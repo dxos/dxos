@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Browser-safe tool contract — Effect Schema input definitions, static
+// Browser-safe tool contract - Effect Schema input definitions, static
 // metadata, and the zod adapter the MCP SDK needs. No node:fs, no ts-morph,
-// no MCP transport machinery — those live in @dxos/introspect-mcp.
+// no MCP transport machinery - those live in @dxos/introspect-mcp.
 
 export { DEFAULT_LIST_LIMIT, type ListOptions, MAX_LIST_LIMIT } from './limits.ts';
 export { TOOL_METADATA, type ToolMetadata, inputSchemaToZod } from './metadata.ts';

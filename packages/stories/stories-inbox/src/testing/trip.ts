@@ -5,7 +5,7 @@
 //
 // Two legs of ONE booking (same PNR), plus an unrelated message. The mocked LLM returns a payload
 // based on the flight number found in the prompt (which includes the message body), so extracting
-// both legs must produce ONE Trip with TWO Segments — exercising the real feed + ExtractMessage
+// both legs must produce ONE Trip with TWO Segments - exercising the real feed + ExtractMessage
 // operation + ECHO space path, where messages are immutable Queue items (the composer setup).
 //
 

@@ -157,7 +157,7 @@ export const formatCount = (count: number): string => count.toLocaleString('en-U
 /** "3 min ago", "2 h ago", "5 d ago"; a dash when there is no time. */
 export const ago = (iso: string | undefined, now = Date.now()): string => {
   if (!iso) {
-    return '—';
+    return '-';
   }
   const seconds = Math.max(0, (now - Date.parse(iso)) / 1000);
   return seconds < 90

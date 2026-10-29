@@ -210,7 +210,7 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {};
 
-/** Without the terrain backdrop — routes and the graticule alone. */
+/** Without the terrain backdrop - routes and the graticule alone. */
 export const GridOnly: Story = {
   args: { terrain: false },
 };

@@ -331,7 +331,7 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
               event.preventDefault();
               handleSave();
             } catch {
-              // Delete results in a validation error; don’t prevent default so dx-grid can emit an edit request.
+              // Delete results in a validation error; don't prevent default so dx-grid can emit an edit request.
             }
             break;
           }

@@ -32,7 +32,7 @@ export type FrameCompanionProps = {
 /**
  * The storyboard's frame companion: the selected frame's artifact article (its request form, Generate
  * and variants). Which frame is the plank's single selection, which the stack sets when a frame is
- * picked — so the companion follows the stack without either holding state of its own.
+ * picked - so the companion follows the stack without either holding state of its own.
  */
 export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameCompanionProps) => {
   const { t } = UiHooks.useTranslation(StudioNamespace.key);

@@ -42,7 +42,7 @@ const HIDDEN_CONTEXT_PREFIX = '<system-context>';
 
 /**
  * True for the injected system-context turn. `useAgentChat` does not reliably round-trip custom
- * `metadata`, so the content marker is the durable signal — without it the raw `<system-context>`
+ * `metadata`, so the content marker is the durable signal - without it the raw `<system-context>`
  * block leaks into the rendered thread.
  */
 const isHiddenContext = (message: UIMessage<Metadata>): boolean =>
@@ -83,7 +83,7 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
 
   // TODO(burdon): Define tools (see generic params).
   // `getInitialMessages` overrides the default eager fetch of the agent's `get-messages` endpoint,
-  // which rejects and throws during render when the host is unreachable — crashing the panel into the
+  // which rejects and throws during render when the host is unreachable - crashing the panel into the
   // error boundary instead of degrading to a status-bar error. Returning `[]` skips the fetch; the
   // thread hydrates from the live stream once connected.
   // TODO(burdon): Restore server-side history once the offline host degrades gracefully.

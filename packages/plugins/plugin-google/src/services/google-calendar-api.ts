@@ -20,7 +20,7 @@ import { GoogleCredentials } from './google-credentials.ts';
 /**
  * The requirements the underlying {@link GoogleCalendar} request functions carry (auth token + HTTP
  * client). {@link GoogleCalendarApi.Live} bakes these in so the service methods themselves require
- * nothing — which is what lets a test satisfy {@link GoogleCalendarApi} with a zero-dependency mock.
+ * nothing - which is what lets a test satisfy {@link GoogleCalendarApi} with a zero-dependency mock.
  */
 type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.CredentialsService;
 
@@ -36,7 +36,7 @@ export type GoogleCalendarApiError =
  * second is the one that is easy to miss:
  *
  * 1. `Live` bakes in the auth/HTTP context (see {@link Requirements}) so every method is
- *    requirement-free — callers declare `GoogleCalendarApi` alone instead of propagating
+ *    requirement-free - callers declare `GoogleCalendarApi` alone instead of propagating
  *    `HttpClient | GoogleCredentials | CredentialsService` through each signature.
  * 2. That same tag lets a test provide {@link GoogleCalendarApi.mock}, so calendar sync runs against
  *    generated events with no live account.
@@ -70,7 +70,7 @@ export interface GoogleCalendarApiService {
 
 /** In-memory events a {@link GoogleCalendarApi.mock} serves, keyed by calendar id. */
 export interface CalendarDataset {
-  /** Events per calendar id, in any order — the mock applies the window and ordering each list uses. */
+  /** Events per calendar id, in any order - the mock applies the window and ordering each list uses. */
   readonly events: Readonly<Record<string, readonly GoogleCalendar.Event[]>>;
 }
 
@@ -128,7 +128,7 @@ export class GoogleCalendarApi extends Context.Service<GoogleCalendarApi, Google
   );
 
   /**
-   * Zero-dependency mock backed by an in-memory {@link CalendarDataset} — for tests that drive the real
+   * Zero-dependency mock backed by an in-memory {@link CalendarDataset} - for tests that drive the real
    * sync pipeline with no live account. Both list methods honour their window, ordering and paging, so
    * the sync's forward walk and pagination exercise realistically.
    */

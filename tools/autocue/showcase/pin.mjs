@@ -82,7 +82,7 @@ const pin = async (page) => {
     screenHeight: height,
   });
   const size = await page.evaluate(() => `${innerWidth}x${innerHeight} @${devicePixelRatio}x`).catch(() => '?');
-  console.log(`[pin] ${page.url()} → ${size}`);
+  console.log(`[pin] ${page.url()} -> ${size}`);
 };
 
 for (const page of context.pages()) {

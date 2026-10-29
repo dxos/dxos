@@ -260,7 +260,7 @@ export class SwarmNetworkManager {
       case ConnectionState.OFFLINE: {
         this._connectionState = state;
         // Only signaling toggles across an offline/online cycle. The messenger stays open so its
-        // subscriptions survive — the swarm does not re-`listen` on reconnect — and its subscriptions
+        // subscriptions survive - the swarm does not re-`listen` on reconnect - and its subscriptions
         // are torn down only on a real `close`.
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline()));
         await this._signalManager.close();

@@ -24,8 +24,8 @@ import * as Scorer from '../Scorer.ts';
 // can exist yet still misrepresent the source email, which no deterministic check alone can catch.
 
 const ACCURACY_JUDGE_RUBRIC = trim`
-  You are checking whether CRM records created from a source email are ACCURATE — not just
-  present, but correct — compared against that email.
+  You are checking whether CRM records created from a source email are ACCURATE - not just
+  present, but correct - compared against that email.
 
   Pass only if all of the following hold:
   - The Person's name matches the sender's name in the email signature.
@@ -45,7 +45,7 @@ const SEED_EMAIL_INPUT = {
       text: trim`
         Hi there,
 
-        Your AI Assistant access is live — meet Noz, SigNoz's AI observability assistant.
+        Your AI Assistant access is live - meet Noz, SigNoz's AI observability assistant.
 
         Let us know if you have any questions getting started.
 
@@ -160,13 +160,13 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite('CRM Mailbox — processes a mailbox email into CRM profiles and employer relation', {
+evalite('CRM Mailbox - processes a mailbox email into CRM profiles and employer relation', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),
 });
 
-// A judge that only ever passes would be worthless as a scorer — this demonstrates it correctly
+// A judge that only ever passes would be worthless as a scorer - this demonstrates it correctly
 // fails records that exist but misrepresent the source email, on a hand-crafted mismatch rather
 // than a live agent run.
 const INACCURATE_RECORDS = JSON.stringify({
@@ -178,7 +178,7 @@ const INACCURATE_RECORDS = JSON.stringify({
   },
 });
 
-evalite('CRM Mailbox — accuracy judge correctly fails misrepresented records', {
+evalite('CRM Mailbox - accuracy judge correctly fails misrepresented records', {
   data: [{ input: { content: INACCURATE_RECORDS } }],
   task: (input: { content: string }) => EffectEx.runPromise(judge(ACCURACY_JUDGE_RUBRIC, input.content)),
   scorers: [

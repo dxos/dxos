@@ -14,9 +14,9 @@ import { type Identity } from './Identity.ts';
 // Lifecycle events of the client stack. Boot order is the chain of these events, each layer
 // subscribing to the fact it needs and emitting the fact it establishes:
 //
-//   Opening → StorageReady → IdentityLoaded → NetworkReady   (host emits Opening, then cascades).
+//   Opening -> StorageReady -> IdentityLoaded -> NetworkReady   (host emits Opening, then cascades).
 //   IdentityBound                                            (a created or accepted identity).
-//   IdentityAvailable → DataSpacesAvailable                      (identity-bound services).
+//   IdentityAvailable -> DataSpacesAvailable                      (identity-bound services).
 //   StackOpened                                              (host, once the cascade is done).
 //   NetworkingEnabled                                        (auto-connect, or the embedder).
 //
@@ -24,7 +24,7 @@ import { type Identity } from './Identity.ts';
 // disposal unwinds the stack in reverse build order. A reset is the embedder's concern and runs on
 // the embedder's controller, which outlives the stack:
 //
-//   Closing → WipingStorage → Reset                          (system service; the embedder handles).
+//   Closing -> WipingStorage -> Reset                          (system service; the embedder handles).
 //
 // Payloads carry facts only. Cancellation and tracing ride on the Effect: a layer that needs a DXOS
 // `Context` for a component takes one from its scope (`EffectEx.contextFromScope`), and the host

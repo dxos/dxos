@@ -28,7 +28,7 @@ export const ContextModule = () => {
 };
 
 const ContextModuleContainer = ({ space }: { space: Space }) => {
-  // Objects bound to the feed (the agent-independent context: `session.addContext` → `binder.bind`).
+  // Objects bound to the feed (the agent-independent context: `session.addContext` -> `binder.bind`).
   // TODO(burdon): Reconcile objects vs. artifacts.
   const chats = useQuery(space.db, Filter.type(Chat.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
@@ -105,7 +105,7 @@ const Tile = ({ data }: { data: ContextItem }) => {
   const artifactRef = data?.kind === 'artifact' ? data.data : undefined;
   // Subscribe + trigger async load. Use the LIVE `ref.target` (populated once loaded) as the subject,
   // NOT `useObject`'s snapshot return: the card Surface filter requires `Obj.isObject(subject)`,
-  // which a snapshot fails — so passing a snapshot yields no candidate and the Surface renders blank.
+  // which a snapshot fails - so passing a snapshot yields no candidate and the Surface renders blank.
   useObject(artifactRef);
 
   if (!data) {

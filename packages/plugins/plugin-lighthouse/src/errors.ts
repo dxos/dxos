@@ -7,7 +7,7 @@ import { BaseError } from '@dxos/errors';
 /** The Research names no lighthouse connection, or its connection has no credential. */
 export class LighthouseNotConnectedError extends BaseError.extend(
   'LighthouseNotConnectedError',
-  'Connect lighthouse first: add a Lighthouse connection in Settings → Connections.',
+  'Connect lighthouse first: add a Lighthouse connection in Settings -> Connections.',
 ) {}
 
 /** No client is registered for the connection's URL. */

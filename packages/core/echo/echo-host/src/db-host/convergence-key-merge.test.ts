@@ -97,7 +97,7 @@ beforeAll(async () => {
 describe('ConvergenceKeyMerger.mergeGroup', () => {
   test('an edit landing while another document loads is folded and covered by the watermark', async ({ expect }) => {
     // The loser loads first; the edit lands during the winner's load. The merge must compute
-    // from the post-edit state — reading at load time would put the edit below the tombstone's
+    // from the post-edit state - reading at load time would put the edit below the tombstone's
     // watermark, where no later fold ever looks.
     const fixture = setup([
       [ID_B, makeEntity(KEY, { title: 'b' })],
@@ -135,7 +135,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
 
   test('a straggler edit on a chain member collapsed in the same pass reaches the final winner', async ({ expect }) => {
     // C was already merged into B; a straggler edit landed on C's tombstone. The same pass then
-    // merges B into A — the fold must follow C -> B -> A through the redirect written moments
+    // merges B into A - the fold must follow C -> B -> A through the redirect written moments
     // earlier, and must not advance C's watermark on an aborted fold.
     const fixture = setup([
       [ID_A, makeEntity(KEY, { title: 'a' })],
@@ -163,7 +163,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
 
   test('the fold writes the value from the same state as the diff and the watermark', async ({ expect }) => {
     // A first straggler edit is followed by a second one landing during the winner's doc load.
-    // Value, diff, and watermark must come from one state — folding the first value while
+    // Value, diff, and watermark must come from one state - folding the first value while
     // watermarking past the second would replace the newest edit with an older one, permanently.
     const fixture = setup([
       [ID_C, makeEntity(KEY, { title: 'c' })],
@@ -198,7 +198,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
   });
 
   test('a fold blocked by a deleted winner leaves the watermark alone for a later pass', async ({ expect }) => {
-    // The redirect target is user-deleted, so the straggler edit cannot fold — but the restored
+    // The redirect target is user-deleted, so the straggler edit cannot fold - but the restored
     // tombstone must still be re-asserted, and the edit must stay above the watermark so it
     // folds once the winner is restored.
     const fixture = setup([
@@ -309,7 +309,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
 
   test('loser tombstones are flushed before the group reports serviced', async ({ expect }) => {
     // The orchestrator clears the durable intent when the group reports serviced, so the
-    // tombstones must already be on disk — an intent must never die before the tombstone it
+    // tombstones must already be on disk - an intent must never die before the tombstone it
     // claims exists. The winner's fold flushes first, then every loser document, each already
     // carrying its tombstone at flush time.
     const fixture = setup([
@@ -346,7 +346,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
   }) => {
     // Two peers merge the same pair concurrently: each records its own `mergedAtHeads`, and
     // automerge keeps one value plus a conflict. Diffing from the union of both means an edit
-    // the other peer already folded is never re-presented — a re-fold from the stale surviving
+    // the other peer already folded is never re-presented - a re-fold from the stale surviving
     // watermark would overwrite the newer winner edit ('v3') with the loser's old value ('v2').
     const fixture = setup([
       [ID_A, makeEntity(KEY, { title: 'a' })],
@@ -376,7 +376,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
     });
 
     // Peer 1's view (this host): never saw 'v2'. The extra edits pump the op counter so peer 1's
-    // register write deterministically survives the conflict — leaving the STALE watermark.
+    // register write deterministically survives the conflict - leaving the STALE watermark.
     edit(fixture, ID_B, (entity) => {
       entity.data.note = 'n1';
     });
@@ -411,7 +411,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
     expect(entityOf(fixture, ID_A)?.data.title).toBe('v3');
 
     // The union must not over-suppress: a genuinely new straggler edit, above both watermarks,
-    // still folds — without re-presenting the already-folded title.
+    // still folds - without re-presenting the already-folded title.
     edit(fixture, ID_B, (entity) => {
       entity.data.description = 'late';
     });
@@ -505,7 +505,7 @@ describe('ConvergenceKeyMerger reference rewriting', () => {
     expect(entityOf(fixture, ID_REF)?.data.owner).toEqual({ '/': `echo://${SPACE_ID}/${ID_A}` });
   });
 
-  test('a stale index row — the path no longer holds a ref to the loser — writes nothing', async ({ expect }) => {
+  test('a stale index row - the path no longer holds a ref to the loser - writes nothing', async ({ expect }) => {
     const { fixture, group, referrers } = setupWithReferrer({
       owner: localRef(ID_A),
       title: 'not a ref',
@@ -540,7 +540,7 @@ describe('ConvergenceKeyMerger reference rewriting', () => {
 
   test('a merged-away referrer is never written', async ({ expect }) => {
     // Writing to a redirected referrer would land above its own fold watermark and be carried
-    // into its winner as if it were a straggler's edit — the reason the skip rule exists.
+    // into its winner as if it were a straggler's edit - the reason the skip rule exists.
     const { fixture, group, referrers } = setupWithReferrer({ owner: localRef(ID_B) });
     edit(fixture, ID_REF, (entity) => {
       if (entity.system) {

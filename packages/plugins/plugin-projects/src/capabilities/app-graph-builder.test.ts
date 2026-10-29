@@ -61,7 +61,7 @@ describe('project app graph builder', () => {
     expect(artifacts.id).toEqual(
       GraphNode.qualifyId(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), ARTIFACTS_SEGMENT),
     );
-    // Virtual, but it carries the project so the action extension can link what the dialog creates —
+    // Virtual, but it carries the project so the action extension can link what the dialog creates -
     // wrapped, so the Project-matching extensions do not claim the branch and nest it inside itself,
     // and tagged so a surface can tell it from the Chats branch, which wraps a project the same way.
     expect(artifacts.data).toEqual({ branch: 'artifacts', project });

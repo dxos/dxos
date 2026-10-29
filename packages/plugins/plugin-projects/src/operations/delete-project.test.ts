@@ -14,9 +14,9 @@ import { Text } from '@dxos/schema';
 import { TaskSet } from '@dxos/types';
 
 /**
- * Deleting a project must take its owned graph with it. The navtree's ⋮ Delete resolves to
+ * Deleting a project must take its owned graph with it. The navtree's : Delete resolves to
  * `SpaceOperation.RemoveObjects`, which splices the project out of its collection and calls
- * `db.remove` — everything else here rides on the ECHO parent edge, so this pins that the edges the
+ * `db.remove` - everything else here rides on the ECHO parent edge, so this pins that the edges the
  * create/chat flows establish are the ones the cascade actually follows.
  */
 describe('deleting a project', () => {

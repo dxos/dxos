@@ -58,13 +58,13 @@ describe('TriggerRuntimeController', () => {
       // start the dispatcher shortly after the space becomes ready.
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
-      // `triggersDisabled = true` → dispatcher should stop.
+      // `triggersDisabled = true` -> dispatcher should stop.
       Obj.update(defaultSpace.properties, (properties) => {
         properties.triggersDisabled = true;
       });
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(false);
 
-      // Back to enabled → dispatcher should start again.
+      // Back to enabled -> dispatcher should start again.
       Obj.update(defaultSpace.properties, (properties) => {
         properties.triggersDisabled = false;
       });

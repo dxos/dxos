@@ -17,8 +17,8 @@ const handler: Operation.WithHandler<typeof DebugOperation.InsertLoremIpsum> = D
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, head }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
-      // Callers hold either key — the article registers under its attendable id, the graph knows the
-      // object URI — so accept both rather than failing on the one we were not given.
+      // Callers hold either key - the article registers under its attendable id, the graph knows the
+      // object URI - so accept both rather than failing on the one we were not given.
       const entry = editorViews.get(subject) ?? editorViews.getByDocumentId(subject);
       if (!entry) {
         log.warn('no editor view for insert target', { subject });

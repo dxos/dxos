@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Blob, Collection, Database, DXN, type Error, Obj, Ref, Type } from '@dxos/echo';
 
 /**
- * Canonical file type. Storage is backend-agnostic — `data` references a {@link Blob.Blob} object
+ * Canonical file type. Storage is backend-agnostic - `data` references a {@link Blob.Blob} object
  * that holds the bytes and their addressing.
  */
 export class File extends Type.makeObject<File>(DXN.make('org.dxos.type.file', '0.2.0'))(

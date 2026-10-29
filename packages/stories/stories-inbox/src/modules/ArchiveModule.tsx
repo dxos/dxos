@@ -39,7 +39,7 @@ const getMessageHtml = (message: Message.Message): string | undefined =>
 /**
  * Capture-time stamp matching the fixture tooling's version format (`20260804-185124`), so the
  * downloaded file carries the moment the mailbox was captured and `moon run fixtures:push` adopts
- * it verbatim — the archive keeps one identity on disk and in R2 rather than gaining an unrelated
+ * it verbatim - the archive keeps one identity on disk and in R2 rather than gaining an unrelated
  * upload time.
  */
 const timestamp = (): string => new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
@@ -59,7 +59,7 @@ const getFixtureName = (message: Message.Message): string => {
  * file is for local development testing only and is never committed. Upload and reset both swap the
  * mailbox's backing feed for a fresh one (seeded from the file, or empty) and delete the previous
  * feed; reset additionally removes the sync binding(s) and every saved Connection (with its
- * AccessToken) so the mailbox returns to a fully disconnected, clean-slate state — otherwise
+ * AccessToken) so the mailbox returns to a fully disconnected, clean-slate state - otherwise
  * disconnected Connection accounts accumulate in the Connect menu across reconnects.
  */
 export const ArchiveModule = () => {
@@ -77,7 +77,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
   const [status, setStatus] = useState<{ action: string; count: number } | undefined>();
   const [busy, setBusy] = useState(false);
 
-  // The message selected in the Mailbox panel — read under the mailbox object's context, matching
+  // The message selected in the Mailbox panel - read under the mailbox object's context, matching
   // `MessageModule` (sibling `ModuleContainer` cells have independent attention targets).
   const messages = useQuery(
     space.db,
@@ -91,7 +91,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
 
   // Starring is how a fixture is nominated: the archive exports exactly the starred messages, so the
   // user curates a set in the Mailbox panel rather than downloading (and later re-importing) the feed.
-  // Membership is read from the tag index's reverse lookup — a per-message `getTagsForMessage` scan
+  // Membership is read from the tag index's reverse lookup - a per-message `getTagsForMessage` scan
   // would walk the whole feed on every render of this panel, including every selection change.
   const starredTag = useQuery(space.db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const tagIndex = mailbox?.tags?.target;
@@ -222,7 +222,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           <Button.Root
             iconOnly
             icon='ph--envelope-simple--regular'
-            label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
+            label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message - select one first'}
             disabled={!selected || busy}
             onClick={handleDownloadMessage}
           />

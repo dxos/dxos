@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
  *
  * Unlike `useDeferredValue` (which still commits every intermediate value, just at a lower
  * priority), this coalesces a burst of rapid updates into a single settled value. The mailbox
- * search uses it so the ECHO query's AST changes only when the user pauses typing — otherwise the
+ * search uses it so the ECHO query's AST changes only when the user pauses typing - otherwise the
  * paginated store rebuilds on every keystroke and the list flashes empty.
  */
 export const useDebouncedValue = <T>(value: T, delayMs: number): T => {

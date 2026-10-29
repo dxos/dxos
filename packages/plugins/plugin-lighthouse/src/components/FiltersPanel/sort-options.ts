@@ -17,14 +17,14 @@ export const sortOptions = (facets: ReadonlyArray<Facet>, hasAreas: boolean): So
     if (facet.kind === 'range' && value) {
       return (['asc', 'desc'] as const).map((dir) => ({
         key: `value:${facet.id}:${dir}`,
-        label: `${facet.label} ${dir === 'asc' ? '↑ lowest first' : '↓ highest first'}`,
+        label: `${facet.label} ${dir === 'asc' ? '\u2191 lowest first' : '\u2193 highest first'}`,
         sort: { by: 'value', value, label: facet.label, dir },
       }));
     }
     if (facet.kind === 'date' && prop) {
       return (['desc', 'asc'] as const).map((dir) => ({
         key: `date:${prop}:${dir}`,
-        label: `${facet.label} ${dir === 'desc' ? '↓ newest first' : '↑ oldest first'}`,
+        label: `${facet.label} ${dir === 'desc' ? '\u2193 newest first' : '\u2191 oldest first'}`,
         sort: { by: 'date', prop, label: facet.label, dir },
       }));
     }
@@ -46,7 +46,7 @@ export const sortKey = (sort: ViewSort | undefined): string => {
   return `value:${'prop' in sort.value ? sort.value.prop : `sum:${sort.value.sum.join('+')}`}:${sort.dir}`;
 };
 
-/** A slider step: 1, 2 or 5 × 10ⁿ, about 1/200 of the range (whole numbers step at least 1). */
+/** A slider step: 1, 2 or 5 × 10^n, about 1/200 of the range (whole numbers step at least 1). */
 export const stepOf = (facet: Pick<Facet, 'min' | 'max' | 'integer'>): number => {
   const raw = ((facet.max ?? 1) - (facet.min ?? 0)) / 200;
   if (raw <= 0) {

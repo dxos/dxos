@@ -4,7 +4,7 @@
 // The template's stage one asks how the engine gets into the Worker and demands a stated fallback
 // if a WASM build does not fit. This IS that fallback: alpha-beta over chess.js with a
 // material-plus-mobility evaluation, depth-bounded so a tool call returns inside a chat's patience.
-// It plays weakly compared with Stockfish and is not trying to compete — the point it has to carry
+// It plays weakly compared with Stockfish and is not trying to compete - the point it has to carry
 // is that the move comes from a search on the server, not from a language model's memory.
 //
 
@@ -79,14 +79,14 @@ const negamax = (chess, depth, alpha, beta, budget) => {
  *
  * The bound is nodes rather than wall-clock on purpose: `Date.now()` does not advance during
  * synchronous compute in a Worker, so a time deadline never fires there and reports `elapsedMs: 0`.
- * Depth alone is not enough either — a wide middlegame is far more work than a quiet endgame at the
- * same depth — so the node budget is what actually keeps a tool call inside a chat's patience.
+ * Depth alone is not enough either - a wide middlegame is far more work than a quiet endgame at the
+ * same depth - so the node budget is what actually keeps a tool call inside a chat's patience.
  */
 export const search = ({ fen, depth = 2, maxNodes = 5000 }) => {
   const chess = new Chess(fen);
   const budget = { nodes: maxNodes };
 
-  // Checkmate and draw have no legal move, so the loop below would leave `bestScore` at -Infinity —
+  // Checkmate and draw have no legal move, so the loop below would leave `bestScore` at -Infinity -
   // which `JSON.stringify` writes as `null`. Answer with the terminal evaluation instead.
   if (chess.isGameOver()) {
     return {
@@ -126,7 +126,7 @@ export const search = ({ fen, depth = 2, maxNodes = 5000 }) => {
   };
 };
 
-/** Static evaluation plus the legal-move count — no search. */
+/** Static evaluation plus the legal-move count - no search. */
 export const evaluateFen = (fen) => {
   const chess = new Chess(fen);
   return {

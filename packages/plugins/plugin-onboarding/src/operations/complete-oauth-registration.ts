@@ -12,7 +12,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { CompleteOAuthRegistration } from './definitions.ts';
 
 /**
- * Completes OAuth recovery registration for the local identity — see
+ * Completes OAuth recovery registration for the local identity - see
  * {@link Account.completeOAuthRegistration}. Wrapped as an operation so UI surfaces can invoke it;
  * the flow itself is shared with the CLI's `dx account signup`.
  */

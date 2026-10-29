@@ -100,7 +100,7 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
       const skipped = result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : '';
       setStatus(
         result.messages === 0 && result.summary.errored === 0
-          ? `No messages in the last ${options.maxDays}d — widen the lookback.`
+          ? `No messages in the last ${options.maxDays}d - widen the lookback.`
           : `Crawled ${result.messages} messages · ${result.stored} stored · ${facts.length} facts${skipped}`,
       );
     });

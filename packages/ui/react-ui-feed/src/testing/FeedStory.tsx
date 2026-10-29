@@ -59,7 +59,7 @@ const makeAnswer = () =>
 //
 
 /**
- * Per-message chrome, supplied by the host rather than the engine — the thing a single thread-wide
+ * Per-message chrome, supplied by the host rather than the engine - the thing a single thread-wide
  * document cannot do without injecting widgets into its own markdown.
  */
 const TestChrome = ({ message, index, selected, onSelect, children }: MessageChromeProps) => {
@@ -82,7 +82,7 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
       </div>
 
       {/*
-        Fork / rewind / reply — chrome, not content. Positioned out of flow and toggled by opacity:
+        Fork / rewind / reply - chrome, not content. Positioned out of flow and toggled by opacity:
         anything that changes a row's height on hover re-triggers the virtualizer's measurement, and
         a pointer moving down the list during a scroll then shifts every row below it.
       */}
@@ -117,7 +117,7 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
 export type FeedStoryProps = {
   /**
    * Which downstream call site to approximate. Each supplies its own renderer, chrome and follow
-   * behaviour; everything else — the list, virtualization, selection, search — is the same engine.
+   * behaviour; everything else - the list, virtualization, selection, search - is the same engine.
    * Omitted, the story runs the synthetic mixed feed the measurements were taken against.
    */
   scenario?: FeedScenario;
@@ -138,7 +138,7 @@ export type FeedStoryProps = {
  * The one renderer every `MessageList` story uses; the stories differ only by args.
  *
  * Seeded history, a search over the model, message-set selection, and a play control that streams
- * turns into the tail until stopped — one harness, so a story is a set of arguments rather than
+ * turns into the tail until stopped - one harness, so a story is a set of arguments rather than
  * another component to keep in step.
  */
 export const FeedStory = ({
@@ -219,7 +219,7 @@ export const FeedStory = ({
         setMessages((prev) => [...prev, makeQuestion(), answer]);
         setAnswerId(answer.id);
 
-        // A chat turn arrives as blocks — status, reasoning, a tool call, then the answer — which is
+        // A chat turn arrives as blocks - status, reasoning, a tool call, then the answer - which is
         // what makes reconciliation hard: the document shrinks and rewrites as well as grows. Every
         // other scenario streams a plain text tail, the easy half.
         const turn =
@@ -309,7 +309,7 @@ export const FeedStory = ({
                 <Toolbar.Separator />
                 <Field.Root>
                   <Input.Root
-                    placeholder='Search…'
+                    placeholder='Search...'
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     data-testid='feed.search'
@@ -347,7 +347,7 @@ export const FeedStory = ({
  * The outline of a feed: one tick per prompt, in message-index space.
  *
  * `OutlineMarker.range` is "the document's own position space", which for a feed is the message
- * index — so a marker is `[index, index + 1)` and the visible range is the mounted window. No
+ * index - so a marker is `[index, index + 1)` and the visible range is the mounted window. No
  * pixel offsets are involved, which is what makes this survive rows whose heights are still
  * estimates.
  */
@@ -375,7 +375,7 @@ const FeedOutline = ({ classNames, messages }: Util.ThemedClassName<{ messages: 
       }));
   }, [messages]);
 
-  // Exactly one tick reads as current — the last prompt at or before the cursor. Passing the
+  // Exactly one tick reads as current - the last prompt at or before the cursor. Passing the
   // mounted window instead would light up whichever ticks happen to fall inside it: none for most
   // of a sampled rail, two when the window straddles a boundary.
   const current = useMemo(() => {
@@ -402,7 +402,7 @@ const FeedOutline = ({ classNames, messages }: Util.ThemedClassName<{ messages: 
   );
 };
 
-/** Scroll-to-hit lives in the toolbar, outside the viewport — the reason Root is headless. */
+/** Scroll-to-hit lives in the toolbar, outside the viewport - the reason Root is headless. */
 const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
   const { scrollToIndex } = useMessageList('FindButton');
   const handleFind = useCallback(() => {

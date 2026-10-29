@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// `SearchList` — search-themed wrapper around `Picker` (this same package).
+// `SearchList` - search-themed wrapper around `Picker` (this same package).
 //
 // What `SearchList` adds on top of `Picker`:
 //
@@ -41,7 +41,7 @@ import { translationKey } from '#translations';
 import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context.ts';
 
 //
-// Root — wraps `Picker.Root` and adds query state + debounced onSearch.
+// Root - wraps `Picker.Root` and adds query state + debounced onSearch.
 //
 
 type SearchListRootProps = PropsWithChildren<{
@@ -165,7 +165,7 @@ const SearchListContent = Util.composable<HTMLDivElement>(({ children, ...props 
 SearchListContent.displayName = 'SearchList.Content';
 
 //
-// Input — search-themed wrapper around Picker.Input. Adds default
+// Input - search-themed wrapper around Picker.Input. Adds default
 // placeholder translation; reads/writes the query from search context.
 //
 
@@ -216,7 +216,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 SearchListInput.displayName = 'SearchList.Input';
 
 //
-// Viewport — scroll surface; carries `role='listbox'`.
+// Viewport - scroll surface; carries `role='listbox'`.
 //
 // `padding` insets the rows from the scroll strip; a menu-style list docked to the popover edge
 // passes `padding={false}` so the rows are flush, matching `Listbox`.
@@ -248,7 +248,7 @@ const SearchListViewport = Util.composable<HTMLDivElement, SearchListViewportPro
 SearchListViewport.displayName = 'SearchList.Viewport';
 
 //
-// Item — search-themed convenience wrapper around `Picker.Item`.
+// Item - search-themed convenience wrapper around `Picker.Item`.
 //
 
 type SearchListItemProps = Util.ThemedClassName<{

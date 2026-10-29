@@ -65,7 +65,7 @@ describe('suggestion branches', () => {
   test('archiveIfEmpty archives an unchanged branch but keeps one with edits', async ({ expect }) => {
     const { db, doc, root } = await setup('one two three');
 
-    // A freshly forked suggestion has no changes vs its fork point → archived.
+    // A freshly forked suggestion has no changes vs its fork point -> archived.
     const empty = await Branch.suggestion(doc, root, 'did:alice');
     expect(await Branch.archiveIfEmpty(doc, empty)).toBe(true);
     expect(doc.history?.branches.find(({ id }) => id === empty.id)?.status).toBe('archived');

@@ -12,7 +12,7 @@ import * as AppSettings from './AppSettings.ts';
 const NS = 'org.dxos.plugin.markdown';
 
 /**
- * One device: its pins over the replicated layer, plus the namespace's own store — which is where
+ * One device: its pins over the replicated layer, plus the namespace's own store - which is where
  * every value actually lives, pinned or not.
  */
 type Device = {
@@ -124,7 +124,7 @@ describe('takeLocal and rejoinAccount', () => {
     expect(resolve(target)).toEqual({ toolbar: true, folding: true });
   });
 
-  test('rejoining keeps the account’s value where the two disagree', ({ expect }) => {
+  test("rejoining keeps the account's value where the two disagree", ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.takeLocal(target.settings, NS, target.local, { freeze: true });
     write(target, 'toolbar', false);
@@ -137,7 +137,7 @@ describe('takeLocal and rejoinAccount', () => {
     expect(target.settings.local[NS]).toBeUndefined();
   });
 
-  test('rejoining with adopt local publishes this device’s values to the account', ({ expect }) => {
+  test("rejoining with adopt local publishes this device's values to the account", ({ expect }) => {
     const target = device({
       shared: { [NS]: { toolbar: true, folding: true } },
       local: { toolbar: true, folding: true },
@@ -333,7 +333,7 @@ describe('conflictingKeys', () => {
     expect(conflicts(target)).toEqual(['toolbar']);
   });
 
-  test('a key only this device holds is not a conflict — rejoining adopts it', ({ expect }) => {
+  test('a key only this device holds is not a conflict - rejoining adopts it', ({ expect }) => {
     const target = device();
     AppSettings.takeLocal(target.settings, NS, target.local);
     write(target, 'folding', true);

@@ -113,7 +113,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
-          {/* Actions only: what the task IS — its status, estimate and priority — reads with the
+          {/* Actions only: what the task IS - its status, estimate and priority - reads with the
               text below, while the toolbar carries what can be done to it. */}
           <Toolbar.Separator variant='gap' />
           <TaskActions task={task} />
@@ -151,7 +151,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 </Layout.Flex>
 
                 {/* The task's own fields, under what it says: they are properties of the task, so
-                  they read after the description rather than as chrome above it — and with the
+                  they read after the description rather than as chrome above it - and with the
                   room a pane has, each says what its glyph means. */}
                 <TaskProperties task={task} members={members} onTaskUpdate={handleUpdate} />
 
@@ -196,7 +196,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
 TaskArticle.displayName = 'TaskArticle';
 
 /**
- * The actions plugins contributed for this task, plus Delete — the same items the list offers in a
+ * The actions plugins contributed for this task, plus Delete - the same items the list offers in a
  * row's trailing gutter, where the pane's whole subject is the task and they are its actions.
  */
 const TaskActions = ({ task }: { task: Task.Task }) => {

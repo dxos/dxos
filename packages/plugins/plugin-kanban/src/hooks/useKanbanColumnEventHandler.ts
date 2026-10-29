@@ -68,7 +68,7 @@ export function useKanbanColumnEventHandler<T extends KanbanLayout.BaseKanbanIte
         }
 
         // 2. Resolve drop target to an index in the column list. A tile target's index comes from its
-        // id against the CURRENT list, never from its `location` — see `useEventHandlerAdapter`, which
+        // id against the CURRENT list, never from its `location` - see `useEventHandlerAdapter`, which
         // resolves the same stale-location off-by-one.
         let targetIndex: number;
         if (target?.type === 'tile') {

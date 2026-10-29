@@ -30,7 +30,7 @@ import { useConnectorEntry, useTargetConnection } from '../components/Initialize
  * user can see and edit rather than silently, and saving it runs the first sync.
  *
  * `connectors` (the registered `Connector` capability list) is resolved by the calling container and
- * threaded down to `useConnectorEntry` — components and the hooks they use must not resolve
+ * threaded down to `useConnectorEntry` - components and the hooks they use must not resolve
  * capabilities themselves.
  */
 export const useSyncTrigger = ({
@@ -56,7 +56,7 @@ export const useSyncTrigger = ({
   // The sync trigger references the connection as its `input.connection`, so it is reached by the
   // reverse-ref from the connection rather than from the subject.
   const connectionTriggers = useQuery(
-    // Skip until the connection resolves — passing no db yields no results without breaking hook order.
+    // Skip until the connection resolves - passing no db yields no results without breaking hook order.
     connection ? db : undefined,
     // `connection` is always set when a db is passed, so this id is never the fallback's.
     Query.select(Filter.id(connection?.id ?? subject.id))
@@ -103,7 +103,7 @@ export const useSyncTrigger = ({
         navigable: false,
       });
       // Turning sync on is the ask, so the save runs the first sync rather than leaving the
-      // mailbox empty until the schedule comes round. The trigger is read off the saved routine —
+      // mailbox empty until the schedule comes round. The trigger is read off the saved routine -
       // a lookup here would race the reverse-ref index.
       const created = data?.target;
       if (created) {

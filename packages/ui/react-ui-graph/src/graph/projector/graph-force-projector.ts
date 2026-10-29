@@ -198,7 +198,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     }
 
     this._simulation
-      // Each tick only mutates `x/y` — emit 'positions' so the renderer can fast-path.
+      // Each tick only mutates `x/y` - emit 'positions' so the renderer can fast-path.
       .on('tick', () => propagating && this.emitUpdate('positions'))
       .velocityDecay(0.3)
       .alphaDecay(1 - Math.pow(0.001, 1 / 300))

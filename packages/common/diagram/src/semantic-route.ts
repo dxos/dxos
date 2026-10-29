@@ -4,8 +4,8 @@
 
 //
 // Channel routing for the semantic diagram. Boxes sit on a lattice with gutters between them, so a
-// good connector is one of a few shapes — straight, L, Z or U through a gutter, or a three-bend
-// detour — between some pair of sides. Every allowed side pair and every nearby channel yields a
+// good connector is one of a few shapes - straight, L, Z or U through a gutter, or a three-bend
+// detour - between some pair of sides. Every allowed side pair and every nearby channel yields a
 // candidate; candidates that clip a box are dropped and the rest are scored by bends, length,
 // crossings and shared runs against the connectors already drawn, with rip-up rounds so an early
 // edge is not stuck with a choice a later one made worse. Ports are then spread along each side in

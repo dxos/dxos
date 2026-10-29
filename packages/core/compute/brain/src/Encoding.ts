@@ -48,7 +48,7 @@ export const RELATIONS: Readonly<Record<string, number>> = { ...FACT_RELATIONS, 
 /**
  * Encodes a fact as `fact(F, S, P, O)` plus one metadata relation per present field. `F` is the statement id and
  * `graph(F, G)` the named graph holding it; `P` is the canonical predicate when the vocabulary knows the surface
- * form, which `surface(F, …)` keeps; a fact without an illocution is `assertive`, and `supersedes` lists
+ * form, which `surface(F, ...)` keeps; a fact without an illocution is `assertive`, and `supersedes` lists
  * `attribution.wasDerivedFrom` and the graphs the fact's graph replaces.
  */
 export const encode = (fact: RDF.Fact, vocabulary?: Vocabulary.Vocabulary): Engine.Entry[] => {

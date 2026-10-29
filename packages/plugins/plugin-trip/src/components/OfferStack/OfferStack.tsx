@@ -72,7 +72,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
             {(origin || destination) && (
               <Card.Row>
                 <Card.Text variant='muted'>
-                  {origin} → {destination}
+                  {origin} {'->'} {destination}
                 </Card.Text>
               </Card.Row>
             )}

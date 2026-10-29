@@ -75,7 +75,7 @@ export type MessengerConfig = {
   clientTag?: string;
   /**
    * When set, `open()` does not dial; the owner must call {@link EdgeClient.startNetworking}. Lets a
-   * host that shares this thread with latency-sensitive work decide when connecting is safe — the
+   * host that shares this thread with latency-sensitive work decide when connecting is safe - the
    * policy (and any delay) belongs to that owner, not here. Reconnects are unaffected.
    * @default false (dial on open)
    */
@@ -85,7 +85,7 @@ export type MessengerConfig = {
 export interface EdgeConnection extends Required<Lifecycle> {
   statusChanged: Event<EdgeStatus>;
   get info(): any;
-  /** Identity DID (`did:halo:…`) of the connected identity. */
+  /** Identity DID (`did:halo:...`) of the connected identity. */
   get identityDid(): string;
   get peerKey(): string;
   get isOpen(): boolean;
@@ -99,7 +99,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
    * Subscribe to connection (re-)establishment.
    *
    * By default the listener also fires once immediately when the connection is already ready at
-   * subscription time — a current-state notification for late subscribers. Pass
+   * subscription time - a current-state notification for late subscribers. Pass
    * `emitCurrentState: false` for reconnect-reaction logic (e.g. restarting a session): reacting
    * to the subscribe-time firing there causes restart loops, since each restart re-subscribes.
    */
@@ -504,7 +504,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   /**
    * Publishes one reconnect.
    * The counter answers "how often, and why" across the fleet; the session gauge answers "how bad
-   * is this one client's session", which a delta counter cannot — it resets with the process, so
+   * is this one client's session", which a delta counter cannot - it resets with the process, so
    * its value IS the per-session total.
    */
   private _recordReconnect(reason: ReconnectReason): void {
@@ -541,7 +541,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Obtain the challenge from `/auth` and sign it into the WebSocket subprotocol auth header.
    *
    * This used to fire a GET at the `/ws/:identityDid/:peerKey` upgrade path itself and harvest the
-   * challenge off the resulting 401 — a request sent specifically to be rejected, which surfaced as
+   * challenge off the resulting 401 - a request sent specifically to be rejected, which surfaced as
    * a console error on every connect and as a routine auth failure in the server's audit trail.
    * `/auth` answers the same challenge with a 200. The nonce is not bound to a path, so the
    * challenge issued at `/auth` is equally valid for the upgrade request.

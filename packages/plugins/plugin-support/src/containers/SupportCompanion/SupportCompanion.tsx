@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Generic plank companion — attaches to any ECHO article and renders the
+// Generic plank companion - attaches to any ECHO article and renders the
 // description from the meta of the plugin that owns the article's typename.
 //
 // Resolution: `manager.capabilities.atomByModule(AppCapabilities.Schema)`

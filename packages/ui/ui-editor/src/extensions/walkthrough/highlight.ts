@@ -39,8 +39,8 @@ const loadLanguage = (name: string): Promise<LanguageSupport | undefined> => {
  * recovery covers the fact that a chunk is not a whole file.
  *
  * A chunk is a window into a file, and one that opens inside a declaration parses as top-level
- * statements: a type's members come out as bare variable names, uncoloured. `context` — the enclosing
- * line git names in the hunk header — is parsed ahead of the code and dropped from the result, so the
+ * statements: a type's members come out as bare variable names, uncoloured. `context` - the enclosing
+ * line git names in the hunk header - is parsed ahead of the code and dropped from the result, so the
  * chunk is read inside the construct it belongs to.
  *
  * Resolves `undefined` when the language is unknown, leaving the caller's plain text in place.

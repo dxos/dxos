@@ -28,7 +28,7 @@ export type Characteristics = {
 export type Options = Pick<Characteristics, 'thinking'>;
 
 /**
- * A model as served by a single provider. The same model `id` — a developer reverse-DNS DXN — may
+ * A model as served by a single provider. The same model `id` - a developer reverse-DNS DXN - may
  * be served by several providers, each with its own back-end name and characteristics; that shared
  * `id` is how equivalent models are recognised across providers. `(provider, id)` is the unique key.
  */
@@ -49,7 +49,7 @@ type MakeOptions = Omit<Model, 'id'>;
 
 /**
  * Constructs a model from its developer-reverse-DNS NSID. The NSID is validated at compile time (its
- * final segment must be camelCase — no hyphens) and at runtime, mirroring {@link DXN.make}.
+ * final segment must be camelCase - no hyphens) and at runtime, mirroring {@link DXN.make}.
  */
 export const make: {
   <Id extends string>(
@@ -59,7 +59,7 @@ export const make: {
 } = (nsid: string, options: MakeOptions): Model => ({ id: DXN.make(nsid), ...options });
 
 // Local models offered identically by the bundled sidecar (`built-in`), an external `ollama` server,
-// and LM Studio — the same curated catalog, each provider serving it under its own back-end name
+// and LM Studio - the same curated catalog, each provider serving it under its own back-end name
 // (an Ollama pull tag vs an LM Studio model id). https://ollama.com/library https://lmstudio.ai/models
 const LOCAL_MODELS = [
   {
@@ -88,7 +88,7 @@ const LOCAL_MODELS = [
     ollama: 'qwen2.5:32b',
     lmStudio: 'qwen2.5-32b-instruct',
   },
-  // Qwen 3 (reasoning): emits chain-of-thought — higher latency, may need lenient JSON parsing.
+  // Qwen 3 (reasoning): emits chain-of-thought - higher latency, may need lenient JSON parsing.
   { id: 'com.alibaba.model.qwen-3-8b.default', label: 'Qwen 3 8B', ollama: 'qwen3:8b', lmStudio: 'qwen3-8b' },
   {
     id: 'com.alibaba.model.qwen-3-30b.default',
@@ -109,7 +109,7 @@ const localModelsFor = (provider: DXN.DXN, backend: (model: (typeof LOCAL_MODELS
   LOCAL_MODELS.map((model) => make(model.id, { provider, backend: backend(model), label: model.label }));
 
 //
-// The models served through EDGE, named so a caller — an eval, a preset, a picker's default —
+// The models served through EDGE, named so a caller - an eval, a preset, a picker's default -
 // binds the catalog entry itself rather than restating its DXN as a string.
 //
 
@@ -212,23 +212,23 @@ export const defaultDecisionModel: DXN.DXN = DXN.make('org.dxos.model.decision.d
 
 /**
  * Curated model catalog. Each entry is a model AS SERVED BY ONE PROVIDER; the same `id` appearing
- * under multiple providers (e.g. `gptOss20b` via Ollama and LM Studio) is intentional — they are the
+ * under multiple providers (e.g. `gptOss20b` via Ollama and LM Studio) is intentional - they are the
  * same model served by different back-ends. Local providers extend this set at runtime with
  * installed models tagged with the provider's id.
  */
 export const all: readonly Model[] = [
-  // Edge — Anthropic Claude via the DXOS edge intermediary.
+  // Edge - Anthropic Claude via the DXOS edge intermediary.
   claudeOpus5,
   claudeSonnet5,
   claudeHaiku45,
 
-  // Edge — DeepSeek via the DXOS edge intermediary (OpenAI-compatible chat completions). Both V4
+  // Edge - DeepSeek via the DXOS edge intermediary (OpenAI-compatible chat completions). Both V4
   // models serve thinking and non-thinking mode from one back-end name; the legacy `deepseek-chat`
   // and `deepseek-reasoner` names were discontinued on 2026-07-24.
   deepseekV4Flash,
   deepseekV4Pro,
 
-  // Local models — the same catalog served by the bundled sidecar, an external Ollama server, and
+  // Local models - the same catalog served by the bundled sidecar, an external Ollama server, and
   // LM Studio, each under its own back-end name.
   ...localModelsFor(Provider.builtIn.id, (model) => model.ollama),
   ...localModelsFor(Provider.ollama.id, (model) => model.ollama),
@@ -246,8 +246,8 @@ export const all: readonly Model[] = [
 
 /**
  * The developer authority an id belongs to: the leading reverse-DNS segments of the NSID
- * (`com.deepseek.model.deepseek-v4-flash.default` → `com.deepseek`). A provider that fronts several
- * upstreams — `edge` serves both Anthropic and DeepSeek — has each resolver claim its own models by
+ * (`com.deepseek.model.deepseek-v4-flash.default` -> `com.deepseek`). A provider that fronts several
+ * upstreams - `edge` serves both Anthropic and DeepSeek - has each resolver claim its own models by
  * this, so the catalog entry needs no separate marker.
  */
 export const developer = (id: DXN.DXN): string => DXN.getName(id).split('.').slice(0, 2).join('.');

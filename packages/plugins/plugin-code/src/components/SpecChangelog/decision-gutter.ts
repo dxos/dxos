@@ -7,7 +7,7 @@ import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemir
 
 import { type DecisionModel, type QuestionModel, githubAvatarUrl } from '../ChangelogGraph/index.ts';
 
-/** A block declaration line, `feat F-1: …` or `  req F-1.2: …`, captured as its id. */
+/** A block declaration line, `feat F-1: ...` or `  req F-1.2: ...`, captured as its id. */
 const BLOCK_DECLARATION = /^\s*[a-z]+\s+([A-Za-z][\w.-]*)\s*:/;
 
 /** Mirrors the cards: a person's chip is solid, an agent's dashed, so the margin reads like the graph. */

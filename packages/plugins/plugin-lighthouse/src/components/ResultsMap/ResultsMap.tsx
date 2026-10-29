@@ -37,7 +37,7 @@ import {
   toPins,
 } from './pins.ts';
 
-// Ported from lighthouse `web/src/components/ResultsMap.tsx` (SPEC "Areas on the map", D-147–D-149, WEB QA-8). The
+// Ported from lighthouse `web/src/components/ResultsMap.tsx` (SPEC "Areas on the map", D-147-D-149, WEB QA-8). The
 // map frame is react-ui-geo's Map (Leaflet + react-leaflet, OSM tiles, resize and pinch handling); the pins,
 // clustering, drawing and areas are imperative Leaflet layers on its L.Map, as in the web UI.
 

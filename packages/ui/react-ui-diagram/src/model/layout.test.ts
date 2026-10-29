@@ -105,7 +105,7 @@ describe('layout', () => {
       edges: [],
     };
 
-    // `A` is unreachable from the root level, so it is simply not placed — but layout returns.
+    // `A` is unreachable from the root level, so it is simply not placed - but layout returns.
     expect(() => layout(graph)).not.toThrow();
   });
 });

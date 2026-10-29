@@ -58,7 +58,7 @@ const parseArgs = () => {
 const options = parseArgs();
 if (!options.demo.length || !options.out) {
   console.error(
-    'usage: node pack.mjs --demo <sidecar.autocue.json|dir> [--demo …] --out <dir> [--title <text>] [--zip] [--upload [<slug>]] [--formats mp4,webm] [--script off] [--poster off] [--prompt <text>]',
+    'usage: node pack.mjs --demo <sidecar.autocue.json|dir> [--demo ...] --out <dir> [--title <text>] [--zip] [--upload [<slug>]] [--formats mp4,webm] [--script off] [--poster off] [--prompt <text>]',
   );
   process.exit(1);
 }
@@ -84,7 +84,7 @@ const resolveSidecar = (input) => {
     .map((name) => path.join(file, name))
     .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0];
   if (!found) {
-    throw new Error(`${input} holds no *.autocue.json — run trim-static.mjs on the recording first`);
+    throw new Error(`${input} holds no *.autocue.json - run trim-static.mjs on the recording first`);
   }
   return found;
 };
@@ -108,10 +108,10 @@ const defaultPrompt = (demo, recording) => {
     lines.push(`- Spec: ${recording.mdl}`);
   }
   if (recording.composer?.url || recording.composer?.environment) {
-    lines.push(`- Composer: ${[recording.composer.environment, recording.composer.url].filter(Boolean).join(' — ')}`);
+    lines.push(`- Composer: ${[recording.composer.environment, recording.composer.url].filter(Boolean).join(' - ')}`);
   }
   if (recording.edge) {
-    lines.push(`- EDGE: ${[recording.edge.environment, recording.edge.url].filter(Boolean).join(' — ')}`);
+    lines.push(`- EDGE: ${[recording.edge.environment, recording.edge.url].filter(Boolean).join(' - ')}`);
   }
   if (recording.template) {
     lines.push(`- Space template: ${recording.template}`);
@@ -345,7 +345,7 @@ const packDemo = (input, position) => {
       files.push(name);
       const size = statSync(video).size;
       if (size > ARTIFACT_FILE_LIMIT) {
-        warnings.push(`${name} is ${(size / 1024 / 1024).toFixed(1)} MB — over the 15 MB Artifact file limit`);
+        warnings.push(`${name} is ${(size / 1024 / 1024).toFixed(1)} MB - over the 15 MB Artifact file limit`);
       }
       return { src: name, type: MIME[ext] };
     });

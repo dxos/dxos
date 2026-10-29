@@ -118,7 +118,7 @@ describe('fetchFlexReport', () => {
       );
     };
     await expect(fetchFlexReport({ token: 't', queryId: 'q', fetchImpl, delayMs: 0 })).rejects.toThrow(/rate limit/i);
-    // SendRequest returns the lockout — never proceeds to polling.
+    // SendRequest returns the lockout - never proceeds to polling.
     expect(calls).toBe(1);
   });
 

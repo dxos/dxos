@@ -88,15 +88,15 @@ const PARAGRAPH_WORDS = [
  * Builds the fixture through the app's own operations, in one page evaluation.
  *
  * Operations rather than direct `db.add`, because the write path is what produces a realistic
- * graph: `tasks.create` files each task into the set's `tasks` array — the membership-and-order
- * record a generic object create leaves untouched — and rejects a cross-set parent, so the
+ * graph: `tasks.create` files each task into the set's `tasks` array - the membership-and-order
+ * record a generic object create leaves untouched - and rejects a cross-set parent, so the
  * hierarchy this generates is one the UI can actually render.
  *
  * One evaluation rather than a call per task: each operation is an in-page await, so driving 10k of
  * them from the test process would add 10k round trips to a fixture nobody measures.
  *
  * Markdown documents are filed as project ARTIFACTS rather than created loose in the space, because
- * that is how a project accumulates them in use — and it is what puts them on the Overview tab the
+ * that is how a project accumulates them in use - and it is what puts them on the Overview tab the
  * flow already opens, so the document stages need no second navigation path.
  */
 export const createProjectsFixture = async (page: Page, scale: Scale, runId: string): Promise<Fixture> =>
@@ -115,7 +115,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
       const isRecord = (value: unknown): value is Record<string, unknown> =>
         typeof value === 'object' && value !== null;
 
-      // `SpaceId`'s own predicate lives in `@dxos/keys`, which this evaluation cannot import — the
+      // `SpaceId`'s own predicate lives in `@dxos/keys`, which this evaluation cannot import - the
       // body is serialized into the page. Restated rather than asserted, so an operation is never
       // handed something that merely looks like an id: RFC4648 base-32, multibase 'B' prefix, 33
       // characters (`packages/common/keys/src/space-id.ts`).
@@ -131,12 +131,12 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
       const invoke = async (key: string, input: unknown, spaceId?: SpaceId): Promise<unknown> => {
         const composer = globalThis.composer;
         if (!composer?.invoke) {
-          throw new Error('composer.invoke is unavailable — the app has not finished mounting');
+          throw new Error('composer.invoke is unavailable - the app has not finished mounting');
         }
         return composer.invoke(key, input, spaceId ? { spaceId } : undefined);
       };
 
-      /** An operation's named output field, or undefined — every output here is a struct. */
+      /** An operation's named output field, or undefined - every output here is a struct. */
       const field = (value: unknown, name: string): unknown => (isRecord(value) ? value[name] : undefined);
 
       const readId = (value: unknown): string | undefined => {
@@ -150,7 +150,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
        * `db.makeRef` rather than `Ref.fromURI`, which `Database.makeRef`'s own docs call out: the
        * latter returns an UNHYDRATED reference whose `.load`/`.target` do not work, so a handler
        * that resolves what it is handed fails with `Resolver is not set`. A reconstructed
-       * `{ '/': … }` envelope does not work either — the input schema wants an instance
+       * `{ '/': ... }` envelope does not work either - the input schema wants an instance
        * (`Expected <Declaration>`). This is the bridge between operations that CREATE an object
        * (returning a JSON snapshot) and those that CONSUME one (taking a `Ref`).
        */
@@ -199,7 +199,7 @@ export const createProjectsFixture = async (page: Page, scale: Scale, runId: str
           throw new Error(`projects.create returned no taskSet: ${JSON.stringify(result)?.slice(0, 400)}`);
         }
         projectIds.push(projectId);
-        // Passed back exactly as the operation returned it — a live `Ref`, which is what the next
+        // Passed back exactly as the operation returned it - a live `Ref`, which is what the next
         // operation's input schema wants.
         taskSets.push(taskSet);
       }

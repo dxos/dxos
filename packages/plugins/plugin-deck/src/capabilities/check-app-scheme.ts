@@ -119,7 +119,7 @@ export default Capability.makeModule(
      * Each handler is isolated with `catchAllCause`, not `catchAll`: a handler that invokes an
      * operation fails as a DEFECT (`OperationProcess.make` uses `Effect.orDie`), which the Fail
      * channel does not carry. An escaping defect would fail this module's activation and take the
-     * popstate listener, the URL<->state sync and the leave-trap down for the whole session — so
+     * popstate listener, the URL<->state sync and the leave-trap down for the whole session - so
      * one handler's failure must not decide whether URL handling exists.
      */
     const dispatchNavigationHandlers = () => {

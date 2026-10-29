@@ -161,7 +161,7 @@ export default Capability.makeModule(
         const resolved = provisionForPlank(plankId, companionVariant);
 
         if (resolved) {
-          // Already provisioned — no need to watch connections.
+          // Already provisioned - no need to watch connections.
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
           AppGraph.expandSync(graph, plankId, AppNode.companion);

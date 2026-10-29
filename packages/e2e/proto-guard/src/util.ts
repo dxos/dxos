@@ -70,7 +70,7 @@ export const withSnapshot = async (
   const expectedData = await SpacesDumper.load(path.join(getBaseDataDir(), snapshot.jsonDataPath));
   const tmp = copySnapshotToTmp(snapshot);
   const client = new Client({ config: createConfig({ dataRoot: tmp }) });
-  // A hang guard, not a perf assertion — this suite asserts that old storage still loads, and the
+  // A hang guard, not a perf assertion - this suite asserts that old storage still loads, and the
   // enclosing test already budgets 30s. The bound was 2s, which a cold `initialize()` now exceeds:
   // the HALO adapters became construction-safe, so setup that used to run in the (untimed)
   // constructor happens inside `initialize()` instead. Construction is ~3ms here; the first

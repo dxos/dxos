@@ -30,7 +30,7 @@ import { sync } from './testing/index.ts';
  * Cron trigger on EDGE runs {@link RunInstructions} for a {@link Routine} that uses the Database
  * skill Query tool against replicated ECHO documents.
  *
- * Prereq: local EDGE (`configPreset({ edge: 'local' })` → `http://localhost:8787`) with LLM
+ * Prereq: local EDGE (`configPreset({ edge: 'local' })` -> `http://localhost:8787`) with LLM
  * available (API key and/or memo replay under `conversationsCache/`).
  */
 describe('Edge instructions', { tags: ['functions-e2e'] }, () => {

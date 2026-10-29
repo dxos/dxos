@@ -13,7 +13,7 @@ import { type InitiateOAuthFlowRequest } from '@dxos/protocols';
 
 import { OAuthFlowError } from './errors.ts';
 
-// atproto OAuth scopes for the recovery flows — shared with the Atmosphere integration provider.
+// atproto OAuth scopes for the recovery flows - shared with the Atmosphere integration provider.
 
 /**
  * Create an `EdgeHttpClient` pointed at the configured edge URL. Extracted here
@@ -29,7 +29,7 @@ export const createEdgeHttpClient = (config: Config): EdgeHttpClient => {
 /**
  * URL path Edge redirects to after an OAuth-recovery flow (account registration or identity
  * recovery) completes. atproto/bsky nullifies `window.opener`, so these flows can't use the
- * `postMessage` relay — kms-service always finalizes them via a top-level redirect to this path,
+ * `postMessage` relay - kms-service always finalizes them via a top-level redirect to this path,
  * carrying the opaque `registrationToken` / `recoveryProof` (never the raw OAuth access token).
  * The recovery finalizer reads this path on app boot and completes the flow.
  */
@@ -62,13 +62,13 @@ export type OAuthRecoveryPendingSnapshot = {
 /**
  * Begin an OAuth-recovery flow: ask EDGE for the provider's authorization URL and send the user to it.
  *
- * Returns once the page is open — completion arrives out of band, at
+ * Returns once the page is open - completion arrives out of band, at
  * {@link OAUTH_RECOVERY_REDIRECT_PATH}.
  *
  * The two platforms diverge at the initiate call, not just at the opening. In the browser the app
  * calls EDGE itself and a new tab lands back on its own origin. On desktop the flow has to run in
  * the system browser (providers refuse embedded webviews), which means EDGE must redirect to the
- * shell's loopback server instead — and EDGE takes that target from the request's `Origin`, which
+ * shell's loopback server instead - and EDGE takes that target from the request's `Origin`, which
  * only Rust can set. So the shell issues the initiate call too.
  */
 export const beginOAuthFlow = (
@@ -96,7 +96,7 @@ export const beginOAuthFlow = (
           try: () => edgeClient.initiateOAuthFlow(DxContext.default(), request),
           catch: (error) => new OAuthFlowError({ message: 'OAuth initiate failed.', cause: error }),
         });
-        // A null return means the popup was blocked — fail rather than silently continue, since the
+        // A null return means the popup was blocked - fail rather than silently continue, since the
         // flow can never complete.
         if (!window.open(authUrl, '_blank')) {
           return yield* Effect.fail(

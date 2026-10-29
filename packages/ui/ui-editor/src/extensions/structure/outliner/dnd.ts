@@ -19,8 +19,8 @@ import { type Item, type Tree, getRange, treeFacet } from './tree.ts';
 
 /**
  * Flattens the tree into draggable units in document order, one per item. Each unit spans only the
- * item's own lines (up to its first child), so the ranges are non-overlapping and every item — parent
- * or leaf — gets its own gutter handle. Memoized per state so the gutter and drag plugin share it.
+ * item's own lines (up to its first child), so the ranges are non-overlapping and every item - parent
+ * or leaf - gets its own gutter handle. Memoized per state so the gutter and drag plugin share it.
  */
 const itemCache = new WeakMap<EditorState, Item[]>();
 const flattenItems = (state: EditorState): Item[] => {
@@ -66,7 +66,7 @@ const indentAt = (state: EditorState, pos: number): number => {
 };
 
 /**
- * Resolves the drop indentation for a single-item drag (see DESIGN "Drag reindent — drop level rules").
+ * Resolves the drop indentation for a single-item drag (see DESIGN "Drag reindent - drop level rules").
  * The dragged subtree stays in the branch of the item above the drop slot by default, outdenting to a
  * sibling of the (shallower) drop target only while the pointer is over that target's row. Returns the
  * target leading-space count and the horizontal pixel offset that previews it. Exported for tests.
@@ -192,7 +192,7 @@ const moveItem = (view: EditorView, sourceIndex: number, dropIndex: number, inde
         ];
 
   // Caret at the end of the moved item; keep the moved item selected (its new anchor is where the moved
-  // text starts — the subtree's first line).
+  // text starts - the subtree's first line).
   const changeSet = state.changes(changes);
   const textStart = changeSet.mapPos(insertAt, -1) + (dropIndex < count ? 0 : 1);
   const caret = textStart + text.length;
@@ -234,7 +234,7 @@ const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): {
 
 /**
  * Moves the items at `sourceIndices` to the slot before `dropIndex`. A single item moves with its whole
- * subtree (re-indented — see `moveItem`); multiple items move by their own lines as a group (a
+ * subtree (re-indented - see `moveItem`); multiple items move by their own lines as a group (a
  * best-effort for multi-selection reorder).
  */
 // Exported for tests (the drag path calls this via `outlinerBlockOps`).

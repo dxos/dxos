@@ -10,11 +10,11 @@ import { Vec2 } from '../../util/index.ts';
 /**
  * One body in the flocking simulation.
  *
- * `id` is optional but enables identity-based reads — callers that seed boids from a
+ * `id` is optional but enables identity-based reads - callers that seed boids from a
  * domain model (e.g. graph nodes) can later look up a boid's mutated position by id.
  *
  * `position`, `velocity`, and `acceleration` are mutated in place by the simulation
- * each tick — this is hot-loop code, so the Vec2 instances are reused rather than
+ * each tick - this is hot-loop code, so the Vec2 instances are reused rather than
  * replaced. The `boids` atom only emits when the array identity changes (i.e. on
  * `setBoids`), not on per-tick position drift.
  */
@@ -41,7 +41,7 @@ export type FlockBoid = {
  *  - `Flock` subscribes via {@link subscribe} and starts a fresh simulation whenever
  *    {@link setBoids} replaces the array.
  *  - External code (e.g. an explorer that hands boids ids matching graph nodes) reads
- *    {@link boids} or {@link findBoid} to sample the latest mutated positions — useful
+ *    {@link boids} or {@link findBoid} to sample the latest mutated positions - useful
  *    when handing positions back to another visualisation on layout swap.
  */
 export class FlockModel {
@@ -64,7 +64,7 @@ export class FlockModel {
     return this._registry.get(this.#boidsAtom);
   }
 
-  /** Replace the boid array atomically — Flock restarts its simulation on emit. */
+  /** Replace the boid array atomically - Flock restarts its simulation on emit. */
   setBoids(boids: readonly FlockBoid[]): this {
     this._registry.set(this.#boidsAtom, boids);
     return this;
@@ -77,7 +77,7 @@ export class FlockModel {
 
   /**
    * Subscribe to array-identity changes (setBoids). The callback is NOT invoked on
-   * per-tick position mutations — those would flood for no benefit.
+   * per-tick position mutations - those would flood for no benefit.
    */
   subscribe(cb: () => void): () => void {
     return this._registry.subscribe(this.#boidsAtom, cb);

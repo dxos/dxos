@@ -9,7 +9,7 @@ import { identitySpecs } from '@dxos/extractor-lib';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 /**
- * Identity rules for Person and Organization — the types this plugin materialises from mail.
+ * Identity rules for Person and Organization - the types this plugin materialises from mail.
  *
  * They live here rather than with the article that renders the duplicates review, or with the CRM
  * plugin that also displays them, because this is where the duplicates come from: whoever creates

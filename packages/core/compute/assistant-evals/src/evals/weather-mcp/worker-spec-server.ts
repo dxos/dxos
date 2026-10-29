@@ -14,7 +14,7 @@ import { listenLoopback, loopbackUrl } from '../../loopback-server.ts';
 // The weather Worker exactly as the template's first task specifies it, on a Node listener instead of
 // Cloudflare: one endpoint speaking MCP over Streamable HTTP with one tool, `get_weather`, over the
 // Open-Meteo forecast. It is the task text made executable, so a test can prove the text a session
-// is handed describes a server the session's own MCP client can connect to — and that nothing the
+// is handed describes a server the session's own MCP client can connect to - and that nothing the
 // text leaves out is something the client needs.
 //
 

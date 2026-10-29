@@ -101,8 +101,8 @@ describe('nodeToJson', () => {
   // and the closing tag ends up in a Paragraph that's never parsed as XML.
   //
   // Syntax tree with blank lines:
-  //   Document [0-28] → Element (incomplete: OpenTag + Text + ⚠ — no CloseTag)
-  //   Paragraph [30-60] → "Second paragraph.\n</reasoning>"
+  //   Document [0-28] -> Element (incomplete: OpenTag + Text + Warning: - no CloseTag)
+  //   Paragraph [30-60] -> "Second paragraph.\n</reasoning>"
 
   test('should parse tag with blank lines in content', ({ expect }) => {
     const xml = trim`
@@ -171,7 +171,7 @@ describe('nodeToJson', () => {
     const registry = { reasoning: { block: true } };
     const elements = parseElements(xml, registry);
     expect(elements).toHaveLength(1);
-    expect(elements[0].children).toEqual(['arrow → and hex →']);
+    expect(elements[0].children).toEqual(['arrow -> and hex ->']);
   });
 
   test('should parse tag with multiple blank lines in content', ({ expect }) => {
@@ -194,7 +194,7 @@ describe('nodeToJson', () => {
   // Regression: when an unregistered XML tag like `<prompt>` appears earlier in the doc,
   // the markdown parser treats it as a paragraph that lazy-continues into subsequent lines,
   // and a later multi-line tag (e.g. `<reasoning>` whose body contains an ordered list) gets
-  // its HTMLBlock truncated to its first line — losing the closing tag and breaking widget
+  // its HTMLBlock truncated to its first line - losing the closing tag and breaking widget
   // rendering. Including the surrounding tag in the registry as a block-only entry (no
   // factory/Component) lets `xmlBlockParsers` keep each tag as its own block.
   test('multi-line reasoning is complete when preceded by a registered prompt block', ({ expect }) => {

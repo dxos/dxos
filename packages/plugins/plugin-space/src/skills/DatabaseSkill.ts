@@ -59,7 +59,7 @@ export const make = (): Skill.Skill =>
 
         # Writing
         - Create by describing the object: pass 'object' with its typename under '@type' and the
-          remaining fields alongside. Prefer a type's own create tool where one exists — it builds
+          remaining fields alongside. Prefer a type's own create tool where one exists - it builds
           the object's owned parts correctly.
         - Add files an object into the space; pass 'target' to file it into a specific collection.
         - Update patches the fields you supply and leaves the rest alone.

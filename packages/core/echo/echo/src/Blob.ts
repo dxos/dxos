@@ -28,9 +28,9 @@ export const InlineData = Schema.TaggedStruct('inline', {
  */
 export const ExternalData = Schema.TaggedStruct('external', {
   /**
-   * URI locating the bytes. The scheme selects the backend at read time (e.g. `ni:///sha-256;…` for
-   * the edge backend — an RFC 6920 content digest, not a backend name — or `wnfs://…` for the
-   * plugin-wnfs extension), resolved via the scheme→backend map built from `registerBlobBackend`
+   * URI locating the bytes. The scheme selects the backend at read time (e.g. `ni:///sha-256;...` for
+   * the edge backend - an RFC 6920 content digest, not a backend name - or `wnfs://...` for the
+   * plugin-wnfs extension), resolved via the scheme->backend map built from `registerBlobBackend`
    * calls. Core code never parses or constructs backend-specific URIs beyond reading the scheme.
    *
    * @see {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920} for the `ni:` URI format.
@@ -68,7 +68,7 @@ export class Blob extends Type.makeObject<Blob>(DXN.make('org.dxos.type.blob', '
 /**
  * Storage backend names, selected at write time via {@link FromBytesOptions.storage}. Call sites
  * always use these constants, never raw string literals. Extensions (e.g. plugin-wnfs) define
- * their own storage names in their own package — core code knows nothing of them.
+ * their own storage names in their own package - core code knows nothing of them.
  *
  * Distinct from {@link Scheme}: a storage name picks *where* to write, a URI scheme describes
  * *what the identifier is* at read time. They coincide for backends with no content-addressing
@@ -85,7 +85,7 @@ export type Storage = (typeof Storage)[keyof typeof Storage];
  * `ni` marks an {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920} Named Information URI whose
  * authority is empty and whose path carries a registered hash-algorithm name plus a base64url-encoded
  * digest (e.g. `ni:///sha-256;UyaQNQIUxQKgg1jVMKMbg1Yr8Rrb2Y3RaOx2N0mVJhc`, produced by the edge
- * backend). The scheme names *what the identifier is* — a content digest over the complete blob —
+ * backend). The scheme names *what the identifier is* - a content digest over the complete blob -
  * not which backend wrote it, so any backend or cache that can resolve that digest may claim it.
  * The URI is an identity claim, not a retrievability promise; transport is selected by the registered
  * backend at read time.
@@ -102,7 +102,7 @@ export type Scheme = (typeof Scheme)[keyof typeof Scheme];
 export const MAX_INLINE_SIZE = 4 * 1024 * 1024;
 
 /**
- * Creates a new blob object. Does not add it to the database — see {@link fromBytes}.
+ * Creates a new blob object. Does not add it to the database - see {@link fromBytes}.
  *
  * @performance O(1); allocates an in-memory blob object.
  */

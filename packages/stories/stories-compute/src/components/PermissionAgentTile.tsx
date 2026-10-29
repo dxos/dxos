@@ -223,7 +223,7 @@ export const PermissionAgentCard = ({
         data-testid='permission-agent-state'
       >
         <Card.Text truncate classNames='font-mono'>
-          {pid ?? (error ? 'not spawned' : 'spawning…')}
+          {pid ?? (error ? 'not spawned' : 'spawning...')}
         </Card.Text>
       </Card.Row>
       <Card.Row span='full'>

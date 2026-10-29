@@ -7,7 +7,7 @@ import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 
 /**
  * Depth bound for the transitive walk. Mirrors `ObjectCore.isDeleted`, which caps the same
- * traversal — the two must agree, or an object queries as deleted yet survives collection.
+ * traversal - the two must agree, or an object queries as deleted yet survives collection.
  */
 const MAX_DELETION_DEPTH = 10;
 

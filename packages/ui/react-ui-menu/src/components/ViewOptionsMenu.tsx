@@ -38,7 +38,7 @@ export type SortMenuProps<T extends string> = {
 
 /**
  * The order-by field and its direction, as one menu beside a list's filter. The value is the host's to
- * persist — typically in a `ViewState` aspect beside the filter query.
+ * persist - typically in a `ViewState` aspect beside the filter query.
  */
 export const SortMenu = <T extends string>({
   fields,

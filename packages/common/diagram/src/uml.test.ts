@@ -41,7 +41,7 @@ describe('uml', () => {
     expect(bone.methods).toEqual([]);
   });
 
-  test('normalizes relations to subtype → supertype and whole → part', ({ expect }) => {
+  test('normalizes relations to subtype -> supertype and whole -> part', ({ expect }) => {
     const { relations } = parse(CLASS_DIAGRAM);
     const byKind = (kind: string) => relations.filter((relation) => relation.kind === kind);
 

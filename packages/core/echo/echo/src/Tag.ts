@@ -32,7 +32,7 @@ export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 export type Map = Record<string, Type.InstanceType<typeof Tag>>;
 
 /**
- * Origin domain for DXOS's own canonical tags — provider-agnostic identities (starred, sent, …) that
+ * Origin domain for DXOS's own canonical tags - provider-agnostic identities (starred, sent, ...) that
  * each provider maps its own vocabulary onto, so a Gmail star, a JMAP `$flagged` keyword and a
  * locally-toggled star all resolve to the same {@link Tag}.
  */
@@ -40,16 +40,16 @@ export const CANONICAL_ORIGIN = 'org.dxos.tag';
 
 /**
  * The tag's origin domain, or `undefined` when the user created it. Says who owns the tag and
- * therefore who may change it — see `Tag.md` §"Tag origin":
+ * therefore who may change it - see `Tag.md` §"Tag origin":
  *
- * - `undefined` — a user tag: rename, recolour, apply and remove are all the user's to do.
- * - {@link CANONICAL_ORIGIN} — a canonical DXOS tag: applied and removed locally, but its label and
+ * - `undefined` - a user tag: rename, recolour, apply and remove are all the user's to do.
+ * - {@link CANONICAL_ORIGIN} - a canonical DXOS tag: applied and removed locally, but its label and
  *   hue are fixed (a provider may be mapping its own vocabulary onto it).
- * - anything else — a foreign provider domain (e.g. `com.google.gmail`): read-only, since sync owns
+ * - anything else - a foreign provider domain (e.g. `com.google.gmail`): read-only, since sync owns
  *   both the tag and which objects carry it.
  *
  * Read from the tag's first foreign key, which is where {@link findOrCreate} records it; a tag never
- * carries more than one origin. Requires a live entity or snapshot — a spread copy (e.g. from
+ * carries more than one origin. Requires a live entity or snapshot - a spread copy (e.g. from
  * {@link createTagList}) has no metadata and throws rather than reporting a false `undefined`.
  *
  * @performance O(1) meta read.
@@ -68,7 +68,7 @@ export const isUserTag = (tag: Type.InstanceType<typeof Tag> | Obj.Snapshot<Type
 /**
  * Whether a foreign provider owns this tag, making it read-only in the app: it cannot be renamed,
  * recoloured, or attached to / detached from an object by hand. Canonical DXOS tags are **not**
- * provider tags — they stay locally toggleable. See {@link getOrigin}.
+ * provider tags - they stay locally toggleable. See {@link getOrigin}.
  *
  * @performance O(1) meta read.
  */

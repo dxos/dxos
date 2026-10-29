@@ -98,7 +98,7 @@ export const localEntityId = (graph: string, iri: string): string | undefined =>
 /** The suffix every graph-local IRI of an entity slug ends with, whichever graph it is local to. */
 export const localEntitySuffix = (id: string): string => `#${encodeURIComponent(id)}`;
 
-/** True for an absolute IRI (`did:key:…`, `echo://…`, `mailto:…`); entity slugs never contain `:`. */
+/** True for an absolute IRI (`did:key:...`, `echo://...`, `mailto:...`); entity slugs never contain `:`. */
 export const isIri = (value: string): boolean => /^[a-z][a-z0-9+.-]*:/i.test(value);
 
 /** The node for an entity key: an absolute IRI as itself, a slug local to `graph` (under {@link ENTITY} when none). */

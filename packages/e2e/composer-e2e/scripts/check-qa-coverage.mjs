@@ -10,8 +10,8 @@
  *
  *   node packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs
  *
- * The binding is declared twice — a `@QA-n` Playwright tag on the test, an `automated:` entry on
- * the `test QA-n` block — and this is what makes the duplication worth having. A one-sided link
+ * The binding is declared twice - a `@QA-n` Playwright tag on the test, an `automated:` entry on
+ * the `test QA-n` block - and this is what makes the duplication worth having. A one-sided link
  * rots silently: rename a test and the suite stays green while the flow it claimed to cover stops
  * being exercised, which is exactly the state the `automated:` field exists to make impossible.
  *
@@ -48,7 +48,7 @@ const SPEC_FILES = {
  *
  * Brace-free and AST-free: `test.describe(` and `test(` both open a block whose title is the first
  * string literal, and the describe trail is tracked by indentation, which every spec in this
- * package follows. `test.skip(`/`test.describe.skip(` are matched too — a disabled test still has
+ * package follows. `test.skip(`/`test.describe.skip(` are matched too - a disabled test still has
  * to name the flow it will cover again, or disabling it is how coverage silently disappears.
  */
 const readSpec = (file) => {
@@ -56,13 +56,13 @@ const readSpec = (file) => {
     // oxfmt wraps a long `test(` call so the title lands on the next line; pulling the argument list
     // back up keeps this reader line-oriented without making it care where the formatter broke.
     .replace(/\btest(\.skip)?\(\s*\n\s*/g, 'test$1(')
-    // …and again for the tag object, which a wrapped call puts on a line of its own.
+    // ...and again for the tag object, which a wrapped call puts on a line of its own.
     .replace(/,\s*\n\s*(\{\s*tag:)/g, ', $1')
     .split('\n');
   const tests = [];
   const trail = [];
   for (const line of lines) {
-    // A blank line's indent reads as 0, which would close every open describe — and the tests of a
+    // A blank line's indent reads as 0, which would close every open describe - and the tests of a
     // describe are routinely separated by one.
     if (line.trim() === '') {
       continue;
@@ -72,7 +72,7 @@ const readSpec = (file) => {
       trail.pop();
     }
     // Skipping is INHERITED: `test.describe.skip` disables every test under it, and a flow that
-    // counted those as coverage would read as automated while nothing ran — the exact rot this
+    // counted those as coverage would read as automated while nothing ran - the exact rot this
     // check exists to catch. `tables.spec.ts` and `inbox.spec.ts` are both whole-suite skips.
     const inheritedSkip = trail.some((entry) => entry.skipped);
     const describe = /^\s*test\.describe(\.skip)?\(\s*(['"])(.*?)\2/.exec(line);
@@ -85,7 +85,7 @@ const readSpec = (file) => {
       const tags = [...test[4].matchAll(/'(@[^']+)'/g)].map((match) => match[1]);
       tests.push({
         file,
-        title: [...trail.map((entry) => entry.title), test[3]].join(' › '),
+        title: [...trail.map((entry) => entry.title), test[3]].join(' > '),
         tags,
         // A disabled test still declares its flow, but must not be counted as covering it.
         skipped: test[1] !== undefined || inheritedSkip,
@@ -136,8 +136,8 @@ const main = () => {
     const qa = test.tags.filter((tag) => /^@(?:[a-z-]+:)?QA-\d+$/.test(tag));
     if (qa.length === 0) {
       errors.push(
-        `${test.file}: "${test.title}" carries no @QA tag — every test is the automated arm of a flow, ` +
-          `so add one (\`test('…', { tag: ['@QA-n'] }, …)\`) or write the flow first.`,
+        `${test.file}: "${test.title}" carries no @QA tag - every test is the automated arm of a flow, ` +
+          `so add one (\`test('...', { tag: ['@QA-n'] }, ...)\`) or write the flow first.`,
       );
       continue;
     }
@@ -172,7 +172,7 @@ const main = () => {
       } else if (owner.skipped) {
         // The rot this whole check exists for: the flow reads as automated while nothing runs it.
         errors.push(
-          `${relativePath}: ${flow} automates "${entry}", which is \`test.skip\` — drop it from ` +
+          `${relativePath}: ${flow} automates "${entry}", which is \`test.skip\` - drop it from ` +
             '`automated:` until the test runs again, or the flow claims coverage it does not have.',
         );
       }
@@ -197,13 +197,13 @@ const main = () => {
 
   if (errors.length > 0) {
     for (const error of errors) {
-      console.error(`✗ ${error}`);
+      console.error(`X ${error}`);
     }
     console.error(`\n${errors.length} QA coverage problem(s). See packages/e2e/composer-e2e/BEST-PRACTICES.md.`);
     process.exit(1);
   }
 
-  console.log(`✓ ${tests.length} test(s) across ${specs.length} spec(s), each bound to an .mdl QA flow.`);
+  console.log(`OK ${tests.length} test(s) across ${specs.length} spec(s), each bound to an .mdl QA flow.`);
 };
 
 main();

@@ -28,8 +28,8 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
 
       Subjects are opened as resizable "planks" arranged side by side; a single active plank renders
       fullbleed, and any plank can be toggled to a transient, headless fullscreen overlay. Users
-      navigate with stack semantics — opening from a pivot truncates planks to the right and appends
-      the new one — with a per-user setting controlling whether navigation replaces the current plank
+      navigate with stack semantics - opening from a pivot truncates planks to the right and appends
+      the new one - with a per-user setting controlling whether navigation replaces the current plank
       or opens a new one alongside it.
 
       Layout state (active planks, sidebar visibility, plank sizes, companion pane) is persisted
@@ -64,7 +64,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
         {
           // App-shell state, so it belongs on the startup pass rather than the idle default: the deck
           // root and `DeckLayout` read it on their FIRST render, and the shell cannot paint without it.
-          // The gate belongs here, on the provider — declaring it as the reader's `requires` instead
+          // The gate belongs here, on the provider - declaring it as the reader's `requires` instead
           // demotes the reader into this module's wave rather than promoting this module.
           activatesOn: ActivationEvents.Startup,
           requires: [Capabilities.AtomRegistry],

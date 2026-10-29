@@ -137,7 +137,7 @@ type MakePropsInternal<T extends Endpoints<any, any>> = {
 /**
  * Props type for relation creation with a given schema. Accepts a `Type.AnyRelation`
  * entity (created with `Type.makeRelation`) and derives the props shape via
- * `Type.InstanceType`. Object-kind entities are rejected at the type level —
+ * `Type.InstanceType`. Object-kind entities are rejected at the type level -
  * use `Obj.MakeProps` for those.
  */
 export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.InstanceType<S>>;
@@ -187,7 +187,7 @@ export const make = <T extends Type.AnyRelation>(
 /**
  * Test if a value is an instance of a given relation type.
  *
- * Mirrors `Obj.instanceOf` but only accepts `Type.AnyRelation` — use
+ * Mirrors `Obj.instanceOf` but only accepts `Type.AnyRelation` - use
  * `Obj.instanceOf` for objects and `Type.isType` for `Type.Type` entities.
  *
  * @example
@@ -424,7 +424,7 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the canonical URI of the relation. Returns `URI.URI` — today always an EID,
+ * Get the canonical URI of the relation. Returns `URI.URI` - today always an EID,
  * but future entity kinds may surface other URI schemes; narrow with `EID.parse(uri)`
  * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
  *

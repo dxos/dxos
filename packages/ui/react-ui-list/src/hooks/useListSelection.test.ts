@@ -62,7 +62,7 @@ describe('useListSelection', () => {
 
       const { result } = renderHook(() => useListSelection({ mode: 'single', value: undefined, onValueChange }));
       // A mouse press fires focus-follow then click in one frame, before the controlled value
-      // re-renders — the second selection of the same id must not re-emit.
+      // re-renders - the second selection of the same id must not re-emit.
       act(() => {
         result.current.bind('a').rowProps.onFocus?.(focusEvent({ currentTarget: optionA, relatedTarget: container }));
         result.current.bind('a').rowProps.onClick(clickEvent());

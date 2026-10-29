@@ -5,12 +5,12 @@
 import { type Progress } from '@dxos/progress';
 
 /**
- * What one shortcut slot shows. Produced by the model, consumed by whichever device renders it — it
+ * What one shortcut slot shows. Produced by the model, consumed by whichever device renders it - it
  * never crosses a wire, so it stays a plain type.
  */
 export type Shortcut = {
   /**
-   * Graph navigation path of the object — what `LayoutOperation.Open` consumes, so a press needs no
+   * Graph navigation path of the object - what `LayoutOperation.Open` consumes, so a press needs no
    * lookup. Carried through the frame, which makes the device stateless about what a slot means.
    */
   target: string;

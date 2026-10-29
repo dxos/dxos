@@ -39,7 +39,7 @@ type Connection = {
 };
 
 /**
- * Owns the `RTCPeerConnection` on behalf of a consumer that cannot hold one — in practice the tab
+ * Owns the `RTCPeerConnection` on behalf of a consumer that cannot hold one - in practice the tab
  * serving a worker, since the page is where the network stack lives.
  *
  * The established `RTCDataChannel` is transferred to the consumer over the per-connection

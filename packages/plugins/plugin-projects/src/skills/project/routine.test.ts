@@ -35,7 +35,7 @@ EntityId.dangerouslyDisableRandomness();
 
 // The headless half of the project loop: a routine the project owns runs its instructions through
 // the assistant, and the model's tool call lands in the project's own ledger. Scripted rather than
-// live, so what is asserted is the wiring — trigger to `RunInstructions` to a real task verb — and
+// live, so what is asserted is the wiring - trigger to `RunInstructions` to a real task verb - and
 // not the model's judgement.
 
 const TYPES = [

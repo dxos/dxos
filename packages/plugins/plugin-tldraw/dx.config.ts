@@ -23,7 +23,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       tldraw is the canvas renderer that powers collaborative whiteboards in DXOS Composer,
       giving every workspace a full-featured infinite canvas. Draw freehand strokes, place
-      geometric shapes, add text and arrows, and organise ideas visually — all within the same
+      geometric shapes, add text and arrows, and organise ideas visually - all within the same
       local-first environment as the rest of your documents.
 
       The plugin contributes a sketch variant to the Illustrator plugin: the base \`Sketch\`

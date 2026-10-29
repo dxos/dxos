@@ -26,7 +26,7 @@ export const translations = [
       [PresenterNamespace.key]: {
         'plugin.name': 'Presenter',
         'toggle-presentation.label': 'Present',
-        'slide-pending.label': 'Loading…',
+        'slide-pending.label': 'Loading...',
         'theme-group.label': 'Theme',
         'theme-color.placeholder': 'From theme',
         'default-font.placeholder': '{{font}} (default)',

@@ -32,7 +32,7 @@ export const steps = [
   {
     name: 'Open the plugin registry',
     run: async ({ demo }) => {
-      await demo.caption({ value: 'Step 1 — Open the plugin registry', subtitle: 'from plugin-chess/PLUGIN.mdl' });
+      await demo.caption({ value: 'Step 1 - Open the plugin registry', subtitle: 'from plugin-chess/PLUGIN.mdl' });
       await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
     },
   },
@@ -41,7 +41,7 @@ export const steps = [
     done: ({ page }) =>
       page.evaluate(() => composer.plugins().some((plugin) => plugin.id === 'org.dxos.plugin.chess' && plugin.enabled)),
     run: async ({ demo, page }) => {
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'chess' });
+      await demo.fill({ selector: 'input[placeholder="Filter..."]', value: 'chess' });
       await demo.click({ text: 'Chess', exact: true });
       // Judge the step by the screen, as a `.mdl` `expect:` would.
       await page.getByText('Chess', { exact: true }).first().waitFor({ state: 'visible', timeout: 10_000 });

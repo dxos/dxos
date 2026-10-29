@@ -25,8 +25,8 @@ export type HeadlessPluginSummary = {
 };
 
 /**
- * Activates plugins the way a headless host does — Startup, Idle and AssistantStart, with no React
- * tree — and reports the operation keys, skill keys and schema typenames they contribute.
+ * Activates plugins the way a headless host does - Startup, Idle and AssistantStart, with no React
+ * tree - and reports the operation keys, skill keys and schema typenames they contribute.
  *
  * Mirrors the EDGE operation-service registry so a workerd smoke test catches a plugin that stops
  * loading, or stops contributing operations, skills or types, outside Composer.

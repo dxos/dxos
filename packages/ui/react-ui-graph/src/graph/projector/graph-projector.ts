@@ -74,8 +74,8 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
       current.data = node;
       // `hidden` is a transient flag set by the cluster projector to fade
       // collapsed leaves. Reset it on every merge so that (a) switching
-      // away from cluster to another projector — which inherits the
-      // previous layout via `prev` — doesn't carry forward stale hidden
+      // away from cluster to another projector - which inherits the
+      // previous layout via `prev` - doesn't carry forward stale hidden
       // flags, and (b) the cluster projector itself re-applies the flag
       // each `doClusterLayout` pass.
       current.hidden = false;
@@ -112,7 +112,7 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
    * Optional projector-owned click intercept. The Graph component invokes this BEFORE
    * forwarding to the consumer's `onSelect`, so projectors can implement built-in
    * interactions (e.g. cluster collapse) without each consumer wiring them. Returning
-   * `true` indicates the click was handled — consumer's `onSelect` is suppressed.
+   * `true` indicates the click was handled - consumer's `onSelect` is suppressed.
    * Default no-op returns `false` so consumer handlers still run.
    */
   handleNodeClick(_node: GraphLayoutNode<NodeData>, _event: MouseEvent): boolean {

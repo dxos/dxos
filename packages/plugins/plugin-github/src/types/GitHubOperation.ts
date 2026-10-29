@@ -23,12 +23,12 @@ import { PullRequest, Repo } from '@dxos/types';
 import * as Walkthrough from './Walkthrough.ts';
 
 /**
- * Discovery only — list GitHub repositories the connection's token can see.
+ * Discovery only - list GitHub repositories the connection's token can see.
  * Returns one descriptor per repo across all the user's orgs (and personal
- * account). Read-only: NEVER materializes local objects — materialization is
+ * account). Read-only: NEVER materializes local objects - materialization is
  * handled by the connector's `materializeTarget` when a `Cursor` is created.
  *
- * Orgs and their members are NOT presented as sync targets — they are
+ * Orgs and their members are NOT presented as sync targets - they are
  * auto-synced as part of the sync of any repo they own.
  */
 export const GetGitHubRepositories = Operation.make({
@@ -61,7 +61,7 @@ export const MaterializeGitHubTarget = Operation.make({
 
 /**
  * Per-target options. `maxDaysBack` caps how far back issues/PRs are pulled
- * (mirrors the Gmail mailbox `daysBack`). Default — when unset — is "sync
+ * (mirrors the Gmail mailbox `daysBack`). Default - when unset - is "sync
  * everything ever opened or edited."
  */
 export const SyncOptions = Schema.Struct({
@@ -153,7 +153,7 @@ export const EnableGitHubFileSync = Operation.make({
  * opened, reviewed and walked through without waiting for a sync of the whole repository. Its
  * repository comes in with it as a `Repo`, which a project or chat can then name to have it checked out.
  *
- * Idempotent by coordinates — a pull request or repository the space already holds is returned as it
+ * Idempotent by coordinates - a pull request or repository the space already holds is returned as it
  * stands rather than duplicated.
  */
 export const ImportPullRequest = Operation.make({
@@ -207,7 +207,7 @@ export const ImportPullRequestFromSnapshot = Operation.make({
  * Generate a walkthrough of a pull request: one markdown document narrating the change in reading
  * order, with its diff chunks spliced in from the patch itself.
  *
- * Idempotent by commit — a walkthrough already generated for the pull request's head is returned
+ * Idempotent by commit - a walkthrough already generated for the pull request's head is returned
  * unchanged unless `force` says otherwise, since the answer cannot have changed.
  */
 export const GenerateWalkthrough = Operation.make({
@@ -239,8 +239,8 @@ export const GenerateWalkthrough = Operation.make({
 /**
  * Submit an approving review on a pull request, as the space's GitHub connection.
  *
- * Falls back to a marked conversation comment where GitHub refuses the review — the author's own
- * pull request, or a token with no review permission — so the approval is still recorded and still
+ * Falls back to a marked conversation comment where GitHub refuses the review - the author's own
+ * pull request, or a token with no review permission - so the approval is still recorded and still
  * detectable by an agent deciding whether the pull request is good to land.
  */
 export const SubmitPullRequestApproval = Operation.make({
@@ -315,8 +315,8 @@ export const AddPullRequestReviewComment = Operation.make({
 });
 
 /**
- * Re-read a stored pull request from GitHub and write back whatever has changed — its title, state,
- * description, branches and size — so the object in the space does not go stale between syncs.
+ * Re-read a stored pull request from GitHub and write back whatever has changed - its title, state,
+ * description, branches and size - so the object in the space does not go stale between syncs.
  */
 export const SyncPullRequest = Operation.make({
   meta: {
@@ -391,7 +391,7 @@ export const CheckRun = Schema.Struct({
   id: Schema.Number.pipe(Schema.optional),
   name: Schema.String,
   outcome: CheckOutcome,
-  /** GitHub's own `conclusion` (`timed_out`, `cancelled`, …), kept for the label when it says more than the outcome. */
+  /** GitHub's own `conclusion` (`timed_out`, `cancelled`, ...), kept for the label when it says more than the outcome. */
   conclusion: Schema.String.pipe(Schema.optional),
   /** Where the run's logs live: the provider's page when it has one, else GitHub's. */
   url: Schema.String.pipe(Schema.optional),

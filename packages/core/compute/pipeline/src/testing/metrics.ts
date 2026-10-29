@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 /** A single reported metric: a running number (counter/sum) or a label. */
 export type MetricValue = number | string;
 
-/** A flat name → value map, as merged into a benchmark row. */
+/** A flat name -> value map, as merged into a benchmark row. */
 export type MetricsSnapshot = Record<string, MetricValue>;
 
 /**
@@ -21,7 +21,7 @@ export type MetricsSnapshot = Record<string, MetricValue>;
 export interface MetricsApi {
   /** Add `by` (default 1) to a numeric counter. */
   readonly inc: (name: string, by?: number) => Effect.Effect<void>;
-  /** Set a value (last write wins) — for labels or gauges. */
+  /** Set a value (last write wins) - for labels or gauges. */
   readonly record: (name: string, value: MetricValue) => Effect.Effect<void>;
   /** Time an effect: adds its duration (ms) to `${name}.ms` and increments `${name}.count`. */
   readonly time: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;

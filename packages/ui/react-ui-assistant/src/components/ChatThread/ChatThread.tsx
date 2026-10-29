@@ -49,7 +49,7 @@ const [ChatThreadProvider, useChatThreadContext] = Hooks.createContext<ChatThrea
 //
 
 /**
- * The imperative handle a host drives the thread through — the successor of the old
+ * The imperative handle a host drives the thread through - the successor of the old
  * `MarkdownStreamController`, and simply the feed's own controller: everything else (visible
  * range, spans, widget state) is either context or the model's business.
  */
@@ -66,7 +66,7 @@ type ChatThreadRootProps = PropsWithChildren<
     viewType?: ChatView;
     /** Extends {@link assistantRegistry}; the host's entries win (e.g. a real `surface` widget). */
     registry?: XmlWidgetRegistry;
-    /** The block widget for an object embedded as a card (`![label](echo://…)`); the host's, since only it can render one. */
+    /** The block widget for an object embedded as a card (`![label](echo://...)`); the host's, since only it can render one. */
     objectImage?: WidgetDef<ObjectLinkProps>;
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
@@ -74,20 +74,20 @@ type ChatThreadRootProps = PropsWithChildren<
     userDid?: string;
     /** Resolves a prompt's sender to the profile its avatar shows. */
     getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
-    /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
+    /** Blank lines kept below the tail at rest - breathing room above the host's composer. */
     tailLines?: number;
     debug?: boolean;
     /** Offers rewind under each prompt; off for an agent that cannot forget a turn. */
     rewind?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
-    /** The visible index range, as the reader scrolls — what an outline rail tracks. */
+    /** The visible index range, as the reader scrolls - what an outline rail tracks. */
     onRangeChange?: (range: MessageRange) => void;
     controllerRef?: Ref<ChatThreadController>;
   }
 >;
 
 /**
- * Headless root: the feed's `MessageList.Root` configured as an assistant thread — the view-typed
+ * Headless root: the feed's `MessageList.Root` configured as an assistant thread - the view-typed
  * renderer, the widget registry, the prompt/answer chrome, and the chat behaviours (follow the
  * streaming tail; reserve room to bring the last prompt to the top). Composes with the feed's own
  * parts: `MessageList.Nav`, `useMessageList`, and the rails all work inside it.
@@ -121,7 +121,7 @@ const ChatThreadRoot = ({
   );
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);
 
-  // While an answer streams, the chrome keeps its toolbars hidden — a control on a half-written
+  // While an answer streams, the chrome keeps its toolbars hidden - a control on a half-written
   // answer invites acting on it, and the hover reveal moving with the growing rows reads as noise.
   const [streaming, setStreaming] = useState(!!model.streamingId);
   useEffect(() => {
@@ -263,7 +263,7 @@ const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
  * Returns the reader to the tail, and re-arms the follow with it (`scrollToBottom` does both).
  *
  * Hidden by opacity rather than unmounted, because a control leaving the layout would move the
- * scroller's own box — which the placement measures; `disabled` and `aria-hidden` then keep the
+ * scroller's own box - which the placement measures; `disabled` and `aria-hidden` then keep the
  * invisible button out of the focus order and off the accessibility tree.
  */
 const ScrollToBottom = () => {

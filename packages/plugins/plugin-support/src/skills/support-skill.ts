@@ -27,7 +27,7 @@ const make = () =>
 
         Workflow:
         - When the user's report is ambiguous, ask one focused question at a time.
-        - Search documentation before guessing — quote a relevant excerpt with its URL.
+        - Search documentation before guessing - quote a relevant excerpt with its URL.
         - Capture a new ticket once you have a clear title and short description.
         - Mark a ticket in progress once active investigation begins.
         - Resolve a ticket only when the user explicitly confirms the issue is fixed,

@@ -87,7 +87,7 @@ const digestFromHex = (hex: string): Uint8Array => {
  */
 export const digestBytes = async (bytes: Uint8Array): Promise<Uint8Array> => {
   // WebCrypto's `BufferSource` type requires an `ArrayBuffer`-backed view, while `Uint8Array` is
-  // generic over `ArrayBufferLike` (which also covers `SharedArrayBuffer`) — a real gap between
+  // generic over `ArrayBufferLike` (which also covers `SharedArrayBuffer`) - a real gap between
   // the DOM lib types and the TS standard lib, not fixable by typing `bytes` differently.
   const digest = await crypto.subtle.digest('SHA-256', bytes as BufferSource);
   return new Uint8Array(digest);
@@ -115,7 +115,7 @@ export const encode = async (bytes: Uint8Array): Promise<string> => fromDigest(a
 /**
  * Extracts the raw SHA-256 digest from a `ni:` URI.
  *
- * @throws If `uri` is not a well-formed `ni:///sha-256;…` URI.
+ * @throws If `uri` is not a well-formed `ni:///sha-256;...` URI.
  */
 export const decode = (uri: string): Uint8Array => {
   const match = /^ni:\/\/\/([a-z0-9-]+);([A-Za-z0-9_-]+)$/.exec(uri);

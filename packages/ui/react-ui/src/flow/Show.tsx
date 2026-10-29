@@ -7,7 +7,7 @@
 import React, { type ReactNode } from 'react';
 
 export type ShowProps<T> = {
-  /** Children render while this is present — anything except `undefined`/`null`/`false` (ui-template's `present`). */
+  /** Children render while this is present - anything except `undefined`/`null`/`false` (ui-template's `present`). */
   when: T | undefined | null | false;
   /** Rendered while `when` is absent. */
   fallback?: ReactNode;

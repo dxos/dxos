@@ -20,8 +20,8 @@ const HaloServicesContext = createContext<Context.Context<HaloServices> | undefi
 
 export type HaloProviderProps = PropsWithChildren<{
   /**
-   * The HALO services context. Build it from a concrete backing — e.g. the client adapter's
-   * `makeIdentityService` / `makeSpaceService` from `@dxos/halo-adapter-client` — and pass it
+   * The HALO services context. Build it from a concrete backing - e.g. the client adapter's
+   * `makeIdentityService` / `makeSpaceService` from `@dxos/halo-adapter-client` - and pass it
    * here.
    */
   services: Context.Context<HaloServices>;

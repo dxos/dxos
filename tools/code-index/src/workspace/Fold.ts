@@ -49,7 +49,7 @@ export type Presentation = {
 
 export type State = {
   readonly title: string;
-  /** The prose of the conversation — what a chat view shows and a resumed prompt replays. */
+  /** The prose of the conversation - what a chat view shows and a resumed prompt replays. */
   readonly turns: readonly Turn[];
   /** The thread as rendered: prose, partial prose and code runs, interleaved in turn order. */
   readonly items: readonly Item[];
@@ -63,7 +63,7 @@ export type State = {
   readonly running: boolean;
   /**
    * The ids of the turns opened and not yet closed; `running` is whether this is non-empty. Kept by
-   * id so an end event closes only its own turn — a boolean would let any `TurnEnded` close
+   * id so an end event closes only its own turn - a boolean would let any `TurnEnded` close
    * whichever turn happens to be open.
    */
   readonly openTurns: readonly string[];
@@ -131,7 +131,7 @@ const appendDelta = (items: readonly Item[], event: Events.AssistantDelta): read
 
 /**
  * Settles a message: the final text replaces whatever its deltas assembled, since the agent trims
- * it. An empty final text removes the message — the deltas held only whitespace.
+ * it. An empty final text removes the message - the deltas held only whitespace.
  */
 const settleMessage = (items: readonly Item[], entry: Events.Entry, event: Events.AssistantMessage) => {
   const id = event.messageId ?? `seq:${entry.seq}`;
@@ -198,8 +198,11 @@ export const apply = (state: State, entry: Events.Entry): State => {
       return {
         ...state,
         seq,
-        turns: [...state.turns, { role: 'assistant', text: `⚠ ${event.message} Retrying.` }],
-        items: [...state.items, { kind: 'notice', id: `seq:${entry.seq}`, text: `⚠ ${event.message} Retrying.` }],
+        turns: [...state.turns, { role: 'assistant', text: `Warning: ${event.message} Retrying.` }],
+        items: [
+          ...state.items,
+          { kind: 'notice', id: `seq:${entry.seq}`, text: `Warning: ${event.message} Retrying.` },
+        ],
       };
     case 'TurnEnded':
       // A boundary marker; the transcript already holds everything the turn produced.
@@ -210,8 +213,8 @@ export const apply = (state: State, entry: Events.Entry): State => {
         ...state,
         seq,
         ...closed,
-        turns: [...state.turns, { role: 'assistant', text: `⚠ ${event.message}` }],
-        items: [...closed.items, { kind: 'notice', id: `seq:${entry.seq}`, text: `⚠ ${event.message}` }],
+        turns: [...state.turns, { role: 'assistant', text: `Warning: ${event.message}` }],
+        items: [...closed.items, { kind: 'notice', id: `seq:${entry.seq}`, text: `Warning: ${event.message}` }],
       };
     }
   }

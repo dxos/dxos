@@ -17,11 +17,11 @@ const CorrectionPayload = Schema.Struct({
   blocks: Schema.Array(Schema.Struct({ index: Schema.Number, corrected: Schema.String })),
 });
 
-const PROMPT = `You repair raw speech-to-text fragments. For each numbered fragment, return a cleaned version: fix capitalization and terminal punctuation, join words split across fragment boundaries, and drop filler/garbage tokens — without changing the meaning. Return exactly one entry per input fragment, preserving its index.`;
+const PROMPT = `You repair raw speech-to-text fragments. For each numbered fragment, return a cleaned version: fix capitalization and terminal punctuation, join words split across fragment boundaries, and drop filler/garbage tokens - without changing the meaning. Return exactly one entry per input fragment, preserving its index.`;
 
 /**
  * LLM-backed correction over a window of transcript blocks (the {@link makeCorrectionStage} seam).
- * Returns an Effect requiring the {@link AiService} — the consumer provides its model layer and adapts
+ * Returns an Effect requiring the {@link AiService} - the consumer provides its model layer and adapts
  * the Effect to the stage's Promise-shaped `CorrectFn` (e.g. `EffectEx.runPromise(... .pipe(Effect.provide(layer)))`).
  */
 export const correctWithLanguageModel = (

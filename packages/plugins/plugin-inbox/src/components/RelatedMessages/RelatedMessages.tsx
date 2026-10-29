@@ -23,8 +23,8 @@ export type RelatedMessagesProps = {
  * What a row says about a message, best first: the derived summary, else the provider's snippet, else
  * the subject.
  *
- * The subject is last because it carries no information here — the section already collapses a thread
- * to one row, and every row in a thread repeats the same `Re: …`. Snippet is set by both the Gmail and
+ * The subject is last because it carries no information here - the section already collapses a thread
+ * to one row, and every row in a thread repeats the same `Re: ...`. Snippet is set by both the Gmail and
  * JMAP mappers, so the middle rung is populated for synced mail even before any summarization runs.
  */
 export const messageDigest = (message: Message.Message, summaries?: ReadonlyMap<string, string>): string | undefined =>
@@ -32,7 +32,7 @@ export const messageDigest = (message: Message.Message, summaries?: ReadonlyMap<
 
 /**
  * Latest message per conversation, newest first. A thread otherwise fills the whole section with
- * near-identical `Re: …` rows for what the reader thinks of as one exchange; messages with no
+ * near-identical `Re: ...` rows for what the reader thinks of as one exchange; messages with no
  * `threadId` are their own conversation rather than being collapsed together.
  */
 export const latestPerConversation = (messages: Message.Message[]): Message.Message[] => {
@@ -53,7 +53,7 @@ export const RelatedMessages = ({ messages, summaries, onMessageClick }: Related
   const { t } = Hooks.useTranslation(InboxNamespace.key);
   // One `now` for the whole list, so rows can't disagree about how old they are.
   const now = useMemo(() => new Date(), [messages]);
-  // A row with nothing to say is dropped rather than rendered blank — `Card.Action` needs a label,
+  // A row with nothing to say is dropped rather than rendered blank - `Card.Action` needs a label,
   // and an empty one reads as a broken row rather than an absent message.
   const conversations = useMemo(
     () => latestPerConversation(messages).filter((message) => messageDigest(message, summaries) !== undefined),

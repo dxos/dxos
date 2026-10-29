@@ -10,7 +10,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { DebugNamespace } from '../namespace.ts';
 
 /**
- * Role token for the transient-stats panel — renders the {@link AppCapabilities.StatsPanel} store
+ * Role token for the transient-stats panel - renders the {@link AppCapabilities.StatsPanel} store
  * (arbitrary reactive telemetry keyed by owner id). A layout targets this role (role-only dispatch);
  * the surface reads the store directly, so it needs no subject.
  */

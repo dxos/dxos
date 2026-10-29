@@ -29,8 +29,8 @@ export type ReviewStoryLayoutProps = {
 
 /**
  * Shared layout for the review stories: the document's article surface beside its companions. Stories
- * differ only in what they seed and which panels they ask for, so the wiring — resolving the seeded
- * document, establishing the attention scope, splitting the columns — lives here rather than being
+ * differ only in what they seed and which panels they ask for, so the wiring - resolving the seeded
+ * document, establishing the attention scope, splitting the columns - lives here rather than being
  * copied per story file. Companions render through `Surface` rather than by mounting the containers
  * directly, so the stories exercise the same companion resolution the app uses.
  */

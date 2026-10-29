@@ -14,18 +14,18 @@ export type GenerateCalendarDatasetOptions = {
   count?: number;
   /**
    * Reference instant the schedule is laid out around. Defaults to the wall clock because the sync
-   * windows against it (`addDays(new Date(), ±syncDays)`) — a pinned past date yields events the sync
+   * windows against it (`addDays(new Date(), ±syncDays)`) - a pinned past date yields events the sync
    * correctly refuses to fetch. Offsets from `now` are fixed, so runs stay comparable.
    */
   now?: Date;
-  /** Days between consecutive events — negative values land them in the past. */
+  /** Days between consecutive events - negative values land them in the past. */
   strideDays?: number;
   /** `updated` stamp for every event; drives the incremental (`updatedMin`) path. */
   updated?: Date;
 };
 
 /**
- * Google Calendar events for {@link GoogleCalendarApi.mock} — the calendar peer of
+ * Google Calendar events for {@link GoogleCalendarApi.mock} - the calendar peer of
  * `generateGmailDataset`. No randomness: every field derives from `now` and the index, so two runs with
  * the same `now` produce identical events.
  */
@@ -53,7 +53,7 @@ export const generateCalendarDataset = ({
 };
 
 /**
- * A recurring series expanded into instances, all sharing `recurringEventId` — what the initial sync's
+ * A recurring series expanded into instances, all sharing `recurringEventId` - what the initial sync's
  * `singleEvents=true` window returns, and what `makeRecurringDedupStage` collapses to one event.
  */
 export const generateRecurringSeries = ({

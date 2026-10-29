@@ -137,7 +137,7 @@ describe('buildStatusGroups', () => {
     expect(root.children[0].children).toHaveLength(1);
   });
 
-  test('groups are flat — a sub-task sits in its own status, not under its parent', ({ expect }) => {
+  test('groups are flat - a sub-task sits in its own status, not under its parent', ({ expect }) => {
     const { a, a1, tasks } = fixture();
     const root = buildStatusGroups(tasks, ['todo']);
     const titles = root.children[0].children.map((child) => child.task?.title);

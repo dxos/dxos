@@ -52,7 +52,7 @@ describe('FileOperation.Create', () => {
     const { harness, defaultSpace } = await setup();
     await using _harness = harness;
 
-    // Mimics `@dxos/client` registering 'edge' as the default once configured — a second
+    // Mimics `@dxos/client` registering 'edge' as the default once configured - a second
     // storage backend registered with `{ default: true }`, with a matching FileCapabilities
     // descriptor contributed (as plugin-file's own EdgeBackend module would).
     const store = new Map<string, Uint8Array>();
@@ -80,7 +80,7 @@ describe('FileOperation.Create', () => {
       const bytes = new Uint8Array([1, 2, 3, 4]);
       await harness.runPromise(
         Effect.gen(function* () {
-          // No Settings.backend configured — should resolve to the registry's default ('mem'),
+          // No Settings.backend configured - should resolve to the registry's default ('mem'),
           // not the plugin's own 'inline' descriptor.
           const { object } = yield* Operation.invoke(
             FileOperation.Create,
@@ -168,7 +168,7 @@ const selectBackend = (harness: TestHarness, storage: string) =>
 
 const setup = async () => {
   const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
-  // The node plugin variant omits the browser-only `InlineBackend` module (settings UI, etc.) —
+  // The node plugin variant omits the browser-only `InlineBackend` module (settings UI, etc.) -
   // contribute the descriptor directly so `resolveActiveStorage` has something to resolve.
   harness.capabilities.contribute({
     module: 'test',

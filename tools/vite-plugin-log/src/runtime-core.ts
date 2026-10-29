@@ -22,7 +22,7 @@ const logFilterExpr =
 const vitePluginLogFilters = parseFilter(logFilterExpr);
 
 // Cached (not read per-line): `inferEnvironmentName` already memoizes its default-scope result at
-// module level, so every realm (tab / dedicated worker) stamps one stable `i` across its lifetime —
+// module level, so every realm (tab / dedicated worker) stamps one stable `i` across its lifetime -
 // matching the id `@dxos/log-store-idb` embeds for the same realm.
 const environmentName = inferEnvironmentName();
 
@@ -37,7 +37,7 @@ export const httpTransport: Transport = (chunk) => {
     body: chunk,
     keepalive: true,
   }).catch(() => {
-    // Sink unavailable (production build, dev server gone) — drop silently.
+    // Sink unavailable (production build, dev server gone) - drop silently.
   });
 };
 

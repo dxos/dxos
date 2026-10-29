@@ -74,7 +74,7 @@ const ReferencesStory = ({ content, index }: ReferencesStoryProps) => {
         </Editor.Root>
       </div>
       <div className='p-2 font-mono text-xs border-t border-separator' data-testid='spec-editor.opened'>
-        {opened ? formatSourceKey(opened) : '—'}
+        {opened ? formatSourceKey(opened) : '-'}
       </div>
     </div>
   );

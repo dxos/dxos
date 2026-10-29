@@ -82,7 +82,7 @@ export const isAvailable = (): boolean => existsSync(ADDON_PATH);
 const CRATE_INPUTS = ['Cargo.toml', 'Cargo.lock', 'build.rs'];
 
 /**
- * FNV-1a 64 over each crate input's relative path and contents, in path order — the hash `build.rs`
+ * FNV-1a 64 over each crate input's relative path and contents, in path order - the hash `build.rs`
  * bakes into the addon, so the two agree exactly when the addon was built from these sources.
  * Undefined when the crate is absent, as in an installed package.
  */
@@ -118,7 +118,7 @@ export const sourcesHash = (crate = dirname(ADDON_PATH)): string | undefined => 
 /**
  * Why the addon cannot be trusted to match its sources, if it cannot. Running the CLI directly
  * skips moon's `build-native` dependency, so a pull that changes the crate leaves the old addon in
- * place, and its symptoms — a RocksDB lock error, a missing method — do not name the cause.
+ * place, and its symptoms - a RocksDB lock error, a missing method - do not name the cause.
  */
 export const staleness = (addon: { sourcesHash?: () => string }, crate?: string): string | undefined => {
   const expected = sourcesHash(crate);
@@ -178,8 +178,8 @@ const nodeOf = (value: string): RDF.NamedNode | RDF.BlankNode =>
   value.startsWith('_:') ? DataFactory.blankNode(value.slice(2)) : DataFactory.namedNode(value);
 
 /**
- * `match`'s rows — subject, predicate, object kind (`I`, `B`, `L`), object value, the literal's
- * `@language` or datatype, graph — as quads: building terms from strings is several times faster
+ * `match`'s rows - subject, predicate, object kind (`I`, `B`, `L`), object value, the literal's
+ * `@language` or datatype, graph - as quads: building terms from strings is several times faster
  * than parsing the same quads as N-Quads, which dominated every pass that reads a graph back.
  */
 const fromRows = (rows: readonly string[]): Effect.Effect<RDF.Quad[]> =>
@@ -368,7 +368,7 @@ export const make = <E>(
       );
     }
     // RocksDB holds a lock on its directory, so the store is closed with the scope rather than left
-    // to the garbage collector — a reopen in the same process would otherwise fail.
+    // to the garbage collector - a reopen in the same process would otherwise fail.
     const native = yield* Effect.acquireRelease(
       attempt('Failed to open native store', () => addon.NativeStore.open(join(dir, DIR))),
       (store) => Effect.sync(() => store.close()),

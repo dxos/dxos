@@ -154,7 +154,7 @@ describe('buildThreadSemiJoin', () => {
           props: { threadId: { type: 'in-query', property: 'threadId' } },
         },
       });
-      // The second arm is the view filter itself, unscoped — the caller's own `.from` scopes it.
+      // The second arm is the view filter itself, unscoped - the caller's own `.from` scopes it.
       expect(query.ast).toMatchObject({
         queries: [expect.anything(), { type: 'select', filter: viewFilter.ast }],
       });
@@ -243,7 +243,7 @@ describe('buildThreadSemiJoin (results)', () => {
   test('retains thread-of-one messages (each keyed on its own threadId)', async () => {
     const fixture = await setup();
     try {
-      // Two messages share a thread; two are singletons keyed on a unique threadId of their own — the
+      // Two messages share a thread; two are singletons keyed on a unique threadId of their own - the
       // shape a compose draft takes (a thread of one). All four must survive the semi-join.
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
       const t2 = message('two', '2020-01-02T00:00:00.000Z', 'thread-a');
@@ -265,7 +265,7 @@ describe('buildThreadSemiJoin (results)', () => {
       const standalone = message('two', '2020-01-02T00:00:00.000Z'); // No threadId (draft/transcription/assistant).
       await append(fixture, [t1, standalone]);
 
-      // `threadId IN (…)` can never admit the threadless row, so the union's direct-match arm is the
+      // `threadId IN (...)` can never admit the threadless row, so the union's direct-match arm is the
       // only thing that carries it. Without that arm this returns `[t1]` and the message is invisible.
       expect(await runSemiJoin(fixture, buildMailboxSelection('', undefined))).toEqual(ids(t1, standalone));
     } finally {
@@ -306,7 +306,7 @@ describe('buildThreadSemiJoin (results)', () => {
     const fixture = await setup();
     try {
       // Feed messages carry no `meta.tags`; membership comes from the mailbox's TagIndex, so the tag
-      // must resolve to ids — a bare `Filter.tag` would match nothing here.
+      // must resolve to ids - a bare `Filter.tag` would match nothing here.
       const a1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
       const b1 = message('two', '2020-01-02T00:00:00.000Z', 'thread-b');
       await append(fixture, [a1, b1]);
@@ -322,7 +322,7 @@ describe('buildThreadSemiJoin (results)', () => {
     const fixture = await setup();
     try {
       // `t1` matches the view filter directly AND is pulled in by the semi-join as a member of its own
-      // thread, so it arrives from both arms — the union must de-duplicate it.
+      // thread, so it arrives from both arms - the union must de-duplicate it.
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
       const t2 = message('two', '2020-01-02T00:00:00.000Z', 'thread-a');
       await append(fixture, [t1, t2]);

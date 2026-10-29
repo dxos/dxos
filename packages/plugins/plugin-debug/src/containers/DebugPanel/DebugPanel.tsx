@@ -18,7 +18,7 @@ export type DebugPanelRootProps = PropsWithChildren<{
 }>;
 
 /**
- * The debug surface in parts, so a host places the tree and the page where the room is — the
+ * The debug surface in parts, so a host places the tree and the page where the room is - the
  * floating window and the deck's drawer both split them under a title bar. `Root` owns the
  * selection, the expanded branches and the mode, persisted so a debugging session survives the
  * reloads it provokes.

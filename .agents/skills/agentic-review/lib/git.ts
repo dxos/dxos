@@ -91,7 +91,7 @@ export const commitTimestamp = (commit: string, cwd?: string): number => {
 
 /**
  * True if `ancestor` is an ancestor of (or equal to) `descendant`. Any nonzero
- * exit is deliberately treated as "not an ancestor" — that covers git's own
+ * exit is deliberately treated as "not an ancestor" - that covers git's own
  * exit-1 answer and an `ancestor` commit absent from this clone (a persisted
  * prior review referencing an unfetched commit), both of which mean base
  * resolution should skip it rather than fail.
@@ -105,7 +105,7 @@ export const isAncestor = (ancestor: string, descendant: string, cwd?: string): 
   }
 };
 
-/** Best-effort merge-base of two refs; null if either is unknown. Internal — the
+/** Best-effort merge-base of two refs; null if either is unknown. Internal - the
  * only consumer is `mainMergeBase`. */
 const mergeBase = (a: string, b: string, cwd?: string): string | null =>
   git(['merge-base', a, b], { allowFail: true, cwd });
@@ -113,8 +113,8 @@ const mergeBase = (a: string, b: string, cwd?: string): string | null =>
 /**
  * Newest commit reachable from `ref` that added `path`, or null if none. Used
  * as a same-history fallback when a review's recorded `commit:` no longer
- * resolves as a real ancestor — its origin branch was squashed or rebased away
- * under a new SHA (or, in a shallow clone, was simply never fetched) — even
+ * resolves as a real ancestor - its origin branch was squashed or rebased away
+ * under a new SHA (or, in a shallow clone, was simply never fetched) - even
  * though the review's own files are plainly present in `ref`'s history. The
  * adding commit, not the last edit, since a later status flip or format
  * migration of the file says nothing about when the review landed.
@@ -131,7 +131,7 @@ const lines = (out: string | null): string[] =>
     .map((line) => line.trim())
     .filter(Boolean);
 
-/** Staged, unstaged, and untracked paths — uncommitted work is the author's by definition. */
+/** Staged, unstaged, and untracked paths - uncommitted work is the author's by definition. */
 const workingTreeChanges = (cwd?: string): string[] => [
   ...lines(git(['diff', '--name-only', 'HEAD'], { allowFail: true, cwd })),
   ...lines(git(['diff', '--name-only', '--cached'], { allowFail: true, cwd })),
@@ -148,7 +148,7 @@ export const changedFiles = (base: string): Set<string> =>
 /**
  * Paths a PR's own commits changed since `base`, ignoring merges: a file counts only when a
  * non-merge commit on HEAD's first-parent line touched it and it still differs from `base`.
- * A merge from main, and the conflict resolution inside it, therefore adds nothing — the review
+ * A merge from main, and the conflict resolution inside it, therefore adds nothing - the review
  * judges the author's change, not the main-line code it was reconciled with.
  */
 export const prChangedFiles = (base: string, cwd?: string): Set<string> => {

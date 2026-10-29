@@ -338,7 +338,7 @@ export class EchoClient extends Resource {
     }
 
     // Disk-only load: wait for dep states to settle, then return the core
-    // only when strong deps are satisfied (unavailable deps → `undefined`).
+    // only when strong deps are satisfied (unavailable deps -> `undefined`).
     return db._loadObjectById(objectId, {
       allowDeleted: true,
       diskOnly: true,

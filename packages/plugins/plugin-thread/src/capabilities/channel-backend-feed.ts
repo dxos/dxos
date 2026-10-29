@@ -14,7 +14,7 @@ import { ChannelBackend, ThreadCapabilities } from '#types';
 
 /**
  * Default local ECHO-feed-backed channel provider. Stores messages in a `Feed`
- * (`makeConfig` → `Feed.make()`), reads them via a reactive database query, and
+ * (`makeConfig` -> `Feed.make()`), reads them via a reactive database query, and
  * writes via `Feed.append`. This is the backend `Channel.make()` defaults to.
  */
 export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {

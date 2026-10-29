@@ -16,7 +16,7 @@ import { downloadLogs } from './download.ts';
  *
  * Deliberately does NOT depend on `@dxos/react-ui`'s themed components: `useApp`'s `ErrorBoundary`
  * can catch failures that happen before/during an app's own theme setup, so its fallback must keep
- * working even when no theme context is available — the same reason `ErrorFallback` itself uses
+ * working even when no theme context is available - the same reason `ErrorFallback` itself uses
  * inline styles rather than Tailwind/theme dependencies.
  */
 export const StorybookErrorFallback = (props: FallbackProps) => (

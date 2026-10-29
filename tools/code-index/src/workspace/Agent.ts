@@ -28,12 +28,12 @@ import * as Sandbox from './Sandbox.ts';
 
 /**
  * The agentic loop. One turn: append the user's message, replay the project's log as the prompt,
- * and let the model run code until it stops calling tools. Every step it takes — its prose, each
- * snippet, each result, everything the snippet displayed — is appended to the log as it happens,
+ * and let the model run code until it stops calling tools. Every step it takes - its prose, each
+ * snippet, each result, everything the snippet displayed - is appended to the log as it happens,
  * so a client that is only tailing the log watches the turn unfold and a reload replays it exactly.
  *
  * There is deliberately one tool. Anything the agent might need is a function inside the sandbox
- * instead, which keeps the tool surface constant as the capabilities grow — a local model handles
+ * instead, which keeps the tool surface constant as the capabilities grow - a local model handles
  * one well-documented tool far better than eight competing ones.
  */
 
@@ -66,7 +66,7 @@ export const MAX_STEPS = 20;
 
 /**
  * How many steps from the end the model is warned. An agent that explores until it is cut off
- * leaves the user with nothing, and it cannot ration a budget it was never told about — the first
+ * leaves the user with nothing, and it cannot ration a budget it was never told about - the first
  * turn this loop ever ran spent all twelve steps discovering predicate names and displayed nothing.
  */
 export const WARN_AT_REMAINING = 3;
@@ -78,8 +78,8 @@ export const MAX_MALFORMED = 3;
 const SUMMARY_LENGTH = 240;
 
 /**
- * Describes a reply whose tool call could not be used — arguments that are not JSON, a tool that
- * does not exist, parameters that do not fit — or returns `undefined` for any other failure. Local
+ * Describes a reply whose tool call could not be used - arguments that are not JSON, a tool that
+ * does not exist, parameters that do not fit - or returns `undefined` for any other failure. Local
  * models produce these often enough that failing the turn on one leaves them unusable, and the
  * model can correct the call once told what was wrong.
  */
@@ -106,13 +106,13 @@ export const malformedToolCall = (cause: unknown): string | undefined => {
 
 const summarize = (text: string): string => {
   const line = text.split('\n')[0];
-  return line.length > SUMMARY_LENGTH ? `${line.slice(0, SUMMARY_LENGTH)}…` : line;
+  return line.length > SUMMARY_LENGTH ? `${line.slice(0, SUMMARY_LENGTH)}...` : line;
 };
 
 /** What the model is told after an unusable reply, so the retry is a correction and not a reroll. */
 const correction = (problem: string): string =>
   `[Your last reply could not be used] ${problem} The only tool is \`exec\`, and its arguments must be ` +
-  'a JSON object with a single string field `code` — for example {"code": "return 1;"}. Strings in ' +
+  'a JSON object with a single string field `code` - for example {"code": "return 1;"}. Strings in ' +
   'JSON use double quotes with escaped newlines; a JavaScript object literal or a template string is ' +
   'not JSON. Try again.';
 
@@ -188,7 +188,7 @@ const make = Effect.gen(function* () {
   /**
    * One model round-trip, streamed. Each text delta is appended as it arrives so a tailing client
    * renders the answer while it is generated; the deltas are settled into one `AssistantMessage` at
-   * the end of each text block, which is also where a tool call starts — so prose and the runs it
+   * the end of each text block, which is also where a tool call starts - so prose and the runs it
    * introduces land in the log in the order the model produced them. Returns every part, which is
    * what the next round-trip's prompt is built from.
    */
@@ -300,7 +300,7 @@ const make = Effect.gen(function* () {
                     type: 'text',
                     text:
                       `[${remaining} tool call${remaining === 1 ? '' : 's'} left in this turn] Stop exploring and ` +
-                      'display what you already have — a partial answer on the screen beats a complete one the ' +
+                      'display what you already have - a partial answer on the screen beats a complete one the ' +
                       'user never sees.',
                   },
                 ],

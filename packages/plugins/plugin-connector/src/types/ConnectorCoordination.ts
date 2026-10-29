@@ -24,7 +24,7 @@ export type CreateCustomConnectionResult = { kind: 'connection-created'; connect
  */
 export type ConnectorCoordinator = {
   /**
-   * Create flow entry: OAuth → in-memory stubs + popup, persist on callback; non-OAuth → `PROVIDER_FORM_DIALOG`, then {@link createCustomConnection}. `connectorId` selects the registry entry stored on the Connection.
+   * Create flow entry: OAuth -> in-memory stubs + popup, persist on callback; non-OAuth -> `PROVIDER_FORM_DIALOG`, then {@link createCustomConnection}. `connectorId` selects the registry entry stored on the Connection.
    * Connectors with `oauth.requiresLoginHint` open `OAUTH_LOGIN_HINT_DIALOG`
    * unless a `loginHint` is supplied. Connectors with
    * `oauth.useRedirectFlow` persist the pending entry to `localStorage`
@@ -73,7 +73,7 @@ export type ConnectorCoordinator = {
   /**
    * Re-run OAuth for an existing connection and replace its {@link AccessToken}
    * value in place. The Connection and its {@link Cursor} objects (and their
-   * sync progress) are preserved — only the credential is refreshed. Reuses the
+   * sync progress) are preserved - only the credential is refreshed. Reuses the
    * same popup / redirect machinery as {@link createConnection}, keyed by the
    * existing access-token id so Edge routes the callback back to it.
    *

@@ -32,7 +32,7 @@ const Edit = Schema.Struct({
 
 /**
  * What a slash-menu command receives: the surface it was triggered on, and the offset the trigger
- * was consumed at. A handler resolves the live view from `MarkdownCapabilities.EditorViews` — the
+ * was consumed at. A handler resolves the live view from `MarkdownCapabilities.EditorViews` - the
  * editor is not reachable from the operation layer any other way.
  */
 export const EditorCommandInput = Schema.Struct({
@@ -109,7 +109,7 @@ export const GetSelection = Operation.make({
     doc: Schema.optional(
       Ref.Ref(Markdown.Document).annotate({
         description:
-          'Optional document to read the selection from. Omit to return the current selection wherever it is — there is no need to call this once per open document.',
+          'Optional document to read the selection from. Omit to return the current selection wherever it is - there is no need to call this once per open document.',
       }),
     ),
   }),
@@ -194,7 +194,7 @@ export const SuggestEdit = Operation.make({
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to suggest edits on.' }),
     // Optional: the runtime supplies the calling agent's identity DID automatically. An agent must
-    // NOT set this — leave it undefined so the suggestion is attributed to the agent itself.
+    // NOT set this - leave it undefined so the suggestion is attributed to the agent itself.
     creator: Schema.optional(
       Schema.String.annotate({
         description:
@@ -258,7 +258,7 @@ export const Update = Operation.make({
   services: [Database.Service],
   input: Schema.Struct({
     // Any text-bearing document (an object holding a `content: Ref(Text)`), not only
-    // `Markdown.Document` — e.g. outlines. Branch edits remain markdown-only.
+    // `Markdown.Document` - e.g. outlines. Branch edits remain markdown-only.
     doc: Ref.Ref(Obj.Unknown).annotate({
       description: 'The ID of the document (any text-bearing object, e.g. a markdown document or an outline).',
     }),
@@ -274,7 +274,7 @@ export const Update = Operation.make({
     ),
   }),
   // A receipt, not the document: the result is fed back to the model verbatim, so returning the
-  // whole text charged a full copy of the document per edit — content the model just supplied.
+  // whole text charged a full copy of the document per edit - content the model just supplied.
   output: Schema.Struct({
     applied: Schema.Number.annotate({ description: 'Number of edits applied; every edit matched or the call failed.' }),
     length: Schema.Number.annotate({ description: 'Length of the document after the edits.' }),

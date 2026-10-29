@@ -26,9 +26,9 @@ import { useVersioning } from './useVersioning.ts';
 
 /**
  * Headless harness for the editor-binding lifecycle: drives the SAME hook pipeline the markdown
- * article mounts (`useVersioning` → `useVersionedEditor`) through mode-switch sequences and asserts
+ * article mounts (`useVersioning` -> `useVersionedEditor`) through mode-switch sequences and asserts
  * the binding outputs (editability, bound subject, own-branch content) at each step. Exists because
- * the mode-switch state machine kept regressing under manual testing — every reported failure here
+ * the mode-switch state machine kept regressing under manual testing - every reported failure here
  * (typed text struck through after a round-trip, the editor ending read-only) becomes a replayable
  * sequence.
  */
@@ -70,7 +70,7 @@ describe('editor binding lifecycle', () => {
     await client.destroy();
   });
 
-  // No plugins are registered — the review-render-policy capability stays unregistered, so the
+  // No plugins are registered - the review-render-policy capability stays unregistered, so the
   // harness drives the default policy.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
@@ -113,14 +113,14 @@ describe('editor binding lifecycle', () => {
     expect(result.current.editor.editorKey).toBe('current');
   });
 
-  test('entering Suggesting binds the user’s own suggestion branch', async () => {
+  test("entering Suggesting binds the user's own suggestion branch", async () => {
     const { result } = setup();
     await settled(result);
     act(() => result.current.versioning.setMode('suggesting'));
     await settled(result);
     expect(result.current.editor.ambientSuggesting).toBe(true);
     expect(result.current.editor.ownBranchText).toBeDefined();
-    // The branch starts as a copy of main, and the editor binds to it — not to main.
+    // The branch starts as a copy of main, and the editor binds to it - not to main.
     expect(result.current.editor.editorObject).toBe(result.current.editor.ownBranchText);
     expect(result.current.editor.effectiveViewMode).not.toBe('readonly');
   });
@@ -128,7 +128,7 @@ describe('editor binding lifecycle', () => {
   test('mode round-trips always end editable (F1.7)', async () => {
     const { result, rerender } = setup();
     await settled(result);
-    // Suggesting → Markdown (preview) → Plain text (source) → Suggesting, twice — the dropdown sets
+    // Suggesting -> Markdown (preview) -> Plain text (source) -> Suggesting, twice - the dropdown sets
     // BOTH the editor view mode and the review mode on each hop (see MarkdownArticle), so each step
     // drives the pair the way the UI does. The reported repro ended read-only.
     for (let cycle = 0; cycle < 2; cycle++) {
@@ -149,7 +149,7 @@ describe('editor binding lifecycle', () => {
   });
 
   // Guards F1.2: text typed on MAIN between Suggesting sessions was missing from the (stale) own
-  // branch, so re-entering Suggesting diffed it as the user's own DELETION — a strikethrough over
+  // branch, so re-entering Suggesting diffed it as the user's own DELETION - a strikethrough over
   // text they just typed. `Branch.suggestion` now retires an unedited branch whose anchor fell behind
   // and re-forks it at the current heads.
   test('re-entering Suggesting fast-forwards an unchanged own branch (F1.2)', async () => {
@@ -173,7 +173,7 @@ describe('editor binding lifecycle', () => {
       });
     });
 
-    // Re-enter Suggesting: the branch has no own edits, so it must reflect current main — otherwise
+    // Re-enter Suggesting: the branch has no own edits, so it must reflect current main - otherwise
     // "world" renders as the user's own deletion.
     act(() => result.current.versioning.setMode('suggesting'));
     await settled(result);
@@ -212,7 +212,7 @@ describe('editor binding lifecycle', () => {
       });
     });
 
-    // Re-enter Suggesting: the branch must now carry BOTH lines — main's new text is not a deletion.
+    // Re-enter Suggesting: the branch must now carry BOTH lines - main's new text is not a deletion.
     act(() => result.current.versioning.setMode('suggesting'));
     await settled(result);
     await waitFor(

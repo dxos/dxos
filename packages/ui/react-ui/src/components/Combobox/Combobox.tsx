@@ -89,7 +89,7 @@ type ComboboxRootProps = ThemedClassName<Omit<ComboboxPrimitive.RootProps<Combob
   loading?: boolean;
   /** Offers a create row while the typed query matches no label exactly; choosing it calls this instead of selecting. */
   onCreate?: (query: string) => void;
-  /** The create row's text for the query (e.g. `Add tag “{query}”`); `Create “{query}”` by default. */
+  /** The create row's text for the query (e.g. `Add tag "{query}"`); `Create "{query}"` by default. */
   createLabel?: (query: string) => string;
   /** The create row's icon; a plus by default. */
   createIcon?: string;
@@ -689,7 +689,7 @@ ComboboxItem.displayName = 'Combobox.Item';
 type ComboboxCreateItemProps = Omit<ComboboxItemProps, 'item'>;
 
 /**
- * The row the Root's `onCreate` offers while the query matches no label exactly: `Create “{query}”` by default. It is
+ * The row the Root's `onCreate` offers while the query matches no label exactly: `Create "{query}"` by default. It is
  * an option like any other, last in keyboard order, so place it after the other items when composing a list.
  */
 const ComboboxCreateItem = forwardRef<HTMLDivElement, ComboboxCreateItemProps>(

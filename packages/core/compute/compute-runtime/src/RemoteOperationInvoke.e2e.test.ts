@@ -113,7 +113,7 @@ interface Harness {
 
 /**
  * Builds the client stack over a cuttable link to a host that runs `Double` as an operation process
- * when `hosted`, and knows no process at all otherwise — EDGE's answer for an operation it was never
+ * when `hosted`, and knows no process at all otherwise - EDGE's answer for an operation it was never
  * given.
  */
 const withInvoker = Effect.fn(

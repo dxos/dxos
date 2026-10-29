@@ -17,7 +17,7 @@ import {
 
 //
 // The canonical text surface: Composer's markdown extension bundle over `Text.content`, with no
-// knowledge that a lens exists. Deliberately the source view — syntax visible, highlighted — because
+// knowledge that a lens exists. Deliberately the source view - syntax visible, highlighted - because
 // this pane's job is to show the string as stored. (`decorateMarkdown`, which hides the markers and
 // renders marks in place, is what a document surface adds on top; it would obscure the point here.)
 //
@@ -31,7 +31,7 @@ export const MarkdownEditor = ({ text }: { text: Text.Text }) => {
     () => ({
       initialValue: text.content ?? '',
       extensions: [
-        createBasicExtensions({ placeholder: 'Markdown…', search: true }),
+        createBasicExtensions({ placeholder: 'Markdown...', search: true }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { scroller: { className: 'p-2' } } }),
         createMarkdownExtensions(),
         createDataExtensions({ id: 'lens-demo', text: Doc.createAccessor(text, ['content']) }),

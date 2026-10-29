@@ -71,8 +71,8 @@ export class CredentialsDocumentStore implements Disposable {
   }
 
   /**
-   * Appends a credential, keyed by its id so that re-appending one — which the migration backfill and
-   * a second device both do — converges instead of duplicating it.
+   * Appends a credential, keyed by its id so that re-appending one - which the migration backfill and
+   * a second device both do - converges instead of duplicating it.
    */
   append(credential: Credential): void {
     const id = toPublicKey(credential.id)?.toHex();
@@ -104,7 +104,7 @@ export const openCredentialsDocument = async (
     return store(lease);
   };
 
-  // Disposed with the caller's context, which is what bounds the store's lifetime — the lease would
+  // Disposed with the caller's context, which is what bounds the store's lifetime - the lease would
   // otherwise keep the document resident for the session.
   const store = (lease: DocumentLease<CredentialsDocument>): CredentialsDocumentStore => {
     const opened = new CredentialsDocumentStore(lease);
@@ -118,7 +118,7 @@ export const openCredentialsDocument = async (
   }
 
   // The creating lease becomes the store's, so the document is never released between being created
-  // and being read back — a fresh document exists only in memory until it is saved.
+  // and being read back - a fresh document exists only in memory until it is saved.
   const created = await echoHost.createDoc<CredentialsDocument>({
     type: CREDENTIALS_DOCUMENT_TYPE,
     spaceId,

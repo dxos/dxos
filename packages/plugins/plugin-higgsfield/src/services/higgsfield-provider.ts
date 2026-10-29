@@ -41,8 +41,8 @@ export type HiggsfieldJob = {
 };
 
 /**
- * Higgsfield Cloud API adapter. Every model shares one lifecycle — `POST /<model>` returns a
- * `request_id` plus the `status_url` to poll to a terminal state — so a single provider serves
+ * Higgsfield Cloud API adapter. Every model shares one lifecycle - `POST /<model>` returns a
+ * `request_id` plus the `status_url` to poll to a terminal state - so a single provider serves
  * image, video and audio models; the caller picks the model path and shapes the body.
  */
 export class HiggsfieldProvider {
@@ -88,7 +88,7 @@ export class HiggsfieldProvider {
     return { jobId: body.request_id, statusUrl: body.status_url ?? this.statusUrl(body.request_id) };
   }
 
-  /** The documented status endpoint for a request id — the fallback when a response carries no `status_url`. */
+  /** The documented status endpoint for a request id - the fallback when a response carries no `status_url`. */
   statusUrl(jobId: string): string {
     return `${this.#baseUrl}/requests/${encodeURIComponent(jobId)}/status`;
   }

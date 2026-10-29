@@ -3,8 +3,8 @@
 //
 
 //
-// Bridge from the scene engine to `@dxos/diagram`'s scene, so its `Diagnostics` and `Objective` —
-// the measurements the layout engines are selected by — can grade a scene a person is editing.
+// Bridge from the scene engine to `@dxos/diagram`'s scene, so its `Diagnostics` and `Objective` -
+// the measurements the layout engines are selected by - can grade a scene a person is editing.
 //
 
 import { type Scene as Diagram } from '@dxos/diagram';

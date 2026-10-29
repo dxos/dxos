@@ -77,7 +77,7 @@ export const useTextEditor = (
   const parentRef = useRef<HTMLDivElement>(null);
 
   // Layout effect, not a passive one: the view is what fills the editor's box, so building it after
-  // the browser paints shows a frame of empty container and then reflows everything below it — a
+  // the browser paints shows a frame of empty container and then reflows everything below it - a
   // field in a pane (a task's description) drops its siblings by the editor's height on every
   // subject change. Constructing before paint costs that work in the commit instead; see PERF.md in
   // `react-ui-markdown/src/MarkdownEditable` for what that costs on a large document.

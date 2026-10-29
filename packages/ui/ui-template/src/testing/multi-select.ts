@@ -5,7 +5,7 @@
 //
 // SPIKE. A machine authored with zag's `createMachine`, probing the "machines are capabilities"
 // direction (docs/DESIGN.md "Typed binding and modules", TASKS.md zag-adoption decision): the
-// definition is plain data — states × events → named actions over bindable context — so it sits
+// definition is plain data - states × events -> named actions over bindable context - so it sits
 // where `MachineDef` sits today, framework-free by construction. The runtime is the adapter's
 // (`@zag-js/react` in components, `@zag-js/vanilla` in tests); nothing here may import React.
 //
@@ -17,7 +17,7 @@ const EMPTY_SELECTION: ReadonlySet<string> = new Set();
 export type MultiSelectProps = {
   /** Ordered ids, giving EXTEND its extent; without them a range gesture degrades to a toggle. */
   items?: readonly string[];
-  /** Observe committed selections — the capability's outward edge. */
+  /** Observe committed selections - the capability's outward edge. */
   onChange?: (details: { selection: ReadonlySet<string> }) => void;
 };
 
@@ -48,8 +48,8 @@ const setEquals = (a: ReadonlySet<string>, b: ReadonlySet<string> | undefined): 
 
 /**
  * Multi-selection over a list: plain SELECT replaces the selection with the clicked id,
- * SELECT+shift toggles the id in or out, EXTEND replaces it with the anchor→id range, CLEAR
- * empties it. A single `idle` state — the machine's value here is the typed event/context
+ * SELECT+shift toggles the id in or out, EXTEND replaces it with the anchor->id range, CLEAR
+ * empties it. A single `idle` state - the machine's value here is the typed event/context
  * contract, not state charts.
  */
 export const multiSelectMachine = createMachine<MultiSelectSchema>({
@@ -103,7 +103,7 @@ export const multiSelectMachine = createMachine<MultiSelectSchema>({
         const from = anchor === undefined ? -1 : items.indexOf(anchor);
         const to = items.indexOf(event.id);
         if (from === -1 || to === -1) {
-          // No anchored range to extend — degrade to the toggle gesture.
+          // No anchored range to extend - degrade to the toggle gesture.
           action(['toggle']);
           return;
         }
@@ -130,7 +130,7 @@ export type MultiSelectApi = {
 };
 
 /**
- * The capability surface over a running service — plain values and event senders, no DOM props,
+ * The capability surface over a running service - plain values and event senders, no DOM props,
  * so the same connect serves React and the headless test.
  */
 export const connect = (service: MultiSelectService): MultiSelectApi => {

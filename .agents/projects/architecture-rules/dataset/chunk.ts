@@ -175,7 +175,7 @@ const summaryLines = [
   '',
   `- Total comments scraped: ${comments.length}`,
   `- Total comments kept (after mechanical filtering): ${keptComments.length}`,
-  `- Chunk count: ${chunkCount} (\`chunks/00.jsonl\` .. \`chunks/${String(Math.max(chunkCount - 1, 0)).padStart(2, '0')}.jsonl\`, ≤ ${maxCommentsPerChunk} comments each)`,
+  `- Chunk count: ${chunkCount} (\`chunks/00.jsonl\` .. \`chunks/${String(Math.max(chunkCount - 1, 0)).padStart(2, '0')}.jsonl\`, <= ${maxCommentsPerChunk} comments each)`,
   '',
   '## Dropped, by reason',
   '',

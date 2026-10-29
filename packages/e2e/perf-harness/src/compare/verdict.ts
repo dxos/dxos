@@ -52,7 +52,7 @@ export type MetricComparison = {
   /** Medians of each arm over the paired rounds. */
   base: number;
   candidate: number;
-  /** Mean of candidate − base over paired rounds, and its Student-t interval. */
+  /** Mean of candidate - base over paired rounds, and its Student-t interval. */
   shift: number;
   interval: [number, number];
   /** Cliff's delta, candidate vs base. */

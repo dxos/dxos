@@ -131,7 +131,7 @@ export const createTestHaloEdgeIdentity = async (
 export const createStubEdgeIdentity = (): EdgeIdentity => {
   const deviceKey = PublicKey.random();
   return {
-    // Random placeholder DID — the stub never authenticates or connects; a real identity replaces it.
+    // Random placeholder DID - the stub never authenticates or connects; a real identity replaces it.
     identityDid: IdentityDid.random(),
     peerKey: deviceKey.toHex(),
     presentCredentials: async () => {

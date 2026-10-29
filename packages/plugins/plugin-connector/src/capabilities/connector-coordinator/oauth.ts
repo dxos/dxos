@@ -53,12 +53,12 @@ export const isOAuthShapedMessage = (data: unknown): boolean =>
 /**
  * Ask EDGE for the provider's authorization URL and send the user to it.
  *
- * Returns once the page is open — completion arrives out of band, at {@link OAUTH_REDIRECT_PATH}.
+ * Returns once the page is open - completion arrives out of band, at {@link OAUTH_REDIRECT_PATH}.
  *
  * The platforms diverge at the initiate call, not just at the opening. In the browser the app calls
  * EDGE itself and the result comes back through the opener or a redirect to its own origin. On
  * desktop the flow has to run in the system browser (providers refuse embedded webviews), so EDGE
- * must redirect to the shell's loopback server instead — and EDGE takes that target from the
+ * must redirect to the shell's loopback server instead - and EDGE takes that target from the
  * request's `Origin`, which only Rust can set. So the shell issues the initiate call too.
  */
 export const beginOAuthFlow = (

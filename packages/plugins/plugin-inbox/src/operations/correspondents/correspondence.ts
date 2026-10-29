@@ -13,7 +13,7 @@ export type Correspondent = {
   readonly automated: boolean;
 };
 
-/** `Re:` / `Fwd:` subject prefixes — the header-less signal that a message continues a conversation. */
+/** `Re:` / `Fwd:` subject prefixes - the header-less signal that a message continues a conversation. */
 const REPLY_SUBJECT_RE = /^\s*(?:re|fwd?)\s*(?:\[\d+\])?\s*:/i;
 
 /** Splits an address list on commas outside double quotes, so `"Doe, Jane" <j@d>` stays one entry. */
@@ -67,11 +67,11 @@ export const isReplyMessage = (message: Message.Message): boolean => {
 };
 
 /**
- * Derives the user's correspondents — "anyone I have sent or replied to" — from a mailbox feed:
+ * Derives the user's correspondents - "anyone I have sent or replied to" - from a mailbox feed:
  *
  *  1. recipients (`to`/`cc`) of messages the user sent, and
  *  2. senders of conversation messages (see {@link isReplyMessage}) addressed directly to one of
- *     the user's addresses — an inbound reply implies prior outbound mail, which is the only way to
+ *     the user's addresses - an inbound reply implies prior outbound mail, which is the only way to
  *     recover the outbound signal from an inbox-only corpus.
  *
  * Pure. Automated-sender signals (`noReply`, `listUnsubscribe`) are carried per correspondent so the

@@ -11,7 +11,7 @@ const HEADING = /^\s{0,3}#{1,6}(\s|$)/;
  * Puts a blank line before every heading outside a code fence.
  *
  * A heading may legally interrupt a paragraph, so the model and the chapter join both emit one on
- * the very next line — which the walkthrough's source-level editor shows flush against the prose.
+ * the very next line - which the walkthrough's source-level editor shows flush against the prose.
  */
 export const spaceHeadings = (markdown: string): string => {
   const lines = markdown.split('\n');

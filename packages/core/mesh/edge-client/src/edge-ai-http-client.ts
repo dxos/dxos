@@ -26,7 +26,7 @@ export type EdgeAiHttpClientOptions = {
 
 /**
  * Thrown by {@link EdgeAiHttpClient} when an AI request carrying {@link BYOK_HEADER} is rejected
- * with 401/403 by the upstream provider — i.e. the user-supplied API key is invalid. Wrapped as
+ * with 401/403 by the upstream provider - i.e. the user-supplied API key is invalid. Wrapped as
  * the `cause` of an `HttpClientError.ResponseError` so it flows through `@effect/ai`'s error
  * mapping; callers walk the cause chain (via {@link ByokError.is}) to render a useful message.
  */

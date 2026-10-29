@@ -130,7 +130,7 @@ const logSyncError = (
   err: Error,
   combinedMeta: CallMetadata,
 ) => {
-  log.error(`.${formatFunction(methodName)} (${formattedArgs}) 🔥 ${err}`, {}, combinedMeta);
+  log.error(`.${formatFunction(methodName)} (${formattedArgs}) \u{1F525} ${err}`, {}, combinedMeta);
 };
 
 const logAsyncBegin = (
@@ -141,7 +141,7 @@ const logAsyncBegin = (
   combinedMeta: CallMetadata,
 ) => {
   log.info(
-    `.${formatFunction(methodName)} ↴ (${formattedArgs}) ${chalk.gray('=>')} ${formatPromise(promiseId)}`,
+    `.${formatFunction(methodName)} \u21B4 (${formattedArgs}) ${chalk.gray('=>')} ${formatPromise(promiseId)}`,
     {},
     combinedMeta,
   );
@@ -157,7 +157,7 @@ const logAsyncResolved = (
 ) => {
   if (resolvedValue !== undefined) {
     log.info(
-      `.${formatFunction(methodName)} ↲ ${greenCheck} ${chalk.gray('resolve')} ${formatPromise(promiseId)} ${formatTimeElapsed(startTime)} ${chalk.gray('=>')} ${inspect(
+      `.${formatFunction(methodName)} \u21B2 ${greenCheck} ${chalk.gray('resolve')} ${formatPromise(promiseId)} ${formatTimeElapsed(startTime)} ${chalk.gray('=>')} ${inspect(
         resolvedValue,
         false,
         1,
@@ -168,7 +168,7 @@ const logAsyncResolved = (
     );
   } else {
     log.info(
-      `.${formatFunction(methodName)} ↲ ${greenCheck} ${chalk.gray('resolve')} ${formatPromise(promiseId)} ${formatTimeElapsed(startTime)}`,
+      `.${formatFunction(methodName)} \u21B2 ${greenCheck} ${chalk.gray('resolve')} ${formatPromise(promiseId)} ${formatTimeElapsed(startTime)}`,
       {},
       combinedMeta,
     );
@@ -184,7 +184,7 @@ const logAsyncRejected = (
   combinedMeta: CallMetadata,
 ) => {
   log.info(
-    `.${formatFunction(methodName)} ↲ 🔥 ${chalk.gray('reject')} ${formatPromise(promiseId)} ${formatTimeElapsed(startTime)} ${chalk.gray('=>')} ${err}`,
+    `.${formatFunction(methodName)} \u21B2 \u{1F525} ${chalk.gray('reject')} ${formatPromise(promiseId)} ${formatTimeElapsed(startTime)} ${chalk.gray('=>')} ${err}`,
     {},
     combinedMeta,
   );
@@ -193,7 +193,7 @@ const logAsyncRejected = (
 const COLOR_FUNCTION = [220, 220, 170] as const;
 
 // https://github.com/dxos/dxos/issues/7286
-const greenCheck = typeof chalk.green === 'function' ? chalk.green('✔') : '✔';
+const greenCheck = typeof chalk.green === 'function' ? chalk.green('\u2714') : '\u2714';
 
 const formatTimeElapsed = (startTime: number) => chalk.gray(`${(performance.now() - startTime).toFixed(0)}ms`);
 

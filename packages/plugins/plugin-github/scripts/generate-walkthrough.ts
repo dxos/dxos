@@ -23,7 +23,7 @@ import { SYSTEM_PROMPT, buildPrompt } from '../src/walkthrough/prompt.ts';
 /**
  * Generates walkthroughs for the eval corpus against the real model.
  *
- *   DX_ANTHROPIC_API_KEY=… node --experimental-strip-types scripts/generate-walkthrough.ts \
+ *   DX_ANTHROPIC_API_KEY=... node --experimental-strip-types scripts/generate-walkthrough.ts \
  *     evals/walkthrough/13288-large --mode=chaptered
  *
  * The same code paths the operation uses, minus ECHO and GitHub: the prompts, the plan, and the
@@ -99,7 +99,9 @@ const main = async (): Promise<void> => {
   const [root] = args.filter((argument) => !argument.startsWith('--'));
   const apiKey = process.env.DX_ANTHROPIC_API_KEY ?? process.env.ANTHROPIC_API_KEY;
   if (!root || !apiKey) {
-    console.error('usage: DX_ANTHROPIC_API_KEY=… generate-walkthrough.ts <fixture|corpus> [--mode=…] [--model=…]');
+    console.error(
+      'usage: DX_ANTHROPIC_API_KEY=... generate-walkthrough.ts <fixture|corpus> [--mode=...] [--model=...]',
+    );
     process.exit(2);
   }
 

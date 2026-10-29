@@ -103,7 +103,7 @@ test.describe('Extension', () => {
     const pullRequestPage = await context.newPage();
     await pullRequestPage.goto(PULL_REQUEST_URL);
 
-    // Driven from an extension page because that is the only context `chrome.runtime` exists in —
+    // Driven from an extension page because that is the only context `chrome.runtime` exists in -
     // the same message the side panel's action row sends when the button is clicked.
     const runner = await context.newPage();
     await runner.goto(`chrome-extension://${extensionId}/options.html`);
@@ -158,7 +158,7 @@ test.describe('Extension', () => {
 
 /**
  * A GitHub pull request page, stubbed at the HTTP boundary so the tab is cheap and deterministic
- * while its URL stays the real one — which is what the action's `urlPatterns` are matched against.
+ * while its URL stays the real one - which is what the action's `urlPatterns` are matched against.
  */
 const stubPullRequestPage = (context: BrowserContext) =>
   context.route(PULL_REQUEST_URL, (route) =>

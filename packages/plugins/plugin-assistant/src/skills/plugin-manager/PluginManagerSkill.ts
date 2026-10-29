@@ -26,7 +26,7 @@ export const make = (): Skill.Skill =>
     key,
     name: 'Plugin Manager',
     description:
-      'Search the installed plugins — enabled or not — for the ones best suited to a task, and offer to enable them.',
+      'Search the installed plugins - enabled or not - for the ones best suited to a task, and offer to enable them.',
     agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -35,7 +35,7 @@ export const make = (): Skill.Skill =>
         fixed set. A plugin that is installed but disabled contributes nothing: its operations, types
         and skills are absent until it is enabled and activates.
 
-        The list below is this host's disabled plugins — rendered fresh into this prompt, so do NOT
+        The list below is this host's disabled plugins - rendered fresh into this prompt, so do NOT
         call [query-disabled-plugins] to obtain it.
 
         <disabled_plugins>
@@ -45,7 +45,7 @@ export const make = (): Skill.Skill =>
         </disabled_plugins>
 
         # Working with plugins
-        - When a request implies a capability — a board, a spreadsheet, a diagram, a mailbox — look
+        - When a request implies a capability - a board, a spreadsheet, a diagram, a mailbox - look
           for the plugin that provides it BEFORE reaching for a generic tool. Read the list above,
           and call [query-plugins] when the request does not obviously match one of its entries:
           the installed set is the catalogue of what this app could do for the task, and the best
@@ -54,7 +54,7 @@ export const make = (): Skill.Skill =>
           their decision, taken by clicking the prompt described below.
         - Before creating an object whose editor comes from a plugin in that list, STOP. Creating it
           through a generic database tool succeeds and leaves the user an object they cannot open or
-          use — a kanban board they cannot drag cards on, a document they cannot type in. Offer the
+          use - a kanban board they cannot drag cards on, a document they cannot type in. Offer the
           plugin first and create the object only once it is enabled.
         - To offer one, DO NOT fail, refuse, or apologise. Emit a self-closing surface tag with the
           'plugin-prompt' role and the plugin's id:
@@ -63,13 +63,13 @@ export const make = (): Skill.Skill =>
 
           Use the id exactly as the list above spells it. Emit the surface once per plugin, then
           briefly say what enabling it would let you do. When the user enables it, a message
-          reporting that the plugin was enabled arrives as the next user turn — resume there rather
+          reporting that the plugin was enabled arrives as the next user turn - resume there rather
           than polling.
         - Call [query-plugins] to search the whole installed set, or to re-read state after the
           user has enabled something. A plugin's tools appear only once it activates, so confirm
           \`active\` there rather than assuming the capability is ready.
         - A plugin the host does not have installed at all cannot be enabled. When you know the URL
-          of its manifest.json — a plugin you just built and served, say — offer to load it instead,
+          of its manifest.json - a plugin you just built and served, say - offer to load it instead,
           with the 'plugin-url-prompt' role, the manifest URL and a name for the label:
 
           <surface role='plugin-url-prompt' data='{"url":"http://localhost:4173/plugins/hello/manifest.json","name":"Hello"}' />

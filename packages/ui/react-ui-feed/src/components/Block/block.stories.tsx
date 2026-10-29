@@ -18,7 +18,7 @@ const MARKDOWN = trim`
   ### A markdown item
 
   One read-only CodeMirror document per message: **bold**, *emphasis*, [a link](https://dxos.org),
-  \`inline code\`, and a fence —
+  \`inline code\`, and a fence -
 
   \`\`\`ts
   const answer = 42;
@@ -42,7 +42,7 @@ const HIGHLIGHTED = 'The needle sits in the middle of this sentence, and the ran
 
 const HTML = trim`
   <h3>An HTML item</h3>
-  <p>Sanitized prose for content that arrives as markup — the email case. <b>Tags</b> render,
+  <p>Sanitized prose for content that arrives as markup - the email case. <b>Tags</b> render,
   <i>scripts</i> do not.</p>
   <ul><li>One</li><li>Two</li></ul>
 `;
@@ -51,7 +51,7 @@ const store = createWidgetStateStore();
 
 /**
  * One story per item kind, outside any list: the item is the unit the feed mounts per message, and
- * this is where its rendering is judged on its own — a defect here is the item's, never the
+ * this is where its rendering is judged on its own - a defect here is the item's, never the
  * placement's. Kinds mirror `ItemContent`: markdown (a read-only CodeMirror document), markdown
  * with block widgets (the assistant turn's shape), markdown with highlights (what decorations
  * paint), and html (sanitized prose, the email case).

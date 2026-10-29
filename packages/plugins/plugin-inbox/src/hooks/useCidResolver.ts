@@ -13,7 +13,7 @@ import { type Message } from '@dxos/types';
 
 /**
  * Resolves `<img src="cid:...">` references (inline attachments, per RFC 2392) against a message's
- * attachments, mirroring the `Database.load` → `Blob.url()`/`Blob.read()`+`createObjectURL()` fallback
+ * attachments, mirroring the `Database.load` -> `Blob.url()`/`Blob.read()`+`createObjectURL()` fallback
  * used by `useImageUrl`/`plugin-file`'s image decorations.
  *
  * Lives here rather than in the renderer so the shared UI package stays free of ECHO: the resolver is
@@ -24,7 +24,7 @@ export const useCidResolver = (
   db: Database.Database | undefined,
 ): HtmlSrcResolver | undefined => {
   // ECHO's reactive proxy can return a fresh array reference on every access, so a stable primitive key
-  // stands in for `attachments` — keying on the array itself would rebuild the resolver (and re-resolve
+  // stands in for `attachments` - keying on the array itself would rebuild the resolver (and re-resolve
   // every image) on unrelated renders.
   const attachmentsKey =
     attachments?.map((attachment) => `${attachment.contentId ?? ''}:${attachment.ref.uri}`).join(',') ?? '';
@@ -63,7 +63,7 @@ export const useCidResolver = (
           // Revocation belongs to the consumer, not here: `Html` caches every resolved url and revokes
           // the `blob:` ones when it unmounts, so a url minted per resolution is released with it.
           // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
-          // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+          // `BlobPart` only covers `ArrayBuffer`-backed views - a gap between the DOM lib types and
           // the TS standard lib, not fixable by typing `bytes` differently.
           return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
         }).pipe(

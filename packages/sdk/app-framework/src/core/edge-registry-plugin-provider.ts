@@ -18,7 +18,7 @@ import type * as Registry from './registry.ts';
  * `profile` (the view's profile plus the resolved provenance `author`) and the latest `release`.
  *
  * This is the one translation seam between the nested wire view and the resolved runtime manifest.
- * `profile.key` is the composer plugin id — a valid NSID — so `DXN.make(profile.key, release.version)`
+ * `profile.key` is the composer plugin id - a valid NSID - so `DXN.make(profile.key, release.version)`
  * reconstructs the canonical plugin DXN.
  */
 const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
@@ -41,12 +41,12 @@ const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
  *
  * Lives in app-framework (rather than the more obvious home of `@dxos/edge-client`)
  * because edge-client doesn't depend on app-framework; siting the implementation
- * here keeps the dependency arrow `app-framework → edge-client` and avoids a
+ * here keeps the dependency arrow `app-framework -> edge-client` and avoids a
  * cycle. The class needs only the public `EdgeHttpClient` type, so a one-way
  * type-import is enough.
  *
  * `listVersions` is served directly from the `releases` array inlined on each
- * entry — no separate endpoint is needed.
+ * entry - no separate endpoint is needed.
  */
 const isAccountRequired = (error: unknown): boolean =>
   error instanceof EdgeCallFailedError && error.data?.type === 'identity_not_associated_with_account';

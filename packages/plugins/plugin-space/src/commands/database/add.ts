@@ -42,7 +42,7 @@ export const add: Command.Command<
       const manager = yield* Plugin.Service;
       const { db } = yield* Database.Service;
 
-      // Ensures the dependency pass has run, then fires the create-flow demand event —
+      // Ensures the dependency pass has run, then fires the create-flow demand event -
       // `SpaceCapabilities.CreateObjectEntry` providers are gated on it by default and must
       // have contributed before they're queried below.
       yield* manager.start();

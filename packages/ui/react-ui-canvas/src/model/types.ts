@@ -140,7 +140,7 @@ export const LINK_FONT_SIZE = 14;
 
 /**
  * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
- * (`Schema.Struct({ ...styleFields, … })`).
+ * (`Schema.Struct({ ...styleFields, ... })`).
  */
 export const styleFields = {
   hue: lineStyleFields.hue,

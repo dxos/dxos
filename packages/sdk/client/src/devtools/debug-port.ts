@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Default port for `composer-recovery.js` — keep in sync with that script. */
+/** Default port for `composer-recovery.js` - keep in sync with that script. */
 export const DEBUG_PORT = 9321;
 
-/** Browser retry interval when the debug server is unreachable — keep in sync with `composer-recovery.js`. */
+/** Browser retry interval when the debug server is unreachable - keep in sync with `composer-recovery.js`. */
 export const DEBUG_PORT_RECONNECT_MS = 2_000;
 
 /**
  * Ceiling of the backoff while the debug server stays unreachable, since the browser logs every refused poll and
- * the one-shot server is down between commands — keep in sync with `composer-recovery.js`.
+ * the one-shot server is down between commands - keep in sync with `composer-recovery.js`.
  */
 export const DEBUG_PORT_RECONNECT_MAX_MS = 30_000;
 
@@ -86,7 +86,7 @@ export const runDebugPortLoop = async ({
   assertLoopbackOrigin(origin);
 
   log(`Session: ${session}`);
-  log(`Connecting to ${origin}…`);
+  log(`Connecting to ${origin}...`);
   log(`node composer-recovery.js --session ${session} "<js snippet>"`);
   log('(Copy the session id above into every composer-recovery.js command.)');
 
@@ -102,7 +102,7 @@ export const runDebugPortLoop = async ({
         break;
       }
       if (!waitingLogged) {
-        log('Waiting for debug server…');
+        log('Waiting for debug server...');
         waitingLogged = true;
       }
       await sleep(delay, signal);
@@ -119,7 +119,7 @@ export const runDebugPortLoop = async ({
 
     log(`Command #${command.id}:`);
     log(command.code);
-    log(`Evaluating command #${command.id}…`);
+    log(`Evaluating command #${command.id}...`);
     let payload: DebugResultPayload;
     try {
       const result = await evalCommand(command.code);
@@ -136,7 +136,7 @@ export const runDebugPortLoop = async ({
     }
 
     // Keep re-posting the same payload: the caller is blocked waiting for this id, and in one-shot
-    // mode nothing re-sends it — dropping through to the next poll loses the result for good.
+    // mode nothing re-sends it - dropping through to the next poll loses the result for good.
     let posted = false;
     while (!posted && !signal?.aborted) {
       try {
@@ -146,7 +146,7 @@ export const runDebugPortLoop = async ({
         if (signal?.aborted) {
           break;
         }
-        log('Debug server unreachable posting result — retrying…');
+        log('Debug server unreachable posting result - retrying...');
         await sleep(DEBUG_PORT_RECONNECT_MS, signal);
       }
     }

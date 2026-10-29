@@ -47,7 +47,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
   });
 
   // General and Members are separate extensions rather than one so each can be an id-less key (a single
-  // id-less key can address only one fixed node — its terminal segment IS the key).
+  // id-less key can address only one fixed node - its terminal segment IS the key).
   const generalExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsGeneral',
     url: { key: 'settings', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },

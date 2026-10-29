@@ -34,7 +34,7 @@ export interface LoadOp {
   maxCeiling: RefSource;
   state: LoadOpState;
   /**
-   * The materialized entity, held weakly — held strongly, this table would be the reason every
+   * The materialized entity, held weakly - held strongly, this table would be the reason every
    * entity a query ever touched stays resident, since an op outlives the read that created it.
    */
   get result(): AnyProperties | null;
@@ -57,7 +57,7 @@ export interface LoadBackend {
   probe(uri: URI.URI): LoadResult | undefined;
 
   /**
-   * Begin loading the body at the given ceiling (always ≥ `disk`); drives the op via `set`.
+   * Begin loading the body at the given ceiling (always >= `disk`); drives the op via `set`.
    * Returns a cancellation function.
    */
   load(uri: URI.URI, source: RefSource, set: (state: LoadOpState, result: LoadResult | undefined) => void): () => void;
@@ -144,7 +144,7 @@ export class LoadOpTable {
    * entity is now materialized. Lets a local materialization (e.g. `db.add`) heal an op that latched
    * `requesting`/`unavailable` while the entity was absent: the working-set tier is the cheapest and
    * authoritative, so a hit settles the op regardless of any in-flight higher-ceiling load (whose IO
-   * is cancelled). No-op when no op is cached for the URI — nothing is waiting on it.
+   * is cancelled). No-op when no op is cached for the URI - nothing is waiting on it.
    */
   refreshFromWorkingSet(uri: URI.URI): void {
     const op = this.#ops.get(uri);

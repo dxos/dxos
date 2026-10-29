@@ -49,7 +49,7 @@ type StoryArgs = {
 const DefaultStory = ({ content, name }: StoryArgs) => {
   const [space] = useSpaces();
   const outline = useMemo(() => space && space.db.add(Outline.make({ name, content })), [space, name, content]);
-  // An outline owns no task set — promotion files into the ledger of whatever embeds it — so the
+  // An outline owns no task set - promotion files into the ledger of whatever embeds it - so the
   // story plays the embedder and supplies one. Passing `undefined` instead is the degraded case:
   // the outline renders with no convert affordance at all.
   const taskSet = useMemo(() => space && space.db.add(TaskSet.make({ name: 'Story tasks' })), [space]);
@@ -174,7 +174,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // The article reads `MarkdownCapabilities.ExtensionProvider` for its editor's contributed
-    // extensions, which needs a plugin manager; nothing here contributes any, which is the point —
+    // extensions, which needs a plugin manager; nothing here contributes any, which is the point -
     // the outline builds the same editor with an empty list.
     withPluginManager({ plugins: CorePlugins.make() }),
     withClientProvider({
@@ -251,7 +251,7 @@ export const ConvertToTask: Story = {
     await canvas.findByRole('button', { name: RENAMED }, { timeout: 10_000 });
     await waitFor(() => expect(sourceText(canvasElement)).toMatch(new RegExp(`- \\[${RENAMED}\\]\\(echo://`)));
 
-    // The task list tracks the rename too — a property change, which is why it queries by type
+    // The task list tracks the rename too - a property change, which is why it queries by type
     // and filters by parent rather than using a `children()` query.
     await waitFor(() => expect(within(taskListPane(canvasElement)).getByText(RENAMED)).toBeTruthy());
   },

@@ -116,7 +116,7 @@ export class ReverseRefIndex implements Index {
 
   /**
    * Referrers of one target in one space, joined to the object metadata for the referrer's
-   * document — the point lookup behind merge reference rewriting. Queue entities carry no
+   * document - the point lookup behind merge reference rewriting. Queue entities carry no
    * document to rewrite and rows from other spaces are not this space's to repoint, so both
    * are excluded in SQL.
    */
@@ -178,7 +178,7 @@ export class ReverseRefIndex implements Index {
             yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
             // Document objects carry `@meta` only so the entity-meta index can extract the
-            // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+            // convergence key - indexing `meta.tags` here would make `Query.incoming()` on a Tag
             // return everything merely tagged with it. Queue blocks always carried meta, so
             // their extraction is unchanged.
             const extractable = object.documentId

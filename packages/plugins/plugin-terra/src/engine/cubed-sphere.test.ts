@@ -25,7 +25,7 @@ describe('cubed-sphere', () => {
 
   test('adjacent faces meet seamlessly (every shared edge point coincides)', ({ expect }) => {
     // +Y face's i=4 edge and +X face's j=0 edge both trace the cube edge x=1, y=1, but walk it in
-    // reversed order (Y's j=0..4 mirrors X's k=4..0 — Y's j=0 and X's k=4 both land on cube corner
+    // reversed order (Y's j=0..4 mirrors X's k=4..0 - Y's j=0 and X's k=4 both land on cube corner
     // (1,1,1), Y's j=4 and X's k=0 both land on (1,1,-1)). Comparing only one index pair (e.g. via
     // `.some()` over all k) would still pass if the seam were stitched with the wrong orientation;
     // walking every sample with the correct reversed mapping cannot.

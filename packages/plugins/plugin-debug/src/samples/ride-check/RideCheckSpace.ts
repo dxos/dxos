@@ -27,10 +27,10 @@ const partials = {
 /**
  * A page worth deploying: one Cloudflare Worker that tells a cyclist whether to ride now, from a live Open-Meteo
  * forecast, built with DXOS UI. The space holds the spec with four features written, the feature map with one card per
- * feature, and three tasks — draw it, build and deploy it, check it — so the run reaches a URL within one task and the
+ * feature, and three tasks - draw it, build and deploy it, check it - so the run reaches a URL within one task and the
  * reader can then change a feature card and watch the redeploy.
  *
- * It replaces `WorkerSpace`'s JSON greeting as the demo of the spec → diagram → deploy → edit loop: every step here
+ * It replaces `WorkerSpace`'s JSON greeting as the demo of the spec -> diagram -> deploy -> edit loop: every step here
  * changes something a viewer can see.
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>

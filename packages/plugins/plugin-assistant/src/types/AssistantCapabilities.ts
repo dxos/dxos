@@ -70,7 +70,7 @@ export const HomeSuggestionsCache = Capability.makeSingleton<Atom.Writable<HomeS
 
 /**
  * Optional engine for producing a conversation turn. When contributed, the agent process runs turns
- * through it instead of DXOS's own `AiSession` — e.g. a Claude Agent SDK host — while keeping its
+ * through it instead of DXOS's own `AiSession` - e.g. a Claude Agent SDK host - while keeping its
  * queue, alarms, redelivery, delegation and hydration.
  *
  * A registry rather than a singleton, for the same reason as `AgentDelegationStrategy`: a harness
@@ -122,7 +122,7 @@ export type Agent = {
   readonly label: string;
   readonly icon: string;
   /**
-   * Where this registration runs the agent. Absent ⇒ this device only. A registration listing both runs
+   * Where this registration runs the agent. Absent => this device only. A registration listing both runs
    * wherever the chat asks (`chat.remote`); one listing a single location runs only there.
    */
   readonly locations?: readonly AgentLocation[];
@@ -167,7 +167,7 @@ export type SubjectBindings = AiContext.BindingProps & {
 };
 
 /**
- * Bindings contributed for a chat opened against a subject object — the object a companion chat is
+ * Bindings contributed for a chat opened against a subject object - the object a companion chat is
  * attached to, or the object a chat was created for.
  *
  * Every contribution whose `appliesTo` accepts the subject runs and the results are merged, so a
@@ -176,7 +176,7 @@ export type SubjectBindings = AiContext.BindingProps & {
  * declares `Registry.Service` for skills resolved out of the hypergraph registry.
  */
 export type SubjectContext = {
-  /** Whether this provider applies to the subject. Absent ⇒ applies to every subject. */
+  /** Whether this provider applies to the subject. Absent => applies to every subject. */
   appliesTo?: (subject: Obj.Unknown) => boolean;
   getBindings: (params: {
     subject: Obj.Unknown;

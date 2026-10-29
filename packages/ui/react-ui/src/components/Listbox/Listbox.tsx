@@ -679,7 +679,7 @@ ListboxItemGroupLabel.displayName = 'Listbox.ItemGroupLabel';
 
 type ListboxContext = UseListboxContext<ListboxOption>;
 
-/** Ark's listbox api (`value`, `selectedItems`, `setValue`, `clearValue`, …) for parts inside the Root, e.g. a detail pane. */
+/** Ark's listbox api (`value`, `selectedItems`, `setValue`, `clearValue`, ...) for parts inside the Root, e.g. a detail pane. */
 const useListboxRootContext = (): ListboxContext => useListboxContext();
 export type {
   ListboxContentProps as ContentProps,

@@ -23,9 +23,9 @@ export const clone = <T extends Obj.Any>(obj: T, opts?: Obj.CloneOptions): T =>
 
 /**
  * Recursive clone worker threaded with two cycle-guard structures:
- * - `cache`: id → already-finished clone; reused when the same object appears more than once in a DAG.
+ * - `cache`: id -> already-finished clone; reused when the same object appears more than once in a DAG.
  * - `inProgress`: ids of objects whose clone is currently being computed; a ref back into this set means
- *   a true cycle — the original ref is kept rather than recursing forever.
+ *   a true cycle - the original ref is kept rather than recursing forever.
  */
 const cloneInner = <T extends Obj.Any>(
   obj: T,
@@ -50,7 +50,7 @@ const cloneInner = <T extends Obj.Any>(
   const mapRef = (value: unknown, recurse: (value: unknown) => unknown): unknown => {
     if (Ref.isRef(value)) {
       const target = value.target;
-      // A ref back to an in-progress object means a cycle — keep the original ref to break it.
+      // A ref back to an in-progress object means a cycle - keep the original ref to break it.
       if (
         target != null &&
         !inProgress.has(target.id) &&
@@ -76,7 +76,7 @@ const cloneInner = <T extends Obj.Any>(
 };
 
 /**
- * Whether `entity`'s parent chain reaches `root` — i.e. it is an owned descendant that cascade-deletes with
+ * Whether `entity`'s parent chain reaches `root` - i.e. it is an owned descendant that cascade-deletes with
  * the root. Walks the `ParentId` back-links (a finite tree); guarded against cycles defensively.
  */
 const isChildOf = (entity: unknown, root: Obj.Any): boolean => {

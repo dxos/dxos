@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.Select> = CommentOp
       registry.set(stateAtom, { ...current, current: input.current });
 
       // A deliberate click reveals the thread in the comments companion (open + switch to it). Nested
-      // here — running in an operation context — so it opens reliably (see the `reveal` note on Select).
+      // here - running in an operation context - so it opens reliably (see the `reveal` note on Select).
       if (input.reveal) {
         yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
           subject: Attention.linkedSegment('comments'),

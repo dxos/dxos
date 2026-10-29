@@ -29,7 +29,7 @@ const NUMBER_WORDS = [
 ];
 
 /**
- * Lowercase words with punctuation stripped, and 0–20 spelled out since a model may write "3." for "three";
+ * Lowercase words with punctuation stripped, and 0-20 spelled out since a model may write "3." for "three";
  * "data base" and "database" stay different words on purpose.
  */
 export const normalizeWords = (text) =>

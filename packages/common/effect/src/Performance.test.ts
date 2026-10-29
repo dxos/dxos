@@ -22,7 +22,7 @@ describe('Performance', () => {
 
     expect(summary.blob).toBe('<Uint8Array 4096 bytes>');
     expect(summary.buffer).toBe('<ArrayBuffer 16 bytes>');
-    expect(summary.long).toMatch(/^x{256}…\(1000 chars\)$/);
+    expect(summary.long).toMatch(/^x{256}\.\.\.\(1000 chars\)$/);
     expect(summary.many).toBe('<Array 100 items>');
     expect(summary.nested).toEqual({ a: { b: '<Object 1 keys>' } });
     expect(summary.short).toBe('ok');
@@ -46,7 +46,7 @@ describe('Performance', () => {
     });
     const [entry] = performance.getEntriesByName(name, 'measure') as PerformanceMeasure[];
     expect(entry.detail.params).toEqual(['<Uint8Array 10 bytes>']);
-    expect(entry.detail.devtools.properties[0][1]).toHaveLength(256 + '…(300 chars)'.length);
+    expect(entry.detail.devtools.properties[0][1]).toHaveLength(256 + '...(300 chars)'.length);
     performance.clearMeasures(name);
   });
 

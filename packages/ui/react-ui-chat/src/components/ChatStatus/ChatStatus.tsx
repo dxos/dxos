@@ -137,7 +137,7 @@ const Stopwatch = ({ classNames, offset = 0 }: StopwatchProps) => {
 export type SeparatorProps = Util.ThemedClassName<unknown>;
 
 /**
- * Middle-dot separator. Decorative — `aria-hidden`.
+ * Middle-dot separator. Decorative - `aria-hidden`.
  */
 const Separator = ({ classNames }: SeparatorProps) => (
   <span aria-hidden='true' className={mx('opacity-50', classNames)}>
@@ -152,7 +152,7 @@ const Separator = ({ classNames }: SeparatorProps) => (
 export type TextProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
- * Generic text node — useful for token counts and other inline metadata.
+ * Generic text node - useful for token counts and other inline metadata.
  */
 const Text = ({ classNames, children }: TextProps) => <span className={mx(classNames)}>{children}</span>;
 

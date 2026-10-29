@@ -33,7 +33,7 @@ export const transcriptMarkdownExtensions = [{ remove: ['Blockquote'] }];
 
 /**
  * Decorates a transcript markdown document:
- * - Markdown links whose text or target encodes a timestamp (e.g. `[1:02](…&t=62)`) are hidden inline
+ * - Markdown links whose text or target encodes a timestamp (e.g. `[1:02](...&t=62)`) are hidden inline
  *   and rendered in a left gutter as a clickable chip that calls `onSeek(seconds)` to move the video.
  * - Paragraphs that start with `>>` are styled as speaker switches (the `>>` marker is replaced with a
  *   speaker widget).
@@ -64,7 +64,7 @@ export const decorateTranscript = ({ onSeek }: DecorateTranscriptOptions = {}): 
 // Decorations: hide inline timestamp links + style speaker lines.
 //
 
-// `>>` at line start or after whitespace — the inline timestamp link may precede it on the line.
+// `>>` at line start or after whitespace - the inline timestamp link may precede it on the line.
 const SPEAKER_RE = /(^|\s)(>>)(\s?)/;
 const LINK_RE = /\[([^\]]*)\]\(([^)]*)\)/g;
 
@@ -233,7 +233,7 @@ export const parseTimestamp = (text: string): number | undefined => {
   return hours * 3600 + minutes * 60 + seconds;
 };
 
-/** Parse a `t=` offset from a URL (`t=62`, `t=62s`, `t=1m2s`, `#t=…`). */
+/** Parse a `t=` offset from a URL (`t=62`, `t=62s`, `t=1m2s`, `#t=...`). */
 export const parseUrlTimestamp = (url: string): number | undefined => {
   const match = /[?&#]t=([0-9hms]+)/.exec(url);
   if (!match) {

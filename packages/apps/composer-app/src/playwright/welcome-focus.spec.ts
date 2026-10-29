@@ -90,7 +90,7 @@ test.describe.skip('Welcome focus', () => {
     await expect(emailInput).toBeVisible();
 
     const timeline = await collectFocusTimeline(page, 2_000, 50);
-    logTimeline('Default→email', timeline);
-    expectEmailHoldsFocus('Default→email', timeline);
+    logTimeline('Default->email', timeline);
+    expectEmailHoldsFocus('Default->email', timeline);
   });
 });

@@ -20,7 +20,7 @@ import * as FeedCursor from './FeedCursor.ts';
  * The feed-cursor helpers outlived `ProcessMailbox` (deleted 2026-08-13) because `ClassifyMailbox`
  * depends on them, so their coverage had to outlive `process-mailbox.test.ts` too. The property that
  * matters is ISOLATION: several pipelines keep a cursor on the same feed, and one adopting another's
- * position silently skips messages — the bug this tagging exists to prevent.
+ * position silently skips messages - the bug this tagging exists to prevent.
  */
 describe('feed cursors', () => {
   let builder: EchoTestBuilder;
@@ -110,7 +110,7 @@ describe('feed cursors', () => {
       const { db, mailbox } = await setup();
 
       // Creating a fresh cursor instead would re-analyze the whole feed at one LLM call per message,
-      // so adoption — not just correct tagging — is what makes the change safe to ship.
+      // so adoption - not just correct tagging - is what makes the change safe to ship.
       const legacy = addLegacyCursor(db, mailbox);
       Cursor.advance(legacy, Cursor.formatKey(Date.parse('2026-07-01T00:00:00.000Z')));
       await db.flush();
@@ -138,7 +138,7 @@ describe('feed cursors', () => {
       expect(Obj.getKeys(second, FeedCursor.FEED_CURSOR_KEY_SOURCE).length).toBe(1);
     });
 
-    test('never adopts another consumer’s cursor', async ({ expect }) => {
+    test("never adopts another consumer's cursor", async ({ expect }) => {
       const { db, mailbox } = await setup();
 
       // The bug the tag exists to prevent, stated as a test: before tagging, analysis claimed
@@ -180,11 +180,11 @@ describe('feed cursors', () => {
 
     /**
      * The feed's owner and the cursor's SUBJECT are not the same thing. One mailbox feed read on
-     * behalf of several Projects gives each its own watermark, under one consumer id — without the
+     * behalf of several Projects gives each its own watermark, under one consumer id - without the
      * subject in the cursor's identity they would adopt each other's position and silently skip each
      * other's work, which is the same failure the consumer tags exist to prevent.
      */
-    test('one feed, one consumer id, distinct subjects — distinct cursors', async ({ expect }) => {
+    test('one feed, one consumer id, distinct subjects - distinct cursors', async ({ expect }) => {
       const { db, mailbox } = await setup();
       const first = db.add(Mailbox.make({ name: 'Alpha' }));
       const second = db.add(Mailbox.make({ name: 'Beta' }));

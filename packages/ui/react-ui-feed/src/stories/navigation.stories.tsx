@@ -14,7 +14,7 @@ import { FeedStory, type FeedStoryProps } from '../testing/index.ts';
  *
  * The property under test is that a press always moves, and always to the adjacent stop: a smooth
  * scroll passes through every range between here and its target, and the cursor follows the range
- * whenever the reader scrolls past it — so a navigation that does not defend its destination
+ * whenever the reader scrolls past it - so a navigation that does not defend its destination
  * overwrites it mid-flight and the next press steps from a row the animation was crossing. The
  * symptom is an arrow that sometimes moves and sometimes returns to the row it just left.
  */
@@ -44,7 +44,7 @@ const settle = async () => {
  * The reading the complaint is about: where the feed actually is.
  *
  * Not the cursor readout, and not `scrollTop` either. The readout can name a neighbour while a stop
- * is still being measured; and the offset now absorbs the start edge's repayments — content and
+ * is still being measured; and the offset now absorbs the start edge's repayments - content and
  * scroll shift together so the reader sees nothing move, which also means the raw offset moves when
  * nothing did. The row under the top edge is what the reader sees, so a press's travel is read as
  * that row's index: ArrowUp must put an earlier row there, every time.
@@ -80,7 +80,7 @@ export const Default: Story = {
  * Every press moves, and lands on a stop.
  *
  * `assistant` makes every second message a prompt and only prompts are stops, so a stop is an even
- * index — which is what makes "landed on a stop" checkable rather than merely "moved". The first
+ * index - which is what makes "landed on a stop" checkable rather than merely "moved". The first
  * press is the odd one out: the feed opens on the last message, an answer, so the nearest stop above
  * it is one index away where every step afterwards is two.
  */
@@ -103,7 +103,7 @@ export const Arrows: Story = {
 
     // And the other way: `ArrowDown` returns towards the tail it came from. Near the end a stop's
     // start can lie beyond the maximum offset, so "already at max scroll" counts as arrived rather
-    // than as a stall — the feed cannot advance the top row past what the viewport can hold.
+    // than as a stall - the feed cannot advance the top row past what the viewport can hold.
     const back = [topRowOf(canvasElement)];
     const progressed: boolean[] = [];
     for (let step = 0; step < 5; step++) {
@@ -112,7 +112,7 @@ export const Arrows: Story = {
       back.push(topRowOf(canvasElement));
       const atMax = viewport.scrollTop >= viewport.scrollHeight - viewport.clientHeight - 2;
       // A press made progress if the top row advanced, or it carried the viewport to (or held it
-      // at) the maximum — the last stop's start can lie beyond what the viewport can scroll to.
+      // at) the maximum - the last stop's start can lie beyond what the viewport can scroll to.
       progressed.push(back[step + 1] > back[step] || atMax || wasAtMax);
     }
 
@@ -124,7 +124,7 @@ export const Arrows: Story = {
 /**
  * The same property where every message is a stop.
  *
- * `plain` names no `isAnchor`, so a press steps one message — and its rows are tall and unequal,
+ * `plain` names no `isAnchor`, so a press steps one message - and its rows are tall and unequal,
  * which is the case where the offset moves furthest between two stops.
  */
 export const Plain: Story = {
@@ -148,7 +148,7 @@ export const Plain: Story = {
  * Presses faster than the glide: each must still take one stop.
  *
  * A step mid-travel that re-derives its base from the scroll offset finds the stop it is already
- * heading to and goes there again — the press is swallowed, which a reader at a toolbar feels as a
+ * heading to and goes there again - the press is swallowed, which a reader at a toolbar feels as a
  * button that "does not reliably move". The navigation chains from the pending destination instead,
  * so three fast presses land three stops away, wherever the glide had got to.
  */
@@ -159,7 +159,7 @@ export const RapidArrows: Story = {
     await settle();
 
     const before = topRowOf(canvasElement);
-    // Three presses inside one glide's travel time — no settling between.
+    // Three presses inside one glide's travel time - no settling between.
     for (let step = 0; step < 3; step++) {
       viewport.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
       await nextFrame();
@@ -175,7 +175,7 @@ export const RapidArrows: Story = {
       last = current;
     }
 
-    // Three stops on the assistant scenario is three prompts — several rows, not one.
+    // Three stops on the assistant scenario is three prompts - several rows, not one.
     const after = topRowOf(canvasElement);
     await expect({ before, after, travelled: before - after >= 3 }).toEqual({
       before,

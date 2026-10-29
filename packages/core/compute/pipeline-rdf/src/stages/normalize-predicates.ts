@@ -14,7 +14,7 @@ export type NormalizeOptions = {
   /** Predicates to canonicalize onto: a surface form one names becomes its label and IRI. */
   readonly ontology?: Ontology.Ontology;
   /**
-   * Synonym table: predicate (any inflection — keys are relation-key normalized) → canonical
+   * Synonym table: predicate (any inflection - keys are relation-key normalized) -> canonical
    * predicate. E.g. `{ 'employed by': 'works at', 'works for': 'works at' }`.
    */
   readonly synonyms?: Readonly<Record<string, string>>;

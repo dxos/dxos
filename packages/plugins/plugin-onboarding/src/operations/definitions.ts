@@ -38,7 +38,7 @@ export const RedeemOAuthRecovery = Operation.make({
  * nullifies `window.opener`, so completion is finalized out-of-band: after auth, kms-service
  * redirects the tab to `/redirect/oauth-recovery` where the recovery finalizer reads the snapshot,
  * creates the local identity, calls {@link CompleteOAuthRegistration}, and redeems the invitation.
- * This operation returns immediately once the tab is open — it does not await completion.
+ * This operation returns immediately once the tab is open - it does not await completion.
  */
 export const RegisterOAuthRecovery = Operation.make({
   meta: {

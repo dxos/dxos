@@ -22,13 +22,13 @@ export class Repo extends Type.makeObject<Repo>(DXN.make('org.dxos.type.repo', '
       Annotation.GeneratorAnnotation.set('company.buzzNoun'),
     ),
 
-    /** Account the repository belongs to, e.g. `dxos` — an organization or a user login. */
+    /** Account the repository belongs to, e.g. `dxos` - an organization or a user login. */
     owner: Schema.String.pipe(
       Schema.annotate({ title: 'Owner' }),
       Annotation.GeneratorAnnotation.set('internet.username'),
     ),
 
-    /** Canonical web URL — stored rather than derived, since only the host knows its URL shape. */
+    /** Canonical web URL - stored rather than derived, since only the host knows its URL shape. */
     url: Format.URL.pipe(
       Schema.annotate({ title: 'URL' }),
       Annotation.GeneratorAnnotation.set('internet.url'),
@@ -86,7 +86,7 @@ export const makeEdge = ({
 /** Returns true when value is a Repo object. */
 export const instanceOf = (value: unknown): value is Repo => Obj.instanceOf(Repo, value);
 
-/** `owner/name` — derived, so it cannot disagree with the parts it is built from. */
+/** `owner/name` - derived, so it cannot disagree with the parts it is built from. */
 export const fullName = (repo: Repo): string => `${repo.owner}/${repo.name}`;
 
 /** Web URL for an issue or pull request. */

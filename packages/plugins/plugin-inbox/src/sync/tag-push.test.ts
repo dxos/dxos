@@ -14,7 +14,7 @@ import {
   tagsFromIndex,
 } from './tag-push.ts';
 
-/** Structural stand-ins for pipeline changes — the observer reads only these fields. */
+/** Structural stand-ins for pipeline changes - the observer reads only these fields. */
 const retag = (entityId: string, add: string[], remove: string[]): ObservableChange => ({
   _tag: 'retag',
   foreignId: `foreign-${entityId}`,
@@ -115,7 +115,7 @@ describe('insert-time tagging', () => {
     const remote = remoteFromBase(base, observer, ELIGIBLE);
 
     const diff = diffTags({ base, local, remote, eligible: ELIGIBLE });
-    // INBOX is on local and remote with an empty base — converged, no traffic. IMPORTANT is
+    // INBOX is on local and remote with an empty base - converged, no traffic. IMPORTANT is
     // local-only, so it pushes.
     expect([...(diff.push.get('m1')?.add ?? [])]).toEqual([IMPORTANT]);
     expect(diff.push.get('m1')?.remove ?? []).toEqual([]);

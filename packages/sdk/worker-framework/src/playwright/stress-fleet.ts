@@ -99,7 +99,7 @@ export class StressFleet {
   };
 
   /**
-   * Opens a tab without waiting for its connection — used by the atomic commands, where waiting
+   * Opens a tab without waiting for its connection - used by the atomic commands, where waiting
    * between the two halves would defeat the race being provoked.
    */
   openTabWithoutWaiting = async (): Promise<StressTab> => {

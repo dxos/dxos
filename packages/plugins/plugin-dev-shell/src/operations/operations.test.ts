@@ -90,11 +90,11 @@ describe('dev shell operations', () => {
 
   /**
    * Loads the handler through the set the plugin contributes and validates the result against the
-   * definition's output schema — the shape the model actually receives, which the handler's own types
+   * definition's output schema - the shape the model actually receives, which the handler's own types
    * do not pin down (an extra or missing optional field passes typecheck and fails at the tool call).
    */
   // `never` services: these handlers ask for none, which is what lets the suite run them without a
-  // resolver — an operation that grew a service dependency would fail here rather than at runtime.
+  // resolver - an operation that grew a service dependency would fail here rather than at runtime.
   const invoke = <I, O>(definition: Operation.Definition<I, O, never>, input: I): Promise<O> =>
     EffectEx.runPromise(
       Effect.gen(function* () {

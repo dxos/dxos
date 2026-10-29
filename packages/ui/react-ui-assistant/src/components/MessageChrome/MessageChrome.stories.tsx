@@ -15,7 +15,7 @@ import { AssistantToolbar, MessageChrome, MessageChromeProvider, PromptToolbar }
 /**
  * The per-message frame and the two toolbars it hangs under a row.
  *
- * The toolbars render here without the chrome's hover reveal — they are opacity-0 until the row is
+ * The toolbars render here without the chrome's hover reveal - they are opacity-0 until the row is
  * under the pointer, so a story that framed them would show an empty box. Rewind and the message id
  * are context, not props: a variant per configuration is a variant per provider.
  */
@@ -24,7 +24,7 @@ type StoryArgs = {
   rewind?: boolean;
   debug?: boolean;
   selected?: boolean;
-  /** Synthetic context riding on the prompt — the selection or event that started the turn. */
+  /** Synthetic context riding on the prompt - the selection or event that started the turn. */
   context?: string;
   /** Only the synthetic block, no prose: a row of machinery. */
   machinery?: boolean;
@@ -115,7 +115,7 @@ export const Assistant_Toolbar: Story = {
   args: { variant: 'assistant-toolbar' },
 };
 
-/** Debug prints the message id — one turn is several messages, and the id says which. */
+/** Debug prints the message id - one turn is several messages, and the id says which. */
 export const Toolbar_Debug: Story = {
   args: { variant: 'prompt-toolbar', rewind: true, debug: true },
 };

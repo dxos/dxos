@@ -27,8 +27,8 @@ const DEFAULT_ZOOM_SENSITIVITY = 0.01;
 /**
  * Map mouse-wheel / trackpad gestures to globe motion:
  * - Scroll (or two-finger pan on a trackpad) rotates the globe:
- *   deltaY → phi (tilt around screen-X), deltaX → lambda (polar spin).
- * - Pinch-to-zoom on a trackpad — and ctrl+scroll on a mouse — are
+ *   deltaY -> phi (tilt around screen-X), deltaX -> lambda (polar spin).
+ * - Pinch-to-zoom on a trackpad - and ctrl+scroll on a mouse - are
  *   delivered as `wheel` events with `ctrlKey: true`. Those are routed
  *   to `setZoom` instead so the gesture matches the user's intent.
  */

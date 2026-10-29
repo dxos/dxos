@@ -30,7 +30,7 @@ describe('progress keys', () => {
   /**
    * The producer (an operation, holding the mailbox from `Database.load`) and the consumer
    * (`MailboxArticle`, holding it from a space query) derive the key independently, so the key must
-   * not depend on which URI form the object was hydrated with — otherwise the article subscribes to a
+   * not depend on which URI form the object was hydrated with - otherwise the article subscribes to a
    * monitor name the trace sink never registered and no meter ever appears.
    */
   test('are the absolute URI, whatever form the object was hydrated with', async ({ expect }) => {

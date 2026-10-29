@@ -67,7 +67,7 @@ const FeedViewPostSchema = Schema.Struct({
 
 /**
  * Subset of `app.bsky.feed.defs#feedViewPost` we read. The XRPC response
- * carries much richer data — keep the surface here narrow so call sites are
+ * carries much richer data - keep the surface here narrow so call sites are
  * obvious about what they actually need.
  */
 export type FeedViewPost = Schema.Schema.Type<typeof FeedViewPostSchema>;
@@ -114,7 +114,7 @@ const SavedFeedSchema = Schema.Struct({
 export type SavedFeed = Schema.Schema.Type<typeof SavedFeedSchema>;
 
 // `getPreferences.preferences` is heterogeneous. Multiple entry types carry
-// an `items` array (`savedFeedsPrefV2`, `mutedWordsPref`, `labelersPref`, …)
+// an `items` array (`savedFeedsPrefV2`, `mutedWordsPref`, `labelersPref`, ...)
 // each with a different shape, so we keep the wrapper schema permissive and
 // decode the saved-feed items per-entry below.
 const PreferencesEntrySchema = Schema.Struct({
@@ -159,7 +159,7 @@ export const toSubscriptionPostInput = (item: FeedViewPost) => {
     description: text,
     author: item.post.author.displayName ?? handle,
     published: item.post.record.createdAt,
-    /** `at://did:plc:.../app.bsky.feed.post/<rkey>` — stable across renames. */
+    /** `at://did:plc:.../app.bsky.feed.post/<rkey>` - stable across renames. */
     guid: item.post.uri,
   };
 };
@@ -177,12 +177,12 @@ type RequestEffect<T> = Effect.Effect<
 /**
  * Decide whether a request failure is worth retrying.
  *  - Transport / encode failures: yes (transient by nature).
- *  - 429 (rate limited) and 5xx: yes — exactly the cases retry was designed for.
- *  - 4xx other than 429 (auth, validation, not-found): no — retry just wastes
+ *  - 429 (rate limited) and 5xx: yes - exactly the cases retry was designed for.
+ *  - 4xx other than 429 (auth, validation, not-found): no - retry just wastes
  *    time and may exacerbate rate limiting on the same token.
  *  - TimeoutException: yes.
- *  - Body encode failures: no — payload is a code bug, not transient.
- *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
+ *  - Body encode failures: no - payload is a code bug, not transient.
+ *  - Schema decode failures (`ParseError`): no - payload won't become valid on retry.
  */
 const shouldRetry = (
   error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | Schema.SchemaError | Cause.TimeoutError,
@@ -319,7 +319,7 @@ type CredentialsValue = {
   accessTokenValue: string;
   edgeBaseUrl: string;
   pdsBaseUrl: string;
-  /** atproto handle or DID — used as the `actor` parameter for self-feed reads. */
+  /** atproto handle or DID - used as the `actor` parameter for self-feed reads. */
   handle: string;
 };
 
@@ -401,7 +401,7 @@ type AuthedEffect<T> = Effect.Effect<
 
 type PublicEffect<T> = RequestEffect<T>;
 
-/** Public XRPC GET — used for any read-only endpoint that doesn't need auth. */
+/** Public XRPC GET - used for any read-only endpoint that doesn't need auth. */
 const publicGet = <T>(
   path: string,
   query: Record<string, string | number | undefined>,
@@ -413,7 +413,7 @@ const publicGet = <T>(
   );
 
 /**
- * Authenticated XRPC GET — proxied through Edge `/atproto/proxy` so the
+ * Authenticated XRPC GET - proxied through Edge `/atproto/proxy` so the
  * stored DPoP key signs the request. Edge requires the caller to include the
  * access token via `Authorization: DPoP <token>` in the proxied request's
  * headers; Edge attaches the matching DPoP proof JWT (signed with the private
@@ -468,7 +468,7 @@ export const getAuthorFeed = (input: {
   );
 
 /**
- * Fetch an actor's liked posts. Requires auth — proxied through Edge so the
+ * Fetch an actor's liked posts. Requires auth - proxied through Edge so the
  * stored DPoP key signs the request.
  */
 export const getActorLikes = (input: {
@@ -487,7 +487,7 @@ export const getActorLikes = (input: {
  *
  * Bookmarks are part of the standard atproto lexicon
  * (`app.bsky.bookmark.getBookmarks`); auth flows via the user's PDS the same
- * way `getActorLikes` does — the PDS proxies `app.bsky.*` requests to the
+ * way `getActorLikes` does - the PDS proxies `app.bsky.*` requests to the
  * AppView. The response shape differs: each entry is a `bookmarkView` whose
  * `item` is a union of `postView | blockedPost | notFoundPost`. We surface
  * only the post-views and skip the rest.

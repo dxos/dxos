@@ -12,7 +12,7 @@ import { DXN, Obj, Type } from '@dxos/echo';
  * Feed-level record scheduling a future self-wake of the agent.
  * Managed with regular feed CRUD: append schedules, `Feed.remove` cancels a pending alarm. When it
  * fires, the agent appends the wake-up `Message` carrying `SessionStore.AckAnnotation` naming this
- * record — the ack filters it out of the pending set; the record itself stays in the feed.
+ * record - the ack filters it out of the pending set; the record itself stays in the feed.
  */
 export class Alarm extends Type.makeObject<Alarm>(DXN.make('org.dxos.type.alarm', '0.1.0'))(
   Schema.Struct({

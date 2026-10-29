@@ -108,7 +108,7 @@ const setup = async () => {
 };
 
 describe('automatic reclamation', () => {
-  // Skipped while `AUTOMATIC_GARBAGE_COLLECTION` is off in `echo-host.ts` — the current reachability
+  // Skipped while `AUTOMATIC_GARBAGE_COLLECTION` is off in `echo-host.ts` - the current reachability
   // pass is too expensive to run on every directory update, so no wipe is scheduled.
   test.skip('wipes a document when its link leaves the space directory', async () => {
     const { host, spaceId, countChunks, createRoot, linkObject, unlink } = await setup();
@@ -129,7 +129,7 @@ describe('automatic reclamation', () => {
   });
 
   // Reachability is transitive, but the directory listing that produces candidates is only one hop
-  // deep — so a document unlinked from the root while still linked from a sibling shows up as
+  // deep - so a document unlinked from the root while still linked from a sibling shows up as
   // departed and must survive on the strength of the deeper path. This is the direction that costs
   // data if the reachability search ever under-reports, which an early-exiting traversal could.
   test('keeps a departed document that is still reachable through another document', async () => {
@@ -183,7 +183,7 @@ describe('automatic reclamation', () => {
     expect(chunksBefore).toBeGreaterThan(0);
     expect(await countHeads(target)).toEqual(1);
 
-    // Fails after the heads row is deleted but before the chunk ranges are — the window that
+    // Fails after the heads row is deleted but before the chunk ranges are - the window that
     // strands chunks if the two are not committed together.
     const { storage } = host.automergeHost;
     const removeRangeEffect = storage.removeRangeEffect.bind(storage);

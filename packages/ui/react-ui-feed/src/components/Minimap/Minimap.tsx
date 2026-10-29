@@ -16,7 +16,7 @@ const DEFAULT_WIDTH = 32;
  *
  * Drawn in **content space**, not in indices. The three quantities a virtualized list can get wrong
  * are where the mounted rows are, how big the reader's slice of them is, and whether the total the
- * thumb is scaled against is honest — and none of those are visible from a row count. Here they are
+ * thumb is scaled against is honest - and none of those are visible from a row count. Here they are
  * three bars on one track, so a mounted range that has drifted away from the viewport, or a total
  * that jumps while nothing scrolls, is a picture rather than a number to be noticed.
  *
@@ -30,7 +30,7 @@ export type MinimapProps = Util.ThemedClassName<{
    * Jump to where the reader pointed, as a fraction of the whole list.
    *
    * A fraction and not an index: the map is drawn in content space, so what a click names is a
-   * position, and turning that into a row is the host's business — it has the count.
+   * position, and turning that into a row is the host's business - it has the count.
    */
   onSelect?: (fraction: number) => void;
 }>;
@@ -55,7 +55,7 @@ export const Minimap = ({ classNames, state, width = DEFAULT_WIDTH, onSelect }: 
     >
       {state && total > 0 && (
         <>
-          {/* Mounted rows: where content actually exists. Should always contain the viewport — if it
+          {/* Mounted rows: where content actually exists. Should always contain the viewport - if it
               does not, the reader is looking at rows nobody has rendered. */}
           <div
             className='absolute inset-x-0 bg-accent-bg/30'

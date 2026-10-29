@@ -26,12 +26,12 @@ import { BlueskyApi } from '../services/index.ts';
  * It is the only scope edge currently declares in its atproto
  * `client_metadata` alongside `atproto`.
  *
- * Granular permission-set scopes (`include:app.bsky.authFullApp?aud=…`)
+ * Granular permission-set scopes (`include:app.bsky.authFullApp?aud=...`)
  * are the long-term replacement, but bsky.social's auth server validates
  * requested scopes against `client_metadata.scope` with literal string
  * equality (no wildcard subsumption, no permission-set expansion). To
  * move off transition scopes, edge needs to be able to advertise
- * arbitrary plugin-contributed scopes in its `client_metadata` — either
+ * arbitrary plugin-contributed scopes in its `client_metadata` - either
  * by aggregating scopes from registered providers into a single
  * `client_metadata.json`, or by serving a per-provider `client_metadata`
  * URL so each plugin gets its own OAuth client identity. Until that
@@ -66,8 +66,8 @@ const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof Atp
  * Bluesky `testConnection`: fetch the actor's preferences through Edge's
  * atproto proxy with the stored session. A rejected/expired session or
  * transport failure surfaces as a user-facing error so the connection UI can
- * offer to reauthenticate. Credentials resolve through the client (handle → PDS
- * → proxy), so `client` is required here where HTTP-only connectors ignore it.
+ * offer to reauthenticate. Credentials resolve through the client (handle -> PDS
+ * -> proxy), so `client` is required here where HTTP-only connectors ignore it.
  */
 const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
   BlueskyApi.getSavedFeeds().pipe(

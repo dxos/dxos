@@ -19,7 +19,7 @@ const SENDERS = ['user', 'assistant'] as const;
 /**
  * Synthetic feed for measuring the engine.
  *
- * Heights are deliberately uneven — a uniform-height feed would hide exactly the measurement
+ * Heights are deliberately uneven - a uniform-height feed would hide exactly the measurement
  * problem the spike exists to answer.
  */
 export const createMessages = ({

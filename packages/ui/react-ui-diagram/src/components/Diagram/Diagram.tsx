@@ -109,8 +109,8 @@ const DiagramRoot = ({ children, diagram, overlay, grid = GRID, onNodeMove }: Di
     [resolved],
   );
 
-  // Local mirror of the projection. React Flow owns the interim state of a gesture — a drag is a
-  // stream of position changes it expects to apply itself — so without this a dragged node stays
+  // Local mirror of the projection. React Flow owns the interim state of a gesture - a drag is a
+  // stream of position changes it expects to apply itself - so without this a dragged node stays
   // frozen until the pointer is released. The model stays authoritative: the mirror is reset from
   // the projection whenever that changes, and a finished drag is committed through `onNodeMove`.
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
@@ -144,7 +144,7 @@ DiagramRoot.displayName = 'Diagram.Root';
 
 export type DiagramCanvasProps = ComposableProps<PropsWithChildren>;
 
-/** The pannable, zoomable surface. Controlled — every node and edge comes from the projection. */
+/** The pannable, zoomable surface. Controlled - every node and edge comes from the projection. */
 const DiagramCanvas = Util.composable<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
   const themeMode = Hooks.useThemeMode();
   const { fitView } = useReactFlow();
@@ -208,7 +208,7 @@ const DOT_SIZE = 1;
  *
  * - `DotPattern` renders `circle cx=r cy=r`, putting the dot's centre `size * zoom / 2` inside the
  *   corner. The error scales with zoom, so it is invisible at 1 and obvious when zoomed in.
- * - `LinePattern` renders `M w/2 0 V h M0 h/2 H w`, drawing at the half-cell — a full `grid / 2` out.
+ * - `LinePattern` renders `M w/2 0 V h M0 h/2 H w`, drawing at the half-cell - a full `grid / 2` out.
  *
  * The leading `grid` term is a whole cell, a no-op once the pattern tiles, and keeps `offset`
  * non-zero: React Flow computes `offset * zoom || 1 + gap / 2`, so a zero offset is falsy and falls

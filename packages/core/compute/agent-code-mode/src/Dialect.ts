@@ -20,8 +20,8 @@ export type SandboxOperation = {
   readonly parameters: unknown;
   /**
    * The operation itself, for a dialect that hands the model the real thing to call
-   * (`Operation.invoke(definition, input)`). Absent for a tool that is not operation-backed — a
-   * provider-defined or MCP tool — which such a dialect cannot express.
+   * (`Operation.invoke(definition, input)`). Absent for a tool that is not operation-backed - a
+   * provider-defined or MCP tool - which such a dialect cannot express.
    */
   readonly definition?: Operation.Definition.Any;
   /** Runs the operation through the tool path, raising whatever error the tool reported. */
@@ -45,7 +45,7 @@ export type SandboxType = {
   readonly kind: 'object' | 'relation';
   /**
    * Fields with their types, so the model never has to introspect a schema to find out what it may
-   * write — least of all that a field holds a reference, which a name alone does not say.
+   * write - least of all that a field holds a reference, which a name alone does not say.
    */
   readonly fields: readonly SandboxField[];
 };
@@ -63,7 +63,7 @@ export type BindingsContext = {
    * type declares are missing. Absent where the host did not say, in which case none is called missing.
    */
   readonly skills?: readonly string[];
-  /** Appends a line to this call's output — the only channel back to the model. */
+  /** Appends a line to this call's output - the only channel back to the model. */
   readonly print: (...values: unknown[]) => void;
 };
 
@@ -96,7 +96,7 @@ export type InstructionsContext = {
 
 /**
  * The types section of the API reference, shared by the dialects. `name` renders the identifier a
- * dialect's code names a type by — its typename, or the DXN it resolves.
+ * dialect's code names a type by - its typename, or the DXN it resolves.
  */
 export const renderTypes = (
   types: readonly SandboxType[],
@@ -107,11 +107,11 @@ export const renderTypes = (
     : trim`
       ### Types
 
-      Every registered type and its fields (\`?\` marks an optional field). This is the whole schema —
+      Every registered type and its fields (\`?\` marks an optional field). This is the whole schema -
       do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
       the object or its id.
 
-      ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${type.fields.map(renderField).join(', ')}`).join('\n')}
+      ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} - ${type.fields.map(renderField).join(', ')}`).join('\n')}
     `;
 
 const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;
@@ -125,7 +125,7 @@ export const renderOperation = (
   call: (name: string) => string,
   input: string = JSON.stringify(operation.parameters),
 ): string => trim`
-  - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
+  - \`${call(operation.name)}\` - ${operation.description ?? 'No description.'}
     input: ${input}
 `;
 

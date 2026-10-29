@@ -316,7 +316,7 @@ describe('decodeBody nested multipart bodies', () => {
     expect,
   }) => {
     // A reply with an inline signature image: Gmail wraps `multipart/alternative` (plain + html) and
-    // the inline image inside a `multipart/related` container — the html/plain parts are one level
+    // the inline image inside a `multipart/related` container - the html/plain parts are one level
     // deeper than `payload.parts`, not at the top level.
     const message = makeGmailMessage({
       payload: {
@@ -377,7 +377,7 @@ describe('GoogleMail.Message schema', () => {
     const raw: unknown = {
       id: 'msg-001',
       threadId: 'thread-001',
-      // `labelIds` intentionally omitted — the Gmail API does not always include it.
+      // `labelIds` intentionally omitted - the Gmail API does not always include it.
       snippet: 'Test email snippet',
       internalDate: String(Date.now()),
       payload: {

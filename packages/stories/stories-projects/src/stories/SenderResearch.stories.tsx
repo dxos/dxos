@@ -49,7 +49,7 @@ type Story = StoryObj<typeof meta>;
  * documents it produces are filed into the project's artifacts instead of loose in the space.
  *
  * Test:
- * 1. Click "Set up project" — the article opens, named "Sender Research — Clients".
+ * 1. Click "Set up project" - the article opens, named "Sender Research - Clients".
  * 2. Skills lists CRM, Web Search, Database and Markdown; Context lists the Clients mailbox.
  * 3. Routines shows the "Sender Research" card (feed trigger, disabled).
  * 4. With a live model: enable the trigger, add a message to the mailbox feed, and watch
@@ -71,7 +71,7 @@ export const Test: Story = {
     const button = await waitFor(() => canvas.getByTestId('projects.story.setup'), { timeout: 30_000 });
     await userEvent.click(button);
 
-    await waitFor(async () => expect(canvas.getByDisplayValue(/Sender Research — Clients/)).toBeInTheDocument(), {
+    await waitFor(async () => expect(canvas.getByDisplayValue(/Sender Research \u2014 Clients/)).toBeInTheDocument(), {
       timeout: 30_000,
     });
 

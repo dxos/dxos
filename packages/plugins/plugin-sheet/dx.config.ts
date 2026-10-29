@@ -34,7 +34,7 @@ const config: Plugin.PluginConfig = Plugin.config({
 
       The plugin integrates with plugin-markdown to expose formula results inside document fenced code blocks, and
       contributes anchor-navigation support so other plugins can scroll and highlight specific cell ranges by DXN reference.
-      AI agents can invoke sheet operations — insert/drop axes, scroll to anchor, and read or write cell values — through
+      AI agents can invoke sheet operations - insert/drop axes, scroll to anchor, and read or write cell values - through
       the standard operations framework.
     `,
     icon: { key: 'ph--grid-nine--regular', hue: 'indigo' },

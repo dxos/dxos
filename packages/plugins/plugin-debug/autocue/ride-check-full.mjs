@@ -29,7 +29,7 @@
 const TEMPLATE = 'Ride Check';
 const PROJECT = 'Ride Check';
 const FEATURE = 'Go / no-go';
-const SUBFEATURE = 'Gust rule — show gusts, warn above 30 km/h';
+const SUBFEATURE = 'Gust rule - show gusts, warn above 30 km/h';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -81,7 +81,7 @@ const showProject = async (page) => {
   await row.waitFor({ state: 'visible', timeout: 5_000 });
 };
 
-/** Task title → status in the take's space, read from ECHO. */
+/** Task title -> status in the take's space, read from ECHO. */
 const taskStatuses = (page) =>
   page
     .evaluate(async (key) => {
@@ -96,7 +96,7 @@ const taskStatuses = (page) =>
     }, TAKE_SPACE)
     .catch(() => ({}));
 
-/** Feature name → status in the take's space. */
+/** Feature name -> status in the take's space. */
 const featureStatuses = (page) =>
   page
     .evaluate(async (key) => {

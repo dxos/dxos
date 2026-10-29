@@ -34,7 +34,7 @@ export type Question<Instructions = unknown> =
   | { type: 'score'; instructions: Instructions; criteria: string[] };
 
 /**
- * An answer as the API returns it, discriminated on `type` — a payload that does not match its
+ * An answer as the API returns it, discriminated on `type` - a payload that does not match its
  * own `type` is a malformed answer, not an answer with fields left unset.
  */
 export type Answer =

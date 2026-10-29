@@ -38,7 +38,7 @@ export const childList = (node: Node, key: string): Node[] => {
 
 export const children = (node: Node): Node[] => {
   const found: Node[] = [];
-  // `for…in` rather than `Object.entries`: no pair arrays per node, which dominated every walk.
+  // `for...in` rather than `Object.entries`: no pair arrays per node, which dominated every walk.
   for (const key in node) {
     const value = node[key];
     if (typeof value !== 'object' || value === null || key === 'parent') {

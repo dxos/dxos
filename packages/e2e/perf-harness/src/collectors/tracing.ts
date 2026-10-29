@@ -77,7 +77,7 @@ type TraceEvent = {
  * One browser-wide trace covering BOOT, sliced by user-timing marks.
  *
  * Why a trace rather than the `Profiler` domain: tracing starts BEFORE the first navigation and is
- * browser-wide, so it covers `boot` and every worker that boot creates — the window the profiler
+ * browser-wide, so it covers `boot` and every worker that boot creates - the window the profiler
  * structurally cannot reach, since there is no target to attach to until the page exists.
  *
  * Why boot ONLY: at `toplevel` granularity boot alone emits ~35,000 tasks and fills Chrome's trace
@@ -234,8 +234,8 @@ export type CounterTrace = {
  * out, layouts forced by script, and instructions retired per thread.
  *
  * Per stage rather than per run because a whole-run trace fills Chrome's buffer during boot (see
- * {@link startTracing}). Starting one fails while another trace records — the boot trace, or a
- * footprint read — which the caller treats as "no counters for this stage" rather than an error.
+ * {@link startTracing}). Starting one fails while another trace records - the boot trace, or a
+ * footprint read - which the caller treats as "no counters for this stage" rather than an error.
  * Only the events between the stage's own marks count, so the harness's boundary reads around them
  * do not.
  */
@@ -264,7 +264,7 @@ export const startCounterTrace = async (
 /**
  * Per-stage, per-realm task time from a trace file on disk.
  *
- * Exported so a saved `trace.json.gz` artifact can be re-read after the fact — the numbers are
+ * Exported so a saved `trace.json.gz` artifact can be re-read after the fact - the numbers are
  * two streaming passes over the file and need no browser, so a regression can be re-examined from
  * the uploaded artifact rather than by reproducing the run.
  */
@@ -290,7 +290,7 @@ const BRACE_CLOSE = 0x7d;
  * Operates on BYTES rather than a string: indexing a string per character allocates a
  * single-character string per byte, which on an 806 MB trace is ~800M allocations.
  *
- * `needles` is a byte-level prefilter — an event whose bytes contain none of them is skipped
+ * `needles` is a byte-level prefilter - an event whose bytes contain none of them is skipped
  * without being parsed, which matters because only ~2.7M of the objects are of interest and
  * `JSON.parse` is the expensive part.
  */
@@ -306,12 +306,12 @@ const streamEvents = async (file: string, onEvent: (event: TraceEvent) => void, 
   let escaped = false;
   // Chrome emits `{"traceEvents":[...],"metadata":{...}}`, NOT a bare array. Without skipping past
   // that opening `[`, the document's own `{` opens an object that only closes at EOF, so the whole
-  // file is buffered and exactly one "event" is ever yielded — which is why this collector
+  // file is buffered and exactly one "event" is ever yielded - which is why this collector
   // produced no numbers at all.
   let entered = false;
 
   for await (const chunk of source) {
-    // Concatenates the straddling remainder only, never the whole file — enforced below for the
+    // Concatenates the straddling remainder only, never the whole file - enforced below for the
     // header search too, which is the one place that could otherwise accumulate without bound.
     let buffer = tail.length ? Buffer.concat([tail, chunk]) : chunk;
     if (!entered) {
@@ -319,7 +319,7 @@ const streamEvents = async (file: string, onEvent: (event: TraceEvent) => void, 
       const open = key < 0 ? -1 : buffer.indexOf(ARRAY_OPEN, key);
       if (open < 0) {
         // A file that never contains the key would otherwise be concatenated whole and then read
-        // as zero events — the same unbounded-buffer failure this parser was rewritten to remove,
+        // as zero events - the same unbounded-buffer failure this parser was rewritten to remove,
         // and reachable from `readTrace` on any saved artifact that is truncated or not a Chrome
         // trace. The marker appears in the first few hundred bytes of a real trace.
         if (buffer.length > MAX_HEADER_BYTES) {
@@ -373,7 +373,7 @@ const streamEvents = async (file: string, onEvent: (event: TraceEvent) => void, 
 
     // Keep only the partial object straddling the chunk boundary. The retained bytes are
     // re-scanned from 0 next chunk, so the scanner state must be reset to what it was AT `start`
-    // — depth 0, outside a string, by construction of a depth-0 `{`. Carrying the running state
+    // - depth 0, outside a string, by construction of a depth-0 `{`. Carrying the running state
     // instead double-counted every brace in the tail, so depth drifted up and never returned to
     // 0: the tail never drained, giving unbounded memory and quadratic work (measured at 5m44s
     // and 1.5 GB, while silently dropping 98% of the events).
@@ -398,8 +398,8 @@ const scanTrace = async (file: string): Promise<TraceIndex> => {
   const open = new Map<string, number>();
   const windows: Array<{ stage: string; from: number; to: number }> = [];
 
-  // Pass one needs only the thread-name metadata and the stage marks — a few hundred objects out
-  // of millions — so everything else is rejected on bytes and never parsed.
+  // Pass one needs only the thread-name metadata and the stage marks - a few hundred objects out
+  // of millions - so everything else is rejected on bytes and never parsed.
   await streamEvents(
     file,
     (event) => {
@@ -431,7 +431,7 @@ const scanTrace = async (file: string): Promise<TraceIndex> => {
 
 /**
  * Script events a layout can nest in. A `Layout` inside one ran synchronously because the script
- * read geometry it had invalidated — DevTools' "forced reflow" — rather than in the frame's own
+ * read geometry it had invalidated - DevTools' "forced reflow" - rather than in the frame's own
  * rendering step.
  */
 const SCRIPT_EVENTS: ReadonlySet<string> = new Set([
@@ -471,8 +471,8 @@ const isTopLevel = (event: TraceEvent): boolean => event.cat?.split(',').include
 /**
  * Pass two: task time per realm inside each window, plus the rendering and instruction counts.
  *
- * NOTE THE SEMANTICS: task time is time spent INSIDE tasks on a thread — what
- * `Performance.getMetrics` calls `TaskDuration` — not the sampled CPU the profiler reports. A thread
+ * NOTE THE SEMANTICS: task time is time spent INSIDE tasks on a thread - what
+ * `Performance.getMetrics` calls `TaskDuration` - not the sampled CPU the profiler reports. A thread
  * parked inside a task waiting on I/O counts as busy here and idle there, so the two agree for a
  * JS-bound realm and diverge for one that blocks. Only `toplevel` events count toward it, so adding
  * `devtools.timeline` to a trace does not add its nested events to the task time.

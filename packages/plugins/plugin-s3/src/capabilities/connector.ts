@@ -42,7 +42,7 @@ const S3CredentialForm = Schema.Struct({
   }),
   accessKeyId: Schema.NonEmptyString.annotate({
     title: 'Access key ID',
-    description: 'The S3 access key ID. For R2: Cloudflare dashboard → R2 → Manage API tokens.',
+    description: 'The S3 access key ID. For R2: Cloudflare dashboard -> R2 -> Manage API tokens.',
   }),
   secretAccessKey: Schema.NonEmptyString.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Secret access key',
@@ -55,7 +55,7 @@ type S3CredentialFormValues = Schema.Schema.Type<typeof S3CredentialForm>;
 /**
  * Strips everything but the host from what the user pasted. The dashboard hands out a full URL, and
  * a scheme or trailing path left in `AccessToken.source` would not match the host parsed out of a
- * blob URI at read time — a mismatch that reads as "no credential" rather than as a typo.
+ * blob URI at read time - a mismatch that reads as "no credential" rather than as a typo.
  */
 export const normalizeEndpoint = (endpoint: string): string =>
   endpoint
@@ -77,7 +77,7 @@ export const composeHost = ({ bucket, endpoint }: { bucket: string; endpoint: st
 
 /**
  * The S3 connector. The bucket endpoint becomes `AccessToken.source`, the access key id
- * `AccessToken.account` (a non-secret identifier) and the secret `AccessToken.token` — so one
+ * `AccessToken.account` (a non-secret identifier) and the secret `AccessToken.token` - so one
  * connection addresses exactly one bucket and the blob backend can find it from a URI's host alone.
  */
 export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
@@ -142,7 +142,7 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
   },
 
   /**
-   * Bucket, endpoint, key id and signing region — every non-secret half of the credential. The
+   * Bucket, endpoint, key id and signing region - every non-secret half of the credential. The
    * secret is deliberately absent; `AccessToken.account` holds the key id precisely because it is
    * the identifier rather than the secret.
    */
@@ -151,7 +151,7 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
     return [
       { label: 'Bucket', value: bucket },
       { label: 'Endpoint', value: rest.join('.') },
-      { label: 'Access key ID', value: accessToken.account ?? '—' },
+      { label: 'Access key ID', value: accessToken.account ?? '-' },
       { label: 'Region', value: regionFromHost(accessToken.source) },
     ];
   },
@@ -159,7 +159,7 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
   /**
    * Probes a key that should not exist: it needs no write permission and leaves nothing behind.
    *
-   * Uses `probeAccess` rather than `headObject`, which reports 403 and 404 alike as "not there" —
+   * Uses `probeAccess` rather than `headObject`, which reports 403 and 404 alike as "not there" -
    * right for reading a blob, wrong here, where a rejected key reported as a miss would pass the
    * test. The failure's own message is passed through as `ConnectionTestError.message`, since that
    * is what the connection UI displays; the default would flatten every cause to "Connection test

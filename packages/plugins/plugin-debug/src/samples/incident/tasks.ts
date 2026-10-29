@@ -16,7 +16,7 @@ import { daysAgo } from './util.ts';
 // this space is a job to delegate, not a retro caught half-written.
 //
 // Each task names one deliverable and where it goes, so the check on a finished task is whether
-// that thing exists in that place — not whether the chat said it did.
+// that thing exists in that place - not whether the chat said it did.
 //
 
 type TaskSeed = {

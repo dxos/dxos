@@ -43,7 +43,7 @@ const haversine = (a: GeoTuple, b: GeoTuple): number => {
 };
 
 export type FakeRoutingOptions = {
-  /** City name (case-insensitive) → `[lon, lat]`. Defaults to {@link CITY_COORDS}. */
+  /** City name (case-insensitive) -> `[lon, lat]`. Defaults to {@link CITY_COORDS}. */
   coords?: Record<string, [number, number]>;
   /** Service id. */
   id?: string;

@@ -8,7 +8,7 @@ import { type TargetKind } from './types.ts';
  * Minimal CDP client over one target's websocket.
  *
  * Raw rather than Playwright's `newCDPSession`, because that wrapper can only reach the page and
- * its dedicated workers — it cannot attach to a SHARED worker, which is where ECHO, automerge and
+ * its dedicated workers - it cannot attach to a SHARED worker, which is where ECHO, automerge and
  * the whole database live. Measuring a DXOS flow through Playwright's CDP alone therefore reports
  * the renderer and silently omits the process that does the work.
  *
@@ -78,7 +78,7 @@ export class Cdp {
    *
    * The readyState guard is load-bearing rather than defensive: Node's global `WebSocket` SILENTLY
    * ignores `send()` once the socket is closing or closed, so a request enqueued after the `close`
-   * listener has already drained `#pending` would never settle — and `trySend` has no timeout, so
+   * listener has already drained `#pending` would never settle - and `trySend` has no timeout, so
    * the awaiting stage would hang until playwright's outer budget aborted the whole flow. A target
    * that disappears between `refreshTargets` and a read is exactly that case.
    *
@@ -115,7 +115,7 @@ export class Cdp {
     });
   }
 
-  /** Send and swallow — for domains a given target type does not implement, and timeouts. */
+  /** Send and swallow - for domains a given target type does not implement, and timeouts. */
   async trySend<T = any>(
     method: string,
     params: Record<string, unknown> = {},
@@ -242,7 +242,7 @@ export type TargetFilter = (target: TargetInfo) => boolean;
  * Reconciles the attached set against the targets that exist now, keeping live sessions open.
  *
  * Sessions are long-lived rather than reopened per stage because the profiler and the screencast
- * are stateful across boundaries — closing their socket would discard the in-flight profile. But
+ * are stateful across boundaries - closing their socket would discard the in-flight profile. But
  * the SET must still be refreshed: a shared worker can start, hibernate or be replaced mid-flow,
  * and one that appears during stage 2 has to be measured for stage 3.
  */

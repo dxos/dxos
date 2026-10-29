@@ -16,7 +16,7 @@ import { useFacts } from './use-facts.ts';
 /**
  * Companion surface rendering the semantic facts extracted for the active space. Reads the shared
  * per-space {@link FactStoreRegistry} (populated by the analysis pipeline) and hands its facts to the
- * presentational {@link FactViewer}. Space-scoped via {@link useActiveSpace} — no container coupling.
+ * presentational {@link FactViewer}. Space-scoped via {@link useActiveSpace} - no container coupling.
  */
 export const FactsCompanion = () => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);

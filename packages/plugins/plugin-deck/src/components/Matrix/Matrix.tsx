@@ -61,7 +61,7 @@ type MatrixRootProps = PropsWithChildren<{
 
 /**
  * Headless root that provides matrix context.
- * Syncs the attention system with `onCurrentChange` — when a tile gains attention, the callback fires.
+ * Syncs the attention system with `onCurrentChange` - when a tile gains attention, the callback fires.
  */
 const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
   ({ children, items = [], Tile, current, onCurrentChange }, forwardedRef) => {

@@ -19,7 +19,7 @@ export type ReplayStep = {
   readonly at: string;
   readonly note: string;
   readonly facts: ReadonlyArray<ReplayFact & { readonly id: string }>;
-  /** Proposed actions checked against `blocks`, as `kind key=value …`. */
+  /** Proposed actions checked against `blocks`, as `kind key=value ...`. */
   readonly actions: ReadonlyArray<string>;
   /** Absent for custom events, which have nothing to check against. */
   readonly expected?: Expectation;

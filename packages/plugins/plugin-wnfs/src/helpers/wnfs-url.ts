@@ -49,7 +49,7 @@ export const getBlobUrl = async ({
 }) => {
   const result = await readWnfsFile({ wnfsUrl, blockstore, forest, directory });
   // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
-  // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and the
+  // `BlobPart` only covers `ArrayBuffer`-backed views - a gap between the DOM lib types and the
   // TS standard lib, not fixable by typing `result` differently.
   const blob = new Blob([result as BlobPart], { type });
   return URL.createObjectURL(blob);

@@ -10,7 +10,7 @@ export type TreeItemDataProps = {
   id: string;
   label: Theme.Label;
   parentOf?: string[];
-  /** Pass-through of the node's disposition; the tree uses this to branch render mode (e.g. `'group'` → section header). */
+  /** Pass-through of the node's disposition; the tree uses this to branch render mode (e.g. `'group'` -> section header). */
   disposition?: string;
   /** When `false`, the item cannot be dragged (overrides tree-level `draggable`). */
   draggable?: boolean;

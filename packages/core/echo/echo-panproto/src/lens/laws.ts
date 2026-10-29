@@ -9,7 +9,7 @@ import { type AnyLens, type Write } from './types.ts';
 
 //
 // The GetPut law over the base object: reading a view and putting it straight back must change
-// nothing. That is the failure a hand-written mapper pair hides — a `get` that normalizes or defaults
+// nothing. That is the failure a hand-written mapper pair hides - a `get` that normalizes or defaults
 // a value, paired with a `put` that writes the normalized form back, silently rewrites the object on
 // every save.
 //
@@ -113,7 +113,7 @@ export const checkLaws = (obj: Obj.Unknown, lens: AnyLens): LawCheckResult => {
 const describe = (write: Write): string =>
   write.kind === 'overlay' ? write.property : write.path.map(String).join('.');
 
-/** The value a write would produce next to the value already there — without applying it. */
+/** The value a write would produce next to the value already there - without applying it. */
 const observe = (obj: Obj.Unknown, write: Write): { current: unknown; next: unknown } => {
   switch (write.kind) {
     case 'assign':

@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
  *
  * Use for tags that are not known at provider construction (e.g. identity
  * resolved asynchronously after login). For values known at startup, prefer
- * putting them on the `Resource` — see `extension.ts`.
+ * putting them on the `Resource` - see `extension.ts`.
  *
  * Failures in the tag provider are swallowed so they can never break span
  * recording (the processor is best-effort and runs on the startSpan hot path).

@@ -53,7 +53,7 @@ export const makeDocs = (drawings: DocDrawings): Docs => {
 
       ### The front door
 
-      \`edge\` is the router worker every client talks to. Its Hono API (\`src/api.ts\`) mounts the realtime routes and proxies each path prefix (\`/db\`, \`/functions\`, \`/kms\` …) to the service behind it. The \`router\` service holds the live connections: one \`RouterObject\` Durable Object per identity keeps that identity's device WebSockets, and \`SwarmObject\` tracks who is in which swarm. A message for a device, from any service, goes through \`ROUTER_MESSENGER\` to that device's \`RouterObject\`.
+      \`edge\` is the router worker every client talks to. Its Hono API (\`src/api.ts\`) mounts the realtime routes and proxies each path prefix (\`/db\`, \`/functions\`, \`/kms\` ...) to the service behind it. The \`router\` service holds the live connections: one \`RouterObject\` Durable Object per identity keeps that identity's device WebSockets, and \`SwarmObject\` tracks who is in which swarm. A message for a device, from any service, goes through \`ROUTER_MESSENGER\` to that device's \`RouterObject\`.
 
       The prefix routing is \`src/service-proxy.ts\`, which forwards a request over the target service's binding. The same worker serves the R2 backup routes (\`src/backups/api.ts\`) and the admin and KMS routes (\`src/admin.ts\`). Data management hands storage purges to \`purge-orchestrator.ts\` through the \`storage-purge\` queue. On the router side, \`src/worker/api.ts\` accepts the WebSocket and the \`/inbox\` API, and \`Inbox\` serves user-to-user notices, which \`EdgeHttpClient\` reaches under \`/inbox/\`. Traffic from a \`RouterObject\` to db-service goes through the \`DATABASE_MESSENGER\` binding.
 

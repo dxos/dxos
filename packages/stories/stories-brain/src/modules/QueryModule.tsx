@@ -17,7 +17,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { DEFAULT_SPARQL, QueryPanel } from '../components/index.ts';
 import { useFactsStory } from './context.ts';
 
-/** LEFT (middle): natural-language → SPARQL over Brain's per-space `FactStore`; results are the view. */
+/** LEFT (middle): natural-language -> SPARQL over Brain's per-space `FactStore`; results are the view. */
 export const QueryModule = () => {
   const space = ToolkitHooks.useActiveSpace();
   if (!space) {

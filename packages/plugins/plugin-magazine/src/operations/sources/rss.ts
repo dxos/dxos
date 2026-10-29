@@ -17,7 +17,7 @@ import { getText } from './http.ts';
 /**
  * Unwrap `<![CDATA[ ... ]]>` sections, returning the inner content.
  * fast-xml-parser returns stopNode'd content (description / summary / content / content:encoded)
- * verbatim, so CDATA-wrapped HTML — which feeds use pervasively — arrives as a literal
+ * verbatim, so CDATA-wrapped HTML - which feeds use pervasively - arrives as a literal
  * `<![CDATA[ ... ]]>` string. Strip the wrapper(s) so the inner HTML reaches downstream
  * conversion. A no-op for values that contain no CDATA section.
  */
@@ -97,7 +97,7 @@ const parseFeed = (url: string, xml: string): FetchResult => {
   const isAtom = !parsed.rss;
   const feedName = text(channel.title) ?? '';
   const feedDescription = markdown(text(isAtom ? channel.subtitle : channel.description)) ?? '';
-  // The channel's own `<link>` is the feed's website, not the feed document — Atom spells it as the
+  // The channel's own `<link>` is the feed's website, not the feed document - Atom spells it as the
   // `alternate` link, and both live alongside the per-item links parsed below.
   const feedLink = channelLink(channel, isAtom);
 

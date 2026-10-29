@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof OutlineOperation.GetOutline> = Outli
   Operation.withHandler(
     Effect.fnUntraced(function* ({ outline: outlineRef }) {
       const outline = yield* Database.load(outlineRef);
-      // The ref is typed but unvalidated — the caller is a model passing an id it read elsewhere,
+      // The ref is typed but unvalidated - the caller is a model passing an id it read elsewhere,
       // and any other object reaches `outline.content` as undefined and throws a raw TypeError.
       if (!Obj.instanceOf(Outline.Outline, outline)) {
         return yield* Effect.fail(

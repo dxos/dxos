@@ -37,7 +37,7 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
   const touchedRef = useRef(false);
 
   // The token is write-only (never rendered back), so the input rests empty.
-  // Persist on blur, but only when the field was actually edited — an untouched
+  // Persist on blur, but only when the field was actually edited - an untouched
   // blur must not be read as "clear" and wipe an existing token. A trimmed-empty
   // value after editing removes the token.
   const handleCommit = useCallback(() => {

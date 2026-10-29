@@ -4,7 +4,7 @@
 
 // Renders the set of MCP tools exposed by `@dxos/introspect-mcp` (or any
 // caller that supplies a compatible map of tool definitions). One row per
-// tool; click to select. Selection is controlled — the parent owns the
+// tool; click to select. Selection is controlled - the parent owns the
 // currently-selected tool name and renders the form / results panel for it.
 //
 // Built on `Listbox` from `@dxos/react-ui-list`, which provides the
@@ -21,7 +21,7 @@ import { translationKey } from '#translations';
 
 import type { ToolEntry } from '../types.ts';
 
-// Not `composable()` — ToolList's outermost rendered element is
+// Not `composable()` - ToolList's outermost rendered element is
 // `<Listbox.Root>`, which is headless. Slot-merging className/ref onto
 // a headless component is a no-op, so an `asChild` surface here would
 // be misleading. Consumers needing slot semantics should reach for

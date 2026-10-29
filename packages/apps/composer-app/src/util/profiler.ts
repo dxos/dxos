@@ -20,19 +20,19 @@ export type ProfilerSnapshot = {
   complete: boolean;
   /** ISO timestamp of when `dump()` was called. */
   finishedAt?: string;
-  /** Top-level startup phases (`startup:dynamic-imports`, `startup:services`, …). */
+  /** Top-level startup phases (`startup:dynamic-imports`, `startup:services`, ...). */
   phases: Array<{ name: string; duration: number; startTime: number }>;
   /** Activation-event timings (`event:foo:bar`). */
   events: Array<{ name: string; duration: number; startTime: number }>;
   /** Module activation timings (`module:org.dxos.plugin.x.module.y`). */
   modules: Array<{ name: string; duration: number; startTime: number }>;
-  /** Scheduling delay per module (`module-wait:` — in-flight providers + requires resolution). */
+  /** Scheduling delay per module (`module-wait:` - in-flight providers + requires resolution). */
   moduleWaits: Array<{ name: string; duration: number; startTime: number }>;
-  /** Activate execution per module (`module-run:` — chunk import + body). */
+  /** Activate execution per module (`module-run:` - chunk import + body). */
   moduleRuns: Array<{ name: string; duration: number; startTime: number }>;
-  /** Lazy chunk import per module (`module-import:` — fetch + parse of the module's chunk). */
+  /** Lazy chunk import per module (`module-import:` - fetch + parse of the module's chunk). */
   moduleImports: Array<{ name: string; duration: number; startTime: number }>;
-  /** Plugin-definition chunk imports (`plugin-load:` — precede all module activation). */
+  /** Plugin-definition chunk imports (`plugin-load:` - precede all module activation). */
   pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
   /** Which event activated each module (`module-cause:<module>:<event>` marks). */
   moduleCauses: Array<{ module: string; event: string; startTime: number }>;
@@ -183,7 +183,7 @@ export const startupProfiler = (): Profiler => {
       console.groupEnd();
 
       // Publish the snapshot on a BroadcastChannel so a devtools panel or
-      // another tab can subscribe without polling localStorage. Best-effort —
+      // another tab can subscribe without polling localStorage. Best-effort -
       // `BroadcastChannel` is missing in some embedded webviews.
       try {
         if (typeof BroadcastChannel !== 'undefined') {
@@ -192,13 +192,13 @@ export const startupProfiler = (): Profiler => {
           channel.close();
         }
       } catch {
-        // No-op — channel publishing is purely additive.
+        // No-op - channel publishing is purely additive.
       }
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(snap));
       } catch {
-        // Quota or disabled storage — non-fatal.
+        // Quota or disabled storage - non-fatal.
       }
     },
   };

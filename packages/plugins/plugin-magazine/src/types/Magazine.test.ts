@@ -51,7 +51,7 @@ describe('Magazine', () => {
     });
 
     // The magazine persists its routine output as JSON Schema, which `completeJob` rebuilds into its
-    // parameter schema — so nullability has to survive that round trip, which a decode-time
+    // parameter schema - so nullability has to survive that round trip, which a decode-time
     // transformation would not.
     test('nullability survives the JSON Schema round trip', ({ expect }) => {
       const roundTripped = JsonSchema.toEffectSchema(JsonSchema.toJsonSchema(Magazine.CurationOutput));

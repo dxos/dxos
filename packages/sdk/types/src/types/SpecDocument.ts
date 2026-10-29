@@ -45,7 +45,7 @@ export class Legacy extends Type.makeObject<Legacy>(DXN.make('org.dxos.type.spec
   }),
 ) {}
 
-/** `org.dxos.type.spec` 0.1.0 → `org.dxos.type.specDocument` 0.1.0: the same fields under the new typename. */
+/** `org.dxos.type.spec` 0.1.0 -> `org.dxos.type.specDocument` 0.1.0: the same fields under the new typename. */
 export const migrations: Migration.Migration[] = [
   Migration.define({
     from: Legacy,

@@ -849,7 +849,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
     // Budgeted like the RPC it confirms, because the setting is already committed on the host and this
     // only waits for the local snapshot, queued behind every other space's synchronized
-    // `_processSpaceUpdate` — on a cold app with several spaces, convergence exceeds a short deadline.
+    // `_processSpaceUpdate` - on a cold app with several spaces, convergence exceeds a short deadline.
     await asyncTimeout(
       this._anySpaceUpdate.waitForCondition(() => {
         return this._data.edgeReplication === setting;

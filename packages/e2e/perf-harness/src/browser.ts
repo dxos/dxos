@@ -102,7 +102,7 @@ const instrument = async (
  * browser-scoped and therefore unreachable from a page session.
  *
  * In the Claude Code cloud sandbox chromium needs a pinned executable and the egress proxy, the
- * same conditions `e2ePreset` applies — restated because that preset configures Playwright's
+ * same conditions `e2ePreset` applies - restated because that preset configures Playwright's
  * fixture, which this deliberately bypasses.
  */
 export const launchInstrumentedBrowser = async (): Promise<InstrumentedBrowser> => {

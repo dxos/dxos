@@ -69,7 +69,7 @@ export type CreateRecoveryUiOptions = {
 };
 
 /**
- * Builds the recovery page chrome with no framework dependency — the page must render when the
+ * Builds the recovery page chrome with no framework dependency - the page must render when the
  * app bundle is exactly what cannot be trusted to load.
  */
 export const createRecoveryUi = ({ container }: CreateRecoveryUiOptions): RecoveryUi => {
@@ -95,7 +95,7 @@ export const createRecoveryUi = ({ container }: CreateRecoveryUiOptions): Recove
   Domino.of('header')
     .append(
       Domino.of('h1').text('Composer Recovery'),
-      Domino.of('p').text('Safe mode — static dxos globals only. Use Diagnostics to inspect the profile.'),
+      Domino.of('p').text('Safe mode - static dxos globals only. Use Diagnostics to inspect the profile.'),
       Domino.of('div')
         .classNames('header-actions')
         .append(...HEADER_ACTIONS.map(createButton)),

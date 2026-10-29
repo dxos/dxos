@@ -46,9 +46,9 @@ const MESSAGE_TAGS: { label: string; hue: string }[][] = [
 /**
  * Renders the seeded mailbox's one thread through `ConversationStack` in isolation. The whole-thread
  * toolbar (view controls, collapse-all) belongs to `MessageArticle`, not the stack, so it is left out
- * here to keep the component's own surface — the message tiles and their per-message toolbars — clear.
+ * here to keep the component's own surface - the message tiles and their per-message toolbars - clear.
  * Starts with every message collapsed; expand one by clicking its summary. (Deciding which message is
- * expanded by default — the most recent — is `MessageArticle`'s concern, exercised in its own story.)
+ * expanded by default - the most recent - is `MessageArticle`'s concern, exercised in its own story.)
  */
 const DefaultStory = ({ reply }: StoryArgs) => {
   const { space } = useClientStory();
@@ -172,7 +172,7 @@ const meta = {
 
           // Half the senders get a Person, so the avatar shows BOTH states side by side: a resolved
           // contact whose card opens on hover, and an unknown one offering to create it. Seeding all or
-          // none leaves one of the two states untestable. Derived from the FEED-scoped messages above —
+          // none leaves one of the two states untestable. Derived from the FEED-scoped messages above -
           // a bare space query does not see feed messages, and would silently seed nobody.
           const senders = [
             ...new Set(
@@ -208,7 +208,7 @@ export const Default: Story = {};
  * Test:
  * 1. Press "Reply" in the toolbar. A draft tile appears after the thread's last message, scrolled
  *    fully into view, with To and `Re:` subject prefilled from that message.
- * 2. The BODY editor has focus — typing immediately lands in the draft body, not a recipient field.
+ * 2. The BODY editor has focus - typing immediately lands in the draft body, not a recipient field.
  * 3. The draft's header fields (To / Cc / Bcc / subject) render as an aligned label/field grid with
  *    vertical separation; reveal Cc and Bcc via the links on the To row to see all rows align.
  */

@@ -57,7 +57,7 @@ export type ClientPluginOptions = ClientOptions & {
   /**
    * Called when the forked `client.initialize()` fails or exceeds `initializeTimeout`.
    *
-   * The initialization runs outside the render tree, so nothing surfaces a failure on its own —
+   * The initialization runs outside the render tree, so nothing surfaces a failure on its own -
    * consumers suspended on the client simply keep waiting. Apps supply this to raise it as a
    * fatal error (Composer shows the reset dialog).
    */
@@ -77,7 +77,7 @@ export type ClientPluginOptions = ClientOptions & {
    *
    * For imperative hosts (the CLI): a command body runs straight through, so an ungated service
    * hands it a client whose getters still throw `Client not initialized`. Leave it off in the app,
-   * where the forked initialization is the point — React consumers suspend on the client instead,
+   * where the forked initialization is the point - React consumers suspend on the client instead,
    * and blocking the service would stall the boot waterfall.
    *
    * @default false

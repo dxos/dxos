@@ -38,7 +38,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       // The app-wide TranscriptionDriver (ReactContext) reads the recording-session/settings
-      // capabilities, which activate on SetupSettings — fire it so the driver does not throw.
+      // capabilities, which activate on SetupSettings - fire it so the driver does not throw.
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({

@@ -288,7 +288,7 @@ type ListedSkill = { key: string; name: string; customized: boolean; skill?: Ref
 
 /**
  * The plugin skills the agent's conversation binds; a customized one opens for editing. Bindings live in the chat's
- * feed and are read through an operation, so the list is re-read whenever the feed gains a binding entry —
+ * feed and are read through an operation, so the list is re-read whenever the feed gains a binding entry -
  * a mode switch from anywhere.
  */
 const useAgentSkills = (agent: Agent.Agent) => {

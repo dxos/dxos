@@ -6,9 +6,9 @@
 // Grid placement for the semantic diagram: every node takes one cell of a regular lattice, and a
 // scored search fills whatever the author left open. Groups are laid out first, each as a compact
 // unit, then the units are seated around one another, and an annealing pass with a greedy polish
-// refines the whole. The score is a cheap model of what the router will make of the placement —
+// refines the whole. The score is a cheap model of what the router will make of the placement -
 // straight edges between neighbours, no crossings, no edge through a box, hubs with one neighbour
-// per side, chains kept straight, flow in the stated direction — so thousands of states can be
+// per side, chains kept straight, flow in the stated direction - so thousands of states can be
 // tried before the few best are routed for real (`semantic-engine.ts`).
 //
 
@@ -387,7 +387,7 @@ const holdsBetween = (kind: Semantic.RelationKind, from: Bounds, target: Bounds)
   }
 };
 
-/** Whether the segments (a1x, a1y)–(a2x, a2y) and (b1x, b1y)–(b2x, b2y) cross at a point interior to both. */
+/** Whether the segments (a1x, a1y)-(a2x, a2y) and (b1x, b1y)-(b2x, b2y) cross at a point interior to both. */
 const segmentsCross = (
   a1x: number,
   a1y: number,
@@ -408,7 +408,7 @@ const segmentsCross = (
   return (d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0);
 };
 
-/** Whether the segment (ax, ay)–(bx, by) passes through the box centred at (cx, cy) with half-extents (hx, hy). */
+/** Whether the segment (ax, ay)-(bx, by) passes through the box centred at (cx, cy) with half-extents (hx, hy). */
 const segmentHitsBox = (
   ax: number,
   ay: number,
@@ -423,7 +423,7 @@ const segmentHitsBox = (
   let exit = 1;
   const dx = bx - ax;
   const dy = by - ay;
-  // Liang–Barsky clipping against the four slabs, in the order left, right, top, bottom.
+  // Liang-Barsky clipping against the four slabs, in the order left, right, top, bottom.
   for (let slab = 0; slab < 4; slab++) {
     const p = slab === 0 ? -dx : slab === 1 ? dx : slab === 2 ? -dy : dy;
     const q = slab === 0 ? ax - (cx - hx) : slab === 1 ? cx + hx - ax : slab === 2 ? ay - (cy - hy) : cy + hy - ay;
@@ -1387,7 +1387,7 @@ const layoutGroup = (
   };
 };
 
-/** Drops empty rows and columns and moves the top-left to 0,0 — only when nothing is pinned. */
+/** Drops empty rows and columns and moves the top-left to 0,0 - only when nothing is pinned. */
 const tidy = (index: Index, state: State): Map<string, Cell> => {
   const cells = new Map<string, Cell>();
   const pinned = index.pinned.some((value) => value === 1);

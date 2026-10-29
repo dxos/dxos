@@ -231,7 +231,7 @@ const seedTasks = (titles: readonly string[]) =>
     return tasks;
   });
 
-/** `root` → `child` → `grandchild`, beside a second root `sibling`. */
+/** `root` -> `child` -> `grandchild`, beside a second root `sibling`. */
 const seedTree = () =>
   Effect.gen(function* () {
     const { db } = yield* Database.Service;

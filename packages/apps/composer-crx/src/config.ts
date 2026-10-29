@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// Deep import (not the `./core` barrel) so this module — reachable from lean contexts — does not
+// Deep import (not the `./core` barrel) so this module - reachable from lean contexts - does not
 // pull background-only weight (e.g. the edge-client-backed `image` action).
 import { DeveloperMode } from './core/state/index.ts';
 import { debugLog } from './debug-log.ts';

@@ -28,7 +28,7 @@ import { PullRequestsArticle } from '../containers/PullRequestsArticle/PullReque
 const DAY = 24 * 60 * 60_000;
 const daysAgo = (days: number) => new Date(Date.now() - days * DAY).toISOString();
 
-/** Number → the live standing the fixture answers with; absent numbers report no CI. */
+/** Number -> the live standing the fixture answers with; absent numbers report no CI. */
 const STATUS: Record<number, { ci: GitHubOperation.CiState; review: GitHubOperation.ReviewState }> = {
   13410: { ci: 'failure', review: 'none' },
   13402: { ci: 'success', review: 'approved' },

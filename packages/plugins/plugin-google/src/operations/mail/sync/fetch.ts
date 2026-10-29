@@ -24,8 +24,8 @@ import { type AttachmentMetadata } from '../mapper.ts';
 /**
  * Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
  *
- * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
- * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync - a 128 MB Cloudflare Workers
+ * isolate - because it bounds the messages fetched, and so the ECHO documents held, per run.
  */
 export const GOOGLE_SYNC_CONFIG = {
   listPageSize: 500,
@@ -44,8 +44,8 @@ export type FetchMessagesProps = {
   readonly label: string;
   /**
    * Forward/backward windows this run covers (from `Cursor.resolveWindows`); either may be absent.
-   * Direction only sets the walk order over each `[start, end)`: forward oldest→newest (incremental
-   * resume), backward newest→oldest (initial/backfill).
+   * Direction only sets the walk order over each `[start, end)`: forward oldest->newest (incremental
+   * resume), backward newest->oldest (initial/backfill).
    */
   readonly windows: Cursor.Windows;
   readonly searchFilter?: string;
@@ -66,7 +66,7 @@ export type FetchMessagesProps = {
  * Streams full Gmail messages for one bidirectional run: forward window ids then backward, concatenated
  * (cheap `listMessages`), each fetched in full (`getMessage`).
  *
- * Intentionally UNBOUNDED — the per-run cap belongs downstream of dedup. Boundary days get
+ * Intentionally UNBOUNDED - the per-run cap belongs downstream of dedup. Boundary days get
  * re-enumerated and sort first within their window, so capping the raw id stream would spend the budget
  * re-fetching messages dedup then drops and stall the cursor past a dense boundary day. The caller caps
  * on post-dedup messages instead; its `Stream.take` halts this stream once the quota is met.
@@ -149,8 +149,8 @@ const fetchMessageIds = (config: FetchMessageIdsProps) =>
     Effect.gen(function* () {
       const api = yield* GoogleMailApi;
 
-      // Only the forward walk chunks: it must emit oldest→newest so the cursor's high watermark
-      // advances gap-free under a cap or crash — Gmail lists newest-first, so a naive walk would raise
+      // Only the forward walk chunks: it must emit oldest->newest so the cursor's high watermark
+      // advances gap-free under a cap or crash - Gmail lists newest-first, so a naive walk would raise
       // `high` past unfetched older messages and strand them. Chunking bounds the in-memory reversal
       // that achieves this. The backward walk (initial sync/backfill) is a single un-chunked query:
       // Gmail's native newest-first order already is the descending backward order, so `low` only moves
@@ -178,14 +178,14 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
     Effect.gen(function* () {
       const { userId, label, direction, searchFilter, onEnumerated, onEstimate } = config;
 
-      // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
+      // `'all'` -> All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
       const folderScope =
         label === 'all' ? 'in:anywhere -in:spam -in:trash -in:drafts -in:chats' : `in:anywhere label:${label}`;
       // `before:` is day-granular and excludes the day it names. Forward internal chunk boundaries are
       // safe (covered by the older chunk's inclusive `after:`). But the backward window's `end` is
       // `low`'s exact timestamp when resuming backfill, so a mid-day `before:` would drop same-day
-      // messages older than that moment — round it up one day; per-message ms precision (`dedupStage`'s
+      // messages older than that moment - round it up one day; per-message ms precision (`dedupStage`'s
       // range check + dedup set) still filters that day's already-committed messages.
       const isBackwardWindow = direction === 'backward';
       const after = format(dateChunk.start, 'yyyy/MM/dd');
@@ -198,7 +198,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
           .listMessages(userId, query, GOOGLE_SYNC_CONFIG.listPageSize, pageToken)
           .pipe(Effect.withSpan('google-sync.fetch.list'));
 
-      // Backward commits newest-first — Gmail's native page order — so stream each page's ids lazily.
+      // Backward commits newest-first - Gmail's native page order - so stream each page's ids lazily.
       // A downstream `Stream.take` (the cap) then halts enumeration rather than paging through all of
       // `[horizon, low)` every run. `low` only moves down past committed territory, so an interrupted
       // page-stream resumes gap-free from the advanced `low`.
@@ -223,7 +223,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
         );
       }
 
-      // Forward needs the whole chunk oldest-first so the cursor advances monotonically — Gmail
+      // Forward needs the whole chunk oldest-first so the cursor advances monotonically - Gmail
       // paginates newest-first, and reversing page-by-page would commit a newer page (raising the
       // cursor) before an older one from the same chunk, permanently skipping it on interrupt. So buffer
       // the chunk and reverse; `chunkDays` keeps it small enough to fit in memory.
@@ -265,7 +265,7 @@ type ForwardChunks = {
 /**
  * Emits contiguous `chunkDays`-wide windows spanning [start, end), oldest-first, so every day is covered
  * exactly once (day-granular `after:`/`before:` is exclusive at the upper bound). Only the forward walk
- * chunks — see {@link fetchMessageIds}.
+ * chunks - see {@link fetchMessageIds}.
  */
 const generateForwardChunks = (config: ForwardChunks): Stream.Stream<DateChunk> =>
   Stream.unfold(config.start, (position: Date) =>
@@ -292,7 +292,7 @@ const generateForwardChunks = (config: ForwardChunks): Stream.Stream<DateChunk> 
 /**
  * Downloads each attachment's bytes via `GoogleMailApi.getAttachment`, decoding the base64url `data`
  * field. One failed download or decode error is logged and dropped rather than failing the whole
- * message — `Effect.try` wraps the decode step so a thrown error there is caught by `catchAll` below
+ * message - `Effect.try` wraps the decode step so a thrown error there is caught by `catchAll` below
  * rather than becoming an uncatchable defect that aborts the whole sync run.
  */
 export const fetchAttachments = (
@@ -304,7 +304,7 @@ export const fetchAttachments = (
     const api = yield* GoogleMailApi;
     // Skip an attachment larger than the inline blob cap BEFORE downloading it. The default blob store
     // is inline (the EDGE operation runtime registers S3 without making it the default), so
-    // `processAttachments` drops anything past this cap anyway — downloading it first only pulls tens of
+    // `processAttachments` drops anything past this cap anyway - downloading it first only pulls tens of
     // MB into the 128 MB isolate, enough to end a run with "Worker exceeded memory limit.". `size` is
     // Gmail part metadata, known here without the download.
     const downloadable = attachments.filter((attachment) => {
@@ -348,7 +348,7 @@ export const fetchAttachments = (
 /**
  * Normalizes RFC 4648 §5 base64url (Gmail's attachment/body encoding) to standard base64 with
  * padding. The browser `Buffer` polyfill (`@dxos/node-std`, used when this pipeline runs client-side)
- * does not implement the `'base64url'` encoding name that Node's own `Buffer` accepts — decoding via
+ * does not implement the `'base64url'` encoding name that Node's own `Buffer` accepts - decoding via
  * `Buffer.from(data, 'base64url')` throws `Unknown encoding` there, so normalize and use `'base64'`.
  */
 const base64UrlToBase64 = (data: string): string => {

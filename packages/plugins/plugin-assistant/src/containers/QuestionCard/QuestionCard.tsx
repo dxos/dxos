@@ -29,17 +29,17 @@ export type QuestionCardProps = {
  * The card body for a question in a task's history, answered through `AnswerQuestion` so the
  * conversation that asked is resumed.
  *
- * The body ONLY — the host draws `Card.Root` and the header.
+ * The body ONLY - the host draws `Card.Root` and the header.
  */
 export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Snapshot rather than the object: the card must repaint when the answer lands, including when
-  // it lands from another surface showing the same question — the task's own row, say.
+  // it lands from another surface showing the same question - the task's own row, say.
   const [snapshot] = useObject(task);
   const [busy, setBusy] = useState(false);
   // What the write actually did, so the card can say when the answer landed but the agent did not
-  // wake — a checkmark over a task that stays blocked forever is the one outcome with no signal.
+  // wake - a checkmark over a task that stays blocked forever is the one outcome with no signal.
   const [failed, setFailed] = useState(false);
   const [stranded, setStranded] = useState(false);
 

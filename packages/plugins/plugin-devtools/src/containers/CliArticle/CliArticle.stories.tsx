@@ -26,7 +26,7 @@ const meta = {
     withTheme(),
     withPluginManager({
       // No setup event: the panel fires `CommandsRequested` itself, which is what pulls the
-      // plugins' command modules in — the same path the app takes.
+      // plugins' command modules in - the same path the app takes.
       plugins: [
         ...CorePlugins.make(),
         // The identity brings a default space, which is what the commands resolve against.

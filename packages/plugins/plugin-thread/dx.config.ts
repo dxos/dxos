@@ -62,7 +62,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/channel-backend-feed.ts', { with: { type: 'module-url' } }),
     ),
     // `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
-    // cannot load without React — browser only.
+    // cannot load without React - browser only.
     SpaceCapability.createObject(
       () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
       {

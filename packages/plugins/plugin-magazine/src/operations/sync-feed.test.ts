@@ -30,7 +30,7 @@ const TestLayer = AssistantTestLayer({
 
 /**
  * Canned RSS XML returned by the stubbed global `fetch`. Two items with stable
- * guids — mirrors what an upstream RSS feed serves on repeated polls when no
+ * guids - mirrors what an upstream RSS feed serves on repeated polls when no
  * new posts have been published.
  */
 const RSS_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -64,7 +64,7 @@ const RSS_XML = `<?xml version="1.0" encoding="UTF-8"?>
  *
  * The original bug: each sync re-appended every previously-seen post because
  * the cursor filter `post.guid !== cursor` only excluded the single post whose
- * guid matched the cursor — every older post passed through and was appended
+ * guid matched the cursor - every older post passed through and was appended
  * again. These tests pin the corrected, guid-deduped behavior.
  */
 describe('SyncFeed', () => {
@@ -107,7 +107,7 @@ describe('SyncFeed', () => {
     'within-batch and link-fallback dedup: same link served twice in one response is appended once',
     Effect.fnUntraced(
       function* ({ expect }) {
-        // RSS items with NO `<guid>` element — the dedup key falls back to
+        // RSS items with NO `<guid>` element - the dedup key falls back to
         // `link`. Two items share the same link, simulating a misbehaving
         // upstream that serves the same post twice in one response.
         const xml = `<?xml version="1.0" encoding="UTF-8"?>

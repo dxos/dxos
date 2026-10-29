@@ -72,7 +72,7 @@ export interface TriggerDispatcherOptions {
    * Poll interval for cron triggers in 'natural' time control mode.
    *
    * Bounds how late a cron trigger fires, so it is also the finest schedule the dispatcher can
-   * honour — a minute, matching the shortest interval any deployed trigger asks for. The tick now
+   * honour - a minute, matching the shortest interval any deployed trigger asks for. The tick now
    * carries timer triggers alone (feed and subscription triggers are woken by their own data), so
    * shortening it costs a cron sweep rather than a re-read of every feed; a caller that needs
    * sub-minute firing passes a smaller value explicitly (tests do) rather than lowering the default.
@@ -167,8 +167,8 @@ interface RuntimeTriggerState {
   };
 
   /**
-   * Set while the trigger's stored reference does not resolve — its target object is deleted or no
-   * handler is registered for its operation — which no amount of re-running repairs. Distinct from
+   * Set while the trigger's stored reference does not resolve - its target object is deleted or no
+   * handler is registered for its operation - which no amount of re-running repairs. Distinct from
    * {@link cooldownUntil}, which parks a trigger whose operation ran and failed.
    */
   staleReference?: {
@@ -308,7 +308,7 @@ export namespace TriggerDispatcher {
 
 const DEFAULT_MAX_CONCURRENCY = 5;
 
-/** Enough consecutive occurrences to cross a cluster and back — one gap would miss `0,5 * * * * *`. */
+/** Enough consecutive occurrences to cross a cluster and back - one gap would miss `0,5 * * * * *`. */
 const CRON_PERIOD_SAMPLES = 8;
 
 /**
@@ -366,7 +366,7 @@ const isStaleReferenceError = (value: unknown): boolean => {
 };
 
 /**
- * Whether a failure is an unresolvable reference rather than an operation that ran and failed —
+ * Whether a failure is an unresolvable reference rather than an operation that ran and failed -
  * the distinction that decides between parking the trigger and arming the failure cooldown.
  */
 const isStaleReferenceCause = (cause: Cause.Cause<unknown>): boolean =>
@@ -414,7 +414,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
   /**
    * Serializes reactive dispatch so two overlapping wake-ups cannot invoke the same trigger twice
-   * for one item — the cursor advances only after an invocation completes.
+   * for one item - the cursor advances only after an invocation completes.
    */
   #reactiveDispatchLock = Semaphore.makeUnsafe(1);
 
@@ -589,7 +589,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
                 }),
               );
               // A crash bypasses `stop()` (`_running` is already false, so a later `stop()` call
-              // would no-op) — tear the subscription down here so it doesn't outlive the dispatcher.
+              // would no-op) - tear the subscription down here so it doesn't outlive the dispatcher.
               yield* this.#teardownTriggerSubscription();
             }),
           ),
@@ -739,7 +739,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       } else {
         // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
         //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown. An
-        //   interrupt is not a genuine failure — distinguish `Cause.hasInterrupts(result.cause)` and
+        //   interrupt is not a genuine failure - distinguish `Cause.hasInterrupts(result.cause)` and
         //   treat it as neutral (re-schedulable, no cooldown) instead.
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
@@ -938,7 +938,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               // `Obj.isDeleted` branch below: the database emits a real tombstone, and a feed
               // removal (`Feed.remove`) now also produces a queryable tombstone that retains the
               // object's type/body (the index merges the `{ id, '@deleted': true }` block onto the
-              // prior snapshot — see `ObjectSnapshotIndex.update` / `EntityMetaIndex.update`).
+              // prior snapshot - see `ObjectSnapshotIndex.update` / `EntityMetaIndex.update`).
               const objects = yield* Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' })).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
@@ -1027,8 +1027,8 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       // lands again at the tail. With `untilExhausted`, keep draining until no retries remain.
       invocations.push(...(yield* this._drainRetries({ untilExhausted })));
 
-      // Publish once the pass has finished, so state the pass itself changed — a trigger parked on
-      // a stale reference without ever being invoked — reaches the UI.
+      // Publish once the pass has finished, so state the pass itself changed - a trigger parked on
+      // a stale reference without ever being invoked - reaches the UI.
       this._publishRuntimeStatuses(yield* Registry.AtomRegistry);
 
       return invocations;
@@ -1140,7 +1140,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
             const now = this.getCurrentTime();
             const period = cronPeriod(cron, now);
 
-            // A schedule finer than the poll cannot be honoured — the tick would find it due, fire it
+            // A schedule finer than the poll cannot be honoured - the tick would find it due, fire it
             // once and skip to the next occurrence after now, so the missed ones are dropped rather
             // than delayed. Refusing it says that out loud instead of running at the poll rate while
             // claiming a faster one. A caller that genuinely needs sub-minute firing (a test) shortens
@@ -1209,7 +1209,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     Effect.gen({ self: this }, function* () {
       // The local dispatcher only runs triggers that are not explicitly routed to edge.
       if (this.#triggerQuery) {
-        // `#subscribeToTriggers` keeps this query current reactively — reuse its cached results
+        // `#subscribeToTriggers` keeps this query current reactively - reuse its cached results
         // instead of issuing a fresh database query on every poll tick.
         return this.#triggerQuery.results.filter((t) => !t.remote);
       }
@@ -1233,7 +1233,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       this.#triggerQuery = queryResult;
       this.#triggerQueryUnsubscribe = queryResult.subscribe(
         () => {
-          // Tracked so a subsequent `#teardownTriggerSubscription` can interrupt this fiber —
+          // Tracked so a subsequent `#teardownTriggerSubscription` can interrupt this fiber -
           // otherwise a refresh forked just before shutdown could still complete afterward, see
           // `this.#triggerQuery` as already cleared, fall back to a fresh one-shot query, and
           // repopulate trigger state after the dispatcher has stopped.
@@ -1253,13 +1253,13 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * Rebuild the live queries that wake feed and subscription triggers so the set matches the
    * current triggers: drop sources whose trigger is gone or whose query has gone stale, and
    * subscribe the ones that are missing. Called from {@link refreshTriggers}, which the trigger
-   * query already re-runs whenever a trigger changes — including the cursor write that dispatch
+   * query already re-runs whenever a trigger changes - including the cursor write that dispatch
    * itself performs, which is what makes a feed source follow its cursor forward.
    */
   #refreshReactiveSources = (): Effect.Effect<void> =>
     // Serialized: `refreshTriggers` runs both from the trigger-query callback and from
     // `invokeScheduledTriggers`, and two interleaved reconciliations would each see a source as
-    // missing, subscribe it, and overwrite the other's entry — leaking the unsubscribe that the
+    // missing, subscribe it, and overwrite the other's entry - leaking the unsubscribe that the
     // overwrite dropped.
     this.#reactiveSourceLock.withPermits(1)(
       Effect.gen({ self: this }, function* () {
@@ -1361,7 +1361,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   #dispatchReactively = (kind: 'feed' | 'subscription', triggerId: string): void => {
     // Held in a cell rather than a plain binding: a dispatch that completes without an async
     // boundary runs its finalizer before `runFork` returns, so the finalizer must tolerate not
-    // having the fiber yet — and the add below must not then resurrect a completed one.
+    // having the fiber yet - and the add below must not then resurrect a completed one.
     const forked: { fiber?: Fiber.Fiber<void, never>; done?: boolean } = {};
     forked.fiber = Effect.runForkWith(this._services)(
       this.#reactiveDispatchLock
@@ -1403,7 +1403,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
   /**
    * Unsubscribe from the live trigger query and interrupt any refresh it forked, so neither can
-   * repopulate trigger state after the dispatcher has stopped — called from both {@link stop} and
+   * repopulate trigger state after the dispatcher has stopped - called from both {@link stop} and
    * the natural-time-processing failure path in {@link start} (a crash bypasses `stop()` since it
    * sets `_running` to `false` directly).
    */

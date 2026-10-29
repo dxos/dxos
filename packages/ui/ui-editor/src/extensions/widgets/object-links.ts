@@ -19,15 +19,15 @@ export type ObjectLinksOptions = {
   schemes?: string[];
   /** Overrides the default chip's preview trigger. */
   trigger?: 'hover' | 'click';
-  /** The inline widget for `[label](eid:…)`; the anchor chip by default. */
+  /** The inline widget for `[label](eid:...)`; the anchor chip by default. */
   link?: WidgetDef<ObjectLinkProps>;
-  /** The block widget for `![label](eid:…)`; none by default. */
+  /** The block widget for `![label](eid:...)`; none by default. */
   image?: WidgetDef<ObjectLinkProps>;
 };
 
 /**
- * Object links as widgets: an inline chip for `[label](eid:…)` (which carries the preview popover)
- * and, when the host provides one, a block for `![label](eid:…)`.
+ * Object links as widgets: an inline chip for `[label](eid:...)` (which carries the preview popover)
+ * and, when the host provides one, a block for `![label](eid:...)`.
  */
 export const objectLinks = ({
   schemes = OBJECT_URL_SCHEMES,

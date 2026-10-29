@@ -11,7 +11,7 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import * as Frame from './Frame.ts';
 
 /**
- * An ordered sequence of {@link Frame}s, each showing a media artifact — a vertical storyboard,
+ * An ordered sequence of {@link Frame}s, each showing a media artifact - a vertical storyboard,
  * and the same shape a slide deck takes (a frame per slide). The frames are owned: `SetParent` on
  * the array persists them with one `Database.add` cascade and deletes them with the storyboard;
  * array order is the canonical order.

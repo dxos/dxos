@@ -44,7 +44,7 @@ const getLandmarks = (document: Document): HTMLElement[] =>
  */
 export const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
   // TODO(thure): This was disconnected once before in #8818;
-  //  if this should change again to support the browser extension, please ensure the change doesn’t break web, desktop and mobile.
+  //  if this should change again to support the browser extension, please ensure the change doesn't break web, desktop and mobile.
   // `Tab` is ignored because the landmark traversal below owns it.
   const {
     ref,

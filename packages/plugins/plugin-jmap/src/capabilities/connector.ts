@@ -30,7 +30,7 @@ export default Capability.makeModule(
         credentialForm: jmapCredentialForm,
         sync: {
           operation: JmapOperation.JmapSync,
-          // What this connector binds — how `Mailbox` discovers it without naming JMAP.
+          // What this connector binds - how `Mailbox` discovers it without naming JMAP.
           targetTypename: Type.getTypename(Mailbox.Mailbox),
           // Single-target connector (the account inbox): no `getTargets`. The coordinator calls
           // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.

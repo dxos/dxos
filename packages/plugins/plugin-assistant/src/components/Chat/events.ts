@@ -22,7 +22,7 @@ export type ChatEvent =
       text: string;
     }
   /**
-   * System-generated turn content — an inline flow (a connector authorized, a plugin enabled)
+   * System-generated turn content - an inline flow (a connector authorized, a plugin enabled)
    * reporting itself. Submitted as a synthetic block, so it reads as a system note rather than as
    * words the user typed.
    */

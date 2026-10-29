@@ -118,7 +118,7 @@ describe.skipIf(!ENABLED)('pipeline-rdf multi-model extraction benchmark (Ollama
       log.info(`wrote benchmark results to ${OUT_PATH}`);
 
       expect(result.variants.length).toBe(variants.length);
-      // A variant may error mid-run (recorded as an `error` row) — that is a benchmark result about
+      // A variant may error mid-run (recorded as an `error` row) - that is a benchmark result about
       // the model/backend, not a test failure. Require only that at least one variant completed, and
       // that every variant which did NOT error processed the whole corpus.
       const succeeded = result.variants.filter((variant) => variant.metrics.error === undefined);

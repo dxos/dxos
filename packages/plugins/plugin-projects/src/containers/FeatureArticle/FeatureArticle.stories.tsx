@@ -147,7 +147,9 @@ export const RefusedCycle: Story = {
     const relations = within(await canvas.findByTestId('feature-article.relations', undefined, { timeout: 10_000 }));
     await pick(canvasElement, 'feature-article.add-dependency', 'Compose & send');
     await expect(
-      await screen.findByText(/Provider sync → Compose & send → Provider sync/, undefined, { timeout: 5_000 }),
+      await screen.findByText(/Provider sync \u2192 Compose & send \u2192 Provider sync/, undefined, {
+        timeout: 5_000,
+      }),
     ).toBeInTheDocument();
     await expect(relations.queryAllByRole('button', { name: 'Remove dependency on Compose & send' })).toHaveLength(0);
   },

@@ -110,14 +110,14 @@ const toDotNotation = (key) => {
     return `${kebab}.${lastWord}${pluralSuffix}`;
   }
 
-  // No valid suffix — kebab-case everything.
+  // No valid suffix - kebab-case everything.
   const kebab = words.join('-');
   return `${kebab}${pluralSuffix}`;
 };
 
 // --- Key validation: resolve meta.id and load translations ---
 
-/** Cache: pluginDir → { metaId, keys } */
+/** Cache: pluginDir -> { metaId, keys } */
 const pluginCache = new Map();
 
 /**
@@ -303,7 +303,7 @@ export default {
         return;
       }
 
-      // Check 2: Suffix joined by hyphen instead of dot (e.g., 'plugin-name' → 'plugin.name').
+      // Check 2: Suffix joined by hyphen instead of dot (e.g., 'plugin-name' -> 'plugin.name').
       const fixedKey = fixHyphenatedSuffix(key);
       if (fixedKey) {
         context.report({

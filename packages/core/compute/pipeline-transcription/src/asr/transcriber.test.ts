@@ -73,7 +73,7 @@ describe('alignWhisperSegments', () => {
       }),
     ];
 
-    // First word starts at T0, second at T0+1500 — only the second survives a cursor at T0+1000.
+    // First word starts at T0, second at T0+1500 - only the second survives a cursor at T0+1000.
     const result = alignWhisperSegments(segments, [chunk(0)], T0 + 1_000);
     expect(result.transcripts).toHaveLength(1);
     expect(result.transcripts[0].text).toBe('new');

@@ -45,15 +45,15 @@ export type XmlBlockDecorationOptions = {
 };
 
 /**
- * Scans the doc for `<tag>…</tag>` blocks and decorates them without replacing them with a
- * widget — the source text remains in the document and can still be matched by other extensions
+ * Scans the doc for `<tag>...</tag>` blocks and decorates them without replacing them with a
+ * widget - the source text remains in the document and can still be matched by other extensions
  * (e.g. `xmlFormatting`). Use this for "bubble"-style styling of XML blocks (chat prompts,
  * callouts, etc.) where the inner content should stay editable/copyable rather than living inside
  * a CodeMirror widget.
  *
  * Matching is done by direct text scan rather than a full-document XML parse: the transcript is
  * mostly markdown, and a single stray `<` anywhere upstream (code, `a < b`, an unclosed streaming
- * widget tag) corrupts a whole-document XML parse — which previously caused a well-formed prompt's
+ * widget tag) corrupts a whole-document XML parse - which previously caused a well-formed prompt's
  * `</tag>` to go unrecognised, extending the bubble over the rest of the conversation. An
  * unterminated open tag (no matching `</tag>`, e.g. mid-stream) is left undecorated rather than
  * painting to the end of the document.
@@ -70,7 +70,7 @@ export const xmlBlockDecoration = ({
   const contentDecoration = contentClass ? Decoration.mark({ class: contentClass }) : undefined;
   const hideDecoration = hideTags ? Decoration.replace({}) : undefined;
 
-  // Match an opening `<tag>` or `<tag …attrs>` (not self-closing); the paired `</tag>` is located
+  // Match an opening `<tag>` or `<tag ...attrs>` (not self-closing); the paired `</tag>` is located
   // by scanning forward so unrelated markup between blocks cannot break matching. `tag` is escaped
   // so a name containing regex metacharacters (e.g. `foo.bar`) matches literally.
   const escapedTag = escapeRegExpSource(tag);

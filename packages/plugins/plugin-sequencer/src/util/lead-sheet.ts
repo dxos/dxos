@@ -33,7 +33,7 @@
 //   <drum>            drum hit, e.g. `Kick`, `Snare`, `Hat`
 //   <drum>/<denom>    drum hit with explicit duration
 //
-// Pitch notation: scientific — note (`C..B`) + optional accidental (`#`/`b`)
+// Pitch notation: scientific - note (`C..B`) + optional accidental (`#`/`b`)
 // + octave (`-1..9`). Middle C = C4 = MIDI 60.
 //
 // Duration denominator `n`: the note occupies 1/n of a whole note (so
@@ -69,7 +69,7 @@ export type LeadSheetDocument = {
 const PITCH_TO_OFFSET: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const OFFSET_TO_PITCH = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-/** Aliases (lowercase) → MIDI pitch. */
+/** Aliases (lowercase) -> MIDI pitch. */
 const DRUM_ALIASES: Record<string, number> = {
   kick: 36,
   bass: 36,
@@ -90,7 +90,7 @@ const DRUM_ALIASES: Record<string, number> = {
   tomhi: 50,
 };
 
-/** MIDI → canonical drum name used by the formatter. */
+/** MIDI -> canonical drum name used by the formatter. */
 const DRUM_CANONICAL: Record<number, string> = {
   36: 'Kick',
   38: 'Snare',
@@ -267,7 +267,7 @@ export const parseLeadSheet = (input: string, options: LeadSheetOptions = {}): L
     if (tokens.length < 2) {
       throw new Error(`Line ${index + 1}: expected position + at least one event, got "${rawLine}"`);
     }
-    // A line is a sequence of `<position> <event>+` groups — every position
+    // A line is a sequence of `<position> <event>+` groups - every position
     // token (matching positionTokenRe) starts a new group whose events apply
     // at that beat. This lets a single line carry several beats, e.g.
     //   1.1 F#5/4   1.2 A5/4   1.3 C#6/2

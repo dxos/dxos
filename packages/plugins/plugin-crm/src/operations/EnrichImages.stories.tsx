@@ -30,7 +30,7 @@ import { CrmOperation } from '#types';
  * `image`, so the enrichment is observable: each card shows its current image URL, or "none".
  *
  * The operation reaches a REAL image service (EDGE's `/image` prefix by default; override with
- * `DX_CRM_IMAGE_SERVICE_URL`), so a run here makes live requests and can legitimately fail — the story
+ * `DX_CRM_IMAGE_SERVICE_URL`), so a run here makes live requests and can legitimately fail - the story
  * reports whatever comes back rather than pretending it succeeded.
  */
 const DefaultStory = () => {
@@ -45,7 +45,7 @@ const DefaultStory = () => {
     if (!space) {
       return;
     }
-    setStatus('Running…');
+    setStatus('Running...');
     void invoker
       .invokePromise(CrmOperation.EnrichImages, { limit: 8 }, { spaceId: space.db.spaceId })
       .then((result) => {
@@ -105,7 +105,7 @@ const meta = {
         ...CorePlugins.make(),
         StorybookPlugin.make({}),
         // Without the plugin the operation has no registered handler, so the button would fail on
-        // click — the story exists to drive the real operation, not a stub.
+        // click - the story exists to drive the real operation, not a stub.
         CrmPlugin.make(),
         ClientPlugin.make({
           types: [Organization.Organization, Person.Person],

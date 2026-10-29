@@ -27,7 +27,7 @@ type Invoke = ReturnType<typeof Hooks.useOperationInvoker>['invoke'];
  * Open an object from a card, beside the plank the card lives in. A card holds an object and has no idea
  * where the nav tree shows it, so ask: {@link NavigationOperation.ResolveNavigationTargets} answers
  * best-first, so an object's canonical home (its collection, a type section) wins over the generic
- * database path. The space id has to come from the object's database — a bare `Ref` URI carries only an
+ * database path. The space id has to come from the object's database - a bare `Ref` URI carries only an
  * entity id, which would resolve against the *active* space and so mis-resolve a card showing an object
  * from elsewhere.
  */
@@ -51,8 +51,8 @@ export const openObject = Effect.fnUntraced(
     );
 
     // plugin-space answers for any loadable object, so a loaded app always gets at least the database
-    // path here. The fallback is for when no resolver answers at all — an unregistered handler, or a
-    // profile without plugin-space — where opening the database path still beats doing nothing.
+    // path here. The fallback is for when no resolver answers at all - an unregistered handler, or a
+    // profile without plugin-space - where opening the database path still beats doing nothing.
     const path = targets[0]?.path ?? GraphPath.getObjectPathFromObject(subject);
     yield* invoke(LayoutOperation.Open, { subject: [path], disposition: 'add', ...options });
   },
@@ -90,7 +90,7 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown =>
  * Returns an activation handler that opens the subject in the layout, or undefined if the subject is not
  * navigable (e.g. not an Echo object, or not of a user-facing type). Use it for a card's own click.
  * A card lives inside a plank, so its object opens as a plank beside that plank (`add`), resolved
- * structurally from the target via {@link Attention.getRootAttendableId} — or, given `detailOf`, as that
+ * structurally from the target via {@link Attention.getRootAttendableId} - or, given `detailOf`, as that
  * plank's detail unless meta/ctrl is held. The destination path comes from {@link openObject}.
  */
 export const useObjectNavigate = (
@@ -122,10 +122,10 @@ export const useObjectNavigate = (
 /**
  * Returns object-scoped menu items (Open, Add to collection) for the given subject.
  * Only includes items when subject is an Echo object of a user-facing type.
- * Register them with the card's menu through `useMenuContribution(menu, …)`, where `menu` is the `MenuActions` the card owner hands down.
+ * Register them with the card's menu through `useMenuContribution(menu, ...)`, where `menu` is the `MenuActions` the card owner hands down.
  * A card lives inside a plank, so opening its object always adds a plank beside that plank (`add`), never
  * replacing it. The menu renders in a portal, so it cannot resolve the plank from its own DOM: the caller
- * supplies the plank's attendable id as `pivot` — via {@link useCardPivot} when the card knows only its
+ * supplies the plank's attendable id as `pivot` - via {@link useCardPivot} when the card knows only its
  * own element.
  */
 export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[] => {

@@ -10,7 +10,7 @@ import { type SpaceDigest } from '../../replicants/client-replicant.ts';
  * The orchestrator's belief about the fleet: what should be true once everything has replicated.
  *
  * It holds no CRDT internals. Every field is chosen so that its converged value is a pure function
- * of the operations issued, independent of merge order — that is what makes exact equality with a
+ * of the operations issued, independent of merge order - that is what makes exact equality with a
  * real peer decidable at all. Its counterpart on the wire is `SpaceDigest`, and `expectedDigest`
  * is the projection between them.
  */
@@ -30,7 +30,7 @@ export type ModelDocument = {
 
 export type ModelSpace = {
   members: Set<IdentityIndex>;
-  /** Identities that should join at their next opportunity — decision D2. */
+  /** Identities that should join at their next opportunity - decision D2. */
   pending: Set<IdentityIndex>;
   /**
    * Devices that hold the space locally.
@@ -64,7 +64,7 @@ export const makeModel = (limits: Model['limits']): Model => ({
 /**
  * The starting model for a fleet shape: one identity per group, its devices online.
  *
- * Pure, so a command sequence can be simulated against it before any process exists — which is
+ * Pure, so a command sequence can be simulated against it before any process exists - which is
  * what lets the plan record what will actually run rather than what was drawn.
  */
 export const makeFleetModel = ({
@@ -94,11 +94,11 @@ export const makeFleetModel = ({
  * mid-token as soon as a peer has received someone else's edit, and a multi-character token
  * spliced into another is no longer recoverable from the text. That made a correct merge look like
  * CRDT interleaving. A character cannot be split, so the set of characters present is exactly the
- * set of operations applied, whatever order they merged in — which is the property the model needs.
+ * set of operations applied, whatever order they merged in - which is the property the model needs.
  */
 export const token = (client: ClientIndex, seq: number): string => {
   const codePoint = TOKEN_BASE + client * TOKEN_STRIDE + seq;
-  // Outside the BMP a code point is a surrogate pair, and a splice can land between the halves —
+  // Outside the BMP a code point is a surrogate pair, and a splice can land between the halves -
   // which would split the very thing this makes unsplittable.
   invariant(codePoint <= TOKEN_LAST, `token space exhausted at client ${client}, op ${seq}`);
   return String.fromCharCode(codePoint);
@@ -113,7 +113,7 @@ const TOKEN_STRIDE = 1024;
 export const documentId = (spaceSlot: number, documentSlot: number): string => `s${spaceSlot}-d${documentSlot}`;
 
 //
-// Pure queries. Preconditions read these only — fast-check requires `check` to be pure.
+// Pure queries. Preconditions read these only - fast-check requires `check` to be pure.
 //
 
 export const identityOf = (model: Model, client: ClientIndex): IdentityIndex => model.clients[client].identity;
@@ -151,7 +151,7 @@ export const hasAdmittingDevice = (model: Model, spaceSlot: number): boolean => 
 
 /**
  * A client coming online joins every space its identity is still pending on, provided somebody can
- * admit it — decision D2, "eventually joins".
+ * admit it - decision D2, "eventually joins".
  */
 export const resolvablePendingSpaces = (model: Model, client: ClientIndex): number[] =>
   model.spaces

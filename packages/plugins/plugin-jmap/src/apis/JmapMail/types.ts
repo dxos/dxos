@@ -4,14 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-/** Structured email address — JMAP gives `{ name, email }` directly (no header parsing). */
+/** Structured email address - JMAP gives `{ name, email }` directly (no header parsing). */
 export const EmailAddress = Schema.Struct({
   name: Schema.optional(Schema.NullOr(Schema.String)),
   email: Schema.String,
 });
 export type EmailAddress = Schema.Schema.Type<typeof EmailAddress>;
 
-/** A folder. `role` is a well-known role (`inbox`, `drafts`, `sent`, `trash`, …) or null for custom folders. */
+/** A folder. `role` is a well-known role (`inbox`, `drafts`, `sent`, `trash`, ...) or null for custom folders. */
 export const Mailbox = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
@@ -42,7 +42,7 @@ export const EmailBodyPart = Schema.Struct({
   name: Schema.optional(Schema.NullOr(Schema.String)),
   /** MIME `Content-Disposition` (`attachment` or `inline`), present on parts listed in `Email.attachments`. */
   disposition: Schema.optional(Schema.NullOr(Schema.String)),
-  /** The part's `Content-ID` header (RFC 8621 §4.1.4), if any — matches a `cid:` reference in an HTML body. */
+  /** The part's `Content-ID` header (RFC 8621 §4.1.4), if any - matches a `cid:` reference in an HTML body. */
   cid: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export type EmailBodyPart = Schema.Schema.Type<typeof EmailBodyPart>;
@@ -69,7 +69,7 @@ export const Email = Schema.Struct({
   bodyValues: Schema.optional(Schema.Record(Schema.String, BodyValue)),
   textBody: Schema.optional(Schema.Array(EmailBodyPart)),
   htmlBody: Schema.optional(Schema.Array(EmailBodyPart)),
-  /** Non-body parts (RFC 8621 §4.1.4) — the attachments proper, distinct from `textBody`/`htmlBody`. */
+  /** Non-body parts (RFC 8621 §4.1.4) - the attachments proper, distinct from `textBody`/`htmlBody`. */
   attachments: Schema.optional(Schema.Array(EmailBodyPart)),
 });
 export type Email = Schema.Schema.Type<typeof Email>;

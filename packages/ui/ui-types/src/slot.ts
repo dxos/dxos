@@ -19,7 +19,7 @@ import { type ThemedClassName } from './theme.ts';
  * `className` is deliberately absent: accepting both gave every part two indistinguishable styling
  * props, and a part that destructured one and spread the other silently dropped the caller's
  * classes. The `asChild` factory still injects `className` at runtime, so implementations receive it via
- * `HTMLAttributes` (see `composable`/`slottable`) and must merge it — that is what `composableProps`
+ * `HTMLAttributes` (see `composable`/`slottable`) and must merge it - that is what `composableProps`
  * does.
  *
  * @see https://ark-ui.com/docs/guides/composition
@@ -32,7 +32,7 @@ export type ComposableProps<P extends object = {}> = ThemedClassName<P> &
  * Props for components that render a default DOM element but support `asChild` to delegate rendering
  * to a child via `asChild`. Extends `ComposableProps` with `asChild`.
  *
- * When `asChild` is true the component does not render its own element — instead it clones its child
+ * When `asChild` is true the component does not render its own element - instead it clones its child
  * and merges props (including event handlers) onto it.
  *
  * Every slottable component is implicitly composable (it spreads props and forwards its ref).

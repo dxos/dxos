@@ -14,7 +14,7 @@ import * as Score from './Score.ts';
 
 /**
  * Read a Score and return its lead-sheet text representation. The lead sheet is
- * the canonical multi-track text format defined in `util/lead-sheet.ts` — each
+ * the canonical multi-track text format defined in `util/lead-sheet.ts` - each
  * track becomes a `[index:name]` section followed by `bar.beat[.frac] pitch/dur`
  * events. Round-trips exactly with {@link Write}.
  */
@@ -44,7 +44,7 @@ export const Read = Operation.make({
 
 /**
  * Replace a Score's tracks and sequences from a lead-sheet text payload.
- * Tracks are matched by 1-based section index — existing tracks at that index
+ * Tracks are matched by 1-based section index - existing tracks at that index
  * keep their id / color / instrument; tracks not referenced by the document are
  * removed. Other Score fields (name, tempo, timeSignature, loop range) are left
  * intact.

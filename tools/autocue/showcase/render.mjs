@@ -8,14 +8,14 @@
  * move judder however the result is re-encoded.
  *
  *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9009] [--theme light] [--hold 20000]
- *     [--holds 43300,19133,…] [--overlap 12000] [--duration 15000] [--supersample 2] [--story shift-clips]
+ *     [--holds 43300,19133,...] [--overlap 12000] [--duration 15000] [--supersample 2] [--story shift-clips]
  *     [--args 'shiftDistance:1;zoomMs:500']
  *
  * `--holds` sets each tour cell's hold in turn (one cell per entry), `--overlap` starts the zoom-out that long before
  * the last tour's hold ends, and `--duration` is the zoom-out's length; unset, the story's defaults apply.
  * `--supersample 2` screenshots each frame at twice the pixel density and area-averages it down, so the tiles do not
- * alias as the camera zooms out. `--story` renders another Grid story (`shift-clips`, `mosaic-tours`, …; see
- * GRID-TRANSITIONS.md), or any stepped story by its full id, and `--args` adds story args in Storybook's `key:value;…` URL form.
+ * alias as the camera zooms out. `--story` renders another Grid story (`shift-clips`, `mosaic-tours`, ...; see
+ * GRID-TRANSITIONS.md), or any stepped story by its full id, and `--args` adds story args in Storybook's `key:value;...` URL form.
  */
 
 import { chromium } from '@playwright/test';

@@ -105,8 +105,8 @@ if (isTrue(process.env.DX_DEBUG)) {
  * Externals pre-bundled ahead of the crawler under `DX_FASTBUNDLE`.
  *
  * Vite resolves these from this package's own root, so only its direct dependency graph can be
- * named here. The heavy libraries this list once also carried — codemirror, radix, automerge,
- * atlaskit, `@effect/platform` — belong to the individual story packages, not to storybook-react;
+ * named here. The heavy libraries this list once also carried - codemirror, radix, automerge,
+ * atlaskit, `@effect/platform` - belong to the individual story packages, not to storybook-react;
  * under pnpm's strict layout they never resolved, so Vite skipped all 30 with a "Failed to resolve
  * dependency" warning. The cold-start scan covers them instead: it crawls every story file and
  * finds ~450 deps unaided.
@@ -141,7 +141,7 @@ const optimizeDepsInclude = [
  * Paths the dev server must not watch, appended to Vite's own defaults (`.git`, `node_modules`,
  * `test-results`, the cache dir).
  *
- * Storybook resolves `@dxos/**` from source, so build output is not in the module graph — but a
+ * Storybook resolves `@dxos/**` from source, so build output is not in the module graph - but a
  * `moon run :build` during an editing session still writes thousands of files under these trees,
  * and every write costs a chokidar event on a watcher already spanning the monorepo.
  */
@@ -154,7 +154,7 @@ const watchIgnored = ['**/dist/**', '**/out/**', '**/.moon/**', '**/temp/**', '*
  * bundle, and chokidar 3's fsevents backend fans every raw event out over one `Set` of listeners
  * per watched tree, each listener re-building `resolvedPath + sep` and running `indexOf` on the
  * event path. Vite registers one listener per file it transforms from outside `root`, and serving
- * every `@dxos/**` package from source puts tens of thousands of files there — measured at 17k
+ * every `@dxos/**` package from source puts tens of thousands of files there - measured at 17k
  * listeners on a single tree, ~1.3ms of main-thread time per raw event, and ~4s of blocked event
  * loop for one `moon run <pkg>:build`. `watchIgnored` cannot help: chokidar consults it only when
  * registering a watch, never on the raw-event path. The `fs.watch` backend has no such fan-out.
@@ -162,7 +162,7 @@ const watchIgnored = ['**/dist/**', '**/out/**', '**/.moon/**', '**/temp/**', '*
  * This only changes macOS: chokidar's fsevents backend does not exist elsewhere, so Linux (CI, the
  * e2e config) already runs the `fs.watch` path this selects.
  *
- * `usePolling: false` is not redundant — chokidar 3 turns polling ON by default on macOS whenever
+ * `usePolling: false` is not redundant - chokidar 3 turns polling ON by default on macOS whenever
  * `useFsEvents` is false, which would be far worse than what it replaces.
  */
 const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: false };
@@ -174,7 +174,7 @@ const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: fa
  * descriptor, which is bound to the file's inode. Editors and agents that save by writing a
  * temporary file and renaming it over the original replace that inode; chokidar 3 re-attaches the
  * watch on an inode change only on Linux, so on macOS the first such save is reported and every
- * later one is silently lost — the server keeps serving the stale transform until restarted.
+ * later one is silently lost - the server keeps serving the stale transform until restarted.
  */
 /**
  * Starts every story dark, since `preview.ts` defaults to the dark theme whatever the OS prefers: ThemePlugin's head
@@ -217,7 +217,7 @@ const rearmWatchPlugin = (): Plugin => ({
   apply: 'serve',
   configureServer: (server) => {
     server.watcher.on('change', (path) => {
-      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      // Vite also emits `change` for virtual module ids (`\0virtual:...`), which are not files and crash `fs.stat`.
       if (path.includes('\0') || !path.startsWith('/')) {
         return;
       }
@@ -395,7 +395,7 @@ export const createConfig = ({
 
     // A human-driven `storybook dev`, as opposed to `storybook build` or the browser-mode vitest
     // suites. Only the former survives long enough for optimizer churn to matter, and only there is
-    // an automatic reload acceptable — under vitest it would sever the test harness's connection.
+    // an automatic reload acceptable - under vitest it would sever the test harness's connection.
     const isInteractiveDev = options.configType !== 'PRODUCTION' && !isVitest;
 
     // NOTE: Dynamic imports seem to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
@@ -436,7 +436,7 @@ export const createConfig = ({
         publicDir: staticDir,
         resolve: {
           // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
-          // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
+          // a bare `util` alias also rewrites `util/types` -> `@dxos/node-std/util/types` (not exported).
           // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
           // native node: polyfill layer handle subpaths like `node:util/types`.
           alias: [
@@ -548,11 +548,11 @@ export const createConfig = ({
             // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,
             // `#meta`) to the `source` condition (`./src/...`); otherwise they fall through
             // to `default` (`./dist/lib/neutral/...`) and fail when a package's `compile` has
-            // not run. Fast mode (`DX_FASTBUNDLE`) still needs this — it only wants to skip
+            // not run. Fast mode (`DX_FASTBUNDLE`) still needs this - it only wants to skip
             // forcing `@dxos/**` to source (so those resolve from dist and get pre-bundled),
             // NOT the `#*` resolution, which every plugin relies on.
             // Packages whose source is not vite-safe publish no `source` condition at all, so they
-            // resolve to dist here just as they do under node/bun — no app-local exclude list.
+            // resolve to dist here just as they do under node/bun - no app-local exclude list.
             include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
           }),
 
@@ -596,7 +596,7 @@ export const createConfig = ({
 
           // Hosts the Claude Agent SDK so stories reach it same-origin. Storybook builds its vite
           // config here and never loads a package's `vite.config.ts`, so a story cannot mount its
-          // own host — hence mounting it centrally. Opt-in: the host spawns the SDK and spends real
+          // own host - hence mounting it centrally. Opt-in: the host spawns the SDK and spends real
           // tokens, so it stays absent unless DX_AGENT_CWD names the root to confine turns to.
           agentCwd && {
             name: 'dx-agent-claude',

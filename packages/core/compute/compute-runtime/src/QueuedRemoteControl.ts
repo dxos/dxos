@@ -59,7 +59,7 @@ const lostOf = (cause: Cause.Cause<unknown>): Error | undefined => {
  * processes' commands behind it, so the flusher skips a process that is waiting out its backoff and
  * delivers for another one instead.
  *
- * A command the host REFUSED — a key it does not host, a request it will never accept — is not
+ * A command the host REFUSED - a key it does not host, a request it will never accept - is not
  * retried: the `Control` dies with {@link RemoteCommandRejectedError} for those, and a refused spawn
  * fails its process with the host's reason. Retrying it would only leave the caller waiting on a
  * process that can never start.
@@ -72,7 +72,7 @@ const lostOf = (cause: Cause.Cause<unknown>): Error | undefined => {
 export interface Options {
   /** Transport to the host. Its failures are defects, which is what marks a command for retry. */
   readonly control: RemoteProcessManager.Control;
-  /** Where the command log is persisted — the same store the process registry uses (SQLite in the worker). */
+  /** Where the command log is persisted - the same store the process registry uses (SQLite in the worker). */
   readonly kvStore: KeyValueStore.KeyValueStore;
   readonly prefix?: string;
   readonly backoff?: Backoff;
@@ -114,7 +114,7 @@ export interface Queued extends RemoteProcessManager.Control {
  *   rather than starting a second one.
  * - `submitInput` buffers the (already encoded) input in the queue, in order.
  * - `terminate` publishes `TERMINATING` at once. If the process's own spawn has not been delivered
- *   yet the whole group is dropped instead — there is nothing on the host to terminate.
+ *   yet the whole group is dropped instead - there is nothing on the host to terminate.
  * - Reads (`status`, `list`, `readEvents`) answer from the host and fall back to the local view when
  *   it is unreachable, with the local view taking precedence for a process whose queued command the
  *   host has not seen yet.
@@ -122,7 +122,7 @@ export interface Queued extends RemoteProcessManager.Control {
  * A background flusher delivers commands in order, retrying with exponential backoff and immediately
  * on {@link Queued.connected}. Each command carries a stable idempotency key, so a delivery whose
  * acknowledgement was lost is safe to repeat: the queue is at-least-once and the host makes it
- * at-most-once. Once a process is observed terminal, its queued commands are dropped — they can
+ * at-most-once. Once a process is observed terminal, its queued commands are dropped - they can
  * never be applied, and retrying them forever would wedge everything behind them.
  */
 export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope> =>
@@ -171,7 +171,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
      * Wakes the flusher: completes the current latch and installs a fresh one.
      *
      * Clears the per-process backoffs too. They are a guess that the host is still unreachable, and
-     * a wake-up is news to the contrary — without this, `connected` would end the flusher's sleep
+     * a wake-up is news to the contrary - without this, `connected` would end the flusher's sleep
      * only for it to find every process still cooling off and go back to sleep.
      */
     const signal = Effect.gen(function* () {
@@ -466,7 +466,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
             return queued;
           }
           if (aliases.has(localPid)) {
-            // Already spawned under this key — report what the host says, or the last thing we knew.
+            // Already spawned under this key - report what the host says, or the last thing we knew.
             return yield* control.status({ spaceId: request.spaceId, pid: remotePidOf(localPid) }).pipe(
               Effect.flatMap(reconcile),
               Effect.catchCause(() => Effect.succeed(startingSnapshot(localPid, request))),
@@ -513,7 +513,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
             (command) => command.localPid === localPid && command.payload._tag === 'spawn',
           );
           if (spawnPending) {
-            // The host has never heard of this process, so there is nothing to terminate there —
+            // The host has never heard of this process, so there is nothing to terminate there -
             // dropping the group is both the correct end state and the only one that does not leak
             // a process the caller has already abandoned.
             //
@@ -586,7 +586,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           }
           const local = overlay.get(localPid);
           if (local !== undefined && !aliases.has(localPid) && localPid === pid) {
-            // No host process yet, so no events either — an empty page at the caller's cursor.
+            // No host process yet, so no events either - an empty page at the caller's cursor.
             return { events: [], cursor: 0, truncated: false, snapshot: local };
           }
           return yield* control.readEvents({ spaceId, pid: remotePidOf(localPid), cursor }).pipe(

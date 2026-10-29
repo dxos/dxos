@@ -26,7 +26,7 @@ import {
  *
  * Effect renders a *parameterless* tool's schema as `{ not: { type: 'null' } }` -- the bare `object`
  * keyword -- which carries no top-level `type`. MCP clients validate that field and reject the entire
- * `tools/list` response over it — "expected object" at `tools[N].inputSchema.type` — so a single
+ * `tools/list` response over it - "expected object" at `tools[N].inputSchema.type` - so a single
  * parameterless tool takes every other tool down with it and the server appears to expose nothing.
  *
  * Only the empty case is rewritten: a schema that already declares `type: 'object'`, or that
@@ -52,7 +52,7 @@ const SERVER_INFO_META = 'io.modelcontextprotocol/serverInfo';
  * `server/discover` result.
  *
  * The server is an MCP `Implementation`, which the specification allows to carry `title`,
- * `websiteUrl` and `icons`, and the discover result may carry top-level `instructions` — but
+ * `websiteUrl` and `icons`, and the discover result may carry top-level `instructions` - but
  * `McpServer`'s layers accept only `{ name, version }` and offer no way to supply any of them.
  * Rather than fork the library, the fields are merged into the response on the way out.
  */

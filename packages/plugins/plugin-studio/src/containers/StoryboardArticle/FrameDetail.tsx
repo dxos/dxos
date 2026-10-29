@@ -23,7 +23,7 @@ export type FrameDetailProps = {
 };
 
 /**
- * The selected frame's compose form — the artifact's `MediaArtifactForm`, whose toolbar reads its
+ * The selected frame's compose form - the artifact's `MediaArtifactForm`, whose toolbar reads its
  * contributed actions (Connect) from the artifact's node under the storyboard while attention
  * follows the storyboard plank. The produced variants are the storyboard's main pane, not the
  * companion's.
@@ -31,7 +31,7 @@ export type FrameDetailProps = {
 export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailProps) => {
   const { t } = Hooks.useTranslation(StudioNamespace.key);
   // The snapshot re-renders this on frame changes; the ref is read live so the resolved artifact is
-  // the live object — the surface filter checks the subject's type, which a snapshot fails.
+  // the live object - the surface filter checks the subject's type, which a snapshot fails.
   const [snapshot] = useObject(frame);
   const artifact = useResolveRef(snapshot ? frame.artifact : undefined);
   if (!artifact) {

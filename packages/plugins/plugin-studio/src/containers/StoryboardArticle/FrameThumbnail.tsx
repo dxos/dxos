@@ -16,7 +16,7 @@ export type FrameThumbnailProps = {
   index: number;
 };
 
-/** A frame's preview with its artifact's cover resolved — the binding `FramePreview` leaves out. */
+/** A frame's preview with its artifact's cover resolved - the binding `FramePreview` leaves out. */
 export const FrameThumbnail = ({ frame, index }: FrameThumbnailProps) => {
   // The snapshot re-renders this on frame changes; the ref is read live so the cover resolves.
   const [snapshot] = useObject(frame);

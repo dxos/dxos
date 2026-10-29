@@ -122,16 +122,16 @@ describe('describe', () => {
         expect(card).toContain('  name: "Login flow"');
         // The schema's title is shown where it says more than the field name.
         expect(card).toContain('  dueAt (Due date): "2026-12-01"');
-        expect(card).toContain(`  notes: "${'x'.repeat(200)}…[+300 chars]"`);
+        expect(card).toContain(`  notes: "${'x'.repeat(200)}...[+300 chars]"`);
         // A field hidden from forms is named, not shown.
         expect(card).not.toContain('plumbing');
         expect(card).toContain('  hidden fields: internal');
         // Hidden or not, a field of refs is structure the model needs.
-        expect(card).toContain(`  watchers: → com.example.type.person ×1 [${ada.id} "Ada"]`);
-        expect(card).toContain(`  lead: → com.example.type.person ${ada.id} "Ada"`);
+        expect(card).toContain(`  watchers: -> com.example.type.person ×1 [${ada.id} "Ada"]`);
+        expect(card).toContain(`  lead: -> com.example.type.person ${ada.id} "Ada"`);
         // A ref list names its shared type once, then the first ten targets.
-        expect(card).toMatch(/ {2}tasks: → com\.example\.type\.task ×12 \[\w+ "Task 0", /);
-        expect(card).toContain('"Task 9", … 2 more]');
+        expect(card).toMatch(/ {2}tasks: -> com\.example\.type\.task ×12 \[\w+ "Task 0", /);
+        expect(card).toContain('"Task 9", ... 2 more]');
         expect(card).not.toContain('"Task 10"');
         // Refs are never printed as their wire envelope.
         expect(card).not.toContain('{"/":');
@@ -142,11 +142,11 @@ describe('describe', () => {
   );
 
   it.effect(
-    'names an owned object’s parent',
+    "names an owned object's parent",
     Effect.fnUntraced(
       function* (_) {
         const { feature, tasks } = yield* seed();
-        expect(formatValue(tasks[0])).toContain(`  parent: → com.example.type.feature ${feature.id} "Login flow"`);
+        expect(formatValue(tasks[0])).toContain(`  parent: -> com.example.type.feature ${feature.id} "Login flow"`);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -163,8 +163,8 @@ describe('describe', () => {
            yield* print(relation);`,
           EffectDialect,
         );
-        expect(output).toContain(`  source: → com.example.type.task ${implementer.id} "Implementer"`);
-        expect(output).toContain(`  target: → com.example.type.feature ${feature.id} "Login flow"`);
+        expect(output).toContain(`  source: -> com.example.type.task ${implementer.id} "Implementer"`);
+        expect(output).toContain(`  target: -> com.example.type.feature ${feature.id} "Login flow"`);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -334,7 +334,7 @@ describe('describe', () => {
   // The loop the printer exists for: the model prints the object it was asked about, learns from the card that
   // tasks implement it through a relation it could not otherwise see, and pastes the fetch line it was given.
   it.effect(
-    'a code-mode turn finds an object’s relations from its printed card',
+    "a code-mode turn finds an object's relations from its printed card",
     Effect.fnUntraced(
       function* (_) {
         const { feature } = yield* seed();
@@ -383,8 +383,8 @@ describe('describe', () => {
 
   it('cuts long arrays and strings inside JSON with a marker', () => {
     const printed = formatValue({ items: Array.from({ length: 15 }, (_, index) => index), text: 'y'.repeat(250) });
-    expect(printed).toContain('"… 5 more items"');
-    expect(printed).toContain(`"${'y'.repeat(200)}…[+50 chars]"`);
+    expect(printed).toContain('"... 5 more items"');
+    expect(printed).toContain(`"${'y'.repeat(200)}...[+50 chars]"`);
     // A top-level string is what the model asked to read, so it is never cut.
     expect(formatValue('z'.repeat(1000))).toHaveLength(1000);
   });

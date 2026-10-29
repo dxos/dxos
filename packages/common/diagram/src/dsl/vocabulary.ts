@@ -4,7 +4,7 @@
 
 //
 // The words the DSL knows, shared by the parser, the printer, the linter and completion so they
-// cannot drift apart — the round trip holds only because one table decides both which attributes
+// cannot drift apart - the round trip holds only because one table decides both which attributes
 // an element accepts and the order they print in. Every literal set is read off `scene.ts` rather
 // than restated, so a schema change shows up here as a type error or a new value, never as a
 // silently stale list.
@@ -41,7 +41,7 @@ const RESERVED_STATEMENTS = ['object', 'elements', 'move', 'remove', ...SEMANTIC
 /** Statement keywords, contextual ones included. */
 export const STATEMENT_KEYWORDS = [...RESERVED_STATEMENTS, 'note', 'fragment'] as const;
 
-/** Keywords inside semantic statements: `@cell(c,r)`, `via …`, `bus`, `compact`. */
+/** Keywords inside semantic statements: `@cell(c,r)`, `via ...`, `bus`, `compact`. */
 export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus', 'compact'] as const;
 
 /**
@@ -81,7 +81,7 @@ const BOX_ATTRS: readonly AttrSpec[] = [
 
 /**
  * Attributes each element kind accepts, in the order they print. Geometry and the label are
- * positional, so the schema's `x`/`y`/`w`/`h`/`points`/`text` do not appear here — except
+ * positional, so the schema's `x`/`y`/`w`/`h`/`points`/`text` do not appear here - except
  * `text`'s wrap width, which the schema also calls `w`.
  */
 export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
@@ -157,7 +157,7 @@ export const BARE_ID = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 export const BARE_REF = /^[A-Za-z_][A-Za-z0-9_-]*(\/[A-Za-z_][A-Za-z0-9_-]*)?(#[A-Za-z_][A-Za-z0-9_-]*)?$/;
 
 /**
- * A structurally valid ref — `[object/]element[#port]`, as `Scene.parseRef` reads it, whose ids may
+ * A structurally valid ref - `[object/]element[#port]`, as `Scene.parseRef` reads it, whose ids may
  * not contain `/` or `#`. Separate from {@link BARE_REF} because quoting exists to carry a ref
  * whose ids cannot lex bare (`1st/box` from a numeric node id), which is well-formed all the same.
  */

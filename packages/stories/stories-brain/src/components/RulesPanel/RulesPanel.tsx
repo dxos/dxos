@@ -32,7 +32,7 @@ export const RulesPanel = ({ classNames, source, diagnostics, onSourceChange, on
       createBasicExtensions({
         lineNumbers: true,
         lineWrapping: true,
-        placeholder: 'Datalog rules — compile the goal or load the reference',
+        placeholder: 'Datalog rules - compile the goal or load the reference',
       }),
       createThemeExtensions({ themeMode, monospace: true, syntaxHighlighting: true }),
       datalog(),

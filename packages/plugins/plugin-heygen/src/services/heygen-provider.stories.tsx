@@ -25,7 +25,7 @@ type Outcome = { kind: Kind; ok: true; options: GenerationOption[] } | { kind: K
 // sample names per candidate; whichever returns a small, account-specific set is the one to use.
 const inspectRaw = async (apiKey: string): Promise<Record<string, unknown>> => {
   // Per-request timeout: `/v2/avatars` returns the full unbounded catalog and can hang, which would
-  // otherwise leave the whole inspection stuck on "Inspecting…". A timed-out probe reports as status -1.
+  // otherwise leave the whole inspection stuck on "Inspecting...". A timed-out probe reports as status -1.
   const fetchJson = async (url: string): Promise<{ status: number; json: unknown }> => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8_000);
@@ -98,7 +98,7 @@ const inspectRaw = async (apiKey: string): Promise<Record<string, unknown>> => {
 /**
  * Manual harness that exercises the live HeyGen list endpoints with a pasted API key, so the real
  * auth/CORS/response path (which the mock-fetch unit tests can't cover) is observable in the browser
- * — paste a key from https://app.heygen.com/settings, then load avatars/voices and read the outcome.
+ * - paste a key from https://app.heygen.com/settings, then load avatars/voices and read the outcome.
  */
 const ProviderHarness = () => {
   const [apiKey, setApiKey] = useState('');
@@ -111,7 +111,7 @@ const ProviderHarness = () => {
     if (!key) {
       return;
     }
-    setRaw({ message: 'Inspecting…' });
+    setRaw({ message: 'Inspecting...' });
     try {
       setRaw({ data: await inspectRaw(key) });
     } catch (err) {
@@ -145,10 +145,10 @@ const ProviderHarness = () => {
       </Field.Root>
       <div className='flex gap-2'>
         <Button.Root disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
-          {busy === 'avatars' ? 'Loading avatars…' : 'List avatars'}
+          {busy === 'avatars' ? 'Loading avatars...' : 'List avatars'}
         </Button.Root>
         <Button.Root disabled={!apiKey.trim() || busy != null} onClick={() => run('voices')}>
-          {busy === 'voices' ? 'Loading voices…' : 'List voices'}
+          {busy === 'voices' ? 'Loading voices...' : 'List voices'}
         </Button.Root>
         <Button.Root disabled={!apiKey.trim()} onClick={() => void inspect()}>
           Inspect raw fields
@@ -161,7 +161,7 @@ const ProviderHarness = () => {
         {outcomes.map((outcome, index) => (
           <div key={index}>
             <div>
-              {outcome.kind} — {outcome.ok ? `${outcome.options.length} option(s)` : 'error'}
+              {outcome.kind} - {outcome.ok ? `${outcome.options.length} option(s)` : 'error'}
             </div>
             {outcome.ok ? (
               <Listbox.Root items={outcome.options.map((option) => ({ value: option.id, label: option.name }))}>

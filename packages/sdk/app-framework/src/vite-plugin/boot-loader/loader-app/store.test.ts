@@ -44,7 +44,7 @@ describe('clampPercent', () => {
 
 describe('displayText', () => {
   test('passes humanized text through unchanged', ({ expect }) => {
-    expect(displayText({ humanized: 'Loading framework…' })).toBe('Loading framework…');
+    expect(displayText({ humanized: 'Loading framework...' })).toBe('Loading framework...');
   });
 
   test('appends an (index/total) suffix for range payloads', ({ expect }) => {
@@ -65,8 +65,8 @@ describe('createLoaderStore', () => {
   });
 
   test('seeds the initial status line', ({ expect }) => {
-    const store = createLoaderStore('Loading…');
-    expect(store.lines().map((line) => line.text)).toEqual(['Loading…']);
+    const store = createLoaderStore('Loading...');
+    expect(store.lines().map((line) => line.text)).toEqual(['Loading...']);
     store.dispose();
   });
 

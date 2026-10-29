@@ -19,7 +19,7 @@ import { artifacts } from './app-graph-builder.ts';
 /**
  * Places a project's chats on its Chats branch and the artifacts it is parent of on its Artifacts
  * branch. Without this a project chat resolves only to the assistant's Chats section, whose connector
- * queries unparented chats — so the path names a node that does not exist and opening it leaves a
+ * queries unparented chats - so the path names a node that does not exist and opening it leaves a
  * blank pane.
  *
  * `Position.first`: the branch is where the tree shows the object as its own, so it outranks both the

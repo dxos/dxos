@@ -5,7 +5,7 @@
 //
 // Mermaid class-diagram dialect: parses the subset needed for UML class diagrams (class blocks
 // with members, stereotypes, and the standard relation arrows) and compiles it to scene commands
-// with a layered layout — supertypes above subtypes. Mermaid carries no coordinates, so the
+// with a layered layout - supertypes above subtypes. Mermaid carries no coordinates, so the
 // dialect owns placement; see `dialect.ts` for the contract.
 //
 
@@ -25,7 +25,7 @@ export type UmlClass = {
 
 export type RelationKind = 'inheritance' | 'realization' | 'composition' | 'aggregation' | 'association' | 'dependency';
 
-/** Rendered arrow direction: subtype → supertype, whole → part, source → target. */
+/** Rendered arrow direction: subtype -> supertype, whole -> part, source -> target. */
 export type UmlRelation = {
   from: string;
   to: string;
@@ -70,7 +70,7 @@ const RELATIONS: [token: string, kind: RelationKind, leftIsTarget: boolean][] = 
   ['--', 'association', false],
 ];
 
-// `A "1" <|-- "many" B : label` — cardinalities and the trailing label are optional.
+// `A "1" <|-- "many" B : label` - cardinalities and the trailing label are optional.
 const RELATION = new RegExp(
   '^([A-Za-z0-9_~<>-]+)\\s*(?:"([^"]*)"\\s*)?' +
     `(${RELATIONS.map(([token]) => token.replace(/[|*.>-]/g, '\\$&')).join('|')})` +
@@ -243,7 +243,7 @@ export const relationText = (relation: UmlRelation): string | undefined => {
 };
 
 /**
- * Rank so arrows read upward where UML convention points at abstractions — inheritance,
+ * Rank so arrows read upward where UML convention points at abstractions - inheritance,
  * realization, and dependency targets sit above their sources; containment and association
  * flow downward (whole/source above part/target).
  */
@@ -274,7 +274,7 @@ export type CompileOptions = {
  * Compile a mermaid class diagram into scene commands: one world object per class (compartment
  * rects `title`/`attributes`/`methods`) and an `edges` object holding the relations as bound
  * arrows. Supertypes rank above subtypes, so inheritance reads downward.
- * @deprecated Mermaid input is deprecated; write the semantic DSL (`extends`, `implements`, …) and use `Dsl.compile`.
+ * @deprecated Mermaid input is deprecated; write the semantic DSL (`extends`, `implements`, ...) and use `Dsl.compile`.
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const model = parse(source);
@@ -312,7 +312,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   }
 
   // Arrow terminals clip at the bound compartment, so each endpoint binds to the compartment
-  // nearest the peer's center — the arrow meets the box's outer edge instead of crossing the
+  // nearest the peer's center - the arrow meets the box's outer edge instead of crossing the
   // compartments between that edge and the title, and mid-arrow labels land in the rank gap.
   const facing = (id: string, peerId: string): string => {
     const box = boxes.get(id)!;

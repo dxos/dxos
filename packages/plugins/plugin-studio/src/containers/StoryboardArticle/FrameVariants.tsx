@@ -19,7 +19,7 @@ export type FrameVariantsProps = {
 };
 
 /**
- * The selected frame's produced variants — the storyboard's main pane; the storyboard node's
+ * The selected frame's produced variants - the storyboard's main pane; the storyboard node's
  * toolbar actions (Play) end its toolbar.
  */
 export const FrameVariants = ({ frame, attendableId }: FrameVariantsProps) => {

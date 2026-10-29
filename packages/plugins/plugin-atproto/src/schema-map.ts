@@ -14,9 +14,9 @@ export type MappedType = {
 };
 
 /**
- * Build a map of lexicon collection NSID → the registered ECHO type that maps to it, by scanning the
+ * Build a map of lexicon collection NSID -> the registered ECHO type that maps to it, by scanning the
  * space's schema registry for types carrying an {@link AtprotoRecordAnnotation}. Only types whose
- * plugin is active (and thus registered) appear — this is how the PDS browser distinguishes
+ * plugin is active (and thus registered) appear - this is how the PDS browser distinguishes
  * collections it can map from plain ones.
  */
 export const getMappedCollections = (db: Database.Database): Map<string, MappedType> => {

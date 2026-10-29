@@ -37,7 +37,7 @@ const tokenTable = {
 export type DatalogToken = keyof typeof tokenTable;
 
 type DatalogState = {
-  /** Inside a `/* … *\/` comment that spans lines. */
+  /** Inside a `/* ... *\/` comment that spans lines. */
   comment: boolean;
   /** No predicate yet in the current clause, so the next one is its head. */
   head: boolean;
@@ -108,11 +108,11 @@ const token = (stream: StringStream, state: DatalogState): DatalogToken | null =
     if (/^[A-Z_]/.test(text)) {
       return 'variable';
     }
-    // The parser reads `not` as negation unless it is itself a rule head (`not :- …`).
+    // The parser reads `not` as negation unless it is itself a rule head (`not :- ...`).
     if (text === 'not' && !stream.match(/^\s*:-/, false)) {
       return 'negation';
     }
-    // `N = count : { … }`: an aggregate name is followed by its `:`, which a predicate never is.
+    // `N = count : { ... }`: an aggregate name is followed by its `:`, which a predicate never is.
     if (AGGREGATES.has(text) && stream.match(/^\s*:(?!-)/, false)) {
       return 'aggregate';
     }
@@ -140,7 +140,7 @@ const token = (stream: StringStream, state: DatalogState): DatalogToken | null =
   return (char ? PUNCTUATION[char] : undefined) ?? 'invalid';
 };
 
-/** Datalog in the `@dxos/datalog` dialect (Soufflé-like rules, `not`/`!` negation, `count : { … }` aggregates). */
+/** Datalog in the `@dxos/datalog` dialect (Soufflé-like rules, `not`/`!` negation, `count : { ... }` aggregates). */
 export const datalogLanguage = StreamLanguage.define<DatalogState>({
   name: 'datalog',
   startState: () => ({ comment: false, head: true }),

@@ -40,7 +40,7 @@ describe('toEvents', () => {
         file: 'basic.spec.ts',
         suite: 'Basic tests',
         // The describe chain is part of the name, so two files may each hold a "create document".
-        test: 'Basic tests › create document',
+        test: 'Basic tests > create document',
         browser: 'chromium',
         qa: '@QA-1',
         status: 'passed',

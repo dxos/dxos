@@ -13,7 +13,7 @@ export const Settings = Schema.Struct({
     Schema.Boolean.annotate({
       title: 'Detect meetings',
       description:
-        'Offer to take notes when another app (Zoom, Meet, Teams, FaceTime, …) starts using the microphone. Desktop only.',
+        'Offer to take notes when another app (Zoom, Meet, Teams, FaceTime, ...) starts using the microphone. Desktop only.',
     }),
   ).pipe(Schema.withConstructorDefault(Effect.succeed(true))),
 

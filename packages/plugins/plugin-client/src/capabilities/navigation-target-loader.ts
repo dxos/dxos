@@ -53,7 +53,7 @@ export default Capability.makeModule(
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address
-          // it, so the next graph expansion materializes its node. Never `absent` on a miss — the
+          // it, so the next graph expansion materializes its node. Never `absent` on a miss - the
           // object may exist in a space this peer has not replicated, which the remote probe settles.
           const space = client.spaces.get(spaceId);
           if (space) {
@@ -68,7 +68,7 @@ export default Capability.makeModule(
           }
 
           // Remote fallback: confirms the object exists somewhere, even if it has not replicated
-          // locally yet. The only path to `absent` — a timeout or transport failure went unanswered.
+          // locally yet. The only path to `absent` - a timeout or transport failure went unanswered.
           return yield* checkRemote(eid).pipe(
             Effect.map((exists): AppCapabilities.NavigationTargetVerdict => (exists ? 'exists' : 'absent')),
             Effect.timeoutOrElse({

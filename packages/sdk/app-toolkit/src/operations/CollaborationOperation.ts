@@ -14,7 +14,7 @@ import { ContentBlock } from '@dxos/types';
 const COLLABORATION_OPERATION = 'org.dxos.app-framework.collaboration.operation';
 
 /**
- * A text splice `[from, from+del) → insert`. Accept/Reject return the splice that undoes them (see
+ * A text splice `[from, from+del) -> insert`. Accept/Reject return the splice that undoes them (see
  * {@link RestoreText}), so the undo registry can reverse a partial cherry-pick.
  */
 const TextSplice = Schema.Struct({
@@ -43,7 +43,7 @@ export const AcceptProposal = Operation.make({
  * Accept an individual change from another branch at an anchored region, without merging the whole
  * branch. The handler recomputes the latest diff between the subject's current branch and `branch`,
  * finds the hunk at `anchor`, and applies the compare branch's current text into the current branch
- * (a partial cherry-pick) — so the latest version is applied, not a snapshot.
+ * (a partial cherry-pick) - so the latest version is applied, not a snapshot.
  */
 export const AcceptChange = Operation.make({
   meta: {
@@ -53,7 +53,7 @@ export const AcceptChange = Operation.make({
     icon: 'ph--check--regular',
   },
   // The handler operates on the passed `subject` object directly (its ambient database) and requires
-  // no injected service, so it is invocable from any context — the UI operation invoker (which lacks
+  // no injected service, so it is invocable from any context - the UI operation invoker (which lacks
   // Database.Service) as well as the agent runtime.
   services: [],
   input: Schema.Struct({
@@ -68,7 +68,7 @@ export const AcceptChange = Operation.make({
 /**
  * Reject an individual change from a branch: revert the hunk at `anchor` (a range in the base
  * subject) on the author's `branch` back to the base text, so the suggestion disappears. The reject
- * counterpart to {@link AcceptChange} — accept splices the branch's version into the base, reject
+ * counterpart to {@link AcceptChange} - accept splices the branch's version into the base, reject
  * splices the base back into the branch.
  */
 export const RejectChange = Operation.make({

@@ -139,8 +139,8 @@ export type LoadDocOptions = {
    *   on disk, wait for storage to populate the handle; otherwise
    *   throw `'unavailable'` immediately without ever consulting the
    *   network. Note that this does not guarantee that the document
-   *   will not be fetched from the network — an inbound peer announce
-   *   can still deliver bytes — but the host will never request it.
+   *   will not be fetched from the network - an inbound peer announce
+   *   can still deliver bytes - but the host will never request it.
    */
   fetchFromNetwork?: boolean;
 };
@@ -160,7 +160,7 @@ export type CreateDocOptions = {
 const OPTIMIZED_SHARE_POLICY = true;
 
 /**
- * Consecutive non-converging collection-sync passes before warning, at a ~10s poll — ~1min, so
+ * Consecutive non-converging collection-sync passes before warning, at a ~10s poll - ~1min, so
  * in-flight replication of a large document does not trip it.
  */
 const NON_CONVERGENCE_WARN_THRESHOLD = 6;
@@ -180,8 +180,8 @@ const NON_CONVERGENCE_ERROR_THRESHOLD = 90;
 /**
  * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
  *
- * `Repo.shareConfigChanged()` takes no document argument — it walks every entry and re-probes each
- * against every connection — so its cost scales with the corpus, and there is no cheaper scoped
+ * `Repo.shareConfigChanged()` takes no document argument - it walks every entry and re-probes each
+ * against every connection - so its cost scales with the corpus, and there is no cheaper scoped
  * variant to reach for ({@link resyncDocument} is the per-document lever). Measured in a browser
  * trace of a ~800-document profile: one kick fanned out to ~7.6k probes over ~12s of worker time,
  * i.e. ~15ms per resident document once the per-connection fan-out is amortised in.
@@ -196,7 +196,7 @@ const SHARE_POLICY_KICK_MS_PER_DOCUMENT = 15;
 
 /**
  * Floor for the share-policy throttle. Below this the kick is cheap enough that throttling only
- * adds recovery latency — a small repo should stay as responsive as it was before the throttle.
+ * adds recovery latency - a small repo should stay as responsive as it was before the throttle.
  */
 const SHARE_POLICY_KICK_MIN_INTERVAL_MS = 1_000;
 
@@ -301,7 +301,7 @@ export class AutomergeHost extends Resource {
    */
   public readonly documentsSaved = new Event();
 
-  /** Fired per document whose heads a save advanced — what a reader of that document must catch up on. */
+  /** Fired per document whose heads a save advanced - what a reader of that document must catch up on. */
   public readonly documentHeadsChanged = new Event<{ documentId: DocumentId; heads: Heads }>();
 
   private readonly _headsUpdates = new Map<DocumentId, Heads>();
@@ -323,7 +323,7 @@ export class AutomergeHost extends Resource {
   private _documentsToRequest = new Set<DocumentId>();
 
   /**
-   * Consecutive non-converging collection-sync passes, keyed by `<collectionId>:<peerId>` — a pair
+   * Consecutive non-converging collection-sync passes, keyed by `<collectionId>:<peerId>` - a pair
    * making no progress is otherwise indistinguishable from idle polling in the logs.
    */
   private _nonConvergingSyncPasses = new Map<string, number>();
@@ -332,7 +332,7 @@ export class AutomergeHost extends Resource {
    * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
    *
    * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
-   * backoff — so one call per observed head pair is the whole retry budget, and calling it again
+   * backoff - so one call per observed head pair is the whole retry budget, and calling it again
    * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
    * rather than a plain "already tried" flag so that a genuine change on either side (the peer
    * advanced, or we committed again) re-opens the retry. An evicted document spends it on the load that
@@ -359,7 +359,7 @@ export class AutomergeHost extends Resource {
 
   /**
    * Reference counts the documents held loaded. The repo caches a document forever once anything
-   * faults it in, so residency is decided here instead — see {@link DocumentLeaseRegistry}.
+   * faults it in, so residency is decided here instead - see {@link DocumentLeaseRegistry}.
    */
   private readonly _leases: DocumentLeaseRegistry;
 
@@ -375,7 +375,7 @@ export class AutomergeHost extends Resource {
   private _signer: MemorySigner | undefined = undefined;
   private readonly _useSubduction: boolean;
 
-  /** Subduction Ed25519 PeerId hex → automerge-repo PeerId, populated from `subduction-peer-bound`. */
+  /** Subduction Ed25519 PeerId hex -> automerge-repo PeerId, populated from `subduction-peer-bound`. */
   private readonly _subductionPeerIdHexToRepoPeerId = new Map<string, PeerId>();
 
   constructor({
@@ -451,7 +451,7 @@ export class AutomergeHost extends Resource {
     // `Repo` unconditionally constructs a Subduction `SubductionSource` (with a fresh
     // `MemorySigner` when none is injected) regardless of whether we register any
     // `subductionAdapters`. That source's signer needs the Subduction WASM module
-    // initialized first — `Repo` imports from `@automerge/automerge-subduction/slim`,
+    // initialized first - `Repo` imports from `@automerge/automerge-subduction/slim`,
     // which does not auto-init. So WASM init runs in both modes.
     await initSubduction();
 
@@ -471,7 +471,7 @@ export class AutomergeHost extends Resource {
           {
             adapter: this._echoNetworkAdapter,
             serviceName: SUBDUCTION_SERVICE_NAME,
-            // DXOS hosts are always clients — the edge DO is the single `accept` peer in
+            // DXOS hosts are always clients - the edge DO is the single `accept` peer in
             // the DXOS-client <-> edge topology. `connect` uses Subduction's discovery mode,
             // so peer-to-peer connections (e.g., mesh replicator, test networks) also work
             // with `connect` on both sides.
@@ -480,7 +480,7 @@ export class AutomergeHost extends Resource {
         ],
       });
 
-      // Capture the subduction ↔ repo PeerId binding (websocket arm has no repoPeerId; unused).
+      // Capture the subduction <-> repo PeerId binding (websocket arm has no repoPeerId; unused).
       Event.wrap<SubductionPeerBinding>(this._repo, 'subduction-peer-bound').on(this._ctx, (binding) => {
         if ('repoPeerId' in binding) {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
@@ -498,7 +498,7 @@ export class AutomergeHost extends Resource {
       // Quiet subduction_core's console WARNs: every per-sedimentree sync round fans out to all
       // space-scoped edge peers, and each correct cross-space `authorizeFetch` denial is logged by
       // the WASM at WARN ("not authorized to access sedimentree"), flooding the console. Must run
-      // after `new Repo(...)` — the SubductionSource constructor resets the level to 'warn' on
+      // after `new Repo(...)` - the SubductionSource constructor resets the level to 'warn' on
       // every startup. Skipped when subduction debugging is requested, mirroring the constructor's
       // own escape hatch (`localStorage.debug` / `__SUBDUCTION_DEBUG`).
       const subductionDebugRequested =
@@ -624,8 +624,8 @@ export class AutomergeHost extends Resource {
       // `DeferredTask` clears its scheduled flag before running this callback, so a `schedule()`
       // landing during a wait here queues a second run, which would fan out again for requests the
       // first run already covered. While the trailing run is parked every schedule returns through
-      // this branch, so a burst costs one fan-out. Leading edge is immediate — a kick after a quiet
-      // period pays nothing, which keeps the deny→allow recovery path prompt.
+      // this branch, so a burst costs one fan-out. Leading edge is immediate - a kick after a quiet
+      // period pays nothing, which keeps the deny->allow recovery path prompt.
       const waitMs = this._sharePolicyKickNextAllowedAt - Date.now();
       if (waitMs > 0) {
         if (!this._sharePolicyKickParked) {
@@ -743,13 +743,13 @@ export class AutomergeHost extends Resource {
     return Object.keys(this._repo.handles).length;
   }
 
-  /** Ids of the documents resident in the repo cache — ids only, so no caller can bypass a lease. */
+  /** Ids of the documents resident in the repo cache - ids only, so no caller can bypass a lease. */
   get loadedDocumentIds(): DocumentId[] {
     return Object.keys(this._repo.handles) as DocumentId[];
   }
 
   /**
-   * Cached handles owned by one space — residency, not the space's document count.
+   * Cached handles owned by one space - residency, not the space's document count.
    *
    * Counted by testing the space's collection state (which survives handle eviction, and is the
    * same mapping `getContainingSpaceIdForDocument` trusts first) against the repo's cache, rather
@@ -807,7 +807,7 @@ export class AutomergeHost extends Resource {
    * Re-drives one document's Subduction sync round, re-arming its heal loop.
    *
    * {@link kickStalledSync} only revives `all-failed`/`no-peers` entries, so it cannot move a
-   * sedimentree Subduction already considers settled — which is the state a document sits in when
+   * sedimentree Subduction already considers settled - which is the state a document sits in when
    * its heads stay behind the sync server with no round in flight.
    */
   resyncDocument(documentId: DocumentId): void {
@@ -819,7 +819,7 @@ export class AutomergeHost extends Resource {
    * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
    *
    * Returns null when `fetchFromNetwork: false` and the document is not on disk, and when the document is
-   * quarantined — including one quarantined while this call waits on it.
+   * quarantined - including one quarantined while this call waits on it.
    */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocumentLease<T> | null> {
     invariant(this.isOpen, 'AutomergeHost is not open');
@@ -847,7 +847,7 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Leases a document without waiting for it to load — the lease's query carries the readiness
+   * Leases a document without waiting for it to load - the lease's query carries the readiness
    * state. Faults the document in, so a caller that only wants to know whether it is already
    * resident must not use this.
    */
@@ -936,7 +936,7 @@ export class AutomergeHost extends Resource {
     this.documentQuarantined.emit(record);
   }
 
-  /** Documents currently leased — what the host holds because something is using it. */
+  /** Documents currently leased - what the host holds because something is using it. */
   get leasedDocsCount(): number {
     return this._leases.size;
   }
@@ -999,12 +999,12 @@ export class AutomergeHost extends Resource {
       return lease;
     }
     const startedAt = performance.now();
-    // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
+    // Readiness lives on the `DocumentQuery`, not the `DocHandle` - see {@link getHandleState}. The
     // query is read from the repo rather than through the lease, which does not hand it out.
     const progress = this._repo.findWithProgress<T>(lease.documentId);
 
     // Default: when `fetchFromNetwork` is unset, behave as if it were
-    // `true` — wait on any source. Only an explicit `false` activates
+    // `true` - wait on any source. Only an explicit `false` activates
     // the storage-only branch.
     if (opts?.fetchFromNetwork !== false) {
       // Network branch: announce that we want the doc, then fall through
@@ -1033,7 +1033,7 @@ export class AutomergeHost extends Resource {
       }
     }
 
-    // `_waitForReady` (vs `progress.whenReady()`) treats `'unavailable'` as transient — the query routinely transits through it when classical sync sees `peers.size === 0` before the next peer arrives.
+    // `_waitForReady` (vs `progress.whenReady()`) treats `'unavailable'` as transient - the query routinely transits through it when classical sync sees `peers.size === 0` before the next peer arrives.
     if (opts?.timeout) {
       const abort = new AbortController();
       try {
@@ -1097,7 +1097,7 @@ export class AutomergeHost extends Resource {
           unsubscribe();
           reject(state.error);
         }
-        // `'unavailable'` and `'loading'` are non-terminal — keep waiting.
+        // `'unavailable'` and `'loading'` are non-terminal - keep waiting.
       });
       const unsubscribe = () => {
         unsubscribeQuarantine();
@@ -1162,7 +1162,7 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Flushed, then evicted, so the handle cannot re-persist what is deleted below — collection loads
+    // Flushed, then evicted, so the handle cannot re-persist what is deleted below - collection loads
     // the document to check ownership, so one is usually live here. Eviction only detaches the save
     // listener; a throttled save already scheduled still runs, and the flush is what makes it a
     // no-op, since its heads then match the last save.
@@ -1174,7 +1174,7 @@ export class AutomergeHost extends Resource {
       await this._repo.removeFromCache(documentId);
     }
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
-    // it would re-create — and re-announce — the query this call deletes.
+    // it would re-create - and re-announce - the query this call deletes.
     this._leases.forget(documentId);
     this._confirmedChanges.delete(documentId);
 
@@ -1305,7 +1305,7 @@ export class AutomergeHost extends Resource {
 
   /**
    * Share policy for the Repo's classical automerge-repo sync path (CollectionSynchronizer /
-   * DocSynchronizer — see `src/synchronizer/DocSynchronizer.ts#resolveSharePolicy`).
+   * DocSynchronizer - see `src/synchronizer/DocSynchronizer.ts#resolveSharePolicy`).
    *
    * NOTE: Subduction replication does NOT consult `shareConfig`.
    * {@link AutomergeReplicator}s via {@link EchoNetworkAdapter}.
@@ -1355,7 +1355,7 @@ export class AutomergeHost extends Resource {
    * false`), which has no inbound gate. Gating inbound here creates a bootstrapping
    * deadlock during invitations: the joining peer's `_getContainingSpaceForDocument`
    * cannot resolve the space-root doc until it's loaded, which can't happen if the
-   * inbound write is denied — and subduction `authorizePut` denials are sticky on the
+   * inbound write is denied - and subduction `authorizePut` denials are sticky on the
    * receiver (see .claude/skills/subduction/SKILL.md), so the entry never recovers.
    * Inbound trust here is bounded by `authorizeFetch` on the sender side (peers can't
    * push docs we wouldn't have served them) and by the sedimentree's internal
@@ -1379,7 +1379,7 @@ export class AutomergeHost extends Resource {
       }
     },
     authorizePut: async (_requestor, _author, sedimentreeId) => {
-      // Intentionally permissive — see class-level comment above. Logged because this is the
+      // Intentionally permissive - see class-level comment above. Logged because this is the
       // only signal that a peer actually delivered changes for a document.
       const documentId = sedimentreeIdToDocumentId(sedimentreeId);
       log.verbose('subduction authorizePut', { documentId });
@@ -1410,7 +1410,7 @@ export class AutomergeHost extends Resource {
   };
 
   /**
-   * Translates subduction PeerId → repo PeerId and delegates to the per-connection
+   * Translates subduction PeerId -> repo PeerId and delegates to the per-connection
    * `shouldAdvertise`. Default-allow when the binding hasn't arrived yet (narrow race
    * window: the handshake event fires before any sedimentree sync round).
    */
@@ -1436,7 +1436,7 @@ export class AutomergeHost extends Resource {
 
   private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
     // Under Subduction the Repo's `peerMetadataByPeerId` is not populated for peers that only
-    // speak Subduction (no classical peer message). Query the adapter directly — it maps
+    // speak Subduction (no classical peer message). Query the adapter directly - it maps
     // peerId -> connection and the per-connection `shouldSyncCollection` gates the answer.
     return this._echoNetworkAdapter.shouldSyncCollection(peerId, { collectionId });
   }
@@ -1566,7 +1566,7 @@ export class AutomergeHost extends Resource {
   /**
    * Resolve the space id owning a document for the share policy.
    *
-   * Membership is answered first from the local collection state — the space root's document
+   * Membership is answered first from the local collection state - the space root's document
    * list (root + linked docs), maintained by `updateLocalCollectionState`. That mapping survives
    * handle eviction and never blocks on the document loading, so a doc the node owns but whose
    * handle is evicted or still `'loading'` resolves to its space instead of reading as "not in any
@@ -1972,7 +1972,7 @@ export class AutomergeHost extends Resource {
     }
 
     // Per-handle state included: a document stuck in `unavailable`/`loading` here on every diff
-    // pass is the signature of a subduction DocumentQuery parked without retry —
+    // pass is the signature of a subduction DocumentQuery parked without retry -
     // `findWithProgress` will not re-issue the query, so the doc never arrives.
     log('replicating documents after collection sync', {
       collectionId,
@@ -1984,7 +1984,7 @@ export class AutomergeHost extends Resource {
     });
 
     // Trigger replication of the missing documents. `findWithProgress` is the
-    // fire-and-forget trigger — it creates a DocHandle and attaches sources. Under classical
+    // fire-and-forget trigger - it creates a DocHandle and attaches sources. Under classical
     // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
@@ -2008,7 +2008,7 @@ export class AutomergeHost extends Resource {
       // `_documentsToSync` feeds a share policy Subduction does not consult, so neither moves a
       // diverged document, resident or not. `resyncDocument` is the lever for a resident one: it
       // clears the heal state and marks the entry never-synced, so Subduction opens a fresh
-      // bidirectional round (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) —
+      // bidirectional round (`syncWithAllPeers` reports both `commitsSent` and `commitsReceived`) -
       // which is what delivers a local commit the peer never received. An evicted one needs no
       // lever: `_leaseUntilSettled` below faults it in and `SubductionSource.attach` gives it a
       // fresh never-synced entry.
@@ -2100,7 +2100,7 @@ export class AutomergeHost extends Resource {
 
   /**
    * Leases a document until its query settles, which both triggers replication and keeps the
-   * document resident while its bytes are in flight — nothing else holds it until they land.
+   * document resident while its bytes are in flight - nothing else holds it until they land.
    *
    * Bounded by {@link REPLICATION_LEASE_TIMEOUT} rather than waiting for `'ready'` forever: a peer
    * can advertise a document it never delivers, and `'unavailable'` is transient here (the query
@@ -2155,8 +2155,8 @@ export class AutomergeHost extends Resource {
         const current = state.documents[documentId];
         // Collection membership is owned by `updateLocalCollectionState` (driven by
         // `SpaceStateManager.spaceDocumentListUpdated`). `_afterSave` fires for every
-        // chunk written — including the space root, system docs, and transiently-fetched
-        // docs that haven't been admitted to any collection — so we only refresh heads
+        // chunk written - including the space root, system docs, and transiently-fetched
+        // docs that haven't been admitted to any collection - so we only refresh heads
         // for documents the membership path has already registered. Adding new keys
         // here would leak non-collection docs into the broadcast state and race with
         // the authoritative rebuild in `updateLocalCollectionState`.
@@ -2186,7 +2186,7 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
   const unavailableHeads = new Set(heads);
 
   // Check the current doc first, then subscribe to `change` to catch later
-  // updates. (We can't use the handle's readiness to gate the subscription —
+  // updates. (We can't use the handle's readiness to gate the subscription -
   // see {@link getHandleState} for why `DocHandle.*` state is unusable in
   // this fork.)
   const checkPresentHeads = () => {
@@ -2283,7 +2283,7 @@ const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
  */
 /**
  * Inverse of {@link documentIdToSedimentreeIdHex}, for naming the document behind a storage key.
- * Decodes the leading 16 bytes by hand — `Buffer` is not available in the browser worker.
+ * Decodes the leading 16 bytes by hand - `Buffer` is not available in the browser worker.
  */
 const sedimentreeHexToDocumentId = (sedimentreeIdHex: string): DocumentId => {
   const bytes = new Uint8Array(16);

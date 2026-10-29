@@ -84,8 +84,8 @@ export const OnePanel: Story = {
 };
 
 /**
- * The drawer's tab strip and its body are resolved separately — the tabs come from the panel's companion
- * nodes while the body is a Surface — so a tab can render over an empty body. This asserts both.
+ * The drawer's tab strip and its body are resolved separately - the tabs come from the panel's companion
+ * nodes while the body is a Surface - so a tab can render over an empty body. This asserts both.
  */
 export const Companion: Story = {
   tags: ['test'],

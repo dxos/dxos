@@ -195,8 +195,8 @@ export class FeedSyncer extends Resource {
           });
           // v4 dropped `Schema.validate`; decoding through the type side is the equivalent.
           const payload = yield* Schema.decodeEffect(Schema.toType(FeedProtocol.ProtocolMessage))(decoded);
-          // Server-initiated messages carry no `requestId`, so `SyncClient.handleMessage` — which
-          // matches responses to in-flight RPCs — would discard them.
+          // Server-initiated messages carry no `requestId`, so `SyncClient.handleMessage` - which
+          // matches responses to in-flight RPCs - would discard them.
           if (payload._tag === 'FeedAdvanced') {
             this.#onFeedAdvanced(payload);
             return;
@@ -348,7 +348,7 @@ export class FeedSyncer extends Resource {
 
   /**
    * The server accepted a subscription, which is this client's only evidence that it is running a
-   * build that pushes hints — an older EDGE drops `SubscribeRequest` without replying.
+   * build that pushes hints - an older EDGE drops `SubscribeRequest` without replying.
    */
   #onSubscribeResponse(message: Extract<FeedProtocol.ProtocolMessage, { _tag: 'SubscribeResponse' }>): void {
     const wasPushing = this.#serverPushesHints;

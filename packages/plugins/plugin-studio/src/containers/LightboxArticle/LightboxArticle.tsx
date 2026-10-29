@@ -65,7 +65,7 @@ export type LightboxArticleProps = AppSurface.ObjectArticleProps<Lightbox.Lightb
 /**
  * A spatial "lightbox" of {@link MediaArtifact}s laid out on a `Board` (react-ui-board). Each artifact
  * renders as its cover-variant card (the `CardContent` surface); dragging persists cell positions.
- * The same artifacts can also be viewed as a `Collection` masonry — layout is a view, not a schema.
+ * The same artifacts can also be viewed as a `Collection` masonry - layout is a view, not a schema.
  */
 export const LightboxArticle = ({ role, subject: lightbox, attendableId }: LightboxArticleProps) => {
   const { hasAttention } = useAttention(attendableId);

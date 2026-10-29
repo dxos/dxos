@@ -14,11 +14,11 @@ import { getObjectEchoUri } from './util.ts';
 /**
  * Controls the URI form returned by `getUri` and the public `*.getURI` helpers.
  *
- * - `'named'`    — Registry key URI (`dxn:<meta.key>`) when the entity has a key in its meta;
+ * - `'named'`    - Registry key URI (`dxn:<meta.key>`) when the entity has a key in its meta;
  *                  falls back to the default EID.
- * - `'absolute'` — Fully-qualified EID with space id (`echo://<spaceId>/<entityId>`);
+ * - `'absolute'` - Fully-qualified EID with space id (`echo://<spaceId>/<entityId>`);
  *                  falls back when no space is available.
- * - `'relative'` — Local EID without space id (`echo:/<entityId>`).
+ * - `'relative'` - Local EID without space id (`echo:/<entityId>`).
  *
  * Omitting `prefer` preserves the existing behaviour.
  */

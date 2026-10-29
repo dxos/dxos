@@ -29,7 +29,7 @@ const QueryComposerLogsInput = Schema.Struct({
     Schema.Array(Schema.String).annotate({
       description: trim`
         LOG_FILTER strings; OR across array entries. Same syntax as DX_LOG / @dxos/log
-        parseFilter — comma-separated tokens of "<pattern>:<level>", a bare "<level>",
+        parseFilter - comma-separated tokens of "<pattern>:<level>", a bare "<level>",
         or "!<pattern>" to exclude. Tokens within one entry combine like @dxos/log
         shouldLog (include/exclude); multiple entries OR.
       `,

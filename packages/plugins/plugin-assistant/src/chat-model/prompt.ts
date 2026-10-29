@@ -15,7 +15,7 @@ export type ChatRequestContext = {
 };
 
 /**
- * Prompt content for a request: the bare message, or — when the request carries selection context —
+ * Prompt content for a request: the bare message, or - when the request carries selection context -
  * a synthetic block (system-generated user-turn content, hidden from the summary view) ahead of it.
  * A synthetic request is itself system-generated (a completed inline flow reporting itself), so it
  * becomes one synthetic block rather than words the reader appears to have typed.

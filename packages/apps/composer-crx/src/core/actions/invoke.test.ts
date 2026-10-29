@@ -56,7 +56,7 @@ describe('deliverInvoke', () => {
       },
       sendMessage: async () => {
         sends++;
-        // First send: content relay times out while the app boots — retried.
+        // First send: content relay times out while the app boots - retried.
         return sends === 1
           ? { version: 1, id: request.id, ok: false, error: 'timeout' }
           : { version: 1, id: request.id, ok: true };

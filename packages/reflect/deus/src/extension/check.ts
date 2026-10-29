@@ -33,10 +33,10 @@ const lintAttribution = (body: string, noun: 'Decision' | 'Question'): string[] 
   const by = fieldValue(body, 'by');
   const principal = fieldValue(body, 'for');
   if (!by) {
-    errors.push(`${noun} is missing \`by:\` — name the user: or agent: that made it.`);
+    errors.push(`${noun} is missing \`by:\` - name the user: or agent: that made it.`);
   } else if (AGENT_REF.test(by)) {
     if (!principal) {
-      errors.push(`Agent ${noun.toLowerCase()} is missing \`for:\` — name the user: the agent acted for.`);
+      errors.push(`Agent ${noun.toLowerCase()} is missing \`for:\` - name the user: the agent acted for.`);
     }
   } else if (USER_REF.test(by)) {
     if (principal !== undefined) {
@@ -133,7 +133,7 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
     } else if (!(id in index.specs)) {
       report('mdl/ref', from, to, unknownSpecMessage(id));
     } else if (!dependencyIds.has(id)) {
-      report('mdl/ref', from, to, `\`${id}\` is not a dependency; add \`uses ${id}: …\` under ## Dependencies.`);
+      report('mdl/ref', from, to, `\`${id}\` is not a dependency; add \`uses ${id}: ...\` under ## Dependencies.`);
     } else if (!index.specs[id].items.includes(item)) {
       report('mdl/ref', from, to, missingItemMessage(id, item));
     }
@@ -153,10 +153,10 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
  * Lints the text of a Spec .mdl document.
  *
  * Checks:
- *   - Unknown block types (first body line of ```mdl blocks) → error
- *   - `decision` and `question` attribution (`by:` / `for:` actor prefixes) → error
- *   - `mdl/block`: a second block header inside one fence, which every tool reads as body → error
- *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given → error
+ *   - Unknown block types (first body line of ```mdl blocks) -> error
+ *   - `decision` and `question` attribution (`by:` / `for:` actor prefixes) -> error
+ *   - `mdl/block`: a second block header inside one fence, which every tool reads as body -> error
+ *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given -> error
  */
 export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: LintOptions = {}): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
@@ -450,9 +450,9 @@ const checkQuestions = (prev: readonly ChangelogQuestion[], next: readonly Chang
   for (const { id, text } of prev) {
     const current = nextById.get(id);
     if (!current) {
-      errors.push(`Question ${id} was removed — the changelog is append-only; answer it with a decision instead.`);
+      errors.push(`Question ${id} was removed - the changelog is append-only; answer it with a decision instead.`);
     } else if (normalize(current.text) !== normalize(text)) {
-      errors.push(`Question ${id} was edited — the changelog is append-only; ask a new question instead.`);
+      errors.push(`Question ${id} was edited - the changelog is append-only; ask a new question instead.`);
     }
   }
 
@@ -460,7 +460,7 @@ const checkQuestions = (prev: readonly ChangelogQuestion[], next: readonly Chang
   let expected = Math.max(0, ...prev.map(({ id }) => Number(QUESTION_ID.exec(id)?.[1] ?? 0))) + 1;
   for (const { id } of next.filter(({ id }) => !prevIds.has(id))) {
     if (id !== `Q-${expected}`) {
-      errors.push(`Question ${id} is out of sequence — the next id is Q-${expected}.`);
+      errors.push(`Question ${id} is out of sequence - the next id is Q-${expected}.`);
     }
     expected++;
   }
@@ -491,9 +491,9 @@ export const checkChangelogChange = (before: string | undefined, after: string):
   for (const { id, text } of prev.entries) {
     const current = nextById.get(id);
     if (!current) {
-      errors.push(`Decision ${id} was removed — the changelog is append-only; supersede it instead.`);
+      errors.push(`Decision ${id} was removed - the changelog is append-only; supersede it instead.`);
     } else if (normalize(current.text) !== normalize(text)) {
-      errors.push(`Decision ${id} was edited — the changelog is append-only; supersede it instead.`);
+      errors.push(`Decision ${id} was edited - the changelog is append-only; supersede it instead.`);
     }
   }
 
@@ -514,7 +514,7 @@ export const checkChangelogChange = (before: string | undefined, after: string):
   let expected = Math.max(0, ...prev.entries.map(({ id }) => Number(DECISION_ID.exec(id)?.[1] ?? 0))) + 1;
   for (const { id } of added) {
     if (id !== `D-${expected}`) {
-      errors.push(`Decision ${id} is out of sequence — the next id is D-${expected}.`);
+      errors.push(`Decision ${id} is out of sequence - the next id is D-${expected}.`);
     }
     expected++;
   }
@@ -536,7 +536,7 @@ export const checkChangelogChange = (before: string | undefined, after: string):
     if (!questionIds.has(answers)) {
       errors.push(`Decision ${id} answers ${answers}, which is not in the changelog.`);
     } else if (first !== undefined && supersedes !== first) {
-      errors.push(`Decision ${id} answers ${answers}, which ${first} already answered — supersede ${first} instead.`);
+      errors.push(`Decision ${id} answers ${answers}, which ${first} already answered - supersede ${first} instead.`);
     } else {
       answeredBy.set(answers, id);
     }

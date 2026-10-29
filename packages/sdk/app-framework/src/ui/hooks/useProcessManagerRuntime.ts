@@ -26,7 +26,7 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
  * with space-scoped services resolved via {@link ServiceResolver.provide}.
  *
  * Arguments passed to the returned callback are forwarded to `fn`, and the effect's result comes
- * back as the callback's promise — rejecting with the effect's failure (`E`), with
+ * back as the callback's promise - rejecting with the effect's failure (`E`), with
  * {@link ServiceNotAvailableError} when a tag cannot be resolved for the space, or with a
  * `TypeError` when called while `spaceId` is still `undefined`.
  *

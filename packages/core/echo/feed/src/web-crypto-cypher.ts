@@ -4,10 +4,10 @@
 
 import { type Cypher, type CypherContext, type EncryptedPayload, type FeedMetadata } from './cypher.ts';
 
-/** AES-256-GCM, the only algorithm here — WebCrypto's only AEAD and the one Cloudflare Workers offer. */
+/** AES-256-GCM, the only algorithm here - WebCrypto's only AEAD and the one Cloudflare Workers offer. */
 const AES_GCM = { name: 'AES-GCM', length: 256 } as const;
 
-/** 96-bit nonce — AES-GCM's native size, so WebCrypto does not hash it down first. */
+/** 96-bit nonce - AES-GCM's native size, so WebCrypto does not hash it down first. */
 const IV_BYTES = 12;
 
 const textEncoder = new TextEncoder();

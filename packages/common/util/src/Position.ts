@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 /**
- * Numeric priority order — lower values sort earlier.
+ * Numeric priority order - lower values sort earlier.
  * - `undefined` - Treated as `0`; sorts between `first` and `last`.
  * - `first` (-Infinity) - Sorts before all other items.
  * - `last` (Infinity) - Sorts after all other items.

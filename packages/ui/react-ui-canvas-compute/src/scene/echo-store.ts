@@ -5,7 +5,7 @@
 //
 // The scene store over a `CanvasBoard` (MIGRATION.md M4): `layout.nodes` are the scene's nodes and
 // `layout.edges` its links, so a board written by the old editor opens on the engine unchanged. The
-// store is the only seam that changes — `Canvas` takes this exactly as it takes the memory store.
+// store is the only seam that changes - `Canvas` takes this exactly as it takes the memory store.
 //
 // The two representations differ in three places, and each is translated rather than migrated:
 // z-order (an array in the layout, a fractional key in the scene), style (`guide` / `classNames` at the
@@ -51,7 +51,7 @@ const linkType = (type: string | undefined): LinkType =>
 //
 
 /**
- * The scene a layout stands for. `z` comes from array order — the order the editor painted in — so the
+ * The scene a layout stands for. `z` comes from array order - the order the editor painted in - so the
  * first read of an existing board reproduces its stacking exactly; every later read uses the key the
  * write path put the node's position in the array for.
  */
@@ -208,7 +208,7 @@ export type EchoStoreOptions = {
 /**
  * A `ViewStore` over a board's layout: reads derive the scene from the object (re-deriving whenever
  * ECHO announces a change, including a peer's edit), writes go back through `Obj.update`. Only the
- * board's own scene lives here — a nested scene needs another object and is not part of M4.
+ * board's own scene lives here - a nested scene needs another object and is not part of M4.
  */
 export const createEchoStore = (board: CanvasBoard.CanvasBoard, options: EchoStoreOptions = {}): ViewStore => {
   const sceneId = options.sceneId ?? boardViewId(board);

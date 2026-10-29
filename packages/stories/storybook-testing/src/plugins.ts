@@ -3,7 +3,7 @@
 //
 
 //
-// Composable story plugins shared by the stories-* packages — the recurring one-off plugins every
+// Composable story plugins shared by the stories-* packages - the recurring one-off plugins every
 // harness used to hand-roll: module-surface contribution, a story AiService, and the
 // `UpdateCompanion` no-op stub.
 //
@@ -40,13 +40,13 @@ export type StoryAiPluginOptions = {
    * service layer (e.g. a mock with canned output, so a play test runs deterministically in CI).
    */
   ai: 'ollama' | (() => Layer.Layer<AiService.AiService>);
-  /** LayerSpec affinity the consuming operations resolve at — `space` unless they run app-wide. */
+  /** LayerSpec affinity the consuming operations resolve at - `space` unless they run app-wide. */
   affinity?: 'space' | 'application';
 };
 
 /**
  * Provides `AiService` on the layer the operations resolve at invoke time, matching how the app
- * provisions it — so an operation invoked from a story reaches a model instead of failing to
+ * provisions it - so an operation invoked from a story reaches a model instead of failing to
  * resolve the service.
  */
 export const StoryAiPlugin = ({ ai, affinity = 'space' }: StoryAiPluginOptions) =>

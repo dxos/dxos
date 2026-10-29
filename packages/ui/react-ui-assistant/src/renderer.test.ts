@@ -133,7 +133,7 @@ describe('createRenderer', () => {
   });
 
   // `collapseToolRuns` keeps the first message's identity, and the previous turn's trailing `stats`
-  // message starts the run — so an alarm turn's synthetic prompt lands on an assistant-role message.
+  // message starts the run - so an alarm turn's synthetic prompt lands on an assistant-role message.
   // Keyed on the role, it rendered as the model's own prose with the panel frame gone.
   test('a synthetic block keeps its panel on an assistant-role message', ({ expect }) => {
     const rendered = createRenderer('normal')(
@@ -150,7 +150,7 @@ describe('createRenderer', () => {
   });
 
   // A message the renderer maps to nothing is dropped as an empty row, so a synthetic-only turn
-  // (a trigger, the planning skill's continuation nudge) used to vanish — leaving the answer to it
+  // (a trigger, the planning skill's continuation nudge) used to vanish - leaving the answer to it
   // reading as though the assistant had spoken unprompted.
   test('a synthetic-only turn renders as its own panel rather than nothing', ({ expect }) => {
     const text = renderUser(userMessage([ContentBlock.Text.make({ text: 'keep going', disposition: 'synthetic' })]));

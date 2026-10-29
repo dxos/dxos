@@ -14,11 +14,11 @@ import { type PluginEntry, type StatusPayload } from './types.ts';
 
 /** Creep timer cadence, in milliseconds. */
 export const CREEP_TICK_MS = 100;
-/** State-1 ease rate — a gentle "we're alive" hint before real progress lands. */
+/** State-1 ease rate - a gentle "we're alive" hint before real progress lands. */
 export const STATE_1_RATE = 0.05;
 /** State-1 asymptote (percent) the creep eases toward before host progress. */
 export const STATE_1_ASYMPTOTE = 40;
-/** State-2 ease rate — bridges the gap between sparse host `progress()` calls. */
+/** State-2 ease rate - bridges the gap between sparse host `progress()` calls. */
 export const STATE_2_RATE = 0.05;
 /** State-2 lead (percent) the ceiling sits ahead of the last host value. */
 export const STATE_2_BUMP = 15;
@@ -27,7 +27,7 @@ export const ABSOLUTE_CEILING = 90;
 
 /**
  * Spacing between plugin icons entering the row, sampled per icon from this range. Activation
- * arrives in bursts — a dozen plugins inside a couple of frames — which lands as a single clump
+ * arrives in bursts - a dozen plugins inside a couple of frames - which lands as a single clump
  * rather than as anything the eye can follow, so arrivals queue and drain at this cadence instead.
  * The interval varies because a fixed one reads as a machine ticking rather than work landing.
  */
@@ -56,7 +56,7 @@ export type StatusLine = {
 };
 
 /**
- * Asymptotic ease — `next = raw + (ceiling - raw) * rate`, clamped so it never
+ * Asymptotic ease - `next = raw + (ceiling - raw) * rate`, clamped so it never
  * overshoots (or regresses past) the ceiling. Pure; unit-tested.
  */
 export const easeToward = (raw: number, ceiling: number, rate: number): number =>
@@ -70,12 +70,12 @@ export const easeToward = (raw: number, ceiling: number, rate: number): number =
 export const clampPercent = (fraction?: number): number =>
   typeof fraction !== 'number' || !Number.isFinite(fraction) || fraction < 0 ? 0 : Math.min(1, fraction) * 100;
 
-/** Display text for a payload — appends the `(index/total)` suffix when a range is present. */
+/** Display text for a payload - appends the `(index/total)` suffix when a range is present. */
 export const displayText = (payload: StatusPayload): string =>
   payload.range ? `${payload.humanized} (${payload.range.index}/${payload.range.total})` : payload.humanized;
 
 /**
- * Reactive loader store — owns the progress percent, the status-line log, and
+ * Reactive loader store - owns the progress percent, the status-line log, and
  * the lifecycle phase, plus the auto-creep timer. All DOM-free, so the creep
  * math and status reduction are testable as plain functions; `Loader.tsx` binds
  * the accessors to the DOM and `bridge.ts` wraps the mutators as the imperative
@@ -94,11 +94,11 @@ export type LoaderStore = {
   onAbort: Accessor<(() => void) | undefined>;
   /** The icon sprite's symbols, as markup for an inline `<svg>`, once {@link LoaderStore.loadSprite} has landed. */
   sprite: Accessor<string | undefined>;
-  /** Whole seconds since the loader appeared. Ticks only while stalled — see {@link LoaderStore.stalled}. */
+  /** Whole seconds since the loader appeared. Ticks only while stalled - see {@link LoaderStore.stalled}. */
   elapsedSeconds: Accessor<number>;
   /** Apply a status update (append, or replace-in-place for range ticks). */
   pushStatus: (payload: StatusPayload) => void;
-  /** Enter host-driven progress with `fraction` ∈ [0, 1]; never regresses. */
+  /** Enter host-driven progress with `fraction` in [0, 1]; never regresses. */
   setProgress: (fraction?: number) => void;
   /**
    * Register the icon for every plugin that *could* activate. Registration alone draws nothing:
@@ -108,18 +108,18 @@ export type LoaderStore = {
   setPlugins: (entries: PluginEntry[]) => void;
   /**
    * Queue this plugin's icon for the row. Arrivals drain one at a time, spaced by {@link drainDelay}
-   * — activation bursts would otherwise land as one clump. Unregistered and repeated ids are ignored.
+   * - activation bursts would otherwise land as one clump. Unregistered and repeated ids are ignored.
    */
   activatePlugin: (id: string) => void;
   /**
    * Fetch the icon sprite for the activation row. Called at mount, so the ~200KB download starts
-   * with the page rather than with the first activation: an external `<use href="/icons.svg#…">`
+   * with the page rather than with the first activation: an external `<use href="/icons.svg#...">`
    * is only requested when its element lands, and on a cold cache that arrives after the row has
-   * filled — or after the loader has gone. Resolves once the sprite is in, or on failure with
+   * filled - or after the loader has gone. Resolves once the sprite is in, or on failure with
    * {@link LoaderStore.sprite} left unset (the slots then stay empty, as they would anyway).
    */
   loadSprite: (url: string) => Promise<void>;
-  /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
+  /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent - the first handler wins. */
   stalled: (onAbort: () => void) => void;
   /** Snap to 100%, stop the creep, and enter the dismissing phase. */
   ready: () => void;
@@ -187,7 +187,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
       ) {
         return current;
       }
-      // Range tick — replace the current line in place rather than appending,
+      // Range tick - replace the current line in place rather than appending,
       // so a counted phase produces one entry with an updating suffix.
       if (payload.range && previous) {
         return [...current.slice(0, -1), { ...previous, text }];
@@ -206,14 +206,14 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   };
 
   // Appended in its final state: the entrance is a CSS animation that runs from the element's first
-  // frame, so it needs no two-step flip to start it (and no frame in which to do so — the main
+  // frame, so it needs no two-step flip to start it (and no frame in which to do so - the main
   // thread is saturated during boot).
   const emitPlugin = (entry: PluginEntry): void => setPluginRows((current) => [...current, entry]);
 
   /**
    * Cooldown after every emission, not merely while the queue is non-empty: activations arrive one
    * at a time as often as in a burst, and without a cooldown each of those would find no timer armed
-   * and draw immediately — the clump this exists to prevent. Sampled afresh each time, so the row
+   * and draw immediately - the clump this exists to prevent. Sampled afresh each time, so the row
    * fills at an uneven human cadence rather than a machine tick. Disarms once the queue is idle.
    */
   const scheduleDrain = (): void => {

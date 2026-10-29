@@ -5,7 +5,7 @@
 //
 // Layered layout over the neutral graph, hierarchy-aware: each group is laid out in its own
 // coordinate space and then sized to fit its children, because React Flow positions a child
-// relative to its parent. Deliberately simple — ELK replaces this (see the design's phasing);
+// relative to its parent. Deliberately simple - ELK replaces this (see the design's phasing);
 // the seam is that nothing outside this module knows how positions were derived.
 //
 

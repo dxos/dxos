@@ -31,8 +31,8 @@ import { LocalRemoteHost } from './testing/index.ts';
  * End-to-end test of the queued remote control, with a SECOND local process manager standing in for
  * the remote runtime and a cuttable channel between the two.
  *
- * Each test asserts on what the host ended up with — which processes exist there, which inputs it
- * applied and how many times — rather than on calls into a mock, which is the only way the
+ * Each test asserts on what the host ended up with - which processes exist there, which inputs it
+ * applied and how many times - rather than on calls into a mock, which is the only way the
  * at-least-once queue plus at-most-once host can be shown to compose into exactly-once.
  */
 describe('queued remote control (e2e against a local host)', () => {
@@ -70,7 +70,7 @@ describe('queued remote control (e2e against a local host)', () => {
           yield* link.cut;
           const { pid } = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'undelivered' });
 
-          // Every read a caller can make must answer for a process the host has never heard of —
+          // Every read a caller can make must answer for a process the host has never heard of -
           // the host would 404 the pid, and a client that surfaced that would lose the process the
           // user just spawned.
           const status = yield* client.status({ spaceId: SPACE, pid });
@@ -194,7 +194,7 @@ describe('queued remote control (e2e against a local host)', () => {
           yield* client.submitInput({ spaceId: SPACE, pid: snapshot.pid, input: 'abandoned' });
           yield* client.terminate({ spaceId: SPACE, pid: snapshot.pid });
 
-          // Nothing to terminate on the host, so nothing should ever be sent there — and the client
+          // Nothing to terminate on the host, so nothing should ever be sent there - and the client
           // forgets it rather than keeping a TERMINATED snapshot only this session could see.
           expect(yield* client.pending).toEqual([]);
           expect(yield* client.list({ spaceId: SPACE })).toEqual([]);
@@ -221,7 +221,7 @@ describe('queued remote control (e2e against a local host)', () => {
             yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'other' });
 
             // Ordering is per process, so the second spawn overtakes the first rather than waiting
-            // on it — which under a single global order it never could.
+            // on it - which under a single global order it never could.
             yield* waitUntil(
               Effect.map(host.list({ spaceId: SPACE }), (hosted) =>
                 hosted.some((info) => info.params.name === 'other'),
@@ -237,7 +237,7 @@ describe('queued remote control (e2e against a local host)', () => {
             // the process is not wanted any more.
             yield* client.terminate({ spaceId: SPACE, pid: doomed.pid });
             expect(yield* client.pending).toEqual([]);
-            // The other process is untouched by any of this — it is on the host and stays there.
+            // The other process is untouched by any of this - it is on the host and stays there.
             expect((yield* client.list({ spaceId: SPACE })).map((info) => info.params.name)).toEqual(['other']);
           }),
         {
@@ -414,7 +414,7 @@ describe('queued remote control (e2e against a local host)', () => {
   it.live(
     'the client manager built over the queue spawns and streams through it',
     Effect.fn(function* ({ expect }) {
-      // The whole client stack — `makeControlVerbs` + `RemoteProcessHandle` — over the queued control,
+      // The whole client stack - `makeControlVerbs` + `RemoteProcessHandle` - over the queued control,
       // so the queue is exercised through the surface callers actually hold.
       yield* withHarness(({ client, host }) =>
         Effect.gen(function* () {
@@ -438,7 +438,7 @@ const SPACE = SpaceId.random();
 /** A process key whose spawn the harness fails as an outage would, rather than as a refusal. */
 const UNREACHABLE_KEY = 'test.unreachable';
 
-/** Long enough that only `connected` can end it — which is what makes the signal the thing under test. */
+/** Long enough that only `connected` can end it - which is what makes the signal the thing under test. */
 const BACKOFF = { initial: Duration.seconds(30), max: Duration.seconds(30) };
 
 /** Echoes each input back as an output; the only part of a definition the remote path uses. */
@@ -489,7 +489,7 @@ interface Harness {
  * Runs `body` against a client + host + channel: two process managers in one process, the second
  * pretending to be the edge.
  *
- * Teardown is explicit and ordered — flushers first, then the host, then the layer's registry. A
+ * Teardown is explicit and ordered - flushers first, then the host, then the layer's registry. A
  * flusher still retrying, or a host process still running, when the atom registry is disposed reports
  * as a failure in whichever test runs next.
  */

@@ -4,7 +4,7 @@
 
 //
 // Auto layout (MIGRATION.md M4): the scene's own nodes arranged into ranked rows along its links,
-// through `@dxos/diagram`'s ranking — the same engine the dynamic projection lays its graph out with,
+// through `@dxos/diagram`'s ranking - the same engine the dynamic projection lays its graph out with,
 // rather than a second one. Unlike the editor's `@antv` layout this keeps each node: its type, its
 // size and its content are untouched and only the centre moves, so laying out is an arrangement of
 // the diagram rather than a replacement of it.

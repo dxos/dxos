@@ -17,12 +17,12 @@ import { type MessageRenderer, defaultRenderer } from '../model/index.ts';
  * The bridge between the placement layer and the thing it has to replace. `placement/*` proves the
  * shape against boxes that cannot lie about their size; `baseline/*` proves the current engine
  * against real editors. This is where those meet: the same messages, the same renderer and the same
- * chrome as a feed, but placed by the new module — so the baseline invariants can be pointed at it
+ * chrome as a feed, but placed by the new module - so the baseline invariants can be pointed at it
  * and answer whether the replacement is ready, rather than the question being settled by argument.
  *
  * Deliberately *not* wired into `MessageList.Root`. Root owns the follow, the sticky tail, the
  * anchors and the cursor as well as the virtualizer, so swapping the placement inside it is not a
- * swap but a reimplementation — and doing that before this exists would leave nothing to check it
+ * swap but a reimplementation - and doing that before this exists would leave nothing to check it
  * against.
  */
 export type MessageWindowProps = {
@@ -33,14 +33,14 @@ export type MessageWindowProps = {
   /** Extent of a row before it has been measured; a function where rows differ widely. */
   estimateSize?: number | ((message: Message.Message, index: number) => number);
   gutter?: 'sm' | 'md' | 'lg';
-  /** Keep the last message against the bottom as content arrives — a chat's standing intent. */
+  /** Keep the last message against the bottom as content arrives - a chat's standing intent. */
   sticky?: boolean;
   /**
    * Empty extent after the last row, so it can be brought to the top of the viewport.
    *
    * A number, computed by the host from its own container. Not a `scrollPastEnd` mode: with the
    * window placed rather than the rows, the reserve is a term in the sizer and nothing else in the
-   * engine knows about it (§7) — which is what the old engine could not say, since its reserve was
+   * engine knows about it (§7) - which is what the old engine could not say, since its reserve was
    * a DOM spacer outside the virtualizer's coordinate space.
    */
   reserve?: number;

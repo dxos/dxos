@@ -40,7 +40,7 @@ const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.
 
 /**
  * NEVER redact EntityIds, EIDs, or DXNs in this module. Fixture prompts
- * must match the exact strings the LLM is asked to reason about — collapsing
+ * must match the exact strings the LLM is asked to reason about - collapsing
  * ids to a placeholder hides real mismatches and produces false hits. Test
  * determinism comes from `EntityId.dangerouslyDisableRandomness()` (test PRNG
  * with a fixed seed); when fixtures drift, fix the upstream id generation or
@@ -53,8 +53,8 @@ const normalizePromptForMatching = (prompt: unknown, dynamicMatcher?: RegExp): u
   const normalized = deepMapValues(prompt, (value, recurse, key) => {
     // Message metadata `timestamp` fields are stamped with the live clock as each turn completes and
     // are fed back verbatim into the prompt of every subsequent turn. They carry no meaning for the
-    // model's reasoning, so collapse them — otherwise no multi-turn conversation can ever replay on a
-    // different run/day. (This is NOT id redaction; see the note above — ids are left intact.)
+    // model's reasoning, so collapse them - otherwise no multi-turn conversation can ever replay on a
+    // different run/day. (This is NOT id redaction; see the note above - ids are left intact.)
     if (key === 'timestamp') {
       return TIMESTAMP_PLACEHOLDER;
     }
@@ -87,7 +87,7 @@ const cloneForMatching = (prompt: unknown): unknown => {
 // freshly generated keypair every run), so they would otherwise prevent any memoized conversation
 // from ever replaying. When opted in via {@link MakeProps.dynamicValuePatterns}, such tokens are:
 //   1. canonicalized to positional placeholders for matching/hashing (so structural equality is
-//      still enforced — two prompts match only if they share the same count of distinct dynamic
+//      still enforced - two prompts match only if they share the same count of distinct dynamic
 //      values in the same positions), and
 //   2. on a cache hit, the stored values are substituted with the live prompt's values before the
 //      response is returned, so the replaying run sees its own real identifiers.
@@ -118,7 +118,7 @@ export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}
 
 /**
  * Matches a canonical UUID (8-4-4-4-12 hex). Use this when a prompt embeds an id minted by an
- * external service on every real invocation (e.g. an image-hosting upload id in a tool result) —
+ * external service on every real invocation (e.g. an image-hosting upload id in a tool result) -
  * such tools aren't otherwise memoizable since the value differs on every live execution.
  * @example 5baed323-7879-4fde-0441-c2cf954f2900
  */
@@ -135,10 +135,10 @@ export const RESULT_PID_PATTERN = /<result pid=\d+>/;
 
 /**
  * Matches the label of a markdown link whose text is an object mnemonic (the last 6 Crockford
- * base-32 chars of an EntityId, uppercased) — the form task refs take in a rendered checklist.
+ * base-32 chars of an EntityId, uppercased) - the form task refs take in a rendered checklist.
  * The mnemonic is a projection of an id that {@link ENTITY_ID_PATTERN} already canonicalizes, so
  * it would otherwise drift with the id while its URI stayed normalized. The `](echo:/` lookahead
- * keeps six ordinary uppercase letters, and any non-ECHO link, from matching — two unrelated links
+ * keeps six ordinary uppercase letters, and any non-ECHO link, from matching - two unrelated links
  * canonicalized to the same label would otherwise share a fixture key.
  * @example [KCNT8N](echo:/
  */
@@ -147,7 +147,7 @@ export const MNEMONIC_LINK_LABEL_PATTERN = /\[[0-9A-HJKMNP-TV-Z]{6}\](?=\(echo:\
 /**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
  * deterministic id generation only holds the id sequence stable while the surrounding allocation
- * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
+ * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids -
  * so normalization, not determinism, is the load-bearing defence and is on by default. Ordered
  * most-specific first so {@link buildDynamicMatcher}'s alternation never partially overlaps a longer
  * token. Opt a fixture layer out by passing `dynamicValuePatterns: []`.
@@ -176,7 +176,7 @@ const buildDynamicMatcher = (patterns: readonly RegExp[]): RegExp | undefined =>
   }
 
   // Only each pattern's `.source` is combined into the alternation, so per-pattern flags would be
-  // dropped. Union them (always adding `g`) so a pattern's flag is not silently lost — e.g. dropping
+  // dropped. Union them (always adding `g`) so a pattern's flag is not silently lost - e.g. dropping
   // UUID_PATTERN's case-insensitivity would leave uppercase-hex UUIDs unmatched. Regex flags are
   // whole-regex in JS and cannot be scoped per-alternative, so encode case-sensitivity in the
   // character class (as the exported patterns do) rather than relying on `i`, which a union would
@@ -199,8 +199,8 @@ const buildDynamicMatcher = (patterns: readonly RegExp[]): RegExp | undefined =>
 const collectDynamicValues = (prompt: unknown, matcher: RegExp): string[] => {
   const seen = new Set<string>();
   const ordered: string[] = [];
-  // Collect over the canonical, key-sorted serialization so the first-appearance order — which fixes
-  // each token's positional placeholder — matches the order used for comparison (jsonStableStringify).
+  // Collect over the canonical, key-sorted serialization so the first-appearance order - which fixes
+  // each token's positional placeholder - matches the order used for comparison (jsonStableStringify).
   // Walking the live object graph in insertion order (deepMapValues, `for..in`) would number
   // placeholders in an order that diverges from the sorted comparison, producing false misses when a
   // snapshot and the live prompt differ only in object key order. See DESIGN.md.
@@ -265,8 +265,8 @@ const remapStoredResponse = (
     return storedResponse;
   }
 
-  // Collect over the same timestamp/datetime-normalized form the matcher compared — but WITHOUT
-  // canonicalizing dynamic tokens, since we need the real values to build the stored→live mapping.
+  // Collect over the same timestamp/datetime-normalized form the matcher compared - but WITHOUT
+  // canonicalizing dynamic tokens, since we need the real values to build the stored->live mapping.
   // Collecting over the raw prompt would pick up tokens the matcher had normalized away (e.g. ISO
   // timestamps in `timestamp` metadata when ISO_TIMESTAMP_PATTERN is registered), diverging the
   // token count/order from what the match established and misaligning the positional remap. See DESIGN.md.
@@ -325,7 +325,7 @@ const isDelta = (part: unknown): part is { type: string; id: string; delta: stri
  */
 export const __testing = {
   buildDynamicMatcher,
-  /** Canonicalizes a prompt for matching/hashing (dynamic tokens → positional placeholders). */
+  /** Canonicalizes a prompt for matching/hashing (dynamic tokens -> positional placeholders). */
   normalizeForMatching: (prompt: unknown, patterns: readonly RegExp[]): unknown =>
     normalizePromptForMatching(cloneForMatching(prompt), buildDynamicMatcher(patterns)),
   /** Substitutes stored dynamic values with the live prompt's values across a stored response. */
@@ -376,7 +376,7 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
  * Requires {@link TestContextService} to derive the `<suite>` store segment from the running test file.
  *
  * @param options.testFilePath [default: the running test file path].
- * @param options.allowGeneration [default: `DX_UPDATE_MODEL_FIXTURES=1`] — whether to hit the live model on a miss.
+ * @param options.allowGeneration [default: `DX_UPDATE_MODEL_FIXTURES=1`] - whether to hit the live model on a miss.
  */
 export const layerTest = (options: Partial<Omit<ServiceOptions, 'upstream'>> = {}) =>
   Layer.effect(
@@ -692,11 +692,11 @@ const resolveSuiteDir = async (testFilePath: string): Promise<string> => {
   }
   if (repoRoot === undefined) {
     // A silent fallback would write fixtures next to the test file and make replay miss the
-    // committed store — fail loudly instead.
+    // committed store - fail loudly instead.
     throw new Error(`Could not locate the repo root (pnpm-workspace.yaml) above ${testFilePath}.`);
   }
   // Percent-encode literal underscores before joining path separators with `_`, so `_` is
-  // unambiguously the separator and the flattened segment is injective — `a/b` and `a_b` must not
+  // unambiguously the separator and the flattened segment is injective - `a/b` and `a_b` must not
   // collide. No current path segment contains `_`, so committed fixture directories are unaffected.
   const suite = relative(repoRoot, testFilePath)
     .replace(/\.(test|eval)\.ts$/, '')
@@ -764,7 +764,7 @@ class FixtureStore {
   getClosestMatch(prompted: FixtureConversation): Effect.Effect<Option.Option<FixtureConversation>> {
     return Effect.promise(async () => {
       const all = await this.#readAll(await this.#dir());
-      // Format the prompted conversation and each fixture's distance once — `Order.mapInput` would
+      // Format the prompted conversation and each fixture's distance once - `Order.mapInput` would
       // otherwise re-run the (patch-computing) mapping on every comparison.
       const promptedFormatted = formatFixtureConversation(prompted, this.#dynamicMatcher);
       const scored = all.map((conversation) => ({
@@ -836,7 +836,7 @@ class FixtureStore {
 
 /**
  * One-off migration from the legacy single-file `<test>.conversations.json` store into the
- * hash-addressed `.store/conversations/<suite>/<hash>.json` layout. Hashes without dynamic patterns —
+ * hash-addressed `.store/conversations/<suite>/<hash>.json` layout. Hashes without dynamic patterns -
  * the few suites that used them are matched structurally by the replay fallback above. Not part of
  * the public API; used once to migrate the committed caches, then retained for any future migration.
  */

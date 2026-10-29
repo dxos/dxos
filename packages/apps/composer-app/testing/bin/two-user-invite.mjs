@@ -77,7 +77,7 @@ const openUser = async (name, index) => {
   console.log(`${name}: ${identity.did}`);
   if (withAccount) {
     // Deployed origins only serve the inbox to identities bound to a hub account. This is the request
-    // `Account.redeemAccessCode` makes; `test+…@dxos.org` addresses skip the code gate on non-production
+    // `Account.redeemAccessCode` makes; `test+...@dxos.org` addresses skip the code gate on non-production
     // hubs. Sent from Node so the hub's CORS policy for the app origin does not matter.
     const response = await fetch(new URL('account/invitation-code/redeem', HUB_URL), {
       method: 'POST',

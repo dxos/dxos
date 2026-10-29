@@ -54,7 +54,7 @@ describe('isGeneratedPath', () => {
 });
 
 describe('isBinaryPatch', () => {
-  test('reads git’s own markers', () => {
+  test("reads git's own markers", () => {
     expect(isBinaryPatch(['Binary files a/x.dat and b/x.dat differ'])).to.be.true;
     expect(isBinaryPatch(['GIT binary patch', 'literal 1234'])).to.be.true;
     expect(isBinaryPatch(['index 111..222 100644', '--- a/src/a.ts', '+++ b/src/a.ts'])).to.be.false;

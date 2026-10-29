@@ -31,7 +31,7 @@ const FACT: Fact = {
   sourceHash: 'h1',
 };
 
-describe('fact ↔ quads mapping', () => {
+describe('fact <-> quads mapping', () => {
   test('round-trips a fact through its own graph', ({ expect }) => {
     const quads = Mapping.factToTriples(FACT);
     expect(quads.length).toBeGreaterThan(5);

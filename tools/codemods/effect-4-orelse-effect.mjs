@@ -5,7 +5,7 @@
 // Lifts a bare error into an Effect in `timeoutOrElse`'s `orElse` callback.
 //
 // v3's `Effect.timeoutFail` took an error thunk; v4's `timeoutOrElse` takes a fallback *Effect*, so
-// a callback that returns `new SomeError(...)` no longer typechecks. Only that shape is rewritten —
+// a callback that returns `new SomeError(...)` no longer typechecks. Only that shape is rewritten -
 // a callback already returning an effect is left alone.
 //
 //   node tools/codemods/effect-4-orelse-effect.mjs [--dry] [path...]

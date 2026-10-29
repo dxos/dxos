@@ -27,7 +27,7 @@ const build = (view: EditorView): DecorationSet => {
  * Removes images from the rendered text.
  *
  * `decorateMarkdown`'s `skip` only declines to render the image, which leaves the markdown source
- * visible — noise in a pane meant for reading prose. Replacing the whole node drops it entirely.
+ * visible - noise in a pane meant for reading prose. Replacing the whole node drops it entirely.
  */
 export const hideImages = (): Extension =>
   ViewPlugin.fromClass(

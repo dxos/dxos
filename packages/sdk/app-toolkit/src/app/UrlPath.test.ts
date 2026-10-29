@@ -288,7 +288,7 @@ describe('UrlPath', () => {
     test('truncates a long title with an ellipsis', ({ expect }) => {
       const title = UrlPath.withTitle(base, 'x'.repeat(200)).searchParams.get(UrlPath.TITLE_PARAM);
       expect([...(title ?? '')].length).toBe(UrlPath.MAX_TITLE_LENGTH);
-      expect(title?.endsWith('…')).toBe(true);
+      expect(title?.endsWith('\u2026')).toBe(true);
     });
 
     test('removes the parameter when there is no title', ({ expect }) => {

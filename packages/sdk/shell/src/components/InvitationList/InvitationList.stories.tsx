@@ -61,7 +61,7 @@ const part = (row: HTMLElement, name: string) =>
 
 /**
  * Each row is one Listbox option: the arrow keys move the highlight across rows, the ring is drawn over the whole row
- * (avatar through ✕), a pick opens the invitation, and the ✕ cancels it without opening it.
+ * (avatar through x), a pick opens the invitation, and the x cancels it without opening it.
  */
 export const TestRows: Story = {
   args: {
@@ -84,7 +84,7 @@ export const TestRows: Story = {
     await userEvent.keyboard('{ArrowUp}');
     await expect(highlighted(content)).toBe(first);
 
-    // (a) The ring is an overlay of the whole row, so it frames the avatar and the trailing ✕ alike.
+    // (a) The ring is an overlay of the whole row, so it frames the avatar and the trailing x alike.
     const row = first.getBoundingClientRect();
     const ring = getComputedStyle(first, '::before');
     await expect(ring.boxShadow).not.toBe('none');
@@ -96,10 +96,10 @@ export const TestRows: Story = {
     await expect(icon.left).toBeGreaterThanOrEqual(row.left);
     await expect(icon.right).toBeLessThanOrEqual(text.left + 1);
     await expect(remove.right).toBeLessThanOrEqual(row.right);
-    // The ✕ ends the row, inset only as any square control is, rather than padded inside it.
+    // The x ends the row, inset only as any square control is, rather than padded inside it.
     await expect(row.right - remove.right).toBeLessThanOrEqual(2);
 
-    // Enter opens the highlighted (shareable) invitation; the ✕ cancels its own row and opens nothing.
+    // Enter opens the highlighted (shareable) invitation; the x cancels its own row and opens nothing.
     await userEvent.keyboard('{Enter}');
     await expect(args.send).toHaveBeenCalledTimes(1);
     await userEvent.click(within(rows[0]).getByTestId('cancel-invitation'));

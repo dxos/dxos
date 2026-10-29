@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The entity → card mapping follows lighthouse's web UI (`web/src/results.ts`), so a result reads the same in both.
+// The entity -> card mapping follows lighthouse's web UI (`web/src/results.ts`), so a result reads the same in both.
 
 import { type Entity, type Value } from '../client/types.ts';
 import { type Location, locationOf } from './location.ts';
@@ -96,12 +96,12 @@ const local = (curie: string) => curie.replace(/^[a-z]+:/, '');
 /** Formats a number for a card: grouped, with at most `digits` fraction digits; a dash when absent. */
 export const formatNumber = (value: number | undefined, digits = 0): string =>
   value === undefined || !Number.isFinite(value)
-    ? '—'
+    ? '-'
     : value.toLocaleString('en-US', { maximumFractionDigits: digits });
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
-/** Decodes the HTML entities scraped titles keep (&amp;, &#038;, &#x27; …). */
+/** Decodes the HTML entities scraped titles keep (&amp;, &#038;, &#x27; ...). */
 export const decodeEntities = (text: string): string =>
   text
     .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
@@ -144,7 +144,7 @@ export const priceOf = (entity: Entity): { price?: string; note?: string } => {
   if (monthly !== undefined) {
     const fee = toNumber(first(entity, 'lh:adminFee')) ?? 0;
     return {
-      price: `${formatNumber(monthly + fee)} zł / mo`,
+      price: `${formatNumber(monthly + fee)} z\u0142 / mo`,
       note: fee ? `rent ${formatNumber(monthly)} + fees ${formatNumber(fee)}` : undefined,
     };
   }
@@ -156,11 +156,11 @@ export const priceOf = (entity: Entity): { price?: string; note?: string } => {
   const low = toNumber(first(entity, 'lh:salaryMin'));
   const high = toNumber(first(entity, 'lh:salaryMax'));
   if (low !== undefined || high !== undefined) {
-    return { price: `${formatNumber(low)}–${formatNumber(high)} ${currency ?? ''}`.trim() };
+    return { price: `${formatNumber(low)}-${formatNumber(high)} ${currency ?? ''}`.trim() };
   }
   const rating = toNumber(first(entity, 'lh:ratingValue', 'schema:ratingValue', 'lh:rating'));
   if (rating !== undefined) {
-    return { price: `${formatNumber(rating, 1)} ★` };
+    return { price: `${formatNumber(rating, 1)} \u2605` };
   }
   return {};
 };
@@ -169,7 +169,7 @@ export const imagesOf = (entity: Entity): string[] =>
   ['schema:image', 'lh:image', 'lh:images', 'schema:thumbnailUrl', 'schema:logo', 'lh:logo']
     .flatMap((key) => entity.props[key] ?? [])
     .filter((value): value is string => typeof value === 'string' && /^https?:/.test(value))
-    // A listing page carries its whole gallery (otodom: ~15–20 photos); a search result only its tile's few.
+    // A listing page carries its whole gallery (otodom: ~15-20 photos); a search result only its tile's few.
     .slice(0, 20);
 
 /** Properties a card shows as rows: the first few with readable values, in a sensible order. */
@@ -217,7 +217,7 @@ const hostOf = (url?: string): string | undefined => {
   }
 };
 
-const clip = (text: string, length: number) => (text.length > length ? `${text.slice(0, length)}…` : text);
+const clip = (text: string, length: number) => (text.length > length ? `${text.slice(0, length)}\u2026` : text);
 
 /** An act's journal reference or a bill's print number, shown above the title. */
 const eyebrowOf = (entity: Entity): string | undefined => {

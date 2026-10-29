@@ -44,12 +44,12 @@ import * as wireInternal from './internal/wire.ts';
 // when that registry loads is the host's call: the tools resolve it per call through
 // `RegistrySource`, and prompts come from whatever registry the host hands `registerPrompts`, at
 // layer build or on a running server. The rest is how a chosen operation actually runs and which
-// spaces the session may address — the `Host` service. The CLI supplies its live registry and
+// spaces the session may address - the `Host` service. The CLI supplies its live registry and
 // in-process invoke (`layer`); EDGE supplies its service binding and the grant's spaces, hydrating
 // registries from its RPC records (see {@link hydrateRegistry}) only as far as each request needs.
 //
 
-/** Failure of the host's invoke seam — an outage or handler fault, not an authorship error. */
+/** Failure of the host's invoke seam - an outage or handler fault, not an authorship error. */
 export class HostError extends Schema.TaggedError<HostError>('McpHostError')('McpHostError', {
   message: Schema.String,
 }) {}
@@ -112,7 +112,7 @@ export type HostShape = {
 export class Host extends Context.Service<Host, HostShape>()('@dxos/mcp-server/Host') {}
 
 /**
- * Replaces live ECHO entities in an operation's result with wire snapshots — what every host's
+ * Replaces live ECHO entities in an operation's result with wire snapshots - what every host's
  * invoke must return. An operation returning a live object is right in-process, but a proxy
  * carries none of its properties through JSON.
  */
@@ -126,23 +126,23 @@ export const snapshot = snapshotInternal.entities;
  * Model-invocable skill loading.
  *
  * A skill's workflow must be readable by the model *before* it uses the tools the workflow
- * governs, and MCP prompts cannot carry that: the specification makes prompts user-controlled —
+ * governs, and MCP prompts cannot carry that: the specification makes prompts user-controlled -
  * "the user being able to explicitly select them for use"
- * (https://modelcontextprotocol.io/specification/2025-06-18/server/prompts) — so a model can never
+ * (https://modelcontextprotocol.io/specification/2025-06-18/server/prompts) - so a model can never
  * fetch one on its own. Tools are the model-controlled primitive, so the load step is a tool.
  *
  * The MCP "Skills over MCP" draft (SEP-2640, extension id `io.modelcontextprotocol/skills`,
  * https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640) models skills as
  * `skill://` resources served through `skills/list` / `skills/get`; the single model-invocable
  * load tool is the *client's* affordance over them. This server-side tool is the polyfill for
- * clients without the extension — serving the resources alongside it is additive when the draft
+ * clients without the extension - serving the resources alongside it is additive when the draft
  * settles.
  */
 export const LoadSkill = Tool.make('loadSkill', {
   description:
     'Loads a skill: the instructions for a multi-tool workflow hosted on this server. Call this ' +
     'before first invoking any operation whose queryOperations row names a skill, and follow the ' +
-    'returned instructions — they define required setup, argument conventions, and ordering that ' +
+    'returned instructions - they define required setup, argument conventions, and ordering that ' +
     'operation descriptions alone do not carry. The result carries a skillToken: pass it to ' +
     "invokeOperation with every call to one of this skill's operations, which are refused without it. " +
     'Omit the skill argument to list every skill this server offers. The same skills are exposed to ' +
@@ -194,7 +194,7 @@ export const LoadSkill = Tool.make('loadSkill', {
  */
 export const QueryOperations = Tool.make('queryOperations', {
   description:
-    'Finds the operations this server can run — the verbs that read and write objects in DXOS ' +
+    'Finds the operations this server can run - the verbs that read and write objects in DXOS ' +
     'spaces. Start here: search with a query describing the task, then call invokeOperation with ' +
     'the key of the operation you chose. Rows are compact (key, description, the skills the ' +
     'operation belongs to, whether it targets a space, and whether it mutates); pass keys to get ' +
@@ -215,7 +215,7 @@ export const QueryOperations = Tool.make('queryOperations', {
       Schema.Array(Schema.String).annotate({
         description:
           'Exact operation keys. Naming them returns their full input and output schemas instead ' +
-          'of compact rows — the lookup to run once you have chosen what to invoke.',
+          'of compact rows - the lookup to run once you have chosen what to invoke.',
       }),
     ),
   }),
@@ -262,19 +262,19 @@ export const QueryOperations = Tool.make('queryOperations', {
  * The single dispatch tool.
  *
  * Safety is a property of the operation rather than of this tool, so the hints a per-operation
- * tool once carried — and which a client turns into its permission prompt — cannot ride on the
+ * tool once carried - and which a client turns into its permission prompt - cannot ride on the
  * annotations here: it is marked possibly-destructive because some operation reached through it
  * is. The per-operation classification still reaches the model, on the `mutation` field of the
  * `queryOperations` row.
  */
 export const InvokeOperation = Tool.make('invokeOperation', {
   description:
-    'Invokes an operation by key — how every read and write on this server is performed. Find the ' +
+    'Invokes an operation by key - how every read and write on this server is performed. Find the ' +
     'key with queryOperations and fetch its input schema (queryOperations with keys) before the ' +
     'first call; input must match that schema. An operation whose row names skills is refused unless ' +
     "skillToken is the token loadSkill returned for one of them. Check the operation's mutation class in its row " +
     'before invoking: this tool is as destructive as whatever it is asked to run. References ' +
-    'between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes — pass them back ' +
+    'between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes - pass them back ' +
     'exactly as received.',
   parameters: Schema.Struct({
     key: Schema.String.annotate({ description: 'Operation key, exactly as queryOperations reported it.' }),
@@ -386,7 +386,7 @@ export const queryOperations = (
         if (keys != null && keys.length > 0) {
           // Named keys are a lookup rather than a search: the caller has chosen, and what it needs
           // back is the schema it must write against. An unknown key contributes nothing instead of
-          // failing the call — `invokeOperation` is where a wrong key gets an actionable error.
+          // failing the call - `invokeOperation` is where a wrong key gets an actionable error.
           const operations = keys.flatMap((key) => {
             const record = viewInternal.lookup(registry, key);
             if (record == null) {
@@ -593,7 +593,7 @@ export { ScriptCall, type ScriptOutcome } from './internal/script.ts';
 /** The text `runScript` answers with: the printed output, the failure, and a trailer of call counts and timings. */
 export const formatScriptAnswer = scriptInternal.formatAnswer;
 
-/** In-process evaluation — NOT a security boundary; only for a host whose caller already holds its authority. */
+/** In-process evaluation - NOT a security boundary; only for a host whose caller already holds its authority. */
 export const inProcessScriptSandbox: ScriptSandbox = scriptInternal.inProcess;
 
 /**
@@ -622,13 +622,13 @@ const DEFAULT_SCRIPT_MAX_OUTPUT = 16_000;
 
 export const RunScript = Tool.make('runScript', {
   description:
-    'Runs an Effect program against this server and returns what it printed — use it instead of a ' +
+    'Runs an Effect program against this server and returns what it printed - use it instead of a ' +
     'chain of invokeOperation calls when a task touches many objects or needs a loop, a filter, or a ' +
     'join. `code` is the BODY of an `Effect.gen(function* () { ... })` generator: write `yield*` ' +
     'statements directly and do not write the wrapper. In scope: `Effect` (the effect module); ' +
     '`yield* invoke(key, input?, { spaceId }?)` runs an operation exactly as invokeOperation does ' +
     '(same keys, input schemas, skill gate and {"/": "echo://..."} ref envelopes) and returns its ' +
-    "output — the skillTokens argument and any token the script's own loadSkill returns are passed " +
+    "output - the skillTokens argument and any token the script's own loadSkill returns are passed " +
     'for it, so invoke needs no skillToken; `yield* queryOperations({ query?, skill?, keys? })` ' +
     'returns the rows queryOperations does; `yield* loadSkill(name?)` returns what loadSkill does ' +
     'and unlocks its operations for the rest of the script; ' +
@@ -637,7 +637,7 @@ export const RunScript = Tool.make('runScript', {
     'a ToolFailure ({ code, message }); recover with `yield* Effect.result(invoke(...))`, whose value ' +
     "is { _tag: 'Success', success } or { _tag: 'Failure', failure }. Run independent calls together " +
     'with `yield* Effect.all([...], { concurrency: 8 })`. Nothing else is in scope: no import, ' +
-    'require or fetch. Only printed values reach you — print the fields you need, not whole objects. ' +
+    'require or fetch. Only printed values reach you - print the fields you need, not whole objects. ' +
     'Look up input schemas with queryOperations before writing code against them. The answer is the ' +
     'printed text, then a failure line when the program failed (the call is then an error), then a ' +
     'trailer after `---` counting the calls the program made and the time they took.',
@@ -929,7 +929,7 @@ export type LayerOptions = {
 export type RegistrySourceShape = {
   /**
    * The registry one tool call reads. Resolved per call rather than at layer build, so the host
-   * decides when operations load and how long they are kept — a host whose registry sits behind an
+   * decides when operations load and how long they are kept - a host whose registry sits behind an
    * RPC (EDGE) must not pay for it on requests that list tools and never call one.
    */
   readonly registry: Effect.Effect<Registry.Registry, ToolFailure>;
@@ -947,7 +947,7 @@ export const registrySourceLayer: Layer.Layer<RegistrySource, never, Registry.Se
 );
 
 /**
- * The fixed tool surface — `queryOperations` / `invokeOperation` / `loadSkill` — reading the
+ * The fixed tool surface - `queryOperations` / `invokeOperation` / `loadSkill` - reading the
  * registry from {@link RegistrySource} and dispatching through {@link Host} per call. Building it
  * touches neither, so `tools/list` is served without the registry.
  */
@@ -1084,8 +1084,8 @@ export const promptsLayer = (
   Layer.effectDiscard(registerPrompts(registry, options)).pipe(Layer.provide(McpServer$.McpServer.layer));
 
 /**
- * The whole projected surface built eagerly over a live {@link Registry.Service} — {@link toolsLayer}
- * plus {@link promptsLayer} — for a host that holds its registry in process (the CLI, tests). A host
+ * The whole projected surface built eagerly over a live {@link Registry.Service} - {@link toolsLayer}
+ * plus {@link promptsLayer} - for a host that holds its registry in process (the CLI, tests). A host
  * that has to fetch its registry composes the two itself, choosing when each part loads.
  */
 export const layer = ({ reservedToolNames, reservedPromptNames, script }: LayerOptions = {}): Layer.Layer<
@@ -1101,8 +1101,8 @@ export const layer = ({ reservedToolNames, reservedPromptNames, script }: LayerO
 //
 // Transports.
 //
-// The response passes belong to the surface, not to a transport — every host runs the same ones or
-// its clients disagree about what this server offers — so each transport applies them on the way
+// The response passes belong to the surface, not to a transport - every host runs the same ones or
+// its clients disagree about what this server offers - so each transport applies them on the way
 // out rather than leaving it to the caller.
 //
 
@@ -1141,7 +1141,7 @@ export type NormalizeResponseOptions = {
  *
  * `serverInfo` is merged into the server's `Implementation` wherever a result names it, on top of the
  * shared identity: the MCP `Implementation` may carry `title`, `websiteUrl` and `icons`, and effect's
- * `McpServer` offers no way to supply them. Pass `icons` here — they need an origin, which only the
+ * `McpServer` offers no way to supply them. Pass `icons` here - they need an origin, which only the
  * host knows.
  *
  * A finite event stream collapses to its lone response, since effect streams any reply carrying a
@@ -1286,7 +1286,7 @@ export type HydratedSkill = {
   readonly description?: string;
   /** Whether the skill opted into MCP projection (`Skill.McpPromptAnnotation`). */
   readonly mcpPrompt?: boolean;
-  /** The skill's tool ids (operation NSIDs) — what decides which operations project. */
+  /** The skill's tool ids (operation NSIDs) - what decides which operations project. */
   readonly tools?: readonly string[];
   /**
    * The instructions text, resolved before crossing the wire: a detached skill holds it in a
@@ -1296,8 +1296,8 @@ export type HydratedSkill = {
 };
 
 /**
- * Builds a registry from records fetched over a wire — `Obj.toJSON` operation records and
- * flattened skills — for a host (EDGE) whose registry lives behind an RPC binding and cannot be
+ * Builds a registry from records fetched over a wire - `Obj.toJSON` operation records and
+ * flattened skills - for a host (EDGE) whose registry lives behind an RPC binding and cannot be
  * handed over live. An in-process host wires its own registry instead.
  */
 export const hydrateRegistry = ({
@@ -1340,13 +1340,13 @@ export const hydrateRegistry = ({
 export type Options = {
   /**
    * Skill definitions to serve. Each must carry `operations` (the definitions behind its ToolIds)
-   * for its tools to project — there is no other registry to resolve them against — and only
+   * for its tools to project - there is no other registry to resolve them against - and only
    * skills whose built object opts in via `mcpPrompt` project at all.
    */
   skills: readonly Skill.Definition[];
   /**
    * Spaces the session may address. No member is a default: a call that names none is refused.
-   * Omitted (the default) means unrestricted — the invoker's own database context decides.
+   * Omitted (the default) means unrestricted - the invoker's own database context decides.
    */
   spaceIds?: readonly string[];
   /** Names of the host's statically-defined tools; none may be one of {@link TOOL_NAMES}. */
@@ -1402,7 +1402,7 @@ export const host = ({
 
 /**
  * The projected surface over skill definitions held in this process, requiring only the operation
- * invoker — {@link layer}'s counterpart for a host with no registry of its own (tests, embedded
+ * invoker - {@link layer}'s counterpart for a host with no registry of its own (tests, embedded
  * servers). Real hosts wire {@link layer} to their process's registry instead. Merge the host's
  * transport beneath either.
  */

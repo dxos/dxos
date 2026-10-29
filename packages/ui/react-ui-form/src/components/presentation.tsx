@@ -5,7 +5,7 @@
 import { type FormPresentation } from '#types';
 
 /**
- * Resolved presentation strategy for a field — which parts render, derived from {@link FormPresentation}.
+ * Resolved presentation strategy for a field - which parts render, derived from {@link FormPresentation}.
  * Visual chrome (borders, grid, spacing) is owned by the Form theme recipe, not here.
  */
 export type FormFieldPresentation = {

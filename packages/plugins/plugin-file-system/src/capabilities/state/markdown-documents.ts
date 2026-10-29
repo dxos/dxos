@@ -88,13 +88,13 @@ export type MarkdownDocuments = {
  * Text objects.
  *
  * Key data structures (all keyed by filesystem file id):
- *  - `documentsByFileId`  — the canonical file-id → Text object lookup.
- *  - `writeTargetByDxn`   — reverse lookup: DXN string → { path, fileId }.
+ *  - `documentsByFileId`  - the canonical file-id -> Text object lookup.
+ *  - `writeTargetByDxn`   - reverse lookup: DXN string -> { path, fileId }.
  *                           Used by the editor save path to resolve where to
  *                           write a given ECHO document back to disk.
- *  - `unwatchByFileId`    — teardown handles for per-file Tauri watchers that
+ *  - `unwatchByFileId`    - teardown handles for per-file Tauri watchers that
  *                           push external edits into ECHO.
- *  - `watchStartPending`  — guards against duplicate watcher setup while the
+ *  - `watchStartPending`  - guards against duplicate watcher setup while the
  *                           async Tauri watch call is in-flight.
  *
  * Lifecycle (per workspace):
@@ -124,7 +124,7 @@ export const createMarkdownDocuments = (
     registry.update(markdownBindingGeneration(fileId), (generation) => generation + 1);
   };
 
-  /** Update both forward (fileId→doc) and reverse (uri→writeTarget) maps. */
+  /** Update both forward (fileId->doc) and reverse (uri->writeTarget) maps. */
   const updateMapsForDocument = (fileId: string, path: string, doc: Text.Text): void => {
     const uri = Obj.getURI(doc);
     documentsByFileId.set(fileId, doc);
@@ -138,7 +138,7 @@ export const createMarkdownDocuments = (
   };
 
   //
-  // --- File watching: external editor → ECHO ---
+  // --- File watching: external editor -> ECHO ---
   //
 
   /**
@@ -225,11 +225,11 @@ export const createMarkdownDocuments = (
   };
 
   //
-  // --- Identity persistence: file ↔ ECHO DXN ---
+  // --- Identity persistence: file <-> ECHO DXN ---
   //
 
   /**
-   * Persist the file→DXN mapping in two places so it survives across sessions:
+   * Persist the file->DXN mapping in two places so it survives across sessions:
    *  1. macOS extended attribute on the file itself (fast, per-file lookup).
    *  2. `.composer/filemap.json` in the workspace root (portable fallback for
    *     filesystems that don't support xattr, or after file moves).
@@ -297,7 +297,7 @@ export const createMarkdownDocuments = (
   /**
    * Attempt to reconnect on-disk markdown files with their previously-created
    * ECHO Text objects. For each file:
-   *  1. Look up a stored DXN — first from the file's xattr, then from filemap.
+   *  1. Look up a stored DXN - first from the file's xattr, then from filemap.
    *  2. Resolve the DXN to a Text object via the client's space database.
    *  3. Index the restored document and attach a file watcher.
    *  4. If disk content diverges from the ECHO object, push the disk version.

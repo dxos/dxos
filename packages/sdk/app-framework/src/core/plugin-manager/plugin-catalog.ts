@@ -28,7 +28,7 @@ export type PluginCatalogOptions = {
  * The plugin catalog: add / enable / disable / remove, lazy plugin resolution, dev-plugin
  * shadowing, and the declared-dependency closure (`getDependencies` / `getDependents`).
  * Enabling resolves declared dependencies (installing registry-catalog-only entries), enables
- * in dependency-first order, and — after startup — runs an incremental activation pass for the
+ * in dependency-first order, and - after startup - runs an incremental activation pass for the
  * newly enabled modules. Disabling tears down dependents first, delegating plugin-level
  * deactivation to the scheduler.
  */
@@ -37,7 +37,7 @@ export class PluginCatalog {
   readonly #resolving = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
   /** The lazy stub each resolved plugin came from, so {@link PluginCatalog.reload} can re-run its loader. */
   readonly #stubs = new Map<string, Plugin.Plugin>();
-  /** Serializes enable/disable per plugin id — see {@link PluginCatalog.#lifecycle}. */
+  /** Serializes enable/disable per plugin id - see {@link PluginCatalog.#lifecycle}. */
   readonly #lifecycles = new Map<string, Semaphore.Semaphore>();
   /** Dev-sourced plugin ids, with the shadowed original (if any) for restoration on remove. */
   readonly #devPlugins = new Map<string, { shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean } }>();
@@ -60,7 +60,7 @@ export class PluginCatalog {
 
   /**
    * Fire-and-forget disable of a failed plugin. Forked because a failure can
-   * happen mid-activation chain — yielding a `disable` inline would deadlock
+   * happen mid-activation chain - yielding a `disable` inline would deadlock
    * on the shared semaphores. Core plugins are skipped (the host opted into
    * them being non-removable; the failure record is enough signal).
    */
@@ -85,7 +85,7 @@ export class PluginCatalog {
    *
    * `#disableOne` flips the `enabled` atom before it tears anything down, so without this an
    * `enable` reacting to that atom re-registers the plugin's modules and the in-flight disable
-   * then de-registers them again — the plugin ends up enabled with no modules. Auto-disable
+   * then de-registers them again - the plugin ends up enabled with no modules. Auto-disable
    * forks precisely so taking this lock cannot deadlock an activation chain.
    */
   #lifecycle(id: string): Semaphore.Semaphore {
@@ -105,7 +105,7 @@ export class PluginCatalog {
   /**
    * Marks `id` as dev-sourced. If the plugin displaced an existing one, pass
    * the shadow snapshot so `remove` can restore it. Repeat calls (e.g. a dev
-   * plugin reload) preserve the original shadow target — restoration always
+   * plugin reload) preserve the original shadow target - restoration always
    * unwinds back to the real underlying plugin, never an intermediate dev build.
    */
   #markDev(id: string, shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean }): void {
@@ -125,7 +125,7 @@ export class PluginCatalog {
   }
 
   //
-  // Plugin catalog — dependency closure, add / enable / remove / disable, dev plugins.
+  // Plugin catalog - dependency closure, add / enable / remove / disable, dev plugins.
   //
 
   getDependencies(id: string, opts?: { transitive?: boolean }): readonly string[] {
@@ -164,7 +164,7 @@ export class PluginCatalog {
         // and swap the dev plugin into the same id slot. The dialog will call
         // `enable(pluginId)` next, which activates the dev plugin's modules.
         // Marking as dev is a no-op when the id is already tracked, so a dev-plugin
-        // reload (after editing source) keeps the *original* shadow target —
+        // reload (after editing source) keeps the *original* shadow target -
         // removal restores the real underlying plugin, not an intermediate build.
         const wasEnabled = this.#state.isEnabled(pluginId);
         if (wasEnabled) {
@@ -321,7 +321,7 @@ export class PluginCatalog {
       // Replay events that already fired so the newly registered modules activate. Startup is
       // excluded: `activate` delegates it to `start()`, which would re-run the full unscoped
       // passes, re-publish the event-level `activated` message that gates app-ready, and fork a
-      // second idle daemon — once per enable. The scoped pass below covers this plugin's
+      // second idle daemon - once per enable. The scoped pass below covers this plugin's
       // baseline-wave modules, which is all the replay was reaching for.
       const startupKey = ActivationEvent.eventKey(ActivationEvent.Startup);
       const replay = this.#state.getPendingReset().filter((event) => event !== startupKey);
@@ -333,7 +333,7 @@ export class PluginCatalog {
 
       // After startup, a newly enabled module whose wave has already passed activates
       // incrementally against the already-contributed capability set. Failures are scoped to
-      // this plugin. Modules still waiting on an unfired event are excluded — they activate
+      // this plugin. Modules still waiting on an unfired event are excluded - they activate
       // when it fires, and the pending-reset dispatch above replays the ones that already did.
       if (yield* this.#state.isStarted()) {
         const pass = this.#scheduler
@@ -349,12 +349,12 @@ export class PluginCatalog {
             }),
           );
         // Streaming bootstrap: fork so `enable` (and thus `initialized`, which event dispatch
-        // awaits) completes on REGISTRATION — awaiting here would serialize the entire startup
+        // awaits) completes on REGISTRATION - awaiting here would serialize the entire startup
         // fan-out into the enable chain. `start()` waits for loads to settle before ready.
         if (yield* Deferred.isDone(this.#state.initialized)) {
           yield* pass;
           // A plugin enabled after boot missed every host fire of its own start event, and the
-          // pending-reset replay above only covers events that fired — so fire it here, or the
+          // pending-reset replay above only covers events that fired - so fire it here, or the
           // plugin's start-gated modules would never activate.
           yield* this.#scheduler
             .activate(ActivationEvent.pluginStart(id))
@@ -373,7 +373,7 @@ export class PluginCatalog {
   /**
    * Re-creates a resolved lazy plugin by running its loader again, with the options it was made
    * with, and swaps it in place. For an enabled plugin, modules the new definition dropped or changed
-   * are torn down — with active modules elsewhere that require a singleton capability they provide —
+   * are torn down - with active modules elsewhere that require a singleton capability they provide -
    * unchanged ones keep running, and the plugin is enabled again so new and changed modules activate
    * for every event that already fired. Hot module replacement calls this when the plugin's
    * definition changes. Returns false for an unknown or still-unresolved plugin.
@@ -507,7 +507,7 @@ export class PluginCatalog {
 
       // If a dev plugin was shadowing an existing plugin, reinstate the
       // original now that the dev plugin is gone. Re-enable only if the
-      // original was enabled at shadow time — preserving the user's intent
+      // original was enabled at shadow time - preserving the user's intent
       // for plugins they had explicitly disabled before iterating on a dev
       // build.
       if (wasDev) {
@@ -552,7 +552,7 @@ export class PluginCatalog {
             );
           }
           // Disable transitive dependents first (leaves before root). The
-          // walk returns them in dependents-before-deps order — exactly what
+          // walk returns them in dependents-before-deps order - exactly what
           // we want for teardown.
           for (const dependentId of enabledDependents) {
             yield* this.#disableOne(dependentId);
@@ -619,7 +619,7 @@ export class PluginCatalog {
   /**
    * Computes the transitive dependency closure for an id.
    *
-   * Walks {@link #directDependencies} (registered plugins ∪ catalog entries).
+   * Walks {@link #directDependencies} (registered plugins union catalog entries).
    * Returns:
    *  - `order`: closure including the root in dependency-first topological order.
    *  - `missing`: ids in the closure that are neither registered nor in the catalog.

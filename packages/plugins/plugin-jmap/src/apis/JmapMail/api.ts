@@ -33,9 +33,9 @@ import {
 /**
  * Resolved per-request context: the session `apiUrl`, the mail account id, and (optionally) the
  * session's blob `downloadUrl` template (RFC 8620 §6.2). Most operations (mailboxGet, emailQuery,
- * send, delete, …) don't need it and construct a `Target` without it; only the attachment-fetching
+ * send, delete, ...) don't need it and construct a `Target` without it; only the attachment-fetching
  * path populates it from `Jmap.Session.downloadUrl`, so {@link downloadBlob} is the sole consumer
- * that requires it — absent here just means "this call site never populated it", not "the server
+ * that requires it - absent here just means "this call site never populated it", not "the server
  * didn't advertise one" (every real session does).
  */
 export type Target = {
@@ -76,7 +76,7 @@ export const downloadBlob = Effect.fn('downloadBlob')(function* (
   const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
 
   // Mapped to `JmapApiError` before `Effect.timeout`/`Effect.retry` so `shouldRetry` can actually
-  // distinguish a permanent 4xx from a transient failure — mirrors `jmapRequest`.
+  // distinguish a permanent 4xx from a transient failure - mirrors `jmapRequest`.
   const buffer = yield* HttpClientRequest.get(url).pipe(
     httpClient.execute,
     Effect.flatMap((response) => response.arrayBuffer),
@@ -95,7 +95,7 @@ const asJmapDownloadError = (error: unknown): JmapApiError =>
     ? error
     : new JmapApiError(undefined, error instanceof Error ? error.message : String(error));
 
-/** Email properties fetched by {@link emailGet} — enough for the mapper to build a Message. */
+/** Email properties fetched by {@link emailGet} - enough for the mapper to build a Message. */
 export const EMAIL_PROPERTIES = [
   'id',
   'blobId',
@@ -184,7 +184,7 @@ export const emailGet = Effect.fn('emailGet')(function* (
 /**
  * Fetches the delta of email changes since an opaque `sinceState` token (RFC 8621 §4.3). A server that
  * can't compute the delta (state too old / evicted) returns a `cannotCalculateChanges` method error,
- * surfaced as a {@link JmapApiError} with that `type` — the caller's cue to fall back to a full scan.
+ * surfaced as a {@link JmapApiError} with that `type` - the caller's cue to fall back to a full scan.
  * The token to pass comes from a prior `Email/get` `state` (NOT `Email/query` `queryState`).
  */
 export const emailChanges = Effect.fn('emailChanges')(function* (

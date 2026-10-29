@@ -67,7 +67,7 @@ export class ReasoningWidget extends WidgetType {
 
   override updateDOM(dom: HTMLElement) {
     // Update only the text leaf; `dom` may be wrapped in an outer shell, and the trail host is a
-    // sibling of the text node inside the bordered container — setting `textContent` on the wrong
+    // sibling of the text node inside the bordered container - setting `textContent` on the wrong
     // ancestor would remove `[data-id]`.
     dom.querySelector<HTMLElement>('[data-reasoning-text]')?.replaceChildren(this.text);
 

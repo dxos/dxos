@@ -24,7 +24,7 @@ export const Track = Schema.Struct({
   name: Schema.String,
   /**
    * Design-system color name (a `ChromaticPalette` value from `@dxos/ui-theme`
-   * — e.g. `'red'`, `'sky'`, `'fuchsia'`). Resolved to a concrete hex by the
+   * - e.g. `'red'`, `'sky'`, `'fuchsia'`). Resolved to a concrete hex by the
    * renderer via `hueToHex`.
    */
   hue: Schema.optional(Schema.String),

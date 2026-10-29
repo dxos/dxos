@@ -24,7 +24,7 @@ export interface Delegation {
 
   /**
    * Spawns the child for this delegation and returns its process id. Must be linked (non-blocking)
-   * so the child's exit wakes the supervisor's `onChildEvent` — i.e. spawned through the supervisor's own
+   * so the child's exit wakes the supervisor's `onChildEvent` - i.e. spawned through the supervisor's own
    * {@link Process.ManagerService}, which links its children by default.
    */
   readonly spawn: Effect.Effect<
@@ -45,7 +45,7 @@ export type StrategyServices = Database.Service;
  *
  * Implemented outside `@dxos/functions-runtime` (which cannot depend on the agent/plan types)
  * and passed to {@link AgentService.layer} so {@link AgentProcess} stays generic.
- * Absent by default — a plain conversational agent.
+ * Absent by default - a plain conversational agent.
  */
 export interface DelegationStrategy {
   /**
@@ -70,7 +70,7 @@ export interface DelegationStrategy {
 
   /**
    * Called when the conversation's own turn fails (e.g. the model request errors), not when it is
-   * interrupted. Nothing after the turn runs — no reconcile — so this is the only chance to record
+   * interrupted. Nothing after the turn runs - no reconcile - so this is the only chance to record
    * that the work the conversation held has stopped.
    */
   readonly onTurnFailed?: (

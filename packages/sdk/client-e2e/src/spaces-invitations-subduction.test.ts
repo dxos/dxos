@@ -32,12 +32,12 @@ import { type SpaceGenesis } from '@dxos/protocols/buf/dxos/halo/credentials_pb'
 // is the sedimentree-based byte transport (see `.claude/skills/effect/subduction/SKILL.md`)
 // and is wired by setting `runtime.client.edgeFeatures.subductionReplicator`. With no
 // edge connection configured, this exercises Subduction over the in-memory mesh
-// transport — the same path used by client↔client invitations in production once the
+// transport - the same path used by client<->client invitations in production once the
 // feature flag is on.
 // File-level timeout: subduction invitation tests do real cryptographic admission
 // + sedimentree byte transport between 2-4 clients. Each completes in ~1-2s on dev
 // machines but consistently brushes against vitest's 5s default under CI worker
-// contention — bump for the whole describe to keep the suite stable.
+// contention - bump for the whole describe to keep the suite stable.
 describe('Spaces/invitations (subduction)', { timeout: 30_000 }, () => {
   test('creates a space and invites a peer', async ({ expect }) => {
     const [client1, client2] = await createInitializedClients(2);
@@ -158,7 +158,7 @@ describe('Spaces/invitations (subduction)', { timeout: 30_000 }, () => {
         }
       } else if (msg.action === QueryInvitationsResponse_Action.REMOVED) {
         msg.invitations?.forEach((inv) => invitationIds.delete(inv.invitationId));
-        // `waitEmpty()` awaits emptiness, so the wake must fire when the set drains — the inverse
+        // `waitEmpty()` awaits emptiness, so the wake must fire when the set drains - the inverse
         // condition hung the waiter whenever the last invitation was removed after the call.
         if (invitationIds.size === 0) {
           invitationsEmpty.wake();

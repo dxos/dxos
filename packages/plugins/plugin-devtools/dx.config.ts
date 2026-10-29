@@ -18,7 +18,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       DevtoolsPlugin is the developer inspector for DXOS Composer. It adds a structured DevTools tree
-      to the floating debug panel — grouped into Client, HALO, ECHO, Mesh, and EDGE sub-sections —
+      to the floating debug panel - grouped into Client, HALO, ECHO, Mesh, and EDGE sub-sections -
       exposing panel views for config, storage, logs, diagnostics, identity, devices, feeds,
       objects, schemas, automerge internals, network topology, EDGE workflows, and invocation
       traces, all driven by the @dxos/devtools component library.

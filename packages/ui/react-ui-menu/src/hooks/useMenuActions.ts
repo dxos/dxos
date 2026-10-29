@@ -99,7 +99,7 @@ export const useMenuActions = (
 
 /**
  * Convenience wrapper around `useMenuActions` that creates the backing atom inline.
- * Pass a builder thunk and a dependency list — the hook memoizes `Atom.make(build)` and threads
+ * Pass a builder thunk and a dependency list - the hook memoizes `Atom.make(build)` and threads
  * it through `useMenuActions`. Saves the `useMemo(() => Atom.make(...), deps)` boilerplate when
  * the action graph is composed from local state (e.g. a toolbar driven by component state).
  *

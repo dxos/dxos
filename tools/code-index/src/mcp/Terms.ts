@@ -44,7 +44,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   // Classes asserted by the parser.
   File: cls('One indexed file in the repository.'),
   Package: cls('A workspace package (one package.json).'),
-  Symbol: cls('A top-level declaration in a file (function, class, variable, type, …).'),
+  Symbol: cls('A top-level declaration in a file (function, class, variable, type, ...).'),
   Member: cls('A named export of a module as imported: module:effect/Layer#effect, module:@dxos/echo#Type.Obj.'),
   Argument: cls('One reference or string literal a declaration passes into a call (deus:passes, deus:passesLiteral).'),
   CallSite: cls(
@@ -69,7 +69,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'A function or static method returning a Layer; its providesService/layerRequires describe that layer (rules/15-types.n3).',
     'deus:Symbol',
   ),
-  Schema: cls('Constructed by Schema.Struct/TaggedStruct/Class/Union/… (rules/10-effect.n3).', 'deus:Symbol'),
+  Schema: cls('Constructed by Schema.Struct/TaggedStruct/Class/Union/... (rules/10-effect.n3).', 'deus:Symbol'),
   DomainError: cls('extends BaseError.extend or Data.TaggedError (rules/10-effect.n3).', 'deus:Symbol'),
   Rpc: cls('Constructed by RpcGroup.make (rules/10-effect.n3).', 'deus:Symbol'),
   EchoType: cls('An ECHO object type: built by Type.makeObject (rules/20-echo.n3).', 'deus:Symbol'),
@@ -122,7 +122,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   ModuleSpec: cls('A spec block of type module.', 'deus:SpecBlock'),
   ServiceSpec: cls('A spec block of type service.', 'deus:SpecBlock'),
   SurfaceSpec: cls('A spec block of type surface.', 'deus:SpecBlock'),
-  SelectedGlob: cls('A FileGlob some rule block selects — the only globs matched against every path.', 'deus:FileGlob'),
+  SelectedGlob: cls('A FileGlob some rule block selects - the only globs matched against every path.', 'deus:FileGlob'),
 
   // File.
   path: prop('deus:File', 'xsd:string', 'Repository-relative path, POSIX separators.'),
@@ -142,7 +142,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   reexports: prop(
     'deus:File',
     'deus:File',
-    'export * from / export { x } from — the edge public-API reachability follows.',
+    'export * from / export { x } from - the edge public-API reachability follows.',
   ),
   declares: prop('deus:File', 'deus:Symbol', 'A top-level declaration the file introduces.'),
   describesPackage: prop(
@@ -156,7 +156,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'Identifier references the resolver could not bind; a quality gauge.',
   ),
   parseError: prop('deus:File', 'xsd:string', 'One message per parse diagnostic; present only on failure.'),
-  specId: prop('deus:File', 'xsd:string', 'A .mdl frontmatter id — the document URI other documents extend.'),
+  specId: prop('deus:File', 'xsd:string', 'A .mdl frontmatter id - the document URI other documents extend.'),
   specName: prop('deus:File', 'xsd:string', 'A .mdl frontmatter name.'),
   specVersion: prop('deus:File', 'xsd:string', 'A .mdl frontmatter version.'),
   specExtends: prop('deus:File', 'xsd:string', 'Each .mdl frontmatter extends URI.'),
@@ -179,7 +179,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   ),
   version: prop('deus:Package', 'xsd:string', 'package.json version.'),
   private: prop('deus:Package', 'xsd:boolean', 'package.json private.'),
-  layer: prop('deus:Package', 'xsd:string', 'moon layer: tool, library, application, …'),
+  layer: prop('deus:Package', 'xsd:string', 'moon layer: tool, library, application, ...'),
   entry: prop('deus:Package', 'deus:File', 'One per export-map subpath: the source condition if present, else types.'),
   declaresDep: prop('deus:Package', 'deus:Package', 'A workspace dependency (dependencies).'),
   declaresDevDep: prop('deus:Package', 'deus:Package', 'A workspace devDependency.'),
@@ -190,7 +190,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   kind: prop(
     'deus:Symbol',
     'xsd:string',
-    'function, class, variable, type, interface, enum, namespace, reexport (an alias symbol of export { x } from), top-level (the symbol carrying references from statements that declare nothing, such as describe(…)) or unknown.',
+    'function, class, variable, type, interface, enum, namespace, reexport (an alias symbol of export { x } from), top-level (the symbol carrying references from statements that declare nothing, such as describe(...)) or unknown.',
   ),
   exported: prop('deus:Symbol', 'xsd:boolean', 'Module-public: the declaration leaves its module.'),
   line: prop(
@@ -239,7 +239,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'On a namespace symbol from export * as N from: the module it publishes whole.',
   ),
   loads: prop('deus:Symbol', 'deus:File', 'A file the declaration imports dynamically (() => import(...)).'),
-  snippet: prop('deus:Symbol', 'xsd:string', 'The definition with implementation abbreviated — valid TypeScript.'),
+  snippet: prop('deus:Symbol', 'xsd:string', 'The definition with implementation abbreviated - valid TypeScript.'),
   doc: prop('deus:Symbol', 'xsd:string', 'The JSDoc summary (first paragraph).'),
   deprecated: prop('deus:Symbol', 'xsd:boolean', 'A @deprecated tag is present.'),
   hasType: prop(
@@ -247,7 +247,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'deus:Type',
     'The type of the value a variable or function declares.',
   ),
-  typeTerm: prop('deus:Symbol', 'xsd:string', "The symbol's type term as JSON — what the bind-types pass binds."),
+  typeTerm: prop('deus:Symbol', 'xsd:string', "The symbol's type term as JSON - what the bind-types pass binds."),
 
   // Argument.
   callee: prop(
@@ -316,7 +316,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   blockType: prop(
     'deus:SpecBlock',
     'xsd:string',
-    "The block's first token: module, type, feat, req, test, op, rule, ext, …",
+    "The block's first token: module, type, feat, req, test, op, rule, ext, ...",
   ),
   blockId: prop('deus:SpecBlock', 'xsd:string', 'The id when present (F-1, QA-3, smoke).'),
   body: prop('deus:SpecBlock', 'xsd:string', 'The source below the header, dedented.'),
@@ -350,7 +350,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   computeRole: prop(
     'deus:Member | deus:Symbol',
     'xsd:string',
-    'Rule-internal fact: which compute API a callee IRI is ("operation", "handler", "handlerSet", …), stated by rules/30-compute.n3.',
+    'Rule-internal fact: which compute API a callee IRI is ("operation", "handler", "handlerSet", ...), stated by rules/30-compute.n3.',
   ),
   implementsOperation: prop('deus:Symbol', 'deus:Symbol', 'An OperationHandler and the Operation it is built from.'),
   bundlesHandler: prop('deus:Symbol', 'deus:Symbol', 'An OperationHandlerSet and a handler it names.'),
@@ -395,8 +395,8 @@ export const TERMS: Readonly<Record<string, Term>> = {
   ),
 
   // Derived: ECHO (rules/20-echo.n3).
-  echoTypename: prop('deus:Symbol', 'xsd:string', "An ECHO type's typename: slot 0 of its DXN.make(…)."),
-  echoVersion: prop('deus:Symbol', 'xsd:string', "An ECHO type's version: slot 1 of its DXN.make(…)."),
+  echoTypename: prop('deus:Symbol', 'xsd:string', "An ECHO type's typename: slot 0 of its DXN.make(...)."),
+  echoVersion: prop('deus:Symbol', 'xsd:string', "An ECHO type's version: slot 1 of its DXN.make(...)."),
   echoSchema: prop('deus:Symbol', 'deus:Symbol', 'The named schema an ECHO type is built from.'),
   echoReferences: prop('deus:Symbol', 'deus:Symbol', 'An ECHO type and each ECHO type a Ref.Ref(X) field names.'),
   relationSource: prop('deus:Symbol', 'deus:Symbol', "An EchoRelation's source endpoint."),
@@ -441,7 +441,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   providesService: prop(
     'deus:Symbol',
     SYMBOL_OR_MEMBER,
-    'The service key a layer provides — on an EffectLayerFactory, the layer it returns. Query providers by this, whatever the class.',
+    'The service key a layer provides - on an EffectLayerFactory, the layer it returns. Query providers by this, whatever the class.',
   ),
   requiresService: prop(
     'deus:Symbol',
@@ -495,27 +495,27 @@ export const TERMS: Readonly<Record<string, Term>> = {
   specifies: prop(
     'deus:SpecBlock',
     'deus:Symbol',
-    'Spec block → the code it defines (op key → Operation, type → EchoType, …).',
+    'Spec block -> the code it defines (op key -> Operation, type -> EchoType, ...).',
   ),
   describes: prop(
     'deus:SpecBlock',
     'deus:Symbol',
     'Everything a block specifies, plus every symbol of its package it mentions.',
   ),
-  covers: prop('deus:SpecBlock', 'deus:SpecBlock', "A scenario's tags or a test's covers → the block of that id."),
-  includesTest: prop('deus:SpecBlock', 'deus:SpecBlock', "A suite's tests → the test block."),
-  automatedBy: prop('deus:SpecBlock', 'deus:File', "A test's automated entry → the spec file that automates it."),
+  covers: prop('deus:SpecBlock', 'deus:SpecBlock', "A scenario's tags or a test's covers -> the block of that id."),
+  includesTest: prop('deus:SpecBlock', 'deus:SpecBlock', "A suite's tests -> the test block."),
+  automatedBy: prop('deus:SpecBlock', 'deus:File', "A test's automated entry -> the spec file that automates it."),
   selectsGlob: prop(
     'deus:SpecBlock',
     'deus:FileGlob',
-    'A rule block → each FileGlob of its files, resolved by its scope.',
+    'A rule block -> each FileGlob of its files, resolved by its scope.',
   ),
-  matchesGlob: prop('deus:File', 'deus:FileGlob', 'File → a SelectedGlob whose pattern its path matches.'),
-  hasSpec: prop('deus:Package', 'deus:File', 'Package → a .mdl file with a block in that package.'),
+  matchesGlob: prop('deus:File', 'deus:FileGlob', 'File -> a SelectedGlob whose pattern its path matches.'),
+  hasSpec: prop('deus:Package', 'deus:File', 'Package -> a .mdl file with a block in that package.'),
   schema: prop(
     'deus:SpecBlock',
     'deus:SpecBlock | deus:Extension',
-    'Spec block → what defines its type (an ext block or an Extension).',
+    'Spec block -> what defines its type (an ext block or an Extension).',
   ),
   declaresField: prop('deus:SpecBlock | deus:Extension', 'xsd:string', 'Each field name an ext declares.'),
   requiresField: prop('deus:SpecBlock | deus:Extension', 'xsd:string', 'Each field name an ext declares without ?.'),
@@ -525,7 +525,7 @@ export const TERMS: Readonly<Record<string, Term>> = {
   violatesSchema: prop(
     'deus:SpecBlock',
     'deus:SpecBlock | deus:Extension',
-    'Spec block → the schema it has an unknown or missing field against.',
+    'Spec block -> the schema it has an unknown or missing field against.',
   ),
   undocumented: prop(
     'deus:Symbol',

@@ -66,7 +66,7 @@ type LoggerRootProps = PropsWithChildren<{
    *
    * Distinct from `initialFilter`, which sets what the process-wide buffer *captures*: a scoped
    * panel must not narrow capture, or it starves every other panel reading the same buffer.
-   * Must be stable across renders — hoist it or memoize it.
+   * Must be stable across renders - hoist it or memoize it.
    */
   rowFilter?: (row: LogRow) => boolean;
   /**
@@ -102,7 +102,7 @@ const LoggerRoot = ({
   // mounting is not the lifetime we want recording to follow.
   const allRows = useSyncExternalStore(buffer.subscribe, buffer.getRows);
   // Applied here rather than in `Logger.List` so row pruning, selection and copy all agree on the
-  // same set — a scoped panel should never copy out rows it never showed.
+  // same set - a scoped panel should never copy out rows it never showed.
   const rows = useMemo(() => (rowFilter ? allRows.filter(rowFilter) : allRows), [allRows, rowFilter]);
   const files = useSyncExternalStore(buffer.subscribe, buffer.getFiles);
   const recording = useSyncExternalStore(buffer.subscribe, buffer.getRecording);
@@ -301,7 +301,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   const [fileFilter, setFileFilter] = useState('');
 
   // `files` arrives already sorted from the provider; narrow by a case-insensitive match on the full
-  // path (so typing a package name filters, since the path carries `packages/<group>/<pkg>/…`).
+  // path (so typing a package name filters, since the path carries `packages/<group>/<pkg>/...`).
   const needle = fileFilter.trim().toLowerCase();
   const visibleFiles = needle ? files.filter((file) => file.toLowerCase().includes(needle)) : files;
   const levelItems = useMemo(

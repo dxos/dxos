@@ -42,7 +42,7 @@ describe('makeProcessSnapshot', () => {
     expect(process.state).toEqual(Process.State.RUNNING);
     expect(resolved).toEqual(0);
 
-    // `live` has no runtime of its own, so delegating to it throws — after resolving.
+    // `live` has no runtime of its own, so delegating to it throws - after resolving.
     expect(() => process.status).toThrow(/known only from data/);
     expect(() => Effect.runSync(process.terminate())).toThrow(/known only from data/);
     expect(resolved).toEqual(1);

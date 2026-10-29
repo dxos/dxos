@@ -198,7 +198,7 @@ describe('OperationHandlerSet.lazy', () => {
 
   test('an earlier make-set override wins over a later lazy set for the same key', async ({ expect }) => {
     // A materialized `make` set answers per-key lookups directly, so resolution honors
-    // contribution order — a later lazy contribution must not shadow an earlier override
+    // contribution order - a later lazy contribution must not shadow an earlier override
     // (e.g. a story or test stubbing an operation a plugin also handles).
     const overrideHandler = makeHandler(KEY_A, 'override');
     const override = OperationHandlerSet.make(overrideHandler);
@@ -214,8 +214,8 @@ describe('OperationHandlerSet.lazy', () => {
   });
 });
 
-// React's `use` dedupes suspended renders by thenable identity, so the reactive set — what
-// useOperationHandler resolves against — must return the SAME promise for repeated same-key calls.
+// React's `use` dedupes suspended renders by thenable identity, so the reactive set - what
+// useOperationHandler resolves against - must return the SAME promise for repeated same-key calls.
 describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
   test('returns a stable promise until the atom changes', async ({ expect }) => {
     const registry = Registry.make();

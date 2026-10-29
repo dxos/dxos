@@ -9,7 +9,7 @@ import { type TreeType } from './tree.ts';
 
 /**
  * Convert an ECHO `TreeType` (id-keyed node map) into a nested `TreeNode` hierarchy.
- * Returns `undefined` if the root id is missing — the tree is then incomplete and shouldn't render.
+ * Returns `undefined` if the root id is missing - the tree is then incomplete and shouldn't render.
  */
 export const treeTypeToTreeNode = (
   tree: TreeType,

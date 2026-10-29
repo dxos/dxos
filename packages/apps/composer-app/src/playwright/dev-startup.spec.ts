@@ -27,7 +27,7 @@ test.beforeAll(() => {
  * Dev-server startup harness. Run via `playwright-dev.config.ts`, which boots
  * `pnpm vite serve` instead of `pnpm vite preview`.
  *
- * What this measures: the *inner-loop* dev experience — `vite serve` is already
+ * What this measures: the *inner-loop* dev experience - `vite serve` is already
  * running with its `node_modules/.vite` optimize-deps cache primed, and the
  * developer opens a fresh browser tab. The first-ever-`vite-serve` cold-start
  * (where vite must pre-bundle deps from scratch) is intentionally NOT
@@ -42,7 +42,7 @@ test.beforeAll(() => {
  *   - hits the same dev server (vite cache + module graph warm)
  *   - has a cold browser context (no IDB, no module-script cache)
  *
- * Numbers will look very different from the production preview harness — dev
+ * Numbers will look very different from the production preview harness - dev
  * pays per-file transformation cost, no minification, more network requests.
  * Use the BENCHMARKS row's `dev-cold` scenario tag to keep them visually
  * distinct from prod rows.

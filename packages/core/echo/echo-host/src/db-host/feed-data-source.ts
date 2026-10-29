@@ -78,7 +78,7 @@ const addTo = (map: Map<SpaceId, Set<string>>, spaceId: SpaceId, value: string) 
 };
 
 export class FeedDataSource implements IndexDataSource {
-  // TODO(queue-to-feed-migration): retains "queue" naming — persisted as a column value in the
+  // TODO(queue-to-feed-migration): retains "queue" naming - persisted as a column value in the
   // local `indexCursor`/`objectMeta` SQLite tables (see index-tracker.ts, indexes/entity-meta-index.ts);
   // renaming it requires a local index-store migration.
   readonly sourceName = 'queue';

@@ -3,7 +3,7 @@
 //
 
 // Operation handler that mutates an existing ECHO object.
-// ECHO objects are reactive — direct property assignment triggers replication
+// ECHO objects are reactive - direct property assignment triggers replication
 // to other peers and re-renders in the UI.
 
 import * as Effect from 'effect/Effect';

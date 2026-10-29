@@ -96,7 +96,7 @@ export const DEFAULT_WORK_METRICS: ReadonlyArray<WorkMetric> = [
 
 /**
  * The counters only `DX_PERF_COUNTERS=trace,calls` rows carry: a trace per stage and V8 precise
- * coverage, which cost 7–29% and so run in a pass of their own rather than beside the trended timings.
+ * coverage, which cost 7-29% and so run in a pass of their own rather than beside the trended timings.
  */
 export const COSTED_WORK_METRICS: ReadonlyArray<WorkMetric> = [
   { name: 'styleRecalcs', keys: ['styleRecalcs'], when: 'traceCounterEvents' },

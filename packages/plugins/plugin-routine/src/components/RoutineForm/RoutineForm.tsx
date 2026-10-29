@@ -32,7 +32,7 @@ import {
 } from '../TriggerEditor/index.ts';
 
 //
-// Schema — one composite form over the routine's editable surface. The general fields are picked from the
+// Schema - one composite form over the routine's editable surface. The general fields are picked from the
 // Routine schema rather than redeclared; the action and trigger sections are discriminated unions rendered
 // as nested field sets at their respective paths.
 //
@@ -54,7 +54,7 @@ const InstructionsActionForm = Schema.Struct({
 });
 
 // Single action: an Operation (the routine's `spec.runnable`) or an owned Instructions edited inline (the
-// instructions content is not a form value — it is a separate owned object, edited by `InstructionsEditor`).
+// instructions content is not a form value - it is a separate owned object, edited by `InstructionsEditor`).
 const ActionForm = Schema.Union([RunnableActionForm, InstructionsActionForm]);
 
 type RoutineFormValues = GeneralForm & {

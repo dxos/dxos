@@ -5,9 +5,9 @@
 // The body of a finalized REVIEW.md, the one file a review store keeps:
 //
 //   _<counts>_
-//   ## Index      — the issue ledger agents edit (see resolution.ts)
-//   ## Issues     — one diagnostic per issue (see diagnostics.ts)
-//   ## Appendix   — how the run was made (System One stats); read by people, never parsed
+//   ## Index      - the issue ledger agents edit (see resolution.ts)
+//   ## Issues     - one diagnostic per issue (see diagnostics.ts)
+//   ## Appendix   - how the run was made (System One stats); read by people, never parsed
 //
 // A body with no `## Index` / `## Issues` heading predates this layout and is all issues.
 

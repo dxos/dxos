@@ -35,7 +35,7 @@ export type WorkerHandle = {
   /**
    * Settles when the thread dies, with why if it died badly.
    *
-   * A worker that fails before it can report — a bad entry module, a crash during setup — would
+   * A worker that fails before it can report - a bad entry module, a crash during setup - would
    * otherwise leave the host waiting for its whole budget and then blame a timeout it never hit.
    */
   readonly stopped: Promise<string | undefined>;
@@ -53,7 +53,7 @@ export type Options = {
   readonly echo: () => EchoAccess;
   /**
    * Module the worker runs. Defaults to the entry beside this one, under the extension this module
-   * was itself loaded under — a worker starts from a real file, not through a bundler.
+   * was itself loaded under - a worker starts from a real file, not through a bundler.
    */
   readonly entry?: URL;
   /** Spawns the worker, for a runtime whose worker is not `node:worker_threads`. */
@@ -66,7 +66,7 @@ export type Options = {
  * The worker is not a special kind of peer: it connects to the host's `ClientServices` exactly as a
  * tab does, so the dialect's bindings are built THERE and the code sees live objects, real queries
  * and a working `Obj.update`. Only what that boundary has no service for is added to the same port
- * — printing, invoking a skill's operation, and reporting the result.
+ * - printing, invoking a skill's operation, and reporting the result.
  *
  * What this buys over {@link Sandbox.inProcess} is that a timeout KILLS the evaluation: the host
  * terminates the thread, so code that outran its budget stops rather than carrying on with its
@@ -147,7 +147,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
       );
       // The worker dying is the other way every stage of this ends, including the one BEFORE the
       // channel exists: `open()` waits for a handshake a dead worker will never send, so a failed
-      // spawn — a missing entry module, a crash while loading it — would otherwise hang there
+      // spawn - a missing entry module, a crash while loading it - would otherwise hang there
       // rather than be reported.
       //
       // `raceFirst`, not `race`: this branch always FAILS, and `race` waits for a SUCCESS, so it
@@ -261,8 +261,8 @@ const invokeDefinition = (context: BindingsContext, key: string, input: unknown,
  */
 const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
   db.registry.list().flatMap((entity) => {
-    // A relation's kind and endpoints do not survive the JSON-schema round trip — the worker would
-    // rebuild it as an object type — so it stays out of the worker rather than resolving as the wrong kind.
+    // A relation's kind and endpoints do not survive the JSON-schema round trip - the worker would
+    // rebuild it as an object type - so it stays out of the worker rather than resolving as the wrong kind.
     if (!Type.isType(entity) || Type.isRelation(entity)) {
       return [];
     }
@@ -329,8 +329,8 @@ const spawnNodeWorker = async (entry: URL, init: SandboxInit): Promise<WorkerHan
 /**
  * The one place the two type worlds meet.
  *
- * `node:worker_threads` and the DOM describe the SAME runtime object — in Node the global
- * `MessageChannel` is this one — but their types are irreconcilable: DOM `postMessage` takes
+ * `node:worker_threads` and the DOM describe the SAME runtime object - in Node the global
+ * `MessageChannel` is this one - but their types are irreconcilable: DOM `postMessage` takes
  * `Transferable[]`, which includes things (`AudioData`) node's `TransferListItem` has never heard
  * of, so neither is structurally assignable to the other. The rpc server is typed against the DOM
  * port, node's `transferList` against node's, and a port cannot be transferred any other way.

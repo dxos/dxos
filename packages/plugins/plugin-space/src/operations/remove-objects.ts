@@ -33,9 +33,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       );
 
       const parentCollection = input.target ?? (yield* loadRootCollection());
-      invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
+      invariant(parentCollection, 'No parent collection found for space - cannot remove objects.');
 
-      // Type entities (persisted schemas) live outside collections — `findIndex` will
+      // Type entities (persisted schemas) live outside collections - `findIndex` will
       // return -1 for them and the splice/active-tracking branches are skipped.
       const indices = entities.map((entity) =>
         Obj.instanceOf(Collection.Collection, parentCollection)
@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       );
 
       // `db.remove` cascades to objects owned via the ECHO parent edge, so those can have planks open
-      // too — a project's chats are the live case. Collected before the removal, while the parent
+      // too - a project's chats are the live case. Collected before the removal, while the parent
       // edges still resolve; a plank left pointing at a removed object cannot be closed by the user.
       const descendantIds = yield* collectOwnedDescendantIds(entities);
       const wasActive = Option.match(layout, {
@@ -92,7 +92,7 @@ const loadRootCollection = Effect.fnUntraced(function* () {
 });
 
 /**
- * Ids of every object owned (transitively, by the ECHO parent edge) by one of `entities` — i.e. what
+ * Ids of every object owned (transitively, by the ECHO parent edge) by one of `entities` - i.e. what
  * `db.remove` will cascade to. Must run before the removal, while the parent edges still resolve.
  * Ownership nests arbitrarily deep, so the walk runs to exhaustion rather than to a depth cap; the
  * visited set (seeded with the roots, so a parent edge looping back cannot re-enqueue one) is what

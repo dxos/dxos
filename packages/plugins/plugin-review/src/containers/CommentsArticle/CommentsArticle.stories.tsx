@@ -57,7 +57,7 @@ import type { ReviewPluginOptions } from '../../types/ReviewPluginOptions.ts';
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
 
 /**
- * Canned echo runner — never makes network calls. Appends an assistant message to the thread's feed
+ * Canned echo runner - never makes network calls. Appends an assistant message to the thread's feed
  * quoting the message that triggered the turn.
  * Used by the WithMentionAgent / WithAutoAgent variants.
  */
@@ -243,7 +243,7 @@ export const Default: Story = {};
 /**
  * AI comment agent in `mention` mode:
  * - The thread is opted into the agent.
- * - Type `@Kai …` in the comment input to trigger the stub runner.
+ * - Type `@Kai ...` in the comment input to trigger the stub runner.
  * - Plain (non-mention) messages are ignored.
  *
  * Test:
@@ -274,7 +274,7 @@ export const WithAutoAgent: Story = {
  * Existing comment threads:
  * - A larger, multi-paragraph document seeded with three anchored comment threads.
  * - Exercises snippet rendering in the companion.
- * - Exercises the companion ↔ editor selection sync.
+ * - Exercises the companion <-> editor selection sync.
  *
  * Test:
  * - Click each seeded thread: editor scrolls + range highlights; click in doc on a highlight: thread activates.
@@ -287,7 +287,7 @@ export const WithComments: Story = {
 };
 
 /**
- * Integrated ambient review demo (two agent authors, deterministic — no LLM):
+ * Integrated ambient review demo (two agent authors, deterministic - no LLM):
  * - Each of "Kai" and "Nova" has a per-author `kind:'suggestion'` branch proposing reworded sentences.
  * - Editor (main): both authors' changes overlay inline, colour-coded per author.
  * - Right column: comments companion (top) + history companion (below).
@@ -304,7 +304,7 @@ export const WithAgentSuggestions: Story = {
 };
 
 /**
- * Comments AND suggestions over the same document — the app condition for the comment-click bug.
+ * Comments AND suggestions over the same document - the app condition for the comment-click bug.
  * Use it to check whether clicking a comment is still detected (watch for the `comment selected` log)
  * when the suggestion overlay is layered over the text; if detection works in `WithComments` but not
  * here, the suggestion overlay is intercepting the click.

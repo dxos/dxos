@@ -200,7 +200,7 @@ export class MixedBlockstore extends BaseBlockstore {
     await IDB.set(this.queueCacheName, arr);
   }
 
-  // 🛠️
+  // \u{1F6E0}
 
   async #createCar(blocks: Block[]): Promise<Uint8Array> {
     const { writer, out } = CarWriter.create();

@@ -86,10 +86,10 @@ type Story = StoryObj<StoryArgs>;
 
 /**
  * Test:
- * 1. Select all and Group (⌘G): one instance replaces the shapes and the Objects panel lists its group while selected.
+ * 1. Select all and Group (CmdG): one instance replaces the shapes and the Objects panel lists its group while selected.
  * 2. Scrub to the middle of the timeline and nudge the instance: the move becomes a key (a diamond on the track).
  * 3. Space plays from the start; the time advances.
- * 4. Selecting the group's row opens it in isolation (`Objects › Group 1`); Escape returns to the scene.
+ * 4. Selecting the group's row opens it in isolation (`Objects > Group 1`); Escape returns to the scene.
  */
 export const Default: Story = {};
 

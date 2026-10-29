@@ -16,7 +16,7 @@ import { type FeedScenario, type ScenarioDefinition, createScenario } from '../t
  * What one mounted row costs, with the fixtures already built.
  *
  * `baseline/fill` can only watch from the first frame a play function gets, and its numbers carry
- * whatever the story did before that — generating five hundred messages, most of all. Here the
+ * whatever the story did before that - generating five hundred messages, most of all. Here the
  * scenarios are built once, before anything is timed, and each feed is then mounted and torn down
  * repeatedly. What is left is the cost of putting rows on screen.
  */
@@ -157,7 +157,7 @@ const MountProfile = ({ count = 200, runs = 3 }: MountProfileProps) => {
   return (
     <div className='flex flex-col h-full'>
       <pre className='p-4 text-xs whitespace-pre' data-testid='mount.results'>
-        {results.length ? format(results) : 'measuring…'}
+        {results.length ? format(results) : 'measuring...'}
       </pre>
       <div ref={containerRef} className='relative dx-grow'>
         {definition && <Mounted key={shown} definition={definition} />}
@@ -226,7 +226,7 @@ export const Default: Story = { args: { count: 200 }, play: waitForResults };
 export const Short: Story = { args: { count: 50 }, play: waitForResults };
 
 // The measurement runs in the component, so the test's only job is to still be there when it
-// finishes — the numbers are printed, not asserted: a threshold on a shared CI machine is noise.
+// finishes - the numbers are printed, not asserted: a threshold on a shared CI machine is noise.
 async function waitForResults({ canvasElement }: { canvasElement: HTMLElement }) {
   const results = within(canvasElement).getByTestId('mount.results');
   await waitFor(() => expect(results.textContent).toContain('ms/row'), { timeout: 60_000 });

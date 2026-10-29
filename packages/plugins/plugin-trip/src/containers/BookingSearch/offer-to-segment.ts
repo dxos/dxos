@@ -40,7 +40,7 @@ export const offerToFlightDetails = (offer: BookingSearch.FlightOffer): Segment.
   };
 };
 
-/** Builds `Booking` make-props from an offer (search-only — no real order). */
+/** Builds `Booking` make-props from an offer (search-only - no real order). */
 export const offerToBookingProps = (offer: BookingSearch.FlightOffer): Obj.MakeProps<typeof Booking.Booking> => ({
   provider: { name: offer.operator.name },
   currency: offer.currency,

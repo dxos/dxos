@@ -125,7 +125,7 @@ describe('PlanRoute', () => {
     };
 
     const segments = [
-      // Resolved coordinates win over every string fallback — the Place passes through unchanged.
+      // Resolved coordinates win over every string fallback - the Place passes through unchanged.
       Segment.make({
         details: {
           _tag: 'road',

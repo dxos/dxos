@@ -32,7 +32,7 @@ export const makeRegistry = (registry: Registry.AtomRegistry): AppCapabilities.P
   };
 
   // App-registry monitors are transient per-run, not resumable like a pipeline's task list. Drop any
-  // prior entry for this name first so a re-register (e.g. a retry after a failed sync) starts fresh —
+  // prior entry for this name first so a re-register (e.g. a retry after a failed sync) starts fresh -
   // otherwise the stale `current`/`startedAt`/`error` would carry into the new run.
   const handles = new Map<string, Progress.TaskHandle>();
   const register: AppCapabilities.ProgressRegistry['register'] = (name, options) => {

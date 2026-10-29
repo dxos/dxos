@@ -312,7 +312,7 @@ const BackgroundPopover = ({ value, onChange }: BackgroundPopoverProps) => {
             {t('background-image.label')}
             <Input.Root
               data-testid='presenter.background-image'
-              placeholder='https://…'
+              placeholder='https://...'
               value={image}
               onChange={(event) => setImage(event.target.value)}
               onBlur={commit}
@@ -323,7 +323,7 @@ const BackgroundPopover = ({ value, onChange }: BackgroundPopoverProps) => {
             {t('background-video.label')}
             <Input.Root
               data-testid='presenter.background-video'
-              placeholder='https://…'
+              placeholder='https://...'
               value={video}
               onChange={(event) => setVideo(event.target.value)}
               onBlur={commit}

@@ -90,7 +90,7 @@ export const slideTokens = (content: string): SlideToken[] => {
 
 /**
  * The markers the editor treats as one unit, so the caret steps over and deletes them whole: `::slot::` markers and
- * click tags without attributes. A tag with attributes (`<Surface ref="…">`, `<v-click at="2">`) stays editable.
+ * click tags without attributes. A tag with attributes (`<Surface ref="...">`, `<v-click at="2">`) stays editable.
  */
 export const atomicTokens = (tokens: readonly SlideToken[]): SlideToken[] =>
   tokens.filter(

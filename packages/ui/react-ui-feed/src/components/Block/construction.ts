@@ -9,7 +9,7 @@ import { EditorView } from '@codemirror/view';
  * What one item costs to build.
  *
  * The list's first fill mounts a viewport's worth of rows at once, so the wall-clock cost of that
- * fill is the per-item construction cost times the number of rows on screen — which is why this is
+ * fill is the per-item construction cost times the number of rows on screen - which is why this is
  * measured per extension set rather than per story: the answer has to say *what* to drop.
  *
  * Only meaningful in a real browser. Construction is dominated by style resolution and the forced

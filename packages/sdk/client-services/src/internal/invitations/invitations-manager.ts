@@ -234,7 +234,7 @@ export class InvitationsManager {
 
   /**
    * The profile is the shape the device credential is signed over, not the wire shape the
-   * service receives — {@link InvitationsServiceImpl} converts before calling this.
+   * service receives - {@link InvitationsServiceImpl} converts before calling this.
    */
   acceptInvitation(
     ctx: Context,

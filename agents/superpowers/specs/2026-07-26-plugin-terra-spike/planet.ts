@@ -1,5 +1,5 @@
 //
-// Terra spike — engine-agnostic planet generation.
+// Terra spike - engine-agnostic planet generation.
 // Deterministic from a seed; produces triangle-soup geometry (flat shaded)
 // plus scatter placements. No Babylon imports here so it stays portable/testable.
 //
@@ -21,10 +21,10 @@ export type TerraConfig = {
   lacunarity: number;
   continentPower: number; // >1 flattens lowlands into oceans, sharpens continents
   landGain: number; // relief multiplier above the waterline (continents rise clearly)
-  // Mountains — clumped into ranges via a low-frequency mask + ridged detail.
+  // Mountains - clumped into ranges via a low-frequency mask + ridged detail.
   mountainScale: number; // extra elevation added inside mountain belts (0 = none)
-  maskFrequency: number; // low → large, few mountain belts
-  maskThreshold: number; // 0..1; higher → mountains confined to fewer, tighter belts
+  maskFrequency: number; // low -> large, few mountain belts
+  maskThreshold: number; // 0..1; higher -> mountains confined to fewer, tighter belts
   // Water.
   waterLevel: number; // 0..1 in elevation space
   // Climate (all relative-height 0..1 unless noted).
@@ -43,11 +43,11 @@ export const defaultConfig = (seed = 'terra'): TerraConfig => ({
   radius: 2,
   resolution: 512,
   elevationScale: 0.16,
-  frequency: 0.9, // lower → larger continents and oceans
+  frequency: 0.9, // lower -> larger continents and oceans
   octaves: 6,
   persistence: 0.5,
   lacunarity: 2.0,
-  continentPower: 1.35, // higher → more ocean, chunkier landmasses
+  continentPower: 1.35, // higher -> more ocean, chunkier landmasses
   landGain: 2.5,
   mountainScale: 0.5,
   maskFrequency: 0.9,

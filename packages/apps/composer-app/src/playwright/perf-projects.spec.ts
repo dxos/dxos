@@ -49,7 +49,7 @@ const FLOW = 'projects-tasks';
 const PROJECT_TYPENAME = 'org.dxos.type.project';
 
 /**
- * A project's navtree path — the AI group's Projects section, NOT the space's `content` subtree.
+ * A project's navtree path - the AI group's Projects section, NOT the space's `content` subtree.
  *
  * `plugin-projects` surfaces projects through `createTypeSectionExtension`, so the object path is
  * `root/<space>/ai/<typename>/<id>`; the `content/collections/<id>` form the markdown and deck QA
@@ -61,7 +61,7 @@ const projectPath = (spaceId: string, projectId: string): string =>
 /**
  * A document's navtree path.
  *
- * `content/collections/<id>`, the form the functional QA opens documents with — a document created
+ * `content/collections/<id>`, the form the functional QA opens documents with - a document created
  * through `markdown.create` lands in the space's root collection, and the bare `content/<id>` form
  * does not resolve to a node.
  */
@@ -117,7 +117,7 @@ const SETTLE_MS = 20_000;
  * Ceiling on the wait for the fixture to reach EDGE.
  *
  * Generous on purpose: overshooting costs a slower nightly, while undershooting publishes the
- * measured stages with setup's replication still running through them — which is the spread this
+ * measured stages with setup's replication still running through them - which is the spread this
  * stage exists to remove. Overridable for a run against a slow or local backend.
  */
 const REPLICATION_TIMEOUT_MS = Number.parseInt(process.env.DX_PERF_REPLICATION_TIMEOUT_MS ?? '', 10) || 180_000;
@@ -128,7 +128,7 @@ const BASE_URL = PERF_ORIGIN;
 /**
  * Where to take a memory snapshot (`DX_PERF_SNAPSHOTS`, comma-separated): any stage id, `idle` for
  * the settled app before the fixture exists, or `end` for the app {@link END_SETTLE_MS} after the
- * last stage. Off by default — a snapshot of a loaded tab takes minutes and writes hundreds of
+ * last stage. Off by default - a snapshot of a loaded tab takes minutes and writes hundreds of
  * megabytes.
  */
 const SNAPSHOTS = new Set(
@@ -178,7 +178,7 @@ const screencastEnabled = process.env.DX_PERF_SCREENCAST !== '0';
 /**
  * Locator budget per mode.
  *
- * `diagnose` gets far more because the SCREENCAST is not a small tax — it took `open-tasks` from
+ * `diagnose` gets far more because the SCREENCAST is not a small tax - it took `open-tasks` from
  * 6.8s to past 60s. A budget sized for `measure` turns every screencast run into a timeout, the
  * one failure mode that yields no artifacts exactly when they are wanted. The profiler, which now
  * runs in both modes, does not need the headroom: it costs +2.6% on the whole flow.
@@ -191,12 +191,12 @@ const locatorTimeout = (mode: Mode): number => (mode === 'diagnose' ? 300_000 : 
  * Generation costs ~420ms per task through the operation layer (five samples: 80.8-84.6s for 200
  * tasks), because every task is one `tasks.create` whose write appends to a growing `tasks` array.
  * The figure below is the upper observation from a larger run, so the flow is over-budgeted rather
- * than at risk of expiring mid-fixture — an expiry there reports no stage at all, which is the one
+ * than at risk of expiring mid-fixture - an expiry there reports no stage at all, which is the one
  * failure that explains nothing.
  */
 const FIXTURE_MS_PER_TASK = 700;
 
-/** Boot, settle and the stages, generously — `diagnose` stages run an order slower. */
+/** Boot, settle and the stages, generously - `diagnose` stages run an order slower. */
 const STAGE_BUDGET_MS = 600_000;
 
 // The assistant wait on top of the stage allowance, which earlier stages may already have spent.
@@ -264,7 +264,7 @@ const waitForObjectsSettled = async (page: Page, timeoutMs: number, quietMs = 1_
 /**
  * Drives the `PERF.mdl` QA-1 flow once, in one mode, at one scale.
  *
- * Stage ids match the step `id:`s in `spec/PERF.mdl` exactly — that correspondence is the whole
+ * Stage ids match the step `id:`s in `spec/PERF.mdl` exactly - that correspondence is the whole
  * link between the flow's description and its numbers, so a rename has to happen in both.
  */
 const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
@@ -317,7 +317,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     // `boot` is its own stage and the profiler cannot start before it: there is no target to attach
     // to until the page exists. Boot therefore carries no profile in either mode, which is why the
-    // startup harness — not this flow — owns boot-time attribution.
+    // startup harness - not this flow - owns boot-time attribution.
     // Before the first navigation, so the probes are in place for `boot` itself: an init script
     // registered after `goto` would miss the whole boot window, which is where the longest tasks
     // are.
@@ -342,7 +342,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // Ended HERE rather than after the flow, because boot is the only window a trace can actually
     // deliver: at `toplevel` granularity boot alone emits ~35,000 tasks and fills Chrome's trace
     // buffer, after which it silently stops recording. A whole-run trace measured 806 MB and
-    // contained the boot marks and NOT ONE mark from the other nine stages — so reading it later
+    // contained the boot marks and NOT ONE mark from the other nine stages - so reading it later
     // bought nothing and cost the run. The profiler covers every stage from here on; boot is the
     // one stage it cannot reach, since no target exists to attach to before the page.
     const traced = await tracing.finish().catch((error) => {
@@ -369,7 +369,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     // Backfilled here because CDP records one trace at a time: `boot`'s own footprint read could
     // not start a trace of its own while this one was still recording, so it left an empty
-    // reading. Taken now, which is a few seconds after boot closed rather than at the instant —
+    // reading. Taken now, which is a few seconds after boot closed rather than at the instant -
     // the same offset every run, so the trend is comparable even though the absolute is not the
     // boundary value the other stages report.
     const bootRow = runner.rows.find((row) => row.stage === 'boot');
@@ -433,14 +433,14 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     // FIRST after the fixture, because the fixture's writes keep replicating long after the last
     // `tasks.create` resolves and whichever stage ran next absorbed their SQLite writes and socket
-    // traffic — the spread the stages' own disk and network columns were reporting. A stage rather
+    // traffic - the spread the stages' own disk and network columns were reporting. A stage rather
     // than a silent wait in setup, so the cost it soaks up shows as its own row.
     await runner.stage('await-replication', async () => {
       const result = await waitForReplication(page, fixture.spaceId, { timeoutMs: REPLICATION_TIMEOUT_MS });
       const described = describeReplication(result);
       if (result.outcome === 'timeout') {
         // The trail at `warn`, the summary in the throw: a row's `error` is one line, and the
-        // question a timeout has to answer — was replication moving at all — is only in the trail.
+        // question a timeout has to answer - was replication moving at all - is only in the trail.
         log.warn('replication did not settle', { ...result.final, transitions: result.transitions });
         // Thrown, so the stage records `ok: false` and is never trended. The flow continues and the
         // remaining stages still publish, but their I/O columns carry setup's replication and the
@@ -460,7 +460,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
         subject: `root/${fixture.spaceId}`,
       });
       // The URL, not `networkidle`: this app holds a websocket open and syncs continuously, so the
-      // network never goes idle and that wait burns its whole timeout — which then reports as the
+      // network never goes idle and that wait burns its whole timeout - which then reports as the
       // stage's duration and would trend as a 60s regression forever.
       await page.waitForURL(new RegExp(`/w/${fixture.spaceId}`), { timeout: budget });
     });
@@ -494,12 +494,12 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     });
 
     // The document stages: the flow is a project, not a task list, and a project accumulates
-    // documents. Their cost is a different engine — CodeMirror's measurement and highlighting
-    // rather than the flat `tasks` array — which is the point of measuring both in one journey.
+    // documents. Their cost is a different engine - CodeMirror's measurement and highlighting
+    // rather than the flat `tasks` array - which is the point of measuring both in one journey.
     await runner.stage('open-document', async () => {
       // Opened through the graph path rather than by clicking its card in the Overview artifact
       // gallery: that click empties the deck instead of opening the document (planks 1 -> 0 and
-      // nothing renders for 30s — a defect, filed separately). The operation is the same mechanism
+      // nothing renders for 30s - a defect, filed separately). The operation is the same mechanism
       // `open-project` uses and is what the functional QA opens documents with.
       await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
         subject: [documentPath(fixture.spaceId, fixture.documentIds[0])],
@@ -520,7 +520,7 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     });
 
     await runner.stage('edit-document', async () => {
-      // Typed rather than set: the keystroke path — input handling, the CRDT write, re-highlight —
+      // Typed rather than set: the keystroke path - input handling, the CRDT write, re-highlight -
       // is what a user feels in a long document, and a programmatic set would skip all of it.
       await documentEditor(page).click({ timeout: budget });
       await page.keyboard.type('Perf harness edit. ', { delay: 20 });
@@ -536,8 +536,8 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     });
 
     // The assistant stages: a project accumulates a conversation as well as tasks and documents,
-    // and an agent turn is a third engine — streaming render, tool dispatch and database queries
-    // interleaved — so it is measured on the same journey rather than in isolation.
+    // and an agent turn is a third engine - streaming render, tool dispatch and database queries
+    // interleaved - so it is measured on the same journey rather than in isolation.
     //
     // Context-wide, so a call from a worker counts too: a request to EDGE's `/ai/generate/` route
     // means a live model answered, and a stage timed against a provider's latency is not this one.
@@ -605,18 +605,18 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     // Written after the flow, with nothing between the last stage and the write: the trace is
     // already read and backfilled by now (right after boot), so no post-processing sits between
-    // completed stages and the durable record — a run whose ten stages all succeeded once lost
+    // completed stages and the durable record - a run whose ten stages all succeeded once lost
     // every row to a slow trace read here.
     appendRows(WORKSPACE_ROOT, name, rows);
     writeRunReport(WORKSPACE_ROOT, `${name}-${runId}`, rows);
     if (mode === 'measure') {
       // Published HERE, at the end of each iteration, rather than once for the whole run: the
       // workflow's trending step cannot run if the job dies partway, so a ten-iteration run that
-      // lost its runner on iteration eight used to publish nothing at all — including the seven
+      // lost its runner on iteration eight used to publish nothing at all - including the seven
       // that had completed and were sitting on disk. Each iteration now stands on its own.
       //
       // The batch file carries the iteration in its name, so this publishes exactly what this
-      // iteration measured. There is no end-of-run backstop on purpose — see `publishPosthogBatch`.
+      // iteration measured. There is no end-of-run backstop on purpose - see `publishPosthogBatch`.
       const batch = writePosthogBatch(WORKSPACE_ROOT, `${name}-${iteration}`, rows, capturedAt);
       const published = publishPosthogBatch(WORKSPACE_ROOT, batch);
       // Logged at `warn` when it did not publish, because that row reached disk and the artifact
@@ -660,12 +660,12 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
 // Not `describe.serial`, although the runs must not overlap: `workers: 1` and
 // `fullyParallel: false` in the config are what serialize them, and serial mode would additionally
-// SKIP every later iteration once one fails — discarding nine good samples over one flaky stage,
+// SKIP every later iteration once one fails - discarding nine good samples over one flaky stage,
 // which is the opposite of why there are ten. Each iteration is independent: its own browser, its
 // own profile, its own fixture.
 test.describe('Projects + Tasks performance', () => {
   // Derived, not flat, and PER TEST: the config's `timeout` is only the outer bound, and a
-  // `setTimeout` here silently overrides it — a flat value below the fixture's cost expires before
+  // `setTimeout` here silently overrides it - a flat value below the fixture's cost expires before
   // any stage runs. One iteration is one test, so this budget is not multiplied by ITERATIONS.
   test.setTimeout(testBudget(SCALE));
 

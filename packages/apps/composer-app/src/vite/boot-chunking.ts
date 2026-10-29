@@ -57,7 +57,7 @@ const defaultLog = {
 /**
  * Normalize a rolldown module id: query stripped, except a `dx-` query, which names a different module
  * of the same file (a plugin config's lazily loaded module list). Returns `null` for ids that must
- * never be grouped — virtual modules, and app-own source (see `appSourcePattern`).
+ * never be grouped - virtual modules, and app-own source (see `appSourcePattern`).
  */
 export const toBootModuleId = (moduleId: string, appSourcePattern = DEFAULT_APP_SOURCE_PATTERN): string | null => {
   if (moduleId.includes('\0') || appSourcePattern.test(moduleId)) {
@@ -73,10 +73,10 @@ export const toBootModuleId = (moduleId: string, appSourcePattern = DEFAULT_APP_
  * Rolldown's default splitting shards the boot path into ~520 chunks whose per-request
  * overhead dominates startup. Grouping them needs care: rolldown's own `maxSize` cuts by
  * accumulated size with no regard for dependency order, which makes chunks import each other
- * circularly — and a cyclic chunk graph has no correct ESM evaluation order (it surfaces as
+ * circularly - and a cyclic chunk graph has no correct ESM evaluation order (it surfaces as
  * `Tag is not a function` at boot). Its remedy, `strictExecutionOrder`, wraps every module
  * body and cost +1.8MB of inhibited treeshaking here. So the partition is computed instead:
- * collapse the graph into strongly connected components (Tarjan — any real cycle becomes one
+ * collapse the graph into strongly connected components (Tarjan - any real cycle becomes one
  * indivisible unit), which emits them dependency-first, then fill buckets with CONTIGUOUS
  * runs of that order. Every cross-chunk edge then points to an earlier chunk, so the chunk
  * graph is a DAG by construction and plain ESM ordering is correct.
@@ -237,7 +237,7 @@ export const computeBootPartition = (ctx: ModuleGraph, options: BootChunkingOpti
  * The rolldown group callback plus the plugin that bounds its memoization to one build.
  *
  * The partition is a property of the whole graph but the callback fires per module, so it is
- * computed once and reused. It is NOT keyed on the callback's `ctx` — rolldown passes a fresh
+ * computed once and reused. It is NOT keyed on the callback's `ctx` - rolldown passes a fresh
  * context wrapper per call, so a WeakMap on it never hits and every module triggers a full
  * recompute.
  */

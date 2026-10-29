@@ -30,7 +30,7 @@ export const useSetPresenting = (object: PresentableObject) => {
 
 /**
  * Exits presentation for the given object. Delegates to the toggle operation so the
- * fullscreen-revert and re-open run sequentially in a single handler — invoking them
+ * fullscreen-revert and re-open run sequentially in a single handler - invoking them
  * separately races, leaving the deck stuck in fullscreen.
  */
 export const useExitPresenter = (object: PresentableObject) => {

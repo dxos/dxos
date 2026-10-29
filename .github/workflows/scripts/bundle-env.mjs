@@ -5,11 +5,11 @@
 
 // Build the selected app(s)' bundle for an environment. Resolves the deployable apps (apps.mjs) for
 // <environment> and runs each app's bundle task with its env-specific config (DX_ENVIRONMENT + PostHog).
-// Deploying is a separate step — see deploy-env.mjs.
+// Deploying is a separate step - see deploy-env.mjs.
 //
 // An app whose output dir is already populated is skipped: that is how a bundle built once and shared via
 // artifact is reused (the build-sharing fan-out downloads it into the output dir before this runs, so no
-// rebuild — see the App deploys section of .github/RELEASE-SPEC.md).
+// rebuild - see the App deploys section of .github/RELEASE-SPEC.md).
 //
 // Usage: bundle-env.mjs <environment> [app|all]
 
@@ -33,7 +33,7 @@ if (apps.length === 0) {
     resolveApps(root, { environment })
       .map((app) => app.name)
       .join(', ') || '(none)';
-  console.error(`"${only}" has no env.${environment} — nothing would be bundled. Apps with that env: ${valid}`);
+  console.error(`"${only}" has no env.${environment} - nothing would be bundled. Apps with that env: ${valid}`);
   process.exit(1);
 }
 
@@ -42,7 +42,7 @@ for (const { name, bundleTask, outDir } of apps) {
 
   const dir = join(root, outDir);
   if (existsSync(dir) && readdirSync(dir).length > 0) {
-    console.log(`Output ${outDir} already present — reusing prebuilt bundle; skipping ${bundleTask}.`);
+    console.log(`Output ${outDir} already present - reusing prebuilt bundle; skipping ${bundleTask}.`);
     console.log('::endgroup::');
     continue;
   }

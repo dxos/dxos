@@ -13,7 +13,7 @@ const isContentMap = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
- * `dxos.org/scene/1` → `dxos.org/scene/2`: every record written back in the shape the read-time upgrades
+ * `dxos.org/scene/1` -> `dxos.org/scene/2`: every record written back in the shape the read-time upgrades
  * (`upgradeSceneContent`) give it, since any version-1 drawing may hold any of the legacy shapes.
  */
 export const sceneV1ToV2 = Migration.defineContent({

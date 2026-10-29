@@ -7,7 +7,7 @@
 
 /**
  * The person's own view of a session's results: filters that cut the list and a sort (SPEC: *Filters and sort*).
- * Next to the agent's rating model, these are the direct, predictable controls — a filter never changes a score,
+ * Next to the agent's rating model, these are the direct, predictable controls - a filter never changes a score,
  * the model still scores every result, and the sort defaults to that score.
  *
  * Filters are derived from the results' own properties (deriveFacets), so the panel fits any session: numbers
@@ -41,7 +41,7 @@ interface FilterBase {
 
 export type ViewFilter =
   | (FilterBase & { readonly kind: 'range'; readonly value: NumValue; readonly min?: number; readonly max?: number })
-  /** Any of the values (or, with `all`, every one of them — amenities). Compared ignoring case and spaces. */
+  /** Any of the values (or, with `all`, every one of them - amenities). Compared ignoring case and spaces. */
   | (FilterBase & {
       readonly kind: 'values';
       readonly prop: string;
@@ -67,7 +67,7 @@ export interface ResultsView {
   readonly updatedAt?: string;
 }
 
-// ── labels ───────────────────────────────────────────────────────────────────
+// -- labels -------------------------------------------------------------------
 
 /** Plain words for the properties sessions use most; anything else is its local name, spaced. */
 const LABELS: Record<string, string> = {
@@ -141,7 +141,7 @@ const valueKey = (v: unknown) =>
     .replace(/[\s_-]+/g, ' ')
     .trim();
 
-// ── reading values ───────────────────────────────────────────────────────────
+// -- reading values -----------------------------------------------------------
 
 const MISSING = Symbol('missing');
 type Read = number | ReadonlyArray<string> | typeof MISSING;
@@ -341,7 +341,7 @@ export const sortResults = <R extends Rateable>(
   return keyed.map((x) => x.r);
 };
 
-// ── facets: the filters a session's results allow ────────────────────────────
+// -- facets: the filters a session's results allow ----------------------------
 
 export interface FacetOption {
   readonly value: string;
@@ -754,21 +754,21 @@ export const facetCounts = (
   return { base: base.length, missing, unknown };
 };
 
-// ── words ────────────────────────────────────────────────────────────────────
+// -- words --------------------------------------------------------------------
 
 const fmt = (x: number) =>
   Math.abs(x) >= 10_000 ? Math.round(x).toLocaleString('en-US') : String(Math.round(x * 100) / 100);
 
-/** A filter in words, as its chip and the agent read it: "Total monthly cost ≤ 6000", "District: Wola or Mokotów". */
+/** A filter in words, as its chip and the agent read it: "Total monthly cost <= 6000", "District: Wola or Mokotów". */
 export const describeFilter = (f: ViewFilter): string => {
   switch (f.kind) {
     case 'range':
       return f.min !== undefined && f.max !== undefined
-        ? `${f.label} ${fmt(f.min)}–${fmt(f.max)}`
+        ? `${f.label} ${fmt(f.min)}-${fmt(f.max)}`
         : f.min !== undefined
-          ? `${f.label} ≥ ${fmt(f.min)}`
+          ? `${f.label} >= ${fmt(f.min)}`
           : f.max !== undefined
-            ? `${f.label} ≤ ${fmt(f.max)}`
+            ? `${f.label} <= ${fmt(f.max)}`
             : f.label;
     case 'values': {
       const vs = f.values.map((v) => valueLabel(f.prop, v));
@@ -799,7 +799,7 @@ export const describeSort = (s: ViewSort | undefined): string => {
   return `${label}, ${s.dir === 'desc' ? 'highest' : 'lowest'} first`;
 };
 
-// ── cleaning what a client or the agent sends ────────────────────────────────
+// -- cleaning what a client or the agent sends --------------------------------
 
 const str = (x: unknown, max = 200) => (typeof x === 'string' && x.trim() ? x.trim().slice(0, max) : undefined);
 const finite = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : undefined);

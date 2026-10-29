@@ -51,7 +51,7 @@ const takeSourceParams = (): { src?: string; share?: string } => {
 const isDxSvg = (file: File) => file.name.endsWith('.svg') || file.type === 'image/svg+xml';
 
 /**
- * The "Edit in …" actions Composer offers on a drawing's plank: each converts it to another variant's editor.
+ * The "Edit in ..." actions Composer offers on a drawing's plank: each converts it to another variant's editor.
  * Re-reads the drawing's canvas, so the choices follow a conversion.
  */
 const EditActions = ({ space, drawing, onError }: Opened & { onError: (message: string) => void }) => {
@@ -227,7 +227,7 @@ export const DrawingRoot = () => {
         </AttendableContainer>
       ) : (
         <div className='flex-1 grid place-items-center text-description' data-testid='drawing-app.loading'>
-          {error ?? 'Opening drawing…'}
+          {error ?? 'Opening drawing...'}
         </div>
       )}
 

@@ -196,7 +196,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
 
   return (
     <Layout.Flex column classNames='dx-expand'>
-      {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
+      {/* Query form: content-height (Viewport without `scroll`) - does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearch.FlightSearchFields}
         values={query}

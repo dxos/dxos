@@ -4,7 +4,7 @@
 
 import { DXN } from '@dxos/keys';
 
-/** Logos by the vendor segment of a model id (`com.<vendor>.model.…`); written out so the sprite scanner finds them. */
+/** Logos by the vendor segment of a model id (`com.<vendor>.model....`); written out so the sprite scanner finds them. */
 const VENDOR_ICONS: Record<string, string> = {
   anthropic: 'px--anthropic--regular',
   deepseek: 'px--deepseek--regular',

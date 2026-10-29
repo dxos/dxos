@@ -30,7 +30,7 @@ import { type ModuleLoader, together } from './module-loader.ts';
  * drive them:
  *
  * - {@link runDependencyPass}: rounds over the capability graph (vocabulary and ordering logic
- *   in `activation-graph.ts`), repeated until nothing new is runnable — each round's
+ *   in `activation-graph.ts`), repeated until nothing new is runnable - each round's
  *   contributions (or a concurrent event wave's) can unlock modules that were waiting. A fired
  *   event stays fired, so a module whose wave has passed stays eligible in later rounds.
  * - Event dispatch: a module parks until its `activatesOn` fires, then runs as an event wave;
@@ -40,7 +40,7 @@ import { type ModuleLoader, together } from './module-loader.ts';
  * plugins into an error state and exclude their modules; everything independent proceeds.
  */
 export class ActivationScheduler {
-  /** Per-wave activation concurrency cap — see the note at the `#executeWaves` call site. */
+  /** Per-wave activation concurrency cap - see the note at the `#executeWaves` call site. */
   static readonly WAVE_CONCURRENCY = 16;
 
   /** Events currently mid-activation (an `allOf` gate counts them as already fired). */
@@ -71,7 +71,7 @@ export class ActivationScheduler {
    * Runs startup: the capability-dependency resolution pass for dependency-mode modules,
    * concurrently with the event dispatch for any module explicitly targeting the Startup
    * event. The event-level Startup `activated` message publishes only after both passes
-   * complete. Idempotent — subsequent calls activate whatever registered since.
+   * complete. Idempotent - subsequent calls activate whatever registered since.
    *
    * Streaming: activation does NOT wait for the constructor's full enable chain. `started`
    * flips immediately and a pass runs over whatever has registered; each still-in-flight
@@ -97,7 +97,7 @@ export class ActivationScheduler {
       yield* this.#state.fibers.track(fiber);
 
       // With streaming, activation work is spread across this call's passes AND the enable
-      // chain's incremental passes — the return value reports whether anything activated.
+      // chain's incremental passes - the return value reports whether anything activated.
       const activeBefore = this.#state.getActiveIds().length;
 
       yield* Ref.set(this.#state.started, true);
@@ -114,7 +114,7 @@ export class ActivationScheduler {
       const key = ActivationEvent.eventKey(ActivationEvent.Startup);
 
       // A capability cycle spanning event boundaries would leave both chains pending
-      // forever. Surface the lock (error state on the involved plugins) and continue —
+      // forever. Surface the lock (error state on the involved plugins) and continue -
       // the cycle members simply never activate; everything else proceeds.
       yield* this.#reportGlobalCycle();
 
@@ -136,7 +136,7 @@ export class ActivationScheduler {
       );
 
       // The enable chain forked its incremental passes, so loads may still be in flight outside
-      // the passes above. Ready must reflect a settled world — alternate between awaiting
+      // the passes above. Ready must reflect a settled world - alternate between awaiting
       // in-flight loads and mop-up passes until neither does any work.
       for (;;) {
         const settledAny = yield* this.#loader.awaitAllSettled();
@@ -164,13 +164,13 @@ export class ActivationScheduler {
       // event, and a host that owned the wait would re-implement it (and could forget to).
       // In a browser it is forked so `start` returns at ready and the contributions gated on it
       // land after first paint instead of competing with it; tracked, because the wave sits behind
-      // a wait of up to 15s and an untracked daemon outlives `shutdown()` — dispatching Idle into a
+      // a wait of up to 15s and an untracked daemon outlives `shutdown()` - dispatching Idle into a
       // manager that has already reset re-activates modules after teardown. A headless host has no
       // paint to lose the race to and completes `whenIdle` immediately, so forking there would only
       // let `start()` return before the wave ran.
       // Inlining is only safe for the gate this module owns, whose headless branch completes
-      // immediately. A host that passes its own gate decides when (or whether) idle arrives —
-      // `Effect.never` is a legitimate "do not run the idle wave" — and awaiting that inline would
+      // immediately. A host that passes its own gate decides when (or whether) idle arrives -
+      // `Effect.never` is a legitimate "do not run the idle wave" - and awaiting that inline would
       // hang `start()` rather than defer a wave.
       if (hostYieldsToPaint() || !this.#ownsIdleGate) {
         yield* this.#state.fibers.trackForked(yield* this.#activateWhenIdle().pipe(Effect.forkDetach));
@@ -226,7 +226,7 @@ export class ActivationScheduler {
         yield* Deferred.await(this.#state.startupComplete);
       }
 
-      // Re-dispatching a fired event is already a no-op — an active module is never re-selected —
+      // Re-dispatching a fired event is already a no-op - an active module is never re-selected -
       // but the instrumentation below is not free (two marks, a devtools track entry, a forked
       // warning timer), and demand events are fired from reactive paths that re-evaluate freely.
       // Bail before paying for a dispatch that has nothing to activate. The module scan is still
@@ -242,12 +242,12 @@ export class ActivationScheduler {
         }
       }
 
-      // Dispatch-latency split: `requested` → `initialized` is registration wait; `initialized`
-      // → the wave's `event:` measure is provider-join wait (in-flight round-1 loads).
+      // Dispatch-latency split: `requested` -> `initialized` is registration wait; `initialized`
+      // -> the wave's `event:` measure is provider-join wait (in-flight round-1 loads).
       performance.mark(`milestone:dispatch:${key}:requested`);
 
-      // Wait for the constructor's core/enabled `enable()` chain — including
-      // any async dynamic imports for lazy plugins — to finish registering
+      // Wait for the constructor's core/enabled `enable()` chain - including
+      // any async dynamic imports for lazy plugins - to finish registering
       // modules. Without this, dispatching to an empty module set is the
       // observable symptom of the race.
       yield* Deferred.await(this.#state.initialized);
@@ -308,8 +308,8 @@ export class ActivationScheduler {
   }
 
   /**
-   * Deactivates the given modules — and every active module that transitively requires a
-   * singleton capability they provide — then activates the same set again. Used by hot module
+   * Deactivates the given modules - and every active module that transitively requires a
+   * singleton capability they provide - then activates the same set again. Used by hot module
    * replacement: a module's `activate` resolves its body afresh, so re-running it swaps in new
    * code. A module whose last activation failed is retried, so fixing a broken edit recovers it.
    * Never-loaded or unknown ids are ignored; returns false when none was reloadable.
@@ -452,15 +452,15 @@ export class ActivationScheduler {
    * Activates inactive modules in dependency order of the capability graph, in rounds,
    * repeated until a round activates nothing new. Candidates are dependency-mode modules plus
    * event-mode modules whose `activatesOn` events have already fired; modules whose singleton
-   * requires cannot be satisfied by this pass WAIT — they are reconsidered by the next round
+   * requires cannot be satisfied by this pass WAIT - they are reconsidered by the next round
    * (each round of contributions, and each event wave, can unlock them). With
    * `candidateModules`, the first round is scoped to those modules (plus any marked for
    * reactivation); follow-up rounds consider the full pool unless `scopedToCandidates` keeps
-   * them scoped — demand pulls and event waves must not become drain workers for the whole
+   * them scoped - demand pulls and event waves must not become drain workers for the whole
    * startup pool (that serializes event dispatch behind unrelated startup work).
    *
-   * Structural problems — duplicate singleton providers within a round, capability cycles,
-   * or a singleton requirement no registered module of any mode could ever provide — put
+   * Structural problems - duplicate singleton providers within a round, capability cycles,
+   * or a singleton requirement no registered module of any mode could ever provide - put
    * the offending plugins into an error state (the `failed` atom, plus an error activation
    * message) and the pass continues with everything else. Individual module activation
    * failures are recorded per plugin (via the loader) and skip that module's transitive
@@ -484,7 +484,7 @@ export class ActivationScheduler {
         }
         ranAny = true;
         allSucceeded = allSucceeded && round;
-        // Follow-up rounds consider everything that might have been unlocked — unless scoped:
+        // Follow-up rounds consider everything that might have been unlocked - unless scoped:
         // a demand pull draining the full pool would block its event wave on unrelated work.
         scoped = options?.scopedToCandidates ? options?.candidateModules : undefined;
       }
@@ -513,7 +513,7 @@ export class ActivationScheduler {
    * Detects capability cycles across the FULL module set, regardless of event gating.
    * Two modules on different activation events that require each other's provides would
    * otherwise wait forever (neither chain can start); this surfaces the lock at startup:
-   * the members are put into an error state and excluded — they simply never activate,
+   * the members are put into an error state and excluded - they simply never activate,
    * and everything else proceeds.
    */
   #reportGlobalCycle(): Effect.Effect<void> {
@@ -590,7 +590,7 @@ export class ActivationScheduler {
 
       // A matched module may be mid-load via a concurrent wave (the round filters it as
       // `isLoading` to avoid in-round deadlocks). Await those loads before reporting the event
-      // activated — demand pulls rely on "activate resolved ⇒ matched modules contributed"
+      // activated - demand pulls rely on "activate resolved => matched modules contributed"
       // (a lookup retry that runs earlier misses the handlers and fails a one-shot invocation).
       // Bounded: every load settles its deferred under the activation timeout.
       const inFlight = (yield* this.#notActivatingHere(modules)).filter((module) => this.#loader.isLoading(module.id));
@@ -695,7 +695,7 @@ export class ActivationScheduler {
    * Deliberately NOT `#isBaselineWave`, which also admits Idle. Candidates handed to
    * `runDependencyPass` are EXPLICIT candidates and bypass the `#waveFired` gate in `#runRound`, so
    * admitting idle-default modules here would activate them eagerly during boot for any plugin
-   * whose `enable()` lands after `started` flips — the dominant path in Composer, where lazy plugin
+   * whose `enable()` lands after `started` flips - the dominant path in Composer, where lazy plugin
    * stubs enable over seconds while Startup dispatches milliseconds after mount. That would make
    * deferral depend on an enable/start race and defeat the idle default entirely. Idle stays in the
    * baseline for PROVIDER PULLS only (see {@link ActivationScheduler.#isBaselineWave}).
@@ -711,7 +711,7 @@ export class ActivationScheduler {
   }
 
   /**
-   * Whether a module sits in the baseline wave — `Startup u Idle`. A module there is pullable as a
+   * Whether a module sits in the baseline wave - `Startup u Idle`. A module there is pullable as a
    * provider by any wave, whether or not its own wave has run; explicitly gated providers stay
    * wave-scoped, which is what keeps two mutually-exclusive providers of one capability from both
    * being candidates.
@@ -719,7 +719,7 @@ export class ActivationScheduler {
    * Idle is in the baseline because it is what omitting `activatesOn` normalizes to: scoping
    * un-annotated modules to their own wave would make every un-annotated provider invisible to the
    * startup pass, so `ClientPlugin`'s `Client` would not initialize until idle. Modules declaring
-   * `Startup` explicitly lose nothing — their wave fires first, so `#waveFired` covers them after.
+   * `Startup` explicitly lose nothing - their wave fires first, so `#waveFired` covers them after.
    */
   #isBaselineWave(module: Plugin.PluginModule): boolean {
     const baseline = [ActivationEvent.Startup, ActivationEvent.Idle].map(ActivationEvent.eventKey);
@@ -731,7 +731,7 @@ export class ActivationScheduler {
   /**
    * Drops the modules whose `activate` bodies this fiber is running inside. A body that fires an
    * activation event is a caller of the wave, so awaiting its own load is a circular wait that
-   * ends only at the activation timeout — recorded as a `PluginTimeoutError` and read by the
+   * ends only at the activation timeout - recorded as a `PluginTimeoutError` and read by the
    * failure supervisor as a broken plugin, which then disables it. Their contributions are simply
    * not visible to this wave; the body contributes them when it returns.
    */
@@ -757,7 +757,7 @@ export class ActivationScheduler {
       const allModules = this.#state.getModules();
 
       // During the streaming bootstrap the provider's plugin definition may simply not have
-      // registered yet — the module waits and the post-initialization pass re-evaluates;
+      // registered yet - the module waits and the post-initialization pass re-evaluates;
       // a missing provider is structural only once the registry is complete.
       const registryComplete = yield* Deferred.isDone(this.#state.initialized);
 
@@ -778,14 +778,14 @@ export class ActivationScheduler {
           active.includes(module.id) ||
           seen.has(module.id) ||
           this.#state.structurallyFailed.has(module.id) ||
-          // Already loading via another path (memoized): awaiting it here could deadlock —
+          // Already loading via another path (memoized): awaiting it here could deadlock -
           // e.g. a cascade triggered by an event wave that an in-flight module itself fired.
           this.#loader.isLoading(module.id)
         ) {
           return false;
         }
         // A multi require is a collection, so "satisfied" is only meaningful once every plugin
-        // definition has registered — a consumer admitted during the streaming window snapshots
+        // definition has registered - a consumer admitted during the streaming window snapshots
         // whatever happens to have contributed so far (the process manager's one-shot
         // `Capabilities.LayerSpec` read is how this surfaced). Which providers are still to come
         // is unknowable mid-registration, so these wait for the complete pass wholesale; this is
@@ -999,7 +999,7 @@ export class ActivationScheduler {
    * Multi requires never gate (they resolve to whatever is currently contributed), but a
    * pulled provider that takes a one-shot snapshot of a multi capability (e.g. the process
    * manager's `Capabilities.LayerSpec` collection) needs its fellow multi providers activated
-   * in the *same* scoped round so the round's ordering can land them first — otherwise a
+   * in the *same* scoped round so the round's ordering can land them first - otherwise a
    * narrow pull (this provider alone) skips that ordering entirely and the snapshot can be
    * taken before sibling providers have contributed.
    */
@@ -1064,7 +1064,7 @@ export class ActivationScheduler {
       if (needed.size > 0) {
         log('pulling dependency providers', { modules: [...needed.keys()] });
         // Providers already mid-load (e.g. via the concurrent startup pass) are joined, not
-        // re-drained — the scoped round below filters them as `isLoading` and would otherwise
+        // re-drained - the scoped round below filters them as `isLoading` and would otherwise
         // return before their capabilities land.
         const inFlight = (yield* this.#notActivatingHere([...needed.values()])).filter((module) =>
           this.#loader.isLoading(module.id),

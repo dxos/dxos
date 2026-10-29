@@ -34,7 +34,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
   ({ role, attendableId, nodeId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
     // The marker rail is a hover/precision target pinned to the thread's left edge, and the status
-    // pill floats over the last turn — on a phone the rail has nowhere to live outside the text and
+    // pill floats over the last turn - on a phone the rail has nowhere to live outside the text and
     // the pill covers the reply it reports on. Neither has a toggle to orphan; both are passive.
     const mobile = usePlatform() === 'mobile';
     const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);

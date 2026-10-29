@@ -21,7 +21,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const existing = (yield* loadPlugins({ profile })) ?? [];
   const record = existing.find((entry) => entry.id === id && entry.source !== undefined);
   if (!record) {
-    // A compiled-in plugin exists but has nothing to uninstall — point at the verb that does apply
+    // A compiled-in plugin exists but has nothing to uninstall - point at the verb that does apply
     // rather than reporting it missing.
     return yield* Effect.fail(
       manager.getPlugins().some((plugin) => plugin.meta.profile.key === id)

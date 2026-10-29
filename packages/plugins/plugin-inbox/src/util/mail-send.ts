@@ -19,7 +19,7 @@ export type MailRoute = {
 };
 
 /**
- * Routes a mailbox's mail to its provider: the connection behind its sync binding (Connection →
+ * Routes a mailbox's mail to its provider: the connection behind its sync binding (Connection ->
  * Mailbox), matched to the send operation contributed for that connector; failing that, the first
  * provider that claims the unbound mailbox itself. Undefined when nothing can send for it.
  */
@@ -30,7 +30,7 @@ export const resolveMailRoute = (
   Effect.gen(function* () {
     const binding = yield* Binding.queryCursor(mailbox);
     if (binding) {
-      // The Connection whose access token is the binding's `spec.source` — fuzzy if an access token is
+      // The Connection whose access token is the binding's `spec.source` - fuzzy if an access token is
       // ever shared across connections.
       const [connection] = yield* Database.query(
         Filter.type(Connection.Connection, { accessToken: binding.spec.source }),
@@ -50,7 +50,7 @@ export const resolveMailRoute = (
 
 /**
  * Flags a draft sent: records the provider id (the reconcile match key) and moves it from the `draft`
- * tag to the provider's sent tag — the same tag its synced copy will carry — so it locks read-only.
+ * tag to the provider's sent tag - the same tag its synced copy will carry - so it locks read-only.
  */
 export const markSent = (mailbox: Mailbox.Mailbox, draft: Message.Message, sent: MailSend.Output) =>
   Effect.gen(function* () {

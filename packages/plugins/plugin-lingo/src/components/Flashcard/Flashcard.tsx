@@ -24,7 +24,7 @@ export type FlashcardProps = Util.ThemedClassName<{
 
 /**
  * One drill card: the term, then the translation once revealed, then a self-graded verdict.
- * Self-grading rather than typed input — recall, not spelling, is what the schedule measures.
+ * Self-grading rather than typed input - recall, not spelling, is what the schedule measures.
  */
 export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: FlashcardProps) => {
   const { t } = Hooks.useTranslation(LingoNamespace.key);

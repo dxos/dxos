@@ -15,7 +15,7 @@ export type ShimmerProps = Util.ThemedClassName<
 >;
 
 /**
- * Text element whose opacity animates left → right across the content in a loop.
+ * Text element whose opacity animates left -> right across the content in a loop.
  * Used as an "AI is thinking / streaming" indicator.
  *
  * The mask-based effect modulates true alpha, so the consumer's `color` token is preserved.

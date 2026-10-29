@@ -94,7 +94,7 @@ export class DocumentsSynchronizer extends Resource {
    * documents on the worker side and accumulates `_pendingUpdates`, which
    * flush automatically on resume. From the client's perspective every
    * `RepoProxy.find()` made while paused returns a handle that stays
-   * `pending` until resume — used to deterministically reproduce
+   * `pending` until resume - used to deterministically reproduce
    * worker-side hangs in query-pipeline tests.
    */
   #sendUpdatesPaused = false;

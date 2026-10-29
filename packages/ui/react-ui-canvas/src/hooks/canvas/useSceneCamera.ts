@@ -36,8 +36,8 @@ export type SceneCamera = {
 };
 
 /**
- * The camera and the animations that move it. While the camera moves on its own — a wheel zoom, a pan,
- * a drill-in — the canvas ignores the pointer: nothing under it is where it will be, so hover and
+ * The camera and the animations that move it. While the camera moves on its own - a wheel zoom, a pan,
+ * a drill-in - the canvas ignores the pointer: nothing under it is where it will be, so hover and
  * presses would land on passing content.
  */
 export const useSceneCamera = (

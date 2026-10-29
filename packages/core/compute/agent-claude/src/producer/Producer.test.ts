@@ -19,7 +19,7 @@ describe('Producer', () => {
 
   test('a request is a description, not a running turn', async () => {
     const producer = await EffectEx.runPromise(Producer.make({ feed: Feed.make() }));
-    // Effect is lazy, so building the request must not reach the host — the process decides when
+    // Effect is lazy, so building the request must not reach the host - the process decides when
     // (and whether) to run it, and cancels by interrupting.
     expect(() => producer.runTurn({ prompt: 'hello' })).not.to.throw();
   });

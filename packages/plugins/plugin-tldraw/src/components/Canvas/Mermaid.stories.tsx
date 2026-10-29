@@ -113,7 +113,7 @@ export const Default: Story = {
   args: { source: FLOWCHART },
 };
 
-/** The UML dialect rendering its own architecture: dialect → scene → variant builders. */
+/** The UML dialect rendering its own architecture: dialect -> scene -> variant builders. */
 export const ClassDiagram: Story = {
   args: { source: CLASS_DIAGRAM, scale: 1 },
 };

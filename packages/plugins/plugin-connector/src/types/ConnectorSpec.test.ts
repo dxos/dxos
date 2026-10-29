@@ -54,7 +54,7 @@ describe('ConnectorSpec.idsForTarget', () => {
   });
 
   test('a targetless connector binds nothing', ({ expect }) => {
-    // No `sync.targetTypename` — e.g. Google Contacts, which writes Person objects into the space.
+    // No `sync.targetTypename` - e.g. Google Contacts, which writes Person objects into the space.
     const capabilities = withConnectors(makeConnector('google-contacts'));
     expect(ConnectorSpec.idsForTarget(Obj.make(Mailbox, {}), capabilities)).toEqual([]);
   });

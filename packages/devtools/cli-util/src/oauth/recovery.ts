@@ -23,7 +23,7 @@ export type RecoveryOAuthParams = {
   readonly provider: string;
   /** Requested scopes. */
   readonly scopes: readonly string[];
-  /** atproto handle or DID — required so Edge can resolve the user's PDS / auth server. */
+  /** atproto handle or DID - required so Edge can resolve the user's PDS / auth server. */
   readonly loginHint: string;
 };
 
@@ -35,7 +35,7 @@ type InitiateEnvelope = { success: boolean; data?: { authUrl?: string }; error?:
  * origin via the `Origin` header), opens the browser, and resolves with the query params Edge
  * carries back in its redirect.
  *
- * Both purposes run before any identity exists, so no auth header is sent — Edge resolves the
+ * Both purposes run before any identity exists, so no auth header is sent - Edge resolves the
  * user's space / token server-side, and the `spaceId` / `accessTokenId` in the request are unused
  * (random values satisfy request validation).
  */

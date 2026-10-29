@@ -54,9 +54,9 @@ type Story = StoryObj<StoryArgs>;
  * Try:
  * 1. Discord: **Connect Discord** signs you in (the servers you administer appear).
  * 2. Pick a server without the bot and **Install** it (Discord's consent page), then **Refresh**.
- * 3. Pick the server, and **Connect** a channel: it appears in Activity → Channels.
+ * 3. Pick the server, and **Connect** a channel: it appears in Activity -> Channels.
  * 4. Activity: **Connect channels** starts the bot; the Discord bot panel reaches ready.
- * 5. Mention @Kai in that channel: the conversation appears under Activity → Conversations.
+ * 5. Mention @Kai in that channel: the conversation appears under Activity -> Conversations.
  * 6. Reload: the space, the binding and the conversation are still there.
  */
 export const Setup: Story = {
@@ -109,7 +109,7 @@ const findEntry = (monitor: HTMLElement, text: string) =>
 
 /**
  * The bot's lifecycle against a fake EDGE bot host (`installFakeDiscordBot`): Activity's Connect channels sends the
- * channel and its config to EDGE, the gateway goes connecting → ready, Disconnect closes it, and the monitor records
+ * channel and its config to EDGE, the gateway goes connecting -> ready, Disconnect closes it, and the monitor records
  * each step.
  */
 export const Scripted: Story = {

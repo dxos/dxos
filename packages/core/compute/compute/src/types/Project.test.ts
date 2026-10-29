@@ -17,7 +17,7 @@ import * as Project from './Project.ts';
 import * as Routine from './Routine.ts';
 
 // Stand-in `Obj.Unknown` type for context objects, mirroring the ad-hoc test types used in
-// `AiContext.test.ts` — no database needed since `Ref.make` inlines the target.
+// `AiContext.test.ts` - no database needed since `Ref.make` inlines the target.
 const TestObject = Type.makeObject(DXN.make('org.dxos.type.testObject', '0.1.0'))(Schema.Struct({}));
 
 describe('Project', () => {

@@ -59,7 +59,7 @@ export const CreateAgent = Operation.make({
       Schema.Array(Schema.String).annotate({ description: 'Anthropic skill ids, e.g. "xlsx", "pptx".' }),
     ),
     environmentId: Schema.optional(
-      Schema.String.annotate({ description: 'Anthropic environment id (env_…) sessions run in.' }),
+      Schema.String.annotate({ description: 'Anthropic environment id (env_...) sessions run in.' }),
     ),
   }),
   output: Schema.Struct({
@@ -198,12 +198,12 @@ export const GetTranscript = Operation.make({
 
 /**
  * The one way to change a running session's credentials: bind, rotate, refresh and revoke in a
- * single call. Counterpart to passing `credentials` at start — an agent that hits a 401 mid-run can
+ * single call. Counterpart to passing `credentials` at start - an agent that hits a 401 mid-run can
  * be fixed without restarting it, and without the secret passing through a message.
  *
  * `refresh` exists because the vault holds the resolved VALUE. The space's OAuth credentials rotate,
  * and nothing propagates a rotation into a running container, so a session that was working and now
- * gets a 401 usually holds a stale copy — `refresh: true` re-reads every credential the session
+ * gets a 401 usually holds a stale copy - `refresh: true` re-reads every credential the session
  * recorded and writes the current value back, with no need to name any of them.
  */
 export const UpdateSessionCredentials = Operation.make({
@@ -215,7 +215,7 @@ export const UpdateSessionCredentials = Operation.make({
   },
   input: Schema.Struct({
     session: Ref.Ref(ClaudeAgentSession.ClaudeAgentSession).annotate({ description: 'The session to update.' }),
-    // Plain arrays rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a keyword
+    // Plain arrays rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` - a keyword
     // the persisted-operation JSON schema does not carry, so the tool resolver could not project
     // this operation and dropped it from the model's toolkit entirely.
     credentials: Schema.optional(

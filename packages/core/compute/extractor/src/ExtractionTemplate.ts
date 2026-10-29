@@ -41,9 +41,9 @@ export const TargetSpec = Schema.Struct({
   type: Schema.String,
   /** How to find an existing instance for merge. Omit to always create. */
   identity: Schema.optional(TargetIdentity),
-  /** Parent target type for containment via `Obj.setParent` (e.g. Segment → Trip). */
+  /** Parent target type for containment via `Obj.setParent` (e.g. Segment -> Trip). */
   parent: Schema.optional(Schema.String),
-  /** Relations to create from the source to this target (e.g. Message → Trip). */
+  /** Relations to create from the source to this target (e.g. Message -> Trip). */
   relations: Schema.optional(Schema.Array(RelationSpec)),
 });
 export interface TargetSpec extends Schema.Schema.Type<typeof TargetSpec> {}

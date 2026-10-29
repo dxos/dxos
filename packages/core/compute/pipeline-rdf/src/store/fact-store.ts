@@ -12,7 +12,7 @@ import { type Fact, type Ontology } from '../types/index.ts';
 //
 // The FactStore service tag and API surface only. Implementations live in `fact-store-live.ts`
 // (exported as `FactStoreLive`) so operation definitions referencing the tag in `services:`
-// stay chunk-free — importing this file must never pull the SPARQL/SQLite machinery.
+// stay chunk-free - importing this file must never pull the SPARQL/SQLite machinery.
 //
 
 export interface FactStoreApi {

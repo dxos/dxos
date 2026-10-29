@@ -18,7 +18,7 @@ import { PlankCompanionControls } from './PlankControls.tsx';
 
 export type CompanionPlankProps = Util.ThemedClassName<{
   /**
-   * The companion to show (`<plank>/~<variant>`), or the plank itself when it has no companions — the
+   * The companion to show (`<plank>/~<variant>`), or the plank itself when it has no companions - the
    * pane belongs to the plank either way, and a linked segment names its plank as its parent.
    */
   id: string;

@@ -60,13 +60,13 @@ export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
  * each space as a dedicated sidebar section.
  *
  * The section id, type, plural label, and icon are all derived from the schema's
- * typename and annotations — no manual wiring needed. The section is suppressed
+ * typename and annotations - no manual wiring needed. The section is suppressed
  * when the space has no matching objects.
  *
  * Requires two coordinated pieces: `GraphPath.createTypeSectionPaths` and this extension, with a
  * {@link SpaceCapabilities.CreateObjectEntry} set to
  * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)`. URL resolution (both directions)
- * is automatic — no path resolver to register — since the extension's `urlKey` declaration is all
+ * is automatic - no path resolver to register - since the extension's `urlKey` declaration is all
  * `@dxos/app-graph`'s `path-resolution.ts` needs.
  *
  * Pass `createObject` to add a "+" action on the section header automatically.
@@ -109,17 +109,17 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
     createObject?: (space: Space) => Effect.Effect<any, any, any>;
     /**
      * Registered URL prefix key for this section's connector (e.g. `doc`, `mail`). Keys are global, so
-     * it is declared here rather than derived — see `@dxos/app-graph`'s `path-resolution.ts` for how
+     * it is declared here rather than derived - see `@dxos/app-graph`'s `path-resolution.ts` for how
      * registered keys resolve and serialize URLs.
      */
     urlKey: string;
     /**
-     * Registered URL key making the section node itself addressable (e.g. `library` → `/w/<space>/library`),
+     * Registered URL key making the section node itself addressable (e.g. `library` -> `/w/<space>/library`),
      * for a section that is worth linking to in its own right; it also names the section node. Omit and the
      * section stays a bare container named by its typename: only its objects are addressable.
      *
-     * Opting in splits the section into two extensions — one owning the section node, one owning its
-     * objects — since each extension carries one binding and the two need different ones. The objects are
+     * Opting in splits the section into two extensions - one owning the section node, one owning its
+     * objects - since each extension carries one binding and the two need different ones. The objects are
      * then materialized on expand rather than inline.
      */
     sectionUrlKey?: string;
@@ -140,7 +140,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
 
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
 
-  // Only allow reordering within this section — reject drops from other type sections.
+  // Only allow reordering within this section - reject drops from other type sections.
   const canDropSameType = (source: TreeData) =>
     AppGraphNode.isGraphNode(source.item) &&
     Obj.isObject(source.item.data) &&
@@ -149,7 +149,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
   /** The section node's own segment: its URL key when it has one, so the key addresses it directly. */
   const sectionSegment = options.sectionUrlKey ?? typename;
   const groupSegments = options.groupSegment ? [options.groupSegment] : [];
-  /** Node-id segments from the space down to the section node — the section's own path. */
+  /** Node-id segments from the space down to the section node - the section's own path. */
   const sectionSegments = [...groupSegments, sectionSegment];
 
   /** The section's objects in their persisted order; empty means the section is suppressed. */
@@ -198,7 +198,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
     return node.type === typename && node.properties.testId === testId && space ? Option.some(space) : Option.none();
   };
 
-  // The section node itself. Addressable in its own right only when sectionUrlKey is declared —
+  // The section node itself. Addressable in its own right only when sectionUrlKey is declared -
   // that makes it a singleton so selecting it opens a plank. Without it the node is a bare
   // container and only its objects get a URL.
   const sectionExtension = AppGraphBuilder.createExtension({
@@ -247,7 +247,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
     },
   });
 
-  // The section's objects — always a separate extension so each object gets its own item binding
+  // The section's objects - always a separate extension so each object gets its own item binding
   // (keyed by urlKey) independent of how the section node itself is addressed.
   const objectsExtension = AppGraphBuilder.createExtension({
     id: sectionObjectsId(typename),

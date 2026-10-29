@@ -30,7 +30,7 @@ const DAY_MS = 86_400_000;
 
 /**
  * Code-unit order, the collation SQLite's `BINARY` applies. Both executors order strings through
- * this so a compiled plan and an in-memory one return the same rows — under `limit` the collation
+ * this so a compiled plan and an in-memory one return the same rows - under `limit` the collation
  * decides which rows are cut, not just their order.
  */
 export const compareCodeUnits = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -209,18 +209,18 @@ export const GroupBy = Object.freeze({
   /**
    * Computes each group's scalar aggregates (`group`/`max`/`min`/`count`) and returns the same items
    * with those values stamped on every member (all members of a group share them), so a following
-   * group-level `OrderStep` can order by them — including by a `group` field whose result name differs
+   * group-level `OrderStep` can order by them - including by a `group` field whose result name differs
    * from its source property. Assumes `items` are already partitioned into contiguous groups
    * (see {@link partitionByGroupKey}).
    *
    * If an `items`-kind aggregate declares its own `order`, each group's members are stably
-   * re-sorted by it (via `compareByOrder`) before scalar aggregates are stamped — this ordering is
+   * re-sorted by it (via `compareByOrder`) before scalar aggregates are stamped - this ordering is
    * local to that aggregate's member selection, independent of whatever order the input stream
    * arrived in. `items` itself is not stamped: it is materialised (and capped to `limit`) at result
    * assembly, from the (possibly now re-sorted) member order this function returns.
    *
    * All members of a group share a single member order, so at most one distinct `order` may be
-   * requested across the group's `items`-kind aggregates — two conflicting orders are rejected
+   * requested across the group's `items`-kind aggregates - two conflicting orders are rejected
    * rather than silently honoring only one of them.
    */
   withGroupAggregates: <T extends { groupKey?: GroupKeyValue; aggregates?: GroupAggregates; weight?: number }>(
@@ -344,6 +344,6 @@ export const GroupBy = Object.freeze({
   },
 });
 
-/** Coerces a raw property value to the scalar aggregate domain (non-scalars → `null`). */
+/** Coerces a raw property value to the scalar aggregate domain (non-scalars -> `null`). */
 const coerceScalar = (value: unknown): AggregateValue =>
   typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null;

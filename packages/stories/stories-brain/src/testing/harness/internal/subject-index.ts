@@ -33,7 +33,7 @@ export type SubjectRetrieval = {
 };
 
 /**
- * The Fact→source bridge: uses the fact store as an INDEX. Given a subject, it finds the facts that
+ * The Fact->source bridge: uses the fact store as an INDEX. Given a subject, it finds the facts that
  * mention that entity, follows each fact's `source` (a message-id) back to the actual message, and
  * returns those source messages (verbatim) alongside the facts. The agent then grounds its answer in
  * real message text, with the fact store doing precise entity-based retrieval.
@@ -61,7 +61,7 @@ const termLabel = (term: RDF.Fact['assertion']['subject']): string => {
 
 // Whether a fact term refers to the subject. Extractors slug the same person differently
 // ("nicole-gudmand" vs "nicole" vs "ngudmand"), so exact-slug matching is too brittle: match if the
-// entity slug (or slugified label) CONTAINS any subject name token as a substring (e.g. "gudmand" ⊂
+// entity slug (or slugified label) CONTAINS any subject name token as a substring (e.g. "gudmand" subset of
 // "ngudmand"). Tokens shorter than 4 chars are dropped to avoid spurious hits.
 const subjectTokens = (subject: string): string[] =>
   subject
@@ -113,7 +113,7 @@ export const buildSubjectIndex = (
   };
 };
 
-/** A `SubjectIndex` layer built from the facts + messages — injected via `extraServices`. */
+/** A `SubjectIndex` layer built from the facts + messages - injected via `extraServices`. */
 export const subjectIndexLayer = (
   facts: readonly RDF.Fact[],
   messages: readonly Message.Message[],

@@ -17,15 +17,15 @@ export const translations = [
         'tools.label': 'MCP tools',
 
         // ToolResults
-        'calling-tool.message': 'Calling tool…',
+        'calling-tool.message': 'Calling tool...',
         'no-result.message': 'No results.',
         'no-displayable-fields.message': '(no displayable fields)',
         'no-matching-rows.message': 'No matching rows.',
         'tool-result.label': 'Tool result',
-        'filter-results.placeholder': 'Filter results…',
+        'filter-results.placeholder': 'Filter results...',
 
         // ToolsExplorer
-        'connecting.message': 'Connecting to MCP Server…',
+        'connecting.message': 'Connecting to MCP Server...',
         'connection-failed.title': 'MCP Server connection failed',
         'not-configured.title': 'MCP Server is not configured',
         'not-configured.message': 'Set the EDGE endpoint (runtime.services.edge.url) to browse tools.',

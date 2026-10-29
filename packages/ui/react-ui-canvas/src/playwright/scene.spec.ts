@@ -12,8 +12,8 @@ const PORT = 9006;
 // The Readonly story's fixture with editing on: Storybook's `args` URL override, so the suite needs no story of its own.
 const FREEHAND_URL = `${storybookUrl('ui-react-ui-canvas-components-canvas--readonly', PORT)}&args=readonly:!false`;
 
-// The fixture (`createViewTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
-// (line, directed) and B→C (spline). Every edge sits on the major grid.
+// The fixture (`createViewTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A->B (curve), A->C
+// (line, directed) and B->C (spline). Every edge sits on the major grid.
 test.describe('Canvas', () => {
   let page: Page;
   let scene: SceneManager;
@@ -99,7 +99,7 @@ test.describe('Canvas', () => {
     await expect(page.getByTestId('node-debug')).toHaveCount(0);
   });
 
-  test('a ⌘-drag leaves the selection and drops a copy, which becomes the selection', async () => {
+  test('a \u2318-drag leaves the selection and drops a copy, which becomes the selection', async () => {
     const id = 'scene:root/a';
     const before = await scene.nodeCount();
     const box = await scene.box(scene.node(id));
@@ -179,7 +179,7 @@ test.describe('Canvas', () => {
     await scene.zoomOut();
     const a = await scene.box(scene.node('scene:root/a'));
     // The empty canvas above and left of A, dragging back over A's corner. Not the other corner: the
-    // B→C spline passes below and right of A, and a press on a link starts an endpoint drag.
+    // B->C spline passes below and right of A, and a press on a link starts an endpoint drag.
     const outside = { x: a.x - 40, y: a.y - 60 };
     const inside = { x: a.x + 20, y: a.y + 20 };
     await scene.focus();
@@ -289,7 +289,7 @@ test.describe('Canvas', () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
     await page.getByTestId('toolbar-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
-    // Freehand offers auto layout; a → b → c ranks into three rows, whatever the fixture's own layout.
+    // Freehand offers auto layout; a -> b -> c ranks into three rows, whatever the fixture's own layout.
     await expect(page.getByTestId('toolbar-layout')).toBeEnabled();
     await page.getByTestId('toolbar-layout').click();
     await expect

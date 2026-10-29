@@ -247,7 +247,7 @@ export type RecoverIdentityResponseBody = {
 };
 
 export type CreateAgentRequestBody = {
-  /** Owner identity DID (`did:halo:…`). */
+  /** Owner identity DID (`did:halo:...`). */
   identityDid: string;
   haloSpaceId: SpaceId;
   haloSpaceKey: string;
@@ -268,7 +268,7 @@ export type GetAgentStatusResponseBody = {
 export type UploadFunctionRequest = {
   name?: string;
   version: string;
-  /** Owner identity DID (`did:halo:…`). The Edge requires it to equal the authenticated presenter DID. */
+  /** Owner identity DID (`did:halo:...`). The Edge requires it to equal the authenticated presenter DID. */
   ownerUri: string;
   entryPoint: string;
   assets: Record<string, Uint8Array>;
@@ -339,7 +339,7 @@ export enum OAuthProvider {
 export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
 
 /**
- * `AccessToken.source` for the Atmosphere connection — the atproto account bound to a DXOS identity.
+ * `AccessToken.source` for the Atmosphere connection - the atproto account bound to a DXOS identity.
  * atproto accounts are portable (both PDS and handle can change), so this is not a hostname. Every
  * subsystem that looks up the account's credential matches on it, hence its home beside
  * {@link OAuthProvider}. The connector that operates the connection is identified separately, by
@@ -636,7 +636,7 @@ const VERIFIABLE_PRESENTATION_TOKEN_PREFIX = 'pb;base64,';
 export const WS_AUTH_PROTOCOL_PREFIX = 'base64url.bearer.authorization.dxos.org';
 
 /**
- * Codec for the credentials header — the single definition of how an encoded verifiable
+ * Codec for the credentials header - the single definition of how an encoded verifiable
  * presentation is framed on the wire, in both places it travels:
  *
  * - `Authorization: VerifiablePresentation pb;base64,<base64>` for HTTP.
@@ -644,8 +644,8 @@ export const WS_AUTH_PROTOCOL_PREFIX = 'base64url.bearer.authorization.dxos.org'
  *   narrower alphabet: `=` padding is stripped and `/` is substituted with `|`, neither being
  *   legal in a subprotocol token.
  *
- * This lives in protocols because both ends own half of it — the client encodes, the Edge worker
- * decodes — and the two had drifted into separate copies of the same string literals.
+ * This lives in protocols because both ends own half of it - the client encodes, the Edge worker
+ * decodes - and the two had drifted into separate copies of the same string literals.
  *
  * Decoding is deliberately lenient where the RFCs are: the auth-scheme is matched
  * case-insensitively (RFC 9110 §11.1) and anything unrecognised yields `undefined` rather than

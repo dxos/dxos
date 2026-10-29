@@ -63,7 +63,7 @@ export interface AgentProcessOptions {
 
   /**
    * Stay resident (IDLE) once the work is done rather than succeeding, so the next prompt lands on this
-   * process instead of a new one. For a host where a spawn is expensive — on EDGE it is a fresh Durable
+   * process instead of a new one. For a host where a spawn is expensive - on EDGE it is a fresh Durable
    * Object that opens the space and loads the toolkit before the turn can start.
    * @default false
    */
@@ -79,7 +79,7 @@ export interface AgentProcessOptions {
    * If true, long-running tool calls are moved to the background after `backgroundThreshold`
    * and the agent is notified asynchronously when they complete.
    *
-   * Currently unstable — disabled by default.
+   * Currently unstable - disabled by default.
    * @default false
    */
   enableToolBackgrounding?: boolean;
@@ -144,7 +144,7 @@ export type AgentProcessDefinition = Operation.Durable<AgentInput, void, any, Ha
 /**
  * How long to wait before re-reading a queue that contradicts a write this process just made, and
  * how many times. A hosted runtime serves the read from an eventually-consistent index, and the lag
- * measured on EDGE is single-digit milliseconds — the cap is what keeps a write that never lands
+ * measured on EDGE is single-digit milliseconds - the cap is what keeps a write that never lands
  * from waking the agent forever.
  */
 const UNSEEN_WRITE_RETRY_MS = 250;
@@ -157,7 +157,7 @@ const RESULT_PREVIEW_LENGTH = 200;
  *
  * Guarded because this sits between removing the child from `delegations` and running the strategy's
  * `onComplete`: a `BigInt` or a cycle would throw here, become a defect, and take the whole return
- * path with it — the work item would never be updated and work waiting on it never reconciled.
+ * path with it - the work item would never be updated and work waiting on it never reconciled.
  * Losing the preview is survivable; losing the return is not.
  */
 const resultPreview = (value: unknown): string | undefined => {
@@ -170,7 +170,7 @@ const resultPreview = (value: unknown): string | undefined => {
   if (text === undefined) {
     return undefined;
   }
-  return text.length > RESULT_PREVIEW_LENGTH ? `${text.slice(0, RESULT_PREVIEW_LENGTH)}…` : text;
+  return text.length > RESULT_PREVIEW_LENGTH ? `${text.slice(0, RESULT_PREVIEW_LENGTH)}\u2026` : text;
 };
 
 const MAX_UNSEEN_WRITE_WAKES = 20;
@@ -191,7 +191,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // `AiContext.Binding` and `Skill` belong here for the same reason the rest do: the host
     // registers exactly these with the process's database, and a typed query for a type it does
     // not know matches nothing. Without them a hosted agent reads its own skill bindings back
-    // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
+    // empty and runs every turn with an EMPTY TOOLKIT - the model can only answer in prose.
     // `mcpServerTypes` (bindings among them) are read each turn to connect the MCP servers.
     types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, Skill.Skill, ...mcpServerTypes],
     services: [
@@ -203,7 +203,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       Process.ManagerService,
       OperationHandlerSet.OperationHandlerProvider,
       AiService.AiService,
-      // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
+      // Needed in the fiber's context - `Header.byokLayer`'s per-request callback reads it.
       Credential.CredentialsService,
     ],
     rpcs: HarnessControl,
@@ -249,13 +249,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const clock = yield* Clock.Clock;
         const now = () => clock.currentTimeMillisUnsafe();
 
-        // Queued tool results were never consumed by onAlarm — reported flags from the synchronous
+        // Queued tool results were never consumed by onAlarm - reported flags from the synchronous
         // execution path are stale after reload and would cause onAlarm to drop them.
         yield* toolCallManager.reconcileWithInputQueue(toolResults);
 
         // Alarms written by this incarnation, keyed by id, until a read confirms the index has them.
         // `wakes` counts reads that did not show the alarm, which is what distinguishes an index
-        // still catching up from one that is gone — a due time cannot: an alarm set for an instant
+        // still catching up from one that is gone - a due time cannot: an alarm set for an instant
         // already past reads as "due" on the very first look, before the index has had any chance.
         const unseenAlarms = new Map<string, { wakeAt: number; wakes: number }>();
 
@@ -283,7 +283,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Hydration: the work is durable (queued prompts and alarms on the feed, undelivered tool
         // results in KV) but the process alarm is not, and a rehydrated process is not handed its
-        // pending input events again — so it must re-arm from that durable state here or sit idle
+        // pending input events again - so it must re-arm from that durable state here or sit idle
         // with work waiting. What was already pending is also what `onSpawn` decides the fate of.
         const startupPending = yield* sessionStore.loadPending(feed);
         yield* reconcileAlarmWith(startupPending);
@@ -314,7 +314,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Fire end-request hooks declared by the bound skills (e.g. the planning plan-reminder).
         // Each hook runs as a child operation with `conversation` set, so it resolves the full
-        // HarnessService (Tier B) and can enqueue a continuation back onto this host's queue — which
+        // HarnessService (Tier B) and can enqueue a continuation back onto this host's queue - which
         // keeps the process alive past this turn.
         const runEndRequestHooks = Effect.gen(function* () {
           yield* SkillHooks.runHooks({
@@ -345,7 +345,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Whether this incarnation has actually run a turn. An empty queue means two different things:
         // after a turn it means the work drained and the process should finish, but on a fresh spawn
-        // it is simply a conversation nobody has spoken to yet — `onSpawn` discards what it inherits,
+        // it is simply a conversation nobody has spoken to yet - `onSpawn` discards what it inherits,
         // so a new process ALWAYS starts empty. Completing on the latter ends the agent before the
         // prompt that spawned it arrives, and `submitInput` then drops that prompt on a finished
         // handle, leaving the reader with no reply and no error.
@@ -358,13 +358,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Queue entries this incarnation wrote but has not yet read back. A hosted process's queue
         // read is served by the space INDEX, which is eventually consistent: the agent appends a
-        // prompt and, milliseconds later, its own read returns empty — the index catches up a beat
+        // prompt and, milliseconds later, its own read returns empty - the index catches up a beat
         // afterwards, but by then the agent has already concluded there is no work and gone idle,
         // and nothing looks again. Locally the same read is served from the resident feed handle, so
         // this never happens off a hosted runtime. Counted rather than flagged so a burst of prompts
         // is not mistaken for one.
         // Held by id, not counted: a resumed process can dequeue an OLDER entry it did not write,
-        // and a bare count would treat that as its own write becoming visible — zeroing the budget
+        // and a bare count would treat that as its own write becoming visible - zeroing the budget
         // while this incarnation's prompt is still unread, so the next empty read completes the
         // process and drops it. In memory because it describes this incarnation's writes only; a
         // later one re-reads the feed from scratch.
@@ -381,7 +381,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           });
 
         // A turn that ends with an alarm pending leaves the process resident, and the reader is then
-        // waiting on the wake rather than on the turn — so the last stage of that turn is no longer
+        // waiting on the wake rather than on the turn - so the last stage of that turn is no longer
         // what is happening.
         const reportSleeping = (state: PendingState): Effect.Effect<void, never, Trace.TraceService> =>
           state.pendingAlarms.length > 0 ? Trace.emitRequestPhase('sleeping') : Effect.void;
@@ -389,7 +389,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
             // A result reported inside the turn it belongs to is still sitting in the queue; it is
-            // not outstanding work, and counting it as such keeps the agent from ever completing —
+            // not outstanding work, and counting it as such keeps the agent from ever completing -
             // the head-drop at the top of `onAlarm` cannot help, because nothing arms another wake.
             for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
               log('drop tool result reported within its turn', { pid });
@@ -401,7 +401,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
             if (!turnRan && !endHooksFired) {
               // Idle, not done: stay resident so the prompt this process was spawned for can still
-              // land. Ahead of the hooks below, which are end-of-REQUEST hooks — there has been no
+              // land. Ahead of the hooks below, which are end-of-REQUEST hooks - there has been no
               // request to end. Nothing is scheduled; the next `onInput` arms the alarm.
               log('agent idle before its first turn, staying resident');
               return;
@@ -440,7 +440,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const maybeComplete = Effect.flatMap(sessionStore.loadPending(feed), maybeCompleteWith);
 
         return {
-          // Runs on a fresh spawn only — never on a resume, which is what a hibernated process gets.
+          // Runs on a fresh spawn only - never on a resume, which is what a hibernated process gets.
           // So anything already pending here was left by a process that is gone for good: stopped by
           // the user, or dead without being rehydrated. Redelivering it would re-run a prompt the
           // reader stopped, and the next thing they type would queue behind it.
@@ -490,7 +490,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               // Earliest point the agent can report to a reader who is already waiting: draining the
               // queue below reads the feed, which is itself part of the wait. Only for a wake with known
-              // work — the re-check after every turn finds none, and on a hosted agent that read takes
+              // work - the re-check after every turn finds none, and on a hosted agent that read takes
               // long enough for the line to read as another request starting after the reply.
               const announced = toolResults.length > 0 || unseenWriteIds.size > 0;
               if (announced) {
@@ -524,8 +524,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const acked = new Set(ackedEntries);
                 const message = state.pendingMessages.find((candidate) => !acked.has(candidate.id));
                 const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now() && !acked.has(alarm.id));
-                // An alarm this incarnation wrote that enough reads have failed to show is gone —
-                // cancelled, or delivered on an earlier wake — and must stop contributing a due
+                // An alarm this incarnation wrote that enough reads have failed to show is gone -
+                // cancelled, or delivered on an earlier wake - and must stop contributing a due
                 // time, or reconciling would re-arm for it forever. Bounded by reads rather than by
                 // the due time, which would drop an already-due alarm before the index caught up.
                 for (const [id, entry] of unseenAlarms) {
@@ -588,8 +588,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   return;
                 } else if (unseenWriteIds.size > 0) {
                   // Retry budget spent and a write this incarnation made is still unread. The bound
-                  // stops the waking, but completing here would drop that prompt for good — there is
-                  // no guaranteed upper bound on index lag — so the process stays resident instead,
+                  // stops the waking, but completing here would drop that prompt for good - there is
+                  // no guaranteed upper bound on index lag - so the process stays resident instead,
                   // to be woken by the next input or alarm.
                   log.warn('agent giving up on an unread write, staying resident', {
                     unseenWrites: unseenWriteIds.size,
@@ -716,7 +716,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             if (event._tag === 'exited') {
               // A delegated sub-agent finished: read its result and hand it to the strategy (which
               // updates the work item and notifies the user). Unlike tool results, this does not
-              // re-enter the turn — the supervisor folds it in out of band.
+              // re-enter the turn - the supervisor folds it in out of band.
               const delegation = delegations.find((delegation) => delegation.pid === event.pid);
               if (delegation) {
                 delegations = delegations.filter((other) => other.pid !== event.pid);
@@ -737,7 +737,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 if (Option.isSome(strategy)) {
                   yield* strategy.value.onComplete(chat, delegation.id, exit);
                   // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)
-                  // spawns now rather than on the next conversational turn — this is what lets a
+                  // spawns now rather than on the next conversational turn - this is what lets a
                   // batch of delegated tasks drain without further prompting.
                   const activeIds = new Set(delegations.map((delegation) => delegation.id));
                   const pending = yield* strategy.value.reconcile(chat, activeIds);
@@ -859,7 +859,7 @@ const AsyncHooksCell = StorageService.cell(
  * Ids of queue entries this process has ACKED, held until the ack is visible in the feed read.
  *
  * The ack is a feed append and a hosted process reads the feed back through the eventually
- * consistent space index, so `loadPending` keeps returning an entry whose ack has not landed yet —
+ * consistent space index, so `loadPending` keeps returning an entry whose ack has not landed yet -
  * and `loadPending` deliberately includes in-flight entries, so that an interrupted turn is
  * redelivered. Without this the two combine into a redelivery loop: the agent re-runs the same turn
  * on every wake, forever. Durable rather than in-memory because the isolate does not survive
@@ -994,8 +994,8 @@ export const isAgentWorkPending = ({
   toolCallManager.hasPendingToolResults();
 
 /**
- * Whether a tool call's result is already accounted for — queued for the next turn or delivered to the
- * agent — so a finished child that can no longer be reattached needs no answer of its own.
+ * Whether a tool call's result is already accounted for - queued for the next turn or delivered to the
+ * agent - so a finished child that can no longer be reattached needs no answer of its own.
  */
 export const isToolResultHandled = (
   queue: readonly ToolResultEvent[],

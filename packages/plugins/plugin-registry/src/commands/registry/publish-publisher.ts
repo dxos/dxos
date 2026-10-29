@@ -15,7 +15,7 @@ import { ClientService } from '@dxos/client';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
 /**
- * `dx registry publish-publisher` — publishes the authenticated user's own
+ * `dx registry publish-publisher` - publishes the authenticated user's own
  * `org.dxos.experimental.publisher.profile` record (rkey = `self`).
  *
  * This is metadata about the publisher (the human/org), shown alongside their

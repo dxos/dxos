@@ -107,7 +107,7 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     (id: string) => {
       const metadata = resolve?.(id);
-      // A live create always has a form to show — the object's own — so only a draft can skip
+      // A live create always has a form to show - the object's own - so only a draft can skip
       // straight to creating from an entry that declares no inputs.
       if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
         // No form to show, so the caller's defaults (a name typed into a link, say) are the data.

@@ -225,7 +225,7 @@ const ActorBar = ({ spec, phase }: { spec: ActorSpec; phase: string }) => (
     <span className='inline-block size-2.5 rounded-full' style={{ background: `var(--color-${spec.hue}-border)` }} />
     <span>{spec.name}</span>
     {spec.role && <span className='text-description font-normal'>{spec.role}</span>}
-    {phase === 'joining' && <span className='ms-auto text-description font-normal'>Joining…</span>}
+    {phase === 'joining' && <span className='ms-auto text-description font-normal'>Joining...</span>}
   </div>
 );
 

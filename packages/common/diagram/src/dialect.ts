@@ -3,10 +3,10 @@
 //
 
 //
-// Extension point for higher-level diagram languages (mermaid, d2, sequence, uml-class, …).
-// A dialect compiles its input into scene edit commands — owning any layout it needs — so its
+// Extension point for higher-level diagram languages (mermaid, d2, sequence, uml-class, ...).
+// A dialect compiles its input into scene edit commands - owning any layout it needs - so its
 // output lands as ordinary world objects and stays editable by id. Mirrors the architecture
-// shared by Mermaid/D2/Kroki: dialect → intermediate positioned model → renderer.
+// shared by Mermaid/D2/Kroki: dialect -> intermediate positioned model -> renderer.
 //
 
 import * as Effect from 'effect/Effect';

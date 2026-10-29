@@ -221,7 +221,7 @@ describe('buildSpanTree', () => {
       }),
     );
     const tree = buildSpanTree(messages, {
-      // Limit far below the 20 `note` events — naive slicing would drop the parent's begin.
+      // Limit far below the 20 `note` events - naive slicing would drop the parent's begin.
       eventLimit: 2,
     });
     expect(tree.children).toHaveLength(1);
@@ -366,7 +366,7 @@ describe('buildSpanTree', () => {
   });
 
   test('a span superseded by a later same-pid begin event is force-closed too', ({ expect }) => {
-    // The first begin never gets an end (interleaved B1 B2 E1 pattern, §15) — `openSpans` only
+    // The first begin never gets an end (interleaved B1 B2 E1 pattern, §15) - `openSpans` only
     // tracks the second span once it supersedes the first, so the sweep must reach both.
     const messages = collectTraceEvents(
       withMeta(

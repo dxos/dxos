@@ -7,8 +7,8 @@ import { trim } from '@dxos/util';
 import { identity } from './identity.ts';
 
 /**
- * Server-level usage guidance, sent as the result's `instructions` — the field the MCP schema
- * defines as "Instructions describing how to use the server and its features … MAY be added to the
+ * Server-level usage guidance, sent as the result's `instructions` - the field the MCP schema
+ * defines as "Instructions describing how to use the server and its features ... MAY be added to the
  * system prompt". It is the one server text a client loads before any tool is selected (Claude
  * Code injects it at session start and truncates at 2KB), and the MCP guidance reserves it for
  * cross-tool rules that no single tool description can carry
@@ -17,7 +17,7 @@ import { identity } from './identity.ts';
  * Deliberately fixed and generic: the plugin ecosystem behind this server is open-ended, so
  * per-plugin or per-skill fragments would grow without bound and truncate silently. Plugin- and
  * project-specific guidance lives in skills, and the operations themselves are discovered at
- * runtime — so what is stated here is the *loop* by which a model reaches both.
+ * runtime - so what is stated here is the *loop* by which a model reaches both.
  */
 export const SERVER_INSTRUCTIONS = trim`
   This server reads and writes objects in DXOS spaces (collaborative databases). Its verbs are not
@@ -28,7 +28,7 @@ export const SERVER_INSTRUCTIONS = trim`
   updates, destructive deletes.
 
   Every write targets exactly one space. Pass spaceId explicitly on writes, taking it from the
-  caller's instructions, a repo/project configuration, or a reference already in hand — when spaceId
+  caller's instructions, a repo/project configuration, or a reference already in hand - when spaceId
   is omitted the server falls back to an arbitrary session default, which is not an inferred choice;
   never guess a space from its name.
 

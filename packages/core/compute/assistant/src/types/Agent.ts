@@ -20,9 +20,9 @@ import * as Chat from './Chat.ts';
 
 /**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
- * text, skills, objects, and commands). Owns no conversation state — a chat is linked to the agent
+ * text, skills, objects, and commands). Owns no conversation state - a chat is linked to the agent
  * it runs as by the ECHO parent edge (the agent parents its chats), and durable work products live on a Project
- * (plugin-projects DESIGN.md, "Agent ↔ Project convergence").
+ * (plugin-projects DESIGN.md, "Agent <-> Project convergence").
  */
 
 /**
@@ -39,7 +39,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
 
     /**
      * Stable identity DID for the agent, used to attribute content it authors (e.g. suggestion
-     * branches) as its own author — distinct from any human or other agent. Provisioned
+     * branches) as its own author - distinct from any human or other agent. Provisioned
      * externally, never minted by {@link makeInitialized} (see the note there); the slot a real
      * HALO identity DID takes once agents get first-class identities. Optional because nothing
      * populates it yet.
@@ -64,7 +64,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     }),
 
     /**
-     * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
+     * Instructions for the agent - the preset payload (text, skills, objects, commands) a chat
      * receives when the agent is applied to it. Owned: `SetParent` cascades it with the agent.
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
@@ -100,7 +100,7 @@ export const loadInstructions = (
 
 /**
  * Resolves the agent's primary chat (the agent holds no chat ref): the latest chat parented to the
- * agent. Entity ids are ULIDs, so the id order is creation order — `resetChatHistory` makes the
+ * agent. Entity ids are ULIDs, so the id order is creation order - `resetChatHistory` makes the
  * replacement chat primary simply by creating it later.
  */
 export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
@@ -120,7 +120,7 @@ export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, nev
 
 /**
  * Resolves the agent a chat runs as, if any. Plain (agentless) chats yield `undefined`.
- * The parent is loaded with the object, so this is synchronous — no query.
+ * The parent is loaded with the object, so this is synchronous - no query.
  */
 export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =>
   Effect.sync(() => {

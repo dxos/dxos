@@ -482,7 +482,7 @@ describe('automerge-subduction', () => {
 
   // After B drops handshake state and rehydrates from durable storage, does
   // subduction re-handshake on the reused logical channel when A pushes?
-  // Empirical answer: no — A's auto-broadcast does not reach B'.
+  // Empirical answer: no - A's auto-broadcast does not reach B'.
   test('does not auto-rehydrate handshake on a logical connection where one end dropped it', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
@@ -511,7 +511,7 @@ describe('automerge-subduction', () => {
 
     // Simulate B crash: clearing the queue's waiters halts the orphaned
     // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
-    // `disconnectFromPeer` — those send a graceful goodbye A would observe.
+    // `disconnectFromPeer` - those send a graceful goodbye A would observe.
     await transportB.disconnect();
     subB.free();
 
@@ -568,7 +568,7 @@ describe('automerge-subduction', () => {
     expect(storage.readOps).toBeGreaterThan(0);
   });
 
-  // Same restart shape as above, but with a `signer` — this activates
+  // Same restart shape as above, but with a `signer` - this activates
   // `SubductionSource` (the subduction-specific document source used in
   // production, distinct from classical automerge-repo's own storage
   // subsystem exercised by the test above). `entry.knownHashes` /

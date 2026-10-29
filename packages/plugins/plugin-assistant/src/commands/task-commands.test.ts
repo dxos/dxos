@@ -26,7 +26,7 @@ describe('task slash commands', () => {
   test('/task:create appends to the checklist', async ({ expect }) => {
     const { chat, run } = await setup(builder);
 
-    expect(await run('/task:create Draft the plan')).toEqual({ summary: 'Created task “Draft the plan”.' });
+    expect(await run('/task:create Draft the plan')).toEqual({ summary: 'Created task "Draft the plan".' });
     await run('/task:create Ship it');
 
     expect(titles(chat)).toEqual(['Draft the plan', 'Ship it']);
@@ -56,10 +56,10 @@ describe('task slash commands', () => {
     await db.flush();
 
     // Ordinal 1 is the parent, so its sub-task goes with it even though nothing named the child.
-    expect(await run('/task:delete 1')).toEqual({ summary: 'Deleted “Ship the release”.' });
+    expect(await run('/task:delete 1')).toEqual({ summary: 'Deleted "Ship the release".' });
     expect(titles(chat)).toEqual(['Unrelated', 'Also unrelated']);
 
-    expect(await run('/task:delete "Also unrelated"')).toEqual({ summary: 'Deleted “Also unrelated”.' });
+    expect(await run('/task:delete "Also unrelated"')).toEqual({ summary: 'Deleted "Also unrelated".' });
     expect(titles(chat)).toEqual(['Unrelated']);
   });
 
@@ -71,7 +71,7 @@ describe('task slash commands', () => {
     await db.flush();
 
     // The child is swept with the parent, so naming both must not report it twice.
-    expect(await run('/task:delete 1 2')).toEqual({ summary: 'Deleted “Parent”.' });
+    expect(await run('/task:delete 1 2')).toEqual({ summary: 'Deleted "Parent".' });
     expect(titles(chat)).toEqual([]);
   });
 
@@ -81,12 +81,12 @@ describe('task slash commands', () => {
     Chat.addTask(db, chat, 'Still here');
     const gone = Chat.addTask(db, chat, 'Removed behind the array');
     await db.flush();
-    // Removed without sweeping the array, so its entry can no longer resolve — `load` would throw
+    // Removed without sweeping the array, so its entry can no longer resolve - `load` would throw
     // and take the whole command with it.
     db.remove(gone);
     await db.flush();
 
-    expect(await run('/task:delete 1')).toEqual({ summary: 'Deleted “Still here”.' });
+    expect(await run('/task:delete 1')).toEqual({ summary: 'Deleted "Still here".' });
   });
 
   test('/task:delete reports an unmatched selector rather than deleting anything', async ({ expect }) => {

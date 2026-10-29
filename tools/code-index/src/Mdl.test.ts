@@ -78,7 +78,7 @@ scenario T-1: Store
 \`\`\`mdl
 test QA-1: Round trip
   automated:
-    - composer-e2e:basic.spec.ts#Basic tests › create document
+    - composer-e2e:basic.spec.ts#Basic tests > create document
   steps:
     - name: Create
       invoke: [op:create] { name: "x" }   # the agent path
@@ -182,7 +182,7 @@ describe('Mdl', () => {
     expect(byId('T-1')?.mentions).toEqual(['putDocument']);
     expect(flat(byId('QA-1')?.fields ?? [])).toEqual([
       'automated=',
-      'automated.0=composer-e2e:basic.spec.ts#Basic tests › create document',
+      'automated.0=composer-e2e:basic.spec.ts#Basic tests > create document',
       'steps=',
       'steps.0=',
       'steps.0.name=Create',
@@ -197,7 +197,7 @@ describe('Mdl', () => {
   });
 
   test('a block type that is not a name still yields a legal IRI', () => {
-    // `packages/reflect/deus/lang/core.mdl` documents the grammar with a block headed `<type> …`,
+    // `packages/reflect/deus/lang/core.mdl` documents the grammar with a block headed `<type> ...`,
     // and an unencoded `<` in an IRI is rejected by every N3 parser downstream.
     const document = analyzeMdl({
       root: '/repo',
@@ -266,7 +266,7 @@ describe('Mdl', () => {
       fieldPath: 'automated.0',
       refScope: 'composer-e2e',
       refTarget: 'basic.spec.ts',
-      refFragment: 'Basic tests › create document',
+      refFragment: 'Basic tests > create document',
     });
     const rule = blocks.find((block) => block.blockType === 'rule');
     expect(rule?.hasField[1].hasField?.[0]).toMatchObject({

@@ -9,7 +9,7 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, type EntityId } from '@dxos/keys';
 
-// Type-only imports (erased at runtime — no import cycle); `internal` may depend
+// Type-only imports (erased at runtime - no import cycle); `internal` may depend
 // on the top-level `Obj` / `Type` API at the type level only.
 import type * as Obj from '../../Obj.ts';
 import type * as Type from '../../Type.ts';
@@ -67,12 +67,12 @@ export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _Source
 /**
  * Accepted relation endpoint: an object-kind `Type.Type` entity (slot-backed)
  * or the branded `Obj.Unknown` schema. Source/target are constrained to these
- * — relations only connect object-kind entities.
+ * - relations only connect object-kind entities.
  */
 export type RelationEndpoint = Type.AnyObj | UnknownTypeSchema<any, EntityKind.Object>;
 
 /**
- * Resolves a relation endpoint to the instance type it describes — the source /
+ * Resolves a relation endpoint to the instance type it describes - the source /
  * target instance recorded on the relation's `RelationSourceTargetRefs`.
  */
 export type RelationEndpointInstance<S> =
@@ -85,7 +85,7 @@ export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget 
   /**
    * Override the entity id stamped on the in-memory `Type.Type` value.
    *
-   * Defaults to `EntityId.deterministic(typename, version)` — stable across processes
+   * Defaults to `EntityId.deterministic(typename, version)` - stable across processes
    * and workerd-safe (no `crypto.getRandomValues()` at module-evaluation time).
    */
   id?: EntityId;

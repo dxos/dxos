@@ -22,7 +22,7 @@ import * as TypeBinding from './TypeBinding.ts';
  * output. Filename order is the only dependency mechanism.
  *
  * Two kinds: N3 rule files, and JS passes (`derive`) for conclusions that need a computation rather
- * than a join — the cross-file type binding (`TypeBinding.ts`) and reference resolution
+ * than a join - the cross-file type binding (`TypeBinding.ts`) and reference resolution
  * (`ReferenceResolution.ts`). A pass reads only the file graphs and runs before every rule file, so
  * each rule file sees every pass's graph.
  */
@@ -75,7 +75,7 @@ export const load = (dir: string): Effect.Effect<Reasoner[], ReasonerError> =>
     },
   });
 
-/** A single rules file, named after itself — for `--rules <file>`. */
+/** A single rules file, named after itself - for `--rules <file>`. */
 export const loadFile = (path: string): Effect.Effect<RuleFile[], ReasonerError> =>
   Effect.tryPromise({
     catch: (cause) => new ReasonerError({ message: `Cannot read rules file: ${path}`, cause }),

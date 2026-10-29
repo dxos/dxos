@@ -75,7 +75,7 @@ describe('topics', () => {
         openQuestions,
         actionItems,
       });
-    // Same subject → the two threads cluster into one topic.
+    // Same subject -> the two threads cluster into one topic.
     const [draft] = clusterThreads([
       thread('t1', ['When is the deadline?'], ['Send draft']),
       thread('t2', ['When is the deadline?', 'Who approves?'], ['Review budget']),

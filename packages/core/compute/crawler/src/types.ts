@@ -4,7 +4,7 @@
 
 /**
  * A source-native user (the author of a message). Identified by a stable id (e.g. a Discord
- * user id), never by display name — names collide and change.
+ * user id), never by display name - names collide and change.
  */
 export type User = {
   /** Stable source-native id (e.g. Discord user id / snowflake). */
@@ -33,7 +33,7 @@ export type Message = {
 export type TargetStatus = 'pending' | 'active' | 'done' | 'error';
 
 /**
- * A unit of crawlable work — a channel or a thread sub-channel. The frontier is a persisted stack
+ * A unit of crawlable work - a channel or a thread sub-channel. The frontier is a persisted stack
  * of these; per-target {@link cursor} is the resumable sync point.
  */
 export type Target = {

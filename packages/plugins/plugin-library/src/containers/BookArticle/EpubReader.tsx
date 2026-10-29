@@ -18,7 +18,7 @@ type FoliateView = HTMLElement & {
 };
 
 /**
- * A reading position: `cfi` is foliate's exact anchor; `fraction` (0–1) is the coarse progress;
+ * A reading position: `cfi` is foliate's exact anchor; `fraction` (0-1) is the coarse progress;
  * `current`/`total` are foliate's location counts (recorded for posterity).
  */
 export type ReaderLocation = { fraction: number; cfi?: string; current?: number; total?: number };
@@ -28,7 +28,7 @@ export type EpubReaderProps = {
   title?: string;
   /** Exact position (foliate CFI) to restore on open; preferred over `initialFraction`. */
   initialCfi?: string;
-  /** Fallback position (0–1) to restore when no CFI is available (e.g. an imported percent). */
+  /** Fallback position (0-1) to restore when no CFI is available (e.g. an imported percent). */
   initialFraction?: number;
   /** Called with the reading position as the reader relocates (page turns, navigation). */
   onRelocate?: (location: ReaderLocation) => void;
@@ -38,7 +38,7 @@ export type EpubReaderProps = {
 export type EpubReaderHandle = { goLeft: () => void; goRight: () => void };
 
 // Content stylesheet applied inside the book's iframes (foliate renders nothing until styles + a first
-// page are requested). `color-scheme: light dark` lets the page adapt to the host's dark theme —
+// page are requested). `color-scheme: light dark` lets the page adapt to the host's dark theme -
 // without it the content is invisible against the dark surface.
 const READER_CSS = `
   @namespace epub "http://www.idpf.org/2007/ops";
@@ -49,7 +49,7 @@ const READER_CSS = `
 
 /**
  * Inline EPUB reader backed by foliate-js's `<foliate-view>` web component. foliate-js is a
- * browser-only ESM package, so it is imported lazily (a dynamic import) — this keeps it out of the
+ * browser-only ESM package, so it is imported lazily (a dynamic import) - this keeps it out of the
  * node/SSR bundle and only fetched when a reader is actually shown.
  */
 export const EpubReader = forwardRef<EpubReaderHandle, EpubReaderProps>(

@@ -94,22 +94,22 @@ describe('useIsSurfaceAvailable typing', () => {
   // These tests double as static assertions: the `@ts-expect-error` comments
   // fail to compile if the surrounding expression typechecks, so they verify
   // the typed overload narrows `data` to the token's declared contract. The
-  // hook is never invoked — only its return type is used to type-check calls.
+  // hook is never invoked - only its return type is used to type-check calls.
   const sectionToken = Role.make<{ attendableId: string; subject: string }>('org.dxos.test.role.section');
   const isSurfaceAvailable = (() => false) as ReturnType<typeof useIsSurfaceAvailable>;
 
   test('typed overload accepts data matching the token contract', () => {
-    // No error — data has all required fields.
+    // No error - data has all required fields.
     isSurfaceAvailable({ type: sectionToken, data: { attendableId: 'id', subject: 'x' } });
   });
 
   test('typed overload rejects data missing required fields', () => {
-    // @ts-expect-error — `data` is missing `attendableId` required by the token.
+    // @ts-expect-error - `data` is missing `attendableId` required by the token.
     isSurfaceAvailable({ type: sectionToken, data: { subject: 'x' } });
   });
 
   test('typed overload rejects data with wrong field type', () => {
-    // @ts-expect-error — `attendableId` must be a string, not a number.
+    // @ts-expect-error - `attendableId` must be a string, not a number.
     isSurfaceAvailable({ type: sectionToken, data: { attendableId: 123, subject: 'x' } });
   });
 });

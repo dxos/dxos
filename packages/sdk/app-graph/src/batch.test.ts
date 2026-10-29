@@ -21,7 +21,7 @@ const label = (registry: Registry.AtomRegistry, graph: Graph.Graph, id: string) 
  * `addNodes` merges onto the node already in the graph, and the builder applies a whole flush inside
  * one {@link Graph.batch}, which bumps the model's version once at the end. Reading the node back
  * through its atom inside that batch yields the value from before it, so a second write in the same
- * flush would merge onto — and undo — the first.
+ * flush would merge onto - and undo - the first.
  */
 describe('writes read the graph as of the current mutation', () => {
   test('a second write in the same batch does not undo the first', () => {
@@ -60,7 +60,7 @@ describe('writes read the graph as of the current mutation', () => {
 });
 
 /**
- * A relation read before its node exists is deferred, and applied when the node arrives — which
+ * A relation read before its node exists is deferred, and applied when the node arrives - which
  * happens inside the flush batch. The connector subscribed at that moment reads the node back
  * through its atom, so it must see the node the batch just wrote.
  */

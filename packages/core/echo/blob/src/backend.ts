@@ -22,8 +22,8 @@ export interface BlobPutResponse {
 /**
  * Moves bytes to and from a content-addressed store, keyed by lowercase hex digest.
  *
- * Declared as its own interface so a backend can be built from anything that can move bytes — the
- * hosted service, a local cache, a test double — rather than from a client class. `EdgeHttpClient`
+ * Declared as its own interface so a backend can be built from anything that can move bytes - the
+ * hosted service, a local cache, a test double - rather than from a client class. `EdgeHttpClient`
  * has 33 public methods spanning identity, queues, functions, workflows and the plugin registry; a
  * blob backend needs these four, and taking the class would drag in the other twenty-nine.
  *
@@ -42,7 +42,7 @@ export interface BlobTransport {
    * Admits bytes already staged by a direct upload, returning the key they landed under.
    *
    * Optional because it is meaningful only for a hosted store: the bytes are moved server-side and
-   * never reach this process, which is the entire reason the path exists — the uploader was an
+   * never reach this process, which is the entire reason the path exists - the uploader was an
    * agent's shell, and routing the file back through the client to hash it would undo the saving.
    */
   finalizeUpload?(uploadId: string): Promise<{ key: string; size: number; contentType?: string }>;
@@ -89,8 +89,8 @@ export interface LocalBlobStore extends BlobStore {
  * Implemented by pluggable blob storage backends and registered on the Hypergraph via
  * `registerBlobBackend`.
  *
- * A backend takes the capabilities it needs rather than a client — see `BlobTransport` for the
- * hosted store and `S3Host` for S3 — so it can be registered in a browser, in a headless worker, or
+ * A backend takes the capabilities it needs rather than a client - see `BlobTransport` for the
+ * hosted store and `S3Host` for S3 - so it can be registered in a browser, in a headless worker, or
  * in a test without a client graph behind it.
  */
 export interface BlobBackend {

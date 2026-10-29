@@ -16,7 +16,7 @@ afterAll(async () => {
     const esbuild = await import('esbuild-wasm');
     await esbuild.stop();
   } catch {
-    // Already stopped, or never initialized — nothing to clean up.
+    // Already stopped, or never initialized - nothing to clean up.
   }
 });
 

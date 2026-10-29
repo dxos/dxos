@@ -86,7 +86,7 @@ describe('McpAuth', () => {
 
   test('refuses to mint over a cleartext transport, before the first request', async ({ expect }) => {
     // The mint response carries the token, so a transport rejected after it has already published
-    // it. Loopback is exempt — that hop never leaves the machine, and is what this suite uses.
+    // it. Loopback is exempt - that hop never leaves the machine, and is what this suite uses.
     const untouched: Seen = {};
     await expect(
       McpAuth.mintApiToken({ edgeUrl: 'http://edge.example.test', identity: identityFor(untouched) }),

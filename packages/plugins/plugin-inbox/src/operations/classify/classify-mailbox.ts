@@ -31,13 +31,13 @@ import * as FeedCursor from '../FeedCursor.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
-/** Categories the model may assign — the canonical mail-category system tags. */
+/** Categories the model may assign - the canonical mail-category system tags. */
 const Category = Schema.Literals(['personal', 'social', 'promotions', 'updates', 'forums']);
 
 const ClassificationResult = Schema.Struct({
   index: Schema.Number.annotate({ description: 'The message number from the input list.' }),
   spam: Schema.Boolean.annotate({
-    description: 'True only for unsolicited, deceptive, or phishing mail — not routine subscribed bulk mail.',
+    description: 'True only for unsolicited, deceptive, or phishing mail - not routine subscribed bulk mail.',
   }),
   // Nullable: models consistently emit `category: null` for spam entries.
   category: Schema.NullOr(Category).pipe(Schema.optional).annotate({
@@ -53,7 +53,7 @@ interface ClassificationPayload extends Schema.Schema.Type<typeof Classification
 
 const decodeResult = Schema.decodeUnknownOption(ClassificationResult);
 
-// Top-level `{…}` spans in free text (best-effort tokenizer for salvage — see `parseExtractPayload`
+// Top-level `{...}` spans in free text (best-effort tokenizer for salvage - see `parseExtractPayload`
 // in pipeline-rdf, which this mirrors).
 const jsonObjectSpans = (raw: string): string[] => {
   const spans: string[] = [];
@@ -107,7 +107,7 @@ const parseClassification = (raw: string): ClassificationPayload => {
 /**
  * Strict structured output first (strong hosted models honor the schema), then a lenient
  * text + JSON-salvage fallback so a schema-non-conforming model (markdown wrapping, prose) still
- * yields verdicts instead of failing the page — the same split `pipeline-rdf`'s extract stage uses.
+ * yields verdicts instead of failing the page - the same split `pipeline-rdf`'s extract stage uses.
  */
 const generateClassification = (prompt: string, useStrict: boolean) =>
   Effect.gen(function* () {
@@ -121,7 +121,7 @@ const generateClassification = (prompt: string, useStrict: boolean) =>
       }
     }
     const response = yield* LanguageModel.generateText({
-      prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"results": [ ... ]} — no prose, no markdown fences.`,
+      prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"results": [ ... ]} - no prose, no markdown fences.`,
     });
     const payload = parseClassification(response.text);
     if (useStrict) {
@@ -140,7 +140,7 @@ const CLASSIFY_PROMPT = trim`
     promotions (marketing / offers), updates (receipts, statements, notifications), forums
     (mailing lists / discussion groups).
 
-  Messages marked [list-mail] carry a List-Unsubscribe header (bulk mail) — that alone does not
+  Messages marked [list-mail] carry a List-Unsubscribe header (bulk mail) - that alone does not
   make them spam. Return a result for every message number, as JSON of the exact form:
   {"results": [{"index": <message number>, "spam": <boolean>, "category": <category or null>}, ...]}
 `;

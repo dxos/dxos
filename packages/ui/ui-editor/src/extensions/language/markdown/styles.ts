@@ -39,8 +39,8 @@ export const formattingStyles = EditorView.theme({
     // hanging indent and lay its own glyph out against a shifted line box.
     textIndent: 0,
     fontVariant: 'tabular-nums',
-    // Anchor to the line top (not the baseline) so the inline-block marker — whose height already
-    // equals the line-height — fills the line box exactly instead of extending it and making a
+    // Anchor to the line top (not the baseline) so the inline-block marker - whose height already
+    // equals the line-height - fills the line box exactly instead of extending it and making a
     // bulleted line taller than a plain one.
     verticalAlign: 'top',
     lineHeight: 'inherit',

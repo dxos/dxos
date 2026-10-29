@@ -44,7 +44,7 @@ export const crawlerLineEffect = StateEffect.define<ScrollToProps>();
 
 /**
  * Start/stop crawling the end of the document.
- * `instant: true` snaps to the bottom each frame (no easing) — used for non-streaming height
+ * `instant: true` snaps to the bottom each frame (no easing) - used for non-streaming height
  * growth (e.g. widgets measuring when a populated thread is first opened); the default eases
  * with the spring for live streaming.
  */
@@ -183,7 +183,7 @@ export const crawler = ({ overScroll = 0 }: CrawlerOptions = {}) => {
       // Spacer below the last text line. Implemented as a real block pseudo-element
       // (rather than `padding-bottom` on `.cm-content`) so it materializes in the
       // scroller's `scrollHeight` regardless of how `padding` is reset by the base
-      // theme or downstream classes — this is what gives auto-scroll its head-room
+      // theme or downstream classes - this is what gives auto-scroll its head-room
       // so the last line stays `overScroll` px above the viewport bottom.
       '.cm-content::after': {
         content: '""',
@@ -203,8 +203,8 @@ export const crawler = ({ overScroll = 0 }: CrawlerOptions = {}) => {
  * Creates a smooth crawler that follows the live bottom of a CodeMirror 6 EditorView.
  *
  * Uses a critically-damped spring: each frame applies a restoring force toward the
- * target and a damping force opposing current velocity. With damping = 2·ω, the
- * system is critically damped — fastest approach without overshoot. The spring
+ * target and a damping force opposing current velocity. With damping = 2·omega, the
+ * system is critically damped - fastest approach without overshoot. The spring
  * naturally sprints when far behind and eases as it approaches, so streaming
  * content is followed tightly without the jerk of explicit accel/decel state.
  *
@@ -212,7 +212,7 @@ export const crawler = ({ overScroll = 0 }: CrawlerOptions = {}) => {
  * constant when requestAnimationFrame is throttled (e.g. low-power mode dropping
  * from 60Hz to 30Hz).
  *
- * @param omega Spring stiffness in rad/s. Higher = snappier follow. ~12–18 feels good.
+ * @param omega Spring stiffness in rad/s. Higher = snappier follow. ~12-18 feels good.
  * @param snapThreshold Snap-to-target distance threshold in px.
  * @param snapVelocity Snap-to-target velocity threshold in px/s.
  */
@@ -257,7 +257,7 @@ export function createCrawler(view: EditorView, omega = 5, snapThreshold = 5, sn
       return;
     }
 
-    // Critically-damped spring: a = ω²·delta − 2ω·v.
+    // Critically-damped spring: a = omega²·delta - 2omega·v.
     const accel = omega * omega * delta - 2 * omega * velocity;
     velocity += accel * dt;
     currentTop += velocity * dt;

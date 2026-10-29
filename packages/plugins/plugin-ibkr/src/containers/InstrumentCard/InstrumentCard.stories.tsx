@@ -15,7 +15,7 @@ import { Ibkr } from '#types';
 import { TRADINGVIEW_SOURCE } from '../../constants.ts';
 import { InstrumentCard } from './InstrumentCard.tsx';
 
-// Fictional instrument only — this is a public repo (never real holdings).
+// Fictional instrument only - this is a public repo (never real holdings).
 const DefaultStory = () => {
   const subject = useMemo(
     () =>

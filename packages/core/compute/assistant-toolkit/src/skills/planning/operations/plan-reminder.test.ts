@@ -110,7 +110,7 @@ const types = [
 //
 // No host process is spawned, so the Tier B enqueue on the continue branch fails with
 // NotSupportedError. That failure is the assertion: it fires exactly when the hook decided to
-// enqueue, and its absence proves it decided not to — observable without reaching into the host's
+// enqueue, and its absence proves it decided not to - observable without reaching into the host's
 // queue, which is where the reminder would otherwise land.
 const layerDeciding = (decision: string) =>
   AssistantTestLayerWithTriggers({

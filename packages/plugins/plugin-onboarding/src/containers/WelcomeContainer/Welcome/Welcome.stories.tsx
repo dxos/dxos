@@ -82,7 +82,7 @@ export const EmailPrimary: Story = {
 };
 
 /**
- * The iOS app's restricted screen: passkey login only — no sign-up tab and no alternative login
+ * The iOS app's restricted screen: passkey login only - no sign-up tab and no alternative login
  * methods. `onEmailLogin` is explicitly cleared because the story wrapper supplies one by default.
  */
 export const PasskeyOnly: Story = {

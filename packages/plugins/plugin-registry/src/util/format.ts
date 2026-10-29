@@ -11,7 +11,7 @@ import { Doc, FormBuilder } from '@dxos/cli-util';
  * anything (installed, disabled), which is what keeps a plugin's commands, its MCP tools and
  * its share of per-command startup cost off a `dx` invocation without discarding it. `core`
  * pins both on. `failure` is populated when the plugin was meant to be active this run but
- * could not load or activate — without it a plugin simply disappears from `dx --help` and
+ * could not load or activate - without it a plugin simply disappears from `dx --help` and
  * `dx mcp serve`'s tool list with nothing to explain the absence.
  */
 export type FormattedPlugin = {

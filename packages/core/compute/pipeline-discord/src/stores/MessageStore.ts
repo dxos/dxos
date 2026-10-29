@@ -14,7 +14,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 import { StoreError } from '../errors.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message/index.ts';
 
-/** A crawled message persisted outside ECHO — the pipeline's replayable working set. */
+/** A crawled message persisted outside ECHO - the pipeline's replayable working set. */
 export type StoredMessage = {
   /** Source-native message id (snowflake); the primary key. */
   readonly id: string;

@@ -57,11 +57,11 @@ const collectImageUrls = (lead: string | undefined, contentHtml: string): string
 //
 // Defuddle's heuristics already strip nav/header/footer/aside at the page
 // level, but on some sites tag clouds and "related" rails live INSIDE the
-// `<article>`/`<main>` container — defuddle keeps them because they're
+// `<article>`/`<main>` container - defuddle keeps them because they're
 // structurally part of the body. We walk trailing children of the content
 // root and drop anything that scores as chrome (tag-href list, link-only
 // list, recognisable class/id, high link density). Only trailing siblings
-// are touched — the same heading text mid-article is left alone.
+// are touched - the same heading text mid-article is left alone.
 //
 
 /** Substring patterns on class/id that mark a block as chrome. */
@@ -117,7 +117,7 @@ const isTagURLBlock = (el: Element): boolean => {
 
 /**
  * True when the element has no body-content descendants. Body content is
- * paragraphs, blockquotes, code/pre, figures, images, and tables — the
+ * paragraphs, blockquotes, code/pre, figures, images, and tables - the
  * signal that a block contributes article substance, not chrome. (Lists and
  * raw `<a>` tags don't count: tag clouds and link rails are entirely those.)
  */
@@ -125,7 +125,7 @@ const hasNoBodyContent = (el: Element): boolean =>
   el.querySelector('p, blockquote, pre, code, figure, img, table') == null;
 
 const isChromeElement = (el: Element): boolean => {
-  // Strong structural signals — fire alone.
+  // Strong structural signals - fire alone.
   const tag = el.tagName;
   if (tag === 'ASIDE' || tag === 'NAV' || tag === 'FOOTER') {
     return true;
@@ -134,14 +134,14 @@ const isChromeElement = (el: Element): boolean => {
   if (role === 'navigation' || role === 'complementary' || role === 'contentinfo') {
     return true;
   }
-  // Link-only list is purely structural and self-contained — safe.
+  // Link-only list is purely structural and self-contained - safe.
   if (isLinkOnlyList(el)) {
     return true;
   }
   // Tag-href ratio AND class-hint can both fire on a wrapper that *contains*
   // a tag rail nested deep among real article paragraphs (the rail's links
   // skew the container's link counts above threshold). Only treat as chrome
-  // when the element has no body-content descendants — i.e. it's structurally
+  // when the element has no body-content descendants - i.e. it's structurally
   // a link rail itself, not a body wrapper that happens to nest one.
   if (!hasNoBodyContent(el)) {
     return false;
@@ -171,7 +171,7 @@ const findContentRoot = (doc: Document): Element | null =>
  *     (`tag`, `topic`, `related`, `comments`, `share`, `widget`, `sidebar`,
  *      `footer`, `recommend`, etc.), AND
  *   - it has no body-content descendants (paragraphs, blockquotes, figures,
- *     tables) — i.e. it's a self-contained widget, not an article wrapper
+ *     tables) - i.e. it's a self-contained widget, not an article wrapper
  *     that happens to share a keyword.
  * Plus elements that are structurally just a list of links (tag clouds,
  * "related" rails) regardless of class.

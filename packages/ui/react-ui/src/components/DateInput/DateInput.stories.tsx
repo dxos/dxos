@@ -103,7 +103,7 @@ const openCalendar = async (root: HTMLElement, testId: string) => {
 };
 
 /**
- * Waits until the calendar hangs 0–3px below the row with its end at the row's (and so its trigger's) end, and returns
+ * Waits until the calendar hangs 0-3px below the row with its end at the row's (and so its trigger's) end, and returns
  * its width.
  */
 const expectEndAnchored = async (row: HTMLElement, calendar: HTMLElement) => {

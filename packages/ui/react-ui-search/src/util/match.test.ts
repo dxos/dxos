@@ -21,20 +21,20 @@ describe('buildSnippet', () => {
   test('falls back to the head of text with a trailing ellipsis when there is no match', () => {
     const text = 'a'.repeat(200);
     const snippet = buildSnippet(text, 'xyz', { maxLength: 160 });
-    expect(snippet).toBe(`${'a'.repeat(160)}…`);
+    expect(snippet).toBe(`${'a'.repeat(160)}\u2026`);
   });
 
   test('falls back to the head of text when the query is empty', () => {
     const text = 'a'.repeat(200);
-    expect(buildSnippet(text, '', { maxLength: 160 })).toBe(`${'a'.repeat(160)}…`);
-    expect(buildSnippet(text, '   ', { maxLength: 160 })).toBe(`${'a'.repeat(160)}…`);
+    expect(buildSnippet(text, '', { maxLength: 160 })).toBe(`${'a'.repeat(160)}\u2026`);
+    expect(buildSnippet(text, '   ', { maxLength: 160 })).toBe(`${'a'.repeat(160)}\u2026`);
   });
 
   test('centres a window on the first match, with ellipses on both sides', () => {
     const text = `${'x'.repeat(100)}TARGET${'y'.repeat(100)}`;
     const snippet = buildSnippet(text, 'target', { maxLength: 40 });
-    expect(snippet.startsWith('…')).toBe(true);
-    expect(snippet.endsWith('…')).toBe(true);
+    expect(snippet.startsWith('\u2026')).toBe(true);
+    expect(snippet.endsWith('\u2026')).toBe(true);
     expect(snippet).toContain('TARGET');
     // The window is centred: roughly as much context before as after the match.
     const inner = snippet.slice(1, -1);
@@ -47,16 +47,16 @@ describe('buildSnippet', () => {
   test('omits the leading ellipsis when the match window starts at the beginning of the text', () => {
     const text = `TARGET${'y'.repeat(200)}`;
     const snippet = buildSnippet(text, 'target', { maxLength: 40 });
-    expect(snippet.startsWith('…')).toBe(false);
-    expect(snippet.endsWith('…')).toBe(true);
+    expect(snippet.startsWith('\u2026')).toBe(false);
+    expect(snippet.endsWith('\u2026')).toBe(true);
     expect(snippet).toContain('TARGET');
   });
 
   test('omits the trailing ellipsis when the match window reaches the end of the text', () => {
     const text = `${'y'.repeat(200)}TARGET`;
     const snippet = buildSnippet(text, 'target', { maxLength: 40 });
-    expect(snippet.startsWith('…')).toBe(true);
-    expect(snippet.endsWith('…')).toBe(false);
+    expect(snippet.startsWith('\u2026')).toBe(true);
+    expect(snippet.endsWith('\u2026')).toBe(false);
     expect(snippet).toContain('TARGET');
   });
 

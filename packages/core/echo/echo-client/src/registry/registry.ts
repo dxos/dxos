@@ -20,9 +20,9 @@ import { QueryResultCache } from '../query/index.ts';
  *
  * All entities (objects, relations, and type-definition entities) are stored in the primary
  * `#entitiesById` map keyed by their (bare) entity id. They are additionally indexed in the
- * secondary `#entitiesByUri` map under every URI that addresses them — a type entity by its
+ * secondary `#entitiesByUri` map under every URI that addresses them - a type entity by its
  * typename DXN (or, when persisted, its identifier EID), and a keyed entity (one carrying a
- * `key` in its meta — e.g. operations, skills) by its `dxn:<key>[:<version>]`. Types and
+ * `key` in its meta - e.g. operations, skills) by its `dxn:<key>[:<version>]`. Types and
  * non-type entities are indexed uniformly, so {@link Registry.Registry.getByURI} resolves by URI
  * in O(1) without separate per-kind indexes.
  */
@@ -32,12 +32,12 @@ export class RegistryImpl implements Registry.Registry {
   readonly #changed = new Event<void>();
 
   /**
-   * Primary index: (bare) entity id → entity. Defines membership and identity.
+   * Primary index: (bare) entity id -> entity. Defines membership and identity.
    */
   readonly #entitiesById: Map<string, Entity.Unknown> = new Map();
 
   /**
-   * Secondary index: addressing URI → entity. A single entity may be reachable under multiple
+   * Secondary index: addressing URI -> entity. A single entity may be reachable under multiple
    * URIs (e.g. a keyed entity under both its versioned and unversioned key DXN, or a persisted
    * type under both its typename DXN and identifier EID).
    */
@@ -263,7 +263,7 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * - `select` clauses applied to plain {@link QueryAST.Filter} nodes (object, key, tag, props, etc.).
  * - Boolean combinators (`and`, `or`, `not`) within filters.
  * - `limit` clauses.
- * - `from` and `options` clauses — unwrapped; scope is ignored (a direct registry query always
+ * - `from` and `options` clauses - unwrapped; scope is ignored (a direct registry query always
  *   targets the registry's own entities).
  *
  * Full-text filters evaluate in memory as case-insensitive all-terms containment, not ranked FTS.

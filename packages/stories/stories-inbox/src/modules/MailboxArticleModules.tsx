@@ -40,7 +40,7 @@ const feedQuery = (feed: Obj.Unknown | undefined) =>
     : Query.select(Filter.nothing());
 
 /**
- * Summaries are immutable annotations on a second feed, keyed by `parentMessage` — surfaced here
+ * Summaries are immutable annotations on a second feed, keyed by `parentMessage` - surfaced here
  * because they are not on the message and would otherwise be invisible in the story.
  */
 const useAnnotations = (db: Database.Database | undefined, mailbox: Mailbox.Mailbox | undefined) => {
@@ -64,7 +64,7 @@ const useMailboxSelection = () => {
 };
 
 /**
- * Every content block that belongs to a message — its own, plus the blocks of the annotations
+ * Every content block that belongs to a message - its own, plus the blocks of the annotations
  * derived from it. Summaries are `Text` blocks with `disposition: 'summary'` living on a second
  * feed, so a view that reads only `message.blocks` never shows them.
  */
@@ -191,7 +191,7 @@ export const ThreadModule = () => {
   );
 };
 
-/** Plain projection of a message — the live proxy carries internals that add noise. */
+/** Plain projection of a message - the live proxy carries internals that add noise. */
 const messageJson = (message: Message.Message, summary?: string) => ({
   id: message.id,
   created: message.created,

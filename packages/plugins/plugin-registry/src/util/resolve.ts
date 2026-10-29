@@ -90,7 +90,7 @@ const resolveDirectory = (locator: string): Effect.Effect<Resolved, PluginInstal
     }
 
     // Only `--dev` on an unbuilt checkout reaches here, where reading the metadata means evaluating
-    // the developer's own config module — the same bar as running the build that would emit a manifest.
+    // the developer's own config module - the same bar as running the build that would emit a manifest.
     const configPath = path.join(directory, 'dx.config.ts');
     const config = yield* Effect.tryPromise(() => import(/* @vite-ignore */ configPath)).pipe(
       Effect.flatMap((mod) => Schema.decodeUnknownEffect(DxConfig)(mod.default)),
@@ -111,7 +111,7 @@ const MANIFEST_TIMEOUT = '30 seconds';
  * Resolves one manifest-declared asset against the URL the manifest was served from.
  *
  * The manifest is untrusted and `new URL(asset, base)` ignores the base for anything absolute, so
- * an asset is confined here to the same origin as its manifest and to a path at or below it —
+ * an asset is confined here to the same origin as its manifest and to a path at or below it -
  * which is what a published bundle looks like anyway.
  */
 const resolveAsset = (asset: string, manifestUrl: string): Effect.Effect<PluginAsset, PluginInstallError> =>
@@ -133,7 +133,7 @@ const resolveAsset = (asset: string, manifestUrl: string): Effect.Effect<PluginA
       return yield* reject(`Plugin asset resolves above its manifest: ${asset}`);
     }
     // Decoded because the path becomes a filename, then segment-checked because percent-encoding
-    // hides traversal from `URL` — `..%5Cx` survives as one path-looking segment.
+    // hides traversal from `URL` - `..%5Cx` survives as one path-looking segment.
     const relative = yield* Effect.try(() => decodeURIComponent(url.pathname.slice(directory.length))).pipe(
       Effect.catch(() => reject(`Plugin asset path is not decodable: ${asset}`)),
     );
@@ -196,11 +196,11 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
  * The plugin's entry module is never imported here: its metadata comes from a manifest, which is
  * what lets install stay a fetch-and-record step with `enable` as the first execution of plugin
  * code. The one exception is `--dev` against a checkout with no built manifest, which reads that
- * directory's `dx.config.ts` — see {@link resolveDirectory}.
+ * directory's `dx.config.ts` - see {@link resolveDirectory}.
  *
  * Two of the four locator/mode combinations are refused with a message rather than half-built:
- * both are expressible in this command's shape — which is why `--dev` is a flag and not a second
- * verb — but neither has a consumer yet.
+ * both are expressible in this command's shape - which is why `--dev` is a flag and not a second
+ * verb - but neither has a consumer yet.
  */
 export const resolveLocator = (
   locator: string,

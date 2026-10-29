@@ -6,12 +6,12 @@
 // SPIKE. The layout template model: a plain, serializable tree that names kinds from
 // `docs/ONTOLOGY.md` and nothing else.
 //
-// This file must never import a UI framework — that constraint is the experiment (ONTOLOGY R-6,
+// This file must never import a UI framework - that constraint is the experiment (ONTOLOGY R-6,
 // R-13). If it ever needs React, Solid, or the DOM, the model has leaked and the result is
 // negative.
 //
 
-/** Kind tags. Deliberately a subset of the ontology's 17 — see the spike's scope. */
+/** Kind tags. Deliberately a subset of the ontology's 17 - see the spike's scope. */
 export type Tag =
   | 'container'
   | 'layout'
@@ -53,7 +53,7 @@ export const TAGS: readonly Tag[] = [
 
 /**
  * A read binding. `path` is resolved lexically against declared names only: the first segment
- * must be a `let` slot in an enclosing scope, a root `var` input, or a `use` alias — there is no
+ * must be a `let` slot in an enclosing scope, a root `var` input, or a `use` alias - there is no
  * fall-through to an ambient context object. `item` binds against the current element inside a
  * `collection`.
  */
@@ -61,7 +61,7 @@ export type Binding = { readonly from: 'state' | 'item'; readonly path: readonly
 
 /**
  * One node. `props` are static aspects (closed enums, validated); `data` are read bindings;
- * `events` map an emitted event name to an operation key — the single outbound edge (R-3).
+ * `events` map an emitted event name to an operation key - the single outbound edge (R-3).
  */
 export type Node = {
   readonly tag: Tag;
@@ -72,7 +72,7 @@ export type Node = {
 };
 
 /**
- * A template, parameterized by the type of the state it binds to (R-1). The parameter is phantom —
+ * A template, parameterized by the type of the state it binds to (R-1). The parameter is phantom -
  * it exists to make `render(template, state)` reject a mismatched state at compile time, and to
  * type the path builder that produced the bindings.
  */
@@ -131,25 +131,25 @@ export type ScopeFrame = {
   readonly id: string;
   /** Publication path: the enclosing scope ids plus this one. */
   readonly path: readonly string[];
-  /** Machine-backed `let` names — the slots operations may write. */
+  /** Machine-backed `let` names - the slots operations may write. */
   readonly slots: readonly string[];
   readonly values: Readonly<Record<string, unknown>>;
 };
 
 /**
  * The current values of one module's contract, materialized for binding. Column 2 (operations)
- * has no read surface — events dispatch it by key. Every export name is present as a key, so a
+ * has no read surface - events dispatch it by key. Every export name is present as a key, so a
  * missing export is distinguishable from a legitimately-absent value.
  */
 export type ModuleView = {
   readonly key: string;
-  /** Column 1: reactive readonly state — export name → current value. */
+  /** Column 1: reactive readonly state - export name -> current value. */
   readonly state: Readonly<Record<string, unknown>>;
-  /** Column 3: capabilities — instance name → the instance's current state (`let from=` binds it). */
+  /** Column 3: capabilities - instance name -> the instance's current state (`let from=` binds it). */
   readonly capabilities: Readonly<Record<string, unknown>>;
   /**
-   * Column 3, live: capability name → the mounted instance's connect surface (event senders).
-   * Reads never come from here — the instance's state flows back through published slots.
+   * Column 3, live: capability name -> the mounted instance's connect surface (event senders).
+   * Reads never come from here - the instance's state flows back through published slots.
    */
   readonly apis?: Readonly<Record<string, unknown>>;
 };
@@ -159,7 +159,7 @@ export type Scope = {
   readonly ui?: Readonly<Record<string, unknown>>;
   readonly item?: unknown;
   /**
-   * Host-supplied values for the root's `var` signature. Keys are the declared input names —
+   * Host-supplied values for the root's `var` signature. Keys are the declared input names -
    * a declared-but-absent optional input resolves to `undefined`; an undeclared key never
    * resolves at all (render narrows the record to the signature).
    */
@@ -168,7 +168,7 @@ export type Scope = {
   readonly modules?: Readonly<Record<string, ModuleView>>;
   /**
    * `use` aliases (built by render from the root's `use` children). A key mapped to `undefined`
-   * is a declared alias whose module is missing — resolving through it is an inline error, not
+   * is a declared alias whose module is missing - resolving through it is an inline error, not
    * silence.
    */
   readonly aliases?: Readonly<Record<string, ModuleView | undefined>>;
@@ -178,7 +178,7 @@ export type Scope = {
 
 /**
  * A binding that reached an undeclared or unresolvable name at render time. Statically-knowable
- * failures are caught at parse ({@link checkBindings}); this class covers the rest — and a
+ * failures are caught at parse ({@link checkBindings}); this class covers the rest - and a
  * renderer surfaces it inline rather than rendering as though the data were absent (R-8).
  */
 export class BindingResolutionError extends Error {
@@ -193,9 +193,9 @@ export class BindingResolutionError extends Error {
 
 /**
  * Walk a binding against a scope. The first segment of a state binding must resolve to a declared
- * name — a `let` slot in an enclosing frame; anything else throws {@link BindingResolutionError}
+ * name - a `let` slot in an enclosing frame; anything else throws {@link BindingResolutionError}
  * (no fall-through to an ambient context object). A path that walks off a resolved value yields
- * `undefined` — legitimate absence, handled structurally by `show` (R-2).
+ * `undefined` - legitimate absence, handled structurally by `show` (R-2).
  */
 export const resolve = (binding: Binding, scope: Scope): unknown => {
   let value: any;
@@ -266,7 +266,7 @@ export class TemplateValidationError extends Error {
 
 /**
  * Recursively validate a node tree: every tag must be in the closed set, every event value must
- * name an operation key, and the structural constructs must be well-formed — `let` declares
+ * name an operation key, and the structural constructs must be well-formed - `let` declares
  * `name` plus `machine` and lives under an element with `id`; `show`
  * requires `when`; `switch` requires `on` and only `match` children. Throws
  * {@link TemplateValidationError} with the offending node's path.
@@ -287,7 +287,7 @@ export const validate = (node: Node, at = 'root'): void => {
         throw new TemplateValidationError(`'let' requires a name`, at);
       }
       // The ladder: rung 1 is a literal initial value, rung 2 a machine-backed slot, rung 3 a
-      // module-provided capability — the backing escalates in place, so exactly one must be named.
+      // module-provided capability - the backing escalates in place, so exactly one must be named.
       const backings = ['initial', 'machine', 'from'].filter((key) => node.props && key in node.props);
       if (backings.length !== 1) {
         throw new TemplateValidationError(`'let' requires exactly one of initial, machine, or from`, at);
@@ -302,7 +302,7 @@ export const validate = (node: Node, at = 'root'): void => {
     }
     case 'var': {
       // The template signature: a typed, host-supplied input (registry schema key), with
-      // cardinality/optionality explicit — inputs are required or optional, never defaulted.
+      // cardinality/optionality explicit - inputs are required or optional, never defaulted.
       if (typeof node.props?.name !== 'string') {
         throw new TemplateValidationError(`'var' requires a name`, at);
       }
@@ -317,7 +317,7 @@ export const validate = (node: Node, at = 'root'): void => {
       break;
     }
     case 'use': {
-      // The module import: a registry module key bound to a local alias — bindings then read
+      // The module import: a registry module key bound to a local alias - bindings then read
       // `<alias>.<export>`, and nothing resolves without the alias.
       if (typeof node.props?.module !== 'string') {
         throw new TemplateValidationError(`'use' requires a module`, at);
@@ -367,13 +367,13 @@ const letNames = (node: Node): string[] =>
     child.tag === 'let' && typeof child.props?.name === 'string' ? [child.props.name] : [],
   );
 
-/** Input names a root's direct `var` children declare — the template's signature. */
+/** Input names a root's direct `var` children declare - the template's signature. */
 export const varNames = (root: Node): string[] =>
   (root.children ?? []).flatMap((child) =>
     child.tag === 'var' && typeof child.props?.name === 'string' ? [child.props.name] : [],
   );
 
-/** Module aliases a root's direct `use` children declare, alias → module key. */
+/** Module aliases a root's direct `use` children declare, alias -> module key. */
 export const useAliases = (root: Node): Record<string, string> => {
   const aliases: Record<string, string> = {};
   for (const child of root.children ?? []) {
@@ -386,7 +386,7 @@ export const useAliases = (root: Node): Record<string, string> => {
 
 /**
  * Full-tree closed-resolution check: every state binding's first path segment must be a declared
- * name — a `let` slot in an enclosing scope, a root `var` input, or a root `use` alias.
+ * name - a `let` slot in an enclosing scope, a root `var` input, or a root `use` alias.
  * Declaration and use are both in the document, so an undeclared name is a parse-time error,
  * never a silent `undefined` at render (R-8). What a module actually exports is checked later,
  * against the registry (registration/mount).

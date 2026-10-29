@@ -13,7 +13,7 @@ import { TRIP_SKILL_KEY } from '../skills/keys.ts';
 import * as Segment from './Segment.ts';
 
 /**
- * Itinerary container — ordered list of segment Refs. Each Segment is a
+ * Itinerary container - ordered list of segment Refs. Each Segment is a
  * standalone ECHO object whose parent is the Trip (set via Obj.setParent).
  * Tags use Obj.getMeta(trip).tags (no tags field in schema).
  */
@@ -61,7 +61,7 @@ export const removeSegment = (trip: Trip, segmentId: string): void => {
 /**
  * Resolves a trip's segment refs to the currently-loaded Segment objects,
  * sorted ascending by primary (departure) date; undated segments sort last
- * (stable by original order). This is the canonical segment order — used for
+ * (stable by original order). This is the canonical segment order - used for
  * both display (SegmentStack) and keyboard navigation, so they stay in sync.
  * Refs whose target is not yet loaded are skipped.
  */

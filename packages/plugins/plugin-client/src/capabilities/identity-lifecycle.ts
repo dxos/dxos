@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 
 import { ClientCapabilities, ClientEvents } from '#types';
 
-/** The deck's workspace before any space is chosen — where a cold boot starts. */
+/** The deck's workspace before any space is chosen - where a cold boot starts. */
 const DEFAULT_WORKSPACE = 'default';
 
 /** Resolves once none of `spaceIds` is in the client's space list, which trails the deletion. */
@@ -29,11 +29,11 @@ const awaitSpacesGone = (client: Client, spaceIds: readonly string[]): Effect.Ef
 
 /**
  * Carries the app across an identity deleted in place (`client.halo.deleteIdentity()`), which keeps
- * the client — and so the whole session — alive.
+ * the client - and so the whole session - alive.
  *
  * On deletion the app is put back where a boot with no identity leaves it: the deck on the default
  * workspace and the one-shot `SpacesAvailable` wave re-run against a space list without the deleted
- * identity's spaces, so whichever identity arrives next — created, joined or recovered — is picked up
+ * identity's spaces, so whichever identity arrives next - created, joined or recovered - is picked up
  * exactly as on a cold start.
  */
 export default Capability.makeModule(

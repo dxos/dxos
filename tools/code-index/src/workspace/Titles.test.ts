@@ -46,25 +46,25 @@ describe('Titles', () => {
     const title = Titles.fallback(
       'Show me every operation that writes to a space and draw how they reach the database layer',
     );
-    expect(title).toBe('Show me every operation that writes…');
+    expect(title).toBe('Show me every operation that writes...');
     expect(title.length).toBeLessThanOrEqual(49);
   });
 
   test('only the first sentence counts, and markdown, code and links are dropped', ({ expect }) => {
     expect(
       Titles.fallback('## Explain `Fold.apply` in [Fold](https://example.com/fold). Then **draw** it.\n```ts\nx\n```'),
-    ).toBe('Explain Fold.apply in Fold…');
+    ).toBe('Explain Fold.apply in Fold...');
   });
 
   test('a prompt with no words keeps the default title, and one huge word is cut', ({ expect }) => {
     expect(Titles.fallback('   \n ``` ```  ')).toBe(Titles.UNTITLED);
     const word = 'a'.repeat(80);
-    expect(Titles.fallback(word)).toBe(`A${'a'.repeat(46)}…`);
+    expect(Titles.fallback(word)).toBe(`A${'a'.repeat(46)}...`);
   });
 
   test('a model reply is unquoted, unlabelled and stripped of trailing punctuation', ({ expect }) => {
     expect(Titles.clean('Title: "Echo package dependents."')).toBe('Echo package dependents');
-    expect(Titles.clean('\n  space write operations\nBecause you asked about…')).toBe('Space write operations');
+    expect(Titles.clean('\n  space write operations\nBecause you asked about...')).toBe('Space write operations');
   });
 
   test('a reply that is not a title is refused', ({ expect }) => {

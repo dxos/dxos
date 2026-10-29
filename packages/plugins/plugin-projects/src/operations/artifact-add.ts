@@ -11,7 +11,7 @@ import { Task } from '@dxos/types';
 
 import { ProjectOperation } from '#types';
 
-/** Compare refs by entity id when possible — space-qualified and local URIs may name the same object. */
+/** Compare refs by entity id when possible - space-qualified and local URIs may name the same object. */
 const refKey = (ref: Ref.Ref<Obj.Unknown>): string => {
   const eid = EID.tryParse(ref.uri);
   return (eid && EID.getEntityId(eid)) ?? ref.uri;

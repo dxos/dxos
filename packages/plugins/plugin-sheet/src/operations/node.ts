@@ -9,7 +9,7 @@ import { SheetOperation } from '#types';
 
 // The operations a headless entry (`SheetPlugin.node`, and workerd via the `#operations` condition)
 // can serve, and only those. `scroll-to-anchor` drives a live
-// editor view, so it is browser-only — and `OperationHandlerSet.lazy` defers the import at runtime
+// editor view, so it is browser-only - and `OperationHandlerSet.lazy` defers the import at runtime
 // without stopping a bundler walking into the React surface behind it.
 
 export const SheetOperationHandlerSet = OperationHandlerSet.lazy([

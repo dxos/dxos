@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { fixtureExists, generateText, parseJsonObject, selectVariants } from '../testing/harness/index.ts';
 
 // Smoke + baseline for the model ladder. For each selected variant: warms the model once (a cold
-// Ollama load is a 10–30s VRAM spike that would poison timing), then times a single structured call
+// Ollama load is a 10-30s VRAM spike that would poison timing), then times a single structured call
 // and checks the JSON parses. Validates that every catalog DXN RESOLVES (an unresolved model degrades
 // to empty output, silently) and gives the first latency + reliability numbers per tier.
 //
@@ -55,7 +55,7 @@ describe.skipIf(!fixtureExists())('model ladder probe', () => {
       }
       // eslint-disable-next-line no-console
       console.table(rows);
-      // Every selected model must resolve (non-empty) — an unresolved DXN is a silent failure.
+      // Every selected model must resolve (non-empty) - an unresolved DXN is a silent failure.
       const unresolved = rows.filter((row) => !row.resolved).map((row) => row.model);
       expect(unresolved, `unresolved models: ${unresolved.join(', ')}`).toEqual([]);
     },

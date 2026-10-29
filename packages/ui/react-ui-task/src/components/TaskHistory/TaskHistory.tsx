@@ -18,7 +18,7 @@ import { UNSET_ICON } from '../../util/status-icons.ts';
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
 
 /**
- * The glyph per event, keyed by the `Task.Event` the entry records — a table rather than a ternary,
+ * The glyph per event, keyed by the `Task.Event` the entry records - a table rather than a ternary,
  * so a new event kind is one line here instead of a condition to find in the markup.
  */
 type EventIcon = { icon: string; hue: string };
@@ -58,8 +58,8 @@ type HistoryItem = {
 };
 
 /**
- * The log as the reader sees it, newest first. A question is an item only once answered — an open
- * one is waiting on the reader and belongs with the task's open questions, not in its record — and
+ * The log as the reader sees it, newest first. A question is an item only once answered - an open
+ * one is waiting on the reader and belongs with the task's open questions, not in its record - and
  * then question and answer are one item, dated when the exchange closed.
  */
 const buildItems = (entries: readonly Task.HistoryEntry[], limit: number): HistoryItem[] => {
@@ -103,7 +103,7 @@ const buildItems = (entries: readonly Task.HistoryEntry[], limit: number): Histo
  * A task's activity log, newest first.
  *
  * Each entry already carries the human-readable record of what happened, so a line is that sentence
- * plus when it happened — the pane adds no interpretation of its own. An answered question reads as
+ * plus when it happened - the pane adds no interpretation of its own. An answered question reads as
  * one line with its answer under it; an open one is not part of the record yet.
  */
 export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps) => {
@@ -116,7 +116,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
 
   return (
     // The log spans the host Column's tracks and re-exposes them, so each entry's glyph sits in the
-    // gutter with the pane's other glyphs and its text in the content track with the pane's text —
+    // gutter with the pane's other glyphs and its text in the content track with the pane's text -
     // rather than in a second set of columns that happens to look similar.
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
     <Layout.Container
@@ -156,7 +156,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
                 )}
               </span>
               {/* Compact and live, because the log is read as "what has been happening" rather than
-                as a record to cite — and the record is a hover away, in the tooltip. */}
+                as a record to cite - and the record is a hover away, in the tooltip. */}
               <Typography.Timestamp date={item.date} classNames='shrink-0 text-right' />
             </div>
           </div>

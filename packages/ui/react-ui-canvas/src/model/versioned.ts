@@ -119,7 +119,7 @@ export const unionPaths = (left: readonly VersionPath[], right: readonly Version
 /**
  * Moves each of `paths` from its value at `from` to its value at `to` (VIEWS.md §8.3 Q4, §8.4.2): a path still at its
  * `from` value is written, one already at `to` is left, and one someone else has changed since is skipped, so undo
- * (after → before) and redo (before → after) never overwrite a concurrent edit.
+ * (after -> before) and redo (before -> after) never overwrite a concurrent edit.
  */
 export const patchSource = <Heads>(
   source: VersionedSource<Heads>,

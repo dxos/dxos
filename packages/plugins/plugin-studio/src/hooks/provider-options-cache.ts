@@ -35,7 +35,7 @@ const cacheKey = (providerId: string, kind: string, field: string, apiKey?: Reda
 
 /**
  * Loads a provider's options for a request field through a shared, time-bounded cache keyed by
- * provider, kind, field and credential — every article and remount reads one fetch, and a rejected load
+ * provider, kind, field and credential - every article and remount reads one fetch, and a rejected load
  * is evicted so the next read retries rather than caching the failure.
  */
 export const loadProviderOptions = (
@@ -68,7 +68,7 @@ export const loadProviderOptions = (
   return promise;
 };
 
-/** Drops cached lists — all of them, or one provider's (e.g. after its credential changes). */
+/** Drops cached lists - all of them, or one provider's (e.g. after its credential changes). */
 export const invalidateProviderOptions = (providerId?: string): void => {
   if (providerId === undefined) {
     cache.clear();

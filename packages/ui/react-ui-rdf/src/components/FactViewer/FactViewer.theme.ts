@@ -7,7 +7,7 @@ import { tv } from '@dxos/ui-theme';
 /**
  * Tailwind-variants theme for the {@link FactViewer} composite. Consumers call
  * `factViewerTheme.styles()` for the per-slot class functions; each accepts an optional
- * `{ class: … }` override for per-instance merging (mirrors the react-ui-list theme pattern).
+ * `{ class: ... }` override for per-instance merging (mirrors the react-ui-list theme pattern).
  */
 const factViewerStyles = tv({
   slots: {

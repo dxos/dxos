@@ -35,7 +35,7 @@ import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fix
 import { GMAIL_TAG_SOURCE } from '../tags.ts';
 import { GMAIL_SYSTEM_TAGS } from './system-tags.ts';
 
-/** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
+/** {@link seedMailboxBinding} with this provider's identity - the shared fixture defaults to neither. */
 const seedGmailBinding = (
   builder: EchoTestBuilder,
   options: Omit<Parameters<typeof seedMailboxBinding>[1], 'source' | 'connectorId'> = {},
@@ -72,7 +72,7 @@ const maxKey = (dataset: GmailDataset) => Math.max(...dataset.messages.map((mess
 const minKey = (dataset: GmailDataset) => Math.min(...dataset.messages.map((message) => Number(message.internalDate)));
 
 /**
- * Wraps a mock {@link GoogleMailApi} so `getMessage` dies after `n` calls — simulates a mid-run crash
+ * Wraps a mock {@link GoogleMailApi} so `getMessage` dies after `n` calls - simulates a mid-run crash
  * so a test can assert the committed prefix is durable and a following run resumes.
  */
 const withFaultAfterMessages = (n: number, dataset: GmailDataset): Layer.Layer<GoogleMailApi> =>
@@ -92,7 +92,7 @@ const withFaultAfterMessages = (n: number, dataset: GmailDataset): Layer.Layer<G
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
 
 /**
- * Wraps a mock {@link GoogleMailApi} so `getMessage` fails with Gmail's 404 for the given ids — the
+ * Wraps a mock {@link GoogleMailApi} so `getMessage` fails with Gmail's 404 for the given ids - the
  * response for a message deleted between the id being listed (or logged in `history.list`) and the full
  * fetch, which no retry can resolve.
  */
@@ -132,7 +132,7 @@ const countingGmailApi = (dataset: GmailDataset): { layer: Layer.Layer<GoogleMai
   return { layer, fetched };
 };
 
-// Gmail sync driven end-to-end against a real ECHO db + a mock Gmail API — no live account. The whole
+// Gmail sync driven end-to-end against a real ECHO db + a mock Gmail API - no live account. The whole
 // pipeline (fetch, dedup, decode, map, contact/thread extraction, tag application, commit, cursor
 // advance) exercises against generated data.
 describe('runGoogleSync against a mock Gmail API', () => {
@@ -156,7 +156,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const { db, mailbox, binding } = await seedGmailBinding(builder);
 
     // Contact extraction is now an allow-list: an unknown individual is not materialised. These
-    // fixtures generate random senders, so give each domain an Organization — the assertions below
+    // fixtures generate random senders, so give each domain an Organization - the assertions below
     // are about the pipeline wiring contacts through, not about the extraction policy (which has its
     // own tests in `@dxos/extractor-lib`).
     await seedSenderOrganizations(db, dataset);
@@ -184,8 +184,8 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const people = await db.query(Filter.type(Person.Person)).run();
     expect(people.length).toBe(senderEmails.size);
 
-    // Labels: system labels (INBOX/SENT/IMPORTANT) map onto shared canonical tags — UNREAD and other
-    // unmapped system labels are dropped — and custom user labels become provider-scoped tags.
+    // Labels: system labels (INBOX/SENT/IMPORTANT) map onto shared canonical tags - UNREAD and other
+    // unmapped system labels are dropped - and custom user labels become provider-scoped tags.
     const tags = await db.query(Filter.type(Tag.Tag)).run();
     const canonical = new Set(
       dataset.labels.flatMap((label) => {
@@ -224,7 +224,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect((await syncedIdsOf(db, mailbox)).length).toBe(dataset.messages.length);
 
     // Re-run with a counting API. The forward window still *lists* the high-water day's ids, but they
-    // are all already committed, so `skipCommitted` drops them before `getMessage` — nothing downloads.
+    // are all already committed, so `skipCommitted` drops them before `getMessage` - nothing downloads.
     const { layer, fetched } = countingGmailApi(dataset);
     const rerun = await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(
@@ -297,7 +297,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
   });
 
-  // `Pipeline.abortWith` interrupts, so nothing after the pipeline runs — the terminal status has to
+  // `Pipeline.abortWith` interrupts, so nothing after the pipeline runs - the terminal status has to
   // come from the interrupt finalizer. The progress sink suppresses a cancelled run's key until its
   // terminal arrives, so a missing one silently hides every later run's meter.
   test('emits a terminal cancelled status when the run is cancelled mid-sync', async ({ expect }) => {
@@ -387,7 +387,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
     const now = new Date();
-    // Three disjoint date bands (distinct ids via idPrefix), oldest → newest: older, mid, recent.
+    // Three disjoint date bands (distinct ids via idPrefix), oldest -> newest: older, mid, recent.
     const mid = generateGmailDataset({
       count: 10,
       seed: 1,
@@ -416,7 +416,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
 
-    // 1) Initial: no cursor → backward from today down to the 14-day horizon. Only `mid` is in range.
+    // 1) Initial: no cursor -> backward from today down to the 14-day horizon. Only `mid` is in range.
     const r1 = await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding) }).pipe(Effect.provide(googleSyncTestServices(db, mid))),
     );
@@ -435,7 +435,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(recent));
     expect(Number.parseInt(binding.min!, 10)).toBe(lowAfterInitial);
 
-    // 3) Widen syncBackDays to 30 — the horizon moves below `min`, reopening backward. `older` is in
+    // 3) Widen syncBackDays to 30 - the horizon moves below `min`, reopening backward. `older` is in
     // range; `max` stays put (older keys don't exceed it).
     Obj.update(binding, (binding) => {
       if (binding.spec.kind === 'external') {
@@ -475,7 +475,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(Exit.isFailure(exit)).toBe(true);
 
     // The committed page is durable, a contiguous newest suffix (backward walks newest-first); `min` is
-    // the oldest committed key, `max` the newest — no completion (the run errored, not exhausted).
+    // the oldest committed key, `max` the newest - no completion (the run errored, not exhausted).
     const committedAfterFault = await syncedIdsOf(db, mailbox);
     expect(committedAfterFault).toHaveLength(10);
     const sortedDesc = [...dataset.messages].sort(
@@ -486,7 +486,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(Number.parseInt(binding.min!, 10)).toBe(Number(sortedDesc[9].internalDate));
 
     // Recovery: a healthy run resumes the backward half from `min` and picks up nothing new forward
-    // (no new mail arrived) — everything lands exactly once.
+    // (no new mail arrived) - everything lands exactly once.
     await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding) }).pipe(Effect.provide(googleSyncTestServices(db, dataset))),
     );
@@ -533,7 +533,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
   });
 
   test(
-    'capped backfill runs keep every message of a newest day that holds more than two caps — ' +
+    'capped backfill runs keep every message of a newest day that holds more than two caps - ' +
       'regression: the forward re-list of that day pulled `min` past messages no run had committed',
     async ({ expect }) => {
       // Pinned clock with mail up to an hour ago: the newest day holds ~300 messages, three caps' worth.
@@ -570,11 +570,11 @@ describe('runGoogleSync against a mock Gmail API', () => {
   );
 
   test(
-    'capped runs make progress even when a boundary day holds more already-synced messages than the cap — ' +
+    'capped runs make progress even when a boundary day holds more already-synced messages than the cap - ' +
       'regression: the day-granular boundary re-fetch consumed the whole budget and stalled the cursor',
     async ({ expect }) => {
       // Pinned clock so day boundaries are fixed. With `maxMessages` smaller than a single day's count,
-      // every capped run re-enumerates the boundary day's already-synced messages — before the fix that
+      // every capped run re-enumerates the boundary day's already-synced messages - before the fix that
       // consumed the whole per-run budget on dedup-dropped re-fetches, so `min` never advanced and the
       // oldest messages were never reached (permanent loss / infinite re-run).
       const now = new Date('2026-07-16T12:00:00.000Z');
@@ -601,11 +601,11 @@ describe('runGoogleSync against a mock Gmail API', () => {
   );
 
   test(
-    'the newest message is not re-committed across backfill runs once it ages out of the dedup seed — ' +
+    'the newest message is not re-committed across backfill runs once it ages out of the dedup seed - ' +
       'regression: the forward high-boundary re-fetch duplicated it every run',
     async ({ expect }) => {
       // Pinned clock: Gmail's queries are day-granular, so an unpinned `now` shifts the day boundaries
-      // with wall-clock time and can strand a boundary-day message under this small a cap — pin it (like
+      // with wall-clock time and can strand a boundary-day message under this small a cap - pin it (like
       // the boundary-day test above) so the multi-run backfill is deterministic.
       const now = new Date('2026-07-16T12:00:00.000Z');
       const dataset = generateGmailDataset({ count: 30, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
@@ -640,9 +640,9 @@ describe('runGoogleSync against a mock Gmail API', () => {
   test('attachments land as Blobs on the feed with resolvable attachment refs', async ({ expect }) => {
     const end = subDays(new Date(), 3);
     const message = generateGmailDataset({ count: 1, seed: 5, start: subDays(end, 1), end }).messages[0];
-    // These bytes base64url-encode to `-__-` — deliberately containing both `-` and `_`, the character
+    // These bytes base64url-encode to `-__-` - deliberately containing both `-` and `_`, the character
     // class a base64-only encode never exercises, so the byte-equality assertion below proves the
-    // `-`/`_` → `+`/`/` substitution is correct.
+    // `-`/`_` -> `+`/`/` substitution is correct.
     const bytes = new Uint8Array([0xfb, 0xff, 0xfe]);
     // The fixture generates a single-part message (body directly on `payload.body`); once `parts` is
     // present the mapper treats it as multipart, so the plaintext body must move into a part too.
@@ -686,7 +686,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     if (!Obj.instanceOf(Blob.Blob, loadedBlob)) {
       throw new Error('expected the attachment ref to resolve to a Blob');
     }
-    // Round-trips exactly — proves the base64url decode (including the `-`/`_` substitution) is correct.
+    // Round-trips exactly - proves the base64url decode (including the `-`/`_` substitution) is correct.
     const loadedBytes = await Blob.read(loadedBlob).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
     expect(Array.from(loadedBytes)).toEqual(Array.from(bytes));
   });
@@ -699,7 +699,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const end = subDays(new Date(), 3);
     const dataset = generateGmailDataset({ count: 4, seed: 7, start: subDays(end, 2), end });
 
-    // No cursor → backward (initial sync): Gmail's native newest-first order should be preserved.
+    // No cursor -> backward (initial sync): Gmail's native newest-first order should be preserved.
     const backward = await seedGmailBinding(builder);
     await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(backward.binding) }).pipe(
@@ -710,7 +710,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
 
     // Forward (incremental resume): seed a cursor just below the dataset, with `syncBackDays` short
-    // enough that the horizon sits above `min` — so only the forward window is active. Within-chunk
+    // enough that the horizon sits above `min` - so only the forward window is active. Within-chunk
     // order reverses to oldest-first, matching the chunk-level walk direction.
     const forwardCursor = String(minKey(dataset) - 1);
     const forward = await seedGmailBinding(builder, {
@@ -732,12 +732,12 @@ describe('runGoogleSync against a mock Gmail API', () => {
   }) => {
     // More than one `listMessages` page (`GOOGLE_SYNC_CONFIG.listPageSize` = 500) within one date chunk
     // (`dateChunkDays` = 7): reversing page-by-page would be oldest-first only within each page, not
-    // across the chunk — the regression this test guards against.
+    // across the chunk - the regression this test guards against.
     const end = subDays(new Date(), 3);
     const dataset = generateGmailDataset({ count: 510, seed: 13, start: subDays(end, 2), end });
 
     // Backward (initial sync): Gmail's native newest-first order is never reversed, so it's already
-    // globally consistent across pages — asserted here as a regression guard alongside forward.
+    // globally consistent across pages - asserted here as a regression guard alongside forward.
     const backward = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
     await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(backward.binding), maxMessages: 1000 }).pipe(
@@ -764,7 +764,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
     expect(forwardOrder).toHaveLength(510);
     expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
-    // Two full 510-message syncs (backward + forward) — well over the default 15s budget on slower CI runners.
+    // Two full 510-message syncs (backward + forward) - well over the default 15s budget on slower CI runners.
   }, 30_000);
 
   test('GoogleMailSync is marked idempotent for durable-execution retry', ({ expect }) => {
@@ -806,7 +806,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(tokenOf(binding)).toBe('1000');
     expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
 
-    // A new message arrives; the history log advances 1000 → 1001 with it added.
+    // A new message arrives; the history log advances 1000 -> 1001 with it added.
     const arrival = generateGmailDataset({ count: 1, seed: 83, start: subDays(now, 1), end: now, idPrefix: 'new' })
       .messages[0];
     const run2 = {
@@ -1053,9 +1053,9 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
     expect(tokenOf(binding)).toBe('1000');
 
-    // Four label-change steps — the 'Work' label (Label_1) added to four already-synced messages —
-    // chained 1000 → 1004. With a per-run budget of 2 records, the reconcile drains across bounded runs
-    // (`hasMoreDelta` → runAgain), advancing the token to each chunk's last record id; no single run holds
+    // Four label-change steps - the 'Work' label (Label_1) added to four already-synced messages -
+    // chained 1000 -> 1004. With a per-run budget of 2 records, the reconcile drains across bounded runs
+    // (`hasMoreDelta` -> runAgain), advancing the token to each chunk's last record id; no single run holds
     // the whole delta, and each run resolves only its chunk's messages (targeted foreign-key lookup).
     const targets = base.messages.slice(0, 4).map((message) => message.id);
     const dataset = {
@@ -1108,7 +1108,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const base = generateGmailDataset({ count: 5, seed: 84, start: subDays(now, 6), end: subDays(now, 2) });
     const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
 
-    // A prior run left a historyId the server can no longer resolve (evicted past retention → 404).
+    // A prior run left a historyId the server can no longer resolve (evicted past retention -> 404).
     Obj.update(binding, (binding) => {
       if (binding.spec.kind === 'external') {
         binding.spec.token = '1';
@@ -1201,7 +1201,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
-    // Token NOT advanced — a crash before the delta fully drained keeps it at '1000'.
+    // Token NOT advanced - a crash before the delta fully drained keeps it at '1000'.
     expect(tokenOf(binding)).toBe('1000');
 
     // Recovery: the next run re-fetches the whole delta, dedups the committed prefix, finishes clean.
@@ -1277,7 +1277,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(googleSyncTestServices(db, run2))),
     );
 
-    // No new feed message — the retag is an objectless commit unit — and the token advanced.
+    // No new feed message - the retag is an objectless commit unit - and the token advanced.
     expect((await syncedIdsOf(db, mailbox)).length).toBe(before);
     expect(tokenOf(binding)).toBe('2001');
 

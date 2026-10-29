@@ -363,7 +363,7 @@ const topLevelNode = (root: HTMLElement, selector: string) =>
   );
 
 /**
- * Group and Ungroup: ⌘G makes an anonymous Object and one Instance in place of the selection, ⇧⌘G puts its contents
+ * Group and Ungroup: CmdG makes an anonymous Object and one Instance in place of the selection, ShiftCmdG puts its contents
  * back and deletes the definition, and each is one undo step. The fixture has no view node, since an Object cannot
  * contain a View (SPEC.mdl F-9.9).
  */

@@ -88,7 +88,7 @@ const GraphPanel = ({ graph, overlay }: { graph: Atom.Writable<GraphModel>; over
       <div className='text-fg-muted mt-2'>edges</div>
       {value.edges.map((edge) => (
         <div key={edge.id}>
-          {edge.from} <span className='text-fg-subtle'>→</span> {edge.to}
+          {edge.from} <span className='text-fg-subtle'>{'->'}</span> {edge.to}
         </div>
       ))}
       <div className='text-fg-muted mt-2'>overrides</div>

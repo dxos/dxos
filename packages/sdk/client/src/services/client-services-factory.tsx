@@ -30,7 +30,7 @@ export type CreateClientServicesOptions = {
  * The deployment mode is chosen exclusively from `runtime.client.services_mode` (or
  * `runtime.client.remote_source` for a remote services endpoint). If the selected mode requires a
  * worker factory that was not supplied via {@link CreateClientServicesOptions}, this function
- * throws — there is no implicit fallback.
+ * throws - there is no implicit fallback.
  */
 export const createClientServices = async (
   config: Config,
@@ -60,7 +60,7 @@ export const createClientServices = async (
   switch (servicesMode) {
     case Runtime_Client_ServicesMode.HOST: {
       // Derive sqlitePath from dataRoot when not explicitly provided (only meaningful when the
-      // config selects FILE sqlite mode — LocalClientServices ignores sqlitePath otherwise).
+      // config selects FILE sqlite mode - LocalClientServices ignores sqlitePath otherwise).
       const dataRoot = config.values.runtime?.client?.storage?.dataRoot;
       const effectiveSqlitePath = sqlitePath ?? (dataRoot ? `${dataRoot}/sqlite.db` : undefined);
       // Loaded on demand: the in-process host drags the full service/storage stack (sqlite,

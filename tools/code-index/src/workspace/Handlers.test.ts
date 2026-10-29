@@ -25,7 +25,7 @@ import * as Titles from './Titles.ts';
 
 /**
  * The RPC handlers against a real log and store, with a stand-in agent whose turn records the prompt
- * and then runs until interrupted — the shape of a turn the user deletes mid-answer.
+ * and then runs until interrupted - the shape of a turn the user deletes mid-answer.
  */
 
 /** Records the prompt, runs until interrupted, and closes the turn on the way out as the real agent does. */

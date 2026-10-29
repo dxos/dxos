@@ -36,7 +36,7 @@ describe('createStructFieldsFromSchema', () => {
 
   // An LLM-supplied ref URI string must coerce to a valid local EID. Refs nested inside an optional
   // field surface as a `T | undefined` union; the projection must still route them through the
-  // LLM-friendly coercion so a qualified URI does not become a malformed `echo:////…`.
+  // LLM-friendly coercion so a qualified URI does not become a malformed `echo:////...`.
   test('coerces refs passed as qualified URI strings inside an optional array', ({ expect }) => {
     const refs = decodeIn(Schema.Struct({ in: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))) }), [
       `echo://${SPACE}/${OBJECT}`,
@@ -101,7 +101,7 @@ describe('projectFunctionToTool', () => {
   // A provider's strict tool mode requires `additionalProperties` on every object node, and one
   // non-conforming tool rejects the ENTIRE request (all tools are sent together) with
   // "For 'object' type, 'additionalProperties' must be explicitly set to false". v4 emits an empty
-  // struct as `{anyOf: [{type:'object'}, {type:'array'}]}`, whose object branch omits it — so a
+  // struct as `{anyOf: [{type:'object'}, {type:'array'}]}`, whose object branch omits it - so a
   // single parameterless operation would break every agent request.
   test('a parameterless operation emits a schema that satisfies strict mode', ({ expect }) => {
     const Parameterless = Operation.make({
@@ -118,7 +118,7 @@ describe('projectFunctionToTool', () => {
   // `Schema.Void` does not survive the registry round trip: `Operation.serialize` renders it through
   // JSON Schema as `{type: 'null'}` and `deserialize` reads that back as `Schema.Null`, while an
   // operation persisted without an `inputSchema` reads back as `Schema.Unknown`. Neither tag is the
-  // one the operation was authored with, and an unhandled tag threw — failing not just this tool but
+  // one the operation was authored with, and an unhandled tag threw - failing not just this tool but
   // every agent request that offered it, since all tools are sent together.
   for (const [name, input] of [
     ['void', Schema.Void],
@@ -139,7 +139,7 @@ describe('projectFunctionToTool', () => {
     });
   }
 
-  // The projection is the last line of defence, so a genuinely unprojectable input still throws —
+  // The projection is the last line of defence, so a genuinely unprojectable input still throws -
   // `makeToolResolverFromOperations` catches that and drops the single tool.
   test('an input that is neither a struct nor empty still fails', ({ expect }) => {
     expect(() => createStructFieldsFromSchema(Schema.String)).toThrow(/Unsupported schema AST: String/);
@@ -147,7 +147,7 @@ describe('projectFunctionToTool', () => {
 
   // An operation taking arbitrary JSON cannot be described under a provider's strict mode: the value
   // slot emits the empty schema, which Anthropic rejects ("Empty schema ({}) that accepts any JSON
-  // value is not supported"). Strict is therefore off for projected operations — re-enabling it makes
+  // value is not supported"). Strict is therefore off for projected operations - re-enabling it makes
   // every request fail, since all tools are sent together.
   test('an operation taking arbitrary JSON is not advertised as strict', ({ expect }) => {
     const PropertyBag = Operation.make({
@@ -302,7 +302,7 @@ describe('makeToolResolverFromOperations', () => {
     await expect(attempt).rejects.toThrow(/claimed by 2 operations/);
   });
 
-  // A recursive input renders as `$ref: '#/$defs/…'` with the bodies in the document's separate
+  // A recursive input renders as `$ref: '#/$defs/...'` with the bodies in the document's separate
   // `definitions` record. Keeping only the root advertised a reference to nothing -- and a model can
   // still answer correctly by inferring the shape from the prompt, so a passing end-to-end test is no
   // evidence the schema itself resolves.

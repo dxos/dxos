@@ -7,7 +7,7 @@
  * sync (`base`), what it looks like now (`local`), and what the provider says (`remote`), decide what
  * to push and what to pull.
  *
- * Deliberately pure — no ECHO, no provider, no Effect — so it is exhaustively testable without a
+ * Deliberately pure - no ECHO, no provider, no Effect - so it is exhaustively testable without a
  * database, reusable by any container that owns a `TagIndex` (a Calendar's starred events, not just a
  * Mailbox), and indifferent to where `base` came from. That last property is what keeps the
  * Automerge-heads base swappable for a shadow index without touching this file. See
@@ -24,15 +24,15 @@ export type TagChange = {
 };
 
 export type TagDiff = {
-  /** Local changes the provider has not seen — apply at the provider. */
+  /** Local changes the provider has not seen - apply at the provider. */
   readonly push: ReadonlyMap<string, TagChange>;
-  /** Provider changes the tag index has not seen — apply locally. */
+  /** Provider changes the tag index has not seen - apply locally. */
   readonly pull: ReadonlyMap<string, TagChange>;
 };
 
 export type DiffTagsOptions = {
   /**
-   * The tag index as of the last completed sync, or `undefined` when it is unavailable — either a
+   * The tag index as of the last completed sync, or `undefined` when it is unavailable - either a
    * first sync (see {@link firstSync}) or heads that no longer resolve. Without it the diff degrades
    * to the additive reconcile described below.
    */
@@ -40,7 +40,7 @@ export type DiffTagsOptions = {
   readonly local: TagsByMessage;
   readonly remote: TagsByMessage;
   /**
-   * Tag uris the active provider knows — its label map inverted. Anything outside this set is
+   * Tag uris the active provider knows - its label map inverted. Anything outside this set is
    * invisible to the diff, which is what keeps user tags from being pushed as new provider labels.
    */
   readonly eligible: ReadonlySet<string>;
@@ -74,7 +74,7 @@ const record = (
  * Three-way merge of tag membership.
  *
  * **There is no conflict case.** Membership of one tag on one message is a boolean on each side, so
- * `local !== base && remote !== base` forces `local === remote` — both sides flipped to the negation
+ * `local !== base && remote !== base` forces `local === remote` - both sides flipped to the negation
  * of base, which is convergence, not disagreement. All eight triples resolve to push, pull, or
  * nothing, and `tag-diff.test.ts` enumerates them to keep that true. A conflict policy would only
  * become necessary if membership stopped being a boolean (a tombstone, a tri-state, a per-tag
@@ -103,7 +103,7 @@ export const diffTags = ({ base, local, remote, eligible, firstSync = false }: D
       const inRemote = remoteTags.has(uri);
 
       if (!base) {
-        // Additive only — see the doc comment above.
+        // Additive only - see the doc comment above.
         if (inLocal && !inRemote && !firstSync) {
           record(push, id, 'add', uri);
         } else if (inRemote && !inLocal) {

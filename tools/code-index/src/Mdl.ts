@@ -10,7 +10,7 @@ import { parse as parseYaml } from 'yaml';
  * A reader for `.mdl` documents: YAML frontmatter, a markdown body with an Extensions table, and
  * typed ```` ```mdl ```` fenced blocks. A fence holds one or more blocks, each headed
  * `<type> [<id>][: <title>]` with an indented body of `key: value` fields, `- item` lists, prose,
- * and nested blocks (`req F-1.1: …` inside a `feat`). Lenient by design — it must never choke on a
+ * and nested blocks (`req F-1.1: ...` inside a `feat`). Lenient by design - it must never choke on a
  * document elsewhere in the repository, so anything it cannot classify is kept as prose.
  *
  * Belongs in `@dxos/deus` as a Node-usable subpath (the CodeMirror grammar there covers block
@@ -21,11 +21,11 @@ import { parse as parseYaml } from 'yaml';
 export type Field = {
   readonly key: string | undefined;
   readonly index: number | undefined;
-  /** Written `key?:` — how an `ext` declares an optional field. */
+  /** Written `key?:` - how an `ext` declares an optional field. */
   readonly optional: boolean;
   /** The scalar text, comment stripped; continuation lines are joined with a space. */
   readonly value: string | undefined;
-  /** Nested entries: a multi-line map, a `{ … }` flow map, a list, or a `[ … ]` flow list. */
+  /** Nested entries: a multi-line map, a `{ ... }` flow map, a list, or a `[ ... ]` flow list. */
   readonly fields: readonly Field[];
   /** 1-based line in the document. */
   readonly line: number;
@@ -36,7 +36,7 @@ export type Block = {
   readonly id: string | undefined;
   readonly title: string | undefined;
   readonly fields: readonly Field[];
-  /** Lines of the body that are neither fields nor nested blocks — the inline description. */
+  /** Lines of the body that are neither fields nor nested blocks - the inline description. */
   readonly prose: string | undefined;
   /** Every backticked identifier-like token in the block's own lines, in order, deduplicated. */
   readonly mentions: readonly string[];
@@ -73,8 +73,8 @@ type Line = {
 const FENCE_OPEN = /^\s*```mdl\s*$/;
 const FENCE_CLOSE = /^\s*```\s*$/;
 const FIELD = /^([A-Za-z_][\w-]*)(\?)?\s*:(?:\s+(.*)|\s*)$/;
-// A nested block's header: a lowercase type, an id, and a colon (`req F-1.1: …`, `req F-2.2:`).
-// The id must open with a capital or digit, so prose like `relies on: …` stays prose.
+// A nested block's header: a lowercase type, an id, and a colon (`req F-1.1: ...`, `req F-2.2:`).
+// The id must open with a capital or digit, so prose like `relies on: ...` stays prose.
 const NESTED_HEADER = /^([a-z][\w-]*)\s+([A-Z0-9][\w.-]*)\s*:(?:\s+(.*)|\s*)$/;
 const ITEM = /^-(?:\s+(.*)|\s*)$/;
 const MENTION = /`([A-Za-z_$][\w$.]*(?:\([^`)]*\))?)`/g;
@@ -127,7 +127,7 @@ const splitTopLevel = (text: string): string[] => {
   return parts.map((part) => part.trim()).filter((part) => part !== '');
 };
 
-/** A `{ … }` or `[ … ]` value that closes on its own line, as nested entries; otherwise none. */
+/** A `{ ... }` or `[ ... ]` value that closes on its own line, as nested entries; otherwise none. */
 const flowEntries = (value: string, line: number): Field[] | undefined => {
   const map = value.match(/^\{(.*)\}$/s);
   if (map) {
@@ -195,7 +195,7 @@ const dedentText = (lines: readonly Line[]): string => {
 type Entries = { readonly fields: Field[]; readonly prose: string[] };
 
 /**
- * Parses a run of lines into entries. A line is a field (`key: value`), a list item (`- …`), or
+ * Parses a run of lines into entries. A line is a field (`key: value`), a list item (`- ...`), or
  * prose; whatever is indented under it is its value (`|`), its children, or its continuation.
  */
 const parseEntries = (lines: readonly Line[], topLevel: boolean): Entries => {
@@ -203,7 +203,7 @@ const parseEntries = (lines: readonly Line[], topLevel: boolean): Entries => {
   const prose: string[] = [];
   let itemIndex = 0;
   let index = 0;
-  // The field a flush-left prose line continues: `then: … may show the` / `TradingView embed`.
+  // The field a flush-left prose line continues: `then: ... may show the` / `TradingView embed`.
   let open: number | undefined;
   while (index < lines.length) {
     const line = lines[index];
@@ -215,7 +215,7 @@ const parseEntries = (lines: readonly Line[], topLevel: boolean): Entries => {
     let end = childrenOf(lines, index, line.indent);
     const item = line.text.match(ITEM);
     const field = item ? null : line.text.match(FIELD);
-    // At a block's top level a capitalised `Source: …` is prose that happens to hold a colon.
+    // At a block's top level a capitalised `Source: ...` is prose that happens to hold a colon.
     const isField = field !== null && !(topLevel && /^[A-Z]/.test(field[1]));
     // A flow value left open (`output: {`) runs to the line that closes it, closer included.
     let raw = (isField ? field?.[3] : item?.[1]) ?? '';
@@ -348,7 +348,7 @@ const parseBlock = (
     }
   }
   const entries = parseEntries(own, true);
-  // A title wrapped onto further lines (`req F-7.1: … (via\n    ExtensionProvider).`) is one title.
+  // A title wrapped onto further lines (`req F-7.1: ... (via\n    ExtensionProvider).`) is one title.
   const wrapped = header.title !== undefined && entries.fields.length === 0 && blocks.length === 0;
   const title = wrapped && entries.prose.length > 0 ? [header.title, ...entries.prose].join(' ') : header.title;
   return {

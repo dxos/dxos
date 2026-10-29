@@ -199,7 +199,7 @@ const VisualizationGraph = ({ debug = false, onNodeHover }: VisualizationGraphPr
   // projector when the variant changes so node x/y survive the swap.
   const lastLayoutRef = useRef<GraphLayout<SpaceGraphNode> | undefined>(undefined);
 
-  // Subscribe to the graph atom — keeps it alive across child unmounts (effect-atom
+  // Subscribe to the graph atom - keeps it alive across child unmounts (effect-atom
   // disposes atoms with no subscribers) and triggers re-renders when query results land.
   useEffect(() => model?.subscribe(() => undefined), [model]);
 
@@ -239,7 +239,7 @@ const VisualizationGraph = ({ debug = false, onNodeHover }: VisualizationGraphPr
   );
 
   // Cursor avoidance for the SVG swarm. The Graph component hands us pre-transformed
-  // SVG model coordinates — same space the boids live in.
+  // SVG model coordinates - same space the boids live in.
   const handlePointerMove = useCallback(
     (point: ModelPoint) => {
       if (projector instanceof GraphSwarmProjector) {
@@ -265,7 +265,7 @@ const VisualizationGraph = ({ debug = false, onNodeHover }: VisualizationGraphPr
     [variant, onNodeHover],
   );
 
-  // Only attach pointer handlers when the variant tracks the cursor — others don't need them
+  // Only attach pointer handlers when the variant tracks the cursor - others don't need them
   // and we want to avoid the per-move CTM math when it'd be a no-op.
   const pointerProps = variant.trackPointer
     ? { onPointerMove: handlePointerMove, onPointerLeave: handlePointerLeave }

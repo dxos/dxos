@@ -14,7 +14,7 @@ import { getObjectEchoUri } from '../Entity/util.ts';
  * so it can be filled from an {@link ObjectCore} (db) or a decoded entity (queue item / snapshot).
  */
 export interface StrongDepRefs {
-  /** Entity kind — relations additionally depend on their source/target. */
+  /** Entity kind - relations additionally depend on their source/target. */
   kind: EntityKind;
   /** Type reference URI (`echo:` for a persisted stored schema, `dxn:` for a static/registry type). */
   type?: URI.URI;
@@ -94,7 +94,7 @@ const getTagUris = (meta: unknown): URI.URI[] => {
 };
 
 /**
- * Direct strong-dependency URIs of a live (decoded) entity — a queue item, cross-space proxy, or
+ * Direct strong-dependency URIs of a live (decoded) entity - a queue item, cross-space proxy, or
  * snapshot. Reads the reference URIs off the entity's hidden model symbols. ECHO db cores compute
  * the same set from their raw encoded references via {@link getStrongDependencyUris}.
  */

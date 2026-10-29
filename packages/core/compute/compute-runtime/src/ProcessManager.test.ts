@@ -314,8 +314,8 @@ const makeWaitingExecutable = () =>
   );
 
 /**
- * A process whose input handler ignores interruption. Terminating it leaves the scope pinned open —
- * the mid-turn cancel where the in-flight turn does not unwind — so the handle stays observable in
+ * A process whose input handler ignores interruption. Terminating it leaves the scope pinned open -
+ * the mid-turn cancel where the in-flight turn does not unwind - so the handle stays observable in
  * the window between "finished" and "torn down", which is where the wedged-chat bug lived.
  */
 const makeStallingProcess = Effect.fnUntraced(function* () {
@@ -682,7 +682,7 @@ describe('ManagerImpl', () => {
       // Operations may carry live references in their input (e.g. a model or handle).
       // The durable process store JSON-serializes the input event; a non-serializable
       // value (here, a cycle) must not fail the invocation. The handler still runs with
-      // the original value — persistence degrades to a best-effort null.
+      // the original value - persistence degrades to a best-effort null.
       const ref: { value: number; self?: unknown } = { value: 42 };
       ref.self = ref;
       const result = yield* Operation.invoke(WithLiveRef, { ref });
@@ -1153,7 +1153,7 @@ describe('ManagerImpl', () => {
   );
 
   it.effect(
-    'parent process remains SUCCEEDED after child completes — requestChildEvent race (DX-999)',
+    'parent process remains SUCCEEDED after child completes - requestChildEvent race (DX-999)',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
 
@@ -1933,7 +1933,7 @@ describe('reentrancy', () => {
 
   // Rehydration rebuilds the process context, so the restored incarnation gets its own cancellation
   // controller. What must hold is the pairing: the restored handle's terminate has to fire the signal
-  // the restored handler observes — otherwise the resumed run is uncancellable while a dead controller
+  // the restored handler observes - otherwise the resumed run is uncancellable while a dead controller
   // is aborted instead. `suspend` (shutdown) must not fire either one; it is not a cancel.
   it.effect(
     'a rehydrated process is cancelled by its own Cancellation signal',
@@ -2306,7 +2306,7 @@ describe('durability', () => {
       const alarmResume = yield* Deferred.make<void>();
       SlowChildGate.alarmResume = alarmResume;
       // The shared handler dies if this is undefined, on both the first run and the redelivered
-      // one, so it must be set before the first `onAlarm` fires — unused otherwise now that the
+      // one, so it must be set before the first `onAlarm` fires - unused otherwise now that the
       // final wait below synchronizes on the process's real status instead of a hand-rolled signal.
       SlowChildGate.alarmHandlerFinished = yield* Deferred.make<void>();
 
@@ -2411,7 +2411,7 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       let gate = true;
-      // No IdempotentAnnotation → treated as non-idempotent by `OperationProcess.make`.
+      // No IdempotentAnnotation -> treated as non-idempotent by `OperationProcess.make`.
       const SlowOp = Operation.make({
         meta: { key: DXN.make('com.example.operation.test.slowNonIdempotent'), name: 'SlowNonIdempotent' },
         input: Schema.Struct({ value: Schema.Number }),
@@ -2436,7 +2436,7 @@ describe('durability', () => {
       yield* handle.submitInput({ value: 1 });
       yield* managerA.shutdown();
 
-      // Restore: the operation observes its durable "started" marker → fails instead of retrying.
+      // Restore: the operation observes its durable "started" marker -> fails instead of retrying.
       gate = false;
       const managerB = mkManager({ kv, registry, resolver, handlerSet: opHandlers, traceSink });
       const restoredHandle = yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
@@ -2572,7 +2572,7 @@ describe('durability', () => {
       yield* live.submitInput(undefined);
       expect(Exit.isFailure(yield* dormant.submitInput(undefined).pipe(Effect.exit))).toBe(true);
 
-      // Hydrating again is idempotent — it returns the same live handle.
+      // Hydrating again is idempotent - it returns the same live handle.
       expect(yield* dormant.hydrate(waiting)).toBe(live);
     }, Effect.provide(DurabilityTestLayer)),
   );

@@ -51,7 +51,7 @@ export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typ
  * The one create-an-object surface: a target picker, a type picker, and a form over the chosen type.
  *
  * In `live` mode the object is added to the database before the form opens, so fields that resolve
- * against the database — dynamic option lookups, autofill, inline refs, child objects — behave
+ * against the database - dynamic option lookups, autofill, inline refs, child objects - behave
  * exactly as they do after creation. Dismissing the dialog by any route other than the confirm
  * button removes it again, so a cancelled create leaves nothing behind; the cleanup hangs off
  * unmount rather than off the cancel button because escape, the overlay, and the close affordance
@@ -145,7 +145,7 @@ const ObjectFormDialogBody = ({
   );
 
   // Matches the panel's own gate: the selector shows while no type has been *chosen*, not while its
-  // entry is still resolving — otherwise the registry button blinks in for the same frame.
+  // entry is still resolving - otherwise the registry button blinks in for the same frame.
   const showTypeSelector = !typename;
   // Gated here as well as in the button: `Dialog.Close asChild` needs an element child, so the
   // action bar cannot wrap a button that renders nothing.
@@ -256,7 +256,7 @@ const ObjectFormDialogBody = ({
   const confirmed = useRef(false);
 
   // Escape, the overlay, and the close affordance dismiss the dialog without reaching a handler, and
-  // each of them is a cancel — so the dismissal hangs off unmount. `dismiss` is applied a task later,
+  // each of them is a cancel - so the dismissal hangs off unmount. `dismiss` is applied a task later,
   // which is what keeps StrictMode's development unmount/remount from reading as one.
   useEffect(() => {
     handle?.retain();
@@ -293,7 +293,7 @@ const ObjectFormDialogBody = ({
     }
 
     // Settled before the close below, since closing unmounts the dialog and an unmount is otherwise
-    // read as a cancel — and cancelling would take the object back out.
+    // read as a cancel - and cancelling would take the object back out.
     confirmed.current = true;
     handle?.settle(object);
 

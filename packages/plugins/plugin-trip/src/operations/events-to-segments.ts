@@ -23,7 +23,7 @@ const placeFromAddress = (address: NonNullable<Event.Event['location']>, fallbac
 
 /**
  * Projects calendar Events onto `activity` Segments. Only events that have a `location` become
- * segments — an event without an address is not an itinerary stop. The returned Segments are
+ * segments - an event without an address is not an itinerary stop. The returned Segments are
  * detached ECHO objects; the caller is responsible for adding them to a database and attaching them
  * to a Trip.
  */
@@ -92,12 +92,12 @@ const toCalendarDay = (iso?: string): Date | undefined => {
   return Number.isNaN(date.getTime()) ? undefined : date;
 };
 
-/** Default trip name derived from the span, e.g. "Trip · Jun 8 – Jun 14". */
+/** Default trip name derived from the span, e.g. "Trip · Jun 8 - Jun 14". */
 export const defaultTripName = (start?: string, end?: string): string => {
   const startDate = toCalendarDay(start);
   const endDate = toCalendarDay(end);
   if (startDate && endDate) {
-    return `Trip · ${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d')}`;
+    return `Trip · ${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}`;
   }
   if (startDate) {
     return `Trip · ${format(startDate, 'MMM d')}`;

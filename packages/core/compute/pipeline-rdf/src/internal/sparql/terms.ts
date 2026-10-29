@@ -10,7 +10,7 @@ const { blankNode, defaultGraph, literal, namedNode, quad } = DataFactory;
 
 const XSD_STRING = 'http://www.w3.org/2001/XMLSchema#string';
 
-/** RDF/JS term → the engine's plain-data term. */
+/** RDF/JS term -> the engine's plain-data term. */
 export const toTerm = (term: RdfTerm): Term => {
   switch (term.termType) {
     case 'NamedNode':
@@ -27,7 +27,7 @@ export const toTerm = (term: RdfTerm): Term => {
   }
 };
 
-/** RDF/JS quad → engine quad (the default graph is the engine's absent `g`). */
+/** RDF/JS quad -> engine quad (the default graph is the engine's absent `g`). */
 export const toQuad = (triple: RdfQuad): Quad => ({
   s: toTerm(triple.subject),
   p: toTerm(triple.predicate),

@@ -35,7 +35,7 @@ const DefaultStory = () => {
   const pipeline = pipelines[0];
 
   if (!pipeline) {
-    return <p>Loading…</p>;
+    return <p>Loading...</p>;
   }
 
   return (

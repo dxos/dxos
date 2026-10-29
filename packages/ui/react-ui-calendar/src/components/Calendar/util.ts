@@ -22,7 +22,7 @@ export const getDate = (start: Date, weekNumber: number, dayOfWeek: number, week
  * Inverse of {@link getDate}: returns the row index for a given date, matching
  * the grid layout (which respects `weekStartsOn`).
  *
- * Uses `differenceInCalendarDays` (DST-safe) — naive ms subtraction silently
+ * Uses `differenceInCalendarDays` (DST-safe) - naive ms subtraction silently
  * loses an hour each DST transition, which accumulates over decades and
  * eventually shifts the row boundary by one day. `differenceInWeeks` is also
  * unsuitable because it computes raw 7-day chunks anchored at the start
@@ -119,7 +119,7 @@ export const layoutDayEvents = <T extends { start: Date; end: Date }>(events: T[
 
   for (const entry of ordered) {
     if (cluster.length > 0 && entry.start >= clusterMax) {
-      // No overlap with the running cluster — close it out before starting fresh.
+      // No overlap with the running cluster - close it out before starting fresh.
       flush();
     }
     cluster.push(entry);

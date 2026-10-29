@@ -14,7 +14,7 @@ import { Form } from '@dxos/react-ui-form';
 
 const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 
-// Owned-routine action fields surfaced by default — the prompt text and the agent's `skills`. The
+// Owned-routine action fields surfaced by default - the prompt text and the agent's `skills`. The
 // context `objects` are excluded here so a routine form doesn't show a second, divergent list beside
 // its owning subject; a surface that owns the context concern (e.g. a project's Context section)
 // opts in via `fields`.
@@ -29,7 +29,7 @@ export type InstructionsEditorProps = {
 };
 
 /**
- * Sub-form: edits the owned Instructions in place — by default its `text` (Markdown) and `skills`,
+ * Sub-form: edits the owned Instructions in place - by default its `text` (Markdown) and `skills`,
  * both fields of the Instructions schema. A bare Form.Root + FieldSet (no Viewport) keeps these
  * fields left-aligned with the sibling general/action forms; only the rendered fields are written
  * back so a partial editor never clobbers the rest of the object.
@@ -96,7 +96,7 @@ export const InstructionsEditor = ({
 const isSystemObject = (object: Entity.Any): boolean => Obj.isObject(object) && !TypeOptions.isUserObject(object);
 
 // Ref-picker options shared by the routine form's skill and object fields: surface a secondary line
-// per candidate — a Skill's registry key, otherwise the object's typename — and sort by label, so the
+// per candidate - a Skill's registry key, otherwise the object's typename - and sort by label, so the
 // pickers present refs consistently. Falls back to the type placeholder (then URI) for unlabelled objects,
 // matching the default RefField; system objects are excluded.
 const getRefOptions = (

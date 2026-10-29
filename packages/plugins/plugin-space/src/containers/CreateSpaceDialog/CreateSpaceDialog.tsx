@@ -63,7 +63,7 @@ export const CreateSpaceDialog = () => {
   );
 
   // Selecting a template seeds the fields it has an opinion about, leaving anything the user has
-  // already typed alone would make the defaults unreachable — so this overwrites, and re-keys the
+  // already typed alone would make the defaults unreachable - so this overwrites, and re-keys the
   // form so it re-reads them.
   const values = useMemo<FormValues>(() => {
     const selected = templates.find(({ id }) => id === template);

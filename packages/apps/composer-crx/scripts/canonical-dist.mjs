@@ -7,7 +7,7 @@ import { existsSync, lstatSync, mkdirSync, unlinkSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 /**
- * Absolute path of the main (primary) worktree — always the first entry of `git worktree list`.
+ * Absolute path of the main (primary) worktree - always the first entry of `git worktree list`.
  *
  * @param {string} cwd
  */

@@ -126,7 +126,7 @@ describe('IndexQuerySource', () => {
   });
 
   // Regression: a registry-only query forwarded to the remote QueryService fails the whole
-  // query on edge — the query host rejects space-less queries ("Query must specify at least one
+  // query on edge - the query host rejects space-less queries ("Query must specify at least one
   // spaceId in options") and `GraphQueryContext.run`'s fail-fast merge discards the
   // `RegistryQuerySource`'s results. Surfaced by `projectCreate` over MCP (`SpaceOperation.
   // AddObject`'s type lookup is registry-scoped); dxos/edge mcp-operations project, DESIGN §6.
@@ -166,7 +166,7 @@ describe('IndexQuerySource', () => {
     expect(calls).toHaveLength(0);
 
     // Reactive: no remote stream is opened either. A registry-only query never targets spaces/feeds,
-    // so `update()` returns before scheduling anything async — the assertion needs no wait.
+    // so `update()` returns before scheduling anything async - the assertion needs no wait.
     source.open();
     source.update(registryOnlyQuery);
     expect(calls).toHaveLength(0);
@@ -184,7 +184,7 @@ describe('IndexQuerySource', () => {
 
     // First host response references an object that isn't loadable yet (simulating a hydration
     // timeout / unavailable document); a later object update makes it loadable.
-    // Fake entity at the loader boundary — only `id` is read by the source under test.
+    // Fake entity at the loader boundary - only `id` is read by the source under test.
     let loaded: Entity.Unknown | undefined;
 
     let emit: ((results: QueryService.QueryResult[]) => void) | undefined;
@@ -222,7 +222,7 @@ describe('IndexQuerySource', () => {
     await expect.poll(() => emit).toBeDefined();
     invariant(emit);
 
-    // Host returns the index hit, but the object can't be hydrated yet → empty results.
+    // Host returns the index hit, but the object can't be hydrated yet -> empty results.
     const settled = nextChanged();
     emit([{ id: objectId, spaceId, rank: 0 }]);
     await settled;
@@ -240,8 +240,8 @@ describe('IndexQuerySource', () => {
   });
 
   // Regression: a per-hit 2-second budget dropped any object whose load outran it, with only a log
-  // line, so a one-shot caller — an agent or an MCP tool, which unlike a reactive query gets no
-  // second pass — read the short result as the whole set.
+  // line, so a one-shot caller - an agent or an MCP tool, which unlike a reactive query gets no
+  // second pass - read the short result as the whole set.
   test('a slow load is waited for rather than dropped', async () => {
     const spaceId = SpaceId$.random();
     const prompt = EntityId.random();
@@ -333,7 +333,7 @@ describe('IndexQuerySource', () => {
 
   // Regression: the one-shot budget covered hydration as well as the host round-trip, so a single
   // document that never arrived held the query open for the whole 20s and then reported itself as
-  // an "index query" timeout — naming the index, which had in fact answered in microseconds.
+  // an "index query" timeout - naming the index, which had in fact answered in microseconds.
   // Blocks AI chat in production (`assistant.createChat`, `assistant.generateHomeSuggestions`).
   describe('an answered index query is not charged for stalled hydration', () => {
     test('the index-query budget is not spent on hydration, and the error names the stall', async () => {

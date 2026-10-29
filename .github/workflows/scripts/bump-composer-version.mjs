@@ -4,7 +4,7 @@
 //
 
 // Bump the Composer desktop/extension version. composer-app + composer-crx share one version line; this
-// bumps both in lockstep and prints the new version to stdout. Composer is not in Changesets — its version
+// bumps both in lockstep and prints the new version to stdout. Composer is not in Changesets - its version
 // lives in these package.jsons and is advanced only by the production release (deploy-apps.yml `release`
 // job), which runs this and then `scripts/sync-versions.mjs` to stamp the derived files (version.ts,
 // tauri.conf.json).

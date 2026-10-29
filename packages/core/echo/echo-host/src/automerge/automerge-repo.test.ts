@@ -79,7 +79,7 @@ const waitForQueryState = async <T>(
 };
 
 /**
- * Assert `handle` does not emit `heads-changed` within `timeoutMs` — gives a would-be
+ * Assert `handle` does not emit `heads-changed` within `timeoutMs` - gives a would-be
  * replication a real window to land before asserting it did not, rather than guessing a
  * sleep duration unrelated to any event the handle actually emits.
  */
@@ -110,7 +110,7 @@ const findInStates = async <T>(
 
 /**
  * Default state set for `findInStates`. Equivalent to the pre-subduction
- * `FIND_PARAMS = { allowableStates: ['ready', 'requesting'] }` — i.e. "give
+ * `FIND_PARAMS = { allowableStates: ['ready', 'requesting'] }` - i.e. "give
  * me the handle as soon as we have it OR are still trying to fetch it".
  * `'loading'` is the {@link QueryState} equivalent of the old `'requesting'`.
  */
@@ -404,7 +404,7 @@ describe('AutomergeRepo', () => {
 
       // Reconnecting cycles the peers and re-triggers sync; the doc
       // becomes available. Use `waitForQueryState` so the transient
-      // `'unavailable'` → `'loading'` → `'ready'` walk doesn't reject the
+      // `'unavailable'` -> `'loading'` -> `'ready'` walk doesn't reject the
       // wait (which is what `progress.whenReady()` would do).
       await reconnectAdapters(adapters);
       await waitForQueryState(progress, ['ready'], { timeout: 1_000 });
@@ -441,7 +441,7 @@ describe('AutomergeRepo', () => {
       const serverHandle = repo.create<{ field?: string }>();
 
       // The client must be bootstrapped via `A.load` on the first message
-      // (full save) — using `A.from({})` + `A.loadIncremental` panics
+      // (full save) - using `A.from({})` + `A.loadIncremental` panics
       // automerge@3.2.5 with `PatchLogMismatch` when the donor history shares
       // no lineage with the receiver's local actor.
       let clientDoc: A.Doc<{ field?: string }> | undefined;
@@ -829,7 +829,7 @@ describe('AutomergeRepo', () => {
       // The doc that's NOT in any remote collection must remain unsynced.
       // Substantive assertion: the handle body stays empty. (The query
       // state may be either `'loading'` or `'unavailable'` depending on
-      // peer share-policy resolution timing — the body is the invariant.)
+      // peer share-policy resolution timing - the body is the invariant.)
       await expect(waitForQueryState(shouldNotFindProgress, ['ready'], { timeout: 200 })).rejects.toThrow();
       const shouldNotFindDoc = peer2.repo.handles[parseAutomergeUrl(docNotInRemoteCollection.url).documentId];
       expect(shouldNotFindProgress.peek().state).to.not.equal('ready');

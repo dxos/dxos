@@ -150,7 +150,7 @@ const meta = {
               yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(space.db)));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
               // Re-read via the feed query so the event objects have their full echo URI set (via
-              // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
+              // hydrateObject -> SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
               // space-qualified ref that findMeetingForEvent can match.
               const synced = yield* Feed.query(feed, Filter.type(Event.Event)).run.pipe(
                 Effect.provide(Database.layer(space.db)),
@@ -219,7 +219,7 @@ export const Default: Story = {
  * The story seeds a Meeting already linked to the event, so the action resolves to its open variant.
  */
 export const MeetingAction: Story = {
-  // TODO(burdon): Skipped — the event toolbar's overflow dropdown does not yet render contributed
+  // TODO(burdon): Skipped - the event toolbar's overflow dropdown does not yet render contributed
   //   graph actions, so the "Open meeting" menu item isn't surfaced (pending react-ui-menu work).
   // TODO(wittjosiah): Also blocked on the hidden Event.Event node not materializing in this story.
   tags: ['!test'],
@@ -229,7 +229,7 @@ export const MeetingAction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Contributed actions live in the event toolbar's overflow dropdown. Two articles render, so scope to
-    // the event toolbar (first) and open its overflow via the dropdown trigger (aria-haspopup="menu") —
+    // the event toolbar (first) and open its overflow via the dropdown trigger (aria-haspopup="menu") -
     // not the "More" label, which needs react-ui-menu translations not registered in this story.
     const [eventToolbar] = await canvas.findAllByRole('toolbar', undefined, { timeout: 10_000 });
     const trigger = eventToolbar.querySelector<HTMLElement>('[aria-haspopup="menu"]');
@@ -247,14 +247,14 @@ export const MeetingAction: Story = {
  * Asserts the contributed action resolves to "Create meeting" when the event has no meeting yet.
  */
 export const CreateMeetingAction: Story = {
-  // TODO(burdon): Skipped — see MeetingAction (overflow dropdown does not yet render contributed actions).
+  // TODO(burdon): Skipped - see MeetingAction (overflow dropdown does not yet render contributed actions).
   tags: ['!test'],
   args: {
     withMeeting: false,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // No meeting yet → the contributed action in the event toolbar's overflow reads "Create meeting".
+    // No meeting yet -> the contributed action in the event toolbar's overflow reads "Create meeting".
     const [eventToolbar] = await canvas.findAllByRole('toolbar', undefined, { timeout: 10_000 });
     const trigger = eventToolbar.querySelector<HTMLElement>('[aria-haspopup="menu"]');
     invariant(trigger, 'event toolbar overflow trigger');

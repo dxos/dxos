@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
-// Imported so TypeScript can name this type in the emitted .d.ts (UploadFile → File).
+// Imported so TypeScript can name this type in the emitted .d.ts (UploadFile -> File).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type File } from '@dxos/types';
 

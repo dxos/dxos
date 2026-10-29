@@ -45,8 +45,8 @@ const PENDING_ENTRYPOINTS = new Set(['@dxos/app-framework/config', '@dxos/echo/i
  * per-namespace subpaths. A `./components` or `./hooks` entry is a second barrel: whatever imports
  * it gets every module behind it, which is the coupling the namespace subpaths exist to remove.
  *
- * Applies to the same packages as `dxos-subpath-exports` — those declaring at least one PascalCase
- * subpath — and reports on the package's root barrel, since the exports map itself is not linted.
+ * Applies to the same packages as `dxos-subpath-exports` - those declaring at least one PascalCase
+ * subpath - and reports on the package's root barrel, since the exports map itself is not linted.
  */
 export default {
   meta: {

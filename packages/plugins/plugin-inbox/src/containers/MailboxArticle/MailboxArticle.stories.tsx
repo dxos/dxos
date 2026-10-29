@@ -42,7 +42,7 @@ import { MailboxArticle } from './MailboxArticle.tsx';
 
 // No-op handler for the one layout operation the article invokes that belongs to DeckPlugin, which
 // this story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin
-// (already in `corePlugins`), and a no-op here would swallow the selection the article publishes —
+// (already in `corePlugins`), and a no-op here would swallow the selection the article publishes -
 // leaving `useSelection` empty and every selection-driven surface dead.
 const MockDeckOperations = Capability.inlineModule(
   'operation-handler',
@@ -67,7 +67,7 @@ const MockDeckOperationsPlugin = Plugin.define(
 const SEARCH_TERM = 'invoice';
 
 /**
- * Term seeded ONLY inside a `text/html` block (never in plain/markdown text or the subject) — used by
+ * Term seeded ONLY inside a `text/html` block (never in plain/markdown text or the subject) - used by
  * `SearchFilter`'s play test to confirm a match found solely in raw HTML markup is excluded from the
  * mailbox's search results.
  */
@@ -78,13 +78,13 @@ const ATTENDABLE_ID = 'story';
 type StoryArgs = {
   /** Number of messages to seed. */
   count?: number;
-  /** Size of the thread-id pool messages are randomly assigned to (fewer → larger conversations). */
+  /** Size of the thread-id pool messages are randomly assigned to (fewer -> larger conversations). */
   threads?: number;
   /** Force conversation grouping on/off; when omitted, the persisted/product-default value applies. */
   conversations?: boolean;
   /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
-  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "No messages" instead of "No connections configured". */
+  /** Seeds a sync binding (AccessToken -> Connection -> Cursor) so `InitializeMailbox` shows "No messages" instead of "No connections configured". */
   bound?: boolean;
   /** Registers a running `#analyze` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
   progress?: boolean;
@@ -92,7 +92,7 @@ type StoryArgs = {
 
 /**
  * Registers a running monitor under the mailbox's `#analyze` progress key, exactly as the analyze
- * cascade's trace status does — so the article's statusbar meter is exercised WITHOUT an LLM or a
+ * cascade's trace status does - so the article's statusbar meter is exercised WITHOUT an LLM or a
  * scheduled process. The producer/consumer key derivation is the thing under test: both sides call
  * `createAnalyzeProgressKey` on their own copy of the mailbox.
  */
@@ -178,8 +178,8 @@ const meta = {
                       threadId: threadId ?? `thread-of-one-${index}`,
                     }),
                   );
-                  // A message whose ONLY occurrence of `HTML_ONLY_TERM` is inside a `text/html` block —
-                  // absent from the plain/markdown body and the subject — so a search for that term must
+                  // A message whose ONLY occurrence of `HTML_ONLY_TERM` is inside a `text/html` block -
+                  // absent from the plain/markdown body and the subject - so a search for that term must
                   // yield no matching card (bugs 2 & 3: HTML-only matches must not surface or blank-render).
                   const htmlOnlyMessage = Message.make({
                     created: new Date().toISOString(),
@@ -274,9 +274,9 @@ export const Empty: Story = {
 };
 
 // Integration test only: proves the search box is wired to the message query so that typing narrows
-// the list. The query behaviors themselves are covered headlessly — the whole-thread semi-join and
+// the list. The query behaviors themselves are covered headlessly - the whole-thread semi-join and
 // thread-of-one retention in `mailbox-search.test.ts`, and the HTML-only exclusion (bugs 2 & 3) by the
-// `messageMatchesQuery` tests in `util.test.ts` — so this story does not re-assert those variants.
+// `messageMatchesQuery` tests in `util.test.ts` - so this story does not re-assert those variants.
 export const SearchFilter: Story = {
   args: {
     conversations: true,
@@ -284,7 +284,7 @@ export const SearchFilter: Story = {
   },
   play: async ({ canvasElement }) => {
     // Each rendered message/conversation tile carries `data-object-id` (set by the shared `Mosaic.Tile`
-    // shell in `Tile.Root`) — the stack is virtualized and untagged with an ARIA list-item role, so this
+    // shell in `Tile.Root`) - the stack is virtualized and untagged with an ARIA list-item role, so this
     // attribute is the only reliable way to count rendered tiles.
     const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
 
@@ -292,7 +292,7 @@ export const SearchFilter: Story = {
     await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
     const initialCount = getTileCount();
 
-    // The search box is a CodeMirror `QueryEditor`, not an <input>/<textarea> — it's the only editor
+    // The search box is a CodeMirror `QueryEditor`, not an <input>/<textarea> - it's the only editor
     // instance in the mailbox toolbar, so the first `.cm-content` on the canvas is unambiguous.
     const editor = canvasElement.querySelector('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
     if (!editor) {
@@ -301,7 +301,7 @@ export const SearchFilter: Story = {
     await userEvent.click(editor);
     await userEvent.type(editor, SEARCH_TERM);
 
-    // Typing the term routes through the query and narrows the list to a smaller, non-empty subset —
+    // Typing the term routes through the query and narrows the list to a smaller, non-empty subset -
     // that wiring is all this story verifies.
     await waitFor(
       async () => {
@@ -315,7 +315,7 @@ export const SearchFilter: Story = {
 };
 
 // The statusbar progress meter, which the analyze cascade and mail sync drive through the
-// progress registry. Both sides key the monitor by the mailbox URI, derived independently — the bug
+// progress registry. Both sides key the monitor by the mailbox URI, derived independently - the bug
 // this guards is a key that differs between producer and consumer, which leaves the run invisible.
 export const Progress: Story = {
   args: {
@@ -350,7 +350,7 @@ export const Paging: Story = {
     await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
     const firstPage = getTileCount();
 
-    // The list's scroll container is the `ScrollArea.Viewport` — the tallest scrollable element on
+    // The list's scroll container is the `ScrollArea.Viewport` - the tallest scrollable element on
     // the canvas (it is not a Radix viewport, so there is no data attribute to match).
     const viewport = [...canvasElement.querySelectorAll<HTMLElement>('*')]
       .filter((element) => element.scrollHeight > element.clientHeight + 8 && element.clientHeight > 200)
@@ -373,11 +373,11 @@ export const Paging: Story = {
   },
 };
 
-// KNOWN GAP — renders an EMPTY list, deliberately: `threads: 0` seeds messages with no `threadId`
+// KNOWN GAP - renders an EMPTY list, deliberately: `threads: 0` seeds messages with no `threadId`
 // (as drafts, transcriptions and assistant-authored messages are), and `buildThreadSemiJoin`'s
 // `threadId IN (SELECT threadId FROM <matches>)` can never match a message that has none, so they
 // never reach the list in either mode. The conversation grouping downstream is already fixed (its
-// key falls back to the message id, giving each its own row); this story turns green — 20 rows — the
+// key falls back to the message id, giving each its own row); this story turns green - 20 rows - the
 // moment the semi-join also admits directly-matching threadless messages.
 export const GroupedWithoutThreads: Story = {
   args: {
@@ -398,7 +398,7 @@ export const PagingGrouped: Story = {
     await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
     const firstPage = getTileCount();
 
-    // The list's scroll container is the `ScrollArea.Viewport` — the tallest scrollable element on
+    // The list's scroll container is the `ScrollArea.Viewport` - the tallest scrollable element on
     // the canvas (it is not a Radix viewport, so there is no data attribute to match).
     const viewport = [...canvasElement.querySelectorAll<HTMLElement>('*')]
       .filter((element) => element.scrollHeight > element.clientHeight + 8 && element.clientHeight > 200)

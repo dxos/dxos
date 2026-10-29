@@ -10,8 +10,8 @@ import * as Option from 'effect/Option';
 
 /**
  * Identity of the actor authoring content within an operation. Today this is an agent (see
- * `assistant-toolkit` `Agent.did`); it attributes content the operation authors — e.g. the
- * `creator` of a suggestion branch — so it reads as its own author, distinct from the human user
+ * `assistant-toolkit` `Agent.did`); it attributes content the operation authors - e.g. the
+ * `creator` of a suggestion branch - so it reads as its own author, distinct from the human user
  * and from other agents. Provided by the agent runtime for the duration of a tool/operation call.
  */
 export interface Identity {

@@ -23,7 +23,7 @@ export type UseListGridReturn = {
 
 /**
  * Row layout aspect. Generates the CSS grid template that keeps drag handle, title,
- * inline actions, expand caret, and trailing icon co-aligned on the same line —
+ * inline actions, expand caret, and trailing icon co-aligned on the same line -
  * independent of whether the row body is expanded.
  *
  * Width tracks are `var(--dx-rail-item)` for icon-button slots and `1fr` for the

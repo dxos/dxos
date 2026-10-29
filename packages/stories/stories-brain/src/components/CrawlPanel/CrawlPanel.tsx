@@ -29,7 +29,7 @@ export type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 export type CrawlAction = 'channels' | 'crawl' | 'file' | 'generate' | 'reset' | 'sparql';
 
 // Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
-// e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
+// e.g. `VITE_DISCORD_TOKEN=... VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
 export const initialOptions = (): CrawlOptions => ({
   token: String(import.meta.env.VITE_DISCORD_TOKEN ?? ''),
   channel: String(import.meta.env.VITE_DISCORD_CHANNEL ?? ''),
@@ -52,7 +52,7 @@ export type CrawlPanelProps = Util.ThemedClassName<{
 
 /**
  * Crawl control column: the Discord token + options form (with the discovered channels bound to the
- * `channel` select) and the toolbar actions. Pure/presentational — the parent owns the crawl state,
+ * `channel` select) and the toolbar actions. Pure/presentational - the parent owns the crawl state,
  * the semantic store, and every handler.
  */
 export const CrawlPanel = ({

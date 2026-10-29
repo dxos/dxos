@@ -20,8 +20,8 @@ import { IrohBeaconNamespace } from '../namespace.ts';
 
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {
-  // The status bar paints with the shell, but the beacon service activates on `SpacesAvailable` — which
-  // the forked client initialization can land long after — so absence is a normal early state here.
+  // The status bar paints with the shell, but the beacon service activates on `SpacesAvailable` - which
+  // the forked client initialization can land long after - so absence is a normal early state here.
   const state = Hooks.useOptionalAtomCapability(BeaconCapabilities.State);
   const { t } = UiHooks.useTranslation(IrohBeaconNamespace.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;

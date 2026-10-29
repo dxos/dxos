@@ -9,7 +9,7 @@ import { type ExportedDeclarations, type JSDoc, type Node, Project, ScriptTarget
 import { formatSymbolRef } from '../refs.ts';
 import type { SourceLocation, SymbolKind } from '../types.ts';
 
-// stderr-only — stdout is reserved for the MCP JSON-RPC stream.
+// stderr-only - stdout is reserved for the MCP JSON-RPC stream.
 const warn = (msg: string, err?: unknown): void => {
   console.error(err ? `[introspect symbols] ${msg}: ${String(err)}` : `[introspect symbols] ${msg}`);
 };
@@ -41,7 +41,7 @@ type PackageLike = {
  * Extract exported symbols from a package's entry points.
  *
  * Uses a per-package ts-morph Project so each package is parsed in isolation.
- * Errors are logged and produce an empty result rather than throwing — the
+ * Errors are logged and produce an empty result rather than throwing - the
  * indexer's job is best-effort coverage, not strict validation.
  */
 export const extractSymbols = (rootPath: string, pkg: PackageLike): PackageSymbols => {
@@ -65,7 +65,7 @@ export const extractSymbols = (rootPath: string, pkg: PackageLike): PackageSymbo
   // than relying on ts-morph to follow re-export chains from the entry point.
   // This makes the indexer robust to namespace re-exports (`export * as X`) and
   // multi-hop barrels, and keeps each file's symbols visible at their original
-  // declaration site — which is what callers actually want from getSymbol.
+  // declaration site - which is what callers actually want from getSymbol.
   const files = globSync('src/**/*.{ts,tsx}', {
     cwd: join(rootPath, pkg.path),
     ignore: ['**/*.test.{ts,tsx}', '**/*.stories.{ts,tsx}', '**/__fixtures__/**', '**/__tests__/**'],
@@ -97,7 +97,7 @@ export const extractSymbols = (rootPath: string, pkg: PackageLike): PackageSymbo
 
   // Dedup by name. When the same name appears in multiple files (e.g. a
   // barrel's namespace re-export plus the original declaration), prefer the
-  // entry whose primary declaration carries the most information — value/type
+  // entry whose primary declaration carries the most information - value/type
   // declarations beat namespace re-exports.
   const byName = new Map<string, ExtractedSymbol>();
   for (const sym of symbols) {
@@ -168,7 +168,7 @@ const describeSymbol = (
 
 // Return the declaration text including any leading `export` modifier.
 // `VariableDeclaration.getText()` returns just the declarator (`x = 1`), missing
-// the `export const` from the parent VariableStatement — climb when needed.
+// the `export const` from the parent VariableStatement - climb when needed.
 const declarationText = (decl: ExportedDeclarations): string => {
   if (decl.getKind() === SyntaxKind.VariableDeclaration) {
     const stmt = decl.getFirstAncestorByKind(SyntaxKind.VariableStatement);

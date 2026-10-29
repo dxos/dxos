@@ -113,7 +113,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'statsCards',
         filter: Surface.makeFilter(AppSurface.DevtoolsOverview),
-        // After the devtools cards (0–12) and before contributors that sit last.
+        // After the devtools cards (0-12) and before contributors that sit last.
         position: 20,
         component: StatsPanel,
         props: () => ({ showEmpty: false }),

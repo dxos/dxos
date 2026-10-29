@@ -18,7 +18,7 @@ export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Se
 );
 
 /**
- * Starts local sandboxes where this runtime cannot spawn processes itself — the desktop app, whose
+ * Starts local sandboxes where this runtime cannot spawn processes itself - the desktop app, whose
  * webview reaches a helper process the shell starts. The effect is memoized by the contributor, so
  * it is safe to run per call.
  */

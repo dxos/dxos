@@ -523,7 +523,7 @@ describe('SpaceArchive', () => {
       const directory = buildDatabaseDirectoryFromObjects(objects as any);
       const structure = directory.objects![id];
       expect(structure.system?.kind).toBe('type');
-      // Type entities aren't relations — source/target stay unset.
+      // Type entities aren't relations - source/target stay unset.
       expect(structure.system?.source).toBeUndefined();
       expect(structure.system?.target).toBeUndefined();
     });

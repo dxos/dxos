@@ -14,7 +14,7 @@ import * as Message from './Message.ts';
 
 /**
  * Creates a draft message. Callers must include `properties.mailbox` for parent-scoped drafts. A
- * compose draft has no thread yet, so it becomes a thread of one keyed on a fresh id — the mailbox
+ * compose draft has no thread yet, so it becomes a thread of one keyed on a fresh id - the mailbox
  * list groups by `threadId` and would otherwise drop it. Reply/forward drafts carry the parent's id.
  */
 export const make = (props: Obj.MakeProps<typeof Message.Message>) =>

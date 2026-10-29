@@ -8,9 +8,9 @@ import { useQuery } from '@dxos/echo-react';
 import { ExtractedFrom, Mailbox } from '#types';
 
 /**
- * Returns the set of objects extracted from a given Message — i.e. the `Source` of every
+ * Returns the set of objects extracted from a given Message - i.e. the `Source` of every
  * `ExtractedFrom` relation whose `Target` is this message. Used by `MessageHeader` to render
- * a tag per extracted artifact (Trip, Person, Booking, …).
+ * a tag per extracted artifact (Trip, Person, Booking, ...).
  *
  * The list updates reactively as new extractions land (via `ExtractMessage` dispatcher) or
  * existing extractions are deleted.

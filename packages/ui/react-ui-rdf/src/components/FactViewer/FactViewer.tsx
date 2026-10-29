@@ -140,7 +140,7 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
         <Field.Root>
           <Field.Label srOnly>Filter facts</Field.Label>
           <Input.Root
-            placeholder='Filter by entity or predicate…'
+            placeholder='Filter by entity or predicate...'
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           />

@@ -118,7 +118,7 @@ export const createMarkdownStreamController = ({
      * Set the context for widgets (XML tags).
      *
      * Remembered as well as dispatched: a host has no signal for when the view exists, and the
-     * dispatch is a no-op before it does — so without this a context set on mount is silently lost and
+     * dispatch is a no-op before it does - so without this a context set on mount is silently lost and
      * every widget callback through it dies on an optional call. {@link flushContext} re-applies it.
      */
     setContext: (context: any) => {
@@ -147,7 +147,7 @@ export const createMarkdownStreamController = ({
       if (text.length) {
         // Always go through the streaming queue, even when the doc starts empty. Skipping the
         // queue in that case (via `onReset`) bypasses the `typewriter` extension's transaction filter
-        // and the first chunk lands in one CM dispatch — defeating the typewriter for any
+        // and the first chunk lands in one CM dispatch - defeating the typewriter for any
         // consumer (e.g. ChatThread) where the first delta is large because upstream batching
         // collected several streaming partials before React rendered.
         const queue = queueRef.current;

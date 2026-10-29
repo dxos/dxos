@@ -69,7 +69,7 @@ describe('Pipeline.run', () => {
 });
 
 describe('Pipeline.run overflow', () => {
-  test('suspend (default) delivers every item to a slow sink — no loss', async ({ expect }) => {
+  test('suspend (default) delivers every item to a slow sink - no loss', async ({ expect }) => {
     const items: number[] = [];
     // A sink that yields between commits; back pressure must still deliver all items.
     const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.tap(Effect.yieldNow));

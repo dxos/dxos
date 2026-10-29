@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-// Organization is referenced in the inferred type of multiple types here (via Provider.Provider → Ref.Ref(Organization));
+// Organization is referenced in the inferred type of multiple types here (via Provider.Provider -> Ref.Ref(Organization));
 // the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Organization, Provider } from '@dxos/types';
@@ -32,7 +32,7 @@ export const ServiceClass = Schema.Literals(['economy', 'premium', 'business', '
 export type ServiceClass = Schema.Schema.Type<typeof ServiceClass>;
 
 //
-// Variant details — discriminated by `_tag`.
+// Variant details - discriminated by `_tag`.
 //
 
 /**
@@ -103,7 +103,7 @@ export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
 export const AccommodationDetails = Schema.TaggedStruct('accommodation', {
   propertyName: Schema.optional(Schema.String).annotate({ title: 'Property' }),
   roomType: Schema.optional(Schema.String).annotate({ title: 'Room type' }),
-  /** Location of the property — single `Place`, no origin/destination distinction. */
+  /** Location of the property - single `Place`, no origin/destination distinction. */
   location: Schema.optional(Place).annotate({ title: 'Location' }),
   checkIn: Schema.optional(Format.DateTime).annotate({ title: 'Check-in' }),
   checkOut: Schema.optional(Format.DateTime).annotate({ title: 'Check-out' }),
@@ -198,7 +198,7 @@ export const getArriveAt = (seg: Segment): string | undefined =>
   seg.details._tag === 'accommodation' ? seg.details.checkOut : seg.details.arriveAt;
 
 /**
- * Sets the departure time (ISO 8601) across variants — `checkIn` for
+ * Sets the departure time (ISO 8601) across variants - `checkIn` for
  * accommodation, `departAt` otherwise.
  */
 export const setDepartAt = (seg: Segment, iso: string): void => {
@@ -212,7 +212,7 @@ export const setDepartAt = (seg: Segment, iso: string): void => {
 };
 
 /**
- * Sets the arrival / end time (ISO 8601) across variants — `checkOut` for
+ * Sets the arrival / end time (ISO 8601) across variants - `checkOut` for
  * accommodation, `arriveAt` otherwise.
  */
 export const setArriveAt = (seg: Segment, iso: string): void => {
@@ -258,7 +258,7 @@ export const getDestination = (seg: Segment): Place | undefined => {
 };
 
 /**
- * Sets the "from" Place across variants, mirroring {@link getOrigin} — `origin`
+ * Sets the "from" Place across variants, mirroring {@link getOrigin} - `origin`
  * for transport, `location` for accommodation, `venue` for activity. Writes a
  * fresh copy: the decoded `Place` carries a readonly `geo` tuple, so the value
  * is normalized to the live object's mutable shape before assignment.
@@ -320,7 +320,7 @@ export const getTitle = (seg: Segment): string => {
   }
 };
 
-/** Route string e.g. "JFK → LHR". Single-location variants render just the place. */
+/** Route string e.g. "JFK -> LHR". Single-location variants render just the place. */
 export const getRoute = (seg: Segment): string | undefined => {
   const origin = getOrigin(seg);
   if (seg.details._tag === 'accommodation' || seg.details._tag === 'activity') {
@@ -332,7 +332,7 @@ export const getRoute = (seg: Segment): string | undefined => {
   if (!from && !to) {
     return undefined;
   }
-  return [from, to].filter(Boolean).join(' → ');
+  return [from, to].filter(Boolean).join(' -> ');
 };
 
 /** Phosphor icon name for a segment kind. */

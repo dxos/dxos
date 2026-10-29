@@ -110,7 +110,7 @@ describe('StreamDeckBridge', () => {
 
     const { bridge } = open();
     await expect.poll(() => bridge.state).toBe('incompatible');
-    // The connection count stays put — a mismatch is not something a reconnect can fix.
+    // The connection count stays put - a mismatch is not something a reconnect can fix.
     const attempts = sockets.length;
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(sockets).toHaveLength(attempts);

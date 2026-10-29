@@ -22,7 +22,7 @@ export type WireMessage = {
 export type WireEnd = {
   end: true;
   denials: number;
-  /** Session the turn ran under — pass it back as `resume` to continue, or with `fork` to branch. */
+  /** Session the turn ran under - pass it back as `resume` to continue, or with `fork` to branch. */
   sessionId?: string;
   error?: string;
 };

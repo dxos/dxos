@@ -49,7 +49,7 @@ const DefaultStory = () => {
   useEffect(() => {
     // Single mutable schema shared by the view, the projection base, and the change callback so
     // schema mutations (e.g. reordering pivot-field options during a column drag) persist and read
-    // back. `createDirectChangeCallback` mutates it in place — the ECHO callback would throw
+    // back. `createDirectChangeCallback` mutates it in place - the ECHO callback would throw
     // "Schema is not mutable" for these non-ECHO, in-memory story objects.
     const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
     const view = ViewModel.make({

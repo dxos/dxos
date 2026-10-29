@@ -4,7 +4,7 @@
 
 import { type LogEntry, shortLevelName } from '@dxos/log';
 
-/** Derive the workspace package directory from a source path (…/packages/<group>/<pkg>/…). */
+/** Derive the workspace package directory from a source path (.../packages/<group>/<pkg>/...). */
 export const packageName = (file: string): string | undefined => file.match(/packages\/[^/]+\/([^/]+)\//)?.[1];
 
 /**
@@ -14,7 +14,7 @@ export type LogRecord = {
   timestamp: string;
   level: string;
   package?: string;
-  /** Repo-relative source path (…/packages/<group>/<pkg>/…); the row derives the basename for display. */
+  /** Repo-relative source path (.../packages/<group>/<pkg>/...); the row derives the basename for display. */
   file?: string;
   line?: number;
   message?: string;

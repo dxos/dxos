@@ -12,7 +12,7 @@ import { PreviewCapabilities } from '#types';
 
 /**
  * The ECHO resolver: an anchor whose eid parses as an entity URI is loaded from the space. Other
- * refs — `dxn:` type URIs, web URLs — are another resolver's.
+ * refs - `dxn:` type URIs, web URLs - are another resolver's.
  */
 export default Capability.makeModule(() =>
   Effect.succeed(

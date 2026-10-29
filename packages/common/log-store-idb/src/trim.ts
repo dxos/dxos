@@ -4,7 +4,7 @@
 
 /**
  * Trim a list of pre-encoded JSONL lines so the joined output (with `\n` separators)
- * fits within `maxSize` bytes (UTF-8). The newest lines (end of array) are preferred —
+ * fits within `maxSize` bytes (UTF-8). The newest lines (end of array) are preferred -
  * lines are dropped from the start. Never cuts inside a line.
  *
  * Returns the trimmed JSONL string (no trailing newline).
@@ -37,8 +37,8 @@ export const trimJsonlToSize = (lines: readonly string[], maxSize: number): stri
 /**
  * UTF-8 byte length of a string, counted without encoding it.
  *
- * `TextEncoder.encode(value).length` allocates twice — the binding copies the string into
- * its own heap, then allocates the output array — and both die on the next line. Callers
+ * `TextEncoder.encode(value).length` allocates twice - the binding copies the string into
+ * its own heap, then allocates the output array - and both die on the next line. Callers
  * measure megabytes at a time, so the count runs in JS instead.
  */
 export const byteLengthUtf8 = (value: string): number => {

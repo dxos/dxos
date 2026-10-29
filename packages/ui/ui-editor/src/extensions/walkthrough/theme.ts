@@ -32,7 +32,7 @@ export const diffBlockTheme = EditorView.theme({
     fontSize: '0.8125rem',
     // A block widget's intrinsic width is the document's: an unconstrained chunk drags the prose
     // beside it past the pane. `100%` cannot break that cycle (it resolves against the width the
-    // block itself is setting), so the cap is the query container — the host puts
+    // block itself is setting), so the cap is the query container - the host puts
     // `dx-container-type-inline-size` on a content element of definite width, as `documentSlots`
     // does. With no such container `cqi` falls back to the viewport, which is still a cap.
     maxWidth: 'min(100%, 100cqi)',
@@ -131,7 +131,7 @@ export const diffBlockTheme = EditorView.theme({
     display: 'grid',
     fontFamily: 'var(--font-mono)',
     lineHeight: '1.8',
-    // Ligatures misreport a diff: JetBrains Mono draws `===` as `≡` and `=>` as `⇒`, so the reader
+    // Ligatures misreport a diff: JetBrains Mono draws `===` as `==` and `=>` as `=>`, so the reader
     // cannot tell which operator the change actually introduced.
     fontVariantLigatures: 'none',
   },
@@ -208,7 +208,7 @@ export const diffBlockTheme = EditorView.theme({
 /**
  * Reading-mode tuning for a walkthrough document: headings and inline code take the reading
  * foreground rather than the editor's syntax accent, since here they are structure the reader
- * navigates by, not markup being authored. Optional, and separate from {@link diffBlockTheme} — a
+ * navigates by, not markup being authored. Optional, and separate from {@link diffBlockTheme} - a
  * host that wants the chunks inside a normal editing surface adds only that one.
  */
 export const walkthroughTheme = (): Extension =>

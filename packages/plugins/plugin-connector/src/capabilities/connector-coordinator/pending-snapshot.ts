@@ -18,11 +18,11 @@ export type PendingSnapshot = {
   /** `mcp` is set for a custom MCP server, whose endpoint the connector cannot supply. */
   connectionSnapshot: { name: string; connectorId: string; mcp?: Connection.McpEndpoint };
   /**
-   * `Ref.uri` of the existing target to bind the first new selection to — an `echo:` EID, not a
+   * `Ref.uri` of the existing target to bind the first new selection to - an `echo:` EID, not a
    * `dxn:` DXN (a DXN names a type or capability and cannot address an object).
    */
   existingTargetUri?: string;
-  /** `mode: 'reauth'` only — `Ref.uri` (`echo:` EID) of the existing AccessToken to refresh in place. */
+  /** `mode: 'reauth'` only - `Ref.uri` (`echo:` EID) of the existing AccessToken to refresh in place. */
   reauthAccessTokenUri?: string;
 };
 

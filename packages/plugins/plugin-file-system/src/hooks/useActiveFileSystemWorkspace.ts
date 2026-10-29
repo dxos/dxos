@@ -8,7 +8,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 
 import { FileSystemCapabilities } from '#types';
 
-/** Extracts the raw workspace id from a qualified graph path (e.g. `root/fs:dir` → `fs:dir`). */
+/** Extracts the raw workspace id from a qualified graph path (e.g. `root/fs:dir` -> `fs:dir`). */
 const getWorkspaceId = (qualifiedPath: string): string => {
   const workspacePath = GraphPath.getWorkspaceFromPath(qualifiedPath);
   const separatorIndex = workspacePath.indexOf('/');

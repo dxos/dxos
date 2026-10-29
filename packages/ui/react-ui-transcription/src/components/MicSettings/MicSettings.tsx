@@ -26,7 +26,7 @@ export type MicSettingsProps = {
 
 /**
  * Recording options for the mic: record mode (toggle/push-to-talk), the input device, and whether
- * entity extraction is applied. Presentational — state lives in the consumer.
+ * entity extraction is applied. Presentational - state lives in the consumer.
  *
  * The menu itself is `MenuButton`: what is specific here is which options exist, not how a caret
  * opens a list of them.

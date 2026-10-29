@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Tool definitions — the metadata + handler body for every MCP tool the
+// Tool definitions - the metadata + handler body for every MCP tool the
 // introspect-mcp server exposes.
 //
 // Centralizing this map gives us:
@@ -11,7 +11,7 @@
 //   - A simple shape for `server.ts` to iterate when registering tools, so the
 //     server's only job is wiring (transport, error handling, readiness gate).
 //   - A natural surface to extend without touching server-construction logic
-//     — adding a tool is a single new entry in this map.
+//     - adding a tool is a single new entry in this map.
 //
 // Input schemas are authored in Effect Schema (see `@dxos/introspect-tools`)
 // so that downstream consumers like `react-ui-form` can render forms from
@@ -20,7 +20,7 @@
 //
 // Each handler returns a `ToolResult` (data + optional note + optional
 // truncated marker); the server wraps that in the MCP `content` envelope.
-// Handlers DO NOT call `await introspector.ready` themselves — the server
+// Handlers DO NOT call `await introspector.ready` themselves - the server
 // applies that gate uniformly via `withReady`, so a future tool can't
 // accidentally skip it.
 
@@ -65,7 +65,7 @@ const pickListOptions = (args: { limit?: number; compact?: boolean }): ListOptio
 });
 
 /**
- * A single MCP tool — metadata + handler. The `inputSchema` field is the
+ * A single MCP tool - metadata + handler. The `inputSchema` field is the
  * Effect `Schema.Struct` that defines the input shape; the server converts
  * it to zod at registration via `effectFieldsToZod`. Authoring in Effect
  * Schema gives `react-ui-form` and other downstream consumers a single
@@ -77,7 +77,7 @@ export type ToolDefinition<TArgs = Record<string, unknown>> = {
 
   /**
    * LLM-targeted description. Models read this to decide WHEN to call the
-   * tool — write it for trigger accuracy, not for human reading. State both
+   * tool - write it for trigger accuracy, not for human reading. State both
    * what the tool does and the situations it's the right answer for.
    */
   description: string;
@@ -89,7 +89,7 @@ export type ToolDefinition<TArgs = Record<string, unknown>> = {
    */
   inputSchema: Schema.Struct<any>;
 
-  /** Tool body. Must NOT await `introspector.ready` — the server gates that uniformly. */
+  /** Tool body. Must NOT await `introspector.ready` - the server gates that uniformly. */
   handler: (args: TArgs) => ToolResult | Promise<ToolResult>;
 };
 

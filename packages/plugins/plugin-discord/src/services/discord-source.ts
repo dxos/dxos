@@ -106,7 +106,7 @@ const makeSource = (options: SourceOptions = {}): Effect.Effect<SourceApi, never
                   .filter((channel): channel is GuildChannelResponse => channel.type === 0 || channel.type === 5)
                   .map((channel) => ({
                     id: channel.id,
-                    name: channel.name ? `#${channel.name} — ${guild.name}` : `${channel.id} — ${guild.name}`,
+                    name: channel.name ? `#${channel.name} - ${guild.name}` : `${channel.id} - ${guild.name}`,
                     guildId: guild.id,
                   })),
               ),

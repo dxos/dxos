@@ -96,7 +96,7 @@ export const MAX_EDGES_PER_ROW = 512;
 
 /**
  * Builds the plan of an `in-query` subquery. Injected rather than imported, because the planner
- * owns plan building and calls this compiler — importing it back would make the two modules cyclic.
+ * owns plan building and calls this compiler - importing it back would make the two modules cyclic.
  */
 export type PlanSubquery = (query: QueryAST.Query) => QueryPlan.Plan;
 
@@ -1497,7 +1497,7 @@ const aggregateColumn = (name: string): string => `agg_${columnSuffix(name)}`;
  * A result field name as a column identifier. Names come from the query author and only have to be
  * unique within the statement, so one that is already identifier-safe is kept for readability and
  * anything else is hex-encoded; the distinct prefixes keep the two classes from colliding. Encoding
- * rather than rejecting is what keeps `aggregate({ 'last-at': … })` working on both executors.
+ * rather than rejecting is what keeps `aggregate({ 'last-at': ... })` working on both executors.
  */
 const columnSuffix = (name: string): string =>
   /^[A-Za-z0-9_]+$/.test(name)
@@ -1576,7 +1576,7 @@ const docRow = (sql: SqlClient.SqlClient, alias: string): Fragment =>
 
 /**
  * The URI of one `json_each` element of `meta.tags`: an encoded reference, or (legacy) a bare URI, whose
- * text `json_extract` would reject as malformed JSON — so the element's type picks the read.
+ * text `json_extract` would reject as malformed JSON - so the element's type picks the read.
  */
 const tagUriOf = (sql: SqlClient.SqlClient, element: Fragment): Fragment =>
   sql`CASE ${element}.type WHEN 'object' THEN json_extract(${element}.value, '$."/"') WHEN 'text' THEN ${element}.value END`;

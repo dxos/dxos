@@ -32,8 +32,8 @@ const ANSI_TOKENS = {
  * Resolves design system color tokens to the hex form xterm's parser accepts.
  *
  * Two steps, because neither alone suffices: a probe element inside the token scope turns
- * `light-dark(var(…))` into an absolute computed color, then a canvas rasterizes that color — which
- * the theme states in `oklch()` — down to sRGB channels.
+ * `light-dark(var(...))` into an absolute computed color, then a canvas rasterizes that color - which
+ * the theme states in `oklch()` - down to sRGB channels.
  */
 const makeResolver = (scope: Element) => {
   const probe = document.createElement('span');
@@ -44,7 +44,7 @@ const makeResolver = (scope: Element) => {
 
   const resolve = (token: string): string | undefined => {
     // An undefined token makes `color` fall back to the inherited text color, which would pass as a
-    // real value — the selection then matched the text and hid it — so it resolves to nothing instead.
+    // real value - the selection then matched the text and hid it - so it resolves to nothing instead.
     if (getComputedStyle(probe).getPropertyValue(token).trim().length === 0) {
       return undefined;
     }

@@ -74,7 +74,7 @@ export const ContactPreview = ({ db, children }: PropsWithChildren<{ db?: Databa
 };
 
 /**
- * Creates the contact for an actor with the extractor's own `buildContactFromActor` — the same core
+ * Creates the contact for an actor with the extractor's own `buildContactFromActor` - the same core
  * the app reaches through `InboxOperation.ExtractContact`, so a story's create affordance flips the row
  * into its card-on-hover state exactly as the app does.
  */

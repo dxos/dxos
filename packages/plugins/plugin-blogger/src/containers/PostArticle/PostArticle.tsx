@@ -29,7 +29,7 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
   // the in-editor toolbar actions (e.g. the comment button). blogger's `postComments` connector
   // contributes a hidden node for the body doc under the Post whose id is `qualifyId(<post node id>,
   // doc.id)`; the Post plank's `attendableId` IS that post node id. The editor's document id (the
-  // comment selection key) stays `getURI(doc)` — the markdown surface derives it from `subject`.
+  // comment selection key) stays `getURI(doc)` - the markdown surface derives it from `subject`.
   const contentDoc = contentRef?.target;
   const contentAttendableId = contentDoc
     ? attendableId

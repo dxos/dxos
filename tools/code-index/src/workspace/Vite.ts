@@ -43,7 +43,7 @@ export type Middleware = {
 export type Options = {
   /** Directory holding `index.html` and the UI source. */
   readonly appRoot: string;
-  /** The repository being indexed — Vite must be allowed to serve workspace sources from it. */
+  /** The repository being indexed - Vite must be allowed to serve workspace sources from it. */
   readonly repoRoot: string;
   /** Where the pre-bundled dependencies go; kept beside the index rather than in the source tree. */
   readonly cacheDir: string;
@@ -55,14 +55,14 @@ export type Options = {
 };
 
 /**
- * The `node:*` modules `@dxos/node-std` shims for the browser. Anything else — `node:child_process`
- * and friends — stays externalized, which is correct: no UI code should reach it.
+ * The `node:*` modules `@dxos/node-std` shims for the browser. Anything else - `node:child_process`
+ * and friends - stays externalized, which is correct: no UI code should reach it.
  */
 const NODE_STD = ['assert', 'buffer', 'crypto', 'events', 'fs', 'fs/promises', 'path', 'process', 'stream', 'util'];
 
 /**
  * Redirects those imports to their browser shims. Workspace packages are served as source here, so
- * their `node:util` imports arrive unrewritten — where a build would have applied this same mapping.
+ * their `node:util` imports arrive unrewritten - where a build would have applied this same mapping.
  */
 const nodeStdPlugin = (): Plugin => ({
   name: 'code-index:node-std',
@@ -104,7 +104,7 @@ export const middleware = ({
               fs: { allow: [appRoot, repoRoot] },
             },
             // The UI is Solid, except for the chat thread, which is the repository's own React
-            // component. `vite-plugin-solid` must therefore be scoped to the Solid half — left
+            // component. `vite-plugin-solid` must therefore be scoped to the Solid half - left
             // unscoped it rewrites JSX in every React file it sees and the thread never renders.
             plugins: [
               nodeStdPlugin(),
@@ -144,7 +144,7 @@ export const middleware = ({
             optimizeDeps: {
               /**
                * The thread reaches a long tail of CommonJS packages through its `@dxos/*` deps, and
-               * a browser import of one fails until it has been converted — so discovery stays on
+               * a browser import of one fails until it has been converted - so discovery stays on
                * and finds them, and this list is only the seed that spares the first load a
                * re-optimize-and-reload for each. `react-dom/client` is the one that must be here:
                * it is the very first import, before any scan has run.
@@ -156,7 +156,7 @@ export const middleware = ({
                * glue and its memory is never initialized, which surfaces as a missing
                * `__wbindgen_externrefs`. Served as source they initialize themselves, with
                * `vite-plugin-wasm` turning the `.wasm` import into a URL. Both reach the graph
-               * through `@dxos/echo` rather than being declared here — naming a transitive package
+               * through `@dxos/echo` rather than being declared here - naming a transitive package
                * is how the pre-bundler is told to leave it alone.
                *
                * `automerge-repo` is deliberately NOT excluded: it does no wasm work itself, and

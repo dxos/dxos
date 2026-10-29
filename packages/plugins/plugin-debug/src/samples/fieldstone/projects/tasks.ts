@@ -188,7 +188,7 @@ export const TASK_SEEDS = [
     title: 'Fix cache-key collision on concurrent writes',
     description:
       'Two writers racing on the same action key could each commit half an entry, so a reader got an index row ' +
-      'pointing at the other writer’s blob. This is what corrupted Okapi’s cache. Make the index write a ' +
+      "pointing at the other writer's blob. This is what corrupted Okapi's cache. Make the index write a " +
       'compare-and-set on the digest.',
     status: 'done',
     priority: 'urgent',
@@ -353,7 +353,7 @@ export const TASK_SEEDS = [
   {
     key: 'cliWarmCache',
     project: 'cache',
-    title: 'A `cairn warm` command that prefetches a branch’s artifacts',
+    title: "A `cairn warm` command that prefetches a branch's artifacts",
     description:
       'Given a branch, fetch the artifacts its last green build produced into the local cache, so the first build ' +
       'on a fresh laptop is not a cold one.',
@@ -400,7 +400,7 @@ export const TASK_SEEDS = [
     title: 'Ship the Cairn dashboard as a Composer plugin',
     description:
       'Move the tokens, usage and hit-rate pages into a Composer plugin that reads the edge gateway with the ' +
-      'workspace API token, so the dashboard opens next to the team’s projects and agent traces. Retire the ' +
+      "workspace API token, so the dashboard opens next to the team's projects and agent traces. Retire the " +
       'standalone web app once the plugin covers its pages.',
     status: 'todo',
     priority: 'medium',
@@ -542,7 +542,7 @@ export const TASK_SEEDS = [
     project: 'billing',
     title: 'Usage page in the dashboard: GB stored and hits this cycle',
     description:
-      'A page under Billing that shows this cycle’s stored GB, hits and projected bill, from the same numbers the ' +
+      "A page under Billing that shows this cycle's stored GB, hits and projected bill, from the same numbers the " +
       'invoice uses.',
     status: 'started',
     priority: 'medium',
@@ -593,7 +593,7 @@ export const TASK_SEEDS = [
   {
     key: 'customerComms',
     project: 'billing',
-    title: 'Give existing customers 30 days’ notice of the switch',
+    title: "Give existing customers 30 days' notice of the switch",
     description: 'One email per account owner, plus a call for the five largest accounts.',
     status: 'backlog',
     priority: 'high',
@@ -701,7 +701,7 @@ export const TASK_SEEDS = [
     project: 'soc2',
     title: 'Draft the data retention policy',
     description:
-      'How long we keep build artifacts, logs and billing records, and what happens to a deleted tenant’s data.',
+      "How long we keep build artifacts, logs and billing records, and what happens to a deleted tenant's data.",
     status: 'started',
     priority: 'medium',
     estimate: 's',
@@ -714,7 +714,7 @@ export const TASK_SEEDS = [
     project: 'soc2',
     title: 'Answer the Meridian security questionnaire',
     description:
-      'Meridian’s 140-question security review gates their enterprise trial. Answer from the policy set and mark ' +
+      "Meridian's 140-question security review gates their enterprise trial. Answer from the policy set and mark " +
       'every answer that depends on a policy not yet approved.',
     status: 'blocked',
     priority: 'urgent',
@@ -972,7 +972,7 @@ const makeTask = (
 
   const description =
     seed.key === 'cacheKeyCollision' && okapiIncident
-      ? `${seed.description}\n\nBackground and the customer timeline are in the “${okapiIncident}” thread.`
+      ? `${seed.description}\n\nBackground and the customer timeline are in the "${okapiIncident}" thread.`
       : seed.description;
 
   return Task.make({

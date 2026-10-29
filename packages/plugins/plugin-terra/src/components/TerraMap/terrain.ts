@@ -9,7 +9,7 @@ import { MAP_HEIGHT, MAP_WIDTH } from './projection.ts';
 /**
  * One sample per degree. Enough to read coastlines at map scale (the nav grid the router works from
  * is far coarser at 24 cells per cube-face edge), and ~65k samples costs well under a tenth of the
- * planet mesh — but it is still the most expensive thing this view does, so callers memoize it on
+ * planet mesh - but it is still the most expensive thing this view does, so callers memoize it on
  * the config.
  */
 const SAMPLES_PER_DEGREE = 1;

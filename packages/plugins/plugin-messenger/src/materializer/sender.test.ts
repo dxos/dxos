@@ -54,7 +54,7 @@ const storedMessages = async (space: Space) => {
 };
 
 describe('Sender', () => {
-  test('delivers a message to a contact’s notifications feed', async ({ expect }) => {
+  test("delivers a message to a contact's notifications feed", async ({ expect }) => {
     const { alice, bob, inboxRelay } = await createClients();
     const bobSpace = await bob.spaces.create();
     await bobSpace.waitUntilReady();

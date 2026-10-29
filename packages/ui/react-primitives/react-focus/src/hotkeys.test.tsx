@@ -146,7 +146,7 @@ describe('hotkey scopes', () => {
 
     expect(seen).not.toContain('Elsewhere');
 
-    // Only the active scopes change here — the command map keeps its identity, which is exactly the
+    // Only the active scopes change here - the command map keeps its identity, which is exactly the
     // case a commands-only snapshot would miss.
     await act(async () => {
       setHotkeyScope('root/elsewhere', store);

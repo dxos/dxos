@@ -13,7 +13,7 @@ export type CompletionOptions = {
 
 /**
  * Tag labels as they must appear in the document. Selecting a completion REPLACES the whole trigger
- * range, `#` included, and inserts the item verbatim — so an unprefixed label would silently drop the
+ * range, `#` included, and inserts the item verbatim - so an unprefixed label would silently drop the
  * `#` and leave text that no longer parses as a tag.
  */
 const tagCompletions = (tags: Tag.Map): string[] => Object.values(tags).map((tag) => formatTag(tag.label));
@@ -38,8 +38,8 @@ export const completions = ({ db, tags }: CompletionOptions) => {
     const tree = parser.parse(text);
     const { node } = tree.cursorAt(pos, -1);
 
-    // A `#` with no label yet is an error node, not a `TagFilter` — the grammar needs a label
-    // character before it accepts one — so the tree cannot answer for the keystroke that opens a tag.
+    // A `#` with no label yet is an error node, not a `TagFilter` - the grammar needs a label
+    // character before it accepts one - so the tree cannot answer for the keystroke that opens a tag.
     // Inside a string it is content, so the tree is still what settles that.
     if (tags && isTypingTag(text, pos) && node.type.id !== QueryDSL.Node.String) {
       return tagCompletions(tags);

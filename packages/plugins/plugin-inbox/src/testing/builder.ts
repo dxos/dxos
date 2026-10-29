@@ -23,12 +23,12 @@ export type DateRange = {
 export type BuilderOptions = {
   /**
    * Date range for generated events.
-   * Defaults to [now − 30 days, now + 14 days].
+   * Defaults to [now - 30 days, now + 14 days].
    */
   events?: DateRange;
   /**
    * Date range for generated messages.
-   * Defaults to [now − 30 days, now].
+   * Defaults to [now - 30 days, now].
    */
   messages?: DateRange;
 };
@@ -82,7 +82,7 @@ const WORK_END_MINUTES = 17 * 60; // 17:00
 
 /**
  * Chainable builder for creating test data distributed across configurable date ranges.
- * Events are constrained to working hours (09:00–17:00); messages can occur at any time.
+ * Events are constrained to working hours (09:00-17:00); messages can occur at any time.
  * Items are sorted chronologically on `build()`.
  *
  * @example
@@ -185,7 +185,7 @@ export class Builder {
   //
 
   /**
-   * Creates a single calendar Event at a random time within the event range (09:00–17:00).
+   * Creates a single calendar Event at a random time within the event range (09:00-17:00).
    */
   createEvent(): this {
     const startDate = this._nextEventTime();
@@ -237,8 +237,8 @@ export class Builder {
       .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphCount })
       .join('\n\n');
 
-    // Seeded blocks carry the fields synced mail always has — a disposition (authored by a person,
-    // as opposed to a derived `summary`) and a mime type — so stories exercise the same shapes the
+    // Seeded blocks carry the fields synced mail always has - a disposition (authored by a person,
+    // as opposed to a derived `summary`) and a mime type - so stories exercise the same shapes the
     // renderers see in production rather than a stripped-down one.
     let blocks: ContentBlock.Text[];
     if (links) {

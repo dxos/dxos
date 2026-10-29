@@ -10,7 +10,7 @@ import { type PdfApi, type PdfCanvasState, type PdfFit } from '../PdfCanvas/inde
 // components, so a context and its hook exported beside them force a full page reload on every edit.
 
 /**
- * What the toolbar needs from a paged document. Present only while such a document is displayed —
+ * What the toolbar needs from a paged document. Present only while such a document is displayed -
  * an image has no pages to step through and no text to search.
  */
 export type PreviewPaged = PdfCanvasState & {

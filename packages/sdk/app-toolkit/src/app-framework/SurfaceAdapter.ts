@@ -12,9 +12,9 @@ import { log } from '@dxos/log';
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 /**
- * The roles the surfaces in a module body's result bind that `declared` omits. Read structurally —
+ * The roles the surfaces in a module body's result bind that `declared` omits. Read structurally -
  * a contribution's `values`, and the `role` (one or several) `Surface.create` resolves from each
- * definition's filter — so this headless module need not load React's `Surface`.
+ * definition's filter - so this headless module need not load React's `Surface`.
  */
 export const undeclaredSurfaceRoles = (result: unknown, declared: readonly string[]): string[] => {
   const bound = (Array.isArray(result) ? result : [result])

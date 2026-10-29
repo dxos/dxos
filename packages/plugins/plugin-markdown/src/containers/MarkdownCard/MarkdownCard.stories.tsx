@@ -68,7 +68,7 @@ export const Default: Story = {};
 
 /**
  * Content lengths side by side. The snippet preview is a fixed 16:9 box, so all three cards must be
- * the same height — a long document clips under the fade rather than growing its card. Regression
+ * the same height - a long document clips under the fade rather than growing its card. Regression
  * net for the case where the preview had a ratio floor and a separate pixel cap, and each card's
  * height landed wherever its content did.
  */

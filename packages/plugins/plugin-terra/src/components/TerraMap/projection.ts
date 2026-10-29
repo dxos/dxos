@@ -7,7 +7,7 @@ import { angleBetween, slerp, toGeo } from '../../sim/index.ts';
 
 /**
  * Equirectangular map units: one unit is one degree, with the origin at 180°W/90°N. Using degrees
- * as the SVG user space means projection is the whole transform — no separate pixel scaling — and
+ * as the SVG user space means projection is the whole transform - no separate pixel scaling - and
  * the view scales by `viewBox` alone.
  */
 export const MAP_WIDTH = 360;
@@ -59,7 +59,7 @@ const SUBDIVISION_STEP = 3;
 
 /**
  * Samples a route's great-circle legs at `SUBDIVISION_STEP`, since a geodesic is a curve in this
- * projection, not a straight line — drawn end to end, a long leg would visibly cut across terrain
+ * projection, not a straight line - drawn end to end, a long leg would visibly cut across terrain
  * the route was planned around (badly so at high latitudes, where a straight line on the map is
  * nothing like the shortest path).
  */

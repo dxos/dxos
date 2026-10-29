@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.AddDependency> = Fe
           new FeatureOperation.DependencyCycleError({
             message: `"${feature.name}" cannot depend on "${dependency.name}": ${[feature.id, ...cycle]
               .map((id) => names.get(id))
-              .join(' → ')} would close a cycle.`,
+              .join(' -> ')} would close a cycle.`,
           }),
         );
       }

@@ -129,7 +129,7 @@ export const steps = [
       }
       if (!(await page.evaluate(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude')))) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-        await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Claude' });
+        await demo.fill({ selector: 'input[placeholder="Filter..."]', value: 'Claude' });
         await demo.click({ selector: 'label.dx-switch:has(input[aria-label="Claude"])', label: 'Enable Claude' });
         await page.waitForFunction(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude'));
         await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', label: 'Space' });
@@ -255,7 +255,7 @@ export const steps = [
   {
     name: 'Assign the task to Claude Code (cloud)',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Assign it to Claude Code (cloud)', subtitle: 'From the task’s menu' });
+      await demo.caption({ value: 'Assign it to Claude Code (cloud)', subtitle: "From the task's menu" });
       const row = `[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`;
       await demo.hover({ selector: row });
       await demo.click({ selector: `${row} >> [data-testid="taskList.item.actions"]`, label: 'Task actions' });
@@ -308,7 +308,7 @@ export const steps = [
       await demo.fill({ selector: PROMPT, value: ASK_TO_CLOSE, label: 'Prompt' });
       await page.waitForTimeout(1_000);
       await demo.press({ key: 'Enter' });
-      await demo.caption({ value: 'Ask it to close the pull request', subtitle: 'In the project’s chat' });
+      await demo.caption({ value: 'Ask it to close the pull request', subtitle: "In the project's chat" });
       await waitForTurn(page);
       for (let attempt = 0; (await pullState(globalThis.autocuePullRequest)) !== 'closed'; attempt++) {
         if (attempt >= 30) {

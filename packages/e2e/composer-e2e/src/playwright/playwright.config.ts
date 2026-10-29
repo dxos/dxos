@@ -8,7 +8,7 @@ import path from 'node:path';
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
 /**
- * The behavioural suite — every spec in this directory, against the production bundle.
+ * The behavioural suite - every spec in this directory, against the production bundle.
  *
  * Measurement harnesses are deliberately NOT here: `startup.spec.ts` and `perf-*.spec.ts` record
  * numbers rather than asserting behaviour and `dev-*` needs `vite serve`, so they stay in
@@ -16,7 +16,7 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
  *
  *   DX_PWA=false moon run composer-e2e:e2e
  *
- * Every spec here is the automated arm of a `test QA-n` in an `.mdl` spec — see BEST-PRACTICES.md.
+ * Every spec here is the automated arm of a `test QA-n` in an `.mdl` spec - see BEST-PRACTICES.md.
  */
 
 /** The app under test. `vite preview` serves its `out/composer`, which `composer-app:bundle-e2e` builds. */

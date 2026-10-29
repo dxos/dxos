@@ -55,7 +55,7 @@ const ask = Command.make('ask', {}, () =>
 
 const colors = Command.make('colors', {}, () =>
   Console.log(
-    Array.from({ length: 8 }, (_, index) => `\x1b[3${index}m██\x1b[0m`).join('') +
+    Array.from({ length: 8 }, (_, index) => `\x1b[3${index}m\u2588\u2588\x1b[0m`).join('') +
       `\n${BOLD}bold${RESET} ${DIM}dim${RESET} \x1b[4munderline${RESET}`,
   ),
 ).pipe(Command.withDescription('Show that ANSI styling renders.'));
@@ -118,7 +118,7 @@ export const Spec: Story = {
     await runCommand(canvasElement, 'greet ada --loud', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'HELLO, ADA!');
 
-    // An unknown command is reported once, by the CLI itself — which answers with the command's
+    // An unknown command is reported once, by the CLI itself - which answers with the command's
     // help rather than a one-line message.
     await runCommand(canvasElement, 'bogus', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'USAGE');

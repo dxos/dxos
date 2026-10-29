@@ -44,7 +44,7 @@ export const make = (): Skill.Skill =>
         ## The index
 
         Prefixes (missing \`deus:\` prefixes are added for you):
-        - \`deus:\` = <https://dxos.org/vocab/deus#> — classes and predicates.
+        - \`deus:\` = <https://dxos.org/vocab/deus#> - classes and predicates.
         - Files are <https://dxos.org/deus/file/REPO_PATH>; a symbol is the file IRI plus \`#name\`.
         - Packages are <https://dxos.org/deus/package/NAME>, e.g. <https://dxos.org/deus/package/@dxos/echo>.
 
@@ -73,13 +73,13 @@ export const make = (): Skill.Skill =>
         ## Drawing
 
         1. If no code graph is in context, create one with ${tool(SpaceOperation.AddObject)}:
-           \`{ "object": { "@type": "${CodeGraph.TYPENAME}", "name": "…", "nodes": [], "edges": [] } }\`.
+           \`{ "object": { "@type": "${CodeGraph.TYPENAME}", "name": "...", "nodes": [], "edges": [] } }\`.
         2. Before changing an existing graph, call ${tool(CodeGraphOperation.Read)}.
         3. Fill it with ${tool(CodeGraphOperation.AddFromQuery)}: SELECT \`?from ?to\` for arrows, or \`?node\`
            for lone boxes. Check a query with ${tool(CodeGraphOperation.Query)} first when you are unsure of it.
            ${tool(CodeGraphOperation.AddNodes)} adds known resources and connects them;
            ${tool(CodeGraphOperation.AddNeighbors)} grows the graph from boxes along a predicate.
-        4. Keep graphs readable: aim for 5–40 boxes. Prefer package-level graphs for an overview and file-level
+        4. Keep graphs readable: aim for 5-40 boxes. Prefer package-level graphs for an overview and file-level
            graphs inside one package. Remove noise with ${tool(CodeGraphOperation.Remove)}.
         5. Pick the layout with ${tool(CodeGraphOperation.SetLayout)}: \`illustrator\` for a tidy architecture
            view (frames per package, routed arrows; best under ~30 boxes), \`force\` for clusters in larger

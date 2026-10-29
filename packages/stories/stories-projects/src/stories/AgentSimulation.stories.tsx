@@ -220,7 +220,7 @@ const makePlay =
     await waitFor(
       async () => {
         // A task blocked on the question comes first, since the pane is where it is answered; otherwise
-        // each sub-task is shown once, as it starts — with several under way, the newest.
+        // each sub-task is shown once, as it starts - with several under way, the newest.
         const blocked = answered ? undefined : subtasks.find((task) => task.status === 'blocked');
         const next = blocked ?? subtasks.find((task) => task.status === 'started' && !followed.has(task.id));
         if (next && next.id !== selected) {

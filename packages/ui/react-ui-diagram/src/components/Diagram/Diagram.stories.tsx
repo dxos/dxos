@@ -21,7 +21,7 @@ import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
 /**
  * Source pane. The DSL is the source of truth, so this is the authoritative editor and the diagram
  * beside it is a projection that re-derives on every keystroke. Composable so it is a valid
- * `Panel.Content asChild` target — the editor's own ref is composed with the slot's.
+ * `Panel.Content asChild` target - the editor's own ref is composed with the slot's.
  */
 const SourceEditor = Util.composable<HTMLDivElement, { value: string; onChange: (value: string) => void }>(
   ({ value, onChange, ...props }, forwardedRef) => {
@@ -31,7 +31,7 @@ const SourceEditor = Util.composable<HTMLDivElement, { value: string; onChange: 
         createBasicExtensions({ lineNumbers: true, lineWrapping: false }),
         createThemeExtensions({ themeMode }),
         // Standalone mermaid document, so the language goes on at top level. (In a markdown editor
-        // it is registered as a fenced-code language instead — see plugin-mermaid.)
+        // it is registered as a fenced-code language instead - see plugin-mermaid.)
         createMermaidExtensions(),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
@@ -64,8 +64,8 @@ type StoryArgs = {
 const count = (value: number, noun: string) => `${value} ${noun}${value === 1 ? '' : 's'}`;
 
 /**
- * One render for every story. The two branches are the two paths the architecture supports —
- * projected from a dialect, or handed the neutral model directly — so both belong in one harness
+ * One render for every story. The two branches are the two paths the architecture supports -
+ * projected from a dialect, or handed the neutral model directly - so both belong in one harness
  * rather than in stories that share no code.
  */
 const DefaultStory = ({ source, projection, background }: StoryArgs) => {
@@ -173,7 +173,7 @@ export const Nested: Story = {
   },
 };
 
-/** Renderer only — a hand-written neutral model, no DSL. Compartments and several ports per side. */
+/** Renderer only - a hand-written neutral model, no DSL. Compartments and several ports per side. */
 export const Neutral: Story = {
   args: {
     projection: CLASS_DIAGRAM,

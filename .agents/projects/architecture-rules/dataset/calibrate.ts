@@ -128,7 +128,7 @@ const report = [
   '',
   '## Per rule, by separation',
   '',
-  '| Rule | Own hunks | Mean p own | Mean p other | Separation | Own ≥ 0.7 | Other ≥ 0.7 |',
+  '| Rule | Own hunks | Mean p own | Mean p other | Separation | Own >= 0.7 | Other >= 0.7 |',
   '| ---- | --------- | ---------- | ------------ | ---------- | --------- | ----------- |',
   ...rows.map(
     ({ rule, own, other, separation }) =>

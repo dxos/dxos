@@ -68,7 +68,7 @@ const topPanel = (canvas: HTMLElement) => {
 
 /**
  * Real elapsed time between the drag and the release, so the cached velocity ages past
- * `VELOCITY_MAX_AGE_MS` and the release reads as a short drag rather than a flick — the flick path
+ * `VELOCITY_MAX_AGE_MS` and the release reads as a short drag rather than a flick - the flick path
  * completes the pop and would mask whether an unseen release settles.
  */
 const pause = () => new Promise((resolve) => setTimeout(resolve, 150));
@@ -76,7 +76,7 @@ const pause = () => new Promise((resolve) => setTimeout(resolve, 150));
 /**
  * An edge-swipe whose release never reaches the stack must still settle. WebKit hands `pointerup` to
  * the original hit-test target once it drops an implicit pointer capture, so a stack that only
- * listened on its own root was left holding the last dragged pose — a permanent sliver of the parked
+ * listened on its own root was left holding the last dragged pose - a permanent sliver of the parked
  * panel at the leading edge.
  */
 export const ReleaseOutsideStack: Story = {
@@ -102,7 +102,7 @@ export const ReleaseOutsideStack: Story = {
 /**
  * The stack root must clip, never scroll. `overflow: hidden` is a scroll container and a panel parked
  * off-screen right makes it scrollable, so a `scrollIntoView` from inside a freshly pushed panel
- * carries the whole stack sideways — Chromium clamps it back as the panel lands, WebKit leaves it
+ * carries the whole stack sideways - Chromium clamps it back as the panel lands, WebKit leaves it
  * there and the panel is off-screen and untappable for good.
  */
 export const RootDoesNotScroll: Story = {
@@ -122,7 +122,7 @@ export const RootDoesNotScroll: Story = {
 };
 
 /**
- * A cancelled gesture snaps back rather than completing a pop the platform took away — and the cancel
+ * A cancelled gesture snaps back rather than completing a pop the platform took away - and the cancel
  * counts wherever it lands. The platform taking the touch over is the very thing that drops the
  * implicit capture, so the cancel is delivered off the stack for the same reason the release is; a
  * cancel dispatched on the stack root would only re-test the path that already worked.

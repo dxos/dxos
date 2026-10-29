@@ -37,7 +37,7 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
     // Parse organizer/owner. Keys with undefined values must be omitted entirely
     // because ECHO's DSON storage serializes undefined as null, which fails schema decode.
     // `Event.owner` is required but each of its own fields is optional, so an event Google returns with
-    // no organizer maps to an empty owner rather than an absent one — which failed schema decode.
+    // no organizer maps to an empty owner rather than an absent one - which failed schema decode.
     const owner = event.organizer?.email
       ? {
           email: event.organizer.email,

@@ -9,7 +9,7 @@ export const FALLBACK_MIME_TYPE = 'application/octet-stream';
  * Media types a browser executes when it renders them.
  *
  * A stored file is handed back through a presigned, public or `blob:` URL on the app's origin, and
- * HTML served from there runs with that origin — making an upload a stored-XSS primitive. Such
+ * HTML served from there runs with that origin - making an upload a stored-XSS primitive. Such
  * files are still accepted, but labelled {@link FALLBACK_MIME_TYPE} so they download rather than
  * render. Matches the blob service's own `ACTIVE_CONTENT_TYPES`, minus SVG, which image previews
  * rely on.
@@ -17,8 +17,8 @@ export const FALLBACK_MIME_TYPE = 'application/octet-stream';
 const ACTIVE_CONTENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml']);
 
 /**
- * The media type to store for an upload. Every type is accepted — the file plugin keeps bytes it
- * cannot preview — so this never rejects; it only neutralizes types that are missing or executable.
+ * The media type to store for an upload. Every type is accepted - the file plugin keeps bytes it
+ * cannot preview - so this never rejects; it only neutralizes types that are missing or executable.
  * Compared case-insensitively and without parameters: RFC 2045 defines type and subtype as
  * case-insensitive, and `text/html; charset=utf-8` is still HTML.
  */

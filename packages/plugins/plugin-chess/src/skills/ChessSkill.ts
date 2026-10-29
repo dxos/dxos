@@ -27,7 +27,7 @@ export const make = (): Skill.Skill =>
         Don't actually make a move unless you are asked to.
 
         When setting a chess position, always set the "pgn" field (move list in standard PGN notation) on the org.dxos.type.chess.state object.
-        The "fen" field is not used by the UI for display — the board is driven exclusively from "pgn".
+        The "fen" field is not used by the UI for display - the board is driven exclusively from "pgn".
         Setting "fen" alone or leaving "pgn" empty will result in the initial position being shown.
       `,
     }),

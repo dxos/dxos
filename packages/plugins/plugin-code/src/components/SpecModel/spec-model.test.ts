@@ -170,7 +170,7 @@ describe('spec references', () => {
     expect(graph.edges).toContainEqual(expect.objectContaining({ from: 'F-1', to: id }));
   });
 
-  test('a reference’s item is not read as a local block of the same name', ({ expect }) => {
+  test("a reference's item is not read as a local block of the same name", ({ expect }) => {
     const graph = buildDefinitionGraph(spec, new Map(), [], index);
     expect(graph.edges).not.toContainEqual(expect.objectContaining({ from: 'F-1', to: 'Scene' }));
   });

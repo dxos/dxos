@@ -82,7 +82,7 @@ export default AgentOperation.RunInstructions.pipe(
           The user is unable to see what you are doing, and cannot answer any questions.
           Do not ask questions.
           Complete the task before you, and at the end call [completeJob] with {"success": <output>}.
-          The output goes inside "success" — never at the top level, and never wrapped in a second
+          The output goes inside "success" - never at the top level, and never wrapped in a second
           "success" of its own.
           If you are unable to complete the task, call [completeJob] with {"failure": {"message": "..."}}.
           Pass one of the two, never both, and omit the field you do not use.

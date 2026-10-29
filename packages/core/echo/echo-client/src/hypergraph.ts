@@ -42,7 +42,7 @@ import { makeRegistry } from './registry/index.ts';
 const TRACE_REF_RESOLUTION = false;
 
 /**
- * A space database's answer for one id: the live entity, and whether its index holds the id at all — a
+ * A space database's answer for one id: the live entity, and whether its index holds the id at all - a
  * tombstone of a deleted or merged-away entity counts, so nothing is left for a feed scan to find.
  */
 type DatabaseResolution = { readonly entity?: Entity.Unknown; readonly indexed: boolean };
@@ -158,7 +158,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * scopes of its own.
    *
    * The index host answers a space-less query with nothing, so such a query would otherwise see
-   * only what the working set already holds — a space nobody has read from in this process
+   * only what the working set already holds - a space nobody has read from in this process
    * contributes no results at all, silently.
    */
   #bindAllSpacesScope(query: Query.Any): Query.Any {
@@ -251,7 +251,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           return undefined;
         }
 
-        // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
+        // Registry refs (DXNs) resolve to the entity held in the registry - a type entity by
         // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         if (DXN.isDXN(uri)) {
           const entity = this._registry.getByURI(uri.toString());
@@ -317,7 +317,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   /**
    * Route a URI to its resolution backend: registry for `dxn:` and a single-space backend for a
-   * space-qualified `echo:` EID. A space-less EID is unroutable here — callers qualify relative URIs
+   * space-qualified `echo:` EID. A space-less EID is unroutable here - callers qualify relative URIs
    * to a space (via {@link #qualifyToContext} for request roots, or the owning space for discovered
    * strong-dependency edges) before routing.
    */
@@ -336,7 +336,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return this.#entityBackend(spaceId);
   }
 
-  // Registry backend — fully in-memory; effectively `working-set`.
+  // Registry backend - fully in-memory; effectively `working-set`.
   readonly #registryBackend: LoadBackend = {
     probe: (uri) => {
       const entity = this._registry.getByURI(uri.toString());
@@ -362,7 +362,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   /**
    * Synchronous working-set probe for an entity within its space: the local db, then its known feed
-   * queues. Resolves regardless of the deleted flag — deletion is filtered by the query pipeline,
+   * queues. Resolves regardless of the deleted flag - deletion is filtered by the query pipeline,
    * not by resolution (gating a deleted object's own satisfaction would hide it from deleted-only
    * queries and break re-add).
    */
@@ -625,7 +625,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return survivor !== objectId ? db.getObjectById(survivor) : undefined;
   }
 
-  /** The live end of `objectId`'s redirect chain over the working set — `objectId` itself when none. */
+  /** The live end of `objectId`'s redirect chain over the working set - `objectId` itself when none. */
   #resolveMergeSurvivorId(db: DatabaseImpl, objectId: EntityId): EntityId {
     return resolveMergeRedirect(objectId, (id) => {
       const entity = db.getObjectById(id, { deleted: true });
@@ -699,7 +699,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         status = 'missing';
         return undefined;
       } else if (DXN.isDXN(uri)) {
-        // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
+        // Registry refs (DXNs) resolve to the entity held in the registry - a type entity by
         // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         const entity = this._registry.getByURI(uri.toString());
         status = entity ? 'resolved' : 'missing';
@@ -954,8 +954,8 @@ type ObjectDiagnostic = {
   spaceId: string;
   loadReason: string;
   /**
-   * Formatted at capture. Storing the `StackTrace` itself would keep this map — which is never
-   * pruned — holding an unformatted stack, and an unformatted stack retains the receiver of every
+   * Formatted at capture. Storing the `StackTrace` itself would keep this map - which is never
+   * pruned - holding an unformatted stack, and an unformatted stack retains the receiver of every
    * frame it captured, i.e. the hypergraph and the whole client graph behind it (DX-1140).
    */
   loadedStack?: string;
@@ -1002,7 +1002,7 @@ trace.diagnostic({
   },
 });
 
-/** True when the query carries a scope clause naming nothing — `from('all-accessible-spaces')`. */
+/** True when the query carries a scope clause naming nothing - `from('all-accessible-spaces')`. */
 const isAllSpacesScope = (ast: QueryAST.Query): boolean => {
   let found = false;
   QueryAST.visit(ast, (node) => {

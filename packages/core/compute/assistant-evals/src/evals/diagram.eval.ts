@@ -22,18 +22,18 @@ import { getDefaultSkills } from '../skills.ts';
 //
 // Tier 3 of the illustrator eval (see plugin-illustrator/docs/DESIGN.md): the agent is asked to
 // diagram a small system it is told about, and the result is graded by the same `Diagnostics`
-// report that gates our own layouts — plus deterministic checks that the diagram is about the
+// report that gates our own layouts - plus deterministic checks that the diagram is about the
 // system it was given. No LLM judge yet: legibility and grounding are both machine-checkable.
 //
 
 const SYSTEM = trim`
   Components of the "Relay" service (each with its documentation URL):
-  - Gateway (https://example.com/docs/gateway) — accepts client HTTPS requests.
-  - Auth (https://example.com/docs/auth) — verifies tokens for the Gateway.
-  - Router (https://example.com/docs/router) — the Gateway forwards authenticated requests here.
-  - Store (https://example.com/docs/store) — the Router reads and writes records here.
-  - Indexer (https://example.com/docs/indexer) — watches the Store for changes.
-  - Notifier (https://example.com/docs/notifier) — the Indexer tells it about changed records; it pushes to clients.
+  - Gateway (https://example.com/docs/gateway) - accepts client HTTPS requests.
+  - Auth (https://example.com/docs/auth) - verifies tokens for the Gateway.
+  - Router (https://example.com/docs/router) - the Gateway forwards authenticated requests here.
+  - Store (https://example.com/docs/store) - the Router reads and writes records here.
+  - Indexer (https://example.com/docs/indexer) - watches the Store for changes.
+  - Notifier (https://example.com/docs/notifier) - the Indexer tells it about changed records; it pushes to clients.
   Gateway and Auth form the "Edge" group; Router, Store, Indexer and Notifier form the "Core" group.
 `;
 
@@ -118,7 +118,7 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite.skip('Illustrator — diagram a described system as a legible, grounded flowchart', {
+evalite.skip('Illustrator - diagram a described system as a legible, grounded flowchart', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

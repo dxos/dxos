@@ -17,14 +17,14 @@ export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
   plugins?: Plugin.Plugin[];
   /**
    * Whether to include `ThemePlugin` in the core plugin set.
-   * Defaults to `false` — `ThemePlugin` requires a browser DOM and breaks Node-only tests.
+   * Defaults to `false` - `ThemePlugin` requires a browser DOM and breaks Node-only tests.
    * Set to `true` (with jsdom/happy-dom) when rendering React surfaces.
    */
   theme?: boolean;
 };
 
 /**
- * Headless core plugins for the test harness — the subset of `corePlugins()`
+ * Headless core plugins for the test harness - the subset of `corePlugins()`
  * that can be activated without a browser DOM.
  */
 const headlessCorePlugins = (): Plugin.Plugin[] => [

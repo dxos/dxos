@@ -12,7 +12,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 
-// TODO: FeedType is currently a closed literal — plugins like plugin-bluesky must add their type here.
+// TODO: FeedType is currently a closed literal - plugins like plugin-bluesky must add their type here.
 // Consider making it extensible (e.g. a string schema with a well-known-values registry) so plugins can
 // register feed types without modifying core.
 /** Subscription protocol type. */
@@ -55,12 +55,12 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     name: Schema.String.pipe(Schema.optional),
     /** The URL of the RSS/Atom feed or AT Protocol handle/DID. */
     url: Schema.String.pipe(Schema.optional),
-    /** Protocol type — determines which fetcher is used for sync. */
+    /** Protocol type - determines which fetcher is used for sync. */
     type: FeedType.pipe(Schema.optional),
     /** Description of the feed. */
     description: Schema.String.pipe(Schema.optional),
     /**
-     * URL of the feed's own website — the RSS channel-level `<link>` / Atom `rel="alternate"`.
+     * URL of the feed's own website - the RSS channel-level `<link>` / Atom `rel="alternate"`.
      * Written by sync from the parsed channel, so it is not a form input.
      */
     link: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
@@ -78,12 +78,12 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
       }),
       Schema.optional,
     ),
-    /** Opaque sync cursor — protocol-specific. */
+    /** Opaque sync cursor - protocol-specific. */
     cursor: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     /** Backing ECHO feed (queue) for Posts: immutable feed entries appended by sync. */
     feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
-     * Backing ECHO feed (queue) for fetched article bodies — one
+     * Backing ECHO feed (queue) for fetched article bodies - one
      * {@link PostContent} entry per Post whose content has been loaded.
      *
      * Feeds (not the {@link postState} side map) are the right home for big
@@ -103,12 +103,12 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
     /**
      * Per-Post mutable state keyed by Post id, shared across every Magazine that references the Post.
      * Posts live immutably in the `feed` queue; their `readAt` marker lives here. (`snippet`/`imageUrl`
-     * are derived from the Post, or refined onto `contentFeed` entries — not stored here; star/archive
-     * are tags — see `tags`.)
+     * are derived from the Post, or refined onto `contentFeed` entries - not stored here; star/archive
+     * are tags - see `tags`.)
      */
     postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
-     * Per-Post tags keyed by tag uri → Post ids. Boolean flags (starred, archived — see
+     * Per-Post tags keyed by tag uri -> Post ids. Boolean flags (starred, archived - see
      * {@link SYSTEM_TAGS}) are modelled as {@link Tag} objects so they
      * participate in the space-wide tag system. Stored as a child {@link TagIndex} object.
      */
@@ -189,7 +189,7 @@ export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.ma
  * Lives in a queue (not on `Subscription.postState`) because fetched bodies
  * can be many KB; storing them inline would inflate the Subscription document
  * unboundedly and force every reader to download every body. The queue is
- * lazily replicated and append-only — a natural fit for immutable content.
+ * lazily replicated and append-only - a natural fit for immutable content.
  */
 export class PostContent extends Type.makeObject<PostContent>(
   DXN.make('org.dxos.type.subscription.postContent', '0.1.0'),
@@ -236,7 +236,7 @@ export const findSystemTagUri = async (
   which: SystemTag,
 ): Promise<string | undefined> => {
   // Prefer the current key; fall back to the legacy 'org.dxos.plugin.feed' source so
-  // starred/archived tags created before the plugin-feed → plugin-magazine rename still resolve.
+  // starred/archived tags created before the plugin-feed -> plugin-magazine rename still resolve.
   // Two separate queries ensure deterministic priority when both tags co-exist.
   const [currentTag] = await db.query(Filter.foreignKeys(Tag.Tag, [SYSTEM_TAGS[which].key])).run();
   if (currentTag) {

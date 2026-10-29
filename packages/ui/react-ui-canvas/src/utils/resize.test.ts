@@ -13,9 +13,9 @@ const snap = (value: number) => Math.round(value / 64) * 64;
 
 describe('resizeBounds', () => {
   test('a moving edge lands on the snap and the opposite edge stays put', ({ expect }) => {
-    // East edge 300 + 50 → 350 → snapped to 320.
+    // East edge 300 + 50 -> 350 -> snapped to 320.
     expect(resizeBounds(start, 'e', { x: 50, y: 0 }, { minSize, snap })).toEqual({ ...start, width: 220 });
-    // West edge 100 - 40 → 60 → snapped to 64; the east edge stays at 300.
+    // West edge 100 - 40 -> 60 -> snapped to 64; the east edge stays at 300.
     expect(resizeBounds(start, 'w', { x: -40, y: 0 }, { minSize, snap })).toEqual({ ...start, x: 64, width: 236 });
     // A corner moves both axes; `n` keeps the bottom edge.
     expect(resizeBounds(start, 'ne', { x: 20, y: -28 }, { minSize })).toEqual({

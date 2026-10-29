@@ -23,7 +23,7 @@ import { Form } from './Form.tsx';
 import { FormField } from './FormField.tsx';
 import { META_TAGS_KEY, partitionMetaTags, resolveMetaTags, withMetaTags } from './meta-tags.ts';
 
-/** The tags row's create option: `Add tag “{query}”`. */
+/** The tags row's create option: `Add tag "{query}"`. */
 const CREATE_TAG_LABEL: CreateOptions['createOptionLabel'] = ['add-tag-query.label', { ns: translationKey }];
 
 /** The create form for a tag (the meta-tags row's create target): its `hue` as a hue Select. */

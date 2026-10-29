@@ -27,7 +27,7 @@ export const getOrderFromArrangement = (arrangement?: Kanban.Arrangement): strin
  * Returns mutable copies so schema readonly does not leak to callers.
  *
  * @param arrangement - Optional arrangement; reads columns.
- * @returns Map of column value → { ids, hidden? }; empty object if not set.
+ * @returns Map of column value -> { ids, hidden? }; empty object if not set.
  */
 export const getOrderByColumnFromArrangement = (
   arrangement?: Kanban.Arrangement,
@@ -52,7 +52,7 @@ export const getOrderByColumnFromArrangement = (
  * Column order: uncategorized first, then effectiveOrder, then any
  * selectOption ids not yet in order. Each entry gets the ids from
  * effectiveByColumn for that column (or empty). Columns whose entry has
- * `hidden: true` are dropped from the result — currently only the
+ * `hidden: true` are dropped from the result - currently only the
  * "Uncategorized" column is toggleable from settings, but the filter is
  * generic so any column can be hidden via the same flag.
  *
@@ -156,7 +156,7 @@ export const computeItemArrangement = <T extends KanbanLayout.BaseKanbanItem = K
 
   // Column order: uncategorized first, then each select option (skip
   // uncategorized if duplicated). Columns whose arrangement entry has
-  // `hidden: true` are dropped — same generic hide-by-column flag used
+  // `hidden: true` are dropped - same generic hide-by-column flag used
   // by `computeColumnStructure`.
   const columnEntries = [
     { columnValue: KanbanConstants.UNCATEGORIZED_VALUE, ids: byColumn[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? [] },

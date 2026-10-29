@@ -21,7 +21,7 @@ import { ContentBlock, Message } from '@dxos/types';
  * with it, and count what comes back out.
  *
  * Run this first after `moon run fixtures:pull -- mailbox`. It answers "did the corpus survive
- * capture, transfer and ingestion" before any real pipeline runs against it — otherwise a wrong
+ * capture, transfer and ingestion" before any real pipeline runs against it - otherwise a wrong
  * result is ambiguous between a broken fixture and a broken pipeline.
  *
  * Skipped wherever the fixture is absent, which includes all of CI: a suite depending on a private
@@ -119,7 +119,7 @@ describe.skipIf(!fixtureExists(FIXTURE))(`mailbox fixture: "${FIXTURE}"`, () => 
 
 /**
  * Rebuilds a feed message from its serialized form, minting a fresh id so an archive can be ingested
- * into the space it came from without colliding. Cross-object refs (`attachments`) are dropped —
+ * into the space it came from without colliding. Cross-object refs (`attachments`) are dropped -
  * they would dangle against objects the archive does not carry.
  */
 const reconstruct = (archived: ArchivedMessage): Message.Message =>

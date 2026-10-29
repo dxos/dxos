@@ -16,7 +16,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
 
 /**
- * The agent's chats — its primary chat and the Discord thread chats bridged to it.
+ * The agent's chats - its primary chat and the Discord thread chats bridged to it.
  * A child-of filter rather than `.children()`, which EDGE's query planner cannot run.
  */
 export const loadChats = (agent: Agent.Agent): Effect.Effect<Chat.Chat[], never, Database.Service> =>

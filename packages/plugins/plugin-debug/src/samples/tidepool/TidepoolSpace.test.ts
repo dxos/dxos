@@ -52,7 +52,7 @@ describe('Tidepool template', () => {
     expect(tasks.filter((task) => !children.includes(task))).toHaveLength(6);
     expect(children).toHaveLength(11);
 
-    // The migration sub-task has children of its own — the level Bramble's flat task set never
+    // The migration sub-task has children of its own - the level Bramble's flat task set never
     // exercised.
     const migration = tasks.find((task) => task.title?.startsWith('Migrate notes written'));
     expect(migration?.id).toBeDefined();

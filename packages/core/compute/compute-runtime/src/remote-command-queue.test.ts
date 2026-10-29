@@ -85,7 +85,7 @@ describe('RemoteCommandQueue', () => {
   );
 
   it.effect(
-    'purging a process drops its commands and alias but not another process’s',
+    "purging a process drops its commands and alias but not another process's",
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const queue = new RemoteCommandQueue(kv);

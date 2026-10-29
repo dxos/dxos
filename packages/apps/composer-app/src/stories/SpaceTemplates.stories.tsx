@@ -111,8 +111,8 @@ const getTemplateContent = async (space: Space): Promise<{ labels: string[]; obj
 };
 
 /**
- * Creates a space from the template through `space.create` — the path the Create Space dialog
- * takes — and opens it in the deck, so its navtree and objects can be browsed.
+ * Creates a space from the template through `space.create` - the path the Create Space dialog
+ * takes - and opens it in the deck, so its navtree and objects can be browsed.
  */
 const TemplateSpace = ({ template }: { template: string }) => {
   const client = useClient();
@@ -184,7 +184,7 @@ const resetIframePath = () => {
 };
 
 /**
- * The deck keeps its navigation in the address bar (`/w/<space>/…`), which inside storybook is the
+ * The deck keeps its navigation in the address bar (`/w/<space>/...`), which inside storybook is the
  * preview iframe's own location, so a remount (HMR, an arg change) would boot the new ephemeral
  * client against the previous client's workspace. The reset runs during render, ahead of the
  * plugin manager's effects that boot the deck.

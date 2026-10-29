@@ -26,7 +26,7 @@ import {
  *
  */
 // TODO(burdon): Make internal
-// Omits the brand slots — those get stamped on the instance by the entity
+// Omits the brand slots - those get stamped on the instance by the entity
 // handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap
 // from kind + jsonSchema.entityKind, StaticTypeSchemaSlot lazily via the
 // proxy), not supplied by the caller.
@@ -37,7 +37,7 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | S
  * Requires a TS-effect schema.
  *
  * Callers that have a `Type.Type` entity (not a raw schema) must unwrap it
- * themselves — `Obj.make` / `Relation.make` do this via `Type.getSchema(...)`
+ * themselves - `Obj.make` / `Relation.make` do this via `Type.getSchema(...)`
  * and pass the entity through as `typeSource` so the instance carries a
  * back-reference for `Obj.getType` and resolves the live source schema
  * uniformly via the entity's `[StaticTypeSchemaSlot]`.
@@ -110,13 +110,13 @@ const createReactiveObject = <T extends AnyProperties>(
 
 /**
  * Rewrap an object decoded from JSON (via `objectFromJSON`) into a live reactive proxy, so that
- * `Obj.update` synchronously mutates it and `Obj.subscribe`/atoms fire — the same contract as
+ * `Obj.update` synchronously mutates it and `Obj.subscribe`/atoms fire - the same contract as
  * automerge-backed objects. Unlike {@link makeObject}, the target already carries `SchemaId`/
  * `TypeId` stamped by `setSchema`/`setTypename` (both `configurable: false`), so this does not
- * re-derive or re-stamp them — it only validates against the schema, reactifies nested arrays,
+ * re-derive or re-stamp them - it only validates against the schema, reactifies nested arrays,
  * rewraps `[MetaId]` as a live nested proxy, and wraps the whole object in a proxy.
  *
- * Objects whose type could not be resolved at decode time (no `SchemaId`) are returned unchanged —
+ * Objects whose type could not be resolved at decode time (no `SchemaId`) are returned unchanged -
  * they remain plain snapshots and `Obj.update` on them stays a no-op, since there is no schema to
  * validate mutations against.
  */

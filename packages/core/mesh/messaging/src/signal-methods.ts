@@ -87,15 +87,15 @@ export interface SignalMethods {
 
   /**
    * Send a message. Point-to-point when `recipient` is set; a swarm broadcast (DX-1125) when `tags`
-   * are set — fanned out to every peer whose tag subscription intersects, with the target swarm taken
+   * are set - fanned out to every peer whose tag subscription intersects, with the target swarm taken
    * from `author.swarmKey`. Exactly one of `recipient` / `tags` must be present. Broadcasts are only
    * supported by edge signaling.
    */
   sendMessage: (ctx: Context, message: Message) => Promise<void>;
 
   /**
-   * Start receiving messages for `peer`: its point-to-point messages, plus — when `tags` are provided
-   * (DX-1125) — swarm broadcasts whose tags intersect. Matching messages are routed to
+   * Start receiving messages for `peer`: its point-to-point messages, plus - when `tags` are provided
+   * (DX-1125) - swarm broadcasts whose tags intersect. Matching messages are routed to
    * `params.onMessage`; routing and the transport stream are owned here. Returns a callback that tears
    * the subscription down; the subscriber owns that lifecycle.
    */

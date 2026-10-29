@@ -201,7 +201,7 @@ export class BlobManager {
     try {
       return await registered.backend.has({ spaceId, uri: data.uri });
     } catch {
-      // A rejecting backend (e.g. offline) means existence can't be confirmed — report as absent
+      // A rejecting backend (e.g. offline) means existence can't be confirmed - report as absent
       // rather than letting the rejection become an unrecoverable defect for callers.
       return false;
     }
@@ -219,7 +219,7 @@ export class BlobManager {
     try {
       return await registered.backend.getUrl({ spaceId, uri: data.uri, contentType });
     } catch {
-      // A rejecting backend means no renderable URL is available right now — same as not
+      // A rejecting backend means no renderable URL is available right now - same as not
       // implementing `getUrl` at all, rather than an unrecoverable defect for callers.
       return undefined;
     }

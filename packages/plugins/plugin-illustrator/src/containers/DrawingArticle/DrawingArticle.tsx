@@ -34,7 +34,7 @@ export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic
   const { t } = UiHooks.useTranslation(IllustratorNamespace.key);
   const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
-  // Subscribe via the snapshot for load/re-render, but hand variants the LIVE object —
+  // Subscribe via the snapshot for load/re-render, but hand variants the LIVE object -
   // their store adapters need `Doc.createAccessor`, which rejects snapshots.
   const [snapshot] = useObject(ref);
   const canvas = snapshot ? ref.target : undefined;

@@ -68,7 +68,7 @@ test.describe('HALO tests', () => {
 
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
     // TODO(wittjosiah): Why so slow?
-    // Wait for replication to complete — guest inherits all of host's spaces.
+    // Wait for replication to complete - guest inherits all of host's spaces.
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 60_000 });
     // The guest swapped identities without leaving the page.
     await guest.expectSameDocument(guestDocument);

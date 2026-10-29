@@ -20,7 +20,7 @@ describe('pluginSet', () => {
     const clock = makePlugin('org.example.clock', ['org.example.map']);
     const manager = PluginManager.make({
       plugins: [map],
-      // Loads the dev plugin, as Plugins → Dev Server does from its manifest URL.
+      // Loads the dev plugin, as Plugins -> Dev Server does from its manifest URL.
       pluginLoader: () => Effect.succeed({ plugin: clock, dev: true }),
     });
     await EffectEx.runPromise(

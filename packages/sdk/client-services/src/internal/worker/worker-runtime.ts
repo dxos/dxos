@@ -36,11 +36,11 @@ import { SessionClosed } from './events.ts';
 
 // Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol
 // serves the client services; systemProtocol carries the reverse-direction
-// RTCService (worker→tab).
+// RTCService (worker->tab).
 export type CreateSessionProps = {
-  /** Forward-direction (tab→worker) protocol over which the worker serves the client services. */
+  /** Forward-direction (tab->worker) protocol over which the worker serves the client services. */
   appProtocol: RpcServer.Protocol['Service'];
-  /** Reverse-direction (worker→tab) protocol serving the tab's WebRTC `RTCService`; the worker is the client. */
+  /** Reverse-direction (worker->tab) protocol serving the tab's WebRTC `RTCService`; the worker is the client. */
   systemProtocol: RpcClient.Protocol['Service'];
 };
 
@@ -53,7 +53,7 @@ export interface WorkerSession {
 /**
  * Grace period between "worker booted" and the first edge dial. wa-sqlite runs in-process on this
  * thread, so the dial, its auth-header request, and the replication behind it contend with the boot
- * RPCs the tab is waiting on — on a document-heavy profile the session handshake loses that race and
+ * RPCs the tab is waiting on - on a document-heavy profile the session handshake loses that race and
  * the client reports a connect timeout. Yielding lets the queued handshake drain first; replication
  * then proceeds behind a live session. The stack exposes the capability; the embedder decides the timing.
  */
@@ -129,8 +129,8 @@ export const makeWorkerRuntime = ({
   onIndexStatus,
 }: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, WorkerRuntimeStartError, Scope.Scope> =>
   Effect.gen(function* () {
-    // Held so effects that outlive this construction — a session finalizer, which the framework runs
-    // when it closes a session scope — still reach the controller.
+    // Held so effects that outlive this construction - a session finalizer, which the framework runs
+    // when it closes a session scope - still reach the controller.
     const controller = yield* Hook.Controller;
     const transportFactory = new RtcTransportProxyFactory();
     const ready = new Trigger<Error | undefined>();

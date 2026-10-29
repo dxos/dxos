@@ -123,7 +123,7 @@ export const CalendarArticle = ({ role, subject, attendableId, filter: filterPro
   );
 
   // Persist a committed multi-day range into the selection manager (as ISO date strings) so actions
-  // contributed to the calendar — e.g. plugin-trip's "Plan trip from calendar" — can read it. Uses a
+  // contributed to the calendar - e.g. plugin-trip's "Plan trip from calendar" - can read it. Uses a
   // dedicated context id so the `range` mode doesn't collide with the `single` event selection on `id`.
   const handleRangeSelect = useCallback(
     ({ range }: { range: { from: Date; to: Date } }) => {

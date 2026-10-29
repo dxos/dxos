@@ -18,8 +18,8 @@ import * as Scorer from '../Scorer.ts';
 
 // Ported from the gated `Planning` scenario (../testing/planning.test.ts).
 // Grades the real outline-checklist DB state and tool-invocation trace directly instead of the agent's
-// self-reported completedCriteria. "A 3-line haiku was written for each topic" — a content
-// judgment a deterministic check can't make — is graded by an LLM judge (TESTING.md dimensions
+// self-reported completedCriteria. "A 3-line haiku was written for each topic" - a content
+// judgment a deterministic check can't make - is graded by an LLM judge (TESTING.md dimensions
 // A/B/H); every other criterion stays dimension-G (deterministic).
 
 const UPDATE_TASKS_OPERATION_KEY = 'dxn:org.dxos.operation.assistantToolkit.updateTasks';
@@ -31,7 +31,7 @@ const OUTLINE_TYPENAME = 'org.dxos.type.outline';
 
 const HAIKU_JUDGE_RUBRIC = trim`
   You are grading an AI assistant's chat transcript against one criterion: does it contain three
-  distinct haiku-style poems (roughly 3 lines each), one for each of these topics — "spring rain",
+  distinct haiku-style poems (roughly 3 lines each), one for each of these topics - "spring rain",
   "ocean waves", "night stars"?
 
   Pass only if all three topics each have their own short, line-broken poem about that topic. Fail
@@ -115,20 +115,20 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite('Planning — create three haiku tasks and complete each one', {
+evalite('Planning - create three haiku tasks and complete each one', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),
 });
 
-// A judge that only ever passes would be worthless as a scorer — this demonstrates it correctly
+// A judge that only ever passes would be worthless as a scorer - this demonstrates it correctly
 // fails malformed output against the same rubric used above, on a hand-crafted transcript rather
 // than a live agent run.
 const MALFORMED_HAIKU_TRANSCRIPT = trim`
   I wrote a haiku about spring rain: gentle drops falling softly on green leaves today.
 `;
 
-evalite('Planning — haiku judge correctly fails malformed output', {
+evalite('Planning - haiku judge correctly fails malformed output', {
   data: [{ input: { content: MALFORMED_HAIKU_TRANSCRIPT } }],
   task: (input: { content: string }) => EffectEx.runPromise(judge(HAIKU_JUDGE_RUBRIC, input.content)),
   scorers: [

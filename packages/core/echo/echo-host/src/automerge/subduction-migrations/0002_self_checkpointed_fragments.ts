@@ -31,8 +31,8 @@ export type FragmentRepairResult = {
 };
 
 /**
- * Rewrites every self-checkpointed fragment in `storage` — what every client on
- * `@automerge/automerge` < 3.5 wrote, and a shape the engine reports no head for — into the valid
+ * Rewrites every self-checkpointed fragment in `storage` - what every client on
+ * `@automerge/automerge` < 3.5 wrote, and a shape the engine reports no head for - into the valid
  * one: same head, boundary and blob; checkpoints without the head and the boundary ids. Goes
  * through `subduction.storeBuiltBatch`, which signs the new record with the Repo's signer and
  * replaces the two chunks (`[subduction, fragments, <sid>, <head>]` and its `fragment-blobs`
@@ -40,7 +40,7 @@ export type FragmentRepairResult = {
  *
  * Never deletes and never edits stored bytes: a chunk that does not parse is not a fragment of ours
  * to touch, and one whose blob is missing or mismatched, or whose rewrite throws, is left exactly
- * as it was. Idempotent — a rewritten record no longer matches. One `storeBuiltBatch` per
+ * as it was. Idempotent - a rewritten record no longer matches. One `storeBuiltBatch` per
  * sedimentree.
  *
  * Runs before the engine loads any tree: a loaded tree keeps one in-memory fragment per head (the
@@ -115,7 +115,7 @@ export const repairSelfCheckpointedFragments = async (
 };
 
 /**
- * Store-wide {@link repairSelfCheckpointedFragments}. Done — and so recorded — once no rewrite
+ * Store-wide {@link repairSelfCheckpointedFragments}. Done - and so recorded - once no rewrite
  * failed; a permanently skipped record does not hold it open, since nothing later can change it.
  */
 export const selfCheckpointedFragments: Migration = {

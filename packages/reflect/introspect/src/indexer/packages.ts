@@ -11,7 +11,7 @@ import { promisify } from 'node:util';
 
 import type { PackageDetail } from '../types.ts';
 
-// stderr-only — stdout is reserved for the MCP JSON-RPC stream.
+// stderr-only - stdout is reserved for the MCP JSON-RPC stream.
 const warn = (msg: string, err?: unknown): void => {
   console.error(err ? `[introspect packages] ${msg}: ${String(err)}` : `[introspect packages] ${msg}`);
 };
@@ -37,7 +37,7 @@ type PackageJson = {
  *
  * Tries Moon's project graph first (`moon query projects`). Falls back to
  * globbing `packages/**\/package.json` when Moon is not on PATH or the command
- * fails — this keeps the package usable in fixture trees that don't ship Moon.
+ * fails - this keeps the package usable in fixture trees that don't ship Moon.
  */
 export const discoverPackages = async (rootPath: string): Promise<PackageDetail[]> => {
   const fromMoon = await tryMoon(rootPath);
@@ -56,7 +56,7 @@ const tryMoon = async (rootPath: string): Promise<PackageDetail[] | null> => {
   }
   try {
     // moon query projects returns JSON to stdout by default. Bound the wait so
-    // a hung moon process can't block `introspector.ready` indefinitely — fall
+    // a hung moon process can't block `introspector.ready` indefinitely - fall
     // through to glob if it doesn't return promptly.
     const { stdout } = await execAsync('moon query projects', {
       cwd: rootPath,
@@ -137,7 +137,7 @@ const readPackageJson = async (rootPath: string, source: string): Promise<Packag
 };
 
 const resolveEntryPoints = (pkg: PackageJson): string[] => {
-  // Prefer the `source` field in `exports."."` (DXOS convention) — it points at TS.
+  // Prefer the `source` field in `exports."."` (DXOS convention) - it points at TS.
   // Fall back to `main` / common defaults so non-DXOS shapes still produce something.
   const candidates: string[] = [];
   const exports = pkg.exports;

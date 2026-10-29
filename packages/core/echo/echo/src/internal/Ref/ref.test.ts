@@ -139,7 +139,7 @@ describe('Ref', () => {
     });
 
     test('reports the offending value under `reportInput`', ({ expect }) => {
-      // The value distinguishes "you passed a number" from "you passed an unresolvable envelope" —
+      // The value distinguishes "you passed a number" from "you passed an unresolvable envelope" -
       // the two mistakes a remote caller actually makes. Operation input validation turns this on;
       // see `validateOperationInput` in `@dxos/compute`.
       expect(rejectionMessage(42, { reportInput: true })).toContain('42');

@@ -7,7 +7,7 @@ import { useCallback, useRef, useState } from 'react';
 import { type Space } from '@dxos/client/echo';
 
 /**
- * Flushes a space's database to storage, exposing a transient `idle → flushing → flushed → idle`
+ * Flushes a space's database to storage, exposing a transient `idle -> flushing -> flushed -> idle`
  * state suitable for driving a toolbar affordance.
  */
 export const useFlush = (space?: Space) => {

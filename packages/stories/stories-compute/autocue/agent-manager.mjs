@@ -39,7 +39,7 @@ export const steps = [
   {
     name: 'Prompt a second local agent',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Pick a suggestion — a second local agent runs alongside', subtitle: SUBTITLE });
+      await demo.caption({ value: 'Pick a suggestion - a second local agent runs alongside', subtitle: SUBTITLE });
       await demo.click({ text: 'Research the history of the Lisbon tram network', exact: true });
       await demo.click({ selector: '[data-testid="process-create"]', label: 'Create' });
       await waitForCards(page, 2);

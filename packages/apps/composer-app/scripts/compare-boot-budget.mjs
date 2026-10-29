@@ -25,7 +25,7 @@ const head = JSON.parse(readFileSync(headPath, 'utf8'));
 
 const asMb = (value) => `${(value / 1024 / 1024).toFixed(2)} MB`;
 const asKb = (value) => `${(value / 1024).toFixed(1)} KB`;
-const signed = (value, format) => `${value >= 0 ? '+' : '−'}${format(Math.abs(value))}`;
+const signed = (value, format) => `${value >= 0 ? '+' : '-'}${format(Math.abs(value))}`;
 const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
 const bytesDelta = head.bytes - base.bytes;
@@ -62,10 +62,10 @@ const body = [
   'If none of these applies, say why in the PR description. Do not raise `MAX_PRELOAD_BYTES` in',
   '`check-boot-budget.mjs` to make room: that is a decision for the team.',
   '',
-  '| | base | this PR | Δ | budget |',
+  '| | base | this PR | Delta | budget |',
   '| --- | ---: | ---: | ---: | ---: |',
   `| bytes | ${asMb(base.bytes)} | ${asMb(head.bytes)} | ${signed(bytesDelta, asKb)} (${signed(percent, (value) => `${value.toFixed(1)}%`)}) | ${asMb(head.budget.bytes)} |`,
-  `| preload entries | ${base.count} | ${head.count} | ${countDelta === 0 ? '—' : signed(countDelta, String)} | ${head.budget.count} |`,
+  `| preload entries | ${base.count} | ${head.count} | ${countDelta === 0 ? '-' : signed(countDelta, String)} | ${head.budget.count} |`,
   '',
   `Headroom left: ${asMb(head.budget.bytes - head.bytes)} and ${plural(head.budget.count - head.count, 'entry', 'entries')}.`,
   ...(chunks.length > 0
@@ -73,12 +73,12 @@ const body = [
         '',
         '<details><summary>Chunks that moved</summary>',
         '',
-        '| chunk | base | this PR | Δ |',
+        '| chunk | base | this PR | Delta |',
         '| --- | ---: | ---: | ---: |',
         ...chunks.map(
           (chunk) =>
-            `| \`${chunk.name}\` | ${chunk.base === undefined ? '—' : asKb(chunk.base)} | ` +
-            `${chunk.head === undefined ? '—' : asKb(chunk.head)} | ${signed(chunk.delta, asKb)} |`,
+            `| \`${chunk.name}\` | ${chunk.base === undefined ? '-' : asKb(chunk.base)} | ` +
+            `${chunk.head === undefined ? '-' : asKb(chunk.head)} | ${signed(chunk.delta, asKb)} |`,
         ),
         '',
         '</details>',

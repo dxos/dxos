@@ -31,7 +31,7 @@ describe('classifyOrigin', () => {
   });
 
   test('a host that only CONTAINS an analytics name is not analytics', ({ expect }) => {
-    // `posthog.com.dxos.network` ends in the edge suffix, so it is the backend — the analytics
+    // `posthog.com.dxos.network` ends in the edge suffix, so it is the backend - the analytics
     // name sits in the prefix and matches nothing. Suffix rules cannot see a proxy that does not
     // announce itself in its host, and pretending otherwise would be the hole.
     expect(classifyOrigin('https://posthog.com.dxos.network/e/', ['dxos.network'])).toBe('edge');

@@ -271,7 +271,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
     const changed =
       presented.kind === 'groups'
-        ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
+        ? // Same T-is-erased-Group boundary as `_presentResults` - `_objectCache`/`presented.objects`
           // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
           !_groupsEqual(
             this._objectCache as unknown as GroupResult[] | undefined,
@@ -288,7 +288,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     log('recomputeResult', { changed });
 
     // An aggregate or change query assembles its records fresh on every recompute, so an unchanged result
-    // still yields a new array — and `useQuery` reads `results` as its `useSyncExternalStore` snapshot
+    // still yields a new array - and `useQuery` reads `results` as its `useSyncExternalStore` snapshot
     // on every render, which would then see a new reference for identical data. Hold the previous
     // arrays in that case only: on the flat path `changed` compares ids and order alone, so pinning
     // would serve stale entities and stale per-row match metadata.
@@ -329,13 +329,13 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   }
 
   /**
-   * Drop entities whose tombstone the index has not caught up with yet — the failure this
+   * Drop entities whose tombstone the index has not caught up with yet - the failure this
    * prevents is code that reads `results.length` or asserts a singleton and breaks on a
    * merged-away duplicate it did not create.
    *
    * Read-only by design: the merge itself runs in the worker off the indexing stream (see
    * `echo-host`'s convergence-key merge), and its tombstones leave query results through ordinary
-   * deleted-filtering once re-indexed. This filter only covers the gap in between — cached
+   * deleted-filtering once re-indexed. This filter only covers the gap in between - cached
    * reactive-query entries hydrated before the re-index. It keys on the deleted flag rather
    * than `mergedInto` (the merge writes both in one change) so that it can never hide a live
    * entity: a loser resurrected by `db.add` stays visible until the worker re-tombstones it,
@@ -343,7 +343,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    */
   private _collapseDuplicates(entries: SourceEntry<T>[]): { kept: SourceEntry<T>[]; removed: SourceEntry<T>[] } {
     // A query that explicitly asks for tombstones is asking to see what was merged away, so
-    // filtering would defeat it — this is how a diagnostic inspects the losers.
+    // filtering would defeat it - this is how a diagnostic inspects the losers.
     if (_queryIncludesDeleted(this._query.ast)) {
       return { kept: entries, removed: [] };
     }
@@ -427,7 +427,7 @@ type GroupResult = { [field: string]: unknown };
 
 /**
  * Boundary cast: T is a plain record for aggregate and change queries (`Query.RecordResult`), but
- * this class is written generically over the entity type — records are a presentation transform
+ * this class is written generically over the entity type - records are a presentation transform
  * applied on top of row-level entries, with the row type erased at runtime.
  */
 const _asResultRows = <T>(rows: readonly unknown[]): T[] => rows as unknown as T[];
@@ -437,7 +437,7 @@ const _asResultRows = <T>(rows: readonly unknown[]): T[] => rows as unknown as T
  * `entries`. The host/local query sources already deliver an aggregate query's entries with groups
  * contiguous and correctly ordered (see `AggregateStep`); this only needs to re-derive that grouping
  * locally, after row objects have deduped/hydrated on the client. Group-key fields and declared
- * aggregates become top-level record fields — group keys spread from the source `key`, others
+ * aggregates become top-level record fields - group keys spread from the source `key`, others
  * recomputed here from each group's hydrated members (`max`/`min`/`items`) or taken from the source
  * (`count`); the ordering they drive is already applied by the source. A group with unhydrated
  * members reflects only the hydrated subset for member-derived aggregates.
@@ -547,7 +547,7 @@ const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly
   }
 };
 
-/** Coerces a raw property value to the scalar aggregate domain (non-scalars → `null`). */
+/** Coerces a raw property value to the scalar aggregate domain (non-scalars -> `null`). */
 const _coerceScalar = (value: unknown): AggregateValue =>
   typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null;
 
@@ -565,7 +565,7 @@ const _groupAggregatesFromQuery = (query: QueryAST.Query): readonly QueryAST.Gro
 };
 
 /**
- * Compares two flat aggregate result sets field-by-field — mirrors the row-level id diff used for
+ * Compares two flat aggregate result sets field-by-field - mirrors the row-level id diff used for
  * non-aggregate queries. Member arrays (the `items` aggregate) compare by id sequence; scalar fields
  * (group keys and `max`/`min`/`count`) compare by value.
  */
@@ -608,7 +608,7 @@ type QueryDiagnostic = {
  *
  * Held weakly, and this is load-bearing rather than tidy. A diagnostic record is reachable only from
  * its own `QueryResultImpl`, but it carries an unformatted `creationStack`, and an unformatted stack
- * retains the receiver of every frame it captured — including the `QueryResultImpl` under
+ * retains the receiver of every frame it captured - including the `QueryResultImpl` under
  * construction, hence its query context, hypergraph, client, database, and every document loaded
  * through them. A strong entry here therefore pinned one whole client graph per query for the
  * lifetime of the process, which killed long-lived hosts: a Cloudflare Worker running ECHO

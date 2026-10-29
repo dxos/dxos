@@ -334,7 +334,7 @@ const InputSection = () => (
     </Field.Root>
     <Field.Root>
       <Field.Label>Search</Field.Label>
-      <Input start={<Icon.Icon icon='ph--magnifying-glass--regular' />} placeholder='Find…' />
+      <Input start={<Icon.Icon icon='ph--magnifying-glass--regular' />} placeholder='Find...' />
     </Field.Root>
     <Field.Root>
       <Field.Label>Workspace</Field.Label>
@@ -528,7 +528,7 @@ const AvatarSection = () => (
   <Section id='avatar' title='Avatar'>
     <Group>
       <Avatar.Root fallback='Ada Lovelace' hue='blue' status='current' label='Ada Lovelace' />
-      <Avatar.Root fallback='🦊' hue='amber' label='Fox' />
+      <Avatar.Root fallback='&#x1F98A;' hue='amber' label='Fox' />
       <Avatar.Root fallback='Bob' hue='rose' variant='square' status='inactive' label='Bob' />
       <Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
       <Avatar.Root fallback='Eve' hue='teal' hueVariant='transparent' status='error' label='Eve' />
@@ -824,9 +824,9 @@ const TimestampSection = () => {
 };
 
 const MENU_ITEMS = [
-  { value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '⌘X' },
-  { value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '⌘C' },
-  { value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '⌘V' },
+  { value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '\u2318X' },
+  { value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '\u2318C' },
+  { value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '\u2318V' },
 ];
 
 const OverlaysSection = () => {
@@ -838,7 +838,7 @@ const OverlaysSection = () => {
           <Tooltip.Trigger asChild>
             <Button>Tooltip</Button>
           </Tooltip.Trigger>
-          <Tooltip.Content>Save changes (⌘S)</Tooltip.Content>
+          <Tooltip.Content>Save changes (&#x2318;S)</Tooltip.Content>
         </Tooltip.Root>
         <Popover.Root>
           <Popover.Trigger asChild>

@@ -154,7 +154,7 @@ const resolveMaxPages = (externalId: string, options: { maxPages?: number } | un
 
 /**
  * Dispatch on the target's `externalId` to the right Bluesky XRPC call.
- * The authenticated branches pull credentials (handle, PDS, token, …) from
+ * The authenticated branches pull credentials (handle, PDS, token, ...) from
  * the `Credentials` service, so the only state needed here is the
  * target's id and the page cursor.
  */

@@ -29,7 +29,7 @@ export default SandboxOperation.Exec.pipe(
       const sandboxService = yield* SandboxService.Service;
 
       // Yielded directly rather than through `Effect.promise`: that wrapper is uninterruptible, so
-      // terminating the operation left the request running — the tool handler reported "Operation
+      // terminating the operation left the request running - the tool handler reported "Operation
       // was terminated" while the fetch underneath it stayed open.
       //
       // A request failure is reported as a failed command rather than raised. `Operation.make` has no

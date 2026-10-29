@@ -15,7 +15,7 @@ export type Scale = {
 /** A scale note with its position in handpan notation (`0` is the ding). */
 export type ScaleNote = {
   index: number;
-  /** Handpan notation label: `D` for the ding, then `1…n` ascending. */
+  /** Handpan notation label: `D` for the ding, then `1...n` ascending. */
   label: string;
   pitch: Pitch;
   midi: number;

@@ -36,7 +36,7 @@ const MediaOutput = Schema.Struct({
 /**
  * The `/requests/{id}/status` payload (also the submit response). Output fields are set only on
  * `completed`, and which is present depends on the model's output type. Unknown keys (the docs
- * mention `zip`/`mov`/… artifacts for some models) are ignored.
+ * mention `zip`/`mov`/... artifacts for some models) are ignored.
  */
 export const HiggsfieldRequestResponse = Schema.Struct({
   status: HiggsfieldRequestStatus,

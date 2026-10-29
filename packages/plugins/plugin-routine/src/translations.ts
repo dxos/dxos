@@ -48,7 +48,7 @@ export const translations: Theme.Resource[] = [
         'command.placeholder': 'Enter slash command...',
         'template.placeholder': 'Enter template...',
         'run-prompt.label': 'Run prompt',
-        'routine-running.label': 'Running…',
+        'routine-running.label': 'Running...',
         'run.label': 'Run',
         'run-error.message': 'Failed to run routine.',
 

@@ -88,8 +88,8 @@ export default Capability.makeModule(
       },
       onMediaStateUpdated: async ([mediaState, isSpeaking]: [CallManager.MediaState, boolean]) => {
         const { transcriptionManager } = store.state;
-        // Not awaited (media updates must not block on transcription), but a rejection — e.g. no
-        // transcription endpoint configured — has to be logged rather than left unhandled.
+        // Not awaited (media updates must not block on transcription), but a rejection - e.g. no
+        // transcription endpoint configured - has to be logged rather than left unhandled.
         void transcriptionManager?.setAudioTrack(mediaState.audioTrack).catch((err) => log.catch(err));
         void transcriptionManager?.setRecording(isSpeaking);
       },

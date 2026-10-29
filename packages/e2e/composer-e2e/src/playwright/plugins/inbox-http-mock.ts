@@ -8,7 +8,7 @@ import { type Jmap, type JmapDataset, generateJmapDataset } from '@dxos/plugin-j
 // HTTP-level mock for the Gmail and JMAP provider APIs, driven by the same deterministic fixtures the
 // plugin-inbox unit suite uses. It answers the exact requests mailbox sync/send make, so a Playwright
 // test can run the real client code with its network intercepted (via `page.route`) instead of hitting
-// a provider. The handler is pure and synchronous — no server, no socket — so it slots straight into a
+// a provider. The handler is pure and synchronous - no server, no socket - so it slots straight into a
 // route interceptor: parse the request, return a response, `route.fulfill`.
 
 export type MockRequest = {
@@ -76,18 +76,18 @@ export const createInboxHttpMock = (options: InboxHttpMockOptions = {}): InboxHt
       calls.push(`${method} ${url.pathname}`);
     }
 
-    // JMAP session discovery — any host, fixed well-known path.
+    // JMAP session discovery - any host, fixed well-known path.
     if (method === 'GET' && url.pathname === '/.well-known/jmap') {
       return json(jmap.session);
     }
 
-    // JMAP API — POST to the session apiUrl.
+    // JMAP API - POST to the session apiUrl.
     const apiUrl = new URL(jmap.session.apiUrl);
     if (method === 'POST' && url.hostname === apiUrl.hostname && url.pathname === apiUrl.pathname) {
       return handleJmap(request.body, { jmap, accountId, account });
     }
 
-    // Gmail userinfo (connect flow) — different host.
+    // Gmail userinfo (connect flow) - different host.
     if (method === 'GET' && url.hostname === 'www.googleapis.com' && url.pathname === '/oauth2/v3/userinfo') {
       return json({ email: account });
     }
@@ -185,7 +185,7 @@ const listGmailMessages = (dataset: GmailDataset, params: URLSearchParams) => {
   return {
     resultSizeEstimate: matching.length,
     messages: page.map((message) => ({ id: message.id, threadId: message.threadId })),
-    // Omit the key entirely on the last page — sync loops `while (pageToken)`.
+    // Omit the key entirely on the last page - sync loops `while (pageToken)`.
     ...(nextOffset < matching.length ? { nextPageToken: String(nextOffset) } : {}),
   };
 };

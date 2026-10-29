@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 /**
  * A single find/replace against a file. Deliberately the same vocabulary as `Text.Edit`, which the
- * markdown skill already uses for document edits, so one habit covers both — but with file-editor
+ * markdown skill already uses for document edits, so one habit covers both - but with file-editor
  * semantics: `oldString` must be unique in the file unless `replaceAll` is set.
  */
 const Edit = Schema.Struct({
@@ -22,7 +22,7 @@ const Edit = Schema.Struct({
   oldString: Schema.String.annotate({
     description: trim`
       Exact text to find, including whitespace and indentation. Must appear exactly once in the file
-      unless replaceAll is set — include the surrounding lines needed to make it unique.
+      unless replaceAll is set - include the surrounding lines needed to make it unique.
     `,
   }),
   newString: Schema.String.annotate({
@@ -45,7 +45,7 @@ export const Bash = Operation.make({
       and multiple lines all work as they would in a terminal. Use it to explore and inspect (ls,
       cat, rg, git status, git diff), and to run the project's own tooling (tests, linters, builds).
 
-      A non-zero exit code is a normal result, not a failure — read stderr and try again. Prefer the
+      A non-zero exit code is a normal result, not a failure - read stderr and try again. Prefer the
       edit tool over sed or a heredoc when changing a file: it is exact, and it reports what matched.
     `,
   },
@@ -91,7 +91,7 @@ export const Edits = Operation.make({
 
       The whole batch is all-or-nothing: if any edit fails to match, no file is written and the
       result names the edit that failed. Read a file (with the bash tool) before editing it, and
-      quote it exactly — this replaces literal text, not a pattern.
+      quote it exactly - this replaces literal text, not a pattern.
 
       Several edits may target the same file; they are applied in order against the file's evolving
       content, so a later edit must quote the text as the earlier ones left it.
@@ -107,7 +107,7 @@ export const Edits = Operation.make({
   }),
   output: Schema.Struct({
     applied: Schema.Boolean.annotate({
-      description: 'False means nothing was written — fix the failing edit and send the batch again.',
+      description: 'False means nothing was written - fix the failing edit and send the batch again.',
     }),
     files: Schema.Array(
       Schema.Struct({

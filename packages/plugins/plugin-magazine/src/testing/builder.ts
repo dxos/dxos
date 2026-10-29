@@ -40,7 +40,7 @@ export const generateFeed = (
 
 /**
  * Generates a Post. Note: per-Post state (snippet, imageUrl, readAt) is no
- * longer on the Post itself — it lives on the source Subscription's or
+ * longer on the Post itself - it lives on the source Subscription's or
  * Magazine's `postState` map. The caller is responsible for seeding those if
  * the story / test needs them. The `read` / `imageUrl` params are kept on
  * the signature for back-compat call sites; they are currently no-ops and

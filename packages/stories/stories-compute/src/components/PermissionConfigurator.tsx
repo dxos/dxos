@@ -97,7 +97,7 @@ export const PermissionConfigurator = ({ edge = false, ready = true, onSpawn }: 
           <Input.Textarea
             autoResize
             rows={3}
-            placeholder='Ask the agent to do something…'
+            placeholder='Ask the agent to do something...'
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             onKeyDown={handleKeyDown}

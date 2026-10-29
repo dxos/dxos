@@ -122,7 +122,7 @@ export const makeIrcConnection = (options: {
         if (message.params[1] === 'LS') {
           // `CAP LS`'s trailing param is the space-separated advertised caps; request
           // `echo-message` too when advertised, so the server echoes our own PRIVMSGs
-          // back to us — without it, messages we send never appear in our own view.
+          // back to us - without it, messages we send never appear in our own view.
           const advertised = new Set((message.params[2] ?? '').split(' ').filter(Boolean));
           const requested = ['sasl', 'echo-message'].filter((cap) => advertised.has(cap));
           if (requested.length > 0) {

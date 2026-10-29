@@ -11,7 +11,7 @@ import { fetchRoute } from './OsrmClient.ts';
 
 export const OSRM_SERVICE_ID = 'osrm';
 
-/** Default delay (ms) between Nominatim geocode calls, to respect its ≤ 1 req/s policy. */
+/** Default delay (ms) between Nominatim geocode calls, to respect its <= 1 req/s policy. */
 const DEFAULT_GEOCODE_DELAY_MS = 1_100;
 
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));

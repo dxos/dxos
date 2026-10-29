@@ -58,7 +58,7 @@ describe('ProcessMailbox operation', () => {
         }
 
         // Provenance recorded on the mailbox (feed messages cannot be relation endpoints), keyed by
-        // the canonical feed-read message ids — the ids trigger events carry.
+        // the canonical feed-read message ids - the ids trigger events carry.
         const feedMessages = yield* Feed.query(yield* Database.load(mailbox.feed), Filter.type(Message.Message)).run;
         const corporate = feedMessages.filter((message) => message.sender?.email !== 'riley.nakamura@gmail.com');
         expect(corporate).toHaveLength(2);
@@ -110,7 +110,7 @@ describe('ProcessMailbox operation', () => {
   );
 
   it.effect(
-    'research: true scaffolds a linked profile per new contact (feed → cursor → contact → profile)',
+    'research: true scaffolds a linked profile per new contact (feed -> cursor -> contact -> profile)',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();

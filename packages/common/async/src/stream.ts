@@ -9,7 +9,7 @@ import { type MaybePromise, throwUnhandledError } from '@dxos/util';
 
 import { Trigger } from './trigger.ts';
 
-/** Narrows a caught `unknown` to `Error` — a thrown value is not guaranteed to be one. */
+/** Narrows a caught `unknown` to `Error` - a thrown value is not guaranteed to be one. */
 const toCaughtError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)));
 
 type Callbacks<T> = {
@@ -345,7 +345,7 @@ export class Stream<T> {
 
 /**
  * Resolves with the first value the stream emits, then closes it.
- * Rejects if the stream closes first — with the stream's error where it had one — so a caller
+ * Rejects if the stream closes first - with the stream's error where it had one - so a caller
  * without a `timeout` cannot wait forever on a stream that will never emit.
  */
 export const getFirstStreamValue = async <T>(stream: Stream<T>, { timeout }: { timeout?: number } = {}): Promise<T> => {

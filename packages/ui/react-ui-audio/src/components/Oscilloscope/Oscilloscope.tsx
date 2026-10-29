@@ -175,7 +175,7 @@ export const Oscilloscope = ({ classNames, active, mode = 'frequency', domain, r
     };
   }, [active, source, mode]);
 
-  // Frequency: 0–255 from baseline. Waveform: 0–255 centered at 128 (silence).
+  // Frequency: 0-255 from baseline. Waveform: 0-255 centered at 128 (silence).
   const defaultRange: [number, number] = mode === 'waveform' ? [0, 255] : [-150, 356];
   const displayData = domain ? data.slice(domain[0], domain[1]) : data;
 

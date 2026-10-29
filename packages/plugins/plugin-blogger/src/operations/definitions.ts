@@ -63,16 +63,16 @@ const PublisherIdSchema = Schema.optional(Schema.String).annotate({
  * Bidirectionally syncs a Publication's posts with an external publisher (the provider calls them
  * "drafts"). Reconciliation, keyed by the remote id stored as a foreign key on each post's meta
  * (source = the publisher's `source`):
- * - post linked to a still-present remote draft → push the local body (local is source of truth);
- * - post linked to a remote draft that was deleted → clear the key, set `status: 'draft'`;
- * - post with no link → create the remote draft, stamp the key, set `status: 'published'`;
- * - remote draft not linked to any post → create a new local Post (stamped, `status: 'published'`).
+ * - post linked to a still-present remote draft -> push the local body (local is source of truth);
+ * - post linked to a remote draft that was deleted -> clear the key, set `status: 'draft'`;
+ * - post with no link -> create the remote draft, stamp the key, set `status: 'published'`;
+ * - remote draft not linked to any post -> create a new local Post (stamped, `status: 'published'`).
  */
 export const SyncPosts = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.blogger.syncPosts'),
     name: 'Sync Posts',
-    description: 'Bidirectionally sync a publication’s posts with its external publisher.',
+    description: "Bidirectionally sync a publication's posts with its external publisher.",
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({

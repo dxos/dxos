@@ -10,7 +10,7 @@ import { Message } from '@dxos/types';
 export const EMAIL_EXTRACTION_RULES: readonly string[] = [
   'Treat a request or promise as a commitment: "please send X by Friday" => subject (the owner), predicate "owes"/"will send", object X, validTo the deadline.',
   'A deadline or due date becomes validTo on the relevant assertion (ISO date when known).',
-  'Attribute first-person statements ("I will…", "we can…") to the message sender as subject.',
+  'Attribute first-person statements ("I will...", "we can...") to the message sender as subject.',
 ];
 
 export const EMAIL_EXTRACT_OPTIONS: RDF.ExtractOptions = {

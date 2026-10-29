@@ -33,7 +33,7 @@ export interface FormHandlerProps<T extends AnyProperties> {
    * invalid values) are held locally and never snap back until they are committed and the source catches up. Persist
    * committed values from `onValuesChanged`/`onSave`. The form re-renders when a new value is passed, so to reflect
    * external/remote mutations pass a reactive source (e.g. a `useObject` snapshot that changes on mutation) rather
-   * than a raw live object — a render-time read of an ECHO object does not itself subscribe to it.
+   * than a raw live object - a render-time read of an ECHO object does not itself subscribe to it.
    */
   values?: Partial<T>;
 
@@ -89,7 +89,7 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
 
   /** Fields whose value has been edited (set by `onValueChange`). Gates autosave-on-blur. */
   changed: Record<SchemaEx.JsonPath, boolean>;
-  /** Fields the user has interacted with (set by `onBlur`). Gates error *visibility* — errors only surface once touched. */
+  /** Fields the user has interacted with (set by `onBlur`). Gates error *visibility* - errors only surface once touched. */
   touched: Record<SchemaEx.JsonPath, boolean>;
 
   /** Map of error strings. */
@@ -153,8 +153,8 @@ export const useFormHandler = <T extends AnyProperties>({
   // uncontrolled form once when no `values` are provided.
   const source = valuesProp ?? defaultValues;
 
-  // Sparse local edits keyed by json-path. A path stays here — holding even an intermediate invalid value, so it
-  // never snaps back — until the source catches up to it (typically once a valid edit has been persisted and echoed
+  // Sparse local edits keyed by json-path. A path stays here - holding even an intermediate invalid value, so it
+  // never snaps back - until the source catches up to it (typically once a valid edit has been persisted and echoed
   // back through `values`). Un-edited paths are never buffered, so they always reflect the current source.
   const [overrides, setOverrides] = useState<Record<SchemaEx.JsonPath, unknown>>({});
 
@@ -195,8 +195,8 @@ export const useFormHandler = <T extends AnyProperties>({
   }, [validate, values, schemaChanged]);
 
   // Drop an override once the source has caught up to it (the committed value has been echoed back), so the field
-  // returns to reflecting the source. Edits the source has not yet reflected — including intermediate invalid values,
-  // and in-progress edits to a field that changed remotely — are kept, so the form never snaps back. Runs on every
+  // returns to reflecting the source. Edits the source has not yet reflected - including intermediate invalid values,
+  // and in-progress edits to a field that changed remotely - are kept, so the form never snaps back. Runs on every
   // render (a new source value re-renders the form), reconciling against whatever the source currently holds.
   useEffect(() => {
     const reconciled = (Object.keys(overrides) as SchemaEx.JsonPath[]).filter((path) =>
@@ -462,7 +462,7 @@ const applyOverrides = <T>(base: Partial<T>, overrides: Record<SchemaEx.JsonPath
 
 // Copied from `@dxos/echo` (internal `Obj.valuesEqual`): references compare by target URI, arrays and plain
 // object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`,
-// which is structural by default in Effect 4. Effect's `Schema.toEquivalence` is not a safe substitute — it returns false-positive
+// which is structural by default in Effect 4. Effect's `Schema.toEquivalence` is not a safe substitute - it returns false-positive
 // equality for dynamic/union/ref-array schemas, which would silently prune edits.
 // TODO(wittjosiah): Factor out into a shared util rather than duplicating echo's internal implementation.
 const valuesEqual = (left: unknown, right: unknown): boolean => {

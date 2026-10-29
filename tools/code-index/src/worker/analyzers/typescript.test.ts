@@ -216,7 +216,7 @@ describe('typescript analyzer', () => {
   });
 
   test('unresolved references are counted, globals are not', () => {
-    // make, doRun, DEFAULT, helper, Base, Result, Api… — referenced but neither imported nor
+    // make, doRun, DEFAULT, helper, Base, Result, Api... - referenced but neither imported nor
     // declared in this file. A gauge, not an exact contract; it must stay a small fraction of the
     // references the file makes.
     expect(document.unresolvedReferences).toBeGreaterThan(0);
@@ -292,7 +292,7 @@ describe('typescript analyzer', () => {
   });
 
   test('a default-exported expression is a declaration with construction', () => {
-    // `export default Capability.makeModule(…)` binds no name, but it declares a value all the same.
+    // `export default Capability.makeModule(...)` binds no name, but it declares a value all the same.
     expect(symbol('default')).toMatchObject({ kind: 'variable', exported: true });
     expect(symbol('default').constructedBy).toEqual([member2('effect/Layer', 'succeed')]);
     expect(symbol('default').argument).toEqual([sym('src/Store.ts', 'Store')]);

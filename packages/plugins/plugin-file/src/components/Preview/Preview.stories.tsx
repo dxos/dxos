@@ -14,7 +14,7 @@ import { translations } from '#translations';
 import pdfUrl from '../../../fixtures/test.pdf?url';
 import { Preview } from './Preview.tsx';
 
-/** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
+/** A 4×3 PNG of three coloured rows. Generated and verified to decode - see the Image story. */
 const PNG_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGUlEQVR4nGN47mMDRwx6ZwrhiMFkxm04AgBTKBIF1eRh+AAAAABJRU5ErkJggg==';
 
@@ -75,7 +75,7 @@ export const Image: Story = {
   args: { type: 'image/png', url: PNG_URL },
   play: async ({ canvasElement }) => {
     // `naturalWidth`, not just the `src` attribute: an image that fails to decode keeps its src and
-    // reports `complete: true`, and MediaPlayer's onError hides it — so an attribute-only assertion
+    // reports `complete: true`, and MediaPlayer's onError hides it - so an attribute-only assertion
     // passes while nothing is on screen. That is exactly what a broken fixture did here once.
     await waitFor(async () => {
       const image = canvasElement.querySelector('img');

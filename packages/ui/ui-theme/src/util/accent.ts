@@ -19,7 +19,7 @@ export const accentTokens = (hue: AccentHue): Record<string, string> => ({
 });
 
 /**
- * Sets the accent for an element's subtree — the document root for the whole app — or clears it back
+ * Sets the accent for an element's subtree - the document root for the whole app - or clears it back
  * to the stylesheet's default when `hue` is undefined.
  */
 export const applyAccent = (element: HTMLElement, hue: AccentHue | undefined): void => {

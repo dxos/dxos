@@ -46,7 +46,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Top): string | undefi
   SchemaAST.getAnnotation<string>(schema.ast, TypeIdentifierAnnotationId);
 
 /**
- * @returns The schema's type identifier URI — whichever URI fits.
+ * @returns The schema's type identifier URI - whichever URI fits.
  *
  * - Stored (dynamic) schemas: the schema-as-object's EID, so loaded objects ride
  *   along with their schema as a strong dependency.
@@ -199,7 +199,7 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
 };
 
 /**
- * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
+ * @returns Object type URI - either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
  * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
  * @example Stored schema: `echo:///01KKKG2FHWCMTR0BY00GJSVT1X`.
@@ -238,7 +238,7 @@ export type PropertyMetaAnnotation = {
 // TODO(wittjosiah): Why is this separate from FormatAnnotation?
 /**
  * Apply property-level metadata to an Effect schema. Only accepts
- * `Schema.Top` — apply BEFORE wrapping the schema with
+ * `Schema.Top` - apply BEFORE wrapping the schema with
  * `Type.makeObject` / `Type.makeRelation`. To read property meta off a
  * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
  */
@@ -411,7 +411,7 @@ export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAn
 /**
  * When set on a `Ref` (or array-of-`Ref`) property, the form OWNS the referenced target(s): "add" creates a
  * new object of the annotation's typename (instead of opening the existing-object picker) and each target is
- * rendered inline — its own fields — like {@link FormInlineAnnotation}. The target typename is carried here
+ * rendered inline - its own fields - like {@link FormInlineAnnotation}. The target typename is carried here
  * (rather than inferred from the element type) so the field can stay `Ref.Ref(Obj.Unknown)` and avoid pulling
  * the target's type (e.g. query-AST-laden `Trigger`) into the schema's emitted declaration.
  */
@@ -548,7 +548,7 @@ interface MakeAnnoationsProps<T> {
   legacyId?: boolean;
 }
 
-// Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
+// Annotation ids use the same NSID / reverse-DNS format as TypenameSchema -
 // dot-separated segments, middle segments may be hyphenated, final segment may be camelCase.
 // At least 3 segments are required (e.g. org.dxos.annotation.example).
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
@@ -580,8 +580,8 @@ const IconAnnotationSchema = Schema.Struct({
    * Sprite icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'px--anthropic--regular').
    *
    * `ph--*` is Phosphor; `px--*` and `dx--*` are brand glyphs, which are sprite-only and carry no
-   * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
-   * session, a GitHub repo — has no honest Phosphor equivalent.
+   * weight variants. All three are admitted because a type whose subject IS a brand - an Anthropic
+   * session, a GitHub repo - has no honest Phosphor equivalent.
    */
   icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/u))),
 
@@ -648,7 +648,7 @@ export type SetParentAnnotationValue = {
  * This is NOT an invariant: it does not guarantee that a target held here has this object as its
  * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
  * from re-parenting the target afterwards, a ref whose target is not resolved is left alone, and
- * removing a ref does NOT clear the target's parent — a move between holders would otherwise lose
+ * removing a ref does NOT clear the target's parent - a move between holders would otherwise lose
  * the edge depending on write order; call `Obj.setParent(child, undefined)` explicitly. Read the
  * parent with `Obj.getParent`; never infer it from the field.
  *
@@ -822,7 +822,7 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
  * `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
  *
  * Note: this is the "static" icon from the object's own schema. It does not follow
- * `IconFromRefAnnotation` delegation — call sites needing that (e.g. app-graph node
+ * `IconFromRefAnnotation` delegation - call sites needing that (e.g. app-graph node
  * builders) should resolve the ref themselves.
  */
 export const getIcon = (entity: AnyProperties): IconAnnotation | undefined => {

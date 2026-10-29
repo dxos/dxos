@@ -222,7 +222,7 @@ class DXNWidget extends WidgetType {
         const len = 16;
         const plen = 4;
         if (part.length > len) {
-          return `[${part.slice(0, plen)}…${part.slice(-plen)}]`;
+          return `[${part.slice(0, plen)}\u2026${part.slice(-plen)}]`;
         }
         return part;
       })

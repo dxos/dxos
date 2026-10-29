@@ -9,7 +9,7 @@ import { normalizeEmail } from './identity.ts';
 
 /**
  * Local parts that are never a person: automated senders and bounce handlers. The separator inside
- * the phrase is optional and may be `-` or `_` — real senders use both (`testflight_no_reply@`).
+ * the phrase is optional and may be `-` or `_` - real senders use both (`testflight_no_reply@`).
  */
 const NO_REPLY_RE = /(^|[._+-])(no[-_]?reply|do[-_]?not[-_]?reply|mailer[-_]?daemon|bounces?)([._+-]|$)/i;
 
@@ -24,13 +24,13 @@ const ROLE_LOCALPART_RE =
 
 /** Signals a message carries about its sender, drawn from headers by the provider's mapper. */
 export type SenderSignals = {
-  /** We sent or replied to this address — the strongest possible signal that it matters. */
+  /** We sent or replied to this address - the strongest possible signal that it matters. */
   readonly outbound?: boolean;
   /** The sender address is a no-reply mailbox (`properties.noReply`). */
   readonly noReply?: boolean;
-  /** The message carries `List-Unsubscribe` (`properties.listUnsubscribe`) — bulk mail. */
+  /** The message carries `List-Unsubscribe` (`properties.listUnsubscribe`) - bulk mail. */
   readonly listUnsubscribe?: string;
-  /** `Precedence: bulk|list|junk` or `Auto-Submitted` — machine-generated mail. */
+  /** `Precedence: bulk|list|junk` or `Auto-Submitted` - machine-generated mail. */
   readonly bulk?: boolean;
 };
 
@@ -39,7 +39,7 @@ export type SenderSignals = {
  *
  * The cheapest fix for duplicate volume is not creating the object at all: a mailbox is mostly
  * automated senders, and each one becomes a Person nobody will ever look at (and another candidate
- * for the duplicates review). This is an allow-list — a sender must earn a record:
+ * for the duplicates review). This is an allow-list - a sender must earn a record:
  *
  *  1. we sent or replied to the address, or
  *  2. its domain matches an Organization the space already knows,
@@ -68,7 +68,7 @@ export const shouldExtractContact = (
  *
  * Separated because the two halves answer different questions. A caller extracting in BULK over a
  * whole mailbox needs the full allow-list (a sender must earn a record), while a caller acting on one
- * message — the Contact extractor, an explicit "extract this sender" — has already decided the sender
+ * message - the Contact extractor, an explicit "extract this sender" - has already decided the sender
  * is interesting and only needs protecting from the obvious machines. Without this split the extractor
  * ran ungated and filled the space with `no-reply@`, `mailer-daemon@` and `invoice+statements@` people.
  */
@@ -90,7 +90,7 @@ export const isAutomatedSender = (email: string | undefined, signals: SenderSign
 /**
  * The sender signals a message carries, as recorded on `properties` by the provider's mapper
  * (`Precedence`/`Auto-Submitted` are folded into `bulk` there). Shared so every extraction path reads
- * the same fields — it was duplicated per caller, and a path that forgot them extracted everything.
+ * the same fields - it was duplicated per caller, and a path that forgot them extracted everything.
  */
 export const senderSignals = (message: Message.Message): SenderSignals => {
   const properties = message.properties ?? {};

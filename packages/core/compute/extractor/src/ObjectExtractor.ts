@@ -19,7 +19,7 @@ export type MatchResult = {
 /**
  * Uniform input shape every extractor receives. The dispatcher invokes per-extractor logic
  * with this exact payload. Generalised over any source ECHO object (a `Message`, a calendar
- * `Event`, …) — not just messages.
+ * `Event`, ...) - not just messages.
  */
 export interface ExtractInput {
   readonly db: Database.Database;
@@ -27,7 +27,7 @@ export interface ExtractInput {
 }
 
 /**
- * Output every extractor produces. Extractors DO NOT touch the database — they return
+ * Output every extractor produces. Extractors DO NOT touch the database - they return
  * descriptions of what should happen. The dispatcher is the single place that calls `db.add`
  * and attaches provenance relations, which lets manual invocations interpose a
  * preview/edit/cancel UI (via `onProposal`) before the writes commit.
@@ -40,7 +40,7 @@ export interface ExtractInput {
  *   wired, in-place updates should become deferred intents applied after the seam.
  * - `relations`: extra relations to persist verbatim.
  * - `tags`: opaque tag descriptors interpreted by the consuming plugin (e.g. applied to the
- *   owning Mailbox by the inbox bridge) — the core dispatcher does not interpret these.
+ *   owning Mailbox by the inbox bridge) - the core dispatcher does not interpret these.
  * - `summary`: human-readable one-line summary for the UI/log.
  */
 export interface ExtractResult {
@@ -84,7 +84,7 @@ export interface ObjectExtractor {
   /**
    * Optional pointer to a registered operation so the extractor is also invocable as a
    * first-class, history-traceable operation (e.g. from the OperationInvoker / agents). The
-   * dispatcher does not use this — it calls `extract` directly.
+   * dispatcher does not use this - it calls `extract` directly.
    */
   readonly operation?: Operation.Definition<ExtractInput, ExtractResult>;
   /**

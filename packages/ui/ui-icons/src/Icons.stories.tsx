@@ -4,7 +4,7 @@
 
 // Gallery for the `px` set: the working surface for drawing an icon and the check that it survived
 // the sprite build. Icons are read from `PxIcons` rather than listed here, so a new entry appears
-// without touching this file — the literals the sprite scanner needs come from `src/index.ts`,
+// without touching this file - the literals the sprite scanner needs come from `src/index.ts`,
 // which every host lists in `scanPaths`.
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -31,7 +31,7 @@ const reference = [
 /**
  * One row per symbol, each size wrapped in a box that hugs the icon so the dashes show that size's
  * bounds. Two things read off it: whether the glyph fills its box like its Phosphor neighbours, and
- * whether it is there at all — a symbol missing from the sprite renders nothing, indistinguishable
+ * whether it is there at all - a symbol missing from the sprite renders nothing, indistinguishable
  * from an empty cell without a boundary to see.
  */
 const Row = ({ symbol }: { symbol: string }) => (
@@ -77,7 +77,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Icons at text size, in a line of prose — where a stroke that is too light or an inset that is too
+ * Icons at text size, in a line of prose - where a stroke that is too light or an inset that is too
  * tight shows up first.
  */
 export const Inline: Story = {
@@ -86,7 +86,7 @@ export const Inline: Story = {
       {Object.values(PxIcons).map((symbol) => (
         <p key={symbol} className='flex items-center gap-2'>
           <Icon.Icon icon={symbol} />
-          <span>The quick brown fox — {symbol}</span>
+          <span>The quick brown fox - {symbol}</span>
         </p>
       ))}
     </div>

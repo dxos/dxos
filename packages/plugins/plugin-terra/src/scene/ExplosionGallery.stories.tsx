@@ -31,7 +31,7 @@ const INTERVAL_SECONDS = 1.5;
 
 const rocket = TerraObject.make({ kind: 'rocket', name: 'rocket', speed: 0.05, spawnedAt: 0 });
 
-/** The impact point, straight up the +Y axis — the layer draws at `unit * radius`, as it does in the live scene. */
+/** The impact point, straight up the +Y axis - the layer draws at `unit * radius`, as it does in the live scene. */
 const IMPACT_UNIT: [number, number, number] = [0, 1, 0];
 
 /** A landed rocket `explosion` through its blast. Written out in full so the story shows exactly which parts of a state the layer reads. */
@@ -97,7 +97,7 @@ const ExplosionScene = () => {
       const explosion = exploding ? cycle / (EXPLOSION_SECONDS * 1000) : 1;
       const object: SimObject = { definition: rocket, state: impactState(explosion) };
       layer.update([object]);
-      // A rocket is destroyed by its own impact — the same rule `ObjectLayer` applies.
+      // A rocket is destroyed by its own impact - the same rule `ObjectLayer` applies.
       form.isVisible = !exploding;
       scene.render();
     });
@@ -117,7 +117,7 @@ const ExplosionScene = () => {
 
   return (
     <div className='relative dx-fill'>
-      {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
+      {/* `dx-fill` is load-bearing - see `ObjectGallery.stories.tsx`. */}
       <canvas ref={canvasRef} className='dx-fill dx-cover outline-none' style={{ touchAction: 'none' }} />
     </div>
   );
@@ -138,12 +138,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The blast a rocket leaves where it lands, on a loop at a fixed camera — in the live scene it
+ * The blast a rocket leaves where it lands, on a loop at a fixed camera - in the live scene it
  * happens once, roughly a minute into a flight, wherever that flight ended.
  *
  * Test:
  * 1. The rocket stands on the impact point; every 4 seconds it is replaced by an explosion.
- * 2. The blast is three concentric shells — pale core, orange, dark red — that expand together,
+ * 2. The blast is three concentric shells - pale core, orange, dark red - that expand together,
  *    fast at first, and fade out as they grow.
  * 3. The rocket is gone for as long as the blast burns, and back once it has faded.
  * 4. Drag to orbit and scroll to zoom: the shells are spheres from every angle.

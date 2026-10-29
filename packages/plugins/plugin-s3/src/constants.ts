@@ -9,7 +9,7 @@ export { S3_CONNECTOR_ID } from '@dxos/compute-runtime';
 
 /**
  * The connector's registry `source`. Unlike a single-service connector this is NOT the value that
- * lands in `AccessToken.source` — each connection stores its own bucket host there, since the
+ * lands in `AccessToken.source` - each connection stores its own bucket host there, since the
  * endpoint is what distinguishes one S3 connection from another. Only the OAuth path in the
  * coordinator reads `connector.source`, and this connector authenticates by credential form.
  */

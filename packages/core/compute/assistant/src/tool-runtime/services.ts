@@ -43,7 +43,7 @@ export const makeToolResolverFromOperations = <R = never>({
       const registry = yield* Registry.Service;
 
       // Tool names derive from operation keys lossily (`Operation.toolNameFromKey`), so a record is
-      // matched by re-deriving its name rather than by reconstructing a key — which rules out the
+      // matched by re-deriving its name rather than by reconstructing a key - which rules out the
       // indexed key lookup and would otherwise mean scanning every operation per resolution.
       let index: Map<string, Operation.PersistentOperation[]> | undefined;
       // Dropped on any registry change rather than only on a lookup miss: a hit against a stale index
@@ -106,7 +106,7 @@ export const makeToolResolverFromOperations = <R = never>({
               return yield* Effect.fail(new AiToolNotFoundError(id));
             }
             // Two keys deriving one name (`webSearch` vs `web-search`) is an authoring error. Picking
-            // the first match would silently shadow the other, so it fails here instead — the only
+            // the first match would silently shadow the other, so it fails here instead - the only
             // place both keys are visible at once (a ToolId no longer distinguishes them).
             invariant(
               matches.length === 1,
@@ -116,7 +116,7 @@ export const makeToolResolverFromOperations = <R = never>({
             );
             // A registry record is untrusted input: its persisted schema may be one the projection
             // cannot express as tool parameters. Throwing here would surface as a defect and fail
-            // the whole request, so one unprojectable operation is logged and dropped instead —
+            // the whole request, so one unprojectable operation is logged and dropped instead -
             // `resolveToolkit` filters a not-found tool out and the agent runs with the rest.
             try {
               return projectFunctionToTool(Operation.deserialize(matches[0]));
@@ -159,7 +159,7 @@ export const makeToolExecutionService = <E, R>(opts: {
 
                 // `handle` streams preliminary results before the final one; the toolkit
                 // interrupts the handler fiber once its effect settles, so the final result is
-                // always the last item emitted — `Stream.runLast` recovers exactly that value.
+                // always the last item emitted - `Stream.runLast` recovers exactly that value.
                 const resultStream = yield* toolkitHandler.handle(tool.name, input);
                 const lastResult = yield* Stream.runLast(resultStream);
                 const handlerResult = yield* Option.match(lastResult, {
@@ -229,7 +229,7 @@ export const getOperationFromTool = (tool: Tool.Any): Option.Option<Operation.De
  * Decodes a model's raw tool arguments against the projected parameter schema.
  *
  * A dynamic tool carries a JSON Schema, so `Toolkit.handle` passes the arguments through unvalidated
- * (that is what lets us state the schema the model is actually held to — see `projectFunctionToTool`).
+ * (that is what lets us state the schema the model is actually held to - see `projectFunctionToTool`).
  * Decoding here keeps the coercions the projection introduces, above all a ref supplied as a URI
  * string becoming a `Ref`, and surfaces a malformed argument to the model as a tool error.
  */
@@ -247,11 +247,11 @@ const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
  * Parameter schema for an operation that takes no input.
  *
  * Spelled as a record with an uninhabited value type rather than `Schema.Struct({})` because v4
- * emits an empty struct as `{not: {type: 'null'}}` — the bare `object` keyword, which states
+ * emits an empty struct as `{not: {type: 'null'}}` - the bare `object` keyword, which states
  * neither `type` nor `additionalProperties`. A provider's strict tool mode rejects that outright
  * ("For 'object' type, 'additionalProperties' must be explicitly set to false"), and one bad tool
  * fails the whole request. A `Never` value type admits no keys, so this emits
- * `{type: 'object', additionalProperties: false}` — the same shape, and valid under strict.
+ * `{type: 'object', additionalProperties: false}` - the same shape, and valid under strict.
  * A JSON-schema annotation cannot express this: v4 honours such an annotation only on a check.
  */
 const EMPTY_PARAMETERS_SCHEMA = Schema.Record(Schema.String, Schema.Never);
@@ -282,7 +282,7 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
     .annotate(FunctionToolAnnotation, { definition: fn, parameters: parametersSchema })
     // The schema above states open records and omissible optional keys, which a provider's strict tool
     // mode forbids (it demands `additionalProperties: false` and every key in `required`). Operations
-    // accept arbitrary input, so strict is off for all of them rather than per-operation — one
+    // accept arbitrary input, so strict is off for all of them rather than per-operation - one
     // non-conforming tool rejects the whole request.
     .annotate(Tool.Strict, false);
   toolCache.set(fn, tool);
@@ -308,11 +308,11 @@ const REFERENCES_INLINE = {
  * v4 renders `Schema.optional(T)` as `anyOf: [T, null]` while its decoder accepts an absent key but
  * rejects `null`, so a model that takes the schema at its word is rejected. The null branch of an
  * optional property is therefore dropped, stating the property as the bare type and leaving it out of
- * `required` — the same contract ECHO's own emitter keeps (`stripUndefinedMember`) and the one the
+ * `required` - the same contract ECHO's own emitter keeps (`stripUndefinedMember`) and the one the
  * pre-migration corpus was recorded against.
  */
 const toModelJsonSchema = (schema: Schema.Codec<unknown, unknown>): JsonSchema.JsonSchema => {
-  // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
+  // A recursive parameter renders as `$ref: '#/$defs/...'` with the bodies in a separate `definitions`
   // record; keeping only the root would advertise a dangling reference to the model.
   // Closed structs, as the recorded corpus states them; Effect's default leaves them open.
   const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema, {

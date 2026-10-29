@@ -12,7 +12,7 @@ import type * as URI from './URI.ts';
 /**
  * Full DXN regex per spec: `dxn:<nsid>[:<version>][#<mnemonic>]`.
  * Middle segments may contain hyphens; the final segment must be camelCase
- * (alphanumeric, leading letter — no hyphens or underscores). The mnemonic is
+ * (alphanumeric, leading letter - no hyphens or underscores). The mnemonic is
  * an ECHO object mnemonic (Crockford base32, either case).
  */
 const DXN_SPEC_REGEXP = new RegExp(
@@ -54,7 +54,7 @@ type Invalid =
  *
  * Matches on excluded characters rather than walking the string character by character, so an
  * interpolated segment (`` `item${number}` ``) is accepted rather than rejected for a placeholder
- * the type cannot evaluate — a walk cannot tell a placeholder from a bad character. A widened
+ * the type cannot evaluate - a walk cannot tell a placeholder from a bad character. A widened
  * `string` passes through for the same reason, leaving both to the runtime check.
  */
 export type Segment<T extends string> = [string] extends [T]
@@ -80,7 +80,7 @@ type LastSegment<T extends string> = T extends `${string}.${infer Rest}` ? LastS
  * Every preceding segment is unconstrained, so a prefix carrying a hyphenated typename
  * (`org.dxos.type.task-set.article`) is fine.
  *
- * This is the shape of a plugin-local id — a surface or graph-extension id, appended to a plugin's
+ * This is the shape of a plugin-local id - a surface or graph-extension id, appended to a plugin's
  * NSID to form a full DXN path. Unlike {@link Name} it has no segment-count minimum, since a local
  * id is a suffix rather than a whole NSID.
  */
@@ -114,7 +114,7 @@ type ValidSegmentChain<T extends string> = T extends `${string}.${infer Rest}`
  *
  * Checks two rules expressible with template literal types:
  * - Three-segment minimum (at least two dots) for names that are fully known at
- *   compile time — matches the runtime grammar in {@link DXN_SPEC_REGEXP} and
+ *   compile time - matches the runtime grammar in {@link DXN_SPEC_REGEXP} and
  *   `parse`.
  * - Final segment (after the last dot) is a valid {@link Segment}.
  *
@@ -122,7 +122,7 @@ type ValidSegmentChain<T extends string> = T extends `${string}.${infer Rest}`
  * first dot) resolves to a concrete literal, so a fully literal two-segment
  * name like `a.b` is rejected. Template-literal call sites whose prefix is a
  * runtime `string` (e.g. `` `${meta.key}.event` ``) can't be proven to have
- * enough segments at compile time — `Head` there infers as `string` itself —
+ * enough segments at compile time - `Head` there infers as `string` itself -
  * so only the known final segment is checked; the rest is validated at
  * runtime by the regex inside `parse`.
  */
@@ -141,7 +141,7 @@ export type Name<T extends string> = [string] extends [T]
     : never;
 
 /**
- * Effect Schema validating an NSID name — the `dxn:`-less portion — at runtime, mirroring the rules
+ * Effect Schema validating an NSID name - the `dxn:`-less portion - at runtime, mirroring the rules
  * the {@link Name} type checks at compile time (multi-segment; camelCase final segment). Pairs with
  * the {@link Name} type for schema fields that hold a bare NSID (e.g. a model id passed to a creator
  * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
@@ -155,7 +155,7 @@ export const NameSchema: Schema.Codec<string, string> = Schema.String.pipe(
 );
 
 /**
- * Cheap prefix check — does not validate the full DXN grammar.
+ * Cheap prefix check - does not validate the full DXN grammar.
  * Sufficient for narrowing a URI to a DXN.
  */
 export const isDXN = (value: unknown): value is DXN => typeof value === 'string' && value.startsWith('dxn:');
@@ -168,8 +168,8 @@ export const isDXN = (value: unknown): value is DXN => typeof value === 'string'
  * the final segment must be camelCase (no hyphens). Template-literal strings
  * with a runtime prefix are accepted here but still validated at runtime.
  *
- * @example make('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
- * @example make('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
+ * @example make('org.dxos.type.calendar') -> 'dxn:org.dxos.type.calendar'
+ * @example make('org.dxos.type.calendar', '1.0.0') -> 'dxn:org.dxos.type.calendar:1.0.0'
  */
 export const make: {
   <T extends string>(
@@ -187,14 +187,14 @@ export const make: {
 /**
  * Parses a full DXN string. Returns undefined on failure.
  *
- * Validates rather than catching `parse`, because rejection is the common case on the query path —
- * every type filter tests each candidate's typename against both grammars — and the `Error` that
+ * Validates rather than catching `parse`, because rejection is the common case on the query path -
+ * every type filter tests each candidate's typename against both grammars - and the `Error` that
  * used to allocate, with its stack, dominated it.
  */
 export const tryMake = (dxn: string): DXN | undefined =>
   typeof dxn === 'string' && DXN_SPEC_REGEXP.test(dxn) ? (dxn as DXN) : undefined;
 
-// Internal — full-grammar validator. Callers outside this module should use
+// Internal - full-grammar validator. Callers outside this module should use
 // `make(nsid, version?)` or `tryMake(dxn)`.
 const parse = (dxn: string): DXN => {
   const parsed = tryMake(dxn);
@@ -206,7 +206,7 @@ const parse = (dxn: string): DXN => {
 
 /**
  * Returns the NSID portion of a DXN (the part after `dxn:` and before optional `:<version>` or `#<mnemonic>`).
- * @example getName('dxn:org.dxos.type.calendar:1.0.0') → 'org.dxos.type.calendar'
+ * @example getName('dxn:org.dxos.type.calendar:1.0.0') -> 'org.dxos.type.calendar'
  */
 export const getName = (dxn: DXN): string => {
   const match = /^dxn:([^:#]+)/.exec(dxn);
@@ -218,7 +218,7 @@ export const getName = (dxn: DXN): string => {
 
 /**
  * Returns the semver version from a versioned DXN, or undefined if unversioned.
- * @example getVersion('dxn:org.dxos.type.calendar:1.0.0') → '1.0.0'
+ * @example getVersion('dxn:org.dxos.type.calendar:1.0.0') -> '1.0.0'
  */
 export const getVersion = (dxn: DXN): string | undefined => {
   const match = /^dxn:[^:#]+:(\d+\.\d+\.\d+)(#|$)/.exec(dxn);
@@ -227,7 +227,7 @@ export const getVersion = (dxn: DXN): string | undefined => {
 
 /**
  * Returns the mnemonic suffix of a DXN, uppercased, or undefined when it has none.
- * @example getMnemonic('dxn:org.example.feature.codeMode#abc123') → 'ABC123'
+ * @example getMnemonic('dxn:org.example.feature.codeMode#abc123') -> 'ABC123'
  */
 export const getMnemonic = (dxn: DXN): string | undefined => {
   const index = dxn.indexOf('#');
@@ -236,14 +236,14 @@ export const getMnemonic = (dxn: DXN): string | undefined => {
 
 /**
  * Sets or replaces the mnemonic suffix of a DXN. Throws if the mnemonic is malformed.
- * @example withMnemonic('dxn:org.example.feature.codeMode', 'abc123') → 'dxn:org.example.feature.codeMode#ABC123'
+ * @example withMnemonic('dxn:org.example.feature.codeMode', 'abc123') -> 'dxn:org.example.feature.codeMode#ABC123'
  */
 export const withMnemonic = (dxn: DXN, mnemonic: string): DXN =>
   parse(`${withoutMnemonic(dxn)}#${EntityId.normalizeMnemonic(mnemonic)}`);
 
 /**
  * Removes the mnemonic suffix of a DXN, leaving the name and version.
- * @example withoutMnemonic('dxn:org.example.feature.codeMode#ABC123') → 'dxn:org.example.feature.codeMode'
+ * @example withoutMnemonic('dxn:org.example.feature.codeMode#ABC123') -> 'dxn:org.example.feature.codeMode'
  */
 export const withoutMnemonic = (dxn: DXN): DXN => {
   const index = dxn.indexOf('#');

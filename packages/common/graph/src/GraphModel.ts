@@ -39,14 +39,14 @@ export type Data<Node extends GraphNode.Any, Edge extends GraphEdge.Any> = Speci
  * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.update).
  *
  * It receives the callback and must invoke it with the WRITABLE mirror. For an ECHO-backed graph,
- * writability travels with the reference — the mirror captured when the model was constructed is
- * read-only — so the provider maps the object its transaction hands over to the mirror within it:
+ * writability travels with the reference - the mirror captured when the model was constructed is
+ * read-only - so the provider maps the object its transaction hands over to the mirror within it:
  * `(fn) => Obj.update(root, (root) => fn(root.graph))`.
  */
 export type GraphChangeFunction<Mirror = any> = (fn: (mirror: Mirror) => void) => void;
 
 /**
- * Node slot in the working graph. `value` is none for a placeholder — a node an edge references
+ * Node slot in the working graph. `value` is none for a placeholder - a node an edge references
  * before it has been added, or one that has been removed while its edges are still being detached.
  */
 type Slot<Node> = { id: string; value: Option.Option<Node> };
@@ -535,7 +535,7 @@ export abstract class AbstractGraphModel<
 
   /**
    * Removes the node, returning it and any detached edges as a separate graph. Retaining the
-   * incident edges leaves them dangling, which is legal — they resolve again if the node returns.
+   * incident edges leaves them dangling, which is legal - they resolve again if the node returns.
    */
   removeNode(id: string, options?: { detachEdges?: boolean }): Model {
     return this.batch(() => this.copy(this.#detachNode(id, options)));
@@ -547,7 +547,7 @@ export abstract class AbstractGraphModel<
    * Distinct from {@link AbstractGraphModel.removeNode}, which tombstones: it keeps the slot so an
    * edge pointing at the id stays legal and re-resolves if the node comes back. That is the right
    * semantics for deletion, and the wrong one for unloading a subgraph the session may never look
-   * at again — the slot, the id-index entry and the adjacency entries all survive, so a long
+   * at again - the slot, the id-index entry and the adjacency entries all survive, so a long
    * session retains every node it has ever materialized. Release is for the unload case: the
    * subgraph is expected to be rebuilt from its source if it is needed again.
    *
@@ -577,7 +577,7 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Ids reachable from `id` along `type` edges, excluding `id` itself — the subgraph a caller
+   * Ids reachable from `id` along `type` edges, excluding `id` itself - the subgraph a caller
    * unloading a branch wants to hand to {@link AbstractGraphModel.release}.
    */
   descendants(id: string, type?: string): string[] {
@@ -611,7 +611,7 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Performs the removal and reports what left, without building a graph to hold it — constructing
+   * Performs the removal and reports what left, without building a graph to hold it - constructing
    * one allocates a registry-backed model, which is most of the cost of removing a node in bulk.
    */
   #detachNode(id: string, { detachEdges = true }: { detachEdges?: boolean } = {}): { nodes: Node[]; edges: Edge[] } {
@@ -658,7 +658,7 @@ export abstract class AbstractGraphModel<
 
   /**
    * Whether any edge is incident on the node. Answered from the endpoint index, so it costs nothing
-   * even mid-mutation — unlike reading the adjacency index, which rebuilds on every version bump.
+   * even mid-mutation - unlike reading the adjacency index, which rebuilds on every version bump.
    */
   hasEdges(id: string): boolean {
     return (this.#outgoing.get(id)?.size ?? 0) > 0 || (this.#incoming.get(id)?.size ?? 0) > 0;
@@ -884,7 +884,7 @@ export abstract class AbstractGraphModel<
 
   /**
    * One cycle over included edges, in order, each step naming the edge that continues the loop.
-   * Empty when acyclic — the witness `topoLevels` cannot provide.
+   * Empty when acyclic - the witness `topoLevels` cannot provide.
    */
   findCycle(includeEdge?: EdgeFilter<Edge>): CycleStep<Edge>[] {
     const outgoing = new Map<string, { target: string; edge: Edge }[]>();
@@ -936,7 +936,7 @@ export abstract class AbstractGraphModel<
   //
 
   /**
-   * Endpoint-keyed edge index, rebuilt once per version — per-edge scans of the whole graph
+   * Endpoint-keyed edge index, rebuilt once per version - per-edge scans of the whole graph
    * dominate otherwise, once many views are mounted.
    */
   #encode(): Data<Node, Edge> {

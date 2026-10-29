@@ -76,7 +76,7 @@ export const CommandPanel = ({ edge = false, ready = true, error, onCreate }: Co
         </Form.Root>
       </Panel.Body>
       <Panel.Footer classNames='p-2 text-sm'>
-        {!ready && <p className='text-fg-muted'>Initializing…</p>}
+        {!ready && <p className='text-fg-muted'>Initializing...</p>}
         {error && (
           <p className='text-error-text' data-testid='process-error'>
             {error}

@@ -19,7 +19,7 @@ export type UnsupportedTypeProps = {
 };
 
 /**
- * Inert, status-only stand-in for an object no enabled plugin can render — offers no remedy; which
+ * Inert, status-only stand-in for an object no enabled plugin can render - offers no remedy; which
  * objects reach it is `capabilities/react-surface.ts`'s call.
  */
 export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {

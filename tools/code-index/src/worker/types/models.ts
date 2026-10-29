@@ -37,7 +37,7 @@ export type Model = {
   readonly value?: Term.Type;
   /** A data-first call. */
   readonly call?: (args: readonly Node[], node: Node, context: ModelContext) => Term.Type;
-  /** A data-last call used as a `.pipe(…)` stage, applied to `self`. */
+  /** A data-last call used as a `.pipe(...)` stage, applied to `self`. */
   readonly pipe?: (args: readonly Node[], self: Term.Type, context: ModelContext) => Term.Type;
 };
 
@@ -113,7 +113,7 @@ const provideMerge = (self: Term.Type, that: Term.Type): Term.Type => {
   );
 };
 
-/** An argument that is an array literal is the `Layers` tuple overload — not modeled. */
+/** An argument that is an array literal is the `Layers` tuple overload - not modeled. */
 const isArrayArgument = (node: Node | undefined) => node?.type === 'ArrayExpression';
 
 const values = new Map<string, Model>([

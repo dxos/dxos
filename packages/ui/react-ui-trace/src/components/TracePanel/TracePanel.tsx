@@ -40,7 +40,7 @@ export type TracePanelProps = Util.ThemedClassName<
 
 /**
  * A space's runtime: its processes as a tree, its trace as a commit graph, and the picked commit's
- * event. Presentation only — the host resolves the process monitor, the trace feed, settings and
+ * event. Presentation only - the host resolves the process monitor, the trace feed, settings and
  * navigation and hands them in as props.
  */
 export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
@@ -138,7 +138,7 @@ export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
                   return (
                     // The trace takes the slack: item and body are flex columns so the scroll
                     // container inside gets a definite height to scroll within. The body's slide
-                    // animation is off here — it ramps to a measured height, and this body's height
+                    // animation is off here - it ramps to a measured height, and this body's height
                     // comes from the flex slack, not its content.
                     <Accordion.Item
                       key={section.id}

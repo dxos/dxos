@@ -48,7 +48,7 @@ export type Question =
 const UnitInterval = Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }));
 
 /**
- * An answer as the System One API returns it, discriminated on `type` — a payload that does not
+ * An answer as the System One API returns it, discriminated on `type` - a payload that does not
  * match its own `type` is a malformed answer, not an answer with fields left unset.
  */
 export const Answer = Schema.Union([
@@ -63,7 +63,7 @@ export const Answer = Schema.Union([
     type: Schema.Literal('score'),
     score: Schema.Number,
     confidence: UnitInterval,
-    /** Keyed by scale position (`"0"`, `"1"`, …). */
+    /** Keyed by scale position (`"0"`, `"1"`, ...). */
     probabilities: Schema.optional(Schema.Record(Schema.String, UnitInterval)),
     /** The criterion each scale position stands for. */
     legend: Schema.optional(Schema.Record(Schema.String, Schema.String)),
@@ -96,7 +96,7 @@ export const toQuestion = (decision: Decision.Any): Question => {
 
 /**
  * A full distribution over `labels`, as `DecisionModel` requires. System One omits options it gives
- * no weight, rounds what it reports, and may report no distribution at all — in which case the
+ * no weight, rounds what it reports, and may report no distribution at all - in which case the
  * answer it committed to carries all of it.
  */
 const toDistribution = (

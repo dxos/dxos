@@ -11,15 +11,15 @@
 //   bun prepare.ts [--chunk=15] [--max-groups=20] [--base=<ref>] [--main=origin/main]
 //                    [--slug=<slug>] [--pr-only] [--fast]
 //
-// Default: no prior finalized review → every rule scans the whole project; a
+// Default: no prior finalized review -> every rule scans the whole project; a
 // rule never seen in a prior ancestor review also gets a full first pass.
 // `--pr-only` restores diff-only mode (last review on this branch, or merge-base with main); its
 // changed set ignores merges, so files that only arrived from main are not reviewed.
 // `--fast` is `--pr-only` recorded as `mode: fast`, for a run System One judges alone (`fast.ts`).
 // Groups are capped at `--max-groups` (default 20; 0 = unlimited): all matched
-// files are still covered — chunk sizes grow so the file set fits the budget.
+// files are still covered - chunk sizes grow so the file set fits the budget.
 //
-// Refuses a dirty working tree or an existing store for HEAD — reviews are
+// Refuses a dirty working tree or an existing store for HEAD - reviews are
 // keyed by commit, so stage only from a clean, not-yet-reviewed commit.
 //
 // Prints the STAGING.md / REVIEW.md paths, the group count, and a per-group line.
@@ -81,12 +81,12 @@ const slug = values.slug ? assertSafeSlug(values.slug) : reviewSlug(branch, shor
 const storeDir = join(root, REVIEWS_DIR, slug);
 
 if (isWorkingTreeDirty()) {
-  console.error('prepare: working tree is dirty — commit your changes first, then stage a review.');
+  console.error('prepare: working tree is dirty - commit your changes first, then stage a review.');
   process.exit(1);
 }
 if (existsSync(storeDir)) {
   console.error(
-    `prepare: a review for this commit already exists at ${REVIEWS_DIR}/${slug}/ — commit a new change (or remove that store) before staging again.`,
+    `prepare: a review for this commit already exists at ${REVIEWS_DIR}/${slug}/ - commit a new change (or remove that store) before staging again.`,
   );
   process.exit(1);
 }
@@ -127,7 +127,7 @@ const scanPriorReviews = (mainBase: string | null): PriorReviewScan => {
       // prior review: its origin branch may have been squashed/rebased into
       // main under a new SHA, or a shallow clone may never have fetched it.
       // Fall back to the commit that actually landed this review's own files
-      // in HEAD's history — reachable by construction, so safe to diff from.
+      // in HEAD's history - reachable by construction, so safe to diff from.
       const landing = commitAdding(`${REVIEWS_DIR}/${entry.name}/REVIEW.md`, head);
       if (!landing || landing === head || !isAncestor(landing, head)) {
         continue;
@@ -215,7 +215,7 @@ mkdirSync(groupsDir, { recursive: true });
 const modeLabel = fast ? 'fast' : prOnly ? 'pr-only' : 'default';
 const totalFiles = groups.reduce((sum, group) => sum + group.files.length, 0);
 const staging = [
-  `# Review staging — ${slug}`,
+  `# Review staging - ${slug}`,
   '',
   `- base: \`${base}\``,
   `- head: \`${head}\``,
@@ -244,14 +244,14 @@ for (const group of groups) {
       ? '**Scope:** full project (first pass for this rule)'
       : `**Scope:** changed since \`${base}\``;
   staging.push(
-    `## Group ${nn} — ${group.rule.title} (\`${group.rule.id}\`, severity: ${group.rule.severity})`,
+    `## Group ${nn} - ${group.rule.title} (\`${group.rule.id}\`, severity: ${group.rule.severity})`,
     '',
     `<!-- fragment: groups/${nn}.md -->`,
     '',
     scopeLine,
     '',
     ...(group.rule.unit === 'pr'
-      ? ['**Unit:** the change set as a whole — judge what the listed files add or leave behind together.', '']
+      ? ['**Unit:** the change set as a whole - judge what the listed files add or leave behind together.', '']
       : []),
     ...(group.rule.context.length > 0
       ? [
@@ -302,6 +302,6 @@ for (const group of groups) {
 }
 if (groups.length === 0) {
   console.log(
-    prOnly ? '  (no rules matched the changed set — nothing to review)' : '  (no rules matched — nothing to review)',
+    prOnly ? '  (no rules matched the changed set - nothing to review)' : '  (no rules matched - nothing to review)',
   );
 }

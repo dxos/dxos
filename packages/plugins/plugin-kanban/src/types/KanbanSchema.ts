@@ -25,14 +25,14 @@ export const PivotColumnAnnotationId = '@dxos/plugin-kanban/annotation/PivotColu
 export const KanbanSettingsSchema = Schema.Struct({
   hideUncategorized: Schema.Boolean.annotate({
     title: 'Hide uncategorized column',
-    description: 'When enabled, items without a pivot value won’t be shown as a column.',
+    description: "When enabled, items without a pivot value won't be shown as a column.",
   }).pipe(Schema.optional),
 });
 
 /**
  * Settings for view-variant Kanbans only. Spreads {@link KanbanSettingsSchema}'s
- * fields and adds a column-field picker that binds the View’s pivot field.
- * Items-variant kanbans use a hardcoded `spec.pivotField` and don’t expose
+ * fields and adds a column-field picker that binds the View's pivot field.
+ * Items-variant kanbans use a hardcoded `spec.pivotField` and don't expose
  * this control.
  */
 export const KanbanViewSettingsSchema = Schema.Struct({

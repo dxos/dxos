@@ -23,7 +23,7 @@ export default defineConfig({
   // This package IS the browser polyfill for the node stdlib, so `DxNodeStdPlugin`'s
   // `node:*` -> `@dxos/node-std/*` remap would point every module at itself.
   nodeTarget: true,
-  // The polyfill implementations themselves. A consumer's bundler cannot resolve them —
+  // The polyfill implementations themselves. A consumer's bundler cannot resolve them -
   // that is the whole point of shipping this package pre-bundled.
   bundle: [
     'assert',

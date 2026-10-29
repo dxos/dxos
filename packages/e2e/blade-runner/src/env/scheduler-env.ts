@@ -75,7 +75,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     private readonly _options: GlobalOptions,
     public params: TestProps<S>,
     // `host` explicitly, not just the port: ioredis defaults to loopback, so in CI the orchestrator
-    // could not reach a Redis service container even with `DX_REDIS_HOST` set — the replicants,
+    // could not reach a Redis service container even with `DX_REDIS_HOST` set - the replicants,
     // which build their options from `DEFAULT_REDIS_OPTIONS`, could.
     private readonly _redisOptions: RedisOptions = { host: REDIS_HOST, port: REDIS_PORT },
   ) {

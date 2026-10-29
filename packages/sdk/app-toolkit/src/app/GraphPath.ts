@@ -69,7 +69,7 @@ export const SPACE_HOME_SEGMENT = 'home';
 export const getSpaceHomePath = (spaceId: string): string => getSpacePath(spaceId, SPACE_HOME_SEGMENT);
 
 /**
- * The workspace token a qualified graph path sits under: the second segment of `root/<workspace>/…`.
+ * The workspace token a qualified graph path sits under: the second segment of `root/<workspace>/...`.
  * Unlike {@link getSpaceIdFromPath} this does not require the workspace to be a space.
  */
 export const getWorkspaceToken = (qualifiedPath: string): string | undefined =>
@@ -93,7 +93,7 @@ export const getDatabasePath = (spaceId: string, ...segments: string[]): string 
 
 /**
  * Slash- and colon-free slug identifying a type for use as a graph node id / path segment: a static
- * schema's typename, or — for a stored (database) schema — its entity id. A full type URI cannot be
+ * schema's typename, or - for a stored (database) schema - its entity id. A full type URI cannot be
  * used here because path segments are split on `/` and the type segment is resolved as a bare entity id.
  */
 export const getTypeSlug = (entity: Type.AnyEntity): string =>
@@ -155,8 +155,8 @@ export const getCollectionObjectPath = (collectionQualifiedId: string, objectId:
 /**
  * Structurally parse a qualified graph path into an ECHO EID: the SpaceId segment plus the trailing
  * EntityId-valid segment, regardless of what lies between them (a canonical database path, a
- * collection path, a custom type-section path, …). Lives in app-toolkit so this parsing has no plugin
- * dependency — used by `useNavigationPresence` and `plugin-deck`'s DXN dedup. `graph` gates
+ * collection path, a custom type-section path, ...). Lives in app-toolkit so this parsing has no plugin
+ * dependency - used by `useNavigationPresence` and `plugin-deck`'s DXN dedup. `graph` gates
  * the result on the
  * path's workspace actually being a known node, so an arbitrary SpaceId-shaped substring in an
  * unrelated string can't be mistaken for a valid target.
@@ -178,7 +178,7 @@ export const tryGetEid = (graph: AppGraph.ExpandableGraph, qualifiedId: string):
  * Every ECHO object a qualified path could be asking about, terminal segment first.
  *
  * The weaker question than {@link tryGetEid}'s "which object IS this node", which must stay strictly
- * terminal because it backs plank dedup — two views of one object are deliberately two planks. A node
+ * terminal because it backs plank dedup - two views of one object are deliberately two planks. A node
  * addressed by a view discriminator (`sent`, `drafts`) carries its object id in an interior segment,
  * so an existence check that demands the terminal one 404s it.
  */

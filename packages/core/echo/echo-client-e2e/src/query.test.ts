@@ -634,7 +634,7 @@ describe('Query', () => {
       expect(singletons.every((group) => group.count === 1 && group.items.length === 1)).to.be.true;
 
       // Without the fallback the same query collapses all five into the single `null` group, where
-      // the limit exposes only 2 of them — the truncation the coalesce chain avoids.
+      // the limit exposes only 2 of them - the truncation the coalesce chain avoids.
       const collapsed = await db
         .query(
           Query.select(Filter.everything())
@@ -660,7 +660,7 @@ describe('Query', () => {
 
       // The outer orderBy sorts ascending (only relevant to initial group formation here, since a
       // single group needs no reordering by a following orderBy), but `items.order` asks for the
-      // top 2 by rank *descending* — a different order than the outer orderBy establishes.
+      // top 2 by rank *descending* - a different order than the outer orderBy establishes.
       const groups = await db
         .query(
           Query.select(Filter.everything())
@@ -895,7 +895,7 @@ describe('Query', () => {
         )
         .run();
 
-      // Groups by latest desc = b(400), c(300), d(200), a(100); skip 1, take 2 → c, d.
+      // Groups by latest desc = b(400), c(300), d(200), a(100); skip 1, take 2 -> c, d.
       expect(page.map((group) => group.threadId)).to.deep.equal(['c', 'd']);
     });
 
@@ -944,7 +944,7 @@ describe('Query', () => {
         )
         .run();
 
-      // Skip group a, take groups b and c — as whole groups (each still has its 2 members).
+      // Skip group a, take groups b and c - as whole groups (each still has its 2 members).
       expect(page.map((group) => group.category)).to.deep.equal(['b', 'c']);
       expect(page.every((group) => group.count === 2 && group.items.length === 2)).to.be.true;
     });
@@ -984,7 +984,7 @@ describe('Query', () => {
         expect(lastResult).to.have.length(1);
 
         // Without `items` the working set declines the aggregate, so the host answers after its
-        // index round trip, which `db.flush({ updates: true })` does not await — poll.
+        // index round trip, which `db.flush({ updates: true })` does not await - poll.
         db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
         await db.flush({ updates: true });
         await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
@@ -1026,7 +1026,7 @@ describe('Query', () => {
         await db.flush({ updates: true });
 
         // `orderBy` makes this host-routed (the working set does not serve windowed queries), and
-        // `db.flush({ updates: true })` does not await that round trip — poll, as the feed-scoped
+        // `db.flush({ updates: true })` does not await that round trip - poll, as the feed-scoped
         // reactivity tests below do.
         await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
@@ -1048,7 +1048,7 @@ describe('Query', () => {
 
         db.remove(obj);
         await db.flush({ updates: true });
-        // Host-routed (no `items`), so the removal lands after the index round trip — poll.
+        // Host-routed (no `items`), so the removal lands after the index round trip - poll.
         await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
 
@@ -1171,7 +1171,7 @@ describe('Query', () => {
       const { db } = await builder.createDatabase({ types: [Feed.Feed, TestSchema.Task] });
       const feed = db.add(Feed.make({}));
 
-      // "t1" has only a non-matching member so far — its thread does not qualify yet.
+      // "t1" has only a non-matching member so far - its thread does not qualify yet.
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 't1', completed: false })]);
       await db.flush();
 
@@ -1192,7 +1192,7 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // This is a feed-scoped, host-routed query (the nested in-query forces isSimple=false), so
-      // the initial event is deferred until the async round trip arrives — db.flush({ updates: true })
+      // the initial event is deferred until the async round trip arrives - db.flush({ updates: true })
       // does not await it (see the equivalent note in echo-client/src/feed/feed.test.ts). Poll instead.
       await waitForCondition({ condition: () => updates.length > 0, timeout: 2000 });
       expect(updates.at(-1)).toEqual(0);
@@ -1458,7 +1458,7 @@ describe('Query', () => {
       expect(after).toBeGreaterThan(before);
     });
 
-    test('createdAt is immutable — stays fixed after Obj.update', async () => {
+    test('createdAt is immutable - stays fixed after Obj.update', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(createTestObject({ value: 1 }));
       await db.flush();
@@ -1700,14 +1700,14 @@ describe('Query', () => {
       const bothSpaces = [db1.spaceId, db2.spaceId];
 
       {
-        // Default: no queue options → only space objects.
+        // Default: no queue options -> only space objects.
         const results = await graph.query(Query.select(Filter.type(TestSchema.Task)).from([db1, db2])).run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
         expect(titles).toEqual([spaceTask1.title, spaceTask2.title]);
       }
 
       {
-        // allFeedsFromSpaces: true → space + all queue objects.
+        // allFeedsFromSpaces: true -> space + all queue objects.
         const results = await graph
           .query(Query.select(Filter.type(TestSchema.Task)).from([db1, db2], { includeFeeds: true }))
           .run();
@@ -1716,7 +1716,7 @@ describe('Query', () => {
       }
 
       {
-        // Specific queue → space objects + only that queue's objects.
+        // Specific queue -> space objects + only that queue's objects.
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
@@ -1730,7 +1730,7 @@ describe('Query', () => {
       }
 
       {
-        // Other specific queue → space objects + only that queue's objects.
+        // Other specific queue -> space objects + only that queue's objects.
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
@@ -1744,7 +1744,7 @@ describe('Query', () => {
       }
 
       {
-        // Both queues explicitly → same as allFeedsFromSpaces.
+        // Both queues explicitly -> same as allFeedsFromSpaces.
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
@@ -1759,7 +1759,7 @@ describe('Query', () => {
       }
 
       {
-        // Single space with allFeedsFromSpaces → only that space's objects + queues.
+        // Single space with allFeedsFromSpaces -> only that space's objects + queues.
         const results = await graph
           .query(Query.select(Filter.type(TestSchema.Task)).from(db1, { includeFeeds: true }))
           .run();
@@ -1768,7 +1768,7 @@ describe('Query', () => {
       }
 
       {
-        // Different type filter → queue options don't affect non-matching types.
+        // Different type filter -> queue options don't affect non-matching types.
         const results = await graph
           .query(Query.select(Filter.type(TestSchema.Person)).from([db1, db2], { includeFeeds: true }))
           .run();
@@ -2694,7 +2694,7 @@ describe('Query', () => {
       });
 
       test('a version-constrained key keeps the composed meaning', async () => {
-        // The index keys a named entity without its version, so a range cannot be honoured there —
+        // The index keys a named entity without its version, so a range cannot be honoured there -
         // the anchor is evaluated normally instead, and matches the meta key of a stored object.
         const entry = db.add(
           Obj.make(TestSchema.Expando, { [Obj.Meta]: { key: 'org.example.operation.foo', version: '1.2.3' } }),
@@ -3781,7 +3781,7 @@ describe('Query', () => {
     });
 
     test('query scoped to the registry returns objects from graph.registry', async ({ expect }) => {
-      // Add an object only to the in-memory registry — NOT to any database.
+      // Add an object only to the in-memory registry - NOT to any database.
       const registryObj = Obj.make(TestSchema.Expando, { value: 42 });
       graph.registry.add([registryObj]);
 
@@ -3815,7 +3815,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { value: 99 }));
       await db.flush();
 
-      // Plain db.query() targets the owning space only — registry excluded.
+      // Plain db.query() targets the owning space only - registry excluded.
       const dbResults = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
       expect(dbResults).toHaveLength(1);
       expect(dbResults[0].value).toBe(99);
@@ -4162,7 +4162,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { name: 'RootExpando' }));
       await db.flush();
 
-      // not(and(type, hasParent(false))) must exclude ONLY the unparented person — a distributed
+      // not(and(type, hasParent(false))) must exclude ONLY the unparented person - a distributed
       // negation (not(type) && hasParent(false)) would wrongly drop the parented person too.
       const objects = await db
         .query(Query.select(Filter.not(Filter.and(Filter.type(TestSchema.Person), Filter.hasParent(false)))))

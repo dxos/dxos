@@ -32,7 +32,7 @@ interface UseQueryFn {
  */
 // The overloaded public signature returns `O[]` (entities) or the flat record `R[]` (aggregate
 // rows and changes) depending on the query shape; the implementation forwards whatever the query result
-// produces, so — as with any implementation of a multi-signature overloaded function type — it is
+// produces, so - as with any implementation of a multi-signature overloaded function type - it is
 // typed as `any[]` here rather than picking one of the mutually-incompatible overload return shapes.
 export const useQuery: UseQueryFn = (
   resource: Database.Queryable | undefined,

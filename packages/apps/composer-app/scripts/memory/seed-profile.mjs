@@ -11,7 +11,7 @@
  *
  * Runs the nightly's own `createProjectsFixture`, so the data here and the data behind the
  * perf trend have the same shape. The fixture takes a Playwright `Page` only to call
- * `page.evaluate`, so a two-line shim over raw CDP stands in for one — which keeps
+ * `page.evaluate`, so a two-line shim over raw CDP stands in for one - which keeps
  * Playwright out of the profile the measuring run will reuse.
  *
  * Seeds with the same Electron build `native-heap.mjs` measures with, because a profile is
@@ -37,7 +37,7 @@ const port = parseInt(process.env.SEED_PORT ?? '9461', 10);
 
 const electronBin = path.join(electronRoot, 'Contents/MacOS/Electron');
 if (!existsSync(electronBin)) {
-  console.error(`no Electron at ${electronBin} — run scripts/memory/fetch-electron.sh`);
+  console.error(`no Electron at ${electronBin} - run scripts/memory/fetch-electron.sh`);
   process.exit(1);
 }
 
@@ -178,7 +178,7 @@ try {
   const cdp = await Cdp.connect(target.webSocketDebuggerUrl);
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
-  console.error(`${version.Browser} — seeding ${spaces} space(s) into ${profileDir}`);
+  console.error(`${version.Browser} - seeding ${spaces} space(s) into ${profileDir}`);
   await cdp.send('Page.navigate', { url });
 
   /** Stands in for a Playwright `Page` for the one method the fixture uses. */
@@ -222,7 +222,7 @@ try {
     const fixture = await createProjectsFixture(page, SCALE, `seed-${Date.now()}-${index}`);
     fixtures.push(fixture);
     console.error(
-      `  space ${index + 1}/${spaces}: ${fixture.spaceId} — ${fixture.taskCount} tasks, ` +
+      `  space ${index + 1}/${spaces}: ${fixture.spaceId} - ${fixture.taskCount} tasks, ` +
         `${fixture.documentCount} documents, ${Math.round((Date.now() - started) / 1000)}s`,
     );
   }

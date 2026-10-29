@@ -15,7 +15,7 @@ import { toJsonSchema } from '../JsonSchema/index.ts';
 import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from './entity.ts';
 
 /**
- * Type-kind schema marker — produced by {@link EchoTypeKindSchema}.
+ * Type-kind schema marker - produced by {@link EchoTypeKindSchema}.
  *
  * Distinguishes meta-schemas (entities of `EntityKind.Type`, such as the
  * built-in `Type.Type` TypeSchema) from object and relation types.

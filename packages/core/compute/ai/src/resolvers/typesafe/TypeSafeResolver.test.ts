@@ -24,7 +24,7 @@ import * as Provider from '../../Provider.ts';
 import * as TypeSafeResolver from './TypeSafeResolver.ts';
 
 const OUTAGE = 'Our production database is down and customers cannot check out. We need help NOW.';
-const PRICING = 'Hi, whenever you have a moment — could you send me a quote for the team plan? No rush at all.';
+const PRICING = 'Hi, whenever you have a moment - could you send me a quote for the team plan? No rush at all.';
 
 const serviceLayer = (apiKey: string) =>
   AiModelResolver.buildAiService.pipe(

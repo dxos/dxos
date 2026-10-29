@@ -68,6 +68,6 @@ const SYSTEM_PROMPT = trim`
   sense that actually applies.
 
   # Output
-  Respond with a JSON array holding exactly one object — no prose, no code fence — with the keys
+  Respond with a JSON array holding exactly one object - no prose, no code fence - with the keys
   "term", "lemma", "translation", "reading" and "partOfSpeech". Omit keys that do not apply.
 `;

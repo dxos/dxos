@@ -85,7 +85,7 @@ const Root = forwardRef<ChessboardController, RootProps>(({ state, children }, f
     [model],
   );
 
-  // Keyboard navigation — fires regardless of which descendant (Board or Info) has focus.
+  // Keyboard navigation - fires regardless of which descendant (Board or Info) has focus.
   // Gated to elements marked data-chessboard-arrow-navigation to avoid intercepting toolbar controls.
   const handleKeyDown = useCallback(
     (ev: React.KeyboardEvent) => {

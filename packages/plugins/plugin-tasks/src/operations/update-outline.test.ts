@@ -49,7 +49,7 @@ describe('update-outline', () => {
 
   it.effect('validates arguments before touching the database', () =>
     Effect.gen(function* () {
-      // A bad argument must report as an argument error even when the ref cannot be loaded —
+      // A bad argument must report as an argument error even when the ref cannot be loaded -
       // i.e. validation runs before the read, so the caller never sees a storage error instead.
       const dangling: Ref.Ref<Outline.Outline> = Ref.fromURI(URI.make('echo:///01JQNEVERWASADOCUMENT00'));
 

@@ -16,9 +16,9 @@ import { Ref } from '../Ref/ref.ts';
 type OwningField = { readonly path: readonly string[]; readonly override: boolean };
 
 /**
- * Owning-field paths relative to an AST node, per {@link SetParentAnnotation}. Memoized per node —
+ * Owning-field paths relative to an AST node, per {@link SetParentAnnotation}. Memoized per node -
  * a schema's annotations do not change once it is built (a dynamic type rebuilds its AST, yielding
- * fresh keys) — which also keeps the walk linear in nodes over a schema whose nested types repeat.
+ * fresh keys) - which also keeps the walk linear in nodes over a schema whose nested types repeat.
  */
 const cache = new WeakMap<SchemaAST.AST, readonly OwningField[]>();
 
@@ -80,7 +80,7 @@ const setParent = (value: unknown, parent: unknown, override: boolean): void => 
     return;
   }
   // By id, not identity: the database resolves a parent edge through the working set, which may
-  // hand back a different proxy for the same entity — an identity compare would miss the
+  // hand back a different proxy for the same entity - an identity compare would miss the
   // short-circuit and re-write the unchanged edge on every update of the holder.
   const current = target[ParentId];
   if (current?.id === (parent as any)?.id) {
@@ -96,7 +96,7 @@ const setParent = (value: unknown, parent: unknown, override: boolean): void => 
  * Propagates the parent edge declared by an object's {@link SetParentAnnotation} fields: every
  * resolved ref target held in an owning field gets its parent set to the holding object.
  *
- * Called after object creation (`Obj.make`) and after every change transaction (`Obj.update`) —
+ * Called after object creation (`Obj.make`) and after every change transaction (`Obj.update`) -
  * idempotent, so re-running it over unchanged fields is a no-op.
  */
 export const propagateParentAnnotations = (obj: unknown): void => {

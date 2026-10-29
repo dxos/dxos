@@ -30,7 +30,7 @@ const resolver =
     map[id] ?? [];
 
 describe('buildGraphMenu', () => {
-  test('flattens a node’s actions under the menu root', ({ expect }) => {
+  test("flattens a node's actions under the menu root", ({ expect }) => {
     const resolve = resolver({ event: [action('delete'), action('save')] });
     const { nodes, edges } = buildGraphMenu(resolve, 'event');
 
@@ -48,7 +48,7 @@ describe('buildGraphMenu', () => {
     });
     const { nodes, edges } = buildGraphMenu(resolve, 'event');
 
-    // root → delete, root → more (group), more → archive, more → export.
+    // root -> delete, root -> more (group), more -> archive, more -> export.
     expect(nodes.map((node) => node.id)).toEqual(['delete', 'more', 'archive', 'export']);
     expect(edges).toEqual([
       { source: GraphNode.RootId, target: 'delete', relation: 'child' },
@@ -76,7 +76,7 @@ describe('buildGraphMenu', () => {
     expect(nodes.map((node) => node.id)).toEqual(['delete']);
   });
 
-  test('keeps a shared action’s node once but records each edge, tolerating cycles', ({ expect }) => {
+  test("keeps a shared action's node once but records each edge, tolerating cycles", ({ expect }) => {
     // `more` references itself; the node is emitted once while both inbound edges survive.
     const resolve = resolver({
       event: [group('more')],

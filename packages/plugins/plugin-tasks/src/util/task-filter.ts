@@ -17,7 +17,7 @@ export type TaskFilterOptions = {
 };
 
 /**
- * The tasks the toolbar's two terms keep, in the array's order — which is the set's canonical one.
+ * The tasks the toolbar's two terms keep, in the array's order - which is the set's canonical one.
  *
  * The terms read the tree differently, because they answer different questions:
  *
@@ -25,7 +25,7 @@ export type TaskFilterOptions = {
  *   under them: a sub-task is part of the work its parent stands for, so a reader who has put a
  *   branch out of sight has put the whole branch out of sight.
  * - The query keeps the ancestors of a match. A reader searching for a task does not know where it
- *   is filed, and a match whose parent was dropped would render at the root — silently restructuring
+ *   is filed, and a match whose parent was dropped would render at the root - silently restructuring
  *   what they are looking at. Those ancestors are drawn from what the status selector left, so the
  *   query can never bring a hidden branch back.
  */

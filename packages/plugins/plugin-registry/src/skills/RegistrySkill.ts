@@ -38,7 +38,7 @@ export const make = (): Skill.Skill =>
         # Orientation
         - Query the plugins to see what is installed. An enabled plugin that is not yet active
           contributes nothing, so its operations, types and skills are absent until it activates.
-        - Use this to explain what a host supports, or to diagnose a verb that is missing — the
+        - Use this to explain what a host supports, or to diagnose a verb that is missing - the
           usual cause is a plugin that is installed but disabled.
         - What can actually be invoked is a separate question: search the operations themselves,
           which is where descriptions and input schemas live.

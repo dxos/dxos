@@ -7,10 +7,10 @@ import { TerraObject } from '#types';
 import { turnToward } from '../sim/index.ts';
 
 /**
- * Max degrees a rendered heading may turn per real second, per kind — a heavy hull turning this
+ * Max degrees a rendered heading may turn per real second, per kind - a heavy hull turning this
  * fast would look like it snapped rather than steered, so ground/sea/air vehicles that actually
  * corner at waypoints get a rate a real vehicle could pull off. Satellites never corner (their
- * bearing drifts smoothly and continuously along the orbit tangent — see `motion.ts`'s
+ * bearing drifts smoothly and continuously along the orbit tangent - see `motion.ts`'s
  * `evaluateOrbit`), so a high rate here costs nothing and keeps their render heading from ever
  * visibly lagging the sim.
  */

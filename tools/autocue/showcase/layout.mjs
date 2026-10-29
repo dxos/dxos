@@ -192,7 +192,7 @@ for (let row = 0; row < ROWS; row++) {
 }
 const repeated = Number.isFinite(closest);
 console.log(
-  `${tour.length} tour + ${grid.length} grid cells from ${available.length} clips → ${path.relative(ROOT, GRID)}; ` +
+  `${tour.length} tour + ${grid.length} grid cells from ${available.length} clips -> ${path.relative(ROOT, GRID)}; ` +
     (repeated ? `closest repeat is ${closest} cells apart` : 'no clip repeats'),
 );
 if (repeated && closest < Number(options.min)) {

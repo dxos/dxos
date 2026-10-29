@@ -33,9 +33,9 @@ const { mergeField, snapshotField } = ConnectorSync;
 //
 // Polling sync of one bound repository (spec/SYNC.mdl).
 //
-// A binding is a `Cursor` whose target is a `Repo`. Each poll reads one delta — the repository's
+// A binding is a `Cursor` whose target is a `Repo`. Each poll reads one delta - the repository's
 // issues and pull requests updated since `Cursor.max`, newest first, sent with the ETag of the last
-// delta in `Cursor.spec.token` — so a quiet repository costs a single `304`. Pull requests in the
+// delta in `Cursor.spec.token` - so a quiet repository costs a single `304`. Pull requests in the
 // delta, plus open ones whose checks are still pending (a CI result does not move `updated_at`), are
 // then read in one GraphQL batch. Issues keep the snapshot-driven three-way merge and push of title,
 // description and status; pull requests are pull-only.
@@ -80,7 +80,7 @@ const WATERMARK_OVERLAP_MS = 5_000;
 
 /**
  * Last-pulled repository fields, plus when the repository and its organization were last read.
- * `name` is recorded but not pushed — see {@link GitHubApi.updateRepo}.
+ * `name` is recorded but not pushed - see {@link GitHubApi.updateRepo}.
  */
 type RepoSnapshot = {
   name: string;
@@ -107,7 +107,7 @@ const fkFor = (id: string | number) => ({ source: GITHUB_SOURCE, id: String(id) 
 
 /**
  * Generic foreign-key lookup. Type is forwarded to `Filter.foreignKeys`
- * untyped — the caller supplies the result type via the explicit `T` parameter
+ * untyped - the caller supplies the result type via the explicit `T` parameter
  * (mirrors how plugin-trello casts after `Database.query(...).run`).
  */
 const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
@@ -129,13 +129,13 @@ export const ensureIssueSet = Effect.fn('ensureIssueSet')(function* (repo: Repo.
 });
 
 //
-// Field mappers (GitHub ↔ DXOS)
+// Field mappers (GitHub <-> DXOS)
 //
 
 /**
  * Maps GitHub issue state to a Task status. GitHub issues only have `open` /
- * `closed` — there's no "in progress" concept, so we collapse open→`todo` and
- * closed→`done`.
+ * `closed` - there's no "in progress" concept, so we collapse open->`todo` and
+ * closed->`done`.
  */
 const issueStateToTaskStatus = (state: string): 'todo' | 'done' => (state === 'closed' ? 'done' : 'todo');
 
@@ -216,7 +216,7 @@ const toPullRequestState = (
 };
 
 /**
- * Move a task into `container`. Idempotent — sync runs repeatedly and must never append a second
+ * Move a task into `container`. Idempotent - sync runs repeatedly and must never append a second
  * ref for a task already in the set.
  */
 export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
@@ -361,7 +361,7 @@ const upsertRepo = Effect.fn('upsertRepo')(function* (
 });
 
 /**
- * Pull a GitHub milestone into ECHO. Mirrored remote-wins without a snapshot merge — milestones
+ * Pull a GitHub milestone into ECHO. Mirrored remote-wins without a snapshot merge - milestones
  * are pull-only (nothing here pushes milestone edits back), so there is no local side to protect.
  */
 export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
@@ -645,7 +645,7 @@ const findPullRequest = (repo: Repo.Repo, number: number, id: number | undefined
   });
 
 //
-// Push (snapshot diff → GitHub mutations)
+// Push (snapshot diff -> GitHub mutations)
 //
 
 export type GitHubPushResult = {
@@ -662,17 +662,17 @@ export type RepoCoordinates = { id: string; owner: string; name: string };
  * binding's snapshot, and PATCHes any diverged field back to GitHub.
  *
  * Behaviour:
- *   - Repo description divergence → PATCH /repos/{owner}/{repo}.
+ *   - Repo description divergence -> PATCH /repos/{owner}/{repo}.
  *     `name` divergence is logged but NOT pushed (rename is destructive and
  *     almost never desired from a sync mirror).
- *   - Task title / description / status divergence → PATCH the issue.
+ *   - Task title / description / status divergence -> PATCH the issue.
  *   - Tombstones (`Obj.isDeleted`) are skipped.
  *
  * After a successful push the snapshot is refreshed with the values just
  * sent so the next pass sees no divergence even before the next pull.
  *
  * The push callbacks' error type is generic. The reconciler doesn't inspect
- * or recover from those errors — it propagates so the outer `Effect.result`
+ * or recover from those errors - it propagates so the outer `Effect.result`
  * at the call site can record the binding's `lastError`. Generic-`E` keeps
  * this module decoupled from the HTTP error hierarchy of `GitHubApi`.
  */
@@ -696,7 +696,7 @@ export const pushRepoUpdates: <E, R>(
     let repos = 0;
     let issues = 0;
 
-    // Repo push — description only.
+    // Repo push - description only.
     {
       const fid = repo.id;
       const local = yield* findByForeignId<Repo.Repo>(Repo.Repo, repo.id);
@@ -712,7 +712,7 @@ export const pushRepoUpdates: <E, R>(
             diverged = true;
           }
           if (snapshot.name !== undefined && snapshot.name !== localName) {
-            // We deliberately don't push repo renames — see updateRepo above.
+            // We deliberately don't push repo renames - see updateRepo above.
             // Log instead so the user can chase down via the audit channel.
             log.warn('github push: local repo name diverges from remote; rename push is intentionally disabled', {
               repoId: fid,
@@ -732,7 +732,7 @@ export const pushRepoUpdates: <E, R>(
       }
     }
 
-    // Task (issue) push — title / body / state.
+    // Task (issue) push - title / body / state.
     for (const [id, remoteIssue] of remoteIssuesById) {
       const local = yield* findByForeignId<Task.Task>(Task.Task, id);
       if (!local || Obj.isDeleted(local)) {
@@ -762,7 +762,7 @@ export const pushRepoUpdates: <E, R>(
       // endpoint for issues and PRs, but `state: 'closed'` on a PR rejects
       // it (the closed-without-merge red badge), and merging requires a
       // separate `PUT /pulls/{n}/merge` endpoint we don't support. The safe
-      // default is to never push a status change for a PR — log if local
+      // default is to never push a status change for a PR - log if local
       // and snapshot diverge so the divergence is auditable.
       const isPullRequest = remoteIssue.pull_request != null;
       if (
@@ -795,7 +795,7 @@ export const pushRepoUpdates: <E, R>(
 
       yield* push.updateIssue(repo.owner, repo.name, remoteIssue.number, input);
       // Refresh the snapshot: title / description / status sent. Status only
-      // gets refreshed when we actually pushed a state change (issues only) —
+      // gets refreshed when we actually pushed a state change (issues only) -
       // for PRs we keep the snapshot's previous status, so the warning above
       // keeps firing until either the user reverts locally or the PR's state
       // changes on GitHub and a pull catches up.

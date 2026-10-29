@@ -69,7 +69,7 @@ export default Capability.makeModule(
     // reading the capability manager synchronously (graph-extension bodies must never sync-get).
     const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
     // Providers activate on the feature's start event, which nothing on the path to an annotated
-    // object's toolbar fires — a cold load straight onto an artifact showed no Connect until the
+    // object's toolbar fires - a cold load straight onto an artifact showed no Connect until the
     // Connections page had been visited. Requested once, detached: the body must stay synchronous,
     // and the atom read in `connectorAuth` re-runs it when the providers land.
     // Optional so a headless harness that supplies only the capability manager still builds the graph.
@@ -193,7 +193,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // ConnectorSpec.Connector-auth ("Connect X") for any object whose type carries `ConnectorAnnotations.ConnectorAuthAnnotation` —
+      // ConnectorSpec.Connector-auth ("Connect X") for any object whose type carries `ConnectorAnnotations.ConnectorAuthAnnotation` -
       // the single cross-plugin toolbar contribution. Opting in is purely declarative (annotate the
       // type); the connectorIds / bindTarget come from the annotation, and connected-state is derived
       // from bindTarget. Owning plugins inline their own sync/generate actions separately.
@@ -218,21 +218,21 @@ export default Capability.makeModule(
               return [];
             }
             // Read the connector list reactively BEFORE anything can return early. Connector modules
-            // activate lazily, so on a fresh load this runs while the list is still empty — and an
+            // activate lazily, so on a fresh load this runs while the list is still empty - and an
             // early return that never touched the atom registered no dependency, so the action never
             // reappeared once the provider activated. That is why Connect showed up only right after
             // creating a mailbox: unrelated graph churn, not the capability arriving.
             get(connectorAtom);
             const capabilities = yield* Capability.Service;
             // The manager is the authority on what is registered, and `connectorIds` below is derived
-            // from it — reading the providers from a lagging atom instead (a module still activating, or
+            // from it - reading the providers from a lagging atom instead (a module still activating, or
             // an atom resolved against a different registry) is what left a disabled Connect frozen on a
             // toolbar whose provider was installed. The atom read above is kept purely for the reactive
             // dependency that re-runs this when one arrives.
             const allConnectors = capabilities.getAll(ConnectorSpec.Connector).flat();
             if (allConnectors.length === 0) {
               // Nothing known yet: indistinguishable from "none installed", so contribute nothing rather
-              // than a disabled control that would stick once the registry fills in — but ask for the
+              // than a disabled control that would stick once the registry fills in - but ask for the
               // providers, so a toolbar reached before any connector surface still gets its Connect.
               yield* requestProviders;
               return [];
@@ -249,8 +249,8 @@ export default Capability.makeModule(
             }
             const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
             const accessTokens = get(db.query(Filter.type(AccessToken.AccessToken)).atom);
-            // bindTarget types are "connected" only while a live binding exists — a cursor targeting the
-            // object AND the connection backing it — because counting an orphaned cursor (its connection
+            // bindTarget types are "connected" only while a live binding exists - a cursor targeting the
+            // object AND the connection backing it - because counting an orphaned cursor (its connection
             // deleted) as connected hid Connect while the owning plugin's sync action, which needs that
             // connection, hid too. Space-level types (no bindTarget) are connected once any Connection
             // for one of the connectorIds exists.
@@ -269,7 +269,7 @@ export default Capability.makeModule(
               spaceId: db.spaceId,
               existingTarget: annotation.bindTarget ? Ref.make(object) : undefined,
               allConnectors,
-              // Reuse binds this object, so a connection for another account is not offered at all —
+              // Reuse binds this object, so a connection for another account is not offered at all -
               // the bind would be refused, and a menu entry that always errors is worse than no entry.
               allConnections: annotation.bindTarget
                 ? allConnections.filter((connection) => !contradictsTargetAccount(connection, accessTokens, object))

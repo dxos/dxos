@@ -32,8 +32,8 @@ const FILE_HEADER = /^diff --git a\/(.+?) b\/(.+)$/;
 const HUNK_HEADER = /^@@+\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@/;
 
 /**
- * Splits a multi-file unified diff — what `GET /repos/…/pulls/N` returns under the `diff` media type
- * — into files and hunks. Hunk bodies are carried verbatim rather than re-derived, so a chunk filled
+ * Splits a multi-file unified diff - what `GET /repos/.../pulls/N` returns under the `diff` media type
+ * - into files and hunks. Hunk bodies are carried verbatim rather than re-derived, so a chunk filled
  * from one is byte-identical to what git produced.
  */
 export const parsePatch = (patch: string): PatchFile[] => {
@@ -129,7 +129,7 @@ export const renderHunks = (hunks: PatchHunk[]): string =>
  * Whether a hunk shows any of `[start, end]` of the post-change file.
  *
  * A pure removal spans nothing after the change (`afterEnd === afterStart - 1`), so it is treated as
- * occupying the single position the lines were removed from — otherwise no range could ever select
+ * occupying the single position the lines were removed from - otherwise no range could ever select
  * it, including the one this module's own {@link hunkRange} reports for it.
  */
 export const hunkOverlaps = (hunk: PatchHunk, start: number, end: number): boolean =>

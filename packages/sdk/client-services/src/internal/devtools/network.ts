@@ -67,7 +67,7 @@ export const subscribeToSignal = ({
                     author: peerKeyBytes(message.author),
                     recipient: peerKeyBytes(message.recipient),
                     // Messaging keeps payloads packed and dispatches on `typeUrl`, so this is a
-                    // field map — the payload is never resolved here.
+                    // field map - the payload is never resolved here.
                     payload: create(AnySchema, {
                       typeUrl: message.payload?.typeUrl,
                       value: message.payload?.value,

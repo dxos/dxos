@@ -81,7 +81,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
     return type ? getFieldPublishFlags(Type.getSchema(type)) : [];
   }, [subject]);
 
-  // Undefined until the first (async, network-aware) derivation resolves — the UI shows a neutral
+  // Undefined until the first (async, network-aware) derivation resolves - the UI shows a neutral
   // "checking" state rather than flashing a definitive (possibly wrong) status.
   const [status, setStatus] = useState<DisplayStatus | undefined>();
   const [canPublish, setCanPublish] = useState(false);
@@ -94,7 +94,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
   const [error, setError] = useState<string | undefined>();
 
   // Codec encoding is async (WASM-backed), inspection is network-aware, and displayed field values may
-  // resolve refs — so publish state and values are derived in an effect and refreshed when the object
+  // resolve refs - so publish state and values are derived in an effect and refreshed when the object
   // mutates (`live`) or its publication changes. Note: this subscribes to the subject only, not to the
   // targets of ref-typed fields (e.g. a review Text), so edits to a ref's content refresh here only on
   // the next subject mutation or remount, not live.
@@ -197,7 +197,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
   const statusMeta = status ? STATUS_META[status] : undefined;
   // An unverifiable state (offline) is a transient info; a definitive block is a warning.
   const reasonValence = status === 'unknown' ? 'info' : 'warning';
-  // Whether the object has any Mirrored fields whose upstream link failed to resolve — those fields
+  // Whether the object has any Mirrored fields whose upstream link failed to resolve - those fields
   // are then visible nowhere despite their tag.
   const mirroredUnresolved =
     mirrorResolved === false && fields.some((field) => !field.group && field.visibility === 'mirror');
@@ -214,7 +214,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Layout.Flex column gap='md' classNames='p-trim-md'>
-              {/* Publish status — the status icon overrides the Message's default valence icon. A
+              {/* Publish status - the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
               <Banner.Root
                 valence={statusMeta?.valence ?? 'neutral'}
@@ -275,7 +275,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     const mirrored = field.visibility === 'mirror';
                     const visible = published || mirrored;
                     const value = !field.group && visible ? values[field.path] : undefined;
-                    // Diverged from the network's current value — the source depends on visibility:
+                    // Diverged from the network's current value - the source depends on visibility:
                     // a Mirrored field differs from the upstream record (from inspect); a Published field
                     // differs from what we last published (the snapshot). The two are mutually exclusive by
                     // visibility, so a Published field is never judged against upstream (which would false-

@@ -15,7 +15,7 @@ import { currentProject, lastProject, openProject } from './routing.ts';
 import { type Session, openSession } from './session.ts';
 
 /**
- * The shell. Chat on the left, and — as soon as the agent has published anything — the canvas
+ * The shell. Chat on the left, and - as soon as the agent has published anything - the canvas
  * beside it. The split is driven by the canvas being non-empty rather than by a toggle: the agent
  * is told the canvas is the only thing the user sees, so a session that has displayed something is
  * a session that should be showing it.
@@ -72,7 +72,7 @@ const ProjectRow = (props: {
               aria-label={`Delete ${props.project.title}`}
               onClick={() => setConfirming(true)}
             >
-              ✕
+              x
             </button>
           </>
         }
@@ -185,7 +185,7 @@ export const App = () => {
   // either, a fresh project is created so the page is never a dead end.
   //
   // The source is wrapped in an object because `createResource` treats a falsy source as "not
-  // ready" and never calls the fetcher — and "no project in the URL" is exactly the case that has
+  // ready" and never calls the fetcher - and "no project in the URL" is exactly the case that has
   // work to do.
   const [resolved] = createResource(
     () => ({ fromUrl: currentProject() }),
@@ -231,7 +231,7 @@ export const App = () => {
       />
       {/* `keyed` is load-bearing: a different project is a different session, and re-keying is
           what disposes the old subscription and opens the new one. */}
-      <Show when={resolved()} keyed fallback={<main class='text-fg-muted p-4 text-sm'>Opening…</main>}>
+      <Show when={resolved()} keyed fallback={<main class='text-fg-muted p-4 text-sm'>Opening...</main>}>
         {(projectId) => {
           const session = openSession(projectId);
           // A session named after its first prompt is renamed by an event in its log, not a reply.

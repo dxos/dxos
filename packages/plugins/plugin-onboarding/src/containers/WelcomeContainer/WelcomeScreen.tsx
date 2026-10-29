@@ -37,8 +37,8 @@ const passkeyOnly = hostPlatform === 'ios' || (hostPlatform === 'macos' && navig
 
 /**
  * Whether the native app offers email sign-in. Off because the emailed link can only return to a web
- * origin — the app's own origin is a bundled `localhost` asset server no mail client can usefully
- * open — and the web app hands a link back to the native app only when `enableNativeRedirect` is
+ * origin - the app's own origin is a bundled `localhost` asset server no mail client can usefully
+ * open - and the web app hands a link back to the native app only when `enableNativeRedirect` is
  * set, which still defaults to false. Until then the link would strand the user in a browser tab
  * instead of the app they started from, so the option is hidden rather than offered broken. Flip
  * this to true once native redirects are the default.
@@ -147,7 +147,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         // Opens the provider auth in a new tab. Because atproto nullifies window.opener, the flow
         // can't relay back via postMessage; kms-service redirects the tab to /redirect/oauth-recovery,
         // where the welcome OAuthRecoveryRedirect module redeems the recovery proof and admits this
-        // device. This call returns once the tab is open — completion happens out-of-band.
+        // device. This call returns once the tab is open - completion happens out-of-band.
         const result = await invokePromise(OnboardingOperation.RedeemOAuthRecovery, { provider, loginHint });
         if (result.error) {
           throw result.error;
@@ -181,7 +181,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           if (identity) {
             return identity;
           }
-          // `invokePromise` resolves with `{ error }` rather than rejecting, so fail explicitly —
+          // `invokePromise` resolves with `{ error }` rather than rejecting, so fail explicitly -
           // otherwise a failed creation only surfaces via the invariant below, as a defect.
           const { error: createError } = yield* Effect.promise(() =>
             invokePromise(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] }),
@@ -194,7 +194,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           return created;
         });
 
-        // Errors are mapped to UI states inside the Effect — `runPromise` rejects with a
+        // Errors are mapped to UI states inside the Effect - `runPromise` rejects with a
         // FiberFailure, so the typed errors are not matchable from a catch block.
         const outcome = await EffectEx.runPromise(
           Account.signUpWithEmail({ hub, email, code, ensureIdentity }).pipe(
@@ -244,7 +244,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         // hub URL are persisted, then kms-service redirects the tab to /redirect/oauth-recovery. The
         // welcome OAuthRecoveryRedirect module then creates the identity, completes registration, and
         // redeems this invitation code with the provider-verified email. This call returns once the
-        // tab is open — completion happens out-of-band.
+        // tab is open - completion happens out-of-band.
         const result = await invokePromise(OnboardingOperation.RegisterOAuthRecovery, {
           provider,
           loginHint,

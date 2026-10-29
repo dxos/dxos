@@ -25,7 +25,7 @@ const statusError = (status: number) => {
 
 describe('pullRequestFailureKey', () => {
   // A revoked or expired connection token is the only one of these the user can act on, and it
-  // reached the toast as the raw `StatusCode: non 2xx status code (401 GET …)` (DX-1301).
+  // reached the toast as the raw `StatusCode: non 2xx status code (401 GET ...)` (DX-1301).
   test('a rejected credential names the reconnect message', ({ expect }) => {
     expect(pullRequestFailureKey(statusError(401), FALLBACK)).toBe('github-token-rejected.title');
   });

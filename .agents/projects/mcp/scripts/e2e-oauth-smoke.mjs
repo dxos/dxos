@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 //
-// E2E smoke (Path A / OAuth stub): MCP createObject(document) → appears in Composer.
+// E2E smoke (Path A / OAuth stub): MCP createObject(document) -> appears in Composer.
 //
 // Prereqs (see ../TESTING.md): edge stack up (START_MCP=1 DX_PARALLEL_WRANGLER_DEV=1
 // moon run edge:dev) and Composer served at --app pointing at the local edge. The identity's
@@ -30,7 +30,7 @@ const { values: args } = parseArgs({
 });
 
 // With --identity/--space: assert-only against an existing profile's space (needs that profile's
-// browser, so headed use only). Without: fully self-contained — boot a fresh browser profile,
+// browser, so headed use only). Without: fully self-contained - boot a fresh browser profile,
 // let onboarding auto-create its identity, harvest key+space from the edge dev log, and assert in
 // the SAME context (a fresh context cannot see another identity's space).
 
@@ -63,7 +63,7 @@ if (!args.identity || !args.space) {
   const tail = readFileSync(EDGE_LOG, 'utf8').slice(logMark);
   const keys = [...tail.matchAll(/identityKey\\?":\\?"(04[0-9a-f]{128})/g)].map((m) => m[1]);
   args.identity = keys.at(-1) ?? fail('bootstrap', 'no identityKey in edge log');
-  // Only spaces first seen after boot belong to the fresh identity — the user's own browser may
+  // Only spaces first seen after boot belong to the fresh identity - the user's own browser may
   // still be replicating its (busier) spaces into the same log.
   const spaces = [...tail.matchAll(/spaceId\\?":\\?"(B[A-Z2-7]{32})/g)]
     .map((m) => m[1])
@@ -76,7 +76,7 @@ if (!args.identity || !args.space) {
   console.log('bootstrapped identity', args.identity.slice(0, 8), 'space', args.space);
 }
 
-// 1. OAuth (dynamic registration → PKCE authorize form → token).
+// 1. OAuth (dynamic registration -> PKCE authorize form -> token).
 step('oauth');
 const reg = await (
   await fetch(`${baseUrl}/register`, {
@@ -154,7 +154,7 @@ await mcp(
 );
 const title = `E2E Smoke ${new Date().toISOString()}`;
 // A document is an object whose content is a Text ref; create via the markdown operation shape:
-// typename org.dxos.type.document requires an owned Text — the operation-service objectCreate
+// typename org.dxos.type.document requires an owned Text - the operation-service objectCreate
 // handles plain property bags, so create the Text first, then the document referencing it.
 const text = await mcp(
   'tools/call',
@@ -184,7 +184,7 @@ const doc = await mcp(
 const docObj = doc.result?.structuredContent?.object ?? fail('create document', JSON.stringify(doc).slice(0, 400));
 console.log('created:', docObj['@uri'] ?? docObj.id);
 
-// 2b. Attach to the space's root collection — raw objectCreate makes an orphan (queryable but
+// 2b. Attach to the space's root collection - raw objectCreate makes an orphan (queryable but
 // absent from the navtree); the deleted createDocument tool used to do this via CollectionModel.add.
 step('attach to root collection');
 const collections = await mcp(

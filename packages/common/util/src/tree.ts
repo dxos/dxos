@@ -30,30 +30,30 @@ export const stringifyTree = (node: TreeNode, ancestors: [TreeNode, number][] = 
       const first = ancestors.slice(j).every(([_, i]) => i === 0);
 
       // Root.
-      parts.push(j === 0 ? (first ? '├' : ' ') : '');
+      parts.push(j === 0 ? (first ? '\u251C' : ' ') : '');
 
       // Ancestor name (if first row) or padding.
-      parts.push(first ? `─(${name(node)})─` : ''.padEnd(keyLen + 4));
+      parts.push(first ? `\u2500(${name(node)})\u2500` : ''.padEnd(keyLen + 4));
 
       if (node.children) {
         // Connector to children.
         if (first) {
-          parts.push(node.children.length > 1 ? '┬' : '─');
+          parts.push(node.children.length > 1 ? '\u252C' : '\u2500');
         } else {
           // Child is on first row.
           const childFirst = ancestors.slice(j + 1).every(([_, i]) => i === 0);
 
           // Last child.
           if (node.children.length - 1 === i) {
-            parts.push(childFirst ? '╰' : ' ');
+            parts.push(childFirst ? '\u2570' : ' ');
           } else {
-            parts.push(childFirst ? '├' : '│');
+            parts.push(childFirst ? '\u251C' : '\u2502');
           }
         }
       }
     });
 
-    parts.push(`─(${name(node)})`);
+    parts.push(`\u2500(${name(node)})`);
     rows.push(parts.join(''));
   }
 

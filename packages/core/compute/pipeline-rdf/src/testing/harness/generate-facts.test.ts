@@ -14,7 +14,7 @@ import { type ExtractDocument } from '../../types/index.ts';
 import { queuedAiService } from '../index.ts';
 import { generateFacts } from './generate-facts.ts';
 
-// Realistic source text — the input a real connector (Gmail/Discord) would feed in.
+// Realistic source text - the input a real connector (Gmail/Discord) would feed in.
 const SOURCE_DOCS: readonly ExtractDocument[] = [
   {
     source: 'dxn:gmail:msg-1',

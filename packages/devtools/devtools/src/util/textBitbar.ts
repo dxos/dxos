@@ -22,11 +22,11 @@ export const createTextBitbar = (value: Uint8Array, length: number, maxBars: num
 
       // Use different symbols based on density
       if (percent === 1) {
-        return '▓'; // Full block for 100%
+        return '\u2593'; // Full block for 100%
       } else if (percent > 0.5) {
-        return '▒'; // Medium shade block for >50%
+        return '\u2592'; // Medium shade block for >50%
       } else if (percent > 0) {
-        return '░'; // Light shade block for >0%
+        return '\u2591'; // Light shade block for >0%
       } else {
         return ' '; // Space for 0%
       }

@@ -33,7 +33,7 @@ export const Transport = ({ playback, chapters, downloads, onFullscreen }: Trans
       <Button.Root
         variant='ghost'
         icon='ph--skip-back--regular'
-        label='Previous chapter (←)'
+        label='Previous chapter (<-)'
         iconOnly
         onClick={() => playback.stepChapter(-1)}
       />
@@ -48,7 +48,7 @@ export const Transport = ({ playback, chapters, downloads, onFullscreen }: Trans
       <Button.Root
         variant='ghost'
         icon='ph--skip-forward--regular'
-        label='Next chapter (→)'
+        label='Next chapter (->)'
         iconOnly
         onClick={() => playback.stepChapter(1)}
       />

@@ -11,7 +11,7 @@ import { IBKR_CONNECTOR_ID, IBKR_SOURCE } from '../constants.ts';
 import { createIbkrConnectorEntry } from './connector.ts';
 
 describe('IBKR connector', () => {
-  test('onSubmit maps token→AccessToken.token and queryId→AccessToken.account', ({ expect }) =>
+  test('onSubmit maps token->AccessToken.token and queryId->AccessToken.account', ({ expect }) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const entry = createIbkrConnectorEntry();

@@ -8,7 +8,7 @@ import { type AnyLens } from './types.ts';
 
 //
 // Static lens registry. `lensesFor` answers "how else can I view this object"; `sourcesFor` answers
-// "what can this interface accept" — the reverse lookup that lets one UI serve many source types.
+// "what can this interface accept" - the reverse lookup that lets one UI serve many source types.
 //
 
 const byId = new Map<string, AnyLens>();
@@ -30,7 +30,7 @@ export const lensesFor = (source: Type.AnyObj | string): readonly AnyLens[] => {
   return [...byId.values()].filter((lens) => Type.getTypename(lens.source) === name);
 };
 
-/** Every registered lens whose target is this type — the sources an interface can accept. */
+/** Every registered lens whose target is this type - the sources an interface can accept. */
 export const sourcesFor = (target: Type.AnyObj | string): readonly AnyLens[] => {
   const name = typename(target);
   return [...byId.values()].filter((lens) => {

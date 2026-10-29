@@ -28,7 +28,7 @@ const DATASETS = [
 const read = (file) => (existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : undefined);
 const fmt = (value, digits = 1) =>
   value === undefined || value === null || Number.isNaN(value)
-    ? '—'
+    ? '-'
     : value >= 100
       ? value.toFixed(0)
       : value.toFixed(digits);
@@ -65,7 +65,7 @@ const planNote = (plan = []) => {
   if (plan.some((row) => /TEMP B-TREE/.test(row))) {
     flags.push('temp b-tree');
   }
-  const order = loops.length > 4 ? `${loops.slice(0, 3).join(' → ')} → …(${loops.length})` : loops.join(' → ');
+  const order = loops.length > 4 ? `${loops.slice(0, 3).join(' -> ')} -> ...(${loops.length})` : loops.join(' -> ');
   return [order, flags.length ? `**${flags.join(', ')}**` : ''].filter(Boolean).join(' ');
 };
 
@@ -96,22 +96,22 @@ for (const { db, label, oracle } of DATASETS) {
   tables.push(
     `Deployed \`${h1.url}\`, build \`${h1.build}\`, ${h1.at.slice(0, 16)}Z. ${h1.stats.triples.toLocaleString('en-US')} triples, ${(h1.stats.dbBytes / 1e6).toFixed(0)} MB. Ping ${fmt(h1.pingMs)} ms.`,
     '',
-    '| query | kind | rows | ✓ | server ms | no hints | wall ms | 1st ms | Oxigraph LOCAL ms | plan (loop order; flags) |',
+    '| query | kind | rows | OK | server ms | no hints | wall ms | 1st ms | Oxigraph LOCAL ms | plan (loop order; flags) |',
     '| ----- | ---- | ---: | - | --------: | -------: | ------: | -----: | ----------------: | ------------------------ |',
   );
   const servers = [];
   for (const query of h1.queries) {
     const old = before.get(query.id);
-    // A rewrite (`…r`) is checked against the engine-neutral original's Oxigraph answer.
+    // A rewrite (`...r`) is checked against the engine-neutral original's Oxigraph answer.
     const reference = oxById.get(query.id) ?? oxById.get(query.id.replace(/r(-.*)?$/, '$1'));
     const check = query.error
       ? ''
       : reference && !reference.error
         ? query.rows === reference.rows && query.checksum === reference.checksum
-          ? '✓'
+          ? 'OK'
           : query.rows === reference.rows && /\bLIMIT\b/i.test(query.sparql)
-            ? '≈'
-            : `✗ (${reference.rows})`
+            ? '~'
+            : `X (${reference.rows})`
         : '';
     if (!query.error) {
       servers.push(query.serverMs);
@@ -180,7 +180,7 @@ console.log(
 );
 for (const row of summary) {
   console.log(
-    `| ${row.label} | ${row.triples.toLocaleString('en-US')} | ${row.queries} | ${row.errors} | ${fmt(row.medianServer)} | ${fmt(row.maxServer)} | ${row.load ? fmt(row.load.quadsPerSec, 0) : '—'} | ${row.load ? (row.load.stats.dbBytes / 1e6).toFixed(0) : '—'} | ${row.load ? row.load.bytesPerTriple.toFixed(0) : '—'} |`,
+    `| ${row.label} | ${row.triples.toLocaleString('en-US')} | ${row.queries} | ${row.errors} | ${fmt(row.medianServer)} | ${fmt(row.maxServer)} | ${row.load ? fmt(row.load.quadsPerSec, 0) : '-'} | ${row.load ? (row.load.stats.dbBytes / 1e6).toFixed(0) : '-'} | ${row.load ? row.load.bytesPerTriple.toFixed(0) : '-'} |`,
   );
 }
 console.log('\n' + tables.join('\n'));

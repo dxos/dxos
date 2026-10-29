@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 import type * as Scene from './scene.ts';
 
-/** Opaque map of record id → renderer record. */
+/** Opaque map of record id -> renderer record. */
 export type ContentMap = Record<string, any>;
 
 /** DSL identity stamped onto a managed record. */

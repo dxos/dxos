@@ -14,11 +14,11 @@ import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions.tsx'
 
 /**
  * Returns a menu item per injected {@link InboxCapabilities.MailboxAction}. Selecting one invokes the
- * contributed operation over the mailbox, scoped to its space — the injection path other plugins use
+ * contributed operation over the mailbox, scoped to its space - the injection path other plugins use
  * to add mailbox toolbar actions (e.g. plugin-brain's `Analyze`) without depending on the toolbar.
  *
  * `actions` and `invoker` are resolved by the container (this hook lives under `components/`, which
- * must not call capability hooks) — see the `MailboxArticle` wiring.
+ * must not call capability hooks) - see the `MailboxArticle` wiring.
  */
 export const useInjectedMailboxActions = (
   mailbox: Mailbox.Mailbox,

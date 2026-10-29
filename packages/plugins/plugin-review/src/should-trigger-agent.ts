@@ -8,7 +8,7 @@ import { type Message, type Thread } from '@dxos/types';
  * Returns the concatenated text of all 'text' blocks on a message.
  *
  * Proposal blocks (assistant-authored markdown diffs) are intentionally
- * excluded — gating mentions off a proposal text would be meaningless.
+ * excluded - gating mentions off a proposal text would be meaningless.
  */
 export const textOf = (message: Message.Message | undefined): string => {
   if (!message) {
@@ -30,7 +30,7 @@ export const textOf = (message: Message.Message | undefined): string => {
  *     messages carry an explicit role.
  *   - `thread.status !== 'resolved'`
  *   - Either mode === 'auto', OR text contains an `@{agentName}` mention
- *     (case-insensitive substring match; v1 — promote to a parser later).
+ *     (case-insensitive substring match; v1 - promote to a parser later).
  */
 export const shouldTriggerAgent = (
   thread: Thread.Thread,

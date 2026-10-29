@@ -90,7 +90,7 @@ export const RelationsPanel = ({ graph, iri, onSelect }: RelationsPanelProps) =>
                           {node.label}
                         </span>
                         <span className='text-xs text-fg-subtle whitespace-nowrap'>
-                          {direction === 'in' ? '← ' : ''}
+                          {direction === 'in' ? '\u2190 ' : ''}
                           {kindOfNode(node)}
                         </span>
                       </button>

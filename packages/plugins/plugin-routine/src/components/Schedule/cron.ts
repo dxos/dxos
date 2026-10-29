@@ -199,7 +199,7 @@ const parseList = (field: string, min: number, max: number): number[] | undefine
 /**
  * Smallest cyclic gap between values in a field whose domain wraps at `span` (60 for minutes, 24 for hours),
  * or Infinity for a single value. The wrap is required so e.g. minutes `0,59` register their 1-unit gap
- * (59 → 0 of the next cycle), not just the 59-unit one.
+ * (59 -> 0 of the next cycle), not just the 59-unit one.
  */
 const minGap = (values: number[], span: number): number => {
   const sorted = [...new Set(values)].sort((lhs, rhs) => lhs - rhs);
@@ -238,7 +238,7 @@ const hourIntervalSeconds = (hour: string): number => {
 
 /**
  * Best-effort minimum seconds between consecutive fires of a 5-field cron expression. Recognises the patterns
- * a too-frequent schedule can take (`* …`, `*\/N …`, explicit minute/hour lists); returns Infinity for
+ * a too-frequent schedule can take (`* ...`, `*\/N ...`, explicit minute/hour lists); returns Infinity for
  * expressions it cannot analyse, so unrecognised crons are treated as satisfying any minimum.
  */
 export const cronIntervalSeconds = (cron: string): number => {

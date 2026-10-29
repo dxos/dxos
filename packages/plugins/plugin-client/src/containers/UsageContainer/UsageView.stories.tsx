@@ -70,7 +70,7 @@ export const Default: Story = {
   },
 };
 
-// Internal plan: a single unlimited (`limit: null`) `ai` limit — renders without a meter.
+// Internal plan: a single unlimited (`limit: null`) `ai` limit - renders without a meter.
 export const Internal: Story = {
   args: {
     state: 'ready',

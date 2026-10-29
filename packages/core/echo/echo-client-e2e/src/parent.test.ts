@@ -193,7 +193,7 @@ describe('Parent Hierarchy', () => {
 
   const SURVIVORS = ['kept', 'kept child 0', 'kept child 1', 'kept child 2'];
 
-  test('siblings follow their own parent’s deletion', { timeout: 30_000 }, async () => {
+  test("siblings follow their own parent's deletion", { timeout: 30_000 }, async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     await seedTwoParentsAndReload(peer, spaceKey);
@@ -244,7 +244,7 @@ describe('Annotation.SetParent', () => {
       sections: Schema.Array(Ref.Ref(Body)).pipe(Annotation.SetParent.set()),
       /** Owned, nested inside a plain struct. */
       backend: Schema.optional(Schema.Struct({ config: Ref.Ref(Body).pipe(Annotation.SetParent.set()) })),
-      /** NOT owned — a plain reference. */
+      /** NOT owned - a plain reference. */
       linked: Schema.optional(Ref.Ref(Body)),
     }),
   ) {}

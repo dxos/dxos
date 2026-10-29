@@ -6,9 +6,9 @@ import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
 import { type IdeogramRequestConfig } from './ideogram-request.ts';
 
-// The Ideogram API returns JSON `null` (not absent) for fields it has no value for — e.g.
+// The Ideogram API returns JSON `null` (not absent) for fields it has no value for - e.g.
 // `request_id: null`. The Generation schema's optional fields are `T | undefined` (not nullable), so
-// every field mapped onto a Variant must be coerced `null → undefined` (see the mapper below).
+// every field mapped onto a Variant must be coerced `null -> undefined` (see the mapper below).
 
 /** One `data[]` entry in an Ideogram `/generate` response. */
 export type IdeogramImageData = {
@@ -30,7 +30,7 @@ export type IdeogramGenerateResponse = {
 /**
  * Maps an Ideogram `/generate` response to provider-agnostic {@link GenerationService.VariantData}.
  * Each variant carries `image/png` content and a `Generation` recording the provider/model/seed +
- * resolved prompt. Entries without a `url` (e.g. safety-filtered) are dropped — provider URLs are
+ * resolved prompt. Entries without a `url` (e.g. safety-filtered) are dropped - provider URLs are
  * ephemeral.
  */
 export const mapIdeogramResponse = (
@@ -47,7 +47,7 @@ export const mapIdeogramResponse = (
       generation: {
         provider: 'ideogram',
         model: config?.model ?? 'V_2',
-        // Coerce null → undefined: the Generation schema's optional fields are not nullable.
+        // Coerce null -> undefined: the Generation schema's optional fields are not nullable.
         prompt: entry.prompt ?? undefined,
         seed: entry.seed ?? undefined,
         requestId: response.request_id ?? undefined,

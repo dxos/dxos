@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 
-/** Picks the declared dependency fields from the form values — the subset a dynamic field subscribes to. */
+/** Picks the declared dependency fields from the form values - the subset a dynamic field subscribes to. */
 export const pickValues = (values: AnyProperties | undefined, deps: readonly string[]): Record<string, unknown> => {
   const subset: Record<string, unknown> = {};
   for (const dep of deps) {
@@ -35,7 +35,7 @@ export type UseAsyncFieldEffectOptions = {
  * Runs a self-contained Effect (`R = never`) whenever `key` changes, debounced and abortable. Used by
  * dynamic form fields to load select options, derive values, or validate against an external source from
  * the current form values. The latest `factory` is always used, but a run is only (re)triggered when
- * `key` changes — derive `key` from the inputs the factory actually reads. Re-running interrupts the
+ * `key` changes - derive `key` from the inputs the factory actually reads. Re-running interrupts the
  * prior run (cancelling any in-flight request).
  */
 export const useAsyncFieldEffect = <A>(

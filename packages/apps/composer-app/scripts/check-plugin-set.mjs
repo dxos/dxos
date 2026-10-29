@@ -7,19 +7,19 @@
  * set does not name reached the app's module graph anyway.
  *
  * `DX_PLUGIN_SET=production` works by aliasing `./plugin-defs` to `plugin-defs.production.tsx`
- * (vite.config.ts). Nothing else enforces it — a stray import from a shipped plugin, a lost alias,
+ * (vite.config.ts). Nothing else enforces it - a stray import from a shipped plugin, a lost alias,
  * or a plugin reached through `main.tsx` rather than the set would all bundle silently and only show
  * up as bytes. The UI cannot tell you either: a plugin absent from the registry can still be in the
  * bundle.
  *
  * Scoped to the chunks reachable from `index.html`, NOT to everything under the output dir. The
- * build emits five HTML entries and `devtools.html` IS the devtools app — its graph carries
+ * build emits five HTML entries and `devtools.html` IS the devtools app - its graph carries
  * plugin-devtools in every environment, which a whole-directory scan reports as a leak.
  *
  * What counts as evidence: a plugin's BODY module (`src/plugin.tsx` and its platform variants, or
  * `dx.config.ts` for a `Plugin.config` plugin),
  * which is what `#plugin` resolves to and what `Plugin.lazy` imports on first enable. That module is
- * package-internal — nothing outside a plugin imports another plugin's body — so its presence means
+ * package-internal - nothing outside a plugin imports another plugin's body - so its presence means
  * the plugin itself entered the graph, not that a shipped plugin borrowed a helper from it.
  *
  * Deliberately NOT "any module under a non-shipped plugin's package": plugins legitimately share
@@ -51,8 +51,8 @@ const shipped = readSet('src/plugin-defs.production.tsx', 'src/plugin-defs.core.
 const allPlugins = readdirSync(pluginsDir).filter((name) => name.startsWith('plugin-'));
 
 /**
- * Chunk specifiers a chunk reaches: `from '…'` / `export … from '…'` and static-or-dynamic
- * `import('…')`. All three quote styles — rolldown emits dynamic imports as template literals
+ * Chunk specifiers a chunk reaches: `from '...'` / `export ... from '...'` and static-or-dynamic
+ * `import('...')`. All three quote styles - rolldown emits dynamic imports as template literals
  * (`import(\`./plugin-x.js\`)`), and missing that form silently understates the graph.
  */
 const SPECIFIER = /(?:\bfrom|\bimport)\s*\(?\s*["'`]([^"'`]+\.js)["'`]/g;
@@ -96,7 +96,7 @@ if (!existsSync(path.join(outDir, 'index.html'))) {
 const chunks = reachable(pageEntries('index.html'));
 
 // `sources` entries are relative to the map file, so the repo-root prefix varies; the `plugins/`
-// parent is the stable part. Platform variants (`plugin.node.ts`, `plugin.workerd.ts`) count too —
+// parent is the stable part. Platform variants (`plugin.node.ts`, `plugin.workerd.ts`) count too -
 // none of them belongs in a browser bundle, and matching them makes a mis-resolved condition visible.
 const BODY_MODULE = /(?:^|\/)plugins\/(plugin-[a-z0-9-]+)\/src\/plugin(?:\.[a-z]+)?\.tsx?$/;
 // A `Plugin.config` plugin has no `src/plugin.tsx`: its `dx.config.ts` is the body. Other plugins'
@@ -147,7 +147,7 @@ console.log(
 );
 
 // Fail closed. Every shipped plugin is a `Plugin.lazy` stub whose body rolldown emits as its own
-// chunk, reached by a dynamic import from the app graph — so all of them must show up here. A missing
+// chunk, reached by a dynamic import from the app graph - so all of them must show up here. A missing
 // one means the walk under-approximates (an import form `SPECIFIER` does not match, a chunk-naming
 // change) and "0 unexpected" would be the walk seeing nothing rather than the invariant holding.
 const missing = [...shipped].filter((name) => !shippedSeen.has(name)).sort();
@@ -170,8 +170,8 @@ for (const [name, chunksForName] of [...found].sort()) {
 }
 console.error(
   `\nERROR: ${found.size} plugin(s) outside the production set reached the app bundle.\n` +
-    'Either the plugin is imported from something the set does reach — trace it back and import the\n' +
-    'narrow module instead of the plugin — or `DX_PLUGIN_SET=production` did not take effect for this\n' +
+    'Either the plugin is imported from something the set does reach - trace it back and import the\n' +
+    'narrow module instead of the plugin - or `DX_PLUGIN_SET=production` did not take effect for this\n' +
     'build, in which case the `./plugin-defs` alias in vite.config.ts is the place to look.',
 );
 process.exit(1);

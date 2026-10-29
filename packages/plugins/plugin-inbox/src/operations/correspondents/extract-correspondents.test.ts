@@ -144,7 +144,7 @@ describe('ExtractCorrespondents operation', () => {
         expect(first.scanned).toBe(3);
         expect(first.correspondents).toBe(3);
         expect(first.created).toBe(2);
-        // Both correspondents share the corporate domain example.com → exactly one derived Organization.
+        // Both correspondents share the corporate domain example.com -> exactly one derived Organization.
         expect(first.organizations).toBe(1);
         const [organization] = yield* Database.query(Filter.type(Organization.Organization)).run;
         expect(organization?.website).toBe('https://example.com');

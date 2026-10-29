@@ -123,7 +123,7 @@ const makeTasks = (ref: string): Task.Task => {
 /**
  * "Composer Plugin (Sandbox)" project template: a chat builds a TypeScript Composer plugin in an EDGE
  * sandbox, serves the build from the container on a port exposed at a public URL, and offers that URL
- * back as an inline load prompt — so it runs against any deployed Composer, not only one served locally.
+ * back as an inline load prompt - so it runs against any deployed Composer, not only one served locally.
  *
  * @param ref Commit the host was built from; its `@dxos/*` packages and the guide are fetched at it.
  */

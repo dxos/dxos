@@ -14,7 +14,7 @@ import { applyWrites } from './write.ts';
 //
 // The live handle. There is only ever ONE object in the database: this is a view of it, not a copy.
 // Reads project through the mapping, writes invert onto the base object's own properties, and identity
-// is never lensed — `Obj.getURI` still resolves to the base object.
+// is never lensed - `Obj.getURI` still resolves to the base object.
 //
 
 /**
@@ -36,7 +36,7 @@ const typeIdentity = (lens: AnyLens): Map<symbol, unknown> => {
 /**
  * View a live object through a lens.
  *
- * The result satisfies the ordinary `Obj.*` API — including `Obj.update`, which batches every
+ * The result satisfies the ordinary `Obj.*` API - including `Obj.update`, which batches every
  * assignment made in its callback into a single change against the base object, writing only the
  * properties that were actually assigned.
  */
@@ -120,7 +120,7 @@ export const of = <S, T extends Record<string, any>>(obj: Obj.Unknown, lens: Len
       if (known(property) || !lens.plan) {
         return view(property);
       }
-      // Everything not in the target shape — `toJSON`, prototype members — stays the base object's.
+      // Everything not in the target shape - `toJSON`, prototype members - stays the base object's.
       return Reflect.get(target, property, receiver);
     },
     set: () => {

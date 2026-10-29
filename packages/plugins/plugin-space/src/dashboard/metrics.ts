@@ -26,7 +26,7 @@ const toProgressMetric = (task: Progress.TaskProgress): MetricSpec => ({
 
 /**
  * Projects the progress registry onto a fixed number of slots, falling back to space stats when
- * nothing is running — the display is never blank, and an active task always wins over the counts.
+ * nothing is running - the display is never blank, and an active task always wins over the counts.
  *
  * Pure, so both modes and the transition between them are testable without a device.
  */

@@ -262,8 +262,8 @@ export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<Sch
 /**
  * The literal values of a union of literals, or `[]` for any other schema.
  *
- * Narrowed to the schema's own type so `Schema.Union([Schema.Literal('a'), …])` yields `('a' | …)[]`
- * rather than all of `LiteralValue` — callers key React lists by these. The AST erases the literal
+ * Narrowed to the schema's own type so `Schema.Union([Schema.Literal('a'), ...])` yields `('a' | ...)[]`
+ * rather than all of `LiteralValue` - callers key React lists by these. The AST erases the literal
  * type, so re-attaching it here is the one place the two can be reconnected.
  */
 export const getLiteralValues = <S extends Schema.Top>(

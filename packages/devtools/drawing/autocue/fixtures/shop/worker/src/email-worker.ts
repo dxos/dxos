@@ -14,7 +14,12 @@ new Worker(
   'emails',
   async (job) => {
     const order = await db.query('select * from orders where id = $1', [job.data.orderId]);
-    await postmark.sendEmail({ To: order.rows[0].email, From: 'shop@example.com', Subject: 'Receipt', TextBody: '…' });
+    await postmark.sendEmail({
+      To: order.rows[0].email,
+      From: 'shop@example.com',
+      Subject: 'Receipt',
+      TextBody: '...',
+    });
   },
   { connection: { url: process.env.REDIS_URL } },
 );

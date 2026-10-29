@@ -25,8 +25,8 @@ export type FeedOwner = Obj.Any;
 /**
  * What a cursor's position is ABOUT, which is not always the feed's owner.
  *
- * A mailbox scanned once has the two coincide. A pass scoped to something narrower — one Project's
- * view of a shared mailbox feed — does not: the feed belongs to the Mailbox while the watermark
+ * A mailbox scanned once has the two coincide. A pass scoped to something narrower - one Project's
+ * view of a shared mailbox feed - does not: the feed belongs to the Mailbox while the watermark
  * belongs to the Project, and several such passes read the same feed at independent positions.
  */
 export type CursorSubject = Obj.Any;
@@ -37,7 +37,7 @@ export const CLASSIFY_CURSOR_KEY_ID = 'classifyMailbox';
 export const ANALYZE_CURSOR_KEY_ID = 'analyzeMailbox';
 
 // Matches on the subject as well as the feed and the tag. Without the subject, two passes sharing a
-// consumer id over one feed — the same pass run for two Projects — would adopt each other's
+// consumer id over one feed - the same pass run for two Projects - would adopt each other's
 // watermark and silently skip each other's work, which is the failure the tags exist to prevent.
 const isConsumerCursor = (cursor: Cursor.Cursor, feedUri: string, subjectUri: string, id: string): boolean =>
   cursor.spec.kind === 'feed' &&
@@ -79,7 +79,7 @@ export const findOrCreateFeedCursor = (owner: FeedOwner, id: string, subject: Cu
     }
     const feed = getFeedRef(owner);
     // A caller reaching here with no feed means the owner's schema is missing `FeedAnnotation` (or
-    // names a property that holds no ref) — a schema defect, not a runtime condition to recover from.
+    // names a property that holds no ref) - a schema defect, not a runtime condition to recover from.
     invariant(feed, 'feed owner has no resolvable feed reference');
     return yield* Database.add(
       Cursor.make({
@@ -92,7 +92,7 @@ export const findOrCreateFeedCursor = (owner: FeedOwner, id: string, subject: Cu
 /**
  * Finds-or-creates the analysis cursor, adopting a legacy untagged one in place.
  *
- * Analysis cursors used to be identified by carrying NO foreign key at all — "the untagged one on
+ * Analysis cursors used to be identified by carrying NO foreign key at all - "the untagged one on
  * this feed is mine". That is the absence of an identity rather than an identity, so any later
  * consumer that forgot to tag its own cursor would be silently adopted, and analysis would resume
  * from that consumer's watermark, skipping everything below it with no error.

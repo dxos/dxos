@@ -127,7 +127,7 @@ const CONTACT_SEEDS = [
   },
 ] as const;
 
-/** One named contact per account — whoever the mail in this space is actually with. */
+/** One named contact per account - whoever the mail in this space is actually with. */
 export const Contacts: SampleSpace.Partial<ContactMap, AccountMap> = SampleSpace.partial('contacts', {
   schemas: [Person.Person],
   run: (accounts: AccountMap) =>

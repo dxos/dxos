@@ -23,7 +23,7 @@ export type SuggestionsOverlay = {
 /**
  * Compartment-backed overlay of ALL active suggestion branches' changes for the ambient review
  * model: the editor's default view renders every open suggestion branch as a live suggestion layer,
- * and the controller reconfigures the aggregated `sources` in place as branches open/close/edit —
+ * and the controller reconfigures the aggregated `sources` in place as branches open/close/edit -
  * mirroring how `MarkdownArticle` reconfigures its compare overlay via `compareCompartment`, so
  * toggling the overlay never remounts the editor (which would rebind automerge and lose
  * scroll/selection).

@@ -107,7 +107,7 @@ export const WithMarkdown: Story = {
         }),
       );
       // Register the documents in the space root collection so plugin-space builds app-graph nodes
-      // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
+      // for them - this is what makes the editor's comment toolbar (a graph action) resolvable.
       addToRootCollection(space, [document, guide]);
       return [
         [StoryRole.Chat],
@@ -135,7 +135,7 @@ const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
   await userEvent.keyboard('{Enter}');
 
   // Submitting clears the editor (its text reverts to the placeholder) and posts the prompt as a
-  // message in the thread. The live agent then responds — not asserted here.
+  // message in the thread. The live agent then responds - not asserted here.
   await waitFor(() => expect(editor.textContent).not.toContain(prompt));
   await canvas.findByText(prompt, {}, { timeout: 30_000 });
 };
@@ -249,7 +249,7 @@ export const WithMarkdownStyleGuide: Story = {
 /**
  * As above, but asks the assistant to make the edits on a NEW branch rather than the live document.
  * The assistant creates a branch (create-branch tool) and applies the style-guide edits to it
- * (update tool with the branchId), leaving the branch unmerged for review — the input to Phase 2's
+ * (update tool with the branchId), leaving the branch unmerged for review - the input to Phase 2's
  * branch-diff view.
  *
  * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it

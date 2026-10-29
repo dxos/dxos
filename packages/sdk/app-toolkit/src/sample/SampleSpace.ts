@@ -18,7 +18,7 @@ import { iconValues } from '@dxos/ui-types';
 import * as AppAnnotation from '../echo/AppAnnotation.ts';
 
 /**
- * Raised when a sample space cannot be built — a missing space root, an unresolvable tag, or a
+ * Raised when a sample space cannot be built - a missing space root, an unresolvable tag, or a
  * partial whose prerequisites were not met.
  */
 export class SampleSpaceError extends BaseError.extend('SampleSpaceError', 'Sample space build failed') {}
@@ -113,7 +113,7 @@ export class Root extends Context.Service<
 
 /**
  * Root collection bound to a space's `SpaceProperties`. Seeds the collection and its annotation when
- * absent, which a headless build always needs — that is normally plugin-space's identity-created
+ * absent, which a headless build always needs - that is normally plugin-space's identity-created
  * capability, and no plugin runs here.
  */
 export const makeRoot = (properties: Obj.Any): Root['Service'] => {
@@ -189,7 +189,7 @@ export class Tags extends Context.Service<
 /**
  * Tag URIs resolved once per key and cached. `Tag.findOrCreate` without a foreign key scans every
  * Tag in the space, so resolving per tagged object turns tagging into the dominant cost of a large
- * import. URIs are stored space-relative so membership survives the space-id remap on import —
+ * import. URIs are stored space-relative so membership survives the space-id remap on import -
  * the runtime resolves the same tags space-absolute, but `TagIndex` compares by entity id.
  */
 export const makeTags = (): Tags['Service'] => {
@@ -213,7 +213,7 @@ export const makeTags = (): Tags['Service'] => {
 
 export type TagOptions = {
   readonly index?: TagIndexOption;
-  /** Resolves a tag key to its object when it is not a plain label — system tags carry an origin. */
+  /** Resolves a tag key to its object when it is not a plain label - system tags carry an origin. */
   readonly resolve?: (db: Database.Database, key: string) => Promise<Type.InstanceType<typeof Tag.Tag>>;
 };
 
@@ -361,7 +361,7 @@ export type SpaceOptions = {
 };
 
 /**
- * Types the builder itself persists, registered for every definition — the root collection and the
+ * Types the builder itself persists, registered for every definition - the root collection and the
  * themed collections `collection` files content under.
  */
 export const BASE_SCHEMAS: ReadonlyArray<Type.AnyEntity> = [Collection.Collection];

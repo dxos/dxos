@@ -10,8 +10,8 @@
 // rest. Editing one package only invalidates that package's entry; everything
 // else is reused.
 //
-// We deliberately don't track every individual file — just per-package src/
-// directory mtimes — because that's what changes when a developer edits code,
+// We deliberately don't track every individual file - just per-package src/
+// directory mtimes - because that's what changes when a developer edits code,
 // and walking deep mtimes for every symbol would be more expensive than the
 // extraction we're trying to cache.
 
@@ -23,7 +23,7 @@ import { pid } from 'node:process';
 
 import type { PackageSymbols } from './symbols.ts';
 
-// All warnings go to stderr — stdout is reserved for the MCP JSON-RPC stream
+// All warnings go to stderr - stdout is reserved for the MCP JSON-RPC stream
 // when this module runs inside the MCP server process.
 const warn = (msg: string, err?: unknown): void => {
   console.error(err ? `[introspect cache] ${msg}: ${String(err)}` : `[introspect cache] ${msg}`);
@@ -51,7 +51,7 @@ export type CachePackageEntry = {
 export type CacheEntry = {
   /** Most-recent mtime (ms) under the package's src/. */
   srcMtime: number;
-  /** Git tree SHA — see CachePackageEntry.srcTreeSha. */
+  /** Git tree SHA - see CachePackageEntry.srcTreeSha. */
   srcTreeSha: string;
   /** Package path relative to monorepo root, kept for debug visibility. */
   path: string;
@@ -60,7 +60,7 @@ export type CacheEntry = {
 };
 
 export type CacheFile = {
-  /** Schema version — bump when CacheFile / extracted symbol shape changes. */
+  /** Schema version - bump when CacheFile / extracted symbol shape changes. */
   version: 3;
   /** Per-package entries keyed by package name. */
   entries: Record<string, CacheEntry>;
@@ -78,7 +78,7 @@ export const cacheFilePath = (rootPath: string): string => join(rootPath, DEFAUL
 
 /**
  * Path to the plugin metadata sidecar (`{plugins, surfaces, capabilities,
- * operations, schemas}` — the runtime output of `extractPlugins`). Lives next
+ * operations, schemas}` - the runtime output of `extractPlugins`). Lives next
  * to `core.json` but versioned and uploaded independently because plugin
  * extraction is cheap (~seconds) and changes far more often than the
  * full-monorepo symbol cache (~minutes).
@@ -123,7 +123,7 @@ export const computePackageMtimes = (rootPath: string, packagePaths: string[]): 
 /**
  * One subprocess call gives us every directory tree SHA in HEAD. Format per
  * line: `<mode> <type> <sha>\t<path>` (NUL-separated). We only keep `tree`
- * entries — blob SHAs are per-file and not used here.
+ * entries - blob SHAs are per-file and not used here.
  */
 const readGitTreeShas = (monorepoRoot: string): Map<string, string> => {
   const map = new Map<string, string>();
@@ -135,7 +135,7 @@ const readGitTreeShas = (monorepoRoot: string): Map<string, string> => {
       maxBuffer: 64 * 1024 * 1024,
     });
   } catch (err) {
-    warn('git ls-tree failed — falling back to mtime-only invalidation', err);
+    warn('git ls-tree failed - falling back to mtime-only invalidation', err);
     return map;
   }
   if (result.status !== 0) {
@@ -148,7 +148,7 @@ const readGitTreeShas = (monorepoRoot: string): Map<string, string> => {
     }
     const meta = entry.slice(0, tab);
     const path = entry.slice(tab + 1);
-    // `<mode> <type> <sha>` — split on space (no spaces inside any field).
+    // `<mode> <type> <sha>` - split on space (no spaces inside any field).
     const parts = meta.split(' ');
     if (parts.length !== 3 || parts[1] !== 'tree') {
       continue;
@@ -182,7 +182,7 @@ const readGitDirtyPaths = (monorepoRoot: string): Set<string> => {
       continue;
     }
     // Two-byte status, one space, then the path. Renames (`R `) emit two
-    // null-separated paths in a row; we don't try to be clever there — both
+    // null-separated paths in a row; we don't try to be clever there - both
     // paths get marked dirty if the rename touches a watched src/ tree.
     dirty.add(record.slice(3));
   }
@@ -228,7 +228,7 @@ export type LoadedCache = {
   staleCount: number;
 };
 
-// Legacy v1 schema — kept here so we can migrate the on-disk file forward
+// Legacy v1 schema - kept here so we can migrate the on-disk file forward
 // without forcing a full re-extraction on every schema bump.
 type CacheFileV1 = {
   version: 1;
@@ -237,7 +237,7 @@ type CacheFileV1 = {
   symbols: Record<string, PackageSymbols>;
 };
 
-// Legacy v2 schema — same shape as v3 minus `srcTreeSha`. Read but only
+// Legacy v2 schema - same shape as v3 minus `srcTreeSha`. Read but only
 // match by mtime; the artifact uploaded by CI uses v3 for portability.
 type CacheFileV2 = {
   version: 2;
@@ -246,11 +246,11 @@ type CacheFileV2 = {
 
 /**
  * Load the cache file and return only those entries that still match the
- * live filesystem. Stale entries are silently dropped — the caller will
+ * live filesystem. Stale entries are silently dropped - the caller will
  * re-extract them. Returns null if the file doesn't exist or is unparseable.
  *
  * Match preference: a v3 entry's tree SHA (portable across machines) beats
- * mtime (same-machine only). Older schemas degrade gracefully — a v1/v2
+ * mtime (same-machine only). Older schemas degrade gracefully - a v1/v2
  * cache file behaves exactly as it did before this PR.
  */
 export const loadCache = async (
@@ -266,10 +266,10 @@ export const loadCache = async (
     const content = await readFile(cachePath, 'utf8');
     parsed = JSON.parse(content) as CacheFile | CacheFileV2 | CacheFileV1;
   } catch (err) {
-    warn('load failed — re-indexing', err);
+    warn('load failed - re-indexing', err);
     return null;
   }
-  // Version-discriminated union narrowing — compare against literals so TS
+  // Version-discriminated union narrowing - compare against literals so TS
   // narrows the union, instead of `=== CACHE_VERSION` (which is just `number`).
   if (parsed.version === 3) {
     return matchV3(parsed, liveMtimes, packageNamesByPath);
@@ -280,7 +280,7 @@ export const loadCache = async (
   if (parsed.version === 1) {
     return matchV1(parsed, liveMtimes, packageNamesByPath);
   }
-  warn(`unknown cache version (saved=${(parsed as { version: number }).version}) — re-indexing`);
+  warn(`unknown cache version (saved=${(parsed as { version: number }).version}) - re-indexing`);
   return null;
 };
 
@@ -304,7 +304,7 @@ const matchV3 = (
       continue;
     }
     // Prefer tree-SHA invalidation when both sides have a SHA. This matches
-    // across machines (CI ↔ developer) for the same git ref.
+    // across machines (CI <-> developer) for the same git ref.
     if (cached.srcTreeSha && live.srcTreeSha && cached.srcTreeSha === live.srcTreeSha && cached.path === path) {
       symbols[name] = cached.symbols;
       valid++;
@@ -320,7 +320,7 @@ const matchV3 = (
     }
   }
   if (treeMatches > 0 || mtimeMatches > 0) {
-    // stderr only — stdout is reserved for MCP JSON-RPC.
+    // stderr only - stdout is reserved for MCP JSON-RPC.
     console.error(`[introspect cache] reused ${treeMatches} via tree-sha + ${mtimeMatches} via mtime`);
   }
   return { symbols, validCount: valid, staleCount: stale };
@@ -384,11 +384,11 @@ const matchV1 = (
 
 /**
  * Persist the cache. Writes to a per-process temp file then atomically
- * renames into place — readers never see a half-written file even if
+ * renames into place - readers never see a half-written file even if
  * multiple introspector processes (Inspector, Claude Code, Claude Desktop)
  * race to rebuild the cache.
  *
- * Errors are logged and swallowed — caching is a performance optimization,
+ * Errors are logged and swallowed - caching is a performance optimization,
  * never a correctness requirement.
  */
 export const saveCache = async (
@@ -416,7 +416,7 @@ export const saveCache = async (
     await mkdir(dirname(cachePath), { recursive: true });
     const file: CacheFile = { version: CACHE_VERSION, entries };
     await writeFile(tmpPath, JSON.stringify(file), 'utf8');
-    // Atomic on POSIX — readers see either the old file or the new one,
+    // Atomic on POSIX - readers see either the old file or the new one,
     // never a partially-written stream.
     await rename(tmpPath, cachePath);
   } catch (err) {

@@ -19,7 +19,7 @@ import type { Merge } from '@dxos/util';
 // A presentational, radix-style component for a single deck pane: a toolbar rail above a content body.
 // A plank always has a toolbar, so it implements that layout directly rather than wrapping the
 // generalized `Panel`. A companion pane is just a Pane whose toolbar holds `Pane.Tabs` instead of a
-// sigil/title. Intentionally free of app-framework concepts (capabilities, operations, Surface) —
+// sigil/title. Intentionally free of app-framework concepts (capabilities, operations, Surface) -
 // containers compose the sigil, controls, tabs and content surface into the slots.
 //
 

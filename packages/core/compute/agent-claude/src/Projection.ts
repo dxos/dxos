@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
 /**
- * Name recorded for a tool result whose `tool_use` was never seen — possible when a projector is
+ * Name recorded for a tool result whose `tool_use` was never seen - possible when a projector is
  * attached mid-stream (e.g. a resumed session), since correlation is stream-order only.
  */
 export const UNKNOWN_TOOL_NAME = 'unknown';
@@ -49,8 +49,8 @@ const finishReason = (stopReason: string | null): ContentBlock.FinishReason => {
 };
 
 /**
- * The turn's conversational model. Even a trivial turn reports several — the SDK runs auxiliary
- * work (e.g. session titling) on a small model — so the main one is the entry with the most output
+ * The turn's conversational model. Even a trivial turn reports several - the SDK runs auxiliary
+ * work (e.g. session titling) on a small model - so the main one is the entry with the most output
  * tokens, reported by its canonical name (the raw key can carry a context suffix like `[1m]`).
  */
 const mainModel = (modelUsage: Record<string, unknown>): string | undefined => {
@@ -93,7 +93,7 @@ export class Projector {
 
   /**
    * Every permission denial reported across the projected stream. `result.permission_denials` is the
-   * SDK's authoritative record — the advisory `permission_denied` frames can race — and it is what a
+   * SDK's authoritative record - the advisory `permission_denied` frames can race - and it is what a
    * real approval surface should be designed against.
    */
   get denials(): readonly SDKPermissionDenial[] {

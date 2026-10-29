@@ -8,7 +8,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 
 /**
  * Brand for a query projected to a single scalar property (`Query.project`), consumed by
- * `Filter.in` to build a subquery-membership predicate — an uncorrelated
+ * `Filter.in` to build a subquery-membership predicate - an uncorrelated
  * `col IN (SELECT property FROM ...)` semi-join. Defined in common/ (not in Query/) so
  * Filter.ts can recognize the brand without importing Query.ts as a value: Query.ts already
  * imports Filter.ts as a value, so a reverse value import would create a cycle. Both
@@ -21,7 +21,7 @@ export const ProjectionTypeId = '~@dxos/echo/Query.Projection' as const;
 export type ProjectionTypeId = typeof ProjectionTypeId;
 
 /**
- * `V` is the projected property's value type — carried only as a phantom brand (like
+ * `V` is the projected property's value type - carried only as a phantom brand (like
  * `Filter<T>`'s `[FilterTypeId]: { value: Types.Covariant<T> }`) so `Filter.in(query.project(k))`
  * infers its own type parameter from the projected property instead of defaulting to `unknown`.
  */

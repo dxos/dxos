@@ -68,7 +68,7 @@ const LLM_OUTPUT = {
   ],
 };
 
-// A directive/interrogative extraction (a question the author asks) — maps to an `illocution`.
+// A directive/interrogative extraction (a question the author asks) - maps to an `illocution`.
 const QUESTION_OUTPUT = {
   facts: [
     {
@@ -97,7 +97,7 @@ describe('FactPipeline', () => {
     expect(prompt).toContain('Use the predicate "is_a" for class membership');
     // Every listed predicate is shown with its shorthand, label, forms, typing and description.
     expect(prompt).toContain(
-      '- has_role: "has role" (also: works as, is on the team as, role, job title) [person → any] — The role or job title the subject holds.',
+      '- has_role: "has role" (also: works as, is on the team as, role, job title) [person -> any] - The role or job title the subject holds.',
     );
     // A new predicate must come with a definition.
     expect(prompt).toContain('set predicateDescription to one sentence');
@@ -155,7 +155,7 @@ describe('FactPipeline', () => {
         });
 
       const first = yield* runOnce();
-      const second = yield* runOnce(); // Unchanged source → skipped and dropped.
+      const second = yield* runOnce(); // Unchanged source -> skipped and dropped.
       const store = yield* FactStore;
       const persisted = yield* store.query({ predicate: 'travelsTo' });
       yield* Effect.sync(() => {
@@ -273,7 +273,7 @@ describe('FactPipeline', () => {
         });
         expect(minted.assertion.subject).toEqual({ kind: 'entity', entity: 'plato', label: 'Plato' });
         // The second document is shown the predicate the first minted, and uses it.
-        expect(String(prompts[1])).toContain('- study_under: "studies under" — A teacher the subject learned from.');
+        expect(String(prompts[1])).toContain('- study_under: "studies under" - A teacher the subject learned from.');
         expect(String(prompts[0])).toContain('- Socrates (person)');
         expect(reused.assertion.predicateIri).toBe(studiesUnder);
         expect(typed.assertion.predicateIri).toBe(Vocab.RDF_TYPE);
@@ -374,7 +374,7 @@ describe('FactPipeline', () => {
         const doc = { text: 'going to Paris', source: 'dxn:q:m9', author: 'Alice', date: '2026-06-06T00:00:00.000Z' };
         yield* FactPipeline.run([doc]);
         const afterFirst = yield* triplesCount();
-        yield* FactPipeline.run([doc]); // unchanged → skipped.
+        yield* FactPipeline.run([doc]); // unchanged -> skipped.
         const afterSecond = yield* triplesCount();
         yield* Effect.sync(() => {
           if (ai.calls() !== 1) {
@@ -385,7 +385,7 @@ describe('FactPipeline', () => {
           }
         });
 
-        yield* FactPipeline.run([{ ...doc, text: 'going to Rome instead' }]); // changed → re-extract.
+        yield* FactPipeline.run([{ ...doc, text: 'going to Rome instead' }]); // changed -> re-extract.
         yield* Effect.sync(() => {
           if (ai.calls() !== 2) {
             throw new Error(`expected 2 LLM calls after change, got ${ai.calls()}`);
@@ -399,7 +399,7 @@ describe('FactPipeline', () => {
     'extractFacts derives facts with only an AiService (no store)',
     Effect.fnUntraced(
       function* () {
-        // Layer provides ONLY AiService — no FactStore / SqlClient — proving derivation is store-free.
+        // Layer provides ONLY AiService - no FactStore / SqlClient - proving derivation is store-free.
         const facts = yield* extractFacts([
           {
             text: "I think I'm probably going to Paris next week",
@@ -521,14 +521,14 @@ describe('FactPipeline', () => {
       const ai = countingAiService({
         facts: [{ subject: 'Composer', predicate: 'discussedIn', object: 'Discord', factuality: 'CT+', polarity: '+' }],
       });
-      // In-memory (browser/test) store layer — no SQLite.
+      // In-memory (browser/test) store layer - no SQLite.
       const layer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(ai.layer));
       yield* Effect.gen(function* () {
         const docs = loadDiscordDocs();
         yield* FactPipeline.run(docs);
         const store = yield* FactStore;
 
-        // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL→SPARQL query.
+        // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL->SPARQL query.
         const byEntity = yield* store.query({ entity: 'composer' });
         const all = yield* store.select(
           'SELECT ?g WHERE { ?g <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://dxos.org/semantic#Graph> }',

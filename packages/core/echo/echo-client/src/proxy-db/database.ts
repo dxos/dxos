@@ -152,7 +152,7 @@ export interface EchoDatabase extends Database.Database {
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
 
   //
-  // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
+  // Branching - inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
   // `mergeBranch`/`deleteBranch`/`listBranches`/`getCurrentBranch`/`branch`). Client-only extras:
   //
 
@@ -285,7 +285,7 @@ const combineSyncState = (
 };
 
 /**
- * The properties `#runObjectMigration` reads/deletes off a migration's `transform` result —
+ * The properties `#runObjectMigration` reads/deletes off a migration's `transform` result -
  * `Migration.ObjectMigration.transform` is declared as `(from: unknown, ...) => Promise<unknown>`
  * on the type-erased interface, but its actual shape always matches `Migration.TransformResult<To>`.
  */
@@ -411,7 +411,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
 
-    // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
+    // Effect hashes an unmarked object structurally, walking its prototype chain - on a database
     // that recurses through the whole entity graph and throws on the first strict-mode function it
     // reaches. Identity is the only sensible equality here, and it is what `Atom.family(db)` wants.
     Equal.byReferenceUnsafe(this);
@@ -469,7 +469,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.linksAdded;
   }
 
-  // ── Resource lifecycle ──────────────────────────────────────────────────
+  // -- Resource lifecycle --------------------------------------------------
 
   @synchronized
   protected override async _open(): Promise<void> {
@@ -518,7 +518,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.close(ctx);
   }
 
-  // ── Working set persistence ─────────────────────────────────────────────
+  // -- Working set persistence ---------------------------------------------
 
   /**
    * Rows the next {@link open} shows and edits the working set from, before the host delivers anything;
@@ -534,7 +534,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
   }
 
-  // ── Space state ─────────────────────────────────────────────────────────
+  // -- Space state ---------------------------------------------------------
 
   @synchronized
   async setSpaceRoot(rootUrl: string): Promise<void> {
@@ -550,7 +550,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  // ── User-facing Database API ─────────────────────────────────────────────
+  // -- User-facing Database API ---------------------------------------------
 
   /**
    * @internal
@@ -899,7 +899,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * Disposes and drops the cached feed handle for a feed (its live working-set / core cache). A
-   * subsequent access re-creates a fresh handle that re-reads the feed cold — primarily used by
+   * subsequent access re-creates a fresh handle that re-reads the feed cold - primarily used by
    * tests to model a spawned process reading the feed with an empty in-memory cache.
    */
   async evictFeedHandle(feed: Feed.Feed): Promise<void> {
@@ -1138,7 +1138,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks arrive on a separate stream, which dies on reconnect (leader change) — re-established
+    // Feed blocks arrive on a separate stream, which dies on reconnect (leader change) - re-established
     // from the refreshed service, and cleared meanwhile so a consumer never keeps reporting a backlog
     // measured against a connection that no longer exists.
     let cleanupFeedStream: (() => void) | undefined;
@@ -1367,7 +1367,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return { ...stored, loaded: { client: this.#clientLoadedStats(), host } };
   }
 
-  /** Residency of this database's own caches — synchronous, so it samples one moment. */
+  /** Residency of this database's own caches - synchronous, so it samples one moment. */
   #clientLoadedStats(): Database.ClientLoadedStats {
     let feedObjects = 0;
     for (const handle of this.#feeds.values()) {
@@ -1432,7 +1432,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.loadEntityById(objectId, options);
   }
 
-  // ── Deprecated API ───────────────────────────────────────────────────────
+  // -- Deprecated API -------------------------------------------------------
 
   /** @deprecated */
   readonly pendingBatch = new Event<unknown>();

@@ -12,7 +12,7 @@ import { composable, composableProps, slottable } from './slots.ts';
 //
 // A slottable host and two candidate children: one built with `composable()`, one a plain
 // `forwardRef`. The `asChild` factory merges its props into whichever child it is given, but a child that
-// does not spread them drops the injected `className` and `ref` — silently, with no error and no
+// does not spread them drops the injected `className` and `ref` - silently, with no error and no
 // type complaint. `slottable()` detects that in dev builds and marks the rendered element with
 // `dx-slot-warning` (a dashed rose outline).
 //
@@ -37,7 +37,7 @@ const GoodChild = composable<HTMLDivElement>(({ children, ...props }, forwardedR
 ));
 
 /** Incorrect: a plain `forwardRef`. It renders fine on its own, but as an `asChild` target the
- *  host's className never reaches the DOM — the failure this diagnostic exists to surface. */
+ *  host's className never reaches the DOM - the failure this diagnostic exists to surface. */
 const BadChild = forwardRef<HTMLDivElement, { children?: ReactNode }>(({ children }, forwardedRef) => (
   <div ref={forwardedRef}>{children}</div>
 ));
@@ -51,17 +51,17 @@ const Row = ({ label, children }: { label: string; children: ReactNode }) => (
 
 const DefaultStory = () => (
   <div className='flex flex-col gap-6 p-4 w-96'>
-    <Row label='No asChild — host renders its own element.'>
+    <Row label='No asChild - host renders its own element.'>
       <Host>Plain host</Host>
     </Row>
 
-    <Row label='asChild with a composable child — no warning.'>
+    <Row label='asChild with a composable child - no warning.'>
       <Host asChild>
         <GoodChild>Composable child</GoodChild>
       </Host>
     </Row>
 
-    <Row label='asChild with a non-composable child — dashed rose outline, and a console warning.'>
+    <Row label='asChild with a non-composable child - dashed rose outline, and a console warning.'>
       <Host asChild>
         <BadChild>Non-composable child</BadChild>
       </Host>

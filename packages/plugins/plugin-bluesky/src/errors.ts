@@ -12,7 +12,7 @@ const PDS_RESOLUTION_FAILED_MESSAGE =
 
 /**
  * The integration's `accessToken.account` (atproto handle / DID) was not
- * set — `account` is needed to resolve XRPC `actor` parameters.
+ * set - `account` is needed to resolve XRPC `actor` parameters.
  */
 export class MissingBlueskyHandleError extends BaseError.extend('MissingBlueskyHandleError', MISSING_HANDLE_MESSAGE) {}
 

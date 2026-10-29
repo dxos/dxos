@@ -49,7 +49,7 @@ const fetchRejectingToken = (status: number, tokens: string[]) => (_owner: strin
     return pull;
   });
 
-describe('import — token fallback', () => {
+describe('import - token fallback', () => {
   test('a token GitHub rejects is retried anonymously', async ({ expect }) => {
     const tokens: string[] = [];
     const result = await run(

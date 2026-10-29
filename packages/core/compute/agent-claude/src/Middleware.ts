@@ -27,7 +27,7 @@ export type MakeMiddlewareOptions = {
 
 export type RunRequest = {
   prompt: string;
-  /** Optional subdirectory of the configured root — see {@link resolveCwd}. */
+  /** Optional subdirectory of the configured root - see {@link resolveCwd}. */
   cwd?: string;
   maxTurns?: number;
   /** SDK session to continue, so a follow-up turn sees the conversation's history. */
@@ -78,7 +78,7 @@ const readBody = (req: IncomingMessage): Promise<string> =>
  * Connect-style middleware streaming a turn as NDJSON.
  *
  * Hosted by the caller's dev server rather than listening on its own port, so the browser reaches
- * it same-origin — no CORS, and no process for a test run to supervise. A standalone managed
+ * it same-origin - no CORS, and no process for a test run to supervise. A standalone managed
  * process is the shape Composer needs, not the shape a story needs.
  */
 export const make =
@@ -100,7 +100,7 @@ export const make =
     }
 
     // Bounded metadata only: the prompt can carry source or credentials, and the session id names an
-    // SDK conversation — neither belongs in log sinks.
+    // SDK conversation - neither belongs in log sinks.
     log.info('run', { cwd, promptLength: prompt.length, hasResume: resume !== undefined });
 
     // NDJSON rather than SSE: the client reads it with a plain streaming fetch, and a turn's frames

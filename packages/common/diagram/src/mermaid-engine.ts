@@ -6,7 +6,7 @@
 // Engine-backed mermaid flowchart dialect. ELK lays out the graph as a compound graph (subgraphs
 // are hierarchical nodes), node origins are quantized to a lattice of the cell size so neighbours
 // align exactly, and connectors take the shared obstacle-avoiding router with straightened ports.
-// Placement and emission are candidate generators — lattice × sibling order × inheritance bus —
+// Placement and emission are candidate generators - lattice × sibling order × inheritance bus -
 // and the `Objective` picks the layout. Parsing stays in `mermaid.ts`; see `docs/DESIGN.md`.
 //
 
@@ -58,8 +58,8 @@ export type Arrangement = 'layered' | 'columns';
 /**
  * How a plain reference ranks its ends. Inheritance always ranks the base above, has-many and
  * containment the owner above; a reference has no such convention, so it is a candidate axis:
- * `down` — the referenced sits below, ELK's reading of an arrow; `up` — the referenced sits above,
- * as the abstraction does, so a node many others point at heads its package; `free` — a reference
+ * `down` - the referenced sits below, ELK's reading of an arrow; `up` - the referenced sits above,
+ * as the abstraction does, so a node many others point at heads its package; `free` - a reference
  * ranks nothing and its ends may share a row. Between packages a reference always orders the packages.
  */
 export type Layering = 'down' | 'up' | 'free';
@@ -88,7 +88,7 @@ export type CompileOptions = {
   /**
    * Pitch of the placement lattice as a multiple of the cell size. Node origins snap to lattice
    * points, so nodes that ELK placed roughly in line share an axis exactly and their connectors
-   * run straight; the gutter between neighbours is `(lattice − 1) × cell`. A list names the
+   * run straight; the gutter between neighbours is `(lattice - 1) × cell`. A list names the
    * candidates the objective chooses among (default `[1.5, 2]`); a number fixes it.
    */
   lattice?: number | readonly number[];
@@ -161,7 +161,7 @@ const measureCell = (graph: MermaidGraph, maxWidth: number): Cell => {
 /**
  * Lattice pitch for a cell. With groups, the gutter between lattice rows must also hold two frame
  * borders, a label band, and clear space between the frames, or adjacent frames touch or overlap
- * after quantization — so that clearance is a floor on the pitch.
+ * after quantization - so that clearance is a floor on the pitch.
  */
 const pitchFor = (graph: MermaidGraph, cell: Cell, lattice: number): Pitch => {
   const framed = graph.groups.some((group) => group.children.length > 0);
@@ -209,7 +209,7 @@ const quantize = (positions: Map<string, Scene.Point>, pitch: Pitch, horizontal:
 /**
  * Close surplus gutters between groups along the cross axis. ELK spaces compound nodes by their
  * own padded extents, so after quantization two groups can sit a whole lattice pitch further apart
- * than the frame clearance needs while another pair sits at the minimum — the uneven gaps a reader
+ * than the frame clearance needs while another pair sits at the minimum - the uneven gaps a reader
  * notices first. Groups are walked in cross-axis order and each, with everything beyond it, is
  * pulled back by whole pitches while its gap to the previous group stays above the clearance, so
  * every node remains on the lattice and cross-group connectors stay straight.
@@ -245,7 +245,7 @@ const compactGroups = (
     if (surplus <= 0) {
       continue;
     }
-    // Everything at or beyond this group's start shifts together, so relative order is preserved —
+    // Everything at or beyond this group's start shifts together, so relative order is preserved -
     // but only onto free lattice points: an ungrouped node moving with the block must not land on
     // a node that stays put.
     const moving = [...result].filter(([, point]) => point[axis] >= current.start);
@@ -277,10 +277,10 @@ type ElkEdge = { id: string; sources: string[]; targets: string[] };
 
 /**
  * Edges for ELK's layering. Inheritance and implementation point at the abstraction, which ranks ABOVE its
- * subtypes — so those edges are reversed, as `relationRanks` does for class diagrams; has-many
+ * subtypes - so those edges are reversed, as `relationRanks` does for class diagrams; has-many
  * and containment already flow owner-above-owned. In `columns`, the root lays out groups without
  * seeing inside them (`SEPARATE_CHILDREN`), so every edge is lifted to its endpoints' root-level
- * representatives — the group, or the node itself when ungrouped — and the groups fall into
+ * representatives - the group, or the node itself when ungrouped - and the groups fall into
  * dependency order; edges within one group stay where they are for that group's own layout.
  * A reference between packages always orders the packages; within one it ranks per `layering`.
  */
@@ -337,7 +337,7 @@ const place = async (
   const grouped = new Set(graph.groups.flatMap((group) => group.children));
   const leaf = (id: string): ElkNode => ({ id, width: cell.w, height: cell.h });
   // Spacing is per compound node, not inherited: left unset, ELK packs a group's members at its
-  // 20px default — inside the router's clearance — and every route through that group is fenced.
+  // 20px default - inside the router's clearance - and every route through that group is fenced.
   // Matching the lattice gutters keeps ELK's output close to lattice points before quantization.
   const spacing = {
     'elk.layered.spacing.nodeNodeBetweenLayers': String(horizontal ? pitch.x - cell.w : pitch.y - cell.h),
@@ -809,8 +809,8 @@ const emit = (
     };
     const buses = bus && !horizontal ? inheritanceBuses(graph.edges, nodes) : { elements: [], consumed: new Set() };
     const routed = graph.edges.filter((edge) => !buses.consumed.has(edge));
-    // In columns the root level runs across the flow, so an edge between two of its members — groups
-    // or ungrouped nodes — runs across it too.
+    // In columns the root level runs across the flow, so an edge between two of its members - groups
+    // or ungrouped nodes - runs across it too.
     const groupOf = new Map(graph.groups.flatMap((group) => group.children.map((id) => [id, group.id] as const)));
     const rootOf = (id: string) => groupOf.get(id) ?? id;
     const isHorizontal = (edge: MermaidEdge) =>
@@ -856,8 +856,8 @@ const emit = (
       };
       // Terminals already placed, per node, with their role. Edges are routed independently (and an
       // internal edge and a cross-group edge may even route in different modes), so a later edge can
-      // land its terminal on an earlier one. Only an exit on an entry is a defect — it reads as a
-      // crossing — so a slot is taken by the opposite role alone: two exits (a fork) or two entries (a
+      // land its terminal on an earlier one. Only an exit on an entry is a defect - it reads as a
+      // crossing - so a slot is taken by the opposite role alone: two exits (a fork) or two entries (a
       // merge) share a trunk, as a bus does. Such an edge is re-routed with the port nudged to a free
       // slot on that side, preferring the nudge that keeps the route straightest.
       type Role = 'exit' | 'entry';

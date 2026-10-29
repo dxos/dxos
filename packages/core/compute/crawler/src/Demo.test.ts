@@ -61,7 +61,7 @@ describe('demo', () => {
 
           console.log(heading(`Agents (${agents.length})`));
           for (const agent of agents) {
-            const window = [agent.firstSeen, agent.lastSeen].filter(Boolean).join(' … ') || 'n/a';
+            const window = [agent.firstSeen, agent.lastSeen].filter(Boolean).join(' ... ') || 'n/a';
             console.log(`  ${String(agent.messageCount).padStart(3)}  ${agent.label ?? agent.id}   [${window}]`);
           }
 
@@ -79,7 +79,7 @@ describe('demo', () => {
               const object =
                 fact.assertion.object.kind === 'entity' ? fact.assertion.object.entity : fact.assertion.object.literal;
               console.log(
-                `  ${fact.attribution.agent ?? '?'}  —${fact.assertion.predicate}→  ${object}   (${fact.attribution.source})`,
+                `  ${fact.attribution.agent ?? '?'}  -${fact.assertion.predicate}->  ${object}   (${fact.attribution.source})`,
               );
             }
           }

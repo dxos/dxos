@@ -91,7 +91,7 @@ describe('edge replication after identity recovery', { timeout: 300_000, retry: 
 
     const hostSpaceId = spaceA.id;
 
-    // Fully destroy Client A — no peer available.
+    // Fully destroy Client A - no peer available.
     console.log('### ClientA: destroying');
     await clientA.destroy();
     console.log('### ClientA: destroyed\n');

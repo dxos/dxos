@@ -69,7 +69,7 @@ const SCORERS = [
   }),
   Scorer.make({
     name: 'left-the-rest-alone',
-    description: 'Exactly two tasks remain open — the agent closed one task, not the ledger.',
+    description: 'Exactly two tasks remain open - the agent closed one task, not the ledger.',
     score: ledgerTasks.pipe(
       Effect.map((tasks) => tasks.filter((candidate) => (candidate.status ?? 'todo') !== 'done').length === 2),
     ),
@@ -125,7 +125,7 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite('Task management — the ledger verbs survive losing their type-specific sugar', {
+evalite('Task management - the ledger verbs survive losing their type-specific sugar', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

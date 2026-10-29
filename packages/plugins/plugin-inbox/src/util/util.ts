@@ -213,7 +213,7 @@ export const formatDateTime = (date: Date, now: Date, options?: FormatDateTimeOp
         : formatDistance(date, now, { addSuffix: true });
 
 /**
- * Age of a timestamp in the shortest form that still reads unambiguously — `now`, `12m`, `4h`, `3d`,
+ * Age of a timestamp in the shortest form that still reads unambiguously - `now`, `12m`, `4h`, `3d`,
  * `2w`, `5mo`, `2y`. Sized for a card row, where a full date would crowd out the subject.
  */
 export const formatAge = (date: Date, now: Date): string => {

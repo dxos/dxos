@@ -97,7 +97,7 @@ describe('Alien Labs inbox and CRM', () => {
     const personByEmail = new Map(people.map((person) => [person.emails?.[0]?.value, person]));
     const extractedIds = new Set(EXTRACTED.map((key) => result.people[key].id));
 
-    // 188 messages in 103 threads, oldest at −60d and newest on the reference date.
+    // 188 messages in 103 threads, oldest at -60d and newest on the reference date.
     const messages = ofType(feedEntries, 'type.message:').filter((message) => message.properties?.subject);
     expect(countOf('type.message:')).toBe(203);
     expect(messages).toHaveLength(188);
@@ -128,7 +128,7 @@ describe('Alien Labs inbox and CRM', () => {
       expect(messages.filter((message) => staff.includes(message.sender?.email)).length, key).toBeGreaterThan(0);
     }
 
-    // 171 events: 153 from −182d to the reference date, 18 in the three months after it.
+    // 171 events: 153 from -182d to the reference date, 18 in the three months after it.
     const events = ofType(feedEntries, 'type.event:');
     expect(countOf('type.event:')).toBe(171);
     // Notes on the one-offs, the team rituals and Hana's first 1:1s.

@@ -86,7 +86,7 @@ export const withoutAppendix = (body: string): string => body.split(/^## Also ch
 /**
  * A fenced block: opener, info line, body, and a closer of at least as many of the same marker with
  * nothing but whitespace after it. Shared by {@link proseOf} and the fence reader so the two never
- * disagree about where a block ends — ` ```text ` opens a block, it does not close one.
+ * disagree about where a block ends - ` ```text ` opens a block, it does not close one.
  */
 const FENCE = /^( {0,3})(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)^[ \t]*\2\2*[ \t]*$/gm;
 
@@ -102,7 +102,7 @@ const sentencesOf = (prose: string): string[] =>
 const wordsOf = (text: string): string[] => text.split(/\s+/).filter((word) => /[a-z]/i.test(word));
 
 /**
- * Fences the model emitted, by path — the same shape {@link fillWalkthrough} reads, parsed again
+ * Fences the model emitted, by path - the same shape {@link fillWalkthrough} reads, parsed again
  * here so scoring an already-filled body and scoring raw model output give the same answer.
  */
 const fencesOf = (body: string): { file?: string; lines?: string; empty: boolean; contents: string }[] => {
@@ -143,7 +143,7 @@ const badRanges = (
       return [];
     }
     const named = `${path} lines=${lines}`;
-    const range = lines.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
+    const range = lines.match(/^(\d+)(?:\s*[-\u2013]\s*(\d+))?$/);
     if (!range) {
       return [named];
     }
@@ -155,7 +155,7 @@ const badRanges = (
 
 /**
  * Inline-code tokens in the prose that name something in the code: a path, an identifier, a
- * constant. Grounding them in the patch is the cheapest hallucination check there is — a
+ * constant. Grounding them in the patch is the cheapest hallucination check there is - a
  * walkthrough that cites a symbol the change never touches is wrong in the way reviewers hate most.
  */
 const citationsOf = (prose: string): string[] => {
@@ -167,7 +167,7 @@ const citationsOf = (prose: string): string[] => {
 
 /**
  * Numbers the prose asserts: a timeout, an interval, a count. Each one is a factual claim about the
- * system, and a model with no source for it invents a plausible value — the failure a reviewer is
+ * system, and a model with no source for it invents a plausible value - the failure a reviewer is
  * least able to catch, because the number reads as evidence.
  */
 const numbersOf = (prose: string): string[] =>
@@ -179,7 +179,7 @@ const numbersOf = (prose: string): string[] =>
  * Numeric literals the patch contains, separators stripped and scaled by a thousand both ways.
  *
  * A constant reads `10_000` in the code and "10 seconds" in the prose, so a plain substring test
- * calls a grounded number invented — which is the worst way for this dimension to be wrong, because
+ * calls a grounded number invented - which is the worst way for this dimension to be wrong, because
  * it teaches the model to drop the detail that made the walkthrough worth reading.
  */
 const patchNumbers = (patch: string): Set<string> => {
@@ -211,8 +211,8 @@ const patchText = (patch: string): string =>
 /**
  * Hunks the document points at, over the hunks worth pointing at.
  *
- * Derived from the fences rather than from `fillWalkthrough`, so a stored walkthrough — whose
- * fences already carry their code — scores the same as the model output it was built from.
+ * Derived from the fences rather than from `fillWalkthrough`, so a stored walkthrough - whose
+ * fences already carry their code - scores the same as the model output it was built from.
  */
 const coverage = (
   files: Map<string, PatchFile>,
@@ -224,7 +224,7 @@ const coverage = (
     if (!file || isGeneratedFile(file)) {
       continue;
     }
-    const range = fence.lines?.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
+    const range = fence.lines?.match(/^(\d+)(?:\s*[-\u2013]\s*(\d+))?$/);
     const start = range ? Number(range[1]) : undefined;
     const end = range ? (range[2] === undefined ? Number(range[1]) : Number(range[2])) : undefined;
     file.hunks.forEach((hunk, index) => {
@@ -273,7 +273,7 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
   const unresolvedFences = fences.filter((fence) => !fence.file || !paths.has(fence.file));
   // A filled fence carries its OWN file's lines; an invented one does not. Per file rather than
   // over the whole patch, because a fence for one file carrying another's lines is exactly the
-  // transcription this grades — and it points the reader at the wrong code.
+  // transcription this grades - and it points the reader at the wrong code.
   const linesByFile = new Map(
     [...files].map(([path, file]) => [
       path,
@@ -298,8 +298,8 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
   });
   const generatedFences = fences
     .map((fence) => fence.file)
-    // Resolved through the patch so a binary the extension does not announce — caught only by
-    // git's own marker — is graded the same as a lockfile.
+    // Resolved through the patch so a binary the extension does not announce - caught only by
+    // git's own marker - is graded the same as a lockfile.
     .filter((path): path is string => {
       const file = path ? files.get(path) : undefined;
       return !!file && isGeneratedFile(file);
@@ -339,7 +339,7 @@ export const scoreWalkthrough = (body: string, patch: string): WalkthroughScore 
       {
         name: 'fences-authentic',
         // Content inside a fence is either the patch's own lines, spliced in by `fillWalkthrough`,
-        // or the model transcribing a diff from memory — which gets lines subtly wrong and makes
+        // or the model transcribing a diff from memory - which gets lines subtly wrong and makes
         // the reader see the change twice, once wrongly.
         score: ratio(fences.length - invented.length, fences.length),
         sampled: fences.length,

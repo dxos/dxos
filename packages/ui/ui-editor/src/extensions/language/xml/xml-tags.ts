@@ -3,8 +3,8 @@
 //
 
 // XML tags as widgets: a `<tag>` element in the markdown is matched by name against a registry and
-// replaced by the widget its definition names. The widget machinery — the decoration field, the
-// portal lifecycle, state and context effects, bookmark navigation — is `widgets`; this module is
+// replaced by the widget its definition names. The widget machinery - the decoration field, the
+// portal lifecycle, state and context effects, bookmark navigation - is `widgets`; this module is
 // the element matcher, including the tail scan that hides a streaming tag before its close arrives.
 
 import { type EditorState, type Extension } from '@codemirror/state';
@@ -28,7 +28,7 @@ import { nodeToJson } from './xml-util.ts';
 /**
  * Widget registry definition: how one tag renders.
  * Prefer an `id="..."` attribute on the tag so `updateWidget` can target the instance; if omitted,
- * an id is derived from the tag’s document range (non-streaming) or opening position (streaming).
+ * an id is derived from the tag's document range (non-streaming) or opening position (streaming).
  * Streaming tags use `cm-xml-<from>` so the same portal id is kept when the closing tag arrives.
  */
 export type XmlWidgetDef = WidgetDef<WidgetProps> & {
@@ -38,7 +38,7 @@ export type XmlWidgetDef = WidgetDef<WidgetProps> & {
   streaming?: boolean;
 };
 
-/** Tag name → definition. */
+/** Tag name -> definition. */
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
 
 /**
@@ -56,8 +56,8 @@ export const getXmlTextChild = (children: WidgetProps['children']): string | nul
 /**
  * All text inside a tag, nested elements contributing their text but not their markup.
  *
- * A model writes prose that happens to fence a block in tags of its own — a reminder quoting a
- * `<checklist>`, say — and the reader wants the prose whole. Their tag NAMES are dropped rather
+ * A model writes prose that happens to fence a block in tags of its own - a reminder quoting a
+ * `<checklist>`, say - and the reader wants the prose whole. Their tag NAMES are dropped rather
  * than reserialised: they delimit the block for the model, and are noise on screen.
  */
 export const getXmlInnerText = (children: any[]): string | null => {
@@ -104,7 +104,7 @@ const createXmlMatcher = (registry: XmlWidgetRegistry): WidgetMatcher => {
       if (!def) {
         return undefined;
       }
-      // Skip unclosed streaming elements — the unclosed tag scan handles them.
+      // Skip unclosed streaming elements - the unclosed tag scan handles them.
       if (def.streaming && !node.node.getChild('CloseTag')) {
         return undefined;
       }
@@ -186,7 +186,7 @@ const matchStreamingTail = (
 
     // Decorated even when the factory declined: a factory may return null while the tag is still
     // empty (`<reasoning>` with no text yet), and leaving the range undecorated renders the raw
-    // markup to the reader for exactly as long as that lasts — the flash this scan exists to
+    // markup to the reader for exactly as long as that lasts - the flash this scan exists to
     // prevent. Without a widget it is an inline replace that simply hides the text; `block` needs
     // a widget to size the line, so it is only claimed when there is one.
     return {
@@ -205,7 +205,7 @@ const matchStreamingTail = (
   }
 
   // A chunk boundary can land inside the opening tag itself, leaving a tail like `<reasoni` that
-  // the complete-tag scan above cannot match — and an undecorated tail renders as literal markup
+  // the complete-tag scan above cannot match - and an undecorated tail renders as literal markup
   // until the `>` arrives. Hidden without a widget: there is no tag name yet to build one from,
   // and `block` needs a widget to size the line.
   const partial = matchPartialOpenTag(tailText, streamingTagNames);
@@ -249,7 +249,7 @@ const matchPartialOpenTag = (text: string, tagNames: string[]): { from: number; 
     return undefined;
   }
 
-  // `<` alone is ambiguous — it becomes a tag or stays prose on the next character, and hiding the
+  // `<` alone is ambiguous - it becomes a tag or stays prose on the next character, and hiding the
   // tail on that guess flickers the reader's own text.
   return fragment.length > 0 && tagNames.some((name) => name.startsWith(fragment))
     ? { from: start, fragment }

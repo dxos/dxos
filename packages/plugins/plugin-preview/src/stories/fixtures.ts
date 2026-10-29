@@ -60,7 +60,7 @@ export const createTask = (): Task.Task => {
 };
 
 /**
- * Plain object cast as `Obj.Any` — has no schema, typename, or database, so cards
+ * Plain object cast as `Obj.Any` - has no schema, typename, or database, so cards
  * like `FormCard` fall through to their empty/unsupported state. Use to story-pin
  * fallback rendering.
  */
@@ -77,7 +77,7 @@ export const createPersonEmpty = (): Person.Person => Obj.make(Person.Person, {}
  * Mock of the `Table` schema (org.dxos.type.table): an optional `name` plus
  * `view` and `sizes` fields annotated with `FormInputAnnotation.set(false)`.
  * When constructed without a `name`, no form-renderable field has a value so
- * FormCard should fall through to its empty state — even though
+ * FormCard should fall through to its empty state - even though
  * `Object.keys(subject)` includes `view`/`sizes`.
  */
 const TableLike = Schema.Struct({

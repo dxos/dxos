@@ -25,7 +25,7 @@ import { createObject } from './create-object.ts';
 import { objectFromJSON, objectStructureFromJson, objectStructureToJson, objectToJSON } from './json-serializer.ts';
 
 /**
- * Decode JSON and rewrap as a live reactive proxy — mirrors the feed hydration path
+ * Decode JSON and rewrap as a live reactive proxy - mirrors the feed hydration path
  * (`objectFromJSON` then {@link makeDecodedEntityLive}).
  */
 const decodeLive = async (json: unknown, options?: { refResolver?: RefResolver }): Promise<AnyEntity> =>
@@ -173,7 +173,7 @@ describe('Object JSON serializer', () => {
       expect(reconstructed[KindId]).toBe(EntityKind.Type);
       expect(Type.isType(reconstructed)).toBe(true);
       // `typename` lives in `EntityMeta.key` on persisted Type.Type entities
-      // — surfaced via `Type.getTypename`.
+      // - surfaced via `Type.getTypename`.
       expect(Type.getTypename(reconstructed)).toBe('com.example.type.regression');
     });
   });
@@ -287,7 +287,7 @@ describe('Object JSON serializer', () => {
 
       expect(getSchema(live)).toBeUndefined();
       expect(live.name).toBe('Alice');
-      // No schema means `Obj.update` cannot validate mutations — direct assignment remains a
+      // No schema means `Obj.update` cannot validate mutations - direct assignment remains a
       // silent no-op-safe plain-object write, not a throw.
       live.name = 'Bob';
       expect(live.name).toBe('Bob');
@@ -385,7 +385,7 @@ describe('Object JSON serializer', () => {
       const decoded = (await objectFromJSON(tombstone, { refResolver })) as TestSchema.Person;
       expect(Obj.isDeleted(decoded)).toBe(true);
 
-      // `objectFromJSON` reads `@deleted`, so the serializer has to emit it — otherwise a tombstone
+      // `objectFromJSON` reads `@deleted`, so the serializer has to emit it - otherwise a tombstone
       // re-serialized (feed compaction, a snapshot hand-off) came back as a live object.
       expect(objectToJSON(decoded)[ATTR_DELETED]).toBe(true);
       const reDecoded = (await objectFromJSON(objectToJSON(decoded), { refResolver })) as TestSchema.Person;

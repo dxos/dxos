@@ -63,7 +63,7 @@ const SplitStory = () => {
   );
 };
 
-// Two main planks side by side; click either to move attention — only the attended plank's sigil and
+// Two main planks side by side; click either to move attention - only the attended plank's sigil and
 // title take the accent color.
 const TwoPanesStory = () => (
   <div className='dx-fill flex px-3 gap-3 dx-deck-surface'>

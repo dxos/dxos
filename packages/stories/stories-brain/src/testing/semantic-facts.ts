@@ -22,7 +22,7 @@ export const SAMPLE_FACTS_TEXT = trim`
 `;
 
 /**
- * Static demo facts that exercise the viewer: an entity→entity conflict (f1 vs f2,
+ * Static demo facts that exercise the viewer: an entity->entity conflict (f1 vs f2,
  * same subject + predicate, different objects/sources) plus a coherent pair (f3/f4).
  * Each `quote` corresponds to a sentence in {@link SAMPLE_FACTS_TEXT} (kept in sync manually).
  */

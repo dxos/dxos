@@ -108,7 +108,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       [id],
     );
 
-    // Everything that varies per render — view mode, theme, the binding's extensions — lives in one
+    // Everything that varies per render - view mode, theme, the binding's extensions - lives in one
     // compartment and is RECONFIGURED on the live view below. Recreating the view on these deps was
     // the teardown behind every mode-switch discontinuity (flicker, caret and focus loss, overlay
     // geometry churn): CodeMirror reconfigures in place; only a different surface (`id`) recreates.
@@ -177,7 +177,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       [id],
     );
 
-    // Reconfigure the live view when any dynamic input changes — never recreate it.
+    // Reconfigure the live view when any dynamic input changes - never recreate it.
     useEffect(() => {
       if (editorView) {
         editorView.dispatch({ effects: dynamicCompartment.reconfigure(dynamicExtensions()) });

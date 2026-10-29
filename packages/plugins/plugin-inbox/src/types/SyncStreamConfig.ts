@@ -3,16 +3,16 @@
 //
 
 /**
- * Tuning for a source sync's streaming pipeline. Each sync operation (Gmail, JMAP, Calendar, …)
- * declares its own constant of this shape — the shared type just keeps the vocabulary consistent;
+ * Tuning for a source sync's streaming pipeline. Each sync operation (Gmail, JMAP, Calendar, ...)
+ * declares its own constant of this shape - the shared type just keeps the vocabulary consistent;
  * values diverge per provider. Provider-specific knobs are optional: a provider omits what it doesn't
  * use (e.g. Calendar's list returns full events, so no full-item fetch to bound, and it isn't
  * capped/re-run, so no per-run budget).
  */
 export type SyncStreamConfig = {
-  /** Items requested per provider list/query API page — the id/event enumeration page size. */
+  /** Items requested per provider list/query API page - the id/event enumeration page size. */
   readonly listPageSize: number;
-  /** Items per feed-commit batch — kept small so each `Feed.append` is a single atomic queue insert. */
+  /** Items per feed-commit batch - kept small so each `Feed.append` is a single atomic queue insert. */
   readonly commitPageSize: number;
   /** In-flight full-item fetches, for a provider whose list returns ids rather than full items. */
   readonly fetchConcurrency?: number;

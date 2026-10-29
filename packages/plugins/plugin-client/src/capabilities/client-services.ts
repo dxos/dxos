@@ -9,8 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities } from '#types';
 
 /**
- * Exposes the pieces of the client that plugins read directly — config, the EDGE HTTP client and
- * the ECHO graph — as capabilities, so those plugins need not depend on `@dxos/client`.
+ * Exposes the pieces of the client that plugins read directly - config, the EDGE HTTP client and
+ * the ECHO graph - as capabilities, so those plugins need not depend on `@dxos/client`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

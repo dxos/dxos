@@ -28,7 +28,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       and edits made in Composer are written back to disk in real time.
       Workspaces can be opened, closed, and refreshed via the app graph action menu;
       ordering is persisted in the user's personal ECHO space so the layout survives restarts.
-      Requires the Electron-based Composer desktop app — not available in browser builds.
+      Requires the Electron-based Composer desktop app - not available in browser builds.
     `,
     icon: { key: 'ph--folder-open--regular' },
     spec: 'PLUGIN.mdl',

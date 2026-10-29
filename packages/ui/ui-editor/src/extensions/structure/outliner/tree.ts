@@ -163,8 +163,8 @@ export const listItemToString = (item: Item, level = 0) => {
   const indent = '  '.repeat(level);
   const data = {
     i: item.index,
-    n: item.nextSibling?.index ?? '∅',
-    p: item.prevSibling?.index ?? '∅',
+    n: item.nextSibling?.index ?? '\u2205',
+    p: item.prevSibling?.index ?? '\u2205',
     level: item.level,
     node: format([item.node.from, item.node.to]),
     line: format([item.lineRange.from, item.lineRange.to]),

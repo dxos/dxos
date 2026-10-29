@@ -10,7 +10,7 @@ import * as Ansi from './Ansi.ts';
  * Minimal stand-in for `@effect/printer/Doc` (and `AnsiDoc`'s renderer).
  *
  * Vendored: `@effect/printer` peers `effect ^3` permanently, v4 ships no printer, and its sealed
- * CLI-internal renderer exposes no general seam — so depending on either would cost a second copy
+ * CLI-internal renderer exposes no general seam - so depending on either would cost a second copy
  * of Effect for rendering alone.
  *
  * There is no reflow: nothing constructs a `group` or a soft line, so every break is mandatory and

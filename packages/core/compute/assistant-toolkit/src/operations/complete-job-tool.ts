@@ -13,7 +13,7 @@ const UNDECLARED_TYPE = 'type' in UNDECLARED_OUTPUT ? UNDECLARED_OUTPUT.type : u
 
 /**
  * Whether the routine's stored output carries a payload contract. `Instructions` keeps only the
- * serialized schema, so a declared `null` output is indistinguishable from a defaulted one — and
+ * serialized schema, so a declared `null` output is indistinguishable from a defaulted one - and
  * wants the same tool either way, having no payload to validate.
  */
 const isUndeclaredOutput = (output: JsonSchema.JsonSchema): boolean =>
@@ -22,7 +22,7 @@ const isUndeclaredOutput = (output: JsonSchema.JsonSchema): boolean =>
 /**
  * Accepts any JSON value, unlike `Schema.Any`, while serializing to concrete types. This matters
  * twice: the Anthropic API rejects a strict tool whose schema contains the empty `{}` subschema
- * `Schema.Any` serializes to, and — observed live — a schema-less `success` invites the model to
+ * `Schema.Any` serializes to, and - observed live - a schema-less `success` invites the model to
  * emit invalid JSON (digit-separated numbers such as `3,628,800`), which kills the sub-agent.
  * `ObjectKeyword` rather than `Record(String, Any)`: the provider's structured-output codec
  * rewrites records into [key, value] tuples whose value member is again the empty schema.

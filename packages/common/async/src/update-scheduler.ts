@@ -20,7 +20,7 @@ export type UpdateSchedulerOptions = {
  */
 const TIME_PERIOD = 1_000;
 
-/** A claimed run's error (or `undefined`). Resolves, never rejects — `runBlocking` re-throws it. */
+/** A claimed run's error (or `undefined`). Resolves, never rejects - `runBlocking` re-throws it. */
 type RunResult = Promise<Error | undefined>;
 
 /**
@@ -37,7 +37,7 @@ export class UpdateScheduler {
   private _scheduled = false;
 
   /**
-   * Armed by the `trigger` that schedules a runner, woken by that runner when it claims — with the
+   * Armed by the `trigger` that schedules a runner, woken by that runner when it claims - with the
    * run's promise, which `Trigger` adopts, so waiters resume when the run *finishes*. Lets
    * `runBlocking` await a run that does not exist in `_currentTask` yet.
    *
@@ -83,7 +83,7 @@ export class UpdateScheduler {
       return;
     }
     this._scheduled = true;
-    this._runOutcome.reset(); // Only here — never on a coalesced trigger (see `_runOutcome`).
+    this._runOutcome.reset(); // Only here - never on a coalesced trigger (see `_runOutcome`).
 
     // The only claim site. A single await suffices: nothing else claims, so this is the only waiter.
     scheduleMicroTask(this._ctx, async () => {

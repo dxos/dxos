@@ -36,7 +36,7 @@ const format = (args: ReadonlyArray<unknown>): string => args.map(stringify).joi
  * Routes Effect's `Console` to the terminal.
  *
  * The CLI renders help, usage errors, and wizard output as ANSI text through this service, which
- * xterm interprets natively — so the browser gets the same styled output as a shell.
+ * xterm interprets natively - so the browser gets the same styled output as a shell.
  */
 export const make = (bridge: TerminalBridge): Console.Console => {
   const write = (args: ReadonlyArray<unknown>) => bridge.write(format(args) + '\n');

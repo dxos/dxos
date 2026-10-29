@@ -131,7 +131,7 @@ export const AssistantTestLayer = (
   agentOptions.provider ??= resolvedProvider;
 
   // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
-  // `ProcessManager.layer` requires the `ServiceResolver` — a construction cycle. Resolve it by
+  // `ProcessManager.layer` requires the `ServiceResolver` - a construction cycle. Resolve it by
   // sharing a late-bound holder: the resolver reads the manager lazily (only at resolution time,
   // when the manager exists), and a downstream layer fills the holder once it is built.
   const processManagerHolder: ProcessManagerHolder = {};
@@ -296,7 +296,7 @@ export const AssistantTestBaseLayer = ({
     Instructions.Instructions,
     Operation.PersistentOperation,
     Feed.Feed,
-    // The agent process runs on a chat, so every session — bare ones included — persists one.
+    // The agent process runs on a chat, so every session - bare ones included - persists one.
     Chat.Chat,
     Trigger.Trigger,
     Tag.Tag,
@@ -307,7 +307,7 @@ export const AssistantTestBaseLayer = ({
   return Layer.empty.pipe(
     // A skill referenced by its registry URI resolves through the DATABASE's registry (production
     // wires that up via plugin-instructions' `RegistrySync`), which is not the `Registry.Service`
-    // seeded below — so a seeded skill has to land in both, or such a ref silently resolves to
+    // seeded below - so a seeded skill has to land in both, or such a ref silently resolves to
     // nothing and the conversation loses the skill.
     Layer.provideMerge(seedDatabaseRegistry(skills)),
     Layer.provideMerge(

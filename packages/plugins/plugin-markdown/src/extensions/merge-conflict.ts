@@ -42,7 +42,7 @@ export const findConflicts = (state: EditorState): ConflictRegion[] => {
     for (let scan = lineNumber + 1; scan <= lineCount; scan++) {
       const line = state.doc.line(scan);
       if (!separator && line.text.startsWith(START_MARKER)) {
-        // A new start marker before the separator: the current block is malformed — abandon it
+        // A new start marker before the separator: the current block is malformed - abandon it
         // (rather than greedily absorbing the next block's markers) and rescan from here.
         restart = scan;
         break;
@@ -83,7 +83,7 @@ export const conflictResolution = (
   const branchText = state.sliceDoc(region.branch.from, region.branch.to);
   const currentText = state.sliceDoc(region.current.from, region.current.to);
   const insert = choice === 'branch' ? branchText : choice === 'current' ? currentText : `${branchText}${currentText}`;
-  // Consume the block's trailing newline so the resolution does not leave a blank line —
+  // Consume the block's trailing newline so the resolution does not leave a blank line -
   // the inserted sections carry their own.
   const to = state.sliceDoc(region.to, region.to + 1) === '\n' ? region.to + 1 : region.to;
   return { from: region.from, to, insert };

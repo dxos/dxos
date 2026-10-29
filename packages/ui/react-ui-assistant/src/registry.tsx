@@ -20,7 +20,7 @@ import {
 
 /**
  * Floor for a portaled panel's collapsed height, reserved before its content paints. `heightMode:
- * 'min'` makes it a floor rather than a pin — without it the row is measured at the height of an
+ * 'min'` makes it a floor rather than a pin - without it the row is measured at the height of an
  * empty box and grows a frame later, a row moving under a reader scrolling up.
  */
 const COLLAPSED_HEIGHT = 42;
@@ -54,7 +54,7 @@ export const assistantRegistry: XmlWidgetRegistry = {
     streaming: true,
     factory: ({ children, range }) => {
       // `getXmlInnerText`: a model fences blocks in tags of its own, and `getXmlTextChild` would
-      // stop at the first one — the reader saw a heading and an opening fence, then nothing.
+      // stop at the first one - the reader saw a heading and an opening fence, then nothing.
       const text = getXmlInnerText(children ?? []);
       return text ? new ReasoningWidget(text, range?.from) : null;
     },

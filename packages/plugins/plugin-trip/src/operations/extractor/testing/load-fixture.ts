@@ -12,8 +12,8 @@ import { ContentBlock, Message } from '@dxos/types';
  * production. Fixtures use a minimal RFC-822-ish format: a header block
  * (`Key: value` lines) followed by a blank line and the body. Recognised
  * headers are `From:` (mapped to `sender.email`) and `Subject:` (mapped to
- * `properties.subject`). The body may be plain text, markdown, or raw HTML —
- * `@dxos/markdown`'s `normalizeText` runs the same HTML→Markdown
+ * `properties.subject`). The body may be plain text, markdown, or raw HTML -
+ * `@dxos/markdown`'s `normalizeText` runs the same HTML->Markdown
  * conversion the Gmail mapper applies before storing the message, so paste
  * the email body straight from your inbox's "View source" / "Show original".
  *

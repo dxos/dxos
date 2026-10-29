@@ -6,10 +6,10 @@
  * Reversible HTML <-> markdown transform for catalog descriptions and book reviews.
  *
  * BookHive supplies descriptions/reviews as HTML (`<b>`, `<i>`, `<br />`); ECHO stores them as markdown
- * (rendered/edited via markdown). The pair is bidirectional so the mapping is symmetric — used one-way
+ * (rendered/edited via markdown). The pair is bidirectional so the mapping is symmetric - used one-way
  * on catalog import and round-trip for the published `review`.
  *
- * Inline-only and best-effort by design (block markdown — lists, headings, links — is not handled). To
+ * Inline-only and best-effort by design (block markdown - lists, headings, links - is not handled). To
  * stay safe on user-authored prose it never invents structure: only real `<tag>`s are stripped (a bare
  * `<`/`>` in text is kept), and emphasis is matched only for delimiters hugging non-space content so a
  * stray `*` (e.g. "4* stars", "2 * 4") is left untouched.
@@ -38,7 +38,7 @@ export const htmlToMarkdown = (html?: string): string | undefined => {
     .replace(/<\s*p[^>]*>/gi, '')
     .replace(/<\s*(b|strong)\b[^>]*>([\s\S]*?)<\/\s*\1\s*>/gi, '**$2**')
     .replace(/<\s*(i|em)\b[^>]*>([\s\S]*?)<\/\s*\1\s*>/gi, '*$2*')
-    // Strip only remaining real tags (`</?letter…>`); a bare `<`/`>` in prose (e.g. "a < b") is kept.
+    // Strip only remaining real tags (`</?letter...>`); a bare `<`/`>` in prose (e.g. "a < b") is kept.
     .replace(/<\/?[a-zA-Z][^>]*>/g, '');
   for (const [pattern, replacement] of HTML_ENTITIES) {
     markdown = markdown.replace(pattern, replacement);

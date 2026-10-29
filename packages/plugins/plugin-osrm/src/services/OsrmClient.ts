@@ -27,7 +27,7 @@ export const fetchRoute = async (
   const path = coordinates.map(([lon, lat]) => `${lon},${lat}`).join(';');
   const url = `${baseUrl}/route/v1/driving/${path}?overview=full&geometries=geojson&steps=true`;
 
-  // Log the host + waypoint count only — the URL path embeds the user's exact coordinates.
+  // Log the host + waypoint count only - the URL path embeds the user's exact coordinates.
   log('osrm route request', { host: new URL(baseUrl).host, profile: 'driving', waypoints: coordinates.length });
   const response = await fetchFn(url);
   log('osrm route response', { status: response.status, ok: response.ok });
@@ -35,6 +35,6 @@ export const fetchRoute = async (
     throw new Routing.RouteError(`OSRM request failed: ${response.status}`);
   }
 
-  // External, untyped JSON — asserted to the documented OSRM shape at this boundary.
+  // External, untyped JSON - asserted to the documented OSRM shape at this boundary.
   return (await response.json()) as OsrmResponse;
 };

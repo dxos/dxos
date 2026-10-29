@@ -105,7 +105,7 @@ export const PreviewComponent = ({
 }: PreviewComponentProps) => {
   const { t } = UiHooks.useTranslation(MarkdownNamespace.key);
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
-  // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
+  // suspending portal holds the whole editor tree un-committed - embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
   const invoker = Hooks.useOptionalCapability(Capabilities.OperationInvoker);
   const invokePromise = invoker?.invokePromise;
@@ -247,7 +247,7 @@ export const PreviewComponent = ({
       const { baseLabel: currentBaseLabel } = parseEmbedLabel(doc.slice(open + 2, close));
       const insert = `![${formatEmbedLabel(currentBaseLabel, Math.round(next * remSize))}](${eid})`;
       view.dispatch({ changes: { from: open, to: close + marker.length, insert } });
-      // After the resized box has laid out, bring its top into frame — but only if that top scrolled
+      // After the resized box has laid out, bring its top into frame - but only if that top scrolled
       // out of view. Scroll the element itself (not the CM view) so it works whichever ancestor
       // actually scrolls (cm-scroller or an outer panel); defer a frame so the new height applies first.
       requestAnimationFrame(() => {

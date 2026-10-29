@@ -73,7 +73,7 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              // Thread pool of size 1 assigns every seeded message the same threadId — a single
+              // Thread pool of size 1 assigns every seeded message the same threadId - a single
               // conversation of exactly `length` messages, oldest to newest.
               const mailbox = yield* Effect.promise(() => initializeMailbox(defaultSpace.db, length, 1));
               // Half the conversation carries a derived summary, so the summary tile renders from a
@@ -123,12 +123,12 @@ export const Spec: Story = {
     const summaryTile = await canvas.findByTestId('conversation.summary', undefined, { timeout: 5_000 });
     await expect(summaryTile).toHaveTextContent(/waiting on a reply/);
 
-    // Reply All on the newest message appends a draft composer inline at the bottom — no navigation.
+    // Reply All on the newest message appends a draft composer inline at the bottom - no navigation.
     await userEvent.click(replyButtons[0]);
     await canvas.findByText('Draft', undefined, { timeout: 5_000 });
     await expect(await canvas.findAllByTestId('edit-email-form', undefined, { timeout: 5_000 })).toHaveLength(1);
 
-    // Pressing it again appends a second draft — multiple drafts per thread are allowed.
+    // Pressing it again appends a second draft - multiple drafts per thread are allowed.
     await userEvent.click(canvas.getByRole('button', { name: 'Reply All' }));
     await waitFor(() => expect(canvas.getAllByTestId('edit-email-form')).toHaveLength(2), { timeout: 5_000 });
   },

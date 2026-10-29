@@ -179,7 +179,7 @@ export const command = Command.make(
       const kept = result.scored.nodes.filter((node) => node.kept).length;
       yield* Console.log(
         [
-          `${result.candidates.nodes.length} candidates (${result.candidates.edges.length} edges) from ${result.candidates.seeds.length} seeds → ${kept} kept, grouped by ${result.scored.grouping}`,
+          `${result.candidates.nodes.length} candidates (${result.candidates.edges.length} edges) from ${result.candidates.seeds.length} seeds -> ${kept} kept, grouped by ${result.scored.grouping}`,
           `explore ${seconds(result.timings.exploreMs)} · zoom ${seconds(result.timings.zoomMs)} · ${result.usage.calls} decision calls (${result.usage.cached} cached), $${result.usage.usd.toFixed(4)}`,
           `wrote ${dir}`,
         ].join('\n'),

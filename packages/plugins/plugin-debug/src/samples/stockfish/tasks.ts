@@ -19,11 +19,11 @@ import { daysAgo } from './util.ts';
 // rather than reconstructable only by following refs.
 //
 // Everything is `todo`: this is a plan to run, not a project caught mid-flight. The one thing the
-// seeds do assert is ORDER — a stage assumes the one before it landed, so each depends on its
+// seeds do assert is ORDER - a stage assumes the one before it landed, so each depends on its
 // predecessor and a runner that skips ahead is visibly out of order rather than merely early.
 //
 // The ordering constraint that shaped the stages: nothing needing an account outside this space
-// happens until the app already works. Publishing is stage five for exactly that reason — a consent
+// happens until the app already works. Publishing is stage five for exactly that reason - a consent
 // screen in the middle of the build is where a first run stops.
 //
 
@@ -31,14 +31,14 @@ type TaskSeed = {
   readonly title: string;
   readonly description?: string;
   readonly estimate?: Task.Estimate;
-  /** Set where the step needs the reader's own hands — a consent screen, or a repository to own. */
+  /** Set where the step needs the reader's own hands - a consent screen, or a repository to own. */
   readonly assignee?: Actor.Actor;
   readonly subTasks?: ReadonlyArray<TaskSeed>;
 };
 
 /**
  * The reader, as an assignee. A template cannot know who they are, so the actor carries the role and
- * a label rather than a Person ref — enough for the row to say the step is not the agent's.
+ * a label rather than a Person ref - enough for the row to say the step is not the agent's.
  */
 const USER: Actor.Actor = { role: 'user', name: 'You' };
 
@@ -56,20 +56,20 @@ const PLAN: TaskSeed = {
         {
           title: 'Select DeepSeek V4 Pro as the chat model',
           description:
-            'Yours to do: the model is a Composer setting, not something this space can carry. Assistant settings → model, or the selector in the chat itself. It runs through the DXOS edge, so no Anthropic key is involved anywhere in this project.',
+            'Yours to do: the model is a Composer setting, not something this space can carry. Assistant settings -> model, or the selector in the chat itself. It runs through the DXOS edge, so no Anthropic key is involved anywhere in this project.',
           estimate: 'xs',
           assignee: USER,
         },
         {
           title: 'Name the two tools and pin their schemas',
           description:
-            'Evaluate a position, and name the best move from one. FEN in, and a bounded search budget as an argument — decide the unit and the ceiling now.',
+            'Evaluate a position, and name the best move from one. FEN in, and a bounded search budget as an argument - decide the unit and the ceiling now.',
           estimate: 'xs',
         },
         {
           title: 'Diagram the request path',
           description:
-            'Chat → MCP client → Worker → engine, as a mermaid flowchart. Name what is bundled and what is fetched.',
+            'Chat -> MCP client -> Worker -> engine, as a mermaid flowchart. Name what is bundled and what is fetched.',
           estimate: 'xs',
         },
         {
@@ -94,7 +94,7 @@ const PLAN: TaskSeed = {
         {
           title: 'Create the sandbox and install the toolchain',
           description:
-            'One sandbox for the whole project — it keeps its filesystem between commands, so a second one pays for node and wrangler again.',
+            'One sandbox for the whole project - it keeps its filesystem between commands, so a second one pays for node and wrangler again.',
           estimate: 's',
         },
         {
@@ -105,13 +105,13 @@ const PLAN: TaskSeed = {
         {
           title: 'Deploy without authenticating to Cloudflare',
           description:
-            '`wrangler deploy --temporary` mints a temporary account and prints a Worker URL and a claim URL; plain `wrangler deploy` refuses non-interactively and demands a token, so the flag is not optional. File the WORKER url on the project. The claim URL is a bearer credential — hand it straight to the reader and file it nowhere.',
+            '`wrangler deploy --temporary` mints a temporary account and prints a Worker URL and a claim URL; plain `wrangler deploy` refuses non-interactively and demands a token, so the flag is not optional. File the WORKER url on the project. The claim URL is a bearer credential - hand it straight to the reader and file it nowhere.',
           estimate: 's',
         },
         {
           title: 'Fetch the deployed URL and confirm the body',
           description:
-            'Fetch it. A successful deploy command is not evidence that anything is serving. Do not claim the account yet — the next stage still redeploys this Worker.',
+            'Fetch it. A successful deploy command is not evidence that anything is serving. Do not claim the account yet - the next stage still redeploys this Worker.',
           estimate: 'xs',
         },
       ],
@@ -141,13 +141,13 @@ const PLAN: TaskSeed = {
         {
           title: 'Redeploy and call `tools/list` and both tools over the wire',
           description:
-            'Against the deployed URL, not a local dev server. Paste the responses into the project — that is the stage evidence. This is the last deploy, so claiming comes next.',
+            'Against the deployed URL, not a local dev server. Paste the responses into the project - that is the stage evidence. This is the last deploy, so claiming comes next.',
           estimate: 's',
         },
         {
           title: 'Claim the temporary Cloudflare account',
           description:
-            'Yours to do: claiming signs the account into yours, which needs a browser the agent does not have. It comes AFTER the last redeploy — an agent with no login cannot update a claimed account, and `--temporary` would mint a second one under a different URL. Do it inside the hour; the account expires with the Worker on it.',
+            'Yours to do: claiming signs the account into yours, which needs a browser the agent does not have. It comes AFTER the last redeploy - an agent with no login cannot update a claimed account, and `--temporary` would mint a second one under a different URL. Do it inside the hour; the account expires with the Worker on it.',
           estimate: 'xs',
           assignee: USER,
         },
@@ -161,13 +161,13 @@ const PLAN: TaskSeed = {
         {
           title: 'Add the deployed URL as an MCP server in this space',
           description:
-            "Add it as an MCP connection with the Skill Manager's `add-mcp-connection` tool, using the URL as it stands AFTER the claim — a `workers.dev` hostname is account-scoped, so confirm it by fetching before trusting it. Protocol `http` — Streamable HTTP, not the deprecated SSE transport. Its key is stored in the space and readable by every member, so keep it to one the Worker can rotate.",
+            "Add it as an MCP connection with the Skill Manager's `add-mcp-connection` tool, using the URL as it stands AFTER the claim - a `workers.dev` hostname is account-scoped, so confirm it by fetching before trusting it. Protocol `http` - Streamable HTTP, not the deprecated SSE transport. Its key is stored in the space and readable by every member, so keep it to one the Worker can rotate.",
           estimate: 's',
         },
         {
           title: 'Enable the Chess plugin',
           description:
-            'Yours to do: it is available but off by default, and without it the seeded game has no board to open — the last step of this stage needs one. Settings -> plugin registry.',
+            'Yours to do: it is available but off by default, and without it the seeded game has no board to open - the last step of this stage needs one. Settings -> plugin registry.',
           estimate: 'xs',
           assignee: USER,
         },
@@ -180,7 +180,7 @@ const PLAN: TaskSeed = {
         {
           title: 'Ask for the best move in the seeded game',
           description:
-            'Open the game and ask. The answer has to arrive as a tool call in the transcript — a plausible move the model knew already is a failure of this step, not a pass.',
+            'Open the game and ask. The answer has to arrive as a tool call in the transcript - a plausible move the model knew already is a failure of this step, not a pass.',
           estimate: 's',
         },
       ],
@@ -194,7 +194,7 @@ const PLAN: TaskSeed = {
         {
           title: 'Create an empty GitHub repository for the server',
           description:
-            'Yours to do: a connector token authorises access to repositories, it cannot create one. Make it empty — this stage pushes the first commit — and note the owner/name.',
+            'Yours to do: a connector token authorises access to repositories, it cannot create one. Make it empty - this stage pushes the first commit - and note the owner/name.',
           estimate: 'xs',
           assignee: USER,
         },
@@ -220,7 +220,7 @@ export type TasksResult = {
   taskSet: TaskSet.TaskSet;
   tasks: Task.Task[];
   root: Task.Task;
-  /** The five stages, in order — the level the dependency chain is written across. */
+  /** The five stages, in order - the level the dependency chain is written across. */
   stages: Task.Task[];
 };
 

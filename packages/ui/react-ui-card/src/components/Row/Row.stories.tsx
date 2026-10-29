@@ -48,7 +48,7 @@ const KNOWN_CONTACT = EID.make({
 /**
  * Answers the card request `Row.Person` dispatches when an avatar with a resolved contact is hovered.
  *
- * `DxAnchorActivate` does NOT bubble, so a host has to listen in the CAPTURE phase — which is how the
+ * `DxAnchorActivate` does NOT bubble, so a host has to listen in the CAPTURE phase - which is how the
  * app's own host (PreviewPlugin, on `window`) receives it. Written out here rather than imported so
  * this package's story stays free of the editor/plugin layers, and so the contract the row depends on
  * is visible in one place.
@@ -127,7 +127,7 @@ const DefaultStory = () => {
     [],
   );
 
-  // `Row.Star` is controlled, so the story owns the state — without it the toggle renders but never moves.
+  // `Row.Star` is controlled, so the story owns the state - without it the toggle renders but never moves.
   const [starred, setStarred] = useState(true);
   const handleToggleStar = useCallback(() => setStarred((current) => !current), []);
 
@@ -197,7 +197,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** The avatar's two hover states — the core mechanism every person surface inherits. */
+/** The avatar's two hover states - the core mechanism every person surface inherits. */
 export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -216,7 +216,7 @@ export const Spec: Story = {
     // Both sizes render a row per actor, so the name is deliberately not unique.
     await waitFor(() => expect(canvas.getAllByText('Bob Bell').length).toBeGreaterThan(0), { timeout: 12_000 });
 
-    // Resolved contact → hovering opens its card (rendered in a portal, so queried from the document).
+    // Resolved contact -> hovering opens its card (rendered in a portal, so queried from the document).
     await userEvent.hover(avatarFor('Alice Avery'));
     const card = await waitFor(
       () => {
@@ -231,7 +231,7 @@ export const Spec: Story = {
     await expect(card).toHaveTextContent('Alice Avery');
     await userEvent.keyboard('{Escape}');
 
-    // No contact → the avatar gives way to a create button, and creating one flips the row's state.
+    // No contact -> the avatar gives way to a create button, and creating one flips the row's state.
     // Mounted for keyboard access but faded until hover/focus, so opacity is what this asserts.
     const created = canvas.getAllByRole('button', { name: 'Create contact' });
     await expect(created.length).toBeGreaterThan(0);

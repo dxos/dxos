@@ -45,7 +45,7 @@ const compare = (
  * Network-aware inspection of a Book's publish state, used by the companion.
  *
  * Eligibility is verified against the live BookHive catalog: a book with no hive link, or one we cannot
- * verify (offline, or the record is gone), is held back — since we cannot confirm it still matches a
+ * verify (offline, or the record is gone), is held back - since we cannot confirm it still matches a
  * hive record, we do not offer to publish. When verified, each catalog field whose local value diverges
  * from the upstream record is flagged (a local edit that stays private and is not pushed).
  */
@@ -67,7 +67,7 @@ export const inspectBook = async (object: unknown): Promise<PublishInspection> =
     return {
       eligibility: {
         ok: false,
-        reason: 'No network connection — cannot verify the BookHive catalog.',
+        reason: 'No network connection - cannot verify the BookHive catalog.',
         unverifiable: true,
       },
     };

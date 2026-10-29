@@ -18,7 +18,7 @@ import { EchoTestBuilder } from './echo-test-builder.ts';
 // Matrix of e2e tests for STRONG-DEPENDENCY resolution exercised through the public database API
 // (db.add / Relation.make / db.query / Relation.getSource|getTarget / feed / Obj.getParent),
 // not the RefResolver internals. Each strong-dep kind (relation source/target, parent, type/schema)
-// is checked against each resolve direction (same-db, automerge↔feed, cross-space, registry) under
+// is checked against each resolve direction (same-db, automerge<->feed, cross-space, registry) under
 // three conditions: in-memory, after reload (from disk), and across peers (from network).
 //
 // PRIMARY TARGET: a relation stored in the automerge database whose source/target live in a FEED.
@@ -37,11 +37,11 @@ describe('strong dependency resolution', () => {
   const TYPES = [Feed.Feed, TestSchema.Person, TestSchema.Organization, TestSchema.HasManager, TestSchema.EmployedBy];
 
   //
-  // Relation source/target — automerge → feed (PRIMARY).
+  // Relation source/target - automerge -> feed (PRIMARY).
   // Relation lives in the database; both endpoints live in a feed.
   //
 
-  describe('relation source/target — automerge → feed (primary)', () => {
+  describe('relation source/target - automerge -> feed (primary)', () => {
     test('in-memory', async () => {
       await using peer = await builder.createPeer({ types: TYPES });
       await using db = await peer.createDatabase();
@@ -100,7 +100,7 @@ describe('strong dependency resolution', () => {
       await peer.reload();
       {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        // Feed handles are created lazily after reload — no need to re-open manually.
+        // Feed handles are created lazily after reload - no need to re-open manually.
         // Querying by type is sufficient to ensure the feed's storage is accessible.
         await db.query(Filter.id(feedId)).run();
 
@@ -152,13 +152,13 @@ describe('strong dependency resolution', () => {
   });
 
   //
-  // Relation source/target — source in database, target in feed (mixed).
+  // Relation source/target - source in database, target in feed (mixed).
   // The relation and its source live in the automerge database; only the target lives in a feed.
   // The target is referenced as the decoded feed object (carrying its absolute feed URI) so it is
   // resolved from the feed rather than copied into the database.
   //
 
-  describe('relation source/target — source in database, target in feed', () => {
+  describe('relation source/target - source in database, target in feed', () => {
     test('in-memory', async () => {
       await using peer = await builder.createPeer({ types: TYPES });
       await using db = await peer.createDatabase();
@@ -184,7 +184,7 @@ describe('strong dependency resolution', () => {
       expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
       expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
 
-      // The target stays in the feed — it is not copied into the database.
+      // The target stays in the feed - it is not copied into the database.
       const persisted = await db.query(Filter.type(TestSchema.Person)).run();
       expect(persisted.map((person) => person.id)).toEqual([source.id]);
     });
@@ -225,7 +225,7 @@ describe('strong dependency resolution', () => {
       await peer.reload();
       {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        // Feed handles are created lazily after reload — no need to re-open manually.
+        // Feed handles are created lazily after reload - no need to re-open manually.
         await db.query(Filter.id(feedId)).run();
 
         const [obj] = await db.query(Filter.id(relationId)).run();
@@ -278,11 +278,11 @@ describe('strong dependency resolution', () => {
   });
 
   //
-  // Relation source/target — feed → automerge.
+  // Relation source/target - feed -> automerge.
   // Relation lives in a feed; an endpoint lives in the database.
   //
 
-  describe('relation source/target — feed → automerge', () => {
+  describe('relation source/target - feed -> automerge', () => {
     // Resolves because the writer's feed handle already reflects the appended relation, so the query
     // returns it without decoding it again; decoding it is what the resolver cannot yet do (see the
     // reload case below).
@@ -310,7 +310,7 @@ describe('strong dependency resolution', () => {
       expect(Relation.getTarget(surfaced as TestSchema.EmployedBy).name).toEqual('DXOS');
     });
 
-    // Expected to fail: same as the in-memory case — strong-dep resolution of a feed relation
+    // Expected to fail: same as the in-memory case - strong-dep resolution of a feed relation
     // pointing at a database object is not yet implemented. Unskip once the feature lands.
     test.fails('after reload (from disk)', async () => {
       const [spaceKey] = PublicKey.randomSequence();
@@ -339,7 +339,7 @@ describe('strong dependency resolution', () => {
       await peer.reload();
       {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        // Feed handles are created lazily after reload — look up the feed object by id.
+        // Feed handles are created lazily after reload - look up the feed object by id.
         const [feedObj] = await db.query(Filter.id(feedId)).run();
         assert(feedObj != null, 'feed object must survive reload');
 
@@ -355,10 +355,10 @@ describe('strong dependency resolution', () => {
   });
 
   //
-  // Relation source/target — same database (regression baseline; should already pass).
+  // Relation source/target - same database (regression baseline; should already pass).
   //
 
-  describe('relation source/target — same database', () => {
+  describe('relation source/target - same database', () => {
     test('after reload (from disk)', async () => {
       const [spaceKey] = PublicKey.randomSequence();
       await using peer = await builder.createPeer({ types: TYPES });
@@ -420,11 +420,11 @@ describe('strong dependency resolution', () => {
   });
 
   //
-  // Relation source/target — automerge → automerge (cross-space).
+  // Relation source/target - automerge -> automerge (cross-space).
   // Both databases share one hypergraph; the relation's target lives in a different space.
   //
 
-  describe('relation source/target — cross-space (automerge → automerge)', () => {
+  describe('relation source/target - cross-space (automerge -> automerge)', () => {
     test('in-memory', async () => {
       await using peer = await builder.createPeer({ types: TYPES });
       await using dbA = await peer.createDatabase();
@@ -449,10 +449,10 @@ describe('strong dependency resolution', () => {
   });
 
   //
-  // Parent strong dependency — automerge child → feed parent.
+  // Parent strong dependency - automerge child -> feed parent.
   //
 
-  describe('parent strong dependency — automerge → feed', () => {
+  describe('parent strong dependency - automerge -> feed', () => {
     test('in-memory', async () => {
       await using peer = await builder.createPeer({ types: TYPES });
       await using db = await peer.createDatabase();
@@ -474,11 +474,11 @@ describe('strong dependency resolution', () => {
   });
 
   //
-  // Type (schema) strong dependency — stored schema must load before its objects surface.
+  // Type (schema) strong dependency - stored schema must load before its objects surface.
   // Baseline (same-db) should already pass; guards against regressing the existing invariant.
   //
 
-  describe('type (schema) strong dependency — automerge', () => {
+  describe('type (schema) strong dependency - automerge', () => {
     test('object with a stored schema surfaces after reload', async () => {
       const [spaceKey] = PublicKey.randomSequence();
       await using peer = await builder.createPeer();
@@ -511,7 +511,7 @@ describe('strong dependency resolution', () => {
   });
 
   //
-  // Non-strong-dep ref — a plain reference must NOT gate the holder's surfacing.
+  // Non-strong-dep ref - a plain reference must NOT gate the holder's surfacing.
   //
 
   describe('non-strong-dep ref', () => {
@@ -524,7 +524,7 @@ describe('strong dependency resolution', () => {
       const employer = Obj.make(TestSchema.Organization, { name: 'DXOS' });
       await db.appendToFeed(feed, [employer]);
 
-      // `employer` is a non-strong Ref field on Person — the person must surface without it loaded.
+      // `employer` is a non-strong Ref field on Person - the person must surface without it loaded.
       const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', employer: Ref.make(employer) }));
       await db.flush();
 

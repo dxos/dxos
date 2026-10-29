@@ -28,7 +28,7 @@ type MainPanelProps = {
 
 /**
  * One panel of the navigation stack. Its own component because every panel resolves its own graph
- * node, and the stack renders a variable number of them — hooks cannot run in a loop.
+ * node, and the stack renders a variable number of them - hooks cannot run in a loop.
  */
 const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
   const { graph } = Hooks.useAppGraph();

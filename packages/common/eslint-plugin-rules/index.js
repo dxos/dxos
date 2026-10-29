@@ -14,6 +14,7 @@ import effectSubpathImports from './rules/effect-subpath-imports.js';
 import folderBarrelImports from './rules/folder-barrel-imports.js';
 import header from './rules/header.js';
 import importAsNamespace from './rules/import-as-namespace.js';
+import latin1Source from './rules/latin1-source.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noDeadTailwindLogical from './rules/no-dead-tailwind-logical.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
@@ -43,6 +44,7 @@ const plugin = {
     'folder-barrel-imports': folderBarrelImports,
     header,
     'import-as-namespace': importAsNamespace,
+    'latin1-source': latin1Source,
     'no-bare-dot-imports': noBareDotImports,
     'no-dead-tailwind-logical': noDeadTailwindLogical,
     'no-effect-run-promise': noEffectRunPromise,

@@ -52,7 +52,7 @@ const Render = () => {
 
   const [messages, setMessages] = useState(() => [
     message('Alice', 'Should we tighten this opening line?'),
-    message('Bob', 'Agreed — it reads a little slow.'),
+    message('Bob', 'Agreed - it reads a little slow.'),
   ]);
   const onComment = useCallback((_anchor: AnchoredTo.AnchoredTo, text: string) => {
     setMessages((messages) => [...messages, message('You', text)]);

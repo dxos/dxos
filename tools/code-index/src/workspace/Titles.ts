@@ -80,7 +80,7 @@ export const fallback = (prompt: string): string => {
     title = words[0].slice(0, MAX_LENGTH - 1);
     cut = true;
   }
-  return capitalize(cut ? `${title.replace(/[.?!:;,]+$/, '')}…` : title);
+  return capitalize(cut ? `${title.replace(/[.?!:;,]+$/, '')}...` : title);
 };
 
 /**
@@ -90,7 +90,7 @@ export const fallback = (prompt: string): string => {
 export const clean = (reply: string): string | undefined => {
   const line = tidy(reply.split('\n').find((candidate) => candidate.trim().length > 0) ?? '')
     .replace(/^title\s*:\s*/i, '')
-    .replace(/^["'“‘]+|["'”’]+$/g, '')
+    .replace(/^["'\u201C\u2018]+|["'\u201D\u2019]+$/g, '')
     .replace(/[.!:;,]+$/, '')
     .trim();
   const words = line.split(' ').filter(Boolean).length;

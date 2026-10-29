@@ -39,7 +39,7 @@ export const matchPicks = (picks: readonly Pick[], results: readonly Entity[]): 
 
   const real = results.filter((entity) => isResult(entity) && !isThin(entity));
   const byName = (title: string) => {
-    const head = normalize(title.split(/\s[—–-]\s|:|\(/)[0] ?? title);
+    const head = normalize(title.split(/\s[\u2014\u2013-]\s|:|\(/)[0] ?? title);
     if (head.length < 3) {
       return undefined;
     }

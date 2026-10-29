@@ -70,7 +70,7 @@ export type TranscribeConfig = {
 };
 
 /**
- * Raised when a transcriber is built without a transport — no `transcribe` fn and no endpoint.
+ * Raised when a transcriber is built without a transport - no `transcribe` fn and no endpoint.
  * Typed so a caller can tell an unconfigured service from a transcription that failed in flight.
  */
 export class TranscriptionEndpointNotConfiguredError extends BaseError.extend(
@@ -221,7 +221,7 @@ export class Transcriber extends Resource {
 
     const audio = await this._mergeAudioChunks(chunks);
     const fetched = await this._fetchTranscription(audio);
-    // Whisper-family models confabulate over silence — a quiet room or a paused speaker yields
+    // Whisper-family models confabulate over silence - a quiet room or a paused speaker yields
     // phantom text ("Thank you.", subtitle credits) rather than nothing, because the model has no
     // strong "no speech" output. `no_speech_prob` is the model's own confidence that a segment holds
     // no speech, so dropping the confident ones removes the hallucinations at their source.

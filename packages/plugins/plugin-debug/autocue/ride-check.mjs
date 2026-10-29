@@ -18,7 +18,7 @@
 const TEMPLATE = 'Ride Check';
 const PROJECT = 'Ride Check';
 const FEATURE = 'Go / no-go';
-const SUBFEATURE = 'Gust rule — warn above 30 km/h';
+const SUBFEATURE = 'Gust rule - warn above 30 km/h';
 
 /** Kept in step with `ride-check/architecture.dx`; flow scripts take no imports. */
 const DIAGRAM = `diagram flow=down

@@ -219,7 +219,7 @@ describe('groupIntoRuns', () => {
 });
 
 // Minimal Ref whose `.uri` is a valid EID.
-// EntityId is a branded string — the cast on the caller's side is intentional for test fixtures.
+// EntityId is a branded string - the cast on the caller's side is intentional for test fixtures.
 function makeRef(entityId: EntityId): Ref.Ref<never> {
   return Ref.fromURI(EID.make({ entityId })) as Ref.Ref<never>;
 }

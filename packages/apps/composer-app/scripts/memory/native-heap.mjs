@@ -8,7 +8,7 @@
  * `ledger.mjs` can say how many bytes sit under each allocator node but not what asked
  * for them: `partition_alloc/allocated_objects/<unspecified>` is most of a Composer tab's
  * PartitionAlloc and no memory-infra dump provider claims it. Chromium's native sampling
- * heap profiler does have the stacks — the obstacle is that Chrome for Testing and the
+ * heap profiler does have the stacks - the obstacle is that Chrome for Testing and the
  * Chromium snapshot builds are both shipped stripped, so the frames come back as bare
  * addresses.
  *
@@ -144,11 +144,11 @@ const GC_TIMEOUT_MS = 15_000;
 
 const electronBin = path.join(electronRoot, 'Contents/MacOS/Electron');
 if (!existsSync(electronBin)) {
-  console.error(`no Electron at ${electronBin} — run scripts/memory/fetch-electron.sh`);
+  console.error(`no Electron at ${electronBin} - run scripts/memory/fetch-electron.sh`);
   process.exit(1);
 }
 if (!symFile || !existsSync(symFile)) {
-  console.error(`no symbol file at ${symFile ?? '<missing>'} — run scripts/memory/fetch-electron.sh`);
+  console.error(`no symbol file at ${symFile ?? '<missing>'} - run scripts/memory/fetch-electron.sh`);
   process.exit(1);
 }
 
@@ -424,7 +424,7 @@ try {
   if (!version) {
     throw new Error(`Electron never opened a debugger port\n${childLog.slice(0, 2000)}`);
   }
-  console.error(`${version.Browser} — ${url}`);
+  console.error(`${version.Browser} - ${url}`);
 
   let page;
   for (let i = 0; i < 40 && !page; i++) {
@@ -467,7 +467,7 @@ try {
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: IDB_PROBE });
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: MEASURE_PROBE });
   // Linear memory appears in no allocator node, so this is the only instrument that
-  // names the modules behind the residual — and the journey is when automerge grows.
+  // names the modules behind the residual - and the journey is when automerge grows.
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: WASM_PROBE });
   if (persistentProfile && !process.argv.includes('--keep-service-worker')) {
     // A seeded profile holds the service worker and precache of the build it was seeded
@@ -528,7 +528,7 @@ try {
     }
   }
   // Named, because a realm missing from this list is one whose garbage the profile will
-  // report as live — the difference between "retained" and "allocated faster than GC".
+  // report as live - the difference between "retained" and "allocated faster than GC".
   console.error(
     `  collected ${collected} of ${workerSessions.size + 1} attached realms: page, ${[...workerSessions.values()].join(', ')}` +
       ' (service and shared workers live in other processes and do not affect this one)',
@@ -588,7 +588,7 @@ try {
 
   const { profile } = await cdp.send('Memory.getSamplingProfile');
   if (!profile?.samples?.length) {
-    throw new Error('the sampling profile is empty — the renderer was probably swapped on navigation');
+    throw new Error('the sampling profile is empty - the renderer was probably swapped on navigation');
   }
 
   // The allocator ledger for the same renderer, so the sample can be read as a share of it.
@@ -618,7 +618,7 @@ try {
     throw new Error(`the profile carries no Electron Framework module: ${modules.map((m) => m.name).join(', ')}`);
   }
   // Recorded as they are produced rather than recognised by shape afterwards: a
-  // PUBLIC-resolved `name+0x…` is still a name, and a C++ symbol may contain a `+`.
+  // PUBLIC-resolved `name+0x...` is still a name, and a C++ symbol may contain a `+`.
   const unresolvedFrames = new Set();
   const symbolize = (address) => {
     let value;
@@ -680,7 +680,7 @@ try {
     .reduce((sum, sample) => sum + sample.bytes, 0);
 
   // Only a renderer has a PartitionAlloc tree, and the profile came from the renderer the
-  // page is in — which is not the browser's largest process, and not necessarily the first
+  // page is in - which is not the browser's largest process, and not necessarily the first
   // renderer in the trace either, since Composer runs more than one.
   const perPid = new Map();
   for (const event of events) {
@@ -752,7 +752,7 @@ try {
   // The sample is a Poisson estimate, so a few percent over the live total is the
   // estimator; far over means the profile and the dump describe different processes.
   if (live && sampled > live * 1.15) {
-    console.error(`  WARNING: the sample is much larger than pid ${rendererPid}'s live objects — wrong process?`);
+    console.error(`  WARNING: the sample is much larger than pid ${rendererPid}'s live objects - wrong process?`);
   }
 
   const report = (label, skipGeneric) => {
@@ -763,7 +763,7 @@ try {
     }
     console.log(`\n=== ${label} ===`);
     for (const [key, bytes] of [...by].sort((a, b) => b[1] - a[1]).slice(0, 30)) {
-      console.log(`${String(MB(bytes)).padStart(9)} MB  ${key.length > 130 ? `${key.slice(0, 130)}…` : key}`);
+      console.log(`${String(MB(bytes)).padStart(9)} MB  ${key.length > 130 ? `${key.slice(0, 130)}...` : key}`);
     }
   };
   report('bytes by allocating call site', false);
@@ -777,7 +777,7 @@ try {
       /blink::mojom::(blink::)?IDB|blink::IDB|IDBDatabase_|IDBTransaction|IDBRequest/,
     ],
     [
-      'performance.measure(…, {detail}) clones',
+      'performance.measure(..., {detail}) clones',
       /blink::PerformanceMeasure::|blink::UserTiming::|blink::Performance::Measure/,
     ],
     [

@@ -14,7 +14,7 @@ import { type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
 
 export type ObjectSurfaceProps = {
   object: Obj.Unknown;
-  /** Where the fallback chain `slide` → `section` → `card` → title starts. */
+  /** Where the fallback chain `slide` -> `section` -> `card` -> title starts. */
   role?: SlideSurfaceRole;
   attendableId?: string;
 };

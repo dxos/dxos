@@ -35,7 +35,7 @@ type Item = TranscriptEvent | typeof END;
 /**
  * Drives {@link PipelineRuntime} from a live ASR source: blocks pushed via the returned handle are
  * enqueued onto the runtime's source stream; `end` closes the stream so the run drains and resolves.
- * This is the single orchestration entry point for live capture — callers supply only the stages,
+ * This is the single orchestration entry point for live capture - callers supply only the stages,
  * commit sink, and (optional) lookup, mirroring a scripted `PipelineRuntime.run`.
  */
 export const runLivePipeline = (options: Omit<RunOptions, 'source'>): LivePipeline => {

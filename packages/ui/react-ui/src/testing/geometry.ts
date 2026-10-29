@@ -77,7 +77,7 @@ const withArrow = (popup: HTMLElement) => {
 const OVERFLOW_PADDING = 8;
 
 /**
- * Waits until `popup` sits 0–3px below `anchor` (the 2px gutter plus rounding) with its start edge or centre aligned
+ * Waits until `popup` sits 0-3px below `anchor` (the 2px gutter plus rounding) with its start edge or centre aligned
  * to the anchor's, allowing only the shift that keeps it inside the viewport; an unpositioned popup sits at the
  * viewport origin and fails.
  */
@@ -123,7 +123,7 @@ const ARROW_AXIS: Record<
 
 /**
  * Asserts `popup` shows an arrow in its own surface colour on the side facing `anchor` (any of the four), within the
- * anchor's span and with its tip 0–3px (the gutter) from it; the popup body keeps the arrow's half-size further off.
+ * anchor's span and with its tip 0-3px (the gutter) from it; the popup body keeps the arrow's half-size further off.
  * The arrow sits under the popup's content but over its surface, so the popup must be a stacking context: otherwise
  * the surface and its ring paint over the arrow's base and leave only a sliver of it.
  */

@@ -174,9 +174,9 @@ const formatClock = (seconds: number) => {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 };
 
-const formatMs = (value?: number) => (value === undefined ? '–' : `${Math.round(value)} ms`);
+const formatMs = (value?: number) => (value === undefined ? '-' : `${Math.round(value)} ms`);
 
-const formatSeconds = (value?: number) => (value === undefined ? '–' : `${value.toFixed(2)} s`);
+const formatSeconds = (value?: number) => (value === undefined ? '-' : `${value.toFixed(2)} s`);
 
 /** Model loading and errors, beside the record button. */
 const Status = ({ status, error, progress }: UseWhistleResult) => {
@@ -312,7 +312,7 @@ const WhistlePanel = ({
           <Input.Switch label='Low latency' checked={fast} onCheckedChange={({ checked }) => setFast(checked)} />
           <p className='text-sm text-description'>
             A pass every {fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS} ms of new audio.{' '}
-            {fast ? 'Words appear sooner but are wrong more often.' : 'As in Cactus’s own demo.'}
+            {fast ? 'Words appear sooner but are wrong more often.' : "As in Cactus's own demo."}
           </p>
           <label className='flex flex-col gap-1'>
             <span className='text-sm text-description'>Keywords</span>

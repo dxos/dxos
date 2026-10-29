@@ -211,7 +211,7 @@ export const resolveDetailOpen = ({
 /**
  * Computes the next `active` list for a mobile {@link LayoutOperation.Open}: the list is a
  * navigation stack (top = last), so subjects are appended, and an already-open subject moves to
- * the top rather than duplicating — a stack can hold each panel only once.
+ * the top rather than duplicating - a stack can hold each panel only once.
  */
 export const pushSubjectsToStack = (active: readonly string[], subjects: readonly string[]): string[] => {
   const next = active.filter((id) => !subjects.includes(id));

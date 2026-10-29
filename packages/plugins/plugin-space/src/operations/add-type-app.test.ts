@@ -26,7 +26,7 @@ const JSON_SCHEMA = {
 
 describe('SpaceOperation.AddType in the app', () => {
   // The handler reads `Plugin.Service` with `Effect.serviceOption` instead of declaring it, so
-  // nothing in the type system says the app's manager still reaches it — it arrives through the
+  // nothing in the type system says the app's manager still reaches it - it arrives through the
   // process-manager runtime's ambient context, which only this exercises.
   test('activates TypeAdded, which is what makes a lazy module contribute its callback', async ({ expect }) => {
     const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin.make({})] });

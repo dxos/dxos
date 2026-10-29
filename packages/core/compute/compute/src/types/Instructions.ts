@@ -22,7 +22,7 @@ export type Command = Schema.Schema.Type<typeof Command>;
 /**
  * Prompt-based operation.
  * May reference skills and additional context.
- * Hidden from the navtree and object picker — accessed only through Routines.
+ * Hidden from the navtree and object picker - accessed only through Routines.
  */
 export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dxos.type.instructions', '0.1.0'))(
   Schema.Struct({

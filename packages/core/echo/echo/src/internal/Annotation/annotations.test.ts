@@ -157,7 +157,7 @@ describe('annotations', () => {
 
   // `getTypeAnnotation` reads annotations from an Effect Schema. To read off a
   // `Type.Type` entity (static or persisted), unwrap with `Type.getSchema(entity)`
-  // first — that handles both the static `StaticTypeSchemaSlot` case and the
+  // first - that handles both the static `StaticTypeSchemaSlot` case and the
   // persisted `jsonSchema` rebuild case.
   describe('getTypeAnnotation via Type.getSchema(entity)', () => {
     test('returns TypeAnnotation for a static Type.Obj entity', ({ expect }) => {

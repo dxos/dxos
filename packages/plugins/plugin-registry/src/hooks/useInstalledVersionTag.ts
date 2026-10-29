@@ -9,7 +9,7 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 
 /**
  * Tracks the per-plugin installed version (sourced from `UrlLoader` localStorage)
- * as React state so post-install/update re-renders are deterministic — the value
+ * as React state so post-install/update re-renders are deterministic - the value
  * lives in component state rather than being read inline on every render.
  *
  * - Initialised from localStorage at mount.

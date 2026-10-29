@@ -24,7 +24,7 @@ const uriForTag = (tags: readonly Tag.Tag[], key: { source: string; id: string }
 
 /**
  * Resolved uris of the `starred` / `archived` system Tags, keyed by database. Fires only when the
- * Tag set changes (rare — on first star/archive). Shared by every per-Post tag slice.
+ * Tag set changes (rare - on first star/archive). Shared by every per-Post tag slice.
  */
 const tagUrisAtom = Atom.family((db: Database.Database) =>
   db.query(Filter.type(Tag.Tag)).atom.pipe(
@@ -37,7 +37,7 @@ const tagUrisAtom = Atom.family((db: Database.Database) =>
 
 /**
  * This Post's `{ starred, archived }`, sliced off its source Subscription's `tags`. Fires only
- * when this Post's tag membership flips — sibling Posts' tag mutations are discarded without
+ * when this Post's tag membership flips - sibling Posts' tag mutations are discarded without
  * propagating. Re-initialises its tag subscription when tag uris change (first star ever in the space).
  */
 export const postTagsAtom = Atom.family((post: Subscription.Post) =>

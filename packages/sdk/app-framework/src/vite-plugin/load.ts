@@ -17,7 +17,7 @@ const CONFIG_BASENAMES = ['dx.config.ts', 'dx.config.mjs', 'dx.config.js'];
 const decodeConfig2 = Schema.decodeUnknownSync(Config2.Config);
 
 // Evaluated by the subprocess below; dependency-free so any plugin-toolchain node runs it. The
-// result travels through a file (argv[2]) rather than stdout, which belongs to the config — a
+// result travels through a file (argv[2]) rather than stdout, which belongs to the config - a
 // `console.log` during module evaluation would otherwise corrupt the JSON.
 const LOADER_SCRIPT =
   'const module = await import(process.argv[1]); const { writeFileSync } = await import("node:fs"); writeFileSync(process.argv[2], JSON.stringify(module.default));';
@@ -33,14 +33,14 @@ export const findDxConfigFile = (dir: string): string | undefined =>
 
 /**
  * Loads a `dx.config.ts` (or `.mjs`/`.js`) file at the given `filePath`, decoding its default export
- * against the `Config2` schema — a malformed config throws a `Schema` parse error.
+ * against the `Config2` schema - a malformed config throws a `Schema` parse error.
  *
  * The config is evaluated by a subprocess and handed back as JSON, so its imports resolve in the
- * plugin's own module context — one behavior whether the caller is node (`composerPlugin`), bun, or
+ * plugin's own module context - one behavior whether the caller is node (`composerPlugin`), bun, or
  * the compiled CLI, whose embedded resolver cannot reach an external `node_modules`. Under bun the
  * subprocess is the running executable itself, so a plugin builds on a machine without node.
  * `Config2` is pure data, so JSON carries it losslessly. The runtime executes the TypeScript itself
- * (type stripping), so a config may only use erasable syntax — no `enum`, no `namespace`.
+ * (type stripping), so a config may only use erasable syntax - no `enum`, no `namespace`.
  */
 export const loadDxConfig = async (filePath: string): Promise<Config2.Config> => {
   const resultPath = join(tmpdir(), `dx-config-${randomUUID()}.json`);

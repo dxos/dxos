@@ -54,8 +54,8 @@ export const useRelatedItems = ({ artifacts, claudeCode, previewUrl }: RelatedCa
 };
 
 /**
- * What the pull request points at beyond its diff, one card each — its demo media, the preview
- * deployment built from it, and the session that wrote it — in the masonry grid related objects
+ * What the pull request points at beyond its diff, one card each - its demo media, the preview
+ * deployment built from it, and the session that wrote it - in the masonry grid related objects
  * use everywhere else. Renders inside its host's scroller rather than owning one.
  */
 export const RelatedCards = ({ items }: { items: readonly RelatedItem[] }) => (

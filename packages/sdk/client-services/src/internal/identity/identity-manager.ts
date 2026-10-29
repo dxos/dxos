@@ -217,7 +217,7 @@ export class IdentityManager {
   /**
    * Closes the identity and drops its persisted record, so the next open starts without one.
    * The identity's storage (feeds, automerge documents, keys) is wiped separately by the reset
-   * chain — this only tears down the live identity and the metadata that would resurrect it.
+   * chain - this only tears down the live identity and the metadata that would resurrect it.
    */
   async deleteIdentity(ctx: Context): Promise<void> {
     const identity = this._identity;
@@ -529,7 +529,7 @@ export class IdentityManager {
         const adopted = this._pendingHaloSpaceRootUrl;
         if (adopted !== undefined && isValidAutomergeUrl(adopted)) {
           // A second root over the same space would leave the two devices disagreeing about which
-          // document carries the chain, so the joining device takes the one the inviter named — and
+          // document carries the chain, so the joining device takes the one the inviter named - and
           // mints nothing when it cannot, since halo documents have no replication path between
           // devices yet and the root may simply never arrive.
           await echoHost.adoptSpaceRoot(ctx, spaceId, adopted).catch((err) => {
@@ -537,7 +537,7 @@ export class IdentityManager {
           });
           return;
         } else {
-          // HALO has never had a directory — its data has always lived in the control feed — so one
+          // HALO has never had a directory - its data has always lived in the control feed - so one
           // is created here to give the root something to point at.
           if (!echoHost.spaceIds.includes(spaceId)) {
             await echoHost.createSpaceRoot(ctx, identity.haloSpaceKey);

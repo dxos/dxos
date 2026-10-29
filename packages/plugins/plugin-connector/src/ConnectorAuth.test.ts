@@ -172,7 +172,7 @@ describe('ConnectorAuth.actions', () => {
     expect(cursors[0].spec.kind).toBe('external');
 
     // The new binding is covered by the account's routine (its fan-out queries the cursors at run
-    // time); no trigger is persisted at bind time — the routine is offered through the create-routine
+    // time); no trigger is persisted at bind time - the routine is offered through the create-routine
     // form by the target's own sync affordance when the account has none.
     const triggers = await db.query(Filter.type(Trigger.Trigger)).run();
     expect(triggers).toHaveLength(0);

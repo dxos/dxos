@@ -16,7 +16,7 @@ export const BRANCH_TIP_PREFIX = 'branch-tip-';
 export const BRANCH_PREFIX = 'branch-';
 
 export type TimelineModel = {
-  /** Oldest-first, topologically ordered (parents precede children) — the Timeline contract. */
+  /** Oldest-first, topologically ordered (parents precede children) - the Timeline contract. */
   commits: Commit[];
   /** Lane order; main first. */
   branches: string[];
@@ -24,7 +24,7 @@ export type TimelineModel = {
 
 /**
  * Maps an object's version history onto Timeline commits:
- * checkpoints → commits, branch records → fork nodes, `merge:` auto-checkpoints → two-parent
+ * checkpoints -> commits, branch records -> fork nodes, `merge:` auto-checkpoints -> two-parent
  * merge commits, plus a synthetic tip for the current state of main.
  */
 export const createTimelineModel = (
@@ -88,7 +88,7 @@ export const createTimelineModel = (
     push({
       id: `${BRANCH_PREFIX}${branch.id}`,
       branch: label,
-      message: stats ? `${label} (+${stats.insertions} −${stats.deletions})` : label,
+      message: stats ? `${label} (+${stats.insertions} -${stats.deletions})` : label,
       timestamp: new Date(branch.createdAt),
       icon: 'ph--git-branch--regular',
       parents: [lastOnBranch.get(parent)].filter((id): id is string => id !== undefined),
@@ -103,7 +103,7 @@ export const createTimelineModel = (
   for (const version of history.versions) {
     // The lane is the branch the checkpoint was taken on (core: via `branch` key; legacy: via
     // target Text id), else main. A core branch checkpoint shares the root's target id, so it must
-    // be laned by `branch` — otherwise it wrongly lands on main.
+    // be laned by `branch` - otherwise it wrongly lands on main.
     const targetBranch = branchForVersion(version);
     const target = targetBranch ? Branch.label(targetBranch) : MAIN_BRANCH;
 
@@ -114,7 +114,7 @@ export const createTimelineModel = (
 
     // A `merge:` checkpoint on the parent becomes the merge commit (two parents) of the
     // matching merged branch; everything else is a plain checkpoint commit.
-    // TODO(burdon): Replace the label match with a structural version→branch link if branch
+    // TODO(burdon): Replace the label match with a structural version->branch link if branch
     // renaming is introduced (labels are currently immutable: name set once, else createdAt).
     const merged = branches.find(
       (branch) => branch.status === 'merged' && version.name === `merge: ${Branch.label(branch)}`,
@@ -136,7 +136,7 @@ export const createTimelineModel = (
     });
 
     // Emit any branch forked at exactly this revision right after it: `emitBranch` parents to the
-    // parent lane's last commit, which is this version we just pushed — so the fork descends from
+    // parent lane's last commit, which is this version we just pushed - so the fork descends from
     // the checkpoint it was created from rather than from the latest commit.
     for (const branch of branches) {
       if (branch.parent.target?.id === version.target.target?.id && sameHeads(branch.anchor, version.heads)) {
@@ -151,7 +151,7 @@ export const createTimelineModel = (
 
   // Synthetic tip per active branch lane: the editable present of that branch. Without it the last
   // node on a branch lane is its latest checkpoint (a read-only pin), leaving no obvious way back to
-  // the live, editable branch tip — the reviewer would have to click the fork node far upstream.
+  // the live, editable branch tip - the reviewer would have to click the fork node far upstream.
   for (const branch of branches) {
     if (branch.status !== 'active') {
       continue;

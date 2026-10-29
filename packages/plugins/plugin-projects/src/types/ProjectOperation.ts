@@ -21,14 +21,14 @@ import { trim } from '@dxos/util';
  *
  * `Create` is the one that reaches beyond compute/echo: templates are a capability, so it declares
  * `Capability.Service`. That costs a remote host (edge operation-service, workerd) nothing it does
- * not already load — the workerd capability barrel imports `@dxos/app-framework/Capability`
- * itself — and a host contributing no templates still creates a blank project, because the handler
+ * not already load - the workerd capability barrel imports `@dxos/app-framework/Capability`
+ * itself - and a host contributing no templates still creates a blank project, because the handler
  * appends the built-in blank as a fallback. The mailbox pipelines, which do pull an app-only graph
  * (`@dxos/plugin-inbox`, `@dxos/ai`), live in `ProjectMailboxOperation` for that reason.
  */
 
 /**
- * Programmatic project creation — the entry point other plugins use to create (and pre-wire)
+ * Programmatic project creation - the entry point other plugins use to create (and pre-wire)
  * projects without reaching into plugin internals. Resolves the template (the default one when unspecified),
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
  *
@@ -42,7 +42,7 @@ import { trim } from '@dxos/util';
  * One chat for the whole list rather than one per task: a reader delegating three tasks is handing
  * over a body of work, and three parallel sessions could not see each other's results.
  *
- * The checklist is a plain ref array, so a delegated task keeps the task set it came from — the chat
+ * The checklist is a plain ref array, so a delegated task keeps the task set it came from - the chat
  * works on it, it does not take it.
  */
 export const DelegateTaskToChat = Operation.make({
@@ -56,7 +56,7 @@ export const DelegateTaskToChat = Operation.make({
   // feed is a message nobody read.
   services: [Capability.Service, Database.Service, AgentService.AgentService],
   input: Schema.Struct({
-    // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a
+    // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` - a
     // keyword the persisted-operation JSON schema does not carry. The handler rejects an empty list.
     tasks: Schema.Array(Ref.Ref(Task.Task)),
     harness: Schema.optional(
@@ -77,7 +77,7 @@ export const DelegateTaskToChat = Operation.make({
 }).pipe(Operation.mutation('write'));
 
 /**
- * Renders one task as a self-contained prompt for an external coding agent — the task's content, its
+ * Renders one task as a self-contained prompt for an external coding agent - the task's content, its
  * addresses (task, task set, project, space), and what the project is about, so a session started
  * from it can reach the live objects rather than work from a transcription.
  *
@@ -106,12 +106,12 @@ export const CopyTaskPrompt = Operation.make({
 export const Create = Operation.make({
   meta: {
     // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
-    // read as `projects-create` — accurate, but the verb alone is too generic to stand on its own.
+    // read as `projects-create` - accurate, but the verb alone is too generic to stand on its own.
     key: DXN.make('org.dxos.operation.projects.create'),
     name: 'Create Project',
     description:
       'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
-      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
+      'task set for its tasks. Returns the project with a `taskSet` reference - pass that reference ' +
       'to taskCreate to record work against it.',
     icon: 'ph--stack--regular',
   },
@@ -132,7 +132,7 @@ export const Create = Operation.make({
 
 /**
  * The detail read behind a project reference: per-task-set open/total counts, the outline's text,
- * and the artifact inventory with typenames — derived figures and a ref walk that a generic read
+ * and the artifact inventory with typenames - derived figures and a ref walk that a generic read
  * would leave the caller to do one object at a time.
  */
 export const GetProject = Operation.make({
@@ -166,13 +166,13 @@ export const GetProject = Operation.make({
 }).pipe(Operation.mutation('none'));
 
 //
-// Artifacts — the project's work products. The skill's own verbs: `Project.artifacts` is a plain
+// Artifacts - the project's work products. The skill's own verbs: `Project.artifacts` is a plain
 // ref array, but adding is idempotent by entity id, which a generic object patch cannot be.
 //
 
 /**
  * Files an object into `Project.artifacts`, idempotently. The array is plain refs, but membership is
- * compared by entity id — the same object can be addressed local or space-qualified — so a generic
+ * compared by entity id - the same object can be addressed local or space-qualified - so a generic
  * patch would need a read-modify-write and would still double-file a differently-spelled URI.
  */
 export const ArtifactAdd = Operation.make({
@@ -182,11 +182,11 @@ export const ArtifactAdd = Operation.make({
     icon: 'ph--stack-plus--regular',
     description: trim`
       Files an object into a project's artifacts collection.
-      Use this after creating an object (document, outline, sheet, contact, …) while working in a
+      Use this after creating an object (document, outline, sheet, contact, ...) while working in a
       project's context, so the project owns it and it appears in the project's artifacts list.
       When the object was produced for a task on your checklist, pass that task too, so the finished
       task shows what it made. Adding the same object twice is a no-op.
-      A pull request is recorded on the task given — a sub-task fixed on its own carries its own PR;
+      A pull request is recorded on the task given - a sub-task fixed on its own carries its own PR;
       it is refused only when that task already has a different open PR.
     `,
   },
@@ -200,7 +200,7 @@ export const ArtifactAdd = Operation.make({
     task: Schema.optional(
       Ref.Ref(Task.Task).annotate({
         description:
-          'The task this object was produced for, when working one — records it on the task as well, ' +
+          'The task this object was produced for, when working one - records it on the task as well, ' +
           'so a finished task shows what it made.',
       }),
     ),

@@ -28,7 +28,7 @@ export type TriggerKindSelectorProps = {
 /**
  * Single-select list of pluggable trigger variants (Schedule / Feed / Query / Webhook / Email): each row
  * shows an icon, title and description. Built on {@link Listbox} (role=listbox/option, arrow-key navigation);
- * selecting a row emits its kind. Selection is transient — the parent swaps in the variant editor on change.
+ * selecting a row emits its kind. Selection is transient - the parent swaps in the variant editor on change.
  */
 export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
   const { t } = Hooks.useTranslation(RoutineNamespace.key);

@@ -37,7 +37,7 @@ export const Settings = Schema.Struct({
     Schema.Boolean.annotate({
       title: 'Scroll past the last plank',
       description:
-        'Let the deck keep scrolling once the last plank reaches the right edge, so it can be brought to the front like any other plank — the one before it collapses to a spine, leaving empty space beside it.',
+        'Let the deck keep scrolling once the last plank reaches the right edge, so it can be brought to the front like any other plank - the one before it collapses to a spine, leaving empty space beside it.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

@@ -20,7 +20,7 @@ export type VersionToolbarProps = {
 };
 
 /**
- * The version-review banner row shown above the editor while off "main @ now" — a slim strip for the
+ * The version-review banner row shown above the editor while off "main @ now" - a slim strip for the
  * active checkpoint / branch / fork (at most one is selected at a time). Owns the selection handlers
  * (restore, branch-from, merge, view-select, close) so the container only wires the versioning state.
  */
@@ -41,7 +41,7 @@ export const VersionToolbar = ({ versioning }: VersionToolbarProps) => {
     [members],
   );
 
-  // A suggestion branch's tag colour is its author's palette hue — the same colour used for the
+  // A suggestion branch's tag colour is its author's palette hue - the same colour used for the
   // author's avatar/tag and the inline suggestion markers, so a suggestion reads consistently.
   const hue = useCallback((branch: Branch.Branch) => authorHue(branch, members), [members]);
 
@@ -98,7 +98,7 @@ export const VersionToolbar = ({ versioning }: VersionToolbarProps) => {
           timestamp={activeVersion.createdAt}
           onRestore={handleRestore}
           // Branching from a BRANCH revision would fork a sub-branch, which is unsupported
-          // (flat core registry) — offer it only for main revisions. See DESIGN.md.
+          // (flat core registry) - offer it only for main revisions. See DESIGN.md.
           onBranchFrom={activeVersion.branch ? undefined : handleBranchFrom}
           onClose={handleCloseBanner}
         />

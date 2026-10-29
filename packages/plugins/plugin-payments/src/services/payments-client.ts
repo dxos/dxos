@@ -47,7 +47,7 @@ const UNRECOGNIZED_CHAIN_ERROR_CODE = 4902;
 
 /**
  * Ensures the wallet's active chain is Base Sepolia. EIP-3009 signing requires the wallet's active
- * chain to match the payment domain's chainId, so prompt the wallet to switch — and to add the network
+ * chain to match the payment domain's chainId, so prompt the wallet to switch - and to add the network
  * first if it isn't known. Idempotent when already on the right chain.
  */
 const ensureBaseSepolia = async (provider: Eip1193Provider): Promise<void> => {

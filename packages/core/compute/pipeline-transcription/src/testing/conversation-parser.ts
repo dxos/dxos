@@ -3,7 +3,7 @@
 //
 
 // Parser for the human-authored conversation fixture (see `conversation.txt`).
-// Captures both the seed entities (Persons, Organizations, …) and the speaker-tagged
+// Captures both the seed entities (Persons, Organizations, ...) and the speaker-tagged
 // dialogue used by `stream-simulator.ts` to feed the pipeline in tests.
 
 export type ConversationEntity = {
@@ -31,7 +31,7 @@ export type ParsedConversation = {
  * Parse the on-disk conversation format into structured data.
  *
  * Tolerates leading whitespace inside blocks and ignores blank / `#` comment lines.
- * Throws if the input doesn't contain a `Conversation:` block — `Entities:` is optional.
+ * Throws if the input doesn't contain a `Conversation:` block - `Entities:` is optional.
  */
 export const parseConversation = (input: string): ParsedConversation => {
   const lines = input.split('\n').map((line) => line.replace(/\s+$/, ''));

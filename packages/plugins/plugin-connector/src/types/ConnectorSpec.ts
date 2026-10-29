@@ -65,9 +65,9 @@ export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof Mater
 
 /**
  * Minimum input for provider {@link ConnectorSync.operation} operations: the account to reconcile.
- * Every connection is potentially multi-target, so a sync operation is account-level — it covers all
+ * Every connection is potentially multi-target, so a sync operation is account-level - it covers all
  * of the connection's bindings (see `Binding.syncAll` for the shared fan-out). A connector uses this
- * schema as its sync operation's `input` directly, or spreads `SyncInput.fields` to extend it — so a
+ * schema as its sync operation's `input` directly, or spreads `SyncInput.fields` to extend it - so a
  * change to the contract lands in every connector at once.
  */
 export const SyncInput = Schema.Struct({
@@ -93,7 +93,7 @@ export type OnTokenCreated = (input: {
   connection: Connection.Connection;
   /**
    * Pre-existing local object the caller wants to bind as the connection's
-   * first sync target — set when the auth flow was initiated from a surface
+   * first sync target - set when the auth flow was initiated from a surface
    * that already has the target object in scope (e.g. an `InitializeMailbox`
    * button on an existing Mailbox). When omitted, single-target connectors
    * (Gmail) materialize a fresh target object.
@@ -103,16 +103,16 @@ export type OnTokenCreated = (input: {
 
 /**
  * Everything a connector needs to sync: the account-level sync operation, how targets are discovered
- * and materialized, the per-binding options schema, and — when the connector wants its bindings kept
- * up to date in the background — the trigger spec to schedule that on.
+ * and materialized, the per-binding options schema, and - when the connector wants its bindings kept
+ * up to date in the background - the trigger spec to schedule that on.
  */
 export type ConnectorSync = {
   /** Reconcile every binding of a connection with its remote (see `Binding.syncAll`). */
   operation: Operation.Definition<SyncInput, SyncOutput>;
   /**
    * Typename of the local object this connector binds as a sync target (e.g. a Mailbox for a mail
-   * connector). Declaring it here is what lets a target *type* ask which connectors can bind it —
-   * `connectorIdsForTarget` — instead of the type naming its providers, so a schema never has to know
+   * connector). Declaring it here is what lets a target *type* ask which connectors can bind it -
+   * `connectorIdsForTarget` - instead of the type naming its providers, so a schema never has to know
    * that Gmail or JMAP exist and a third-party provider can bind it without touching the domain plugin.
    * Omit for a targetless connector, which writes objects straight into the space rather than binding a
    * root (e.g. Google Contacts).
@@ -131,9 +131,9 @@ export type ConnectorSync = {
    */
   auto?: boolean;
   /**
-   * Schedule to keep bindings in sync on — a timer cron, a subscription, whatever the connector
-   * wants. The connection gets one account-level Routine wrapping a trigger with this spec — created
-   * through the create-routine form, never silently — and that trigger is also what a manual sync
+   * Schedule to keep bindings in sync on - a timer cron, a subscription, whatever the connector
+   * wants. The connection gets one account-level Routine wrapping a trigger with this spec - created
+   * through the create-routine form, never silently - and that trigger is also what a manual sync
    * force-runs, so scheduled and on-demand syncs share the dispatcher's durable execution. Omit for a
    * connector that should only sync on demand: {@link operation} is then invoked directly.
    */
@@ -142,7 +142,7 @@ export type ConnectorSync = {
    * Run the sync on EDGE rather than on the client. Defaults to false: a connector opts in only once
    * its sync operation is registered in the workerd plugin build, since a remote trigger is dispatched
    * where the client may be closed. Applies to newly created sync Routines; an existing Routine keeps
-   * whatever the user last chose in the trigger editor. Only meaningful alongside {@link trigger} —
+   * whatever the user last chose in the trigger editor. Only meaningful alongside {@link trigger} -
    * with no trigger spec there is no Routine to mark, and the on-demand path invokes {@link operation}
    * locally.
    */
@@ -184,10 +184,10 @@ export type ConnectorOAuthSpec = {
 /**
  * Result of a connector credential form submission.
  *
- * `complete` — for non-OAuth flows: the form yields a fully built
+ * `complete` - for non-OAuth flows: the form yields a fully built
  * `AccessToken` + `Connection` and the coordinator persists them.
  *
- * `oauth` — for OAuth flows that need pre-flight input (e.g. atproto
+ * `oauth` - for OAuth flows that need pre-flight input (e.g. atproto
  * handle): the coordinator opens the auth window and forwards
  * `loginHint` to Edge.
  */
@@ -224,7 +224,7 @@ export type CredentialFormResult =
 /**
  * Per-connector form rendered by the generic connector-form dialog. One
  * shape covers both non-OAuth (custom token, IMAP) and OAuth pre-flight
- * (atproto handle) — the discriminator on `onSubmit`'s result tells the
+ * (atproto handle) - the discriminator on `onSubmit`'s result tells the
  * coordinator which path to take next.
  */
 export type CredentialForm<Values = any> = {
@@ -242,7 +242,7 @@ export type CredentialForm<Values = any> = {
    * Build the next step of the connection flow from form values.
    *
    * Failures (`Effect.fail`) propagate to the coordinator and surface in the dialog's
-   * `Effect.catch` — use these for user-visible validation messages. Do NOT `Effect.orDie`
+   * `Effect.catch` - use these for user-visible validation messages. Do NOT `Effect.orDie`
    * validation errors; defects bypass the dialog's failure handler and crash the request.
    */
   onSubmit: (input: {
@@ -261,7 +261,7 @@ export type CredentialForm<Values = any> = {
 export type ConnectorKind = 'user' | 'app' | 'custom';
 
 /**
- * One Connector capability row — shape of entries contributed via {@link Connector}.
+ * One Connector capability row - shape of entries contributed via {@link Connector}.
  * A connector is the reusable driver for a service: it knows how to authenticate
  * (oauth / credentialForm), discover and materialize sync targets, and sync them.
  */
@@ -279,19 +279,19 @@ export type ConnectorEntry = {
   /**
    * Renders before authentication. Use for non-OAuth credentials (custom
    * token, IMAP host/port/user/password) or OAuth pre-flight inputs (atproto
-   * handle / DID). The submit result decides what runs next — see
+   * handle / DID). The submit result decides what runs next - see
    * {@link CredentialFormResult}.
    */
   credentialForm?: CredentialForm<any>;
   onTokenCreated?: OnTokenCreated;
   /**
    * Probe whether the stored credential still works (see {@link TestConnection}).
-   * When present, the connection is tested on open and — if the connector also
-   * declares {@link oauth} — the user is offered a reauthenticate action on failure.
+   * When present, the connection is tested on open and - if the connector also
+   * declares {@link oauth} - the user is offered a reauthenticate action on failure.
    */
   testConnection?: TestConnection;
   /**
-   * Non-secret facts about this connection, listed in its settings — the bucket and endpoint of an
+   * Non-secret facts about this connection, listed in its settings - the bucket and endpoint of an
    * S3 connection, the host of an IMAP one. Answers "which account is this?" without making the
    * user re-derive it from an opaque `source` hostname, and gives a failed test something concrete
    * to be read against.
@@ -312,7 +312,7 @@ export type ConnectorEntry = {
 
 /**
  * Capability registry token for Connector contributions (auth + discovery + sync wiring).
- * Multi: every service-specific connector plugin (Bluesky, Discord, GitHub, …) contributes its
+ * Multi: every service-specific connector plugin (Bluesky, Discord, GitHub, ...) contributes its
  * own entry array alongside plugin-connector's built-ins.
  */
 export const Connector = Capability.make<ConnectorEntry[]>()('org.dxos.plugin.connector.capability.connector');
@@ -329,7 +329,7 @@ export const Connector = Capability.make<ConnectorEntry[]>()('org.dxos.plugin.co
  * ```
  *
  * That inverts the dependency. A domain type keeps no provider names, so adding a provider means
- * registering a {@link Connector} — no edit to the type it binds — and a third-party provider can bind
+ * registering a {@link Connector} - no edit to the type it binds - and a third-party provider can bind
  * a built-in type without the domain plugin knowing it exists. It also removes the duplicate-constant
  * problem the literal form creates: the id lived in both the provider and the domain plugin, kept in
  * step by hand.

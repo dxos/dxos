@@ -13,7 +13,7 @@ const BOX_PADDING = 2;
 
 /**
  * Operations a document supplies so whole blocks can be selected, reordered, and cut/copy/pasted. The
- * same contract backs markdown top-level blocks and outliner items — nothing here is markdown-specific.
+ * same contract backs markdown top-level blocks and outliner items - nothing here is markdown-specific.
  */
 export type BlockOps = {
   /** Blocks in document order; ranges non-overlapping. Should be memoized per state. */
@@ -27,14 +27,14 @@ export type BlockOps = {
   serialize: (state: EditorState, blocks: Block[]) => string;
   /**
    * Removes the blocks at `indices` and, when `text` is non-null, inserts it as block(s) at the first
-   * removed slot — as a single edit. `text === null` is a pure delete (cut); non-null is a replace (paste).
+   * removed slot - as a single edit. `text === null` is a pure delete (cut); non-null is a replace (paste).
    */
   replaceBlocks: (view: EditorView, indices: number[], text: string | null) => void;
 };
 
 //
 // State: the block selection is an ordered set of block anchors (each block's `from`), kept sorted.
-// Positions — not indices — so the set survives edits (mapped through changes).
+// Positions - not indices - so the set survives edits (mapped through changes).
 //
 
 /** Replaces the whole block selection. */
@@ -269,7 +269,7 @@ export const createBlockSelectionHighlight = (getBlocks: BlockOps['getBlocks'], 
 /**
  * Whole-block selection state and cut/copy/paste over the selected blocks. The border/background behind
  * the selection is drawn by `createBlockSelectionHighlight`, and the gutter grip gestures that populate
- * the selection live in `createBlockDrag` (the handle is a gutter marker) — compose all three together.
+ * the selection live in `createBlockDrag` (the handle is a gutter marker) - compose all three together.
  */
 export const createBlockSelection = (ops: BlockOps): Extension => [
   blockSelectionField,

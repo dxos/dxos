@@ -49,8 +49,8 @@ export const Compartment = Schema.Struct({
 export type Compartment = Schema.Schema.Type<typeof Compartment>;
 
 /**
- * A node, or a group when its kind admits children — there is no separate group entity, which is
- * also how React Flow models it. `parent` is child→parent so multi-parent is unrepresentable.
+ * A node, or a group when its kind admits children - there is no separate group entity, which is
+ * also how React Flow models it. `parent` is child->parent so multi-parent is unrepresentable.
  */
 export const Node = Schema.Struct({
   id: Schema.String,
@@ -89,7 +89,7 @@ export type Graph = Schema.Schema.Type<typeof Graph>;
 /**
  * What a dialect's `project` returns. Named for the operation rather than the artifact so it does
  * not collide with the `Diagram` component. `provenance` maps entity id to a dialect-private handle
- * back into the source (a text span, an AST path, a DXN) and is opaque here — only `apply` reads it.
+ * back into the source (a text span, an AST path, a DXN) and is opaque here - only `apply` reads it.
  */
 export const Projection = Schema.Struct({
   graph: Graph,
@@ -121,7 +121,7 @@ export const isGroup = (node: Node): boolean => node.type === GROUP;
 export const childrenOf = (graph: Graph, id: string | undefined): readonly Node[] =>
   graph.nodes.filter((node) => node.parent === id);
 
-/** Root nodes — those with no parent. */
+/** Root nodes - those with no parent. */
 export const rootsOf = (graph: Graph): readonly Node[] => childrenOf(graph, undefined);
 
 export const findNode = (graph: Graph, id: string): Node | undefined => graph.nodes.find((node) => node.id === id);

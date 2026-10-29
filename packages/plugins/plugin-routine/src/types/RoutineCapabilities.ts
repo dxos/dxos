@@ -26,7 +26,7 @@ export const AgentDelegationStrategy = Capability.make<DelegationStrategy>()(
 
 /**
  * Id of the built-in blank template. Declared here (rather than on the template itself) so callers that
- * scaffold a routine without the picker — e.g. a project's toolbar — can name it without importing the
+ * scaffold a routine without the picker - e.g. a project's toolbar - can name it without importing the
  * template module.
  */
 export const BlankTemplateId = 'org.dxos.routine.blank';
@@ -47,7 +47,7 @@ export type Template = {
   /** Values the create panel collects as a form before scaffolding; omit and it scaffolds on selection. */
   inputSchema?: Schema.Codec<any, any>;
   /**
-   * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned
+   * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph - the routine plus its owned
    * trigger and instructions, assembled by `makeRoutine`. The create flow persists it with a single
    * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
    * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `input` carries

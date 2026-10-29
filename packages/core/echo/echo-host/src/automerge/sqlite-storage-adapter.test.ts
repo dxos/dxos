@@ -160,7 +160,7 @@ describe('SqliteStorageAdapter', () => {
 
   // The range bounds are anchored on the separator, so a prefix selects whole segments only. A
   // bounds anchored on the prefix itself would degrade to a raw string-prefix match and return these
-  // siblings — a different document's chunks. The key layout is protocol, so pin the boundary.
+  // siblings - a different document's chunks. The key layout is protocol, so pin the boundary.
   test('loadRange matches whole segments, not string prefixes', async () => {
     const adapter = await setup();
     const target = ['sub', 'doc1'];
@@ -179,7 +179,7 @@ describe('SqliteStorageAdapter', () => {
     expect(range.map((chunk) => chunk.key)).toEqual([[...target, 'chunk']]);
   });
 
-  // `loadRange` must also return a key stored at exactly the queried prefix — the production
+  // `loadRange` must also return a key stored at exactly the queried prefix - the production
   // `subduction-ids-<sid>` records are shaped that way, and dropping the equality branch in favour of
   // a pure descendant range would silently stop finding them.
   test('loadRange includes a key stored at exactly the prefix', async () => {

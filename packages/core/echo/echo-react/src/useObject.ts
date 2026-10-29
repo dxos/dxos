@@ -30,8 +30,8 @@ export const useObject: {
    * @returns The current target snapshot (or undefined if not loaded) and update callback
    *
    * @idiom org.dxos.echo-react.useObjectReactive
-   *   applies: Reading a ref's target (or a specific property) inside a React component — establishes a reactive subscription so the component re-renders when the ref resolves or the value changes
-   *   instead-of: `ref.target` — synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never triggers a re-render when it becomes available
+   *   applies: Reading a ref's target (or a specific property) inside a React component - establishes a reactive subscription so the component re-renders when the ref resolves or the value changes
+   *   instead-of: `ref.target` - synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never triggers a re-render when it becomes available
    *   uses: {@link useObject}
    *   related: org.dxos.echo.objAtomReactive, org.dxos.echo.refLoad
    */
@@ -242,8 +242,8 @@ const useObjectProperty = <T extends Obj.Unknown | Obj.Snapshot, K extends keyof
  * across multiple refs without using .target directly.
  *
  * @deprecated Subscribes the component to the whole list, re-rendering on any element's change. Prefer pushing
- * the subscription down — derive the aggregate in an atom (reading each `Obj.atom(ref)`) and read it where it is
- * needed, or subscribe to the individual ref/property closest to the consumer — to keep subscriptions granular.
+ * the subscription down - derive the aggregate in an atom (reading each `Obj.atom(ref)`) and read it where it is
+ * needed, or subscribe to the individual ref/property closest to the consumer - to keep subscriptions granular.
  *
  * @param refs - Array of Refs to dereference and subscribe to
  * @returns Array of loaded target snapshots (excludes unloaded refs)

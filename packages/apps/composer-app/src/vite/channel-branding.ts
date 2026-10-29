@@ -6,10 +6,10 @@
 //
 // Every non-production channel deploys as its own app on its own origin, and the desktop builds install
 // side by side (see `.github/actions/cn-config`). Shared artwork makes those indistinguishable once
-// they are open — the same tab favicon, the same mark on the boot screen — so each channel ships a
+// they are open - the same tab favicon, the same mark on the boot screen - so each channel ships a
 // recoloured mark. `pnpm icons:variants` generates them; this module decides which set a build uses.
 //
-// To see a deployed channel's artwork, bundle with its environment and preview the output — `vite preview`
+// To see a deployed channel's artwork, bundle with its environment and preview the output - `vite preview`
 // serves `out/composer`:
 //
 //   DX_ENVIRONMENT=preview moon run composer-app:bundle && pnpm exec vite preview
@@ -23,11 +23,11 @@ import { type ConfigEnv, type PluginOption } from 'vite';
 
 import { type Channel, CHANNELS, channelMarkFilter, isChannel } from '@dxos/brand/channels';
 
-/** A prerelease channel — `@dxos/brand` owns the set and each one's colour; this module applies them to a build. */
+/** A prerelease channel - `@dxos/brand` owns the set and each one's colour; this module applies them to a build. */
 export type ChannelVariant = Channel;
 
 /**
- * Every icon the shell hands the browser — `index.html`'s `<link rel=icon>` set plus the two
+ * Every icon the shell hands the browser - `index.html`'s `<link rel=icon>` set plus the two
  * `site.webmanifest` names. The manifest pair matters as much as the favicons: a browser picks the tab
  * and app icon from both, so leaving them blue shows the released mark next to the channel's own.
  * Replaced wholesale, so a variant set must carry all of them.
@@ -106,7 +106,7 @@ export const applyChannelFavicons = (appDir: string, outDir: string, variant: Ch
     const from = path.join(source, favicon);
     if (!existsSync(from)) {
       // A half-generated variant would ship production's mark on a prerelease, which is the exact
-      // confusion this exists to prevent — fail the build instead.
+      // confusion this exists to prevent - fail the build instead.
       throw new Error(`channel favicon missing: ${from} (run \`pnpm icons:variants\`)`);
     }
     copyFileSync(from, path.join(outDir, favicon));

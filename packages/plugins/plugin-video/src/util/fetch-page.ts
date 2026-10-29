@@ -79,7 +79,7 @@ export const fetchPage = (url: string): Effect.Effect<string, FetchError> => {
 
 /**
  * Fetch a raw resource body as text through the EDGE CORS proxy. Use this (rather than {@link
- * fetchPage}) for data endpoints — e.g. a caption timed-text URL — where the rendered-DOM result of
+ * fetchPage}) for data endpoints - e.g. a caption timed-text URL - where the rendered-DOM result of
  * the CRX render-proxy would corrupt a non-HTML response.
  */
 export const fetchResource = (url: string): Effect.Effect<string, FetchError> =>

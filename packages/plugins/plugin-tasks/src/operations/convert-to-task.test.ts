@@ -39,7 +39,7 @@ describe('convert-to-task', () => {
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text] }))),
   );
 
-  it.effect('the outline markdown is left untouched — the item is copied, not moved', () =>
+  it.effect('the outline markdown is left untouched - the item is copied, not moved', () =>
     Effect.gen(function* () {
       const taskSet = yield* seed();
       const outline = yield* Database.add(Outline.make({ name: 'Launch plan', content: '- [ ] first\n- [ ] second' }));

@@ -512,8 +512,8 @@ describe('AutomergeHost with Subduction', () => {
       }
     });
 
-    // Holder's `shouldAdvertise` returns false → `_subductionPolicy.authorizeFetch`
-    // on the holder rejects the fetcher's request → fetcher's query never reaches
+    // Holder's `shouldAdvertise` returns false -> `_subductionPolicy.authorizeFetch`
+    // on the holder rejects the fetcher's request -> fetcher's query never reaches
     // `'ready'` and the local doc stays empty.
     test('unauthorized holder blocks fetcher (authorizeFetch denial)', async ({ expect }) => {
       const gate = createDenyGate();
@@ -577,7 +577,7 @@ describe('AutomergeHost with Subduction', () => {
 
         // Flip the holder to allow, then drive a no-op commit on the holder.
         // Creating a fresh doc on host2 schedules `_sharePolicyChangedTask`, which
-        // calls `_repo.shareConfigChanged()` on host2 — the documented recovery
+        // calls `_repo.shareConfigChanged()` on host2 - the documented recovery
         // hatch for `authorizeFetch`-denied entries.
         host2Replicator.shouldAdvertise = () => true;
         await host2.createDoc({ kick: true });
@@ -629,7 +629,7 @@ describe('AutomergeHost with Subduction', () => {
           // repoPeerId on side X should match the OTHER host's repo peerId.
           const expectedRemote = side === 'host1' ? host2.peerId : host1.peerId;
           expect(binding.repoPeerId).toEqual(expectedRemote);
-          // The subduction PeerId is the verified signer Ed25519 pubkey hex — disjoint
+          // The subduction PeerId is the verified signer Ed25519 pubkey hex - disjoint
           // from the repo PeerId (which is the `host-<random>` label).
           expect(binding.subductionPeerId.toString()).not.toEqual(binding.repoPeerId);
         }
@@ -642,7 +642,7 @@ describe('AutomergeHost with Subduction', () => {
   });
 
   // Characterization of `_subductionPolicy` recovery behavior introduced by
-  // PR 11351 — relevant to the production sync-divergence investigation.
+  // PR 11351 - relevant to the production sync-divergence investigation.
   //
   // Setup: both hosts have the same documents with DIVERGENT commits (each
   // side has one local commit the other lacks), mirroring production state
@@ -654,8 +654,8 @@ describe('AutomergeHost with Subduction', () => {
   // initial subduction sync round (confirmed via subduction_core WARNs
   // `policy denied: authorizePut denied by client share policy`), flipping
   // the policy to allow recovers replication in seconds on `AutomergeHost`'s
-  // own machinery — no fresh commit and no `shareConfigChanged()` from the
-  // test — PROVIDED the scope change is signalled.
+  // own machinery - no fresh commit and no `shareConfigChanged()` from the
+  // test - PROVIDED the scope change is signalled.
   //
   // CORRECTION: an earlier reading of this test had recovery needing no
   // signal at all. It does. `_sharePolicyChangedTask` is scheduled by
@@ -667,7 +667,7 @@ describe('AutomergeHost with Subduction', () => {
   // `MeshEchoReplicator.authorizeDevice`), so the test now does too.
   //
   // This contradicts the raw-Repo F1 test in
-  // `automerge-repo-subduction.test.ts` ("authorizePut deny → allow needs
+  // `automerge-repo-subduction.test.ts` ("authorizePut deny -> allow needs
   // a fresh holder commit to recover"), suggesting that the
   // `AutomergeHost` wrapper papers over the raw bridge's recovery gap.
   //
@@ -710,7 +710,7 @@ describe('AutomergeHost with Subduction', () => {
       return true;
     };
 
-    test('deny→allow flip recovers via AutomergeHost machinery once the scope change is signalled', async ({
+    test('deny->allow flip recovers via AutomergeHost machinery once the scope change is signalled', async ({
       expect,
     }) => {
       const rt1 = createRuntime();
@@ -750,8 +750,8 @@ describe('AutomergeHost with Subduction', () => {
 
         allowOnHost1 = true;
         // Signal the scope change the way production does. `_sharePolicyChangedTask` is scheduled
-        // by exactly three things — `onConnectionOpen`, `onConnectionAuthScopeChanged`, and an
-        // incidental `documentRequested` — and flipping a `shouldAdvertise` closure fires none of
+        // by exactly three things - `onConnectionOpen`, `onConnectionAuthScopeChanged`, and an
+        // incidental `documentRequested` - and flipping a `shouldAdvertise` closure fires none of
         // them, so without this the test waits on a heal retry happening to ask host1 for a doc.
         // That is why it failed at windows of 10s, 20s, 35s and 70s alike.
         for (const connection of host1Replicator.connections) {
@@ -851,7 +851,7 @@ describe('AutomergeHost with Subduction', () => {
   // production wiring for peer-to-peer DXOS connections; it gates per-space
   // via `authorizeDevice(await createIdFromSpaceKey(spaceKey), deviceKey)`.
   describe('subductionPolicy + MeshEchoReplicator', () => {
-    // Two hosts in the same space, both authorized → doc replicates.
+    // Two hosts in the same space, both authorized -> doc replicates.
     test('authorized peers in same space replicate', async ({ expect }) => {
       const spaceKey = PublicKey.random();
       const teleportBuilder = new TeleportBuilder();
@@ -882,7 +882,7 @@ describe('AutomergeHost with Subduction', () => {
 
     // Two hosts in the same space, but neither side `authorizeDevice`s the other.
     // `MeshReplicatorConnection.shouldAdvertise` consults `_authorizedDevices`, which
-    // is empty → `_subductionPolicy.authorizeFetch` rejects on the holder → fetcher
+    // is empty -> `_subductionPolicy.authorizeFetch` rejects on the holder -> fetcher
     // never reaches `'ready'`.
     test('unauthorized peers cannot fetch (authorizeFetch denial)', async ({ expect }) => {
       const spaceKey = PublicKey.random();
@@ -902,7 +902,7 @@ describe('AutomergeHost with Subduction', () => {
       await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
 
       // An unauthorized mesh connection advertises nothing, so there is no refusal to observe and
-      // no traffic to drain — the bounded window is the assertion.
+      // no traffic to drain - the bounded window is the assertion.
       const progress = host1.host.acquireDoc<{ text: string }>(handle.documentId);
       await sleep(NO_TRAFFIC_WINDOW_MS);
       expect(progress.state).to.not.equal('ready');
@@ -911,7 +911,7 @@ describe('AutomergeHost with Subduction', () => {
 
     // Start unauthorized; the holder's `_subductionPolicy.authorizeFetch` rejects.
     // Then authorize the device on the holder and drive a fresh commit (which schedules
-    // `_sharePolicyChangedTask` → `_repo.shareConfigChanged()` on the holder — the
+    // `_sharePolicyChangedTask` -> `_repo.shareConfigChanged()` on the holder - the
     // documented recovery hatch). The denied entry on the fetcher should clear and
     // the doc syncs.
     test('authorizeDevice after denial recovers replication', async ({ expect }) => {
@@ -957,7 +957,7 @@ describe('AutomergeHost with Subduction', () => {
     // Per-space authorization scoping: a device authorized for space A must not be
     // able to fetch documents that belong to space B, even on the same connection.
     // Verifies that `_subductionPolicy.authorizeFetch` resolves the doc's
-    // `spaceKey` via `getContainingSpaceForDocument` → `_getSpaceKeyByRootDocumentId`
+    // `spaceKey` via `getContainingSpaceForDocument` -> `_getSpaceKeyByRootDocumentId`
     // and that `MeshReplicatorConnection.shouldAdvertise` rejects when the device
     // is not in `_authorizedDevices[spaceB]`.
     test('device authorized for space A cannot fetch space B docs', async ({ expect }) => {
@@ -1016,8 +1016,8 @@ describe('AutomergeHost with Subduction', () => {
         )
         .toEqual('space-A-doc');
 
-      // Space B doc does NOT — host2's `_subductionPolicy.authorizeFetch` resolves
-      // its space → spaceB, finds no authorized devices for spaceB, rejects.
+      // Space B doc does NOT - host2's `_subductionPolicy.authorizeFetch` resolves
+      // its space -> spaceB, finds no authorized devices for spaceB, rejects.
       // No wait needed: the space-A poll above already observed this connection carrying a doc, so
       // anything space B was going to receive over it would have arrived by now.
       const progress = host1.host.acquireDoc<{ text: string }>(spaceBDocId);
@@ -1071,7 +1071,7 @@ type MeshTestPeer = {
  * Spin up an `AutomergeHost` whose subduction transport carries a
  * `MeshEchoReplicator`, the production p2p wiring. The host's
  * `getSpaceKeyByRootDocumentId` is stubbed to return the test space key for any
- * document id, so `_subductionPolicy.authorizeFetch` → `MeshReplicatorConnection.shouldAdvertise`
+ * document id, so `_subductionPolicy.authorizeFetch` -> `MeshReplicatorConnection.shouldAdvertise`
  * resolves the space lookup without depending on actual `DatabaseDirectory` docs.
  */
 const setupMeshAutomergeHost = async ({
@@ -1092,7 +1092,7 @@ const setupMeshAutomergeHost = async ({
     runtime,
     useSubduction: true,
     // Bypass DatabaseDirectory lookup: route every doc through a synthetic
-    // `documentId → spaceKey` map so `MeshReplicatorConnection.shouldAdvertise`
+    // `documentId -> spaceKey` map so `MeshReplicatorConnection.shouldAdvertise`
     // can look up `_authorizedDevices[space]` without depending on
     // `DatabaseDirectory`-shaped contents.
     getSpaceKeyByRootDocumentId: spaceLookup ?? (() => spaceKey),

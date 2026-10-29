@@ -78,7 +78,7 @@ export class BootCacheStore {
     const store = db.transaction(STORE, 'readonly').objectStore(STORE);
     const [streams, spaces] = await Promise.all([
       request(store.get(STREAMS_KEY)),
-      request(store.getAll(IDBKeyRange.bound(SPACE_PREFIX, `${SPACE_PREFIX}￿`))),
+      request(store.getAll(IDBKeyRange.bound(SPACE_PREFIX, `${SPACE_PREFIX}\uFFFF`))),
     ]);
     if (!isStreamsEntry(streams)) {
       return undefined;

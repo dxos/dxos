@@ -166,7 +166,7 @@ describe('Obj.getChanges', () => {
     expect(Obj.getVersion(task, newest.heads)).toMatchObject({ title: 'live', description: 'base fork' });
   });
 
-  test('changes replicated from another peer carry that peer’s actor', async ({ expect }) => {
+  test("changes replicated from another peer carry that peer's actor", async ({ expect }) => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     await using peer1 = await builder.createPeer({ types: [TestSchema.Task] });

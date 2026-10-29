@@ -23,7 +23,7 @@ import { applyKeep, resolveSelected } from './curate-magazine.ts';
 
 /**
  * Whether the model picks the right articles is a judgement question, graded out-of-band; scripting
- * its selection keeps this on the operation's own behaviour — that the chosen ids are resolved,
+ * its selection keeps this on the operation's own behaviour - that the chosen ids are resolved,
  * recorded on the magazine, and counted.
  *
  * The script is per-test state, but the layer captures the turns array once at module load and the
@@ -124,7 +124,7 @@ describe('applyKeep', () => {
   });
 
   // Curated posts live in a feed queue, whose refs never populate `ref.target`. The bound used to
-  // read the target directly, so every prior post counted as unresolved and escaped it — the list
+  // read the target directly, so every prior post counted as unresolved and escaped it - the list
   // grew past `keep` on every run.
   test('bounds posts whose refs do not resolve their target', async () => {
     const { db } = await setup();
@@ -135,7 +135,7 @@ describe('applyKeep', () => {
       URI.make(`${Obj.getURI(post).toString().split('/').slice(0, -1).join('/')}/${QUEUE_ID}/${post.id}`);
     const entries = posts.map((post) => ({ ref: Ref.fromURI(queueUri(post)), post }));
     // Guards the test itself: if these refs ever resolve, it no longer covers the case it was written
-    // for. A ref with no resolver throws on `target` rather than returning undefined — which is the
+    // for. A ref with no resolver throws on `target` rather than returning undefined - which is the
     // second reason the bound must not read it.
     const resolvesTarget = (ref: Ref.Ref<Subscription.Post>) => {
       try {
@@ -234,7 +234,7 @@ describe('CurateMagazine', () => {
 
   // A second run is a different code path from the first: it resolves the already-curated refs before
   // bounding them, and filters them out of the candidate set. Curating only into an empty magazine
-  // left both untested — which is how re-running used to re-offer, and re-add, every curated post.
+  // left both untested - which is how re-running used to re-offer, and re-add, every curated post.
   it.effect(
     'does not offer posts it already curated as candidates',
     Effect.fnUntraced(
@@ -267,7 +267,7 @@ describe('CurateMagazine', () => {
 
         // Both runs are scripted up front: the model reads the turn list by index across the whole
         // test, so a selection queued between runs would arrive after the second run asked for it.
-        // Each run picks the same post — the second run must not be able to.
+        // Each run picks the same post - the second run must not be able to.
         scripted.select([posts[0].id]);
         scripted.select([posts[0].id]);
         scripted.select([posts[0].id]);

@@ -24,7 +24,7 @@ export type MobileStack = {
 /**
  * Projects the active deck as a mobile navigation stack: `active` is the stack (top = last), the
  * workspace itself is the root panel beneath it, so back is Close until the stack is empty and
- * SwitchWorkspace(root) from there — the same operations every other surface uses.
+ * SwitchWorkspace(root) from there - the same operations every other surface uses.
  */
 export const useMobileStack = (): MobileStack => {
   const { state, deck } = DeckHooks.useDeckState();

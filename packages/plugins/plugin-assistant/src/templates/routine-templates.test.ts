@@ -34,7 +34,7 @@ describe('scheduled routine templates', () => {
       // Templates are in-memory (no DB calls); Database.notAvailable surfaces any accidental DB access.
       const draft = await EffectEx.runPromise(template.scaffold({}).pipe(Effect.provide(Database.notAvailable)));
 
-      // The draft is a routine graph wired for an instructions action (spec → RunInstructions).
+      // The draft is a routine graph wired for an instructions action (spec -> RunInstructions).
       expect(Obj.instanceOf(Routine.Routine, draft)).toBe(true);
       expect(draft.spec?.kind).toBe('instructions');
 

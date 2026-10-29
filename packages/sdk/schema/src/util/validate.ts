@@ -12,17 +12,17 @@ export type ValidationError = { path: string; message: string };
 
 /**
  * Effect 4 replaced `ParseResult.ArrayFormatter` with the Standard Schema formatter, which flattens
- * the issue tree into `{ message, path }` entries — the same shape this already produced.
+ * the issue tree into `{ message, path }` entries - the same shape this already produced.
  */
 const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
 
 export const validateSchema = <T>(schema: Schema.Codec<T, any>, values: any): ValidationError[] | undefined => {
   // Validate against the TYPE side: callers hold decoded values (a form's `Ref` is a materialized
   // `Ref`, not its `{ '/': dxn }` encoding), so decoding the codec would report every such field as
-  // malformed at a path — `_tags[0]['/']` — that is not even addressable as a form field.
+  // malformed at a path - `_tags[0]['/']` - that is not even addressable as a form field.
   const validator = Schema.decodeUnknownResult(Schema.make<Schema.Codec<T, any>>(SchemaAST.toType(schema.ast)), {
     errors: 'all',
-    // Only the issues are read, never the decoded value, so stripping excess keys is immaterial —
+    // Only the issues are read, never the decoded value, so stripping excess keys is immaterial -
     // what matters is that an extra property is not itself an error.
     onExcessProperty: 'ignore',
   });

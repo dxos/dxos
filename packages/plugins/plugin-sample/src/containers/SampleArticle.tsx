@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// Article surface component — the main content view for SampleItem objects.
+// Article surface component - the main content view for SampleItem objects.
 // `Panel.Root` and `Panel.Content` provide the standard article layout with
 // consistent padding, scrolling, and responsive behavior.
 // The `role` prop is forwarded to Panel.Root so the layout system can adapt
@@ -45,7 +45,7 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
 
   // `onValuesChanged` receives partial updates from the form.
   // `Obj.update` provides a mutable draft for safe property assignment.
-  // ECHO objects are reactive proxies — changes replicate to other peers.
+  // ECHO objects are reactive proxies - changes replicate to other peers.
   const handleValuesChanged = useCallback(
     (values: Partial<{ name: string; description: string; status: 'active' | 'archived' | 'draft' }>) => {
       Obj.update(subject, (subject) => {

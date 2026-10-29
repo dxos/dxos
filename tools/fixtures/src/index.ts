@@ -7,7 +7,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Resolves development fixtures pulled by `moon run fixtures:pull` — real, PII-bearing corpora that
+ * Resolves development fixtures pulled by `moon run fixtures:pull` - real, PII-bearing corpora that
  * live outside git in one shared directory at the repo root, so a corpus pulled once serves every
  * package's tests.
  *
@@ -58,7 +58,7 @@ export const fixtureVersions = (
 };
 
 /**
- * Absolute path of a fixture — the newest version, or the one pinned by `options.version`. Returns
+ * Absolute path of a fixture - the newest version, or the one pinned by `options.version`. Returns
  * `undefined` when no matching version has been pulled, so callers gate rather than handle a path
  * that does not exist.
  */
@@ -81,7 +81,7 @@ export const fixtureExists = (name: string, options: FixtureOptions = {}): boole
   fixturePath(name, options) !== undefined;
 
 /**
- * Parses a fixture. Throws when absent — callers gate on {@link fixtureExists} first, so an absent
+ * Parses a fixture. Throws when absent - callers gate on {@link fixtureExists} first, so an absent
  * fixture reaching here is a bug in the test rather than a missing pull.
  */
 export const readFixture = <T = unknown>(name: string, options: FixtureOptions = {}): T[] => {

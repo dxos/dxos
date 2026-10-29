@@ -10,7 +10,7 @@
 //   - outDir        := config `assets.directory`, resolved relative to the config.
 //   - environments  := the config's `env.*` keys.
 //   - wranglerConfig := `<dir>/wrangler.jsonc`.
-// This list is the ONLY thing not inferable — the repo has other wrangler configs (discord-worker, edge)
+// This list is the ONLY thing not inferable - the repo has other wrangler configs (discord-worker, edge)
 // that are deliberately not part of this deploy pipeline. Add an app by adding its directory here. Consumed by bundle-env.mjs, deploy-env.mjs, and deploy-apps.yml.
 
 import JSON5 from 'json5';
@@ -31,7 +31,7 @@ export const APP_DIRS = [
 export const resolveApps = (root, { environment, only = 'all' } = {}) =>
   APP_DIRS.map((dir) => {
     const wranglerConfig = join(dir, 'wrangler.jsonc');
-    // JSON5 parses wrangler.jsonc's comments (and trailing commas) — no hand-rolled stripping.
+    // JSON5 parses wrangler.jsonc's comments (and trailing commas) - no hand-rolled stripping.
     const config = JSON5.parse(readFileSync(join(root, wranglerConfig), 'utf8'));
     return {
       name: config.name,

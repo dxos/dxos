@@ -38,20 +38,20 @@ describe('SummarizeMessageExtractor', () => {
     expect(SummarizeMessageExtractor.kinds).toContain('summary');
   });
 
-  test('match — long text body matches with low confidence', ({ expect }) => {
+  test('match - long text body matches with low confidence', ({ expect }) => {
     const result = SummarizeMessageExtractor.match(makeMessage(LONG_BODY));
     expect(result.matched).toBe(true);
     expect(result.confidence ?? 0).toBeLessThan(0.5);
   });
 
-  test('match — short body does not match', ({ expect }) => {
+  test('match - short body does not match', ({ expect }) => {
     const result = SummarizeMessageExtractor.match(makeMessage('Hi there.'));
     expect(result.matched).toBe(false);
   });
 
-  test('summarizeMessage — produces a Document containing the AI summary', async ({ expect }) => {
+  test('summarizeMessage - produces a Document containing the AI summary', async ({ expect }) => {
     // Exercise the core `summarizeMessage` Effect with a mocked AI service, validating the
-    // AI prompt → Document mapping in isolation from the dispatcher.
+    // AI prompt -> Document mapping in isolation from the dispatcher.
     const message = makeMessage(LONG_BODY);
 
     const result = await summarizeMessage({ db, source: message })

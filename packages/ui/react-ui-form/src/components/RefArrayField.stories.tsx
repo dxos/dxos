@@ -209,7 +209,7 @@ export const TestTitle: Story = {
     await userEvent.click(select(canvasElement, '[data-scope="combobox"][data-part="trigger"]'));
     const createPopup = await body.findByRole('dialog');
     await userEvent.keyboard('Zeta');
-    await userEvent.click(within(createPopup).getByRole('option', { name: 'Create “Zeta”' }));
+    await userEvent.click(within(createPopup).getByRole('option', { name: 'Create "Zeta"' }));
     await expect(await within(createPopup).findByRole('textbox', { name: 'Name' })).toHaveValue('Zeta');
     await userEvent.click(within(createPopup).getByTestId('save-button'));
     await waitFor(() => expect(readValues(canvasElement)).toEqual(['Apollo', 'Mercury', 'Zeta']));

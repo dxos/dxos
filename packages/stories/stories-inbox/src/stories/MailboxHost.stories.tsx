@@ -43,7 +43,7 @@ const HOST_STORY_TYPES = [
   TagIndex.TagIndex,
 ];
 
-// Bulk senders seeded into the hosted mailbox — each carries a List-Unsubscribe header so
+// Bulk senders seeded into the hosted mailbox - each carries a List-Unsubscribe header so
 // `dx mailbox subscriptions` (which calls `Mailbox.deriveSubscriptions`) reports them as
 // subscriptions after a device joins this identity over EDGE.
 const SEED_SENDERS = [
@@ -54,7 +54,7 @@ const SEED_SENDERS = [
 
 // Computed once at module scope (see MailboxSync) so re-renders don't spawn fresh workers.
 // `edgeFeatures.agents` (not set by `configPreset`) is required to provision the EDGE agent that
-// recovery-code login resolves — without it EDGE returns `Agent status: not_found`.
+// recovery-code login resolves - without it EDGE returns `Agent status: not_found`.
 const HOST_STORY_CLIENT_SERVICES = persistentClientServices(
   new Config({
     version: 1,
@@ -80,29 +80,29 @@ const HostModule = () => {
   const identity = client.halo.identity.get();
   const space = AppSpace.getDefaultSpace(client);
 
-  // Recovery code (seed phrase) — the path a bun CLI can actually use to join this identity:
+  // Recovery code (seed phrase) - the path a bun CLI can actually use to join this identity:
   // `dx account login --method recovery-code` recovers over EDGE (HTTP), whereas device-invitation
   // relies on p2p which does not work in bun. Recovery resolves the identity's EDGE agent, so
   // provision one first (otherwise EDGE returns `Agent status: not_found`).
   const [status, setStatus] = useState<string>();
   const onCreateRecoveryCode = useCallback(async () => {
     const hasEdgeAgent = !!client.services.services.EdgeAgentService;
-    setStatus(`EdgeAgentService present: ${hasEdgeAgent}; provisioning…`);
+    setStatus(`EdgeAgentService present: ${hasEdgeAgent}; provisioning...`);
     try {
       await client.services.services.EdgeAgentService?.createAgent(undefined, { timeout: 20_000 });
-      setStatus('Agent provisioned; creating recovery credential…');
+      setStatus('Agent provisioned; creating recovery credential...');
     } catch (err) {
       setStatus(`Agent provisioning error: ${String(err)}`);
       return;
     }
     const result = await client.services.services.IdentityService?.createRecoveryCredential({});
     setRecoveryCode(result?.recoveryCode);
-    setStatus((prev) => `${prev} — ready.`);
+    setStatus((prev) => `${prev} - ready.`);
   }, [client]);
 
   const onShare = useCallback(() => {
     // Persistent + shared-secret device invitation: resumable while the code is copied. Note: only
-    // usable browser-to-browser / from Composer — the bun CLI cannot complete a p2p device join.
+    // usable browser-to-browser / from Composer - the bun CLI cannot complete a p2p device join.
     const observable = client.halo.share({ authMethod: Invitation_AuthMethod.SHARED_SECRET, persistent: true });
     observable.subscribe(
       (inv) => {
@@ -254,7 +254,7 @@ const meta = {
                 Message.make({
                   created: new Date(2026, 0, index + 1).toISOString(),
                   sender: { email: sender.email, name: sender.name },
-                  blocks: [{ _tag: 'text', text: `Hello — ${sender.subject}. Click here to unsubscribe.` }],
+                  blocks: [{ _tag: 'text', text: `Hello - ${sender.subject}. Click here to unsubscribe.` }],
                   properties: {
                     subject: sender.subject,
                     listUnsubscribe: `<mailto:unsubscribe@${sender.email.split('@')[1]}>`,

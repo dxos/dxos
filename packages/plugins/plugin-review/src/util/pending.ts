@@ -5,10 +5,10 @@
 import { type Message } from '@dxos/types';
 
 /** Shown in the thread from the moment the agent starts until its reply lands. */
-export const PENDING_TEXT = 'Working on it…';
+export const PENDING_TEXT = 'Working on it...';
 
 /** Replaces the pending message when the turn fails or never settles (e.g. no reachable model). */
-export const FAILED_TEXT = 'Sorry, I couldn’t respond.';
+export const FAILED_TEXT = "Sorry, I couldn't respond.";
 
 const isPending = (message: Message.Message): boolean =>
   message.sender.role === 'assistant' &&

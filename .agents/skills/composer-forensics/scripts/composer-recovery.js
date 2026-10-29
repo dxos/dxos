@@ -5,7 +5,7 @@
 // One-shot debug bridge for Composer recovery mode (`/recovery.html`).
 //
 // Usage:
-//   # Browser: open /recovery.html → Open Debug Port (copy session id from log)
+//   # Browser: open /recovery.html -> Open Debug Port (copy session id from log)
 //   node composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
 //
 //   # Persistent REPL (optional):
@@ -65,7 +65,7 @@ Environment:
   COMPOSER_RECOVERY_TLS_KEY         PEM key path (default: scripts/.recovery-tls/key.pem)
 
 Workflow (one-shot):
-  1. Open /recovery.html → Open Debug Port (copy session id from log)
+  1. Open /recovery.html -> Open Debug Port (copy session id from log)
   2. node composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
   3. Browser runs snippet; result prints to stdout; process exits
 
@@ -161,7 +161,7 @@ const waitForSessionConnect = (sessionId) => {
         new Error(
           `Browser did not connect for session ${sessionId} within ${timeoutMs}ms ` +
             `(the browser retries every ${BROWSER_RECONNECT_MS / 1000}-${BROWSER_RECONNECT_MAX_MS / 1000}s). ` +
-            'Open /recovery.html → Open Debug Port and pass the session id from the log.',
+            'Open /recovery.html -> Open Debug Port and pass the session id from the log.',
         ),
       );
     }, timeoutMs);
@@ -304,7 +304,7 @@ const requestHandler = async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/enqueue') {
     if (oneShot) {
       res.writeHead(409, { 'content-type': 'text/plain' });
-      res.end('One-shot mode — use CLI snippet or --interactive');
+      res.end('One-shot mode - use CLI snippet or --interactive');
       return;
     }
     const raw = await readBody(req);
@@ -390,7 +390,7 @@ const waitForOneShotResult = () => {
 };
 
 const runOneShot = async () => {
-  console.error(`One-shot mode — waiting for browser (session ${targetSession})…`);
+  console.error(`One-shot mode - waiting for browser (session ${targetSession})...`);
   try {
     await waitForSessionConnect(targetSession);
     console.error(`Browser connected (session ${targetSession}).`);
@@ -407,16 +407,16 @@ const runOneShot = async () => {
 server.listen(PORT, '127.0.0.1', () => {
   console.error(`Composer recovery debug server listening on ${origin}`);
   if (useHttps) {
-    console.error('HTTPS enabled — required when /recovery.html is served over HTTPS.');
+    console.error('HTTPS enabled - required when /recovery.html is served over HTTPS.');
   } else if (!oneShot) {
     console.error(
-      'HTTP mode — fine for http://localhost dev; use COMPOSER_RECOVERY_HTTPS=1 on production HTTPS origins.',
+      'HTTP mode - fine for http://localhost dev; use COMPOSER_RECOVERY_HTTPS=1 on production HTTPS origins.',
     );
   }
 
   if (interactive) {
     void (async () => {
-      console.error(`Interactive mode — session ${targetSession}. Paste JS snippets (empty line to exit).`);
+      console.error(`Interactive mode - session ${targetSession}. Paste JS snippets (empty line to exit).`);
       try {
         await waitForSessionConnect(targetSession);
         console.error(`Browser connected (session ${targetSession}).`);

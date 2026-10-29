@@ -13,7 +13,7 @@ import {
 } from './pending-text.ts';
 
 //
-// Sinks — decouple the streamer from its target (a live editor, or memory for tests/stories).
+// Sinks - decouple the streamer from its target (a live editor, or memory for tests/stories).
 //
 
 /**
@@ -70,7 +70,7 @@ export const memoryPendingTextSink = (
 };
 
 //
-// Streamer — buffering, pacing, and post-processing between a text source and a sink.
+// Streamer - buffering, pacing, and post-processing between a text source and a sink.
 //
 
 /** Minimal timer interface so tests can drive the streamer deterministically. */
@@ -85,7 +85,7 @@ const defaultScheduler: Scheduler = {
 };
 
 export type PendingTextStreamerOptions = {
-  /** Delay (ms) before the first text is revealed — absorbs the source's initial latency. */
+  /** Delay (ms) before the first text is revealed - absorbs the source's initial latency. */
   initialBufferMs?: number;
   /** `batch` reveals each pushed chunk whole; `word` reveals one word per {@link wordIntervalMs}. */
   mode?: 'batch' | 'word';
@@ -175,7 +175,7 @@ export class PendingTextStreamer {
 
   /**
    * Reveal everything immediately and run any pending post-process (e.g. on stop). Resolves once the
-   * post-process pass (entity linking, …) has settled, so callers can drain before disposing.
+   * post-process pass (entity linking, ...) has settled, so callers can drain before disposing.
    */
   async flush(): Promise<void> {
     this.#clear(this.#bufferHandle);
@@ -191,7 +191,7 @@ export class PendingTextStreamer {
     this.#postHandle = null;
     if (this.#options.postProcess && this.#final.length > 0) {
       // Await any post-process already in flight (its scheduled timer may have fired), then run a
-      // final pass over the settled buffer — so draining truly waits for post-processing to finish.
+      // final pass over the settled buffer - so draining truly waits for post-processing to finish.
       if (this.#postPromise) {
         await this.#postPromise;
       }
@@ -258,7 +258,7 @@ export class PendingTextStreamer {
     try {
       const result = await postProcess(input);
       // Skip if disposed while processing (avoid writing into a torn-down sink / destroyed view), or
-      // if the buffer grew — a later pass will cover the newer text.
+      // if the buffer grew - a later pass will cover the newer text.
       if (!this.#disposed && result !== input && this.#final === input) {
         this.#final = result;
         this.#sink.replaceFinal(result);

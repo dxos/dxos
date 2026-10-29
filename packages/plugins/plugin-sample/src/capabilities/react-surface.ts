@@ -3,7 +3,7 @@
 //
 
 // React surface capability module.
-// Surfaces are the rendering system — they connect graph nodes to React components.
+// Surfaces are the rendering system - they connect graph nodes to React components.
 // Each `Surface.create()` call registers a component for a specific role and data shape.
 // The framework matches surfaces by role first, then applies the filter function to
 // select the correct component for the current data.
@@ -11,7 +11,7 @@
 // A container is registered as itself via `component`, and `props` maps the surface's data
 // envelope onto the container's own props. The mapper's argument type comes from the same
 // `filter` that defines the surface's data shape, so the unpacking is type-checked against it.
-// Hooks cannot run in a mapper, so hook-dependent surfaces get a named component — see `SampleSurfaces.tsx`.
+// Hooks cannot run in a mapper, so hook-dependent surfaces get a named component - see `SampleSurfaces.tsx`.
 
 import * as Effect from 'effect/Effect';
 

@@ -36,8 +36,8 @@ export const translations = [
         'signup-tab.label': 'Sign Up',
         'welcome-back.title': 'Welcome back!',
         'sign-in-with-passkey-button.label': 'Log in with passkey',
-        'passkey-pending.label': 'Waiting for passkey…',
-        'oauth-pending.label': 'Authorizing…',
+        'passkey-pending.label': 'Waiting for passkey...',
+        'oauth-pending.label': 'Authorizing...',
         'passkey-dismissed-error.message':
           'No passkey was used. The prompt was dismissed, or this device has no passkey for Composer.',
         'passkey-rejected-error.message':
@@ -71,13 +71,13 @@ export const translations = [
         'or-divider.label': 'or',
         'atmosphere-account-button.label': 'Or use your Atmosphere account.',
         'atmosphere-handle-input.placeholder': 'you.bsky.social',
-        'invitation-code-format-error.message': 'Codes use A–Z, 0–9 and dashes (e.g. XK4F-9P2A or SF-MEETUP-7K2Q).',
+        'invitation-code-format-error.message': 'Codes use A-Z, 0-9 and dashes (e.g. XK4F-9P2A or SF-MEETUP-7K2Q).',
         'invitation-code-invalid-error.message': "That code isn't valid. Check it for typos or request a new one.",
 
         'waitlist.title': 'Join the waiting list',
         'waitlist.description': "We'll let you know as soon as access opens up.",
         'waitlist-submitted.title': "You're on the list",
-        'waitlist-submitted.description': "Thanks — we'll be in touch when an invitation is available.",
+        'waitlist-submitted.description': "Thanks - we'll be in touch when an invitation is available.",
 
         'redeem-passkey-button.label': 'Continue with a passkey',
         'redeem-passkey-button.description': 'The simplest way to access your data on new devices.',

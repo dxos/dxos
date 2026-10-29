@@ -34,7 +34,7 @@ const AUTHOR_LABELS = { 'did:alice': 'Alice', 'did:bob': 'Bob' };
 
 const Render = () => {
   // Accept mutates the base (the change merges in and re-diffs away); reject hides the suggestion for
-  // the session without altering the base — mirroring the durable AcceptChange / RejectChange ops.
+  // the session without altering the base - mirroring the durable AcceptChange / RejectChange ops.
   const [base, setBase] = useState(BASE);
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
 
@@ -83,7 +83,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Accept/Reject semantics (deterministic — no AI, runs in CI):
+ * Accept/Reject semantics (deterministic - no AI, runs in CI):
  * - Accept merges a change into the document and re-diffs the rest (overlapping edits re-express).
  * - Reject hides a suggestion without altering the document.
  */
@@ -96,8 +96,8 @@ export const AcceptReject: Story = {
     // Four suggestions: Alice{fast, sleepy} + Bob{swift, leaps}; "fast"/"swift" overlap on "quick".
     await waitFor(() => expect(accepts()).toHaveLength(4));
 
-    // Accept the first (offset then author ⇒ Alice's "quick"→"fast"): it merges and re-diffs away, and
-    // Bob's overlapping "quick"→"swift" re-expresses against the new base as "fast"→"swift".
+    // Accept the first (offset then author => Alice's "quick"->"fast"): it merges and re-diffs away, and
+    // Bob's overlapping "quick"->"swift" re-expresses against the new base as "fast"->"swift".
     await userEvent.click(accepts()[0]);
     await waitFor(() => expect(accepts()).toHaveLength(3));
     await waitFor(() => expect(text()).toContain('swift'));

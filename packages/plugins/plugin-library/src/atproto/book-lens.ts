@@ -9,7 +9,7 @@ import { Text } from '@dxos/schema';
 import { htmlToMarkdown, markdownToHtml } from '../operations/html-markdown.ts';
 
 // BookHive's catalog service account, which owns the canonical `buzz.bookhive.catalogBook` records. The
-// published book's `hiveBookUri` points here (its rkey is the hive id) — how BookHive associates the record.
+// published book's `hiveBookUri` points here (its rkey is the hive id) - how BookHive associates the record.
 const BOOKHIVE_SERVICE_DID = 'did:plc:enu2j5xjlqsjaylv3du4myh4';
 
 // Register the ECHO-specific codecs the book lens references by name. A module side-effect kept alive by
@@ -36,7 +36,7 @@ Panproto.registerRefType('text', {
  * `review` `Ref<Text>` resolves to the wire's HTML, `status` is prefixed to its knownValue reference,
  * dates widen to the wire's ISO datetime, `progress` nests as `bookProgress`, and `hiveBookUri` is
  * synthesized from the hive id. Private/ECHO-only fields (notes, content, purchase*, `progress.cfi`) have
- * no adapter and never cross the boundary — the egress gate.
+ * no adapter and never cross the boundary - the egress gate.
  */
 export const bookLens: Panproto.Lens = {
   adapters: [

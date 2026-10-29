@@ -19,7 +19,7 @@ export type FrameStackProps<T extends FrameStackItem> = Util.ThemedClassName<{
 }>;
 
 /**
- * A vertical, reorderable stack of frame previews with one selected — the master column of a
+ * A vertical, reorderable stack of frame previews with one selected - the master column of a
  * storyboard. Presentation-only: the parent owns the items, the selection and the reorder.
  */
 export const FrameStack = <T extends FrameStackItem>({

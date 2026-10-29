@@ -15,7 +15,7 @@ import * as Game from '@dxos/plugin-game/Game';
 // The last stage's definition of done is a chat answering "what is the best move here?" from the
 // engine rather than from what the model already knows, so the space ships a position to ask it
 // about. Seeded as a game rather than a bare FEN in the brief because the chess chat opens on a
-// Game — a position the reader has to paste in is a step that will be skipped.
+// Game - a position the reader has to paste in is a step that will be skipped.
 //
 // A Spanish opening five moves deep: quiet, materially level, and with no forced tactic, so a
 // plausible answer produced without calling the tool is not accidentally the right one.
@@ -33,7 +33,7 @@ export const ChessGame: SampleSpace.Partial<GameResult> = SampleSpace.partial('g
       const state = yield* Database.add(Chess.make({ pgn: OPENING_PGN }));
       const game = yield* Database.add(
         Game.make({
-          name: 'Test position — Spanish, 5 moves in',
+          name: 'Test position - Spanish, 5 moves in',
           players: [
             { role: 'white', name: 'You' },
             { role: 'black', name: 'Engine' },

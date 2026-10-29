@@ -59,7 +59,7 @@ describe('update-project-tasks', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('a message sharing the cursor’s timestamp is not dropped', () =>
+  it.effect("a message sharing the cursor's timestamp is not dropped", () =>
     Effect.gen(function* () {
       const { db, feed, mailbox, project } = yield* seed([{ email: 'first@kirkconsult.com', subject: 'First at T' }]);
 

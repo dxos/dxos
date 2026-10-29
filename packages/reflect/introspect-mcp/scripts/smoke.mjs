@@ -28,7 +28,7 @@ child.on('error', (err) => {
 });
 
 const killTimer = setTimeout(() => {
-  console.error(`Smoke test timed out after ${TIMEOUT_MS}ms — killing child.`);
+  console.error(`Smoke test timed out after ${TIMEOUT_MS}ms - killing child.`);
   child.kill('SIGKILL');
   process.exit(1);
 }, TIMEOUT_MS);
@@ -64,24 +64,24 @@ child.on('close', () => {
     try {
       const parsed = JSON.parse(line);
       if (parsed.id === 1 && parsed.result?.serverInfo) {
-        console.log(`  initialize → ${parsed.result.serverInfo.name} v${parsed.result.serverInfo.version}`);
+        console.log(`  initialize -> ${parsed.result.serverInfo.name} v${parsed.result.serverInfo.version}`);
         sawInitialize = true;
       } else if (parsed.id === 2 && Array.isArray(parsed.result?.tools)) {
         const names = parsed.result.tools.map((t) => t.name).join(', ');
-        console.log(`  tools/list → ${parsed.result.tools.length} tools: [${names}]`);
+        console.log(`  tools/list -> ${parsed.result.tools.length} tools: [${names}]`);
         sawTools = true;
       } else if (parsed.error) {
         console.log(
-          `  error      → id=${parsed.id ?? 'none'}: ${parsed.error.message ?? JSON.stringify(parsed.error)}`,
+          `  error      -> id=${parsed.id ?? 'none'}: ${parsed.error.message ?? JSON.stringify(parsed.error)}`,
         );
       } else {
-        console.log(`  other      → id=${parsed.id ?? 'none'}`);
+        console.log(`  other      -> id=${parsed.id ?? 'none'}`);
       }
     } catch {
       console.log(`  unparseable: ${line.slice(0, 80)}`);
     }
   }
-  // Exit 0 only when both expected responses were recognised — not just when
+  // Exit 0 only when both expected responses were recognised - not just when
   // two non-empty lines arrived.
   process.exit(sawInitialize && sawTools ? 0 : 1);
 });

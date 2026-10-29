@@ -12,9 +12,9 @@ import { Person } from '@dxos/types';
 import { buildContactIndex } from './contact-index.ts';
 
 /**
- * The list-level lookup: one Person query for the whole list, reduced to an email→contact map. Tested
+ * The list-level lookup: one Person query for the whole list, reduced to an email->contact map. Tested
  * against a real database rather than plain objects, because the reported failure was that seeded
- * Persons did not resolve — which would be invisible to a test using literals.
+ * Persons did not resolve - which would be invisible to a test using literals.
  */
 describe('buildContactIndex', () => {
   let builder: EchoTestBuilder;

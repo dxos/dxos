@@ -220,8 +220,8 @@ export interface Toast extends Omit<Schema.Schema.Type<typeof Toast>, 'onAction'
  * Structured override for the toast shown when a process fails. A failing operation carries it as
  * `context.notifyOverride` on its error (built with {@link setNotifyOverride}); the notification
  * tracker reads it back from the process's raw failure with {@link getNotifyOverride} and renders it
- * in place of the default title + `Cause.pretty` dump. Every field is plain serializable data —
- * the override rides on an error across the process failure boundary — so the click action is a
+ * in place of the default title + `Cause.pretty` dump. Every field is plain serializable data -
+ * the override rides on an error across the process failure boundary - so the click action is a
  * {@link Operation.SerializedInvocation} the tracker runs via its own invoker, not a live callback.
  */
 export interface NotifyOverride {
@@ -235,8 +235,8 @@ export interface NotifyOverride {
 }
 
 /**
- * Builds the `context` fragment an error merges in (e.g. `context: { ...setNotifyOverride(o), … }`) to
- * set its {@link NotifyOverride} — the counterpart to {@link getNotifyOverride}, so the
+ * Builds the `context` fragment an error merges in (e.g. `context: { ...setNotifyOverride(o), ... }`) to
+ * set its {@link NotifyOverride} - the counterpart to {@link getNotifyOverride}, so the
  * `notifyOverride` key is only ever spelled in one place.
  */
 export const setNotifyOverride = (override: NotifyOverride): { notifyOverride: NotifyOverride } => ({
@@ -352,7 +352,7 @@ export const Open = Operation.make({
         description:
           'How the deck should place the opened items. `solo` (the default) navigates: the deck becomes ' +
           'just the opened items, unless they are all already open (the existing plank scrolls into view). ' +
-          '`add` inserts the items as new planks — immediately after `pivotId` when provided (in-plank ' +
+          '`add` inserts the items as new planks - immediately after `pivotId` when provided (in-plank ' +
           'navigation anchors at its origin), else at the end of the deck. `auto` follows the deck: ' +
           'when already sliding (2+ planks) it adds beside its origin (`pivotId`, falling back to the ' +
           'attended plank); when solo it navigates. `detail` opens the item as the detail of `pivotId` ' +
@@ -459,7 +459,7 @@ export const UpdateCompanion = Operation.make({
   input: Schema.Struct({
     subject: Schema.Union([Schema.String, Schema.Null]).annotate({
       description:
-        'The companion node id to show — either qualified (`<plank>/~<variant>`) or a bare `~<variant>`, which targets the given anchor, else the attended plank. Null closes a companion.',
+        'The companion node id to show - either qualified (`<plank>/~<variant>`) or a bare `~<variant>`, which targets the given anchor, else the attended plank. Null closes a companion.',
     }),
     anchor: Schema.optional(Schema.String).annotate({
       description:

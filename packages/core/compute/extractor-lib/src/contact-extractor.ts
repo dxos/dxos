@@ -20,7 +20,7 @@ export const matchMessage = (source: Obj.Any): MatchResult => {
 };
 
 /**
- * Turns the sender into a Person plus their Organization — linked when the domain resolves to a
+ * Turns the sender into a Person plus their Organization - linked when the domain resolves to a
  * known Organization, freshly created (placeholder name/website from the domain) when it does not
  * and the domain is corporate. Deterministic (`R = never`): requires neither `Resolver` nor
  * `AiService`, so it composes into contexts without those layers (e.g. a streaming pipeline
@@ -38,8 +38,8 @@ export const extractContact = ({ db, source }: ExtractInput): Effect.Effect<Extr
 
     // A machine is never a contact. Only the deny half of the contact gate applies here: this
     // extractor runs per message, so it has no outbound/known-organization evidence to satisfy the
-    // full allow-list — but running with NO gate at all (as it did) turned every `no-reply@`,
-    // `mailer-daemon@` and `invoice+statements+acct_…@stripe.com` sender in a mailbox into a Person.
+    // full allow-list - but running with NO gate at all (as it did) turned every `no-reply@`,
+    // `mailer-daemon@` and `invoice+statements+acct_...@stripe.com` sender in a mailbox into a Person.
     if (isAutomatedSender(sender.email, senderSignals(message))) {
       return { created: [], updated: [], relations: [] };
     }

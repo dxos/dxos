@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 /**
  * Provenance recorded on a generated {@link Variant} (inline, not an ECHO object). Absent on
  * uploaded/external variants. The request knobs live on {@link Variant.config}; this records what
- * the provider actually did (resolved prompt, seed, request id, …).
+ * the provider actually did (resolved prompt, seed, request id, ...).
  */
 export const Generation = Schema.Struct({
   provider: Schema.String,

@@ -72,7 +72,7 @@ export const useType = (
         }),
       );
 
-    // Subscribe before reading `.results` — the query requires at least one subscriber.
+    // Subscribe before reading `.results` - the query requires at least one subscriber.
     const unsubscribe = queryResult.subscribe(update);
     update();
 

@@ -11,7 +11,7 @@ export type SpectralPeak = {
   amplitude: number;
 };
 
-/** A playable note's sound: its frequency and the relative strength of harmonics 1…n (from calibration). */
+/** A playable note's sound: its frequency and the relative strength of harmonics 1...n (from calibration). */
 export type ChordTemplate = {
   pitch: Pitch;
   frequency: number;
@@ -43,7 +43,7 @@ export type NoteWeight = {
 
 /**
  * Explains a spectrum as a non-negative mix of known note spectra (NNLS over a fixed dictionary).
- * With only the instrument's 8–9 notes as candidates, a note's own octave and twelfth partials are
+ * With only the instrument's 8-9 notes as candidates, a note's own octave and twelfth partials are
  * attributed to it rather than read as separate notes, which is what defeats generic polyphonic
  * pitch detection on a handpan.
  */
@@ -56,7 +56,7 @@ export class ChordDecomposer {
   readonly #sampleRate: number;
   /** Unit-length template spectra, one per note, over the first `#bins` bins. */
   readonly #dictionary: Float64Array[];
-  /** Gram matrix DᵀD. */
+  /** Gram matrix D^TD. */
   readonly #gram: number[][];
 
   constructor(
@@ -79,7 +79,7 @@ export class ChordDecomposer {
   }
 
   /**
-   * Weights plus `fit`: the fraction of the spectrum's energy the weighted templates explain (0–1).
+   * Weights plus `fit`: the fraction of the spectrum's energy the weighted templates explain (0-1).
    * A strike of the instrument's notes fits well; a tak or room noise does not.
    */
   analyze(magnitudes: Float32Array): { weights: NoteWeight[]; fit: number } {
@@ -146,7 +146,7 @@ export type SpectralPeaksOptions = {
   maxFrequency?: number;
   /** Most peaks kept, strongest first. */
   count?: number;
-  /** Peaks below this fraction of the strongest are ignored (above the Hann window's −31 dB side lobes). */
+  /** Peaks below this fraction of the strongest are ignored (above the Hann window's -31 dB side lobes). */
   floor?: number;
 };
 

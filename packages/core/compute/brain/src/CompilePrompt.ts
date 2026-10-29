@@ -42,7 +42,7 @@ export type Goal = {
   readonly instructions?: string;
   /** Handle of the actor who owns the goal. */
   readonly owner: string;
-  /** Creation time (ISO); `elapsed(goal, …)` and `every` count from it. */
+  /** Creation time (ISO); `elapsed(goal, ...)` and `every` count from it. */
   readonly now: string;
   /** Source id of the conversation a session goal is scoped to. */
   readonly session?: string;
@@ -72,7 +72,7 @@ export const FACT_RELATION_DOCS: Readonly<Record<keyof typeof Encoding.FACT_RELA
   force: 'force(F, X)              assertive | directive | commissive | expressive',
   polarity: 'polarity(F, X)           "+" (affirmed), "-" (negated or refused), "?" (open question or unknown)',
   mood: 'mood(F, X)               declarative | interrogative | imperative',
-  factuality: 'factuality(F, X)         "CT+" (certain), "PR+" (probable), "PS+" (possible), "Uu" (unknown), "CT-" …',
+  factuality: 'factuality(F, X)         "CT+" (certain), "PR+" (probable), "PS+" (possible), "Uu" (unknown), "CT-" ...',
   addressee: 'addressee(F, X)          who it was said to',
   quote: 'quote(F, Text)           the words as said',
   source:
@@ -87,7 +87,7 @@ export const FACT_RELATION_DOCS: Readonly<Record<keyof typeof Encoding.FACT_RELA
   recordedAt: 'recordedAt(F, T)         when it was extracted',
   pass: 'pass(F, Id)              the extraction pass that produced it',
   graph: 'graph(F, G)              the named graph holding it; statements stated together share one',
-  kind: 'kind(F, K)               what a remembered statement records: preference | commitment | relationship | …',
+  kind: 'kind(F, K)               what a remembered statement records: preference | commitment | relationship | ...',
 };
 
 /** One line per goal-state relation the runtime maintains. */
@@ -269,7 +269,7 @@ export const systemPrompt = ({ vocabulary = Compiler.defaultVocabulary() }: Syst
     # Known vocabularies
 
     - Agent actions are recorded in the goal's own feed as fact(F, goal, Verb, Obj) with speaker(F, agent) and
-      source(F, "goal"); the verbs are canonical predicates above (relayed, notified, awaiting, drafted, …).
+      source(F, "goal"); the verbs are canonical predicates above (relayed, notified, awaiting, drafted, ...).
     - Mailbox: an arriving email is fact(F, Msg, received, inbox) with speaker = sender address and
       source = "mailbox:<owner>"; when it leaves the inbox, fact(F, Msg, archived, inbox) or fact(F, Msg, deleted, inbox).
     - Action kinds: book_meeting, update_meeting, cancel_meeting, send_email, send_message, archive_email.
@@ -279,7 +279,7 @@ export const systemPrompt = ({ vocabulary = Compiler.defaultVocabulary() }: Syst
     # Compilation guidance
 
     - Match on CONTENT (about) and POLARITY. Do not require a particular speaker, force or mood for achievement unless the
-      goal itself names them ("get Dima to …" names Dima and a commitment). Extractor labels such as force are noisy, and
+      goal itself names them ("get Dima to ..." names Dima and a commitment). Extractor labels such as force are noisy, and
       outcomes are often reported by third parties ("the accountant filed it", "Alice says it shipped").
     - A goal about a person covers facts the person said AND facts whose subject is that person.
     - Possessive goals ("my taxes", "my inbox") concern the owner: use concerns(F, <owner>) rather than a speaker.

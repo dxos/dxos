@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import type * as Mailbox from '../types/Mailbox.ts';
 
 /**
- * One mutex per mailbox URI, created on first use and never evicted — a mailbox is a long-lived
+ * One mutex per mailbox URI, created on first use and never evicted - a mailbox is a long-lived
  * object and the entry is a few bytes.
  */
 const locks = new Map<string, Semaphore.Semaphore>();
@@ -20,7 +20,7 @@ const locks = new Map<string, Semaphore.Semaphore>();
  *
  * Pipelines that APPEND (summaries, annotations) are only idempotent when their read of what already
  * exists cannot interleave with another run's write: two concurrent runs would each see a message as
- * unsummarized and each append a summary for it, and — worse — each provision an annotation feed,
+ * unsummarized and each append a summary for it, and - worse - each provision an annotation feed,
  * leaving whichever assignment landed last as the only one reachable from the mailbox.
  *
  * In-process only, which covers what actually races today: a routine firing while the user presses

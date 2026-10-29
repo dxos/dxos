@@ -20,7 +20,7 @@ export type TrailSpec = {
   startAlpha: number;
   /** Angular distance the emission point sits behind the object's own origin, clearing its tail. */
   aftOffset: number;
-  /** Puff colour, linear RGB. Exhaust burns; a wake does not — a rocket's plume is flame, a boat's is spray. */
+  /** Puff colour, linear RGB. Exhaust burns; a wake does not - a rocket's plume is flame, a boat's is spray. */
   color: [number, number, number];
 };
 
@@ -28,7 +28,7 @@ export type TrailSpec = {
 export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
   // Live puff count is `lifetimeMs / (spacing / speed * 1000)`, capped by `capacity`. Spacing is
   // tight so the puffs read as a continuous plume, and the lifetime is short so only ~20 are alive
-  // at once — each stays planted where it was emitted, so the wake is visibly left behind.
+  // at once - each stays planted where it was emitted, so the wake is visibly left behind.
   boat: {
     spacing: 0.003,
     lifetimeMs: 3000,
@@ -70,25 +70,25 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
 export type TrailPuff = { position: Vec3; age: number };
 
 /**
- * A puff is born the instant an emission tick falls due, not sampled backward from "now" — that
+ * A puff is born the instant an emission tick falls due, not sampled backward from "now" - that
  * distinction is what keeps puffs planted in the air instead of sliding along with the object.
  * Emission ticks sit on a fixed grid of absolute times `t_k = definition.spawnedAt + k * intervalMs`
- * for integer `k >= 0`, where `intervalMs = (spec.spacing / definition.speed) * 1000` — the interval
+ * for integer `k >= 0`, where `intervalMs = (spec.spacing / definition.speed) * 1000` - the interval
  * that makes consecutive ticks `spec.spacing` radians of *distance* apart at the object's own speed,
  * not a fixed wall-clock cadence. Puff `k`'s world position is `evaluate(state, definition, {
- * config, elapsed: (t_k - spawnedAt) / 1000 })`'s position — a pure function of `k` alone, so it is
+ * config, elapsed: (t_k - spawnedAt) / 1000 })`'s position - a pure function of `k` alone, so it is
  * identical on every frame and for every peer regardless of when `nowMs` sampled it. Its age is
  * simply `nowMs - t_k`; a puff is shown while that age is within `[0, spec.lifetimeMs)`.
  *
  * Because `t_k` never depends on `nowMs`, the *set* of visible puffs slides forward one tick at a
- * time as `nowMs` advances, but no individual puff's own position ever changes — it only ages
+ * time as `nowMs` advances, but no individual puff's own position ever changes - it only ages
  * (fades and grows) in place while the object flies on past it. Capped at `spec.capacity` samples.
  *
  * One caveat: for routed kinds (boat/plane), `state`'s `route`/`leg`/`legStart` are the *current*
- * leg's — correct for any tick at or after that leg began, but a tick reaching back past the leg's
+ * leg's - correct for any tick at or after that leg began, but a tick reaching back past the leg's
  * own start clamps to the leg's start point (see `motion.ts`'s `evaluateRouted`) rather than
  * replaying the previous leg. This only affects puffs within one `lifetimeMs` window of a
- * re-target, and self-heals as those puffs age out — deliberately not solved by replaying the full
+ * re-target, and self-heals as those puffs age out - deliberately not solved by replaying the full
  * leg history here, which would reintroduce the per-frame bookkeeping this approach removes.
  */
 export const trailPuffs = (
@@ -112,7 +112,7 @@ export const trailPuffs = (
   const intervalMs = (spec.spacing / definition.speed) * 1000;
   const elapsedNowMs = nowMs - definition.spawnedAt;
   // The largest tick strictly before `elapsedNowMs`, so the freshest puff never sits exactly on the
-  // object's own current position — `ceil(...) - 1` (rather than `floor`) guarantees strictness even
+  // object's own current position - `ceil(...) - 1` (rather than `floor`) guarantees strictness even
   // when `elapsedNowMs` lands exactly on a tick.
   const latestTick = Math.ceil(elapsedNowMs / intervalMs) - 1;
 
@@ -137,7 +137,7 @@ export const trailPuffs = (
  * kind's `aftOffset`, so the puff leaves the tail rather than the middle of the form. The axis is
  * pitched off the local horizontal by `state.pitch`, exactly as the mesh is drawn: offsetting along
  * the ground track alone would hang a climbing rocket's exhaust out beside its arc instead of below
- * it, which is the whole plume for a near-vertical launch. Purely cosmetic — it never affects
+ * it, which is the whole plume for a near-vertical launch. Purely cosmetic - it never affects
  * emission timing or spacing.
  */
 const behindHull = (historical: ObjectState, spec: TrailSpec): Vec3 => {

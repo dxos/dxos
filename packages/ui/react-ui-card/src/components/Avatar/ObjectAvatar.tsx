@@ -18,7 +18,7 @@ import { nameToHue } from './avatar-name.ts';
  * A convention rather than an annotation because it is already one across the types that have a
  * picture at all: `Person.image` and `Organization.image` are both an optional URL string, written
  * by `CrmOperation.EnrichImages` (Gravatar / logo service, re-hosted). Promote it to an annotation
- * when a type needs to name a different field — nothing does yet, and an annotation nobody varies is
+ * when a type needs to name a different field - nothing does yet, and an annotation nobody varies is
  * indirection without a payer.
  */
 const IMAGE_PROPERTY = 'image';
@@ -34,7 +34,7 @@ export const getObjectImage = (entity: Entity.Unknown | Entity.Snapshot): string
   asImage(Reflect.get(entity, IMAGE_PROPERTY));
 
 export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClick'> & {
-  /** Any ECHO object — the avatar is derived entirely from it. */
+  /** Any ECHO object - the avatar is derived entirely from it. */
   object: Entity.Unknown | Entity.Snapshot;
   /** Fallback glyph when the object has neither a picture nor a label. */
   fallbackIcon?: string;
@@ -45,7 +45,7 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
 /**
  * An object depicted as itself: its picture, else its initials, else its type glyph.
  *
- * This is the treatment for objects whose identity IS the point — a person, an organization — so it
+ * This is the treatment for objects whose identity IS the point - a person, an organization - so it
  * is opted into per type through `AppSurface.CardIcon` rather than applied to everything. A
  * directory of cards is scanned by kind, and giving every object a per-instance disc would trade
  * that away; the type glyph stays the default.
@@ -65,7 +65,7 @@ export const ObjectAvatar = ({
   const iconAnnotation = Entity.getIcon(object);
 
   // No picture and no label leaves initials with nothing to derive from, so the type's own glyph is
-  // the only honest thing left — a blank disc would read as a failed image rather than as an object
+  // the only honest thing left - a blank disc would read as a failed image rather than as an object
   // that has never been named.
   if (!image && !label) {
     const icon = fallbackIcon ?? iconAnnotation?.icon ?? 'ph--circle-dashed--regular';

@@ -5,8 +5,8 @@
 import { Proxy } from '@dxos/crx-protocol';
 
 /**
- * Page side of the composer-crx extension's ping contract — a health-check round-trip that proves
- * the page → content-script → background messaging path and reports the extension's identity.
+ * Page side of the composer-crx extension's ping contract - a health-check round-trip that proves
+ * the page -> content-script -> background messaging path and reports the extension's identity.
  *
  * The event names and wire shapes are the shared `@dxos/crx-protocol` `Proxy` protocol (the single
  * source of truth, consumed by both the plugin and the extension).

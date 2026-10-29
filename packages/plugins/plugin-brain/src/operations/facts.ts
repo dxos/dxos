@@ -22,8 +22,8 @@ export const toCompactFact = (fact: RDF.Fact): BrainOperation.CompactFact => ({
   source: fact.attribution.source,
 });
 
-/** One text line per fact for LLM prompts: `[id] subject — predicate — object (factuality, date)`. */
+/** One text line per fact for LLM prompts: `[id] subject - predicate - object (factuality, date)`. */
 export const factLine = (fact: BrainOperation.CompactFact): string =>
-  `[${fact.id}] ${fact.subject} — ${fact.predicate} — ${fact.object} (${fact.factuality}${
+  `[${fact.id}] ${fact.subject} - ${fact.predicate} - ${fact.object} (${fact.factuality}${
     fact.confidence !== undefined ? ` ${fact.confidence}` : ''
   }, ${fact.date})`;

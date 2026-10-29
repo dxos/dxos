@@ -76,8 +76,8 @@ const sync: ConnectorSpec.ConnectorEntry['sync'] = {
  * caps how far back issues are pulled by `Issue.updatedAt`.
  *
  * Scopes:
- *   - `read`  — required for pull (projects, issues, workflow states).
- *   - `write` — required to push local edits back via `issueUpdate` and
+ *   - `read`  - required for pull (projects, issues, workflow states).
+ *   - `write` - required to push local edits back via `issueUpdate` and
  *               `projectUpdate`. Linear treats issue and project mutations
  *               under a single umbrella `write` scope; there's no narrower
  *               permission for "edit only, never create".

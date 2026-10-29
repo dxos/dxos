@@ -27,7 +27,7 @@ export type DisclosureItemBinding = {
   triggerId: string;
   /** Stable id on the controlled panel; the trigger references it via aria-controls. */
   panelId: string;
-  /** Spread onto the trigger element (button, title row, …). */
+  /** Spread onto the trigger element (button, title row, ...). */
   triggerProps: {
     'id': string;
     'aria-expanded': boolean;
@@ -63,7 +63,7 @@ const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value 
  * Controlled-ness keys on `onValueChange` rather than on the value's presence so that
  * `undefined` (single mode) and the empty set (multi mode) remain valid "nothing expanded"
  * values. `useControllableState` keys on the value's presence, so it flips to uncontrolled when a
- * controlled value clears to `undefined`, then re-reads the stale internal state and fails to collapse —
+ * controlled value clears to `undefined`, then re-reads the stale internal state and fails to collapse -
  * a hand-rolled controller is the only correct option here.
  */
 export const useListDisclosure: {
@@ -74,7 +74,7 @@ export const useListDisclosure: {
 
   // Latches whenever the consumer passes the `value` prop key, regardless of whether the
   // current value is `undefined`. A controlled single-expand parent (`expandedId: string | undefined`)
-  // must be able to clear to undefined without the row falling back to stale internal state —
+  // must be able to clear to undefined without the row falling back to stale internal state -
   // detecting controlled-ness by `value !== undefined` would misclassify "controlled and currently
   // empty" as uncontrolled.
   const wasControlledRef = useRef(Object.prototype.hasOwnProperty.call(opts, 'value'));

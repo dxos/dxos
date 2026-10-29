@@ -95,7 +95,7 @@ export const REVIEW_SYSTEM_PROMPT = trim`
 `;
 
 const clip = (text: string, max: number): string =>
-  text.length <= max ? text : `${text.slice(0, max)}… [${text.length - max} chars truncated]`;
+  text.length <= max ? text : `${text.slice(0, max)}\u2026 [${text.length - max} chars truncated]`;
 
 const stringify = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
 
@@ -136,7 +136,7 @@ export const formatReviewPrompt = (history: readonly Message.Message[]): string 
   const budget = Math.max(0, MAX_TRANSCRIPT_CHARS - turnText.length);
   const contextText = context.map(formatMessage).join('\n\n');
   const clippedContext =
-    contextText.length > budget ? `…${contextText.slice(contextText.length - budget)}` : contextText;
+    contextText.length > budget ? `\u2026${contextText.slice(contextText.length - budget)}` : contextText;
   return [clippedContext, '<latest_turn>', clip(turnText, MAX_TRANSCRIPT_CHARS), '</latest_turn>']
     .filter((part) => part.length > 0)
     .join('\n\n');

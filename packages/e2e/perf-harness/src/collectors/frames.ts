@@ -32,7 +32,7 @@ export type Screencast = {
  *
  * One mechanism for two deliverables: frame timestamps are the only measurement of what the SCREEN
  * did rather than what the event loop did, and the same frames are the between-stage screenshots.
- * Diagnose mode only — an attached screencast is itself a perturbation.
+ * Diagnose mode only - an attached screencast is itself a perturbation.
  */
 export const startScreencast = async (page: Cdp, outputDir: string): Promise<Screencast> => {
   mkdirSync(outputDir, { recursive: true });
@@ -55,7 +55,7 @@ export const startScreencast = async (page: Cdp, outputDir: string): Promise<Scr
     lastFrameAt = now;
 
     // First and last only: a stage at 10 fps is hundreds of PNGs, and the pair is what a reviewer
-    // compares. The last is BUFFERED rather than rewritten per frame — decoding and writing a full
+    // compares. The last is BUFFERED rather than rewritten per frame - decoding and writing a full
     // PNG on every frame, ahead of the ack below, is instrumentation cost charged to the very
     // stage being measured.
     if (framesThisStage === 0) {

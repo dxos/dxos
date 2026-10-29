@@ -23,7 +23,7 @@ export type S3Host = {
   resolveCredentials: (request: { spaceId: SpaceId; host: string }) => Promise<S3Credentials | undefined>;
   /**
    * The bucket a space writes to. Reads take their endpoint from the URI, so this exists only for
-   * `put` — `BlobPutRequest` carries no endpoint of its own.
+   * `put` - `BlobPutRequest` carries no endpoint of its own.
    */
   resolveWriteEndpoint: (spaceId: SpaceId) => Promise<{ host: string; credentials: S3Credentials } | undefined>;
 };

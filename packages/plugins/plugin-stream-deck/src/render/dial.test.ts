@@ -26,7 +26,7 @@ describe('renderDial', () => {
   test('renders an indeterminate task without a bar', ({ expect }) => {
     expect(renderDial({ kind: 'progress', title: 'Indexing' })).toEqual({
       title: 'Indexing',
-      value: '…',
+      value: '\u2026',
       bar: undefined,
     });
   });

@@ -11,7 +11,7 @@ import { type Pattern, replacePatterns } from './replace-patterns-extension.ts';
 // Permissive PSTN dial-in: `+` then digits/separators, `,,` pause, conference digits, `#`.
 const DIAL_IN = String.raw`\+[\d][\d\s\-()]*,,[\d]+#`;
 
-/** Visible dial string immediately followed by a `<tel:…>` link (Teams / Outlook invites). */
+/** Visible dial string immediately followed by a `<tel:...>` link (Teams / Outlook invites). */
 const DIAL_IN_WITH_TEL_LINK = new RegExp(`(${DIAL_IN})<tel:[^>]+>`);
 
 /** Bare conference dial-in (e.g. Zoom "One tap mobile" lines). */
@@ -61,7 +61,7 @@ export const inboxMarkdown = ({ loadRemoteImages = false }: InboxMarkdownOptions
 
 const decorateInboxMarkdown = (loadRemoteImages: boolean): Extension =>
   decorateMarkdown({
-    // When image loading is disabled, suppress every image — not just http(s), or a `cid:`/
+    // When image loading is disabled, suppress every image - not just http(s), or a `cid:`/
     // protocol-relative target renders as a broken image. `hideImages` omits the raw markdown
     // source to match. Object links and images are a widget's and skipped by the decorator itself.
     skip: (node) => node.name === 'Image' && !loadRemoteImages,

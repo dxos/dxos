@@ -139,7 +139,7 @@ export const Default: Story = {
   decorators: [withPlugins()],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // One card per ref, labelled from each type's own annotations — the grid is type-agnostic.
+    // One card per ref, labelled from each type's own annotations - the grid is type-agnostic.
     await expect(canvas.findByText('Acme', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Alice Ashe', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Send the contract', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
@@ -150,7 +150,7 @@ export const Empty: Story = {
   decorators: [withPlugins()],
   render: EmptyStory,
   play: async ({ canvasElement }) => {
-    // Renders nothing, so a host with no objects to show is left with no region to lay out — and no
+    // Renders nothing, so a host with no objects to show is left with no region to lay out - and no
     // separator line under content that has nothing beneath it.
     await waitFor(() => expect(canvasElement.textContent?.trim()).toBe(''), { timeout: 10_000 });
   },
@@ -214,7 +214,7 @@ const CompactStory = () => {
         size='compact'
         inline
         CardMenu={RemoveMenu}
-        pending={[{ id: 'upload', label: 'Uploading diagram.png…' }]}
+        pending={[{ id: 'upload', label: 'Uploading diagram.png...' }]}
       />
     </div>
   );
@@ -226,7 +226,7 @@ export const Compact: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('Acme', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText('Uploading diagram.png…')).resolves.toBeTruthy();
+    await expect(canvas.findByText('Uploading diagram.png...')).resolves.toBeTruthy();
 
     // Two columns: the tiles sit at exactly two distinct horizontal offsets.
     await waitFor(async () => {

@@ -31,7 +31,7 @@ export const diffSpans = (before: string, after: string): DiffSpan[] => {
 
 export type DiffStats = { insertions: number; deletions: number };
 
-/** Character counts, used for the `+N −M` branch summaries. */
+/** Character counts, used for the `+N -M` branch summaries. */
 export const diffStats = (spans: DiffSpan[]): DiffStats =>
   spans.reduce(
     (stats, span) => {
@@ -94,7 +94,7 @@ export const merge3 = ({ base, ours, theirs }: Merge3Props): Merge3Result => {
       theirsActive &&
       sameLines(oursHunk.lines, theirsHunk.lines) &&
       oursHunk.baseLength === theirsHunk.baseLength;
-    // Hunks conflict when their consumed base intervals overlap — same start, or a staggered
+    // Hunks conflict when their consumed base intervals overlap - same start, or a staggered
     // hunk beginning inside the interval the active hunk consumes (e.g. [0,2) vs [1,2)).
     const overlap =
       !identical &&
@@ -105,7 +105,7 @@ export const merge3 = ({ base, ours, theirs }: Merge3Props): Merge3Result => {
         (theirsActive && nextOurs < hunkEnd(theirsHunk)));
 
     if (overlap) {
-      // The conflict region is the connected union of every intersecting hunk on both sides —
+      // The conflict region is the connected union of every intersecting hunk on both sides -
       // a broad hunk can overlap several smaller ones, all of which must be consumed together.
       const oursRegion = [oursHunk];
       const theirsRegion = [theirsHunk];
@@ -207,7 +207,7 @@ const sameLines = (a: string[], b: string[]) => a.length === b.length && a.every
 
 const splitLines = (text: string): string[] => (text === '' ? [] : stripTrailingNewline(text).split('\n'));
 
-// Unlike whole-document splitting, a diff chunk is never empty — a chunk of '\n' is one blank
+// Unlike whole-document splitting, a diff chunk is never empty - a chunk of '\n' is one blank
 // line (jsdiff attaches the terminator to its line), so no empty-string special case applies.
 const chunkLines = (value: string): string[] => stripTrailingNewline(value).split('\n');
 

@@ -8,7 +8,7 @@
 /**
  * Content-hashed build output, which vite emits flat in `/assets/`. Subdirectories there are copied
  * static trees (`/assets/plugin-tldraw/**`) whose filenames are stable across builds, so the
- * immutable header must not reach them — a year-long `max-age` on those would strand every existing
+ * immutable header must not reach them - a year-long `max-age` on those would strand every existing
  * client on the icons and fonts it already has.
  */
 const HASHED_ASSET_PATH = /^\/assets\/[^/]+$/;

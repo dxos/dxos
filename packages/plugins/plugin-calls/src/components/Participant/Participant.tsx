@@ -25,7 +25,7 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
 
   // Track name to display for non-self users; undefined when no video should show.
-  // Guard on both the enabled flag and track-ID presence — a track may be enabled in state
+  // Guard on both the enabled flag and track-ID presence - a track may be enabled in state
   // before the ID has been published to the swarm.
   const pulledTrackName = useMemo<EncodedTrackName | undefined>(() => {
     if (isSelf) {

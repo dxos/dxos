@@ -78,7 +78,7 @@ const mentionPattern = (names: readonly string[] = []): RegExp => {
 };
 
 /**
- * Replaces each `@mention` with a pill widget — the same atomic-widget recipe as `hashtag`, so the cursor steps over a
+ * Replaces each `@mention` with a pill widget - the same atomic-widget recipe as `hashtag`, so the cursor steps over a
  * mention and one delete removes it.
  */
 export const mentionPills = ({ names, hue }: MentionPillsOptions = {}): Extension => {

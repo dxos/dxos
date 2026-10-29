@@ -17,7 +17,7 @@ export type MediaArtifactCardProps = {
 
 /**
  * Card rendering of a {@link MediaArtifact}: its cover variant as the poster. Rendered into the
- * `AppSurface.CardContent` slot — `Card.Root` and the header (title, drag handle) are the host's (a
+ * `AppSurface.CardContent` slot - `Card.Root` and the header (title, drag handle) are the host's (a
  * board cell, a popover), so this emits `Card.Body` only; the gallery, which owns its tiles, uses
  * `GalleryImage` instead.
  */

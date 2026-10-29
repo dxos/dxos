@@ -52,7 +52,7 @@ afterEach(async () => {
   await builder.close();
 });
 
-describe('dxos.org/scene/1 → dxos.org/scene/2', () => {
+describe('dxos.org/scene/1 -> dxos.org/scene/2', () => {
   test('a stored version-1 canvas is migrated to version 2 in the current shape', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);

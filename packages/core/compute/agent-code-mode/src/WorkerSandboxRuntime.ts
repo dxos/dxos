@@ -28,14 +28,14 @@ import * as Wire from './Wire.ts';
 import { type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
 /**
- * The model's code, running on its own thread against its own ECHO client — whichever platform the
+ * The model's code, running on its own thread against its own ECHO client - whichever platform the
  * thread belongs to. The entries (`WorkerSandboxEntry` for `node:worker_threads`,
  * `WorkerSandboxBrowserEntry` for a Web Worker) only receive the port and the init and hand them here.
  *
  * Nothing here is special-cased for the sandbox: the worker connects an ordinary {@link EchoClient}
  * to the host's services and asks the dialect for its ordinary bindings, so the code sees the same
  * live objects and the same API it would in-process. The host's only extra job is the handful of
- * calls ECHO has no service for — printing, invoking a skill's operation, and reporting the result.
+ * calls ECHO has no service for - printing, invoking a skill's operation, and reporting the result.
  */
 
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
@@ -72,7 +72,7 @@ type SandboxClient = Effect.Success<ReturnType<typeof connect>>;
 const evaluate = (client: SandboxClient, init: SandboxInit) =>
   Effect.gen(function* () {
     const echo = new EchoClient({});
-    // The worker is simply another client of the host's services — the same connection the tab makes.
+    // The worker is simply another client of the host's services - the same connection the tab makes.
     echo.connectToService({ dataService: client, queryService: client });
     yield* Effect.promise(() => echo.open());
 
@@ -80,11 +80,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     // rebuilds each one and registers it. Queries and `make` then name types exactly as on the host.
     //
     // Rebuilt through the effect schema rather than by `makeObjectFromJsonSchema`, which returns a
-    // STORED schema entity — one the registry holds but `Type.isObject` rejects, so `make` would not
+    // STORED schema entity - one the registry holds but `Type.isObject` rejects, so `make` would not
     // find a type to construct from.
     //
     // One at a time: the JSON-schema round trip does not cover every schema (a record keyed by a
-    // pattern, for one), and a type the worker cannot rebuild must cost only that type — not every
+    // pattern, for one), and a type the worker cannot rebuild must cost only that type - not every
     // evaluation in a workspace that happens to register it.
     const types = init.types.flatMap(({ typename, version, jsonSchema, skills }) => {
       try {

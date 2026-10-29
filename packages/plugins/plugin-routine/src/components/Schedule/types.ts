@@ -11,7 +11,7 @@ export const MinutelySpec = Schema.Struct({
     Schema.check(Schema.isBetween({ minimum: 1, maximum: 59 })),
   ).annotate({
     title: 'Every (minutes)',
-    description: '1–59',
+    description: '1-59',
   }),
 });
 
@@ -22,14 +22,14 @@ export const HourlySpec = Schema.Struct({
     Schema.check(Schema.isBetween({ minimum: 1, maximum: 23 })),
   ).annotate({
     title: 'Every (hours)',
-    description: '1–23',
+    description: '1-23',
   }),
   minute: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isBetween({ minimum: 0, maximum: 59 })),
   ).annotate({
     title: 'At minute',
-    description: '0–59',
+    description: '0-59',
   }),
 });
 
@@ -40,14 +40,14 @@ export const DailySpec = Schema.Struct({
     Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
   ).annotate({
     title: 'Hour',
-    description: '0–23',
+    description: '0-23',
   }),
   minute: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isBetween({ minimum: 0, maximum: 59 })),
   ).annotate({
     title: 'Minute',
-    description: '0–59',
+    description: '0-59',
   }),
 });
 
@@ -63,14 +63,14 @@ export const WeeklySpec = Schema.Struct({
     Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
   ).annotate({
     title: 'Hour',
-    description: '0–23',
+    description: '0-23',
   }),
   minute: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isBetween({ minimum: 0, maximum: 59 })),
   ).annotate({
     title: 'Minute',
-    description: '0–59',
+    description: '0-59',
   }),
 });
 
@@ -89,14 +89,14 @@ export const MonthlySpec = Schema.Struct({
     Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
   ).annotate({
     title: 'Hour',
-    description: '0–23',
+    description: '0-23',
   }),
   minute: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isBetween({ minimum: 0, maximum: 59 })),
   ).annotate({
     title: 'Minute',
-    description: '0–59',
+    description: '0-59',
   }),
 });
 

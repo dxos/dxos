@@ -56,7 +56,7 @@ export default Capability.makeModule(
     let subscription: { unsubscribe: () => void } | undefined;
     let removeUnloadGuard: (() => void) | undefined;
 
-    // Registered BEFORE the fork so it runs AFTER the fiber's interrupt — scope finalizers run in
+    // Registered BEFORE the fork so it runs AFTER the fiber's interrupt - scope finalizers run in
     // reverse order of addition, so the in-flight initialization stops before the client it is
     // initializing goes away.
     yield* Effect.addFinalizer(() =>
@@ -108,7 +108,7 @@ export default Capability.makeModule(
       // and reset must reload too, but to a different URL. `reload()` re-requests the *current* URL
       // (path included); after a reset the current route (e.g. the Devices settings panel where reset
       // was triggered) points at now-deleted data, so reopening it shows stale/broken UI. Navigating
-      // to `origin` instead drops the path and boots the app fresh — which is also what the app's own
+      // to `origin` instead drops the path and boots the app fresh - which is also what the app's own
       // post-reset flow targets. The two branches differ only when the path isn't already `/`; a
       // normal reconnect keeps the user where they were, a reset returns them to the root.
       //
@@ -156,7 +156,7 @@ export default Capability.makeModule(
             Effect.runPromiseExit,
           );
           // Shutting the manager down mid-activation interrupts this fiber, which is the subscription
-          // ending rather than a failure — and rethrowing it from this floating promise surfaces as an
+          // ending rather than a failure - and rethrowing it from this floating promise surfaces as an
           // unhandled rejection. Real failures still propagate.
           if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
             EffectEx.throwCause(exit.cause);
@@ -165,7 +165,7 @@ export default Capability.makeModule(
       });
     }).pipe(
       // A failed client init is fatal to the session: every dependent surface stays suspended.
-      // The fork is outside the render tree, so the app has to be told — React never sees it.
+      // The fork is outside the render tree, so the app has to be told - React never sees it.
       Effect.catch((error) =>
         Effect.gen(function* () {
           log.error('client initialization failed', { error: String(error) });
@@ -184,7 +184,7 @@ export default Capability.makeModule(
 
     log('client capability ready (initialization in flight)');
 
-    // `waitUntilInitialized` is the completion signal only — a failed `initialize()` rejects at its
+    // `waitUntilInitialized` is the completion signal only - a failed `initialize()` rejects at its
     // own call site and leaves this pending forever, so the wait is bounded by the same budget.
     const clientServiceLayer = awaitInitialization
       ? Layer.effect(

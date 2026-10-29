@@ -155,17 +155,17 @@ type SlackEffect<T> = Effect.Effect<
 /**
  * Slack uses HTTP 200 + `{ ok: false, error: '<code>' }` for application errors,
  * so 5xx and 429 are the only meaningful retryable HTTP statuses. For
- * `ok: false`, we surface a {@link SlackApiError} from the response body —
+ * `ok: false`, we surface a {@link SlackApiError} from the response body -
  * that error is NOT retried because the failure mode (auth revoked, missing
  * scope, channel not found) won't change between attempts.
  *
  *  - Transport / encode / invalid-URL failures: yes (transient by nature).
- *  - 429 (rate limited) and 5xx: yes — Slack's rate limiter sets `Retry-After`,
+ *  - 429 (rate limited) and 5xx: yes - Slack's rate limiter sets `Retry-After`,
  *    but exponential backoff is a reasonable default until we wire up the header.
- *  - 4xx other than 429: no — won't recover on retry.
+ *  - 4xx other than 429: no - won't recover on retry.
  *  - TimeoutError: yes.
- *  - Schema decode failures (`SchemaError`): no — payload won't become valid on retry.
- *  - SlackApiError: no — body-level "ok: false" is an application error, not transient.
+ *  - Schema decode failures (`SchemaError`): no - payload won't become valid on retry.
+ *  - SlackApiError: no - body-level "ok: false" is an application error, not transient.
  */
 const shouldRetry = (
   error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | SlackApiError,
@@ -235,13 +235,13 @@ const slackRequest = <T extends { ok: boolean; error?: string }>(
  *    `Authorization` in `Access-Control-Allow-Headers`. Sending the bearer
  *    header triggers a preflight that's rejected, blocking every request
  *    from a browser origin.
- *  - The legacy `?token=…` query-string form is rejected with `invalid_auth`
- *    for OAuth v2 / granular-scope tokens (`xoxb-…`). Confirmed by direct
- *    curl: `Authorization: Bearer …` returns `ok: true`, `?token=…` on the
+ *  - The legacy `?token=...` query-string form is rejected with `invalid_auth`
+ *    for OAuth v2 / granular-scope tokens (`xoxb-...`). Confirmed by direct
+ *    curl: `Authorization: Bearer ...` returns `ok: true`, `?token=...` on the
  *    same token returns `invalid_auth`. Slack's docs imply this still works,
  *    but in practice they've tightened it for v2 tokens.
  *  - POST with `application/x-www-form-urlencoded` is a "simple" CORS
- *    request — no preflight — and Slack's Web API accepts the token in the
+ *    request - no preflight - and Slack's Web API accepts the token in the
  *    body under the same `token` key, equivalently to the bearer header.
  *    Every method we use (`auth.test`, `conversations.list`,
  *    `conversations.history`, `users.info`) accepts POST.
@@ -348,8 +348,8 @@ const SlackBotsInfoResponseSchema = Schema.Struct({
  *
  * Used to resolve the friendly name of bot-posted messages where Slack
  * supplies only `bot_id` (incoming-webhook posts, legacy bot users). The
- * `bot_id` namespace (`B…`) is disjoint from user ids (`U…`) and `users.info`
- * does NOT accept bot ids — the dedicated `bots.info` method is required.
+ * `bot_id` namespace (`B...`) is disjoint from user ids (`U...`) and `users.info`
+ * does NOT accept bot ids - the dedicated `bots.info` method is required.
  */
 export const fetchBot = (botId: string): SlackEffect<SlackBot | undefined> =>
   Effect.gen(function* () {
@@ -363,12 +363,12 @@ export const fetchBot = (botId: string): SlackEffect<SlackBot | undefined> =>
 /**
  * Fetches messages from a single conversation (`conversations.history`).
  *
- * `oldest` is a Slack ts string (`"1700000000.000000"`) — we store the most
+ * `oldest` is a Slack ts string (`"1700000000.000000"`) - we store the most
  * recent processed `ts` as the binding's `cursor` so subsequent syncs
  * pick up only new messages. Drains every page so callers see the full
  * delta in one call; `limit` caps the per-request page size only.
  *
- * Threaded replies are NOT included here — Slack returns parent messages with
+ * Threaded replies are NOT included here - Slack returns parent messages with
  * `thread_ts === ts` and `reply_count > 0`; replies live in
  * `conversations.replies` and would be fetched separately if needed.
  */
@@ -406,7 +406,7 @@ export const fetchHistory = (
 const SlackPostMessageResponseSchema = Schema.Struct({
   ok: Schema.Boolean,
   error: Schema.String.pipe(Schema.optional),
-  /** The conversation the message landed in (a DM's `D…` id when posting to a user). */
+  /** The conversation the message landed in (a DM's `D...` id when posting to a user). */
   channel: Schema.String.pipe(Schema.optional),
   /** The posted message's timestamp; its id within the conversation. */
   ts: Schema.String.pipe(Schema.optional),

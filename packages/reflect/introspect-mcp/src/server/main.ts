@@ -120,12 +120,12 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   const args = parseArgs(argv);
 
   // Kick off indexing in the background. We deliberately DON'T await
-  // `introspector.ready` here — on a cold cache that's ~80s of ts-morph
+  // `introspector.ready` here - on a cold cache that's ~80s of ts-morph
   // parsing, longer than most MCP clients (Inspector, Claude Code, Composer)
   // will wait for `initialize` / `tools/list`. Each tool handler awaits
   // `introspector.ready` itself before doing work, so:
   //
-  //   - `initialize`     responds instantly (MCP handshake — no introspector calls)
+  //   - `initialize`     responds instantly (MCP handshake - no introspector calls)
   //   - `tools/list`     responds instantly (registered statically in createServer)
   //   - `tools/call`     waits for indexing, then runs
   //
@@ -165,19 +165,19 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   } else {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    // Stay alive until stdin closes — the SDK handles that signal internally.
+    // Stay alive until stdin closes - the SDK handles that signal internally.
   }
 };
 
 const runHttp = async (serverFactory: () => Awaited<ReturnType<typeof createServer>>, args: Args): Promise<void> => {
-  // Stateful mode — we keep one transport per client session. The session ID
+  // Stateful mode - we keep one transport per client session. The session ID
   // is returned in the initialize response and the client echoes it on every
   // subsequent request. Required because the MCP client expects to send
   // `notifications/initialized` (and later requests) under the same session.
   const transports = new Map<string, StreamableHTTPServerTransport>();
 
   const httpServer = createHttpServer((req: IncomingMessage, res: ServerResponse) => {
-    // CORS — Composer (and any other browser-based MCP client) sends a
+    // CORS - Composer (and any other browser-based MCP client) sends a
     // cross-origin preflight before the POST. Without these headers, the
     // browser blocks the request and the underlying client surfaces a generic
     // "UnknownException" from Effect.tryPromise. We allow any origin because
@@ -226,7 +226,7 @@ const runHttp = async (serverFactory: () => Awaited<ReturnType<typeof createServ
       if (typeof sessionId === 'string' && transports.has(sessionId)) {
         transport = transports.get(sessionId)!;
       } else {
-        // No session yet — must be an `initialize` request. Spin up a new
+        // No session yet - must be an `initialize` request. Spin up a new
         // McpServer + transport pair (the SDK requires a 1:1 binding) and
         // remember it under the session id Composer/Inspector echoes back.
         const sessionServer = serverFactory();
@@ -264,7 +264,7 @@ const runHttp = async (serverFactory: () => Awaited<ReturnType<typeof createServ
       if (args.apiKey) {
         console.error('[introspect-mcp] auth: Authorization: Bearer <token> required');
       } else {
-        console.error('[introspect-mcp] auth: none — bind to localhost only');
+        console.error('[introspect-mcp] auth: none - bind to localhost only');
       }
       resolveListen();
     });

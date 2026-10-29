@@ -18,9 +18,9 @@ import { type ContentBlock, Message, Task, TaskSet } from '@dxos/types';
  * bottleneck, at the sizes it was seen at.
  */
 export type BusyScale = {
-  /** Entries in the space's indexed trace feed — the largest driver of index passes and query scans. */
+  /** Entries in the space's indexed trace feed - the largest driver of index passes and query scans. */
   traceMessages: number;
-  /** Extra trace feeds of 2–12 entries, from the trace-feed creation race. */
+  /** Extra trace feeds of 2-12 entries, from the trace-feed creation race. */
   strayTraceFeeds: number;
   /** Data feeds holding only repeated context bindings, one per companion chat that was never saved. */
   bindingFeeds: number;
@@ -115,7 +115,7 @@ const OPERATIONS = [
 
 /**
  * The trace mix the dump showed: 45% operation.start, 42% operation.end, ~11% completeBlock tool
- * results (with a tail of 20–430 KB copies), the rest task status changes.
+ * results (with a tail of 20-430 KB copies), the rest task status changes.
  */
 const traceMessage = (index: number, spaceId: string): Trace.Message => {
   const bucket = index % 100;

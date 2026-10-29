@@ -17,7 +17,7 @@ import {
  * {@link EdgeSignalManager} exercises: swarm membership (JOIN/LEAVE), tag subscriptions (SUBSCRIBE),
  * point-to-point relay, and tag broadcast fan-out (DX-1125). Multiple {@link TestEdgeConnection}s
  * attach to one mesh, so a broadcast from one client is delivered to the matching subscribers of
- * another — mirroring the real edge without a WebSocket or Durable Object.
+ * another - mirroring the real edge without a WebSocket or Durable Object.
  */
 export class TestEdgeMesh {
   /** peerKey -> connection. */

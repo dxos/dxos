@@ -88,7 +88,7 @@ export class Scene<T = unknown> implements SceneView {
   /** When each actor first reached each joining phase, for measuring where startup time goes. */
   readonly timeline: Record<number, Record<string, number>> = {};
   readonly #started = performance.now();
-  /** Steps that failed, as `actor › step: error`. */
+  /** Steps that failed, as `actor > step: error`. */
   readonly errors: string[] = [];
 
   #hostSpace = new Trigger<Space>();
@@ -251,7 +251,7 @@ export class Scene<T = unknown> implements SceneView {
       }
     }).pipe(
       // A defect while joining otherwise vanishes into the client's startup, leaving the actor joining forever.
-      Effect.tapCause((cause) => Effect.sync(() => scene.errors.push(`${spec.name} › join: ${Cause.pretty(cause)}`))),
+      Effect.tapCause((cause) => Effect.sync(() => scene.errors.push(`${spec.name} > join: ${Cause.pretty(cause)}`))),
     );
   };
 
@@ -294,7 +294,7 @@ export class Scene<T = unknown> implements SceneView {
     const target = this.#target;
     invariant(target, 'the scene started before its space was seeded');
     void runFlow(this.flow, target.value, actors, this.clock, ({ actor, step, error }) => {
-      this.errors.push(`${actor} › ${step}: ${String(error)}`);
+      this.errors.push(`${actor} > ${step}: ${String(error)}`);
     }).then(() => this.#setPhase('done'));
     this.#setPhase('playing');
     if (!this.#disposed) {

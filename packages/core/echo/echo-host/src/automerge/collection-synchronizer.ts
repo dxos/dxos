@@ -120,7 +120,7 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Coalesce bursts of `setLocalCollectionState` (e.g. from `_onHeadsChanged` during an
    * import) into one broadcast microtask per collection. If another call arrives while
-   * the microtask is pending, we just flag the collection dirty — the in-flight run
+   * the microtask is pending, we just flag the collection dirty - the in-flight run
    * already reads the latest `localState`. If it arrives during the run itself, we
    * schedule exactly one follow-up.
    */
@@ -242,7 +242,7 @@ export class CollectionSynchronizer extends Resource {
     // Dedupe an unchanged remote state only while that peer is fully caught up. A peer whose
     // state is unchanged AND still diverges from ours is a stalled sync: skipping the diff
     // would suppress `peerCollectionStateUpdated`, and with it the `_handleCollectionSync`
-    // replication retry, for as long as the remote keeps repeating itself — i.e. forever.
+    // replication retry, for as long as the remote keeps repeating itself - i.e. forever.
     // The poll below can then only ever act on change, never on a stall, and the sole escape
     // is a reconnect.
     if (
@@ -562,7 +562,7 @@ export const isCollectionStateEqual = (left: CollectionState, right: CollectionS
  * over the wire. Empty-heads entries are inert (they don't participate in the
  * diff thanks to `Record.filter` in {@link diffCollectionState}) but they
  * inflate the on-wire payload AND end up advertised as "I know about this
- * document with no commits" to the receiver — leaking sedimentree ids that
+ * document with no commits" to the receiver - leaking sedimentree ids that
  * leaked into the local store from other spaces via the subduction
  * fingerprint exchange. Filtering at the send site is the cheapest place to
  * keep collection-state semantics aligned with `diffCollectionState`.
@@ -589,7 +589,7 @@ export const subsetRemoteToLocal = (local: CollectionState, remote: CollectionSt
  * Peer-aware wrapper around {@link diffCollectionState}.
  *
  * For mesh peers the diff is symmetric (every doc on either side participates).
- * For edge peers we first intersect the remote state with the local key set —
+ * For edge peers we first intersect the remote state with the local key set -
  * see {@link subsetRemoteToLocal} for why.
  */
 export const diffCollectionStateForPeer = (
@@ -633,8 +633,8 @@ export const diffCollectionState = (
     } else if (!headsOverlap(local.documents[documentId], remote.documents[documentId])) {
       // Subduction's `getAllHeads()` on the edge mixes raw `LooseCommit` tips with
       // fragment heads (commit IDs promoted to depth >= 1 by leading-zero count of the
-      // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips —
-      // it has no notion of fragments — so the two views can disagree on a doc's
+      // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips -
+      // it has no notion of fragments - so the two views can disagree on a doc's
       // head set even when every change byte is replicated. We treat the doc as in
       // sync as long as both sides agree on at least one head.
       different.push(documentId);

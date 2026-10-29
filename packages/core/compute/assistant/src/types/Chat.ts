@@ -55,8 +55,8 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
 
     /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
-     * chat may work on a task that belongs somewhere else — a project's task set delegates one here
-     * — and an owning field re-parents every resolved member on each update of the chat, which
+     * chat may work on a task that belongs somewhere else - a project's task set delegates one here
+     * - and an owning field re-parents every resolved member on each update of the chat, which
      * would silently move that task out of the set that owns it. Tasks the chat itself creates are
      * parented to it explicitly; see {@link addTask}.
      */
@@ -82,7 +82,7 @@ export const make = (
 /**
  * Refs to the chats accompanying an object, stored on the subject itself (replaces the former
  * `CompanionTo` relation): the annotation is deleted with the subject, and its refs make the
- * parented chats real children — referenced and cascaded — rather than ref-less parent-edge
+ * parented chats real children - referenced and cascaded - rather than ref-less parent-edge
  * orphans reachable only by index query.
  */
 export const CompanionChatAnnotation = Annotation.make({
@@ -113,7 +113,7 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
 };
 
 /**
- * Starts a chat on a default session config — a project's, say — copied rather than referenced, so
+ * Starts a chat on a default session config - a project's, say - copied rather than referenced, so
  * a model later picked in the chat is the chat's own. A chat already carrying a config keeps it.
  */
 export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | undefined): void => {
@@ -143,7 +143,7 @@ export const addTask = (
 };
 
 /**
- * Appends existing tasks to the checklist. Ownership is deliberately untouched — the task keeps the
+ * Appends existing tasks to the checklist. Ownership is deliberately untouched - the task keeps the
  * parent it arrived with (contrast {@link addTask}, which parents what the chat creates), so a task
  * borrowed from a project's set stays in that set. Refs already on the checklist are skipped.
  * Returns the refs actually appended.
@@ -167,7 +167,7 @@ export const assignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): R
 };
 
 /**
- * Takes tasks off the checklist without destroying them — the inverse of {@link assignTasks}, and
+ * Takes tasks off the checklist without destroying them - the inverse of {@link assignTasks}, and
  * distinct from {@link deleteTask}, which also removes the members the chat owns. Returns the refs
  * actually removed.
  */
@@ -190,7 +190,7 @@ export const unassignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]):
 
 /**
  * Remove a task and its sub-tasks from `tasks`, the chat's checklist loaded in full (see
- * {@link loadTasks}) — an unloaded child is invisible to the walk and would be left orphaned in
+ * {@link loadTasks}) - an unloaded child is invisible to the walk and would be left orphaned in
  * the array. Returns everything dropped from the checklist.
  *
  * Only members the chat owns are destroyed: a delegated task belongs to the set that parents it,
@@ -236,7 +236,7 @@ export const loadForFeed = (feed: Feed.Feed): Effect.Effect<Chat | undefined, ne
     const chats = yield* Database.query(Filter.type(Chat)).run;
     return chats.find((chat) => feedEntityId(chat) === feed.id);
     // A chat-less feed is legitimate (a bare `AiSession`, or a database with the type unregistered),
-    // so callers get `undefined` rather than a failure — but a query that actually broke is logged,
+    // so callers get `undefined` rather than a failure - but a query that actually broke is logged,
     // since it is otherwise indistinguishable from the feed simply having no chat.
   }).pipe(
     Effect.catchCause((cause) =>
@@ -254,7 +254,7 @@ const MAX_OWNER_DEPTH = 8;
  * The project a conversation belongs to, if any.
  *
  * Walks the parent chain rather than reading the immediate parent, because a chat reaches its project
- * through whatever owns it — directly for a project chat, through the agent for an agent's chat.
+ * through whatever owns it - directly for a project chat, through the agent for an agent's chat.
  */
 export const peekProject = (chat: Chat): Project.Project | undefined => {
   let owner: Obj.Unknown | undefined = Obj.getParent(chat);
@@ -301,7 +301,7 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
 
 /**
  * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order, each followed by an indented
- * note line carrying the task's ref and any status/dependency notes — appended to the title, models
+ * note line carrying the task's ref and any status/dependency notes - appended to the title, models
  * paste the notes back into it. The ref renders as `[MNEMONIC](uri)` so the mnemonic the user reads
  * and the handle the tools take travel together and get pasted back verbatim.
  */

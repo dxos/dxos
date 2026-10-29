@@ -5,7 +5,7 @@
 // Runs INSIDE the Cloudflare Workers runtime via `@cloudflare/vitest-pool-workers`, opted in with
 // `workerd` in this package's vite config. That is the point rather than a detail: `WorkerdSandbox`
 // loads the model's code through the `worker_loaders` binding, which exists in no other runtime,
-// and the loaded isolate's outbound `fetch` is pinned to the worker under test — which the pool
+// and the loaded isolate's outbound `fetch` is pinned to the worker under test - which the pool
 // runs in THIS isolate, so the host handler a test registers is the one the sandbox answers
 // through. Nothing here is simulated.
 //
@@ -190,7 +190,7 @@ describe('workerd sandbox', () => {
     // Two bounds exist and the runtime's is the tighter one: with nothing pending anywhere,
     // workerd detects a request that can never respond and cancels it in milliseconds, long before
     // the sandbox's own budget elapses. Asserting only the sandbox's message would be asserting a
-    // path this runtime does not take, so what is pinned is the property that matters — the turn
+    // path this runtime does not take, so what is pinned is the property that matters - the turn
     // comes back, with a failure, fast.
     const started = Date.now();
     const result = await evaluate('await ops.stall({});', '30 seconds');

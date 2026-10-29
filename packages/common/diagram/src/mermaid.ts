@@ -5,7 +5,7 @@
 //
 // Mermaid flowchart dialect: parses the subset needed for block diagrams (node declarations,
 // subgraphs, directed edges) and compiles it to scene commands with a layered layout. Mermaid
-// carries no coordinates, so the dialect owns placement — see `dialect.ts` for the contract.
+// carries no coordinates, so the dialect owns placement - see `dialect.ts` for the contract.
 //
 
 import * as Layout from './layout.ts';
@@ -113,7 +113,7 @@ const NODE = /^([A-Za-z0-9_-]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?$/;
 const EDGE = /^(.+?)\s*(o-->|--\|>|\.\.\|>|--\{|-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
 const SUBGRAPH = /^subgraph\s+([A-Za-z0-9_-]+)(?:\s*\[(.*?)\])?\s*$/;
 
-// `%% ref A packages/core/echo` — a comment to mermaid proper, so sources stay portable.
+// `%% ref A packages/core/echo` - a comment to mermaid proper, so sources stay portable.
 const REF = /^%%\s*ref\s+([A-Za-z0-9_-]+)\s+(\S+)\s*$/;
 
 const unquote = (value: string) => value.trim().replace(/^"(.*)"$/, '$1');

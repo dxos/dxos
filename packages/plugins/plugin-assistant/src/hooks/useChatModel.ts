@@ -50,7 +50,7 @@ export const useChatModel = ({
 }: UseChatModelProps): ChatModel | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
-  // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
+  // Reactive subscription - re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
   const [feedSnapshot] = useObject(chat?.feed);
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 

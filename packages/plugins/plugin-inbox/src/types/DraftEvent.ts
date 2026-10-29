@@ -8,7 +8,7 @@ import { Event } from '@dxos/types';
 /**
  * A draft calendar event is a local `Event` ECHO object that lives in the space database (not the
  * calendar feed), is parented to its calendar (`Obj.setParent(event, calendar)`), and has not yet been
- * pushed to the remote calendar. It is the calendar analogue of an email draft — created / edited
+ * pushed to the remote calendar. It is the calendar analogue of an email draft - created / edited
  * offline, overlaid on the calendar, and pushed on save. Once synced, the provider's sync mapper
  * stamps its foreign key so it is no longer a draft.
  */
@@ -17,7 +17,7 @@ import { Event } from '@dxos/types';
 export const make = (props: Parameters<typeof Event.make>[0]): Event.Event => Event.make(props);
 
 /**
- * Whether an event has not yet been synced to any remote calendar — keyed on the absence of ANY
+ * Whether an event has not yet been synced to any remote calendar - keyed on the absence of ANY
  * provider's foreign key, since checking one provider's made every other connector's events drafts.
  */
 export const isDraft = (event: Event.Event): boolean => (Obj.getMeta(event).keys?.length ?? 0) === 0;

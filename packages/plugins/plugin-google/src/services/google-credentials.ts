@@ -15,7 +15,7 @@ import { GOOGLE_INTEGRATION_SOURCE } from '../constants.ts';
 
 /**
  * Reads a credential through {@link Credential.CredentialsService}, which resolves a server-custodied
- * token transparently — consumers here never see whether the value came from the space or from EDGE.
+ * token transparently - consumers here never see whether the value came from the space or from EDGE.
  *
  * Resolution is deferred to `get()` rather than done when the layer is built, so a long-running sync
  * picks up a rotated token instead of holding the one that was live when it started.

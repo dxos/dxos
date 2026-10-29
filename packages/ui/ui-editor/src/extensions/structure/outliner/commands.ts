@@ -16,8 +16,8 @@ import { type Item, getRange, treeFacet } from './tree.ts';
 //
 
 /**
- * The items a menu action operates on: the block selection expanded to whole subtrees, or — with no
- * selection — the caret's item. Menu commands (delete, toggle, ...) act over this scope so that a
+ * The items a menu action operates on: the block selection expanded to whole subtrees, or - with no
+ * selection - the caret's item. Menu commands (delete, toggle, ...) act over this scope so that a
  * selected subtree is the unit of the action rather than a single line.
  */
 export const getActionScope = (state: EditorState): Item[] => {
@@ -199,7 +199,7 @@ const ITEM_LINK = /^\[[^\]]*\]\([^)]+\)$/;
  * Whether the action scope's first item is already a single markdown link.
  *
  * Converting such an item again would replace the link with a link to a NEW object titled after the
- * old link's label, silently orphaning the first one — so callers gate the convert action on this.
+ * old link's label, silently orphaning the first one - so callers gate the convert action on this.
  */
 export const isItemLink = (state: EditorState): boolean => {
   const text = getItemText(state)?.trim();
@@ -236,7 +236,7 @@ export const replaceItemWithLink = (view: EditorView, { label, url }: ItemLink):
 // Misc commands.
 //
 
-/** Deletes the action scope — each selected item's whole subtree (or the caret item's) — and clears the selection. */
+/** Deletes the action scope - each selected item's whole subtree (or the caret item's) - and clears the selection. */
 export const deleteItem: Command = (view: EditorView) => {
   const { state } = view;
   const tree = state.facet(treeFacet);

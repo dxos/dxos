@@ -13,7 +13,7 @@ import { loadCases } from './util.ts';
 
 /**
  * Removes the case from the plan's ordering only. The TestCase object survives, because results in
- * past runs still reference it — and a run started before this still counts the key it captured.
+ * past runs still reference it - and a run started before this still counts the key it captured.
  */
 const handler: Operation.WithHandler<typeof QaOperation.RemoveCase> = QaOperation.RemoveCase.pipe(
   Operation.withHandler(

@@ -19,7 +19,7 @@ import { type ModelVariant } from '../models.ts';
 
 export type MessageFactsResult = {
   readonly facts: number;
-  /** Total characters of extractor input (`messageToDocument().text`) — the HTML-vs-text size signal. */
+  /** Total characters of extractor input (`messageToDocument().text`) - the HTML-vs-text size signal. */
   readonly inputChars: number;
 };
 
@@ -100,7 +100,7 @@ export const extractFactsForVariant = (
         );
 
       // A fresh cursor per run (this harness doesn't test resume behavior across calls, so there is no
-      // need to find-or-create/persist across invocations — just a real db-backed target for it to point at).
+      // need to find-or-create/persist across invocations - just a real db-backed target for it to point at).
       const target = yield* Database.add(Expando.make({ name: 'facts-benchmark-target' }));
       const cursor = yield* Database.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target) }));
       const { processed } = yield* runFactPipeline({ feed, cursor, extract, pageSize, concurrency });

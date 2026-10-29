@@ -3,7 +3,7 @@
 //
 
 //
-// Root view of the scene engine (§6–§8): owns the camera, the scene path, selection and the pointer
+// Root view of the scene engine (§6-§8): owns the camera, the scene path, selection and the pointer
 // state machine; renders the current scene through `SceneLayer` under one CSS transform and drills
 // in and out of portals with a camera transition then a root swap. Every model change goes through
 // the projection as an intent; the view never writes coordinates itself (decision 11).
@@ -59,7 +59,7 @@ export const CanvasNavigation = ({ classNames = 'top-2 left-2' }: CanvasBarProps
   const scenes = useAtomValue(store.views);
   const actions = useMemo<NavigationActions>(
     () => ({
-      // In isolation the crumbs read `Objects › <name>`, and the first leads back out.
+      // In isolation the crumbs read `Objects > <name>`, and the first leads back out.
       path: isolation ? [OBJECTS_CRUMB, isolation.composite] : path,
       nameOf: (id) => (id === OBJECTS_CRUMB ? 'Objects' : (scenes[id]?.name ?? id)),
       onPath: commands.openPath,

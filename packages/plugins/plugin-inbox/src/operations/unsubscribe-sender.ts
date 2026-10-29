@@ -12,7 +12,7 @@ import { InboxOperation, Mailbox } from '#types';
 /**
  * Unsubscribes from a bulk sender: adds a skip-sender filter to the mailbox (hides existing + future
  * mail) and, when the `List-Unsubscribe` header exposes an HTTP target, fires the RFC 8058 one-click
- * POST (`List-Unsubscribe=One-Click`). The HTTP request is best-effort — a failure never blocks the
+ * POST (`List-Unsubscribe=One-Click`). The HTTP request is best-effort - a failure never blocks the
  * local filter. A mailto-only affordance can't be one-clicked, so only the filter is applied.
  */
 const handler = InboxOperation.UnsubscribeSender.pipe(
@@ -24,12 +24,12 @@ const handler = InboxOperation.UnsubscribeSender.pipe(
         return { filtered: false, unsubscribed: false };
       }
 
-      // Local skip filter — hides the sender across the UI / analysis (idempotent).
+      // Local skip filter - hides the sender across the UI / analysis (idempotent).
       Mailbox.ignoreSender(mailbox, email);
       yield* Effect.promise(() => db.flush());
 
       // Fire the one-click POST when an HTTP target exists (RFC 8058); best-effort, fire-and-forget.
-      // `mode: 'no-cors'` — the unsubscribe endpoint is a third-party origin that returns no
+      // `mode: 'no-cors'` - the unsubscribe endpoint is a third-party origin that returns no
       // `Access-Control-Allow-Origin`, so a normal fetch is blocked by CORS (and logs a console error)
       // even though the local skip filter above already suppresses the sender. A one-click POST needs no
       // response body, and its `Content-Type: application/x-www-form-urlencoded` is CORS-safelisted, so a

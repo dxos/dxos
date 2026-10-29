@@ -326,7 +326,7 @@ async function main() {
   const env = argv.env;
   const dryRun = argv['dry-run'];
 
-  console.log(chalk.bold.cyan(`\n🚀 Uploading vendored packages to R2`));
+  console.log(chalk.bold.cyan(`\n\u{1F680} Uploading vendored packages to R2`));
   console.log(chalk.cyan(`   Bucket: ${BUCKET}`));
   console.log(chalk.cyan(`   Environment: ${env}`));
   console.log(chalk.cyan(`   Concurrency: ${CONCURRENCY}`));
@@ -414,7 +414,7 @@ async function main() {
   }
 
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  console.log(chalk.bold.green(`\n✨ All ${files.length} files uploaded successfully in ${duration}s!\n`));
+  console.log(chalk.bold.green(`\n\u2728 All ${files.length} files uploaded successfully in ${duration}s!\n`));
 }
 
 main().catch((error) => {

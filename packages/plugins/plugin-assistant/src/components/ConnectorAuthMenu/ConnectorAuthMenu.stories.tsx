@@ -31,7 +31,7 @@ import { translations } from '#translations';
 import { ConnectorAuthMenu } from './ConnectorAuthMenu.tsx';
 
 /** `connector-b` already has a Connection below, so it renders as a "reuse" entry; `connector-a` has
- * none, so it renders as a "Connect" entry — together they exercise both item kinds and the
+ * none, so it renders as a "Connect" entry - together they exercise both item kinds and the
  * separator between them. `Default` renders the `ConnectorAuthMenu` component. `Toolbar` feeds the
  * same `ConnectorAuth.actions` atom into an object toolbar the way studio/ibkr/inbox do. */
 const CredentialSchema = Schema.Struct({ apiKey: Schema.String.annotate({ title: 'API key' }) });
@@ -143,7 +143,7 @@ const meta = {
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
 
-              // `connector-b` already has a connection — offered for reuse.
+              // `connector-b` already has a connection - offered for reuse.
               const accessToken = AccessToken.make({ source: 'connector-b.example', token: 'mock-token' });
               space.db.add(
                 Connection.make({

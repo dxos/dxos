@@ -24,7 +24,7 @@ type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObjec
  * owned instructions and artifacts collection.
  *
  * Also the "create Repository" entry: a project names the repository its work lands in, and a `Ref`
- * field offers inline create only for a typename some plugin can create — without this the
+ * field offers inline create only for a typename some plugin can create - without this the
  * project's repository picker had no `+`.
  *
  * Specs are created empty from the nav menu; a spec's features are made on its map.

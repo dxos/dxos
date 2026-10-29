@@ -21,8 +21,8 @@ import {
 import { createMarkdownStreamController } from './create-controller.ts';
 
 /**
- * The host↔editor seam: a host mounts the controller and publishes the context widgets call back
- * through, but the controller's dispatches are no-ops until the editor view exists — and the host has no
+ * The host<->editor seam: a host mounts the controller and publishes the context widgets call back
+ * through, but the controller's dispatches are no-ops until the editor view exists - and the host has no
  * signal for when that is. These pin the contract that a context set at any point still reaches widgets.
  */
 describe('MarkdownStreamController context', () => {
@@ -30,7 +30,7 @@ describe('MarkdownStreamController context', () => {
     const harness = createHarness();
     const context = { rewind: () => {} };
 
-    // No view yet — this is what a host mounting the controller in an effect actually does.
+    // No view yet - this is what a host mounting the controller in an effect actually does.
     harness.controller.setContext(context);
     expect(harness.widgetContext()).toBeUndefined();
 
@@ -56,7 +56,7 @@ describe('MarkdownStreamController context', () => {
     expect(harness.widgetContext()).toBeUndefined();
   });
 
-  // `setContent` resets the document and rebuilds decorations, which used to clear the context — the
+  // `setContent` resets the document and rebuilds decorations, which used to clear the context - the
   // context belongs to the host, not the document, so it has to survive.
   test('the context survives a document reset', async ({ expect }) => {
     const harness = createHarness();

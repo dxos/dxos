@@ -353,7 +353,7 @@ export type ReorderItemBinding = {
  * with the list controller once both `rowRef` and `handleRef` are attached. Unmounting (or
  * detaching either ref) tears down the registration.
  *
- * Called inside the item component, not in the parent's render loop — this is what keeps
+ * Called inside the item component, not in the parent's render loop - this is what keeps
  * us inside the rules of hooks.
  */
 export const useReorderItem = <T>(controller: ReorderListController<T>, id: string): ReorderItemBinding => {
@@ -427,8 +427,8 @@ export const useReorderItem = <T>(controller: ReorderListController<T>, id: stri
  * automatically. Pair with `OrderedList.Viewport` (or any caller-owned ScrollArea) so long
  * lists can be reordered without manually scrolling first.
  *
- * `autoScrollForElements` is global — it activates on every drag regardless of which list
- * started it — so it's safe to register one element per scroll surface.
+ * `autoScrollForElements` is global - it activates on every drag regardless of which list
+ * started it - so it's safe to register one element per scroll surface.
  *
  * Returns a callback ref so the registration fires as soon as the element attaches and the
  * cleanup fires when it detaches; React doesn't re-run effects on mutable `ref.current`

@@ -41,10 +41,10 @@ const hasMetrics = (snapshot?: Ibkr.FundamentalsSnapshot): boolean =>
   ].some((value) => value != null) ||
     hasAdditionalFacts(snapshot));
 
-/** Humanize an XBRL concept name for display, e.g. `StockholdersEquity` → `Stockholders Equity`. */
+/** Humanize an XBRL concept name for display, e.g. `StockholdersEquity` -> `Stockholders Equity`. */
 const formatConceptLabel = (concept: string): string => concept.replace(/([A-Z])/g, ' $1').trim();
 
-/** debtToEquity is a plain ratio, not currency or percent — format as a plain decimal. */
+/** debtToEquity is a plain ratio, not currency or percent - format as a plain decimal. */
 const formatFundamentalValue = (
   format: Format.TypeFormat | undefined,
   jsonPath: string | undefined,

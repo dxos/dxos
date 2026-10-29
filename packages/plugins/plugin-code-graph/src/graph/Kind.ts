@@ -37,7 +37,7 @@ const CLASS_NAMES: readonly [string, string][] = [
 /** Classes that say only what the resource is structurally, which the coarse kind already says. */
 const STRUCTURAL = new Set(['Symbol', 'File', 'Package', 'Member']);
 
-/** `EchoType` → `echo type`, for a class the table does not name yet. */
+/** `EchoType` -> `echo type`, for a class the table does not name yet. */
 const spaced = (name: string): string => name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
 /**
@@ -71,7 +71,7 @@ export const describe = ({
 export const titleOf = (node: Pick<CodeGraph.Node, 'id' | 'kind' | 'label'>): string =>
   node.kind === 'symbol' ? Iri.labelOf(node.id) : node.label;
 
-/** IRIs a SPARQL `<…>` term can hold as written. */
+/** IRIs a SPARQL `<...>` term can hold as written. */
 const isSafeIri = (iri: string): boolean => Iri.isIri(iri) && !/[\s<>"{}|\\^`]/.test(iri);
 
 /**

@@ -26,7 +26,7 @@ export const handler = Effect.fn(function* ({
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
 
-  // Validate up front — an invalid host inside `onConnecting` would abort after the invitation
+  // Validate up front - an invalid host inside `onConnecting` would abort after the invitation
   // is already hosted, without printing the codes.
   yield* Effect.try({
     try: () => new URL(host),

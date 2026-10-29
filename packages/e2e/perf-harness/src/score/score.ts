@@ -6,14 +6,14 @@
 // Budget scoring for trended performance numbers.
 //
 // A metric's budget is two values on its own scale: `target`, the value we want, and `limit`, the
-// worst value still inside the expected range. Scores run 0–1. A metric at or better than its target
-// scores 1 — capped, so beating one budget by a mile cannot hide a regression in another. Past the
+// worst value still inside the expected range. Scores run 0-1. A metric at or better than its target
+// scores 1 - capped, so beating one budget by a mile cannot hide a regression in another. Past the
 // target the score decays in log space, `1 / (1 + x²)` with `x = ln(value / target) / ln(limit / target)`:
 //
 //   value    target   limit   limit·band   limit·band²
 //   score       1.0     0.5          0.2           0.1        (floored at 0.01)
 //
-// Log space because performance moves by ratios — 2× slower is the same regression at 1ms and 1s —
+// Log space because performance moves by ratios - 2× slower is the same regression at 1ms and 1s -
 // and the curve is flat at the target, so noise just above it costs almost nothing, while a doubling
 // past the limit still reads as a steady decline rather than falling off a cliff.
 //
@@ -107,7 +107,7 @@ const excess = (value: number, { target, limit, direction = 'lower' }: Budget): 
   return ratio <= 1 ? 0 : Math.log(ratio) / Math.log(band);
 };
 
-/** The 0–1 score of one value against its budget. */
+/** The 0-1 score of one value against its budget. */
 export const scoreValue = (value: number, budget: Budget): number => {
   if (value === 0) {
     // A measured zero is ideal for a cost and worthless for a throughput; the log scale cannot place it.

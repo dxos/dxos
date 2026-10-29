@@ -10,7 +10,7 @@ import type * as Registry from '@dxos/app-framework/Registry';
 /**
  * Reads the registry plugin catalog from `manager.pluginRegistry.plugins`.
  * The catalog is loaded once when the plugin manager is constructed (with a
- * provider) so this hook is purely reactive — subscribers re-render as the
+ * provider) so this hook is purely reactive - subscribers re-render as the
  * `{entries, loading, error}` state settles.
  */
 export const useRegistryPlugins = (): Registry.PluginsState => {

@@ -13,7 +13,7 @@ import { PluginItem, type PluginItemProps } from './PluginItem.tsx';
 export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags' | 'hasUpdate' | 'failure'> & {
   plugins?: readonly Plugin.Plugin[];
   /**
-   * Map from plugin id → extra tags to display (e.g. `registry`, `local`).
+   * Map from plugin id -> extra tags to display (e.g. `registry`, `local`).
    * Computed by the container; not persisted to plugin meta.
    */
   extraTagsById?: Record<string, readonly string[]>;
@@ -23,7 +23,7 @@ export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags' | 'ha
    */
   updateAvailableIds?: ReadonlySet<string>;
   /**
-   * Map from plugin id → most recent failure record. Used to render a warning
+   * Map from plugin id -> most recent failure record. Used to render a warning
    * badge next to the plugin name. Sourced from `PluginManager.failed`.
    */
   failuresById?: Record<string, PluginManager.PluginFailure>;

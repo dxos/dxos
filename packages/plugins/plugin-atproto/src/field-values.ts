@@ -10,10 +10,10 @@ import { getFieldPublishFlags } from './annotation.ts';
 /** Format a resolved (non-ref) field value as the compact string the network view shows. */
 export const formatValue = (value: unknown): string => {
   if (value == null) {
-    return '—';
+    return '-';
   }
   if (Array.isArray(value)) {
-    return value.length ? value.join(', ') : '—';
+    return value.length ? value.join(', ') : '-';
   }
   if (typeof value === 'boolean') {
     return value ? 'Yes' : 'No';
@@ -22,8 +22,8 @@ export const formatValue = (value: unknown): string => {
 };
 
 /**
- * The display value of a field as the network sees it — the lens output, not the raw ECHO value. A
- * `Ref<Text>` (e.g. a review) is resolved to its content, not shown as `Ref(…)`.
+ * The display value of a field as the network sees it - the lens output, not the raw ECHO value. A
+ * `Ref<Text>` (e.g. a review) is resolved to its content, not shown as `Ref(...)`.
  */
 export const resolveDisplayValue = async (value: unknown): Promise<string> => {
   if (!Ref.isRef(value)) {
@@ -31,16 +31,16 @@ export const resolveDisplayValue = async (value: unknown): Promise<string> => {
   }
   try {
     const target = await value.load();
-    return Obj.instanceOf(Text.Text, target) ? target.content || '—' : (Obj.getLabel(target) ?? '—');
+    return Obj.instanceOf(Text.Text, target) ? target.content || '-' : (Obj.getLabel(target) ?? '-');
   } catch {
-    return '—';
+    return '-';
   }
 };
 
 /**
  * Snapshot the display value of every Published leaf field, keyed by JSONPath. Captured at publish
  * time and stored on the publication so the companion can flag which Published fields have since
- * diverged — a diverged Published field is exactly what puts the object out of sync.
+ * diverged - a diverged Published field is exactly what puts the object out of sync.
  */
 export const computePublishedValues = async (object: Obj.Unknown): Promise<Record<string, string>> => {
   const type = Obj.getType(object);

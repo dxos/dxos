@@ -16,15 +16,15 @@ import { makeDiscordLayer } from '../services/index.ts';
 const GUILD_PAGE_LIMIT = 200;
 
 /**
- * Discovery only — fetch every guild the bot belongs to, then every text /
+ * Discovery only - fetch every guild the bot belongs to, then every text /
  * announcement channel inside each guild, and return one descriptor per
  * channel.
  *
- * `name` is rendered as `#channel — guild` so the integration UI can
+ * `name` is rendered as `#channel - guild` so the integration UI can
  * disambiguate same-named channels across multiple guilds without a separate
  * grouping concept. Failures fetching channels for one guild (e.g. the bot
  * was removed mid-call) are logged and skipped rather than failing the whole
- * discovery — every other guild remains visible.
+ * discovery - every other guild remains visible.
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels> =
   DiscordOperation.GetDiscordChannels.pipe(
@@ -52,7 +52,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels>
             guilds,
             (guild) =>
               rest.listGuildChannels(guild.id).pipe(
-                // Narrow to guild text / announcement channels — the only
+                // Narrow to guild text / announcement channels - the only
                 // shapes we sync. `type` 0 = GUILD_TEXT, 5 = GUILD_ANNOUNCEMENT;
                 // this also acts as a TS narrow to GuildChannelResponse since
                 // those type values only appear on that branch of the union.
@@ -64,7 +64,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels>
                 Effect.map((channels) =>
                   channels.map((channel) => ({
                     id: channel.id,
-                    name: channel.name ? `#${channel.name} — ${guild.name}` : `${channel.id} — ${guild.name}`,
+                    name: channel.name ? `#${channel.name} - ${guild.name}` : `${channel.id} - ${guild.name}`,
                     description: channel.topic ?? undefined,
                     metadata: {
                       guildId: guild.id,

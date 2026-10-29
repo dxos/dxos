@@ -30,7 +30,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
-      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card — after
+      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card - after
       // a grace period, so the pointer may already have opened another anchor by then. Only the
       // anchor currently shown may close the popover; a stale close from the one just left is dropped.
       if (event.state === false) {

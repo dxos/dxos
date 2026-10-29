@@ -422,7 +422,7 @@ describe('IndexEngine', () => {
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
-      // First update with no data — both sub-indexes report done immediately.
+      // First update with no data - both sub-indexes report done immediately.
       const { updated: updated0, done: done0 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
       expect(updated0).toBe(0);
       expect(done0).toBe(true);
@@ -441,12 +441,12 @@ describe('IndexEngine', () => {
         },
       ]);
 
-      // Update with pending data — sub-indexes process objects, done is false.
+      // Update with pending data - sub-indexes process objects, done is false.
       const { updated: updated1, done: done1 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
       expect(updated1).toBeGreaterThan(0);
       expect(done1).toBe(false);
 
-      // Second update with no new data — all sub-indexes caught up, done is true.
+      // Second update with no new data - all sub-indexes caught up, done is true.
       const { updated: updated2, done: done2 } = yield* engine.update(Context.default(), dataSource, {
         spaceId: null,
       });
@@ -672,7 +672,7 @@ describe('IndexEngine', () => {
         const query = { query: 'Unflushed', spaceId: null, includeAllQueues: false, queues: null };
         expect(yield* engine.queryText(query)).toHaveLength(0);
 
-        // Draining is the caller's to do — `Database.flush({ secondaryIndexes: true })` in the app.
+        // Draining is the caller's to do - `Database.flush({ secondaryIndexes: true })` in the app.
         yield* engine.updateSecondaryIndexes(Context.default());
         expect(yield* engine.queryText(query)).toHaveLength(1);
       }, Effect.provide(TestLayer)),

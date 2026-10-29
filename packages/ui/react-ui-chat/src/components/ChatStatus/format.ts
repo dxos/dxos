@@ -8,7 +8,7 @@ const HOUR = 60 * MINUTE;
 
 /**
  * Formats elapsed milliseconds as a human-readable duration.
- * Tiers: `Ns` (< 60s), `Nm Xs` (< 60m), `Nh Xm` (≥ 60m).
+ * Tiers: `Ns` (< 60s), `Nm Xs` (< 60m), `Nh Xm` (>= 60m).
  * Negative inputs clamp to `0s`.
  */
 export const formatElapsed = (ms: number): string => {

@@ -18,7 +18,7 @@ import { SearchResultStack } from '#components';
 import { toSearchResults, useGlobalSearch } from '#hooks';
 
 export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
-  // TODO(burdon): Cross-space search — Milestone 2 (fan-out + merge).
+  // TODO(burdon): Cross-space search - Milestone 2 (fan-out + merge).
   const [query, setQuery] = useState<string>();
   // Scope the FTS query to user-facing types so results match what the app can render.
   const typeUris = ObjectCombobox.useListedTypeUris(space.db);

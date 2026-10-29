@@ -15,7 +15,7 @@ const ProcessManagerCapability = Capability.lazyModule(
   'ProcessManager',
   {
     // Event-mode on Startup: the body snapshots multi capabilities (LayerSpec, TraceSink,
-    // OperationHandler), so it must run after the full registry is in — the Startup wave
+    // OperationHandler), so it must run after the full registry is in - the Startup wave
     // fires post-registration and pulls all inactive multi providers first. A streaming
     // dependency round could otherwise run it before later plugins' specs contribute.
     activatesOn: ActivationEvents.Startup,

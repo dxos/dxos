@@ -15,7 +15,7 @@ import { omitId } from '../util/index.ts';
  *
  * An object's tags live in `Obj.getMeta(obj).tags` (off-schema), so the form surfaces them as an
  * extra field rather than reading the schema. The key is underscore-prefixed so it never collides
- * with a `tags` field an object schema declares itself — e.g. a `TagIndex` record on a feed host,
+ * with a `tags` field an object schema declares itself - e.g. a `TagIndex` record on a feed host,
  * whose `tags` is `Record<tagId, objectId[]>`, not an array. Extending such a schema with a `tags`
  * array threw "overlapping types at path: [\"tags\"]"; the disjoint `_tags` key avoids it. The
  * human-facing label is restored via the `title` annotation on {@link withMetaTags}.
@@ -46,13 +46,13 @@ const isTag = Obj.instanceOf(Tag.Tag);
 /**
  * Narrows a tag picker's candidates to the tags a user may apply by hand: those with no origin.
  *
- * A tag that carries an origin is owned by whoever put it there — a Gmail label or a JMAP folder is
+ * A tag that carries an origin is owned by whoever put it there - a Gmail label or a JMAP folder is
  * sync's to apply, and a canonical DXOS tag (`starred`, `sent`, `draft`) is applied by a purpose-built
  * affordance such as the star button or the draft lifecycle. Offering either in a generic picker
  * invites an attribution that nothing maintains: on a synced object the next delta silently strips it,
  * and on an unsynced one it never gets corrected at all. See `Tag.md` §"Tag origin".
  *
- * Non-tag candidates pass through untouched, so this is safe to apply to any ref field's results —
+ * Non-tag candidates pass through untouched, so this is safe to apply to any ref field's results -
  * hence generic in the element type rather than narrowed to `Entity.Any`, which concrete instances are
  * deliberately not assignable to.
  */
@@ -66,7 +66,7 @@ export const filterTagCandidates = <T>(results: readonly T[]): T[] =>
  * refs whose delete affordance knows nothing about tags, so the only way to make one non-removable
  * would be to thread tag-specific policy through a type-agnostic renderer. Holding them out of the
  * form value instead keeps them off the picker *and* out of reach of the delete button, and matches
- * where they are already surfaced — as chips on the object's own views.
+ * where they are already surfaced - as chips on the object's own views.
  *
  * The caller must write `preserved` back alongside whatever the form returns: `meta.tags` is replaced
  * wholesale on save, so omitting them would delete the object's provider tags on the first edit.

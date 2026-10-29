@@ -136,7 +136,7 @@ export class DxGrid extends LitElement {
   private cells: DxGridCells = { grid: {} };
 
   //
-  // `pos`, short for ‘position’, is the position in pixels of the viewport from the origin.
+  // `pos`, short for 'position', is the position in pixels of the viewport from the origin.
   //
 
   @state()
@@ -146,7 +146,7 @@ export class DxGrid extends LitElement {
   private posBlock = 0;
 
   //
-  // `size` (when not suffixed with ‘row’ or ‘col’, see above) is the size in pixels of the viewport.
+  // `size` (when not suffixed with 'row' or 'col', see above) is the size in pixels of the viewport.
   //
 
   @state()
@@ -182,7 +182,7 @@ export class DxGrid extends LitElement {
   private binBlockMax = defaultRowSize;
 
   //
-  // `vis`, short for ‘visible’, is the range in numeric index of the columns or rows which should be rendered within
+  // `vis`, short for 'visible', is the range in numeric index of the columns or rows which should be rendered within
   // the viewport. These start with naïve values that are updated before first contentful render.
   //
 
@@ -221,7 +221,7 @@ export class DxGrid extends LitElement {
   private templatefrozenRowsEnd = '';
 
   //
-  // `frozen…Size` is used to measure space available for the non-fixed planes
+  // `frozen...Size` is used to measure space available for the non-fixed planes
   //
 
   @state()
@@ -1407,7 +1407,7 @@ export class DxGrid extends LitElement {
     }
 
     // Commented-out code will let the event delta through unmodified if the cell can scroll but is scrolled to the end
-    // in the same direction as the wheel event, a.k.a. “overscroll”; this is probably undesirable, though.
+    // in the same direction as the wheel event, a.k.a. "overscroll"; this is probably undesirable, though.
 
     const { scrollWidth, clientWidth, scrollHeight, clientHeight /*, scrollLeft, scrollTop */ } = contentEl;
 

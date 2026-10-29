@@ -18,7 +18,7 @@ const TERMINATE_ACTION = 'terminate';
 
 /**
  * What an escalation tells the tab acting on it: who raised it, over which storage lock, and how
- * long the incumbent was given — the context the forced termination is reported with.
+ * long the incumbent was given - the context the forced termination is reported with.
  */
 const TerminateRequestSchema = Schema.Struct({
   issuerId: Schema.String,
@@ -52,14 +52,14 @@ export const displaceChannelFor = (storageLockKey: string): string => `${storage
  * lock tears down and releases it; that is cooperative and needs the incumbent's event loop. When
  * the incumbent is wedged badly enough not to service this channel it never hears `stop`, so the
  * starting worker escalates with `terminate`, which is addressed at the *tab* holding the
- * incumbent's `Worker` handle — the only party that can free the lock without the worker's help.
+ * incumbent's `Worker` handle - the only party that can free the lock without the worker's help.
  */
 export class DisplaceChannel {
   readonly #channel: BroadcastChannel;
 
   /**
    * Called when another worker posts `stop`, with whatever that worker said about itself. Assignable
-   * because what a stop means to this worker changes as it starts up — before the storage lock is
+   * because what a stop means to this worker changes as it starts up - before the storage lock is
    * granted there is nothing to stand down from.
    */
   onStop: (issuer: DisplaceIssuer) => void = () => {};

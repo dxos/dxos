@@ -89,7 +89,7 @@ export const makeDemoMessages = (): Message.Message[] => [
     },
   }),
   // A sender at a corporate domain with NO seeded Organization: the contact extractor creates both
-  // the Person and a derived Organization (`wayne-enterprises.com` → "Wayne-enterprises"), while
+  // the Person and a derived Organization (`wayne-enterprises.com` -> "Wayne-enterprises"), while
   // the CRM pipeline's allow-list gate still denies the sender (unknown org, not outbound).
   Message.make({
     threadId: 'demo-thread-wayne',
@@ -111,7 +111,7 @@ export const makeDemoMessages = (): Message.Message[] => [
 
 /**
  * Idempotently seeds the feed with the demo messages: appends only those whose subject is not already
- * present, so repeated runs — e.g. reopening the story against persistent (OPFS) storage — never
+ * present, so repeated runs - e.g. reopening the story against persistent (OPFS) storage - never
  * duplicate them.
  */
 export const seedDemoMessages = (feed: Feed.Feed): Effect.Effect<void, never, Database.Service> =>
@@ -126,7 +126,7 @@ export const seedDemoMessages = (feed: Feed.Feed): Effect.Effect<void, never, Da
 
 /**
  * Adds a Mailbox seeded from the pulled `@dxos/fixtures` mailbox corpus (served by the storybook
- * dev server at `/fixtures/<name>.json` — see `.storybook/main.mts`), falling back to the shared
+ * dev server at `/fixtures/<name>.json` - see `.storybook/main.mts`), falling back to the shared
  * demo messages when no corpus has been pulled (CI, fresh checkout). The dev server SPA-fallbacks
  * unknown paths with HTML, so gate on the content type rather than the status alone.
  */

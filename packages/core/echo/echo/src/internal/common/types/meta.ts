@@ -72,15 +72,15 @@ export const EntityMetaSchema = Schema.Struct({
   /**
    * Caller-supplied domain identity, unique within a space: two entities carrying the same
    * convergence key are the same entity and are merged into one. Declared by assigning this
-   * field inside an update callback — `Entity.update(x, (x) => { Entity.getMeta(x).convergenceKey = '…' })`
-   * — so it batches with the caller's other writes; there is deliberately no dedicated setter.
+   * field inside an update callback - `Entity.update(x, (x) => { Entity.getMeta(x).convergenceKey = '...' })`
+   * - so it batches with the caller's other writes; there is deliberately no dedicated setter.
    *
    * Objects only: the merge engine ignores the field on relations and types (not merge subjects
-   * yet), and treats the empty string as no key — both are verified at detection, in the worker,
+   * yet), and treats the empty string as no key - both are verified at detection, in the worker,
    * and in the client executor rather than at write time, since the field replicates from peers
    * that cannot be trusted to have validated it.
    *
-   * Opaque to the storage engine — callers that need generations encode them in the string
+   * Opaque to the storage engine - callers that need generations encode them in the string
    * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
    * Distinct from `key`/`version` above, which record the registry entry an instance was
    * created from (provenance, not identity).
@@ -94,13 +94,13 @@ export const EntityMetaSchema = Schema.Struct({
 
   /**
    * Unix ms timestamp when this entity was created.
-   * Read-only; sourced from the system section of the automerge document — not stored in meta.
+   * Read-only; sourced from the system section of the automerge document - not stored in meta.
    */
   createdAt: Schema.optional(Schema.Number),
 
   /**
    * Unix ms timestamp of the last automerge change on this entity's document.
-   * Read-only; derived from the automerge change graph — not stored in meta.
+   * Read-only; derived from the automerge change graph - not stored in meta.
    */
   updatedAt: Schema.optional(Schema.Number),
 });
@@ -116,9 +116,9 @@ const VIRTUAL_META_FIELDS: readonly string[] = ['createdAt', 'updatedAt'];
 /**
  * Stored meta fields holding a single scalar value.
  *
- * Derived from the schema rather than listed by hand: several places enumerate meta fields —
+ * Derived from the schema rather than listed by hand: several places enumerate meta fields -
  * snapshotting copies them, and persistence decides from them whether the meta section is worth
- * writing at all — and a hand-maintained list silently drops any field added later, so the field
+ * writing at all - and a hand-maintained list silently drops any field added later, so the field
  * appears to work until it crosses one of those boundaries.
  */
 export const SCALAR_META_FIELDS: readonly string[] = Object.keys(EntityMetaSchema.fields).filter(

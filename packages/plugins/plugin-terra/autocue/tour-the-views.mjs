@@ -122,7 +122,7 @@ export const steps = [
   },
   {
     name: 'Show the rotation gizmos',
-    narration: 'Gizmos show each object’s heading and orientation.',
+    narration: "Gizmos show each object's heading and orientation.",
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="terra.toolbar.toggle-gizmos"] >> nth=0', label: 'Gizmos' });
       await page.waitForTimeout(BEAT * 1.5);

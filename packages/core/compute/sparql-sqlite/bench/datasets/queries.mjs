@@ -141,7 +141,7 @@ export const DBLP = [
   ],
   ['D13-versions', 'path +', `SELECT ?v ?root WHERE { ?v dblp:isVersionOf+ ?root } LIMIT 100`],
   ['D14-sameAs-count', 'count', `SELECT (COUNT(*) AS ?n) WHERE { ?p owl:sameAs ?x }`],
-  // Rewrite of D10 with the year as a constant term: what an equality pushdown of STR(?y) = "…" would emit.
+  // Rewrite of D10 with the year as a constant term: what an equality pushdown of STR(?y) = "..." would emit.
   [
     'D10r-prolific-const',
     'aggregate+join',

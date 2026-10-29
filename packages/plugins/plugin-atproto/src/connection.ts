@@ -7,7 +7,7 @@ import { ATMOSPHERE_SOURCE, OAuthProvider } from '@dxos/protocols';
 
 /**
  * Connector ids that authenticate against the AT Protocol. The Atmosphere connector this plugin
- * contributes is identified by the OAuth provider it wraps; `bluesky` is plugin-bluesky's —
+ * contributes is identified by the OAuth provider it wraps; `bluesky` is plugin-bluesky's -
  * hardcoded here (rather than imported) so this system plugin does not depend on the labs plugin.
  */
 export const ATPROTO_CONNECTOR_IDS = new Set<string>([OAuthProvider.ATPROTO, 'bluesky']);

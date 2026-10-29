@@ -14,7 +14,7 @@ import { makeColumnIdsAtom, makePivotFieldIdAtom } from '../util/index.ts';
 
 /**
  * Minimal `ProjectionModel` for `spec.kind === 'items'` (no View). Supplies `pivotField`
- * and column options from `arrangement.columns` keys—written by sync so columns exist
+ * and column options from `arrangement.columns` keys-written by sync so columns exist
  * before refs hydrate. Stubs `getFieldProjections` / `getHiddenProperties` for shared
  * board/card UI; hides the pivot on the card body (column shows it); Expando cards render title only.
  */

@@ -5,7 +5,7 @@
 /**
  * Stories for turn folding: a chat transcript is treated as a sequence of turns, and each turn's
  * response is a foldable region built on CodeMirror's native folding. The fold ranges are supplied
- * by the story via a `TurnSource` — here, one that scans `<prompt>` boundaries (a user turn is a
+ * by the story via a `TurnSource` - here, one that scans `<prompt>` boundaries (a user turn is a
  * `<prompt>` element; the response is everything up to the next prompt).
  */
 

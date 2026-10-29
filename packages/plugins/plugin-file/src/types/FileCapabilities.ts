@@ -13,7 +13,7 @@ import * as Settings from './Settings.ts';
 /**
  * Descriptor for a registered `BlobBackend` storage option, surfaced in the file plugin's
  * settings UI. Actual upload/read logic lives in the Blob backend registered on the Hypergraph
- * under `storage` (see `client.graph.registerBlobBackend`) — this type carries no behavior.
+ * under `storage` (see `client.graph.registerBlobBackend`) - this type carries no behavior.
  */
 export type Backend = {
   /** Display label shown in the settings UI. */
@@ -22,7 +22,7 @@ export type Backend = {
   readonly description?: string;
   /**
    * `Blob.fromBytes`'s `storage` option to use when this backend is selected. Also the settings
-   * key identifying this backend — one `BlobBackend` is registered per storage name, so the two
+   * key identifying this backend - one `BlobBackend` is registered per storage name, so the two
    * concepts always coincide.
    */
   readonly storage: string;

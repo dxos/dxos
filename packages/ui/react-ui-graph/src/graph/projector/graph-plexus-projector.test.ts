@@ -23,7 +23,7 @@ const makeContext = () => {
 };
 
 // Mirrors plugin-explorer's relationOf: each relation/ref gets separate nodes for the outgoing
-// (focus is source, `→`) and incoming (focus is target, `←`) directions.
+// (focus is source, `->`) and incoming (focus is target, `<-`) directions.
 const relationOf = (edge: GraphLayoutEdge, focusId: string): PlexusRelation | undefined => {
   const outgoing = edge.source.id === focusId;
   const incoming = edge.target.id === focusId;
@@ -31,7 +31,7 @@ const relationOf = (edge: GraphLayoutEdge, focusId: string): PlexusRelation | un
     return undefined;
   }
   const direction = outgoing ? 'out' : 'in';
-  const arrow = outgoing ? '→' : '←';
+  const arrow = outgoing ? '\u2192' : '\u2190';
   if (edge.type === 'relation') {
     return { key: `relation:${direction}:HasRelationship`, label: `HasRelationship ${arrow}` };
   }
@@ -45,14 +45,14 @@ const relationOf = (edge: GraphLayoutEdge, focusId: string): PlexusRelation | un
 const graph: GraphModel.AnyData = {
   nodes: [{ id: 'p1' }, { id: 'org' }, { id: 'p2' }, { id: 'p3' }, { id: 'p4' }, { id: 'other' }] as any,
   edges: [
-    // Outgoing ref from focus → grouped under "organization →".
+    // Outgoing ref from focus -> grouped under "organization ->".
     { id: 'e1', type: 'ref', source: 'p1', target: 'org', data: { property: 'organization' } },
-    // Outgoing relations from focus → grouped under "HasRelationship →".
+    // Outgoing relations from focus -> grouped under "HasRelationship ->".
     { id: 'e2', type: 'relation', source: 'p1', target: 'p2', data: {} },
     { id: 'e3', type: 'relation', source: 'p1', target: 'p3', data: {} },
-    // Incoming relation to focus → separate "HasRelationship ←" node.
+    // Incoming relation to focus -> separate "HasRelationship <-" node.
     { id: 'e4', type: 'relation', source: 'p4', target: 'p1', data: {} },
-    // Edge NOT incident to focus → ignored.
+    // Edge NOT incident to focus -> ignored.
     { id: 'e5', type: 'ref', source: 'other', target: 'org', data: { property: 'organization' } },
   ] as any,
 };
@@ -75,9 +75,9 @@ describe('GraphPlexusProjector', () => {
     // Three relation nodes: outgoing relation, incoming relation, outgoing ref.
     const relations = byType(PLEXUS_NODE_TYPE_RELATION);
     expect(relations.map((node) => node.label).sort()).toEqual([
-      'HasRelationship ←',
-      'HasRelationship →',
-      'organization →',
+      'HasRelationship <-',
+      'HasRelationship ->',
+      'organization ->',
     ]);
 
     // Four object leaves (org, p2, p3 outgoing; p4 incoming); the non-incident edge is excluded.
@@ -85,7 +85,7 @@ describe('GraphPlexusProjector', () => {
     expect(objects.map((node) => node.id).sort()).toEqual(['org', 'p2', 'p3', 'p4']);
     expect(nodes.find((node) => node.id === 'other')).toBeUndefined();
 
-    // Hierarchy edges: focus→relation (3) + relation→object (4) = 7.
+    // Hierarchy edges: focus->relation (3) + relation->object (4) = 7.
     const edges = projector.layout.graph.edges;
     expect(edges).toHaveLength(7);
     expect(edges.every((edge) => edge.type === 'hierarchy')).toBe(true);

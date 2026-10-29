@@ -168,7 +168,7 @@ export const WithCommands: Story = {
     await waitFor(() => expect(optionLabels()).toEqual(['$track']));
 
     // `acceptCompletion` ignores Enter within `interactionDelay` (75ms, default) of the popover
-    // opening — an anti-flicker guard against an Enter that was already in flight before the
+    // opening - an anti-flicker guard against an Enter that was already in flight before the
     // options rendered. Real usage always clears this; wait it out so the test presses Enter the
     // way a person would (after seeing the popover), not mid-guard.
     await new Promise((resolve) => setTimeout(resolve, 150));

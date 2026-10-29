@@ -21,7 +21,7 @@ import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
 //
 // Two interfaces over one object, plus an inspector showing where the data actually lands.
 //
-// Both interfaces are the SAME component — `Form` from `@dxos/react-ui-form` — differing only in the
+// Both interfaces are the SAME component - `Form` from `@dxos/react-ui-form` - differing only in the
 // schema they are given. That is the whole claim of the lens stated as code: a surface written against
 // a type works on any object that lenses to it, with no knowledge that a lens is involved.
 //
@@ -46,7 +46,7 @@ export const DemoPanel = ({ label, children, testId }: { label: string; children
  * The changed subset of a form's values.
  *
  * Both schemas here are flat, so a changed json path is a property name. Passing only this subset is
- * what keeps a write minimal — handing the whole view to either sink would rewrite properties the user
+ * what keeps a write minimal - handing the whole view to either sink would rewrite properties the user
  * never touched and clobber a concurrent peer.
  *
  * Both panels drive this from `onValuesChanged` rather than `autoSave`: autosave fires on blur, and the
@@ -98,7 +98,7 @@ export const CanonicalTaskPanel = ({ task }: { task: Task.Task }) => {
   );
 
   return (
-    <DemoPanel label='Canonical — Form over Task' testId='canonical-panel'>
+    <DemoPanel label='Canonical - Form over Task' testId='canonical-panel'>
       <Form.Root schema={TaskForm} values={snapshot} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
@@ -144,14 +144,14 @@ export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
         return;
       }
       // The form reports which field the user just changed; the lens turns it into the minimal write on
-      // the base object — an `assign` to a mapped property, or an `overlay` when nothing maps.
+      // the base object - an `assign` to a mapped property, or an `overlay` when nothing maps.
       Lens.put(task, GtdLens, changedOnly(values, meta));
     },
     [task],
   );
 
   return (
-    <DemoPanel label='Lensed — Form over GtdTask' testId='lensed-panel'>
+    <DemoPanel label='Lensed - Form over GtdTask' testId='lensed-panel'>
       <Form.Root schema={GtdForm} values={view} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
@@ -178,7 +178,7 @@ const JsonSection = ({ title, data, testId }: { title: string; data: unknown; te
 /**
  * The proof, and the reason this pane exists: every lensed edit shows up here as an ordinary property
  * of the base object under its own schema, and the target-only fields show up under the object's
- * annotations — never as stray properties and never as a second object.
+ * annotations - never as stray properties and never as a second object.
  */
 export const RawInspector = ({ task }: { task: Obj.Unknown }) => {
   const [snapshot] = useObject(task);
@@ -199,7 +199,7 @@ export const RawInspector = ({ task }: { task: Obj.Unknown }) => {
           </Card.Row>
         </Card.Section>
         <JsonSection title='properties (Task schema)' data={properties} testId='inspector-properties' />
-        <JsonSection title='meta.annotations — lens overlay' data={overlays} testId='inspector-overlay' />
+        <JsonSection title='meta.annotations - lens overlay' data={overlays} testId='inspector-overlay' />
       </Card.Root>
     </DemoPanel>
   );

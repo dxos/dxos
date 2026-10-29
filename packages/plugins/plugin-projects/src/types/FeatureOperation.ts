@@ -22,8 +22,8 @@ import * as Spec from './Spec.ts';
 
 /**
  * Every type a spec's features touch. Declared on the operations (`types`) as well as in the plugin's schema
- * capability, because a host that imports the handler set without activating the plugin — the EDGE
- * operation-service behind MCP — registers only what the operations declare.
+ * capability, because a host that imports the handler set without activating the plugin - the EDGE
+ * operation-service behind MCP - registers only what the operations declare.
  */
 export const TYPES = [
   Feature.Feature,

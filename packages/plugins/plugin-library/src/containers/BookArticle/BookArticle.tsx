@@ -35,7 +35,7 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
-          {/* Paging controls for the reader — shown only in reading mode; no-op for PDF/no content. */}
+          {/* Paging controls for the reader - shown only in reading mode; no-op for PDF/no content. */}
           {viewMode === 'read' && (
             <>
               <Button.Root

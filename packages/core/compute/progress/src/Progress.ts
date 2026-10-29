@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-/** Lifecycle of a tracked task (a pipeline run, a sync, a benchmark stage, …). */
+/** Lifecycle of a tracked task (a pipeline run, a sync, a benchmark stage, ...). */
 export type TaskStatus = 'pending' | 'running' | 'done' | 'error';
 
 /** Live progress for one task: `current`/`total` is the item (e.g. message) index. */
@@ -34,7 +34,7 @@ export type TaskProgress = {
   readonly estimatedMs?: number;
   readonly note?: string;
   readonly error?: string;
-  /** Whether the producer registered a cancel handler — UIs show a cancel control when true. */
+  /** Whether the producer registered a cancel handler - UIs show a cancel control when true. */
   readonly cancellable?: boolean;
 };
 
@@ -56,19 +56,19 @@ export interface TaskHandle {
   readonly set: (current: number) => void;
   /**
    * Set (or revise) the expected total for the current phase. Pass `undefined` to return the task to
-   * indeterminate — a run that counted one phase and cannot count the next (a single model call, a
+   * indeterminate - a run that counted one phase and cannot count the next (a single model call, a
    * remote step reporting nothing) has to be able to drop the bar rather than leave it pinned at its
    * last fraction, which reads as stuck.
    */
   readonly total: (total: number | undefined) => void;
   /**
    * Enter a phase: sets the index, resets the item count, and clears the total unless one is given.
-   * Clearing is the default because the next phase's length is a fresh question — carrying the last
+   * Clearing is the default because the next phase's length is a fresh question - carrying the last
    * phase's total forward is how a bar ends up describing work it knows nothing about.
    */
   readonly phase: (phase: number, options?: { total?: number; note?: string }) => void;
   /**
-   * Set the plan without entering a phase — how a remote producer's status update lands, where the
+   * Set the plan without entering a phase - how a remote producer's status update lands, where the
    * count and the phase arrive together and the update must not reset either.
    */
   readonly plan: (options: { phases?: number; phase?: number }) => void;
@@ -82,13 +82,13 @@ export interface TaskHandle {
 }
 
 /**
- * A live progress registry. It is subscribable — every mutation notifies listeners, so a reactive
+ * A live progress registry. It is subscribable - every mutation notifies listeners, so a reactive
  * consumer (e.g. a browser panel) updates instantly while file/log sinks throttle.
  */
 export interface Api {
   /**
    * Registers (or resumes) a task and marks it running; returns a handle to update it.
-   * Pass `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
+   * Pass `onCancel` to make the task cancellable - UIs then show a cancel control that invokes
    * {@link Api.cancel}.
    */
   readonly task: (
@@ -244,8 +244,8 @@ const STALL_FLOOR_MS = 5_000;
 
 /**
  * Estimated remaining time (ms): the producer's `estimatedMs` if present, else a naive linear
- * estimate `elapsedMs / current × (total − current)` when the total and some progress are known;
- * `undefined` when it cannot be estimated, or when the run has stalled — a rate is only worth
+ * estimate `elapsedMs / current × (total - current)` when the total and some progress are known;
+ * `undefined` when it cannot be estimated, or when the run has stalled - a rate is only worth
  * projecting while the count is moving, and projecting a stalled run reports an estimate that
  * grows with every touch and never arrives.
  */

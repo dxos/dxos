@@ -4,7 +4,7 @@
 
 /**
  * Mail-sync scheduling policy. Owned by the mail domain rather than by any one provider so every mail
- * connector polls on the same cadence — a provider plugin reads these when declaring its sync trigger.
+ * connector polls on the same cadence - a provider plugin reads these when declaring its sync trigger.
  */
 
 /** How often a mailbox's sync Routine polls for new mail. */

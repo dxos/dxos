@@ -49,7 +49,7 @@ export type FrameOptions = {
   captionPosition?: CaptionPosition;
   /** The title's and captions' colours; see `FrameColors`. */
   colors?: FrameColors;
-  /** The opacity (0–1) of the caption panel's background; unset keeps `--autocue-caption-alpha`. */
+  /** The opacity (0-1) of the caption panel's background; unset keeps `--autocue-caption-alpha`. */
   captionBackground?: number;
   /** On, the header's text also shows as a translucent band over the top; defaults to off (no panels). */
   headerBand?: boolean;

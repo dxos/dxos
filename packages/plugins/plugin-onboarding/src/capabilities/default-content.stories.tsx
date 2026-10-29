@@ -34,7 +34,7 @@ import { README_DOCUMENT_NAME } from './default-content.ts';
 
 /**
  * Contributes the assistant's prompt-run extension so the ```prompt blocks in the README (e.g. the
- * "Create a project…" prompt) render their run button. Clicking it surfaces the prompt text — the
+ * "Create a project..." prompt) render their run button. Clicking it surfaces the prompt text - the
  * story stub logs it rather than spawning a chat, so the interaction is testable without an LLM.
  */
 const PromptExtensionPlugin = Plugin.define(

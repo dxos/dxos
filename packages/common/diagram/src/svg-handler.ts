@@ -5,7 +5,7 @@
 //
 // SVG variant content handler: the scene DSL is the persistence format. Each element is stored
 // verbatim as one record carrying its DSL identity and its object's placement, so
-// `applyCommands` provides upsert/remove/move and `read` reconstructs the scene losslessly —
+// `applyCommands` provides upsert/remove/move and `read` reconstructs the scene losslessly -
 // there is no renderer-native encoding to compile to. The plugin binds it to ECHO as `SvgBuilder`.
 //
 

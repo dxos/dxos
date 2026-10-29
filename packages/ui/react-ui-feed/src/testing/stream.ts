@@ -22,7 +22,7 @@ export type TextStreamOptions = {
 export async function* textStream(text: string, options: TextStreamOptions = {}): AsyncGenerator<string, void> {
   const { chunkDelay = 120, variance = 0.4, wordsPerChunk = 4 } = options;
   // Floored rather than validated: this is driven by a storybook control, and a size of zero never
-  // advances the cursor — the generator would yield empty chunks for ever, which presents as a hang
+  // advances the cursor - the generator would yield empty chunks for ever, which presents as a hang
   // rather than a mistake.
   const chunkSize = Math.max(1, Math.floor(wordsPerChunk));
   const tokens = text.match(/\S+|\s+/g) ?? [];
@@ -45,7 +45,7 @@ export async function* textStream(text: string, options: TextStreamOptions = {})
 }
 
 /**
- * A plausible assistant answer: prose, a list, a code block and a closing paragraph — enough
+ * A plausible assistant answer: prose, a list, a code block and a closing paragraph - enough
  * structure that the item re-parses markdown as the text arrives, rather than growing one flat
  * paragraph.
  */
@@ -57,9 +57,9 @@ export const createAnswer = (): string =>
     '',
     random.lorem.paragraph(),
     '',
-    `- **${random.lorem.words(2)}** — ${random.lorem.sentence(8)}`,
-    `- **${random.lorem.words(2)}** — ${random.lorem.sentence(10)}`,
-    `- **${random.lorem.words(2)}** — ${random.lorem.sentence(6)}`,
+    `- **${random.lorem.words(2)}** - ${random.lorem.sentence(8)}`,
+    `- **${random.lorem.words(2)}** - ${random.lorem.sentence(10)}`,
+    `- **${random.lorem.words(2)}** - ${random.lorem.sentence(6)}`,
     '',
     '```ts',
     'const feed = useQuery(db, Query.from(feed));',

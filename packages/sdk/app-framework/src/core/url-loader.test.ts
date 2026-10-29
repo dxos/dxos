@@ -101,7 +101,7 @@ describe('UrlLoader', () => {
         { id: 'p1', url: 'http://example.com/p1.mjs', version: 'v1.0.0' },
       ]);
 
-      // Replacement, not a merge — the device-sync layer writes the whole set it resolved.
+      // Replacement, not a merge - the device-sync layer writes the whole set it resolved.
       UrlLoader.setRemoteEntries([{ id: 'p2', url: 'http://example.com/p2.mjs' }], { storage, key: 'test-key' });
       expect(UrlLoader.getRemoteEntries({ storage, key: 'test-key' })).toEqual([
         { id: 'p2', url: 'http://example.com/p2.mjs' },

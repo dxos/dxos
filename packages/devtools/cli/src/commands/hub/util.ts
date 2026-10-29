@@ -22,7 +22,7 @@ const hubBaseUrl = Effect.gen(function* () {
   const url = config.values?.runtime?.services?.hub?.url;
   if (!url) {
     // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
-    // was edited — report that rather than silently substituting a DXOS-operated host.
+    // was edited - report that rather than silently substituting a DXOS-operated host.
     return yield* Effect.fail(new HubApiError({ message: 'Hub URL is not configured (runtime.services.hub.url).' }));
   }
   return url;

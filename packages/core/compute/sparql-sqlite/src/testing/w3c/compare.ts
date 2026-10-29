@@ -166,8 +166,8 @@ export const isomorphic = (expected: Row[], actual: Row[], vars: string[]): bool
 const describeRows = (rows: Row[], vars: string[]) =>
   rows
     .slice(0, 20)
-    .map((row) => `  { ${vars.map((name) => `${name}=${termKey(row[name]) || '∅'}`).join(' ')} }`)
-    .join('\n') + (rows.length > 20 ? `\n  … ${rows.length - 20} more` : '');
+    .map((row) => `  { ${vars.map((name) => `${name}=${termKey(row[name]) || '\u2205'}`).join(' ')} }`)
+    .join('\n') + (rows.length > 20 ? `\n  \u2026 ${rows.length - 20} more` : '');
 
 const dedupe = (rows: Row[], vars = ['s', 'p', 'o']): Row[] => {
   const seen = new Map<string, Row>();

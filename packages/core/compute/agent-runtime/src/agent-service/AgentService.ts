@@ -97,7 +97,7 @@ export interface Options {
 
   /**
    * If true, long-running tool calls are moved to the background and the agent is notified
-   * asynchronously when they complete. Currently unstable — disabled by default.
+   * asynchronously when they complete. Currently unstable - disabled by default.
    *
    * @default false
    */
@@ -105,7 +105,7 @@ export interface Options {
 
   /**
    * When provided, sessions act as supervisors: the agent delegates outstanding work to sub-agent
-   * child processes and folds their results back into the conversation. Absent — a plain agent.
+   * child processes and folds their results back into the conversation. Absent - a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
 
@@ -177,7 +177,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
 
       // Serializes `getSession` per chat: discovery and spawn sit several suspensions before the
       // cache is written, so concurrent callers resolving the same conversation would each spawn a
-      // process for it. Kept for the lifetime of the layer — one entry per chat, no bigger than the
+      // process for it. Kept for the lifetime of the layer - one entry per chat, no bigger than the
       // session cache beside it.
       const sessionLocks = new Map<string, Semaphore.Semaphore>();
       const lockFor = (chatId: string): Semaphore.Semaphore => {
@@ -335,7 +335,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                     target,
                     ...(guard !== undefined ? { guard } : {}),
                     // Stamp the host marker so the harness control surface is discoverable by annotation
-                    // lookup (set once at spawn, immutable — the identity plane).
+                    // lookup (set once at spawn, immutable - the identity plane).
                     annotations: Annotation.buildDictionary((dictionary) => {
                       Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
                     }),
@@ -353,16 +353,16 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                   sessionCache.delete(chat.id);
                 };
                 // A process that finished its turn releases its host, so the NEXT prompt on this
-                // session has nowhere to land — it is dropped as "input dropped (already finished)"
+                // session has nowhere to land - it is dropped as "input dropped (already finished)"
                 // and the conversation silently stops accepting turns. Re-entering `getSession`
                 // spawns a fresh process for the same feed (history is replayed from it), which is
                 // the path an app already takes when it re-reads the session per prompt.
                 const databaseContext = yield* Effect.context<Database.Service>();
                 // A REMOTE handle's status is a snapshot the client polls, so a process that finished
-                // moments ago still reads as running here — and the host then drops the prompt. What
+                // moments ago still reads as running here - and the host then drops the prompt. What
                 // the host actually knows is the manager's `list`. A local handle is the live process
                 // itself, so its status is authoritative, and the local `list` reads every persisted
-                // process record — a storage round trip per record before every prompt.
+                // process record - a storage round trip per record before every prompt.
                 const isFinished: Effect.Effect<boolean> = Effect.suspend(() =>
                   Process.isTerminal(handle.status.state) || location !== 'edge'
                     ? Effect.succeed(Process.isTerminal(handle.status.state))

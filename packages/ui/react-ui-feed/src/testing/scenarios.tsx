@@ -34,14 +34,14 @@ const UNIFORM_CONTROLS = {
 /**
  * The five places in the repo that render a thread of messages, approximated against one engine.
  *
- * The point is not the fixtures — it is that all five differ only in the renderer, the chrome and a
+ * The point is not the fixtures - it is that all five differ only in the renderer, the chrome and a
  * couple of options, while the list, the virtualization, the selection and the search are the same
  * code. Where a scenario needs something the engine does not have, that is the finding.
  */
 export type FeedScenario =
   /** No editor at all: fixed-height divs, so the list is measured against content that cannot move. */
   | 'plain'
-  /** One editor per row, every row identical — the same document, so every height is the same. */
+  /** One editor per row, every row identical - the same document, so every height is the same. */
   | 'uniform'
   /** The `uniform` rows with their text as a paragraph: the same feed without a document at all. */
   | 'uniform-text'
@@ -74,7 +74,7 @@ export type ScenarioDefinition = {
   /**
    * Height a row is assumed to have before it is measured. A function where rows differ widely: a
    * one-line prompt and a long answer share no useful average, and a row measured for the first time
-   * re-lays everything below it — which the reader sees as flicker when scrolling up, into rows that
+   * re-lays everything below it - which the reader sees as flicker when scrolling up, into rows that
    * have never been measured.
    */
   estimateSize: number | ((message: Message.Message, index: number) => number);
@@ -114,7 +114,7 @@ export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions)
         estimateSize: UNIFORM_HEIGHT,
       };
 
-    // The controls for `uniform`: identical messages, identical chrome, identical estimate — only
+    // The controls for `uniform`: identical messages, identical chrome, identical estimate - only
     // what the row contains changes, so the difference between any two of them is that content.
     case 'uniform-text':
     case 'uniform-bare':
@@ -196,7 +196,7 @@ const PANEL_HEIGHT = 50;
 /**
  * What a row will measure, from the message alone.
  *
- * Rough on purpose — it is an estimate, and its only job is to be close enough that measuring the row
+ * Rough on purpose - it is an estimate, and its only job is to be close enough that measuring the row
  * does not move the rows below it. Text is counted in wrapped lines, blank lines between blocks are
  * counted, and every block that renders as a widget is counted at its collapsed height.
  */
@@ -229,14 +229,14 @@ const estimateAssistantRow = (message: Message.Message): number => {
 // Fixtures
 //
 
-/** Fixed heights, cycling so the feed is uneven — but known in advance and never corrected. */
+/** Fixed heights, cycling so the feed is uneven - but known in advance and never corrected. */
 const PLAIN_HEIGHTS = [64, 120, 200, 88, 320, 56];
 
 /**
  * What the chrome adds to a plain row: the separator beneath it.
  *
  * The estimate has to include this. A control scenario whose estimate is the *content* height is off
- * by the chrome on every single row, and the list corrects each one — which looks exactly like the
+ * by the chrome on every single row, and the list corrects each one - which looks exactly like the
  * defect the control exists to rule out.
  */
 const PLAIN_CHROME = 1;
@@ -257,7 +257,7 @@ const createPlainMessages = (count: number): Message.Message[] =>
  * Exact on purpose, and checked against the DOM rather than guessed: this scenario's whole job is to
  * be the case where the estimate is right, and it was declared at 84 against a real 24. A viewport
  * filled from an estimate three times too large covers a third of the screen once the rows measure,
- * so the feed arrived in two visible pieces — in the one story that exists to have nothing wrong
+ * so the feed arrived in two visible pieces - in the one story that exists to have nothing wrong
  * with it.
  */
 const UNIFORM_HEIGHT = 24;
@@ -268,7 +268,7 @@ const createUniformMessages = (count: number): Message.Message[] =>
     Message.make({
       created: at(index),
       sender: { role: index % 2 === 0 ? 'user' : 'assistant', name: index % 2 === 0 ? 'Alice' : 'Assistant' },
-      // Not `${index}. …`: markdown reads a leading number and a dot as an ordered list and renumbers
+      // Not `${index}. ...`: markdown reads a leading number and a dot as an ordered list and renumbers
       // it, so the row would show a number that is not its index. The index is in the chrome.
       blocks: [{ _tag: 'text', text: random.lorem.sentence(index % 16 === 0 ? 100 : 1) }],
     }),
@@ -289,7 +289,7 @@ const createAssistantMessages = (count: number): Message.Message[] =>
       });
     }
 
-    // Every answer is several blocks — reasoning, sometimes a tool round-trip, prose, and closing
+    // Every answer is several blocks - reasoning, sometimes a tool round-trip, prose, and closing
     // affordances. A single text block is the easy case and the one the engine already handled.
     const blocks: ContentBlock.Any[] = [{ _tag: 'reasoning', reasoningText: random.lorem.paragraph() }];
     if (index % 4 === 1) {
@@ -392,7 +392,7 @@ const createTranscriptMessages = (count: number): Message.Message[] =>
 /**
  * A row of a known height: the content is a box, not a document.
  *
- * The height is the point — it is declared, never measured — so it is stated in the row rather than
+ * The height is the point - it is declared, never measured - so it is stated in the row rather than
  * left to be inferred, and the text sits at the top like every other scenario's does.
  */
 const PlainItem = ({ content, message }: { content: { data?: unknown }; message: Message.Message }) => {
@@ -428,7 +428,7 @@ const PlainChrome = ({ index, children }: MessageChromeProps) => (
 );
 
 //
-// Every scenario's difference that is not the renderer lives here — which is the claim being
+// Every scenario's difference that is not the renderer lives here - which is the claim being
 // tested: chrome is the host's, and the engine only has to keep it out of the measurement.
 //
 
@@ -443,15 +443,15 @@ const Row = ({ children, classNames }: { children: React.ReactNode; classNames?:
 
 /**
  * Assistant: the reader's prompts and the model's answers are framed differently, because they are
- * different kinds of thing — a prompt is an instruction that can be rewound to, an answer is a
+ * different kinds of thing - a prompt is an instruction that can be rewound to, an answer is a
  * result that can be forked from.
  *
  * A prompt carries its rewind toolbar underneath; an answer carries its timestamp at the foot, where
- * it reads as when the answer finished rather than when the turn began. Both are always in flow — a
+ * it reads as when the answer finished rather than when the turn began. Both are always in flow - a
  * control that appears on hover changes the row's height, and a pointer travelling down a scrolling
  * list then moves every row below it.
  */
-/** Copies the message's extracted text — the model's truth, not the DOM's partial render. */
+/** Copies the message's extracted text - the model's truth, not the DOM's partial render. */
 const CopyButton = ({ message }: { message: Message.Message }) => (
   <SystemButton.Clipboard iconOnly label='Copy' variant='ghost' size='sm' onCopy={() => Message.extractText(message)} />
 );
@@ -463,7 +463,7 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
     <Row classNames={mx(selected && 'bg-hover-surface')}>
       {prompt ? (
         // The reader's own words sit apart from the model's: right-aligned, at most two thirds of
-        // the viewport — the chat convention that makes whose-turn legible at a glance.
+        // the viewport - the chat convention that makes whose-turn legible at a glance.
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[66%] min-w-0'>
             {/* The reader's own words, framed: a prompt is an instruction the thread can be rewound
@@ -472,7 +472,7 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
             {/* Revealed on hover, but never removed from flow: chrome that appears and disappears
                 changes the row's height, and a pointer travelling down a scrolling list would then
                 move every row below it. Opacity costs nothing to measure. The toolbar follows the
-                bubble's edge — right-aligned, like the words it belongs to. */}
+                bubble's edge - right-aligned, like the words it belongs to. */}
             <div className='flex items-center justify-end gap-1 pt-1 text-xs text-fg-muted opacity-0 transition-opacity group-hover:opacity-100'>
               <CopyButton message={message} />
               <Button.Root
@@ -503,7 +503,7 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
   );
 };
 
-/** Email: a header of its own — sender, address, date — and a card-like body. */
+/** Email: a header of its own - sender, address, date - and a card-like body. */
 const EmailChrome = ({ message, children }: MessageChromeProps) => (
   <Row classNames='border-b border-separator'>
     <div className='flex items-baseline gap-2'>
@@ -555,7 +555,7 @@ const CommentChrome = ({ message, children }: MessageChromeProps) => (
   </Row>
 );
 
-/** Transcription: a timestamp and speaker in the gutter, and no separators — it reads as one text. */
+/** Transcription: a timestamp and speaker in the gutter, and no separators - it reads as one text. */
 const TranscriptChrome = ({ message, children }: MessageChromeProps) => (
   <Row classNames='grid grid-cols-[5rem_1fr] gap-2 py-0.5'>
     <div className='text-xs text-fg-muted tabular-nums'>

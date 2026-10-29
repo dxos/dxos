@@ -24,10 +24,10 @@ const renderFact = (fact: RDF.Fact): string =>
   `- **${termLabel(fact.assertion.subject)}** ${fact.assertion.predicate} **${termLabel(fact.assertion.object)}**` +
   ` _(${fact.attribution.source})_`;
 
-// Lists the questions and requests captured in the fact store — the directive facts the illocution
+// Lists the questions and requests captured in the fact store - the directive facts the illocution
 // extraction emits (interrogative = question, imperative = request). Deterministic (no LLM); reads the
 // saved fact-store fixture. Regenerate the fixture with `moon run stories-brain:facts` to populate
-// illocution — a fact store built before that extraction has no directive facts.
+// illocution - a fact store built before that extraction has no directive facts.
 describe.skipIf(!factStoreFixtureExists())('list questions and requests from the fact store', () => {
   test('lists every directive fact (question / request)', ({ expect }) => {
     const facts = loadFacts(FACT_STORE_FIXTURE);
@@ -56,11 +56,11 @@ describe.skipIf(!factStoreFixtureExists())('list questions and requests from the
     const responseLog = startResponseLog('list-questions');
     responseLog.append({
       title: `Questions (${questions.length})`,
-      body: questions.length ? questions.map(renderFact).join('\n') : '_(none — regenerate the fact store)_',
+      body: questions.length ? questions.map(renderFact).join('\n') : '_(none - regenerate the fact store)_',
     });
     responseLog.append({
       title: `Requests (${requests.length})`,
-      body: requests.length ? requests.map(renderFact).join('\n') : '_(none — regenerate the fact store)_',
+      body: requests.length ? requests.map(renderFact).join('\n') : '_(none - regenerate the fact store)_',
     });
 
     // The fact store loads; question/request counts are informational (zero until the store is

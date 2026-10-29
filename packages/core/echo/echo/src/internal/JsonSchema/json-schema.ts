@@ -91,7 +91,7 @@ export const toJsonSchema = (
   schema: Schema.Top | Type.AnyEntity,
   options: JsonSchemaOptions = {},
 ): Types.DeepMutable<JsonSchemaType> => {
-  // Allow passing a `Type.Type` entity — use its hidden source schema (or its
+  // Allow passing a `Type.Type` entity - use its hidden source schema (or its
   // already-built jsonSchema as a fallback).
   const slot = getStaticTypeSchema(schema);
   if (slot != null) {
@@ -617,7 +617,7 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
     schemaFields[ECHO_ANNOTATIONS_NS_KEY] = echoAnnotations;
   }
 
-  // For stored schemas the storage URI is the definitive identifier — it overrides
+  // For stored schemas the storage URI is the definitive identifier - it overrides
   // the typename `$id` written above.
   const echoIdentifier = annotations[TypeIdentifierAnnotationId];
   if (echoIdentifier) {
@@ -699,7 +699,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
     Object.assign(
       annotations,
       makeTypeJsonSchemaAnnotation({
-        // $id is the typename DXN — the schema's type identity. The storage EID (if any)
+        // $id is the typename DXN - the schema's type identity. The storage EID (if any)
         // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
         identifier: DXN.make(typeAnnotation.typename, typeAnnotation.version),
         kind: typeAnnotation.kind,
@@ -736,7 +736,7 @@ const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): Schema
  * keys were silently dropped. The omission is unambiguous: a closed struct carries
  * `additionalProperties: false` under `onExcessProperty: 'error'`, a constrained index signature
  * carries its value schema, and the empty-struct and rest-signature forms are restored before this
- * runs — only a dropped unconstrained signature lacks the key.
+ * runs - only a dropped unconstrained signature lacks the key.
  */
 const restoreOpenRecord = (node: Record<string, any>): Record<string, any> => {
   if (node.type !== 'object' || 'additionalProperties' in node) {
@@ -824,7 +824,7 @@ const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
  * The reference's encoded side is a struct so that Effect 4 will serialize it at all (declarations
  * have no JSON schema representation), but that also emits the `{ '/': string }` shape. The
  * structural keys are dropped to keep the serialized form identical to what existing readers and
- * persisted schemas already carry — adding `type: 'object'` here would change the stored
+ * persisted schemas already carry - adding `type: 'object'` here would change the stored
  * representation of every echo type that embeds a reference, and an older `toEffectSchema` matches
  * the generic object branch before the sentinel, silently rebuilding such a reference as a plain
  * struct. Consumers that need the structural keywords (e.g. an MCP tool schema read by a language
@@ -898,7 +898,7 @@ const inlineAllOfDeep = (node: any): any => {
     inlineAllOf(collapseNumberUnion(restoreOpenRecord(foldRestSignature(restoreEmptyObject(node))))),
   );
   // Recursed into a copy, never `inlined` itself: the collapse helpers pass a node through unchanged
-  // when there is nothing to collapse, so `inlined` can still BE the caller's node — and that node can
+  // when there is nothing to collapse, so `inlined` can still BE the caller's node - and that node can
   // be live stored schema, which normalizing must not rewrite in place.
   const result: any = { ...inlined };
   for (const [key, value] of Object.entries(inlined)) {

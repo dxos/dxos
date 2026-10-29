@@ -263,7 +263,7 @@ const extractFromPrompt = (prompt: string) => {
 
 /**
  * An {@link AiService} that extracts facts deterministically from the prompt instead of calling a
- * model — so the crawler builds a real fact graph from real message content with no token. Swap in
+ * model - so the crawler builds a real fact graph from real message content with no token. Swap in
  * a live `AiService` to get model-quality extraction over the same pipeline.
  */
 // TODO(dmaretskyi): Extract to ai package as MockAiServiceLayer -- where you're able to configure prebaked replies in options. See about unifiying with scripted model.
@@ -315,7 +315,7 @@ export const TestLayer = (
 ): Layer.Layer<Source | StateStore.StateStore | AgentRegistry.AgentRegistry | FactStore | AiService.AiService> =>
   Layer.merge(fixtureSourceLayer(fixture), servicesLayer);
 
-/** A channel with one message that spawns a thread — exercises depth-first descent + per-thread resume. */
+/** A channel with one message that spawns a thread - exercises depth-first descent + per-thread resume. */
 export const THREADED_FIXTURE: Fixture = {
   state: { channelId: 'chan-1' },
   messages: [

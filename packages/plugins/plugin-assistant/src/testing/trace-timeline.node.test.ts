@@ -71,15 +71,15 @@ describe.skip('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     [atom] Agent processing request...
-            ├──●  [user] Create an organization called "Cyberdyne Systems".
-            │  ●  [list] List schemas - Success
-            │  ●  [plus] Create object - Success
-            ◆──╯  [atom] Agent completed request
-            ●  │  [atom] Agent processing request...
-            │  ●  [user] Create a person named "John Connor".
-            │  ●  [plus] Create object - Success
-            ◆──╯  [atom] Agent completed request
+            *     [atom] Agent processing request...
+            \u251C\u2500\u2500*  [user] Create an organization called "Cyberdyne Systems".
+            \u2502  *  [list] List schemas - Success
+            \u2502  *  [plus] Create object - Success
+            \u25C6\u2500\u2500\u256F  [atom] Agent completed request
+            *  \u2502  [atom] Agent processing request...
+            \u2502  *  [user] Create a person named "John Connor".
+            \u2502  *  [plus] Create object - Success
+            \u25C6\u2500\u2500\u256F  [atom] Agent completed request
             "
           `);
         },
@@ -106,12 +106,12 @@ describe.skip('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     [atom] Agent processing request...
-            ├──●  [user] Search for all organizations. How many are there?
-            │  ●  [list] List schemas - Success
-            │  ●  [magnifying-glass] Query - Success
-            │  ●  [magnifying-glass] Query - Success
-            ◆──╯  [atom] Agent completed request
+            *     [atom] Agent processing request...
+            \u251C\u2500\u2500*  [user] Search for all organizations. How many are there?
+            \u2502  *  [list] List schemas - Success
+            \u2502  *  [magnifying-glass] Query - Success
+            \u2502  *  [magnifying-glass] Query - Success
+            \u25C6\u2500\u2500\u256F  [atom] Agent completed request
             "
           `);
         },
@@ -142,10 +142,10 @@ describe.skip('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
               "
-              ●     [atom] Agent processing request...
-              ├──●  [user] Search for all organizations. How many are there?
-              │  ●  [magnifying-glass] Query - Success
-              ◆──╯  [atom] Agent completed request
+              *     [atom] Agent processing request...
+              \u251C\u2500\u2500*  [user] Search for all organizations. How many are there?
+              \u2502  *  [magnifying-glass] Query - Success
+              \u25C6\u2500\u2500\u256F  [atom] Agent completed request
               "
             `);
         },
@@ -196,14 +196,14 @@ describe.skip('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
                 "
-                ●     [brain] Run Routine
-                ├──●  [user] Research the given topic, or object.
-                │  ●  [wrench] AnthropicWebSearch - Success
-                │  ●  [wrench] AnthropicWebSearch - Success
-                │  ●  [wrench] AnthropicWebSearch - Success
-                │  ●  [wrench] AnthropicWebSearch - Success
-                │  ●  [wrench] completeJob - Success
-                ◆──╯  [brain] Run Routine - Success
+                *     [brain] Run Routine
+                \u251C\u2500\u2500*  [user] Research the given topic, or object.
+                \u2502  *  [wrench] AnthropicWebSearch - Success
+                \u2502  *  [wrench] AnthropicWebSearch - Success
+                \u2502  *  [wrench] AnthropicWebSearch - Success
+                \u2502  *  [wrench] AnthropicWebSearch - Success
+                \u2502  *  [wrench] completeJob - Success
+                \u25C6\u2500\u2500\u256F  [brain] Run Routine - Success
                 "
               `);
         },
@@ -228,9 +228,9 @@ describe.skip('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
                   "
-                  ●  [function] Reply - Success
-                  ●  [function] Reply - Success
-                  ●  [function] Reply - Success
+                  *  [function] Reply - Success
+                  *  [function] Reply - Success
+                  *  [function] Reply - Success
                   "
                 `);
         },

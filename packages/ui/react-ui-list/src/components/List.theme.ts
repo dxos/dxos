@@ -23,7 +23,7 @@ const listStyles = tv({
     listboxContent: 'flex flex-col',
     // `dx-selected` pairs with `aria-selected="true"` set per-option (see
     // `ui-theme/src/css/components/state.md`). `outline-none` removes the native focus
-    // ring; `dx-focus-ring-inset` restores a themed indicator on the focused row — without it,
+    // ring; `dx-focus-ring-inset` restores a themed indicator on the focused row - without it,
     // arrow navigation is invisible wherever selection does not follow focus (multi-select).
     listboxItem:
       'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) cursor-pointer outline-none dx-focus-ring-inset',
@@ -46,7 +46,7 @@ const listStyles = tv({
     //
     // Picker
     //
-    // `px-[var(--gutter,…)]` aligns padding with sibling `Column.Center` content, falling back to
+    // `px-[var(--gutter,...)]` aligns padding with sibling `Column.Center` content, falling back to
     // the density control pad when not nested under `Column.Root`.
     pickerItem:
       'dx-hover dx-selected flex items-center min-h-(--dx-control) px-[var(--gutter,var(--dx-control-pad))] cursor-pointer select-none',
@@ -57,7 +57,7 @@ const listStyles = tv({
     // `m-form-chrome mb-0` mirrors the rest of the form-chrome padding convention.
     comboboxInput: 'm-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]',
     comboboxList: 'p-form-chrome',
-    // Trigger value / placeholder text — grows and truncates; subdued when placeholder.
+    // Trigger value / placeholder text - grows and truncates; subdued when placeholder.
     comboboxTriggerText: 'font-normal text-start flex-1 min-w-0 truncate me-trim-sm',
     // Item row adds flex layout; `dx-hover`/`dx-selected` and padding come from `Picker.Item`.
     comboboxItem: 'flex w-full gap-trim-sm items-center',

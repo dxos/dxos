@@ -11,7 +11,7 @@ import { type Database, Tag } from '@dxos/echo';
  * custom user labels; Gmail's *system* labels map onto canonical {@link SystemTags.SystemTag}s instead.
  *
  * The domain carries no resource segment: the key sits on a `Tag`, so the object's own type already
- * says "label" — `com.google.gmail.label` said it twice.
+ * says "label" - `com.google.gmail.label` said it twice.
  */
 export const GMAIL_TAG_SOURCE = 'com.google.gmail';
 

@@ -3,7 +3,7 @@
 //
 
 /**
- * Sets a plugin's showcase entry in its `dx.config.ts` `screenshots` list — the light and dark videos the plugin
+ * Sets a plugin's showcase entry in its `dx.config.ts` `screenshots` list - the light and dark videos the plugin
  * registry plays. An entry is the showcase's when its URLs name `-<pkg>-showcase`, so a re-run replaces it and leaves
  * every other screenshot alone.
  */

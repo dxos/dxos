@@ -226,7 +226,7 @@ const MarkdownArticleImpl = forwardRef<
     }, [manager, enabled, invokePromise, t]);
 
     // The binding's extensions (review overlays/compartments) are stable across keystrokes by
-    // construction — recreating this array remounts nothing but recreates the editor state config.
+    // construction - recreating this array remounts nothing but recreates the editor state config.
     const combinedExtensions = useMemo<Extension[]>(
       () => [...extensions, mergeConflicts(), fenceExtension, ...(binding.extensions ?? [])],
       [extensions, fenceExtension, binding.extensions],
@@ -245,14 +245,14 @@ const MarkdownArticleImpl = forwardRef<
 
     // View-mode dropdown entries: the built-in editor modes plus any contributed review modes (e.g.
     // Suggesting from plugin-review). Each entry forwards ONE selection to the binding, which owns
-    // what it means — the article does no mode arithmetic, so the review posture and the editor view
+    // what it means - the article does no mode arithmetic, so the review posture and the editor view
     // mode can never be updated out of step here. Off the ambient path (an explicit branch/checkpoint
     // is selected) the review mode has no effect, so only the built-in editor modes are shown.
     const { ambient, activeReviewMode, selectViewMode } = binding;
     const viewModeExtensions = Hooks.useCapabilities(MarkdownCapabilities.ViewModeExtension);
 
     // Bumped on every dropdown selection: the menu returns focus to its trigger on close, so the
-    // editor must be handed the focus back (the caret survives in editor state) — see RefocusEditor.
+    // editor must be handed the focus back (the caret survives in editor state) - see RefocusEditor.
     const [focusRequest, setFocusRequest] = useState(0);
     const viewModes = useMemo<ViewModeItem[]>(() => {
       const current = viewMode ?? 'source';
@@ -416,7 +416,7 @@ MarkdownArticleImpl.displayName = 'MarkdownArticleImpl';
  * Hands focus back to the editor after a view-mode dropdown selection: the menu returns focus to its
  * trigger on close, which strands the caret (still intact in editor state) until the user clicks.
  * The menu's own focus return can land after close animations, so a single deferred focus loses the
- * race — retry over a short bounded window instead, stopping as soon as the editor holds focus.
+ * race - retry over a short bounded window instead, stopping as soon as the editor holds focus.
  * Gated on the explicit selection counter so the editor never steals focus on ambient changes.
  */
 const RefocusEditor = ({ request }: { request: number }) => {
@@ -445,7 +445,7 @@ const RegisterEditorView = ({ id, attendableId }: { id: string; attendableId?: s
   const [editorViews] = Hooks.useCapabilities(MarkdownCapabilities.EditorViews);
   const view = controller?.view;
   useEffect(() => {
-    // Boot-waterfall milestone (once per page): the first editor can accept input from here —
+    // Boot-waterfall milestone (once per page): the first editor can accept input from here -
     // the "time to first meaningful action" anchor for the returning-user entry path. Marked on
     // the view alone: the EditorViews registry is an optional capability and must not gate it.
     if (view && performance.getEntriesByName('milestone:first-editor-interactive').length === 0) {

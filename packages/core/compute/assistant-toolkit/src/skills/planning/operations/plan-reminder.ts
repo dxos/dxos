@@ -17,7 +17,7 @@ import { PlanReminder } from './definitions.ts';
 
 /**
  * End-request hook for the planning skill. When the conversation's checklist still has
- * open tasks, an ephemeral check asks the model — given the full conversation — whether the
+ * open tasks, an ephemeral check asks the model - given the full conversation - whether the
  * agent should keep working: a deterministic reminder alone would trap an agent that legitimately
  * finishes with open items in an unbreakable re-prompt loop. On "continue" it enqueues a
  * continuation reminder onto the owning host's queue (HarnessService Tier B), which keeps the
@@ -63,7 +63,7 @@ export default PlanReminder.pipe(
 const checklistCompletionCheckSystem = concat`
   You decide whether an agent should stop or continue working on its checklist, given the conversation so far and the agent's remaining items.
   The user's request defines the scope: if the user asked for a specific task or subset and that work is complete, 
-  the agent must STOP even though other items remain open — open items alone are not a reason to continue.
+  the agent must STOP even though other items remain open - open items alone are not a reason to continue.
   Reply with exactly one word: "stop" or "continue". Do not use tools. Do not add explanation.
 `;
 

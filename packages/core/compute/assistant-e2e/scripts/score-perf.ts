@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Scores the chat perf flow's `measure` rows — the blank space and the busy one together — against
+// Scores the chat perf flow's `measure` rows - the blank space and the busy one together - against
 // `src/playwright/perf/budgets.json`, or proposes work-counter budgets from several nights' rows.
 //
 //   node scripts/score-perf.ts score [--dir test-results/perf] [--counters] [--publish] [--summary <file>]
@@ -12,8 +12,8 @@
 // counters alone, against `budgets-counters.json`, as the `chat-work` suite. Its timings are
 // inflated by the instruments and are never scored.
 //
-// `calibrate` reads one directory per run — a downloaded `chat-bench` (or `perf-counters`) artifact
-// — and replaces the work-counter budgets with its proposal, leaving every other budget as it is.
+// `calibrate` reads one directory per run - a downloaded `chat-bench` (or `perf-counters`) artifact
+// - and replaces the work-counter budgets with its proposal, leaving every other budget as it is.
 //
 // Run `score` once after every iteration has written its batch: a night's score is the median across
 // them. A low score never fails the job; only broken inputs do.

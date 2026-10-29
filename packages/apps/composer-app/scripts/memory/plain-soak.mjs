@@ -3,7 +3,7 @@
 //
 
 /**
- * RSS soak with a BARE chromium — no Playwright page bindings, no CDP Network
+ * RSS soak with a BARE chromium - no Playwright page bindings, no CDP Network
  * domain, nothing enabled on the page target. Discriminates real app growth
  * from instrumentation-induced retention (DevTools/CDP network buffers).
  *
@@ -110,7 +110,7 @@ const cdp = await Cdp.connect(pageTarget.webSocketDebuggerUrl);
 await cdp.send('Page.enable');
 await cdp.send('Page.navigate', { url });
 
-// Wait for app-ready by polling the DOM (Runtime.evaluate only — no Network domain ever enabled).
+// Wait for app-ready by polling the DOM (Runtime.evaluate only - no Network domain ever enabled).
 let ready = false;
 for (let i = 0; i < 240; i++) {
   const { result } = await cdp

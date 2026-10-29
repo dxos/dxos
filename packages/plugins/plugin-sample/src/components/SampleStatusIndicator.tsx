@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// Status bar indicator surface — contributes an item to the application status bar.
+// Status bar indicator surface - contributes an item to the application status bar.
 // `StatusBar.Item` from `@dxos/plugin-status-bar` provides the layout wrapper.
 // Status indicators are rendered by the deck layout when `role: 'status-indicator'`
 // matches in the surface registry.

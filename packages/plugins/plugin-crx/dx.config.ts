@@ -21,7 +21,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Capture content from any web page into your workspace with the Composer browser extension.
-      Highlight a section of a page and save it as a contact, an organization, or a bookmark —
+      Highlight a section of a page and save it as a contact, an organization, or a bookmark -
       the page's title, images, and details are picked up automatically, so a profile page
       becomes a ready-made Person card and an article becomes a note with its source and text already filled in.
 

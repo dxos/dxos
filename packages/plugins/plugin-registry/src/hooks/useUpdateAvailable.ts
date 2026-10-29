@@ -17,7 +17,7 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
  * `manager.remove` / `UrlLoader.setInstalledVersion` outside React's view, so a
  * memo keyed on `entries` would happily return stale data for the rest of the
  * session after an update completes (the bug that produced "Update button
- * reappears after Updating…"). The loop is O(catalog size) sync reads — cheap
+ * reappears after Updating..."). The loop is O(catalog size) sync reads - cheap
  * enough to do every render.
  */
 export const useUpdateAvailableIds = (entries: readonly Plugin.Meta[]): ReadonlySet<string> => {

@@ -14,7 +14,7 @@ export type DiagramIslandProps = {
   readonly objects: readonly Scene.WorldObject[];
   /** True while the engine's full search is still running and a better layout may replace this one. */
   readonly refining: boolean;
-  /** Resolves a box's `ref` — an index IRI, or a path or name — to the resource it depicts. */
+  /** Resolves a box's `ref` - an index IRI, or a path or name - to the resource it depicts. */
   readonly describe: (target: string) => Promise<Protocol.Entity>;
 };
 
@@ -34,7 +34,7 @@ const pageBackground = (): string =>
 /** Facts shown per box: enough to say what it is without turning the panel into a dump. */
 const FACTS = 12;
 
-/** The readable tail of an IRI — its fragment, else its last path segment. */
+/** The readable tail of an IRI - its fragment, else its last path segment. */
 const localName = (iri: string): string => decodeURIComponent(iri.split('#').pop()?.split('/').pop() ?? iri);
 
 /**
@@ -113,7 +113,7 @@ export const DiagramIsland = ({ objects, refining, describe }: DiagramIslandProp
       {...(expanded ? { 'role': 'dialog', 'aria-modal': true, 'aria-label': 'Diagram' } : {})}
     >
       <div className='text-description flex justify-end gap-3 text-xs'>
-        {refining && <span>Refining layout…</span>}
+        {refining && <span>Refining layout...</span>}
         <button
           ref={toggle}
           className='hover:text-baseText'
@@ -184,7 +184,9 @@ const EntityCard = ({ target, describe }: { target: string; describe: DiagramIsl
           ))}
           {entity.incomingCounts.slice(0, 4).map((count) => (
             <React.Fragment key={count.predicate}>
-              <dt>← {localName(count.predicate)}</dt>
+              <dt>
+                {'<-'} {localName(count.predicate)}
+              </dt>
               <dd className='text-baseText'>{count.count.toLocaleString()}</dd>
             </React.Fragment>
           ))}

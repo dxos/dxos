@@ -19,7 +19,7 @@ import { isTruthy } from '@dxos/util';
 
 export type EditorProps = Util.ThemedClassName<
   Pick<EditorViewProps, 'value' | 'onChange'> & {
-    /** Domain-specific extensions composed after the basic/theme defaults (automerge binding, composer actions, …). */
+    /** Domain-specific extensions composed after the basic/theme defaults (automerge binding, composer actions, ...). */
     extensions?: Extension[];
     placeholder?: string;
     lineWrapping?: boolean;
@@ -34,7 +34,7 @@ export type EditorProps = Util.ThemedClassName<
  * Shared CodeMirror editor for the inbox: composes the standard basic + theme (+ optional markdown)
  * extensions with the caller's domain extensions, then renders react-ui-editor's `Editor.View`.
  * Serves both the controlled message composer (`value`/`onChange`) and the automerge-bound event body
- * editor (no `value` — the passed automerge extension drives the doc).
+ * editor (no `value` - the passed automerge extension drives the doc).
  */
 export const Editor = ({
   extensions: extensionsProp,

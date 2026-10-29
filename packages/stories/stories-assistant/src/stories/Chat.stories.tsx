@@ -95,7 +95,7 @@ const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
 };
 
 /**
- * A project owning a task set owning one task, with the task bound to the chat — the shape
+ * A project owning a task set owning one task, with the task bound to the chat - the shape
  * `ProjectOperation.DelegateTaskToChat` produces, seeded here so the story exercises the session
  * rather than the operation (which its own node test covers).
  */
@@ -197,7 +197,7 @@ export const Default: Story = {
 };
 
 //
-// Executable tasks — seeds the delegation/execution demos. B depends on A and C on B, so a drain
+// Executable tasks - seeds the delegation/execution demos. B depends on A and C on B, so a drain
 // must run in dependency order; every title routes the work through the story-local calculator.
 //
 
@@ -389,7 +389,7 @@ export const WithPluginUrlPrompt: Story = {
 
 /**
  * Live twin of the drain: seeded with the same dependent tasks, a real model, and the calculator
- * tool — type a prompt yourself (e.g. "delegate all tasks", "do the first and last", "do all
+ * tool - type a prompt yourself (e.g. "delegate all tasks", "do the first and last", "do all
  * tasks that don't have dependencies"). Live AI, so excluded from CI.
  */
 export const WithTaskDrain: Story = {
@@ -470,7 +470,7 @@ export const TestDelegation: Story = {
  * Deterministic counterpart to {@link TestPlanning}: the scripted model calls `update-tasks` twice
  * (plan, then complete), so the checklist write-and-check-off path runs in CI. The second call
  * leaves no open items, which also keeps the end-of-request plan reminder from consulting the
- * model — the reminder only fires while work is outstanding.
+ * model - the reminder only fires while work is outstanding.
  */
 export const TestPlanningScripted: Story = {
   decorators: createDecorators({
@@ -545,7 +545,7 @@ const holdSubAgent = async ({ space }: { space: Space }) => {
 };
 
 /**
- * Deterministic end-to-end delegation over a scripted (offline) model — the storybook analog of
+ * Deterministic end-to-end delegation over a scripted (offline) model - the storybook analog of
  * `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`, sharing the same routed turn
  * script: the sub-agent route keys on the `RunInstructions` "non-interactive mode" system prompt,
  * the chat-naming turn has its own route, and the supervisor is the fallback. Runs in CI.
@@ -585,7 +585,7 @@ export const TestDelegationScripted: Story = {
         turns: [
           {
             parts: [
-              text('On it — delegating.'),
+              text('On it - delegating.'),
               toolCall(Operation.toolName(DelegationSkill.Operations.DelegateTask), { title: TASK_TITLE }),
             ],
           },
@@ -607,7 +607,7 @@ export const TestDelegationScripted: Story = {
     await userEvent.keyboard('{Enter}');
 
     // The immediate reply streams before the sub-agent runs.
-    await canvas.findByText(/On it — delegating/i, {}, { timeout: 30_000 });
+    await canvas.findByText(/On it \u2014 delegating/i, {}, { timeout: 30_000 });
 
     // Delegation is the promotion moment: the durable task it creates is mirrored into the
     // conversation's checklist, unchecked while the sub-agent works.
@@ -625,7 +625,7 @@ export const TestDelegationScripted: Story = {
 
 /**
  * The assistant executes task 1 itself: marks it started, computes through the calculator tool,
- * and marks it done — tasks 2 and 3 stay untouched. Scripted, so it runs in CI.
+ * and marks it done - tasks 2 and 3 stay untouched. Scripted, so it runs in CI.
  */
 export const TestTaskExecutionScripted: Story = {
   decorators: createDecorators({
@@ -725,14 +725,14 @@ export const TestTaskDelegationScripted: Story = {
 };
 
 /**
- * The assistant delegates ALL tasks at once; the reconcile loop drains them in dependency order —
+ * The assistant delegates ALL tasks at once; the reconcile loop drains them in dependency order -
  * each task's sub-agent spawns only once its predecessor is done, and each completion turn
  * re-runs the reconcile.
  *
  * Excluded from CI `test` runs (`tags: ['!test']`) because the drain does not always close: roughly
  * one run in three the checklist never reaches all-done inside its 180s bound, and the story fails
  * with `Checklist never satisfied the condition`. That is the reconcile loop stalling, not the
- * assertions — those are sound, and two defects that were masking this have been fixed (the package
+ * assertions - those are sound, and two defects that were masking this have been fixed (the package
  * timeout that killed the test mid-wait, and a count read that raced the last render). Run it in
  * storybook while the stall is diagnosed.
  *
@@ -752,7 +752,7 @@ export const TestTaskDrainScripted: Story = {
       ...EXECUTABLE_TASKS.map(subAgentRoute),
       chatNameRoute,
       // Before the catch-all: the checklist is open for the whole drain, so the planning skill's
-      // reminder fires — and without a route of its own the supervisor answers it, burning one of
+      // reminder fires - and without a route of its own the supervisor answers it, burning one of
       // the two turns it has. The story then times out waiting for a reply the script cannot give.
       planReminderRoute,
       {
@@ -791,7 +791,7 @@ export const TestTaskDrainScripted: Story = {
 };
 
 //
-// Project delegation — a task worked in its own chat, with the product filed back.
+// Project delegation - a task worked in its own chat, with the product filed back.
 //
 
 const POEM_TASK_TITLE = 'Create a markdown document with a short poem';
@@ -802,8 +802,8 @@ const POEM_CONTENT = '# Ode to a Coffee Bean\n\nSmall dark seed,\nthe morning ow
  * A task delegated into its own chat, worked end to end: the session reads its checklist, writes a
  * document, files it as an artifact of the project, and closes the task.
  *
- * The whole point is the seam between plugins — plugin-projects contributes the row action,
- * plugin-tasks owns the capability, and the session reaches the project's artifact verb — so the
+ * The whole point is the seam between plugins - plugin-projects contributes the row action,
+ * plugin-tasks owns the capability, and the session reaches the project's artifact verb - so the
  * assertions are on the DATABASE rather than on the transcript.
  */
 export const TestProjectTaskDelegationScripted: Story = {
@@ -881,7 +881,7 @@ export const TestProjectTaskDelegationScripted: Story = {
     await expect(documents.map((document) => document.name)).toContain(POEM_DOC_NAME);
 
     // Finished, not closed: the task named a reviewer, so the session marking it done lands on
-    // `review`. The model asked for `done` and cannot know about reviewers — the rule is the task's.
+    // `review`. The model asked for `done` and cannot know about reviewers - the rule is the task's.
     const tasks = await storySpace.db.query(Filter.type(Task.Task)).run();
     const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
     await expect(worked?.status).toEqual('review');
@@ -889,7 +889,7 @@ export const TestProjectTaskDelegationScripted: Story = {
 };
 
 //
-// Performance — driven by `assistant-e2e`'s `perf-chat.spec.ts`, which types the prompt itself.
+// Performance - driven by `assistant-e2e`'s `perf-chat.spec.ts`, which types the prompt itself.
 //
 
 /** Calculator calls per user prompt before the closing answer; the spec waits for that line. */
@@ -928,7 +928,7 @@ const perfScript: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
       delay: '250 millis',
       parts: [
         reasoning(`All ${PERF_TOOL_TURNS} calculations returned; summarizing.`),
-        text(`Done — ran ${PERF_TOOL_TURNS} calculations.`),
+        text(`Done - ran ${PERF_TOOL_TURNS} calculations.`),
       ],
     };
   }

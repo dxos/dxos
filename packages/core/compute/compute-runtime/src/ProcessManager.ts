@@ -152,14 +152,14 @@ export interface Manager {
 
   /**
    * Suspends all live processes, clears in-memory handle state, and persists durable records to KV.
-   * Mimics app teardown. Idempotent — safe to call multiple times before {@link startup}.
+   * Mimics app teardown. Idempotent - safe to call multiple times before {@link startup}.
    * Live processes must be rehydrated externally via {@link Process.Process.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void>;
 
   /**
    * Marks the manager as ready after {@link shutdown}, mimicking a fresh boot from KV storage.
-   * Does not rehydrate processes — callers supply definitions via {@link Process.Process.hydrate}.
+   * Does not rehydrate processes - callers supply definitions via {@link Process.Process.hydrate}.
    */
   startup(): Effect.Effect<void>;
 
@@ -491,7 +491,7 @@ export class Impl implements Manager {
         setAlarm: (timeout?: number) => handleRef?.requestAlarm(timeout) ?? Effect.void,
       };
 
-      // One controller per run, fired by {@link ProcessHandle.Impl.terminate} — the
+      // One controller per run, fired by {@link ProcessHandle.Impl.terminate} - the
       // local counterpart of the EDGE-provided Cancellation service.
       const cancellation = new AbortController();
       const origin = resolveOrigin(environment, options?.origin);
@@ -587,7 +587,7 @@ export class Impl implements Manager {
       // store JSON-serializes this value, and a successful schema encode does not guarantee
       // JSON-safety (e.g. Schema.Any passes a live reference straight through), so round-trip
       // through JSON and degrade to null when it is not serializable. The handler still receives
-      // the original typed value; re-delivery after restart sees null — best-effort by design.
+      // the original typed value; re-delivery after restart sees null - best-effort by design.
       const encodeInput = (input: I): Effect.Effect<unknown> =>
         Schema.encodeEffect(defRaw.input)(input).pipe(
           Effect.flatMap((encoded) => Effect.try((): unknown => JSON.parse(JSON.stringify(encoded)))),
@@ -650,7 +650,7 @@ export class Impl implements Manager {
       markWork('process.started');
       log('lifecycle: started', { pid: id, key: definition.key });
 
-      // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),
+      // Runtime->public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),
       // while the public surface is the precise `Process.Process<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
       return handle as unknown as Process.Process<I, O, _Rpcs>;
@@ -812,7 +812,7 @@ export class Impl implements Manager {
         () => this.#hasNonTerminalChildren(id),
         () => this.#terminateChildren(id),
         persistence,
-        true, // restoring — suppresses onSpawn
+        true, // restoring - suppresses onSpawn
         encodeInput,
         record.state, // hydrate the persisted state instead of defaulting to RUNNING
         cancellation,
@@ -885,7 +885,7 @@ export class Impl implements Manager {
   #discardRecord(id: Process.ID): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       // Read before anything is torn down: `terminate` deletes records, and a live termination only
-      // walks children in `#handles` — a process hydrated between the listing and this call would
+      // walks children in `#handles` - a process hydrated between the listing and this call would
       // otherwise leave its still-dormant descendants in storage to be rediscovered later.
       log('lifecycle: discard record', { pid: id });
       const persisted = yield* this.#store.listProcesses();

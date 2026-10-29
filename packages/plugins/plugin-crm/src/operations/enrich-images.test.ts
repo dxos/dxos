@@ -55,11 +55,11 @@ describe('EnrichImages operation (no-candidate paths, offline)', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { db } = yield* Database.Service;
-        // No email → no candidates → skipped.
+        // No email -> no candidates -> skipped.
         const nobody = db.add(Obj.make(Person.Person, { fullName: 'No Email' }));
-        // No website → no candidates → skipped.
+        // No website -> no candidates -> skipped.
         db.add(Obj.make(Organization.Organization, { name: 'Stealth Startup' }));
-        // Already has an image → excluded from the scan entirely.
+        // Already has an image -> excluded from the scan entirely.
         db.add(Obj.make(Person.Person, { emails: [{ value: 'has@image.com' }], image: 'https://img.example/x.png' }));
         yield* Effect.promise(() => db.flush());
 

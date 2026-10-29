@@ -26,7 +26,7 @@ export class PluginAssetCacheError extends BaseError.extend(
 export interface Cache {
   /**
    * Persist all listed URLs under the namespace of `pluginId`. Idempotent.
-   * The order of `urls` is significant — the first entry is treated as the entry module.
+   * The order of `urls` is significant - the first entry is treated as the entry module.
    */
   cache(pluginId: string, urls: readonly string[]): Effect.Effect<void, PluginAssetCacheError>;
 
@@ -50,7 +50,7 @@ export interface Cache {
 
 /**
  * No-op implementation. Used when no platform cache is registered (tests, unsupported environments).
- * Plugins still load — they just have no offline guarantee.
+ * Plugins still load - they just have no offline guarantee.
  */
 export const noop = (): Cache => ({
   cache: () => Effect.void,

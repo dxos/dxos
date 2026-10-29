@@ -60,7 +60,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'State',
       {
-        // App-shell state — same reason as the deck's `DeckState`: `SpotlightLayout` reads it on its
+        // App-shell state - same reason as the deck's `DeckState`: `SpotlightLayout` reads it on its
         // first render, so the shell cannot paint until this module has run.
         activatesOn: ActivationEvents.Startup,
         provides: [SpotlightCapabilities.State, AppCapabilities.Layout],

@@ -8,8 +8,8 @@ import type { Proxy } from '@dxos/crx-protocol';
  * Search render-proxy + ping protocol (extension side).
  *
  * The serializable wire *shapes* are the single source of truth in `@dxos/crx-protocol` (`Proxy`)
- * and are imported here **type-only** (erased at build) so the extension — in particular the
- * per-page content script, which decodes these directly — carries no `effect` runtime. Decoding is
+ * and are imported here **type-only** (erased at build) so the extension - in particular the
+ * per-page content script, which decodes these directly - carries no `effect` runtime. Decoding is
  * done by the hand-rolled validators below (also `effect`-free).
  *
  * The cross-tab CustomEvent name constants are plain string literals (not imported, to avoid pulling

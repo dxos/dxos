@@ -50,7 +50,7 @@ ObjectCard.displayName = 'ObjectCard';
 
 export type ObjectCardWidgetProps = ObjectLinkProps & Pick<ObjectCardProps, 'db'>;
 
-/** An object embedded in a message (`![label](echo://…)`) as its card. */
+/** An object embedded in a message (`![label](echo://...)`) as its card. */
 export const ObjectCardWidget = ({ db, eid, label }: ObjectCardWidgetProps) => (
   <ObjectCard db={db} eid={eid} label={label} />
 );

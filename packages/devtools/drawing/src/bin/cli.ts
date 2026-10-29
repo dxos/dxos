@@ -41,7 +41,7 @@ const formatReport = (file: string, output: string | undefined, report: Report):
   // A source that does not compile has no layout to count.
   const laidOut = report.nodes > 0 || report.connectors > 0;
   return [
-    `${file}${output ? ` → ${output}` : ''}`,
+    `${file}${output ? ` -> ${output}` : ''}`,
     ...(laidOut
       ? [
           `  ${plural(report.nodes, 'node')}, ${plural(report.connectors, 'connector')}, ` +

@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 
 //
 // An extraction model reads a state and returns one typed value per named field, with its own
-// confidence — the "System One" counterpart to `DecisionModel` for values rather than choices.
+// confidence - the "System One" counterpart to `DecisionModel` for values rather than choices.
 // Effect has no such service, so it is defined here; Cloudflare's Clairic is the first provider.
 //
 

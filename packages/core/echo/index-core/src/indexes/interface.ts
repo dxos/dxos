@@ -30,7 +30,7 @@ export interface IndexerObject {
   documentId: string | null;
 
   /**
-   * Global position the position authority assigned this object's feed block — the monotonic
+   * Global position the position authority assigned this object's feed block - the monotonic
    * insertion id a feed cursor names. Set only for queue objects that have been positioned; null
    * for automerge objects and for local blocks not yet acknowledged.
    */

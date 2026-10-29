@@ -30,8 +30,8 @@ const toCrawlMessage = (stored: MessageStore.StoredMessage): Type.Message => ({
 
 /**
  * Re-drive pipeline stages from the SQLite working set instead of a live Source: for every stored
- * target, emits Start → each stored message (chronological) → End. A stage assembly that is
- * idempotent over a live crawl behaves identically over a replay; there is no frontier/cursor —
+ * target, emits Start -> each stored message (chronological) -> End. A stage assembly that is
+ * idempotent over a live crawl behaves identically over a replay; there is no frontier/cursor -
  * a replay is a full pass, and stages rely on their own idempotency (fact hash cursors, upserts).
  */
 export const replayStream = (

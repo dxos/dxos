@@ -37,7 +37,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // runs.
     // No `export * from './fact-store.ts'` here: that barrel re-export made the module a static import of
     // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
-    // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
+    // pulls SPARQL (~1.5 MB) into the definition closure - defeating this lazy module. Consumers of
     // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
     AppCapability.layerSpec(() => import('./src/capabilities/fact-store.ts', { with: { type: 'module-url' } }), {
       name: 'FactStore',

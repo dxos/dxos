@@ -42,7 +42,7 @@ type Runner = {
  * Reads one JSON request per line from stdin and writes one JSON reply per line to stdout; exits when stdin closes.
  *
  * Each script's child gets its own process group (`detached`) so a timeout can kill everything it started rather than
- * only the shell — a backgrounded build would otherwise outlive the request that spawned it and keep writing to a dead
+ * only the shell - a backgrounded build would otherwise outlive the request that spawned it and keep writing to a dead
  * pipe. The program is dependency-free so it runs from source and from a build alike.
  */
 const RUNNER_PROGRAM = `

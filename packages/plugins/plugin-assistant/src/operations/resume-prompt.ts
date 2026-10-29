@@ -13,7 +13,7 @@ import { trim } from '@dxos/util';
  */
 export const resumePrompt = ({ task, questionId }: { task: Task.Task; questionId: string }): string => trim`
   Your question on the task "${task.title}" has been answered.
-  Read the task back with the get-objects tool, passing {"/": "${Obj.getURI(task)}"} — the answer is the
+  Read the task back with the get-objects tool, passing {"/": "${Obj.getURI(task)}"} - the answer is the
   entry in its "history" whose "event" is "answer" and whose "questionId" is "${questionId}".
   Then continue: update the task's status yourself if the answer unblocks it, and ask again if it does not.
 `;

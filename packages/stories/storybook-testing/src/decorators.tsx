@@ -5,7 +5,7 @@
 //
 // Shared story-harness substrate for the stories-* packages: theme + fullscreen layout + a plugin
 // manager wired with the client (identity/seeding/snapshot import) and the runtime-layout atom.
-// Domain packages layer their own plugins and context binding on top — see `stories-assistant`'s
+// Domain packages layer their own plugins and context binding on top - see `stories-assistant`'s
 // `createDecorators` for the heavyweight example.
 //
 
@@ -61,7 +61,7 @@ export type StoryDecoratorsProps = {
 } & Omit<ClientOptions.ClientPluginOptions, 'onClientInitialized' | 'onSpacesAvailable'>;
 
 /**
- * Props, or a function of the story context — the function form gives seeding code access to the
+ * Props, or a function of the story context - the function form gives seeding code access to the
  * story's `args` (mirroring `withPluginManager`).
  */
 export type StoryDecoratorsInput<Args = any> =
@@ -199,8 +199,8 @@ const PluginManagerHost = ({
       enabled: (options.plugins ?? []).map(({ meta }) => meta.profile.key),
     });
 
-    // `useApp` contributes these too, but from an effect registered AFTER this component's own —
-    // which kicks off activation — so the startup pass would reach a module requiring `AtomRegistry`
+    // `useApp` contributes these too, but from an effect registered AFTER this component's own -
+    // which kicks off activation - so the startup pass would reach a module requiring `AtomRegistry`
     // with no provider registered and nothing to wait for. Contribute at construction instead.
     pluginManager.capabilities.contribute({
       interface: Capabilities.PluginManager,
@@ -263,7 +263,7 @@ const PluginManagerHost = ({
  */
 export const createStoryDecorators = <Args = any,>(input: StoryDecoratorsInput<Args> = {}) => {
   const host = ((Story: FC, context: { id: string; args: Args }) => {
-    // The function form re-resolves when args change (a Controls edit reboots the whole harness —
+    // The function form re-resolves when args change (a Controls edit reboots the whole harness -
     // correct, since the seeded space depends on them).
     const props = useMemo(
       () => (typeof input === 'function' ? input({ args: context.args }) : input),

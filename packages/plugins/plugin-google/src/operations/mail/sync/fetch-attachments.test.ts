@@ -34,7 +34,7 @@ describe('fetchAttachments', () => {
       mimeType: 'application/pdf',
       filename: 'oversized.pdf',
     };
-    // Only the small attachment's bytes are registered — the oversized one must never be fetched.
+    // Only the small attachment's bytes are registered - the oversized one must never be fetched.
     const dataset: GmailDataset = {
       labels: [],
       messages: [],

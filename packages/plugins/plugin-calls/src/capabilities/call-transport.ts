@@ -33,7 +33,7 @@ export default Capability.makeModule(
       label: 'Cloudflare',
       join: async (roomId) => {
         const callManager = capabilities.get(CallsCapabilities.Manager);
-        // Joining is exclusive — the swarm rejects a second join (and `setRoomId` is ignored while
+        // Joining is exclusive - the swarm rejects a second join (and `setRoomId` is ignored while
         // joined), so leave any in-progress call before switching rooms.
         if (callManager.joined) {
           await callManager.leave();

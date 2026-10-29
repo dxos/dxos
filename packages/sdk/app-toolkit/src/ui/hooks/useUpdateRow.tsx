@@ -42,7 +42,7 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
   const setStatus = useAtomSet(manager.status);
 
   // The status atom can flip between `checking` and `up-to-date` faster than the user can perceive,
-  // so the button is also gated on the click handler's lifetime — otherwise a check that resolves
+  // so the button is also gated on the click handler's lifetime - otherwise a check that resolves
   // instantly looks like nothing happened.
   const [pending, setPending] = useState<Pending>(null);
   const runAction = (kind: Exclude<Pending, null>, action: (() => Promise<void>) | undefined) => async () => {
@@ -111,8 +111,8 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
       ),
     })),
     Match.when({ kind: 'downloading' }, (s) => ({
-      // Progress is absent until the first event, and its unit differs by platform — bytes for a
-      // native archive, precache entries on the web — so this reports a percentage either way.
+      // Progress is absent until the first event, and its unit differs by platform - bytes for a
+      // native archive, precache entries on the web - so this reports a percentage either way.
       description: t('settings.updates.downloading.message', {
         percent: s.progress && s.progress.total > 0 ? Math.round((s.progress.completed / s.progress.total) * 100) : 0,
       }),

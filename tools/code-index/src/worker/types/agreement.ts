@@ -18,7 +18,7 @@ import * as Term from './Term.ts';
  * The agreement harness (`design/TYPES.md`): runs the propagator and `tsc`'s checker over the same
  * files and scores each variable and function declaration. `tsc` types are converted into the same
  * term language, naming symbols through the file's own imports, so a comparison is term against
- * term — with named types (aliases, `typeof`, defaulted arguments) expanded through the checker
+ * term - with named types (aliases, `typeof`, defaulted arguments) expanded through the checker
  * when the two sides spell the same type differently.
  */
 
@@ -54,7 +54,7 @@ export const emptyScore = (): Score => ({
   skipped: 0,
 });
 
-/** Every `unresolved` reason in a term — the buckets an analyzer improvement moves. */
+/** Every `unresolved` reason in a term - the buckets an analyzer improvement moves. */
 const reasonsOf = (type: Term.Type, into: Map<string, number>): void => {
   const visit = (inner: Term.Type): void => {
     switch (inner.kind) {
@@ -120,7 +120,7 @@ const INEXPRESSIBLE = Symbol('inexpressible');
 type Converted = Term.Type | typeof INEXPRESSIBLE;
 
 const isTransientReadonly = (symbol: ts.Symbol): boolean => {
-  // `CheckFlags.Readonly` on a synthesized property (`as const`, mapped types) — the checker's own
+  // `CheckFlags.Readonly` on a synthesized property (`as const`, mapped types) - the checker's own
   // record; not part of the public API, so read defensively.
   const links: unknown = 'links' in symbol ? symbol.links : undefined;
   if (typeof links === 'object' && links !== null && 'checkFlags' in links && typeof links.checkFlags === 'number') {
@@ -517,7 +517,7 @@ class TscFile {
 
   /**
    * Whether `tsc` binds a (qualified) type name to what `iri` names: through this file's import of
-   * its root identifier — the IRI is then the binding's member path — or directly to a local or
+   * its root identifier - the IRI is then the binding's member path - or directly to a local or
    * global symbol registered under it.
    */
   #bindsTo(typeName: ts.EntityName, iri: string): boolean {

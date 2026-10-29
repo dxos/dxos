@@ -57,7 +57,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     EffectEx.runDetached(pluginManager.activate(SpaceEvents.CreateObjectRequested));
 
   return yield* Effect.all([
-    // System section group — created alongside database/settings so the group always
+    // System section group - created alongside database/settings so the group always
     // appears when the space plugin is active and hides when there are no children.
     AppGraphBuilder.createExtension({
       id: GraphPath.GroupSegments.system,
@@ -102,7 +102,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         return node.type === DATABASE_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        // Read settings reactively — same pattern as the translator read below.
+        // Read settings reactively - same pattern as the translator read below.
         const settingsAtom = get(capabilities.atom(SpaceCapabilities.SettingsAtom)).at(0);
         const showHidden = settingsAtom ? get(settingsAtom).showHidden : false;
 
@@ -140,7 +140,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // Sort alphabetically by display name. Static types' labels are `typename.label` translation
         // keys resolved at render; resolve them here via the Translator capability so the order matches
         // what users see. Resolved reactively inside the connector (not at factory setup) so the
-        // capability — contributed during startup by the theme plugin — is present when this runs.
+        // capability - contributed during startup by the theme plugin - is present when this runs.
         const translator = get(capabilities.atom(AppCapabilities.Translator)).at(0);
         const labelOf = (node: AppGraphNode.NodeArg<Type.AnyEntity>): string => {
           const label = node.properties?.label;
@@ -170,7 +170,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        // Scoped to the Database section's own type nodes (both static and database schemas — see
+        // Scoped to the Database section's own type nodes (both static and database schemas - see
         // SCHEMA_NODE_TYPE): other plugins' type nodes (e.g. plugin-crm's virtual type nodes) share the
         // `Type.isType(node.data)` shape but should stay leaf nodes for now.
         return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
@@ -203,11 +203,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Every object of a type — not just its views — as a hidden child of its type node, so
-    // `…/database/<slug>/<objectId>` resolves via the generic `db` key even when the type has no
+    // Every object of a type - not just its views - as a hidden child of its type node, so
+    // `.../database/<slug>/<objectId>` resolves via the generic `db` key even when the type has no
     // dedicated section of its own. Disjoint from `schemaChildren`'s view nodes (`viewIndex.isView`
     // excludes them) so the two connectors never emit a node with the same id under the same parent.
-    // The `db` key names the database subgraph — the generic key that guarantees every ECHO object a
+    // The `db` key names the database subgraph - the generic key that guarantees every ECHO object a
     // URL (see the design's "Unmapped nodes"); `object` addresses the same object via the collection
     // subgraph.
     AppGraphBuilder.createExtension({
@@ -434,7 +434,7 @@ const createSchemaActions = ({
           target: space.db,
           views: true,
           // The type-picker field value is the type URI (see TypeOptions), so seed the default with
-          // the URI — not the bare typename — for the option to be pre-selected.
+          // the URI - not the bare typename - for the option to be pre-selected.
           defaults: { typename: Type.getURI(type) },
         }),
       properties: {

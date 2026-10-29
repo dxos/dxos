@@ -15,7 +15,7 @@ const tags: Tag.Map = {
 };
 
 /**
- * Selecting a completion replaces the WHOLE trigger range — the `#` included — and inserts the item
+ * Selecting a completion replaces the WHOLE trigger range - the `#` included - and inserts the item
  * verbatim, so an unprefixed label would drop the `#` and leave text that no longer parses as a tag.
  */
 describe('tag completions', () => {

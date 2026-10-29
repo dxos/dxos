@@ -3,7 +3,7 @@
 //
 
 /**
- * Guarded fetch for URLs supplied by an untrusted party — typically a model, which chooses the URL
+ * Guarded fetch for URLs supplied by an untrusted party - typically a model, which chooses the URL
  * and would otherwise turn any handler that downloads it into a request-forgery primitive aimed at
  * whatever the host can reach.
  *
@@ -22,17 +22,17 @@ const isBlockedIPv4 = (host: string): boolean => {
   return (
     first === 10 || // 10.0.0.0/8
     first === 127 || // 127.0.0.0/8
-    (first === 169 && second === 254) || // 169.254.0.0/16 — link-local, includes cloud metadata at 169.254.169.254.
+    (first === 169 && second === 254) || // 169.254.0.0/16 - link-local, includes cloud metadata at 169.254.169.254.
     (first === 172 && second !== undefined && second >= 16 && second <= 31) || // 172.16.0.0/12
     (first === 192 && second === 168) || // 192.168.0.0/16
-    (first === 100 && second !== undefined && second >= 64 && second <= 127) // 100.64.0.0/10 — carrier-grade NAT.
+    (first === 100 && second !== undefined && second >= 64 && second <= 127) // 100.64.0.0/10 - carrier-grade NAT.
   );
 };
 
 /**
  * Rejects internal metadata services and development loopback addresses, explicit private IPv4
  * ranges in case a raw-IP URL is supplied, and IPv6 loopback / unique-local / link-local literals.
- * The IPv6 parsing is deliberately loose — a false positive costs a rejected URL, a false negative
+ * The IPv6 parsing is deliberately loose - a false positive costs a rejected URL, a false negative
  * costs an SSRF.
  */
 export const isBlockedHost = (host: string): boolean => {

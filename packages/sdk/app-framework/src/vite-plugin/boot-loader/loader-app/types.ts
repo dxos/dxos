@@ -4,7 +4,7 @@
 
 /**
  * Status payload accepted by `window.__bootLoader.status(...)`. The caller owns
- * formatting — `humanized` is the exact text rendered — while `event` / `module`
+ * formatting - `humanized` is the exact text rendered - while `event` / `module`
  * carry the structured activation ids for the boot trace, and `range` drives an
  * in-place `(index/total)` counter for long counted phases.
  */
@@ -26,7 +26,7 @@ export type StatusPayload = {
 
   /**
    * Optional `(index/total)` tick. When present the loader replaces the current
-   * line in place ("Loading plugins (12/80)") instead of appending a new entry —
+   * line in place ("Loading plugins (12/80)") instead of appending a new entry -
    * keeps the visible log compact during long counted phases.
    */
   range?: { index: number; total: number };
@@ -38,7 +38,7 @@ export type StatusPayload = {
  * first use and would otherwise sit dim for the whole boot.
  */
 export type PluginEntry = {
-  /** Stable id the host activates this entry by — the plugin's slug (e.g. `markdown`). */
+  /** Stable id the host activates this entry by - the plugin's slug (e.g. `markdown`). */
   id: string;
   /** Sprite symbol name from the plugin's meta (e.g. `ph--text-aa--regular`). */
   icon?: string;
@@ -56,14 +56,14 @@ export type BootLoaderApi = {
   plugins: (entries: PluginEntry[]) => void;
   /** Add this plugin's icon to the activation row; unregistered ids are ignored. */
   activated: (id: string) => void;
-  /** Enter host-driven progress — `fraction` ∈ [0, 1]. */
+  /** Enter host-driven progress - `fraction` in [0, 1]. */
   progress: (fraction?: number) => void;
   /**
    * Report that startup has outrun its budget without failing it, offering the user a way out.
    *
    * Dev-only: production still treats the deadline as fatal, because a user watching a hung boot
    * has no diagnostics to gain by waiting. In development the run is usually just slow (a cold
-   * OPFS, a rebuild, a paused debugger), and killing it destroys the state worth inspecting — so
+   * OPFS, a rebuild, a paused debugger), and killing it destroys the state worth inspecting - so
    * the loader keeps running and offers `onAbort`, which raises the same failure the deadline
    * used to raise on its own.
    */
@@ -82,14 +82,14 @@ export type BootLoaderApi = {
 export type BootLoaderConfig = {
   /**
    * Id of the static backdrop element the plugin injects and the loader mounts
-   * into — the single coupling between `transformIndexHtml` and the app. The
+   * into - the single coupling between `transformIndexHtml` and the app. The
    * plugin owns the authoritative value and passes it here so `entry.tsx` reads
-   * it rather than hardcoding (the CSS selector mirrors it — see `boot-loader.css`).
+   * it rather than hardcoding (the CSS selector mirrors it - see `boot-loader.css`).
    */
   rootId?: string;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
-  /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
+  /** A CSS filter over the mark - how a channel recolours the released artwork without its own file. */
   markFilter?: string;
   /** Initial status text rendered before the host fires its first `status(...)`. */
   status?: string;

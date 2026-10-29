@@ -23,11 +23,11 @@ export type ModelVariant = {
   readonly reasoning?: boolean;
 };
 
-// The open-weight ladder (Ollama, from pipeline-email/scripts/pull-models.sh) — an ascending size
-// sweep, 3B→30B — plus three remote Claude tiers (Anthropic direct via DX_ANTHROPIC_API_KEY).
+// The open-weight ladder (Ollama, from pipeline-email/scripts/pull-models.sh) - an ascending size
+// sweep, 3B->30B - plus three remote Claude tiers (Anthropic direct via DX_ANTHROPIC_API_KEY).
 // Anthropic models declare `provider: edge` in the catalog; the `direct` preset just points the
 // client at the Anthropic endpoint. `reasoning` marks models that emit chain-of-thought (higher
-// latency, may break strict JSON — recorded, not hidden).
+// latency, may break strict JSON - recorded, not hidden).
 export const LOCAL_VARIANTS: readonly ModelVariant[] = [
   {
     name: 'llama-3.2-3b',
@@ -96,7 +96,7 @@ export const REMOTE_VARIANTS: readonly ModelVariant[] = [
 export const ALL_VARIANTS: readonly ModelVariant[] = [...LOCAL_VARIANTS, ...REMOTE_VARIANTS];
 
 /**
- * Resolves the variant set for a run. `MODELS` (comma-separated name substrings) filters the set —
+ * Resolves the variant set for a run. `MODELS` (comma-separated name substrings) filters the set -
  * e.g. `MODELS=llama,haiku`; `MODELS=local` / `MODELS=remote` select a tier. Defaults to all six.
  */
 export const selectVariants = (): readonly ModelVariant[] => {

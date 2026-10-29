@@ -79,7 +79,7 @@ const toPersistedChildEvent = (event: Operation.ChildEvent<unknown>) =>
  * Serialize a failed process's cause into a {@link Process.Process}'s `error`. `message` falls back to the
  * pretty-printed cause; `context` is carried through so structured detail (e.g. a notify override) on a
  * `BaseError` survives. Every operation handler is wrapped in `Effect.orDie` before running as a
- * process, so a typed error thrown in a nested invoke arrives as a defect, not a `Fail` — check both
+ * process, so a typed error thrown in a nested invoke arrives as a defect, not a `Fail` - check both
  * channels for the failing value.
  */
 const failingValue = (cause: Cause.Cause<unknown>): unknown =>
@@ -92,11 +92,11 @@ const failingValue = (cause: Cause.Cause<unknown>): unknown =>
  * Report a crashed process, from the single point every FAILED transition passes through.
  *
  * A user dismissing an interactive prompt (a passkey ceremony, an aborted signal) fails the process
- * but is not a defect, so it reports at `info` — at `error` it swamps the production error stream
+ * but is not a defect, so it reports at `info` - at `error` it swamps the production error stream
  * and hides real regressions (DX-1281).
  *
  * The failing value is passed as `error` rather than only as pretty-printed text because the log
- * pipeline walks its `cause` chain, while `Cause.pretty` flattens to the outermost reason — the same
+ * pipeline walks its `cause` chain, while `Cause.pretty` flattens to the outermost reason - the same
  * loss that makes a failed agent turn surface to the user as "An unexpected error occurred."
  */
 const logFailure = (pid: Process.ID, key: string, cause: Cause.Cause<unknown>): void => {
@@ -175,7 +175,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
   // True from the moment a fired alarm clears #alarmFiber until its handler starts running. A 0ms
   // alarm fires on the next microtask, which can precede the completion of the handler that
   // scheduled it; without this flag #handlerCompleted would see no pending alarm and settle to IDLE,
-  // letting runUntilSettled resolve during the persistence→dispatch hand-off before the turn runs.
+  // letting runUntilSettled resolve during the persistence->dispatch hand-off before the turn runs.
   #alarmDispatching = false;
   #services: Context.Context<R | Operation.BaseServices>;
   readonly #dispatchContext: Context.Context<never>;
@@ -358,7 +358,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
       this.#cancellation?.abort();
       // Published before the teardown is awaited: `#cleanup` closes the process scope, which cannot
       // complete while a handler fiber sits in an uninterruptible section, and a handle left in
-      // TERMINATING reads as live to every terminal-state check — the next session adopts the dead
+      // TERMINATING reads as live to every terminal-state check - the next session adopts the dead
       // process, its input is dropped by the `#finished` guard, and the turn never settles.
       this.#setStatus(Process.State.TERMINATED, Exit.void);
       if (this.#onTerminate !== undefined) {
@@ -409,7 +409,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
   }
   /**
    * Re-arm the in-memory alarm timer for a persisted due-time (used by hydrate).
-   * Does NOT persist the alarm — it is already in the persisted record.
+   * Does NOT persist the alarm - it is already in the persisted record.
    */
   rearmAlarm(dueAt: number): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
@@ -553,7 +553,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
    *
    * A successful finish ends the stream by offering the queue's end sentinel rather than
    * interrupting: the sentinel queues behind outputs already emitted, whereas an interrupt cuts
-   * them off — a process that finishes before its consumer starts draining would yield nothing. A
+   * them off - a process that finishes before its consumer starts draining would yield nothing. A
    * failure still interrupts, since its outputs are not wanted.
    */
   #runAndExitInterruptEffect(): Effect.Effect<void, never, never> {
@@ -589,7 +589,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
   /**
    * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
    *
-   * Exposed for hosts that mirror the process's alarm onto their own scheduler — a Durable Object
+   * Exposed for hosts that mirror the process's alarm onto their own scheduler - a Durable Object
    * whose isolate is reclaimed between turns cannot rely on the in-memory timer, so it needs the
    * due-time to re-arm a platform alarm.
    */
@@ -642,7 +642,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
 
   #makeAlarmSleepEffect(delay: number): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
-      // 0ms delays must not block on the TestClock — use yieldNow() so they complete in the
+      // 0ms delays must not block on the TestClock - use yieldNow() so they complete in the
       // current event loop without requiring a TestClock.adjust call from the test.
       if (delay > 0) {
         yield* Effect.sleep(Duration.millis(delay));
@@ -693,7 +693,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
       // reached a terminal state. Without this, onFinished fires after the parent succeeds
       // (the child's async cleanup outlasts the parent's handler), requestChildEvent clobbers
       // the parent status to RUNNING via #runHandler, and #handlerCompleted exits early
-      // (finished=true) without resetting it — leaving the process permanently RUNNING.
+      // (finished=true) without resetting it - leaving the process permanently RUNNING.
       if (this.#finished) {
         log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
         return;
@@ -764,7 +764,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
           Effect.catchCause((cause) =>
             Effect.gen({ self: this }, function* () {
               recordWall();
-              // Do NOT remove the event on a pure interruption — the scope was closed for
+              // Do NOT remove the event on a pure interruption - the scope was closed for
               // suspend/restart, so the event must stay in the mailbox for re-delivery.
               if (eventSeq !== undefined && !Cause.hasInterruptsOnly(cause)) {
                 yield* this.#persistence.removeEvent(eventSeq);
@@ -845,8 +845,8 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
       log('lifecycle: cleanup');
       yield* this.#clearAlarm();
       // Terminal: no further turn can run, so the due-time must not be mirrored onto a host
-      // scheduler. `#clearAlarm` deliberately keeps it — `suspend` needs it to survive so `hydrate`
-      // can re-arm — which is why this is cleared here rather than there.
+      // scheduler. `#clearAlarm` deliberately keeps it - `suspend` needs it to survive so `hydrate`
+      // can re-arm - which is why this is cleared here rather than there.
       this.#alarmDueAt = null;
       Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {

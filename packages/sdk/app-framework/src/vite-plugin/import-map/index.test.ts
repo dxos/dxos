@@ -39,7 +39,7 @@ describe('getPackageEntrypoints', () => {
   });
 
   // A `null` target means "explicitly not exported". Emitting one yields a specifier the resolver
-  // rejects, which aborts the whole app build — the shape `@effect/atom-react` ships.
+  // rejects, which aborts the whole app build - the shape `@effect/atom-react` ships.
   test('honours null targets, including patterns a wildcard would otherwise match', ({ expect }) => {
     const packageJsonPath = makePackage(
       {

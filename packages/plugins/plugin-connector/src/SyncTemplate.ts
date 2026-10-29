@@ -26,7 +26,7 @@ export const ID = 'org.dxos.routine.connectorSync';
  * "Sync" automation template: the account-level recurring sync routine for a Connection, built from
  * the connector-declared trigger spec and bound to the connector's own sync operation (whose handler
  * fans out over every binding of the account). Contributed so the routine is created through the
- * create-routine form — the user sees and can edit the schedule — instead of being persisted silently.
+ * create-routine form - the user sees and can edit the schedule - instead of being persisted silently.
  *
  * The subject may be the Connection itself (the connection flow, the multi-target picker) or a bound
  * target such as a Mailbox (a target's sync affordance); a target resolves to its binding's

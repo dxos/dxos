@@ -88,7 +88,7 @@ export const StopReplacesSendWhileProcessing: Story = {
   args: { processing: true, canSend: false, drawer: 'tasks' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Same control, same handle — the mode is what changed.
+    // Same control, same handle - the mode is what changed.
     const stop = await canvas.findByTestId('assistant.send', {}, { timeout: 10_000 });
     await expect(stop).toHaveAccessibleName('Stop processing');
     await expect(canvas.queryAllByTestId('assistant.send')).toHaveLength(1);
@@ -142,7 +142,7 @@ const plainContributedActions = Atom.make<ActionGraphProps>({
 
 /**
  * Plain contributed items render `Toolbar.*` primitives, which need the roving-focus context from
- * the row's `ActionToolbar` — without it this story crashes the way the assistant companion did on
+ * the row's `ActionToolbar` - without it this story crashes the way the assistant companion did on
  * commentable objects.
  */
 export const ContributedPlainAction: Story = {

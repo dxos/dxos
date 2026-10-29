@@ -8,7 +8,7 @@ import type { MessageResponse, UserResponse } from 'dfx/types';
 import type { ThreadRef, Type } from '@dxos/crawler';
 
 /**
- * Discord snowflake epoch — 2015-01-01 00:00:00 UTC in milliseconds. All
+ * Discord snowflake epoch - 2015-01-01 00:00:00 UTC in milliseconds. All
  * Discord snowflakes (message ids, channel ids, ...) encode the time of
  * creation as `(unix_ms - DISCORD_EPOCH_MS) << 22`. We use this to construct
  * an "after" snowflake from a wall-clock cutoff so we can ask Discord for
@@ -40,7 +40,7 @@ const isContentMessage = (raw: MessageResponse): boolean => {
 /**
  * Resolve Discord mention markup so raw snowflake ids never reach extraction: user mentions become
  * `@displayName`, custom emoji collapse to `:name:`, and channel/role mentions (whose names aren't
- * carried on the message) are dropped. Without this the extractor treats e.g. `<#837…>` as an entity.
+ * carried on the message) are dropped. Without this the extractor treats e.g. `<#837...>` as an entity.
  */
 export const normalizeMentions = (content: string, mentions: ReadonlyArray<UserResponse>): string => {
   const names = new Map(mentions.map((user) => [user.id, user.global_name || user.username]));

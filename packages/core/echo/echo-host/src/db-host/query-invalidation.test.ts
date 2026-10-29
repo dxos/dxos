@@ -54,7 +54,7 @@ const testRuntime = Effect.never;
 /**
  * Real but never-opened QueryExecutor dependencies, shared across the fixtures below. The index
  * engine holds a client, and resolving one is asynchronous, so the fixture is built in `beforeAll`
- * — no query in this file reaches the engine.
+ * - no query in this file reaches the engine.
  */
 let testDeps: {
   indexEngine: IndexEngine;
@@ -124,7 +124,7 @@ describe('hintFromIndexingResult', () => {
     expect(result.typenames?.has(PERSON_TYPENAME)).toBe(true);
     expect(result.typenames?.has(PERSON_DXN)).toBe(false);
     expect(result.objectIds?.has(objectId)).toBe(true);
-    // Empty queues → undefined (no queue constraint)
+    // Empty queues -> undefined (no queue constraint)
     expect(result.queueIds).toBeUndefined();
   });
 
@@ -162,7 +162,7 @@ describe('canonicalTypename', () => {
 });
 
 // ---------------------------------------------------------------------------
-// mergeHints — per-tick merger
+// mergeHints - per-tick merger
 // ---------------------------------------------------------------------------
 
 describe('mergeHints', () => {
@@ -181,7 +181,7 @@ describe('mergeHints', () => {
 
   test('drops a dimension to unconstrained when either contributor is unconstrained', ({ expect }) => {
     const s = SpaceId.random();
-    // b has no spaceIds → unconstrained on that dimension
+    // b has no spaceIds -> unconstrained on that dimension
     const merged = mergeHints(
       makeHint({ spaceIds: makeSpaceSet(s), typenames: makeTypeSet('TypeA') }),
       makeHint({ typenames: makeTypeSet('TypeB') }),
@@ -204,10 +204,10 @@ describe('mergeHints', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — typed queries
+// QueryExecutor.matchesHint - typed queries
 // ---------------------------------------------------------------------------
 
-describe('QueryExecutor.matchesHint — typed query', () => {
+describe('QueryExecutor.matchesHint - typed query', () => {
   test('matches when hint typenames overlaps', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
@@ -222,7 +222,7 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     expect(executor.matchesHint(hint)).toBe(false);
   });
 
-  test('matches when hint has no typenames constraint (unconstrained → always match)', ({ expect }) => {
+  test('matches when hint has no typenames constraint (unconstrained -> always match)', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     expect(executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID) }))).toBe(true);
   });
@@ -259,7 +259,7 @@ describe('QueryExecutor.matchesHint — typed query', () => {
   // Regression for DX-966. The Composer navtree lists objects per type via a version-less typename
   // DXN (`Filter.type(DXN.make(typename))`). It must match the canonical hint produced for a stored
   // (versioned) object so the reactive query is re-run on insert/delete. Both scope and hint are
-  // reduced to the same canonical typename, so the comparison stays a plain set overlap — see
+  // reduced to the same canonical typename, so the comparison stays a plain set overlap - see
   // `canonicalTypename` and `hintFromIndexingResult` for the canonicalization at each boundary.
   test('version-less typename scope matches the canonical hint typename', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(DXN.make(PERSON_TYPENAME)))));
@@ -268,17 +268,17 @@ describe('QueryExecutor.matchesHint — typed query', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — aggregate queries
+// QueryExecutor.matchesHint - aggregate queries
 // ---------------------------------------------------------------------------
 
-// An aggregate clause on top of a simple type selector stays "simple" for hint purposes — like
+// An aggregate clause on top of a simple type selector stays "simple" for hint purposes - like
 // OrderStep/LimitStep, it reorders/annotates the working set but doesn't change which typenames,
 // spaces, or object ids the query is scoped to. Any property edit on a matching object still
 // triggers re-execution (via the typename/space hint match below); the executor's `changed` diff
 // then decides whether the edit actually moved the object between groups and needs to reach the
-// client — that end-to-end behavior is covered by the reactive aggregate tests in
+// client - that end-to-end behavior is covered by the reactive aggregate tests in
 // `echo-client-e2e/src/query.test.ts`.
-describe('QueryExecutor.matchesHint — aggregate query', () => {
+describe('QueryExecutor.matchesHint - aggregate query', () => {
   test('a grouped query with a simple type selector still matches on typename/space (isSimple stays true)', ({
     expect,
   }) => {
@@ -319,11 +319,11 @@ describe('QueryExecutor.matchesHint — aggregate query', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — complex / non-simple queries
+// QueryExecutor.matchesHint - complex / non-simple queries
 // ---------------------------------------------------------------------------
 
-describe('QueryExecutor.matchesHint — non-simple queries always match', () => {
-  test('Filter.not(Filter.or(typeA, typeB)) query always matches (inverted TypeSelector → isSimple=false)', ({
+describe('QueryExecutor.matchesHint - non-simple queries always match', () => {
+  test('Filter.not(Filter.or(typeA, typeB)) query always matches (inverted TypeSelector -> isSimple=false)', ({
     expect,
   }) => {
     const executor = makeExecutor(
@@ -339,7 +339,7 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
     expect(executor.matchesHint(hint)).toBe(true);
   });
 
-  test('Union query (Query.all) always matches (UnionStep → isSimple=false)', ({ expect }) => {
+  test('Union query (Query.all) always matches (UnionStep -> isSimple=false)', ({ expect }) => {
     const executor = new QueryExecutor({
       ...testDeps,
       queryId: 'test',
@@ -358,16 +358,16 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — nested Filter.in(projection) (subquery semi-join)
+// QueryExecutor.matchesHint - nested Filter.in(projection) (subquery semi-join)
 //
 // The subquery's result depends on its own scope/typenames, which may differ entirely from the
-// parent query's — a hint scoped to the parent's dimensions could miss a change that alters the
+// parent query's - a hint scoped to the parent's dimensions could miss a change that alters the
 // subquery's result set. `extractScopes` marks such a query non-simple (like `child-of`,
 // `text-search`, unions) so it conservatively re-runs on every invalidation, regardless of
 // whether the parent and subquery target the same or different types/spaces.
 // ---------------------------------------------------------------------------
 
-describe('QueryExecutor.matchesHint — nested Filter.in(projection)', () => {
+describe('QueryExecutor.matchesHint - nested Filter.in(projection)', () => {
   test('a query with a nested subquery semi-join always matches (isSimple=false)', ({ expect }) => {
     const subquery = Query.select(Filter.type(TestSchema.Organization));
     const executor = makeExecutor(
@@ -395,18 +395,18 @@ describe('QueryExecutor.matchesHint — nested Filter.in(projection)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — id-rooted relation traversal
+// QueryExecutor.matchesHint - id-rooted relation traversal
 //
 // The shape:
 //   Query.select(Filter.id(primary.id)).targetOf(SomeRelation).source()
 // i.e. it is rooted at a FIXED object id and traverses inbound relations. When a new source +
 // relation are persisted, the primary object is NOT re-indexed, so the indexing hint mentions
-// only the new relation/source (their ids + the relation typename) — not the primary's id.
+// only the new relation/source (their ids + the relation typename) - not the primary's id.
 // The user's hypothesis: such a query is skipped by hint matching because its only constrained
 // dimension (objectIds = {primary.id}) does not overlap the hint.
 // ---------------------------------------------------------------------------
 
-describe('QueryExecutor.matchesHint — id-rooted relation traversal', () => {
+describe('QueryExecutor.matchesHint - id-rooted relation traversal', () => {
   const PRIMARY_ID = EntityId.random();
   const NEW_CHAT_ID = EntityId.random();
   const NEW_RELATION_ID = EntityId.random();
@@ -416,7 +416,7 @@ describe('QueryExecutor.matchesHint — id-rooted relation traversal', () => {
 
   // The decisive case: a relation is added targeting PRIMARY_ID. The hint carries the new
   // relation/source object ids and the relation typename, but NOT PRIMARY_ID. If the query is
-  // treated as "simple" (objectIds = {PRIMARY_ID}), this hint is disjoint and the query is skipped —
+  // treated as "simple" (objectIds = {PRIMARY_ID}), this hint is disjoint and the query is skipped -
   // reproducing the reported "history dropdown doesn't update until reload" bug.
   test('re-runs when a relation targeting the root is added (hint omits the root id)', ({ expect }) => {
     const hint = makeHint({
@@ -435,8 +435,8 @@ describe('QueryExecutor.matchesHint — id-rooted relation traversal', () => {
     expect(idRootedTraversal().matchesHint(hint)).toBe(true);
   });
 
-  // Sanity: traversal queries are conservative — even a fully disjoint hint re-runs them.
-  test('re-runs for a fully disjoint hint (traversal → isSimple=false → always match)', ({ expect }) => {
+  // Sanity: traversal queries are conservative - even a fully disjoint hint re-runs them.
+  test('re-runs for a fully disjoint hint (traversal -> isSimple=false -> always match)', ({ expect }) => {
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
       typenames: makeTypeSet('com.example.unrelated'),
@@ -447,14 +447,14 @@ describe('QueryExecutor.matchesHint — id-rooted relation traversal', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — id-rooted typed relation query
+// QueryExecutor.matchesHint - id-rooted typed relation query
 //
 // `Query.select(Filter.id(root)).targetOf(Relation)` returns the relations themselves, so its result changes only
 // when the root changes, a relation of that type changes, or an endpoint of a returned relation changes. Edits to
 // other objects in the space (typing in a document's text, say) must not re-run it.
 // ---------------------------------------------------------------------------
 
-describe('QueryExecutor.matchesHint — id-rooted typed relation query', () => {
+describe('QueryExecutor.matchesHint - id-rooted typed relation query', () => {
   const ROOT_ID = EntityId.random();
   const HAS_MANAGER_TYPENAME = 'com.example.type.hasManager';
 
@@ -506,10 +506,10 @@ describe('QueryExecutor.matchesHint — id-rooted typed relation query', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — queue-scope derives spaceId
+// QueryExecutor.matchesHint - queue-scope derives spaceId
 // ---------------------------------------------------------------------------
 
-describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
+describe('QueryExecutor.matchesHint - queue scope derives spaceId', () => {
   test('queue-only scope derives spaceId and matches space-scoped hint', ({ expect }) => {
     const executor = new QueryExecutor({
       ...testDeps,
@@ -517,11 +517,11 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
       query: Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]).ast,
       reactivity: QueryReactivity.REACTIVE,
     });
-    // Hint carries the space derived from the queue DXN → should match.
+    // Hint carries the space derived from the queue DXN -> should match.
     const matchingHint = makeHint({ spaceIds: makeSpaceSet(QUEUE_SPACE_ID) });
     expect(executor.matchesHint(matchingHint)).toBe(true);
 
-    // Hint from a different space → should not match.
+    // Hint from a different space -> should not match.
     const nonMatchingHint = makeHint({ spaceIds: makeSpaceSet(SpaceId.random()) });
     expect(executor.matchesHint(nonMatchingHint)).toBe(false);
   });
@@ -533,23 +533,23 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
       query: Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]).ast,
       reactivity: QueryReactivity.REACTIVE,
     });
-    // Hint constrained to the exact queue → match.
+    // Hint constrained to the exact queue -> match.
     const matchingHint = makeHint({ queueIds: makeObjectSet(QUEUE_ID) });
     expect(executor.matchesHint(matchingHint)).toBe(true);
 
-    // Hint with a different queue → no match.
+    // Hint with a different queue -> no match.
     const nonMatchingHint = makeHint({ queueIds: makeObjectSet(EntityId.random()) });
     expect(executor.matchesHint(nonMatchingHint)).toBe(false);
   });
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — compiled (sql) plan
+// QueryExecutor.matchesHint - compiled (sql) plan
 // ---------------------------------------------------------------------------
 
 // The compiled path folds the plan into one `SqlStep`; scope analysis must still see the steps it
 // absorbed, or every compiled query matches every hint and re-runs on every write.
-describe('QueryExecutor.matchesHint — compiled (sql) plan', () => {
+describe('QueryExecutor.matchesHint - compiled (sql) plan', () => {
   const makeSqlExecutor = (query: { ast: QueryAST.Query }): QueryExecutor =>
     new QueryExecutor({
       ...testDeps,

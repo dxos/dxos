@@ -151,14 +151,14 @@ const describeBinding = (value: unknown): string => {
 };
 
 /**
- * Rendered in place of a surface cell whose binding matched no registered surface — surfaces the
+ * Rendered in place of a surface cell whose binding matched no registered surface - surfaces the
  * dispatch role and data so a story author can spot a wrong companion variant, an unloaded plugin,
  * or an unregistered subject type instead of staring at a blank cell.
  */
 const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> }) => (
   <div className='grid place-items-center p-2 text-xs text-warning-text'>
     <div className='grid gap-1 rounded-sm border border-dashed border-separator p-2 font-mono'>
-      <div className='font-medium'>⚠ No surface matched this binding</div>
+      <div className='font-medium'>Warning: No surface matched this binding</div>
       <div>role: {role}</div>
       {Object.entries(data).map(([key, value]) => (
         <div key={key}>
@@ -201,7 +201,7 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
  *
  * Each cell resolves via `<Surface.Surface type={token} limit={1} />` and is wrapped in an
  * `AttendableContainer` so its attendable id participates in the attention system. The active
- * workspace is set to the first space so module surfaces resolve it via `useActiveSpace()` — done
+ * workspace is set to the first space so module surfaces resolve it via `useActiveSpace()` - done
  * from the React tree because the plugin-module activation context resolves a different AtomRegistry
  * than the UI reads. Each cell's attendable id is injected into its surface `data`.
  *
@@ -230,7 +230,7 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
     }
   }, [spaces, space, layoutState, atomRegistry]);
 
-  // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
+  // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve -
   // the work the deck's navtree normally does on navigation.
   const objectPaths = space
     ? resolvedLayout

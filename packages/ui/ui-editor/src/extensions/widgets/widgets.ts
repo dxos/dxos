@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// Widgets: syntax-tree ranges replaced by CodeMirror widgets — native ones rendered inline, React/Solid
+// Widgets: syntax-tree ranges replaced by CodeMirror widgets - native ones rendered inline, React/Solid
 // ones portaled by the host into a placeholder. This module owns everything after a match: the one
 // decoration field (block decorations cannot come from a view plugin), the placeholder lifecycle the
 // host renders portals from, widget state and context effects, and bookmark navigation. What is
@@ -119,14 +119,14 @@ export type WidgetDef<TProps extends WidgetProps = WidgetProps> = {
 
   /**
    * How `estimatedHeight` is applied: `fixed` (default) pins the block, `min` treats it as a floor.
-   * Use `min` for a widget whose height changes after it mounts — a disclosure, a growing log —
+   * Use `min` for a widget whose height changes after it mounts - a disclosure, a growing log -
    * since a pinned box cannot open and clips what it holds.
    */
   heightMode?: 'fixed' | 'min';
 
   /**
    * Keep a block's placeholder (and portal) mounted across viewport culls and decoration rebuilds
-   * even without a reserved height — otherwise only known-height blocks are kept. For a bounded set
+   * even without a reserved height - otherwise only known-height blocks are kept. For a bounded set
    * of widgets (a document's embeds), not a stream: every kept block stays mounted off screen.
    */
   keepAlive?: boolean;
@@ -156,7 +156,7 @@ export const widgetContextEffect = StateEffect.define<unknown>();
 export const widgetResetEffect = StateEffect.define();
 
 /**
- * Force a full decoration rebuild without a document change — dispatched once background parsing of a
+ * Force a full decoration rebuild without a document change - dispatched once background parsing of a
  * long document completes, so blocks past the initial parse window are decorated without needing an edit.
  */
 export const widgetRebuildEffect = StateEffect.define();
@@ -179,7 +179,7 @@ type WidgetStateMap = Record<string, Partial<WidgetProps>>;
 /** What a matcher sees for one node of the tree walk. */
 export type WidgetMatchContext = {
   state: EditorState;
-  /** Opaque host-supplied value (theme, callbacks, …); narrowed by the host's own widget code. */
+  /** Opaque host-supplied value (theme, callbacks, ...); narrowed by the host's own widget code. */
   context: unknown;
   widgetStateMap: WidgetStateMap;
   notifier: WidgetNotifier;
@@ -210,7 +210,7 @@ export type WidgetMatcher = {
   /** Whether any of the matcher's widgets is in debug mode. */
   debug?: boolean;
   match: (node: SyntaxNodeRef, ctx: WidgetMatchContext) => WidgetMatch | undefined;
-  /** Runs after the walk over the rebuilt range — for markup the parser has not closed yet. */
+  /** Runs after the walk over the rebuilt range - for markup the parser has not closed yet. */
   tail?: (ctx: WidgetTailContext) => WidgetMatch | undefined;
 };
 
@@ -351,7 +351,7 @@ export const getWidgetState = (state: EditorState, id: string): Partial<WidgetPr
  * Re-applies the accumulated widget state at mount time.
  *
  * A widget's props are baked when its decoration is built, but state can be dispatched before the
- * widget mounts — rehydration after a document reset targets widgets that are still outside
+ * widget mounts - rehydration after a document reset targets widgets that are still outside
  * CodeMirror's viewport, and `widgetUpdateEffect` alone rebuilds no decorations. Such a widget would
  * otherwise mount with the stale props it was built with, since `StubWidget.eq` (id equality) stops a
  * later rebuild from replacing the instance.
@@ -390,7 +390,7 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
       setWidgets?.([...widgets.values()]);
     },
     unmounted: (id: string, root?: HTMLElement | null) => {
-      // Stale destroy: a replacement widget (same id) already registered a newer root — CodeMirror
+      // Stale destroy: a replacement widget (same id) already registered a newer root - CodeMirror
       // draws the replacement before destroying the old instance, and deleting here would orphan
       // the live placeholder with no portal (embeds vanished until a view-mode toggle).
       const current = widgets.get(id);
@@ -398,7 +398,7 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
         return;
       }
       widgets.delete(id);
-      // A cull drops the portal for a frame before it re-mounts — this is the blank-space window.
+      // A cull drops the portal for a frame before it re-mounts - this is the blank-space window.
       if (debug) {
         log.info('widget-map: unmounted', { id, count: widgets.size });
       }
@@ -446,7 +446,7 @@ const buildDecorations = (
   state: EditorState,
   range: Range,
   notifier: WidgetNotifier,
-  /** Parse ahead of the background parser rather than reading a partial tree — see {@link PARSE_BUDGET}. */
+  /** Parse ahead of the background parser rather than reading a partial tree - see {@link PARSE_BUDGET}. */
   forceParse = false,
 ): Omit<WidgetDecorationSet, 'notifier'> => {
   const matchers = state.facet(widgetMatchersFacet);
@@ -455,7 +455,7 @@ const buildDecorations = (
   const builder = new RangeSetBuilder<Decoration>();
 
   // A fresh view has parsed only about a viewport, so a large payload's `Element` is absent at
-  // first paint and its markup renders raw until a rebuild — the flash on a remounted row.
+  // first paint and its markup renders raw until a rebuild - the flash on a remounted row.
   const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return { from: range.from, decorations: Decoration.none, atomic: Decoration.none };
@@ -550,7 +550,7 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
         return rebuild(whole);
       }
       // Widget props capture the context at build time and `StubWidget.eq` compares ids, so a context
-      // set after the first build would otherwise never reach a widget — leaving its callbacks bound to
+      // set after the first build would otherwise never reach a widget - leaving its callbacks bound to
       // `undefined` for the life of the document.
       if (effect.is(widgetContextEffect)) {
         return rebuild(whole);
@@ -570,7 +570,7 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
         const rebuildFrom = streamingFrom ?? from;
         const result = buildDecorations(state, { from: rebuildFrom, to: state.doc.length }, notifier);
         const next = decorations.update({
-          // Remove old streaming decorations — they are rebuilt each tick.
+          // Remove old streaming decorations - they are rebuilt each tick.
           filter: (_f, _t, deco) => !deco.spec.streaming,
           add: decorationSetToArray(result.decorations),
         });

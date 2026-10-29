@@ -25,7 +25,7 @@ import { EchoTestBuilder } from '../testing/index.ts';
 // the object was materialized AND `_areDepsSatisfied(core)` returned true,
 // hanging forever when the dep document was unreachable.
 //
-// After the `pending → requesting → ready` state machine + `diskOnly`
+// After the `pending -> requesting -> ready` state machine + `diskOnly`
 // option landed, query-driven loads no longer block on the network: when
 // the dep doc's disk probe completes negative the loader emits
 // `onObjectUnavailable`, the parent's deps become "resolved" (loaded OR
@@ -172,10 +172,10 @@ describe('Query pipeline strong-dependency stalls', () => {
     expect(resolved).toBeUndefined();
   });
 
-  // Same scenario but with a 3-deep strong-dep chain (`A → B → C`, C
+  // Same scenario but with a 3-deep strong-dep chain (`A -> B -> C`, C
   // unreachable). Verifies that `_onObjectUnavailable` walks transitive
   // dependents so a waiter for the root resolves promptly instead of
-  // staying parked because only `C → B` is in the index at unavailable
+  // staying parked because only `C -> B` is in the index at unavailable
   // time. Regression check for the BFS in `_onObjectUnavailable`.
   test('loadObjectCoreById resolves to undefined when a transitive strong-dep document is unreachable', async () => {
     const testBuilder = new EchoTestBuilder();
@@ -341,7 +341,7 @@ describe('Query pipeline strong-dependency stalls', () => {
 
   // The same unsatisfied-dependency state, asked the two ways a caller actually asks.
   //
-  // `Ref.peek` — what a listing walks, e.g. `TaskSet.loadTasks` -> `loadRefs` -> `Database.peek` —
+  // `Ref.peek` - what a listing walks, e.g. `TaskSet.loadTasks` -> `loadRefs` -> `Database.peek` -
   // resolves through `db.getObjectById`, which gates on `isBodyAvailable` alone. `Database.load`,
   // what a write verb calls to turn a ref into an object, resolves through a `Filter.id` query,
   // and every query source gates on `areStrongDepsSatisfied`.
@@ -428,7 +428,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     const probe = await asyncTimeout(db.loadObjectCoreById(object.id, { diskOnly: true }), 1000);
     expect(probe, 'absent id resolves to undefined and is marked unavailable').toBeUndefined();
 
-    // Persist locally — mirrors SpaceOperation.AddObject + flush on first submit.
+    // Persist locally - mirrors SpaceOperation.AddObject + flush on first submit.
     db.add(object);
     await db.flush();
 
@@ -466,7 +466,7 @@ describe('Query pipeline strong-dependency stalls', () => {
       },
     });
 
-    // Link only the main object — the dep id has no entry in the directory at all.
+    // Link only the main object - the dep id has no entry in the directory at all.
     const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
@@ -476,14 +476,14 @@ describe('Query pipeline strong-dependency stalls', () => {
     await sleep(200);
 
     // The dangling dep resolves as unavailable instead of parking forever, so the
-    // load completes promptly with `undefined` (deps unsatisfied → object omitted).
+    // load completes promptly with `undefined` (deps unsatisfied -> object omitted).
     const begin = performance.now();
     const loaded = await asyncTimeout(db.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
     expect(loaded).toBeUndefined();
 
     const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
     expect(results.some((object) => object.id === mainObjectId)).toBe(false);
-    // Well under the per-hit hydration timeout — no stall, no timeout-driven completion.
+    // Well under the per-hit hydration timeout - no stall, no timeout-driven completion.
     expect(performance.now() - begin).toBeLessThan(1500);
   });
 

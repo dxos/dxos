@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Stories for the elemental `@dxos/react-list` primitive — ARIA + structure
+// Stories for the elemental `@dxos/react-list` primitive - ARIA + structure
 // only. These show the default-styling-free behavior of `List` / `ListItem`
 // in isolation. For the styled, ARIA-correct, keyboard-navigable layer most
 // app code reaches for, see `@dxos/react-ui-list`'s `Listbox` story.
@@ -21,7 +21,7 @@ const items: Item[] = Array.from({ length: 5 }, (_, i) => ({
 }));
 
 //
-// Static unordered list — no selection.
+// Static unordered list - no selection.
 //
 
 const StaticStory = () => (
@@ -37,7 +37,7 @@ const StaticStory = () => (
 //
 // Single-select listbox. Pairs `aria-selected` (set by the primitive when
 // `selectable={true}`) with the canonical `dx-selected` / `dx-hover`
-// utilities to demonstrate the ARIA ↔ dx-* grammar in its rawest form.
+// utilities to demonstrate the ARIA <-> dx-* grammar in its rawest form.
 //
 
 const SingleSelectStory = () => {
@@ -104,7 +104,7 @@ const MultiSelectStory = () => {
 };
 
 //
-// Collapsible item — opens / closes an Ark `Collapsible`-backed body.
+// Collapsible item - opens / closes an Ark `Collapsible`-backed body.
 // Useful for accordion-style headings without reaching for the full
 // `react-ui-list` `Accordion` component.
 //
@@ -124,7 +124,7 @@ const CollapsibleStory = () => (
   </List>
 );
 
-// Inline column decorator — `react-list` deliberately doesn't depend on
+// Inline column decorator - `react-list` deliberately doesn't depend on
 // `@dxos/react-ui` (a `withTheme/withLayout` import would create a cycle
 // since `react-ui` already depends on this primitive). Storybook's global
 // `withThemeByClassName` already applies the theme class at the root.

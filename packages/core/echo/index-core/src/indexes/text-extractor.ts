@@ -11,7 +11,7 @@ const SEPARATOR = '\n';
 
 /**
  * Property names that carry an identifier rather than content, at any depth.
- * `@`-prefixed keys (`@type`, `@meta`, `@relationSource`, …) are excluded by prefix.
+ * `@`-prefixed keys (`@type`, `@meta`, `@relationSource`, ...) are excluded by prefix.
  */
 const EXCLUDED_KEYS = new Set(['id']);
 
@@ -21,7 +21,7 @@ const isExcludedKey = (key: string): boolean => key.startsWith('@') || EXCLUDED_
  * Extracts the human-readable text of an object for the full-text index.
  *
  * Indexing the object's JSON made every property name part of the index, so a search for `title`
- * or `name` matched every object that merely had such a field — and a trigram index made that
+ * or `name` matched every object that merely had such a field - and a trigram index made that
  * worse, since any 3-character window of a key (`des` of `description`) matched too. Only string
  * values reach the index here: keys, numbers, booleans, identifiers and reference URIs are
  * dropped, because none of them is content a user searches for.
@@ -29,7 +29,7 @@ const isExcludedKey = (key: string): boolean => key.startsWith('@') || EXCLUDED_
 export const extractIndexableText = (data: Obj.JSON): string => {
   const fragments: string[] = [];
   const visit = (value: unknown): void => {
-    // A reference is `{ '/': 'dxn:…' }` — an identifier, and its target's text is indexed under
+    // A reference is `{ '/': 'dxn:...' }` - an identifier, and its target's text is indexed under
     // the target's own row.
     if (isEncodedReference(value) || isEncodedUint8Array(value)) {
       return;

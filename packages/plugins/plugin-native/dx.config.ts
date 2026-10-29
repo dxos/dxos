@@ -52,7 +52,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     // Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
     // require once during startup, so the sidecar resolver contributed in a later round is invisible to
-    // it and every `built-in` model fails to resolve. Activation stays cheap — it builds the manager and
+    // it and every `built-in` model fails to resolve. Activation stays cheap - it builds the manager and
     // a lazy layer; the sidecar process spawns on first use, not here.
     Capability.lazyModule(
       'Ollama',

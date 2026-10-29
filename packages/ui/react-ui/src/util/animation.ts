@@ -24,7 +24,7 @@ export const useReducedMotion = (): boolean =>
   useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false);
 
 /**
- * `VITE_DX_DISABLE_ANIMATIONS=true` turns off animation that runs without a user gesture —
+ * `VITE_DX_DISABLE_ANIMATIONS=true` turns off animation that runs without a user gesture -
  * carousel auto-advance and the like.
  *
  * Agent-driven recordings (`autocue`) are culled by dropping runs of identical frames, and

@@ -24,7 +24,7 @@ import * as AiRequest from './AiRequest.ts';
 
 const { text, toolCall, layer } = ScriptedLanguageModel;
 
-// Real handler, so a scripted tool call drives a genuine tool-call → result → continue cycle.
+// Real handler, so a scripted tool call drives a genuine tool-call -> result -> continue cycle.
 const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
     description: 'Returns its input value verbatim.',

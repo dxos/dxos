@@ -65,7 +65,7 @@ const SubgridStory = () => (
       <Grid key={label} cols='subgrid' gap='sm' align='center'>
         <Cell label={label} hue='red' />
         <Cell label={`content ${label}`} hue='green' />
-        <Cell label='⋯' hue='blue' />
+        <Cell label='&#x22EF;' hue='blue' />
       </Grid>
     ))}
   </Grid>

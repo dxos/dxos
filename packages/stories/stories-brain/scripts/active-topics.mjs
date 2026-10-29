@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 
-// Seed process.env from a local `.env` (git-ignored) — shell env already set wins over the file.
+// Seed process.env from a local `.env` (git-ignored) - shell env already set wins over the file.
 const loadDotEnv = () => {
   const path = resolve(PACKAGE_ROOT, '.env');
   if (!existsSync(path)) {
@@ -54,7 +54,7 @@ console.error(
   `  candidates: ${process.env.ACTIVE_N}   active: ${process.env.ACTIVE_TOP}   threshold: ${process.env.ACTIVE_THRESHOLD}`,
 );
 console.error(`  policy:     ${process.env.MODEL_POLICY ?? '(default)'}`);
-console.error('  reports →   fixtures/local/results/active-topics/{index,<topic>}.md + active-topics.json\n');
+console.error('  reports ->   fixtures/local/results/active-topics/{index,<topic>}.md + active-topics.json\n');
 
 const result = spawnSync('pnpm', ['exec', 'vitest', 'run', '--project=node', 'src/test/active-topics.bench.test.ts'], {
   stdio: 'inherit',

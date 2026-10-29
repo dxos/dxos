@@ -23,7 +23,7 @@ import type * as Filter from './Filter.ts';
 import type * as Hypergraph from './Hypergraph.ts';
 import { type AnyProperties, EntityKind, KindId } from './internal/common/types/index.ts';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
-// Database → internal/Entity → entity → JsonSchema → Ref → Database.
+// Database -> internal/Entity -> entity -> JsonSchema -> Ref -> Database.
 import { isInstanceOf } from './internal/Entity/type-uri.ts';
 import * as queryInternal from './internal/Query/index.ts';
 import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
@@ -95,7 +95,7 @@ export type AddOptions = {
 
   /**
    * Append the object to this feed instead of the automerge-backed space database. The object is
-   * returned synchronously (a live feed object) and persisted in the background — confirm the write
+   * returned synchronously (a live feed object) and persisted in the background - confirm the write
    * completed with {@link Database.flush}. Synchronous alternative to the async
    * {@link Database.appendToFeed}.
    */
@@ -219,7 +219,7 @@ export interface Database extends Queryable {
    * Adds an object or relation to the database.
    *
    * Only Object and Relation entities are accepted. To persist a Type definition use
-   * {@link addType} — passing a Type entity is rejected at compile time (and at runtime).
+   * {@link addType} - passing a Type entity is rejected at compile time (and at runtime).
    *
    * Pass `{ to: feed }` to append to a feed instead (synchronous; confirm with {@link flush}).
    *
@@ -233,7 +233,7 @@ export interface Database extends Queryable {
    *
    * Runs a conflict query first: if a type with the same typename + version already exists in
    * this space, the existing persisted entity is returned and no duplicate is created. This is
-   * the only supported way to add Type entities — {@link add} rejects them.
+   * the only supported way to add Type entities - {@link add} rejects them.
    *
    * @performance Async; O(t) in the space persisted types, which it queries in full for a duplicate before writing.
    */
@@ -289,7 +289,7 @@ export interface Database extends Queryable {
 
   /**
    * The device-global current branch for an object id (`'main'` by default).
-   * @deprecated Prefer `Obj.getBranch(obj)` — it takes the object and reports the branch of that
+   * @deprecated Prefer `Obj.getBranch(obj)` - it takes the object and reports the branch of that
    * specific instance (including `db.branch()` independent instances), not just the device selection.
    *
    * @performance O(1) device-local map lookup.
@@ -297,7 +297,7 @@ export interface Database extends Queryable {
   getCurrentBranch(objectId: string): string;
 
   /**
-   * An immutable snapshot of the object at the given historical heads — a detached instance, not a
+   * An immutable snapshot of the object at the given historical heads - a detached instance, not a
    * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
    *
    * @performance O(object size) plus the Automerge cost of viewing the document at `heads`; nothing is cached.
@@ -362,11 +362,11 @@ export interface Database extends Queryable {
   deleteBranch(rootObjectId: string, name: string): void;
 
   /**
-   * Create a caller-owned, writable binding to one branch of one object — a live object whose reads
+   * Create a caller-owned, writable binding to one branch of one object - a live object whose reads
    * resolve the branch document and whose writes land on the branch document only. Multiple bindings
    * to different branches of the same object may coexist; the device-global current branch and other
    * bindings are unaffected. Binding to `'main'` returns the canonical live object. Bindings are
-   * ephemeral and never persisted — the caller must `dispose()`.
+   * ephemeral and never persisted - the caller must `dispose()`.
    *
    * @performance Async; O(1) for main, otherwise loads and binds the branch document of this one object.
    */
@@ -407,7 +407,7 @@ export interface Database extends Queryable {
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
    * Rejects with `Error.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
    * `maxSize`), `Error.BlobWriteError` (backend upload failure), or `Error.BlobNotAvailableError`
-   * (`reason: 'backend-not-registered'` — the requested storage name has no registered backend).
+   * (`reason: 'backend-not-registered'` - the requested storage name has no registered backend).
    *
    * @performance Async; O(size) to hash, plus the backend upload (a no-op for inline storage).
    */
@@ -417,7 +417,7 @@ export interface Database extends Queryable {
    * Adopts bytes already staged by a direct upload, returning an un-added Blob object.
    *
    * Unlike {@link createBlob} the bytes never enter this process: they were written straight to the
-   * store by whoever held the upload URL, which is the point — the uploader is typically an agent's
+   * store by whoever held the upload URL, which is the point - the uploader is typically an agent's
    * shell moving a file far too large to pass through a model. Size and content type therefore come
    * back from the store rather than from the caller.
    *
@@ -490,8 +490,8 @@ export interface Database extends Queryable {
    *
    * Derived from the directory's own maps, so clearing a space costs one change rather than a scan
    * of its contents. The objects are dropped, not soft-deleted: they are gone from the space and
-   * their documents are reclaimed by garbage collection, on this peer and — as the change
-   * replicates — on every other. Permanent; there is nothing left to restore from.
+   * their documents are reclaimed by garbage collection, on this peer and - as the change
+   * replicates - on every other. Permanent; there is nothing left to restore from.
    *
    * @returns Ids of the objects dropped from the directory.
    *
@@ -606,7 +606,7 @@ export const resolve: {
       return yield* Effect.fail(new Error.EntityNotFoundError(dxn));
     }
     // `isInstanceOf` uses a conditional generic that TS can't resolve through
-    // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
+    // the local `S extends Type.AnyEntity` parameter - runtime accepts it fine.
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
@@ -632,7 +632,7 @@ export const beginMigration = (
  * for it.
  *
  * The options parameter means this cannot be passed point-free where the caller supplies a second
- * argument — `Effect.forEach(refs, (ref) => load(ref))`, not `Effect.forEach(refs, load)`, since the
+ * argument - `Effect.forEach(refs, (ref) => load(ref))`, not `Effect.forEach(refs, load)`, since the
  * iteratee index would land on `options`.
  *
  * Catching not found error:
@@ -653,7 +653,7 @@ export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, E
   });
 
 /**
- * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
+ * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` -
  * never throws and never triggers loading. Compose with {@link load} for a sync-when-materialized
  * read with an async fallback, keeping the effect runnable under `Effect.runSync` when every ref
  * is materialized (e.g. a mutation in a gesture frame):
@@ -662,8 +662,8 @@ export const load: <T>(ref: Ref<T>, options?: LoadOptions) => Effect.Effect<T, E
  * const task = Database.peek(ref) ?? (yield* Database.load(ref));
  * ```
  *
- * Peek skips {@link load}'s settling — a just-added object can resolve here before it has its own
- * document — so callers that branch (or otherwise need a settled document) must load.
+ * Peek skips {@link load}'s settling - a just-added object can resolve here before it has its own
+ * document - so callers that branch (or otherwise need a settled document) must load.
  *
  * @performance O(1) working-set lookup; never loads and never throws.
  */
@@ -869,7 +869,7 @@ export interface DatabaseStats {
   readonly feedBlocks: number;
   /**
    * What is resident in memory right now, as opposed to the stored counts above. Split by realm
-   * because the client and the host cache independently — a client-side working set that is never
+   * because the client and the host cache independently - a client-side working set that is never
    * released reads as nothing at all in the host's numbers, and vice versa.
    */
   readonly loaded: {
@@ -888,7 +888,7 @@ export interface ClientLoadedStats {
   readonly objects: number;
   /** Feed handles cached by this database. */
   readonly feeds: number;
-  /** Objects resident across those feed handles — the feeds' working set, not what is stored. */
+  /** Objects resident across those feed handles - the feeds' working set, not what is stored. */
   readonly feedObjects: number;
   /** Entities in the runtime registry (types and other static entities), across the whole client. */
   readonly registryTotal: number;
@@ -919,7 +919,7 @@ export interface GarbageCollectionOptions {
   readonly index?: boolean;
   /**
    * Reserved for feed-block purge (positioned deletion markers). Not yet effective on the local
-   * host — see the feed-purge deferral in `@dxos/echo-host` garbage-collection design notes.
+   * host - see the feed-purge deferral in `@dxos/echo-host` garbage-collection design notes.
    * @default true
    */
   readonly feeds?: boolean;

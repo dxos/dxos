@@ -60,8 +60,8 @@ export type ProxyTarget = {
 } & ({ [key: keyof any]: any } | EchoArray<any>);
 
 // ---------------------------------------------------------------------------
-// EchoDatabase accessor — the database field on ObjectCore is `unknown` to
-// avoid a circular dep between core-db ← proxy-db. This module bridges the
+// EchoDatabase accessor - the database field on ObjectCore is `unknown` to
+// avoid a circular dep between core-db <- proxy-db. This module bridges the
 // two layers: it imports EchoDatabase and exposes a typed getter.
 // ---------------------------------------------------------------------------
 

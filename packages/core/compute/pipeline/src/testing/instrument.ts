@@ -10,15 +10,15 @@ import * as Stage from '../Stage.ts';
 import { Metrics, useMetrics } from './metrics.ts';
 
 /**
- * Wrap a {@link Stage.Stage} to auto-record per-stage metrics — `${name}.in`, `${name}.out`,
- * `${name}.errors` (counts) and `${name}.ms` (summed processing latency) — through the ambient
+ * Wrap a {@link Stage.Stage} to auto-record per-stage metrics - `${name}.in`, `${name}.out`,
+ * `${name}.errors` (counts) and `${name}.ms` (summed processing latency) - through the ambient
  * {@link Metrics} service, with no changes to the stage itself. Compose it in place of the stage:
- * `source.pipe(instrument('extract', s), …)`. The wrapped stage additionally requires `Metrics` in
+ * `source.pipe(instrument('extract', s), ...)`. The wrapped stage additionally requires `Metrics` in
  * its environment (provided at the edge by the benchmark runner).
  *
  * Latency is the wall-clock between the most recent input entering and an output leaving the stage.
  * For a sequential stage (`Stage.map`, the common case) the item just emitted is the last one pulled
- * in, so `${name}.ms` is the true per-item processing time — including drop/filter stages, whose
+ * in, so `${name}.ms` is the true per-item processing time - including drop/filter stages, whose
  * discarded inputs simply never produce an output to attribute. It is only approximate for a stage
  * that reorders or processes items concurrently (concurrency > 1), where the "most recent input" is
  * no longer the one being emitted. Divide `${name}.ms` by `${name}.out` for the average.

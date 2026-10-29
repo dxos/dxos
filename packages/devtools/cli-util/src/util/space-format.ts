@@ -19,7 +19,7 @@ export type FormatSpaceOptions = {
   /**
    * If set, wait up to this many seconds for the space to reach
    * `SPACE_READY` before reading its fields. If unset, read whatever state
-   * is available right now — much safer for `space list` etc., where a
+   * is available right now - much safer for `space list` etc., where a
    * single stuck space would otherwise hang the entire command.
    */
   waitSeconds?: number;
@@ -143,15 +143,15 @@ const aggregateSyncState = (syncState: SpaceSyncState) => {
 const getSyncIndicator = (up: boolean, down: boolean) => {
   if (up) {
     if (down) {
-      return '⇅';
+      return '\u21C5';
     } else {
-      return '↑';
+      return '\u2191';
     }
   } else {
     if (down) {
-      return '↓';
+      return '\u2193';
     } else {
-      return '✓';
+      return '\u2713';
     }
   }
 };

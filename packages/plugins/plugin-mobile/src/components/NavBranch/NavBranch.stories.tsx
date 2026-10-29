@@ -47,7 +47,7 @@ const makeLeaf = (id: string, label: string) =>
 const whenId = (id: string) => (node: AppGraphNode.Node) => (node.id === id ? Option.some(node) : Option.none());
 
 /**
- * A branch holding a leaf, a group nothing contributes to, and a group with a child — the shape the
+ * A branch holding a leaf, a group nothing contributes to, and a group with a child - the shape the
  * fixed mobile plugin set produces, where Communications has no contributor at all.
  */
 const storyGraph = Capability.inlineModule(
@@ -90,7 +90,7 @@ const StoryRoot = ({ id }: { id: string }) => {
   const { graph } = Hooks.useAppGraph();
 
   // Expanded during this first render, before `NavBranch` mounts, so the branch arrives with its own
-  // children already resolved — the state the panel above it leaves behind in the app. The cold-mount
+  // children already resolved - the state the panel above it leaves behind in the app. The cold-mount
   // story is about whether the *groups* one level further down are known, not about this.
   useState(() => {
     AppGraph.expandSync(graph, GraphNode.RootId, 'child');
@@ -151,7 +151,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * A group is a label over its children, so one with nothing under it must not offer a row — tapping it
+ * A group is a label over its children, so one with nothing under it must not offer a row - tapping it
  * would push a panel that can never hold anything.
  */
 export const HidesEmptyGroups: Story = {

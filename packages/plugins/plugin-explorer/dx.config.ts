@@ -21,7 +21,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
     Explorer is an interactive hypergraph visualization plugin that reveals the relationships
     between objects stored in your DXOS workspace. Each Graph document is backed by a live
-    ECHO query and a View that you configure — Explorer keeps the visualization synchronized
+    ECHO query and a View that you configure - Explorer keeps the visualization synchronized
     with the database in real time so every peer immediately sees changes made by collaborators.
 
     The plugin offers four switchable layout algorithms for the same data set: a physics-based

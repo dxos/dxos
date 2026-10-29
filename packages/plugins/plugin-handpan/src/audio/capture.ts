@@ -73,7 +73,7 @@ export const startCapture = async ({ context, source, onSamples }: CaptureOption
 };
 
 /**
- * Opens the microphone with browser voice processing disabled — echo cancellation, noise
+ * Opens the microphone with browser voice processing disabled - echo cancellation, noise
  * suppression and AGC distort instrument pitch and dynamics.
  */
 export const openMicrophone = async (context: AudioContext): Promise<{ source: AudioNode; close: () => void }> => {

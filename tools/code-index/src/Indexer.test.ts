@@ -45,7 +45,7 @@ describe('Indexer', () => {
     EffectEx.runPromise(Effect.scoped(Effect.provide(Effect.flatMap(Store.Store, f), Store.layer(dir))));
 
   // Deliberately not a closure: reachability over `deus:imports` is a query (`deus:imports+`),
-  // never a materialized rule — see the header of `rules/50-example.n3`.
+  // never a materialized rule - see the header of `rules/50-example.n3`.
   const REASONER = {
     name: 'test',
     rules: `
@@ -277,7 +277,7 @@ describe('Indexer', () => {
     expect(snippets.length).toBeGreaterThan(0);
     for (const quad of snippets) {
       const file = decodeURIComponent(quad.subject.value.slice(Ontology.FILE_BASE.length).split('#')[0]);
-      // Re-parsed under the file's own extension: `<T>(…) =>` is a generic arrow in .ts, JSX in .tsx.
+      // Re-parsed under the file's own extension: `<T>(...) =>` is a generic arrow in .ts, JSX in .tsx.
       expect(
         parseSync(file, quad.object.value).errors.map((error) => error.message),
         file,

@@ -40,13 +40,13 @@ export type PreviewRootProps = {
  * whatever the content learns about it, `Preview.Content` renders by media type, and
  * `Preview.Toolbar` sits above with controls.
  *
- * Split this way because the toolbar needs facts only the content discovers — a PDF's page count,
- * current page and search matches are known after pdf.js parses the document, not before — and a
+ * Split this way because the toolbar needs facts only the content discovers - a PDF's page count,
+ * current page and search matches are known after pdf.js parses the document, not before - and a
  * single component taking a `toolbar` prop would have to lift that state through props it does not
  * own.
  *
  * The root renders no element of its own. Its parts are placed into slots that belong to whatever
- * surrounds them — `Panel.Toolbar` and `Panel.Content` in the file article — so a wrapper would
+ * surrounds them - `Panel.Toolbar` and `Panel.Content` in the file article - so a wrapper would
  * break the panel's grid by putting a div between it and its areas.
  */
 const PreviewRoot = ({ type, url, name, size, attendableId, children }: PreviewRootProps) => {
@@ -81,7 +81,7 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
   const { hasAttention } = useAttention(attendableId);
 
   // Gated on the article having attention rather than bound globally, so the shortcut belongs to
-  // whichever plank the reader is in — the same mechanism `useArticleKeyboardNavigation` uses.
+  // whichever plank the reader is in - the same mechanism `useArticleKeyboardNavigation` uses.
   useHotkeys({
     id: `${attendableId}:search`,
     commands: [
@@ -136,9 +136,9 @@ const PreviewToolbar = Util.composable<HTMLDivElement>(({ children, ...props }, 
             onClick={() => paged.api?.stepPage(-1)}
           />
           {/* Two copies stacked in one grid cell: an invisible one of the widest value reserves the
-              box, so stepping 9 → 10 does not shove the buttons beside it. Padding with spaces
+              box, so stepping 9 -> 10 does not shove the buttons beside it. Padding with spaces
               cannot do this (HTML collapses them) and zero-padding shows a leading zero.
-              `Toolbar.Text` also truncates by default — right for a label, wrong for a counter. */}
+              `Toolbar.Text` also truncates by default - right for a label, wrong for a counter. */}
           <Toolbar.Text classNames='grid justify-items-end shrink-0 overflow-visible text-nowrap text-sm tabular-nums'>
             <span aria-hidden className='invisible col-start-1 row-start-1'>
               {t('page-of.label', { page: paged.pageCount, count: paged.pageCount })}
@@ -225,10 +225,10 @@ PreviewToolbar.displayName = 'Preview.Toolbar';
 
 /**
  * Renders the source by media type: PDFs through pdf.js, images/video/audio through `MediaPlayer`,
- * and anything else as a description of what it is — the download lives in the toolbar, where it is
+ * and anything else as a description of what it is - the download lives in the toolbar, where it is
  * available for every type rather than only the ones with no preview.
  *
- * `composable` for the same reason as the toolbar — it is placed in `Panel.Content asChild`.
+ * `composable` for the same reason as the toolbar - it is placed in `Panel.Content asChild`.
  */
 const PreviewContent = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -271,7 +271,7 @@ const PreviewContent = Util.composable<HTMLDivElement>((props, forwardedRef) => 
           src={url}
           // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/
           // presigned one with no usable extension, which is all `detectMediaKind` has to go on.
-          // Images take no `kind` — `MediaKind` has no image member, and the unset path is `<img>`.
+          // Images take no `kind` - `MediaKind` has no image member, and the unset path is `<img>`.
           kind={type.startsWith('audio/') ? 'audio' : type.startsWith('video/') ? 'video' : undefined}
           fit='contain'
         />

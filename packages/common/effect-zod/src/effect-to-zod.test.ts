@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Verifies the Effect Schema → Zod converter produces zod schemas equivalent
+// Verifies the Effect Schema -> Zod converter produces zod schemas equivalent
 // to the ones we'd write by hand. The MCP SDK doesn't care HOW the zod schema
-// was built, only that it parses correctly — so each test asserts
+// was built, only that it parses correctly - so each test asserts
 // parse-equivalence with a hand-written zod schema for the same shape.
 
 import * as Schema from 'effect/Schema';
@@ -14,7 +14,7 @@ import { z } from 'zod';
 import { effectFieldsToZod } from './effect-to-zod.ts';
 
 describe('effectFieldsToZod', () => {
-  test('Schema.String required → z.string()', ({ expect }) => {
+  test('Schema.String required -> z.string()', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
         name: Schema.String.annotate({ description: 'a name' }),
@@ -25,7 +25,7 @@ describe('effectFieldsToZod', () => {
     expect(out.name.description).toBe('a name');
   });
 
-  test('Schema.optional(Schema.String) → z.string().optional()', ({ expect }) => {
+  test('Schema.optional(Schema.String) -> z.string().optional()', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
         nick: Schema.optional(Schema.String).annotate({ description: 'nick' }),
@@ -36,13 +36,13 @@ describe('effectFieldsToZod', () => {
     expect(out.nick.description).toBe('nick');
   });
 
-  test('Schema.Boolean → z.boolean()', ({ expect }) => {
+  test('Schema.Boolean -> z.boolean()', ({ expect }) => {
     const out = effectFieldsToZod(Schema.Struct({ enabled: Schema.Boolean }));
     expect(out.enabled.parse(true)).toBe(true);
     expect(() => out.enabled.parse('true')).toThrow();
   });
 
-  test('Schema.Number with int/positive/lessThanOrEqualTo refinements → z.number().int().positive().max(N)', ({
+  test('Schema.Number with int/positive/lessThanOrEqualTo refinements -> z.number().int().positive().max(N)', ({
     expect,
   }) => {
     const out = effectFieldsToZod(
@@ -64,7 +64,7 @@ describe('effectFieldsToZod', () => {
     expect(() => out.limit.parse(-1)).toThrow(); // not positive
   });
 
-  test('Schema.Literal(...) string union → z.enum([...])', ({ expect }) => {
+  test('Schema.Literal(...) string union -> z.enum([...])', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
         kind: Schema.Literals(['function', 'class', 'interface']),
@@ -74,7 +74,7 @@ describe('effectFieldsToZod', () => {
     expect(() => out.kind.parse('module')).toThrow();
   });
 
-  test('Schema.Array(Schema.String) → z.array(z.string())', ({ expect }) => {
+  test('Schema.Array(Schema.String) -> z.array(z.string())', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
         tags: Schema.Array(Schema.String),
@@ -84,7 +84,7 @@ describe('effectFieldsToZod', () => {
     expect(() => out.tags.parse([1, 2])).toThrow();
   });
 
-  test('Schema.Array(Schema.Literal(...)) → z.array(z.enum([...]))', ({ expect }) => {
+  test('Schema.Array(Schema.Literal(...)) -> z.array(z.enum([...]))', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
         include: Schema.optional(Schema.Array(Schema.Literals(['source', 'jsdoc']))),

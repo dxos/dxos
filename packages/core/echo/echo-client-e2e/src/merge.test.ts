@@ -23,14 +23,14 @@ describe('convergence-key merging', () => {
     await builder.close();
   });
 
-  // The field is assigned through meta inside an update — there is deliberately no dedicated setter.
+  // The field is assigned through meta inside an update - there is deliberately no dedicated setter.
   const setConvergenceKey = (object: Obj.Unknown, convergenceKey: string | undefined) =>
     Obj.update(object, (object) => {
       Obj.getMeta(object).convergenceKey = convergenceKey;
     });
 
   // The merge runs in the worker, so its records are read at the storage layer rather than
-  // through a client API — deliberately: the client keeps no merge surface.
+  // through a client API - deliberately: the client keeps no merge surface.
   const getMergedFrom = (object: Obj.Unknown) => getObjectCore(object).getMergedFrom();
 
   // Merging is triggered by the worker's indexing stream, so convergence is awaited rather than
@@ -91,7 +91,7 @@ describe('convergence-key merging', () => {
     setConvergenceKey(second, 'org.example.seed');
     await db.flush();
 
-    // No merge call anywhere — the worker notices the collision while indexing the writes.
+    // No merge call anywhere - the worker notices the collision while indexing the writes.
     await waitForLiveCount(db, 1);
 
     const after = await db.query(Filter.type(TestSchema.Task)).run();
@@ -130,7 +130,7 @@ describe('convergence-key merging', () => {
     const relations = await db.query(Filter.type(TestSchema.EmployedBy)).run();
     expect(relations).toHaveLength(1);
 
-    // Deletion semantics still apply — at the live end of the chain: removing the survivor
+    // Deletion semantics still apply - at the live end of the chain: removing the survivor
     // transitively deletes the relation.
     db.remove(winner);
     expect(Relation.isDeleted(relation)).toBe(true);
@@ -211,7 +211,7 @@ describe('convergence-key merging', () => {
     await waitForLiveCount(db, 1);
 
     // The §4.11 freshness residual: a referrer written after the merge is not re-presented by the
-    // loser's key, so its ref stays un-rewritten until the loser next re-indexes — and resolution
+    // loser's key, so its ref stays un-rewritten until the loser next re-indexes - and resolution
     // follows `system.mergedInto` to the survivor regardless, which is what makes rewriting an
     // optimization rather than a correctness requirement.
     const referrer = db.add(Obj.make(TestSchema.Task, { title: 'late referrer', previous: Ref.make(second) }));
@@ -232,7 +232,7 @@ describe('convergence-key merging', () => {
     }
 
     // A collection-shaped referrer: the refs sit inside an array, where a top-level-only
-    // traversal would never look — precisely how a root collection points at its members.
+    // traversal would never look - precisely how a root collection points at its members.
     const untouched = db.add(Obj.make(TestSchema.Task, { title: 'untouched' }));
     const referrer = db.add(
       Obj.make(TestSchema.Task, {
@@ -284,7 +284,7 @@ describe('convergence-key merging', () => {
     });
     const [smallest, middle, largest] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
 
-    // A peer with a partial view already merged the two larger ones — staged through the cores
+    // A peer with a partial view already merged the two larger ones - staged through the cores
     // exactly as that peer's worker would have written it, in the same tick as the adds.
     const largestCore = getObjectCore(largest);
     largestCore.setMergedInto(middle.id, largestCore.getHeads());
@@ -317,7 +317,7 @@ describe('convergence-key merging', () => {
       await db.flush();
       const winner = tasks[0].id < tasks[1].id ? tasks[0] : tasks[1];
 
-      // No merge call anywhere — the worker notices the collision while indexing the writes.
+      // No merge call anywhere - the worker notices the collision while indexing the writes.
       await waitForLiveCount(db, 1);
       const results = await db.query(Filter.type(TestSchema.Task)).run();
       expect(results[0].id).toBe(winner.id);

@@ -24,9 +24,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     spec: 'PLUGIN.mdl',
     description: trim`
       Integrates the AT Protocol (atproto) and Bluesky social network into the
-      DXOS Composer workspace. Users authenticate via the atproto OAuth flow —
+      DXOS Composer workspace. Users authenticate via the atproto OAuth flow -
       DPoP-bound tokens are managed by the DXOS Edge proxy so credentials never
-      leave the server — and the plugin syncs their posts, liked posts, bookmarks,
+      leave the server - and the plugin syncs their posts, liked posts, bookmarks,
       and saved custom feed generators into local Subscription.Feed objects backed
       by ECHO queues.
 

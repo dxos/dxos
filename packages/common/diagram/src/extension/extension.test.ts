@@ -30,12 +30,12 @@ describe('diagram language', () => {
     expect(names).toContain('ObjectDecl');
     expect(names).toContain('BoxElement');
     expect(names).toContain('AttrName');
-    expect(names).not.toContain('⚠');
+    expect(names).not.toContain('\u26A0');
   });
 
   //
   // The tags are standard so the theme colours most of a document, but `vscode*Style` defines
-  // neither `attributeValue` nor `null` — enum values and the unbound arrow end rendered plain
+  // neither `attributeValue` nor `null` - enum values and the unbound arrow end rendered plain
   // until `diagramHighlightStyle` filled them. Asserting against the real theme is what catches
   // the next tag added to `styleTags` with nothing to colour it.
   //
@@ -53,7 +53,7 @@ describe('diagram language', () => {
   }
 });
 
-/** Every element kind, both arrow forms, a quoted id, a comment — one of each tag the grammar emits. */
+/** Every element kind, both arrow forms, a quoted id, a comment - one of each tag the grammar emits. */
 const SAMPLE = `# comment
 object pkgA @ -24,-24 scale=1 index="a1" {
   rect frame 0,0 248x172 "Package A" color=grey stroke=dashed
@@ -115,7 +115,7 @@ describe('diagram lint', () => {
   });
 
   test('a layout error points at the object that caused it, not the top of the file', ({ expect }) => {
-    // Two boxes on the same spot — `node-overlap`, which `Diagnostics` reports against both refs.
+    // Two boxes on the same spot - `node-overlap`, which `Diagnostics` reports against both refs.
     const source = printCommands([
       { op: 'upsert-object', object: { id: 'A', origin: { x: 0, y: 0 }, elements: [box('a')] } },
       { op: 'upsert-object', object: { id: 'B', origin: { x: 0, y: 0 }, elements: [box('b')] } },

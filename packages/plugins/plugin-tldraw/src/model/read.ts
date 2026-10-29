@@ -3,8 +3,8 @@
 //
 
 //
-// Derives the neutral scene from tldraw records. Geometry is read from the live records —
-// not from a stored copy — so the agent's mental model stays coherent after users drag or
+// Derives the neutral scene from tldraw records. Geometry is read from the live records -
+// not from a stored copy - so the agent's mental model stays coherent after users drag or
 // resize shapes in the UI. An object's `origin` is the top-left of its bounding box.
 //
 

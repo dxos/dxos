@@ -157,7 +157,7 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   if (features) {
     const { points, lines, selected } = features;
 
-    // Lines first so points (drawn after) sit on top — the route nodes should
+    // Lines first so points (drawn after) sit on top - the route nodes should
     // never be occluded by an arc that passes through them.
     if (lines && styles.line) {
       layers.push({
@@ -198,7 +198,7 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
  *
  * When `viewCenter` is supplied (orthographic globe), layers with a
  * `cullable` index are filtered to just the features whose bounding circle
- * intersects the visible hemisphere — keeping the d3-geo walk proportional
+ * intersects the visible hemisphere - keeping the d3-geo walk proportional
  * to what's actually on-screen.
  */
 export const renderLayers = (

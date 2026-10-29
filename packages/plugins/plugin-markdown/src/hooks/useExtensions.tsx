@@ -71,7 +71,7 @@ export type ExtensionsOptions = {
   identity?: Identity.Info | null;
   setWidgets?: WidgetHostOptions['setWidgets'];
   /**
-   * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
+   * Callback when an internal link is clicked, with the link's URL pathname - resolving one to a node
    * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
    * click/keydown event, so callers can invert the deck's navigation disposition.
    */
@@ -228,7 +228,7 @@ const createBaseExtensions = ({
             },
           },
           image: {
-            // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+            // Reserve the persisted height (`![label|404](...)`) up front so the block does not collapse
             // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
             estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
             // An embed that released its reserved height (a card) must still keep its element across
@@ -259,7 +259,7 @@ const selectionChange = (viewState: ViewState.Manager) => {
     const selection = update.state.selection;
     // NOTE: Filter on numeric offsets BEFORE converting to cursor strings.
     // Cursors are opaque (Automerge-encoded), so a lexicographic `to > from`
-    // comparison is nondeterministic — it would let some cursor-placements
+    // comparison is nondeterministic - it would let some cursor-placements
     // (where from === to numerically) through and reject genuine selections
     // depending on encoding, which made the comment button's enabled state
     // appear random across different lines.

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// This hook is based on Chakra UI’s `useMediaQuery`: https://github.com/chakra-ui/chakra-ui/blob/main/packages/components/media-query/src/use-media-query.ts
+// This hook is based on Chakra UI's `useMediaQuery`: https://github.com/chakra-ui/chakra-ui/blob/main/packages/components/media-query/src/use-media-query.ts
 
 import { useEffect, useState } from 'react';
 

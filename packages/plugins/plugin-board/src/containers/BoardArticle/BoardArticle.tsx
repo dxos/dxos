@@ -90,7 +90,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
     [board],
   );
 
-  // Backdrop "+" supplies a position → create a new Markdown document directly.
+  // Backdrop "+" supplies a position -> create a new Markdown document directly.
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (position) => {
       const db = Obj.getDatabase(board);

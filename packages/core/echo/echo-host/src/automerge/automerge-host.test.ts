@@ -47,7 +47,7 @@ describe('AutomergeHost', () => {
 
     // Regression: a document known to the space via the root's document list, but whose handle was
     // never created (eviction / lazy load), must resolve to its space rather than reading as "not
-    // in any space" — the latter produced spurious share-policy (`authorizeFetch`) denials.
+    // in any space" - the latter produced spurious share-policy (`authorizeFetch`) denials.
     const spaceId = SpaceId.random();
     const { documentId: rootId } = parseAutomergeUrl(generateAutomergeUrl());
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
@@ -247,7 +247,7 @@ describe('AutomergeHost', () => {
     await host1.addReplicator(Context.default(), await network.createReplicator());
     await host2.addReplicator(Context.default(), await network.createReplicator());
 
-    // Spy on host2's incoming-request event — fires when any peer sends
+    // Spy on host2's incoming-request event - fires when any peer sends
     // an automerge `request` message for a doc to host2. If host1 ever
     // announced wanting `documentId`, this would trigger.
     const requests: DocumentId[] = [];
@@ -339,7 +339,7 @@ describe('AutomergeHost', () => {
     };
 
     // A head the local document cannot overlap, so the diff reports `different` rather than
-    // `missingOnLocal`/`missingOnRemote` — the shape that used to fall through to nothing.
+    // `missingOnLocal`/`missingOnRemote` - the shape that used to fall through to nothing.
     const peerId = 'test-peer' as PeerId;
     const remoteState = { documents: { [documentId]: ['0'.repeat(64)] } };
     const synchronizer = (host as any)._collectionSynchronizer;
@@ -682,7 +682,7 @@ describe('AutomergeHost', () => {
   });
 
   // `DeferredTask` clears its scheduled flag before running the callback, so a throttle that waited
-  // inside the callback queued a second run for kicks it had already covered — and that run fanned
+  // inside the callback queued a second run for kicks it had already covered - and that run fanned
   // out again a full interval later.
   test('a burst of share-policy kicks inside the throttle window fans out once', { timeout: 15_000 }, async () => {
     const { runtime, dispose } = createTestSqliteRuntime();

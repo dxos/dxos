@@ -18,7 +18,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       Conductor is a visual node-based compute graph plugin for DXOS Composer.
       It lets you compose reactive data pipelines by connecting typed input and output ports on a
-      drag-and-drop infinite canvas — no code required for common automation patterns.
+      drag-and-drop infinite canvas - no code required for common automation patterns.
 
       Each node in the graph is a first-class ECHO object, so the full pipeline topology is
       replicated to every collaborator in real time via the local-first runtime.

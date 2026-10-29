@@ -15,7 +15,7 @@ export type BuildResult = { filter?: Filter.Any; name?: string };
 
 /**
  * The `#tag` token for a tag label. The grammar's `Tag` token admits only `[a-zA-Z0-9_-]`, so every
- * other run of characters becomes one `-` — otherwise `#Needs reply` parses as tag `needs` plus text.
+ * other run of characters becomes one `-` - otherwise `#Needs reply` parses as tag `needs` plus text.
  */
 export const formatTag = (label: string): string =>
   '#' +
@@ -370,7 +370,7 @@ export class QueryBuilder {
     const typename = this._getNodeText(cursor, input);
     cursor.parent(); // Go back to TypeFilter.
     // Callers may pass a bare typename (e.g. `com.example.task`) or a canonical URI
-    // (`dxn:…` / `echo:…`); prepend `dxn:` only for bare names, detected by the absence of a
+    // (`dxn:...` / `echo:...`); prepend `dxn:` only for bare names, detected by the absence of a
     // URI scheme.
     const uri = (/^[a-z][a-z0-9+.-]*:/i.test(typename) ? typename : `dxn:${typename}`) as URI.URI;
     return Filter.type(uri);
@@ -571,7 +571,7 @@ const SPECIAL_CHARS = /[\s(){}[\],"']/;
 const PROPERTY_KEY = /^[a-zA-Z_][a-zA-Z0-9_.]*$/;
 const NUMBER_LITERAL = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
 
-// Common URL schemes — `http://...`, `mailto:rich@...` etc. should be searched as text,
+// Common URL schemes - `http://...`, `mailto:rich@...` etc. should be searched as text,
 // not auto-promoted to property filters.
 const URL_SCHEMES = new Set([
   'http',
@@ -663,7 +663,7 @@ export const normalizeInput = (input: string): string => {
       continue;
     }
 
-    // Single-char structural tokens. `}` / `]` only reach here when unmatched —
+    // Single-char structural tokens. `}` / `]` only reach here when unmatched -
     // pass them through so the lezer parser can produce a clear error rather than spinning.
     if (
       currentChar === '(' ||
@@ -685,7 +685,7 @@ export const normalizeInput = (input: string): string => {
       continue;
     }
 
-    // NOT prefix (`!`) — single token.
+    // NOT prefix (`!`) - single token.
     if (currentChar === '!') {
       out.push(currentChar);
       pos++;
@@ -748,7 +748,7 @@ export const normalizeInput = (input: string): string => {
       const key = token.slice(0, colonIdx);
       const rest = token.slice(colonIdx + 1);
 
-      // type:typename — leave for grammar's TypeFilter (Identifier value).
+      // type:typename - leave for grammar's TypeFilter (Identifier value).
       if (key === 'type') {
         out.push(token);
         continue;
@@ -759,7 +759,7 @@ export const normalizeInput = (input: string): string => {
       const isUrlScheme = URL_SCHEMES.has(key.toLowerCase()) || rest.startsWith('//');
       if (!isUrlScheme && PROPERTY_KEY.test(key)) {
         if (rest.length === 0) {
-          // Trailing colon while typing — pass through.
+          // Trailing colon while typing - pass through.
           out.push(token);
           continue;
         }
@@ -783,10 +783,10 @@ export const normalizeInput = (input: string): string => {
         continue;
       }
 
-      // URL or unknown key shape — fall through to text.
+      // URL or unknown key shape - fall through to text.
     }
 
-    // Identifier followed by `=` is the LHS of an Assignment — keep as-is.
+    // Identifier followed by `=` is the LHS of an Assignment - keep as-is.
     if (PROPERTY_KEY.test(token)) {
       let lookahead = pos;
       while (lookahead < input.length && /\s/.test(input[lookahead])) {

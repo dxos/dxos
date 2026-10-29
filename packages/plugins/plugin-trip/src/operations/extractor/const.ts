@@ -5,7 +5,7 @@
 import { type LatLngLiteral } from '@dxos/react-ui-geo/types';
 
 // TODO(burdon): Minimal seed data. Replace with a comprehensive IATA dataset (airlines +
-//   airports) — likely a generated lookup or an airport-data service — as coverage grows.
+//   airports) - likely a generated lookup or an airport-data service - as coverage grows.
 
 export type Airline = {
   code: string;
@@ -13,7 +13,7 @@ export type Airline = {
   domain: string;
 };
 
-/** IATA airline prefix → display name. Extend as needed; falls back to the sender domain. */
+/** IATA airline prefix -> display name. Extend as needed; falls back to the sender domain. */
 export const AIRLINES: Airline[] = [
   { code: 'AA', name: 'American Airlines', domain: 'aa.com' },
   { code: 'AC', name: 'Air Canada', domain: 'aircanada.com' },
@@ -59,7 +59,7 @@ export type Airport = {
 
 export const AIRPORTS: Airport[] = [
   // US
-  { iata: 'ATL', name: 'Hartsfield–Jackson Atlanta', location: { lat: 33.6407, lng: -84.4277 } },
+  { iata: 'ATL', name: 'Hartsfield-Jackson Atlanta', location: { lat: 33.6407, lng: -84.4277 } },
   { iata: 'DFW', name: 'Dallas/Fort Worth', location: { lat: 32.8998, lng: -97.0403 } },
   { iata: 'ORD', name: "Chicago O'Hare", location: { lat: 41.9742, lng: -87.9073 } },
   { iata: 'DEN', name: 'Denver', location: { lat: 39.8561, lng: -104.6737 } },
@@ -75,7 +75,7 @@ export const AIRPORTS: Airport[] = [
   { iata: 'EWR', name: 'Newark Liberty', location: { lat: 40.6895, lng: -74.1745 } },
   { iata: 'IAH', name: 'Houston Intercontinental', location: { lat: 29.9902, lng: -95.3368 } },
   { iata: 'BOS', name: 'Boston Logan', location: { lat: 42.3656, lng: -71.0096 } },
-  { iata: 'MSP', name: 'Minneapolis–Saint Paul', location: { lat: 44.8848, lng: -93.2223 } },
+  { iata: 'MSP', name: 'Minneapolis-Saint Paul', location: { lat: 44.8848, lng: -93.2223 } },
   { iata: 'LGA', name: 'LaGuardia', location: { lat: 40.7769, lng: -73.874 } },
   { iata: 'DTW', name: 'Detroit Metro', location: { lat: 42.2162, lng: -83.3554 } },
   { iata: 'PHL', name: 'Philadelphia', location: { lat: 39.8744, lng: -75.2424 } },
@@ -126,7 +126,7 @@ export const AIRPORTS: Airport[] = [
   { iata: 'BLR', name: 'Bengaluru', location: { lat: 13.1986, lng: 77.7066 } },
   { iata: 'KUL', name: 'Kuala Lumpur', location: { lat: 2.7456, lng: 101.7072 } },
   { iata: 'BKK', name: 'Bangkok Suvarnabhumi', location: { lat: 13.69, lng: 100.7501 } },
-  { iata: 'CGK', name: 'Jakarta Soekarno–Hatta', location: { lat: -6.1256, lng: 106.6559 } },
+  { iata: 'CGK', name: 'Jakarta Soekarno-Hatta', location: { lat: -6.1256, lng: 106.6559 } },
   { iata: 'MNL', name: 'Manila', location: { lat: 14.5086, lng: 121.0198 } },
   { iata: 'TPE', name: 'Taipei Taoyuan', location: { lat: 25.0797, lng: 121.2342 } },
   { iata: 'NRT', name: 'Tokyo Narita', location: { lat: 35.7719, lng: 140.3929 } },

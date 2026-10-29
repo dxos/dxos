@@ -40,15 +40,15 @@ export type PluginActions = {
 };
 
 /**
- * The user-facing actions the article exposes — enable/disable, uninstall,
- * install (latest), update (to latest catalog version), and install-from-picker —
+ * The user-facing actions the article exposes - enable/disable, uninstall,
+ * install (latest), update (to latest catalog version), and install-from-picker -
  * plus the `installing`/`updating` flags they drive. Each handler ends with a
  * `syncInstalledVersion()` call inside its `Effect.ensuring` so the cached
  * installed version snaps to the freshly-written localStorage value in the same
  * render that clears the in-flight flag.
  *
  * `handleOpenSpec` is included only when a `spec` child graph node exists for
- * this plugin — contributed by whichever plugin can render MDL (today
+ * this plugin - contributed by whichever plugin can render MDL (today
  * `plugin-code`). When that contributor isn't enabled, the action is absent
  * and the detail view hides its "Open Specification" chip.
  */

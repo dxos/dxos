@@ -159,21 +159,21 @@ export const steps = [
   },
   {
     name: 'Show the running capability',
-    narration: 'This Settings row comes from plugin-space’s app-graph builder, a capability with no React in it.',
+    narration: "This Settings row comes from plugin-space's app-graph builder, a capability with no React in it.",
     run: async ({ demo, page }) => {
       await demo.title({ value: 'Hot-reloading a plugin capability', subtitle: 'Composer dev server', hold: 3_600 });
       await demo.caption({
-        value: 'The “Settings · v1” row comes from plugin-space’s app-graph builder',
+        value: 'The "Settings · v1" row comes from plugin-space\'s app-graph builder',
         subtitle: 'A capability module, no React: it contributes navtree nodes',
       });
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: 'Edit the node’s label',
+    name: "Edit the node's label",
     narration: 'Edit the extension in the terminal. Only that module re-runs, and the navtree follows.',
     run: async (context) => {
-      await context.demo.caption({ value: 'Change the node’s label', subtitle: `${EXTENSION_DIR}/${EXTENSION}` });
+      await context.demo.caption({ value: "Change the node's label", subtitle: `${EXTENSION_DIR}/${EXTENSION}` });
       await hotEdit(context, {
         from: 'v1',
         to: 'v2',
@@ -182,10 +182,10 @@ export const steps = [
     },
   },
   {
-    name: 'Edit the node’s icon colour',
+    name: "Edit the node's icon colour",
     narration: 'Again, for the icon colour.',
     run: async (context) => {
-      await context.demo.caption({ value: 'Change the node’s icon colour', subtitle: `${EXTENSION_DIR}/${EXTENSION}` });
+      await context.demo.caption({ value: "Change the node's icon colour", subtitle: `${EXTENSION_DIR}/${EXTENSION}` });
       await hotEdit(context, {
         from: "iconHue: 'emerald'",
         to: "iconHue: 'rose'",

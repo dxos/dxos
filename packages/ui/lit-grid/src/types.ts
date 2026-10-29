@@ -84,7 +84,7 @@ export type DxGridCellValue = {
    */
   dataRefs?: string;
   /**
-   * Whether to render a resize handle for this cell’s row or column.
+   * Whether to render a resize handle for this cell's row or column.
    */
   resizeHandle?: DxGridAxis;
   /**

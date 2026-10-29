@@ -219,7 +219,7 @@ const formatBlock = (block: ContentBlock.Any): string => {
   switch (block._tag) {
     case 'text': {
       const text = block.text.replace(/\s+/g, ' ').trim();
-      return JSON.stringify(text.length > MAX_TEXT ? `${text.slice(0, MAX_TEXT)}…` : text);
+      return JSON.stringify(text.length > MAX_TEXT ? `${text.slice(0, MAX_TEXT)}\u2026` : text);
     }
     case 'toolCall':
       return `call(${block.name})`;

@@ -17,7 +17,7 @@ import { daysAgo } from './util.ts';
 //
 // The account mail: the thread behind each pipeline stage.
 //
-// Deliberately small — the point is that a stage has a conversation attached, not that the mailbox
+// Deliberately small - the point is that a stage has a conversation attached, not that the mailbox
 // is full. Threading is by subject: a reply reuses its root's subject, so the conversation list
 // groups them without an id scheme.
 //
@@ -43,7 +43,7 @@ const EMAIL_SEEDS: ReadonlyArray<EmailSeed> = [
   {
     from: 'owner',
     subject: 'Re: Question from the newsletter',
-    body: 'There is — the team plan starts at ten seats. Happy to walk you through it. Are you free Thursday?',
+    body: 'There is - the team plan starts at ten seats. Happy to walk you through it. Are you free Thursday?',
     daysAgo: 11,
   },
   {
@@ -55,7 +55,7 @@ const EMAIL_SEEDS: ReadonlyArray<EmailSeed> = [
   },
   {
     from: 'gil',
-    subject: 'Security review — outcome',
+    subject: 'Security review - outcome',
     body: 'Review is closed with no findings. Procurement has the paperwork; expect two weeks of silence and then a PO.',
     daysAgo: 6,
     tags: ['important', 'starred'],
@@ -63,7 +63,7 @@ const EMAIL_SEEDS: ReadonlyArray<EmailSeed> = [
   {
     from: 'ines',
     subject: 'Finance sign-off',
-    body: 'We are a yes at 40 seats. Finance wants the invoice dated next quarter — workable?',
+    body: 'We are a yes at 40 seats. Finance wants the invoice dated next quarter - workable?',
     daysAgo: 4,
     tags: ['starred'],
   },

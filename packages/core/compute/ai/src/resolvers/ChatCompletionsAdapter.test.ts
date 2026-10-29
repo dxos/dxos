@@ -126,7 +126,7 @@ interface WireRequestBody {
   readonly messages: WireMessage[];
 }
 
-/** The lone assistant message in a captured request body — every caller here expects exactly one. */
+/** The lone assistant message in a captured request body - every caller here expects exactly one. */
 const assistantMessage = (body: WireRequestBody): WireMessage => {
   const message = body.messages.find((message) => message.role === 'assistant');
   invariant(message, 'expected an assistant message in the captured request body');
@@ -408,7 +408,7 @@ describe('streamed finish part', () => {
   );
 
   // With `stream_options.include_usage`, OpenAI reports usage in a trailing chunk whose `choices`
-  // is empty — after the chunk that carried `finish_reason`.
+  // is empty - after the chunk that carried `finish_reason`.
   it.effect(
     'takes usage from a trailing usage-only chunk',
     Effect.fn(function* (_) {
@@ -469,7 +469,7 @@ const toolCallDelta = (
     ],
   });
 
-/** True when `part` is one of the three parts that stream a tool call's parameters — the ones that carry `id`. */
+/** True when `part` is one of the three parts that stream a tool call's parameters - the ones that carry `id`. */
 const isToolParamsPart = <T extends { type: string }>(
   part: T,
 ): part is Extract<T, { type: 'tool-params-start' | 'tool-params-delta' | 'tool-params-end' }> =>

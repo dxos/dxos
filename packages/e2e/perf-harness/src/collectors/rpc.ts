@@ -40,7 +40,7 @@ type RemoteResult = { result?: { value?: unknown } };
  * Reads the RPC timings every instrumented realm publishes.
  *
  * Per realm rather than summed, unlike disk: queue wait IS the realm's event-loop responsiveness
- * measured from real traffic, so which realm produced it is the whole signal — a summed queue wait
+ * measured from real traffic, so which realm produced it is the whole signal - a summed queue wait
  * across the tab and three workers answers no question anyone asks.
  */
 export const readRpc = async (targets: Attached[]): Promise<RpcReading[]> => {
@@ -114,7 +114,7 @@ const summarize = (before: RpcReading | undefined, after: RpcReading): RealmRpc 
  *
  * Counts come from differencing the running totals; percentiles and maxima come from the samples,
  * which the middleware keeps as a bounded ring. When a stage serves more calls than the ring
- * holds, `calls` exceeds `samples` — and that difference is the integrity column, because the
+ * holds, `calls` exceeds `samples` - and that difference is the integrity column, because the
  * percentile then describes the tail of the stage rather than all of it.
  */
 export const diffRpc = (before: RpcReading[], after: RpcReading[]): RealmRpc[] => {

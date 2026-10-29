@@ -22,7 +22,7 @@ import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-se
  * pdf.js, loaded on first use rather than on import.
  *
  * At module scope it joins the plugin's own module graph, so every consumer of the components barrel
- * pays for the whole PDF engine at load — enough to push `plugin-file` past its activation timeout
+ * pays for the whole PDF engine at load - enough to push `plugin-file` past its activation timeout
  * and take plugins that depend on it down with it. Memoised, so the cost is paid once.
  *
  * The worker is bundled and served by us rather than fetched from a CDN: the app must render a PDF
@@ -78,7 +78,7 @@ type PageRefs = {
  * Renders a PDF to stacked canvases, one per page, each with a selectable text layer over it.
  *
  * Replaces an `<iframe>` pointed at the browser's built-in viewer. That viewer lives in its own
- * origin — a `chrome-extension://` document — so nothing about it can be styled or driven. Owning
+ * origin - a `chrome-extension://` document - so nothing about it can be styled or driven. Owning
  * the render means the toolbar can page, fit and search, and the pages can be themed.
  *
  * The text layer is what makes the page more than a picture: it is transparent text positioned over
@@ -86,7 +86,7 @@ type PageRefs = {
  * in the layer's own spans rather than by positioning overlays over the page.
  *
  * Every page is rendered rather than one at a time: the iframe it replaces scrolled through the
- * whole document. Large documents therefore cost their full page count up front — virtualization is
+ * whole document. Large documents therefore cost their full page count up front - virtualization is
  * the obvious next step if that becomes a problem.
  */
 export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
@@ -105,7 +105,7 @@ export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
     // nothing and never corrects itself.
     const queryRef = useRef('');
     // The page a scroll is heading towards. Stepping reads this rather than the observed page, so
-    // clicking next twice quickly advances two pages instead of re-targeting the same one — smooth
+    // clicking next twice quickly advances two pages instead of re-targeting the same one - smooth
     // scrolling means the observed page has not moved yet on the second click.
     const targetRef = useRef<number | undefined>(undefined);
     // Read by the imperative navigation callbacks, which must stay stable for `useImperativeHandle`
@@ -120,7 +120,7 @@ export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
     const [error, setError] = useState(false);
 
     // Tracks the in-flight render so a resize or an unmount can cancel it. Without this, tearing the
-    // document down mid-render leaves `page.render(…).promise` and `getPage` rejecting with
+    // document down mid-render leaves `page.render(...).promise` and `getPage` rejecting with
     // `RenderingCancelledException` / `Transport destroyed` and nothing to catch them.
     const renderRef = useRef<RenderRun | undefined>(undefined);
 
@@ -164,7 +164,7 @@ export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
       return Math.min(widthScale, (container.clientHeight - PAGE_MARGIN * 2) / size.height);
     }, []);
 
-    // Renders one page at device resolution, so text stays sharp on a HiDPI display — a canvas
+    // Renders one page at device resolution, so text stays sharp on a HiDPI display - a canvas
     // sized in CSS pixels renders visibly soft.
     const renderPage = useCallback(
       async (pdf: PDFDocumentProxy, pageNumber: number, fitMode: PdfFit, run: RenderRun) => {
@@ -325,7 +325,7 @@ export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
             onLoad?.(pdf.numPages);
 
             // Text of every page, resolved once. Searching re-reads it on every keystroke, and
-            // `getTextContent` is a worker round-trip per page — fine once, not once per character.
+            // `getTextContent` is a worker round-trip per page - fine once, not once per character.
             // After the sizes, so the document is on screen before the index is built.
             const pages: PdfPageText[] = [];
             for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -415,7 +415,7 @@ export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
       };
     }, [pageCount, fit, currentPage, renderVisible, cancelRender]);
 
-    // The page under the top of the viewport is "current" — the same rule the browser's own viewer
+    // The page under the top of the viewport is "current" - the same rule the browser's own viewer
     // uses, and the one that matches what a reader considers the page they are on.
     useEffect(() => {
       const container = containerRef.current;

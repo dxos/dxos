@@ -14,12 +14,12 @@ import { Language, Vocabulary, Word } from '#types';
  * segmenter and the furigana line that a space-delimited language leaves dead.
  */
 export const TEST_PASSAGE = [
-  '# 朝の市場',
+  '# \u671D\u306E\u5E02\u5834',
   '',
-  '毎朝、**パン屋**は夜明け前に店を開けます。',
-  '市場で小麦粉を買って、その日のパンを作ります。',
+  '\u6BCE\u671D\u3001**\u30D1\u30F3\u5C4B**\u306F\u591C\u660E\u3051\u524D\u306B\u5E97\u3092\u958B\u3051\u307E\u3059\u3002',
+  '\u5E02\u5834\u3067\u5C0F\u9EA6\u7C89\u3092\u8CB7\u3063\u3066\u3001\u305D\u306E\u65E5\u306E\u30D1\u30F3\u3092\u4F5C\u308A\u307E\u3059\u3002',
   '',
-  '近所の人たちは早く来ます。焼きたてのパンはすぐに売り切れるからです。',
+  '\u8FD1\u6240\u306E\u4EBA\u305F\u3061\u306F\u65E9\u304F\u6765\u307E\u3059\u3002\u713C\u304D\u305F\u3066\u306E\u30D1\u30F3\u306F\u3059\u3050\u306B\u58F2\u308A\u5207\u308C\u308B\u304B\u3089\u3067\u3059\u3002',
 ].join('\n');
 
 /** {@link TEST_PASSAGE} in English, standing in for a live passage translation in stories. */
@@ -33,18 +33,24 @@ export const TEST_PASSAGE_TRANSLATION = [
 ].join('\n');
 
 const ENTRIES: Array<Pick<Word.Word, 'term' | 'translation' | 'reading' | 'partOfSpeech'> & { box?: number }> = [
-  { term: '市場', translation: 'market', reading: 'いちば', partOfSpeech: 'noun', box: 3 },
-  { term: 'パン屋', translation: 'bakery', reading: 'パンや', partOfSpeech: 'noun', box: 1 },
-  { term: '店', translation: 'shop', reading: 'みせ', partOfSpeech: 'noun', box: 5 },
-  { term: '小麦粉', translation: 'flour', reading: 'こむぎこ', partOfSpeech: 'noun' },
-  { term: '夜明け', translation: 'dawn', reading: 'よあけ', partOfSpeech: 'noun', box: 2 },
-  { term: '近所', translation: 'neighbourhood', reading: 'きんじょ', partOfSpeech: 'noun', box: 4 },
+  { term: '\u5E02\u5834', translation: 'market', reading: '\u3044\u3061\u3070', partOfSpeech: 'noun', box: 3 },
+  { term: '\u30D1\u30F3\u5C4B', translation: 'bakery', reading: '\u30D1\u30F3\u3084', partOfSpeech: 'noun', box: 1 },
+  { term: '\u5E97', translation: 'shop', reading: '\u307F\u305B', partOfSpeech: 'noun', box: 5 },
+  { term: '\u5C0F\u9EA6\u7C89', translation: 'flour', reading: '\u3053\u3080\u304E\u3053', partOfSpeech: 'noun' },
+  { term: '\u591C\u660E\u3051', translation: 'dawn', reading: '\u3088\u3042\u3051', partOfSpeech: 'noun', box: 2 },
+  {
+    term: '\u8FD1\u6240',
+    translation: 'neighbourhood',
+    reading: '\u304D\u3093\u3058\u3087',
+    partOfSpeech: 'noun',
+    box: 4,
+  },
 ];
 
 /** An unsaved language, deck and words for stories and tests. */
 export const makeTestDeck = () => {
   const language = Language.make({ name: 'Japanese', code: 'ja', baseCode: 'en', level: 'A2' });
-  const vocabulary = Vocabulary.make({ name: '市場の単語', language: Ref.make(language) });
+  const vocabulary = Vocabulary.make({ name: '\u5E02\u5834\u306E\u5358\u8A9E', language: Ref.make(language) });
   const words = ENTRIES.map(({ box, ...entry }) =>
     Word.make({
       ...entry,
@@ -61,7 +67,7 @@ export const makeTestDeck = () => {
  * The analysis a model would produce for {@link TEST_PASSAGE} and its translation, built through
  * the real aligner so the ranges are computed exactly as they would be in production.
  *
- * A fixture rather than a live call because the interaction under test — hover, select, mirror — is
+ * A fixture rather than a live call because the interaction under test - hover, select, mirror - is
  * about the ranges, not about how they were derived.
  */
 export const PAIRED_ANALYSIS: Segmentation = alignSegments(
@@ -69,50 +75,50 @@ export const PAIRED_ANALYSIS: Segmentation = alignSegments(
   [
     {
       kind: 'sentence',
-      text: '毎朝、**パン屋**は夜明け前に店を開けます。',
+      text: '\u6BCE\u671D\u3001**\u30D1\u30F3\u5C4B**\u306F\u591C\u660E\u3051\u524D\u306B\u5E97\u3092\u958B\u3051\u307E\u3059\u3002',
       translation: 'Every morning the **bakery** opens its shop before dawn.',
       children: [
         {
           kind: 'clause',
-          text: '夜明け前に',
+          text: '\u591C\u660E\u3051\u524D\u306B',
           translation: 'before dawn',
           children: [
             {
               kind: 'vocab',
-              text: '夜明け',
+              text: '\u591C\u660E\u3051',
               translation: 'dawn',
               gloss: 'dawn',
-              reading: 'よあけ',
+              reading: '\u3088\u3042\u3051',
             },
           ],
         },
         {
           kind: 'vocab',
-          text: '店',
+          text: '\u5E97',
           translation: 'shop',
           gloss: 'shop',
-          reading: 'みせ',
+          reading: '\u307F\u305B',
         },
       ],
     },
     {
       kind: 'sentence',
-      text: '市場で小麦粉を買って、その日のパンを作ります。',
+      text: '\u5E02\u5834\u3067\u5C0F\u9EA6\u7C89\u3092\u8CB7\u3063\u3066\u3001\u305D\u306E\u65E5\u306E\u30D1\u30F3\u3092\u4F5C\u308A\u307E\u3059\u3002',
       translation: "It buys flour at the market and makes the day's bread.",
       children: [
         {
           kind: 'vocab',
-          text: '市場',
+          text: '\u5E02\u5834',
           translation: 'market',
           gloss: 'market',
-          reading: 'いちば',
+          reading: '\u3044\u3061\u3070',
         },
         {
           kind: 'vocab',
-          text: '小麦粉',
+          text: '\u5C0F\u9EA6\u7C89',
           translation: 'flour',
           gloss: 'flour',
-          reading: 'こむぎこ',
+          reading: '\u3053\u3080\u304E\u3053',
         },
       ],
     },

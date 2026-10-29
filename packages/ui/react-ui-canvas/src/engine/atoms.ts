@@ -44,7 +44,7 @@ export type Drag =
   /**
    * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
    * and `delta` the resulting scene-space offset applied transiently to every selected node. With
-   * `copy` (⌘ held) the originals stay and copies land at `delta` instead. `raw` is the pointer's own offset, which
+   * `copy` (Cmd held) the originals stay and copies land at `delta` instead. `raw` is the pointer's own offset, which
    * the nodes follow while the drag is in flight; `delta` is where they land.
    */
   | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point; raw?: Point; copy?: boolean }

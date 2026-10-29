@@ -110,7 +110,7 @@ describe('parsePlan', () => {
 });
 
 describe('chapterDiff', () => {
-  test('carries only the chapter’s own files', () => {
+  test("carries only the chapter's own files", () => {
     const files = parsePatch(PATCH);
     const diff = chapterDiff(files, { title: 'The compiler', files: ['src/core.ts'] });
 

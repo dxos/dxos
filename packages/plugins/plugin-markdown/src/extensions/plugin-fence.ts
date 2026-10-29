@@ -60,9 +60,9 @@ export const findPluginFences = (
 };
 
 export type PluginFencesOptions = {
-  /** Fence language → plugin id. */
+  /** Fence language -> plugin id. */
   plugins?: Readonly<Record<string, string>>;
-  /** True when the plugin is installed but not enabled — the only case worth offering. */
+  /** True when the plugin is installed but not enabled - the only case worth offering. */
   canEnable: (pluginId: string) => boolean;
   /** Invoked from the button, e.g. to open the plugin registry filtered by the fence's language. */
   onSelect: (fence: Pick<PluginFence, 'language' | 'pluginId'>) => void;

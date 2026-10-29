@@ -29,7 +29,7 @@ const readPackageVersion = (dir: string): string => {
 /**
  * Snapshot the project's declared `dependencies`, resolving each to its concrete
  * installed version (read from `node_modules/<name>/package.json`) so the manifest
- * records exactly what the plugin was built against — the host derives SDK
+ * records exactly what the plugin was built against - the host derives SDK
  * compatibility from the `@dxos/*` subset. Falls back to the declared spec when a
  * dependency can't be resolved on disk.
  */
@@ -74,7 +74,7 @@ const isExternal = (id: string) => id !== JSX_DEV_RUNTIME && isSharedPackage(id)
  *  function`.
  *
  * The full dependency graphs of non-trivial plugins unavoidably drag in CJS-only
- * helpers (`use-sync-external-store` via xstate / zustand / preact-signals / … ),
+ * helpers (`use-sync-external-store` via xstate / zustand / preact-signals / ... ),
  * and waiting for every one of those packages to ship ESM isn't realistic. Instead
  * we install a tiny module-local `require` at the top of the bundle that looks up
  * a handful of well-known host-provided modules by name and returns their already
@@ -119,7 +119,7 @@ export type ComposerPluginOptions = {
    */
   config?: string;
   /**
-   * Plugin metadata. Optional — when omitted it is derived from the project's `dx.config.ts`
+   * Plugin metadata. Optional - when omitted it is derived from the project's `dx.config.ts`
    * (`@dxos/protocols` `Config2.Config`) plus the `package.json` version and resolved dependencies. When
    * present (explicitly or derived), a `manifest.json` asset is emitted alongside the bundle listing
    * every emitted file. The host fetches this manifest at install time and persists the declared
@@ -135,12 +135,12 @@ export type ComposerPluginOptions = {
  * provides at runtime via import map.
  *
  * Handles:
- * 1. Build config — lib mode entry point, ES format output, rollup externals, code-split chunks.
- * 2. Dev externalization — marks shared deps as external during `vite serve` and strips
+ * 1. Build config - lib mode entry point, ES format output, rollup externals, code-split chunks.
+ * 2. Dev externalization - marks shared deps as external during `vite serve` and strips
  *    the `/@id/` prefix that Vite's import analysis adds to external bare specifiers.
- * 3. JSX dev runtime shim — bridges `react/jsx-dev-runtime` (used by React refresh in dev)
+ * 3. JSX dev runtime shim - bridges `react/jsx-dev-runtime` (used by React refresh in dev)
  *    to `react/jsx-runtime` (which is what the externalized React provides).
- * 4. Manifest emit — when `meta` is supplied, writes `manifest.json` next to the bundled
+ * 4. Manifest emit - when `meta` is supplied, writes `manifest.json` next to the bundled
  *    module listing every emitted asset (entry, CSS, chunks, etc.) so the host can eagerly
  *    cache them for offline use.
  */
@@ -153,7 +153,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2.Config`). When the caller
   // doesn't pass `meta` explicitly, load + validate the config and derive a `BuildMeta` from it
   // (augmented with the package `version` and a resolved dependency snapshot). Loaded once the Vite root
-  // is known — `vite build <dir>` roots the project there, not at the process cwd — and awaited by the
+  // is known - `vite build <dir>` roots the project there, not at the process cwd - and awaited by the
   // manifest hooks, so the synchronous plugin factory stays sync.
   const loadMeta = (projectRoot: string): Promise<BuildMeta | undefined> =>
     options?.meta
@@ -189,7 +189,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         preview: { port, strictPort: true },
         build: {
           sourcemap: true,
-          // Transitively-bundled WASM modules (automerge, tiktoken, …) emit top-level
+          // Transitively-bundled WASM modules (automerge, tiktoken, ...) emit top-level
           // await; `esnext` lets rolldown pass that through without an explicit polyfill.
           target: 'esnext',
           lib: {
@@ -284,7 +284,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     // React Refresh preamble stub.
     //
     // @vitejs/plugin-react's JSX transform prepends a runtime check to every module:
-    //   if (!window.$RefreshReg$) throw new Error("@vitejs/plugin-react can't detect preamble…");
+    //   if (!window.$RefreshReg$) throw new Error("@vitejs/plugin-react can't detect preamble...");
     // In a normal single-origin app, vite injects a `<script type="module">` preamble
     // into `index.html` that sets up `$RefreshReg$` / `$RefreshSig$` on `window` before any
     // app code runs. When a community plugin is dev-served at its own origin and then
@@ -330,7 +330,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     apply: 'build',
     // `enforce: 'post'` is load-bearing: vite's CSS extraction plugin emits sibling
     // `.css` assets in its own `generateBundle` hook. Without `post`, ours runs first
-    // and sees only the JS chunks — the manifest then omits CSS, so the host can't
+    // and sees only the JS chunks - the manifest then omits CSS, so the host can't
     // inject `<link>` tags for the plugin's stylesheet at install time.
     enforce: 'post',
     configResolved: (config) => {
@@ -341,7 +341,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       if (!meta) {
         return;
       }
-      // Source maps are large and only fetched when devtools opens — exclude them
+      // Source maps are large and only fetched when devtools opens - exclude them
       // from the manifest so the host doesn't precache megabytes of debug data.
       const assets = Object.keys(bundle)
         .filter((name) => name !== MANIFEST_ASSET_NAME && !name.endsWith('.map'))
@@ -372,7 +372,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       }
       const body = serializeManifest(meta, { assets: [], devEntry: entry.replace(/^\.?\//, '') });
       server.middlewares.use(`/${MANIFEST_ASSET_NAME}`, (req, res, next) => {
-        // Only intercept the bare manifest URL — let any sub-paths fall through.
+        // Only intercept the bare manifest URL - let any sub-paths fall through.
         if (req.url && req.url !== '/' && req.url !== '') {
           return next();
         }

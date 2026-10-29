@@ -20,7 +20,7 @@ type CapabilityEntry<T> = {
 };
 
 //
-// Contribution ingestion — manager-side machinery for a module's activate result. Lives here
+// Contribution ingestion - manager-side machinery for a module's activate result. Lives here
 // rather than in `capability` so the authoring namespace exposes only the plugin-author API.
 //
 
@@ -106,7 +106,7 @@ export interface CapabilityManager {
 
   /**
    * Promise form of {@link waitFor}, memoized per interface so repeated calls return the SAME
-   * reference — React dedupes suspended renders by thrown-promise identity, so a fresh promise per
+   * reference - React dedupes suspended renders by thrown-promise identity, so a fresh promise per
    * render would re-suspend forever.
    * @returns A promise settling once at least one capability is contributed.
    */

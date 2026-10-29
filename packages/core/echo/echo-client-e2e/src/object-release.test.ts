@@ -10,8 +10,8 @@ import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
 /**
- * Drives the release paths reachable without a collector — removal, `retainObjects`, host garbage
- * collection, reopen — because release must not cost correctness on a runner that has none.
+ * Drives the release paths reachable without a collector - removal, `retainObjects`, host garbage
+ * collection, reopen - because release must not cost correctness on a runner that has none.
  */
 describe('object release', () => {
   let builder: EchoTestBuilder;

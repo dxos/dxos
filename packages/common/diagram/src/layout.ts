@@ -24,7 +24,7 @@ export type FontMetrics = {
 
 /**
  * Empirical text metrics per scene weight, calibrated to tldraw's draw font (`size` s/m/l/xl runs
- * ~18/25/38/48 px): charW ≈ 0.6–0.67 em, lineH ≈ 1.35 em. Dialects size boxes from these so text
+ * ~18/25/38/48 px): charW ~ 0.6-0.67 em, lineH ~ 1.35 em. Dialects size boxes from these so text
  * fits without the renderer growing shapes over their neighbours.
  */
 export const FONT_METRICS: Record<Scene.Weight, FontMetrics> = {

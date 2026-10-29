@@ -150,7 +150,7 @@ export const acceptCommandCompletion = (view: EditorView, index: number): void =
   selectCommandCompletion(view, index);
   const clicked = currentCompletions(view.state)[index];
   if (!acceptCompletion(view)) {
-    // A click is deliberate, so one inside the delay is accepted once it ends rather than dropped — but only the
+    // A click is deliberate, so one inside the delay is accepted once it ends rather than dropped - but only the
     // option clicked: a list reopened meanwhile builds new options, which may sit at the same index.
     setTimeout(() => {
       if (
@@ -257,7 +257,7 @@ export const commands = ({ getCommands }: CommandsOptions): Extension => [
   // precedences break by extension order, so the caller must place this extension ahead of `submit()`.
   // `completionStatus`/`acceptCompletion` are imported from the same module as `autocompletion()` above
   // (not re-derived in a different package) so this always reads the completion state `autocompletion()`
-  // actually wrote — a cross-package import of the same-named API can resolve to a distinct bundled
+  // actually wrote - a cross-package import of the same-named API can resolve to a distinct bundled
   // copy of `@codemirror/autocomplete` under some bundler configurations, silently reading `null`.
   Prec.highest(
     keymap.of([

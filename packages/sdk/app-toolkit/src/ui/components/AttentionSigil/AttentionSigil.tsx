@@ -156,7 +156,7 @@ const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>(
                       return;
                     }
                     event.stopPropagation();
-                    // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                    // TODO(thure): Why does Dialog's modal-ness cause issues if we don't explicitly close the menu here?
                     setOptionsMenuOpen(false);
                     onAction?.(action);
                   };

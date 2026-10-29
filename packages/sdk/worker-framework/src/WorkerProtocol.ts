@@ -117,9 +117,9 @@ export interface DedicatedWorkerSessionMessage {
   clientId: string;
   /** The connect attempt this session serves, echoed from `start-session`; absent from a worker that predates it. */
   attempt?: number;
-  /** Client → worker RPC channel (tab runs the client, worker runs the server). */
+  /** Client -> worker RPC channel (tab runs the client, worker runs the server). */
   clientToWorker: MessagePort;
-  /** Worker → client RPC channel (worker runs the client, tab runs the server). */
+  /** Worker -> client RPC channel (worker runs the client, tab runs the server). */
   workerToClient: MessagePort;
   isOwner: boolean;
 }

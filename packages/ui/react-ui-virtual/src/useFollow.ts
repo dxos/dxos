@@ -24,22 +24,22 @@ export type FollowHandle = {
    * Whether the reader is resting on the end, within {@link STICKY_THRESHOLD}.
    *
    * Published as state rather than read from the intent ref, so a host can render an affordance
-   * against it — the intent is a ref precisely because the correction must not re-render, and a
+   * against it - the intent is a ref precisely because the correction must not re-render, and a
    * second scroll listener in the host would fork the threshold.
    */
   atEnd: boolean;
   /**
-   * Whether the follow is armed — the feed is, or will be, scrolling itself to keep the tail in
+   * Whether the follow is armed - the feed is, or will be, scrolling itself to keep the tail in
    * view. Published so a host can hold back an affordance that only makes sense once the reader
    * has left: while a turn streams the tail outruns the glide a frame at a time, and `atEnd` alone
    * flickers with it.
    */
   following: boolean;
   /**
-   * A navigation is the reader answering "do you want the tail?" — and it must answer *before* the
+   * A navigation is the reader answering "do you want the tail?" - and it must answer *before* the
    * scroll moves. The intent is otherwise withdrawn by the scroll event the jump raises, which is
    * asynchronous: the correction effect can run in between, still believe the reader is following,
-   * and snap them straight back to the tail they just left. Found by the outline rail — a click
+   * and snap them straight back to the tail they just left. Found by the outline rail - a click
    * near the top of a sticky feed moved the list a few pixels and no further.
    */
   onNavigate: (index: number) => void;
@@ -51,7 +51,7 @@ export type UseFollowOptions = {
   scrollerRef: RefObject<HTMLElement | null>;
   /** The placement whose `endOffset` is the tail's resting place. */
   placement: Placement;
-  /** Total content extent — the correction re-runs when it changes, which is how growth is noticed. */
+  /** Total content extent - the correction re-runs when it changes, which is how growth is noticed. */
   extent: number;
   count: number;
   axis?: 'block' | 'inline';
@@ -67,11 +67,11 @@ export type UseFollowOptions = {
    */
   glide?: boolean;
   /**
-   * When the content last actually changed — a model event, not a measurement.
+   * When the content last actually changed - a model event, not a measurement.
    *
    * The follow moves the view only while new content is arriving AND the reader is pinned to the
    * bottom. Extent alone cannot say why the document grew: a widget toggled open near the tail
-   * grows it too, and correcting for that snaps the reader's toggle out from under them — the feed
+   * grows it too, and correcting for that snaps the reader's toggle out from under them - the feed
    * "jumps to place its bottom at the bottom". Growth is followed only within a beat of a model
    * change; everything else is the reader rearranging what they already have.
    */
@@ -79,15 +79,15 @@ export type UseFollowOptions = {
 };
 
 /**
- * The sticky tail as an intent (SPEC: useFollow) — a policy over the window, not part of it.
+ * The sticky tail as an intent (SPEC: useFollow) - a policy over the window, not part of it.
  *
  * Withdrawn by one thing only: a scroll that moves *backwards*. That is the reader; a correction
  * never moves the offset back, it moves the end away. Re-deriving the intent from proximity on
- * every commit cannot survive its own corrections — measuring the tail grows the document under a
+ * every commit cannot survive its own corrections - measuring the tail grows the document under a
  * reader who has not moved, the gap opens past any threshold worth having, and the follow reads
  * that as the reader leaving and disengages for good (`bridge/Tail`, the second defect).
  *
- * Reusable for any streaming container — transcripts, logs — because nothing here knows about
+ * Reusable for any streaming container - transcripts, logs - because nothing here knows about
  * messages: it needs a scroller, a placement, and the two numbers that say the content grew.
  */
 export const useFollow = ({
@@ -121,7 +121,7 @@ export const useFollow = ({
   }, [enabled]);
 
   // Read through a ref by the stable callbacks below: the count changes on every append, and a
-  // handle rebuilt per append republishes every controller derived from it — a host that stores
+  // handle rebuilt per append republishes every controller derived from it - a host that stores
   // that controller in state then loops on its own effect (`Maximum update depth exceeded`).
   const countRef = useRef(count);
   countRef.current = count;
@@ -131,7 +131,7 @@ export const useFollow = ({
    *
    * From the row's own rectangle when it is mounted, and from the arithmetic only when it is not:
    * measured extents are rounded to integers and rendered rows are fractional, so over a mounted
-   * window the sum drifts from the layout by tens of pixels — an "arrived" that the reader can see
+   * window the sum drifts from the layout by tens of pixels - an "arrived" that the reader can see
    * is short. The rect already includes the window's transform, so the delta is exact.
    */
   const endTarget = useCallback(() => {
@@ -197,7 +197,7 @@ export const useFollow = ({
   // every scroll as stationary.
   // Why a backwards scroll alone cannot be the withdrawal: the machinery scrolls backwards too. A
   // shrinking turn makes the browser clamp the offset by itself; a correction can move up; and none
-  // of it is the reader. Direction plus pre-announcement was tried and kept dying in races — this
+  // of it is the reader. Direction plus pre-announcement was tried and kept dying in races - this
   // is the old engine's proven rule instead: the follow writes `scrollTop`, it does not turn wheels
   // or press keys, so a scroll counts as the reader's only when a gesture preceded it. Returning to
   // the tail, by any means, opts back in.
@@ -255,13 +255,13 @@ export const useFollow = ({
   // reader is pinned to has moved, so the scroll has to as well.
   //
   // Through `endOffset` rather than a jump: a jump re-bases the model on a sum of estimates, and
-  // this effect runs again every time the document's extent changes — so each answer mounted rows
+  // this effect runs again every time the document's extent changes - so each answer mounted rows
   // whose measurement changed the sum the next answer was drawn from. That recurs rather than
   // converging, and React ends it by exceeding the update limit. Keyed on the extent as well as the
   // count: measuring the rows a scroll reveals moves the end, so a tail pinned once drifts off it
   // as the estimates are replaced.
   // Whether the feed has arrived at its tail once. Opening a populated feed is not motion to
-  // follow — the reader was not watching the travel, so it arrives; the glide is for content
+  // follow - the reader was not watching the travel, so it arrives; the glide is for content
   // arriving at a tail they are looking at. Earned by the settle pass below rather than by an
   // effect that finds itself at the target: StrictMode re-runs the effect in the same tick as the
   // arrival, and an opening still settling (the reserve lands a beat after the first write) would
@@ -291,10 +291,10 @@ export const useFollow = ({
 
     // Arrival and small repayments are always allowed; *growth* is followed only while content just
     // changed. A widget toggled open near the tail grows the document exactly as a streamed chunk
-    // does, and correcting for it snaps the reader's toggle out from under them — but the few-pixel
+    // does, and correcting for it snaps the reader's toggle out from under them - but the few-pixel
     // residues of estimates settling are the tail being kept honest, model change or none.
     // Growth is followed only while content just changed; shrink is always repaid. The document
-    // growing says nothing about why — a streamed chunk and a widget's opening animation look the
+    // growing says nothing about why - a streamed chunk and a widget's opening animation look the
     // same from here, and a size allowance fails too, because an animation grows in sub-threshold
     // steps. Only the model can say "content arrived". Shrink is different: the content's end moved
     // *up* (a panel closed, estimates settled), and repaying it keeps the tail honest without ever
@@ -312,7 +312,7 @@ export const useFollow = ({
     }
 
     // A far tail, a backwards correction, or no glide: arrive rather than travel. Written directly,
-    // never followed by an invalidate — the write raises a scroll event, which re-renders, which
+    // never followed by an invalidate - the write raises a scroll event, which re-renders, which
     // changes the extent this effect watches; invalidating here as well is a loop, and React says so.
     follower?.cancel();
     const write = (value: number) => {

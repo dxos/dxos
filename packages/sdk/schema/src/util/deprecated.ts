@@ -113,8 +113,8 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; ty
 //   It should return the type the query is indexing, regardless of where in the AST it is.
 // TODO(burdon): What does this actually mean? Queries may be complex (in the future) and have multiple types.
 /**
- * Returns the type URI a query selects on — the `echo:` EID (stored schema) or `dxn:` typename DXN
- * stored on the filter — or undefined. Compare against an entity via `Type.getURI`.
+ * Returns the type URI a query selects on - the `echo:` EID (stored schema) or `dxn:` typename DXN
+ * stored on the filter - or undefined. Compare against an entity via `Type.getURI`.
  */
 export const getTypeURIFromQuery = (query: QueryAST.Query | undefined): URI.URI | undefined => {
   let typeUri: URI.URI | undefined;

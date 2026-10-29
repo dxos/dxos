@@ -69,7 +69,7 @@ const RUNTIME_ERROR: ProjectBuildState = {
   ...CLEAN_BUILD,
   lastRun: {
     ok: false,
-    stdout: ['starting…'],
+    stdout: ['starting...'],
     stderr: ['Error: boom: deliberate runtime error\n    at main (eval at <anonymous>:3:9)'],
     diagnostics: [],
     timestamp: stamp,
@@ -94,7 +94,7 @@ export default meta;
 
 type Story = StoryObj;
 
-/** No prior build — empty-state placeholder. */
+/** No prior build - empty-state placeholder. */
 export const Empty: Story = {
   render: () => (
     <Frame>
@@ -139,7 +139,7 @@ export const RuntimeError: Story = {
   ),
 };
 
-/** Build in progress — pane shows the empty-state until results arrive. */
+/** Build in progress - pane shows the empty-state until results arrive. */
 export const Building: Story = {
   render: () => (
     <Frame>

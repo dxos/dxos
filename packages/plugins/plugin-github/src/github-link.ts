@@ -8,7 +8,7 @@
 
 /**
  * `https://github.com/owner/repo`, `/pull/123` or `/issues/123`, with an optional trailing slash,
- * fragment or query. A path below the repository (`/blob/…`, `/actions`) is a page, not an object.
+ * fragment or query. A path below the repository (`/blob/...`, `/actions`) is a page, not an object.
  */
 export const GITHUB_LINK =
   /^https:\/\/github\.com\/([^/\s?#]+)\/([^/\s?#]+)(?:\/(pull|issues)\/(\d+)(?:[/?#]\S*)?|\/?(?:[?#]\S*)?)$/;
@@ -36,7 +36,7 @@ export const parseGitHubLink = (url: string): GitHubLink | undefined => {
 };
 
 /**
- * `owner/repo#123` — how a pull request is written where a URL would be noise, and the one form a
+ * `owner/repo#123` - how a pull request is written where a URL would be noise, and the one form a
  * reviewer can type from memory.
  */
 const PULL_REQUEST_SHORTHAND = /^([\w.-]+)\/([\w.-]+)#(\d+)$/;

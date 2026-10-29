@@ -27,7 +27,7 @@ describe('approval fallback', () => {
   });
 
   test('an ordinary comment is not an approval', () => {
-    expect(isApprovalComment('Approved — good to land.')).toBe(false);
+    expect(isApprovalComment('Approved - good to land.')).toBe(false);
   });
 
   test('only a refusal to review falls back', () => {

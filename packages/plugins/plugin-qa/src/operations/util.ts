@@ -23,7 +23,7 @@ export const findCase = (
 export const loadFeed = (plan: TestPlan.TestPlan): Effect.Effect<Feed.Feed, Error, Database.Service> =>
   Database.load(plan.feed);
 
-/** The plan's runs, newest first — the feed appends in execution order. */
+/** The plan's runs, newest first - the feed appends in execution order. */
 export const loadRuns = (plan: TestPlan.TestPlan): Effect.Effect<TestRun.TestRun[], Error, Database.Service> =>
   Effect.gen(function* () {
     const feed = yield* loadFeed(plan);

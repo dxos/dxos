@@ -74,7 +74,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
         <Card.Row icon='ph--plus-minus--regular'>
           <Layout.Flex gap='sm' align='center'>
             {additions !== undefined && <span className='text-green-500'>+{additions}</span>}
-            {deletions !== undefined && <span className='text-red-500'>−{deletions}</span>}
+            {deletions !== undefined && <span className='text-red-500'>-{deletions}</span>}
           </Layout.Flex>
         </Card.Row>
       )}

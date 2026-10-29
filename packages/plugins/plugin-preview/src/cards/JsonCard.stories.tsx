@@ -13,7 +13,7 @@ import { translations } from '#translations';
 
 import { JsonCard } from './JsonCard.tsx';
 
-// The card is a row slot, so it is mounted in the `Card.Root` its surface host supplies — on its own
+// The card is a row slot, so it is mounted in the `Card.Root` its surface host supplies - on its own
 // it has no grid to place itself in and the toggle's column cannot be seen.
 const DefaultStory = ({ data }: { data: unknown }) => (
   <div className='p-4 dx-card-max-width'>
@@ -40,7 +40,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Collapsed: the row reports the payload's size and nothing else. */
 export const Default: Story = {
-  args: { data: { subject: { id: '01M270MRCEV0W2BR43HT4BPEGY', name: 'Notes — Priya Nair' } } },
+  args: { data: { subject: { id: '01M270MRCEV0W2BR43HT4BPEGY', name: 'Notes - Priya Nair' } } },
 };
 
 /**
@@ -54,7 +54,7 @@ export const Expanded: Story = {
       subject: {
         id: '01M270MRCEV0W2BR43HT4BPEGY',
         content: { '/': 'echo:///01M270MRCEV0W2BR43HT4BPEGZ' },
-        name: 'Notes — Priya Nair',
+        name: 'Notes - Priya Nair',
         tags: ['incident', 'retrospective', 'notes'],
         history: [
           { date: '2026-05-16T09:00:00Z', event: 'created' },

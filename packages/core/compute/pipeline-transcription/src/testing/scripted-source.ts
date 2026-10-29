@@ -15,7 +15,7 @@ export type ScriptedSourceOptions = {
 
 /**
  * Build a deterministic {@link TranscriptEvent} stream from a fixture of blocks. Emits a `block`
- * event per entry, then (by default) a trailing `silence`. No audio or network — for testbench and CI.
+ * event per entry, then (by default) a trailing `silence`. No audio or network - for testbench and CI.
  */
 export const scriptedSource = (
   blocks: readonly ScriptedBlock[],

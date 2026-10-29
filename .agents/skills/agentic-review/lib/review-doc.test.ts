@@ -60,7 +60,7 @@ describe('renderReviewBody / splitReviewBody', () => {
 
   test('a pre-index body is all issues and falls back to RESOLUTION.md', () => {
     const body = '_1 error(s), 0 warning(s)._\n\n# ERROR abc-1 no-casts `src/a.ts:3`\n\nCast.\n';
-    writeFileSync(join(dir, 'RESOLUTION.md'), '# Resolution — abc\n\n- abc-1 - ignored - no-casts - src/a.ts:3\n');
+    writeFileSync(join(dir, 'RESOLUTION.md'), '# Resolution - abc\n\n- abc-1 - ignored - no-casts - src/a.ts:3\n');
     expect(splitReviewBody(body).index).toBeNull();
     expect(parseDiagnostics(splitReviewBody(body).issues)).toHaveLength(1);
     expect(readIndexEntries(dir, body).map(({ status }) => status)).toEqual(['ignored']);
@@ -79,7 +79,7 @@ describe('writeAppendix', () => {
 describe('legacySystemOneAppendix', () => {
   test('keeps the run metadata and drops the follow-up list', () => {
     const text =
-      '# System One pass — .agents/reviews/abc\n\n- model: jev\n\n## Still needs an agentic reviewer\n\n- `x`\n';
+      '# System One pass - .agents/reviews/abc\n\n- model: jev\n\n## Still needs an agentic reviewer\n\n- `x`\n';
     expect(legacySystemOneAppendix(text)).toBe('### System One pass\n\n- model: jev');
   });
 });

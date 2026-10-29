@@ -59,7 +59,7 @@ export type ExtractedEntities = {
   candidates: ContentBlock.Candidate[];
 };
 
-/** Resolve a block's proper nouns: matched → references/quotes, unmatched → candidates. */
+/** Resolve a block's proper nouns: matched -> references/quotes, unmatched -> candidates. */
 export const resolveEntities = async (text: string, lookup?: EntityLookup): Promise<ExtractedEntities> => {
   const nouns = extractProperNouns(text);
   const references: Ref.Ref<any>[] = [];
@@ -72,7 +72,7 @@ export const resolveEntities = async (text: string, lookup?: EntityLookup): Prom
       // leaving them as candidates. The lookup backend stays injected.
       const candidates = await lookup(noun); // ranked best-first.
       // Auto-link only a clear winner: the top candidate must strictly out-rank the runner-up. A tie
-      // at the top is genuine ambiguity, left for the context-aware resolver / the user — so we never
+      // at the top is genuine ambiguity, left for the context-aware resolver / the user - so we never
       // link the wrong object on a guess. (Text search returns weak spurious matches too, so counting
       // candidates is not a reliable ambiguity signal; the rank gap is.)
       const unambiguous =
@@ -106,12 +106,12 @@ export const linkEntities = async (text: string, lookup: EntityLookup): Promise<
 };
 
 /**
- * Stage ②: surface proper nouns across the window, link those that match objects (via the injected
+ * Stage (2): surface proper nouns across the window, link those that match objects (via the injected
  * {@link EntityLookup}), and report the rest as candidates the user can act on.
  *
  * Processes every not-yet-linked block in the window (not just the newest). Under `latest-wins`
  * with a fast stream, earlier per-block invocations are interrupted, so the surviving invocation
- * must cover the whole window — otherwise blocks behind the head never get extracted.
+ * must cover the whole window - otherwise blocks behind the head never get extracted.
  */
 export const makeExtractionStage = (): Stage<ExtractionInput> => ({
   id: 'extract',

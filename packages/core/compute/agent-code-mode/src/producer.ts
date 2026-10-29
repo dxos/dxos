@@ -33,7 +33,7 @@ export type CodeModeOptions = {
 
   /**
    * Where the model's code runs.
-   * @default Sandbox.layerAsyncFunction's implementation — in this process, in this thread.
+   * @default Sandbox.layerAsyncFunction's implementation - in this process, in this thread.
    */
   sandbox?: Sandbox.Sandbox;
 
@@ -56,7 +56,7 @@ export type CodeModeOptions = {
 /**
  * Runs each turn in "code mode": the model carries ONE tool, `eval`, and reaches the workspace by
  * writing code rather than by calling a tool per action. Operations bound by the conversation's
- * skills are not projected as tools at all — they are functions the code calls, so a task spanning
+ * skills are not projected as tools at all - they are functions the code calls, so a task spanning
  * several of them costs one turn instead of one turn each.
  *
  * Substituted for {@link makeAiSessionTurnProducer} through `AgentProcessOptions.makeTurnProducer`;
@@ -206,7 +206,7 @@ const labelEvalCalls = (
 /**
  * The operation a tool invokes, when one backs it.
  *
- * Absent for a provider-defined or MCP tool, which carries no annotation context — and on which
+ * Absent for a provider-defined or MCP tool, which carries no annotation context - and on which
  * `getOperationFromTool` throws rather than returning `None`, so the throw is contained here.
  */
 const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined => {
@@ -230,7 +230,7 @@ const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = E
 
 /**
  * Projects the skills' tools, and those of the turn's MCP servers, into callable operations. Resolution goes through the ordinary toolkit
- * path, so an operation reachable in code mode is exactly the one a tool-calling agent would reach —
+ * path, so an operation reachable in code mode is exactly the one a tool-calling agent would reach -
  * same registry, same handlers, same invocation options.
  */
 export const projectOperations = Effect.fnUntraced(function* (
@@ -245,8 +245,8 @@ export const projectOperations = Effect.fnUntraced(function* (
     parameters: Tool.getJsonSchema(tool),
     // Carried so a dialect can hand the model the operation itself rather than a wrapper around it.
     definition: operationBehind(tool),
-    // A failed operation raises in the sandbox — as a rejected promise or a failed effect,
-    // depending on the dialect — since `toolResultValue` throws whatever the tool reported.
+    // A failed operation raises in the sandbox - as a rejected promise or a failed effect,
+    // depending on the dialect - since `toolResultValue` throws whatever the tool reported.
     invoke: (input: unknown) =>
       callTool(handlers, {
         _tag: 'toolCall',

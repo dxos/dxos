@@ -23,8 +23,8 @@ import * as Events from './Events.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
 /**
- * The append-only project log. Everything a session accumulates — the chat transcript, what the
- * canvas shows, the project's own title — is a fold over these events, so there is no second copy
+ * The append-only project log. Everything a session accumulates - the chat transcript, what the
+ * canvas shows, the project's own title - is a fold over these events, so there is no second copy
  * to keep in step. Appends are serialized through one fiber-safe sequence per project, and every
  * appended entry is published so a live UI folds the same stream a reload replays.
  */
@@ -47,7 +47,7 @@ export interface Api {
   }) => Effect.Effect<Project, LogError>;
   readonly listProjects: () => Effect.Effect<Project[], LogError>;
   readonly getProject: (id: string) => Effect.Effect<Project | undefined, LogError>;
-  /** The project touched last — what a reload with no id in the URL opens. */
+  /** The project touched last - what a reload with no id in the URL opens. */
   readonly lastProject: () => Effect.Effect<Project | undefined, LogError>;
   /**
    * Deletes a project with its log and stored values; false when there was none. Whoever runs its
@@ -85,7 +85,7 @@ const fail = (message: string) => (cause: unknown) => new LogError({ message, ca
 const encodeEvent = Schema.encodeUnknownEffect(Events.Event);
 const decodeEvent = Schema.decodeUnknownEffect(Events.Event);
 
-/** Sortable and short — the id appears in the webui URL. */
+/** Sortable and short - the id appears in the webui URL. */
 const newId = (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope> =>
@@ -96,8 +96,8 @@ const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope>
     // One hub for every project: a subscriber filters by id, which costs nothing at this volume and
     // spares the store a per-project registry to garbage-collect.
     const hub = yield* PubSub.unbounded<Events.Entry>();
-    // Appends must not interleave — two fibers reading the same `MAX(seq)` would collide on the
-    // primary key — so the whole read-compute-insert is taken under one semaphore.
+    // Appends must not interleave - two fibers reading the same `MAX(seq)` would collide on the
+    // primary key - so the whole read-compute-insert is taken under one semaphore.
     const gate = yield* Semaphore.make(1);
 
     const getProject: Api['getProject'] = (id) =>
@@ -243,7 +243,7 @@ const make = (): Effect.Effect<Api, LogError, SqlClient.SqlClient | Scope.Scope>
     } satisfies Api;
   });
 
-/** Opens (creating if absent) the workspace log inside `dir` — beside the code index, not in it. */
+/** Opens (creating if absent) the workspace log inside `dir` - beside the code index, not in it. */
 export const layer = (dir: string): Layer.Layer<Log, LogError> =>
   Layer.unwrap(
     Effect.map(

@@ -17,7 +17,7 @@ import { type AnalyzeContext, fileNode } from './common.ts';
 // Block types whose second header token names the thing described rather than labelling the block.
 const NAMED_BLOCKS = new Set(['module', 'type', 'service', 'component', 'op', 'ext', 'flow', 'skill', 'capability']);
 
-/** `<scope>:<target>[#<fragment>]` — the reference syntax of `core.mdl` (`markdown:QA-1`). */
+/** `<scope>:<target>[#<fragment>]` - the reference syntax of `core.mdl` (`markdown:QA-1`). */
 const REFERENCE = /^([A-Za-z][\w.@-]*):([^\s:#/][^\s#]*)(?:#(.+))?$/;
 
 /** The frontmatter keys with a property of their own; any other is kept as `key=value`. */

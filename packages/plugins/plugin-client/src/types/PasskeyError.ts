@@ -108,7 +108,7 @@ export const classify = (error: unknown): Failure => {
 
 /**
  * Report a failed redemption and classify it for the UI. A dismissed prompt is the user closing a
- * dialog, so it reports at `info` — at `error` it swamps the production error stream (DX-1281).
+ * dialog, so it reports at `info` - at `error` it swamps the production error stream (DX-1281).
  */
 export const report = (error: unknown): Failure => {
   const failure = classify(error);

@@ -23,7 +23,7 @@ const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).
 
 /**
  * A task whose log interleaves changes with two questions: one answered, one still open with
- * options — which the log leaves to the task's open questions.
+ * options - which the log leaves to the task's open questions.
  */
 const seedTask = (): Task.Task => {
   const task = Task.make({ title: 'Draft the refund reply', status: 'started', assignee: agent });
@@ -77,7 +77,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * An answered question is one entry — the question with its answer under it — dated when it was
+ * An answered question is one entry - the question with its answer under it - dated when it was
  * answered; an open question is not in the log, since it is waiting on the reader rather than a
  * record of what happened.
  */

@@ -81,7 +81,7 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
           ? Effect.fail(error)
           : Effect.gen(function* () {
               const Yaml = yield* Effect.promise(() => import('yaml'));
-              // First run materializes only the endpoints — features and storage keep coming from
+              // First run materializes only the endpoints - features and storage keep coming from
               // profileBuiltinDefaults so they track the code, while what the CLI talks to is stated
               // in the file the user owns.
               const useLocalDev = process.env.DX_LOCAL_DEV !== undefined && process.env.DX_LOCAL_DEV !== '0';
@@ -110,8 +110,8 @@ const withProfileDefaults = (configValues: ConfigInit, profile: string) =>
 
 /**
  * `DX_*` process env projected onto `runtime.app.env`, mirroring what the bundler config plugin does
- * for browser builds — without it those keys are unreachable on node, where nothing bundles the app.
- * Takes precedence over the profile config file, so `DX_HUB_URL=… dx …` overrides for one command.
+ * for browser builds - without it those keys are unreachable on node, where nothing bundles the app.
+ * Takes precedence over the profile config file, so `DX_HUB_URL=... dx ...` overrides for one command.
  */
 const processEnvDefaults = (): ConfigInit => {
   const env: Record<string, string> = {};

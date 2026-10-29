@@ -14,7 +14,7 @@ const AI_MODEL_NOT_AVAILABLE = 'AiModelNotAvailableError';
  * `LayerStack`. The extract operations declare `AiService` in their `services`, so the process
  * invoker resolves it eagerly at spawn time; if the assistant plugin's `AiService` `LayerSpec`
  * was not contributed before the runtime built its stack, the spawn dies with a
- * `ServiceNotAvailableError` naming the tag — before the handler ever runs.
+ * `ServiceNotAvailableError` naming the tag - before the handler ever runs.
  *
  * The check is intentionally lenient: it matches the structured `context.service` field
  * (`ServiceNotAvailableError`) and falls back to the formatted message, since the structured error
@@ -38,7 +38,7 @@ export const isAiServiceUnavailable = (error: unknown): boolean => {
 
 /**
  * Recognise "no resolver claims this model". Distinct from {@link isAiServiceUnavailable}: the
- * `AiService` IS in the stack, but the model's resolver is not — plugin-assistant contributes the
+ * `AiService` IS in the stack, but the model's resolver is not - plugin-assistant contributes the
  * Anthropic one on `AssistantEvents.Start` and only with a client, so a pipeline run before the
  * assistant is up asks for a model nobody serves.
  *
@@ -53,7 +53,7 @@ export const isAiModelUnavailable = (error: unknown): boolean => {
   return typeof message === 'string' && message.includes(AI_MODEL_NOT_AVAILABLE);
 };
 
-/** Either flavour of "the assistant is not ready yet" — no service in the stack, or no model resolver. */
+/** Either flavour of "the assistant is not ready yet" - no service in the stack, or no model resolver. */
 export const isAiUnavailable = (error: unknown): boolean =>
   isAiServiceUnavailable(error) || isAiModelUnavailable(error);
 

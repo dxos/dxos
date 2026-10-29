@@ -135,7 +135,7 @@ const demoPairs = (grid: NavGrid, domain: Domain, count: number): Array<{ source
   }));
 };
 
-/** One random source/target pair for `domain`, drawn from the same reachable candidates `demoPairs` uses — for a single ad hoc placement rather than an evenly-spread set. */
+/** One random source/target pair for `domain`, drawn from the same reachable candidates `demoPairs` uses - for a single ad hoc placement rather than an evenly-spread set. */
 const randomPair = (grid: NavGrid, domain: Domain): { source: GeoPoint; target: GeoPoint } => {
   const candidates = domainCandidates(grid, domain);
   if (candidates.length < 2) {
@@ -197,7 +197,7 @@ const objectsFromPairs = (
 /**
  * A Terra world seeded with two objects of each kind: boats and tanks placed on this seed's own
  * sea/land via the nav grid (so the demo works for any seed), planes and rockets on fixed
- * long-separation geo pairs, and two satellites on differing orbits. Deterministic — no
+ * long-separation geo pairs, and two satellites on differing orbits. Deterministic - no
  * `Math.random()` anywhere in the derivation.
  */
 export const makeDemoWorld = (props?: { name?: string; config?: Partial<TerraConfig> }): Terra => {
@@ -242,11 +242,11 @@ const randomOrbit = (): Orbit => ({
 
 /**
  * A single new object of a randomly chosen kind, ready to be pushed onto `terra.objects`. Boats,
- * tanks, planes, and rockets are placed via `randomPair` — the same nav-grid-derived reachability
- * logic `makeDemoWorld` uses — while satellites get a random orbit instead of a surface placement.
+ * tanks, planes, and rockets are placed via `randomPair` - the same nav-grid-derived reachability
+ * logic `makeDemoWorld` uses - while satellites get a random orbit instead of a surface placement.
  * `spawnedAt` is the caller's clock origin (matching `SimEngine.evaluateAt`'s domain) so the object
  * starts moving immediately. Adding an object is a deliberate user action, not simulation state, so
- * `Math.random()` is fine here — it must never appear in `src/sim/`.
+ * `Math.random()` is fine here - it must never appear in `src/sim/`.
  */
 export const makeRandomObject = (terra: Terra, spawnedAt: number): TerraObject.TerraObject => {
   const kind = RANDOM_KINDS[Math.floor(Math.random() * RANDOM_KINDS.length)];

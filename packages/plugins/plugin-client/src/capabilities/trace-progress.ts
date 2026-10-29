@@ -20,10 +20,10 @@ import { log } from '@dxos/log';
  * source is the swarm-backed monitor contributed by `remote-trace-monitor`.
  *
  * Only edge-runtime messages are projected here: local progress already flows through the
- * `plugin-progress` trace sink, and both write the same progress keys — projecting local messages
+ * `plugin-progress` trace sink, and both write the same progress keys - projecting local messages
  * twice would let two writers clobber each other's registry handles.
  *
- * Cancel on this path always routes to {@link RemoteProcessManager} (edge) — local terminate is
+ * Cancel on this path always routes to {@link RemoteProcessManager} (edge) - local terminate is
  * handled by the `plugin-progress` sink, which never sees these messages.
  */
 export default Capability.makeModule(
@@ -51,7 +51,7 @@ export default Capability.makeModule(
     // own activation, and losing it would leave the subscription permanently unstarted.
     const progressSink = Progress.makeTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
       // An edge run is a chain of bounded invocations, each with a fresh pid, so a pid tombstone
-      // would only mask one chain link and the next would resurrect the meter — suppress the key
+      // would only mask one chain link and the next would resurrect the meter - suppress the key
       // until the run's terminal status, matching the local (single-pid) cancel behaviour.
       cancelScope: 'run',
       cancelProcess: (target: Progress.CancelTarget) => {
@@ -59,7 +59,7 @@ export default Capability.makeModule(
         if (target.space && triggerId) {
           cancelRemote(target.space, triggerId, target.pid);
         } else {
-          // Never drop a user's cancel silently — an unresolvable target means the trace meta lost
+          // Never drop a user's cancel silently - an unresolvable target means the trace meta lost
           // its addressing (e.g. the swarm wire codec), which must surface in the log.
           log.warn('edge progress cancel dropped: unresolvable target', {
             space: target.space,

@@ -381,7 +381,7 @@ describe('ReadSource', () => {
   );
 
   it.effect(
-    'recall finds facts minted under a person’s accounts in other sources, tied by strong identifiers only',
+    "recall finds facts minted under a person's accounts in other sources, tied by strong identifiers only",
     Effect.fnUntraced(
       function* ({ expect }) {
         const dmytro = yield* Database.add(Person.make({ fullName: 'Dmytro Maretskyi' }));

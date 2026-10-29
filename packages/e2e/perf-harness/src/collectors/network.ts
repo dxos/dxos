@@ -26,7 +26,7 @@ const API_RESOURCE_TYPES: ReadonlySet<string> = new Set(['fetch', 'xhr', 'websoc
 /**
  * The subset of {@link API_RESOURCE_TYPES} that is a REQUEST rather than a stream.
  *
- * A socket and an eventsource each produce one `response` — the handshake — and then carry their
+ * A socket and an eventsource each produce one `response` - the handshake - and then carry their
  * traffic outside it, so counting either as an edge request would report a connection as a call
  * and double-count traffic `edgeSocketFrames` already has.
  */
@@ -48,7 +48,7 @@ const DEFAULT_EDGE_HOSTS: readonly string[] = ['dxos.network', 'dxos.workers.dev
  * Telemetry endpoints, kept OUT of the edge columns.
  *
  * Analytics rides the same `fetch` resource type as a real API call, so without this the backend
- * columns silently include however much PostHog happened to flush during a stage — which is both
+ * columns silently include however much PostHog happened to flush during a stage - which is both
  * noise and not the app's cost.
  */
 const ANALYTICS_HOSTS: readonly string[] = [
@@ -160,7 +160,7 @@ export type TrackNetworkOptions = {
  * Two listeners, because one cannot see the whole picture:
  *
  * - `response` gives bytes per request, taken from `content-length` where the header is present
- *   and from the body otherwise — the resource-timing buffer caps out on a graph this size, so the
+ *   and from the body otherwise - the resource-timing buffer caps out on a graph this size, so the
  *   response event is the only complete accounting.
  * - `websocket` gives FRAME bytes in both directions, which no `response` reports: a socket
  *   produces exactly one response, the 101 with an empty body.
@@ -182,7 +182,7 @@ export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (()
   };
   const edgeHosts = options.edgeHosts ?? DEFAULT_EDGE_HOSTS;
 
-  // Frame-level, because a socket fires exactly one `response` — the 101, with an empty body — so
+  // Frame-level, because a socket fires exactly one `response` - the 101, with an empty body - so
   // every byte ECHO replicates is invisible to the handler below. Frames are counted in both
   // directions: a sync is a conversation, and an upload regression is as real as a download one.
   page.on('websocket', (socket) => {
@@ -235,13 +235,13 @@ export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (()
         totals.otherBytes += bytes;
       }
       // Origin is orthogonal to the code/API split, so it accumulates separately rather than
-      // partitioning the columns above — the bundle is served from the same host as the API in a
+      // partitioning the columns above - the bundle is served from the same host as the API in a
       // deployed build, and `codeBytes` must keep meaning the whole bundle.
       if (origin === 'analytics') {
         totals.analyticsBytes += bytes;
       } else if (origin === 'edge' && bucket === 'api' && EDGE_REQUEST_RESOURCE_TYPES.has(resourceType)) {
         // Gated on the same set as the counter above, so bytes and requests describe the same
-        // population. A handshake body is empty, so this changes no number today — it stops the
+        // population. A handshake body is empty, so this changes no number today - it stops the
         // two columns diverging the day a socket upgrade starts carrying one.
         totals.edgeApiBytes += bytes;
       }
@@ -249,7 +249,7 @@ export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (()
       // Redirects and preflights have no readable body; the request is still counted above.
     }
     // Reading a body is async, so a response that arrives just before a stage boundary can be
-    // counted against the next stage. Bounded to responses without `content-length` — in a
+    // counted against the next stage. Bounded to responses without `content-length` - in a
     // `vite preview` run that is API traffic, not the bundle.
   });
 
@@ -259,7 +259,7 @@ export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (()
   });
 };
 
-/** Difference of two running totals — the bytes and requests a single stage accounted for. */
+/** Difference of two running totals - the bytes and requests a single stage accounted for. */
 export const diffNetwork = (before: NetworkMetrics, after: NetworkMetrics): NetworkMetrics => ({
   codeBytes: after.codeBytes - before.codeBytes,
   apiBytes: after.apiBytes - before.apiBytes,

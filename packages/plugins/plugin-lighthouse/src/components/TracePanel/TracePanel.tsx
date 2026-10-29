@@ -290,8 +290,8 @@ export type TracePanelProps = {
 };
 
 /**
- * EXPLAIN ANALYZE for a session, as lighthouse's web UI shows it: the trajectory as a tree (input → agent turn →
- * tool call → command → loads, extractions and model calls), each row with its time, a bar placing it on the
+ * EXPLAIN ANALYZE for a session, as lighthouse's web UI shows it: the trajectory as a tree (input -> agent turn ->
+ * tool call -> command -> loads, extractions and model calls), each row with its time, a bar placing it on the
  * session's timeline, its cost and what it yielded. Rows are coloured by what ran them (the LLM, System One, or no
  * model); runs of System One calls are folded into one row. Extractions open to their predicates and types.
  */

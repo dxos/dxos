@@ -4,7 +4,7 @@
 //
 
 // Renders an audio file as a PNG an LLM can read: a time axis in seconds, the waveform, a mel spectrogram (0-8 kHz,
-// low frequencies at the bottom), the speech/silence strip, and — with --words — numbered word spans whose legend is
+// low frequencies at the bottom), the speech/silence strip, and - with --words - numbered word spans whose legend is
 // printed to stdout.
 //
 // Usage: node spectrogram.mjs <file> [-o out.png] [--words words.json|timeline.jsonl] [--from s] [--to s] [--width px]
@@ -148,8 +148,8 @@ words.forEach(({ start, end }, index) => {
 
 const out = flags.out ?? file.replace(/\.[^.]+$/, '') + '.png';
 canvas.save(out);
-console.log(`wrote ${out} (${WIDTH}×${HEIGHT}), ${formatTime(from)}–${formatTime(to)}`);
-console.log('rows: time axis · waveform · mel spectrogram (0–8 kHz, low at bottom) · speech/silence · words');
+console.log(`wrote ${out} (${WIDTH}×${HEIGHT}), ${formatTime(from)}-${formatTime(to)}`);
+console.log('rows: time axis · waveform · mel spectrogram (0-8 kHz, low at bottom) · speech/silence · words');
 if (words.length > 0) {
   console.log('\n  #   start    end      p     word');
   words.forEach(({ word, start, end, probability }, index) =>

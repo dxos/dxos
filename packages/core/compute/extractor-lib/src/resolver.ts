@@ -30,7 +30,7 @@ const indexes = new WeakMap<Database.Database, Promise<IdentityIndex>>();
  * syncing at once both missed the other's contacts and both created one. One index means a Person
  * built by either run is immediately visible to the other.
  *
- * `refresh` re-seeds from the space into the same instance — do this at the start of a run so it
+ * `refresh` re-seeds from the space into the same instance - do this at the start of a run so it
  * picks up what other writers (or an earlier run) committed. Registrations are first-writer-wins,
  * so re-seeding never displaces an uncommitted object a caller has already registered.
  */
@@ -42,7 +42,7 @@ export const getIdentityIndex = (
     let pending = indexes.get(db);
     if (!pending) {
       // Cache the in-flight build, not just its result: two runs starting together would otherwise
-      // both miss, both build, and end up with separate indexes — the split this exists to close.
+      // both miss, both build, and end up with separate indexes - the split this exists to close.
       pending = EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
       // Drop a failed build so the next caller retries. Caching the rejection would disable identity
       // resolution for this database permanently after one transient query failure.

@@ -18,7 +18,7 @@ import * as Log from './Log.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /**
- * These run the real child process — the point of the sandbox is what a snippet can and cannot
+ * These run the real child process - the point of the sandbox is what a snippet can and cannot
  * reach, and a mocked bridge would prove nothing about that.
  */
 
@@ -254,7 +254,7 @@ edge file -> other "imports"
 
   test('a host call in flight at the deadline does not land afterwards', async () => {
     // The leak this guards: `storage.set` is a SQL write on the parent's runtime, so a call still
-    // running when the deadline fires could commit after `run` had already reported failure — a
+    // running when the deadline fires could commit after `run` had already reported failure - a
     // timed-out turn silently changing the project's memory.
     //
     // The write is held open rather than merely slow, because the leak exists only while a call is
@@ -262,7 +262,7 @@ edge file -> other "imports"
     // flight, and such a test passes whether or not the run interrupts anything.
     // The release and the read stay inside the scope that owns the log, because that is the
     // situation on the server: the log outlives any single run. Releasing after the scope closed
-    // would prove nothing — the resumed write would fail on a finalized layer whether or not the
+    // would prove nothing - the resumed write would fail on a finalized layer whether or not the
     // deadline had interrupted it.
     const gate = held();
     const directory = join(dir, 'in-flight');
@@ -311,7 +311,7 @@ edge file -> other "imports"
   });
 
   test('a snippet cannot forge a protocol frame on fd 3 either', async () => {
-    // fd 3 is reachable from the snippet — it can import `node:fs` and write there — so the
+    // fd 3 is reachable from the snippet - it can import `node:fs` and write there - so the
     // descriptor is not the boundary. Every real frame carries a per-run token the runtime deletes
     // from the environment before evaluating anything, and the host drops frames without it.
     const result = await run(`

@@ -73,7 +73,7 @@ export class SqliteMetadataStore implements IMetadataStore {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   #metadata: EchoMetadata = emptyEchoMetadata();
-  /** The stored record, minus its `updated` stamp — a save that would only bump the stamp writes nothing. */
+  /** The stored record, minus its `updated` stamp - a save that would only bump the stamp writes nothing. */
   #persisted: EchoMetadata | undefined;
   #loaded = false;
   readonly #spaceLargeMetadata = new ComplexMap<PublicKey, LargeSpaceMetadata>(PublicKey.hash);

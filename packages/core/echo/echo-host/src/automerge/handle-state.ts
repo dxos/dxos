@@ -16,7 +16,7 @@ export type HandleQueryState = QueryState<unknown>['state'];
  * exists for this document yet.
  *
  * Use this anywhere you need to ask "is this document loaded?" / "did sync
- * give up?" — read the result against the {@link HandleQueryState} variants
+ * give up?" - read the result against the {@link HandleQueryState} variants
  * (e.g. `=== 'ready'`).
  *
  * # Why we can't just call `DocHandle.isReady()` / read `DocHandle.state`
@@ -36,7 +36,7 @@ export type HandleQueryState = QueryState<unknown>['state'];
  * ```
  *
  * That means `handle.isReady()` always lies "yes", `handle.state` always reads
- * `'ready'`, and `await handle.whenReady()` never blocks — even for handles
+ * `'ready'`, and `await handle.whenReady()` never blocks - even for handles
  * whose document has never been loaded from storage or synced from a peer.
  * Reading `handle.doc()` on such a "ready" handle returns the empty initial
  * doc (`A.init()` or `A.emptyChange(A.init())`) rather than throwing or
@@ -45,7 +45,7 @@ export type HandleQueryState = QueryState<unknown>['state'];
  *
  * Real liveness moved to the {@link DocumentQuery} returned by
  * `Repo.findWithProgress`, whose state goes through
- * `'loading' → 'ready' | 'unavailable' | 'failed'`. Production code that
+ * `'loading' -> 'ready' | 'unavailable' | 'failed'`. Production code that
  * needs to know whether a document is actually loaded must consult the query
  * state through this helper instead of any `DocHandle.*` predicate.
  *

@@ -9,7 +9,7 @@ import { Text } from '@dxos/schema';
 import { Presentation, Slide } from './Presentation.ts';
 
 /**
- * plugin-projects' `org.dxos.type.showcase@0.1.0` → `Presentation`: its markdown becomes the first slide and each
+ * plugin-projects' `org.dxos.type.showcase@0.1.0` -> `Presentation`: its markdown becomes the first slide and each
  * artifact a linked slide after it. The object keeps its id, so the `Demonstrates` edges from it still hold. The new
  * slides pass from `transform` to `onMigration` in this migration's own closure.
  */

@@ -79,8 +79,8 @@ export const translations = [
 
         'combobox.search.label': 'Search',
         'combobox.empty.label': 'No results',
-        'combobox.loading.label': 'Loading…',
-        'combobox.create.label': 'Create “{{query}}”',
+        'combobox.loading.label': 'Loading...',
+        'combobox.create.label': 'Create "{{query}}"',
 
         'drag-handle.label': 'Drag to rearrange',
         'drag-handle.role.label': 'drag handle',

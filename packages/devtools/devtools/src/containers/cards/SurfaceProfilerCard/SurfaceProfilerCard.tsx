@@ -181,8 +181,8 @@ export const SurfaceProfilerCard = ({
               <span className='truncate text-start'>{group.role}</span>
             </Tooltip.Trigger>
             <span className='text-fg-muted'>{group.ids.length}</span>
-            <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
-            <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
+            <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '-'}</span>
+            <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '-'}</span>
           </Layout.Grid>
         </StatCard.Row>
       ))}

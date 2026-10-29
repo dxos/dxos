@@ -52,7 +52,7 @@ describe('multiSelectMachine', () => {
     await settle();
     expect([...connect(service).selection].sort()).toEqual(['b', 'c', 'd']);
 
-    // The anchor survives, so a second extend re-ranges from it — backwards included.
+    // The anchor survives, so a second extend re-ranges from it - backwards included.
     connect(service).extendTo('a');
     await settle();
     expect([...connect(service).selection].sort()).toEqual(['a', 'b']);

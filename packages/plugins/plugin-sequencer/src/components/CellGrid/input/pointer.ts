@@ -9,7 +9,7 @@ import type { Cell, CellCoord, Headers, SelectionRange, Tool } from '../state/ty
 import { cellKey, hitTestCell } from '../state/viewport.ts';
 
 /**
- * 'set' / 'unset' are idempotent — the receiver must add or remove the cell
+ * 'set' / 'unset' are idempotent - the receiver must add or remove the cell
  * regardless of current state. 'toggle' flips it. Drag operations always pick
  * a fixed mode (set or unset) based on the cell under the initial pointerdown
  * so the user paints a uniform stroke instead of flipping each cell.
@@ -53,13 +53,13 @@ export const attachPointerHandlers = <T>(
   };
 
   // setPointerCapture throws for synthetic / untrusted PointerEvents (e.g. those
-  // dispatched by tests). Capture is a best-effort UX nicety — never let it abort
+  // dispatched by tests). Capture is a best-effort UX nicety - never let it abort
   // the click path.
   const tryCapture = (pointerId: number) => {
     try {
       element.setPointerCapture(pointerId);
     } catch {
-      // Ignore — drag tracking still works without capture.
+      // Ignore - drag tracking still works without capture.
     }
   };
 
@@ -192,7 +192,7 @@ export const attachPointerHandlers = <T>(
 
   // pointercancel signals an interrupted gesture (system gesture, palm rejection,
   // capture lost). Per the Pointer Events spec this should clean up local state
-  // ONLY and not be treated as a successful completion — so we never commit a
+  // ONLY and not be treated as a successful completion - so we never commit a
   // selection from cancel.
   const onPointerCancel = (event: PointerEvent) => {
     drag = null;

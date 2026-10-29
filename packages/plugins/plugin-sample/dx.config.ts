@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 import { SampleNamespace } from './src/namespace.ts';
 import * as SampleCapabilities from './src/types/SampleCapabilities.ts';
 
-// Plugin definition — the main entry point for the plugin.
+// Plugin definition - the main entry point for the plugin.
 // `Plugin.config` takes the plugin's identity and its module list. Each module is authored via an
 // `AppCapability.*` maker or `Capability.lazyModule`, declares what it requires, provides and
 // activates on, and names its body with an `import(..., { with: { type: 'module-url' } })`: the
@@ -36,7 +36,7 @@ const config: Plugin.PluginConfig = Plugin.config({
 
       Settings are persisted to local KVS via an atom and contributed to the global
       settings panel. A status-bar indicator demonstrates reactive capability
-      subscriptions — it appears or disappears immediately when the user toggles the
+      subscriptions - it appears or disappears immediately when the user toggles the
       corresponding setting.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sample',

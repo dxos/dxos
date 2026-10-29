@@ -42,7 +42,7 @@ export const Outcome: Story = {
     outcome: {
       command: 'What depends on identity service in halo',
       message: 'Files that import the identity service.',
-      trailer: '+57 not shown: 57 files in packages/sdk/client-services (40), packages/core/halo (17), e.g. …',
+      trailer: '+57 not shown: 57 files in packages/sdk/client-services (40), packages/core/halo (17), e.g. ...',
       elapsedMs: 2400,
     },
   },
@@ -71,7 +71,7 @@ export const Verbose: Story = {
           kind: 'add',
           turn: 1,
           ms: 38,
-          label: '24 rows → +18 boxes, +24 arrows',
+          label: '24 rows -> +18 boxes, +24 arrows',
           detail:
             'SELECT DISTINCT ?from ?to WHERE {\n  BIND(<https://dxos.org/deus/file/packages/core/halo/halo/src/Identity.ts#Service> AS ?to)\n  ?from deus:implDependsOn|deus:apiDependsOn ?to .\n}',
         },

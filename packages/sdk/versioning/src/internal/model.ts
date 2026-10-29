@@ -33,7 +33,7 @@ const getHeads = (text: Text.Text): string[] => {
 
 /** @returns The Text content at the given automerge heads (read-only time travel). */
 export const contentAt = (text: Text.Text, heads: readonly string[]): string => {
-  // `checkoutVersion` returns `unknown` (raw historical data) — narrow via runtime checks.
+  // `checkoutVersion` returns `unknown` (raw historical data) - narrow via runtime checks.
   const snapshot = checkoutVersion(text, [...heads]);
   if (snapshot && typeof snapshot === 'object' && 'content' in snapshot) {
     const { content } = snapshot;
@@ -110,7 +110,7 @@ export type CreateBranchProps = {
 
 /**
  * Forks a draft branch: an ECHO-core branch of the parent Text at the anchor heads (defaults to
- * the parent's current heads) — same object id, shared automerge history, CRDT merge-back. The
+ * the parent's current heads) - same object id, shared automerge history, CRDT merge-back. The
  * record stores presentation metadata keyed into the core registry via `key`; the anchor is
  * auto-checkpointed so the fork point stays addressable in the timeline.
  */
@@ -156,10 +156,10 @@ export const createBranch = async (doc: VersionedObject, props: CreateBranchProp
 
 // Viewing a checkpoint no longer pins the live object: the caller reads the historical value with
 // `contentAt` (or `Obj.getVersion` for the full snapshot) and renders it, so only that surface shows
-// history — the live object is never mutated. (The former `viewVersion`/`clearVersionView` pin is gone.)
+// history - the live object is never mutated. (The former `viewVersion`/`clearVersionView` pin is gone.)
 
 /**
- * Applies the checkpoint's content to the tip as a new forward edit — history is never rewritten. For
+ * Applies the checkpoint's content to the tip as a new forward edit - history is never rewritten. For
  * a branch checkpoint, `text` is the branch-bound Text; the restore lands on the branch, not the base.
  * No pin to clear: the live object was never mutated by viewing.
  */
@@ -191,14 +191,14 @@ export const bindBranch = async (
 };
 
 /**
- * Merge the branch back into its parent. Core branches merge via the CRDT (`db.mergeBranch` —
+ * Merge the branch back into its parent. Core branches merge via the CRDT (`db.mergeBranch` -
  * shared fork ancestry, character-level, conflict-free; the registry entry is removed). Legacy
  * content-copy branches fall back to a textual 3-way merge (base = parent@anchor, ours = parent
- * tip, theirs = branch tip) with git-style markers left for manual cleanup — retained until
+ * tip, theirs = branch tip) with git-style markers left for manual cleanup - retained until
  * convergence-plan stage 4 for external/imported conflicts.
  */
 export const mergeBranch = async (doc: VersionedObject, branch: Versioning.Branch): Promise<MergeResult> => {
-  // Callers may hold a detached copy of the record — mutate the stored one.
+  // Callers may hold a detached copy of the record - mutate the stored one.
   const stored = resolveBranch(doc, branch);
   invariant(stored.status === 'active', 'branch is not active');
   const parent = stored.parent.target;
@@ -241,7 +241,7 @@ export const discardBranch = (doc: VersionedObject, branch: Versioning.Branch): 
 };
 
 // In-flight find-or-create per (doc, creator): two surfaces entering Suggesting concurrently must
-// resolve to ONE branch — without this, both can pass the not-found check and create duplicates.
+// resolve to ONE branch - without this, both can pass the not-found check and create duplicates.
 const inflightSuggestionBranches = new Map<string, Promise<Versioning.Branch>>();
 
 /**
@@ -276,7 +276,7 @@ const findOrCreateSuggestionBranch = async (
     (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === creator,
   );
   if (existing) {
-    // INVARIANT: an own suggestion branch is always "main + that author's suggestions" — main's
+    // INVARIANT: an own suggestion branch is always "main + that author's suggestions" - main's
     // progress must never read as the author's deletions. A branch whose anchor fell behind is
     // reconciled on re-entry by folding main's changes INTO it (CRDT merge; shared fork ancestry)
     // and advancing the anchor. Always a sync, never a re-fork: callers hold the branch identity
@@ -298,7 +298,7 @@ const findOrCreateSuggestionBranch = async (
 };
 
 /**
- * Archives the branch when it carries no changes vs its fork point (parent@anchor) — e.g. once the
+ * Archives the branch when it carries no changes vs its fork point (parent@anchor) - e.g. once the
  * last suggested hunk has been accepted or rejected. Keeps the timeline free of empty suggestion
  * branches. Returns whether it archived.
  */

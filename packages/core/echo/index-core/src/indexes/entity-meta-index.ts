@@ -86,7 +86,7 @@ const _typeDxnMatch = (typeDXN: string): { forms: string[]; hasNoVersion: boolea
 
 /**
  * WHERE fragment matching the `typeDXN` column against any of the given type identifiers,
- * covering legacy-equivalent stored forms and — for versionless DXNs — versioned rows via a
+ * covering legacy-equivalent stored forms and - for versionless DXNs - versioned rows via a
  * LIKE prefix. Shared with `FtsIndex` so type scoping matches identically across indexes.
  */
 export const buildTypeDxnCondition = (sql: SqlClient.SqlClient, typeDxns: readonly string[]): Statement.Fragment =>
@@ -121,7 +121,7 @@ export const EntityMeta = Schema.Struct({
   documentId: Schema.String,
   entityKind: Schema.String,
   /**
-   * Type identifier URI for the object — typename DXN for non-stored schemas,
+   * Type identifier URI for the object - typename DXN for non-stored schemas,
    * schema-as-object EID for stored (dynamic) schemas. Mirrors the value
    * written into the object's `system.type`.
    */
@@ -142,7 +142,7 @@ export const EntityMeta = Schema.Struct({
   /** Unix ms timestamp when the object was last re-indexed. */
   updatedAt: Schema.NullOr(Schema.Number),
   /**
-   * Global position assigned to the object's feed block — the insertion id a feed cursor names.
+   * Global position assigned to the object's feed block - the insertion id a feed cursor names.
    * Null for automerge objects and for feed blocks not yet positioned.
    */
   queuePosition: Schema.NullOr(Schema.Number),
@@ -240,7 +240,7 @@ const buildSourceRefsCondition = (
 /**
  * Window over a queue-scoped read: which rows, in what order, and how many.
  *
- * Only meaningful for a queue-scoped query — `queuePosition` is null for automerge objects and the
+ * Only meaningful for a queue-scoped query - `queuePosition` is null for automerge objects and the
  * caller-visible orderings differ, so a caller must not apply this to a query that also selects
  * from a space's documents.
  */
@@ -274,7 +274,7 @@ export interface NaturalQueueWindow {
   readonly skip?: number;
   /**
    * Restrict to rows with this deleted state. Folded in here rather than left to the caller so the
-   * skip and cap count only rows the caller keeps — a limit applied before the deleted filter would
+   * skip and cap count only rows the caller keeps - a limit applied before the deleted filter would
    * return short of what the caller asked for.
    */
   readonly deleted?: boolean;
@@ -304,7 +304,7 @@ export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow |
     return sql`${deleted}${order} LIMIT ${window.limit}${offset}`;
   }
 
-  // A cursor read is over positioned blocks only — `queuePosition > ?` excludes the nulls, and
+  // A cursor read is over positioned blocks only - `queuePosition > ?` excludes the nulls, and
   // that is the intent: an unpositioned block has no place in the ordering yet, so admitting it
   // would let it slip past a later read that resumes beyond its eventual position.
   const upper = window.before !== undefined ? sql` AND queuePosition < ${window.before}` : sql``;
@@ -390,7 +390,7 @@ export class EntityMetaIndex implements Index {
    *
    * The detection point-lookup for convergence-key merging: called with only the keys seen in a just
    * indexed batch, so its cost is proportional to writes that carry a convergence key. Tombstoned
-   * rows are included — a merged-away loser that received late edits must be found so those
+   * rows are included - a merged-away loser that received late edits must be found so those
    * edits can be folded into the winner; the merge re-verifies every row against its document.
    */
   queryByConvergenceKeys = Effect.fn('EntityMetaIndex.queryByConvergenceKeys')(
@@ -400,7 +400,7 @@ export class EntityMetaIndex implements Index {
           return [];
         }
         const sql = this.#sql;
-        // Chunked against the bound-variable budget — an initial index of a fresh clone can
+        // Chunked against the bound-variable budget - an initial index of a fresh clone can
         // present thousands of keys in one batch, and a thrown query here would skip convergence
         // detection for the whole batch with no retry. Distinct keys so a repeated one cannot
         // straddle two chunks and duplicate its row.
@@ -641,7 +641,7 @@ export class EntityMetaIndex implements Index {
             const [{ v }] = result;
             const version = (v ?? 0) + 1;
 
-            // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
+            // A partial block carries no `@type`/body - notably the `{ id, '@deleted': true }`
             // tombstone appended by `Feed.remove`. Preserve the prior row's body-derived columns
             // (type, kind, relation endpoints, parent) rather than recomputing them from the empty
             // block; otherwise `typeDXN` collapses to the `'type'` fallback and type-scoped queries
@@ -683,7 +683,7 @@ export class EntityMetaIndex implements Index {
             const parentId = preserveBody ? priorRow.parentId : localEntityId(parent, spaceId);
             const sourceId = preserveBody ? priorRow.sourceId : localEntityId(source, spaceId);
             const targetId = preserveBody ? priorRow.targetId : localEntityId(target, spaceId);
-            // Convergence key (nullable) — from the meta section of the serialized object. The meta
+            // Convergence key (nullable) - from the meta section of the serialized object. The meta
             // arrives as raw replicated JSON, so anything but a string is treated as no key.
             const rawConvergenceKey = (castData[ATTR_META] as { convergenceKey?: unknown } | undefined)?.convergenceKey;
             const convergenceKey = preserveBody
@@ -705,7 +705,7 @@ export class EntityMetaIndex implements Index {
             const createdAtTimestamp = object.createdAt ?? updatedAtTimestamp;
 
             if (existing.length > 0) {
-              // Feed entries collapse by id to the latest whole-object block — a re-append reusing
+              // Feed entries collapse by id to the latest whole-object block - a re-append reusing
               // an existing id (a live feed object's `Obj.update`) UPDATEs this row wholesale.
               // TODO(wittjosiah): With partial-update blocks (see `EchoFeedCodec.encode`'s TODO),
               // this becomes a field-level last-write-wins merge instead of a wholesale replace.
@@ -808,7 +808,7 @@ export class EntityMetaIndex implements Index {
   );
 
   /**
-   * Record ids of rows belonging to whole documents or specific objects — the set garbage
+   * Record ids of rows belonging to whole documents or specific objects - the set garbage
    * collection reclaims across the dependent indexes.
    */
   selectRecordIdsForRemoval = Effect.fn('EntityMetaIndex.selectRecordIdsForRemoval')(
@@ -1027,7 +1027,7 @@ export class EntityMetaIndex implements Index {
    * Matches both:
    * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
    * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
-   *   DXN uses the feed's object id as its queue id — see `Feed.getFeedUri`).
+   *   DXN uses the feed's object id as its queue id - see `Feed.getFeedUri`).
    */
   queryChildren = Effect.fn('EntityMetaIndex.queryChildren')(
     (query: { spaceId: SpaceId[]; parentIds: EntityId[] }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> =>

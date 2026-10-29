@@ -7,7 +7,7 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
 /**
  * Custom factory used by generic create flows (e.g. the form picker's "Create
  * new" action) when the schema's required structure cannot be produced by
- * `Obj.make(schema, values)` alone — for instance when a type needs a backing
+ * `Obj.make(schema, values)` alone - for instance when a type needs a backing
  * object linked by a required ref.
  *
  * The factory receives the values from the inline create form and must return

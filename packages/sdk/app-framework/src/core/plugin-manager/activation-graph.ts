@@ -14,7 +14,7 @@ import type * as Plugin from '../plugin.ts';
 //
 // Pure ordering logic for the activation scheduler, built on the shared `@dxos/graph` model.
 // Everything here is side-effect free and operates on explicit inputs so the scheduler's
-// decisions can be read — and tested — independently of manager state.
+// decisions can be read - and tested - independently of manager state.
 //
 // This module's vocabulary (kept out of the rest of the manager):
 //
@@ -72,10 +72,10 @@ export type SelectRunnableInputs = {
 
 export type SelectRunnableResult = {
   runnable: Plugin.PluginModule[];
-  /** Requires with no possible provider at all — a configuration error for the caller to report. */
+  /** Requires with no possible provider at all - a configuration error for the caller to report. */
   missing: Array<{ module: Plugin.PluginModule; capability: string }>;
   /** Modules left out of this round (including the `missing` ones), with the require that made
-   * them wait — a later round reconsiders them once the provider becomes available. */
+   * them wait - a later round reconsiders them once the provider becomes available. */
   waiting: Array<{ module: Plugin.PluginModule; capability: string }>;
 };
 
@@ -204,7 +204,7 @@ export const buildRoundGraph = (
 
 /**
  * Builds the singleton require -> provider graph across the given modules regardless of event
- * gating or satisfaction — used to surface capability cycles that span activation events (two
+ * gating or satisfaction - used to surface capability cycles that span activation events (two
  * modules on different events requiring each other's provides would otherwise pend forever).
  */
 export const buildSingletonGraph = (modules: readonly Plugin.PluginModule[]): ActivationGraphModel => {

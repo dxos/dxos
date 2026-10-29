@@ -15,7 +15,7 @@ const OUTRO_FALLBACK_MS = 800;
 
 /**
  * Mount the boot loader into a host element (`#boot-loader`, the static backdrop
- * the plugin injects — or any container in the storybook) and install the
+ * the plugin injects - or any container in the storybook) and install the
  * `window.__bootLoader` facade. Renders the disc + status into the host, toggles
  * `data-dismissing` on it for the outro, and removes everything once the outro
  * completes.

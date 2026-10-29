@@ -4,7 +4,7 @@
 //
 
 // Replays an audio file through Whistle as the browser story streams it, and reports what happened on one clock:
-// every pass (committed words, the pending tail, pass time), the final transcript, and the words worth a look —
+// every pass (committed words, the pending tail, pass time), the final transcript, and the words worth a look -
 // committed in silence (likely invented), low confidence, or slow to commit.
 //
 // Usage: node whistle-replay.mjs <file> [--pass-ms 1000] [--keywords "ECHO, DXOS"] [--language en]
@@ -83,9 +83,9 @@ if (flags.json) {
 console.log(`file:         ${file} (${analysis.duration.toFixed(2)} s)`);
 console.log(`replay:       a pass every ${passMs} ms; model load ${summary.loadMs} ms`);
 console.log(
-  `passes:       ${passTimes.length}, mean ${summary.meanPassMs?.toFixed(0) ?? '–'} ms, max ${summary.maxPassMs ?? '–'} ms`,
+  `passes:       ${passTimes.length}, mean ${summary.meanPassMs?.toFixed(0) ?? '-'} ms, max ${summary.maxPassMs ?? '-'} ms`,
 );
-console.log(`commit lag:   mean ${summary.meanCommitLag?.toFixed(2) ?? '–'} s after a word ends`);
+console.log(`commit lag:   mean ${summary.meanCommitLag?.toFixed(2) ?? '-'} s after a word ends`);
 console.log(`transcript:   ${transcript || '(nothing)'}`);
 if (summary.reference !== undefined) {
   console.log(`reference:    ${summary.reference}`);
@@ -103,7 +103,7 @@ for (const { type, at, passMs: ms, committed, pending } of events) {
   const label = type === 'stop' ? 'stop' : `${ms} ms`;
   const added = committed.map(({ word }) => word).join(' ');
   console.log(
-    `  ${formatTime(at).padEnd(7)} ${label.padStart(7)}  ${added ? `+ ${added}` : ''}${pending ? `  …${pending}` : ''}`,
+    `  ${formatTime(at).padEnd(7)} ${label.padStart(7)}  ${added ? `+ ${added}` : ''}${pending ? `  ...${pending}` : ''}`,
   );
 }
 

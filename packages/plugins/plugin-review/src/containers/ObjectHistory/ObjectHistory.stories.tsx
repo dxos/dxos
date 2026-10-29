@@ -29,7 +29,7 @@ import { ReviewCapabilities } from '#types';
 import { ObjectHistory } from './ObjectHistory.tsx';
 
 /**
- * Minimal versioned host: any object holding a root Text and a history qualifies — the panel is
+ * Minimal versioned host: any object holding a root Text and a history qualifies - the panel is
  * markdown-agnostic, gated only by a per-typename HistoryProvider contribution.
  */
 const TestDoc = Type.makeObject(DXN.make('org.dxos.test.versioning.Doc', '0.1.0'))(
@@ -92,7 +92,7 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Real checkpoints (valid heads) between edits, so each lands on a distinct revision;
-              // the branch is a static record — enough for the timeline graph, no live registry.
+              // the branch is a static record - enough for the timeline graph, no live registry.
               const root = yield* Effect.promise(() => doc.content.load());
               Version.create(doc, { name: 'First draft', target: root });
               Obj.update(root, (root) => {
@@ -129,7 +129,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Static history graph: two checkpoints on main and one branch with its own revision — the panel's
+ * Static history graph: two checkpoints on main and one branch with its own revision - the panel's
  * timeline, lane highlighting, and selection affordances without any markdown involvement.
  */
 export const Default: Story = {};

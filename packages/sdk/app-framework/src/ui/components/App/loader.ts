@@ -11,7 +11,7 @@ declare global {
       /**
        * Optional `(index/total)` tick. When present, the loader replaces the
        * current line in place ("Loading plugins (12/80)") instead of appending
-       * a new entry — keeps the visible log compact during long counted phases.
+       * a new entry - keeps the visible log compact during long counted phases.
        */
       range?: { index: number; total: number };
     }) => void;
@@ -22,7 +22,7 @@ declare global {
     progress: (fraction?: number) => void;
     /**
      * Report that startup has outrun its budget without failing it, offering `onAbort` as the way
-     * out. Dev-only — see the canonical doc on `BootLoaderApi.stalled`.
+     * out. Dev-only - see the canonical doc on `BootLoaderApi.stalled`.
      */
     stalled: (onAbort: () => void) => void;
     ready: () => void;
@@ -32,8 +32,8 @@ declare global {
   interface Window {
     /**
      * Driver injected by `@dxos/app-framework/vite-plugin`'s `bootLoaderPlugin`
-     * (a Solid app inlined into `index.html`). Declared here — on a module that
-     * is part of the `@dxos/app-framework/ui` export surface — so the React side
+     * (a Solid app inlined into `index.html`). Declared here - on a module that
+     * is part of the `@dxos/app-framework/ui` export surface - so the React side
      * and host apps (e.g. composer-app) can drive the loader without each
      * re-declaring the type. The canonical definition lives in the plugin's
      * `loader-app/types.ts`; this mirror exists because that source compiles in a

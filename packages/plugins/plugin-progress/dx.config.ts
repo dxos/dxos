@@ -25,7 +25,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['system'],
   },
   modules: [
-    // Definitions only — bodies load lazily so the plugin definition stays out of the boot
+    // Definitions only - bodies load lazily so the plugin definition stays out of the boot
     // evaluation floor (this def chunk was 177 kB when the bodies were inline).
     Capability.lazyModule(
       'ProgressRegistry',

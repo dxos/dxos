@@ -20,7 +20,7 @@ export type ListProps = ComponentPropsWithRef<typeof ark.ol> & {
   /**
    * If true, render as `role="listbox"` and let `ListItem` children become
    * `role="option"` + `aria-selected`. If false (default) the list is a
-   * plain `<ol>` / `<ul>` with no selection semantics — pick this for
+   * plain `<ol>` / `<ul>` with no selection semantics - pick this for
    * static lists.
    */
   selectable?: boolean;

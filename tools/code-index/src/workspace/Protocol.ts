@@ -14,7 +14,7 @@ import * as IndexState from './IndexState.ts';
 /**
  * The contract between the browser and the server. Deliberately thin: `Watch` streams the project's
  * log and `Dispatch` appends to it, so almost everything the UI does is an event in flight rather
- * than a method. The remaining calls are the ones that are genuinely questions or requests — what
+ * than a method. The remaining calls are the ones that are genuinely questions or requests - what
  * projects exist, make or delete one, what model am I talking to, and what is the indexer doing.
  */
 
@@ -79,7 +79,7 @@ export class Rpcs extends RpcGroup.make(
     error: RequestFailed,
   }),
 
-  /** The indexer's status now, then every change — the footer's live line. */
+  /** The indexer's status now, then every change - the footer's live line. */
   Rpc.make('WatchIndex', {
     success: IndexState.Status,
     error: RequestFailed,
@@ -97,7 +97,7 @@ export class Rpcs extends RpcGroup.make(
     error: RequestFailed,
   }),
 
-  /** The log from `after`, then everything appended after it — replay and live tail in one stream. */
+  /** The log from `after`, then everything appended after it - replay and live tail in one stream. */
   Rpc.make('Watch', {
     payload: { projectId: Schema.String, after: Schema.optional(Schema.Number) },
     success: Events.Entry,

@@ -88,7 +88,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     extract: (object) => labels.get(object) ?? '',
   });
 
-  // Selection is keyed by the type's own URI — the same id the 'selected-objects' companion resolves
+  // Selection is keyed by the type's own URI - the same id the 'selected-objects' companion resolves
   // from its `companionTo` (see react-surface.tsx), so cards, table rows and the companion agree.
   const selectedIds = useSelection(typeUri, 'multi');
   const { multi: setSelectedObjects, toggle: toggleSelected } = useSelectionActions(typeUri);
@@ -247,8 +247,8 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     [layout, layouts, selectedIds.length, duplicatesGroup, handleDeleteSelected],
   );
 
-  // The card grid backs two layouts — every object for `masonry`, only the group under review for
-  // `duplicates` — so the items are resolved here and the grid itself is declared once.
+  // The card grid backs two layouts - every object for `masonry`, only the group under review for
+  // `duplicates` - so the items are resolved here and the grid itself is declared once.
   const tiles = layout === 'duplicates' ? duplicates.current : results;
   const tileItems = useMemo<TileData[]>(() => {
     const toTile = (object: Obj.Unknown): TileData => ({
@@ -304,7 +304,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
                 rows={results}
                 features={tableFeatures}
                 rowActions={rowActions}
-                // Seed from the shared selection so switching card → table keeps what was selected;
+                // Seed from the shared selection so switching card -> table keeps what was selected;
                 // the table otherwise starts from its own empty model.
                 selection={selectedIds}
                 onRowAction={handleRowAction}

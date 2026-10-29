@@ -47,8 +47,8 @@ import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
  * The chat model against an EDGE-hosted agent and a real model: the same indicator log as the scripted
  * suite, plus the latency of each stage of a turn, so a slow or silent hosted turn shows WHERE it is slow.
  *
- * The stack is the one Composer builds for a `remote` chat — the durable command queue in front of EDGE
- * process control, and the swarm monitor for the agent's live trace — so what this measures is what the
+ * The stack is the one Composer builds for a `remote` chat - the durable command queue in front of EDGE
+ * process control, and the swarm monitor for the agent's live trace - so what this measures is what the
  * app sees.
  *
  * Run (one or more environments, comma-separated; `local` is `moon run edge:dev` in the edge repo):
@@ -87,7 +87,7 @@ type TurnTiming = {
   /** The chat reads idle again. */
   settled?: number;
   phases: string[];
-  /** EDGE process-control calls made during the turn, as `verb start→end` (ms after send). */
+  /** EDGE process-control calls made during the turn, as `verb start->end` (ms after send). */
   calls: string[];
 };
 
@@ -154,7 +154,7 @@ describe.each(ENVS)('ChatModel (edge-hosted agent, %s)', { tags: ['manual'], tim
       })),
     );
     for (const timing of timings) {
-      console.log(`  phases: ${timing.phases.join(' → ')}`);
+      console.log(`  phases: ${timing.phases.join(' -> ')}`);
       console.log(`  calls:  ${timing.calls.join(', ')}`);
     }
   });
@@ -213,8 +213,8 @@ const runTurns = (client: Client, space: Space, calls: EdgeCall[]) =>
           .slice(firstCall)
           .filter(({ verb }) => verb !== 'readProcessEvents' && verb !== 'getProcess')
           .map(({ verb, start, end }) => {
-            const at = (time: number | undefined) => (time === undefined ? '…' : Math.round(time - sentAt));
-            return `${verb.replace('Process', '')} ${at(start)}→${at(end)}`;
+            const at = (time: number | undefined) => (time === undefined ? '\u2026' : Math.round(time - sentAt));
+            return `${verb.replace('Process', '')} ${at(start)}->${at(end)}`;
           }),
       });
     }

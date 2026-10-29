@@ -78,7 +78,7 @@ describe('server', () => {
       textDocument,
       position: { line: 16, character: 4 },
     });
-    expect(hoverText(hover)).toContain('**Done** — The action is registered.');
+    expect(hoverText(hover)).toContain('**Done** - The action is registered.');
 
     const hints: InlayHint[] = await client.sendRequest('textDocument/inlayHint', {
       textDocument,

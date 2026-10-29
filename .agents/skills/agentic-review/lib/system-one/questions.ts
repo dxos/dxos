@@ -29,7 +29,7 @@ export type VerdictQuestion = Extract<Question<QuestionInstructions>, { type: 'n
 export type ChoiceQuestion = Extract<Question<QuestionInstructions>, { type: 'choice' }>;
 
 /**
- * Rule prose without its trailing provenance (`Source: …`, which may wrap onto a URL line): it
+ * Rule prose without its trailing provenance (`Source: ...`, which may wrap onto a URL line): it
  * names reviews and links the model cannot use.
  */
 export const ruleText = (rule: Rule): string => {
@@ -65,7 +65,7 @@ export const verdictQuestion = (rule: Rule): VerdictQuestion => ({
  * file or, for a `pr` rule, the changed files; asked speculatively beside the verdict and read
  * only when the verdict is positive.
  *
- * @param options Option id → description.
+ * @param options Option id -> description.
  */
 export const locationQuestion = (rule: Rule, options: Record<string, string>): ChoiceQuestion => ({
   type: 'choice',

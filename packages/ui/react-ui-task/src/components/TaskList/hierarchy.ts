@@ -36,7 +36,7 @@ export const subtreeIds = (tasks: readonly Task.Task[], task: Task.Task): Set<st
 export type TaskDropIntent = 'reorder-above' | 'reorder-below' | 'make-child';
 
 /**
- * Places a task after `target`'s ancestor `levels` steps up — the tree hitbox's `reparent`, which
+ * Places a task after `target`'s ancestor `levels` steps up - the tree hitbox's `reparent`, which
  * is how a drop past the last child escapes the subtree it would otherwise join. `levels` of 1 is
  * "after my parent", 2 "after my grandparent", and so on; running out of ancestors rejects rather
  * than silently landing at the root.
@@ -78,7 +78,7 @@ export type TaskPlacement = {
  *
  * Rejected rather than silently ignored, so the caller can say no with the cursor:
  * - onto itself, or into its own subtree (the cycle `UpdateTask` rejects);
- * - onto a task from another set — a membership transfer, not a reorder.
+ * - onto a task from another set - a membership transfer, not a reorder.
  */
 export const resolveTaskPlacement = ({
   tasks,
@@ -133,7 +133,7 @@ const siblingsOf = (
 };
 
 /**
- * Indent: the task becomes the last child of its previous sibling — the outliner's `Tab`. Undefined
+ * Indent: the task becomes the last child of its previous sibling - the outliner's `Tab`. Undefined
  * when it is the first among its siblings and so has nothing to indent under.
  */
 export const resolveIndent = (tasks: readonly Task.Task[], task: Task.Task): TaskPlacement | undefined => {
@@ -143,7 +143,7 @@ export const resolveIndent = (tasks: readonly Task.Task[], task: Task.Task): Tas
 };
 
 /**
- * Outdent: the task becomes the next sibling of its parent — the outliner's `Shift-Tab`. Undefined
+ * Outdent: the task becomes the next sibling of its parent - the outliner's `Shift-Tab`. Undefined
  * for a task already at the root.
  */
 export const resolveOutdent = (tasks: readonly Task.Task[], task: Task.Task): TaskPlacement | undefined => {
@@ -156,7 +156,7 @@ export const resolveOutdent = (tasks: readonly Task.Task[], task: Task.Task): Ta
 };
 
 /**
- * Move within the current parent — `Alt-ArrowUp` / `Alt-ArrowDown`. Undefined at either end, so the
+ * Move within the current parent - `Alt-ArrowUp` / `Alt-ArrowDown`. Undefined at either end, so the
  * key is a no-op rather than silently jumping the task out of its branch.
  */
 export const resolveNudge = (

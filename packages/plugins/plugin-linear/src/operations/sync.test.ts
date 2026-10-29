@@ -159,7 +159,7 @@ describe('plugin-linear sync', () => {
       task.description = 'edited locally';
     });
 
-    // Pull again with unchanged remote — local edit must survive.
+    // Pull again with unchanged remote - local edit must survive.
     await Effect.gen(function* () {
       yield* upsertTask(binding, issue(), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
@@ -184,7 +184,7 @@ describe('plugin-linear sync', () => {
     expect(snapshots['issue-1']?.title).toBe('Renamed remotely');
   });
 
-  test('both-changed → remote wins (conflict policy)', async ({ expect }) => {
+  test('both-changed -> remote wins (conflict policy)', async ({ expect }) => {
     const { db, binding } = await setup();
     const layer = Database.layer(db);
 
@@ -287,7 +287,7 @@ describe('plugin-linear sync', () => {
 
   test('push: priority assigned to previously-unprioritised issue is pushed', async ({ expect }) => {
     // Regression: an earlier guard `snapshot.priority !== undefined` silently
-    // dropped pushes when the remote had no priority — exactly the common
+    // dropped pushes when the remote had no priority - exactly the common
     // "user sets a priority on a freshly-pulled issue" case.
     const { db, binding } = await setup();
     const layer = Database.layer(db);
@@ -316,7 +316,7 @@ describe('plugin-linear sync', () => {
       });
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
-    // Linear maps medium → 3.
+    // Linear maps medium -> 3.
     expect(issueUpdateInput?.priority).toBe(3);
   });
 
@@ -356,7 +356,7 @@ describe('plugin-linear sync', () => {
     const { db, binding } = await setup();
     const layer = Database.layer(db);
 
-    // First pull: Linear says "no priority" (0 → undefined via the mapper).
+    // First pull: Linear says "no priority" (0 -> undefined via the mapper).
     const first = await Effect.gen(function* () {
       return yield* upsertTask(binding, issue({ priority: 0 }), undefined);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);

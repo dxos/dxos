@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 /**
  * Spine width in px. The deck's stacking geometry reserves exactly this much per pinned plank, so the
- * `w-11` below and this constant must agree — hence both living here.
+ * `w-11` below and this constant must agree - hence both living here.
  */
 export const SPINE_PX = 44;
 
@@ -26,7 +26,7 @@ export type FoldSpineProps = Util.ThemedClassName<{
 /**
  * A folded plank's book-spine sigil: icon plus vertical title, crossfading in as the plank collapses
  * (the enclosing tile toggles `data-folded`) and returning the plank to view on click. It sits at the
- * plank's leading edge — the sliver that stays visible in either pile.
+ * plank's leading edge - the sliver that stays visible in either pile.
  *
  * The `dx-fold-spine` class is a documented hook for stories to retime or restyle the transition
  * (see `Deck.stories.tsx`); keep it on the root.
@@ -54,7 +54,7 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
     <Layout.Flex center classNames='h-(--dx-rail-content) shrink-0'>
       <Icon.Icon icon={icon} size='lg' tone='subtle' />
     </Layout.Flex>
-    {/* TODO(wittjosiah): Plain span — no react-ui primitive renders a vertical (writing-mode) label. */}
+    {/* TODO(wittjosiah): Plain span - no react-ui primitive renders a vertical (writing-mode) label. */}
     <span className='truncate text-sm font-normal text-fg-muted [writing-mode:vertical-rl] rotate-180'>{label}</span>
   </Button.Root>
 );

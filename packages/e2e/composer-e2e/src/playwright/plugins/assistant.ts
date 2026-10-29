@@ -12,7 +12,7 @@ import { type Locator, type Page, expect } from '@playwright/test';
 export class Assistant {
   /**
    * The plank hosting a chat. Creating a chat swaps it in over the space home plank, which renders a
-   * prompt of its own — so the thread, which only the chat surface has, is what tells them apart.
+   * prompt of its own - so the thread, which only the chat surface has, is what tells them apart.
    */
   static plank(page: Page): Locator {
     return page.getByTestId('deck.plank').filter({ has: page.getByTestId('assistant.thread') });
@@ -65,7 +65,7 @@ export class Assistant {
 
   /**
    * Types a prompt and submits it. `fill` can resolve before CodeMirror's state holds the text, and
-   * submission reads that state — so the text is confirmed in the editor before Enter is sent.
+   * submission reads that state - so the text is confirmed in the editor before Enter is sent.
    */
   async send(text: string): Promise<void> {
     await this.prompt.click();

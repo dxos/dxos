@@ -16,7 +16,7 @@ import { Key } from '@dxos/echo';
 export type KeyTableEntry = {
   key: string;
   hasId: boolean;
-  /** Whether this key rebases the workspace (the anchor tier, `w`) — see `parse`. */
+  /** Whether this key rebases the workspace (the anchor tier, `w`) - see `parse`. */
   anchor?: boolean;
 };
 
@@ -50,7 +50,7 @@ export type ParsedUrl = {
 };
 
 /**
- * The prefix key for the workspace tier (`/w/<workspace>/…`) — the canonical declaration, from which the
+ * The prefix key for the workspace tier (`/w/<workspace>/...`) - the canonical declaration, from which the
  * graph builder is configured (`GraphBuilder.UrlGrammar.anchorKey`) and serializers emit the leading pair.
  */
 export const WORKSPACE_KEY = 'w';
@@ -88,7 +88,7 @@ export const normalizeTitle = (title: string | undefined): string | undefined =>
     ? `${chars
         .slice(0, MAX_TITLE_LENGTH - 1)
         .join('')
-        .trimEnd()}…`
+        .trimEnd()}\u2026`
     : collapsed;
 };
 
@@ -104,7 +104,7 @@ export const withTitle = (url: URL, title: string | undefined): URL => {
   return next;
 };
 
-// The workspace and companion keys are NOT reserved — they are the grammar's own configured keys.
+// The workspace and companion keys are NOT reserved - they are the grammar's own configured keys.
 const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
 /**

@@ -60,7 +60,7 @@ describe('external definitions', () => {
     '\n\n' +
     fence('type Thing');
 
-  test('a key to another spec becomes that spec’s block, described when its text is known', ({ expect }) => {
+  test("a key to another spec becomes that spec's block, described when its text is known", ({ expect }) => {
     const other = fence('type Obj: An ECHO object.');
     const graph = buildDefinitionGraph(spec, new Map([['github:dxos/dxos/packages/core/echo/echo/SPEC.mdl', other]]));
     const external = graph.definitions.find(({ id }) => id === 'github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Obj');

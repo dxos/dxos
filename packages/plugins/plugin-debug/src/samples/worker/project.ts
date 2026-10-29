@@ -37,17 +37,17 @@ the wrong step.
 What the plan must account for:
 - Write the code yourself in one sandbox, through the Sandbox skill (\`org.dxos.skill.sandbox\`). It keeps its \
 filesystem between commands, so a second sandbox pays for node and wrangler again. The sandbox image ships a coding \
-agent of its own; do not delegate to it — it has none of this space's context.
+agent of its own; do not delegate to it - it has none of this space's context.
 - \`wrangler deploy --temporary\` mints a temporary Cloudflare account and prints a Worker URL and a claim URL; \
 plain \`wrangler deploy\` refuses non-interactively and demands a token. \`--temporary\` needs wrangler 4.102 or \
 later, which needs Node 22, and the sandbox runs Node 20: install \`wrangler@latest\` explicitly and run it under \
 \`npx --yes node@22 node_modules/wrangler/bin/wrangler.js\`.
 - A deploy that exited zero is not evidence that anything is serving: fetch the URL and check the body.
 - The claim URL is a bearer credential for the account: give it to me directly and file it nowhere. Claiming \
-needs a browser, so that step is mine, and it comes after the last deploy — an agent with no login cannot update a \
+needs a browser, so that step is mine, and it comes after the last deploy - an agent with no login cannot update a \
 claimed account. The account expires within the hour.
 
-The container is not durable, so file what has to outlive it — the Worker URL, the response body — as artifacts on \
+The container is not durable, so file what has to outlive it - the Worker URL, the response body - as artifacts on \
 this project in the turn you produce it. This project needs no Cloudflare login and no API keys; if a step seems \
 to need either, that is the wrong step.`;
 

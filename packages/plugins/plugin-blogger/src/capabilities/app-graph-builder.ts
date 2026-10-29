@@ -214,8 +214,8 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             // Hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
-            // The doc has no navtree node, so `graph.actions(<post node id>/<doc.id>)` — the id
-            // PostArticle uses as the editor's `attendableId` — would otherwise be empty. plugin-review's
+            // The doc has no navtree node, so `graph.actions(<post node id>/<doc.id>)` - the id
+            // PostArticle uses as the editor's `attendableId` - would otherwise be empty. plugin-review's
             // `commentToolbar` matches on `node.data` (not the node type/id), so a custom `type` keeps
             // object/delete actions off this node. `disposition: 'hidden'` keeps it out of the navtree.
             AppGraphNode.make({

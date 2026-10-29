@@ -75,7 +75,7 @@ export default defineConfig(
           },
           output: {
             keepNames: true,
-            // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+            // Rolldown (used by Vite 8) requires `manualChunks` to be a function - the
             // record form that worked in Rollup is rejected at runtime.
             manualChunks: (id: string) => {
               if (

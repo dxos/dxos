@@ -122,7 +122,7 @@ describe('AcpAgent', () => {
         ['assistant', 'stats'],
       ]);
       expect(written.filter(({ key }) => key === Trace.RequestPhase.key).map(({ payload }) => payload)).toMatchObject([
-        { phase: 'calling-tool', detail: 'Preparing file…' },
+        { phase: 'calling-tool', detail: 'Preparing file...' },
         { phase: 'calling-tool', detail: 'Write note.txt' },
       ]);
       expect(AcpAgent.sessionIdOf(chat, 'fake')).toBe('fake-1');

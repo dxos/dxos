@@ -41,7 +41,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     // Separate from `RegisterPwa` so that an app without the progress registry still registers the
-    // service worker — only the meter is lost, not the update flow itself.
+    // service worker - only the meter is lost, not the update flow itself.
     Capability.lazyModule(
       'UpdateProgress',
       { provides: [] },

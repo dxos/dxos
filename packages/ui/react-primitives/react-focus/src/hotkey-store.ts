@@ -17,7 +17,7 @@ export type { CommandDefinition, HotkeyCommand, HotkeyOptions, HotkeyStore, Pars
  * The one store every DXOS binding registers on.
  *
  * Ark's own default store is module-private and only reachable from React, so a second store would
- * split the registry in two — bindings registered from an Effect capability would never see the
+ * split the registry in two - bindings registered from an Effect capability would never see the
  * ones registered from a component. Everything here defaults to this instance instead.
  */
 export const hotkeyStore: HotkeyStore = createHotkeyStore({
@@ -34,7 +34,7 @@ export const initHotkeys = (target: Document | ShadowRoot = document): void => {
  * Stop listening and drop every registration.
  *
  * This is the whole app's store, so a single owner tearing it down takes every other component's
- * bindings with it. Only a root that called `initHotkeys` should call this — a capability or story
+ * bindings with it. Only a root that called `initHotkeys` should call this - a capability or story
  * that merely registered commands unregisters those instead.
  */
 export const destroyHotkeys = (): void => {
@@ -42,7 +42,7 @@ export const destroyHotkeys = (): void => {
 };
 
 // Scopes are shared: two groups can hold overlapping chains (`root/a` and `root/a/b` both hold
-// `root`), so the last holder — not the first to unmount — is what retires one. Keyed by store,
+// `root`), so the last holder - not the first to unmount - is what retires one. Keyed by store,
 // since `holdHotkeyScope` takes one: a count shared across stores would let a release in one leave
 // the scope active in another, with its commands still firing.
 const scopeHolders = new WeakMap<HotkeyStore, Map<string, number>>();
@@ -99,7 +99,7 @@ export const nestHotkeyScope = (segment?: string): string =>
  * Every prefix of a path, root first: `a/b/c` -> `a`, `a/b`, `a/b/c`.
  *
  * Ark's scopes are a flat active set rather than a hierarchy, so inheritance is expressed by
- * activating each ancestor alongside the leaf — which is what keeps a binding registered on the
+ * activating each ancestor alongside the leaf - which is what keeps a binding registered on the
  * graph root firing while a plank is attended.
  */
 export const scopeChain = (path: string): string[] => {
@@ -125,7 +125,7 @@ export const setHotkeyScope = (path?: string, store: HotkeyStore = hotkeyStore):
 };
 
 /**
- * The most specific active scope — the leaf `setHotkeyScope` was last called with, since it
+ * The most specific active scope - the leaf `setHotkeyScope` was last called with, since it
  * activates every ancestor alongside it. `undefined` when only the store's wildcard is active.
  */
 export const getHotkeyScope = (store: HotkeyStore = hotkeyStore): string | undefined =>

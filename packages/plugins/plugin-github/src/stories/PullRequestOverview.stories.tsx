@@ -49,7 +49,7 @@ const REAL_PULL_REQUEST: PullRequestOverviewProps = {
     reference: 'dxos/dxos#13348',
     state: 'open',
     checks: 'CI passing 22/22',
-    branches: 'dm/wonderful-thompson-njcels → main',
+    branches: 'dm/wonderful-thompson-njcels -> main',
   },
   runs: PULL_REQUEST_13348_RUNS,
 };

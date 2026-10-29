@@ -8,12 +8,12 @@ import { BOOST_FRACTION, DESCENT_FRACTION, behaviorFor } from './behaviors.ts';
 import { angleBetween, bearingTo, toUnit } from './geo.ts';
 import { FALLBACK_UNIT, clampNonNegative, walkRoute } from './path.ts';
 
-/** Flight stage of a rocket, derived from flight fraction — never stored across calls. */
+/** Flight stage of a rocket, derived from flight fraction - never stored across calls. */
 export type RocketPhase = 'boost' | 'cruise' | 'descent';
 
 /**
  * A movable object's state at a single instant. Everything here is a pure function of
- * `(definition, config, elapsed)` — `route`, `legStart`, and `leg` are carried forward unchanged by
+ * `(definition, config, elapsed)` - `route`, `legStart`, and `leg` are carried forward unchanged by
  * `evaluate` (routed kinds) or recomputed fresh each call (satellite, rocket); neither ever
  * accumulates history.
  */
@@ -37,7 +37,7 @@ export type ObjectState = {
   explosion: number;
 };
 
-/** `elapsed` is seconds since the object's `spawnedAt` — always absolute, never a per-frame delta. */
+/** `elapsed` is seconds since the object's `spawnedAt` - always absolute, never a per-frame delta. */
 export type MotionContext = { config: TerraConfigValues; elapsed: number };
 
 /** Degrees to radians. */
@@ -169,7 +169,7 @@ const evaluateRocket = (definition: TerraObject.TerraObject, context: MotionCont
   });
 
   // The instant it comes down is closed-form (the arc over its speed), so how far the blast has
-  // burnt through follows from `elapsed` alone — no landing event to catch and remember.
+  // burnt through follows from `elapsed` alone - no landing event to catch and remember.
   const impactElapsed = definition.speed > 0 ? total / definition.speed : Infinity;
   const explosion =
     fraction >= 1 ? Math.min(1, (clampNonNegative(context.elapsed) - impactElapsed) / EXPLOSION_SECONDS) : 0;
@@ -227,7 +227,7 @@ export const initialState = (definition: TerraObject.TerraObject, config: TerraC
 };
 
 /**
- * The object's state AT `context.elapsed` — pure and idempotent. Never takes a `dt`: the same
+ * The object's state AT `context.elapsed` - pure and idempotent. Never takes a `dt`: the same
  * `elapsed` always produces the same result, regardless of what was evaluated before it, which is
  * what lets two peers rendering at different frame cadences converge on the same world.
  */

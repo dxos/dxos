@@ -75,14 +75,14 @@ describe('toMessages', () => {
       results,
     );
     expect(message?.blocks).toEqual([
-      { _tag: 'text', text: 'Votes: 👍 Meeple Bangkok · 👎 Brick ＆ Board — rebuild the ranking.' },
+      { _tag: 'text', text: 'Votes: \u{1F44D} Meeple Bangkok · \u{1F44E} Brick \uFF06 Board - rebuild the ranking.' },
     ]);
   });
 
   test('a running session ends with a working status; a failed one with Retry', ({ expect }) => {
     const running = snapshot('running');
     expect(toMessages(running.session, running.events, running.results).at(-1)?.blocks).toEqual([
-      { _tag: 'status', statusText: 'Working…' },
+      { _tag: 'status', statusText: 'Working...' },
     ]);
     const failed = { ...snapshot('reported').session, status: 'failed' as const, busy: false, reason: 'model_error' };
     expect(toMessages(failed, [], []).at(-1)?.blocks.at(-1)).toEqual({ _tag: 'suggestion', text: 'Retry' });
@@ -93,8 +93,15 @@ describe('run payload', () => {
   test('base64 JSON round-trips non-ASCII text and long outputs', ({ expect }) => {
     const rows = [
       {
-        narration: 'ร้านบอร์ดเกม — "big" library',
-        calls: [{ tool: 'search', args: 'q="บอร์ดเกม"', ok: true, output: 'x'.repeat(70_000) }],
+        narration: '\u0E23\u0E49\u0E32\u0E19\u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E40\u0E01\u0E21 - "big" library',
+        calls: [
+          {
+            tool: 'search',
+            args: 'q="\u0E1A\u0E2D\u0E23\u0E4C\u0E14\u0E40\u0E01\u0E21"',
+            ok: true,
+            output: 'x'.repeat(70_000),
+          },
+        ],
         pills: [],
         total: 0,
         followed: 0,

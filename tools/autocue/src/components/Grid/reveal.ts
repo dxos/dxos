@@ -79,7 +79,7 @@ export const wrap = (value: number, start: number, length: number) =>
 /** Distance travelled by `ms` at unit speed when the speed ramps up linearly over `ramp` ms, so motion starts gently. */
 const rampTravel = (ms: number, ramp: number) => (ms < ramp ? (ms * ms) / (2 * ramp) : ms - ramp / 2);
 
-/** A deterministic 0–1 value per cell, so a layout is the same on every render. */
+/** A deterministic 0-1 value per cell, so a layout is the same on every render. */
 export const hash = (col: number, row: number) =>
   ((((col + 7) * 73_856_093) ^ ((row + 3) * 19_349_663)) % 1_000) / 1_000;
 
@@ -136,7 +136,7 @@ const schedule = (legs: number, duration: number, move: number) => {
   return starts;
 };
 
-/** The leg playing at `ms` and how far through its move (0–1), from the legs' start times. */
+/** The leg playing at `ms` and how far through its move (0-1), from the legs' start times. */
 const legAt = (starts: number[], ms: number, move: number) => {
   let index = 0;
   while (index < starts.length - 1 && ms >= starts[index + 1]) {
@@ -334,7 +334,7 @@ export const REVEALS: Record<Exclude<Variant, 'shift' | 'console'>, (context: Re
   mosaic,
 };
 
-/** A leg of the shift loop's timeline: `frame` takes the leg's raw progress (0–1); `focus` is the close-up cell. */
+/** A leg of the shift loop's timeline: `frame` takes the leg's raw progress (0-1); `focus` is the close-up cell. */
 export type ShiftShot = {
   ms: number;
   focus?: string;

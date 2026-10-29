@@ -49,7 +49,7 @@ export type OrderedCredential = { id: string; credential: Credential };
  * which does not decode, is dropped for the same reason.
  *
  * `parentCredentialIds` win over `issuanceDate`, since clock skew across devices can date a parent after
- * its child. A parent that has not replicated yet does not block its child — the state machine rejects a
+ * its child. A parent that has not replicated yet does not block its child - the state machine rejects a
  * chain it cannot verify, so ordering need not enforce that too.
  */
 export const orderCredentials = (encoded: ReadonlyMap<string, CredentialsDocumentEntry>): OrderedCredential[] => {
@@ -63,7 +63,7 @@ export const orderCredentials = (encoded: ReadonlyMap<string, CredentialsDocumen
 
   const byTiebreak = (a: OrderedCredential, b: OrderedCredential) => {
     // Genesis roots the chain and carries no parent link, and it is issued in the same millisecond as
-    // the first membership credential — so without this the id tiebreak decides, and half the time the
+    // the first membership credential - so without this the id tiebreak decides, and half the time the
     // state machine sees a member admitted into a space that does not exist yet.
     const genesis = rankGenesis(a.credential) - rankGenesis(b.credential);
     if (genesis !== 0) {

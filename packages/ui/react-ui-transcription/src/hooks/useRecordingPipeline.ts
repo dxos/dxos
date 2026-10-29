@@ -39,7 +39,7 @@ export type RecordingPipelineOptions = {
   /** Re-segment ASR output into complete sentences before the pipeline (merges mid-sentence cuts). */
   segmentSentences?: boolean;
   /**
-   * Raw capture flag — recording (mic) or playing (file). When it flips false the hook drains
+   * Raw capture flag - recording (mic) or playing (file). When it flips false the hook drains
    * (flushing the transcriber's buffered audio) before returning to idle.
    */
   active: boolean;
@@ -60,14 +60,14 @@ export type RecordingPipelineOptions = {
 };
 
 export type RecordingPipeline = {
-  /** Lifecycle phase (idle → recording → draining → idle). */
+  /** Lifecycle phase (idle -> recording -> draining -> idle). */
   phase: PipelinePhase;
 };
 
 /**
  * Single ASR-capture engine binding for React consumers: drives an {@link AsrPipeline}
  * ({@link runAsrPipeline}) off a capture flag, sourcing audio from the microphone (owned here) or an
- * external track. The editor driver, message-list recording, and stories all build on this — varying
+ * external track. The editor driver, message-list recording, and stories all build on this - varying
  * only by source, stages, and commit sink.
  */
 export const useRecordingPipeline = ({
@@ -83,7 +83,7 @@ export const useRecordingPipeline = ({
   segmentSentences,
 }: RecordingPipelineOptions): RecordingPipeline => {
   // Phase machine: hold 'recording' for the commit when `active` flips off, then 'draining' until the
-  // transcriber flushes, then 'idle' — so the tail of speech and its enrichment are not lost.
+  // transcriber flushes, then 'idle' - so the tail of speech and its enrichment are not lost.
   const [phase, setPhase] = useState<PipelinePhase>('idle');
   const inUse = phase !== 'idle';
   useEffect(() => {

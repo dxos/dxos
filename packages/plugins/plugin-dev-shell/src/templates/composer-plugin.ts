@@ -12,7 +12,7 @@ import { SKILL_KEY } from '../skills/dev-shell-skill.ts';
 /** Where the run writes the plugin, under the Composer app's gitignored `temp/`. */
 export const FOLDER = 'world-clock';
 
-/** The dev manifest `composerPlugin` serves, and the URL Plugins → Dev Server loads by default. */
+/** The dev manifest `composerPlugin` serves, and the URL Plugins -> Dev Server loads by default. */
 export const MANIFEST_URL = `http://localhost:${PluginManifest.DEV_SERVER_PORT}/manifest.json`;
 
 /** The plugin's entry as the dev server compiles it on request. */
@@ -57,7 +57,7 @@ ${Templates.IDS}`,
 /**
  * The browser version of plugin-projects' "Composer Plugin" template, which the desktop app offers itself: here
  * the agent writes the plugin with the Dev Shell skill's shell, which only a vite server carries, so this plugin
- * contributes it, and the reader loads it from the plugin's dev server through Plugins → Dev Server.
+ * contributes it, and the reader loads it from the plugin's dev server through Plugins -> Dev Server.
  */
 export const composerPlugin: ProjectCapabilities.Template | undefined = isTauri()
   ? undefined

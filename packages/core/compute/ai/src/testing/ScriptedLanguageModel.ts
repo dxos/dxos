@@ -22,13 +22,13 @@ import * as AiTelemetry from '../AiTelemetry.ts';
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.
 //
 // This is the scripted-model primitive extracted from the memoized layer's cache-hit path
-// (see `packages/core/compute/ai/TESTING.md`): "given this call, return these parts" — with no
+// (see `packages/core/compute/ai/TESTING.md`): "given this call, return these parts" - with no
 // prompt-matching, no file I/O, and no live provider. It exists to test the deterministic parts
-// of an agent turn (dimension D — the harness/loop) by driving `AiRequest`/`AiSession` with a
+// of an agent turn (dimension D - the harness/loop) by driving `AiRequest`/`AiSession` with a
 // fixed sequence of responses and asserting over the observable effects.
 //
 // Turns are consumed sequentially: the Nth model call returns the Nth turn. Calling past the end
-// of the script fails loudly — a script is exhausted only if the loop iterated more than expected,
+// of the script fails loudly - a script is exhausted only if the loop iterated more than expected,
 // which is itself a test failure worth surfacing.
 //
 
@@ -60,7 +60,7 @@ export type ScriptedTurn =
       /**
        * Emit every `tool-params-end` at the end of the turn instead of after the call it closes,
        * so a second call opens while the first is still open. The OpenAI dialect (DeepSeek, LM
-       * Studio) carries no per-call terminator on the wire — an adapter has to synthesize one, and
+       * Studio) carries no per-call terminator on the wire - an adapter has to synthesize one, and
        * one that synthesizes them all at `finish_reason` produces exactly this. Scripts it so a
        * consumer tracking a single open tool call is tested against the shape rather than only
        * against well-nested Anthropic output.
@@ -267,7 +267,7 @@ const exhausted = (index: number, length: number, route: string): AiError.AiErro
     }),
   });
 
-const snippet = (raw: string): string => (raw.length > 160 ? `${raw.slice(0, 160)}…` : raw);
+const snippet = (raw: string): string => (raw.length > 160 ? `${raw.slice(0, 160)}\u2026` : raw);
 
 const unmatched = (request: ScriptedRequest): AiError.AiError =>
   new AiError.AiError({
@@ -382,7 +382,7 @@ const sharedModel = (script: Script): AiService.LanguageModelResolver => {
  * An {@link AiService.AiService} layer whose model, regardless of the requested name, is the
  * scripted model. Pass to `AssistantTestLayer({ aiService })` to drive the agent loop deterministically.
  * With a routed script, every session resolved through the service shares the routes (and their
- * cursors) — the seam that lets one script drive a supervisor and its sub-agents.
+ * cursors) - the seam that lets one script drive a supervisor and its sub-agents.
  */
 export const scriptedAiService = (script: Script): Layer.Layer<AiService.AiService> =>
   Layer.succeed(AiService.AiService, AiService.make({ languageModel: sharedModel(script) }));

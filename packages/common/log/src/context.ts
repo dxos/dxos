@@ -209,7 +209,7 @@ const readErrorContext = (value: unknown): object | undefined =>
     : undefined;
 
 /**
- * Merges scope info, entry context, and error into a single record — preserving nested
+ * Merges scope info, entry context, and error into a single record - preserving nested
  * objects and Error instances so rich consumers (console inspect, devtools) can format them.
  *
  * Prefer {@link LogEntry.computedContext} for serialized / JSON outputs.
@@ -223,8 +223,8 @@ export const getContextFromEntry = (entry: LogEntry): Record<string, any> | unde
     }
   }
 
-  // An error reaches an entry three ways — as `entry.error`, as the call's context, or as a value
-  // inside it — and carries the same `context` in all three. Lifting only the second left callers
+  // An error reaches an entry three ways - as `entry.error`, as the call's context, or as a value
+  // inside it - and carries the same `context` in all three. Lifting only the second left callers
   // hand-lifting the others at every site. Merged before the call's own keys, so those win.
   context = Object.assign(context ?? {}, readErrorContext(entry.error));
 

@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import * as Stage from './Stage.ts';
 
 /**
- * Terminal commit for a pipeline: applies a stage's output value. Keeps stages pure — they emit
+ * Terminal commit for a pipeline: applies a stage's output value. Keeps stages pure - they emit
  * typed `Out` descriptions and the sink performs the side effect (in-memory capture in tests, a
  * database write in production).
  */
@@ -30,11 +30,11 @@ export type RunOptions<Out, E = never, R = never> = {
 
 /**
  * Drain a composed stream to a sink: apply the pipeline-level overflow buffer and run to
- * completion. Cancellation is structural — interrupting the returned effect interrupts the stream
+ * completion. Cancellation is structural - interrupting the returned effect interrupts the stream
  * and all in-flight stage work; there are no daemon fibers to leak. Compose with `pipe`, chaining
  * `Stage` transforms ahead of it: `pipe(source, Stage.map(...), Stage.window(...), Pipeline.run({
  * sink }))`. Mirrors `Stream.runForEach`'s own shape: the sink's `E`/`R` (bound once, from `options`)
- * are kept independent of — and unioned with — the piped-in stream's own `E`/`R`, so the incoming
+ * are kept independent of - and unioned with - the piped-in stream's own `E`/`R`, so the incoming
  * stream's generics aren't forced to unify with the sink's at the call site.
  */
 export const run: {
@@ -60,7 +60,7 @@ export const run: {
  *
  * Races the wrapped effect against the signal; losing the race resolves as a genuine fiber
  * interrupt, which skips every subsequent `yield*`/pipe step in the wrapped effect (an interrupt is
- * not a failure — `Effect.tapError` and friends never see it). `onCancel` runs via `Effect.onInterrupt`
+ * not a failure - `Effect.tapError` and friends never see it). `onCancel` runs via `Effect.onInterrupt`
  * so every caller gets cancellation cleanup (e.g. resetting a progress monitor stuck at its last
  * `running` snapshot) without each one having to remember to add its own `Effect.onInterrupt`.
  */

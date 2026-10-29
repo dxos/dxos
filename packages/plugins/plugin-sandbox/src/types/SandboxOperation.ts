@@ -78,7 +78,7 @@ export const Exec = Operation.make({
     }),
     background: Schema.optional(Schema.Boolean).annotate({
       description:
-        'Start the command and return at once without its output, leaving it running — for a server. EDGE sandboxes only.',
+        'Start the command and return at once without its output, leaving it running - for a server. EDGE sandboxes only.',
     }),
   }),
   output: Schema.Struct({

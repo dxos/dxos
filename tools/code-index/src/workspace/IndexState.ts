@@ -39,7 +39,7 @@ const MAX_MESSAGE = 160;
 
 const firstLine = (message: string): string => {
   const line = message.trim().split('\n')[0] ?? '';
-  return line.length > MAX_MESSAGE ? `${line.slice(0, MAX_MESSAGE - 1)}…` : line;
+  return line.length > MAX_MESSAGE ? `${line.slice(0, MAX_MESSAGE - 1)}...` : line;
 };
 
 /** The state after a phase finished: a `Progress` reports the phase that ended, so this names the next. */
@@ -86,7 +86,7 @@ export const describe = (state: State): string | undefined => {
     case 'Static':
       return undefined;
     case 'Starting':
-      return 'Starting watcher…';
+      return 'Starting watcher...';
     case 'Indexing':
       return `Indexing · ${state.phase} ${state.step}/${state.steps}`;
     case 'UpToDate':

@@ -24,12 +24,12 @@ export type PublishStatus = 'unpublished' | 'published' | 'outOfDate';
 /**
  * The headline state shown by the companion, combining the publication-relative {@link PublishStatus}
  * with network-aware eligibility ({@link PublishInspection}):
- * - `unknown` — eligibility is unverifiable (offline / upstream unreachable); we cannot determine the
+ * - `unknown` - eligibility is unverifiable (offline / upstream unreachable); we cannot determine the
  *   true state, so this overrides `published`/`outOfDate`.
- * - `ineligible` — not published and definitively not publishable (e.g. no catalog link).
- * - `ready` — not published and eligible to publish now.
- * - `published` — published and in sync with what we would publish.
- * - `outOfDate` — published but a Published field has changed locally since.
+ * - `ineligible` - not published and definitively not publishable (e.g. no catalog link).
+ * - `ready` - not published and eligible to publish now.
+ * - `published` - published and in sync with what we would publish.
+ * - `outOfDate` - published but a Published field has changed locally since.
  */
 export type DisplayStatus = 'unknown' | 'ineligible' | 'ready' | 'published' | 'outOfDate';
 
@@ -56,7 +56,7 @@ export const encodeRecord = async (object: Obj.Unknown): Promise<Record<string, 
 
 /**
  * Whether an object may be published right now. An object with no atproto record annotation is not
- * publishable; otherwise its type's optional {@link AtprotoPolicy.canPublish} gate decides (absent ⇒
+ * publishable; otherwise its type's optional {@link AtprotoPolicy.canPublish} gate decides (absent =>
  * eligible). Used by the companion to enable/disable publish and by {@link publishObject} to refuse.
  */
 export const getPublishEligibility = (object: Obj.Unknown): PublishEligibility => {
@@ -133,7 +133,7 @@ type Binding = {
 
 /**
  * Create/replace the object's {@link AtprotoPublication} and stamp its atproto foreign key. The single
- * source of "this object is published to this repo" — shared by publish and import so both leave the
+ * source of "this object is published to this repo" - shared by publish and import so both leave the
  * object in the same, re-publishable state.
  */
 const bindPublication = (
@@ -169,7 +169,7 @@ export type PublishOptions = {
 
 /**
  * Publish (or re-publish) an object's public projection to the connected atproto repo, then bind it.
- * Requires an {@link AtprotoRepo} — tests provide the mock.
+ * Requires an {@link AtprotoRepo} - tests provide the mock.
  */
 export const publishObject = ({
   object,
@@ -251,7 +251,7 @@ export type ImportOptions = {
   policy?: AtprotoPolicy;
   collection: string;
   record: AtprotoRepo.RepoRecord;
-  /** Connection the record belongs to — when present, the import is bound as published to it. */
+  /** Connection the record belongs to - when present, the import is bound as published to it. */
   connection?: Connection.Connection;
   db: Database.Database;
   now?: number;
@@ -260,7 +260,7 @@ export type ImportOptions = {
 /**
  * Import a repo record into the space as a live ECHO object of its mapped type. Always stamps the
  * atproto foreign key (record AT-URI). When a `connection` is given (the record belongs to a
- * connected account), it is additionally bound as an in-sync {@link AtprotoPublication} — so the
+ * connected account), it is additionally bound as an in-sync {@link AtprotoPublication} - so the
  * companion shows it published and a future re-publish overwrites the same record.
  */
 export const importRecord = ({

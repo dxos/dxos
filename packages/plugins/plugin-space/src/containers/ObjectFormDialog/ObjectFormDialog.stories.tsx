@@ -30,7 +30,7 @@ import * as SpaceOperationHandlerSet from '../../operations/SpaceOperationHandle
 import { type ObjectFormHandle, makeObjectFormHandle } from '../../util/index.ts';
 import { ObjectFormDialog } from './ObjectFormDialog.tsx';
 
-/** A child object the bookmark's required ref points at — only the factory below can supply it. */
+/** A child object the bookmark's required ref points at - only the factory below can supply it. */
 class Visits extends Type.makeObject<Visits>(DXN.make('com.example.type.visits', '0.1.0'))(
   Schema.Struct({ count: Schema.optional(Schema.Number) }),
 ) {}
@@ -161,7 +161,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The object exists before the form opens, so the form writes straight through to it — and the
+ * The object exists before the form opens, so the form writes straight through to it - and the
  * seeded defaults are already on it rather than only in the form's state.
  */
 export const LiveEdit: Story = {
@@ -199,7 +199,7 @@ export const LiveCancelled: Story = {
   },
 };
 
-/** Confirming keeps the object and settles the handle with it — what the operation returns. */
+/** Confirming keeps the object and settles the handle with it - what the operation returns. */
 export const LiveConfirmed: Story = {
   play: async () => {
     const body = within(document.body);

@@ -4,25 +4,25 @@
 
 // Local-loopback Google OAuth tool. First run opens the browser for a one-time consent, then saves
 // the refresh token to fixtures/local/.google-token.json (git-ignored) and mints access tokens from
-// it on every subsequent run — no further browser interaction.
+// it on every subsequent run - no further browser interaction.
 //
-// One-time setup — create a Desktop-app OAuth client (Google Cloud Console, https://console.cloud.google.com):
+// One-time setup - create a Desktop-app OAuth client (Google Cloud Console, https://console.cloud.google.com):
 //   1. Create or select a project (top-left project picker).
-//   2. Enable the Gmail API: APIs & Services → Library → search "Gmail API" → Enable.
+//   2. Enable the Gmail API: APIs & Services -> Library -> search "Gmail API" -> Enable.
 //      Or via the CLI (also avoids the console's "insufficient permissions to check enablement" hiccup):
 //        gcloud services enable gmail.googleapis.com --project <PROJECT_ID>
-//   3. Configure the consent screen: APIs & Services → OAuth consent screen → User type "External" →
+//   3. Configure the consent screen: APIs & Services -> OAuth consent screen -> User type "External" ->
 //      fill app name + your email. Add the scope ".../auth/gmail.readonly". Under "Test users", add
 //      your own Google account (while the app stays in "Testing", only test users may consent).
-//   4. Create the client: APIs & Services → Credentials → Create credentials → OAuth client ID →
+//   4. Create the client: APIs & Services -> Credentials -> Create credentials -> OAuth client ID ->
 //      Application type "Desktop app". (A Desktop client trusts the http://localhost loopback
-//      redirect automatically — no redirect URI to register.) Copy the Client ID + Client secret.
+//      redirect automatically - no redirect URI to register.) Copy the Client ID + Client secret.
 //   5. Provide the client id + secret. Easiest: a `.env.tpl` (git-ignored) with 1Password references,
-//      auto-loaded via `op inject` on run — nothing lands in your shell history/rc:
+//      auto-loaded via `op inject` on run - nothing lands in your shell history/rc:
 //        # packages/stories/stories-brain/.env.tpl
 //        export GOOGLE_CLIENT_ID=op://DXOS/google.console.dxos-testing/GOOGLE_CLIENT_ID
 //        export GOOGLE_CLIENT_SECRET=op://DXOS/google.console.dxos-testing/credential
-//      Alternatively export the raw values, or export them as `op://…` refs (resolved with `op read`).
+//      Alternatively export the raw values, or export them as `op://...` refs (resolved with `op read`).
 //
 // Usage:
 //   node scripts/google-auth.mjs            # ensure a refresh token (consent if needed), print status
@@ -46,7 +46,7 @@ const ENV_TEMPLATE = resolve(PACKAGE_ROOT, '.env.tpl');
 /**
  * Populates process.env from `.env.tpl` (git-ignored) by rendering its 1Password references with
  * `op inject`. Existing env values win, so an explicit export overrides the template. A no-op when the
- * template is absent or the `op` CLI is unavailable — the raw-env / op:// paths still apply.
+ * template is absent or the `op` CLI is unavailable - the raw-env / op:// paths still apply.
  */
 const loadEnvTemplate = () => {
   if (!existsSync(ENV_TEMPLATE)) {
@@ -66,7 +66,7 @@ const loadEnvTemplate = () => {
   }
 };
 
-/** Resolves a value that may be a 1Password secret reference (`op://…`) via the `op` CLI. */
+/** Resolves a value that may be a 1Password secret reference (`op://...`) via the `op` CLI. */
 const resolveSecret = (value) => {
   if (!value?.startsWith('op://')) {
     return value;
@@ -75,7 +75,7 @@ const resolveSecret = (value) => {
     return execFileSync('op', ['read', value], { encoding: 'utf8' }).trim();
   } catch (err) {
     throw new Error(
-      `failed to read ${value} from 1Password — is the \`op\` CLI installed and signed in? (${err.message})`,
+      `failed to read ${value} from 1Password - is the \`op\` CLI installed and signed in? (${err.message})`,
     );
   }
 };
@@ -152,7 +152,7 @@ const consent = () =>
       }
     });
     server.listen(REDIRECT_PORT, () => {
-      console.error(`Opening browser for consent (listening on ${REDIRECT_URI}) …`);
+      console.error(`Opening browser for consent (listening on ${REDIRECT_URI}) ...`);
       openBrowser(authUrl);
     });
   });
@@ -216,7 +216,7 @@ export const getAccessToken = async ({ force = false } = {}) => {
   if (!saved?.refresh_token) {
     const tokens = await consent();
     if (!tokens.refresh_token) {
-      die('no refresh_token returned — revoke prior access at myaccount.google.com and retry with --force.');
+      die('no refresh_token returned - revoke prior access at myaccount.google.com and retry with --force.');
     }
     saved = tokens;
     saveToken(tokens);
@@ -236,7 +236,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (printToken) {
       process.stdout.write(token);
     } else {
-      console.error('OK — access token acquired (use --token to print it for piping).');
+      console.error('OK - access token acquired (use --token to print it for piping).');
     }
   }
 }

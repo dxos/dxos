@@ -31,7 +31,7 @@ import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken, resolveDiscor
  * Manual-credential form for the Discord Bot connector.
  *
  * Collects a bot token directly because bot auth is outside the normal OAuth
- * flow — the user creates an application in the Discord developer portal,
+ * flow - the user creates an application in the Discord developer portal,
  * grabs the bot token, and invites the bot to their guild. `generateInviteUrl`
  * in `constants.ts` surfaces the invite link.
  */
@@ -48,8 +48,8 @@ const DiscordTokenForm = Schema.Struct({
  * Validate the pasted token against `GET /users/@me` before letting the
  * coordinator persist the Connection.
  *
- * Doing this here (rather than waiting for first sync) means a wrong token —
- * pasted Application ID, expired token, regenerated token — fails the form
+ * Doing this here (rather than waiting for first sync) means a wrong token -
+ * pasted Application ID, expired token, regenerated token - fails the form
  * with a clear message instead of silently creating a Connection that 401s
  * on every later operation. As a bonus we already have the bot's identity,
  * so we populate `accessToken.account` inline and skip the `onTokenCreated`
@@ -68,7 +68,7 @@ const validateToken = (token: string) =>
         });
       }
       // Preserve Discord's code/message for 403/404/5xx etc. via formatDiscordSyncFailure
-      // — `String(error)` would collapse a dfx tagged error to its `_tag` string.
+      // - `String(error)` would collapse a dfx tagged error to its `_tag` string.
       return error instanceof Error ? error : new DiscordSyncError({ message: formatDiscordSyncFailure(error) });
     }),
   );
@@ -156,8 +156,8 @@ const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
 
 /**
  * Contributes two `ConnectorSpec.Connector` entries for Discord:
- * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
- * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
+ * - `discord` - bot token (manual credential form, syncs guild channels the bot was invited to)
+ * - `discord-user` - OAuth user token (syncs guild channels the user is a member of)
  *
  * Both connectors share the same `GetDiscordChannels` discovery,
  * `materializeTarget` (empty feed-backed Channel per remote channel), and

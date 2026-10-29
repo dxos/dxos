@@ -32,7 +32,7 @@ const getIframeSandbox = (): string => {
     : IFRAME_SANDBOX);
 };
 
-/** Cloudflare Stream `/iframe` embeds: `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`. */
+/** Cloudflare Stream `/iframe` embeds: `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?...]`. */
 const CLOUDFLARE_STREAM_IFRAME_PATTERN =
   /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\/[a-f0-9]{32}\/iframe(?:[/?#]|$)/i;
 

@@ -12,11 +12,11 @@ import { join, resolve } from 'path';
 //
 // Packs the CLI with `npm pack`, installs it from the tarballs, and hands the result to
 // verify-installed.mjs. Every defect that made @dxos/cli@0.10.0 unrunnable was invisible to tests that
-// exercise the source tree; this covers the tarball itself — file modes, the `files` array, the launcher's
+// exercise the source tree; this covers the tarball itself - file modes, the `files` array, the launcher's
 // platform mapping and its `require.resolve`.
 //
 // What it cannot cover is a binary that resolves a path at bundle time, because that path still resolves on
-// the machine that built it — which is where both this test and CI run it. `--hide` approximates a foreign
+// the machine that built it - which is where both this test and CI run it. `--hide` approximates a foreign
 // machine via a mount namespace where the kernel permits it, and the `cli-foreign` CI job is the real
 // article. Both call the same verifier so the checks cannot drift apart.
 //
@@ -52,7 +52,7 @@ const AUTOMERGE_NODE_WASM_ENTRY = 'wasm_bindgen_output/nodejs';
 const binaryBytes = Buffer.from(await Bun.file(join(platformDir, binaryName)).bytes());
 if (binaryBytes.includes(AUTOMERGE_NODE_WASM_ENTRY)) {
   console.error(`[Smoke] ${binaryName} references "${AUTOMERGE_NODE_WASM_ENTRY}", read from disk at runtime.`);
-  console.error("[Smoke] That path is the build machine's — redirect the package in scripts/build.ts.");
+  console.error("[Smoke] That path is the build machine's - redirect the package in scripts/build.ts.");
   process.exit(1);
 }
 
@@ -71,7 +71,7 @@ const run = (command: string, args: string[], cwd: string) => {
   return result;
 };
 
-// `npm pack` (not `pnpm pack`) — the packer must be the one `scripts/publish.ts` uses, because
+// `npm pack` (not `pnpm pack`) - the packer must be the one `scripts/publish.ts` uses, because
 // pnpm's strips file modes and that difference is exactly what this test guards.
 const pack = (dir: string): string => {
   const result = run('npm', ['pack', '--silent', '--pack-destination', scratch], dir);
@@ -83,13 +83,13 @@ const platformTarball = pack(platformDir);
 const mainTarball = pack(mainDir);
 
 // Install both tarballs side by side. `--omit=optional` skips the registry lookup for the
-// platform packages declared in optionalDependencies — this version isn't published yet, and
+// platform packages declared in optionalDependencies - this version isn't published yet, and
 // the tarball installed alongside is what `require.resolve` finds.
 console.log('[Smoke] Installing tarballs...');
 writeFileSync(join(scratch, 'package.json'), JSON.stringify({ name: 'dx-smoke', private: true }, null, 2));
 run('npm', ['install', '--no-audit', '--no-fund', '--omit=optional', platformTarball, mainTarball], scratch);
 
-// The checks themselves live in verify-installed.mjs, which the `cli-foreign` CI job also runs — on a
+// The checks themselves live in verify-installed.mjs, which the `cli-foreign` CI job also runs - on a
 // machine with no checkout, where the tree that built the binary is genuinely absent. One copy, two
 // environments; `--hide` approximates the second one here when the kernel permits it.
 const verify = spawnSync(process.execPath, [resolve('scripts/verify-installed.mjs'), scratch, '--hide', nodeModules], {

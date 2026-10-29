@@ -13,7 +13,7 @@ import * as File from './File.ts';
 import * as Milestone from './Milestone.ts';
 import * as Task from './Task.ts';
 
-/** A task's change entries — the ones that carry a `description`. */
+/** A task's change entries - the ones that carry a `description`. */
 const changes = (task: Task.Task): Task.ChangeEntry[] => (task.history ?? []).filter(Task.isChangeEntry);
 
 /** A task whose `subtasks` own `children`, so their parent edges point at it. */
@@ -237,7 +237,7 @@ describe('completion', () => {
       const unreviewed = yield* Database.add(Task.make({ title: 'Unreviewed', status: 'started' }));
       yield* Database.flush();
 
-      // Every writer asks for `done` — the agent tools, the list's checkbox — and none of them know
+      // Every writer asks for `done` - the agent tools, the list's checkbox - and none of them know
       // about reviewers, so the rule is on the write itself.
       Task.setStatus(reviewed, 'done');
       Task.setStatus(unreviewed, 'done');
@@ -260,7 +260,7 @@ describe('completion', () => {
       yield* Database.flush();
 
       // What a session does: it asks for `done`, sees the task is not done, and asks again. Exempting
-      // `review → done` let the second call close it, which is the reviewer's move, not the worker's.
+      // `review -> done` let the second call close it, which is the reviewer's move, not the worker's.
       Task.setStatus(task, 'done');
       yield* Database.flush();
       expect(task.status).toEqual('review');

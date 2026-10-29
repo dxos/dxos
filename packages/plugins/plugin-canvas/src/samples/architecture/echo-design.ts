@@ -65,7 +65,7 @@ export const makeEchoBenchmarks = (): Sheet.Sheet => {
   return sheet;
 };
 
-/** The objects the design document embeds, by the name its `{{…}}` placeholders use. */
+/** The objects the design document embeds, by the name its `{{...}}` placeholders use. */
 export type EchoDesignEmbeds = Readonly<Record<string, Drawing.Drawing | Sheet.Sheet>>;
 
 const PLACEHOLDER = /\{\{([a-z-]+)\}\}/g;

@@ -27,7 +27,7 @@ const matrixFor = ({ state, definition }: SimObject, heading: number): Matrix =>
   const position = scale(state.unit, state.radius);
   const { right, up, forward } = objectFrame(state, heading);
   // Build the rotation from an explicit left-handed basis rather than `FromLookDirectionLH`, which
-  // returns a view-style rotation that lands the mesh's local +Z on -forward — i.e. every object
+  // returns a view-style rotation that lands the mesh's local +Z on -forward - i.e. every object
   // flies tail-first. Mapping local X/Y/Z onto right/up/forward is unambiguous.
   const basis = new Matrix();
   Matrix.FromXYZAxesToRef(right, up, forward, basis);
@@ -55,7 +55,7 @@ export class ObjectLayer {
     for (const kind of KINDS) {
       const base = createObjectForm(kind, options.scene);
       // Babylon only recomputes a thin-instance mesh's bounding box inside `thinInstanceSetBuffer`,
-      // which `update` calls only when the instance count changes — so the box otherwise stays
+      // which `update` calls only when the instance count changes - so the box otherwise stays
       // frozen wherever the objects were on that frame. Once they have moved on, a camera that no
       // longer sees the stale box culls the whole kind, which is why a followed object could vanish
       // from a close-up camera. Refreshing every frame would walk every instance for a cull that
@@ -67,7 +67,7 @@ export class ObjectLayer {
 
   /**
    * The heading `definition` was last drawn at, or `undefined` before its first frame. Lets another
-   * consumer — the chase camera — orient off exactly the heading the mesh is rendered at, rather
+   * consumer - the chase camera - orient off exactly the heading the mesh is rendered at, rather
    * than `state.bearing`, which the easing lags behind through every turn.
    */
   renderHeading(definition: TerraObject.TerraObject): number | undefined {
@@ -86,7 +86,7 @@ export class ObjectLayer {
     return heading;
   }
 
-  /** `deltaMs` is real (wall-clock) time since the previous frame, driving turn-rate easing only — never the sim clock. */
+  /** `deltaMs` is real (wall-clock) time since the previous frame, driving turn-rate easing only - never the sim clock. */
   update(objects: readonly SimObject[], deltaMs: number): void {
     const byKind = new Map<TerraObject.Kind, SimObject[]>(KINDS.map((kind) => [kind, []]));
     const live = new Set<TerraObject.TerraObject>();
@@ -99,7 +99,7 @@ export class ObjectLayer {
       live.add(object.definition);
     }
 
-    // Drops headings for objects no longer simulated — removed, or orphaned by a freshly rebuilt SimEngine.
+    // Drops headings for objects no longer simulated - removed, or orphaned by a freshly rebuilt SimEngine.
     for (const definition of this.#headings.keys()) {
       if (!live.has(definition)) {
         this.#headings.delete(definition);
@@ -128,7 +128,7 @@ export class ObjectLayer {
         group.forEach((object, index) =>
           matrixFor(object, this.#headingFor(object, deltaMs)).copyToArray(buffer, index * 16),
         );
-        // `staticBuffer: false` is load-bearing — Babylon builds the GPU buffer with
+        // `staticBuffer: false` is load-bearing - Babylon builds the GPU buffer with
         // `updatable = !staticBuffer`, so a static buffer silently ignores every later
         // `thinInstanceBufferUpdated` and the objects render frozen at their first position.
         base.thinInstanceSetBuffer('matrix', buffer, 16, false);

@@ -26,7 +26,7 @@ describe('surface dispositions', () => {
   });
 
   // What lets dictation sit in a document toolbar and a chat prompt while commenting stays in the
-  // toolbar alone — the two surfaces act on different things, so opting into one must not opt into
+  // toolbar alone - the two surfaces act on different things, so opting into one must not opt into
   // the other.
   test('an action reaches both when it names both', ({ expect }) => {
     const both = action(['toolbar', 'prompt']);

@@ -149,11 +149,11 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.lineWrapping && EditorView.lineWrapping,
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
-    // `EditorState.readOnly` is advisory — CodeMirror doesn't auto-reject doc-changing
+    // `EditorState.readOnly` is advisory - CodeMirror doesn't auto-reject doc-changing
     // transactions. Some extensions (e.g. `@codemirror/lang-markdown`'s Enter handler that
     // continues a list) dispatch programmatic edits regardless. Drop user-initiated edits
     // (`input` / `delete` keymap dispatches plus `undo` / `redo` from the history extension)
-    // but pass programmatic dispatches — streaming `MarkdownStream` and similar consumers
+    // but pass programmatic dispatches - streaming `MarkdownStream` and similar consumers
     // depend on being able to populate the doc themselves.
     props.readOnly &&
       EditorState.transactionFilter.of((tr) =>

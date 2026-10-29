@@ -28,7 +28,7 @@ import * as Memory from '../types/Memory.ts';
 
 /**
  * Shared layer for operation tests: every handler in the package plus the types those handlers
- * touch, with no language model. Defined once so a `.test.ts` per handler does not restate it —
+ * touch, with no language model. Defined once so a `.test.ts` per handler does not restate it -
  * handler sets are lazy, so registering all of them costs nothing until one is invoked.
  */
 export const OperationTestLayer = AssistantTestLayerWithTriggers({

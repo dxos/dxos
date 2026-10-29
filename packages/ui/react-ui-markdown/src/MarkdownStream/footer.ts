@@ -10,7 +10,7 @@ import { typewriterDrainingEffect } from '@dxos/ui-editor';
 
 /**
  * Host-controlled visibility intent. The footer block widget is rendered only when this is
- * `true` AND typewriter is not actively draining its typewriter buffer — the latter is observed
+ * `true` AND typewriter is not actively draining its typewriter buffer - the latter is observed
  * through {@link typewriterDrainingEffect}. Removing the decoration during a drip avoids the
  * scroll-measure conflict between CM's view-line model and the floating absolute child.
  */
@@ -30,7 +30,7 @@ type FooterState = {
  *
  * Toggle the host-intent visibility via {@link setFooterVisibleEffect}. The widget is also
  * automatically removed while {@link typewriterDrainingEffect} reports `true` and re-mounted
- * once the typewriter's buffer drains — this prevents the block widget from interfering with CM's
+ * once the typewriter's buffer drains - this prevents the block widget from interfering with CM's
  * view-line measurement during the typewriter drip.
  *
  * For pure doc edits (no visibility transition), the decoration's position is mapped
@@ -85,7 +85,7 @@ class FooterWidget extends WidgetType {
     super();
   }
 
-  // Singleton equality so CM keeps the same DOM element across decoration rebuilds —
+  // Singleton equality so CM keeps the same DOM element across decoration rebuilds -
   // the React subtree portaled into it is not unmounted on every doc change.
   override eq(_other: this): boolean {
     return true;
@@ -98,7 +98,7 @@ class FooterWidget extends WidgetType {
   override toDOM(): HTMLElement {
     // The outer block-widget element is `position: relative` with zero flow height so it
     // does not push the document layout (autoScroll, line measurement, etc. ignore it).
-    // The inner element is `position: absolute`, taking the React subtree out of flow — it
+    // The inner element is `position: absolute`, taking the React subtree out of flow - it
     // renders as a floating layer anchored to the doc tail without consuming space.
     const inner = Domino.of('div')
       .classNames('cm-stream-footer-content')

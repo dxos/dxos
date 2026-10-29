@@ -104,7 +104,7 @@ const STOP_WORDS = new Set([
   'your',
 ]);
 
-/** Topical vocabulary of a message: lowercased content words (≥ 4 chars, non-stopword). */
+/** Topical vocabulary of a message: lowercased content words (>= 4 chars, non-stopword). */
 export const salientTokens = (text: string): Set<string> => {
   const tokens = new Set<string>();
   for (const raw of text.toLowerCase().match(/[a-z0-9][a-z0-9_.-]{3,}/g) ?? []) {
@@ -174,7 +174,7 @@ const join = (topic: OpenTopic, message: MessageStore.StoredMessage, at: number,
 
 /**
  * Affinity of a message for an open topic: @mentions of topic participants are the strongest
- * conversational signal (asker ↔ answerer), shared vocabulary carries subject continuity, and an
+ * conversational signal (asker <-> answerer), shared vocabulary carries subject continuity, and an
  * author already in the topic gets a small continuation bias. `tokens`/`mentions` are computed once
  * per message by the caller and reused across every open topic (avoiding O(M×N) recomputation).
  */
@@ -219,7 +219,7 @@ const toSegment = (topic: OpenTopic, threadId?: string): TopicSegment => ({
  * Segment one target's chronological messages into topics. A subthread target is a single topic
  * spanning the whole conversation. On a main channel several topics can be open concurrently
  * (interleaved conversations): a message joins by reply link first (which can revive a closed
- * topic), then by affinity against topics still inside the session gap — a newcomer who replies
+ * topic), then by affinity against topics still inside the session gap - a newcomer who replies
  * to / mentions / lexically continues an open topic joins it, anything else starts a new topic.
  * Pure and deterministic: no LLM, evaluable against hand-labeled fixtures.
  */

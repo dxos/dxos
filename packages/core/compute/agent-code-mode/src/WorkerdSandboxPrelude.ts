@@ -6,7 +6,7 @@
  * The facade the model's code runs against inside a loaded isolate.
  *
  * Emitted as SOURCE rather than imported, because the isolate is a separate runtime with its own
- * module graph — nothing from this process can be handed to it except text. Every binding here is
+ * module graph - nothing from this process can be handed to it except text. Every binding here is
  * a call home: the isolate holds no database, only snapshots and the ids that name the real
  * objects on the host.
  */
@@ -34,7 +34,7 @@ const add = (obj) => __call('add', [obj]);
 const remove = (obj) => __call('remove', [obj]);
 const flush = () => __call('flush', []);
 
-// The mutator cannot cross — a function is not structured-cloneable — so it is applied HERE to the
+// The mutator cannot cross - a function is not structured-cloneable - so it is applied HERE to the
 // snapshot and the resulting field changes are what travel. The model still writes the ordinary
 // \`update(obj, (obj) => { obj.x = 1 })\`, and the snapshot is updated in place so later reads in
 // the same program see the write.

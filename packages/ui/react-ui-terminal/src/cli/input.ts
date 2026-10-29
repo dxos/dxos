@@ -73,7 +73,7 @@ const matchEscapeSequence = (data: string, index: number): { name: string; lengt
 const unrecognizedEscapeLength = (data: string, index: number): number => {
   const introducer = data[index];
   if (introducer === '[') {
-    // CSI: parameter and intermediate bytes up to a final byte in `@`–`~`.
+    // CSI: parameter and intermediate bytes up to a final byte in `@`-`~`.
     let end = index + 1;
     while (end < data.length && !(data[end] >= '@' && data[end] <= '~')) {
       end += 1;

@@ -8,7 +8,7 @@ import { type FieldExtractor, type ResultMapping } from '../types/Provider.ts';
 import { structureCandidates } from './summarizeStructure.ts';
 
 /**
- * Derive a complete, working {@link ResultMapping} directly from a rendered listings page — the
+ * Derive a complete, working {@link ResultMapping} directly from a rendered listings page - the
  * deterministic fallback when an LLM-authored mapping extracts nothing. Walks the ranked repeating
  * containers and, for the first that yields a titled row, picks robust per-field selectors (title /
  * url / image) by probing the card's own DOM. Returns `undefined` if no titled container is found.

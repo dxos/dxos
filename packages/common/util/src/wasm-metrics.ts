@@ -56,7 +56,7 @@ const origin = (): string => {
     .filter((url): url is string => url !== undefined)
     .map((url) => url.split('?')[0]);
   // The first located frame is this module's own, whatever bundle it was inlined into, so the
-  // caller is the first frame from a DIFFERENT file — a fixed frame count gets this wrong as soon
+  // caller is the first frame from a DIFFERENT file - a fixed frame count gets this wrong as soon
   // as the probe is bundled with the code it measures.
   const strip = (url: string) => url.replace(/:\d+:\d+$/, '');
   const own = located[0] === undefined ? undefined : strip(located[0]);
@@ -90,7 +90,7 @@ const track = (memory: WebAssembly.Memory, where: string): void => {
   memories.add({ where, ref: new WeakRef(memory) });
 };
 
-/** Every `WebAssembly.Memory` an instance exports — where a wasm-bindgen or Emscripten build keeps it. */
+/** Every `WebAssembly.Memory` an instance exports - where a wasm-bindgen or Emscripten build keeps it. */
 const trackExports = (instance: WebAssembly.Instance, where: string): void => {
   for (const exported of Object.values(instance.exports)) {
     if (exported instanceof WebAssembly.Memory) {
@@ -102,7 +102,7 @@ const trackExports = (instance: WebAssembly.Instance, where: string): void => {
 /**
  * Every `WebAssembly.Memory` passed IN through the import object.
  *
- * A module can take its memory rather than export it — an Emscripten build with pthreads does —
+ * A module can take its memory rather than export it - an Emscripten build with pthreads does -
  * and that memory is never visible on `instance.exports`, so tracking exports alone would report
  * zero bytes for a module holding hundreds of megabytes.
  */
@@ -120,7 +120,7 @@ const trackImports = (imports: WebAssembly.Imports | undefined, where: string): 
  * Bytes of wasm linear memory live in this realm right now.
  *
  * `buffer.byteLength` rather than a remembered size, because `memory.grow()` replaces the buffer
- * and a wasm heap only ever grows — the number this returns is the one that never comes back down,
+ * and a wasm heap only ever grows - the number this returns is the one that never comes back down,
  * which is the whole reason it is worth a column.
  */
 export const getWasmMemoryStats = (): WasmMemoryStats => {
@@ -149,13 +149,13 @@ export const getWasmMemoryStats = (): WasmMemoryStats => {
  * Starts counting wasm linear memory in this realm, and publishes the reader.
  *
  * **Call it before the realm's first wasm module loads.** It works by wrapping instantiation, so a
- * module already compiled when this runs is invisible to it — which is what `instances` exists to
+ * module already compiled when this runs is invisible to it - which is what `instances` exists to
  * make visible.
  *
  * Wrapping instantiation rather than reading a per-library handle, because every wasm the app
  * loads (automerge, subduction, SQLite) goes through these two functions and none of them exposes
  * its memory on a stable API. Idempotent, and the cost is one `Object.values` walk per module
- * instantiated — a few per realm, for the lifetime of the realm.
+ * instantiated - a few per realm, for the lifetime of the realm.
  *
  * Nothing in CDP counts this memory: `Runtime.getHeapUsage` reports the JS heap, and wasm linear
  * memory is outside it. Process RSS covers it and cannot be split by realm.
@@ -207,7 +207,7 @@ export const installWasmMemoryProbe = (): void => {
   };
 
   // The constructor too, because a memory built in JS and handed to a module through its imports
-  // is the one route neither instantiation hook sees on its own — an Emscripten pthreads build
+  // is the one route neither instantiation hook sees on its own - an Emscripten pthreads build
   // does exactly that, and its memory is never on `instance.exports`.
   const memory = new Proxy(WebAssembly.Memory, {
     // `newTarget` forwarded, so a class extending `WebAssembly.Memory` is constructed against its

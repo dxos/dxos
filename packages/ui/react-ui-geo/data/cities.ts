@@ -179,7 +179,7 @@ export default {
       type: 'Feature',
       properties: {
         pop_max: 11294000,
-        name: 'Ōsaka',
+        name: '\u014Csaka',
         adm0name: 'Japan',
       },
       geometry: {

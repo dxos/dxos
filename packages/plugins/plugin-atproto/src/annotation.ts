@@ -49,7 +49,7 @@ export type FieldPublishFlag = {
 
 /**
  * The visibility annotation set anywhere on a property's type, if any. Optional fields wrap the value
- * type in a `Union(X, undefined)` — and transformations nest it further — so an annotation
+ * type in a `Union(X, undefined)` - and transformations nest it further - so an annotation
  * applied to the value schema before `Schema.optional` sits below `property.type`, not on it. Search
  * through those wrappers so annotations on optional fields are recognized.
  */

@@ -27,7 +27,7 @@ const EMPLOYED = 200;
 const PAGE_SIZE = 100;
 
 /**
- * Counts the queries that hold at least one subscriber — what the worker's QueryService keeps live.
+ * Counts the queries that hold at least one subscriber - what the worker's QueryService keeps live.
  * A proxy rather than a spy on `db.query`: the model takes the database by reference, and results are
  * shared per query, so a result is counted once however many atoms subscribe to it.
  */

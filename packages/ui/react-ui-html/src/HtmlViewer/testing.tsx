@@ -14,7 +14,7 @@ import m2 from './fixtures/m2.html?raw';
 import m3 from './fixtures/m3.html?raw';
 
 //
-// Sandbox samples — exercise `Html` itself, with no dialect.
+// Sandbox samples - exercise `Html` itself, with no dialect.
 //
 
 /** Aggressive selectors that would restyle the app if the content were not in a shadow root. */
@@ -28,7 +28,7 @@ export const HOSTILE_CSS = trim`
 
 /**
  * Declares its own dark rendering. NOTE: DOMPurify strips `<style>`, so the authored rules never reach
- * the shadow root and this currently renders unstyled in both panes — the story exists to make that
+ * the shadow root and this currently renders unstyled in both panes - the story exists to make that
  * visible (see DESIGN.md §2, Gap A), not to demonstrate a working rewrite.
  */
 export const AUTHORED_DARK = trim`
@@ -75,16 +75,16 @@ Sam
 `;
 
 //
-// Email samples — exercise the email dialect.
+// Email samples - exercise the email dialect.
 //
 
-/** A simple/personal email (no layout tables) — recolored to the app theme so it reads in light/dark. */
+/** A simple/personal email (no layout tables) - recolored to the app theme so it reads in light/dark. */
 export const PERSONAL_EMAIL = trim`
   <div style="color:#202124;font-family:Georgia,serif">
     <p>Hi team,</p>
     <p>Following up on the
       <a href="https://example.com" style="color:#1a73e8">proposal</a>
-      from last week — a couple of notes inline below.</p>
+      from last week - a couple of notes inline below.</p>
     <blockquote style="color:#5f6368;border-left:3px solid #dadce0;padding-left:12px">
       Can we ship the first cut by Friday?
     </blockquote>
@@ -95,7 +95,7 @@ export const PERSONAL_EMAIL = trim`
 /**
  * A marketing email built from layout tables with intentional brand colors. Undeclared bodies are
  * recolored regardless of layout now, so this shows how the brand's own colored header and button
- * survive that pass — `stripContentBackgrounds` drops only *light* backgrounds.
+ * survive that pass - `stripContentBackgrounds` drops only *light* backgrounds.
  */
 export const MARKETING_EMAIL = trim`
   <table width="100%" style="background:#ffffff"><tr><td align="center">
@@ -114,14 +114,14 @@ export const MARKETING_EMAIL = trim`
   </td></tr></table>
 `;
 
-/** A reply whose quoted history (Gmail's `.gmail_quote`) is collapsed behind the "•••" toggle. */
+/** A reply whose quoted history (Gmail's `.gmail_quote`) is collapsed behind the "***" toggle. */
 export const REPLY_EMAIL = trim`
   <div style="color:#202124;font-family:Arial">
-    <p>Sounds good — I'll have the draft ready by Thursday.</p>
+    <p>Sounds good - I'll have the draft ready by Thursday.</p>
     <div class="gmail_quote">
       <div class="gmail_attr">On Mon, Jul 6, 2026 at 9:14 AM Alex &lt;alex@example.com&gt; wrote:</div>
       <blockquote class="gmail_quote" style="margin:0 0 0 .8ex;border-left:1px solid #ccc;padding-left:1ex">
-        <p>Hi — can we get the first cut of the proposal by end of week?</p>
+        <p>Hi - can we get the first cut of the proposal by end of week?</p>
         <p>Thanks,<br/>Alex</p>
       </blockquote>
     </div>
@@ -131,7 +131,7 @@ export const REPLY_EMAIL = trim`
 /**
  * The near-universal email call-to-action: a painted `<td>` wrapping a bare `<a>` whose only styling is
  * a light label. The anchor carries no background of its own, so a check of its inline style alone
- * misses it and the accent override rewrites the label — blue on blue.
+ * misses it and the accent override rewrites the label - blue on blue.
  */
 export const BUTTON_EMAIL = trim`
   <table><tr>
@@ -154,11 +154,11 @@ export type Sample = { html: string; note: string };
 export const EMAIL_SAMPLES: Record<string, Sample> = {
   personal: {
     html: PERSONAL_EMAIL,
-    note: 'Simple body, no tables — recolored to the app theme.',
+    note: 'Simple body, no tables - recolored to the app theme.',
   },
   reply: {
     html: REPLY_EMAIL,
-    note: 'Quoted history collapsed behind the "•••" toggle.',
+    note: 'Quoted history collapsed behind the "***" toggle.',
   },
   button: {
     html: BUTTON_EMAIL,
@@ -166,7 +166,7 @@ export const EMAIL_SAMPLES: Record<string, Sample> = {
   },
   marketing: {
     html: MARKETING_EMAIL,
-    note: 'Layout tables — recolored; intentional colored backgrounds are kept.',
+    note: 'Layout tables - recolored; intentional colored backgrounds are kept.',
   },
   m1: {
     html: m1,
@@ -174,22 +174,22 @@ export const EMAIL_SAMPLES: Record<string, Sample> = {
   },
   m2: {
     html: m2,
-    note: 'Captured: declares color-scheme light — the sender has no dark rendering.',
+    note: 'Captured: declares color-scheme light - the sender has no dark rendering.',
   },
   m3: {
     html: m3,
-    note: 'Captured: declares light dark and ships dark rules — which sanitization strips, so it recolors.',
+    note: 'Captured: declares light dark and ships dark rules - which sanitization strips, so it recolors.',
   },
 };
 
 export const SANDBOX_SAMPLES: Record<string, Sample> = {
   hostile: {
     html: HOSTILE_CSS,
-    note: 'Sender CSS targeting `*` — contained by the shadow root.',
+    note: 'Sender CSS targeting `*` - contained by the shadow root.',
   },
   authoredDark: {
     html: AUTHORED_DARK,
-    note: 'Ships its own dark rules — currently dropped by sanitization; see DESIGN.md Gap A.',
+    note: 'Ships its own dark rules - currently dropped by sanitization; see DESIGN.md Gap A.',
   },
   remoteImage: {
     html: REMOTE_IMAGE,
@@ -197,7 +197,7 @@ export const SANDBOX_SAMPLES: Record<string, Sample> = {
   },
   unloadableImages: {
     html: UNLOADABLE_IMAGES,
-    note: 'Linked, protocol-relative and unresolvable cid: images — hidden, never drawn broken.',
+    note: 'Linked, protocol-relative and unresolvable cid: images - hidden, never drawn broken.',
   },
   plaintext: {
     html: PLAINTEXT,
@@ -213,14 +213,14 @@ export const SANDBOX_SAMPLES: Record<string, Sample> = {
  * One body rendered in a pinned theme, regardless of the storybook theme global. Both the DOM class
  * (which resolves the `--color-*` custom properties the transforms probe) and the React `ThemeProvider`
  * are set, since `Html` reads the mode from context while the color probe reads computed values off the
- * DOM — they have to agree.
+ * DOM - they have to agree.
  */
 export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: ReactNode }) => {
   const { tx } = Theme.useThemeContext();
   return (
-    // `colorScheme` is what actually switches the palette: the theme's tokens are `light-dark(…)`, which
+    // `colorScheme` is what actually switches the palette: the theme's tokens are `light-dark(...)`, which
     // resolves against the computed `color-scheme`, and only `.dark` sets it (there is no `.light` rule)
-    // — so a `light` pane inside a dark storybook would otherwise inherit dark and both panes would match.
+    // - so a `light` pane inside a dark storybook would otherwise inherit dark and both panes would match.
     // The class stays for rules scoped to `.dark`.
     <div className={mode} style={{ colorScheme: mode }}>
       <Theme.Provider tx={tx} themeMode={mode}>

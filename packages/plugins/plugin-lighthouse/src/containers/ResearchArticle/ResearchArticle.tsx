@@ -126,9 +126,9 @@ const Meters = ({ session, connected }: { session: Session; connected: boolean }
   const seconds = String(Math.round(spent.seconds % 60)).padStart(2, '0');
   return (
     <Layout.Flex gap='sm' wrap align='center' classNames='text-xs text-fg-muted tabular-nums' role='status'>
-      <span>{t('meter-pages.label', { spent: spent.pages, limit: budget.pages ?? '∞' })}</span>
-      <span>{t('meter-cost.label', { spent: spent.usd.toFixed(3), limit: budget.usd?.toFixed(2) ?? '∞' })}</span>
-      <span>{t('meter-time.label', { spent: `${minutes}:${seconds}`, limit: budget.minutes ?? '∞' })}</span>
+      <span>{t('meter-pages.label', { spent: spent.pages, limit: budget.pages ?? '\u221E' })}</span>
+      <span>{t('meter-cost.label', { spent: spent.usd.toFixed(3), limit: budget.usd?.toFixed(2) ?? '\u221E' })}</span>
+      <span>{t('meter-time.label', { spent: `${minutes}:${seconds}`, limit: budget.minutes ?? '\u221E' })}</span>
       <TagChip hue={session.busy ? 'amber' : session.status === 'failed' ? 'red' : 'neutral'}>
         {t(`status.${session.status}`)}
       </TagChip>
@@ -237,7 +237,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   const applied = useMemo(() => applyView(ranked, resultsView, viewContext), [ranked, resultsView, viewContext]);
   const filtering = (resultsView.filters ?? []).some(isActive);
   const activeFilters = (resultsView.filters ?? []).filter(isActive).length;
-  // Sorted by the person (area, price…), the picks join the sorted list, still marked, instead of leading it.
+  // Sorted by the person (area, price...), the picks join the sorted list, still marked, instead of leading it.
   const ownSort = !!resultsView.sort && resultsView.sort.by !== 'score';
   const passing = useMemo(() => new Set(applied.results.map((entity) => entity.id)), [applied]);
 

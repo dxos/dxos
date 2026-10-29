@@ -14,7 +14,7 @@ import { type GitHubHttpMock, PULL_REQUEST_FIXTURE, installGitHubMock } from './
  * The automated arm of `test QA-3` in plugin-github's `PLUGIN.mdl`. What it covers that a unit test
  * cannot: the descriptor a plugin contributes is serializable and reaches the wire, the invoke
  * handler resolves the active space on its own, and the operation the descriptor names imports the
- * pull request its URL points at — with no GitHub connection configured, so the import takes the
+ * pull request its URL points at - with no GitHub connection configured, so the import takes the
  * anonymous path. GitHub itself is mocked at the HTTP boundary by default; see `github-http-mock.ts`.
  */
 
@@ -102,7 +102,7 @@ test.describe('Extension page actions', () => {
 
     const ack = await invoke();
     // The page reports operation failures by code alone; the cause only reaches the console.
-    expect(ack.error, `ack failed — console: ${host.recentConsoleErrors(8)}`).toBeUndefined();
+    expect(ack.error, `ack failed - console: ${host.recentConsoleErrors(8)}`).toBeUndefined();
     expect(ack.ok).toBe(true);
     expect(ack.objectId).toBeTruthy();
 
@@ -111,7 +111,7 @@ test.describe('Extension page actions', () => {
     const pullRequest = await host.page.evaluate(async (id) => {
       for (const space of globalThis.dxos?.spaces?.() ?? []) {
         // A ref into a space that does not hold the object is dangling, and a dangling load never
-        // settles — so each space gets a bounded turn rather than the test's whole budget.
+        // settles - so each space gets a bounded turn rather than the test's whole budget.
         const object = await Promise.race([
           space.db.makeRef(`echo:///${id}`).load(),
           new Promise<undefined>((resolve) => setTimeout(resolve, 5_000)),

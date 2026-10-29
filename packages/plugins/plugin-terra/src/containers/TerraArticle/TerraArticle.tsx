@@ -30,7 +30,7 @@ type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };
 
 /**
  * Which view the article shows: the orbiting 3D planet, the 2D map from above, or the chase camera
- * riding a chosen object. `'camera'` shares the 3D canvas with `'scene'` — only the active camera
+ * riding a chosen object. `'camera'` shares the 3D canvas with `'scene'` - only the active camera
  * differs.
  */
 type ViewMode = 'scene' | 'map' | 'camera';
@@ -45,15 +45,15 @@ const resolveDefinitions = (terra: Terra.Terra): TerraObject.TerraObject[] =>
     .map((ref) => ref.target)
     .filter((definition): definition is TerraObject.TerraObject => definition != null);
 
-/** A `SimEngine` over `definitions`, with a nav grid freshly built for `values` — the grid depends on the seed. */
+/** A `SimEngine` over `definitions`, with a nav grid freshly built for `values` - the grid depends on the seed. */
 const buildSimEngine = (values: TerraConfigValues, definitions: readonly TerraObject.TerraObject[]): SimEngine =>
   new SimEngine({ config: values, definitions, grid: buildNavGrid(values) });
 
 /**
- * Samples the telemetry panel at a modest rate rather than every sim frame (60fps) — the panel is
+ * Samples the telemetry panel at a modest rate rather than every sim frame (60fps) - the panel is
  * for a human to read, and re-rendering React that often would both thrash the DOM for no visual
  * benefit and contend with the render loop for the main thread. ~6.6Hz sits in the middle of the
- * requested 4–10Hz band.
+ * requested 4-10Hz band.
  */
 const TELEMETRY_SAMPLE_INTERVAL_MS = 150;
 
@@ -104,7 +104,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const trailLayerRef = useRef<TrailLayer | null>(null);
   const explosionLayerRef = useRef<ExplosionLayer | null>(null);
   // Set/cleared only by the gizmo-toggle effect below, but read fresh each frame by the mount-once
-  // render-loop observer — mirrors `simEngineRef`'s ref-for-freshness pattern, since the layer's own
+  // render-loop observer - mirrors `simEngineRef`'s ref-for-freshness pattern, since the layer's own
   // lifetime (created/disposed on toggle) is independent of the observer's (mount-once).
   const gizmoLayerRef = useRef<GizmoLayer | null>(null);
   const chaseCameraRef = useRef<ChaseCamera | null>(null);
@@ -112,12 +112,12 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // entering that mode and read fresh each frame by the mount-once render-loop observer.
   const chaseTargetRef = useRef<TerraObject.TerraObject | null>(null);
   const simEngineRef = useRef<SimEngine | null>(null);
-  // The config `simEngineRef`'s current engine was built with — kept in lockstep with it (set
+  // The config `simEngineRef`'s current engine was built with - kept in lockstep with it (set
   // wherever `simEngineRef.current` is) so trail sampling always re-evaluates motion under the same
   // config its states' `route`/`leg`/`legStart` were produced under.
   const configRef = useRef<TerraConfigValues | null>(null);
   // Mutated directly by `handleTogglePlaying` and read fresh each frame by the mount-once render-loop
-  // observer below — mirrors `simEngineRef`'s ref-for-freshness pattern so the closure never goes stale.
+  // observer below - mirrors `simEngineRef`'s ref-for-freshness pattern so the closure never goes stale.
   const clockRef = useRef<SimClock>({ pausedTotalMs: 0, pausedAtMs: null });
   const [config, updateConfig] = useObject(terra, 'config');
   const [objectRefs] = useObject(terra, 'objects');
@@ -132,7 +132,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const telemetryDue = useSamplePacer(TELEMETRY_SAMPLE_INTERVAL_MS, telemetry);
   // Sampled only while the map is showing; the 3D view reads the engine directly each frame.
   const [objects, setObjects] = useState<readonly SimObject[]>([]);
-  // The object the chase camera rides and the map highlights — one selection, shared by both views.
+  // The object the chase camera rides and the map highlights - one selection, shared by both views.
   const [selectedId, setSelectedId] = useState<string | undefined>();
   // Read fresh by the mount-once render-loop observer, which must not close over this render's `view`.
   const viewRef = useRef<ViewMode>(view);
@@ -179,7 +179,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       const clock = clockRef.current;
       const nowMs = (clock.pausedAtMs ?? performance.now()) - clock.pausedTotalMs;
       engine.evaluateAt(nowMs);
-      // Real (wall-clock) frame delta, not the pause-adjusted sim clock — turn easing is a
+      // Real (wall-clock) frame delta, not the pause-adjusted sim clock - turn easing is a
       // rendering concern independent of whether the sim is paused.
       const deltaMs = manager.engine.getDeltaTime();
       layer.update(engine.objects, deltaMs);
@@ -280,7 +280,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     }
 
     // Created/disposed only while the toolbar toggle is on, independent of the mount-once canvas
-    // lifecycle above — the render-loop observer reads `gizmoLayerRef.current` fresh each frame.
+    // lifecycle above - the render-loop observer reads `gizmoLayerRef.current` fresh each frame.
     const gizmos = new GizmoLayer({ scene: manager.scene });
     gizmoLayerRef.current = gizmos;
     return () => {

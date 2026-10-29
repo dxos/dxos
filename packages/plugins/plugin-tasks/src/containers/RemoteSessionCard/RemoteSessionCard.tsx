@@ -26,7 +26,7 @@ const stateOption = (state: RemoteSession.State) => RemoteSession.StateOptions.f
 
 /**
  * Relative age, to the coarsest unit that still says something. A session's heartbeat is only
- * meaningful as "how long since" — an absolute timestamp makes the reader do the subtraction that
+ * meaningful as "how long since" - an absolute timestamp makes the reader do the subtraction that
  * decides whether a `running` session is actually alive.
  */
 const since = (iso: string): string => {

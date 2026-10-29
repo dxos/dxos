@@ -3,7 +3,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 // Copyright 2026 DXOS.org
 //
 
-// Two contexts (Item / Input) instead of one — performance optimization
+// Two contexts (Item / Input) instead of one - performance optimization
 // from the original SearchList: items don't subscribe to query / input
 // state, so typing in the input doesn't re-render every option.
 //

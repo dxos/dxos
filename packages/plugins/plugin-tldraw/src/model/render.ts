@@ -178,7 +178,7 @@ export const renderObject = (object: Scene.WorldObject, options: RenderOptions):
   return builder.records();
 };
 
-/** `objectId/elementId` — element ids may themselves not contain `/`. */
+/** `objectId/elementId` - element ids may themselves not contain `/`. */
 const splitHandle = (handle: string): [string, string] => {
   const index = handle.indexOf('/');
   return [handle.slice(0, index), handle.slice(index + 1)];

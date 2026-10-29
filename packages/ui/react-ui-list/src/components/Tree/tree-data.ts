@@ -24,7 +24,7 @@ export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDat
  * Whether the payload is a tree item belonging to `treeId`.
  *
  * pragmatic-dnd monitors are global, so every mounted tree sees every other tree's drags. Matching
- * on shape alone is not enough — the payloads are identical — and a monitor that claims a foreign
+ * on shape alone is not enough - the payloads are identical - and a monitor that claims a foreign
  * drag goes on to read its `item` as its own node type.
  */
 export const isTreeDataFor = (data: unknown, treeId: string): data is TreeData =>

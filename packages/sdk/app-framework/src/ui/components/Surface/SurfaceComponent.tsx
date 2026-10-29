@@ -272,7 +272,7 @@ export const SurfaceComponent = memo(
       return null;
     }
 
-    // An explicit `limit={0}` means render nothing — including while a role is still activating,
+    // An explicit `limit={0}` means render nothing - including while a role is still activating,
     // where the placeholder below would otherwise reintroduce output the caller opted out of.
     if (limit === 0) {
       return null;
@@ -327,7 +327,7 @@ const ErrorFallback = ({ error }: { error: Error }) => {
  *
  * A module gated on a role's demand event is absent from the first render that requests it, so an
  * eager `Position.last` catch-all (plugin-space's record article matches any ECHO object) claims the
- * slot and is replaced a second later when the specific module's chunk lands — a flash of unrelated
+ * slot and is replaced a second later when the specific module's chunk lands - a flash of unrelated
  * UI, not a slower load. Holding ONLY fallbacks is the conservative half of the fix: a surface that
  * already has a specific match renders immediately, so this can never delay a plank that has real
  * content to show.
@@ -377,8 +377,8 @@ type IsSurfaceAvailable = <TToken extends Role.Role<any>>(args: { type: TToken; 
 /**
  * @returns a stable function that checks whether a contributed surface is available for a
  * role & data. The surface manager is captured via context, so the returned function carries
- * no dependency of its own and is safe to store and invoke later — e.g. from inside another
- * callback such as a render-prop or event handler — since it calls no hooks itself.
+ * no dependency of its own and is safe to store and invoke later - e.g. from inside another
+ * callback such as a render-prop or event handler - since it calls no hooks itself.
  */
 export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
   const surfaceManager = useSurfaceManager();

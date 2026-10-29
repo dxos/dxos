@@ -76,7 +76,7 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--books--regular', hue: 'indigo' }),
     // Offer "Connect <publisher>" (via plugin-connector's `connectorAuth` extension) until a
-    // Connection for the registered publisher exists — associating a publisher connection with the
+    // Connection for the registered publisher exists - associating a publisher connection with the
     // Publication, mirroring plugin-studio's Artifact.
     ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: resolvePublicationConnectorIds }),
     Annotation.UserType.set(),

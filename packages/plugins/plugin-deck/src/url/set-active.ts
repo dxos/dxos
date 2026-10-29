@@ -78,7 +78,7 @@ export const computeActiveUpdates = ({
     // Deduped and pruned to open planks: entries survived every close, so a long-lived deck accreted
     // one per plank ever opened (a live profile measured fourteen, with duplicates). Only an explicit
     // close empties this, so a companion open on a plank that navigation replaces carries to whatever
-    // replaced it — under `flatten` the flag is deck-wide and re-points at the plank now current, and
+    // replaced it - under `flatten` the flag is deck-wide and re-points at the plank now current, and
     // while the deck slides it moves to the newest plank rather than being pruned away with the one
     // it was attached to.
     companionPlanks: carryCompanions(deck.companionPlanks, next, flatten),

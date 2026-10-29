@@ -52,7 +52,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/wola-ul-gieldowa-4a-45-m2-2-pok-wanna-odswiezone-ID4B12O',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Wola | ul. Giełdowa 4a | 45 m2 | 2 pok. | Wanna | Odświeżone'],
+      'schema:name': ['Wola | ul. Gie\u0142dowa 4a | 45 m2 | 2 pok. | Wanna | Od\u015Bwie\u017Cone'],
       'lh:monthlyPrice': [4200],
       'lh:adminFee': [800],
       'lh:areaM2': [45],
@@ -90,7 +90,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/apartament-2-pokojowy-przyjazne-zwierzetom-miesiac-gratis-ID4CgSW',
     types: ['lh:RentalListing', 'schema:Product', 'schema:Apartment'],
     props: {
-      'schema:name': ['Apartament 2-pokojowy | Przyjazne zwierzętom | Miesiąc GRATIS'],
+      'schema:name': ['Apartament 2-pokojowy | Przyjazne zwierz\u0119tom | Miesi\u0105c GRATIS'],
       'lh:monthlyPrice': [3900],
       'lh:adminFee': [700],
       'lh:areaM2': [38],
@@ -115,7 +115,7 @@ export const filterResults: Entity[] = [
         'washing_machine',
       ],
       'lh:district': ['Mokotów'],
-      'lh:neighbourhood': ['Służewiec'],
+      'lh:neighbourhood': ['S\u0142u\u017Cewiec'],
       'schema:datePosted': ['2026-07-20T08:08:17+00:00', '2026-07-20T08:08:17Z'],
       'lh:availableFrom': ['2026-07-24'],
       'lh:deposit': [5200],
@@ -150,7 +150,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/do-wynajecia-jasne-ciche-dwupokojowe-mieszkanie-ID4DJjJ',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Do wynajęcia jasne ciche dwupokojowe mieszkanie'],
+      'schema:name': ['Do wynaj\u0119cia jasne ciche dwupokojowe mieszkanie'],
       'lh:monthlyPrice': [4400],
       'lh:adminFee': [800],
       'lh:areaM2': [39],
@@ -158,7 +158,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [4],
       'lh:advertiserType': ['private'],
       'lh:district': ['Wola'],
-      'lh:neighbourhood': ['Powązki'],
+      'lh:neighbourhood': ['Pow\u0105zki'],
       'schema:datePosted': ['2026-10-28T10:43:12+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6IjhqcHg3MW5oZ3d1eTItQVBMIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.FNrDR7jOB-rGn-Ne38KlgGlVrBNVhll1ioH2y3GGl6g/image;s=655x491;q=80',
@@ -177,7 +177,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [1],
       'lh:advertiserType': ['business'],
       'lh:district': ['Ursynów'],
-      'lh:neighbourhood': ['Ursynów Północny'],
+      'lh:neighbourhood': ['Ursynów Pó\u0142nocny'],
       'schema:datePosted': ['2026-09-03T13:21:48+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6ImhmeW53aWV5YXYzNDMtRUNPU1lTVEVNIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.9ejaKOTAcuwQSNBH_Oz_I9NygQIs1kpI5JQwhx4LH4Q/image;s=655x491;q=80',
@@ -188,7 +188,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/2-pokojowe-50-99-m2-balkon-internet-w-cenie-bezposrednio-ID4CeA4',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['2-pokojowe | 50.99 m2 | Balkon | Internet w cenie | Bezpośrednio'],
+      'schema:name': ['2-pokojowe | 50.99 m2 | Balkon | Internet w cenie | Bezpo\u015Brednio'],
       'lh:monthlyPrice': [5646],
       'lh:adminFee': [1122],
       'lh:areaM2': [50.99],
@@ -226,7 +226,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/2-pokoje-39m2-srodmiescie-ul-gornoslaska-czerniakowska-ID4DJgL',
     types: ['lh:RentalListing', 'schema:Product', 'schema:Apartment'],
     props: {
-      'schema:name': ['2 pokoje,39m2,Śródmieście,ul. Górnośląska /Czerniakowska'],
+      'schema:name': ['2 pokoje,39m2,\u015Aródmie\u015Bcie,ul. Górno\u015Bl\u0105ska /Czerniakowska'],
       'lh:monthlyPrice': [3600],
       'lh:adminFee': [600],
       'lh:areaM2': [39],
@@ -251,7 +251,7 @@ export const filterResults: Entity[] = [
         'stove',
         'washing_machine',
       ],
-      'lh:district': ['Śródmieście'],
+      'lh:district': ['\u015Aródmie\u015Bcie'],
       'lh:neighbourhood': ['Solec'],
       'schema:datePosted': ['2026-10-28T10:10:15+00:00', '2026-10-28T10:10:15Z'],
       'lh:deposit': [4200],
@@ -275,7 +275,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [4],
       'lh:advertiserType': ['business'],
       'lh:district': ['Wola'],
-      'lh:neighbourhood': ['Koło'],
+      'lh:neighbourhood': ['Ko\u0142o'],
       'schema:datePosted': ['2024-12-14T21:44:58+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6Ims4dWc0MnJkY3N0ZjItQVBMIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.UTu7oIFySbi69t6brWhcD90Mtb4WeityeESPZRHo03k/image;s=655x491;q=80',
@@ -308,7 +308,7 @@ export const filterResults: Entity[] = [
       'schema:name': ['Woronicza 82'],
       'lh:advertiserType': ['business'],
       'lh:district': ['Mokotów'],
-      'lh:neighbourhood': ['Wyględów'],
+      'lh:neighbourhood': ['Wygl\u0119dów'],
       'schema:datePosted': ['2026-08-17T08:58:18+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6ImFxeGRoMnBuenJmdTEtQVBMIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.LVnezlAkDhpj5yjH82VBZ-YZ1uM8ddYIw_2QCoIqhTE/image;s=655x491;q=80',
@@ -319,7 +319,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/bez-prowizji-zlota-srodmiescie-studio-a-c-gym-ID4DFsM',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Bez prowizji | Złota, Śródmieście | Studio+ | A/C | Gym'],
+      'schema:name': ['Bez prowizji | Z\u0142ota, \u015Aródmie\u015Bcie | Studio+ | A/C | Gym'],
       'lh:monthlyPrice': [4300],
       'lh:adminFee': [1070],
       'lh:areaM2': [38.16],
@@ -345,7 +345,7 @@ export const filterResults: Entity[] = [
       'schema:numberOfRooms': [1],
       'lh:floor': [1],
       'lh:advertiserType': ['business'],
-      'lh:district': ['Śródmieście'],
+      'lh:district': ['\u015Aródmie\u015Bcie'],
       'lh:neighbourhood': ['Muranów'],
       'schema:datePosted': ['2026-10-28T09:58:24+00:00'],
       'schema:image': [
@@ -357,7 +357,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/apartament-3-pokoje-taras-garaz-ochrona-metro-ID4DxwQ',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Apartament 3 pokoje, taras, garaż, ochrona, Metro'],
+      'schema:name': ['Apartament 3 pokoje, taras, gara\u017C, ochrona, Metro'],
       'lh:monthlyPrice': [5400],
       'lh:adminFee': [1700],
       'lh:areaM2': [121.68],
@@ -376,7 +376,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/balkon-parking-zamkniete-osiedle-klimatyzacja-mokotow-ID4DJfF',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Balkon/Parking/Zamknięte osiedle/Klimatyzacja, Mokotów'],
+      'schema:name': ['Balkon/Parking/Zamkni\u0119te osiedle/Klimatyzacja, Mokotów'],
       'lh:monthlyPrice': [3600],
       'lh:adminFee': [789],
       'lh:areaM2': [46],
@@ -384,7 +384,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [4],
       'lh:advertiserType': ['business'],
       'lh:district': ['Mokotów'],
-      'lh:neighbourhood': ['Służewiec'],
+      'lh:neighbourhood': ['S\u0142u\u017Cewiec'],
       'schema:datePosted': ['2026-10-28T09:55:49+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6Ijl6c2k4eDBmM2lzZzMtRUNPU1lTVEVNIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.BeBrFtVZB45U1QCO83dxXqkc9MGX7ghaS5U-ZIv5a3o/image;s=655x491;q=80',
@@ -395,7 +395,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/4-pokoje-bezposrednio-parking-promo-ID4AvQD',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['4 pokoje; Bezpośrednio; Parking; Promo.'],
+      'schema:name': ['4 pokoje; Bezpo\u015Brednio; Parking; Promo.'],
       'lh:monthlyPrice': [5900],
       'lh:adminFee': [1700],
       'lh:areaM2': [76],
@@ -403,7 +403,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [5],
       'lh:advertiserType': ['business'],
       'lh:district': ['Ursynów'],
-      'lh:neighbourhood': ['Wyczółki'],
+      'lh:neighbourhood': ['Wyczó\u0142ki'],
       'schema:datePosted': ['2026-03-16T13:45:33+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6ImI4aHlpaDJramhtNi1BUEwiLCJ3IjpbeyJmbiI6ImVudmZxcWUxYXk0azEtQVBMIiwicyI6IjE2IiwiYSI6IjAiLCJwIjoiMTAsLTEwIn1dfQ.cQgtNbBYVjs8ofJHy3cV23zYdQf5xWKxjy5R0k90v-k/image;s=655x491;q=80',
@@ -414,7 +414,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/wynajme-3-pokojowe-mieszkanie-57-m-jana-kazimierza-32b-ID4DJej',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Wynajmę 3-pokojowe mieszkanie | 57 m² | Jana Kazimierza 32B'],
+      'schema:name': ['Wynajm\u0119 3-pokojowe mieszkanie | 57 m² | Jana Kazimierza 32B'],
       'lh:monthlyPrice': [4900],
       'lh:adminFee': [1300],
       'lh:areaM2': [57],
@@ -452,7 +452,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/63-m-3-pokoje-garaz-dzieci-ok-mokotow-ID4CZvK',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['63 m² | 3 pokoje | garaż | dzieci ok. | Mokotów'],
+      'schema:name': ['63 m² | 3 pokoje | gara\u017C | dzieci ok. | Mokotów'],
       'lh:monthlyPrice': [4063],
       'lh:adminFee': [1136.97],
       'lh:areaM2': [63.23],
@@ -471,7 +471,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/studio-garaz-ul-kolejowa-43-wola-ID4wAl3',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Studio + Garaż ul. Kolejowa 43, Wola'],
+      'schema:name': ['Studio + Gara\u017C ul. Kolejowa 43, Wola'],
       'lh:monthlyPrice': [3500],
       'lh:adminFee': [700],
       'lh:areaM2': [37.2],
@@ -490,15 +490,15 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/2-sypialnie-balkon-po-remoncie-parking-srodmiescie-ID4DkCY',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['2 sypialnie| balkon| PO REMONCIE| parking| Śródmieście'],
+      'schema:name': ['2 sypialnie| balkon| PO REMONCIE| parking| \u015Aródmie\u015Bcie'],
       'lh:monthlyPrice': [5500],
       'lh:adminFee': [900],
       'lh:areaM2': [74.6],
       'schema:numberOfRooms': [3],
       'lh:floor': [3],
       'lh:advertiserType': ['business'],
-      'lh:district': ['Śródmieście'],
-      'lh:neighbourhood': ['Śródmieście Południowe'],
+      'lh:district': ['\u015Aródmie\u015Bcie'],
+      'lh:neighbourhood': ['\u015Aródmie\u015Bcie Po\u0142udniowe'],
       'schema:datePosted': ['2026-10-01T09:03:16+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6InpvanpqZHoycWhxdy1FQ09TWVNURU0iLCJ3IjpbeyJmbiI6ImVudmZxcWUxYXk0azEtQVBMIiwicyI6IjE2IiwiYSI6IjAiLCJwIjoiMTAsLTEwIn1dfQ.UYgZvVWHNf5LNgUV5A7fyZvWXjt6FKTh7V_H4c90VoM/image;s=655x491;q=80',
@@ -517,7 +517,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [4],
       'lh:advertiserType': ['private'],
       'lh:district': ['Mokotów'],
-      'lh:neighbourhood': ['Wyględów'],
+      'lh:neighbourhood': ['Wygl\u0119dów'],
       'schema:datePosted': ['2026-10-28T09:24:21+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6ImtmNDA0dHBmMHR4bDItQVBMIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.oHhTX2W67IK2B664aq7TMpO7wHO42kR94tD1s07XJIU/image;s=655x491;q=80',
@@ -528,15 +528,15 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/kawalerka-przy-sgh-ul-batorego-mokotow-metro-nowy-sprzet-ID4D3BC',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Kawalerka przy SGH, ul. Batorego, Mokotów, metro, nowy sprzęt'],
+      'schema:name': ['Kawalerka przy SGH, ul. Batorego, Mokotów, metro, nowy sprz\u0119t'],
       'lh:monthlyPrice': [2250],
       'lh:adminFee': [550],
       'lh:areaM2': [20],
       'schema:numberOfRooms': [1],
       'lh:floor': [11],
       'lh:advertiserType': ['private'],
-      'lh:district': ['Śródmieście'],
-      'lh:neighbourhood': ['Śródmieście Południowe'],
+      'lh:district': ['\u015Aródmie\u015Bcie'],
+      'lh:neighbourhood': ['\u015Aródmie\u015Bcie Po\u0142udniowe'],
       'schema:datePosted': ['2026-09-13T18:48:55+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6Im5rNncyOGk3cG5yazMtQVBMIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.H_y-H7iKjPn61JNlS8cA0k7NN7RGYKRkFjW3MAitkgM/image;s=655x491;q=80',
@@ -547,7 +547,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/jasne-wnetrza-miejsce-w-garazu-loft-ID4DJcJ',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Jasne wnętrza | Miejsce w garażu | Loft'],
+      'schema:name': ['Jasne wn\u0119trza | Miejsce w gara\u017Cu | Loft'],
       'lh:monthlyPrice': [5200],
       'lh:adminFee': [1400],
       'lh:areaM2': [83.66],
@@ -555,7 +555,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [1],
       'lh:advertiserType': ['business'],
       'lh:district': ['Mokotów'],
-      'lh:neighbourhood': ['Służewiec'],
+      'lh:neighbourhood': ['S\u0142u\u017Cewiec'],
       'schema:datePosted': ['2026-10-28T09:21:36+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6ImMyMmFycHV6MTRybzItRUNPU1lTVEVNIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.3XDKPg-EC6Bulp9qU38LCXURmZA1Mztt2HFCpw_df70/image;s=655x491;q=80',
@@ -605,7 +605,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/wynajem-warszawa-wola-43-5-m2-2-pokoje-balkon-miejsce-garazowe-ID4Dc10',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Wynajem, Warszawa, Wola, 43,5 m2, 2 pokoje, balkon, miejsce garażowe.'],
+      'schema:name': ['Wynajem, Warszawa, Wola, 43,5 m2, 2 pokoje, balkon, miejsce gara\u017Cowe.'],
       'lh:monthlyPrice': [3700],
       'lh:adminFee': [800],
       'lh:areaM2': [43.5],
@@ -632,7 +632,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [4],
       'lh:advertiserType': ['private'],
       'lh:district': ['Wola'],
-      'lh:neighbourhood': ['Koło'],
+      'lh:neighbourhood': ['Ko\u0142o'],
       'schema:datePosted': ['2020-01-20T20:19:27+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6Impud2wzY2xobmw2Ni1BUEwiLCJ3IjpbeyJmbiI6ImVudmZxcWUxYXk0azEtQVBMIiwicyI6IjE2IiwiYSI6IjAiLCJwIjoiMTAsLTEwIn1dfQ.tReOap6S7pps8KUrg-Va1_aBtrQoxP7QEPjS2DOn1QI/image;s=655x491;q=80',
@@ -643,14 +643,14 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/2-pokoje-z-balkonem-powisle-najem-okazjonalny-bez-prowizji-ID4DiGI',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['2 pokoje z balkonem Powiśle -najem okazjonalny ( bez prowizji )'],
+      'schema:name': ['2 pokoje z balkonem Powi\u015Ble -najem okazjonalny ( bez prowizji )'],
       'lh:monthlyPrice': [2900],
       'lh:adminFee': [600],
       'lh:areaM2': [40],
       'schema:numberOfRooms': [2],
       'lh:floor': [11],
       'lh:advertiserType': ['business'],
-      'lh:district': ['Śródmieście'],
+      'lh:district': ['\u015Aródmie\u015Bcie'],
       'lh:neighbourhood': ['Solec'],
       'schema:datePosted': ['2026-09-29T10:03:58+00:00'],
       'schema:image': [
@@ -662,7 +662,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/bez-prowizji-zlota-srodmiescie-2-pokojowy-apartament-a-c-gym-ID4DFeI',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Bez prowizji | Złota, Śródmieście | 2-pokojowy apartament | A/C | Gym'],
+      'schema:name': ['Bez prowizji | Z\u0142ota, \u015Aródmie\u015Bcie | 2-pokojowy apartament | A/C | Gym'],
       'lh:monthlyPrice': [4640],
       'lh:adminFee': [1120],
       'lh:areaM2': [39.35],
@@ -681,7 +681,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/kawalerka-na-wyscigach-ID3cYSy',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Kawalerka na Wyścigach'],
+      'schema:name': ['Kawalerka na Wy\u015Bcigach'],
       'lh:monthlyPrice': [2800],
       'lh:adminFee': [800],
       'lh:areaM2': [34],
@@ -700,7 +700,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/nowoczesne-2-pokoje-z-balkonem-i-widokiem-na-zielen-garaz-ID4DhPM',
     types: ['lh:RentalListing', 'schema:Product', 'schema:Apartment'],
     props: {
-      'schema:name': ['Nowoczesne 2 pokoje z balkonem i widokiem na zieleń | garaż'],
+      'schema:name': ['Nowoczesne 2 pokoje z balkonem i widokiem na ziele\u0144 | gara\u017C'],
       'lh:monthlyPrice': [2890],
       'lh:adminFee': [690],
       'lh:areaM2': [40],
@@ -782,7 +782,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/klimatyzowane-2-pokoje-na-10-pietrze-z-garazem-ID4l1Nt',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Klimatyzowane 2-pokoje na 10 piętrze z garażem'],
+      'schema:name': ['Klimatyzowane 2-pokoje na 10 pi\u0119trze z gara\u017Cem'],
       'lh:monthlyPrice': [4500],
       'lh:adminFee': [600],
       'lh:areaM2': [39],
@@ -801,14 +801,14 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/gornoslaska-2-pokoje-48m2-ID4DJ7g',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Górnośląska 2 pokoje 48m2'],
+      'schema:name': ['Górno\u015Bl\u0105ska 2 pokoje 48m2'],
       'lh:monthlyPrice': [3300],
       'lh:adminFee': [1200],
       'lh:areaM2': [49],
       'schema:numberOfRooms': [2],
       'lh:floor': [5],
       'lh:advertiserType': ['business'],
-      'lh:district': ['Śródmieście'],
+      'lh:district': ['\u015Aródmie\u015Bcie'],
       'lh:neighbourhood': ['Solec'],
       'schema:datePosted': ['2026-10-28T08:00:46+00:00'],
       'schema:image': [
@@ -820,7 +820,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/cieszynska-3-pokoje-70m2-ID4DJ7d',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Cieszyńska 3 pokoje 70m2'],
+      'schema:name': ['Cieszy\u0144ska 3 pokoje 70m2'],
       'lh:monthlyPrice': [5600],
       'lh:adminFee': [1300],
       'lh:areaM2': [70],
@@ -839,7 +839,7 @@ export const filterResults: Entity[] = [
     id: 'https://www.otodom.pl/pl/oferta/przytulne-3-pokojowe-mieszkanie-po-remoncie-mokotow-i-bezposrednio-ID4DJ6x',
     types: ['lh:RentalListing'],
     props: {
-      'schema:name': ['Przytulne 3-pokojowe mieszkanie po remoncie | Mokotów I Bezpośrednio'],
+      'schema:name': ['Przytulne 3-pokojowe mieszkanie po remoncie | Mokotów I Bezpo\u015Brednio'],
       'lh:monthlyPrice': [3400],
       'lh:adminFee': [1550],
       'lh:areaM2': [50],
@@ -847,7 +847,7 @@ export const filterResults: Entity[] = [
       'lh:floor': [10],
       'lh:advertiserType': ['private'],
       'lh:district': ['Mokotów'],
-      'lh:neighbourhood': ['Wyględów'],
+      'lh:neighbourhood': ['Wygl\u0119dów'],
       'schema:datePosted': ['2026-10-28T07:46:04+00:00'],
       'schema:image': [
         'https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6InI2OWttMWdkbmdqeDItQVBMIiwidyI6W3siZm4iOiJlbnZmcXFlMWF5NGsxLUFQTCIsInMiOiIxNiIsImEiOiIwIiwicCI6IjEwLC0xMCJ9XX0.JnVZgS9WzCAyQ8ySh0Gu0YBt2QcERToPQ1hlBqwrIzo/image;s=655x491;q=80',
@@ -859,15 +859,15 @@ export const filterResults: Entity[] = [
 export const filterModel = {
   version: 2,
   rationale:
-    'Goal: 2-room rentals in Śródmieście/Wola/Mokotów, total monthly cost (rent + czynsz) under 6000 PLN, with a balcony, near metro. Hard constraints that evaluate reliably are requirements (2 rooms, total ≤6000); the district condition and metro proximity are weighted terms because the store holds no station-distance property.',
+    'Goal: 2-room rentals in \u015Aródmie\u015Bcie/Wola/Mokotów, total monthly cost (rent + czynsz) under 6000 PLN, with a balcony, near metro. Hard constraints that evaluate reliably are requirements (2 rooms, total <=6000); the district condition and metro proximity are weighted terms because the store holds no station-distance property.',
   terms: [
     {
       id: 'district',
-      label: 'In Śródmieście / Wola / Mokotów',
+      label: 'In \u015Aródmie\u015Bcie / Wola / Mokotów',
       weight: 3,
       value: {
         match: 'lh:district',
-        pattern: 'Śródmieście|Wola|Mokotów',
+        pattern: '\u015Aródmie\u015Bcie|Wola|Mokotów',
       },
       shape: 'flag',
       missing: 0,
@@ -888,7 +888,8 @@ export const filterModel = {
       weight: 2.5,
       value: {
         match: 'lh:neighbourhood',
-        pattern: 'Muranów|Śródmieście|Powiśle|Solec|Mirów|Czyste|Stary Mokotów|Nowy Świat|Koszyki|Wierzbno',
+        pattern:
+          'Muranów|\u015Aródmie\u015Bcie|Powi\u015Ble|Solec|Mirów|Czyste|Stary Mokotów|Nowy \u015Awiat|Koszyki|Wierzbno',
       },
       shape: 'flag',
       missing: 0,
@@ -934,7 +935,7 @@ export const filterModel = {
       target: '2',
     },
     {
-      label: 'Total (rent + czynsz) ≤ 6000 PLN',
+      label: 'Total (rent + czynsz) <= 6000 PLN',
       value: {
         sum: ['lh:monthlyPrice', 'lh:adminFee'],
       },
@@ -947,7 +948,7 @@ export const filterModel = {
   updatedAt: '2026-10-28T11:08:30.551Z',
 } as unknown as RatingModel;
 
-/** WEB QA-9's view: total ≤ 6000, 2+ rooms, has a balcony, sorted by floor area, largest first. */
+/** WEB QA-9's view: total <= 6000, 2+ rooms, has a balcony, sorted by floor area, largest first. */
 export const filterView: ResultsView = {
   filters: [
     {

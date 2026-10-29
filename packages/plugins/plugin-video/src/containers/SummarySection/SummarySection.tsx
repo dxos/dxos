@@ -26,7 +26,7 @@ export type SummarySectionProps = {
  * is generated. The summary is generated on demand once a transcript exists.
  *
  * Renders the editor via the local {@link Summary} component (not a generic Surface) so the
- * CodeMirror `EditorView` is never carried in a React prop — see {@link Summary} for why that crashes
+ * CodeMirror `EditorView` is never carried in a React prop - see {@link Summary} for why that crashes
  * alongside the cross-origin player iframe.
  */
 export const SummarySection = ({ subject }: SummarySectionProps) => {

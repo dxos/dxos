@@ -99,7 +99,7 @@ const renderText = async (space: Space, sessionFeedId: string): Promise<string> 
 
 /**
  * Run the agent loop to completion with a single prompt. No TUI. Used by
- * `dx chat --prompt …` for scripted research / smoke tests.
+ * `dx chat --prompt ...` for scripted research / smoke tests.
  */
 export const runNonInteractive = async (options: RunNonInteractiveOptions): Promise<void> => {
   const { space, processor, skills, prompt, model, json } = options;
@@ -135,7 +135,7 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
         })
         .map(({ id, created }) => ({ id, created, kind, typename })),
     );
-    // The `typename` filter above is too permissive — re-derive kind per id.
+    // The `typename` filter above is too permissive - re-derive kind per id.
     const result = changed
       .map(({ id, created }) => {
         // Look up the live object to get its typename.
@@ -160,7 +160,7 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
     return;
   }
 
-  // Default text mode — print a one-line summary plus the count of changed
+  // Default text mode - print a one-line summary plus the count of changed
   // objects so a human running this from a script knows the agent finished.
   // eslint-disable-next-line no-console
   console.log(await renderText(space, (session as any).feed?.id ?? ''));

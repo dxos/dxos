@@ -202,7 +202,7 @@ const CommentsList = ({
                   {(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
                 </Listbox.ItemText>
                 <Listbox.ItemDescription>
-                  {range ? `${range.from}–${range.to}` : comment.cursor}
+                  {range ? `${range.from}-${range.to}` : comment.cursor}
                 </Listbox.ItemDescription>
                 <Button.Root
                   variant='ghost'
@@ -281,7 +281,7 @@ export const ClickSelectsComment: Story = {
  * `pointer-events: none` and pass the click through to the line. An upward DOM-target walk never finds
  * the span's `data-comment-id`, so `handleCommentClick` must fall back to a `posAtCoords` hit-test.
  * Dispatches the click ON the line element (target = line) at the comment's coordinates and asserts the
- * thread is still selected — this is exactly the "first click ignored" case seen in the app.
+ * thread is still selected - this is exactly the "first click ignored" case seen in the app.
  */
 export const ClickThroughLineSelectsComment: Story = {
   args: {
@@ -296,7 +296,7 @@ export const ClickThroughLineSelectsComment: Story = {
       throw new Error('comment mark or line not rendered');
     }
 
-    // Dispatch the click on the LINE (not the span) at the comment's centre — reproduces the highlight
+    // Dispatch the click on the LINE (not the span) at the comment's centre - reproduces the highlight
     // rect passing the click through to `.cm-line`, which the old target-walk missed.
     const rect = comment.getBoundingClientRect();
     line.dispatchEvent(

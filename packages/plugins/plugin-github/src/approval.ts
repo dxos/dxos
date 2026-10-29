@@ -8,14 +8,14 @@ import { GitHubApi } from './services/index.ts';
  * Machine-readable marker carried by an approval posted as a comment.
  *
  * An HTML comment renders as nothing on GitHub, so the marker is invisible to a human reader while
- * remaining an exact string for an agent polling the conversation — which is the point: a comment
+ * remaining an exact string for an agent polling the conversation - which is the point: a comment
  * fallback has to be as detectable as the review state it stands in for.
  */
 export const APPROVAL_MARKER = '<!-- dxos:approval state=approved -->';
 
 /** Prose shown above the marker; states why the approval is a comment rather than a review. */
 const APPROVAL_TEXT =
-  'Approved — good to land.\n\n' +
+  'Approved - good to land.\n\n' +
   '_GitHub declined an approving review from this connection (a pull request cannot be approved by ' +
   'its own author, and some tokens carry no review permission), so the approval is recorded here._';
 
@@ -23,7 +23,7 @@ const APPROVAL_TEXT =
 export const approvalCommentBody = (body?: string): string =>
   [body?.trim(), APPROVAL_TEXT, APPROVAL_MARKER].filter(Boolean).join('\n\n');
 
-/** Whether a comment body records an approval — the detector an agent runs over a PR's comments. */
+/** Whether a comment body records an approval - the detector an agent runs over a PR's comments. */
 export const isApprovalComment = (body: string): boolean => body.includes(APPROVAL_MARKER);
 
 /**

@@ -71,7 +71,7 @@ const roundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   ctx.closePath();
 };
 
-// Deterministic 0..1 random — Linear Congruential Generator. Used in story
+// Deterministic 0..1 random - Linear Congruential Generator. Used in story
 // seeding so the same args produce the same grid every render.
 const makeLcg = (seed: number) => {
   let state = seed >>> 0;
@@ -194,7 +194,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { layout: 'fullscreen' },
   argTypes: {
     variant: { control: { type: 'inline-radio' }, options: ['sequencer', 'data-viz'] },
-    // 'resize' is deferred (PR description "Deferred / out of v1") — hide from controls.
+    // 'resize' is deferred (PR description "Deferred / out of v1") - hide from controls.
     tool: { control: { type: 'inline-radio' }, options: ['toggle', 'select'] },
     numCols: { control: { type: 'number', min: 16, max: 1024, step: 16 } },
     numRows: { control: { type: 'number', min: 1, max: 64, step: 1 } },

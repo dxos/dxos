@@ -9,7 +9,7 @@ export type SnippetOptions = {
   /**
    * Maximum height of the editor as a CSS length; overflowing content is hidden. Shorter content
    * renders at its natural height, so the snippet grows with the document up to this cap.
-   * Container units (`cqi`) resolve against the nearest inline-size container — put
+   * Container units (`cqi`) resolve against the nearest inline-size container - put
    * `dx-container-type-inline-size` on the wrapper to cap relative to the card's width.
    */
   maxHeight: string;

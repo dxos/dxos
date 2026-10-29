@@ -16,7 +16,7 @@ import { frontmatter } from '@dxos/deus/spec-index';
 
 import { type Workspace, uriOfPath } from './workspace.ts';
 
-/** A block or `req` declaration inside an `mdl` fence: `feat F-1: …`, `  req F-1.2: …`, `type Scene`. */
+/** A block or `req` declaration inside an `mdl` fence: `feat F-1: ...`, `  req F-1.2: ...`, `type Scene`. */
 export const DECLARATION = /^\s*([a-z][\w-]*)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
 
 /** One declared spec item: its kind, id and 0-based line. */
@@ -156,7 +156,7 @@ export const reviewedSpecPath = (workspace: Workspace, reviewPath: string, revie
   return key && isSpecKey(key) && isLocal(workspace, key) ? key.path : reviewPath.replace(/\.review\.mdl$/, '.mdl');
 };
 
-/** The review written beside a spec, `SPEC.mdl` → `SPEC.review.mdl`; undefined for a review itself. */
+/** The review written beside a spec, `SPEC.mdl` -> `SPEC.review.mdl`; undefined for a review itself. */
 export const reviewPathOf = (specPath: string): string | undefined =>
   specPath.endsWith('.review.mdl') || !specPath.endsWith('.mdl')
     ? undefined

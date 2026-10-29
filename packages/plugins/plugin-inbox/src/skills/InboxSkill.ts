@@ -44,7 +44,7 @@ export const make = ({ syncOperations = [] }: InboxSkillOptions = {}): Skill.Ski
         - Before working with email, check whether a mailbox already exists (query for Mailbox objects).
         - If no mailbox exists, enable the "Connectors" skill and use it to show a connector prompt so I can
           connect an email account; do not attempt to read or sync email until a mailbox is connected.
-        - If a mailbox already exists, do not show the connector prompt — proceed with the request.
+        - If a mailbox already exists, do not show the connector prompt - proceed with the request.
 
         # Summary formatting:
         - Format the summary as a markdown document without extra comments like "Here is the summary of the mailbox:".

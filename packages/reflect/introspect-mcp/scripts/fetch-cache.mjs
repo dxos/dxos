@@ -15,7 +15,7 @@
 //
 // The MCP server (and any other consumer of @dxos/introspect) will pick up
 // the prebuilt cache automatically on next start. Per-package validity is
-// determined by git tree SHA — entries whose tree SHA matches your current
+// determined by git tree SHA - entries whose tree SHA matches your current
 // HEAD survive. Anything that drifted since the CI run gets re-extracted on
 // demand. A clean checkout at a recent main commit typically yields ~95%
 // reuse.
@@ -71,7 +71,7 @@ const ensureGhAvailable = () => {
 };
 
 const findLatestSuccessfulRun = () => {
-  log(`Looking up most recent successful "${WORKFLOW}" run on main…`);
+  log(`Looking up most recent successful "${WORKFLOW}" run on main...`);
   // `gh run list` returns the newest first; --status=success filters to runs
   // that finished green.
   const stdout = run('gh', [
@@ -114,7 +114,7 @@ const main = async () => {
   }
   mkdirSync(tmpDir, { recursive: true });
 
-  log(`Downloading "${ARTIFACT_NAME}" into ${tmpDir}…`);
+  log(`Downloading "${ARTIFACT_NAME}" into ${tmpDir}...`);
   run('gh', ['run', 'download', String(latest.databaseId), '--repo', REPO, '--name', ARTIFACT_NAME, '--dir', tmpDir]);
 
   // Locate downloaded files. The artifact bundles two siblings, core.json
@@ -138,7 +138,7 @@ const main = async () => {
   const coreSrc = locate('core.json');
   const pluginsSrc = locate('plugins.json');
 
-  // Atomic install — rename only after the download succeeded so we never
+  // Atomic install - rename only after the download succeeded so we never
   // leave a destination half-written. Same convention as introspect's own
   // saveCache.
   mkdirSync(CACHE_DIR, { recursive: true });

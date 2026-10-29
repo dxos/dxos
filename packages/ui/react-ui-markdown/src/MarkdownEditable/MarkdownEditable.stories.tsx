@@ -114,7 +114,7 @@ export const TestMultiline: Story = {
     });
 
     // The paragraph wraps to the field's width rather than scrolling off the side, which is what
-    // the markdown bundle alone does — it is `white-space: pre` without the basic extensions.
+    // the markdown bundle alone does - it is `white-space: pre` without the basic extensions.
     await waitFor(async () => expect(content.scrollWidth).toBeLessThanOrEqual(content.clientWidth + 1));
     // A wrapped line is still ONE `.cm-line`, so the wrap shows up as height rather than line count:
     // the field is taller than the single row it would be if the text ran off the side.

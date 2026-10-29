@@ -64,7 +64,7 @@ export const layer: Layer.Layer<SandboxService.Service, never, Capability.Servic
  * The layer the plugin contributes: EDGE or local per the plugin setting (`DX_SANDBOX_BACKEND`
  * overrides it under Node or Bun), read on every call so a change applies without a restart. Where
  * this runtime cannot spawn processes, local sandboxes come from a contributed
- * {@link SandboxCapabilities.LocalLauncher} — the desktop app's helper process.
+ * {@link SandboxCapabilities.LocalLauncher} - the desktop app's helper process.
  */
 export const layerFromCapabilities: Layer.Layer<SandboxService.Service, never, Capability.Service> = Layer.effect(
   SandboxService.Service,

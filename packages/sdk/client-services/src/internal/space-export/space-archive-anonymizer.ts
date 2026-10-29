@@ -612,6 +612,6 @@ export const scanForSecrets = (text: string): SecretFinding[] =>
   Object.entries(SECRET_PATTERNS).flatMap(([pattern, regex]) =>
     [...text.matchAll(regex)].map(([match]) => ({
       pattern,
-      sample: match.length <= 8 ? '*'.repeat(match.length) : `${match.slice(0, 4)}…${match.slice(-2)}`,
+      sample: match.length <= 8 ? '*'.repeat(match.length) : `${match.slice(0, 4)}\u2026${match.slice(-2)}`,
     })),
   );

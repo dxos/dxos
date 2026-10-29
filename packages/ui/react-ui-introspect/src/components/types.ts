@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The shape these components consume — a thin metadata-only view of an MCP
+// The shape these components consume - a thin metadata-only view of an MCP
 // tool definition. Decoupled from `@dxos/introspect-mcp/tools.ToolDefinition`
 // (which carries a runtime handler closing over an introspector) so callers
 // can supply the metadata however they want: from the static export, from
@@ -17,7 +17,7 @@ export type ToolEntry = {
   description: string;
   /**
    * Effect Schema struct describing the tool's input. Passed straight to
-   * `react-ui-form`'s `<Form.Root schema={...}>` — every tool input we ship
+   * `react-ui-form`'s `<Form.Root schema={...}>` - every tool input we ship
    * uses primitives the form renderer understands (string / number / boolean
    * / literal-union / array, plus optional + description annotations).
    */

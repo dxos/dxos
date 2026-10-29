@@ -109,9 +109,9 @@ export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
 
 /**
  * Collect the group's members, optionally ordered by `order` and capped to `limit` per group.
- * Opt-in — groups carry no members unless this aggregate is declared.
+ * Opt-in - groups carry no members unless this aggregate is declared.
  *
- * `order` is this aggregate's own per-group ordering — independent of any `orderBy` elsewhere in
+ * `order` is this aggregate's own per-group ordering - independent of any `orderBy` elsewhere in
  * the query, which orders the whole input stream (and, following `aggregate`, the resulting
  * groups), not this aggregate's member selection. Without `order`, members keep whatever order
  * they arrived in from a preceding `orderBy` (unspecified if there is none), so a per-group
@@ -136,7 +136,7 @@ export const sum = <T, K extends NumericKeys<T>>(property: K): Aggregate<T, numb
   new AggregateClass({ kind: 'sum', property });
 
 /**
- * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.
+ * Count the group's members. Opt-in - groups carry no count unless this aggregate is declared.
  *
  * @performance O(1); builds an aggregate spec without evaluating anything.
  */

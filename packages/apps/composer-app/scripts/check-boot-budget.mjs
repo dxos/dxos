@@ -4,7 +4,7 @@
 
 /**
  * Structural guardrail for the eager boot graph: fails when the built `index.html`'s entry
- * script plus its modulepreload closure — vite's exact static-dependency set for startup —
+ * script plus its modulepreload closure - vite's exact static-dependency set for startup -
  * exceeds budget. Nothing watched this before, which is how the eager graph reached 749 chunks
  * / 8.8 MB unnoticed (AUDIT.md §12).
  *
@@ -17,8 +17,8 @@
  *
  * - COUNT catches the chunk partition collapsing. Boot chunks are built by a cycle-safe
  *   topological partition (see `bootChunkingPlugin` in vite.config.ts) that took preload
- *   requests from 520 to ~20; if that silently stops applying — a rolldown API change, a bug in
- *   the buildStart reset — the count snaps back to the hundreds. It is NOT a proxy for bytes:
+ *   requests from 520 to ~20; if that silently stops applying - a rolldown API change, a bug in
+ *   the buildStart reset - the count snaps back to the hundreds. It is NOT a proxy for bytes:
  *   bucket boundaries follow the SCC condensation, not size, and the count moved 13 -> 20 on a
  *   legitimate change, so the headroom is sized for a partition reshuffle rather than kept tight.
  *
@@ -63,7 +63,7 @@ const hrefs = [
 const entries = [];
 for (const href of hrefs) {
   if (/^[a-z]+:\/\//.test(href)) {
-    // Externally hosted — not part of the built output, so not ours to budget.
+    // Externally hosted - not part of the built output, so not ours to budget.
     continue;
   }
   // Fail closed: swallowing a missing asset would understate the total and pass a regression.
@@ -105,7 +105,7 @@ for (const entry of [...entries].sort((first, second) => second.bytes - first.by
 if (overCount) {
   console.error(
     `\nERROR: ${entries.length} preload entries exceeds ${MAX_PRELOAD_ENTRIES}.\n` +
-      'The boot chunk partition is likely not applying — check `bootChunkingPlugin` in vite.config.ts\n' +
+      'The boot chunk partition is likely not applying - check `bootChunkingPlugin` in vite.config.ts\n' +
       '(a count in the hundreds means it dropped out entirely, not that the app grew).',
   );
 }

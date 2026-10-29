@@ -66,7 +66,7 @@ describe('Identity', () => {
       const registry = Registry.make();
       const atom = Identity.atom(service);
       expect(Option.getOrThrow(registry.get(atom)).did).toEqual(identity.did);
-      // Same service, same atom — the family is keyed by reference.
+      // Same service, same atom - the family is keyed by reference.
       expect(Identity.atom(service)).toBe(atom);
 
       // Subscribe, then mutate: the seed alone would satisfy the assertions above.

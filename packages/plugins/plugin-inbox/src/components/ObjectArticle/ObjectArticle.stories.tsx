@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { Header } from '../Header/index.ts';
 import { ObjectArticle } from './ObjectArticle.tsx';
 
-// Stub toolbar / header / body slots to show the shared article scaffold (Panel → toolbar · header · body).
+// Stub toolbar / header / body slots to show the shared article scaffold (Panel -> toolbar · header · body).
 const DefaultStory = () => (
   <ObjectArticle
     role='article'

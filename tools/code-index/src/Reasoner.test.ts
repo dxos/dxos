@@ -23,7 +23,7 @@ import { createResolver } from './worker/analyzers/resolver.ts';
 import { analyzeTypeScript } from './worker/analyzers/typescript.ts';
 
 /**
- * The rule files as shipped, run against a real store — a paraphrase of a rule in a test proves the
+ * The rule files as shipped, run against a real store - a paraphrase of a rule in a test proves the
  * paraphrase. `60-canonical.n3` is the one with a property worth guarding: a canonical name is
  * stated only where it differs from the declared one.
  */
@@ -805,7 +805,7 @@ describe('compute rules', () => {
       'src/operations/ping.ts#default 22-rdf-syntax-ns#type deus#OperationHandler',
       'src/operations/ping.ts#default deus#implementsOperation src/operations/definitions.ts#Ping',
       // A `Skill.Definition`; `Ping` reaches it through `export * from './definitions'`, `Create` through
-      // the spread list, and `Remove` — bound as a hook, not offered as a tool — not at all.
+      // the spread list, and `Remove` - bound as a hook, not offered as a tool - not at all.
       'src/skill.ts#skill 22-rdf-syntax-ns#type deus#Skill',
       'src/skill.ts#skill deus#exposesOperation src/operations/definitions.ts#Ping',
       'src/skill.ts#skill deus#exposesOperation src/types/DemoOperation.ts#Create',
@@ -816,7 +816,7 @@ describe('compute rules', () => {
       'src/types/DemoOperation.ts#Create deus#operationRequires @dxos/echo#Database.Service',
       'src/types/DemoOperation.ts#Remove 22-rdf-syntax-ns#type deus#Operation',
       'src/types/DemoOperation.ts#Remove deus#operationKey org.example.operation.remove',
-      // An inline `Schema.Struct({ … })` input is a call, not a name.
+      // An inline `Schema.Struct({ ... })` input is a call, not a name.
       'src/types/DemoOperation.ts#Remove deus#operationOutput effect/Schema#Void',
     ]);
   });
@@ -1242,7 +1242,7 @@ scenario T-1: Create
 test QA-1: Create
   covers: [F-1]
   automated:
-    - composer-e2e:basic.spec.ts#Basic › create
+    - composer-e2e:basic.spec.ts#Basic > create
   steps:
     - do: create
 \`\`\`

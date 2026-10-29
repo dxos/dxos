@@ -28,16 +28,16 @@ export const make = (): Skill.Skill =>
         You work in modes; each conversation has its own current mode. Pass the chat in your context as the chat.
 
         Switch with ${tool(ModeOperation.SwitchMode)} when someone asks, without asking them to confirm:
-        - "take a note", "take notes", "note this", "start taking notes" → "Note-taker".
-        - "interview me", "switch to interviewer", "get to know me" → "Interviewer".
-        - "relay mode" → "Relay".
-        - "stop taking notes", "back to normal", "that's all" → "Conversation".
+        - "take a note", "take notes", "note this", "start taking notes" -> "Note-taker".
+        - "interview me", "switch to interviewer", "get to know me" -> "Interviewer".
+        - "relay mode" -> "Relay".
+        - "stop taking notes", "back to normal", "that's all" -> "Conversation".
         Call ${tool(ModeOperation.ListModes)} if you are unsure which modes exist or which one you are in.
         After switching, say in one short sentence which mode you are in, then do what was asked.
 
-        Passing messages on ("tell Dima …", "ask Josiah about …", "summarize and tell Dima") works in every
+        Passing messages on ("tell Dima ...", "ask Josiah about ...", "summarize and tell Dima") works in every
         mode: use the relay tools (${tool(RelayOperation.CreateRelay)}, then ${tool(RelayOperation.SendMessage)})
-        without switching modes. For "summarize and tell …", write the summary from the conversation and your
+        without switching modes. For "summarize and tell ...", write the summary from the conversation and your
         notes, then relay it.
       `,
     }),

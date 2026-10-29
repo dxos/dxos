@@ -5,7 +5,7 @@
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 // The `/testing` entrypoints re-export each plugin's config (`export * as XPlugin from '#meta'`), which
-// builds the plugin eagerly with lazy module bodies — use them from any storybook `withPluginManager` setup.
+// builds the plugin eagerly with lazy module bodies - use them from any storybook `withPluginManager` setup.
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';

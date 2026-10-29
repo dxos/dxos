@@ -61,7 +61,7 @@ const FLUSH_RETRY_DELAY_MS = 50;
 
 /**
  * Client-side handle for a single feed, backed by an EDGE queue.
- * Internal to echo-client — feed operations are exposed through {@link DatabaseImpl}.
+ * Internal to echo-client - feed operations are exposed through {@link DatabaseImpl}.
  */
 export class FeedHandle {
   private readonly _ctx = new Context();
@@ -91,7 +91,7 @@ export class FeedHandle {
   private _parentEntity: Obj.Unknown | undefined = undefined;
 
   /**
-   * Per-object client-side state, keyed by id — the single source of truth for entity identity.
+   * Per-object client-side state, keyed by id - the single source of truth for entity identity.
    * Held weakly: identity only needs preserving while a caller holds the object, so reading a feed
    * does not make it resident for the life of the handle. See {@link FeedCoreRegistry}.
    */
@@ -216,7 +216,7 @@ export class FeedHandle {
     const cores = this.#registerItemsForAppend(items);
 
     const batch = cores.map((core) => {
-      // Captured explicitly below — don't let the background scheduler also flush this core.
+      // Captured explicitly below - don't let the background scheduler also flush this core.
       this.#dirtyCores.delete(core);
       const { json, token } = core.captureForAppend();
       return { core, json, token };
@@ -502,7 +502,7 @@ export class FeedHandle {
     }
     if (this.#endpointClosed) {
       // Recorded rather than skipped in silence: this handle can never send these, so a caller that
-      // reads `error` after `waitForPendingWrites` learns the flush wrote nothing. They stay dirty —
+      // reads `error` after `waitForPendingWrites` learns the flush wrote nothing. They stay dirty -
       // discarding a local edit here would lose more than it fixes, and `dispose` names the count.
       this._error = this.#endpointClosed;
       this.updated.emit();
@@ -535,7 +535,7 @@ export class FeedHandle {
 
   /**
    * Wait for every pending local `Obj.update` to be captured and sent (not for it to be echoed back
-   * through polling — the index that serves queries is caught up synchronously by the query host
+   * through polling - the index that serves queries is caught up synchronously by the query host
    * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
    *
    * While an append is failing, a drain waits for the scheduled retry rather than sending ahead of
@@ -607,7 +607,7 @@ export class FeedHandle {
   /**
    * The single materialization entry point for feed JSON: reconciles into an existing core's
    * working-set instance, or decodes and registers a fresh live core. Used by polling, reference
-   * resolution, and (via `DatabaseImpl._getFeedHandleIfAvailable`) index-backed query hydration —
+   * resolution, and (via `DatabaseImpl._getFeedHandleIfAvailable`) index-backed query hydration -
    * whichever of these observes an id first wins the identity for that entity.
    */
   async upsertFromJSON(json: ObjectJSON): Promise<Entity.Unknown | undefined> {
@@ -658,7 +658,7 @@ export class FeedHandle {
       const decoded = makeDecodedEntityLive(snapshot);
       invariant(Entity.isEntity(decoded), 'objectFromJSON produced an invalid entity');
       // A concurrent writer (e.g. `append`) may have registered a core for this id while we were
-      // decoding — discard this (possibly stale) hydration rather than clobber the fresher core;
+      // decoding - discard this (possibly stale) hydration rather than clobber the fresher core;
       // the next poll or query reconciles it properly via the "existing core" branch above.
       const racedCore = this.#cores.get(id);
       if (racedCore) {
@@ -690,7 +690,7 @@ export class FeedHandle {
   async getObjectsById(ids: EntityId[]): Promise<(Entity.Unknown | undefined)[]> {
     // Resolve what is already live and hold it here for the rest of the call: the core registry is
     // weak, so an id resolvable at entry could otherwise be collected across the await below and
-    // read back as `undefined` — a miss for an object the feed does have.
+    // read back as `undefined` - a miss for an object the feed does have.
     const resolved = new Map<EntityId, Entity.Unknown>();
     for (const id of ids) {
       const entity = this.#cores.get(id)?.entity;
@@ -742,7 +742,7 @@ export class FeedHandle {
 
   /**
    * Subscribes to `FeedService.subscribeFeed`, replacing the previous poll-timer loop with a real
-   * server-push subscription — ref-counted so concurrent callers share one underlying stream.
+   * server-push subscription - ref-counted so concurrent callers share one underlying stream.
    */
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {
@@ -760,7 +760,7 @@ export class FeedHandle {
   /**
    * Opens the shared `subscribeFeed` stream. On a stream error (the RPC connection dropping, say)
    * this reopens after a backoff delay rather than leaving the handle without updates for the rest
-   * of its session — the poll loop it replaced self-healed on its next tick, so this subscription
+   * of its session - the poll loop it replaced self-healed on its next tick, so this subscription
    * needs an equivalent recovery path. `generation` guards a reconnect scheduled by an earlier,
    * now-superseded subscription (unsubscribed, or replaced by a fresh `beginPolling()`) from firing.
    */
@@ -871,7 +871,7 @@ export class FeedHandle {
 
     // Release the last snapshot with the subscription that produced it. The array is a strong
     // reference to every object the feed contained, so keeping it past the last subscriber would
-    // pin the whole working set for the life of the handle — and it is stale from this point
+    // pin the whole working set for the life of the handle - and it is stale from this point
     // anyway, since nothing is left to refresh it.
     this.#objects = new Map();
     this.#subscriptionBlocks = new Map();

@@ -12,7 +12,7 @@ import { DEMO_MARKDOWN, RichTextLens, blockText, diffBlocks, parseBlocks, plain 
 
 //
 // The lens's own logic, without a browser. The property that matters is that editing one block
-// produces a splice over that block's range alone — everything else in the document is untouched, which
+// produces a splice over that block's range alone - everything else in the document is untouched, which
 // is what lets the markdown editor and another peer keep their concurrent edits.
 //
 
@@ -43,7 +43,7 @@ describe('parseBlocks', () => {
     expect(blockText(blocks[2])).to.eq('Why it merges');
     expect(blockText(blocks[3])).to.eq('Each block remembers its source range');
 
-    // Every range must quote the source it came from — that is the whole basis of the splice.
+    // Every range must quote the source it came from - that is the whole basis of the splice.
     for (const block of blocks) {
       expect(DEMO_MARKDOWN.slice(block.range[0], block.range[1]).length).to.be.greaterThan(0);
       expect(block.range[1]).to.be.greaterThan(block.range[0]);
@@ -56,7 +56,7 @@ describe('parseBlocks', () => {
       const text = blockText(block);
       expect(text.startsWith('#')).to.be.false;
       expect(text.startsWith('- ')).to.be.false;
-      // Mark delimiters are syntax too — the view carries the mark, not the asterisks.
+      // Mark delimiters are syntax too - the view carries the mark, not the asterisks.
       expect(text).not.to.contain('**');
       expect(text).not.to.contain('`');
     }
@@ -147,7 +147,7 @@ describe('diffBlocks', () => {
     const updated = applyToString(DEMO_MARKDOWN, diffBlocks(blocks, next));
     expect(updated).to.contain('- A much, much longer final bullet than before');
     expect(updated).to.contain('Appended after the rewrite.');
-    // The untouched region is verbatim — the property the whole lens is built around.
+    // The untouched region is verbatim - the property the whole lens is built around.
     expect(updated).to.contain('# One object, two editors');
     expect(updated).to.contain('## Why it merges');
     expect(updated).to.contain('- Each block remembers its `source range`');

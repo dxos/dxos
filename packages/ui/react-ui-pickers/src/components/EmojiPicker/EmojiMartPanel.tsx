@@ -13,7 +13,7 @@ export type EmojiMartPanelProps = {
 
 /**
  * The emoji-mart picker and its emoji database (~480 KB), isolated in its own module so the
- * default export can be lazily imported — the database is otherwise resident in every tab via
+ * default export can be lazily imported - the database is otherwise resident in every tab via
  * the pickers barrel, for a panel that only renders once a user opens it.
  */
 const EmojiMartPanel = ({ onEmojiSelect, themeMode }: EmojiMartPanelProps) => (

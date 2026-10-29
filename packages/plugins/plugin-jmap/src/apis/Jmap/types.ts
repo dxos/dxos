@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 //
-// Shared JMAP core schemas (RFC 8620). These are capability-agnostic — they apply to mail, calendars,
+// Shared JMAP core schemas (RFC 8620). These are capability-agnostic - they apply to mail, calendars,
 // and contacts alike.
 //
 
@@ -15,12 +15,12 @@ export const Session = Schema.Struct({
   apiUrl: Schema.String,
   /**
    * URI Template (RFC 6570) for blob downloads, with `accountId`/`blobId`/`type`/`name` variables
-   * (RFC 8620 §6.2). Required, matching the spec — every real JMAP session advertises one.
+   * (RFC 8620 §6.2). Required, matching the spec - every real JMAP session advertises one.
    */
   downloadUrl: Schema.String,
   /** Authenticated username (used to seed the connection account when the form leaves it blank). */
   username: Schema.optional(Schema.String),
-  /** Capability urn → primary account id (e.g. `urn:ietf:params:jmap:mail`). */
+  /** Capability urn -> primary account id (e.g. `urn:ietf:params:jmap:mail`). */
   primaryAccounts: Schema.Record(Schema.String, Schema.String),
   accounts: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
   capabilities: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),

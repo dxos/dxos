@@ -6,7 +6,7 @@
  * Registry of source files that use `@dxos/log`, populated at module load by the
  * `@dxos/vite-plugin-log` transform in development. Enables tooling (e.g. the Logger
  * panel) to enumerate log files and offer per-file level control. The registry owns
- * the file list only — levels are applied via the standard `@dxos/log` filter string.
+ * the file list only - levels are applied via the standard `@dxos/log` filter string.
  */
 export interface LogFileRegistry {
   /** Register a file path (idempotent; notifies subscribers only when newly added). */
@@ -57,7 +57,7 @@ declare global {
 
 /**
  * Global singleton so all (possibly duplicated) copies of `@dxos/log` and the
- * transform-injected `globalThis.DX_LOG_FILES.register(...)` calls share one registry —
+ * transform-injected `globalThis.DX_LOG_FILES.register(...)` calls share one registry -
  * mirrors how `log` is `globalThis.DX_LOG`.
  */
 export const logFileRegistry: LogFileRegistry = (globalThis.DX_LOG_FILES ??= createLogFileRegistry());

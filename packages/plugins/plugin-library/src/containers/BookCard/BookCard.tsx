@@ -19,7 +19,7 @@ export const BookCard = ({ subject }: AppSurface.ObjectCardProps<Book.Book>) => 
   const [{ catalog, stars }] = useObject(subject);
   const cover = catalog?.cover ?? catalog?.thumbnail;
   const authors = catalog?.authors ?? [];
-  const meta = [catalog?.publicationYear, stars != null ? `★ ${stars}/10` : undefined].filter(Boolean).join(' · ');
+  const meta = [catalog?.publicationYear, stars != null ? `\u2605 ${stars}/10` : undefined].filter(Boolean).join(' · ');
 
   return (
     <Card.Body>

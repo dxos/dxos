@@ -149,7 +149,7 @@ describe('Cursor.layer', () => {
   });
 
   test(
-    'dedupStage folds every considered key into state.extent, even when dropped by the dedup set — ' +
+    'dedupStage folds every considered key into state.extent, even when dropped by the dedup set - ' +
       'the stall-proofing seam for a crash that landed items in the feed before the cursor min advance persisted',
     async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
@@ -200,19 +200,19 @@ describe('Cursor.layer', () => {
       );
 
       expect(extent).toEqual({ maxKey: 30, minKey: 20 });
-      // Both items were dropped via the dedup set — nothing committed, so `min` hasn't moved yet.
+      // Both items were dropped via the dedup set - nothing committed, so `min` hasn't moved yet.
       expect(cursor.min).toBe('50');
 
       // Stall-proofing: fold in the extent extent though nothing committed, so a re-run's backward
       // window shrinks instead of re-scanning the same items forever.
       Cursor.extendRange(cursor, extent);
       expect(cursor.min).toBe('20');
-      expect(cursor.max).toBe('100'); // Unaffected — extent.maxKey (30) doesn't exceed `max`.
+      expect(cursor.max).toBe('100'); // Unaffected - extent.maxKey (30) doesn't exceed `max`.
     },
   );
 
   test(
-    'the high-boundary item is deduped even after the newest-by-insertion seed window has aged past it — ' +
+    'the high-boundary item is deduped even after the newest-by-insertion seed window has aged past it - ' +
       'regression: the newest message was re-committed on every backfill run',
     async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
@@ -234,7 +234,7 @@ describe('Cursor.layer', () => {
       );
 
       // Seed tail smaller than the items backfilled after `max`, so a newest-only seed would miss
-      // `max`'s item — the production case with >500 backfilled messages.
+      // `max`'s item - the production case with >500 backfilled messages.
       const layer = Cursor.layer({
         cursor,
         feed,
@@ -269,7 +269,7 @@ describe('Cursor.layer', () => {
   );
 
   test(
-    'a single-directional run drops a key === 0 item below an advanced max; a range run keeps it — ' +
+    'a single-directional run drops a key === 0 item below an advanced max; a range run keeps it - ' +
       'regression: trackRange gates the interior shortcut so the min bound never strands a fallback key',
     async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
@@ -529,7 +529,7 @@ describe('token accessors', () => {
     expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-b']);
   });
 
-  test('tag heads survive a token clear — a stale delta does not invalidate the base', async ({ expect }) => {
+  test('tag heads survive a token clear - a stale delta does not invalidate the base', async ({ expect }) => {
     const cursor = await makeExternalCursor();
     Cursor.writeSyncState(cursor, { token: 'history-1', tagHeads: ['head-a'] });
 
@@ -606,7 +606,7 @@ describe('foreignIndex (reconcileFilter)', () => {
     await builder.close();
   });
 
-  test('maps the reconcile filter’s foreignIds to their EntityIds', async ({ expect }) => {
+  test("maps the reconcile filter's foreignIds to their EntityIds", async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
     const feed = db.add(Feed.make());
     const target = db.add(Expando.make({ name: 'mailbox' }));
@@ -647,7 +647,7 @@ describe('foreignIndex (reconcileFilter)', () => {
     expect(state.foreignIndex!.get('id-30')).toBe(items[2].id);
   });
 
-  test('is absent when no reconcileFilter is set — the add-only path pays nothing', async ({ expect }) => {
+  test('is absent when no reconcileFilter is set - the add-only path pays nothing', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
     const feed = db.add(Feed.make());
     const target = db.add(Expando.make({ name: 'mailbox' }));
@@ -968,13 +968,13 @@ describe('resolveWindows', () => {
 
   const horizon = (days: number) => addCalendarDays(NOW, -days);
 
-  test('never synced (maxKey 0) → backward-only, covering the whole horizon', ({ expect }) => {
+  test('never synced (maxKey 0) -> backward-only, covering the whole horizon', ({ expect }) => {
     const windows = Cursor.resolveWindows({ maxKey: 0, minKey: 0, now: NOW, horizon: horizon(30) });
     expect(windows.forward).toBeUndefined();
     expect(windows.backward).toEqual({ direction: 'backward', start: horizon(30), end: addCalendarDays(NOW, 1) });
   });
 
-  test('synced before, horizon below min → both forward and backward windows', ({ expect }) => {
+  test('synced before, horizon below min -> both forward and backward windows', ({ expect }) => {
     const maxKey = new Date('2026-07-01T00:00:00.000Z').getTime();
     const minKey = new Date('2026-06-20T00:00:00.000Z').getTime();
     const windows = Cursor.resolveWindows({ maxKey, minKey, now: NOW, horizon: horizon(30) });
@@ -982,7 +982,7 @@ describe('resolveWindows', () => {
     expect(windows.backward).toEqual({ direction: 'backward', start: horizon(30), end: new Date(minKey) });
   });
 
-  test('backward absent once the horizon has reached (or passed) min — backfill complete', ({ expect }) => {
+  test('backward absent once the horizon has reached (or passed) min - backfill complete', ({ expect }) => {
     const maxKey = new Date('2026-07-01T00:00:00.000Z').getTime();
     const minKey = horizon(30).getTime();
     const windows = Cursor.resolveWindows({ maxKey, minKey, now: NOW, horizon: horizon(30) });
@@ -1001,7 +1001,7 @@ describe('resolveWindows', () => {
     expect(widened.backward).toEqual({ direction: 'backward', start: horizon(60), end: new Date(minKey) });
   });
 
-  test('unset min (minKey 0) is defensively treated as max — no backward window if the horizon has already reached max', ({
+  test('unset min (minKey 0) is defensively treated as max - no backward window if the horizon has already reached max', ({
     expect,
   }) => {
     const maxKey = horizon(10).getTime();
@@ -1012,7 +1012,7 @@ describe('resolveWindows', () => {
 });
 
 describe('completeBackfill', () => {
-  test('no-op when max is unset — nothing synced yet, so there is no floor to clamp', async ({ expect }) => {
+  test('no-op when max is unset - nothing synced yet, so there is no floor to clamp', async ({ expect }) => {
     const builder = await new EchoTestBuilder().open();
     const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed] });
     const feed = db.add(Feed.make());
@@ -1056,7 +1056,7 @@ describe('completeBackfill', () => {
       }),
     );
 
-    // The horizon advances a day later (syncBackDays unchanged) — still above the already-clamped min.
+    // The horizon advances a day later (syncBackDays unchanged) - still above the already-clamped min.
     Cursor.completeBackfill(cursor, firstHorizon + 24 * 60 * 60 * 1000);
     expect(cursor.min).toBe(String(firstHorizon));
     await builder.close();

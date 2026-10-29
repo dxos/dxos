@@ -38,7 +38,7 @@ export const AppendChannelMessage = Operation.make({
     icon: 'ph--chat-text--regular',
   },
   // Note: Database.Service is provided inside the handler from space.db, not at the
-  // operation level — the runtime can't fulfill it without a space context.
+  // operation level - the runtime can't fulfill it without a space context.
   services: [Capability.Service],
   input: Schema.Struct({
     channel: Type.getSchema(Channel.Channel),

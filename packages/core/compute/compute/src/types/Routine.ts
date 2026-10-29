@@ -33,7 +33,7 @@ const RoutineSpec = Schema.Union([RunnableSpec, InstructionsSpec]);
 
 /**
  * User-facing routine: a thin aggregate of an action (`runnable`) and the triggers that fire it.
- * App-level only — EDGE stays unaware of it (triggers point directly at the runnable).
+ * App-level only - EDGE stays unaware of it (triggers point directly at the runnable).
  */
 export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.routine', '0.2.0'))(
   Schema.Struct({
@@ -51,7 +51,7 @@ export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.ro
     spec: RoutineSpec.pipe(Schema.optional),
 
     /**
-     * Explicit membership, bi-directional with `trigger.runnable → runnable`. Required (not derived by query)
+     * Explicit membership, bi-directional with `trigger.runnable -> runnable`. Required (not derived by query)
      * because the runnable may be a shared registry operation referenced by multiple automations, which would
      * conflate triggers. MVP enforces length <= 1.
      */
@@ -75,7 +75,7 @@ export const instructionsRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Instruc
   routine.spec?.kind === 'instructions' ? routine.spec.instructions : undefined;
 
 // Return type de-aliased to `Operation.PersistentOperation` (what `Runnable.Runnable` aliases) so this
-// exported symbol's declaration names it directly — the reference that lets `tsc` emit the module's
+// exported symbol's declaration names it directly - the reference that lets `tsc` emit the module's
 // `.d.ts` (avoids TS2742) without keeping an otherwise-unused `Operation` import.
 /** The Operation (runnable) ref of an operation-action routine, or undefined for an instructions action. */
 export const runnableRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Operation.PersistentOperation> | undefined =>

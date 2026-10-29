@@ -63,7 +63,7 @@ export const runBenchmark = <Config, Output, E, R>(
         const snapshot = yield* metrics.snapshot;
         return {
           'total.ms': Math.round(Duration.toMillis(duration)),
-          // Heap growth across the run (Node only; approximate — subject to GC, and for out-of-process
+          // Heap growth across the run (Node only; approximate - subject to GC, and for out-of-process
           // model back-ends like Ollama it reflects harness overhead, not the model's own memory).
           ...(heapBefore !== undefined && heapAfter !== undefined
             ? { 'heap.mb': Math.round(((heapAfter - heapBefore) / (1024 * 1024)) * 100) / 100 }

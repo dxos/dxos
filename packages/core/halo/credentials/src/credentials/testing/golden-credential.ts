@@ -7,7 +7,7 @@
  *
  * Every credential ever issued is signed over the canonical stringification of its *decoded* shape,
  * so a shape change anywhere in the codec path silently invalidates all of them. A test that signs
- * with the current tree cannot catch that — it moves with the tree and keeps agreeing with itself.
+ * with the current tree cannot catch that - it moves with the tree and keeps agreeing with itself.
  * This vector is the missing half: bytes and signing payload produced by a build that predates the
  * change under test.
  *

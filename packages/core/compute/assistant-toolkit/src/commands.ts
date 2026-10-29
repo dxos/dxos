@@ -10,7 +10,7 @@ import { type Database } from '@dxos/echo';
 /**
  * A deterministic prompt shortcut: a leading `/command args` line runs an operation directly, with
  * no model in the loop. The commands live with the verbs they invoke, so this module stays
- * operation-agnostic — the parse and the shape are all a prompt editor or a chat needs.
+ * operation-agnostic - the parse and the shape are all a prompt editor or a chat needs.
  */
 export type SlashCommand = {
   /** Including the leading slash, e.g. `/task:run`. */
@@ -55,7 +55,7 @@ export type SlashCommandResult = {
 export type TaskSelector = { ordinal: number } | { title: string };
 
 /**
- * `1 3`, `1,3`, or titles. Quoting is what makes a title unambiguous — a title is often several
+ * `1 3`, `1,3`, or titles. Quoting is what makes a title unambiguous - a title is often several
  * words (`"Draft release notes"`) and may itself be a number (`"123"`), neither of which a bare
  * whitespace split can express.
  */

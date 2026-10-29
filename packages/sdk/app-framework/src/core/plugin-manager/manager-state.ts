@@ -46,7 +46,7 @@ export class ManagerState {
   readonly active: Atom.Writable<string[]>;
   /** Activation events that have fired. */
   readonly eventsFired: Atom.Writable<string[]>;
-  /** Events whose modules changed after the event fired — replayed on the next enable. */
+  /** Events whose modules changed after the event fired - replayed on the next enable. */
   readonly pendingReset: Atom.Writable<string[]>;
   /** Plugins that failed to load or activate (latest failure per id). */
   readonly failed: Atom.Writable<PluginFailure[]>;
@@ -62,14 +62,14 @@ export class ManagerState {
    * modules; event dispatch awaits it so lazy plugin imports can't race activation.
    */
   readonly initialized = Effect.runSync(Deferred.make<void, PluginInitializationError>());
-  /** Whether `start()` has run — gates incremental activation on later enables. */
+  /** Whether `start()` has run - gates incremental activation on later enables. */
   readonly started = Effect.runSync(Ref.make(false));
   /**
    * Completed when the Startup wave has finished; events dispatched mid-startup await it so their
    * modules can rely on every startup capability. Reset by {@link clearEventsFired}.
    */
   startupComplete = Effect.runSync(Deferred.make<void>());
-  /** Set for the duration of `shutdown()` — new starts/activations are skipped meanwhile. */
+  /** Set for the duration of `shutdown()` - new starts/activations are skipped meanwhile. */
   readonly shuttingDown = Effect.runSync(Ref.make(false));
   /**
    * Modules deactivated because a singleton capability they require lost its provider
@@ -261,7 +261,7 @@ export class ManagerState {
 
   //
   // Pending reset: events that already fired but whose module set changed (a plugin was
-  // enabled after the fact) — replayed so the new modules activate.
+  // enabled after the fact) - replayed so the new modules activate.
   //
 
   getPendingReset(): readonly string[] {

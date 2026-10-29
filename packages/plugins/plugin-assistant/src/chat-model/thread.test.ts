@@ -163,7 +163,7 @@ describe('queue projection', () => {
     expect(tail).toBe(1);
   });
 
-  test('a consumed queue entry leaves the tail — the turn it drove is the thread entry', ({ expect }) => {
+  test('a consumed queue entry leaves the tail - the turn it drove is the thread entry', ({ expect }) => {
     const entry = consumed(queued(message('do the thing')));
     const turn = message('do the thing');
     const { messages, queued: count } = projectThread({ feedMessages: [entry, turn] });
@@ -174,7 +174,7 @@ describe('queue projection', () => {
     expect(count).toBe(0);
   });
 
-  // Regression: the entry stayed in the queue until the ack, which lands only after the turn — so the
+  // Regression: the entry stayed in the queue until the ack, which lands only after the turn - so the
   // prompt was rendered in the queue and the thread at once for the whole turn.
   test('an entry the running turn took up leaves the tail as soon as the thread shows it', ({ expect }) => {
     const entry = inFlight(queued(message('do the thing')));
@@ -433,7 +433,7 @@ describe('collapseToolRuns', () => {
     expect(collapsed).toHaveLength(3);
   });
 
-  // The model explains itself before each call, so a real run is call/reasoning/call — the shape
+  // The model explains itself before each call, so a real run is call/reasoning/call - the shape
   // that produced one panel per call in the app.
   test('reasoning between calls does not split the run', ({ expect }) => {
     const collapsed = collapseToolRuns([

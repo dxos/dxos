@@ -408,7 +408,7 @@ const InlineGroup = ({ menu, group, separated }: ItemProps<{ group: MenuItemGrou
   );
 };
 
-/** The ⋮ menu: groups collapsed out of the rows (as submenus), then the overflow group's own and contributed items. */
+/** The : menu: groups collapsed out of the rows (as submenus), then the overflow group's own and contributed items. */
 const OverflowMenu = ({ menu, group, collapsed }: ItemProps<{ group: MenuItemGroup; collapsed: MenuItem[] }>) => {
   const items = useMenuItems(menu, group);
   const actions = useMemo(() => [...collapsed, ...byOrder(items ?? [])], [collapsed, items]);
@@ -551,14 +551,14 @@ export type ActionToolbarProps = Partial<MenuActions> &
     alwaysActive?: boolean;
     /**
      * Items another component adds to this toolbar, merged with its own group by group: root items follow the owner's,
-     * and `MenuBuilder.extend(groupId, …)` adds to a named group.
+     * and `MenuBuilder.extend(groupId, ...)` adds to a named group.
      */
     customActions?: Atom.Atom<ActionGraphProps>;
   };
 
 /**
  * A toolbar driven from a `MenuActions`. Each item's `placement` puts it in the start or end zone of a row; a
- * plain named group renders inline and others extend it (`MenuBuilder.extend`); the overflow menu (⋮,
+ * plain named group renders inline and others extend it (`MenuBuilder.extend`); the overflow menu (:,
  * `TOOLBAR_OVERFLOW_ID`) ends the first row and takes collapsible items while a row is too narrow. One row renders as a
  * single `Toolbar.Root` (which takes the props and ref); more stack one per row. Hand-written controls join the graph as
  * `custom` items (`MenuBuilder.custom`), labels as `text` items.

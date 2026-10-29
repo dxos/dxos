@@ -23,7 +23,7 @@ import * as Task from './Task.ts';
  *
  * The set holds a tree: `tasks` lists the ROOT tasks in order, and each task lists its own sub-tasks
  * in `Task.subtasks`. Every list is also its members' ECHO parent (`Annotation.SetParent`), so a
- * task's position in the tree is one record — the list that holds it, which is also the edge
+ * task's position in the tree is one record - the list that holds it, which is also the edge
  * `Filter.childOf` follows and deletion cascades along. Milestone assignment stays a single ref on
  * the task (`Task.milestone`).
  */
@@ -108,7 +108,7 @@ export const addTask = (
 
 /**
  * Delete a task from its holder's list and the database. The delete cascades along the parent edge,
- * so its sub-tasks go with it; `dependsOn` refs pointing into the subtree dangle by design —
+ * so its sub-tasks go with it; `dependsOn` refs pointing into the subtree dangle by design -
  * `Task.isTaskReady` reads a dangling dependency as satisfied.
  */
 export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.Task): void => {
@@ -117,12 +117,12 @@ export const deleteTask = (db: Database.Database, taskSet: TaskSet, task: Task.T
 };
 
 //
-// Set-scoped readers. The task-level derived views — hierarchy, readiness, milestone grouping,
-// progress — take a plain task list rather than a set, so they live in `Task`.
+// Set-scoped readers. The task-level derived views - hierarchy, readiness, milestone grouping,
+// progress - take a plain task list rather than a set, so they live in `Task`.
 //
 
 /**
- * Every task in the set in tree pre-order — each root followed by its sub-tasks — dropping
+ * Every task in the set in tree pre-order - each root followed by its sub-tasks - dropping
  * unresolved refs and de-duplicating by id: concurrent edits can merge a ref into a list twice, and a
  * reader must not show the task twice. An entry whose parent edge names another holder is skipped,
  * so a task appears under exactly one parent.
@@ -155,7 +155,7 @@ const resolveRefs = <T extends Obj.Unknown>(refs: ReadonlyArray<Ref.Ref<T>>): Ar
 /**
  * Whether `holder`'s list may show `task`: the parent edge is the one record of where a task lives,
  * so an entry left behind in a second list (two peers moving one task) reads as absent there. A task
- * with no parent edge at all — a legacy entry — is shown by whichever list holds it.
+ * with no parent edge at all - a legacy entry - is shown by whichever list holds it.
  */
 const heldBy = (holder: Holder, task: Task.Task): boolean => {
   const parent = Obj.getParent(task);
@@ -169,7 +169,7 @@ const heldBy = (holder: Holder, task: Task.Task): boolean => {
 
 /**
  * The task set a task belongs to: the set holding the root of its tree. Found through the
- * reverse-ref index first — a legacy root's parent edge may not yet be healed to the set — with the
+ * reverse-ref index first - a legacy root's parent edge may not yet be healed to the set - with the
  * root's ECHO parent as the fallback, for a root whose list entry was dropped (see {@link ensureMember}).
  */
 export const findTaskSet = (task: Task.Task): Effect.Effect<TaskSet | undefined, never, Database.Service> =>
@@ -186,8 +186,8 @@ export const findTaskSet = (task: Task.Task): Effect.Effect<TaskSet | undefined,
   });
 
 /**
- * Whether `task` is a member of `taskSet` — listed in it, or a sub-task somewhere under one of its
- * roots — re-listing it wherever only its ECHO parent edge says it belongs.
+ * Whether `task` is a member of `taskSet` - listed in it, or a sub-task somewhere under one of its
+ * roots - re-listing it wherever only its ECHO parent edge says it belongs.
  *
  * The two records of membership can disagree: the tree shows `Filter.childOf(holder)`, while a
  * whole-array write merged against a concurrent push drops that entry from the holder's list. The
@@ -266,8 +266,8 @@ export const addMilestoneToSet = (taskSet: TaskSet, milestone: Milestone.Milesto
 };
 
 /**
- * How long one cold ref may take to resolve. An unresolvable ref does not fail — the resolver runs
- * a query that simply finds nothing and waits out its own 30s timeout — so without a bound of our
+ * How long one cold ref may take to resolve. An unresolvable ref does not fail - the resolver runs
+ * a query that simply finds nothing and waits out its own 30s timeout - so without a bound of our
  * own a single dangling entry stalls the whole read past any caller's deadline. Past this, the
  * entry is treated as gone, which is what an unresolvable ref means to every reader here.
  */
@@ -275,7 +275,7 @@ const REF_LOAD_TIMEOUT = Duration.seconds(5);
 
 /**
  * Every ref loaded, dropping entries whose object is gone. The lists may hold cold refs, and the
- * sync `resolveTasks` silently drops those — an incomplete member list here becomes an incomplete
+ * sync `resolveTasks` silently drops those - an incomplete member list here becomes an incomplete
  * subtree sweep or a false membership rejection.
  *
  * Materialized refs are taken from the working set and never hit the resolver, and the cold
@@ -338,7 +338,7 @@ export const addPersisted = <T extends Obj.Any>(
   });
 
 /**
- * Takes `task` out of the list that holds it — its parent task's `subtasks`, else `taskSet.tasks` —
+ * Takes `task` out of the list that holds it - its parent task's `subtasks`, else `taskSet.tasks` -
  * returning the holder and the index it sat at, so an undo can put it back. The set is swept too
  * when the holder is a task: a concurrent move can leave a stale root entry behind.
  */
@@ -360,7 +360,7 @@ export const detach = (
 };
 
 //
-// In-place list writes. Every list — `TaskSet.tasks`, `Task.subtasks`, `TaskSet.milestones` — is
+// In-place list writes. Every list - `TaskSet.tasks`, `Task.subtasks`, `TaskSet.milestones` - is
 // spliced, never reassigned: a whole-array write replaces the list in the CRDT, so merged against a
 // concurrent peer's push it drops that entry.
 //
@@ -390,7 +390,7 @@ export const collapseDuplicatesInPlace = <T extends Obj.Unknown>(refs: Ref.Ref<T
 
 /**
  * Insert `ref` immediately before `beforeId` (or at the end when unanchored or the anchor is
- * absent), after splicing out any copy already there — so the entry lands exactly once.
+ * absent), after splicing out any copy already there - so the entry lands exactly once.
  */
 export const insertInPlace = <T extends Obj.Unknown>(
   refs: Ref.Ref<T>[],
@@ -430,7 +430,7 @@ export const reorderInPlace = <T extends Obj.Unknown>(
  * Move the item keyed `id` to sit immediately before `beforeId` (or to the end when unanchored).
  * Returns the array unchanged when the entry is absent, so a concurrent removal is not
  * resurrected. Generic over the item shape so an optimistic UI transform over loaded tasks shares
- * the exact algorithm {@link reorder} applies to the refs array — the two orders must agree.
+ * the exact algorithm {@link reorder} applies to the refs array - the two orders must agree.
  */
 export const reorderItems = <T>(
   items: ReadonlyArray<T>,
@@ -503,7 +503,7 @@ export const resolveParentTask = (
 
 /**
  * The whole write half of a move: place the task before `beforeId` among its siblings and, when
- * `parentTask` is given (`null` for a root of the set), move it to that holder's list first —
+ * `parentTask` is given (`null` for a root of the set), move it to that holder's list first -
  * spliced out of the old list and into the new one, with the parent edge following. Validating the
  * placement is the caller's job.
  */

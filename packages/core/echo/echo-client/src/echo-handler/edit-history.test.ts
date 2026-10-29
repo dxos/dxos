@@ -91,7 +91,7 @@ describe('edit-history', () => {
     invariant(baseVersion, 'expected an initial edit-history entry');
     const baseHeads = [baseVersion.change.hash];
 
-    // Edit the live branch, then make a second edit branching from the base version — concurrent
+    // Edit the live branch, then make a second edit branching from the base version - concurrent
     // with the first. Integrating it leaves the history non-linear (two frontier heads).
     accessor.handle.change((doc: AutomergeDoc<TestSchema.Task>) => {
       A.splice(doc, path, 4, 0, ' [live]');

@@ -67,7 +67,7 @@ const isTauriBuild = isTrue(process.env.DX_TAURI) || Boolean(process.env.TAURI_E
 
 // Vite's full-bundle dev mode: a Rolldown dev build serves the client graph instead of the
 // per-module transform pipeline, reusing `build.rolldownOptions` verbatim and running no dep
-// optimizer — so config written for one pipeline or the other has to branch on it.
+// optimizer - so config written for one pipeline or the other has to branch on it.
 //
 // Read from argv rather than a plugin hook, because `ConfigEnv` carries no flag and
 // `build.rolldownOptions` is consumed before any hook could amend it. Only the `dev` command reads
@@ -85,7 +85,7 @@ const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core
 /**
  * Slide theme fonts that plugin-presenter imports only when a deck picks one (`FONTS`/`MONO_FONTS` in its
  * `SlideTheme.tsx`; keep the two in step). Precaching them would download every one at install, so the service
- * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-…` file names, so a family
+ * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-...` file names, so a family
  * that only shares a prefix (`nunito-sans`) is not caught.
  */
 const ON_DEMAND_FONTS = [
@@ -134,7 +134,7 @@ const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo',
 
 /**
  * Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser`
- * condition — a `browser`-conditioned subpath resolves to that package's own wasm-initializing
+ * condition - a `browser`-conditioned subpath resolves to that package's own wasm-initializing
  * glue, so pinning the non-browser resolution keeps one wasm instance shared by every importer.
  */
 const slimWasm = (): PluginOption => {
@@ -161,7 +161,7 @@ const slimWasm = (): PluginOption => {
         }
         // automerge-repo is redirected only where Rolldown bundles the graph: under the
         // transform-per-module dev server a redirect would hand out a raw `/@fs` path that
-        // bypasses its optimizer chunk, and repo's dist imports CJS deps (`debug`, …) that only
+        // bypasses its optimizer chunk, and repo's dist imports CJS deps (`debug`, ...) that only
         // the prebundle's ESM interop makes importable. The prebundled fullfat chunk's
         // automerge/subduction imports are externalized and still land here. Bundled dev runs no
         // optimizer at all, so it needs the redirect a build gets.
@@ -226,7 +226,7 @@ const reducedPluginEntries = () => {
 // Node builtins the client graph references from code it never runs, with the names those importers
 // destructure: `net`/`os` arrive via `@dxos/cli-util/callback`'s `get-port-please`, reached from
 // plugin-client's and plugin-connector's CLI command modules. Only bundled dev needs them (see
-// `nodeBuiltinStubs`) — `build` links the same graph without complaint, so the production path is
+// `nodeBuiltinStubs`) - `build` links the same graph without complaint, so the production path is
 // left alone and the shipped bundle is unchanged.
 const NODE_BUILTIN_STUBS = {
   net: ['createServer'],
@@ -250,7 +250,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // Package-internal `#*` subpath imports must still resolve to source, or they fall
   // through to `dist/lib/*` and fail when a package has not been compiled.
   // Packages whose source is not vite-safe publish no `source` condition at all, so they resolve
-  // to dist here exactly as they do under node/bun — no app-local exclude list, and no divergence
+  // to dist here exactly as they do under node/bun - no app-local exclude list, and no divergence
   // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve`. The same
   // holds per-export for bundler-plugin entrypoints (`./vite-plugin`, `./plugin`) of packages whose
   // remaining exports are vite-safe; the `vite-plugin` tag builds their dist.
@@ -320,7 +320,7 @@ const rearmWatchPlugin = (): PluginOption => ({
   apply: 'serve',
   configureServer: (server) => {
     server.watcher.on('change', (file) => {
-      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      // Vite also emits `change` for virtual module ids (`\0virtual:...`), which are not files and crash `fs.stat`.
       if (file.includes('\0') || !file.startsWith('/')) {
         return;
       }
@@ -339,7 +339,7 @@ export default defineConfig((env) => ({
     // Per-dev-server-instance id (config re-evaluates on every server start/restart). main.tsx
     // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
-    // URL + name). Empty in production builds — the name must stay stable across deploys.
+    // URL + name). Empty in production builds - the name must stay stable across deploys.
     '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
     '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
@@ -357,28 +357,28 @@ export default defineConfig((env) => ({
         : undefined,
     watch: {
       // Use the fs.watch backend, not fsevents. chokidar's fsevents handler keeps ONE native stream per
-      // root with a Set of listeners — one per watched path — and routes every event by running
+      // root with a Set of listeners - one per watched path - and routes every event by running
       // `indexOf` against every listener (lib/fsevents-handler.js, `cont.listeners.forEach`). Resolving
       // `@dxos/*` from source means a watch per transformed module, so that set runs to thousands and
       // grows as more of the app is browsed; a write burst then pins the main thread and the server
       // stops responding (diagnosed via `moon run composer-app:diagnose-serve`: 4062 of 4064 samples in
-      // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
+      // fse_dispatch_event, with no idle time at all). `ignored` does not help - chokidar filters after
       // this routing, so the scan happens regardless.
       useFsEvents: false,
       // Explicit: chokidar turns polling ON for macOS whenever fsevents is off and `usePolling` is unset, which
       // `fs.watchFile`-stats every watched module and starves the libuv pool that serves transforms on reload.
       usePolling: false,
       // Build output is not source, and the watch root spans the monorepo, so a single
-      // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
+      // `moon run <pkg>:build` - which rewrites dist across many packages - is a large event burst for
       // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
       // these in. Trade-off: rebuilding a package whose dist is consumed at runtime no longer triggers
-      // HMR, so that needs a server restart — the honest behaviour for a prebuilt dependency.
+      // HMR, so that needs a server restart - the honest behaviour for a prebuilt dependency.
       ignored: ['**/dist/**', '**/.moon/cache/**', '**/temp/**', '**/coverage/**', '**/*.tsbuildinfo'],
       // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
       // a single HMR pass: chokidar holds add/change events until the file size
       // has been stable for `stabilityThreshold` ms, so a hundred-file burst
       // produces one invalidation wave instead of one per write. Costs ~200 ms
-      // of HMR latency on every save — acceptable against the multi-second
+      // of HMR latency on every save - acceptable against the multi-second
       // rescan queue a burst otherwise produces (each invalidation of the
       // theme CSS re-runs a monorepo-wide Tailwind scan).
       awaitWriteFinish: {
@@ -411,7 +411,7 @@ export default defineConfig((env) => ({
   preview: {
     // With https enabled (and no proxy) vite serves preview over HTTP/2, whose stream
     // multiplexing removes the ~6-connection HTTP/1.1 request serialization across the
-    // ~500-chunk boot preload wave — the dominant pre-main cost when previewing locally.
+    // ~500-chunk boot preload wave - the dominant pre-main cost when previewing locally.
     // Same opt-in as `server`: HTTPS=true with key/cert at the repo root.
     https:
       process.env.HTTPS === 'true'
@@ -461,7 +461,7 @@ export default defineConfig((env) => ({
         // Production shaping only, though bundled dev would otherwise honour it (it reuses this
         // whole options object): `boot.plugin`, which drops the memoized partition per build, is
         // `apply: 'build'`, so under dev the first build's partition would be reapplied to every
-        // rebuild forever. Dev has nothing to gain from it either — chunk count is not what a dev
+        // rebuild forever. Dev has nothing to gain from it either - chunk count is not what a dev
         // server optimizes, and computing a whole-graph Tarjan partition is pure rebuild latency.
         codeSplitting: isBundledDev
           ? undefined
@@ -493,13 +493,13 @@ export default defineConfig((env) => ({
     // The wasm packages `slimWasm` redirects must not be pre-bundled: the optimizer resolves
     // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
     // land on that chunk's top-level await regardless of what the plugin resolves. automerge-repo
-    // is deliberately NOT excluded: it has CJS deps (`debug`, …) that need the prebundle's ESM
+    // is deliberately NOT excluded: it has CJS deps (`debug`, ...) that need the prebundle's ESM
     // interop, and its prebundled chunk's externalized automerge/subduction imports still resolve
     // through `slimWasm` at serve time.
     exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
     // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
     // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
-    // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
+    // subpath), which forces a full page reload with the "Discovered new dependencies" banner -
     // ~10 s of wasted dev time per cycle and the most common cause of HMR appearing to hang.
     //
     // The list is static rather than left to the `entries` scan below because vite runs that scan
@@ -511,7 +511,7 @@ export default defineConfig((env) => ({
     // Regenerate with `moon run composer-app:gen-optimize-deps`.
     //
     // Entries must resolve from this app's root, which is why deps reached only through `@dxos/*`
-    // packages (@automerge/*, @atlaskit/pragmatic-drag-and-drop*, @opentelemetry/*, xstate, …) are
+    // packages (@automerge/*, @atlaskit/pragmatic-drag-and-drop*, @opentelemetry/*, xstate, ...) are
     // also listed as direct deps of composer-app in package.json. An entry that stops resolving
     // costs a warning per start, not a failed scan.
     //
@@ -524,7 +524,7 @@ export default defineConfig((env) => ({
     //
     // Additionally, point the scanner at every plugin's entry files. Plugins
     // are loaded via `await import(...)` at runtime so their bare-module
-    // imports aren't reachable from the static graph rooted at `index.html` —
+    // imports aren't reachable from the static graph rooted at `index.html` -
     // Vite would discover them mid-session and trigger a re-optimize + full
     // page reload per plugin family. Walking the entries at startup catches
     // whatever `include` above has drifted away from, and is what
@@ -537,7 +537,7 @@ export default defineConfig((env) => ({
       './reset.html',
       './recovery.html',
       // Under a reduced DX_PLUGIN_SET, scan only the plugins that set can reach, read from its
-      // sources themselves — the hand-maintained list this replaces had drifted from them
+      // sources themselves - the hand-maintained list this replaces had drifted from them
       // (missing `tasks`/`progress`, still naming a removed `outliner`).
       isReducedPluginSet ? reducedPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
@@ -545,7 +545,7 @@ export default defineConfig((env) => ({
   resolve: {
     conditions: isTauriBuild ? ['tauri', ...defaultClientConditions] : undefined,
     // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
-    // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
+    // a bare `util` alias also rewrites `util/types` -> `@dxos/node-std/util/types` (not exported).
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
@@ -567,7 +567,7 @@ export default defineConfig((env) => ({
       { find: /^stream$/, replacement: '@dxos/node-std/stream' },
       { find: /^tiktoken\/lite$/, replacement: path.resolve(dirname, 'stub.mjs') },
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
-      //   source files — imports embedded inside compiled dist/ files bypass it entirely.
+      //   source files - imports embedded inside compiled dist/ files bypass it entirely.
       // '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
       // TODO(wittjosiah): Remove this once we have a better solution.
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
@@ -600,7 +600,7 @@ export default defineConfig((env) => ({
     rearmWatchPlugin(),
     ...sharedPlugins(env),
 
-    // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
+    // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only -
     // a deployed Composer has no vite server, and needs the standalone managed process instead.
     // Turns are confined to DX_AGENT_CWD (default: the workspace root); the host refuses any
     // requested directory outside it.
@@ -717,13 +717,13 @@ export default defineConfig((env) => ({
     // Emit a `<script type="importmap">` into the production HTML mapping shared
     // bare specifiers (`react`, `effect`, `@dxos/client`, etc.) to dedicated chunk
     // URLs the host serves. Two consumers:
-    //   1. **Third-party plugins (primary)** — remote plugin bundles externalize
+    //   1. **Third-party plugins (primary)** - remote plugin bundles externalize
     //      these specifiers via `composerPlugin`'s `isSharedPackage`; the import
     //      map is what lets a plugin loaded from a third-party origin call
     //      `import 'react'` and get the host's React instance instead of bundling
     //      a duplicate copy. Singleton-correct hooks, contexts, and ECHO state
     //      depend on this.
-    //   2. **In-browser console use** — once the importmap is registered, the
+    //   2. **In-browser console use** - once the importmap is registered, the
     //      DevTools console can `await import('@dxos/client')` and reach the
     //      host's instance for ad-hoc inspection / scripting.
     //
@@ -737,7 +737,7 @@ export default defineConfig((env) => ({
     // is established before any JS bundle parses. The SVG carries its own
     // brand-palette fills (no `currentColor` reliance) and ships as ~2 KB of
     // inline markup. Wrapped in try/catch so an asset rename or move only
-    // loses the brand mark — the loader still renders the bar + status
+    // loses the brand mark - the loader still renders the bar + status
     // without it.
     bootLoaderPlugin({
       // A prerelease bundle and the dev server recolour the released mark; production shows it as is.

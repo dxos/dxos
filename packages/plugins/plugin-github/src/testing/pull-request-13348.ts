@@ -11,7 +11,7 @@ import { type GitHubOperation } from '#types';
 export const PULL_REQUEST_13348_BODY = [
   "Hovering a PR pill in a task body showed no card when the PR could not be fetched. Now the card opens, titled with the pill's short name (`#1145`), and says **No preview available.**",
   '',
-  '**Demo (before → after):** https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-09-23-artifact/pr-pill-hover-card.webm',
+  '**Demo (before -> after):** https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-09-23-artifact/pr-pill-hover-card.webm',
   '',
   '| Before | After |',
   '| --- | --- |',
@@ -40,7 +40,7 @@ export const PULL_REQUEST_13348_BODY = [
   '- `oxlint` is clean and `oxfmt` has been applied to the changed files.',
   '- Storybook interactions: `DescriptionLinkUnavailable` PASS (FAIL with the fix reverted); `DescriptionLinks` still passes.',
   '',
-  '🤖 Generated with [Claude Code](https://claude.com/claude-code)',
+  '\u{1F916} Generated with [Claude Code](https://claude.com/claude-code)',
   '',
   'https://claude.ai/code/session_016GM9fXXzbrr6JGNeeQBCmj',
   '',
@@ -49,7 +49,7 @@ export const PULL_REQUEST_13348_BODY = [
   '',
   '<!-- composer-preview:begin -->',
   '---',
-  '🚀 Composer preview: https://pr-13348-composer-dev.dxos.workers.dev',
+  '\u{1F680} Composer preview: https://pr-13348-composer-dev.dxos.workers.dev',
   '<!-- composer-preview:end -->',
   '',
 ].join('\n');

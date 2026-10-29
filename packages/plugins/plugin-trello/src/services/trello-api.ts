@@ -96,7 +96,7 @@ export type UpdateCardInput = {
 
 /**
  * Trello tokens are stored as a single colon-separated string `<apiKey>:<userToken>`
- * in the `AccessToken.token` field — set this way by the OAuth callback handler in
+ * in the `AccessToken.token` field - set this way by the OAuth callback handler in
  * kms-service (`tokenInCallback` providers) so the stored value is self-contained
  * regardless of how the token was obtained (DXOS OAuth flow or manual entry).
  *
@@ -146,7 +146,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
 
 /**
  * Loads the access token directly and parses it into `TrelloCredentials`. Used by callers that
- * only have an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+ * only have an external-sync cursor's `spec.source` - the cursor no longer relates to `Connection`.
  */
 export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
   Layer.effect(
@@ -183,11 +183,11 @@ type TrelloEffect<T> = Effect.Effect<
 /**
  * Decide whether a Trello request failure is worth retrying.
  *  - Transport / encode / invalid-URL failures: yes (transient by nature).
- *  - 429 (rate limited) and 5xx: yes — exactly the cases retry was designed for.
- *  - 4xx other than 429 (auth, validation, not-found): no — retry just wastes time
+ *  - 429 (rate limited) and 5xx: yes - exactly the cases retry was designed for.
+ *  - 4xx other than 429 (auth, validation, not-found): no - retry just wastes time
  *    and, for 401/403, may exacerbate rate limiting on the same token.
  *  - TimeoutException (the request didn't complete in the allotted window): yes.
- *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
+ *  - Schema decode failures (`ParseError`): no - payload won't become valid on retry.
  */
 const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
   if (error instanceof Schema.SchemaError) {
@@ -209,13 +209,13 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError
  * Common pipeline for Trello requests:
  *  - execute via the injected HttpClient with its tracer disabled (Effect's
  *    tracer adds a `traceparent` header which trips CORS preflight on
- *    api.trello.com — Trello answers the GET fine but doesn't handle the
+ *    api.trello.com - Trello answers the GET fine but doesn't handle the
  *    preflight OPTIONS, so the browser blocks the response. Same workaround
  *    we use for Google's userinfo endpoint).
  *  - parse JSON body with Effect Schema (invalid shapes fail as {@link Schema.SchemaError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
- *    (transport errors, 429, 5xx) — never on 4xx auth/validation errors.
+ *    (transport errors, 429, 5xx) - never on 4xx auth/validation errors.
  *  - scope the response so its body stream is released even on failure
  */
 const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): TrelloEffect<T> =>
@@ -238,7 +238,7 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
 /**
  * Build a Trello request that pulls credentials from the `TrelloCredentials`
  * service before delegating to {@link runRequest}. All fetch helpers are
- * thin wrappers around this — call sites compose the layer once at the
+ * thin wrappers around this - call sites compose the layer once at the
  * operation boundary instead of threading creds through every call.
  */
 const trelloRequest = <T>(
@@ -279,7 +279,7 @@ export const fetchBoards = (): TrelloEffect<ReadonlyArray<TrelloBoard>> =>
  *
  * We need every list `fetchCards` could reference. If we filtered to `open`
  * only, a card on an archived list would resolve to an empty `listName`
- * locally — appearing in a "no column" bucket and unable to be pushed
+ * locally - appearing in a "no column" bucket and unable to be pushed
  * (because the empty string doesn't resolve to any list id).
  */
 const TrelloListListSchema = Schema.Array(TrelloListSchema);
@@ -297,7 +297,7 @@ export const fetchLists = (boardId: string): TrelloEffect<ReadonlyArray<TrelloLi
  * Fetches all cards on a board (including closed/archived).
  *
  * Trello's `/boards/{id}/cards/all` endpoint does NOT support a `since` parameter
- * — only `/boards/{id}/actions` does — so we full-fetch every sync. There's no
+ * - only `/boards/{id}/actions` does - so we full-fetch every sync. There's no
  * meaningful per-target cursor for this endpoint; the `cursor` field on
  * `IntegrationTarget` is reserved for service-defined sync state and is left
  * unset for Trello.

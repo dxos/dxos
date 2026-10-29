@@ -10,7 +10,7 @@ import { Surface } from '../ui/index.ts';
 /**
  * Storybook decorator that enables the surface debug overlays (`<dx-surface>` wrappers + boundary
  * badges) for the wrapped story. The flag is a `window` singleton, so it is (re)applied on every
- * render — enabling it on decorated stories and clearing it otherwise, so the setting never leaks
+ * render - enabling it on decorated stories and clearing it otherwise, so the setting never leaks
  * between stories. Prefer this over the `.storybook/preview` flag when the story must also render
  * under the aggregate root Storybook, which does not load a per-package preview.
  */

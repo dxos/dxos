@@ -9,7 +9,7 @@ import { type ClientServicesRpc } from '@dxos/client-protocol';
 import { runServiceCall } from '@dxos/protocols';
 
 /**
- * {@link BlobStore} served by the client services host, whose database holds the bytes — in the
+ * {@link BlobStore} served by the client services host, whose database holds the bytes - in the
  * browser, the OPFS SQLite database owned by the worker. The host replicates to EDGE on its own.
  * `getRpc` is read per call because a reconnect to a new worker replaces the RPC proxy.
  */

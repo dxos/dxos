@@ -24,7 +24,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       Run Anthropic Claude agents from your space. In the desktop app, assign a project's tasks to
       Claude Code on this computer and follow its session in the chat. Managed agents run on Anthropic:
-      an agent's configuration — model, system prompt, toolsets, skills and MCP servers — is an object
+      an agent's configuration - model, system prompt, toolsets, skills and MCP servers - is an object
       you edit locally and deploy to Anthropic, which hosts and runs it on your behalf.
 
       Sessions started against an agent are recorded alongside it, so the assistant can deploy an

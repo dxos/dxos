@@ -10,7 +10,7 @@ const REPORT_INTERVAL = 250;
 /**
  * A frame longer than this counts as a hitch: two intervals of a 60Hz display, the point at which a
  * pause stops reading as motion and starts reading as a stutter. Deliberately absolute rather than
- * derived from the display's rate — the question is whether a reader notices, not whether the
+ * derived from the display's rate - the question is whether a reader notices, not whether the
  * hardware's budget was met.
  */
 const HITCH_MS = 32;
@@ -22,7 +22,7 @@ const MAX_BUCKET = 512;
 const MAX_TRACE = 100;
 
 export type FrameStats = {
-  /** Frames per second over the last reporting window — what the eye checks while a gesture runs. */
+  /** Frames per second over the last reporting window - what the eye checks while a gesture runs. */
   fps: number;
   /** Rate at the median frame: the pass's typical smoothness. */
   p50: number;
@@ -41,7 +41,7 @@ export type FrameStats = {
 const EMPTY: FrameStats = { fps: 0, p50: 0, p95: 0, worst: 0, hitches: 0, frames: 0, duration: 0 };
 
 /**
- * Rate (fps) at the frame standing at `quantile` of a pass, counting from the fast end — so 0.95 is
+ * Rate (fps) at the frame standing at `quantile` of a pass, counting from the fast end - so 0.95 is
  * the slow tail, the fifth of the pass a reader would call the stutter.
  *
  * `buckets` counts frames by their duration in whole milliseconds. Exported for its test: this is
@@ -65,7 +65,7 @@ export const rateAtQuantile = (buckets: Uint32Array, frames: number, quantile: n
 };
 
 export type FrameMeterOptions = {
-  /** Names the pass in the recorded line — the story's arguments, since they are what varies. */
+  /** Names the pass in the recorded line - the story's arguments, since they are what varies. */
   label?: string;
 };
 
@@ -77,8 +77,8 @@ export type FrameMeter = FrameStats & { label?: string; record: () => string };
  *
  * This exists because scroll smoothness is the deciding criterion for the feed engine and no
  * automated harness can report it: an agent's browser throttles `requestAnimationFrame`, so any
- * number collected there describes the harness. Averages hide the defect — a scroll that holds
- * 60fps and stalls once for 200ms reads as smooth in a mean and as broken to a reader — so the
+ * number collected there describes the harness. Averages hide the defect - a scroll that holds
+ * 60fps and stalls once for 200ms reads as smooth in a mean and as broken to a reader - so the
  * percentiles, the worst frame and the hitch count are reported together, and each hitch is traced
  * to the console as it happens so a bad number can be turned into a cause.
  *
@@ -109,7 +109,7 @@ export const useFrameMeter = ({ label }: FrameMeterOptions = {}): FrameMeter => 
 
   /**
    * Ends the pass: returns its one-line summary, copies it to the clipboard, logs it, and starts a
-   * fresh pass. One control, because a pass is exactly the interval between two of these — start a
+   * fresh pass. One control, because a pass is exactly the interval between two of these - start a
    * clean one by clicking, run the gesture, click again to record it.
    */
   const record = useCallback((): string => {

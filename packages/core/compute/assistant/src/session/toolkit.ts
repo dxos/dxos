@@ -41,7 +41,7 @@ export const createToolkit = <E = never, R = never>({
 
     const toolkitDefs = [toolkitProp?.toolkit, skillToolkit, opaqueToolkit.toolkit].filter(isTruthy);
     // Tool names are key-derived and registry-unique, so a duplicate here is a distinct tool being
-    // silently shadowed by the merge below — fail loudly instead.
+    // silently shadowed by the merge below - fail loudly instead.
     const toolNames = toolkitDefs.flatMap((def) => Object.keys(def.tools));
     const duplicates = toolNames.filter((name, index) => toolNames.indexOf(name) !== index);
     invariant(duplicates.length === 0, `Duplicate tool names in session toolkit: ${duplicates.join(', ')}`);

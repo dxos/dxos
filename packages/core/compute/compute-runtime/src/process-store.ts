@@ -51,7 +51,7 @@ export const PersistedProcess = Schema.Struct({
     // Annotation dictionary values are pre-encoded (JSON-safe); persisted verbatim.
     annotations: Annotation.Dictionary,
   }),
-  // Environment is { space?: SpaceId, conversation?: URI } — both string-serializable.
+  // Environment is { space?: SpaceId, conversation?: URI } - both string-serializable.
   environment: Schema.Struct({
     space: Schema.optional(Schema.String),
     conversation: Schema.optional(Schema.String),

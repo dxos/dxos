@@ -91,7 +91,7 @@ export default Capability.makeModule(
         return { ...state, pulls };
       });
 
-    // Force the scoped sidecar layer, spawning the process idempotently — the runtime is lazy and
+    // Force the scoped sidecar layer, spawning the process idempotently - the runtime is lazy and
     // only spawns on first force, so opening settings starts Ollama rather than hitting a refused
     // connection, and a chat already using the resolver does not spawn a second process. The endpoint
     // is unused; forcing `OllamaSidecar` is what triggers the spawn. Failures surface as defects.
@@ -171,7 +171,7 @@ export default Capability.makeModule(
           });
 
         // Run the pull on a daemon fiber so `cancel` can interrupt it; clear progress and drop the
-        // fiber on every exit path. A cancelled pull interrupts the fiber — treated as a no-op.
+        // fiber on every exit path. A cancelled pull interrupts the fiber - treated as a no-op.
         const work = admin.pull(name).pipe(
           Stream.runForEach(onProgress),
           Effect.provide(clientLayer),
@@ -314,7 +314,7 @@ const OllamaSidecarLive = Layer.effect(
     // console with red errors. Kept on `console.*` for Ollama's own line formatting.
     command.stdout.on('data', (data) => logSidecar(data.toString()));
     command.stderr.on('data', (data) => logSidecar(data.toString()));
-    // Set before the finalizer's kill, so a warning below means the process died on its own — the
+    // Set before the finalizer's kill, so a warning below means the process died on its own - the
     // only other trace of that is the connection error the settings panel shows nine seconds later.
     let stopping = false;
     command.on('close', ({ code, signal }) => {

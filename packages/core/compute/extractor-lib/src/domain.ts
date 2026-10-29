@@ -5,7 +5,7 @@
 /** Extract the domain portion of an email address (lower-cased). */
 export const extractDomain = (email: string): string | undefined => email.match(/@(.+)/)?.[1]?.toLowerCase();
 
-// Consumer mail providers whose domain identifies no organization — a sender at one of these must
+// Consumer mail providers whose domain identifies no organization - a sender at one of these must
 // never mint an Organization named after their mailbox host.
 const FREE_MAIL_DOMAINS = new Set([
   'aol.com',
@@ -40,8 +40,8 @@ export const isFreeMailDomain = (domain: string | undefined): boolean =>
   !!domain && FREE_MAIL_DOMAINS.has(domain.toLowerCase());
 
 /**
- * Placeholder display name for an Organization derived from its domain — the second-level label,
- * capitalized (`kirkconsult.com` → `Kirkconsult`). Enrichment (real name, logo) is a later pass.
+ * Placeholder display name for an Organization derived from its domain - the second-level label,
+ * capitalized (`kirkconsult.com` -> `Kirkconsult`). Enrichment (real name, logo) is a later pass.
  */
 export const organizationNameFromDomain = (domain: string): string => {
   const parts = domain.split('.');

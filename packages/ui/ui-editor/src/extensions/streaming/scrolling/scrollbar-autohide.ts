@@ -15,7 +15,7 @@ export type ScrollbarAutohideOptions = {
 
 /**
  * macOS-style overlay scrollbar: the thumb is hidden until the user scrolls, then fades out after a
- * short idle `timeout`. Opt-in — include it in the editor's extension list. Independent of the
+ * short idle `timeout`. Opt-in - include it in the editor's extension list. Independent of the
  * default hover behaviour in the base theme (which still reveals the thumb on hover).
  */
 export const scrollbarAutohide = ({ timeout = 800 }: ScrollbarAutohideOptions = {}): Extension => [

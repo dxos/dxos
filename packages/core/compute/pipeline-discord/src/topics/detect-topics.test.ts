@@ -36,11 +36,11 @@ const message = (
 
 /**
  * Timeline (minutes past 10:00 UTC):
- *   Topic A (storage): m1 Alice asks about OPFS → m3 Carol answers @Alice → m5 Alice follow-up →
+ *   Topic A (storage): m1 Alice asks about OPFS -> m3 Carol answers @Alice -> m5 Alice follow-up ->
  *     m7 Dave joins via @Carol.
- *   Topic B (release), interleaved with A: m2 Bob asks → m4 Dave answers @Bob → m6 Bob replies (m4).
+ *   Topic B (release), interleaved with A: m2 Bob asks -> m4 Dave answers @Bob -> m6 Bob replies (m4).
  *   Topic C (lunch), after a 54-minute session gap: m8 Carol starts it (despite being a Topic A
- *     participant) → m9 Alice joins via @Carol.
+ *     participant) -> m9 Alice joins via @Carol.
  */
 const CHANNEL: MessageStore.StoredMessage[] = [
   message('9000', 'a1', 'Alice', 'Should Composer use OPFS for local persistent storage?', 0),
@@ -90,7 +90,7 @@ describe('detectTopics (eval)', () => {
       expect(release.messageIds).toEqual(['9001', '9003', '9005']);
       expect(release.participants).toEqual(['b1', 'd1']);
 
-      // Topic C: opened after the session gap — Carol starts a NEW topic even though she already
+      // Topic C: opened after the session gap - Carol starts a NEW topic even though she already
       // participates in Topic A; Alice joins it via @mention.
       expect(lunch.startMessageId).toBe('9007');
       expect(lunch.endMessageId).toBe('9008');

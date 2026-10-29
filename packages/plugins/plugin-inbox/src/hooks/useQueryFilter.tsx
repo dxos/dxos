@@ -47,7 +47,7 @@ export const useQueryFilter = ({ owner, tags, initialText = '' }: UseQueryFilter
 
   const builder = useMemo(() => new QueryBuilder(tags), [tags]);
   const [text, setText] = useState<string>(initialText);
-  // Supplied by the query editor, which already parses the DSL to decorate it — deriving the filter
+  // Supplied by the query editor, which already parses the DSL to decorate it - deriving the filter
   // here as well parsed every keystroke twice. `builder` remains for programmatic text, which raises
   // no editor event.
   const [filter, setFilter] = useState<Filter.Any | undefined>(() => builder.build(initialText).filter);
@@ -57,7 +57,7 @@ export const useQueryFilter = ({ owner, tags, initialText = '' }: UseQueryFilter
   const debouncedText = useDebouncedValue(text, FILTER_DEBOUNCE_MS);
   const debouncedFilter = useMemo(() => builder.build(debouncedText).filter, [debouncedText, builder]);
 
-  // Text set from here reaches the editor imperatively — a controlled `value` would race fast typing —
+  // Text set from here reaches the editor imperatively - a controlled `value` would race fast typing -
   // and raises no editor event, so the parse (which gates Save) is redone here too.
   const applyText = useCallback(
     (next: string) => {
@@ -112,7 +112,7 @@ const EMPTY_TAG_IDS_ATOM = Atom.make((): readonly (readonly [string, readonly En
 
 /**
  * Resolves a filter's root tag terms to member ids from `tagIndex`, read reactively so a search scoped
- * to a tag's members re-runs when that tag's membership changes — feed objects carry no `meta.tags`.
+ * to a tag's members re-runs when that tag's membership changes - feed objects carry no `meta.tags`.
  */
 export const useFilterTagIds = (tagIndex: TagIndex.TagIndex | undefined, filter: Filter.Any | undefined) => {
   const tagUris = useMemo(() => getFilterTagUris(filter), [filter]);
@@ -130,7 +130,7 @@ export const useFilterTagIds = (tagIndex: TagIndex.TagIndex | undefined, filter:
   return useCallback((tagUri: string) => tagIds.find(([uri]) => uri === tagUri)?.[1], [tagIds]);
 };
 
-/** Tag registry keyed by the Tag object's URI — the id space of `meta.tags`, a `TagIndex`, and the QueryBuilder's tag terms. */
+/** Tag registry keyed by the Tag object's URI - the id space of `meta.tags`, a `TagIndex`, and the QueryBuilder's tag terms. */
 export const useTagMap = (db: Database.Database | undefined): Tag.Map => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
   return useMemo(

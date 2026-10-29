@@ -39,7 +39,7 @@ const workspaceRearrangeCache = new Map<string, (nextOrder: string[]) => void>()
 
 /**
  * Depth-first walk of a workspace tree from its top-level entries to `targetId`, accumulating the
- * ancestor directory-id chain (root→leaf, excluding the entry). Returns null if not found. Entry ids are
+ * ancestor directory-id chain (root->leaf, excluding the entry). Returns null if not found. Entry ids are
  * lossy and the tree has no parent pointers, so the path can only be rebuilt by walking down.
  */
 const findEntryAncestorChain = (
@@ -66,7 +66,7 @@ export const createFileSystemEntryExtensions = (
   fileSystemManagerCapabilitiesAtom: Atom.Atom<FileSystemManager.FileSystemManager[]>,
   readState: () => FileSystemCapabilities.FileSystemState,
 ) => {
-  // Files/directories sit at a variable-depth, data-dependent path (`root/<workspace>/<dir>/…/<id>`), so
+  // Files/directories sit at a variable-depth, data-dependent path (`root/<workspace>/<dir>/.../<id>`), so
   // forward URL resolution walks the current workspace tree to rebuild the node path from the entry id.
   const url: AppGraphBuilder.UrlBinding = {
     key: 'file',
@@ -324,6 +324,6 @@ const constructEntryNode = (
     });
   }
 
-  // Unsupported file type — skip.
+  // Unsupported file type - skip.
   return null;
 };

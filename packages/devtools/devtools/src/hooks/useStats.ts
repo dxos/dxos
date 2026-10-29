@@ -37,7 +37,7 @@ export type DatabaseInfo = {
   storedDocuments?: number;
   /** Feeds registered across every open space, and their blocks. */
   feeds?: { count: number; blocks: number };
-  /** Automerge documents currently held in memory — unrelated to what is stored. */
+  /** Automerge documents currently held in memory - unrelated to what is stored. */
   documents: number;
   documentsToReconcile: number;
   dataStats?: EchoDataStats;

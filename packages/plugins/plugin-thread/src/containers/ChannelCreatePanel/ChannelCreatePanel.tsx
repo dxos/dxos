@@ -14,7 +14,7 @@ import { ChannelBackend, ThreadCapabilities } from '#types';
 /**
  * Provider-driven create panel for channels. Reads the registered
  * `ChannelBackend` providers and renders a react-ui-form whose schema is the
- * assembled `{ name?, backend: Union(...) }` — a backend selector plus the
+ * assembled `{ name?, backend: Union(...) }` - a backend selector plus the
  * selected provider's create fields (just a name field when there is a single
  * field-less provider).
  */

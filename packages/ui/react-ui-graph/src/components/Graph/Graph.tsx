@@ -48,7 +48,7 @@ export type GraphProps<Node extends GraphNode.Any = any, Edge extends GraphEdge.
      */
     onInspect?: (node: GraphLayoutNode<Node> | null, event: MouseEvent) => void;
     /**
-     * Pointer-move in SVG model coordinates (the same space `node.x/y` live in — centered
+     * Pointer-move in SVG model coordinates (the same space `node.x/y` live in - centered
      * origin, post-zoom). The CTM lookup is done against the dx-graph group, so zoom + viewBox
      * are both undone in one step. Pair with `onPointerLeave` to clear cursor-driven state.
      * When either handler is set the renderer's `<svg>` is given `pointer-events: all` so
@@ -107,7 +107,7 @@ const GraphInner = <Node extends GraphNode.Any = any, Edge extends GraphEdge.Any
     }
 
     return { projector, renderer };
-    // Renderer options are baked into the instance — re-memo when any of them change
+    // Renderer options are baked into the instance - re-memo when any of them change
     // so a swapped `renderNode` / handler is actually applied.
   }, [
     context,

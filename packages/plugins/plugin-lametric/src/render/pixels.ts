@@ -39,8 +39,8 @@ const drawText = (pixels: boolean[][], text: string, offset: number): void => {
 /**
  * Rasterises one frame the way the device would.
  *
- * Pure and separate from the component so the question that actually matters — does this text fit on
- * 37 pixels — is answered by a test rather than by squinting at a screenshot.
+ * Pure and separate from the component so the question that actually matters - does this text fit on
+ * 37 pixels - is answered by a test rather than by squinting at a screenshot.
  *
  * `offset` is the horizontal scroll position, which the replica animates for text too long to fit.
  */

@@ -46,7 +46,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Selectors use the descendant combinator (`[&_X]`) — the mesh / hexagon / border elements
+// Selectors use the descendant combinator (`[&_X]`) - the mesh / hexagon / border elements
 // live inside the SVG inside the div, so direct-child (`>`) selectors don't match.
 export const Default: Story = {
   args: {

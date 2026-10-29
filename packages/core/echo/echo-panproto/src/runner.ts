@@ -8,8 +8,8 @@ import { type Adapter, type Lens } from './wire-lens.ts';
 
 //
 // The runner executes a declarative {@link Lens} against a live ECHO object, both directions. It applies
-// the `adapters` (ref resolution, array<->string, object metadata, scalar value coercions) and — when
-// present — the panproto `migration` (structural renames), which it loads lazily from the `./wasm`
+// the `adapters` (ref resolution, array<->string, object metadata, scalar value coercions) and - when
+// present - the panproto `migration` (structural renames), which it loads lazily from the `./wasm`
 // engine entrypoint so the wasm never enters this module's static graph.
 //
 
@@ -61,7 +61,7 @@ const readMeta = (object: Obj.Unknown, field: string): string => {
   return new Date(typeof value === 'number' ? value : 0).toISOString();
 };
 
-/** Produce the encoded value for one adapter from the live ECHO object (undefined ⇒ omit). */
+/** Produce the encoded value for one adapter from the live ECHO object (undefined => omit). */
 const encodeAdapter = async (adapter: Adapter, object: Obj.Unknown): Promise<unknown> => {
   switch (adapter.kind) {
     case 'scalar':

@@ -15,7 +15,7 @@ const READ_TIMEOUT_MS = 10_000;
  * Repeated collection with a turn between passes.
  *
  * One `collectGarbage` leaves `FinalizationRegistry` callbacks and `WeakRef` clears pending, so a
- * reading taken straight after it still counts collected objects as live — the same three-pass
+ * reading taken straight after it still counts collected objects as live - the same three-pass
  * settle `echo-client-e2e/src/testing/retention.ts` applies on the node side.
  */
 const settle = async (target: Attached): Promise<void> => {
@@ -74,7 +74,7 @@ const readWasmMemory = async (target: Attached): Promise<WasmReading | undefined
  * reasons, and a single total hides which one grew.
  *
  * Wasm is read here rather than in its own pass because it belongs to the same realm and the same
- * boundary — and it is a quantity the JS-heap figures are silent about, so a reader comparing
+ * boundary - and it is a quantity the JS-heap figures are silent about, so a reader comparing
  * `usedBytes` across a run is looking at a fraction of what the realm holds.
  */
 export const readHeap = async (
@@ -147,7 +147,7 @@ type DumpEvent = {
  * Private footprint of every browser process, named.
  *
  * Replaces a sum of `ps` RSS over the process tree, which was not a quantity: every process's RSS
- * counts the shared pages it maps, so the total multi-counts — an empty headless Chromium sums to
+ * counts the shared pages it maps, so the total multi-counts - an empty headless Chromium sums to
  * 1,335 MB that way against 408 MB of actual footprint. Private footprint is per-process and
  * disjoint by construction, which is what makes summing the renderers below legitimate.
  *
@@ -188,7 +188,7 @@ export const readProcessFootprint = async (browserCdp: Cdp): Promise<FootprintRe
     }
     // Each step checked rather than assumed: `trySend` turns every CDP failure into `undefined`,
     // so a dump that never happened would otherwise fall through to the parse below and return an
-    // empty reading — which sums to a footprint of zero and enters the trend as a measurement.
+    // empty reading - which sums to a footprint of zero and enters the trend as a measurement.
     const dumped = await browserCdp.trySend('Tracing.requestMemoryDump', {
       deterministic: false,
       levelOfDetail: 'light',

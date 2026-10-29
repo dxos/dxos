@@ -23,7 +23,7 @@ import * as SystemOne from './SystemOne.ts';
 import * as Zoom from './Zoom.ts';
 
 /**
- * The design pipeline up to, but not including, layout: explore → zoom (or select) → compact variants. Layout
+ * The design pipeline up to, but not including, layout: explore -> zoom (or select) -> compact variants. Layout
  * and judging need ELK and therefore Node (`Draw.ts`), so this half stays runnable under Bun and
  * hands its variants over as files.
  */
@@ -38,7 +38,7 @@ export type Options = {
   readonly scorer: Zoom.Scorer;
   readonly model: string;
   readonly cache: Cache.Api;
-  /** Nodes the pruned graph keeps (the force view shows these; the diagram cuts them to ≲ 14). */
+  /** Nodes the pruned graph keeps (the force view shows these; the diagram cuts them to <~ 14). */
   readonly budget: number;
   readonly threshold: number;
 };
@@ -252,7 +252,7 @@ const scoreWith = (
 /**
  * What the sandbox's `design.subgraph` returns: the query pipeline when the workspace hands it an
  * explorer model, else the deterministic explorer plus zoom; System One when a decision model is in
- * context, the baseline otherwise — the chat must work with no key at all.
+ * context, the baseline otherwise - the chat must work with no key at all.
  */
 export const subgraph = (
   store: Store.Api,
@@ -271,7 +271,7 @@ export const subgraph = (
 
 /**
  * The answer an MCP client gets: the pruned graph and a compact diagram draft in the illustrator's DSL. The draft is not laid
- * out or judged — that needs ELK, which only the Node half (`code-index design`) runs.
+ * out or judged - that needs ELK, which only the Node half (`code-index design`) runs.
  */
 export const answer = (
   store: Store.Api,

@@ -69,7 +69,7 @@ type Story = StoryObj<typeof meta>;
  * 1. The bar shows the time against the duration and a diamond per key.
  * 2. Pressing the middle of the track moves the playhead there, on the frame grid.
  * 3. Add key puts a diamond at the playhead; on a key the same button removes it.
- * 4. ⌘← and ⌘→ jump between keys; Delete removes the key under the playhead.
+ * 4. Cmd<- and Cmd-> jump between keys; Delete removes the key under the playhead.
  * 5. Play advances the clock; pressing it again pauses.
  */
 export const Default: Story = {};
@@ -142,7 +142,7 @@ export const Test: Story = {
       ),
     );
 
-    // 6. From the play button: ⌘ with an arrow walks the keys and then reaches the end (or the start), a plain arrow
+    // 6. From the play button: Cmd with an arrow walks the keys and then reaches the end (or the start), a plain arrow
     // scrubs a frame, Enter keys the playhead once, Delete removes that key and Space plays and pauses.
     const play = canvas.getByTestId('timeline-play');
     play.focus();

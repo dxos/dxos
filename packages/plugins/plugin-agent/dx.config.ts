@@ -23,7 +23,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Autonomous agents that converse with people in channels and Composer chats. Give an agent
-      channels — a Discord bot, a freeq room, a local feed — and each conversation in them becomes a
+      channels - a Discord bot, a freeq room, a local feed - and each conversation in them becomes a
       chat the agent replies in.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-agent',

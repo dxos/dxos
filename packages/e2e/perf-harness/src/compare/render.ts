@@ -14,12 +14,12 @@ const unitOf = (id: string): Unit =>
       ? 'bytes'
       : 'count';
 
-const signed = (value: number, unit: Unit): string => `${value < 0 ? '−' : '+'}${formatValue(Math.abs(value), unit)}`;
+const signed = (value: number, unit: Unit): string => `${value < 0 ? '-' : '+'}${formatValue(Math.abs(value), unit)}`;
 
 const percent = (value: number, base: number): string =>
-  base === 0 ? '' : `${value < 0 ? '−' : '+'}${Math.abs((value / base) * 100).toFixed(1)}%`;
+  base === 0 ? '' : `${value < 0 ? '-' : '+'}${Math.abs((value / base) * 100).toFixed(1)}%`;
 
-/** One line per metric: verdict, id, base → candidate, shift with its interval, effect size, pairs. */
+/** One line per metric: verdict, id, base -> candidate, shift with its interval, effect size, pairs. */
 export const renderMetric = ({
   id,
   verdict,
@@ -38,9 +38,9 @@ export const renderMetric = ({
   return [
     verdict.padEnd(12),
     id.padEnd(40),
-    `${formatValue(base, unit)} → ${formatValue(candidate, unit)}`.padEnd(26),
+    `${formatValue(base, unit)} -> ${formatValue(candidate, unit)}`.padEnd(26),
     `${relative || signed(shift, unit)} ${range}`.padEnd(28),
-    `δ ${delta.toFixed(2)}`,
+    `delta ${delta.toFixed(2)}`,
     `n=${pairs}`,
   ].join(' ');
 };

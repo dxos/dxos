@@ -44,9 +44,9 @@ export const WithMeta: Story = {
       <ChatStatus.Icon />
       <ChatStatus.Stopwatch />
       <ChatStatus.Separator />
-      <ChatStatus.Text>↑ 234</ChatStatus.Text>
+      <ChatStatus.Text>&#x2191; 234</ChatStatus.Text>
       <ChatStatus.Separator />
-      <ChatStatus.Text>↓ 1.2k</ChatStatus.Text>
+      <ChatStatus.Text>&#x2193; 1.2k</ChatStatus.Text>
     </ChatStatus.Root>
   ),
 };
@@ -79,9 +79,9 @@ export const WithCustomIcon: Story = {
       </ChatStatus.Icon>
       <ChatStatus.Stopwatch />
       <ChatStatus.Separator />
-      <ChatStatus.Text>↑ 234</ChatStatus.Text>
+      <ChatStatus.Text>&#x2191; 234</ChatStatus.Text>
       <ChatStatus.Separator />
-      <ChatStatus.Text>↓ 1.2k</ChatStatus.Text>
+      <ChatStatus.Text>&#x2193; 1.2k</ChatStatus.Text>
     </ChatStatus.Root>
   ),
 };
@@ -92,9 +92,9 @@ export const LongRunning: Story = {
       <ChatStatus.Icon />
       <ChatStatus.Stopwatch offset={65 * 60} />
       <ChatStatus.Separator />
-      <ChatStatus.Text>↑ 4.5k</ChatStatus.Text>
+      <ChatStatus.Text>&#x2191; 4.5k</ChatStatus.Text>
       <ChatStatus.Separator />
-      <ChatStatus.Text>↓ 12.3k</ChatStatus.Text>
+      <ChatStatus.Text>&#x2193; 12.3k</ChatStatus.Text>
     </ChatStatus.Root>
   ),
 };
@@ -103,13 +103,13 @@ export const TextOnly: Story = {
   render: () => (
     <ChatStatus.Root>
       <ChatStatus.Icon />
-      <ChatStatus.Text>Connecting…</ChatStatus.Text>
+      <ChatStatus.Text>Connecting...</ChatStatus.Text>
     </ChatStatus.Root>
   ),
 };
 
 /**
- * Demonstrates the imperative controller — start/stop the 1Hz tick from the outside.
+ * Demonstrates the imperative controller - start/stop the 1Hz tick from the outside.
  */
 export const Controller: Story = {
   render: () => {

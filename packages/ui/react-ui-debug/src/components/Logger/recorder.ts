@@ -35,7 +35,7 @@ export interface LogRecorder {
 /**
  * Register a recording session that self-filters its own entries (via its own parsed filter)
  * while contributing that filter to the shared @dxos/log config. Because every entry is
- * delivered to every processor, self-filtering — not the shared config — is what keeps
+ * delivered to every processor, self-filtering - not the shared config - is what keeps
  * concurrent recorders with divergent filters from clobbering each other's view.
  */
 export const startLogRecording = (

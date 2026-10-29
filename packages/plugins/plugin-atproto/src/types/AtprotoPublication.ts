@@ -23,7 +23,7 @@ export class AtprotoPublication extends Type.makeRelation<AtprotoPublication>(
 })(
   Schema.Struct({
     id: Obj.ID,
-    /** AT-URI of the created record, e.g. `at://did:plc:…/buzz.bookhive.book/<rkey>`. */
+    /** AT-URI of the created record, e.g. `at://did:plc:.../buzz.bookhive.book/<rkey>`. */
     uri: Schema.String,
     /** Content id returned by the PDS. */
     cid: Schema.String,
@@ -35,7 +35,7 @@ export class AtprotoPublication extends Type.makeRelation<AtprotoPublication>(
     publishedHash: Schema.String,
     /**
      * Display value of each Published leaf field at publish time, keyed by JSONPath. Lets the companion
-     * flag which individual Published fields have since diverged (older publications lack it — the
+     * flag which individual Published fields have since diverged (older publications lack it - the
      * companion then shows no per-field Published divergence).
      */
     publishedValues: Schema.optional(Schema.Record(Schema.String, Schema.String)),

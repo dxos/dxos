@@ -22,7 +22,7 @@ afterEach(async () => {
   await builder.close();
 });
 
-describe('repository → repo migration', () => {
+describe('repository -> repo migration', () => {
   test('converts in place, carrying the object id over as the EDGE key', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([LegacyRepository.Repository, Repo.Repo]);

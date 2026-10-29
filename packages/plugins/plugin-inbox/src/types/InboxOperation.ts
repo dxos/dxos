@@ -225,17 +225,17 @@ export const ExtractContact = Operation.make({
 });
 
 /**
- * Operation form of the contact extractor — runs against a full Message and returns
+ * Operation form of the contact extractor - runs against a full Message and returns
  * Person/Organization proposals via the shared ExtractResult shape, without touching the
  * database. The dispatcher (ExtractMessage) is responsible for db.add + ExtractedFrom. The
  * actor-targeted `ExtractContact` above stays as the avatar-button entry point and commits
  * directly via SpaceOperation.AddObject (no preview interposition there by design).
  */
 /**
- * Uniform input shape every extractor operation receives — generalised over any source ECHO
+ * Uniform input shape every extractor operation receives - generalised over any source ECHO
  * object (`source`), not just messages. Defined late in this file (after the other
  * Operation.make calls) so its `Schema.Struct` call doesn't run before `Database.Database` is
- * initialised — moving it earlier triggers a load-order cycle that leaves `Database.Database`
+ * initialised - moving it earlier triggers a load-order cycle that leaves `Database.Database`
  * undefined when the struct is constructed.
  */
 export const ExtractInputSchema = Schema.Struct({
@@ -264,7 +264,7 @@ export const ExtractContactFromMessage = Operation.make({
 });
 
 /**
- * Operation form of the summarize extractor — runs against a full Message and returns a
+ * Operation form of the summarize extractor - runs against a full Message and returns a
  * Markdown.Document containing an AI-generated summary of the message body. The dispatcher
  * (`ExtractMessage`) is responsible for `db.add` + `ExtractedFrom`.
  */
@@ -338,7 +338,7 @@ export const ExtractMailbox = Operation.make({
  * The URI is pinned to the ABSOLUTE form. The producer (an operation, which resolves the mailbox
  * through `Database.load`) and the consumer (the article, holding the object from a space query)
  * derive the key independently, and the default `Obj.getURI` form follows how the object was
- * hydrated — a relative URI on one side and an absolute one on the other means the article looks up a
+ * hydrated - a relative URI on one side and an absolute one on the other means the article looks up a
  * monitor name the sink never registered, and no meter appears.
  */
 const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
@@ -367,7 +367,7 @@ export const createExtractProgressKey = (mailbox: Mailbox.Mailbox) => createProg
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
 export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
 
-/** Hard per-run cap on messages summarized — one LLM call each, so the run must stay bounded. */
+/** Hard per-run cap on messages summarized - one LLM call each, so the run must stay bounded. */
 export const MAX_SUMMARIZE_MAILBOX_BATCH_LIMIT = 50;
 
 /** Default number of messages summarized per run ({@link SummarizeMailbox}). */
@@ -394,7 +394,7 @@ export const SummarizeMailbox = Operation.make({
     contactsOnly: Schema.optional(
       Schema.Boolean.annotate({
         description:
-          'Summarize only mail whose sender has a Person record (the default) — the funnel that makes this tier affordable.',
+          'Summarize only mail whose sender has a Person record (the default) - the funnel that makes this tier affordable.',
       }),
     ),
     model: Schema.optional(
@@ -413,14 +413,14 @@ export const SummarizeMailbox = Operation.make({
 
 /**
  * The cost classes {@link AnalyzeMailbox} runs. Each tier's output gates the next,
- * so the ordering is the contract — not a convenience:
+ * so the ordering is the contract - not a convenience:
  *
- * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
- * - `classify` — cheap hosted model over every ungated message: spam verdict + category tags. The
+ * - `deterministic` - no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
+ * - `classify` - cheap hosted model over every ungated message: spam verdict + category tags. The
  *   contacts from the previous tier are what keep known senders out of the model entirely.
- * - `summarize` — one LLM call per message, over contact mail only. The narrowest funnel and the
+ * - `summarize` - one LLM call per message, over contact mail only. The narrowest funnel and the
  *   highest value per call, which is why it sits behind the contact gate rather than beside it.
- * - `analyze` — per-message LLM fact extraction. Opt-in: unlike the tiers above it has no per-run
+ * - `analyze` - per-message LLM fact extraction. Opt-in: unlike the tiers above it has no per-run
  *   batch cap, so it walks the whole feed.
  */
 export const MailboxTier = Schema.Literals(['deterministic', 'classify', 'summarize', 'analyze']);
@@ -429,7 +429,7 @@ export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
 /**
  * Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed).
  *
- * A tier SELECTS which processors run, never their order — that comes from the `after` edges each
+ * A tier SELECTS which processors run, never their order - that comes from the `after` edges each
  * processor declares, so a caller listing tiers backwards still gets the cascade order.
  */
 export const DEFAULT_ANALYZE_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
@@ -439,12 +439,12 @@ export const AnalyzeMailbox = Operation.make({
     key: DXN.make('org.dxos.operation.inbox.analyzeMailbox'),
     name: 'Analyze Mailbox',
     description:
-      'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
+      'Runs the mailbox pipelines in cascade order - deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
     icon: AI_ACTION_ICON,
   },
   // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
   // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
-  // `Capability.Service` is the exception it cannot do without — the processors it runs are read from
+  // `Capability.Service` is the exception it cannot do without - the processors it runs are read from
   // a capability, so without it there is no topology to resolve.
   services: [Capability.Service, Database.Service, Trace.TraceService],
   input: Schema.Struct({
@@ -460,7 +460,7 @@ export const AnalyzeMailbox = Operation.make({
     tiers: Schema.optional(
       Schema.Array(MailboxTier).annotate({
         description:
-          'Tiers to run — a set, not a sequence: they always run in cascade order. Defaults to the bounded tiers.',
+          'Tiers to run - a set, not a sequence: they always run in cascade order. Defaults to the bounded tiers.',
       }),
     ),
     batchLimit: Schema.optional(
@@ -490,13 +490,13 @@ export const AnalyzeMailbox = Operation.make({
     completed: Schema.Number,
     failed: Schema.Number,
     skipped: Schema.Number,
-    /** Passes that never ran because the cascade was interrupted — distinct from skipped. */
+    /** Passes that never ran because the cascade was interrupted - distinct from skipped. */
     cancelled: Schema.Number,
-    /** Per-processor outcome in run order — the spawned operation's own output, or why it did not run. */
+    /** Per-processor outcome in run order - the spawned operation's own output, or why it did not run. */
     stages: Schema.Array(
       Schema.Struct({
         tier: MailboxTier,
-        /** The contributed processor's id — its topology key and its cursor tag. */
+        /** The contributed processor's id - its topology key and its cursor tag. */
         processor: Schema.String,
         /** URI of what this run was about; several entries share a processor when it covers N subjects. */
         subject: Schema.optional(Schema.String),
@@ -538,7 +538,7 @@ export const ExtractCorrespondents = Operation.make({
 
 /**
  * Clears one consumer's feed cursor. Generic rather than pipeline-specific: several pipelines keep
- * their own tagged cursor on the same feed (`classifyMailbox`, …), and each needs a way to start over.
+ * their own tagged cursor on the same feed (`classifyMailbox`, ...), and each needs a way to start over.
  */
 export const ResetFeedCursor = Operation.make({
   meta: {
@@ -566,7 +566,7 @@ export const ResetFeedCursor = Operation.make({
 /** Progress-registry key for a mailbox's classification monitor ({@link ClassifyMailbox}). */
 export const createClassifyProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#classify');
 
-/** Hard per-run cap on messages classified — LLM batches must stay bounded. */
+/** Hard per-run cap on messages classified - LLM batches must stay bounded. */
 export const MAX_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
 
 /** Default number of messages classified per run ({@link ClassifyMailbox}). */

@@ -34,14 +34,14 @@ const DEFAULT_POLL_INTERVAL = Duration.millis(250);
 const READ_RETRIES = 5;
 
 export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
-  /** Snapshot the handle starts from — from a spawn, list or status response. */
+  /** Snapshot the handle starts from - from a spawn, list or status response. */
   readonly info: RemoteProcessManager.Snapshot;
 
   readonly control: RemoteProcessManager.Control;
 
   /**
    * Space every {@link RemoteProcessManager.Control} call is addressed within. Supplied rather than
-   * read off {@link info}, whose `environment.space` is optional — a handle must be able to address
+   * read off {@link info}, whose `environment.space` is optional - a handle must be able to address
    * its process regardless of what the host chose to record.
    */
   readonly spaceId: SpaceId;
@@ -62,15 +62,15 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
    * Live source of the host's ephemeral trace, when the deployment has one.
    *
    * Without it {@link RemoteProcessHandle.subscribeEphemeral} discovers the stream by paging the
-   * host's event ring, and the host flushes that ring only at the END of an invocation — so a
+   * host's event ring, and the host flushes that ring only at the END of an invocation - so a
    * reader cannot see a turn arriving at all until it is over, however well the provider streamed.
    * With it the same messages arrive as they are produced, over the space swarm.
    */
   readonly remoteTrace?: RemoteTraceMonitor.Monitor;
 
   /**
-   * Ran after a lifecycle change this handle causes, so the manager's process tree — which the
-   * aggregate `Process.Manager` reads rather than recomputes — does not keep reporting a process
+   * Ran after a lifecycle change this handle causes, so the manager's process tree - which the
+   * aggregate `Process.Manager` reads rather than recomputes - does not keep reporting a process
    * this handle has terminated.
    */
   readonly onLifecycleChange?: Effect.Effect<void>;
@@ -81,7 +81,7 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
  *
  * The remote host owns the process; this is a view plus the control verbs. Outputs and ephemeral
  * trace are read by cursor (see `RemoteProcessManager.Control.readEvents`), so every subscription
- * runs its own independent paginated read — the endpoint is stateless in the cursor, so concurrent
+ * runs its own independent paginated read - the endpoint is stateless in the cursor, so concurrent
  * readers do not consume each other's events and no fan-out hub is needed.
  *
  * `runToCompletion` / `runUntilSettled` are derived here from polled state rather than served by the
@@ -196,12 +196,12 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   /**
    * The process's RPC client. Built lazily and cached, since it holds a transport the caller may
-   * never use. Requires the local definition (for the RPC group) — a handle from `list` has none.
+   * never use. Requires the local definition (for the RPC group) - a handle from `list` has none.
    */
   get rpc(): RpcClient.RpcClient<_Rpcs> {
     if (!this.#rpc) {
       // The client outlives any one call, so it is built in a scope that is deliberately never
-      // closed — the same shape `ProcessManager` uses for its loopback clients.
+      // closed - the same shape `ProcessManager` uses for its loopback clients.
       this.#rpc = Effect.runSync(
         this.#control
           .makeRpcClient<_Rpcs>({ ...this.#target, group: this.#requireDefinition().rpcs })
@@ -227,7 +227,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   subscribeOutputs(): Stream.Stream<_Output> {
     // Decoding an output needs the definition's output codec, so a handle from `list` (which has no
-    // definition) cannot serve this — the same limitation as {@link rpc}.
+    // definition) cannot serve this - the same limitation as {@link rpc}.
     const decode = Schema.decodeUnknownSync(this.#requireDefinition().output);
     // Not from the start of the log while the process lives: the local handle streams outputs as they
     // are produced, so replaying earlier turns' outputs into a new subscriber would not match it.
@@ -270,7 +270,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // rest would defeat the point: it is flushed at the end of an invocation, so the turn this
     // reader attached to would arrive whole, after the fact.
     //
-    // A message can appear in both halves — one broadcast buffered while the replay is still
+    // A message can appear in both halves - one broadcast buffered while the replay is still
     // reading. That is left to the consumer rather than deduplicated here: a partial block carries
     // the whole text so far and is applied by message id, so re-applying one is idempotent.
     return Stream.unwrap(
@@ -306,7 +306,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
    *
    * The replay half of a pushed subscription: it must END so the live stream can follow it, where
    * the polled read is deliberately open until the process settles. Pages to the ring's end rather
-   * than reading once — a page is bounded, so a single read can leave buffered events in neither
+   * than reading once - a page is bounded, so a single read can leave buffered events in neither
    * half of the subscription.
    */
   #readRing(start: number): Stream.Stream<RemoteProcessManager.Event> {
@@ -338,7 +338,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // Mirrors `ProcessHandle.runUntilSettled`: returns as soon as the foreground turn is done, so a
     // supervisor's reply does not wait on the sub-agents it delegated to. Hybernation with no
     // pending alarm means only background children remain, which is why the wire info carries
-    // `alarmPending` — without it the two predicates could not be told apart remotely.
+    // `alarmPending` - without it the two predicates could not be told apart remotely.
     return this.#awaitState(
       (state, info) =>
         state === Process.State.IDLE ||
@@ -355,7 +355,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
         // outputs and not the history of earlier turns.
         const start = yield* this.#endCursor;
         yield* Effect.forEach(options.inputs, (input) => this.#submit(input), { discard: true });
-        // Ends on IDLE or SUCCEEDED as the local `runAndExit` does — a remote process that goes idle
+        // Ends on IDLE or SUCCEEDED as the local `runAndExit` does - a remote process that goes idle
         // has finished this call's work, and waiting for a terminal state would never return.
         return this.#readEvents(start, (state) => state === Process.State.IDLE || Process.isExited(state), true).pipe(
           Stream.filter((event) => event._tag === 'output'),
@@ -411,7 +411,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
         yield* this.#setInfo(page.snapshot);
         if (page.truncated) {
           // The host dropped events before `cursor` from its bounded ring, so this page does not
-          // continue the previous one — the consumer's history has a hole in it.
+          // continue the previous one - the consumer's history has a hole in it.
           log.warn('remote process event history truncated', { pid: page.snapshot.pid, cursor });
         }
         if (page.events.length === 0) {
@@ -435,8 +435,8 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   /**
    * One page of the host's event log, retried with backoff when the read fails.
    *
-   * A subscription is a long-lived poll, so without the retry one failed request — a dropped
-   * connection, a host restarting — ends it for good, and its consumer stops receiving events from a
+   * A subscription is a long-lived poll, so without the retry one failed request - a dropped
+   * connection, a host restarting - ends it for good, and its consumer stops receiving events from a
    * process that is still running. Bounded so a host that is truly gone still ends the stream.
    */
   #readPage(cursor: number, attempt = 0): Effect.Effect<RemoteProcessManager.EventPage> {

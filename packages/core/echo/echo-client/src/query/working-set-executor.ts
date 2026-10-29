@@ -31,7 +31,7 @@ export type WorkingSetItem = {
   spaceId: SpaceId;
   /** Automerge-backed object core. */
   core: ObjectCore;
-  /** The core's body, captured when the item entered the working set — see {@link ObjectCore.isBodyAvailable}. */
+  /** The core's body, captured when the item entered the working set - see {@link ObjectCore.isBodyAvailable}. */
   structure: EntityStructure;
   /** Group key, set by `AggregateStep`. Undefined without an `aggregate` clause; `{}` for one over the whole input. */
   groupKey?: GroupKeyValue;
@@ -54,7 +54,7 @@ const WorkingSetItem = Object.freeze({
   },
 
   /**
-   * Reads a top-level property for the `aggregate` clause, resolving `id` to the entity id — every
+   * Reads a top-level property for the `aggregate` clause, resolving `id` to the entity id - every
    * object exposes `id` through the API, but documents don't store it in their data, so a group key
    * falling back to `id` would otherwise collapse every keyless member into the shared `null` group.
    */
@@ -100,7 +100,7 @@ export type WorkingSetDataProvider = {
 
 /**
  * Executes a QueryPlan against the client-side in-memory working set.
- * No SQL index access — all selection is done by scanning loaded cores.
+ * No SQL index access - all selection is done by scanning loaded cores.
  * Feed-scoped reads are not served here; they go through the index-backed source.
  * Returns null when the plan requires index capabilities (TextSelector, TimestampSelector).
  */
@@ -183,7 +183,7 @@ export class WorkingSetQueryExecutor {
   }
 
   private _execSelectStep(step: QueryPlan.SelectStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
-    // TextSelector and TimestampSelector require index — bail out.
+    // TextSelector and TimestampSelector require index - bail out.
     if (step.selector._tag === 'TextSelector' || step.selector._tag === 'TimestampSelector') {
       return null;
     }
@@ -197,7 +197,7 @@ export class WorkingSetQueryExecutor {
       !hasExplicitScopes ||
       spaceScopes.some(
         // SpaceScope.spaceId is a plain string from the schema AST; SpaceId is a branded type
-        // in this package. Both carry the same runtime value — the cast is the boundary.
+        // in this package. Both carry the same runtime value - the cast is the boundary.
         (scope) => scope.spaceId === undefined || (scope.spaceId as SpaceId) === this._provider.spaceId,
       );
 
@@ -258,14 +258,14 @@ export class WorkingSetQueryExecutor {
       return this._execChildOfFilterStep(step.filter, ws);
     }
 
-    // Timestamp filter requires index — bail.
+    // Timestamp filter requires index - bail.
     if (_filterContainsTimestamp(step.filter)) {
       return null;
     }
 
     // A nested in-query (subquery-membership) predicate cannot be resolved correctly against
     // this in-memory working set: the subquery may target a feed or another space, and
-    // `_execSelectStep` returns an *empty* (not null) result for scopes outside this space — so
+    // `_execSelectStep` returns an *empty* (not null) result for scopes outside this space - so
     // resolving locally would silently compute an empty membership set instead of the real one.
     // Bail so the whole branch defers to the index-backed source, which can resolve the subquery
     // across every scope.
@@ -628,7 +628,7 @@ export class WorkingSetQueryExecutor {
   }
 
   /**
-   * Undefined for a core whose body has not landed — such a core is loaded but has nothing to
+   * Undefined for a core whose body has not landed - such a core is loaded but has nothing to
    * select, filter or traverse, and every step reads the structure this carries.
    */
   private _coreToItem(core: ObjectCore): WorkingSetItem | undefined {
@@ -637,7 +637,7 @@ export class WorkingSetQueryExecutor {
       return undefined;
     }
     return {
-      // ObjectCore.id is typed as string; this cast is a type-system boundary —
+      // ObjectCore.id is typed as string; this cast is a type-system boundary -
       // entity ids are structurally EntityId strings but the core uses a plain string type.
       objectId: core.id as EntityId,
       spaceId: this._provider.spaceId,

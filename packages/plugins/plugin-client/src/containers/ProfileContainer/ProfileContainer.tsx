@@ -37,7 +37,7 @@ const getDefaultEmojiValue = (identity?: Identity.Info): string => hexToEmoji(id
 const getEmojiValue = (identity?: Identity.Info): string => identity?.data?.emoji || getDefaultEmojiValue(identity);
 
 /**
- * `useControlledState`, frozen while `pending` — so a resync from the live identity (a change from
+ * `useControlledState`, frozen while `pending` - so a resync from the live identity (a change from
  * another device/session) can't clobber an edit whose debounced write hasn't reached the server yet.
  */
 const usePendingGatedState = <T,>(value: T, pending: boolean): [T, Dispatch<SetStateAction<T>>] => {
@@ -54,7 +54,7 @@ export const ProfileContainer = () => {
   const identity = useIdentity();
   const pendingRef = useRef(false);
   // Bumped on every edit, so a write's completion can tell whether a newer edit has queued behind
-  // it — a debounced call in flight when another edit lands is still the stale one once it settles.
+  // it - a debounced call in flight when another edit lands is still the stale one once it settles.
   const editIdRef = useRef(0);
   const [displayName, setDisplayNameDirectly] = usePendingGatedState(identity?.displayName ?? '', pendingRef.current);
   const [emoji, setEmojiDirectly] = usePendingGatedState(getEmojiValue(identity), pendingRef.current);
@@ -74,7 +74,7 @@ export const ProfileContainer = () => {
               hue: profile.hue,
             },
           }).finally(() => {
-            // Only clear the gate for the edit that's actually settling — otherwise a write that
+            // Only clear the gate for the edit that's actually settling - otherwise a write that
             // started before a newer edit landed would prematurely reopen the resync over it.
             if (editIdRef.current === editId) {
               pendingRef.current = false;

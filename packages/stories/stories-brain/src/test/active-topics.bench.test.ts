@@ -45,7 +45,7 @@ describe('active-topics', () => {
       );
       writeActiveTopicsReports(OUT, result);
       // eslint-disable-next-line no-console
-      console.log(`active-topics → ${OUT}  (active ${result.active.length}, suggested ${result.suggested.length})`);
+      console.log(`active-topics -> ${OUT}  (active ${result.active.length}, suggested ${result.suggested.length})`);
     },
     30 * 60_000,
   );

@@ -19,7 +19,7 @@ import { CrxSettings } from './CrxSettings.tsx';
 /**
  * Stand in for the extension's content relay so the connection test succeeds: set the readiness
  * dataset marker and ack each ping with a fake identity. Without this the test button always
- * reports "Extension not detected" — storybook is not a Composer origin with the extension relay.
+ * reports "Extension not detected" - storybook is not a Composer origin with the extension relay.
  */
 const withFakeExtension: Decorator = (Story) => {
   useEffect(() => {
@@ -86,7 +86,7 @@ export const Readonly: Story = {
 };
 
 /**
- * No fake relay — the connection test talks to the real composer-crx extension. For development:
+ * No fake relay - the connection test talks to the real composer-crx extension. For development:
  * load the dev extension (`moon run composer-crx:build`, load unpacked from `out/composer-crx`),
  * then add this storybook's origin (e.g. `http://localhost:9009/*`) to the extension's Composer
  * URLs in its options page so the content relay installs here.

@@ -123,7 +123,7 @@ export const parseFenceInfo = (info: string): FenceInfo => {
   return { language: language.toLowerCase(), attributes, positional };
 };
 
-/** `@@ -12,7 +12,9 @@ section` — counts are optional and default to one line. */
+/** `@@ -12,7 +12,9 @@ section` - counts are optional and default to one line. */
 const HUNK_HEADER = /^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@(.*)$/;
 
 /** Metadata git emits before a file's first hunk. */
@@ -131,7 +131,7 @@ const PREAMBLE = /^(index |new file mode |deleted file mode |old mode |new mode 
 
 /**
  * Parses a unified diff body into rows already paired for the side-by-side layout. Runs of removals
- * and additions are zipped positionally — the convention every review tool uses — so a replaced line
+ * and additions are zipped positionally - the convention every review tool uses - so a replaced line
  * sits opposite the line that replaced it and a pure insertion leaves the left column empty.
  *
  * Headers git emits around the body (`diff --git`, `index`, `---`, `+++`) are consumed for the file

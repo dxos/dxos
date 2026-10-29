@@ -20,7 +20,7 @@ import { Ibkr } from '#types';
 import { TRADINGVIEW_SOURCE } from '../../constants.ts';
 import { InstrumentArticle } from './InstrumentArticle.tsx';
 
-// Fictional instrument only — this is a public repo (never real holdings). IbkrPlugin is intentionally
+// Fictional instrument only - this is a public repo (never real holdings). IbkrPlugin is intentionally
 // not loaded: the OperationInvoker (from ProcessManagerPlugin) resolves, so GetInstrumentFundamentals
 // fails fast with NoHandlerError (no SEC network call) and the panel renders its error state.
 const DefaultStory = () => {

@@ -11,7 +11,7 @@
 // `--objectives default,appeal` instead lets the engine choose among all its candidates under each objective
 // (`appeal` is `Appeal.objective()`, `--appeal-weight` its weight), which is how an engine change is judged.
 // `--json out.json` and `--png-dir dir` keep the scores and the renders. Clef needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`.
-// Run: `moon run plugin-illustrator:appeal-diagrams -- [--judge clef] /abs/path/x.mmd …`.
+// Run: `moon run plugin-illustrator:appeal-diagrams -- [--judge clef] /abs/path/x.mmd ...`.
 //
 
 import * as Effect from 'effect/Effect';
@@ -117,7 +117,7 @@ const program = Effect.gen(function* () {
   }
 
   console.log(
-    `\nRules — mean code score, mean ${judgeName ?? 'judge'} score, r(code, judge) over ${drawings.length} drawings`,
+    `\nRules - mean code score, mean ${judgeName ?? 'judge'} score, r(code, judge) over ${drawings.length} drawings`,
   );
   for (const rule of Rules.RULES) {
     const codes = drawings.flatMap(({ code }) => (code[rule.id] ? [code[rule.id].score] : []));
@@ -129,8 +129,8 @@ const program = Effect.gen(function* () {
       [
         `  ${rule.id.padEnd(26)}`,
         `w${String(rule.weight).padEnd(3)}`,
-        (codes.length ? mean(codes).toFixed(2) : '—').padEnd(6),
-        (visions.length ? mean(visions).toFixed(2) : '—').padEnd(6),
+        (codes.length ? mean(codes).toFixed(2) : '-').padEnd(6),
+        (visions.length ? mean(visions).toFixed(2) : '-').padEnd(6),
         pairs.length > 2 ? `r ${pearson(pairs).toFixed(2)}` : '',
       ].join(' '),
     );
@@ -152,7 +152,7 @@ const program = Effect.gen(function* () {
         vision['tidy-overall'] === undefined ? [] : [vision['tidy-overall']],
       );
       console.log(
-        `  ${label.padEnd(12)} ${mean(chosen.map(({ appeal }) => appeal)).toFixed(3)}   ${tidy.length ? mean(tidy).toFixed(3) : '—'}`,
+        `  ${label.padEnd(12)} ${mean(chosen.map(({ appeal }) => appeal)).toFixed(3)}   ${tidy.length ? mean(tidy).toFixed(3) : '-'}`,
       );
     }
   }

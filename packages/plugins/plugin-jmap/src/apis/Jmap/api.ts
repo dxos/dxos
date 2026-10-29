@@ -19,7 +19,7 @@ import { MethodError, Response, Session } from './types.ts';
 export const REQUEST_TIMEOUT = '10 seconds';
 export const REQUEST_RETRY = Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }));
 
-// Retry transient failures (network, 5xx, timeout) but not 4xx — a bad host/token or malformed
+// Retry transient failures (network, 5xx, timeout) but not 4xx - a bad host/token or malformed
 // request will fail identically on retry, so retrying only adds latency.
 export const shouldRetry = (error: unknown): boolean =>
   !(error instanceof JmapApiError && error.status !== undefined && error.status >= 400 && error.status < 500);
@@ -96,7 +96,7 @@ export const jmapRequest = (
 
 /**
  * Extracts and decodes the result for a given `callId` from a response envelope. A method-level
- * `["error", …]` response (or a decode failure) becomes a typed {@link JmapApiError}.
+ * `["error", ...]` response (or a decode failure) becomes a typed {@link JmapApiError}.
  */
 export const getMethodResponse = <A, I, R>(
   response: Response,
@@ -139,4 +139,4 @@ const asJmapApiError = (error: unknown): JmapApiError =>
     ? error
     : new JmapApiError(undefined, error instanceof Error ? error.message : String(error));
 
-const truncate = (text: string, max = 500): string => (text.length > max ? `${text.slice(0, max)}…` : text);
+const truncate = (text: string, max = 500): string => (text.length > max ? `${text.slice(0, max)}\u2026` : text);

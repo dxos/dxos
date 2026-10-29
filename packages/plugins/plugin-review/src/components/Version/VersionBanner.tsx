@@ -35,12 +35,12 @@ export type VersionBannerProps = {
   mode: 'checkpoint' | 'branch' | 'fork';
   name: string;
   /**
-   * Palette hue for the name tag — pass the branch author's identity hue so a suggestion banner reads
+   * Palette hue for the name tag - pass the branch author's identity hue so a suggestion banner reads
    * with the author's colour (matching their avatar/tag and the inline suggestion markers). Defaults
    * to neutral.
    */
   hue?: Hue;
-  /** ISO timestamp — shown as a compact age tag (`2d`, `5h`, `30m`) with the full date in a tooltip. */
+  /** ISO timestamp - shown as a compact age tag (`2d`, `5h`, `30m`) with the full date in a tooltip. */
   timestamp?: string;
   onRestore?: () => void;
   onBranchFrom?: (name: string) => void;

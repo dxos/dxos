@@ -15,7 +15,7 @@ import { Terra } from '#types';
 
 export type TerraFormProps = {
   config: Terra.TerraConfig;
-  /** Fires with only the changed fields — callers must merge, not replace, the existing config. */
+  /** Fires with only the changed fields - callers must merge, not replace, the existing config. */
   onChange: (patch: Partial<Terra.TerraConfig>) => void;
   /** Water sheen is a scene-only effect, not a stored config field. */
   onWaterSheen?: (enabled: boolean) => void;
@@ -75,7 +75,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
         label={label}
         readonly={readonly}
         presentation={presentation}
-        // A sibling of the label text (never a child) — keeps `Field.Label`'s `textContent` exactly
+        // A sibling of the label text (never a child) - keeps `Field.Label`'s `textContent` exactly
         // `label` and avoids re-deriving the input's accessible name on every drag frame.
         labelEnd={<span className='text-sm text-fg-muted tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}

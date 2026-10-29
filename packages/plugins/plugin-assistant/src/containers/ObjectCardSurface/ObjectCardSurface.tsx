@@ -11,7 +11,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { ObjectCard } from '#components';
 
 export type ObjectCardSurfaceProps = {
-  /** The object's URI, as the model wrote it in `<surface role='card' data='{"id":…}'>`. */
+  /** The object's URI, as the model wrote it in `<surface role='card' data='{"id":...}'>`. */
   id?: string;
 };
 

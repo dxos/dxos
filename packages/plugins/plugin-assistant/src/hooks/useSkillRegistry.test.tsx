@@ -17,7 +17,7 @@ import { Text } from '@dxos/schema';
 import { getSkillId, useActiveSkills, useSkillHandlers, useSkills } from './useSkillRegistry.ts';
 
 /**
- * A skill the user authored in a space, which — unlike a registry skill — carries no registry key.
+ * A skill the user authored in a space, which - unlike a registry skill - carries no registry key.
  */
 const makeSpaceSkill = (name: string) => Obj.make(Skill.Skill, { name, instructions: Template.make(), tools: [] });
 

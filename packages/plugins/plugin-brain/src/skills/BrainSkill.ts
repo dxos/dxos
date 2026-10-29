@@ -30,7 +30,7 @@ export const make = (): Skill.Skill =>
         ## Procedure (do this first)
         When asked to summarize, describe, or find information about a specific person, organization,
         or topic:
-        1. FIRST call Summarize Subject with \`subject\` set to that name — it returns a fact-grounded
+        1. FIRST call Summarize Subject with \`subject\` set to that name - it returns a fact-grounded
            summary plus a \`factCount\`.
         2. If \`factCount\` is 0, call Query Facts with \`entity\` set to the name's slug to
            double-check before concluding anything is missing.
@@ -38,7 +38,7 @@ export const make = (): Skill.Skill =>
            knowledge or guess.
 
         ## Using the tools
-        - Entity slugs are lowercase-hyphenated forms of names: "Alice Smith" → "alice-smith".
+        - Entity slugs are lowercase-hyphenated forms of names: "Alice Smith" -> "alice-smith".
         - Query Facts: use \`entity\` to match facts where the entity appears as subject OR object;
           use \`subjectEntity\` to match the subject position only. Start broad (just \`entity\`), then
           narrow iteratively with \`predicate\` or \`minConfidence\` (e.g. 0.8) when there are too many
@@ -49,7 +49,7 @@ export const make = (): Skill.Skill =>
         ## Interpreting results
         - Factuality codes: CT certain, PR probable, PS possible; a trailing "-" means the statement
           is negated; "CTu"/"Uu" mean unknown. Hedge non-certain facts when relaying them.
-        - Facts are extracted claims, not verified truth — attribute them ("according to the email…").
+        - Facts are extracted claims, not verified truth - attribute them ("according to the email...").
         - \`source\` is the DXN of the message or document the fact came from; \`date\` is when the
           fact was recorded.
       `,

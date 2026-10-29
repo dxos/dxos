@@ -76,7 +76,7 @@ const makeCalendar = (
       attendees: [a('kai'), a('diego'), a('sam'), a('riley')],
     }),
     eventAt({
-      title: 'Equipment demo — Hario rep',
+      title: 'Equipment demo - Hario rep',
       description: 'Brewer demo for the cafe.',
       daysFromNowVal: 2,
       startHour: 14,
@@ -84,7 +84,7 @@ const makeCalendar = (
       attendees: [a('kai'), a('riley'), actor('Yuki Watanabe', 'yuki@hario.co.jp')],
     }),
     eventAt({
-      title: 'Wholesale onboarding — Olive & Vine',
+      title: 'Wholesale onboarding - Olive & Vine',
       description: 'Video call with Mateo to walk through pricing and ordering.',
       daysFromNowVal: 4,
       startHour: 17,
@@ -92,7 +92,7 @@ const makeCalendar = (
       attendees: [a('sam'), a('mateo')],
     }),
     eventAt({
-      title: 'Spring Blend cupping — Hatch',
+      title: 'Spring Blend cupping - Hatch',
       description: 'Cupping v2 in Brooklyn with Priya and the Hatch team.',
       daysFromNowVal: 8,
       startHour: 21,
@@ -108,7 +108,7 @@ const makeCalendar = (
       attendees: [a('sam')],
     }),
     eventAt({
-      title: 'Site visit — Finca Esperanza',
+      title: 'Site visit - Finca Esperanza',
       description: "Two days at Carmen's farm during the sourcing trip.",
       daysFromNowVal: 21,
       startHour: 14,

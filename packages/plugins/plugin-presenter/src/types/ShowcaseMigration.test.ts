@@ -15,7 +15,7 @@ import { PullRequest } from '@dxos/types';
 import * as Presentation from './Presentation.ts';
 import { makeShowcaseMigration } from './ShowcaseMigration.ts';
 
-describe('showcase → presentation migration', () => {
+describe('showcase -> presentation migration', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {

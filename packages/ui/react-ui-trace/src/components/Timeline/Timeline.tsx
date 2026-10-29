@@ -131,7 +131,7 @@ export const Timeline = memo(
         onChange?.({ current, commit: current === undefined ? undefined : commits[current] });
       }, [onChange, current]);
 
-      // When the controlled `branch` changes, jump to the first commit on that branch — but
+      // When the controlled `branch` changes, jump to the first commit on that branch - but
       // never override an explicit commit selection that already sits on that branch. Otherwise a
       // click that selects a commit (and drives `branch` via the parent) would be snapped
       // back to the branch's first commit.

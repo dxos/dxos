@@ -19,7 +19,7 @@ export type RunRowProps = {
 };
 
 /**
- * One row of the plan's run feed. It subscribes to its own run — a query subscription fires on the
+ * One row of the plan's run feed. It subscribes to its own run - a query subscription fires on the
  * result set, not on a mutation inside a row, so the tally would otherwise sit at its initial value
  * while the expanded results below it updated.
  */

@@ -20,7 +20,7 @@ export const Fact = Schema.Struct({
   graph: Schema.optional(Schema.String),
   assertion: Assertion,
   factuality: Factuality,
-  /** The speech act the source performed. Absent ⇒ assertive (a plain notification/statement). */
+  /** The speech act the source performed. Absent => assertive (a plain notification/statement). */
   illocution: Schema.optional(Illocution),
   attribution: Attribution,
   /** ISO transaction time. */

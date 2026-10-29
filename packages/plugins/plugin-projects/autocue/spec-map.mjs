@@ -22,7 +22,7 @@ const BEAT = 1_500;
 const NODE = '[data-testid="feature-canvas-node"]';
 
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 /** The canvas box holding the named feature's card; its frame takes the presses that select and zoom. */
 const node = (name) => `[data-node-id]:has(${NODE}:has-text("${name}"))`;

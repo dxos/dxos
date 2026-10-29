@@ -111,7 +111,7 @@ export class ClaudeAgent {
   /**
    * Spawns the agent and returns immediately; the process is live from here until {@link close}.
    *
-   * Nothing is sent yet — the CLI sits waiting on stdin — so a caller can scaffold whatever the
+   * Nothing is sent yet - the CLI sits waiting on stdin - so a caller can scaffold whatever the
    * first turn will act on before spending a token on it.
    */
   static start({
@@ -157,7 +157,7 @@ export class ClaudeAgent {
         // Nobody is at the keyboard: anything not pre-allowed is denied rather than hanging.
         '--permission-prompts',
         'none',
-        // Variadic, so an empty list would swallow whatever followed it — and the CLI then reads
+        // Variadic, so an empty list would swallow whatever followed it - and the CLI then reads
         // no prompt at all and produces not one event.
         ...(allowedTools.length > 0 ? ['--allowedTools', ...allowedTools] : []),
       ],

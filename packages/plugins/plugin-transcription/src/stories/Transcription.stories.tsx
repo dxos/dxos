@@ -4,7 +4,7 @@
 
 /**
  * Streaming file transcription into a message list. Loads an audio file and streams its transcript
- * through the recording engine (Transcriber → runLivePipeline → correction stage) **as it plays** —
+ * through the recording engine (Transcriber -> runLivePipeline -> correction stage) **as it plays** -
  * appending each corrected block as a message rather than waiting for playback to stop.
  *
  * - `Default` plays a hosted m4a; the play/pause + upload toolbar gates playback and capture.

@@ -17,7 +17,7 @@ const EDITING = ReviewCapabilities.defaultReviewRenderPolicy('editing');
 const SUGGESTING = ReviewCapabilities.defaultReviewRenderPolicy('suggesting');
 const VIEWING = ReviewCapabilities.defaultReviewRenderPolicy('viewing');
 
-/** Ambient editing on main with everything resolved — rows override what they test. */
+/** Ambient editing on main with everything resolved - rows override what they test. */
 const BASE: LifecycleInputs = {
   mode: 'editing',
   viewMode: 'preview',
@@ -46,7 +46,7 @@ describe('deriveBinding', () => {
       { subject: 'document', editorKey: 'current', effectiveViewMode: 'readonly', loading: false },
     ],
     [
-      // Mounted on main, read-only, until the branch binds — never unmounted (loading) on the
+      // Mounted on main, read-only, until the branch binds - never unmounted (loading) on the
       // ambient path.
       'ambient suggesting waits for the own branch on main, read-only',
       { mode: 'suggesting', policy: SUGGESTING },
@@ -116,7 +116,7 @@ describe('deriveBinding', () => {
   }
 
   // The F1.7 shape: any sequence of mode/view-mode flips on the ambient path must end editable when
-  // it ends in an editable posture — derivation is stateless, so history cannot leak in.
+  // it ends in an editable posture - derivation is stateless, so history cannot leak in.
   test('mode round-trips are history-free', ({ expect }) => {
     const sequence: Array<Partial<LifecycleInputs>> = [
       { mode: 'suggesting', policy: SUGGESTING, ownBranchBound: true },
@@ -135,7 +135,7 @@ describe('deriveBinding', () => {
 });
 
 describe('applyViewModeSelection', () => {
-  // One dropdown gesture writes BOTH halves of the pair — the table is the contract.
+  // One dropdown gesture writes BOTH halves of the pair - the table is the contract.
   const rows: Array<
     [
       string,

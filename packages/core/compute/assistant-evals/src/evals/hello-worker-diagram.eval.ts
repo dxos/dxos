@@ -161,7 +161,7 @@ const selected = process.env.DX_EVAL_MODELS?.trim()
   : undefined;
 const VARIANTS = selected ? MODELS.filter(({ name }) => selected.includes(name)) : MODELS;
 
-evalite.each(VARIANTS)('Hello Worker — the architecture task is laid out by the engine, with no defects', {
+evalite.each(VARIANTS)('Hello Worker - the architecture task is laid out by the engine, with no defects', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

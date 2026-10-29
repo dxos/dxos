@@ -14,7 +14,7 @@ import {
 
 describe('assertLoopbackOrigin', () => {
   // The port evaluates whatever the server sends, so this check is the boundary that keeps a
-  // remote host from driving eval in the page — not a formatting nicety.
+  // remote host from driving eval in the page - not a formatting nicety.
   test('accepts loopback hosts', () => {
     for (const origin of [
       'http://127.0.0.1:9321',

@@ -23,8 +23,8 @@ import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space.ts
 /**
  * Resolve the settings space, creating one only for legacy profiles that predate it.
  *
- * On every other path a tagged settings space is guaranteed to arrive — genesis creates it for
- * fresh profiles, replication delivers it for existing profiles on a new device — so this waits
+ * On every other path a tagged settings space is guaranteed to arrive - genesis creates it for
+ * fresh profiles, replication delivers it for existing profiles on a new device - so this waits
  * for it rather than creating: an eager create here races {@link AppSpace.setupIdentitySpaces}
  * (which publishes the default space before the settings space) and loses, leaving the profile
  * with a duplicate settings space.
@@ -110,7 +110,7 @@ export const resolveAppSettings = Effect.fnUntraced(function* (space: Space) {
 /**
  * Converge duplicate settings spaces. Passes are driven by a sliding(1) queue subscribed before
  * the first pass, so a list change landing mid-pass is consumed by the next pass rather than lost
- * to a re-subscribe window. Exits once every known space has settled — duplicates only surface
+ * to a re-subscribe window. Exits once every known space has settled - duplicates only surface
  * while spaces are opening or replicating in, and one that arrives after that is healed next boot.
  */
 export const runSettingsSpaceHealing = Effect.fnUntraced(function* (client: Client) {
@@ -136,7 +136,7 @@ const isSettledSpaceState = (state: SpaceState): boolean =>
 
 /**
  * One healing pass: salvage every ready duplicate's content into the survivor, then tombstone it.
- * The survivor is the lowest-id tagged space — a pure function of replicated state, so the global
+ * The survivor is the lowest-id tagged space - a pure function of replicated state, so the global
  * minimum survives every partial view; device-local readiness and designation must not influence
  * the pick, or two mid-sync devices would tombstone each other's.
  */
@@ -166,7 +166,7 @@ export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: 
       }
 
       // The tombstone persists immediately while `delete()` flushes only the duplicate's own db,
-      // so the salvaged content must be durable first — after the delete the source is gone.
+      // so the salvaged content must be durable first - after the delete the source is gone.
       yield* Effect.promise(() => survivor.db.flush());
       yield* Effect.promise(() => duplicate.delete());
       log.info('removed duplicate settings space', { duplicate: duplicate.id, survivor: survivor.id });
@@ -179,7 +179,7 @@ export const healDuplicateSettingsSpaces = Effect.fnUntraced(function* (client: 
  * the survivor lacks (the survivor wins conflicts) and the cross-space ordering.
  *
  * @returns Whether the duplicate is now fully carried by the survivor and safe to delete. False
- * when it holds content this pass does not know how to salvage — deletion is irreversible, so
+ * when it holds content this pass does not know how to salvage - deletion is irreversible, so
  * unknown content keeps the duplicate alive rather than being silently destroyed.
  */
 const salvageSettingsContent = Effect.fnUntraced(function* (survivor: Space, duplicate: Space) {

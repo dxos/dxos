@@ -34,7 +34,7 @@ describe('parsePullRequestBody', () => {
 
   test('the bare preview line, without the CI block', ({ expect }) => {
     const { markdown, previewUrl, claudeCode } = parsePullRequestBody(
-      'Body.\n\n🤖 Generated with Claude Code\n\n🚀 Composer preview: https://pr-1-composer-dev.dxos.workers.dev\n',
+      'Body.\n\n\u{1F916} Generated with Claude Code\n\n\u{1F680} Composer preview: https://pr-1-composer-dev.dxos.workers.dev\n',
     );
     expect(markdown).toEqual('Body.');
     expect(previewUrl).toEqual('https://pr-1-composer-dev.dxos.workers.dev');

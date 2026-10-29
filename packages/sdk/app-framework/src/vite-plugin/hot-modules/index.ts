@@ -18,7 +18,7 @@ const SOURCE_FILE = /\.[cm]?[jt]sx?$/;
  */
 const LAZY_CALLEE = 'lazy';
 
-/** A query that makes an import an asset rather than a module (`?raw`, `?url`, `?worker`, …). */
+/** A query that makes an import an asset rather than a module (`?raw`, `?url`, `?worker`, ...). */
 const ASSET_QUERY = /[?&](raw|url|inline|worker|sharedworker)\b/;
 
 /** Relative files and package subpath imports (`#plugin`); anything else is a dependency. */
@@ -59,9 +59,9 @@ const loaderCandidates = (argument: ESTree.Node): ESTree.Node[] =>
     : [argument];
 
 /**
- * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule`, every
- * maker built on it, and `Plugin.lazy` — or passed as the values of an object argument, the loader map a
- * dev manifest hands `Plugin.fromManifest`. Asset imports (`?raw`, `?url`, …) are skipped; another query,
+ * Finds the `() => import('./x')` loaders passed to a call - the shape of `Capability.lazyModule`, every
+ * maker built on it, and `Plugin.lazy` - or passed as the values of an object argument, the loader map a
+ * dev manifest hands `Plugin.fromManifest`. Asset imports (`?raw`, `?url`, ...) are skipped; another query,
  * such as a config's `?dx-modules` half, names a module of its own.
  */
 export const findModuleLoaders = (program: ESTree.Program): ModuleLoader[] => {
@@ -90,7 +90,7 @@ export const findModuleLoaders = (program: ESTree.Program): ModuleLoader[] => {
 
 /**
  * Makes each loader resolve to the newest version of its body. After a hot update the browser keeps
- * serving the original URL's stale instance, so the swap has to happen where the import resolves —
+ * serving the original URL's stale instance, so the swap has to happen where the import resolves -
  * innermost, so wrappers around a loader re-run against the new version.
  */
 export const rewriteLoaders = (code: string, loaders: readonly ModuleLoader[]): string =>

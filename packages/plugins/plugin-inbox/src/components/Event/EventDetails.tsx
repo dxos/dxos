@@ -27,7 +27,7 @@ export type EventDetailsProps = {
   description?: boolean;
   /** Maximum attendee rows shown; omit for all. */
   maxAttendees?: number;
-  /** Render an editable form (title · all-day · start · end/duration) — used for draft events. */
+  /** Render an editable form (title · all-day · start · end/duration) - used for draft events. */
   editable?: boolean;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
@@ -58,12 +58,12 @@ export const EventDetails = ({
   onToggleStar,
 }: EventDetailsProps) => {
   const { t } = Hooks.useTranslation(InboxNamespace.key);
-  // Synced events are immutable feed snapshots (not LiveObjects), so read fields directly — `useObject`
+  // Synced events are immutable feed snapshots (not LiveObjects), so read fields directly - `useObject`
   // requires a live object and throws on a snapshot. Inline draft editing is handled by EventEditor below.
   const data = event;
   const attendees = maxAttendees != null ? data.attendees.slice(0, maxAttendees) : data.attendees;
 
-  // The Meeting for this event, if any — found by reverse-matching its `event` ref to this event's
+  // The Meeting for this event, if any - found by reverse-matching its `event` ref to this event's
   // URI. (A ref, not a relation, since the event is a feed object; queried by typename to keep
   // plugin-inbox free of a plugin-meeting dependency.) Only resolved on the interactive heading path:
   // EventDetails is shared by cards/tiles, so an unconditional query would subscribe every instance to

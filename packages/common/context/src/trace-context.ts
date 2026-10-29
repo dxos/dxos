@@ -15,7 +15,7 @@ export const TRACE_SPAN_ATTRIBUTE = 'dxos.trace-span';
  * Stored on DXOS {@link Context} attributes and carried across RPC boundaries.
  *
  * Because these are plain strings (not live runtime objects), they remain valid
- * after the originating span ends — enabling long-lived contexts (`this._ctx`)
+ * after the originating span ends - enabling long-lived contexts (`this._ctx`)
  * to serve as parents for later child spans without a retention cache.
  *
  * @see https://www.w3.org/TR/trace-context/
@@ -33,7 +33,7 @@ export type TraceContextData = {
 /**
  * Codec for propagating trace identity across RPC boundaries.
  *
- * Hardcoded in `RpcPeer` — every outgoing request calls {@link encode} to
+ * Hardcoded in `RpcPeer` - every outgoing request calls {@link encode} to
  * extract W3C trace context from the DXOS `Context`, and every incoming
  * request calls {@link decode} to reconstruct a DXOS `Context` carrying the
  * caller's trace context.

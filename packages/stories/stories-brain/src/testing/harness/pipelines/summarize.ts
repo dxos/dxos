@@ -24,7 +24,7 @@ const PROMPT = trim`
   Summarize the email below as a terse markdown bullet list (1-3 bullets): who sent it and what they
   want or are telling the recipient.
   Rules:
-  - Start each bullet with a verb or the sender's name — never with "The email", "This email", or "The sender".
+  - Start each bullet with a verb or the sender's name - never with "The email", "This email", or "The sender".
   - No preamble, heading, labels, or quotes. Output ONLY the bullets.
   - Keep each bullet under ~15 words.
 `;
@@ -34,7 +34,7 @@ const LABEL_PROMPT = trim`
   from (e.g. "Invoice from Acme", "Newsletter: Stripe changelog", "Shipping update from Amazon",
   "Payment receipt from GitHub", "Security alert from Google").
   Rules:
-  - Output ONLY the single line — no preamble, bullets, or quotes.
+  - Output ONLY the single line - no preamble, bullets, or quotes.
   - Under ~10 words.
 `;
 
@@ -73,7 +73,7 @@ export type SummarizeOptions = {
 
 /**
  * Decides whether a message earns a full summary or just a one-line label (REPORT §5): reserve
- * summarization budget for people, and give org / bulk mail a cheap label. Pure — reuses the same
+ * summarization budget for people, and give org / bulk mail a cheap label. Pure - reuses the same
  * person-only gate as reply drafting (`Mailbox.isReplyable`), so summarization and replying agree on
  * what counts as person mail.
  */

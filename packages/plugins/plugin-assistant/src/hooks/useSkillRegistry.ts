@@ -39,7 +39,7 @@ export const useSkills = ({ registry, db }: { registry?: Registry.Registry; db?:
   const spaceSkills = useQuery(db, Filter.type(Skill.Skill));
   return useMemo(() => {
     // Space copies first, so a fork shadows the registry entry it was cloned from rather than the
-    // other way round — it carries the user's edits (same precedence as `Skill.resolveAnnotatedSkills`).
+    // other way round - it carries the user's edits (same precedence as `Skill.resolveAnnotatedSkills`).
     const skills = distinctBy([...spaceSkills, ...registrySkills], getSkillId);
     skills.sort(({ name: a }, { name: b }) => a.localeCompare(b));
     return skills;
@@ -80,7 +80,7 @@ export const useSkillHandlers = ({ context }: { context?: AiContext.Binder }) =>
         return;
       }
 
-      // A registry skill binds by its key URI, which resolves through the hypergraph registry — no
+      // A registry skill binds by its key URI, which resolves through the hypergraph registry - no
       // DB clone needed. Anything else is a space object (including a fork of a registry skill) and
       // binds by its own ref, so the user's edits are what the conversation sees.
       const key = Obj.getMeta(skill).key;

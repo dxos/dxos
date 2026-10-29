@@ -49,7 +49,7 @@ const readAddressField = (value: unknown): { email: string; name?: string }[] =>
 };
 
 /**
- * Extracts all actors from a message — sender (`from`) plus `to`/`cc` recipients parsed from the
+ * Extracts all actors from a message - sender (`from`) plus `to`/`cc` recipients parsed from the
  * message properties. Deterministic (header parsing, no LLM), so results are model-independent.
  */
 export const extractActors = (message: Message.Message): ExtractedActor[] => {

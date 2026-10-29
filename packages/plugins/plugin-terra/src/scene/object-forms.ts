@@ -91,8 +91,8 @@ const makeBoat = (scene: Scene): Mesh => {
   const hullHeight = 0.15;
   const sternLength = 1.3;
 
-  // Every part is placed relative to the cabin so the form's origin — the point the object layer
-  // positions and rotates about — sits at the cabin's centre rather than out at the stern.
+  // Every part is placed relative to the cabin so the form's origin - the point the object layer
+  // positions and rotates about - sits at the cabin's centre rather than out at the stern.
   const cabinZ = 0.15;
 
   const stern = CreateBox('stern', { width: beam, height: hullHeight, depth: sternLength }, scene);

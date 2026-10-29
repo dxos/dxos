@@ -4,7 +4,7 @@
 
 // End-to-end stdio integration test: spawn the actual CLI as a subprocess via
 // `StdioClientTransport` and exercise it through real pipes. Catches issues
-// the in-memory transport in `server.test.ts` cannot — stdout pollution,
+// the in-memory transport in `server.test.ts` cannot - stdout pollution,
 // `--conditions=source` resolution, exports-field mishaps, framing, and
 // process startup failures.
 

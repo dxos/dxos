@@ -42,7 +42,7 @@ export interface EdgeProxyHttpClientOptions {
  * Overriding that reference reuses the whole `FetchHttpClient.layer` machinery
  * (request encoding, response decoding, timeouts, retry composition) and swaps
  * only how the underlying network call is made. `Fetch` is a `Context.Reference`
- * with a default, so it is not a layer requirement — hence `Layer<never>`.
+ * with a default, so it is not a layer requirement - hence `Layer<never>`.
  *
  * Discord (and any other integration upstream that doesn't permit browser
  * CORS) only works in a browser via the proxy; this layer is the single

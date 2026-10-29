@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type ModuleLayout } from './ModuleContainer.tsx';
 
 /**
- * Writable atom holding a story layout produced at runtime — e.g. by a harness `onInit` that binds
+ * Writable atom holding a story layout produced at runtime - e.g. by a harness `onInit` that binds
  * freshly-created objects into `Cell.article`/`Cell.companion` cells. {@link ModuleContainer} reads
  * it when contributed and otherwise falls back to its static `layout` prop, so contributing this
  * capability is how a harness hands a runtime-built layout to the container without a wrapper.

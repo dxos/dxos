@@ -37,7 +37,7 @@ export type DeckPlankProps = Util.ThemedClassName<{
 /**
  * Connected deck plank: resolves the node, actions and operation handlers via {@link useDeckPlank} and
  * renders the presentational {@link Plank}. A companion id (a `~<variant>` linked segment) is an ordinary
- * plank too — delegated to {@link CompanionPlank}, which supplies the companion's own header and content —
+ * plank too - delegated to {@link CompanionPlank}, which supplies the companion's own header and content -
  * so the deck layout never special-cases companions.
  */
 export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {

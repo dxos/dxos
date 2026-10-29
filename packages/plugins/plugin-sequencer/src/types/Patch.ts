@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
  * - A typical melodic track has one SynthPatch covering the track's full range
  *   (e.g. MIDI 24..72). The played note's pitch becomes the synth frequency.
  * - A drum track has one DrumPatch per drum sound, each fixed to a single pitch
- *   (Kick=36, Snare=38, Hat=42, …).
+ *   (Kick=36, Snare=38, Hat=42, ...).
  * - A SamplePatch points at an audio file; the note's pitch is mapped relative
  *   to the patch's `basePitch` (so a single sample can play across a range).
  */

@@ -16,11 +16,11 @@ import { FeedStory, type FeedStoryProps } from '../testing/index.ts';
  * statusbar's `jumps` (rows moving on screen against the scroll, sampled per frame) and `shifts`
  * (rows whose offset changed after layout) are the readings; both should be zero on a still feed.
  *
- * 1. **Plain** — no editor at all, every row a fixed height declared in advance. Nothing here can be
+ * 1. **Plain** - no editor at all, every row a fixed height declared in advance. Nothing here can be
  *    measured wrong, so any movement belongs to the list itself.
- * 2. **Uniform** — one editor per row, every row the identical document, so a single estimate is
+ * 2. **Uniform** - one editor per row, every row the identical document, so a single estimate is
  *    exactly right for all of them. What this adds over Plain is CodeMirror construction.
- * 3. **Varied** — one editor per row, contents of different lengths, so the estimate is wrong for
+ * 3. **Varied** - one editor per row, contents of different lengths, so the estimate is wrong for
  *    most rows and the list corrects as it goes. What this adds is measurement error.
  *
  * Above the ladder sit the call-site stories (`MessageList/Assistant` and friends), which add
@@ -51,7 +51,7 @@ export default meta;
 
 type Story = StoryObj<FeedStoryProps>;
 
-/** The feed at rest — the varied rung, which is the one that matters. No play. */
+/** The feed at rest - the varied rung, which is the one that matters. No play. */
 export const Default: Story = {
   args: { scenario: 'thread' },
 };
@@ -63,14 +63,14 @@ export const Plain: Story = {
   },
 };
 
-/** Rung 2: an editor per row, all identical — adds CodeMirror construction. */
+/** Rung 2: an editor per row, all identical - adds CodeMirror construction. */
 export const Uniform: Story = {
   args: {
     scenario: 'uniform',
   },
 };
 
-/** Rung 3: an editor per row, varied lengths — adds measurement error. */
+/** Rung 3: an editor per row, varied lengths - adds measurement error. */
 export const Varied: Story = {
   args: {
     scenario: 'thread',

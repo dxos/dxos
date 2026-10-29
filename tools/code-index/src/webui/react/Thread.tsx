@@ -18,7 +18,7 @@ import type * as Fold from '../../workspace/Fold.ts';
 /**
  * The chat, as Composer's assistant renders it: `ChatThread` over a `FeedModel`, with the
  * repository's own codemirror composer below. The transcript arrives already folded from the
- * project log, so this component holds no transcript state of its own — it maps the fold's items to
+ * project log, so this component holds no transcript state of its own - it maps the fold's items to
  * `Message` objects and hands a typed line back up to Solid.
  *
  * Each code run becomes a `toolCall`/`toolResult` block pair inside the turn's assistant message,
@@ -64,7 +64,7 @@ const toolBlocks = (item: Extract<Fold.Item, { kind: 'tool' }>): ContentBlock.An
 
 /**
  * Groups the fold's items into rows: each prompt is a row, and everything the agent produced until
- * the next prompt is ONE assistant row whose blocks keep the turn's order — the renderer puts each
+ * the next prompt is ONE assistant row whose blocks keep the turn's order - the renderer puts each
  * tool run where it falls between the prose.
  */
 const toRows = (items: readonly Fold.Item[]): Row[] => {
@@ -140,7 +140,7 @@ const Transcript = ({ items, busy, onSend }: ThreadIslandProps) => {
             id='composer'
             classNames='dx-grow'
             lineWrapping
-            placeholder={busy ? 'Working…' : 'Ask about the repository…'}
+            placeholder={busy ? 'Working...' : 'Ask about the repository...'}
             onSubmit={handleSend}
           />
           <ChatStatusIndicator processing={busy} />

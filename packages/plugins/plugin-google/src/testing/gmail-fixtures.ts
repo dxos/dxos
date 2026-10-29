@@ -18,16 +18,16 @@ export interface GenerateGmailDatasetOptions {
   senders?: number;
   /** Custom (user) label names; the common system labels are always present. */
   labels?: readonly string[];
-  /** Seed for deterministic output (same seed → same dataset). */
+  /** Seed for deterministic output (same seed -> same dataset). */
   seed?: number;
-  /** `internalDate` window. Defaults to [now − 90 days, now]. */
+  /** `internalDate` window. Defaults to [now - 90 days, now]. */
   start?: Date;
   end?: Date;
   /** Prefix for message + thread ids, so disjoint datasets (e.g. date bands) don't collide. Defaults to `msg`. */
   idPrefix?: string;
 }
 
-// Every real account carries these, whether or not a fixture message uses them — and the label
+// Every real account carries these, whether or not a fixture message uses them - and the label
 // dictionary, not the messages, is what `syncLabels` maps into tags. A label missing here is simply
 // not syncable, which silently disables tag reconciliation for it.
 const SYSTEM_LABELS: readonly GoogleMail.Label[] = [
@@ -42,7 +42,7 @@ const SYSTEM_LABELS: readonly GoogleMail.Label[] = [
 
 /**
  * Deterministically generates a {@link GmailDataset} for driving {@link GoogleMailApi.mock} in unit
- * and benchmark tests — no live account. Messages are ordered ascending by `internalDate` and spread
+ * and benchmark tests - no live account. Messages are ordered ascending by `internalDate` and spread
  * across the [start, end] window so the sync's date-walk + pagination exercise realistically.
  */
 export const generateGmailDataset = (options: GenerateGmailDatasetOptions = {}): GmailDataset => {

@@ -7,7 +7,7 @@ import { clearCaches, clearIndexedDB, clearOPFS, clearServiceWorkers } from '@dx
 export type ResetProgress = (message: string) => void;
 
 export type ResetResult = {
-  /** False when any storage area failed to clear — callers should not treat the origin as wiped. */
+  /** False when any storage area failed to clear - callers should not treat the origin as wiped. */
   ok: boolean;
 };
 
@@ -27,7 +27,7 @@ export const resetComposerStorage = async (onProgress: ResetProgress): Promise<R
     }
   };
 
-  onProgress('Clearing all storage…');
+  onProgress('Clearing all storage...');
   await attempt('localStorage', async () => localStorage.clear());
   await attempt('sessionStorage', async () => sessionStorage.clear());
 
@@ -45,6 +45,6 @@ export const resetComposerStorage = async (onProgress: ResetProgress): Promise<R
     });
   });
 
-  onProgress(ok ? 'Done. Reload / to start fresh.' : 'Completed with errors — storage may not be fully wiped.');
+  onProgress(ok ? 'Done. Reload / to start fresh.' : 'Completed with errors - storage may not be fully wiped.');
   return { ok };
 };

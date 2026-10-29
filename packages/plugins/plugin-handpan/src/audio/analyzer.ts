@@ -20,7 +20,7 @@ export type AnalyzerOptions = {
   padding?: number;
   minFrequency?: number;
   maxFrequency?: number;
-  /** Minimum MPM clarity (0–1) for a frame's pitch to be reported. */
+  /** Minimum MPM clarity (0-1) for a frame's pitch to be reported. */
   minClarity?: number;
   /** Minimum fraction of post-onset energy on a candidate's harmonics for a strike to be pitched. */
   minHarmonicity?: number;
@@ -65,7 +65,7 @@ export type NoteEvent = {
   clarity: number;
   /** Peak RMS following the onset. */
   velocity: number;
-  /** Normalized energy at harmonics 1…n of the fundamental (sums to 1); empty when percussive. */
+  /** Normalized energy at harmonics 1...n of the fundamental (sums to 1); empty when percussive. */
   partials: number[];
   percussive: boolean;
   /**
@@ -180,7 +180,7 @@ export class Analyzer {
     return this.#sampleRate;
   }
 
-  /** Strike sensitivity (0–1); the default 0.7 matches the onset margin the analyzer is tuned for. */
+  /** Strike sensitivity (0-1); the default 0.7 matches the onset margin the analyzer is tuned for. */
   setSensitivity(sensitivity: number): void {
     this.#onsets.setDelta(sensitivityToDelta(sensitivity));
   }
@@ -377,7 +377,7 @@ const CHORD_RELATIVE = 0.2;
 /** Fraction of a strike's new energy the note templates must explain for it to count as pitched. */
 const MIN_CHORD_FIT = 0.5;
 
-/** Maps sensitivity 0–1 to an onset flux margin of 0.31 (least) … 0.01 (most); 0.7 → 0.1. */
+/** Maps sensitivity 0-1 to an onset flux margin of 0.31 (least) ... 0.01 (most); 0.7 -> 0.1. */
 const sensitivityToDelta = (sensitivity: number): number => 0.01 + 0.3 * (1 - Math.max(0, Math.min(1, sensitivity)));
 
 const computeRms = (frame: Float32Array): number => {
@@ -390,7 +390,7 @@ const computeRms = (frame: Float32Array): number => {
 
 /**
  * Peak magnitude near each harmonic k·f0 (±3%, at least ±1 bin), normalized to sum to 1.
- * Captures the instrument's timbre — handpan tone fields are tuned to 1 : 2 : 3.
+ * Captures the instrument's timbre - handpan tone fields are tuned to 1 : 2 : 3.
  */
 export const partialProfile = (
   magnitudes: Float32Array,

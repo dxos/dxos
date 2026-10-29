@@ -22,7 +22,7 @@ export const MCP_REQUEST_META: {
  *
  * `runDx` cannot serve here: `spawnSync` closes stdin as soon as its input is written and the
  * server exits with the stream, so a scaffold needing three ordered calls would need three
- * servers — each paying the client boot again, and the second racing the first one's shutdown
+ * servers - each paying the client boot again, and the second racing the first one's shutdown
  * over the same data directory.
  */
 export type McpSessionOptions = {
@@ -119,7 +119,7 @@ export class McpSession {
    * Shuts the server down and waits for it to go.
    *
    * SIGTERM, not SIGKILL: nothing on the invoke path flushes, so the client's own shutdown is
-   * what gets the scaffold to disk — killed outright, the next reader can find an empty database
+   * what gets the scaffold to disk - killed outright, the next reader can find an empty database
    * and the failure looks like a broken fixture. SIGKILL is only the backstop for a server that
    * will not leave.
    */

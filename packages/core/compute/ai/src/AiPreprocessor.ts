@@ -6,7 +6,7 @@
 
 // Side-effect import: the provider augments `Prompt.ReasoningPartOptions` with its `anthropic` key,
 // which line ~438 reads. It has to stay type-only so the provider is not pulled into the bundle, and
-// a type-only side-effect import has no form that satisfies both rules — a namespace binding would
+// a type-only side-effect import has no form that satisfies both rules - a namespace binding would
 // be unused, and a runtime import would ship the module.
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
@@ -380,7 +380,7 @@ const makeToolResultPart = (
   Prompt.makePart('tool-result', {
     id: block.toolCallId,
     name: block.name,
-    // `undefined` drops the key on serialization, and the part schema requires it — a single such
+    // `undefined` drops the key on serialization, and the part schema requires it - a single such
     // part fails the decode of the entire prompt, permanently, for a conversation that already
     // holds one. Normalized here so a history written before the parser guard still replays.
     result: result === undefined ? null : result,
@@ -824,7 +824,7 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
 const MAX_RETIRED_RESULT = 2_000;
 
 /**
- * Rewrites history's calls to tools the request no longer offers — and their results — as plain text.
+ * Rewrites history's calls to tools the request no longer offers - and their results - as plain text.
  *
  * The toolkit can change between turns of one conversation (a skill disabled, a switch to code mode),
  * and a past call kept as a call reads to the model as a tool it may call again: it does, and the
@@ -881,7 +881,7 @@ const retiredResult = (block: ContentBlock.ToolResult): string => {
 
 const capRetired = (text: string): string =>
   text.length > MAX_RETIRED_RESULT
-    ? `${text.slice(0, MAX_RETIRED_RESULT)}… [${text.length - MAX_RETIRED_RESULT} characters omitted]`
+    ? `${text.slice(0, MAX_RETIRED_RESULT)}\u2026 [${text.length - MAX_RETIRED_RESULT} characters omitted]`
     : text;
 
 /**

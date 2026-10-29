@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-// Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
+// Value-side `EID` import keeps TS declaration emit portable - `TriggerTemplate`
 // references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
 // otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
 import * as Capability from '@dxos/app-framework/Capability';
@@ -87,7 +87,7 @@ export const RunPromptInNewChat = Operation.make({
   }),
 });
 
-// Runs a routine's action now, routed by its first trigger — that is where both the runnable's input
+// Runs a routine's action now, routed by its first trigger - that is where both the runnable's input
 // (e.g. a sync routine's binding cursor) and the `remote` flag live. A `remote` trigger force-runs on the
 // EDGE dispatcher over HTTP, since that is the only runtime it is registered on; a local one runs
 // in-process. Without the trigger a manual run would invoke an input-taking runnable with nothing, and

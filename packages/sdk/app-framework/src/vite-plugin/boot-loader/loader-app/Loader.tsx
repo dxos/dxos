@@ -12,11 +12,11 @@ import { type LoaderStore } from './store.ts';
 const RING_RADIUS = 48;
 const RING_CENTER = 50;
 // Leading-edge marker: a small dot drawn at the arc's head in an unmasked layer.
-const MARKER_RADIUS = 1; // viewBox units → ~3.8px on the 384px disc
+const MARKER_RADIUS = 1; // viewBox units -> ~3.8px on the 384px disc
 
 /**
  * Read an element's *current animated* translateY (px) from its live transform
- * matrix — the interpolated value mid-transition, not the last-written property.
+ * matrix - the interpolated value mid-transition, not the last-written property.
  * Used by the status FLIP so successive appends chain off the in-flight position
  * instead of yanking the track back to a fixed invert target.
  */
@@ -30,7 +30,7 @@ const readTranslateY = (element: HTMLElement): number => {
     return 0;
   }
   const values = match[1].split(',');
-  // 2D `matrix(a, b, c, d, tx, ty)` → ty at index 5; 3D `matrix3d(...)` → ty at 13.
+  // 2D `matrix(a, b, c, d, tx, ty)` -> ty at index 5; 3D `matrix3d(...)` -> ty at 13.
   if (values.length === 6) {
     return Number.parseFloat(values[5]) || 0;
   }
@@ -45,12 +45,12 @@ export type LoaderProps = {
   store: LoaderStore;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
-  /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
+  /** A CSS filter over the mark - how a channel recolours the released artwork without its own file. */
   markFilter?: string;
 };
 
 /**
- * The boot loader, authored as a single Solid component — the one source of
+ * The boot loader, authored as a single Solid component - the one source of
  * truth for the loader DOM. `bootLoaderPlugin` bundles this (Solid runtime
  * inlined) into `index.html`; the storybook mounts the very same component, so
  * the two can no longer drift. The DOM structure, ids, and classes mirror
@@ -128,7 +128,7 @@ export const Loader: Component<LoaderProps> = (props) => {
   // 12 o'clock whose angle grows with the eased `shown()` progress. The sweep is
   // capped just shy of a full turn so the single arc command never degenerates at
   // 100%. The leading-edge dot is its `head` point, rendered separately (below) in
-  // an *unmasked* layer — drawing it via `marker-end` on this path would put it
+  // an *unmasked* layer - drawing it via `marker-end` on this path would put it
   // under the ring's conic fade mask, whose hard edge bisects the dot into a
   // half-circle.
   const arc = () => {
@@ -145,7 +145,7 @@ export const Loader: Component<LoaderProps> = (props) => {
     return { d: `M ${x0} ${y0} A ${RING_RADIUS} ${RING_RADIUS} 0 ${largeArc} 0 ${headX} ${headY}`, headX, headY };
   };
 
-  // Once host-driven, the brand mark eases grayscale → colour and stays there.
+  // Once host-driven, the brand mark eases grayscale -> colour and stays there.
   const isHostDriven = () => props.store.phase() !== 'creep';
 
   return (
@@ -206,7 +206,7 @@ export const Loader: Component<LoaderProps> = (props) => {
           </Index>
         </div>
       </div>
-      {/* Shown only once the host reports the deadline passed, and only in dev — startup keeps
+      {/* Shown only once the host reports the deadline passed, and only in dev - startup keeps
           running behind it, so this is an offer rather than a verdict. Placed below the status log,
           where the reader's eye already is. */}
       {props.store.onAbort() ? (

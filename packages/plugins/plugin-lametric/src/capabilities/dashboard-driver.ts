@@ -25,7 +25,7 @@ const DEFAULT_MIN_INTERVAL_MS = 5_000;
  * Keeps the device showing the active space.
  *
  * Headless, like the Stream Deck driver: the display must stay live whether or not a panel is on
- * screen. It costs nothing when the device is unconfigured — no transport is built, so no request is
+ * screen. It costs nothing when the device is unconfigured - no transport is built, so no request is
  * ever made, which is the common case since most users have no LaMetric.
  */
 export default Capability.makeModule(

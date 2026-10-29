@@ -103,7 +103,7 @@ describe('merge3', () => {
   });
 
   test('marks staggered overlapping hunks as a conflict', ({ expect }) => {
-    // Ours replaces base lines [0,2); theirs edits [1,2) — overlapping but different starts.
+    // Ours replaces base lines [0,2); theirs edits [1,2) - overlapping but different starts.
     const base = 'alpha\nbravo\ncharlie\n';
     const ours = 'replaced\ncharlie\n';
     const theirs = 'alpha\nbravo edited\ncharlie\n';
@@ -117,7 +117,7 @@ describe('merge3', () => {
   });
 
   test('staggered conflict regions include each side of the union', ({ expect }) => {
-    // Theirs replaces [0,3); ours edits [2,3) only — theirs' side must still carry its full block.
+    // Theirs replaces [0,3); ours edits [2,3) only - theirs' side must still carry its full block.
     const base = 'one\ntwo\nthree\nfour\n';
     const ours = 'one\ntwo\nthree edited\nfour\n';
     const theirs = 'rewritten\nfour\n';

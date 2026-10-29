@@ -18,8 +18,8 @@ import { makeTypefullyPublisherService } from './typefully-api.ts';
 //   TYPEFULLY_API_KEY=<v2-key> moon run plugin-typefully:test -- typefully-api.integration.test.ts
 //
 // It drives the same proxy-wired `makeTypefullyPublisherService` the app uses, so it covers the full
-// path the offline contract tests (typefully-api.test.ts) cannot: edge CORS proxy → Typefully v2 →
-// Bearer auth → social-set resolution → response parsing. These are the exact calls `SyncPosts`
+// path the offline contract tests (typefully-api.test.ts) cannot: edge CORS proxy -> Typefully v2 ->
+// Bearer auth -> social-set resolution -> response parsing. These are the exact calls `SyncPosts`
 // (plugin-blogger) makes, so a green run here means sync's network layer works end-to-end.
 //
 // The create test writes a real draft to the connected account and deletes it again for cleanup.
@@ -70,7 +70,7 @@ describe.skipIf(!apiKey)('Typefully PublisherService (live)', () => {
     const service = makeTypefullyPublisherService();
     const connection = await connect(apiKey);
     // A recognizable marker so a leaked draft (if cleanup fails) is easy to spot and remove manually.
-    const text = `DXOS Typefully sync integration test — ${new Date().toISOString()}`;
+    const text = `DXOS Typefully sync integration test - ${new Date().toISOString()}`;
 
     const created = await service.createDraft(connection, { text });
     // Cleanup in `finally` so a failed assertion never leaks the draft (a create can succeed remotely

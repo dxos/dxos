@@ -9,14 +9,14 @@
  * one wrapper chunk per entry so the host serves it at runtime, and `composerPlugin`
  * (via {@link isSharedPackage}) externalizes the same set from plugin bundles.
  * Adding a new `@dxos/*` (or third-party) package that plugins may depend on means
- * adding it here — in one place — so the externalization contract stays in sync
+ * adding it here - in one place - so the externalization contract stays in sync
  * with what the host actually provides.
  *
  * Every entry must also be a **direct** dependency of composer-app's `package.json`,
  * including packages that are only re-exported by an umbrella (e.g. via subpath
  * re-exports from another listed package). pnpm doesn't symlink transitive deps
  * into a package's own `node_modules`, so the import-map plugin's `this.resolve`
- * call fails for transitive-only entries and the importmap silently drops them —
+ * call fails for transitive-only entries and the importmap silently drops them -
  * leaving plugins with bare specifiers the host can't satisfy at install time.
  *
  * Plugin packages (`@dxos/plugin-*`) are intentionally NOT listed: community plugins
@@ -168,8 +168,8 @@ export const DEFAULT_PACKAGES = [
  * True when the given bare specifier (or one of its subpaths) is provided by the
  * Composer host at runtime and must not be re-bundled by a plugin.
  *
- * Matches only packages listed in {@link DEFAULT_PACKAGES} — the same list
- * {@link importMapPlugin} consumes — so externalization cannot claim a package
+ * Matches only packages listed in {@link DEFAULT_PACKAGES} - the same list
+ * {@link importMapPlugin} consumes - so externalization cannot claim a package
  * the host isn't actually mapping. Unknown `@dxos/*` packages fall through to
  * normal bundling, which is the correct default for plugin-owned or yet-to-be
  * shared workspace packages.

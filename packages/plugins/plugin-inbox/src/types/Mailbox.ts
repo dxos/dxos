@@ -25,8 +25,8 @@ export enum MessageState {
 }
 
 /**
- * A message filter — an exclusion rule applied across the mailbox UI, sync, and analysis. Kept
- * intentionally small; expected to grow (subject, labels, date, …), so match logic lives in the
+ * A message filter - an exclusion rule applied across the mailbox UI, sync, and analysis. Kept
+ * intentionally small; expected to grow (subject, labels, date, ...), so match logic lives in the
  * {@link matchesFilter} / {@link isFiltered} helpers rather than at call sites.
  */
 export const Filter = Schema.Struct({
@@ -56,13 +56,13 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
 
     /**
-     * Append-only feed of derived annotations about the messages in {@link feed} — summaries today
+     * Append-only feed of derived annotations about the messages in {@link feed} - summaries today
      * (see {@link makeSummary}), each a Message whose `parentMessage` names its subject.
      *
      * A second feed rather than a record on this object: annotations are immutable and unbounded, so
      * they belong in an append-only structure instead of growing the mailbox document, and
      * re-deriving one (better model, changed prompt) appends a new version rather than destroying the
-     * old. The primary feed stays pure — no reader has to filter annotations out of the message list.
+     * old. The primary feed stays pure - no reader has to filter annotations out of the message list.
      * Provisioned lazily on first annotation, like {@link tags}.
      */
     annotations: Ref.Ref(Feed.Feed).pipe(
@@ -72,7 +72,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     ),
 
     /**
-     * Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
+     * Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) -> message ids.
      *
      * Messages are immutable Queue items, so their tag associations cannot live on the message and
      * live in a child `TagIndex` object instead (the `meta.tags` augmentation for feed objects). Tag
@@ -90,10 +90,10 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     }).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 
     /**
-     * Provenance for extracted objects: message id → extracted object ids.
+     * Provenance for extracted objects: message id -> extracted object ids.
      *
-     * Feed-stored Messages are immutable Queue items and cannot be ECHO relation endpoints, so — as
-     * with {@link tags} — the association lives here on the mutable Mailbox. The referenced objects
+     * Feed-stored Messages are immutable Queue items and cannot be ECHO relation endpoints, so - as
+     * with {@link tags} - the association lives here on the mutable Mailbox. The referenced objects
      * are space-db objects resolved by id (`db.getObjectById`).
      */
     extracted: Schema.Record(Schema.String, Schema.Array(Schema.String)).pipe(
@@ -104,7 +104,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     /**
      * SAVED VIEWS, shown as named children under the mailbox in the navtree. Each is a serialized
      * query string the user built in the filter bar and named (`SaveFilterPopover`); selecting one
-     * scopes the list to it. Additive and presentational — a saved view narrows what you are LOOKING
+     * scopes the list to it. Additive and presentational - a saved view narrows what you are LOOKING
      * at and never changes what the mailbox contains.
      *
      * Not to be confused with {@link messageFilters} below, which is the opposite in every respect.
@@ -115,7 +115,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     ),
 
     /**
-     * EXCLUSION RULES (see {@link Filter}), honored across the UI, sync and analysis — a message
+     * EXCLUSION RULES (see {@link Filter}), honored across the UI, sync and analysis - a message
      * matching any of them is hidden everywhere, never committed to the feed, and never scanned by a
      * pipeline. This is the "ignore this sender" list, subtractive and global.
      *
@@ -137,7 +137,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * Bulk-mail subscriptions extracted from the feed by `ExtractSubscriptions`: one entry per sender
      * carrying an unsubscribe affordance (header or body link).
      *
-     * Replaced wholesale each run — persisted derived state for the UI, never a source of truth,
+     * Replaced wholesale each run - persisted derived state for the UI, never a source of truth,
      * which is why that pass must see every message and cannot take a feed cursor.
      */
     subscriptions: Schema.Array(Subscription).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
@@ -213,7 +213,7 @@ export const removeTag = (mailbox: Mailbox, uri: string, message: Message.Messag
 
 /**
  * Records the ids of objects extracted from a message under `mailbox.extracted[messageId]`.
- * Idempotent — duplicate ids are not appended. Used as the provenance association for feed-stored
+ * Idempotent - duplicate ids are not appended. Used as the provenance association for feed-stored
  * messages (which cannot be ECHO relation endpoints).
  */
 export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds: readonly string[]): void => {
@@ -243,9 +243,9 @@ export const getExtractedObjectIds = (mailbox: Mailbox | Obj.Snapshot<Mailbox>, 
   mailbox.extracted?.[messageId] ?? [];
 
 /**
- * Inverts the tag index to a `messageId → tag uri[]` view-model.
+ * Inverts the tag index to a `messageId -> tag uri[]` view-model.
  *
- * Cheaper than calling {@link getTagsForMessage} once per message — the caller iterates the map
+ * Cheaper than calling {@link getTagsForMessage} once per message - the caller iterates the map
  * once and indexes by message id. Labels/hues are resolved separately from the `Tag` objects (e.g.
  * via {@link Tagging.resolve}); UI surfaces look up the resolved `Tag` by uri.
  */
@@ -310,7 +310,7 @@ export const matchesFilter = (filter: Filter, message: Filterable): boolean => {
 export const isFiltered = (mailbox: Pick<Mailbox, 'messageFilters'>, message: Filterable): boolean =>
   (mailbox.messageFilters ?? []).some((filter) => matchesFilter(filter, message));
 
-/** Adds a sender-exclusion filter for `email` (idempotent — no-op if already ignored). */
+/** Adds a sender-exclusion filter for `email` (idempotent - no-op if already ignored). */
 export const ignoreSender = (mailbox: Mailbox, email: string): void => {
   if (email.length === 0 || (mailbox.messageFilters ?? []).some((filter) => filter.from === email)) {
     return;
@@ -321,8 +321,8 @@ export const ignoreSender = (mailbox: Mailbox, email: string): void => {
   });
 };
 
-// Local-part patterns for role / automated mailboxes — an organization, not an individual (support,
-// billing, notifications, …). A leading role word, optionally followed by a separator (`support`,
+// Local-part patterns for role / automated mailboxes - an organization, not an individual (support,
+// billing, notifications, ...). A leading role word, optionally followed by a separator (`support`,
 // `billing+eu`, `no.reply`).
 const ROLE_LOCALPART_RE =
   /^(support|help(desk)?|info|hello|contact|team|sales|billing|invoices?|receipts?|payments?|accounts?|admin|postmaster|mailer|marketing|promo(tions)?|offers|deals|careers?|jobs|feedback|survey|orders?|shipping|service|members?|membership|community|digest|notifications?|notify|alerts?|updates?|news(letter)?|security|welcome|webmaster)([._+-]|$)/i;
@@ -331,7 +331,7 @@ const ROLE_LOCALPART_RE =
 const ORG_NAME_RE = /\b(inc|llc|ltd|gmbh|corp|team|support|notifications?|newsletter|billing|no-?reply)\b/i;
 
 /**
- * Whether a sender is an organization / automated role mailbox rather than an individual — a
+ * Whether a sender is an organization / automated role mailbox rather than an individual - a
  * strong-signal, deterministic check (a role local part or an org-shaped display name). Deliberately
  * conservative: it errs toward `false` (treat as a person) so a genuine individual is never wrongly
  * excluded from replies. The richer, confidence-scored person/org triage lives in the research
@@ -348,8 +348,8 @@ export const isOrgSender = (message: MessageLike): boolean => {
 };
 
 /**
- * Whether a message is worth drafting a reply to. Replies go only to people: bulk/automated mail — a
- * no-reply sender, an unsubscribe affordance, or an organizational / role sender — is skipped. Reads
+ * Whether a message is worth drafting a reply to. Replies go only to people: bulk/automated mail - a
+ * no-reply sender, an unsubscribe affordance, or an organizational / role sender - is skipped. Reads
  * the signals the Gmail sync mapper records on `properties` (`noReply`, `listUnsubscribe`), falling
  * back to the sender address for messages mapped before those signals existed (e.g. an older
  * fixture). When the caller has a classified sender type (e.g. the background classify-sender stage),
@@ -370,7 +370,7 @@ export const isReplyable = (message: MessageLike, options: { senderClass?: 'pers
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Best-effort addresses for the mailbox owner — the `me` input correspondence derivation needs to
+ * Best-effort addresses for the mailbox owner - the `me` input correspondence derivation needs to
  * tell outbound from inbound. The connectors seed `mailbox.name` from the connection's
  * `accessToken.account`, so a synced mailbox usually names its own account. Anything else yields
  * none: callers report the dependent stage as skipped rather than deriving against a wrong identity,
@@ -413,7 +413,7 @@ export const makeSummary = ({
   });
 
 /**
- * The mailbox's annotation feed, provisioned on first use — annotations are rare relative to
+ * The mailbox's annotation feed, provisioned on first use - annotations are rare relative to
  * mailboxes, so the feed is not created until something derives one (the {@link Mailbox.tags} pattern).
  */
 export const findOrCreateAnnotations = (mailbox: Mailbox, db: Pick<Database.Database, 'add'>): Feed.Feed => {
@@ -442,7 +442,7 @@ export const getSummaryText = (annotation: MessageLike): string | undefined => {
 };
 
 /**
- * Newest summary per source message, keyed by message id — the read model for UI that renders
+ * Newest summary per source message, keyed by message id - the read model for UI that renders
  * summaries beside messages it already has (the article), where the full {@link mergeAnnotations}
  * pairing would mean re-walking the message feed.
  */
@@ -476,14 +476,14 @@ export type ConversationSummary = {
   readonly messageId: string;
   /** Model that produced it, when the annotation recorded one. */
   readonly model?: string;
-  /** When it was derived — NOT the message's date, so a stale summary reads as stale. */
+  /** When it was derived - NOT the message's date, so a stale summary reads as stale. */
   readonly created: string;
 };
 
 /**
  * The summary shown for a whole conversation: the newest annotation naming any message in the thread.
  * `SummarizeMailbox` files one summary per thread under its newest message, so this normally resolves
- * to that annotation — and to the most recent one when a re-derivation has superseded it.
+ * to that annotation - and to the most recent one when a re-derivation has superseded it.
  *
  * Takes the annotations rather than a {@link summaryIndex} map because provenance (`model`, `created`)
  * lives on the annotation Message, which the map discards.
@@ -497,7 +497,7 @@ export const conversationSummary = (
     ids.add(message.id);
   }
 
-  // The summary text and parent id are captured in the loop, where they are known to be present —
+  // The summary text and parent id are captured in the loop, where they are known to be present -
   // narrowing them again afterwards would need non-null assertions.
   let newest: ConversationSummary | undefined;
   for (const annotation of annotations) {
@@ -532,8 +532,8 @@ export type AnnotatedMessage = {
 
 /**
  * Merges the mailbox's message feed with its annotation feed, yielding each message with whatever
- * has been derived about it. Iterates the message feed in its own order — annotations never add,
- * remove or reorder messages — and indexes the annotations once, so the merge stays linear.
+ * has been derived about it. Iterates the message feed in its own order - annotations never add,
+ * remove or reorder messages - and indexes the annotations once, so the merge stays linear.
  *
  * Annotations are grouped by `parentMessage` and ordered newest-first, so a re-derived summary
  * supersedes the earlier one while both remain in the feed.
@@ -574,8 +574,8 @@ export const getUnsubscribeTarget = (message: MessageLike): string | undefined =
 };
 
 /**
- * Parse an unsubscribe affordance — an RFC 2369 `List-Unsubscribe` header (`<https://…>, <mailto:…>`)
- * or a bare URL (a body-extracted link) — into its one-click HTTP and mailto targets. The HTTP form
+ * Parse an unsubscribe affordance - an RFC 2369 `List-Unsubscribe` header (`<https://...>, <mailto:...>`)
+ * or a bare URL (a body-extracted link) - into its one-click HTTP and mailto targets. The HTTP form
  * supports RFC 8058 one-click POST; the mailto is the fallback. Pure.
  */
 export const parseUnsubscribe = (header: string): { http?: string; mailto?: string } => {
@@ -602,7 +602,7 @@ export const parseUnsubscribe = (header: string): { http?: string; mailto?: stri
   return targets;
 };
 
-// Unsubscribe-shaped URLs in message bodies — the affordance bulk senders put in the footer when
+// Unsubscribe-shaped URLs in message bodies - the affordance bulk senders put in the footer when
 // the transport header is absent (or was stripped by a forward).
 const BODY_UNSUBSCRIBE_RE =
   /https?:\/\/[^\s()[\]"<>]*(?:unsubscrib|opt[-_]?out|email[-_]?preferences|manage[-_]?preferences)[^\s()[\]"<>]*/i;
@@ -626,8 +626,8 @@ export const getUnsubscribeAffordance = (message: MessageLike): string | undefin
   getUnsubscribeTarget(message) ?? extractBodyUnsubscribe(message);
 
 /**
- * Group the mailbox's messages into subscriptions — one per sender carrying an unsubscribe
- * affordance — for the Subscriptions view. Sorted by message count (noisiest first). Pure. The
+ * Group the mailbox's messages into subscriptions - one per sender carrying an unsubscribe
+ * affordance - for the Subscriptions view. Sorted by message count (noisiest first). Pure. The
  * default resolver reads only the header; pass {@link getUnsubscribeAffordance} to include body
  * links (the extraction pipeline does).
  */

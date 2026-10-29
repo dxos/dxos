@@ -17,7 +17,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const SUMMARY = 'The user ordered a laptop stand; the order shipped on the 3rd.';
 
-// Scripting the model keeps the assertion on what `summarize` does with the response — the memoized
+// Scripting the model keeps the assertion on what `summarize` does with the response - the memoized
 // version could only check that a summary block existed.
 const TestLanguageModel = ScriptedLanguageModel.layer([{ parts: [ScriptedLanguageModel.text(SUMMARY)] }]);
 

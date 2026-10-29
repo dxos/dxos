@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Read> = FileOperation.
       const urlOption = yield* Blob.url(blob);
       const url = yield* Option.match(urlOption, {
         onSome: Effect.succeed,
-        // No renderable URL from the backend (e.g. external storage without `getUrl`) — fall back
+        // No renderable URL from the backend (e.g. external storage without `getUrl`) - fall back
         // to reading the bytes directly and encoding them as a `data:` URL.
         onNone: () => Blob.read(blob).pipe(Effect.map((bytes) => `data:${type};base64,${bytesToBase64(bytes)}`)),
       });

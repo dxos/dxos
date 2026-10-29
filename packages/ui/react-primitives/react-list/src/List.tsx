@@ -8,16 +8,16 @@
 // semantically-correct `<ol>` / `<ul>` (or, when `selectable={true}`, a
 // `role="listbox"` element with `role="option"` children carrying
 // `aria-selected`). It applies no styling, no keyboard navigation, and
-// no `dx-*` utility classes — those are layered above in
+// no `dx-*` utility classes - those are layered above in
 // `@dxos/react-ui-list`.
 //
 // Layering:
-//   - `@dxos/react-list`      — this package; ARIA + structure only.
-//   - `@dxos/react-ui-list`   — adds `dx-*` styling, keyboard nav, and
+//   - `@dxos/react-list`      - this package; ARIA + structure only.
+//   - `@dxos/react-ui-list`   - adds `dx-*` styling, keyboard nav, and
 //                               opinionated containers (Listbox, OrderedList,
 //                               Tree, Accordion, Combobox, Picker) plus the
 //                               reusable navigation/selection/disclosure aspects.
-//   - `@dxos/react-ui-mosaic` — virtualized / draggable / card-board
+//   - `@dxos/react-ui-mosaic` - virtualized / draggable / card-board
 //                               layouts; composes the above where useful.
 //
 // Most app code should reach for `@dxos/react-ui-list`. Use this primitive
@@ -26,7 +26,7 @@
 //
 // See:
 //   - `packages/ui/ui-theme/src/css/components/state.md` for the
-//     `aria-selected` ↔ `dx-selected` pairing rules.
+//     `aria-selected` <-> `dx-selected` pairing rules.
 //   - `packages/ui/react-ui-list/AUDIT.md` for why this layering exists.
 //   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 

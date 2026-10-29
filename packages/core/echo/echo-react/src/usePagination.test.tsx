@@ -451,7 +451,7 @@ describe('usePagination', () => {
       Obj.make(TestSchema.Task, { title: 'a', completed: false }),
       Obj.make(TestSchema.Task, { title: 'b', completed: true }),
       Obj.make(TestSchema.Task, { title: 'b', completed: false }),
-      Obj.make(TestSchema.Task, { title: 'c', completed: false }), // no qualifying member — excluded
+      Obj.make(TestSchema.Task, { title: 'c', completed: false }), // no qualifying member - excluded
     ]);
 
     const matches = Query.select(Filter.type(TestSchema.Task, { completed: true })).from(feed);
@@ -484,7 +484,7 @@ describe('usePagination', () => {
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'aggregated' }));
     // Two members per email; each group's max(name) is the recency proxy. Appended so that neither
-    // feed order nor first-occurrence matches aggregate order — only max(name) ordering does.
+    // feed order nor first-occurrence matches aggregate order - only max(name) ordering does.
     const emailByName: Record<string, string> = {
       p0: 'd@x',
       p1: 'a@x',
@@ -506,7 +506,7 @@ describe('usePagination', () => {
       .aggregate({ email: Aggregate.group('email'), latest: Aggregate.max('name'), items: Aggregate.items() });
 
     const descending = renderHook(() => usePagination(db, grouped.orderBy(Order.property('latest', 'desc')).limit(2)));
-    // First page: the two groups with the highest max(name) — a@x (p7) then b@x (p6).
+    // First page: the two groups with the highest max(name) - a@x (p7) then b@x (p6).
     await waitFor(() => {
       expect(descending.result.current.items.map((group) => group.email)).toEqual(['a@x', 'b@x']);
     });

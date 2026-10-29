@@ -11,8 +11,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ModelVariant } from '../models.ts';
 
 // Runs a task across the model ladder with fair timing. For each variant it WARMS the model once
-// (a cold Ollama load is a 10–30s VRAM spike that would poison the average), then runs every item
-// serially — no concurrency — so per-item latency is a clean steady-state measurement. Returns the
+// (a cold Ollama load is a 10-30s VRAM spike that would poison the average), then runs every item
+// serially - no concurrency - so per-item latency is a clean steady-state measurement. Returns the
 // per-item outputs plus p50/p95/mean latency and throughput, so accuracy graders and the report can
 // line up quality against cost per model.
 

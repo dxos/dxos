@@ -20,7 +20,7 @@ describe('benchmark framework', () => {
   test('instrument records per-stage counters and latency, even when items are dropped', async ({ expect }) => {
     // A drop stage (out < in): odds are filtered, kept evens sleep a known amount. Because a
     // dropped input has no output to attribute, `evens.ms` must reflect only the two kept items'
-    // ~10ms each — a FIFO pairing would mis-attribute a dropped item's entry time instead.
+    // ~10ms each - a FIFO pairing would mis-attribute a dropped item's entry time instead.
     const evens = Stage.map('evens', (n: number) =>
       n % 2 === 0 ? Effect.sleep('10 millis').pipe(Effect.as(n)) : Effect.succeed(undefined),
     );

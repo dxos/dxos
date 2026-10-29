@@ -23,8 +23,8 @@ export type XmlFormattingOptions = {
  * Mark decoration extension that highlights XML tag delimiters
  * (e.g., `<tag>`, `</tag>`, `<tag attr="x"/>`) with the `cm-xml-tag` class.
  *
- * Uses `@codemirror/lang-xml`'s Lezer parser standalone — only to compute
- * decoration ranges — without changing the editor's primary language. This
+ * Uses `@codemirror/lang-xml`'s Lezer parser standalone - only to compute
+ * decoration ranges - without changing the editor's primary language. This
  * keeps the document plain text while still handling nesting and attributes
  * correctly.
  */
@@ -79,7 +79,7 @@ export const xmlFormatting = ({ skip }: XmlFormattingOptions = {}): Extension =>
             return;
           }
           if (skipSet?.has(tagName)) {
-            // Skip this element AND its descendants — another extension owns rendering.
+            // Skip this element AND its descendants - another extension owns rendering.
             return false;
           }
           ranges.push(xmlElementMark.range(node.from, node.to));
@@ -119,7 +119,7 @@ export const xmlFormatting = ({ skip }: XmlFormattingOptions = {}): Extension =>
 };
 
 /**
- * Well-formed XML tag name (a stray `<` in prose — e.g. `a < b` — has none, so it stays undecorated).
+ * Well-formed XML tag name (a stray `<` in prose - e.g. `a < b` - has none, so it stays undecorated).
  */
 const VALID_TAG_NAME = /^[A-Za-z_][\w.-]*$/;
 

@@ -244,8 +244,8 @@ export const useRefEditor = (
           {
             key: 'Space',
             // In email mode, a space after a bare address commits it (a tag only forms once
-            // committed). A partial `Name <…` segment still needs spaces, so only commit — and
-            // consume the space — when the whole in-progress segment is an address.
+            // committed). A partial `Name <...` segment still needs spaces, so only commit - and
+            // consume the space - when the whole in-progress segment is an address.
             run: (view) => {
               if (mode !== 'email') {
                 return false;
@@ -283,7 +283,7 @@ export const useRefEditor = (
 
 /**
  * Insert an RFC 5322 mailbox, replacing the in-progress segment (anything typed after the last
- * comma — multi-word queries can leave words outside the popover's completion range).
+ * comma - multi-word queries can leave words outside the popover's completion range).
  */
 const insertMailbox = (view: EditorView, head: number, mailbox: string) => {
   const line = view.state.doc.lineAt(head);

@@ -54,7 +54,7 @@ describe('Connection under hostile callers and browsers', () => {
         const id = handles.length + 1;
         const handle = { id, closed: false, close: async () => void (handle.closed = true) };
         handles.push(handle);
-        // The first attempt's handle only resolves once the test lets it — long after its session died.
+        // The first attempt's handle only resolves once the test lets it - long after its session died.
         if (id === 1) {
           firstOpening.wake();
           await gate.wait();

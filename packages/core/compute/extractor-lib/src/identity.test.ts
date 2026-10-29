@@ -146,7 +146,7 @@ describe('planMerge', () => {
     expect(plan.preview.emails?.map((email) => email.value)).toEqual(['a@dxos.org', 'alice@personal.com']);
   });
 
-  test('the preview is detached — planning writes nothing', ({ expect }) => {
+  test('the preview is detached - planning writes nothing', ({ expect }) => {
     const objects = [
       Person.make({ id: '01000000000000000000000001', fullName: 'Alice', emails: [{ value: 'a@dxos.org' }] }),
       Person.make({ id: '01000000000000000000000002', fullName: 'Alice B', emails: [{ value: 'a@dxos.org' }] }),
@@ -310,7 +310,7 @@ describe('IdentityIndex', () => {
 
   test('an object registered mid-run resolves before it is committed', async ({ expect }) => {
     const index = await EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
-    // Not added to the database — this is the window in which the old per-run caches forked a duplicate.
+    // Not added to the database - this is the window in which the old per-run caches forked a duplicate.
     const contact = Person.make({ fullName: 'Alice', emails: [{ value: 'alice@dxos.org' }] });
     index.register(contact);
     expect(index.lookup(Person.Person, { email: 'alice@dxos.org' })?.fullName).toBe('Alice');

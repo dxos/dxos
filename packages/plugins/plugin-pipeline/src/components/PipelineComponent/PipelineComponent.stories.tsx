@@ -73,7 +73,7 @@ const DefaultStory = () => {
   }, [space, pipeline]);
 
   if (!pipeline) {
-    return <p>Loading…</p>;
+    return <p>Loading...</p>;
   }
 
   return (
@@ -146,7 +146,7 @@ const MutationsStory = () => {
   }, [space, pipeline, contacts]);
 
   if (!pipeline) {
-    return <p>Loading…</p>;
+    return <p>Loading...</p>;
   }
 
   return (

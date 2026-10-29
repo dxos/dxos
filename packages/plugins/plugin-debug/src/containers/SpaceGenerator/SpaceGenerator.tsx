@@ -125,7 +125,7 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
 
     UiHooks.useAsyncEffect(updateInfo, [updateInfo]);
 
-    // TODO(wittjosiah): Custom toast required — `notify` labels are fixed at invocation, so a
+    // TODO(wittjosiah): Custom toast required - `notify` labels are fixed at invocation, so a
     //  result-dependent count cannot be reported through it. Drop these once operation notify
     //  supports dynamic labels.
     const handleReset = useCallback(async () => {
@@ -263,8 +263,8 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
 SpaceGenerator.displayName = 'SpaceGenerator';
 
 /**
- * Toolbar actions for the space generator. The toolbar's own action items hold the pending state —
- * each awaits its invoke, disables only itself while in flight, and guards re-entry — so nothing
+ * Toolbar actions for the space generator. The toolbar's own action items hold the pending state -
+ * each awaits its invoke, disables only itself while in flight, and guards re-entry - so nothing
  * here tracks that. The trailing gap separator pushes any sibling rendered after `Menu.Items` to the
  * end of the toolbar.
  */
@@ -305,7 +305,7 @@ const TEST_PROGRESS_NAME = `${DebugNamespace.key}.test-progress`;
 
 type ProgressGeneratorProps = Util.ThemedClassName;
 
-// Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised —
+// Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised -
 // and renders the meter here too, since the rail's only lives inside a popover the user must open,
 // which made a working monitor look like a broken one.
 const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {

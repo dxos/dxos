@@ -127,7 +127,7 @@ const GitHubIssueSchema = Schema.Struct({
 });
 export type GitHubIssue = Schema.Schema.Type<typeof GitHubIssueSchema>;
 
-/** GET /repos/{owner}/{repo}/pulls/{number} — the pull-request view, which alone carries the diff size and merge state. */
+/** GET /repos/{owner}/{repo}/pulls/{number} - the pull-request view, which alone carries the diff size and merge state. */
 const GitHubPullSchema = Schema.Struct({
   id: Schema.Number,
   number: Schema.Number,
@@ -235,11 +235,11 @@ export type GitHubEffect<T> = Effect.Effect<
 /**
  * Decide whether a GitHub request failure is worth retrying.
  *  - Transport / encode failures: yes (transient by nature).
- *  - 429 / 5xx: yes — exactly the cases retry was designed for.
- *  - 4xx other than 429 (auth, validation, not-found): no — wastes time and
+ *  - 429 / 5xx: yes - exactly the cases retry was designed for.
+ *  - 4xx other than 429 (auth, validation, not-found): no - wastes time and
  *    may exacerbate rate limiting on the same token.
  *  - TimeoutException: yes.
- *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
+ *  - Schema decode failures (`ParseError`): no - payload won't become valid on retry.
  */
 const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
   if (error instanceof Schema.SchemaError) {
@@ -281,7 +281,7 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredent
  * have to remember to attach credentials (forgetting would silently 401).
  *
  * `filterStatusOk` converts non-2xx responses into a typed `ResponseError`
- * (carrying `status` and the raw body) BEFORE we try to decode the body —
+ * (carrying `status` and the raw body) BEFORE we try to decode the body -
  * otherwise GitHub error envelopes (`{ message, documentation_url }`) would
  * blow up against the success schema with a `ParseError`, masking the real
  * cause (e.g. a 403 from an integration token that lacks issue write).
@@ -306,7 +306,7 @@ const githubRequest = <T>(build: () => HttpClientRequest.HttpClientRequest, sche
   });
 
 /**
- * Fetch a response GitHub serves as text rather than JSON — the `diff` media type, which has no
+ * Fetch a response GitHub serves as text rather than JSON - the `diff` media type, which has no
  * schema to decode against.
  *
  * The timeout is longer than `githubRequest`'s because a diff is the whole change rather than a
@@ -337,11 +337,11 @@ const githubText = (build: () => HttpClientRequest.HttpClientRequest, accept: st
 //
 
 /**
- * Walk paginated GitHub list endpoints by following `Link: <…>; rel="next"`.
+ * Walk paginated GitHub list endpoints by following `Link: <...>; rel="next"`.
  *
  * Sets `per_page=100` automatically; aggregates pages into a single array.
  * Returns the empty array if the first page is empty. Stops at `MAX_PAGES`
- * to bound memory + traffic for very large orgs/repos — in v1 we accept that
+ * to bound memory + traffic for very large orgs/repos - in v1 we accept that
  * the very largest orgs may be partially synced and surface a TODO to add
  * cursor support.
  */
@@ -351,7 +351,7 @@ const getNextLink = (header: string | undefined): string | undefined => {
   if (!header) {
     return undefined;
   }
-  // Link: <url>; rel="next", <url>; rel="last", …
+  // Link: <url>; rel="next", <url>; rel="last", ...
   for (const part of header.split(',')) {
     const match = part.trim().match(/^<([^>]+)>;\s*rel="([^"]+)"$/);
     if (match && match[2] === 'next') {
@@ -363,7 +363,7 @@ const getNextLink = (header: string | undefined): string | undefined => {
 
 /**
  * Walks `rel="next"` to the end, decoding each page with `pageSchema` and taking its items through
- * `select` — an endpoint that answers with an envelope rather than a bare array pages the same way.
+ * `select` - an endpoint that answers with an envelope rather than a bare array pages the same way.
  */
 const githubPages = <TPage, T>(
   buildInitial: () => HttpClientRequest.HttpClientRequest,
@@ -419,19 +419,19 @@ const githubPaginated = <T>(
 // API surface
 //
 
-/** GET /user — authenticated user profile. */
+/** GET /user - authenticated user profile. */
 export const fetchUser = (): GitHubEffect<GitHubUser> =>
   githubRequest(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user`), GitHubUserSchema);
 
-/** GET /user/orgs — orgs visible to the authenticated user. */
+/** GET /user/orgs - orgs visible to the authenticated user. */
 export const fetchUserOrgs = (): GitHubEffect<readonly GitHubOrg[]> =>
   githubPaginated(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user/orgs`), GitHubOrgSchema);
 
 /**
- * GET /user/repos — every repo the authenticated user can see.
+ * GET /user/repos - every repo the authenticated user can see.
  *
  * Includes owner, collaborator, and org-member affiliations. For a GitHub App
- * user-to-server token this is intersected with the App's installation scope —
+ * user-to-server token this is intersected with the App's installation scope -
  * admins control which repos are visible by choosing All / Selected at install
  * time.
  */
@@ -439,7 +439,7 @@ export const fetchUserRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
   githubPaginated(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user/repos`), GitHubRepoSchema);
 
 /**
- * GET /installation/repositories — the repos an App installation token reaches. Such a token acts as
+ * GET /installation/repositories - the repos an App installation token reaches. Such a token acts as
  * no user, so `/user/repos` refuses it.
  */
 export const fetchInstallationRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
@@ -450,7 +450,7 @@ export const fetchInstallationRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
   );
 
 /**
- * GET /installation/repositories (one repo) — the account an App installation token acts on, which
+ * GET /installation/repositories (one repo) - the account an App installation token acts on, which
  * stands in for `/user` (refused to such a token). Undefined when the installation selected no repos.
  */
 export const fetchInstallationAccount = (): GitHubEffect<string | undefined> =>
@@ -468,22 +468,22 @@ export const fetchReachableRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
     token.startsWith(INSTALLATION_TOKEN_PREFIX) ? fetchInstallationRepos() : fetchUserRepos(),
   );
 
-/** GET /orgs/{org} — full org metadata. */
+/** GET /orgs/{org} - full org metadata. */
 export const fetchOrg = (org: string): GitHubEffect<GitHubOrg> =>
   githubRequest(() => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}`), GitHubOrgSchema);
 
-/** GET /orgs/{org}/members — public + private members (depends on token). */
+/** GET /orgs/{org}/members - public + private members (depends on token). */
 export const fetchOrgMembers = (org: string): GitHubEffect<readonly GitHubUser[]> =>
   githubPaginated(
     () => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}/members`),
     GitHubUserSchema,
   );
 
-/** GET /users/{login} — full user profile (org members lists return a partial form). */
+/** GET /users/{login} - full user profile (org members lists return a partial form). */
 export const fetchUserByLogin = (login: string): GitHubEffect<GitHubUser> =>
   githubRequest(() => HttpClientRequest.get(`${GITHUB_API_BASE}/users/${encodeURIComponent(login)}`), GitHubUserSchema);
 
-/** GET /orgs/{org}/repos — repos owned by the org. */
+/** GET /orgs/{org}/repos - repos owned by the org. */
 export const fetchOrgRepos = (org: string): GitHubEffect<readonly GitHubRepo[]> =>
   githubPaginated(
     () => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}/repos`),
@@ -491,11 +491,11 @@ export const fetchOrgRepos = (org: string): GitHubEffect<readonly GitHubRepo[]> 
   );
 
 /**
- * GET /repos/{owner}/{repo}/issues — both issues AND pull requests.
+ * GET /repos/{owner}/{repo}/issues - both issues AND pull requests.
  *
  * `state=all` includes closed. PRs are distinguishable by a non-null
  * `pull_request` field. `since` is an optional ISO timestamp; when provided,
- * GitHub returns only issues updated at or after that point — we use this
+ * GitHub returns only issues updated at or after that point - we use this
  * for incremental syncs.
  */
 export const fetchRepoIssues = (
@@ -520,7 +520,7 @@ export const fetchRepo = (owner: string, repo: string): GitHubEffect<GitHubRepo>
     GitHubRepoSchema,
   );
 
-/** GET /repos/{owner}/{repo}/issues/{number} — an issue, or the issue view of a pull request. */
+/** GET /repos/{owner}/{repo}/issues/{number} - an issue, or the issue view of a pull request. */
 export const fetchIssue = (owner: string, repo: string, number: number): GitHubEffect<GitHubIssue> =>
   githubRequest(
     () =>
@@ -541,7 +541,7 @@ export const fetchPullRequest = (owner: string, repo: string, number: number): G
   );
 
 /**
- * GET /repos/{owner}/{repo}/pulls/{number} as a unified diff — the same bytes `git diff` would
+ * GET /repos/{owner}/{repo}/pulls/{number} as a unified diff - the same bytes `git diff` would
  * produce, which is what a generated walkthrough splices its chunks from.
  */
 export const fetchPullRequestDiff = (owner: string, repo: string, number: number): GitHubEffect<string> =>
@@ -554,7 +554,7 @@ export const fetchPullRequestDiff = (owner: string, repo: string, number: number
   );
 
 /**
- * GET /repos/{owner}/{repo}/milestones — `state=all` so closed milestones stay mirrored (the
+ * GET /repos/{owner}/{repo}/milestones - `state=all` so closed milestones stay mirrored (the
  * issues still assigned to them have to resolve to something).
  */
 export const fetchRepoMilestones = (owner: string, repo: string): GitHubEffect<readonly GitHubMilestone[]> =>
@@ -637,7 +637,7 @@ const conditionalGet = <T>(
 export type DeltaItem = GitHubIssue;
 
 /**
- * GET /repos/{o}/{r}/issues?state=all&sort=updated&since=…&per_page=100, following `Link` pages.
+ * GET /repos/{o}/{r}/issues?state=all&sort=updated&since=...&per_page=100, following `Link` pages.
  * Newest first by default, so any change reaches page one: `If-None-Match` goes on that page only, and a
  * 304 there means no page changed. Oldest first with `maxPages` reads a backlog in resumable chunks.
  */
@@ -917,7 +917,7 @@ export type CommitFilesInput = {
 };
 
 /**
- * Tree (on `baseTree`, with file content inline) → commit (on `parents`, in order) → ref update. The
+ * Tree (on `baseTree`, with file content inline) -> commit (on `parents`, in order) -> ref update. The
  * ref update is never forced: when the branch moved, or already exists where it was to be created,
  * GitHub answers 422 and the commit fails with {@link GitHubRefMovedError}.
  */
@@ -1049,7 +1049,7 @@ export type IssueUpdateInput = {
 };
 
 /**
- * PATCH /repos/{owner}/{repo}/issues/{number} — update title / body / state.
+ * PATCH /repos/{owner}/{repo}/issues/{number} - update title / body / state.
  *
  * GitHub conflates issues and PRs at this endpoint: the same PATCH works for
  * both, but PR-specific fields (head/base/draft) must go through the
@@ -1078,7 +1078,7 @@ export type RepoUpdateInput = {
 };
 
 /**
- * PATCH /repos/{owner}/{repo} — update repo description and a small set of
+ * PATCH /repos/{owner}/{repo} - update repo description and a small set of
  * mapped metadata. Renames (`name`) are accepted by the API but we don't push
  * them by default: a rename invalidates clones, breaks pinned URLs, and is
  * almost never what a user wants from a sync mirror.
@@ -1123,7 +1123,7 @@ const GitHubSubmittedReviewSchema = Schema.Struct({
 export type GitHubSubmittedReview = Schema.Schema.Type<typeof GitHubSubmittedReviewSchema>;
 
 /**
- * GET /repos/{owner}/{repo}/pulls/{number}/reviews — every page, oldest first, since a reviewer's
+ * GET /repos/{owner}/{repo}/pulls/{number}/reviews - every page, oldest first, since a reviewer's
  * standing verdict is their latest review and a truncated list could miss it.
  */
 export const fetchReviews = (
@@ -1140,7 +1140,7 @@ export const fetchReviews = (
     (page) => page,
   );
 
-/** POST /repos/{owner}/{repo}/issues/{number}/comments — a conversation comment, which a pull request shares with issues. */
+/** POST /repos/{owner}/{repo}/issues/{number}/comments - a conversation comment, which a pull request shares with issues. */
 export const createIssueComment = (
   owner: string,
   repo: string,
@@ -1177,7 +1177,7 @@ const GitHubCheckRunsSchema = Schema.Struct({
 });
 
 /**
- * GET /repos/{owner}/{repo}/commits/{sha}/check-runs — every page, since a truncated list would
+ * GET /repos/{owner}/{repo}/commits/{sha}/check-runs - every page, since a truncated list would
  * report a failing commit as green.
  */
 export const fetchCheckRuns = (owner: string, repo: string, sha: string): GitHubEffect<readonly GitHubCheckRun[]> =>
@@ -1200,7 +1200,7 @@ export type ReviewCommentInput = {
   side: 'LEFT' | 'RIGHT';
 };
 
-/** POST /repos/{owner}/{repo}/pulls/{number}/comments — a review comment on one line of the diff. */
+/** POST /repos/{owner}/{repo}/pulls/{number}/comments - a review comment on one line of the diff. */
 export const createReviewComment = (
   owner: string,
   repo: string,

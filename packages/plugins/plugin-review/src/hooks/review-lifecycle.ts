@@ -18,7 +18,7 @@ export type LifecycleInputs = {
   viewMode: EditorViewMode | undefined;
   /** What the render policy says this mode may do. */
   policy: ReviewCapabilities.ReviewRenderConfig;
-  /** Version selection kind — `current` is the ambient path. */
+  /** Version selection kind - `current` is the ambient path. */
   selection: ReviewCapabilities.VersionSelection['kind'];
   /** Ids for key derivation (present when the corresponding selection is active). */
   branchId?: string;
@@ -42,7 +42,7 @@ export type BindingDescriptor = {
   editorKey: string;
   /** `readonly` overrides the caller's view mode; otherwise the caller's mode passes through. */
   effectiveViewMode: EditorViewMode | 'readonly' | undefined;
-  /** True while a required async binding is unresolved — the editor must not mount against main. */
+  /** True while a required async binding is unresolved - the editor must not mount against main. */
   loading: boolean;
   ambient: boolean;
   ambientSuggesting: boolean;
@@ -50,8 +50,8 @@ export type BindingDescriptor = {
 
 /**
  * The editor-binding state machine, as one pure derivation. Order of precedence:
- * snapshot (checkpoint/fork/base) → suggest overlay (bound to main, read-only) → ambient Suggesting
- * (own branch) → selected branch → main. `loading` gates every subject whose document resolves
+ * snapshot (checkpoint/fork/base) -> suggest overlay (bound to main, read-only) -> ambient Suggesting
+ * (own branch) -> selected branch -> main. `loading` gates every subject whose document resolves
  * asynchronously, because the editor key does not change when a binding resolves late.
  */
 export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
@@ -69,7 +69,7 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
           : undefined;
 
   // Ambient Suggesting is NOT loading while its branch binds: the editor stays mounted on main,
-  // read-only (see effectiveViewMode), and swaps in place when the binding resolves — unmounting here
+  // read-only (see effectiveViewMode), and swaps in place when the binding resolves - unmounting here
   // would tear the view down, which is exactly what the ambient path must never do.
   const loading =
     (inputs.selection === 'branch' && !inputs.branchBound && !inputs.baseActive) ||
@@ -88,8 +88,8 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
 
   // Ambient postures share ONE key: entering/leaving Suggesting swaps the bound document through the
   // live view's extension compartment (the automerge source reconciles the content in place), so the
-  // editor is never torn down and caret/focus/scroll survive. Only the advanced paths — genuinely a
-  // different surface — remount.
+  // editor is never torn down and caret/focus/scroll survive. Only the advanced paths - genuinely a
+  // different surface - remount.
   const editorKey = snapshotKey
     ? snapshotKey
     : inputs.suggestActive
@@ -99,7 +99,7 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
         : 'current';
 
   // Suggesting is an editable posture by definition, but the view-mode dropdown leaves `viewMode`
-  // untouched when a contributed mode is picked — so a stale `readonly` (from a Read-only hop) would
+  // untouched when a contributed mode is picked - so a stale `readonly` (from a Read-only hop) would
   // silently win and the user lands in Suggesting unable to type. The contradiction resolves here.
   const effectiveViewMode =
     snapshotKey || inputs.suggestActive || !ambientEditable
@@ -129,9 +129,9 @@ export type ViewModeSelection =
 
 /**
  * The single owner of what a dropdown selection means: both halves of the (review mode, view mode)
- * pair are written by this one function, so a contradictory pair — the F1.7 class of bug, where a
- * stale readonly view mode survived into Suggesting — cannot be stored at all. Built-ins imply the
- * review posture (readonly ⇒ viewing, else editing); a contributed mode keeps the editor on an
+ * pair are written by this one function, so a contradictory pair - the F1.7 class of bug, where a
+ * stale readonly view mode survived into Suggesting - cannot be stored at all. Built-ins imply the
+ * review posture (readonly => viewing, else editing); a contributed mode keeps the editor on an
  * editable view mode, stepping off readonly if that is where the user came from.
  */
 export const applyViewModeSelection = (

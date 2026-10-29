@@ -13,9 +13,9 @@ import { Domino } from '@dxos/ui';
  *
  * Makes each turn's response a foldable region. `codeFolding` (from `@codemirror/language`) hides the
  * folded ranges and renders the placeholder, but folds are driven **only** by this extension's own
- * gutter — never through CodeMirror's `foldable()`/`foldGutter`/`foldService`. That matters because
+ * gutter - never through CodeMirror's `foldable()`/`foldGutter`/`foldService`. That matters because
  * `foldable()` unconditionally falls back to the language's `syntaxFolding` (markdown `foldNodeProp`
- * — headings, fenced code, …) whenever no fold service matches a line; routing folds through
+ * - headings, fenced code, ...) whenever no fold service matches a line; routing folds through
  * `foldEffect` on our own ranges instead means only turns from the caller-provided {@link TurnSource}
  * can ever fold. The section model (scan text, read a tree, derive from a message array) lives with
  * the host and can change without touching the fold UI.
@@ -26,9 +26,9 @@ import { Domino } from '@dxos/ui';
 
 /** A foldable turn response. */
 export type Turn = {
-  /** Fold range start — the end of the head line, so the head stays visible. */
+  /** Fold range start - the end of the head line, so the head stays visible. */
   from: number;
-  /** Fold range end — the end of the response that follows the head. */
+  /** Fold range end - the end of the response that follows the head. */
   to: number;
   /** Start offset of the head line; the gutter marker anchors here. */
   headLineFrom: number;
@@ -147,18 +147,18 @@ class TurnMarker extends GutterMarker {
 }
 
 /**
- * Default head element: a `<prompt>…</prompt>` element (content is escaped, so it never nests),
+ * Default head element: a `<prompt>...</prompt>` element (content is escaped, so it never nests),
  * plus any run of self-closing tags immediately following it.
  *
- * Those trailing tags are per-turn affordances belonging to the head — a toolbar rendered under the
- * prompt, say — so they must stay visible when the response folds. Absorbing them into the head also
+ * Those trailing tags are per-turn affordances belonging to the head - a toolbar rendered under the
+ * prompt, say - so they must stay visible when the response folds. Absorbing them into the head also
  * keeps the fold starting below them, rather than swallowing the toolbar that triggers the fold.
  */
 export const PROMPT_ELEMENT = /<prompt\b[^>]*>[\s\S]*?<\/prompt>(?:\s*<[a-zA-Z][\w-]*\b[^>]*\/>)*/g;
 
 /**
  * Builds a {@link TurnSource} that scans the document for head elements matching `element`, folding
- * the response after each — from the end of that head's line up to the next head (or the end of the
+ * the response after each - from the end of that head's line up to the next head (or the end of the
  * document), trailing whitespace trimmed. `element` selects the turn head (e.g. {@link PROMPT_ELEMENT}
  * for `<prompt>`); pass another pattern to key turns off a different tag.
  */

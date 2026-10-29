@@ -15,7 +15,7 @@ import { captureScreenshot, uploadScreenshot } from './screenshot.ts';
 export type ScreenshotAttachment = {
   /** Public image-service URL, absent when capture was not requested or failed. */
   url?: string;
-  /** True when the user opted in but capture/upload failed — callers surface this in their toast. */
+  /** True when the user opted in but capture/upload failed - callers surface this in their toast. */
   failed: boolean;
 };
 

@@ -37,7 +37,7 @@ const MESSAGE_PAGE_LIMIT = 100;
  * Compute the initial sync cursor for a Discord channel.
  *
  * - If we already have a `cursor` (newest message id from the previous sync),
- *   use it verbatim — every subsequent sync is incremental.
+ *   use it verbatim - every subsequent sync is incremental.
  * - On first sync, derive a snowflake from "now minus N days" where N comes
  *   from the user-provided `maxDays` option (clamped to a sane range,
  *   default 30).
@@ -71,10 +71,10 @@ export type PullResult = {
  *   special-case lookup.
  * - `threadId` carries `referenced_message.id` for in-channel replies so the
  *   client can reconstruct reply chains on read without a separate object
- *   type — mirrors the Slack mapping which uses `thread_ts`.
+ *   type - mirrors the Slack mapping which uses `thread_ts`.
  * - `blocks` is a single `Text` block from `content`. Discord's rich-embed
- *   shape (embeds, attachments, components) is NOT mapped yet — that would
- *   need a Discord-embed → ContentBlock translator that's a separate piece
+ *   shape (embeds, attachments, components) is NOT mapped yet - that would
+ *   need a Discord-embed -> ContentBlock translator that's a separate piece
  *   of work.
  *
  * Returns `undefined` for non-default messages (joins, pins, calls, ...) so
@@ -90,7 +90,7 @@ const mapDiscordMessage = (message: MessageResponse): Message.Message | undefine
   const blocks: ContentBlock.Any[] = text.length > 0 ? [{ _tag: 'text', text } as ContentBlock.Text] : [];
 
   // For replies (type 19), prefer `referenced_message.id`, but fall back to
-  // `message_reference.message_id` — Discord omits `referenced_message` when
+  // `message_reference.message_id` - Discord omits `referenced_message` when
   // the parent has been deleted, while `message_reference` still carries the id.
   const referenced =
     message.type === 19
@@ -136,7 +136,7 @@ export const findChannelForDiscordChannel: (
  *     `binding.spec.externalId` is the Discord channel id.
  *  2. Ask Discord for messages with id greater than `binding.max` (or from
  *     "now minus maxDays" on first sync).
- *  3. Map each Discord message → `@dxos/types` Message and append the batch to
+ *  3. Map each Discord message -> `@dxos/types` Message and append the batch to
  *     the channel's feed.
  *  4. Advance `binding.max` to the largest id seen so the next sync is incremental.
  *

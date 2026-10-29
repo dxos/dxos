@@ -53,7 +53,7 @@ describe('suggest-edit operation', () => {
         });
         expect(bob.branchId).not.toBe(first.branchId);
 
-        // The branch is a suggestion branch keyed by its creator (read the raw history record —
+        // The branch is a suggestion branch keyed by its creator (read the raw history record -
         // GetHistory projects a subset for agents; the review layer reads history.branches directly).
         const branch = doc.history?.branches.find(({ id }) => id === first.branchId);
         invariant(branch);

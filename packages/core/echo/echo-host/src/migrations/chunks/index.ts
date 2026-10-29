@@ -9,7 +9,7 @@ import subductionMigrations from './0002_subduction_migrations.sql?raw';
 
 /**
  * Automerge chunk-storage migrations, keyed `<id>_<name>` as `Migrator.fromRecord` expects. Ids must only ever increase,
- * and an applied migration must never be edited — nothing verifies its contents.
+ * and an applied migration must never be edited - nothing verifies its contents.
  */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),

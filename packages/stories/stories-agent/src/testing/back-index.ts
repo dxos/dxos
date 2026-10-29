@@ -37,7 +37,7 @@ const fakeFact = (target: string, step: number): Parameters<typeof FactFeed.make
 
 /**
  * Stands in for EDGE running the back-index trigger: while the space's back-index trigger is enabled, each tick moves
- * the top actionable target of its crawl state one step (pending → active → done), appends facts to its fact feed,
+ * the top actionable target of its crawl state one step (pending -> active -> done), appends facts to its fact feed,
  * and spawns one thread under a finished channel when the trigger's input descends threads. Returns a stop function that
  * waits for a step in flight.
  */

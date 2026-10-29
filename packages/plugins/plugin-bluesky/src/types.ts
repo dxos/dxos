@@ -31,7 +31,7 @@ export const BlueskyTargetOptions = Schema.Struct({
    * Maximum number of XRPC pages walked per sync for this target.
    *
    * Self-targets (your own posts / likes / bookmarks) are chronological
-   * and stop early when `target.cursor` is reached — leave unset to use
+   * and stop early when `target.cursor` is reached - leave unset to use
    * the default {@link DEFAULT_MAX_PAGES.SELF}.
    *
    * Custom feed generators are algorithmic and have no reliable end

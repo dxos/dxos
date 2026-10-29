@@ -38,13 +38,13 @@ Running setup script.
 Setup script finished in 70 ms.
 
   API
-    ✓ Pseudo-code
+    OK Pseudo-code
 
   Schema
-    ✓ class creation
-    ✓ add and delete field
-    ✓ edit field
-    ✓ validate data item
+    OK class creation
+    OK add and delete field
+    OK edit field
+    OK validate data item
     
  64 passing (7680ms)
  1 failing

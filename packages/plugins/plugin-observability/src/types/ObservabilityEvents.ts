@@ -7,7 +7,7 @@
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
 /**
- * Mirrors `ClientEvents.IdentityCreated` (`@dxos/plugin-client`) — a genuine runtime event, fired
+ * Mirrors `ClientEvents.IdentityCreated` (`@dxos/plugin-client`) - a genuine runtime event, fired
  * only when an identity is newly created in this session (not recovered/joined). Cloned by
  * identifier to avoid a circular workspace dependency: plugin-client already depends on
  * plugin-observability for `ObservabilityOperation`.

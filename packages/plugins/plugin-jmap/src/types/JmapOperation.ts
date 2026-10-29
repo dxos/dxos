@@ -37,7 +37,7 @@ export const JmapSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
+  // Capability (on-arrival extractors), Database (feed I/O), Trace (status) - provided by the invoker;
   // HTTP client and JMAP credentials are provided by the handler from the connection.
   services: [Capability.Service, Database.Service, Trace.TraceService],
 }).pipe(Operation.visible, Operation.idempotent);

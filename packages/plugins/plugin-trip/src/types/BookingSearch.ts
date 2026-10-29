@@ -13,12 +13,12 @@ import * as Segment from './Segment.ts';
 
 /**
  * Transient search/offer types shared by plugin-trip and booking-service
- * implementations (e.g. plugin-duffel). These are NOT ECHO objects — they are
+ * implementations (e.g. plugin-duffel). These are NOT ECHO objects - they are
  * plain Effect schemas passed across the BookingService capability boundary.
  *
  * The shape mirrors `Segment`: a shared field mixin (`FlightSearchFields`)
  * extended into a tagged variant (`FlightSearchQuery`), discriminated by the
- * same `Segment.Kind` literal so non-flight kinds (train, accommodation, …)
+ * same `Segment.Kind` literal so non-flight kinds (train, accommodation, ...)
  * can be added later as additional tagged members with no signature changes.
  */
 

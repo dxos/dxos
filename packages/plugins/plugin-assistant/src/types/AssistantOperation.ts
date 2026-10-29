@@ -24,7 +24,7 @@ export const CreateChat = Operation.make({
     icon: 'ph--chat-text--regular',
   },
   // The chat is returned unfiled, for the caller to add with `SpaceOperation.AddObject` when it wants
-  // a durable one. Its feed is added regardless — see the handler.
+  // a durable one. Its feed is added regardless - see the handler.
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -106,7 +106,7 @@ export const BindChatContext = Operation.make({
   services: [Capability.Service, Registry.Service],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
-    /** The object the chat runs against — a companion's primary object, or a chat's originating object. */
+    /** The object the chat runs against - a companion's primary object, or a chat's originating object. */
     subject: Obj.Unknown,
   }),
   output: Schema.Void,
@@ -133,8 +133,8 @@ export const EnsureCompanionChat = Operation.make({
  * Runs `prompt` as a turn on an existing chat, for a caller starting one on the chat's behalf
  * (delegation, a routine) rather than a reader typing it.
  *
- * The session is created with the model the chat's own UI would use — resolved from the assistant
- * settings — because `AgentService` binds the model to the agent process at spawn and tears that
+ * The session is created with the model the chat's own UI would use - resolved from the assistant
+ * settings - because `AgentService` binds the model to the agent process at spawn and tears that
  * process down when a later caller asks for a different one. A turn started on any other model
  * therefore interrupts itself the moment the reader opens the chat.
  */
@@ -149,13 +149,13 @@ export const RunPromptInChat = Operation.make({
   services: [Capability.Service, Database.Service, AgentService.AgentService],
   input: Schema.Struct({
     chat: Schema.optional(Type.getSchema(Chat.Chat)),
-    // The object whose companion chat should run the prompt — the way to name a companion chat that
+    // The object whose companion chat should run the prompt - the way to name a companion chat that
     // has not been persisted yet, which a caller outside the page (an agent) cannot hold.
     companionTo: Schema.optional(Obj.Unknown),
     prompt: Schema.String,
     /**
      * How the turn is attributed. `synthetic` marks a prompt the system raised on the reader's
-     * behalf — a resumed agent must be able to tell one from something a person typed, since only
+     * behalf - a resumed agent must be able to tell one from something a person typed, since only
      * the latter is an instruction it owes an answer to.
      *
      * @default 'user'
@@ -225,7 +225,7 @@ export const AnswerQuestion = Operation.make({
   output: Schema.Struct({
     /**
      * False when the answer was blank, the question is not in the task's history, or it was already
-     * answered — nothing was written.
+     * answered - nothing was written.
      */
     accepted: Schema.Boolean,
     /**
@@ -247,7 +247,7 @@ export const GenerateHomeSuggestions = Operation.make({
     key: DXN.make('org.dxos.operation.assistant.generateHomeSuggestions'),
     name: 'Generate Home Suggestions',
     icon: 'ph--sparkle--regular',
-    // Internal UI operation — not exposed as an agent tool.
+    // Internal UI operation - not exposed as an agent tool.
     skipRegistry: true,
   },
   services: [Capability.Service, AiService.AiService, Database.Service],
@@ -264,7 +264,7 @@ export const SetTracePanelDebug = Operation.make({
   },
   services: [Capability.Service],
   // Required: a caller that omitted it used to get a flip, which made the result depend on state the
-  // caller had not read — two calls racing would land wherever the interleaving left them.
+  // caller had not read - two calls racing would land wherever the interleaving left them.
   input: Schema.Struct({
     state: Schema.Boolean,
   }),

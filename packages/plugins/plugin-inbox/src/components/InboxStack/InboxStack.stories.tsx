@@ -206,8 +206,8 @@ export const WithConversations: Story = {
 /**
  * Seeds a Person for half the senders so the list SHOWS both contact states.
  *
- * KNOWN GAP: the list-level lookup (`InboxStack`'s `db` → `useContactLookup`) is not resolving these
- * seeds yet — every avatar still renders as unknown — so this asserts only that the list renders while
+ * KNOWN GAP: the list-level lookup (`InboxStack`'s `db` -> `useContactLookup`) is not resolving these
+ * seeds yet - every avatar still renders as unknown - so this asserts only that the list renders while
  * a space is attached. See the mailbox-research ledger.
  */
 export const Spec: Story = {

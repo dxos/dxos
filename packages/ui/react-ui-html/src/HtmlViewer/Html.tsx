@@ -35,7 +35,7 @@ export type HtmlTransform = (root: HTMLElement, context: HtmlTransformContext) =
 export type HtmlSrcResolver = (src: string) => Promise<string | undefined>;
 
 /**
- * Everything a kind of content needs beyond the sandbox itself — how email, RSS, a web clip, or
+ * Everything a kind of content needs beyond the sandbox itself - how email, RSS, a web clip, or
  * agent-produced markup differ. A plain value, deliberately: not a subclass, and not a `variant` enum
  * (which would put every dialect's knowledge back inside this component).
  *
@@ -44,8 +44,8 @@ export type HtmlSrcResolver = (src: string) => Promise<string | undefined>;
  */
 export type HtmlDialect = {
   /**
-   * Identifies this dialect *configuration*. Rebuild the content when it changes — so it must capture
-   * every option that changes what the transforms do. Omit for a dialect whose behaviour never varies —
+   * Identifies this dialect *configuration*. Rebuild the content when it changes - so it must capture
+   * every option that changes what the transforms do. Omit for a dialect whose behaviour never varies -
    * as the email dialect now is, since only the document's own declaration steers it.
    */
   key?: string;
@@ -53,7 +53,7 @@ export type HtmlDialect = {
   css?: string;
   /** Content transforms, applied in order once the content is attached. */
   transforms?: readonly HtmlTransform[];
-  /** Resolves non-http `src` values (inline attachments, blob refs, …). */
+  /** Resolves non-http `src` values (inline attachments, blob refs, ...). */
   resolveSrc?: HtmlSrcResolver;
   /** Tags removed during sanitization, on top of DOMPurify's defaults. */
   forbidTags?: readonly string[];
@@ -83,19 +83,19 @@ const BASE_CSS = [
 ].join('');
 
 /**
- * Whether loading this `src` would hit the network. Protocol-relative (`//host/…`) counts: it is a
+ * Whether loading this `src` would hit the network. Protocol-relative (`//host/...`) counts: it is a
  * remote fetch, and matching only `https?:` would let a tracking pixel through.
  */
 const isNetworkSrc = (src: string): boolean => /^(https?:)?\/\//i.test(src);
 
-/** Inline payloads — already in the document, so nothing is fetched. */
+/** Inline payloads - already in the document, so nothing is fetched. */
 const isInlineSrc = (src: string): boolean => /^(data|blob):/i.test(src);
 
 /**
- * Strips remote `url(…)` references from an inline `style` attribute.
+ * Strips remote `url(...)` references from an inline `style` attribute.
  *
  * DOMPurify does not parse CSS, so a `background-image` survives sanitization untouched and fetches on
- * render — blocking only `<img>` would leave a tracking pixel one CSS property away. `<style>` blocks
+ * render - blocking only `<img>` would leave a tracking pixel one CSS property away. `<style>` blocks
  * are dropped wholesale by sanitization, so inline attributes are the only remaining carrier.
  */
 const stripRemoteCssUrls = (element: Element): void => {
@@ -129,8 +129,8 @@ const hideImage = (img: Element, blockedSrc?: string): void => {
 const escapeHtml = (text: string): string => text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 
 /**
- * Whether the payload is markup rather than plain text. Deliberately conservative — a bare `<` in
- * prose ("a < b") must not be mistaken for markup and lose its `<pre>` treatment — so it requires a
+ * Whether the payload is markup rather than plain text. Deliberately conservative - a bare `<` in
+ * prose ("a < b") must not be mistaken for markup and lose its `<pre>` treatment - so it requires a
  * recognized tag. Mirrors `@dxos/markdown`'s `isHtml`, without taking the dependency.
  */
 const isMarkup = (text: string): boolean =>
@@ -138,12 +138,12 @@ const isMarkup = (text: string): boolean =>
 
 /**
  * Renders untrusted HTML inside a Shadow DOM host so the content's (often aggressive) CSS is isolated
- * from the app while it still flows in the app layout — no iframe, no height measurement. Script
+ * from the app while it still flows in the app layout - no iframe, no height measurement. Script
  * safety comes from DOMPurify sanitization, since a shadow root isolates style but does not sandbox
  * execution; remote images are stripped unless enabled, so tracking pixels don't load.
  *
  * Content-specific behaviour is supplied by the caller as a {@link HtmlDialect}: `transforms` mutate
- * the attached subtree (collapsing quoted replies, recoloring to the theme, …) and `resolveSrc`
+ * the attached subtree (collapsing quoted replies, recoloring to the theme, ...) and `resolveSrc`
  * resolves non-http `src` references. This component owns only the sandbox.
  */
 export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: HtmlProps) => {
@@ -151,7 +151,7 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
   const hostRef = useRef<HTMLDivElement>(null);
   // Resolved src cache, persisted across content rebuilds; blob: urls are revoked on unmount.
   const srcCacheRef = useRef<Map<string, string>>(new Map());
-  // Resolution is async, so a promise can settle after unmount — past the cleanup that would have
+  // Resolution is async, so a promise can settle after unmount - past the cleanup that would have
   // revoked its url. The flag lets the late completion revoke its own.
   const disposedRef = useRef(false);
   // Read at rebuild time rather than depended on, so an inline (unmemoized) dialect doesn't re-parse

@@ -36,7 +36,7 @@ const outDir = resolve(dirname(fileURLToPath(import.meta.url)), '../__fixtures__
 const outPath = resolve(outDir, 'discord-messages.json');
 
 const program = Effect.gen(function* () {
-  console.log(`Fetching messages from channel ${channelId} (last ${maxDays} days)…`);
+  console.log(`Fetching messages from channel ${channelId} (last ${maxDays} days)...`);
   const result = yield* fetchChannelMessages(channelId, { maxDays });
   console.log(`Fetched ${result.messages.length} messages, ${result.threads.length} threads.`);
   for (const thread of result.threads) {

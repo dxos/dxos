@@ -299,7 +299,7 @@ export type SceneSvgProps = Util.ThemedClassName<{
 /**
  * SVG backend for the scene DSL: renders world objects directly (no canvas editor), resolving
  * bound arrow refs against box borders and drawing the UML end markers. Selection is host-owned
- * and optional — pass `selection` with `onSelectionChange` (click, shift-toggle, background clear,
+ * and optional - pass `selection` with `onSelectionChange` (click, shift-toggle, background clear,
  * Space) and `onActivate` (double-click, Enter) to make objects interactive; persistence stays
  * with the variant that holds the canvas.
  */

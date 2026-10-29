@@ -34,7 +34,7 @@ export const schemaDiagnostic: DiagnosticProvider = {
         }
         const type = Obj.getType(obj);
         if (!type) {
-          // Untyped documents and some system objects legitimately have no schema —
+          // Untyped documents and some system objects legitimately have no schema -
           // surface as 'info' rather than 'warning' to keep the signal/noise ratio reasonable.
           issues.push({
             id: `${db.spaceId}:${(obj as { id?: string }).id ?? 'unknown'}:no-schema`,

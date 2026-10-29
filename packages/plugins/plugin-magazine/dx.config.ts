@@ -32,8 +32,8 @@ const config: Plugin.PluginConfig = Plugin.config({
       cover; pressing the Curate button (or a scheduled trigger) syncs all
       referenced feeds in parallel, then runs a single-shot agent pass that selects
       matching posts and returns their ids, which the operation adds mechanically.
-      The agent's base methodology — how to select, how to dedup, and the structured
-      output contract — lives in the MagazineSkill. Each magazine stores a
+      The agent's base methodology - how to select, how to dedup, and the structured
+      output contract - lives in the MagazineSkill. Each magazine stores a
       persisted curation Routine (created at magazine creation time) whose instructions
       hold the editorial brief; pressing Curate runs that Routine against the synced
       candidates via RunInstructions. The skill also exposes a FetchArticleContent
@@ -46,8 +46,8 @@ const config: Plugin.PluginConfig = Plugin.config({
       Clicking a tile opens the PostArticle detail surface via the deck's layout
       dispatch, routing to the appropriate location (complementary drawer, sibling
       plank, or deck companion) based on the current layout mode. The schema also
-      scaffolds a future tagging feature — posts carry an optional tags array and
-      the tile renders a tag row when tags are present — enabling navigation and
+      scaffolds a future tagging feature - posts carry an optional tags array and
+      the tile renders a tag row when tags are present - enabling navigation and
       feed-discovery flows in a later revision.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-magazine',
@@ -93,7 +93,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     // Startup rather than the default dependency-mode gate: the consumers read the capability set
     // (`capabilities.getAll`) instead of declaring it as a requirement, so nothing would ever demand it
-    // and a Post would stay unreadable — no reading companion, no extraction.
+    // and a Post would stay unreadable - no reading companion, no extraction.
     AppCapability.textContent(() => import('./src/capabilities/text-content.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Startup,
     }),

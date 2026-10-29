@@ -44,7 +44,7 @@ const sameLiterals = (a: readonly SchemaAST.LiteralValue[], b: readonly SchemaAS
  * Whether two property types are close enough to map by name alone.
  *
  * Deliberately conservative: a name match is a hint, not a mapping, and a wrong automatic mapping is
- * worse than an absent one. Enum-like properties must carry the *same* literal set — two `status`
+ * worse than an absent one. Enum-like properties must carry the *same* literal set - two `status`
  * fields with different members describe different vocabularies, so they are reported as suspicious
  * rather than silently wired together.
  */
@@ -162,7 +162,7 @@ type MappingEntryLike = string | Converted | Derived | { kind: 'readOnly'; prope
  * Compile a partial mapping into the plan the reader and writer run, plus the coverage report.
  *
  * Resolution order per target property: explicit entry, else automatic (same name, compatible type),
- * else overlay. A name match with an incompatible type resolves to neither — it is reported as
+ * else overlay. A name match with an incompatible type resolves to neither - it is reported as
  * suspicious and left unmapped, because overlaying it would duplicate a fact the source already holds.
  */
 export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, mapping: Mapping): Plan => {

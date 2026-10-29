@@ -396,7 +396,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
               return false;
             }
 
-            // F-3.2: apply base → content as of the heads the base was synced at. Once the pull request
+            // F-3.2: apply base -> content as of the heads the base was synced at. Once the pull request
             // merged, the base is what this space pushed, so its own edits are not applied a second time.
             const fromPushed = merged ? marker.pushed : undefined;
             const baseBlob = fromPushed?.blob ?? marker.blob;

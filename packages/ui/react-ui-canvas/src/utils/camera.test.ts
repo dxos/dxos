@@ -40,7 +40,7 @@ const expectCamera = (expect: ExpectStatic, actual: Camera, expected: Camera) =>
 };
 
 describe('camera', () => {
-  test('scene ↔ screen round-trips', ({ expect }) => {
+  test('scene <-> screen round-trips', ({ expect }) => {
     const camera = { x: 120, y: -40, zoom: 1.75 };
     const point = { x: 333, y: -12 };
     const back = screenToScene(camera, sceneToScreen(camera, point));
@@ -79,7 +79,7 @@ describe('camera', () => {
     expect(centre.y).toBeCloseTo(300);
   });
 
-  test('exitPortal ∘ enterPortal is the identity', ({ expect }) => {
+  test('exitPortal \u2218 enterPortal is the identity', ({ expect }) => {
     const camera = { x: -300, y: -450, zoom: 1.3 };
     expectCamera(expect, exitPortal(enterPortal(camera, portal, child), portal, child), camera);
   });

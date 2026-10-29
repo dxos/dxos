@@ -8,7 +8,7 @@
  * Contract between `dx account login --method composer` and the Composer page that approves it.
  *
  * The CLI opens `<composer>/?cliLogin=<callback>&cliLoginState=<state>`; once the user approves,
- * Composer creates a device invitation and hands its code to `<callback>?invitationCode=…&state=…`.
+ * Composer creates a device invitation and hands its code to `<callback>?invitationCode=...&state=...`.
  * Both sides import this module so the parameter names cannot drift apart.
  */
 

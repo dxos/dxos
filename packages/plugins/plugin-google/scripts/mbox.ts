@@ -3,7 +3,7 @@
 //
 
 /**
- * Pure mbox → ECHO Message mapping, out of band from the app.
+ * Pure mbox -> ECHO Message mapping, out of band from the app.
  *
  * Gmail Takeout exports each label as a large RFC-822 `.mbox` file. Messages carry Gmail's own
  * headers (`X-GM-THRID`, `X-Gmail-Labels`, `Message-ID`) which map onto `threadId` / tags / the
@@ -30,7 +30,7 @@ export type MappedMessage = { message: Message.Message; labels: readonly string[
 /**
  * Accumulates mbox lines into RFC-822 message strings, one line at a time, so both an in-memory
  * string (small fixtures/tests) and a streamed file (real Takeout exports, which can be several GB
- * — too large for a single JS string, see `buffer.constants.MAX_STRING_LENGTH`) share one
+ * - too large for a single JS string, see `buffer.constants.MAX_STRING_LENGTH`) share one
  * implementation of the mbox `From `-separator and `>From` body-unescaping rules.
  */
 const createMboxAccumulator = () => {
@@ -77,7 +77,7 @@ export const splitMbox = (raw: string): string[] => {
 };
 
 /**
- * Streams a large mbox FILE line by line and yields each RFC-822 message as it completes — the file
+ * Streams a large mbox FILE line by line and yields each RFC-822 message as it completes - the file
  * is never held in memory as a whole, so this scales to multi-GB Takeout exports.
  */
 export async function* streamMboxMessages(path: string): AsyncGenerator<string> {
@@ -129,7 +129,7 @@ export const mapMboxMessage = async (raw: string): Promise<MappedMessage | null>
     return null;
   }
 
-  // Gmail prefers HTML then plaintext; `normalizeText` converts HTML → Markdown, else passes through.
+  // Gmail prefers HTML then plaintext; `normalizeText` converts HTML -> Markdown, else passes through.
   const body = parsed.html || parsed.text;
   if (!body) {
     return null;

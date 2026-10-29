@@ -32,7 +32,7 @@ const CALENDAR_SYNC_CONFIG = {
 const DEFAULT_SYNC_BACK_DAYS = 30;
 const DEFAULT_SYNC_FORWARD_DAYS = 365;
 
-/** Maps a Google event to a commit unit (event → feed). Resolves attendees via `Resolver`; drops
+/** Maps a Google event to a commit unit (event -> feed). Resolves attendees via `Resolver`; drops
  * cancelled/start-less events (mapEvent returns null). Events carry no tags or extracted objects. */
 export const mapEventStage: Stage.Stage<GoogleCalendar.Event, Cursor.CommitUnit, never, Resolver> = Stage.map(
   'map-event',
@@ -77,8 +77,8 @@ export type SyncCalendarProps = {
 };
 
 /**
- * Runs the Google Calendar sync pipeline for a binding: fetch events → dedup → drop recurring
- * repeats → map to commit units → commit each page (advancing the cursor). Requires the ambient
+ * Runs the Google Calendar sync pipeline for a binding: fetch events -> dedup -> drop recurring
+ * repeats -> map to commit units -> commit each page (advancing the cursor). Requires the ambient
  * services (Google Calendar API credentials, `Resolver`, `Database`) rather than providing them, so a
  * test can drive it against a mock API; the handler wraps it with the Live layers. The return type is
  * written out so the emitted `.d.ts` can name it without expanding the Google API's `CredentialsService`
@@ -158,7 +158,7 @@ export const syncCalendar = ({
         ),
     );
 
-    // Flush indexes once at the end of the run (per-page commits no longer flush — see
+    // Flush indexes once at the end of the run (per-page commits no longer flush - see
     // `Cursor.commit`) so cross-run dedup / resolution observe this run's writes.
     yield* Database.flush({ indexes: true });
 

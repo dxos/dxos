@@ -13,7 +13,7 @@ import { Place } from './Place.ts';
 
 /**
  * Transient routing types shared by plugin-trip and routing-service implementations
- * (e.g. plugin-osrm). These are NOT ECHO objects — they are plain Effect schemas / interfaces
+ * (e.g. plugin-osrm). These are NOT ECHO objects - they are plain Effect schemas / interfaces
  * passed across the `RoutingService` capability boundary. The shape parallels `BookingSearch`.
  */
 
@@ -40,7 +40,7 @@ export const RouteQuery = Schema.Struct({
 export interface RouteQuery extends Schema.Schema.Type<typeof RouteQuery> {}
 
 //
-// Route — the computed driving route, stored inline on `RoadDetails.routes` and returned by the
+// Route - the computed driving route, stored inline on `RoadDetails.routes` and returned by the
 // service. Minimal mirror of the OSRM response (geometry + per-leg distance/duration/summary/steps).
 //
 
@@ -56,7 +56,7 @@ export const RouteLeg = Schema.Struct({
   distance: Schema.Number.annotate({ description: 'Distance in meters.' }),
   duration: Schema.Number.annotate({ description: 'Duration in seconds.' }),
   summary: Schema.optional(Schema.String),
-  // Hidden from schema-driven forms — geometry is computed/plotted, not user-editable.
+  // Hidden from schema-driven forms - geometry is computed/plotted, not user-editable.
   geometry: Schema.Array(Format.GeoPoint).pipe(Annotation.FormInputAnnotation.set(false)),
   steps: Schema.Array(RouteStep),
 });

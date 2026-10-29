@@ -25,9 +25,9 @@ export type TimelineLayout = {
   laneCount: number;
   /** The span each branch's line covers. */
   spans: Map<string, TimelineSpan>;
-  /** Row index per commit index — the keyboard navigates in commit indices but scrolls rows. */
+  /** Row index per commit index - the keyboard navigates in commit indices but scrolls rows. */
   rowByCommitIndex: Map<number, number>;
-  /** Commit index per commit id — a click names a commit, everything else speaks in indices. */
+  /** Commit index per commit id - a click names a commit, everything else speaks in indices. */
   commitIndexById: Map<string, number>;
 };
 
@@ -37,7 +37,7 @@ export type TimelineLayout = {
  *
  * Pure and linear in the number of commits: every lookup a commit makes about a parent, and every
  * lane release, is served from an index built in one pass. Commits are assumed to be in topological
- * order — a parent always precedes its children.
+ * order - a parent always precedes its children.
  */
 export const layoutTimeline = (commits: readonly Commit[], branches: readonly string[]): TimelineLayout => {
   const visibleBranches = new Set(branches);
@@ -81,7 +81,7 @@ export const layoutTimeline = (commits: readonly Commit[], branches: readonly st
   }
 
   // Assign branches to lanes, reusing a lane once its branch has been merged. Unmerged branches
-  // keep their lane active — they may still be in progress.
+  // keep their lane active - they may still be in progress.
   const branchLane = new Map<string, number>();
   if (firstBranch !== undefined) {
     branchLane.set(firstBranch, 0);

@@ -8,7 +8,7 @@
 // sourcemaps only name the modules that landed in a chunk, not how the entry reaches them. This
 // walks the entry's static-import closure (the same parse graph `boot-chunking` partitions) and
 // prints the shortest import path from the entry to each package that must never be boot-reachable
-// — so a leak names the exact edge instead of a list of suspects.
+// - so a leak names the exact edge instead of a list of suspects.
 //
 // Opt-in, since it walks the whole closure on every build:
 //
@@ -27,7 +27,7 @@ const TARGETS: Array<[string, RegExp]> = [
   ['network-manager', /packages\/core\/mesh\/network-manager\//],
   ['teleport', /packages\/core\/mesh\/teleport\//],
   ['automerge-repo', /@automerge\+automerge-repo/],
-  // Property-testing generators reached from production code — `effect`'s `Arbitrary` pulls
+  // Property-testing generators reached from production code - `effect`'s `Arbitrary` pulls
   // fast-check (and pure-rand with it), which is a whole boot chunk of test-only machinery.
   ['fast-check', /node_modules\/\.pnpm\/fast-check@/],
   ['effect/Arbitrary', /node_modules\/effect\/dist\/esm\/Arbitrary\.js$/],

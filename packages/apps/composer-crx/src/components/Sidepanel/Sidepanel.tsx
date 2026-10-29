@@ -25,7 +25,7 @@ import { Thumbnail } from '../Thumbnail/index.ts';
 
 /**
  * Side panel root component. `Root` (theme + i18n + tooltip + error boundary) must wrap the
- * content so its `useTranslation` resolves against an initialized i18n instance — a consumer
+ * content so its `useTranslation` resolves against an initialized i18n instance - a consumer
  * declared in the same component that renders the provider would sit above it and get raw keys.
  */
 export const Sidepanel = () => (
@@ -89,7 +89,7 @@ const SidepanelContent = () => {
       return;
     }
 
-    // Fire and forget — picker + delivery is orchestrated by the content
+    // Fire and forget - picker + delivery is orchestrated by the content
     // script and background worker. Any rejection during the round-trip is
     // surfaced by the background via a browser notification, so here we just
     // need to log it. The panel stays open, unlike the former popup.

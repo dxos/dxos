@@ -28,7 +28,7 @@ export default TripOperation.MergeTrip.pipe(
         return { merged: false };
       }
 
-      // Move each segment onto the target — `addSegment` re-parents (`Obj.setParent`) and appends.
+      // Move each segment onto the target - `addSegment` re-parents (`Obj.setParent`) and appends.
       for (const ref of trip.segments ?? []) {
         const segment = Ref.isRef(ref) ? ref.target : undefined;
         if (Segment.instanceOf(segment)) {

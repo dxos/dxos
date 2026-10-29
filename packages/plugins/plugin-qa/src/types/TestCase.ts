@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 /**
- * A terminal outcome — the only thing a case or a step can be reported as. `blocked` is distinct
+ * A terminal outcome - the only thing a case or a step can be reported as. `blocked` is distinct
  * from `failed`: nothing was tested, so it must not be counted as a defect.
  */
 export const ResultStatus = Schema.Literals(['passed', 'failed', 'skipped', 'blocked']);
@@ -17,13 +17,13 @@ export type ResultStatus = Schema.Schema.Type<typeof ResultStatus>;
 
 /**
  * A run's status: any terminal outcome, or `running` while it is open. `running` is deliberately
- * absent from {@link ResultStatus} — a case result that could be `running` would count as
+ * absent from {@link ResultStatus} - a case result that could be `running` would count as
  * non-failing in the rollup, letting a run seal as `passed` with nothing actually finished.
  */
 export const Status = Schema.Literals([...ResultStatus.literals, 'running']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
-/** One move in a case — the authored instruction and its criterion. Mirrors `step` in the QA dialect. */
+/** One move in a case - the authored instruction and its criterion. Mirrors `step` in the QA dialect. */
 export const Step = Schema.Struct({
   /** Stable handle; steps are otherwise numbered by position from 1. */
   id: Schema.optional(Schema.String),
@@ -35,7 +35,7 @@ export const Step = Schema.Struct({
 export interface Step extends Schema.Schema.Type<typeof Step> {}
 
 /**
- * The definition of one test. Static — an execution never writes here, which is what lets results
+ * The definition of one test. Static - an execution never writes here, which is what lets results
  * across months of runs point at one identity.
  *
  * No `tags` field: ECHO carries tags in every object's meta (`Obj.getMeta(case).tags`), so a

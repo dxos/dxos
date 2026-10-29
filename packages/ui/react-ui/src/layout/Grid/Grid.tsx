@@ -37,7 +37,7 @@ export type GridProps = {
   grow?: boolean;
   /**
    * Collapse the wrapper to `display: contents`, so children join the parent grid directly. For a
-   * wrapper that exists only conditionally — an unconditional pass-through wants `asChild`.
+   * wrapper that exists only conditionally - an unconditional pass-through wants `asChild`.
    */
   contents?: boolean;
 };
@@ -51,17 +51,17 @@ export type GridProps = {
  *
  * `subgrid` adopts the parent's tracks and spans them (`grid-column: 1 / -1`), which is the only
  * way it is ever useful; the parent must actually define those tracks. Check `Column.Row` and
- * `Card.Row` first — both already are 3-track subgrid rows.
+ * `Card.Row` first - both already are 3-track subgrid rows.
  *
  * `gap` is restricted to the named steps of the theme spacing ramp (see {@link Gap}). As with
  * `Flex`, padding, sizing, and colour go through `classNames` rather than growing props here.
  *
  * @example
  * ```tsx
- * <Grid cols={3} gap='sm'>…</Grid>
- * <Grid cols={['fill', 'auto']} gap='md' align='center'>…</Grid>
- * <Grid cols={['18rem', 'fill']}>…</Grid>
- * <Grid cols='subgrid' gap='sm' align='center'>…</Grid>
+ * <Grid cols={3} gap='sm'>...</Grid>
+ * <Grid cols={['fill', 'auto']} gap='md' align='center'>...</Grid>
+ * <Grid cols={['18rem', 'fill']}>...</Grid>
+ * <Grid cols='subgrid' gap='sm' align='center'>...</Grid>
  * ```
  */
 export const Grid = slottable<HTMLDivElement, GridProps>(

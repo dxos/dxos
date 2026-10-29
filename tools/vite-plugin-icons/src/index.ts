@@ -27,13 +27,13 @@ export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & {
   /**
    * Globs of files scanned eagerly at build start, in addition to the module
    * graph. Needed for icon names that only occur in sources the build never
-   * imports — e.g. descriptors contributed by other packages at runtime (the
+   * imports - e.g. descriptors contributed by other packages at runtime (the
    * composer-crx page actions).
    */
   scanPaths?: string[];
   /**
    * Icon-set catalogs to expose as individual SVGs (dev middleware + build-output copy)
-   * for runtime icon resolution — icons referenced only by runtime-loaded code that the
+   * for runtime icon resolution - icons referenced only by runtime-loaded code that the
    * scanner never sees. Opt-in: hosts that only need the static sprite omit this (e.g.
    * composer-crx, where copying a full catalog would bloat the packaged extension).
    */
@@ -82,7 +82,7 @@ export const IconsPlugin = ({
   // bursts as plugin sources stream through, and each write is a full `makeSprite()`. Coalescing
   // collapses N detections in the same idle window into a single write.
   //
-  // Also skip the write when the sprite's contents would be identical — a cheap guard against
+  // Also skip the write when the sprite's contents would be identical - a cheap guard against
   // repeating the work when the same icons get re-detected after a reload.
   let writeTimer: NodeJS.Timeout | null = null;
   let lastFingerprint: string | null = null;
@@ -143,7 +143,7 @@ export const IconsPlugin = ({
       fresh.forEach(({ symbol }) => warnedMissing.add(symbol));
       console.warn(
         `[icons] No asset for ${fresh.length === 1 ? 'symbol' : 'symbols'}: ` +
-          `${fresh.map(({ symbol }) => symbol).join(', ')} — omitted from the sprite, so the icon renders blank. ` +
+          `${fresh.map(({ symbol }) => symbol).join(', ')} - omitted from the sprite, so the icon renders blank. ` +
           'Check the name against the icon set.',
       );
     }
@@ -161,7 +161,7 @@ export const IconsPlugin = ({
 
   // Forces `fill="currentColor"` onto every symbol `makeSprite` just wrote. A glyph that declares
   // no fill defaults to black and disappears against a dark surface, and vector editors drop the
-  // attribute on every re-export — patching the source SVG loses that race. Runs here rather than
+  // attribute on every re-export - patching the source SVG loses that race. Runs here rather than
   // via svg-sprite's `shape.transform` so it also applies to a caller-supplied `config`.
   const normalizeSpriteFile = (path: string) => {
     const { svg, hardcoded } = normalizeSprite(fs.readFileSync(path, 'utf8'));
@@ -170,7 +170,7 @@ export const IconsPlugin = ({
     if (fresh.length > 0) {
       fresh.forEach((id) => warnedHardcoded.add(id));
       console.warn(
-        `[icons] Hardcoded color in ${fresh.length === 1 ? 'symbol' : 'symbols'}: ${fresh.join(', ')} — ` +
+        `[icons] Hardcoded color in ${fresh.length === 1 ? 'symbol' : 'symbols'}: ${fresh.join(', ')} - ` +
           'a paint declaration on the glyph itself (a `style` or a `fill`/`stroke` attribute) overrides ' +
           'the symbol fill, so it will not follow the theme. Replace the literal with `currentColor` ' +
           'in the source SVG.',
@@ -244,7 +244,7 @@ export const IconsPlugin = ({
 
   // Debounce: every new detection resets the timer; only when no new icon has been detected for
   // `writeDebounceMs` does the write happen, so bursts during cold start collapse into one write.
-  // Every scan path calls this — a symbol found by the request middleware used to wait for some
+  // Every scan path calls this - a symbol found by the request middleware used to wait for some
   // unrelated later transform, and was never written when none came.
   const scheduleWrite = () => {
     if (writeTimer) {
@@ -297,7 +297,7 @@ export const IconsPlugin = ({
 
         // Every dev server owns a private sprite rather than sharing the public-dir file: the shared
         // storybook and each storybook vitest run load one config and so one publicDir, and whichever
-        // wrote last — usually a test run that saw a handful of modules — replaced the sprite the
+        // wrote last - usually a test run that saw a handful of modules - replaced the sprite the
         // others served, which then never rewrote it because their own symbol set had not changed.
         devSpriteDir = fs.mkdtempSync(join(tmpdir(), 'dx-icons-'));
         spritePath = join(devSpriteDir, spriteFile);
@@ -306,7 +306,7 @@ export const IconsPlugin = ({
         fs.rmSync(publicSpritePath, { force: true });
 
         // Rebuild when a glyph already in the sprite is redrawn. The icon registry ingests the sprite
-        // once per document, so the write alone changes nothing on screen — hence the full reload.
+        // once per document, so the write alone changes nothing on screen - hence the full reload.
         const rebuild = () => {
           // The watcher has told us the file changed, which is better evidence than the fingerprint:
           // mtime and size can both survive an edit (a same-length change written within the same
@@ -325,8 +325,8 @@ export const IconsPlugin = ({
         server.watcher.on('add', onAssetAdd);
 
         // Serves the private sprite, complete. On a cold start the browser
-        // requests it as soon as the first <Icon> paints — often before the
-        // debounced write has flushed, or before the first write at all — which
+        // requests it as soon as the first <Icon> paints - often before the
+        // debounced write has flushed, or before the first write at all - which
         // yields blank icons until a hard reload, so a pending write is flushed
         // first and the served sprite reflects every symbol detected so far.
         // Read whole rather than streamed: a read error then falls through to `next()` instead of
@@ -363,10 +363,10 @@ export const IconsPlugin = ({
         // Process chunks.
         server.middlewares.use((req, res, next) => {
           const url = req.url ?? '';
-          // Skip plugin-resolved virtual modules — these aren't files on disk.
+          // Skip plugin-resolved virtual modules - these aren't files on disk.
           // Conventions:
-          //   `/virtual:` — legacy Vite convention.
-          //   `/@id/`     — Vite's URL form for `resolveId`-returned IDs, including
+          //   `/virtual:` - legacy Vite convention.
+          //   `/@id/`     - Vite's URL form for `resolveId`-returned IDs, including
           //                 Rolldown's null-byte (`\0`) prefix encoded as `__x00__`.
           if (url.includes('/virtual:') || url.includes('/@id/')) {
             return next();

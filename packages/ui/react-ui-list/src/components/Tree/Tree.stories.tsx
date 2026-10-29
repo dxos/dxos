@@ -627,7 +627,7 @@ export const RevealTest: Story = {
   },
 };
 
-/** ⌘↑ moves focus to the parent row; ⌘↓ to the parent's next sibling (or, at the top level, past the row's subtree). */
+/** Cmd^ moves focus to the parent row; Cmdv to the parent's next sibling (or, at the top level, past the row's subtree). */
 export const ParentKeysTest: Story = {
   args: { tree: createFixedTree, animate: false, open: true },
   play: async ({ canvasElement }) => {

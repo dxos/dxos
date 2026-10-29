@@ -61,7 +61,7 @@ const annotationPropertyFamily = Atom.family(
 
       const unsubscribe = subscribe(target, () => {
         const next = read();
-        // Content comparison — `read()` snapshots, so identity never matches for arrays/objects.
+        // Content comparison - `read()` snapshots, so identity never matches for arrays/objects.
         if (!snapshotEquals(next, previous)) {
           previous = next;
           get.setSelf(next);

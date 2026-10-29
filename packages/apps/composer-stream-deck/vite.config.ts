@@ -15,8 +15,8 @@ const config = defineConfig({
   test: { node: true },
 });
 
-// `ws` and other CJS dependencies require builtins unprefixed (`stream`, `net`, …), so both spellings
-// have to be recognised — bundling them yields `undefined` named exports at runtime.
+// `ws` and other CJS dependencies require builtins unprefixed (`stream`, `net`, ...), so both spellings
+// have to be recognised - bundling them yields `undefined` named exports at runtime.
 const builtins = new Set([...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
 
 // The Stream Deck application loads `bin/plugin.mjs` from the assembled `.sdPlugin` directory, which

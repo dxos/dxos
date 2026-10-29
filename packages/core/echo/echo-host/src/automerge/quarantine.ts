@@ -18,7 +18,7 @@ export type QuarantineRecord = {
 };
 
 /**
- * Whether a load failed because the document cannot fit in Automerge's WASM heap — `error inflating document chunk
+ * Whether a load failed because the document cannot fit in Automerge's WASM heap - `error inflating document chunk
  * ops: out of memory` from `loadIncremental`, or the heap refusing to grow. Every load of such a document fails the
  * same way, while any other error (a storage read, malformed bytes) may not repeat.
  */

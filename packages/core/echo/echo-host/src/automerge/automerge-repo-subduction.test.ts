@@ -153,13 +153,13 @@ describe('AutomergeRepo with Subduction', () => {
         .toEqual('Hello world');
     });
 
-    // 4-peer chain (A→B→C→D) waits sequentially on each hop instead of opening all
+    // 4-peer chain (A->B->C->D) waits sequentially on each hop instead of opening all
     // three downstream queries at once. Calling `findInStates` opens a
     // `SubductionSource` that proactively does `syncWithAllPeers`, and a `find`
     // issued on C or D before B has the doc causes the fetch to fail-fast at the
     // configured `syncMs` (2 s). Recovery then waits for the heal scheduler's
-    // exponential backoff (100 → 200 → 400 → 800 → 1600 → 3200 ms ...), which
-    // can stack across hops and consume the test's wall-clock budget — that is
+    // exponential backoff (100 -> 200 -> 400 -> 800 -> 1600 -> 3200 ms ...), which
+    // can stack across hops and consume the test's wall-clock budget - that is
     // exactly the failure mode observed in CI: 5002 ms timeout with multiple
     // `connection/managed.rs:278 request RequestId { ... } timed out` errors.
     //
@@ -334,9 +334,9 @@ describe('AutomergeRepo with Subduction', () => {
     // - `SubductionSource.#recomputeEntry` in the `running` branch only
     //   re-syncs when `lastSyncResult === null` OR (lastSyncResult ===
     //   `"no-peers"` AND generation changed). It does NOT re-sync on
-    //   `"all-failed"` even when the connection generation changed — only
+    //   `"all-failed"` even when the connection generation changed - only
     //   the heal scheduler retries `"all-failed"`, and its backoff
-    //   (100 → 200 → 400 → 800 → 1600 → 3200 → 6400 ms ...) means
+    //   (100 -> 200 -> 400 -> 800 -> 1600 -> 3200 -> 6400 ms ...) means
     //   recovery takes ~10+ s under the test's 15 s wall clock.
     // - Even when heal rounds DO fire on the new transport (visible in
     //   `subduction:source` debug logs), they exchange heads-protocol frames
@@ -347,7 +347,7 @@ describe('AutomergeRepo with Subduction', () => {
     //
     // Suggested fork fix: in `SubductionSource.#recomputeEntry`, treat
     // `lastSyncResult === "all-failed"` the same as `"no-peers"` for the
-    // `lastSyncGeneration !== this.#connectionGeneration()` re-sync check —
+    // `lastSyncGeneration !== this.#connectionGeneration()` re-sync check -
     // a connection-generation change means the prior failure was on a
     // now-dead peer set and is worth retrying immediately.
     //
@@ -399,7 +399,7 @@ describe('AutomergeRepo with Subduction', () => {
     // adapted for subduction:
     //   - Classical version asserts the query reaches `'unavailable'` before
     //     peer candidates are emitted. Subduction does NOT drive this query
-    //     to `'unavailable'` while a dormant subduction source is attached —
+    //     to `'unavailable'` while a dormant subduction source is attached -
     //     the SKILL doc and inline TODOs in the classical file call this out.
     //     We assert "stays in `'loading'`" instead.
     //   - After emitting peer candidates AND cycling adapters via
@@ -475,7 +475,7 @@ describe('AutomergeRepo with Subduction', () => {
       // Get a doc onto both sides so each peer has a running entry.
       // Wait for `'ready'` (NOT `FIND_STATES` which permits `'loading'`)
       // so repoB has actually replicated the doc before the next mutation
-      // — otherwise the symmetric in-flight push state this test relies on
+      // - otherwise the symmetric in-flight push state this test relies on
       // is not reliably set up.
       const handle = repoA.create<{ text?: string }>();
       handle.change((doc: any) => {
@@ -484,7 +484,7 @@ describe('AutomergeRepo with Subduction', () => {
       await waitForSubductionSave([repoA, repoB]);
       await findInStates(repoB, handle.url, ['ready']);
 
-      // Pending throttled save at the moment of shutdown — required
+      // Pending throttled save at the moment of shutdown - required
       // to put an `addBatch` in flight when both sides hit step 4.
       handle.change((doc: any) => {
         doc.text = 'pre-close write';
@@ -563,7 +563,7 @@ describe('AutomergeRepo with Subduction', () => {
 
         const progress = client.findWithProgress<{ text?: string }>(handle.url);
         // Two `accept` peers never handshake, so there is no refusal to observe and no traffic to
-        // drain — the bounded window is the assertion. We can't assert `'loading'` strictly either,
+        // drain - the bounded window is the assertion. We can't assert `'loading'` strictly either,
         // because the dormant source may go `'unavailable'`; what we CAN assert is never `'ready'`.
         await sleep(NO_TRAFFIC_WINDOW_MS);
         expect(progress.peek().state).to.not.equal('ready');
@@ -580,7 +580,7 @@ describe('AutomergeRepo with Subduction', () => {
       // `'loading'` query (for example, the fork swallows the rejection and
       // surfaces `'unavailable'` or `'failed'` instead), we update the assertion
       // and leave a TODO pointing at the SKILL doc claim. We do NOT force-pass.
-      // `authorizeFetch` is consulted on the SERVER side of a fetch — i.e. when
+      // `authorizeFetch` is consulted on the SERVER side of a fetch - i.e. when
       // a peer requests a sedimentree from us, our `authorizeFetch` decides
       // whether we serve it. The SKILL doc summary "gates reads of a specific
       // sedimentree" is server-centric, not fetcher-centric.
@@ -631,10 +631,10 @@ describe('AutomergeRepo with Subduction', () => {
         expect(docHandle?.doc()?.text).to.be.undefined;
       });
 
-      // Control for the test above: same setup, host policy permissive →
+      // Control for the test above: same setup, host policy permissive ->
       // doc DOES reach `'ready'` on the client. If this control failed
       // alongside the `authorizeFetch` denial test, the negative result
-      // wouldn't actually prove anything — we'd just have a flaky
+      // wouldn't actually prove anything - we'd just have a flaky
       // replication setup. Keeping this control here pins the contract
       // ("with permissive host, client gets the doc") and makes the
       // `authorizeFetch` denial result meaningful.
@@ -663,7 +663,7 @@ describe('AutomergeRepo with Subduction', () => {
         };
 
         // Receiver creates the doc and seeds initial content; sender then attempts
-        // to push a change. Receiver's policy denies puts → receiver doc must
+        // to push a change. Receiver's policy denies puts -> receiver doc must
         // remain at the original heads.
         const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
           subductionPolicies: { host: denyingPolicy },
@@ -695,7 +695,7 @@ describe('AutomergeRepo with Subduction', () => {
       //
       // Sequence:
       //   1. allowFetch = false. Connect, request the doc on the client. Host's
-      //      `authorizeFetch` denies → fetch RPC fails → entry settles in
+      //      `authorizeFetch` denies -> fetch RPC fails -> entry settles in
       //      `lastSyncResult === "all-failed"`.
       //   2. Flip allowFetch = true.
       //   3. Call `client.shareConfigChanged()`. This is the documented escape
@@ -772,16 +772,16 @@ describe('AutomergeRepo with Subduction', () => {
     });
 
     // Confirms B is actually relaying via subduction in a 3-peer chain, by
-    // counting messages of type SUBDUCTION_MESSAGE_TYPE that traverse the B↔C
+    // counting messages of type SUBDUCTION_MESSAGE_TYPE that traverse the B<->C
     // adapter pair while a doc created on A propagates to C.
     test('B relays via subduction in 3-peer chain', async () => {
       let bcSubductionMessages = 0;
       const onMessage = (message: Message) => {
         if (message.type === SUBDUCTION_MESSAGE_TYPE) {
-          // We only count messages on the B↔C pair. `createRepoTopology` invokes
+          // We only count messages on the B<->C pair. `createRepoTopology` invokes
           // this hook for every adapter pair, but since this test uses a
-          // fresh topology and only A↔B and B↔C exist, a positive count on the
-          // B↔C pair (filtered below by `targetId`) is sufficient.
+          // fresh topology and only A<->B and B<->C exist, a positive count on the
+          // B<->C pair (filtered below by `targetId`) is sufficient.
           bcSubductionMessages++;
         }
       };
@@ -792,7 +792,7 @@ describe('AutomergeRepo with Subduction', () => {
           ['A', 'B'],
           ['B', 'C'],
         ],
-        // Hook installed only on the B↔C pair (second connection).
+        // Hook installed only on the B<->C pair (second connection).
         onMessageByConnection: { 1: onMessage },
       });
       const [repoA, repoB, repoC] = repos;
@@ -813,7 +813,7 @@ describe('AutomergeRepo with Subduction', () => {
       await expect.poll(() => docC.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('relayed');
 
       // If C reached `'ready'` AND we observed subduction-typed messages on the
-      // B↔C pair, B is relaying via subduction (not via some classical bypass).
+      // B<->C pair, B is relaying via subduction (not via some classical bypass).
       expect(bcSubductionMessages).to.be.greaterThan(0);
     });
   });

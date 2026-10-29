@@ -122,7 +122,7 @@ export const startLogTap = async ({ context, page, file }) => {
 };
 
 /**
- * The same tap for a page that reports no console events — a Tauri webview under WebDriver. The page
+ * The same tap for a page that reports no console events - a Tauri webview under WebDriver. The page
  * buffers its entries and this drains them every second, re-installing the tap after a navigation; entries
  * logged before the first drain of a document are not captured, since WebDriver has no init scripts.
  */

@@ -50,7 +50,7 @@ export const Matrix = ({
     return variants;
   }, [dim, dotSize, gap]);
 
-  // Internal tick — incremented every `interval` ms while `active`. Drives position randomization.
+  // Internal tick - incremented every `interval` ms while `active`. Drives position randomization.
   const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!active) {

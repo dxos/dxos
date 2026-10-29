@@ -35,7 +35,7 @@ const PROJECT_INSTRUCTIONS = trim`
 `;
 
 /**
- * The per-message research task — the CRM routine template's instructions plus the artifact-filing
+ * The per-message research task - the CRM routine template's instructions plus the artifact-filing
  * step a project adds.
  */
 const ROUTINE_INSTRUCTIONS = trim`
@@ -50,10 +50,10 @@ const ROUTINE_INSTRUCTIONS = trim`
 `;
 
 /**
- * "Sender research" project template: the CRM research automation reframed as a project — the
+ * "Sender research" project template: the CRM research automation reframed as a project - the
  * mailbox as standing context, CRM skills for its chats, and the per-message research routine
  * (feed-triggered, disabled until the user enables it) scoped to the project, filing profiles and
- * dossiers into its artifacts. Only applies to a Mailbox subject — the feed trigger
+ * dossiers into its artifacts. Only applies to a Mailbox subject - the feed trigger
  * needs `mailbox.feed`. The routine-only variant remains available as the CRM automation template.
  */
 export const crmProject: ProjectCapabilities.Template = {
@@ -72,7 +72,7 @@ export const crmProject: ProjectCapabilities.Template = {
       const feed = yield* Database.load(mailbox.feed);
 
       const project = Templates.scaffoldProject({
-        name: name ?? `Sender Research — ${mailbox.name ?? 'Mailbox'}`,
+        name: name ?? `Sender Research - ${mailbox.name ?? 'Mailbox'}`,
         text: PROJECT_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
         objects: [Ref.make(mailbox)],

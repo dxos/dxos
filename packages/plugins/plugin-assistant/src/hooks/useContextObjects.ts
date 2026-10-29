@@ -30,7 +30,7 @@ export const useContextObjects = ({ db, context }: UseContextObjectsProps): UseC
   const boundObjects = useAtomValue(context?.objects ?? emptyObjectsAtom);
   // The session's own chat is bound into its context so the agent harness can resolve it
   // (`get-context` requires a bound chat to read the plan when no agent is present); it is not a
-  // user-added reference, so exclude it from the UI. Mirrors the `!Obj.instanceOf(Chat.Chat, …)`
+  // user-added reference, so exclude it from the UI. Mirrors the `!Obj.instanceOf(Chat.Chat, ...)`
   // filter applied when copying context objects in `assistant-toolkit` `Agent`.
   const objects = useMemo(() => boundObjects.filter((object) => !Obj.instanceOf(Chat.Chat, object)), [boundObjects]);
 

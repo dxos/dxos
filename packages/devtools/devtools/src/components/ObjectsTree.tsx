@@ -539,8 +539,8 @@ export class ObjectsTreeModel {
   );
 
   /**
-   * The node as reached through `path`. `model.item(id)` cannot carry this: `type` — and so the
-   * relation arrow — is computed relative to the anchor, so an id-keyed lookup reports every
+   * The node as reached through `path`. `model.item(id)` cannot carry this: `type` - and so the
+   * relation arrow - is computed relative to the anchor, so an id-keyed lookup reports every
    * relation as incoming.
    */
   itemAt(path: string[]): Atom.Atom<ObjectsTreeItem | undefined> {

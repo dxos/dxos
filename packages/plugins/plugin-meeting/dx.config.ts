@@ -43,7 +43,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
-        // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
+        // Call manager read optionally in the body (absence-guarded atom) - see plugin-thread's note.
         requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
       },
     ),

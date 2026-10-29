@@ -8,7 +8,7 @@ import type * as Voxel from '../types/Voxel.ts';
 type Pattern = { name: string; cells: [number, number][] };
 
 const PATTERNS: Pattern[] = [
-  // Glider — translates diagonally.
+  // Glider - translates diagonally.
   {
     name: 'glider',
     cells: [
@@ -19,7 +19,7 @@ const PATTERNS: Pattern[] = [
       [1, -1],
     ],
   },
-  // Lightweight spaceship (LWSS) — translates horizontally.
+  // Lightweight spaceship (LWSS) - translates horizontally.
   {
     name: 'lwss',
     cells: [
@@ -34,7 +34,7 @@ const PATTERNS: Pattern[] = [
       [2, -2],
     ],
   },
-  // R-pentomino — small methuselah that evolves for 1103 generations.
+  // R-pentomino - small methuselah that evolves for 1103 generations.
   {
     name: 'r-pentomino',
     cells: [
@@ -45,7 +45,7 @@ const PATTERNS: Pattern[] = [
       [0, -1],
     ],
   },
-  // Acorn — methuselah that takes 5206 generations to stabilize.
+  // Acorn - methuselah that takes 5206 generations to stabilize.
   {
     name: 'acorn',
     cells: [
@@ -58,7 +58,7 @@ const PATTERNS: Pattern[] = [
       [3, -1],
     ],
   },
-  // Gosper glider gun — produces a stream of gliders.
+  // Gosper glider gun - produces a stream of gliders.
   {
     name: 'gosper-glider-gun',
     cells: [
@@ -104,7 +104,7 @@ const PATTERNS: Pattern[] = [
       [18, 3],
     ],
   },
-  // Pulsar — period-3 oscillator.
+  // Pulsar - period-3 oscillator.
   {
     name: 'pulsar',
     cells: [
@@ -130,7 +130,7 @@ const PATTERNS: Pattern[] = [
       ]),
     ],
   },
-  // Diehard — vanishes after 130 generations.
+  // Diehard - vanishes after 130 generations.
   {
     name: 'diehard',
     cells: [

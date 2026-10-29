@@ -203,13 +203,13 @@ const makeActiveProcess = (
   });
 
 describe('buildExecutionGraph (span-tree based)', () => {
-  test('empty input → no commits', ({ expect }) => {
+  test('empty input -> no commits', ({ expect }) => {
     const { commits, branches } = buildExecutionGraph({ traceMessages: [] });
     expect(commits).toEqual([]);
     expect(branches).toEqual(['main']);
   });
 
-  test('top-level operation with no inner events → collapsed to single end commit on main', ({ expect }) => {
+  test('top-level operation with no inner events -> collapsed to single end commit on main', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(
         { pid: 'op-1' },
@@ -225,12 +225,12 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(commits[0].branch).toBe('main');
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [function] Reply
+      *  [function] Reply
       "
     `);
   });
 
-  test('nested operation under an agent → collapsed to a single end commit', ({ expect }) => {
+  test('nested operation under an agent -> collapsed to a single end commit', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
         yield* withMeta(
@@ -258,15 +258,15 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(branches).toEqual(['main', 'agent-1']);
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [function] Lookup
-      │  ●  [user] hello
-      ◆──╯  [atom] Agent completed request
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [function] Lookup
+      \u2502  *  [user] hello
+      \u25C6\u2500\u2500\u256F  [atom] Agent completed request
       "
     `);
   });
 
-  test('nested operation with its own inner status message → expanded fork/merge', ({ expect }) => {
+  test('nested operation with its own inner status message -> expanded fork/merge', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(
         { pid: 'op-1' },
@@ -296,7 +296,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
         yield* withMeta({ pid: 'supervisor' }, Trace.write(Trace.AgentRequestBegin, {}));
         // A delegated sub-agent runs as a separate process: its own pid, parented to the supervisor.
         // With an inner status event the span is non-collapsible, so its begin event is emitted as a
-        // real fork — and because it crosses a process boundary it forks onto its OWN branch.
+        // real fork - and because it crosses a process boundary it forks onto its OWN branch.
         yield* withMeta(
           { pid: 'sub', parentPid: 'supervisor' },
           Effect.gen(function* () {
@@ -313,14 +313,14 @@ describe('buildExecutionGraph (span-tree based)', () => {
       }),
     );
     const { commits } = buildExecutionGraph({ traceMessages: messages });
-    // The sub-agent's begin ("Run Routine") lands on its OWN branch ('sub'), not the supervisor's —
+    // The sub-agent's begin ("Run Routine") lands on its OWN branch ('sub'), not the supervisor's -
     // so a concurrent sub-agent gets its own lane from its first event rather than sharing the
     // parent lane until its first middle commit.
     const begin = commits.find((commit) => commit.message === 'Run Routine');
     expect(begin?.branch).toBe('sub');
   });
 
-  test('pending span with user message → user lands on own branch, not parent', ({ expect }) => {
+  test('pending span with user message -> user lands on own branch, not parent', ({ expect }) => {
     const messages = collectTraceEvents(
       // Agent has begun and emitted a user message, but has NOT yet completed.
       withMeta(
@@ -337,7 +337,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
     );
     const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
     // Two commits: AgentBegin on main (fork), user "hello" on agent-1 branch (middle).
-    // No end commit yet — the span is pending.
+    // No end commit yet - the span is pending.
     expect(commits).toHaveLength(2);
     expect(commits[0].branch).toBe('main');
     expect(commits[0].message).toBe('Agent processing request...');
@@ -345,13 +345,13 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(commits[1].message).toBe('hello');
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [user] hello
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [user] hello
       "
     `);
   });
 
-  test('pending span with collapsed sub-span then user message → user on own branch', ({ expect }) => {
+  test('pending span with collapsed sub-span then user message -> user on own branch', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
         yield* withMeta({ pid: 'agent-1' }, Trace.write(Trace.AgentRequestBegin, {}));
@@ -406,7 +406,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
       }),
     );
     const { commits } = buildExecutionGraph({ traceMessages: messages });
-    // After collapsing, expect: AgentBegin, Op1.End, Op2.End, AgentEnd → 4 commits.
+    // After collapsing, expect: AgentBegin, Op1.End, Op2.End, AgentEnd -> 4 commits.
     expect(commits.map((commit) => commit.message)).toEqual([
       'Agent processing request...',
       'A',
@@ -434,14 +434,14 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [function] Reply
+      *  [function] Reply
       "
     `);
   });
 
   /**
    * Top-level operation containing one nested operation. The parent has a child so it cannot
-   * collapse — it forks to its own branch on begin and merges back on end. The nested op is
+   * collapse - it forks to its own branch on begin and merges back on end. The nested op is
    * still collapsible so it emits a single end commit on the parent's branch.
    */
   test('top-level operation with one child forks then merges', ({ expect }) => {
@@ -464,9 +464,9 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [function] Parent
-      ├──●  [function] Child
-      ◆──╯  [function] Parent
+      *     [function] Parent
+      \u251C\u2500\u2500*  [function] Child
+      \u25C6\u2500\u2500\u256F  [function] Parent
       "
     `);
   });
@@ -497,18 +497,18 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [function] Parent
-      ├──●  [function] Alpha
-      │  ●  [function] Beta
-      │  ●  [function] Gamma
-      ◆──╯  [function] Parent
+      *     [function] Parent
+      \u251C\u2500\u2500*  [function] Alpha
+      \u2502  *  [function] Beta
+      \u2502  *  [function] Gamma
+      \u25C6\u2500\u2500\u256F  [function] Parent
       "
     `);
   });
 
   /**
    * Two overlapping top-level operations (different pids, both parented at root). R2 starts
-   * before R1 ends. Each routine has a nested sub-operation so they cannot collapse — they
+   * before R1 ends. Each routine has a nested sub-operation so they cannot collapse - they
    * occupy their own branches off main. Regression: end commits must anchor to the immediate
    * predecessor on main rather than skipping back to their matching begin commit.
    */
@@ -558,12 +558,12 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [function] Run Routine 1
-      ├──●  [function] Lookup A
-      ◆──╯  [function] Run Routine 1
-      ●  │  [function] Run Routine 2
-      ├──●  [function] Lookup B
-      ◆──╯  [function] Run Routine 2
+      *     [function] Run Routine 1
+      \u251C\u2500\u2500*  [function] Lookup A
+      \u25C6\u2500\u2500\u256F  [function] Run Routine 1
+      *  \u2502  [function] Run Routine 2
+      \u251C\u2500\u2500*  [function] Lookup B
+      \u25C6\u2500\u2500\u256F  [function] Run Routine 2
       "
     `);
   });
@@ -599,12 +599,12 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [user] First question
-      ◆──╯  [atom] Agent completed request
-      ●  │  [atom] Agent processing request...
-      │  ●  [user] Follow-up question
-      ◆──╯  [atom] Agent completed request
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [user] First question
+      \u25C6\u2500\u2500\u256F  [atom] Agent completed request
+      *  \u2502  [atom] Agent processing request...
+      \u2502  *  [user] Follow-up question
+      \u25C6\u2500\u2500\u256F  [atom] Agent completed request
       "
     `);
   });
@@ -648,11 +648,11 @@ describe('buildExecutionGraph scenarios', () => {
 
       expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
         "
-        ●        [function] Sync
-        ├──●     [arrows-clockwise] Sync - Incomplete
-           ●     [arrows-clockwise] Sync - Incomplete
-           ●     [function] Sync
-           ├──●  [info] batch 3
+        *        [function] Sync
+        \u251C\u2500\u2500*     [arrows-clockwise] Sync - Incomplete
+           *     [arrows-clockwise] Sync - Incomplete
+           *     [function] Sync
+           \u251C\u2500\u2500*  [info] batch 3
         "
       `);
     });
@@ -672,7 +672,7 @@ describe('buildExecutionGraph scenarios', () => {
 
       expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
         "
-        ●  [function] Sync
+        *  [function] Sync
         "
       `);
     });
@@ -711,17 +711,17 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [function] Work
-      ├──●  [info] thinking
-      │  ●  [info] searching
-      │  ●  [info] writing
-      ◆──╯  [function] Work
+      *     [function] Work
+      \u251C\u2500\u2500*  [info] thinking
+      \u2502  *  [info] searching
+      \u2502  *  [info] writing
+      \u25C6\u2500\u2500\u256F  [function] Work
       "
     `);
   });
 
   /**
-   * Plain (non-operation) tool calls — e.g. a toolkit handler or an MCP tool — render as a
+   * Plain (non-operation) tool calls - e.g. a toolkit handler or an MCP tool - render as a
    * single auto-collapsed commit on the agent's branch so the timeline shows that work
    * happened without forking a dedicated routine span.
    */
@@ -750,9 +750,9 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [wrench] web-search
-      ◆──╯  [atom] Agent completed request
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [wrench] web-search
+      \u25C6\u2500\u2500\u256F  [atom] Agent completed request
       "
     `);
   });
@@ -800,15 +800,15 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [wrench] web-search
-      ◆──╯  [atom] Agent completed request
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [wrench] web-search
+      \u25C6\u2500\u2500\u256F  [atom] Agent completed request
       "
     `);
   });
 
   /**
-   * Error results render as a single commit with an error level and an " - Error" suffix —
+   * Error results render as a single commit with an error level and an " - Error" suffix -
    * matches the operation-end error convention.
    */
   test('tool call with failing tool result renders as a single error commit', ({ expect }) => {
@@ -848,9 +848,9 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [wrench] flaky - Error
-      ◆──╯  [atom] Agent completed request
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [wrench] flaky - Error
+      \u25C6\u2500\u2500\u256F  [atom] Agent completed request
       "
     `);
   });
@@ -897,9 +897,9 @@ describe('buildExecutionGraph scenarios', () => {
 
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [function] Lookup
-      ◆──╯  [atom] Agent completed request
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [function] Lookup
+      \u25C6\u2500\u2500\u256F  [atom] Agent completed request
       "
     `);
   });
@@ -932,9 +932,9 @@ describe('buildExecutionGraph scenarios', () => {
     expect(endCommit?.level).toBe(LogLevel.ERROR);
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●     [atom] Agent processing request...
-      ├──●  [user] hello
-      ◆──╯  [atom] Agent request failed: Unsupported schema AST: UnknownKeyword
+      *     [atom] Agent processing request...
+      \u251C\u2500\u2500*  [user] hello
+      \u25C6\u2500\u2500\u256F  [atom] Agent request failed: Unsupported schema AST: UnknownKeyword
       "
     `);
   });
@@ -957,16 +957,16 @@ describe('buildExecutionGraph scenarios', () => {
     const endCommit = commits.at(-1);
     expect(endCommit?.message).toBe('Agent request interrupted');
     expect(endCommit?.level).toBe(LogLevel.WARN);
-    // Begin/end only — collapsible span renders a single end commit on main.
+    // Begin/end only - collapsible span renders a single end commit on main.
     expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [atom] Agent request interrupted
+      *  [atom] Agent request interrupted
       "
     `);
   });
 
   /**
-   * Orphan `OperationEnd` event — no matching `OperationStart` was captured. The span tree
+   * Orphan `OperationEnd` event - no matching `OperationStart` was captured. The span tree
    * attaches it to the synthetic root rather than crashing, so the renderer produces a
    * single commit on main.
    */
@@ -980,7 +980,7 @@ describe('buildExecutionGraph scenarios', () => {
     expect(commits[0].branch).toBe('main');
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [function] Lost - Error
+      *  [function] Lost - Error
       "
     `);
   });
@@ -1120,7 +1120,7 @@ describe('buildExecutionGraph collapseCompletedSpans', () => {
 
     expect(`\n${renderGraph(messages, true)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [atom] Agent completed request
+      *  [atom] Agent completed request
       "
     `);
   });
@@ -1148,7 +1148,7 @@ describe('buildExecutionGraph collapseCompletedSpans', () => {
 });
 
 describe('buildExecutionGraph in-progress shimmer tags', () => {
-  test('pending agent begin → effect:shimmer', ({ expect }) => {
+  test('pending agent begin -> effect:shimmer', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(
         { pid: 'agent-1' },
@@ -1163,7 +1163,7 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
     expect(commits[0]?.tags).toContain(SHIMMER_EFFECT_TAG);
   });
 
-  test('pending tool call → effect:shimmer', ({ expect }) => {
+  test('pending tool call -> effect:shimmer', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(
         { pid: 'agent-1' },
@@ -1190,7 +1190,7 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
     expect(toolCall?.tags).toContain(SHIMMER_EFFECT_TAG);
   });
 
-  test('completed operation end → no effect:shimmer', ({ expect }) => {
+  test('completed operation end -> no effect:shimmer', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(
         { pid: 'worker' },
@@ -1205,7 +1205,7 @@ describe('buildExecutionGraph in-progress shimmer tags', () => {
     expect(commits.every((commit) => !commit.tags?.includes(SHIMMER_EFFECT_TAG))).toBe(true);
   });
 
-  test('active running process → Running... has effect:shimmer after span subtree', ({ expect }) => {
+  test('active running process -> Running... has effect:shimmer after span subtree', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(
         { pid: 'worker' },

@@ -17,7 +17,7 @@ import {
 
 /**
  * Progress-registry task name for the pipeline run. Producer (the story provider) registers/advances
- * it; consumer modules read it via `useProgressMonitor(PIPELINE_RUN)` to derive "running" + progress —
+ * it; consumer modules read it via `useProgressMonitor(PIPELINE_RUN)` to derive "running" + progress -
  * replacing the ad-hoc `running`/`processed` state. See {@link AppCapabilities.ProgressRegistry}.
  */
 export const PIPELINE_RUN = 'brain.pipeline.run';

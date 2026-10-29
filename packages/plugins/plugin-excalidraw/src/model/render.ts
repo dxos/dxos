@@ -13,7 +13,7 @@ import { Scene } from '@dxos/diagram';
 
 import { toFontSize, toStyle } from './style.ts';
 
-/** Canvas content: an opaque map of ElementId → excalidraw element. */
+/** Canvas content: an opaque map of ElementId -> excalidraw element. */
 export type CanvasContent = Record<string, any>;
 
 /** Canvas-px bounding box of an existing element another object's arrow may bind to. */
@@ -188,7 +188,7 @@ export const renderObject = (
 
   /**
    * Label as a companion text element bound to its shape, folded back into `text` on read.
-   * Binding makes excalidraw own the centring and keeps the two together — an unbound label is a
+   * Binding makes excalidraw own the centring and keeps the two together - an unbound label is a
    * separate shape the user can drag off the box it names.
    */
   const label = (element: Scene.Element, value: string, bounds: ExternalBox) => {

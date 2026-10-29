@@ -22,7 +22,7 @@ export const ProcessEnvironment = {
 
 export type ProcessEnvironment = (typeof ProcessEnvironment)[keyof typeof ProcessEnvironment];
 
-/** Every environment, in menu order — widening scope, so the filter reads the same on every trace. */
+/** Every environment, in menu order - widening scope, so the filter reads the same on every trace. */
 export const ALL_PROCESS_ENVIRONMENTS: readonly ProcessEnvironment[] = [
   ProcessEnvironment.App,
   ProcessEnvironment.Space,

@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       const taskSet = yield* Database.load(taskSetRef);
       const parent = parentTask ? yield* Database.load(parentTask) : undefined;
 
-      // A task may only be filed under a milestone of its own set — the milestone sequence is what
+      // A task may only be filed under a milestone of its own set - the milestone sequence is what
       // the set renders, so a cross-set ref would show work under a milestone that never lists it.
       // Compared by entity id: the same object may be addressed local or space-qualified.
       if (milestone) {

@@ -11,7 +11,7 @@ import { type PipelinePhase } from '../../types.ts';
 export type PipelineStatusProps = {
   /** Live lifecycle phase published by the transcription driver. */
   phase?: PipelinePhase;
-  /** Ordered stage ids being run (e.g. correct → extract → summarize). */
+  /** Ordered stage ids being run (e.g. correct -> extract -> summarize). */
   stages?: readonly string[];
   /** Per-stage telemetry emitted by `PipelineRuntime`. */
   telemetry?: readonly TelemetryEvent[];
@@ -29,7 +29,7 @@ export const PipelineStatus = ({ phase = 'idle', stages, telemetry, summary }: P
     <Section title='Status'>
       <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-fg-muted'>
         <span>Mic</span>
-        <span>{phase === 'recording' ? '● on' : '○ off'}</span>
+        <span>{phase === 'recording' ? '* on' : '\u25CB off'}</span>
         <span>Pipeline</span>
         <span>{phase}</span>
       </div>
@@ -37,7 +37,7 @@ export const PipelineStatus = ({ phase = 'idle', stages, telemetry, summary }: P
 
     {stages && (
       <Section title='Stages'>
-        <div className='text-fg-muted'>{stages.join(' → ') || '(none)'}</div>
+        <div className='text-fg-muted'>{stages.join(' -> ') || '(none)'}</div>
       </Section>
     )}
 

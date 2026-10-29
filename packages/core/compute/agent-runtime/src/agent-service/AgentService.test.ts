@@ -107,7 +107,7 @@ const Stall = Operation.make({
   output: Schema.String,
 });
 
-/** Resolved by the test to let the stalled tool — and with it the blocked teardown — finish. */
+/** Resolved by the test to let the stalled tool - and with it the blocked teardown - finish. */
 let stallRelease: Deferred.Deferred<void> | undefined;
 /** Fulfilled once the tool is actually running, so the test stops at the right moment. */
 let stallStarted: Deferred.Deferred<void> | undefined;
@@ -204,7 +204,7 @@ const delegationHarness: DelegationHarness = { pending: [], completed: [] };
 /**
  * Stub {@link DelegationStrategy} driven by {@link delegationHarness}: each reconcile delegates the
  * pending work not already in flight (spawning {@link DelegatedWork} as a linked child) and records
- * completions, so a test can assert the reconcile → spawn → onChildEvent → onComplete loop.
+ * completions, so a test can assert the reconcile -> spawn -> onChildEvent -> onComplete loop.
  */
 const StubDelegationStrategy: DelegationStrategy = {
   reconcile: (_chat, activeIds) =>
@@ -329,7 +329,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* researchService.completeOneTask();
         // Settle the turn before tearing down, so what survives the reload is the queued tool result
         // alone. Without this the prompt's queue entry may also still be unacked, and recovery
-        // delivers the result AND redelivers the prompt — which re-issues the tool this test is
+        // delivers the result AND redelivers the prompt - which re-issues the tool this test is
         // asserting does not run twice.
         yield* session.waitForCompletion();
 
@@ -342,7 +342,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* session.waitForCompletion();
 
         // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
-        // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
+        // re-issuing the tool, so the research must not run a second time - a re-issue would duplicate
         // the side effects of an operation that had already completed.
         expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
         session = yield* ComputeAgentService.getSession(session.chat);
@@ -474,7 +474,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
           // Settles on the turn's reply; the delegated child runs in the background (not awaited here).
           yield* session.waitForCompletion();
 
-          // The post-turn reconcile spawned a linked child; its exit drives onChildEvent → onComplete.
+          // The post-turn reconcile spawned a linked child; its exit drives onChildEvent -> onComplete.
           yield* Effect.promise(async () => {
             await expect.poll(() => delegationHarness.completed.length, { timeout: 5_000 }).toBe(1);
           });
@@ -649,7 +649,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
   // Stopping mid-tool-call finishes the handle while its teardown is still blocked on the in-flight
   // turn. A handle left readable as live is adopted by the next session, whose prompt is then dropped
-  // by the `#finished` guard — the conversation wedges with no error until the page reloads. Uses a
+  // by the `#finished` guard - the conversation wedges with no error until the page reloads. Uses a
   // tool that ignores interruption, since a tool that unwinds lets teardown complete and never
   // produces the stranded handle. The runtime seam is covered in ProcessManager.test.ts.
   it.effect(
@@ -667,14 +667,14 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* Deferred.await(stallStarted);
 
         // The stop button returns at once; `terminate` does not, because the tool holds the scope
-        // open. Forking is what the UI effectively does — and what leaves the handle observable
+        // open. Forking is what the UI effectively does - and what leaves the handle observable
         // mid-teardown. `terminate` publishes the state before its first yield, so one turn is enough.
         const stopping = yield* Effect.forkChild(session.terminate());
         yield* Effect.yieldNow;
         expect(handle.status.state).not.toBe(Process.State.RUNNING);
 
         // Same feed: the user typing again after hitting stop. The stopped handle must not be
-        // adopted — neither from the session cache nor by the remount lookup that follows it.
+        // adopted - neither from the session cache nor by the remount lookup that follows it.
         const resumed = yield* ComputeAgentService.getSession(session.chat);
         expect(resumed).not.toBe(session);
 
@@ -774,7 +774,7 @@ describe('Agent Service (control plane)', () => {
         // Reboot without hydrating: the record survives but no live handle does, so `list` yields
         // a read-only dormant view. A service whose session cache does not carry over (boot-time
         // hydration cleared it, or skipped this agent) rediscovers the process through that view
-        // and must adopt what `hydrate` returns — adopting the dormant view itself leaves every
+        // and must adopt what `hydrate` returns - adopting the dormant view itself leaves every
         // call on the session dying with "Process not hydrated".
         yield* processManager.shutdown();
         yield* processManager.startup();
@@ -793,7 +793,7 @@ describe('Agent Service (control plane)', () => {
     ),
   );
 
-  // Exercises the instruction-aware reuse identity on both paths — the session cache and the
+  // Exercises the instruction-aware reuse identity on both paths - the session cache and the
   // remount (rediscovered process) path. The steering ref lives on the chat, so repointing the
   // chat is what makes the running process stale.
   it.effect(
@@ -994,7 +994,7 @@ describe('Agent Service (control plane)', () => {
     'binds a space-authored skill, which carries no registry key',
     Effect.fnUntraced(
       function* (_) {
-        // Authored in the space rather than provided by the registry, so it has no meta key at all —
+        // Authored in the space rather than provided by the registry, so it has no meta key at all -
         // the case that used to be dropped on the way into the context binder (DX-1248).
         const skill = yield* Database.add(
           Obj.make(Skill.Skill, {

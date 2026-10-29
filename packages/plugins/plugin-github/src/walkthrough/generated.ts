@@ -34,7 +34,7 @@ const GENERATED_DIRECTORIES = /(^|\/)(dist|build|out|coverage|node_modules|vendo
 const GENERATED_SUFFIX =
   /(\.min\.(js|css)|\.map|\.snap|\.d\.ts|[._-]pb\.(ts|js)|\.pb\.go|_pb2\.py|\.gen\.(ts|js|go)|\.generated\.[a-z]+)$/i;
 
-/** Binary by extension. A patch shows these as "Binary files … differ", with nothing to read. */
+/** Binary by extension. A patch shows these as "Binary files ... differ", with nothing to read. */
 const BINARY_SUFFIX =
   /\.(png|jpe?g|gif|webp|avif|ico|icns|bmp|tiff?|svgz|pdf|woff2?|ttf|otf|eot|zip|gz|tgz|bz2|xz|7z|rar|wasm|so|dylib|dll|exe|bin|dat|db|sqlite3?|mp[34]|mov|mp4|webm|wav|ogg|jar|class|pyc|node)$/i;
 

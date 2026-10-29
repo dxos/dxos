@@ -3,8 +3,8 @@
 //
 
 //
-// Normalized scoring: every heuristic — an objective's constraints and cost terms, or any other
-// judge of a layout — reports one score in [0, 1] (0 bad, 1 good), so heterogeneous scorers read
+// Normalized scoring: every heuristic - an objective's constraints and cost terms, or any other
+// judge of a layout - reports one score in [0, 1] (0 bad, 1 good), so heterogeneous scorers read
 // as one list and combine into one number. `Objective` stays the engines' selector; this is the
 // view of the same measurements a person (or a later judge) compares layouts by.
 //
@@ -32,7 +32,7 @@ export type Entry = {
 };
 
 /**
- * One judge of a subject — by default the layout. An effect, so a judge that asks something outside the
+ * One judge of a subject - by default the layout. An effect, so a judge that asks something outside the
  * process can run late, be interrupted, and name what it needs in `R`.
  */
 export type Scorer<S = Objective.Layout, R = never> = Entry & {
@@ -55,7 +55,7 @@ export type Scored = Result & Entry;
  */
 export const HALF_COST = 3;
 
-/** Maps a weighted cost in [0, ∞) onto (0, 1]: 1 at no cost, 0.5 at `half`, falling off hyperbolically. */
+/** Maps a weighted cost in [0, infinity) onto (0, 1]: 1 at no cost, 0.5 at `half`, falling off hyperbolically. */
 export const fromCost = (weighted: number, half: number = HALF_COST): number => 1 / (1 + Math.max(0, weighted) / half);
 
 /** A hard requirement: 1 when it holds, 0 when anything violates it. */
@@ -112,8 +112,8 @@ export const evaluate = <S, R>(sources: readonly Source<S, R>[], subject: S): Ef
 
 /**
  * One number for a set of scores: the worst constraint gates the mean of everything else, so a
- * layout that breaks a constraint scores 0 however good it otherwise is — the same precedence
- * `Objective.select` gives violations over cost — while every other kind contributes equally.
+ * layout that breaks a constraint scores 0 however good it otherwise is - the same precedence
+ * `Objective.select` gives violations over cost - while every other kind contributes equally.
  * `undefined` when nothing could be judged, so a set of failed scorers never reads as a perfect score.
  */
 export const overall = (all: readonly Pick<Scored, 'kind' | 'score' | 'error'>[]): number | undefined => {

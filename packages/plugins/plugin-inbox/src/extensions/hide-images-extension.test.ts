@@ -23,7 +23,7 @@ describe('hideImages ranges', () => {
     expect(applyHidden('before ![alt](https://example.com/a.png) after')).to.equal('before  after');
   });
 
-  test('leaves local (echo:/dxn:) images untouched — preview() renders them without a fetch', ({ expect }) => {
+  test('leaves local (echo:/dxn:) images untouched - preview() renders them without a fetch', ({ expect }) => {
     for (const text of ['see ![alt](echo:/1234) here', 'see ![alt](dxn:foo:1234) here']) {
       expect(applyHidden(text)).to.equal(text);
     }

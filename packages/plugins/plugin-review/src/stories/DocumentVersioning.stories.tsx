@@ -10,12 +10,12 @@
 // they are spliced through the automerge binding to simulate the editor's live typing (concurrent
 // branch/parent edits must CRDT-merge, which whole-string assignment would not).
 //
-//   1. main revisions              — TimeTravel: checkpoints on main, travel back/forward, return to Now.
-//   2. sub-branch revisions        — BranchRevisions: revisions ON a branch; select one (read-only),
+//   1. main revisions              - TimeTravel: checkpoints on main, travel back/forward, return to Now.
+//   2. sub-branch revisions        - BranchRevisions: revisions ON a branch; select one (read-only),
 //                                    then return to the branch TIP (editable). BranchMerge: merge back.
-//   3. chained branches + merges   — ChainedBranches: fork → merge → fork again → merge (flat registry).
+//   3. chained branches + merges   - ChainedBranches: fork -> merge -> fork again -> merge (flat registry).
 //                                    True nested branch-of-branch is a follow-up (see DESIGN.md).
-//   4. merge conflict              — ConflictAutoResolve: concurrent same-line edits CRDT-merge with no
+//   4. merge conflict              - ConflictAutoResolve: concurrent same-line edits CRDT-merge with no
 //                                    markers. ConflictResolution: the marker-resolution UI for a
 //                                    legacy/external conflict block.
 //
@@ -255,7 +255,7 @@ const createBranchViaUi = async (canvasElement: HTMLElement, name: string) => {
   const canvas = within(canvasElement);
   const body = within(canvasElement.ownerDocument.body);
   await userEvent.click(await canvas.findByText('New branch', undefined, { timeout: 15_000 }));
-  const input = await body.findByPlaceholderText('Branch name…');
+  const input = await body.findByPlaceholderText('Branch name...');
   await userEvent.type(input, name);
   await userEvent.click(body.getByText('Create'));
 };
@@ -299,7 +299,7 @@ const meta = {
                 storyDocs.set(context.id, doc);
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
-                // Seeded before mount so a manual story opens already reviewable — the same state the
+                // Seeded before mount so a manual story opens already reviewable - the same state the
                 // play-driven stories build up step by step, without a play mutating it first.
                 for (const { creator, content } of context.args.suggestions ?? []) {
                   yield* Effect.promise(() => seedSuggestion(doc, creator, content));
@@ -346,7 +346,7 @@ export const Default: Story = {
 
 //
 // Manual walkthroughs. Setup is declared in `args` (suggestions are seeded before mount) and there
-// is deliberately no play function — a play would leave the story in a post-assertion state, so the
+// is deliberately no play function - a play would leave the story in a post-assertion state, so the
 // numbered scripts below would start from something other than what they describe.
 //
 
@@ -413,7 +413,7 @@ export const EditingTyping: Story = {
 
 /**
  * Time travel across checkpoints:
- * - Edits the doc and creates three named revisions (v1–v3) via the panel.
+ * - Edits the doc and creates three named revisions (v1-v3) via the panel.
  * - Selecting each revision renders its pinned content read-only.
  * - "Now" returns to the editable tip and clears the checkpoint banner.
  */
@@ -463,7 +463,7 @@ export const TimeTravel: Story = {
 /**
  * Revisions on a branch, then navigation (reported-bug regression):
  * - Forks a `draft` branch; "New branch" is disabled while on a branch (no sub-branching).
- * - Two edit→revision cycles checkpoint the branch's own heads/lane.
+ * - Two edit->revision cycles checkpoint the branch's own heads/lane.
  * - Selecting a branch revision renders that historical branch content (not empty, not the parent).
  * - The per-branch `Tip` node returns to the editable branch tip.
  * - Clicking a branch revision highlights THAT revision, not the main-lane fork node.
@@ -486,7 +486,7 @@ export const BranchRevisions: Story = {
     // branch, so a fork cannot silently derive from main instead of the branch.
     await waitFor(() => expect(canvas.getByRole('button', { name: 'New branch' })).toBeDisabled());
 
-    // Two edit→revision cycles ON the branch (each checkpoints the branch's heads, laned on the branch).
+    // Two edit->revision cycles ON the branch (each checkpoints the branch's heads, laned on the branch).
     await setBranchContent(doc, 'draft', 'alpha\nbravo\ncharlie\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
     await createRevisionViaUi(canvasElement, 'draft-r1');
@@ -496,7 +496,7 @@ export const BranchRevisions: Story = {
     await createRevisionViaUi(canvasElement, 'draft-r2');
 
     // Select the FIRST branch revision: the editor shows that historical branch content (read-only),
-    // not empty and not the parent — the binding must resolve before the editor mounts.
+    // not empty and not the parent - the binding must resolve before the editor mounts.
     await selectTimelineNode(canvasElement, 'draft-r1');
     await canvas.findByTestId('version-banner-checkpoint');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
@@ -510,7 +510,7 @@ export const BranchRevisions: Story = {
     await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
     await waitFor(() => expect(canvas.queryByTestId('version-banner-checkpoint')).toBeNull());
 
-    // Regression: from the branch tip, clicking a branch revision must highlight THAT revision — not
+    // Regression: from the branch tip, clicking a branch revision must highlight THAT revision - not
     // snap the highlight to the main-lane 'fork: draft' checkpoint (the timeline was jumping to the
     // first commit of the highlighted lane on every selection change).
     await selectTimelineNode(canvasElement, 'draft-r2');
@@ -530,7 +530,7 @@ export const BranchRevisions: Story = {
 
 /**
  * Branch revisions + CRDT merge:
- * - Forks `draft`; three edit→revision cycles, each checkpointing the branch (heads/lane on the branch).
+ * - Forks `draft`; three edit->revision cycles, each checkpointing the branch (heads/lane on the branch).
  * - A concurrent parent edit stays isolated from the branch view.
  * - Merge folds every branch edit AND the parent edit onto main; the editor returns to main.
  * - A `merge: draft` node appears; post-merge revisions resolve read-only against the root doc.
@@ -549,7 +549,7 @@ export const BranchMerge: Story = {
     await createBranchViaUi(canvasElement, 'draft');
     await canvas.findByTestId('version-banner-branch');
 
-    // Edit → create a named revision, repeated. Each revision is created via the panel while the
+    // Edit -> create a named revision, repeated. Each revision is created via the panel while the
     // branch is selected, so it checkpoints the BRANCH (records the branch's heads, tagged with the
     // branch key) and appears on the branch lane. A later edit only builds on the earlier ones if
     // the branch document truly accumulates them.
@@ -604,11 +604,11 @@ export const BranchMerge: Story = {
 };
 
 /**
- * Chained fork→merge sequences:
+ * Chained fork->merge sequences:
  * - Forks `first` off main, edits, merges back (leaves a `merge: first` node).
  * - Forks `second` off the now-updated main, edits, merges back.
  * - Main accumulates both branches' edits; both merges are recorded in the timeline.
- * - True nested branch-of-branch is a follow-up — the core registry is flat, keyed by the root. See DESIGN.md.
+ * - True nested branch-of-branch is a follow-up - the core registry is flat, keyed by the root. See DESIGN.md.
  */
 export const ChainedBranches: Story = {
   args: {
@@ -669,7 +669,7 @@ export const ConflictAutoResolve: Story = {
     await waitFor(() => expect(editorContent(canvasElement)).toContain('theirs'));
     setRootContent(doc, 'alpha ours\nbravo\n');
 
-    // Merge: both edits interleave via the CRDT — no markers, both words present.
+    // Merge: both edits interleave via the CRDT - no markers, both words present.
     await mergeViaPanel(canvasElement);
     await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
     await waitFor(() => expect(editorContent(canvasElement)).toContain('ours'), { timeout: 10_000 });
@@ -684,7 +684,7 @@ export const ConflictAutoResolve: Story = {
  * - Seeds a git-style conflict block, as a legacy textual merge or an external import would.
  * - The block renders with markers + both sides, and is NOT styled as a blockquote.
  * - "Accept branch" resolves it: the branch side wins and the markers disappear.
- * - (Core branches CRDT-merge without markers — see ConflictAutoResolve.)
+ * - (Core branches CRDT-merge without markers - see ConflictAutoResolve.)
  */
 export const ConflictResolution: Story = {
   args: {
@@ -765,7 +765,7 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
 };
 
 /**
- * Ambient review (Milestone A) — the default view, governed by the per-user review mode:
+ * Ambient review (Milestone A) - the default view, governed by the per-user review mode:
  * - Stays on main and overlays EVERY author's suggestions plus comments (no branch selection).
  * - Editing: both authors' suggestions overlay inline and the comment highlight shows; editor editable.
  * - Viewing: suggestions hide, the comment stays, the editor goes read-only.
@@ -816,7 +816,7 @@ export const AmbientReviewTest: Story = {
 };
 
 /**
- * Suggesting mode (Milestone B) — the current user authors on their OWN suggestion branch:
+ * Suggesting mode (Milestone B) - the current user authors on their OWN suggestion branch:
  * - Switching to Suggesting binds the editor to the user's `kind:'suggestion'` branch (find-or-create),
  *   so typed edits accrue there rather than mutating main.
  * - The user's typing renders as a self tracked-change (`.cm-track-insert`), NOT a foreign overlay.
@@ -841,7 +841,7 @@ export const EditingTypingTest: Story = {
     const doc = await waitForDoc(id);
     await waitFor(() => expect(editorContent(canvasElement)).toContain('Body paragraph'), { timeout: 20_000 });
 
-    // Type at the end of the body paragraph — default mode is Editing, editor bound to main. Position
+    // Type at the end of the body paragraph - default mode is Editing, editor bound to main. Position
     // the caret at the document end via the CodeMirror view (the `{Control>}{End}` combo is not
     // implemented by the headless userEvent), then type real keystrokes so the edit path is exercised.
     const content = canvasElement.querySelector<HTMLElement>('.cm-content');
@@ -857,7 +857,7 @@ export const EditingTypingTest: Story = {
     await waitFor(
       async () => {
         await expect(rootContent(doc)).toContain('edited');
-        // Require history to be initialized — otherwise a not-yet-loaded `history` would collapse to an
+        // Require history to be initialized - otherwise a not-yet-loaded `history` would collapse to an
         // empty branch list and pass before the regression scenario has settled.
         const history = doc.history;
         invariant(history, 'history not initialized');
@@ -903,7 +903,7 @@ export const SuggestingTest: Story = {
     // (a) The typed text renders as the user's own tracked change (self), not a foreign overlay.
     await waitFor(() => expect(trackInserts(canvasElement)).toContain('really'), { timeout: 15_000 });
 
-    // (b) The edit landed on the user's suggestion branch — main (root) is unchanged, the branch has it.
+    // (b) The edit landed on the user's suggestion branch - main (root) is unchanged, the branch has it.
     await waitFor(() => expect(rootContent(doc)).not.toContain('really'));
     await waitFor(async () => expect(await suggestionBranchContent(doc, 'did:bob')).toContain('really'), {
       timeout: 15_000,
@@ -920,7 +920,7 @@ export const SuggestingTest: Story = {
  * Review chrome on the ambient path, with the suggestion seeded before mount (no play setup):
  * - A suggestion anchored at the end of the document leaves an empty line below it, so the caret can
  *   still reach the end (the widget renders at `doc.length` and would otherwise be the last line).
- * - Switching to the "Markdown" view mode keeps the suggestions overlaid and the editor editable —
+ * - Switching to the "Markdown" view mode keeps the suggestions overlaid and the editor editable -
  *   only "Read only" is a viewing posture, and treating preview as viewing hid every suggestion.
  */
 export const ReviewChromeTest: Story = {
@@ -956,7 +956,7 @@ export const ReviewChromeTest: Story = {
 
 /**
  * The same-view invariant (DESIGN.md §3.3): ambient mode switches never tear down the editor. The
- * CodeMirror view — and its DOM — must persist across entering and leaving Suggesting, with caret and
+ * CodeMirror view - and its DOM - must persist across entering and leaving Suggesting, with caret and
  * focus surviving and edits landing on the right document.
  */
 export const SuggestingSwapTest: Story = {
@@ -983,7 +983,7 @@ export const SuggestingSwapTest: Story = {
     await selectViewMode(canvasElement, 'Suggesting');
     await waitFor(() => expect(contentEl()?.getAttribute('contenteditable')).toBe('true'), { timeout: 15_000 });
 
-    // Same view, same DOM — no teardown; caret survived the swap.
+    // Same view, same DOM - no teardown; caret survived the swap.
     await expect(contentEl()).toBe(before);
     await expect(EditorView.findFromDOM(before)).toBe(view);
     await expect(view.state.selection.main.anchor).toBe(anchor);
@@ -1008,7 +1008,7 @@ export const SuggestingSwapTest: Story = {
 //
 // Shared-scenario plays: each runs a `testing/scenarios.ts` definition through the full plugin
 // stack. The SAME definitions run headless in `testing/scenarios.test.tsx`, so the tiers cannot
-// drift — a new step kind fails both executors at compile time until each interprets it.
+// drift - a new step kind fails both executors at compile time until each interprets it.
 //
 
 const scenarioArgs = (scenario: ReviewScenario): StoryArgs => ({

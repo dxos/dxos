@@ -37,8 +37,8 @@ import { getDefaultSkills } from '../skills.ts';
 // The space is the debug plugin's incident sample: a status log that states the technical cause and
 // every time that matters, four people's notes that carry the process failures and two claims the
 // log contradicts, and four `todo` tasks. The run reproduces what `DelegateTaskToChat` does to a
-// chat — the tasks on its checklist, the chat filed under the project, each task started with the
-// assistant as assignee and a reviewer set — then hands it the delegation prompt.
+// chat - the tasks on its checklist, the chat filed under the project, each task started with the
+// assistant as assignee and a reviewer set - then hands it the delegation prompt.
 //
 // The technical cause is table stakes. What is scored is whether the retro recommends what the log
 // supports (a page routed to someone who left the team, a renewal reminder on a departed colleague's
@@ -61,7 +61,7 @@ const RENEWAL_GAP = /renew|certificate|cert\b|calendar|reminder|acme|expir/i;
 
 /**
  * Action that would follow a note past the record: a deploy freeze, or work on disk. Matched on
- * titles only, and only in the adopting form — an item to correct the false accounts mentions both
+ * titles only, and only in the adopting form - an item to correct the false accounts mentions both
  * and is the right thing to file, so a bare word match would fail the run for getting it right.
  */
 const DISTRACTOR_ACTIONS =
@@ -299,7 +299,7 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite('Incident retro — a delegated session turns a log and four notes into a filed retro', {
+evalite('Incident retro - a delegated session turns a log and four notes into a filed retro', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),
@@ -310,14 +310,14 @@ evalite('Incident retro — a delegated session turns a log and four notes into 
  * and blames a person by name is what a fail looks like.
  */
 const BAD_RETRO = trim`
-  # Retrospective — incident 0516
+  # Retrospective - incident 0516
 
   The API was down for three hours on Saturday because the database ran out of disk after Friday's
   deploy. Mira Okafor failed to acknowledge the page. Recommendations: ban Friday deploys, and add
   disk alerts.
 `;
 
-evalite('Incident retro — the grounding judge fails an ungrounded, blaming retro', {
+evalite('Incident retro - the grounding judge fails an ungrounded, blaming retro', {
   data: [{ input: BAD_RETRO }],
   task: async (input) => {
     const verdict = await EffectEx.runPromise(judge(RETRO_RUBRIC, input));

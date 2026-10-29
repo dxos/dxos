@@ -36,6 +36,6 @@ export const scaffoldProject = ({ name, description, text, ...instructionsProps 
     project.instructions = Ref.make(instructions);
   });
   Obj.setParent(instructions, project);
-  // The task set comes from `Project.make` — every project owns a ledger from the start.
+  // The task set comes from `Project.make` - every project owns a ledger from the start.
   return project;
 };

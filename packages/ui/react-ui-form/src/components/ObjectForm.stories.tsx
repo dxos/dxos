@@ -121,10 +121,10 @@ export const Test: Story = {
     await waitFor(() => expect(readObject(canvasElement).tags).toEqual(['Friend', 'Colleague']));
     await expect(within(tags).getByText('Colleague')).toBeVisible();
 
-    // 5. An unmatched query offers `Add tag “…”` with a tag icon; the create form is seeded with the query and has a hue
+    // 5. An unmatched query offers `Add tag "..."` with a tag icon; the create form is seeded with the query and has a hue
     // Select, and the new tag joins the selection.
     await userEvent.keyboard('Family');
-    const create = await within(popup).findByRole('option', { name: 'Add tag “Family”' });
+    const create = await within(popup).findByRole('option', { name: 'Add tag "Family"' });
     await expect(create.querySelector('[data-scope="icon"]')?.getAttribute('data-icon')).toBe('ph--tag--regular');
     await userEvent.click(create);
     await expect(await within(popup).findByRole('textbox', { name: 'Label' })).toHaveValue('Family');

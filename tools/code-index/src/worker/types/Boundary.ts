@@ -6,7 +6,7 @@ import * as Ontology from '../../Ontology.ts';
 import { type Node, childList, isNode, nameOf } from '../analyzers/ast.ts';
 
 /**
- * How a name that crosses the file boundary is spelled as an IRI — shared by the analyzer's
+ * How a name that crosses the file boundary is spelled as an IRI - shared by the analyzer's
  * references, the type propagator, and the agreement harness, so all three name a symbol alike.
  */
 
@@ -23,7 +23,7 @@ export type ImportBinding = {
 };
 
 /**
- * `effect` and its lowercase sub-package barrels (`effect/rpc`, `effect/cli`, …) publish every module
+ * `effect` and its lowercase sub-package barrels (`effect/rpc`, `effect/cli`, ...) publish every module
  * whole (`export * as Layer from './Layer.js'`), so `Layer.Layer` under `effect` is `Layer` under
  * `effect/Layer`. Rewriting to the module's own specifier gives one IRI per symbol however it was
  * imported.
@@ -40,7 +40,7 @@ export const memberIri = (specifier: string, path: readonly string[]): string =>
 
 /**
  * The single IRI naming `binding` (through a member path) as a type or value: the member IRI for a
- * bare specifier, the resolved symbol for a relative one. `undefined` when it names nothing — a
+ * bare specifier, the resolved symbol for a relative one. `undefined` when it names nothing - a
  * namespace import with no member, or a relative specifier that did not resolve.
  */
 export const boundaryIri = (binding: ImportBinding, path: readonly string[]): string | undefined => {

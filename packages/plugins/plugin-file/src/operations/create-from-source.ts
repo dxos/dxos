@@ -37,8 +37,8 @@ const decodeBase64 = (data: string): Uint8Array => {
 /**
  * Resolves the source to bytes plus the MIME type to trust.
  *
- * The type always comes from the source's own declaration — the `mediaType` field, or the response
- * `Content-Type` — never from the URL's extension. A `.png` URL that serves something else is the
+ * The type always comes from the source's own declaration - the `mediaType` field, or the response
+ * `Content-Type` - never from the URL's extension. A `.png` URL that serves something else is the
  * exact case that makes extension-sniffing exploitable.
  */
 const resolveSource = Effect.fnUntraced(function* (source: typeof FileOperation.FileSource.Type) {
@@ -62,7 +62,7 @@ const resolveSource = Effect.fnUntraced(function* (source: typeof FileOperation.
     }
 
     case 'http': {
-      // The URL is chosen by the caller — a model, in the case this operation exists for — so the
+      // The URL is chosen by the caller - a model, in the case this operation exists for - so the
       // guard is not optional. No proxy: this runs headless, where there is no CORS constraint to
       // work around and no reason to route the bytes through an extra hop.
       const url = yield* Effect.try({

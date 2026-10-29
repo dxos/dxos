@@ -61,13 +61,13 @@ export class ColumnManager {
     const handle = this.header().getByTestId('mosaicBoard.columnDragHandle');
     const handleBox = await handle.boundingBox();
     if (!handleBox) {
-      throw new Error('column drag handle has no bounding box — the drag never started');
+      throw new Error('column drag handle has no bounding box - the drag never started');
     }
 
     await handle.hover();
     await this._page.mouse.down();
     // Every exit releases the button. Playwright's mouse state belongs to the page, so throwing while it
-    // is held leaves the page mid-drag and the next gesture — or teardown — is swallowed by that drag
+    // is held leaves the page mid-drag and the next gesture - or teardown - is swallowed by that drag
     // rather than reporting this failure.
     try {
       // Small initial movement to trigger the native drag start.
@@ -79,7 +79,7 @@ export class ColumnManager {
       await this._page.waitForTimeout(200);
       const box = await target.boundingBox();
       if (!box) {
-        throw new Error('column drop target has no bounding box — nothing to drop onto');
+        throw new Error('column drop target has no bounding box - nothing to drop onto');
       }
       await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
       // Allow the drop target to process the hover before releasing.
@@ -105,7 +105,7 @@ export class ItemManager {
     const handle = this.locator.getByTestId('mosaicBoard.cardDragHandle');
     const handleBox = await handle.boundingBox();
     if (!handleBox) {
-      throw new Error('card drag handle has no bounding box — the drag never started');
+      throw new Error('card drag handle has no bounding box - the drag never started');
     }
 
     // Capture stable ElementHandles to source and target before the drag
@@ -115,7 +115,7 @@ export class ItemManager {
     const targetHandle = await target.elementHandle();
     const box = targetHandle ? await targetHandle.boundingBox() : null;
     if (!targetHandle || !box) {
-      throw new Error('drop target has no bounding box — nothing to drop onto');
+      throw new Error('drop target has no bounding box - nothing to drop onto');
     }
     const sourceHandle = await this.locator.elementHandle();
 
@@ -142,7 +142,7 @@ export class ItemManager {
         // independent React state, and only the latter drives the attribute.
         // The former drives `useVisibleItems` filtering, which is what
         // physically reflows the column. So we ALSO wait for the source tile
-        // to detach from the DOM — that's the unambiguous signal that the
+        // to detach from the DOM - that's the unambiguous signal that the
         // reflow has happened and any cached bbox is stale.
         await expect
           .poll(() => this._page.locator('[data-mosaic-container-state="active"]').count(), { timeout: 2000 })
@@ -155,22 +155,22 @@ export class ItemManager {
         // at the placeholder representing the requested edge. The Fragment
         // keying on item id keeps the target tile's adjacent placeholder DOM
         // node stable across reconciliation, but its `location` prop and bbox
-        // both change once the source is filtered out — measure after the
+        // both change once the source is filtered out - measure after the
         // reflow, never before.
         const placeholderHandle = await this._adjacentPlaceholder(targetHandle, edge);
         if (!placeholderHandle) {
-          throw new Error(`no ${edge} placeholder adjacent to the drop target — the drop would land unaimed`);
+          throw new Error(`no ${edge} placeholder adjacent to the drop target - the drop would land unaimed`);
         }
         const phBox = await placeholderHandle.boundingBox();
         if (!phBox) {
-          throw new Error(`${edge} placeholder has no bounding box — the drop would land unaimed`);
+          throw new Error(`${edge} placeholder has no bounding box - the drop would land unaimed`);
         }
         const aimX = phBox.x + phBox.width / 2;
         const aimY = phBox.y + Math.max(phBox.height / 2, 1);
         await this._page.mouse.move(aimX, aimY, { steps: 4 });
 
         // Some browser/CDP combinations need a follow-up nudge to push
-        // the dragOver event through — re-aim with a 1px offset and poll.
+        // the dragOver event through - re-aim with a 1px offset and poll.
         const isActive = () =>
           placeholderHandle.evaluate((el) => el.getAttribute('data-mosaic-placeholder-state') === 'active');
         if (!(await isActive())) {
@@ -202,7 +202,7 @@ export class ItemManager {
           });
         }
       } else {
-        // Legacy path: no explicit edge — rely on the offset placement and a
+        // Legacy path: no explicit edge - rely on the offset placement and a
         // small settle delay before releasing.
         await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
         await this._page.waitForTimeout(100);
@@ -233,7 +233,7 @@ export class ItemManager {
     if (!handle) {
       return null;
     }
-    // `evaluateHandle` returning `null` still produces a non-null JSHandle —
+    // `evaluateHandle` returning `null` still produces a non-null JSHandle -
     // verify the underlying element actually exists.
     const exists = await handle.evaluate((el) => el !== null);
     return exists ? handle : null;
@@ -256,7 +256,7 @@ export class ItemManager {
     const handle = this.locator.getByTestId('mosaicBoard.cardDragHandle');
     const holdBox = await holdTarget.boundingBox();
     if (!holdBox) {
-      throw new Error('auto-scroll hold target has no bounding box — the drag never started');
+      throw new Error('auto-scroll hold target has no bounding box - the drag never started');
     }
 
     // The hold position is ~20px above the footer to trigger pragmatic auto-scroll.
@@ -276,11 +276,11 @@ export class ItemManager {
       await this._page.waitForTimeout(100);
 
       if (!needsScroll) {
-        // Target is already visible — drag directly without auto-scroll.
+        // Target is already visible - drag directly without auto-scroll.
         await this._page.mouse.move(holdX, holdY, { steps: 4 });
         const dropBox = await dropTarget.boundingBox();
         if (!dropBox) {
-          throw new Error('drop target vanished after the drag started — nothing to drop onto');
+          throw new Error('drop target vanished after the drag started - nothing to drop onto');
         }
         const dropX = dropOffset.x + dropBox.x + dropBox.width / 2;
         const dropY = dropOffset.y + dropBox.y + dropBox.height / 2;
@@ -304,7 +304,7 @@ export class ItemManager {
           // Drop target has scrolled into view. Re-read box so we use current position (scroll may have moved it).
           const finalBox = await dropTarget.boundingBox();
           if (!finalBox) {
-            throw new Error('drop target vanished after scrolling into view — nothing to drop onto');
+            throw new Error('drop target vanished after scrolling into view - nothing to drop onto');
           }
 
           const dropX = dropOffset.x + finalBox.x + finalBox.width / 2;

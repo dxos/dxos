@@ -9,8 +9,8 @@ import * as Graph from './Graph.ts';
 import * as Zoom from './Zoom.ts';
 
 /**
- * The answer diagram's content, built from the scored subgraph with no layout involved: which ≲ 14
- * nodes, which ≤ 3 groups, which arrows. Several variants are produced from the same scores because
+ * The answer diagram's content, built from the scored subgraph with no layout involved: which <~ 14
+ * nodes, which <= 3 groups, which arrows. Several variants are produced from the same scores because
  * the judges, not this module, decide which reads best; the drawing stage lays each out and keeps one.
  *
  * The limits are the corpus lessons (`plugin-illustrator/docs/diagrams/ideas/README.md`): about 14
@@ -32,7 +32,7 @@ export type Variant = {
   readonly name: string;
   readonly grouping: Graph.Grouping;
   readonly nodes: number;
-  /** `semantic` drops plain imports wherever a framework relation (service, operation, …) says more. */
+  /** `semantic` drops plain imports wherever a framework relation (service, operation, ...) says more. */
   readonly edges: 'all' | 'semantic';
 };
 
@@ -95,7 +95,7 @@ export const shortLabel = (label: string): string => {
   if (trimmed.length <= MAX_LABEL && trimmed.length > 2) {
     return trimmed;
   }
-  return `${label.slice(0, MAX_LABEL - 1)}…`;
+  return `${label.slice(0, MAX_LABEL - 1)}...`;
 };
 
 const identifier = (label: string): string => label.replace(/[^A-Za-z0-9]/g, '') || 'n';
@@ -116,7 +116,7 @@ export const groupKey = (node: Graph.ScoredNode, grouping: Graph.Grouping): stri
 
 const groupLabel = (key: string, grouping: Graph.Grouping): string => {
   const text = grouping === 'directory' ? (key.split(':')[1] ?? key) : key;
-  return text.length > 24 ? `…${text.slice(-23)}` : text;
+  return text.length > 24 ? `...${text.slice(-23)}` : text;
 };
 
 /** The default variant set: the chosen grouping three ways, and one alternative grouping. */
@@ -133,7 +133,7 @@ export const variants = (chosen: Graph.Grouping): Variant[] => {
 /** One diagram variant from a scored graph. */
 export const build = (scored: Graph.Scored, variant: Variant): Compacted => {
   // The kept set, topped up from the best of the rest: a strict threshold can keep so few nodes that,
-  // once boxes without arrows are dropped, nothing is left to draw — and judges score an empty page well.
+  // once boxes without arrows are dropped, nothing is left to draw - and judges score an empty page well.
   const ranked = [...scored.nodes].sort(
     (left, right) => Number(right.kept) - Number(left.kept) || right.score - left.score,
   );

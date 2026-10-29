@@ -114,8 +114,8 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
 );
 
 /**
- * Browse the collections and records on an atproto repo (PDS) as a nested master-detail: collections →
- * records → record. Reads any repo by handle (public). Collections that a plugin has a schema mapping
+ * Browse the collections and records on an atproto repo (PDS) as a nested master-detail: collections ->
+ * records -> record. Reads any repo by handle (public). Collections that a plugin has a schema mapping
  * for are marked; their records preview as ECHO objects (readonly card surface) and can be imported.
  */
 export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
@@ -199,7 +199,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const record = records.find((entry) => entry.uri === recordUri);
 
   // Query the mapped type normally (resolving its schema) and check foreign keys in memory, rather than
-  // a foreign-key index query — an index query over a code-defined (non-space-registered) schema logs
+  // a foreign-key index query - an index query over a code-defined (non-space-registered) schema logs
   // "unable to resolve schema" and yields unresolved objects.
   const mappedObjects = useQuery(db, mappedForCollection ? Filter.type(mappedForCollection.type) : Filter.nothing());
   const alreadyImported = !!recordUri && mappedObjects.some((object) => getAtprotoUris(object).includes(recordUri));

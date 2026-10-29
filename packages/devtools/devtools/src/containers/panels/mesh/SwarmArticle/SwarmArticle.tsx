@@ -124,7 +124,7 @@ export const SwarmArticle = ({ role }: ArticleProps) => {
           connectionMap.set(connection.sessionId, connection);
 
           const stats = getStats(connection);
-          const statsDisplay = stats ? `↑ ${bytes(stats.bytesSent)} ↓ ${bytes(stats.bytesReceived)}` : '';
+          const statsDisplay = stats ? `\u2191 ${bytes(stats.bytesSent)} \u2193 ${bytes(stats.bytesReceived)}` : '';
 
           connections.push({
             id: `${swarm.id.toHex()}-${connection.sessionId.toHex()}`, // For table key

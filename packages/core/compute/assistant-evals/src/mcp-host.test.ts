@@ -71,7 +71,7 @@ const stubInvoker = () => {
 /**
  * The in-process host an eval's agent dials, exercised by the same MCP client `AiSession` uses.
  *
- * Deterministic and offline — no model, no harness — because what can break here is the transport:
+ * Deterministic and offline - no model, no harness - because what can break here is the transport:
  * effect's RPC layer answers a single request with a one-element batch, and a client that receives
  * the array lists no tools at all (see `McpServer.normalizeResponse`).
  */
@@ -101,7 +101,7 @@ describe('startMcpHost', () => {
         ]);
 
         // The handlers are what the MCP client built, so calling one drives a real request over
-        // the transport — the same path a model's tool call takes.
+        // the transport - the same path a model's tool call takes.
         const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
         // The skill first: the host refuses its operations without the token loadSkill hands out.
         yield* Stream.runDrain(
@@ -178,7 +178,7 @@ describe('startMcpHost', () => {
           }),
         );
 
-        // Three probes at two timed iterations each, and the warm-up excluded — the shape of the
+        // Three probes at two timed iterations each, and the warm-up excluded - the shape of the
         // report is the contract; the numbers themselves are whatever the machine gives.
         expect(report.samples.length).to.equal(6);
         expect(report.stats['*'].errors).to.equal(0);

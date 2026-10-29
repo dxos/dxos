@@ -44,7 +44,7 @@ const operationLayer = Layer.succeed(Operation.Service, {
  * (`--config`, `--profile`); everything else resolves the same way, including `--space-id`
  * defaulting to the first available space.
  *
- * Returns `undefined` until something contributes commands — there is no shell to offer yet.
+ * Returns `undefined` until something contributes commands - there is no shell to offer yet.
  */
 export const useCliApp = (client: Client) => {
   const manager = PluginManagerProvider.usePluginManager();
@@ -64,7 +64,7 @@ export const useCliApp = (client: Client) => {
     }
 
     const command = Command.make('dx').pipe(
-      // Shared so they parse anywhere in the line — a plain command config is only read when `dx`
+      // Shared so they parse anywhere in the line - a plain command config is only read when `dx`
       // itself is the leaf.
       Command.withSharedFlags({
         json: Options.Boolean('json').pipe(Options.withDefault(false), Options.withDescription('JSON output.')),

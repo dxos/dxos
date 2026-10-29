@@ -38,7 +38,7 @@ export const getEdgeAuthHeader = async (identity: Identity.EdgeIdentity, baseUrl
 /**
  * Returns a `fetch` that injects the edge `Authorization` header on every request. This is used as the
  * *base* fetch for the x402 payment wrapper so that, on the 402 retry, both `Authorization` (edge) and
- * `X-PAYMENT` (x402) headers are present — they are distinct headers and do not conflict.
+ * `X-PAYMENT` (x402) headers are present - they are distinct headers and do not conflict.
  */
 export const createEdgeAuthedFetch = (identity: Identity.EdgeIdentity, baseUrl: string): typeof globalThis.fetch => {
   let authHeader: string | undefined;
@@ -46,7 +46,7 @@ export const createEdgeAuthedFetch = (identity: Identity.EdgeIdentity, baseUrl: 
     authHeader ??= await getEdgeAuthHeader(identity, baseUrl);
     // Carry x402's payment header from the retry (v2 uses `payment-signature`) plus Authorization.
     // @x402/fetch builds the retry Request by copying headers off the 402 response, so skip the
-    // response-only CORS headers (access-control-*) it drags in — they aren't valid request headers
+    // response-only CORS headers (access-control-*) it drags in - they aren't valid request headers
     // and would break the browser preflight.
     const headers = new Headers();
     const carry = (source?: HeadersInit): void => {

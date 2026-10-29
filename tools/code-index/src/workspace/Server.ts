@@ -34,7 +34,7 @@ import * as Vite from './Vite.ts';
 /**
  * The default command: one HTTP listener serving the RPC endpoint and, on everything else, Vite in
  * middleware mode. Vite runs *inside this process* through its programmatic API, so the web UI is
- * transformed on demand from the same working tree the indexer reads — there is no bundle to
+ * transformed on demand from the same working tree the indexer reads - there is no bundle to
  * rebuild between an edit and a reload, and nothing to install beyond the workspace.
  */
 

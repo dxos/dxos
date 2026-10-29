@@ -10,7 +10,7 @@ import { Obj, Type } from '@dxos/echo';
 
 /**
  * Namespace prefix for the identity keys the engine derives from `Obj.Meta.keys`, so every type
- * gets foreign-key identity (Google `resourceName`, Linear id, …) without type-specific code.
+ * gets foreign-key identity (Google `resourceName`, Linear id, ...) without type-specific code.
  */
 export const FOREIGN_KEY_PREFIX = 'fk';
 
@@ -18,7 +18,7 @@ export const FOREIGN_KEY_PREFIX = 'fk';
  * The single identity rule for a type: which normalized keys an object carries, how to derive the
  * same keys from a lookup input, and how to fold one object's fields into another.
  *
- * This is the identity half of the extractor pattern — an extractor's create-vs-merge decision and
+ * This is the identity half of the extractor pattern - an extractor's create-vs-merge decision and
  * an after-the-fact duplicate scan are the same question ("does this identity key already exist?")
  * and must not answer it differently. {@link Resolver}, `getOrCreate` and `findDuplicates` all read
  * their answer from here.
@@ -26,7 +26,7 @@ export const FOREIGN_KEY_PREFIX = 'fk';
 export interface IdentitySpec<S extends Type.AnyObj = Type.AnyObj> {
   readonly type: S;
   /**
-   * Identity keys carried by an object — normalized and namespaced (e.g. `email:alice@dxos.org`).
+   * Identity keys carried by an object - normalized and namespaced (e.g. `email:alice@dxos.org`).
    * Two objects sharing ANY key are the same entity. Foreign keys are added by the engine.
    */
   keys(object: Type.InstanceType<S>): readonly string[];
@@ -38,7 +38,7 @@ export interface IdentitySpec<S extends Type.AnyObj = Type.AnyObj> {
   /**
    * Folds `source`'s fields into `target`, run inside `Obj.update`. Owns array unioning and
    * scalar precedence for the type; the engine never guesses at field semantics. `target` is
-   * authoritative — fill gaps and union collections, never overwrite a set scalar.
+   * authoritative - fill gaps and union collections, never overwrite a set scalar.
    */
   merge(target: Obj.Mutable<Type.InstanceType<S>>, source: Type.InstanceType<S>): void;
   /**

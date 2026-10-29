@@ -17,7 +17,7 @@ import { SpaceSchema } from '#types';
  * cross-space ordering, the default-space designation, and the space's display name (which used to
  * come from a translation because the space had no name of its own).
  *
- * Idempotent — every step is a no-op once the settings space already carries the value — so it is
+ * Idempotent - every step is a no-op once the settings space already carries the value - so it is
  * safe to re-run when a legacy space is discovered after the settings space, or migrated later.
  */
 export const migrateToSettingsSpace = Effect.fnUntraced(function* ({
@@ -112,7 +112,7 @@ export const isSpacesOrder = (object: Obj.Unknown): boolean =>
  * the losing copy.
  *
  * @returns Whether the duplicate's ordering is now carried by the canonical space. False means the
- * merge could not run (e.g. the canonical is closing) — the caller must keep the duplicate, since
+ * merge could not run (e.g. the canonical is closing) - the caller must keep the duplicate, since
  * deleting it would destroy the only copy of its ordering.
  */
 export const mergeSpacesOrder = Effect.fnUntraced(function* (canonical: Space, duplicate: Space) {

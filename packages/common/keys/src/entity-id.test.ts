@@ -63,7 +63,7 @@ describe('EntityId', () => {
     });
 
     test('seed-component separator avoids collisions across adjacent inputs', ({ expect }) => {
-      // ('ab', 'c') vs ('a', 'bc') must hash differently — guards against naive
+      // ('ab', 'c') vs ('a', 'bc') must hash differently - guards against naive
       // concatenation that would conflate adjacent string seeds.
       const left = EntityId.deterministic('ab', 'c');
       const right = EntityId.deterministic('a', 'bc');

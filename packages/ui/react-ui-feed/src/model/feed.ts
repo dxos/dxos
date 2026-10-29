@@ -17,8 +17,8 @@ import {
 /**
  * One position navigation can land on (SPEC: Stop).
  *
- * Produced by a pluggable policy over the model and consumed identically by every driver —
- * toolbar, arrow keys, outliner, minimap — which is what keeps the rails and the keymap from
+ * Produced by a pluggable policy over the model and consumed identically by every driver -
+ * toolbar, arrow keys, outliner, minimap - which is what keeps the rails and the keymap from
  * growing parallel wiring.
  */
 export type Stop = {
@@ -41,7 +41,7 @@ export type FeedModelOptions = {
 
 /**
  * The native case, not an add-on (SPEC: FeedModel): a ListModel of messages carrying the feed's
- * own semantics — the stops policy, the streaming tail, and iteration. The list consumes this and
+ * own semantics - the stops policy, the streaming tail, and iteration. The list consumes this and
  * nothing else; `hits`, `isAnchor` and `streamingId` all left the props API and live here or in
  * the decoration provider.
  *
@@ -97,7 +97,7 @@ export class FeedModel extends ListModel<Message.Message> {
    * The positions navigation can land on, under the current policy.
    *
    * Recomputed on demand rather than cached: a policy is a predicate over the model, and the model
-   * knows when it changed — callers that want reactivity derive from `rowsAtom`.
+   * knows when it changed - callers that want reactivity derive from `rowsAtom`.
    */
   stops(): Stop[] {
     const predicate = this.#stops === 'message' ? () => true : this.#stops === 'prompt' ? isPrompt : this.#stops;
@@ -115,7 +115,7 @@ export class FeedModel extends ListModel<Message.Message> {
   /**
    * The window reached the start: ask the source for history.
    *
-   * The model owns iteration (SPEC F-7.2) — the pages arrive as a prepend, which the virtualizer
+   * The model owns iteration (SPEC F-7.2) - the pages arrive as a prepend, which the virtualizer
    * is told about, so nothing on screen moves (F-1.1). Serialized, because edges are reached once
    * per frame while the reader sits on them.
    */

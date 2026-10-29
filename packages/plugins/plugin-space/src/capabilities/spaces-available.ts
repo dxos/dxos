@@ -102,7 +102,7 @@ export default Capability.makeModule(
     const haloIdentity = yield* ClientCapabilities.IdentityService;
 
     //
-    // Settings space bootstrap — one-shot, deferred until there is something to bootstrap from.
+    // Settings space bootstrap - one-shot, deferred until there is something to bootstrap from.
     //
 
     // Interrupted in cleanup so they cannot touch the db after client.destroy() closes the repo.
@@ -134,7 +134,7 @@ export default Capability.makeModule(
     });
 
     // Converges duplicate settings spaces; self-gated (no-ops without tagged spaces), so it does
-    // not wait on the bootstrap — welding it to that fiber's fate would silently disable healing
+    // not wait on the bootstrap - welding it to that fiber's fate would silently disable healing
     // whenever bootstrap stalls or dies.
     const healFiber = Effect.runFork(
       runSettingsSpaceHealing(client).pipe(catchNonInterrupt('settings space healing stopped')),
@@ -151,7 +151,7 @@ export default Capability.makeModule(
     subscriptions.add(() => spacesSub.unsubscribe());
 
     //
-    // Space subscriptions — set up immediately, do not depend on default space.
+    // Space subscriptions - set up immediately, do not depend on default space.
     //
 
     // Cache space names.

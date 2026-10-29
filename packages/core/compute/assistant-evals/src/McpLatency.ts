@@ -10,7 +10,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 /** One timed round trip: the client-observed wall clock of a single MCP request. */
 export type Sample = {
   readonly tool: string;
-  /** What the sample is grouped under — the tool, or `invokeOperation:<key>` for an operation. */
+  /** What the sample is grouped under - the tool, or `invokeOperation:<key>` for an operation. */
   readonly label: string;
   readonly millis: number;
   readonly isError: boolean;
@@ -33,7 +33,7 @@ export type Report = {
   /** Time to `initialize` plus the first `tools/list`, which no per-tool figure should carry. */
   readonly connectMillis: number;
   readonly samples: readonly Sample[];
-  /** Per label — one row per tool, and one per operation behind `invokeOperation` — plus `*`. */
+  /** Per label - one row per tool, and one per operation behind `invokeOperation` - plus `*`. */
   readonly stats: Record<string, Stats>;
 };
 
@@ -45,7 +45,7 @@ export type Probe = {
    * Overrides the row this probe's samples are grouped under.
    *
    * Rarely needed: `invokeOperation` is keyed by the operation it invokes automatically, which is
-   * the breakdown that matters — every operation goes through the one tool, so a per-tool figure
+   * the breakdown that matters - every operation goes through the one tool, so a per-tool figure
    * for it is an average over verbs that have nothing in common.
    */
   readonly label?: string;
@@ -76,7 +76,7 @@ export type ProbeOptions = {
    * Untimed repetitions run first.
    *
    * The first call of a run pays for a cold isolate and a warm-up of whatever the worker lazily
-   * builds, which is real but is not the latency of a tool call — a run that folded it in would
+   * builds, which is real but is not the latency of a tool call - a run that folded it in would
    * report a p95 set by the sample count rather than by the surface.
    */
   readonly warmup?: number;
@@ -121,7 +121,7 @@ const summarize = (samples: readonly Sample[]): Record<string, Stats> => {
  *
  * Client-observed rather than server-side, because that is the only figure every target can produce:
  * a deployed worker's own handling time is not visible from here, and a number measured one way for
- * `local` and another way for `prod` cannot be compared — which is the whole reason to have targets.
+ * `local` and another way for `prod` cannot be compared - which is the whole reason to have targets.
  *
  * One connection for the whole probe: reconnecting per call would measure the OAuth handshake and
  * TLS setup once per sample instead of once per run.

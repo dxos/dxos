@@ -93,9 +93,9 @@ const CachedStory = () => {
  *
  * Test:
  * 1. Wait for the planet to appear; the readout still shows `hits=0 misses=0` (it only re-renders on click).
- * 2. Click `Unmount`: the readout shows `misses=1` — the first mount generated one planet.
+ * 2. Click `Unmount`: the readout shows `misses=1` - the first mount generated one planet.
  * 3. Click `Mount`: the planet appears immediately, with no multi-second stall.
- * 4. Click `Unmount` again: the readout shows `hits=1 misses=1` — the remount generated nothing.
+ * 4. Click `Unmount` again: the readout shows `hits=1 misses=1` - the remount generated nothing.
  */
 export const CachedManual: Story = {
   render: () => <CachedStory />,

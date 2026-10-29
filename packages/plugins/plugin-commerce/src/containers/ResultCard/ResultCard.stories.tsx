@@ -45,7 +45,7 @@ const seedSpace = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.waitUntilReady());
 
     const provider = space.db.add(makeSampleProvider());
-    // The second sample is starred — exercises the star toggle's filled state.
+    // The second sample is starred - exercises the star toggle's filled state.
     space.db.add(makeSampleResults(provider)[1]);
     yield* Effect.promise(() => space.db.flush());
   });

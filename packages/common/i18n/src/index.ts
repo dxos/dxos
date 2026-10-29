@@ -22,7 +22,7 @@ void i18n.init({
   resources: {
     [initialLng]: {
       [initialNs]: {
-        'loading translations': 'Loading translations…',
+        'loading translations': 'Loading translations...',
       },
     },
   },

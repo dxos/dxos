@@ -20,7 +20,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const spaceId = Obj.getDatabase(agent)?.spaceId;
 
   // Subscriptions live on the compiled automation, so a toggle recompiles them (per-category
-  // reconcile — the schedule routine is untouched). `useSpaceCallback` takes no arguments, so the
+  // reconcile - the schedule routine is untouched). `useSpaceCallback` takes no arguments, so the
   // next set is staged on a ref.
   const pendingSubscriptions = useRef<Ref.Ref<Obj.Unknown>[]>([]);
   const syncAutomation = Hooks.useSpaceCallback(

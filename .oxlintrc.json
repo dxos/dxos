@@ -58,6 +58,8 @@
     "@dxos/eslint-plugin-rules/folder-barrel-imports": "off",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
+    // One character above U+00FF makes V8 hold the whole module at two bytes per character.
+    "@dxos/eslint-plugin-rules/latin1-source": "error",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
     "@dxos/eslint-plugin-rules/no-dead-tailwind-logical": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
@@ -240,6 +242,23 @@
     }
   },
   "overrides": [
+    {
+      // Outside production a changed string value costs nothing, so symbols take ASCII even where compared. Tests
+      // follow the package they test, whose output they match.
+      "files": [
+        "**/scripts/**",
+        "**/bench/**",
+        "**/autocue/**",
+        ".agents/**",
+        "tools/**",
+        "packages/e2e/**",
+        "packages/stories/**",
+        "packages/experimental/**"
+      ],
+      "rules": {
+        "@dxos/eslint-plugin-rules/latin1-source": ["error", { "loose": true }]
+      }
+    },
     {
       // Every folder is private; react-ui-canvas imports across folders only through barrels. Its headless entry
       // imports single files on purpose, to keep React out of its bundle.

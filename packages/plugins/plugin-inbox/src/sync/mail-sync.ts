@@ -33,11 +33,11 @@ import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, t
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
  * service ({@link MailSyncProvider}), so each operation is this one effect with its own provider layer
  * provided (see the gmail/jmap handlers). Owns everything not provider-specific: binding/mailbox/feed
- * loads, window resolution, the dedup→cap→process→commit pipeline, progress monitor, cancellation, stats.
+ * loads, window resolution, the dedup->cap->process->commit pipeline, progress monitor, cancellation, stats.
  */
 
 /**
- * Progress-registry key for a mailbox's mail-sync monitor — the mailbox URI plus `#sync` so distinct
+ * Progress-registry key for a mailbox's mail-sync monitor - the mailbox URI plus `#sync` so distinct
  * monitor types (e.g. `#topics`) can coexist. `MailboxArticle` subscribes to show the sync meter.
  */
 // Absolute form, matching the other pipeline keys: the producer (this module, running in an
@@ -62,7 +62,7 @@ export type MailSyncSourceOptions = {
   readonly windows: Cursor.Windows;
   /** User search filter from the binding options (provider query DSL). */
   readonly filter?: string;
-  /** The mailbox's tag index — a provider's reconcile branch reads it to diff remote vs local tags. */
+  /** The mailbox's tag index - a provider's reconcile branch reads it to diff remote vs local tags. */
   readonly tagIndex: TagIndex.TagIndex;
   /** Called with each enumeration page/chunk's id count, to accumulate the retrieval total. */
   readonly onEnumerated: (count: number) => void;
@@ -97,23 +97,23 @@ export type MailSyncItem = {
 };
 
 /**
- * A `retag`/`delete` {@link EmailStage.Change} minus its `entityId` — the shape a provider produces
- * before {@link reconcileToChanges} resolves `foreignId` → `entityId`.
+ * A `retag`/`delete` {@link EmailStage.Change} minus its `entityId` - the shape a provider produces
+ * before {@link reconcileToChanges} resolves `foreignId` -> `entityId`.
  */
 export type ReconcileItem = Omit<EmailStage.Retag, 'entityId'> | Omit<EmailStage.Delete, 'entityId'>;
 
 /** The run's two raw source streams, produced by {@link MailSyncProviderService.prepare} once ready. */
 export type MailSyncStreams = {
   /**
-   * Raw new-message candidates the provider's change feed listed (an incremental delta's created ids →
-   * `skipCommitted` → fetch), or absent when this run lists additions by date window only. The harness
+   * Raw new-message candidates the provider's change feed listed (an incremental delta's created ids ->
+   * `skipCommitted` -> fetch), or absent when this run lists additions by date window only. The harness
    * reads all of them before {@link windowAdditions} and marks them {@link MailSyncItem.fromDelta}, since
    * a window item taken is its proof that no delta item was cut.
    */
   readonly deltaAdditions?: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
   /**
-   * Raw new-message candidates the provider's date windows listed (→ `skipCommitted` → fetch). Like the
-   * delta's, not yet deduped, capped, or decoded — the harness applies `dedupStage` → `boundStage` →
+   * Raw new-message candidates the provider's date windows listed (-> `skipCommitted` -> fetch). Like the
+   * delta's, not yet deduped, capped, or decoded - the harness applies `dedupStage` -> `boundStage` ->
    * decode, so those generic stages stay visible in its pipeline rather than hidden in the provider.
    */
   readonly windowAdditions: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
@@ -128,8 +128,8 @@ export type MailSyncStreams = {
 /** The run's change source, produced by {@link MailSyncProviderService.prepare} once ready. */
 export type MailSyncSource = {
   /**
-   * Builds the run's two raw streams. The provider owns only what's provider-specific — the
-   * forward/backward windows, `skipCommitted`, fetch, and (for `reconciles`) the resolution — while the
+   * Builds the run's two raw streams. The provider owns only what's provider-specific - the
+   * forward/backward windows, `skipCommitted`, fetch, and (for `reconciles`) the resolution - while the
    * harness owns the generic head (dedup/cap/decode), the merge, and the shared email tail, so the full
    * stage list is flat and visible there. Requires only `Cursor.Service`; the provider's API is captured.
    */
@@ -144,7 +144,7 @@ export type MailSyncSource = {
   readonly nextToken?: () => string | undefined;
   /**
    * Whether the provider has more delta beyond the chunk fetched this run. When true the harness requests
-   * a durable `runAgain()` so reconciliation is bounded per run and resumed from the advanced token —
+   * a durable `runAgain()` so reconciliation is bounded per run and resumed from the advanced token -
    * the same budget/re-run treatment additions already get.
    */
   readonly hasMoreDelta?: () => boolean;
@@ -155,7 +155,7 @@ export type MailSyncSource = {
    */
   readonly reconcileForeignIds?: readonly string[];
   /**
-   * Tag uri → provider label id for every tag this provider can write — its label map inverted. Its
+   * Tag uri -> provider label id for every tag this provider can write - its label map inverted. Its
    * keys are the eligible set for tag reconciliation, so a tag absent here is invisible to the push
    * (which is what keeps user tags from being pushed as new provider labels).
    *
@@ -170,7 +170,7 @@ export type MailSyncSource = {
  */
 export type TagPushResult = {
   /**
-   * Ops that reached a terminal state — applied, or permanently rejected (message deleted, label
+   * Ops that reached a terminal state - applied, or permanently rejected (message deleted, label
    * gone, insufficient scope). Safe to advance past: no retry can change a permanent rejection, and
    * refusing to advance would block the base forever.
    */
@@ -188,7 +188,7 @@ export type MailSyncPreparation = {
   readonly now: Date;
   /** The cursor's current delta-resume token, or undefined on the first tick / after staleness. */
   readonly token?: string;
-  /** Per-run budget — the provider bounds its delta chunk (JMAP `maxChanges`, Gmail `maxResults`) to it. */
+  /** Per-run budget - the provider bounds its delta chunk (JMAP `maxChanges`, Gmail `maxResults`) to it. */
   readonly maxMessages: number;
 };
 
@@ -196,7 +196,7 @@ export type MailSyncPreparation = {
 export interface MailSyncProviderService {
   /** Provider tag for spans and logs (`gmail`, `jmap`); the run's span is `<name>-sync`. */
   readonly name: string;
-  /** The provider's streaming-pipeline tuning (commit page size, per-run cap, …). */
+  /** The provider's streaming-pipeline tuning (commit page size, per-run cap, ...). */
   readonly config: SyncStreamConfig.SyncStreamConfig;
   /** Foreign-key source stamped on committed items (dedup key namespace). */
   readonly foreignKeySource: string;
@@ -213,7 +213,7 @@ export interface MailSyncProviderService {
    *
    * Reports per-op outcomes rather than succeeding or failing as a whole: the harness decides what
    * each outcome means for the reconciliation base, and only a run with nothing `pending` may advance
-   * it. Retry is between runs — never a loop inside this call, which owns no backoff state.
+   * it. Retry is between runs - never a loop inside this call, which owns no backoff state.
    */
   readonly pushTags?: (ops: readonly TagPushOp[]) => Effect.Effect<TagPushResult, MailSyncError, never>;
 }
@@ -272,13 +272,13 @@ const NO_TAG_PUSH: TagPushOutcome = { nextHeads: undefined, pending: [] };
 
 /**
  * Messages per {@link resolveForeignIds} query. Each match is returned in full (bodies included), so an
- * unbounded id list — an additive reconcile over a whole mailbox — exceeds the 32 MiB RPC cap and the
+ * unbounded id list - an additive reconcile over a whole mailbox - exceeds the 32 MiB RPC cap and the
  * 128 MB isolate on EDGE.
  */
 const RESOLVE_FOREIGN_IDS_CHUNK = 100;
 
 /**
- * Resolves message ids to provider foreign ids for messages the run did not already touch — a user
+ * Resolves message ids to provider foreign ids for messages the run did not already touch - a user
  * starring a message synced weeks ago. Bounded by the push diff, not the feed.
  */
 const resolveForeignIds = Effect.fn('mail-sync.resolveForeignIds')(function* (
@@ -302,11 +302,11 @@ const resolveForeignIds = Effect.fn('mail-sync.resolveForeignIds')(function* (
 });
 
 /**
- * The local → provider half of tag sync: diff the tag index against the base recorded at the last
+ * The local -> provider half of tag sync: diff the tag index against the base recorded at the last
  * completed run, and apply what changed locally at the provider.
  *
  * Returns the heads to persist as the next base and any ops that must be retried. Never fails the
- * run — a provider with no write path, no bindings, or an unreadable base degrades to pull-only.
+ * run - a provider with no write path, no bindings, or an unreadable base degrades to pull-only.
  */
 const pushLocalTags = Effect.fn('mail-sync.pushTags')(function* ({
   provider,
@@ -330,7 +330,7 @@ const pushLocalTags = Effect.fn('mail-sync.pushTags')(function* ({
 
   const eligible = new Set(bindings.keys());
   const savedHeads = Cursor.readTagHeads(binding);
-  // Captured here, between the pull's commit and the push — see the ordering rule in TAG-SYNC.md.
+  // Captured here, between the pull's commit and the push - see the ordering rule in TAG-SYNC.md.
   const nextHeads = Obj.version(tagIndex).automergeHeads;
   const local = tagsFromIndex(tagIndex.index ?? {}, eligible);
 
@@ -338,13 +338,13 @@ const pushLocalTags = Effect.fn('mail-sync.pushTags')(function* ({
   //
   // A genuinely NEW binding (no heads, no watermark) has no evidence its local tags were ever meant
   // for the provider, so it records a base and pushes nothing. But a binding that has been syncing
-  // for weeks and is only now gaining tag sync ALSO has no heads — and treating that as a first sync
+  // for weeks and is only now gaining tag sync ALSO has no heads - and treating that as a first sync
   // strands every tag the user already applied: the first run absorbs them into the base, after which
-  // `local ⊖ base` is empty forever and they can never reach the provider. Diagnosed live against a
+  // `local (-) base` is empty forever and they can never reach the provider. Diagnosed live against a
   // real mailbox whose four existing stars had become permanently unpushable exactly this way.
   //
-  // So an existing binding gaining tag sync takes the additive path instead — push what the remote
-  // lacks, remove nothing — which is the same treatment as heads that no longer resolve.
+  // So an existing binding gaining tag sync takes the additive path instead - push what the remote
+  // lacks, remove nothing - which is the same treatment as heads that no longer resolve.
   let base: ReturnType<typeof tagsFromIndex> | undefined;
   const newBinding = Cursor.parseKey(binding.max) === 0 && Cursor.readToken(binding) === undefined;
   let firstSync = savedHeads === undefined && newBinding;
@@ -481,9 +481,9 @@ export const runMailSync = (
 
     // A run with neither window resolves to no enumeration at all: the cursor already spans the full
     // horizon (nothing older to backfill) and there is nothing newer than `maxKey`. On edge this is the
-    // most common cause of a `{ newMessages: 0 }` despite mail existing — surface it explicitly.
+    // most common cause of a `{ newMessages: 0 }` despite mail existing - surface it explicitly.
     if (!windows.forward && !windows.backward) {
-      log.warn('mail sync: no windows to scan — cursor already covers the full range', {
+      log.warn('mail sync: no windows to scan - cursor already covers the full range', {
         provider: provider.name,
         mailbox: Obj.getURI(mailbox),
         maxKey,
@@ -502,10 +502,10 @@ export const runMailSync = (
     const draftPool = yield* EmailStage.queryDraftPool(mailbox);
 
     // The delta-resume token (undefined on the first tick / after staleness): drives the provider's
-    // incremental fast-path, and gates building the foreignId→EntityId map (only reconcile runs need it).
+    // incremental fast-path, and gates building the foreignId->EntityId map (only reconcile runs need it).
     const token = Cursor.readToken(binding);
 
-    // Session/target discovery + the provider's label/folder→tag map; undefined skips the run.
+    // Session/target discovery + the provider's label/folder->tag map; undefined skips the run.
     const source = yield* provider.prepare({ db, binding, mailbox, now, token, maxMessages });
     if (!source) {
       log.warn('mail sync skipped: no source', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
@@ -515,7 +515,7 @@ export const runMailSync = (
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Fires on run cancellation (local terminate or EDGE cancel) — the pipeline observes it below.
+    // Fires on run cancellation (local terminate or EDGE cancel) - the pipeline observes it below.
     const signal = yield* Cancellation.signal;
 
     // Live sync status via trace `status.update` events. The progress trace sink projects these into
@@ -576,8 +576,8 @@ export const runMailSync = (
     const senders = new Set<string>();
     const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
 
-    // Per-run funnel counts, each stage narrower than the last: `taken` (post-dedup candidates — the
-    // cap gauge) → `processed` (post-decode/map) → `stats.newMessages` (committed). `extent` is the
+    // Per-run funnel counts, each stage narrower than the last: `taken` (post-dedup candidates - the
+    // cap gauge) -> `processed` (post-decode/map) -> `stats.newMessages` (committed). `extent` is the
     // observed key range, folded into the cursor at run end so a run that commits nothing still advances.
     let taken = 0;
     let outOfTime = false;
@@ -586,8 +586,8 @@ export const runMailSync = (
     const extent: Cursor.Extent = { maxKey: 0, minKey: 0 };
     // Stats PUBLISHING is disabled: it wrote each run's snapshot to the `AppCapabilities.StatsPanel`
     // capability, which isn't available on edge compute. Collection (below, via `collectStats`) is kept.
-    // TODO(wittjosiah): Publish stats through the trace feed instead — the way progress is being made
-    //   isomorphic across host/edge in #12225 — then re-enable the publish.
+    // TODO(wittjosiah): Publish stats through the trace feed instead - the way progress is being made
+    //   isomorphic across host/edge in #12225 - then re-enable the publish.
     // const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
     //   store.compartment(meta.profile.key),
     // );
@@ -621,7 +621,7 @@ export const runMailSync = (
 
     // Pass-through stage: collects per-message telemetry into the run counters. Publishing a live
     // snapshot from these is disabled (see the TODO above) until it goes through the trace feed.
-    // Records the provider's reported tag state as changes stream past — the delta is consumed by the
+    // Records the provider's reported tag state as changes stream past - the delta is consumed by the
     // pipeline, so it cannot be asked for after the fact. See `tag-push.ts`.
     const remoteObserver = createRemoteObserver();
     const observeTags = Stage.map('observe-tags', (change: EmailStage.Change) =>
@@ -685,10 +685,10 @@ export const runMailSync = (
         ),
       );
 
-    // The provider yields two raw streams; the harness owns everything generic. The add-only head —
+    // The provider yields two raw streams; the harness owns everything generic. The add-only head -
     // dedup on foreignId/key, then cap at `maxMessages` (counting survivors into `taken`, which tells a
-    // truncated run → re-run from an exhausted one → complete backfill), then the provider decode into an
-    // `insert` Change — is flat here rather than hidden in the provider.
+    // truncated run -> re-run from an exhausted one -> complete backfill), then the provider decode into an
+    // `insert` Change - is flat here rather than hidden in the provider.
     // While the delta has more chunks the backward window waits, so a message imported with an old date
     // reaches the delta before the backfill can list it by date (only the delta's copy is deduped by id).
     const deltaBehind = source.hasMoreDelta?.() ?? false;
@@ -748,11 +748,11 @@ export const runMailSync = (
       Stage.map('decode', (item: MailSyncItem) => item.process),
     );
 
-    // Additions and reconciles converge into the shared email tail → single commit. `dedup`/`bound`/
+    // Additions and reconciles converge into the shared email tail -> single commit. `dedup`/`bound`/
     // `decode` are add-only (a retag targets an already-committed message), so they run before the merge.
     yield* Stream.merge(inserts, reconciles).pipe(
       EmailStage.processAttachments(),
-      // TODO(wittjosiah): Not compatible with edge compute — reaches `Capability.Service`
+      // TODO(wittjosiah): Not compatible with edge compute - reaches `Capability.Service`
       //   (`InboxCapabilities.ObjectExtractor`) and invokes `Operation.ExtractMessage`, neither of
       //   which is available off-host. Factor on-arrival extraction into a separate pipeline that runs
       //   where those services exist, rather than inline in the sync.
@@ -791,7 +791,7 @@ export const runMailSync = (
       ),
       Pipeline.abortWith(
         signal,
-        // `abortWith` interrupts, so nothing below the pipeline runs — the terminal status must be
+        // `abortWith` interrupts, so nothing below the pipeline runs - the terminal status must be
         // emitted here or the meter's key stays suppressed for every later run.
         Effect.sync(() => {
           log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
@@ -800,8 +800,8 @@ export const runMailSync = (
       ),
       Effect.tapError((error) =>
         Effect.sync(() => {
-          // Log the raw error; the meter shows only a short reason (the full exception — provider
-          // errors, auth tokens — must not reach the UI).
+          // Log the raw error; the meter shows only a short reason (the full exception - provider
+          // errors, auth tokens - must not reach the UI).
           log.warn('mail sync failed', { provider: provider.name, error });
           reportStatus({ message: Progress.STATUS_FAILED });
         }),
@@ -809,16 +809,16 @@ export const runMailSync = (
     );
 
     // Flush indexes once at end of run so cross-run dedup / contact resolution observe this run's writes
-    // (per-page commits no longer flush — see `Cursor.commit`).
+    // (per-page commits no longer flush - see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
 
-    // Local → provider tag reconciliation. Runs AFTER the pull has committed and BEFORE the sync state
+    // Local -> provider tag reconciliation. Runs AFTER the pull has committed and BEFORE the sync state
     // is persisted: the heads captured here already contain this run's pulled tags (so they are not
     // re-pushed next run) while anything the user does after this instant belongs to the next run (so
     // it is not silently absorbed). See `docs/TAG-SYNC.md` §"Ordering within a run".
     //
     // Defects are contained here rather than allowed to fail the run. This phase sits OUTSIDE the
-    // pipeline's `tapError`, so an escaping failure would end the run with no terminal status at all —
+    // pipeline's `tapError`, so an escaping failure would end the run with no terminal status at all -
     // leaving the progress key live and the mailbox's Sync button disabled until the user navigates
     // away. The pull has already committed by this point, so losing the push is a degradation; losing
     // the run's completion signal is a visible break.
@@ -839,10 +839,10 @@ export const runMailSync = (
     );
 
     // Full funnel, each stage narrower than the last, so a zero result on a completed run can be
-    // attributed: `enumerated` + `estimated` 0 → empty windows / provider returned no ids; `taken` 0
-    // with either > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
-    // `taken` > 0 → every candidate dropped in decode/map (no body, filtered sender, unmappable);
-    // `newMessages` 0 with `processed` > 0 → commit dropped them (e.g. draft reconciliation).
+    // attributed: `enumerated` + `estimated` 0 -> empty windows / provider returned no ids; `taken` 0
+    // with either > 0 -> everything dedup-dropped (cursor already has these); `processed` 0 with
+    // `taken` > 0 -> every candidate dropped in decode/map (no body, filtered sender, unmappable);
+    // `newMessages` 0 with `processed` > 0 -> commit dropped them (e.g. draft reconciliation).
     log.info('mail sync funnel', {
       provider: provider.name,
       mailbox: Obj.getURI(mailbox),
@@ -860,7 +860,7 @@ export const runMailSync = (
       extent,
     });
 
-    // Final stats publish (disabled — see the TODO above) recorded the committed `newMessages` count and
+    // Final stats publish (disabled - see the TODO above) recorded the committed `newMessages` count and
     // the run's end time / duration after the last mid-stream snapshot.
     // finishedMs = Date.now();
     // finishedAt = new Date(finishedMs).toISOString();
@@ -869,7 +869,7 @@ export const runMailSync = (
     reportStatus({ message: Progress.STATUS_COMPLETE });
 
     // Fold the run's observed key extent so the window advances even if every scanned message was
-    // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
+    // dedup-dropped (e.g. a crash orphaned feed appends) - prevents an identical re-scan / infinite re-run.
     Cursor.extendRange(binding, extent);
 
     // Running out of time is a cap like any other: state stays put and the next run resumes the window.
@@ -893,7 +893,7 @@ export const runMailSync = (
     const deltaChanged = deltaHandled.size !== deltaHandledAtStart;
     if (tagPush.pending.length === 0) {
       // Heads advance on capped runs too: a backfill caps every run, and without a base each run's
-      // additive reconcile re-pushes — and loads in full — every message synced so far until the
+      // additive reconcile re-pushes - and loads in full - every message synced so far until the
       // isolate OOMs. Heads ahead of the token only re-read a delta the base already holds (see
       // TAG-SYNC.md for the one concurrent-edit case this does not cover).
       //
@@ -919,7 +919,7 @@ export const runMailSync = (
       Cursor.writeSyncState(binding, { deltaIds: [...deltaHandled] });
     }
     if (capped || hasMoreDelta || tagPush.pending.length > 0) {
-      // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
+      // More to sync - either additions capped, or the delta had more chunks. A durable re-run (rather
       // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
       // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
       return yield* Operation.runAgain().pipe(Effect.orDie);

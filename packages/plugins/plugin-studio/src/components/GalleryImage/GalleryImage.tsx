@@ -12,14 +12,14 @@ import { mx } from '@dxos/ui-theme';
 export type GalleryImageProps = {
   /** Resolved media `src` (a remote URL, or a `data:`/`blob:` URL for a file). */
   src?: string;
-  /** Mime of the source — selects `<video>` vs `<img>`. */
+  /** Mime of the source - selects `<video>` vs `<img>`. */
   contentType?: string;
   alt?: string;
   classNames?: string;
 };
 
 /**
- * A single media tile rendered as a Card poster. Presentation-only — source already resolved. The
+ * A single media tile rendered as a Card poster. Presentation-only - source already resolved. The
  * media box always reserves a 16:9 aspect ratio (so the tile has height before/without a load), and
  * `video/*` sources render as a muted `<video>` first-frame poster rather than a broken `<img>`.
  */

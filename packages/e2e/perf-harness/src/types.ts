@@ -11,10 +11,10 @@
  * a per-frame screencast costs an order of magnitude on a render-heavy stage. So the
  * memory-authoritative run cannot be the profiled one, and the two modes' timings never mix.
  *
- * - `measure`  — counter reads at stage boundaries only. Authoritative for memory and wall time;
+ * - `measure`  - counter reads at stage boundaries only. Authoritative for memory and wall time;
  *                the only mode whose rows are trended.
- * - `diagnose` — always-on sampling profiler and screencast. Good for hotspots and visible stalls;
- *                its timings and memory are NOT comparable to `measure`, and the gap is large —
+ * - `diagnose` - always-on sampling profiler and screencast. Good for hotspots and visible stalls;
+ *                its timings and memory are NOT comparable to `measure`, and the gap is large -
  *                on a 200-task render the same stage went from 6.8s to past a 60s timeout.
  */
 export type Mode = 'measure' | 'diagnose';
@@ -37,8 +37,8 @@ export type Comparability = {
   /**
    * Which instruments were attached, because neither mode is bare any more.
    *
-   * The profiler runs in both modes — measured at +2.6% on the whole flow, below the run-to-run
-   * noise — so that worker CPU is trended rather than diagnose-only. The screencast is what makes
+   * The profiler runs in both modes - measured at +2.6% on the whole flow, below the run-to-run
+   * noise - so that worker CPU is trended rather than diagnose-only. The screencast is what makes
    * `diagnose` timings incomparable: it costs +45%. Allocation sampling and video recording run
    * only on request; the video encoder shares the cores the stages are measured on.
    */
@@ -92,9 +92,9 @@ export type HeapReading = {
    * Its own reading because no JS-heap figure counts it: `usedBytes` is the V8 heap, and a wasm
    * module's linear memory lives outside it. Before this, the only instrument that saw automerge's
    * and SQLite's memory at all was the footprint of the renderer processes, which cannot say
-   * which realm holds it — a dedicated worker shares its creator's renderer.
+   * which realm holds it - a dedicated worker shares its creator's renderer.
    *
-   * Absent when the realm published no probe, which is a different fact from holding no wasm —
+   * Absent when the realm published no probe, which is a different fact from holding no wasm -
    * `wasmInstances` is what tells them apart.
    */
   wasmBytes?: number;
@@ -106,7 +106,7 @@ export type HeapReading = {
    */
   wasmSharedBytes?: number;
   wasmInstances?: number;
-  /** Bytes per creating script. NDJSON only — a module-keyed PostHog column would mint a series per bundle rename. */
+  /** Bytes per creating script. NDJSON only - a module-keyed PostHog column would mint a series per bundle rename. */
   wasmByModule?: Record<string, number>;
 };
 
@@ -119,7 +119,7 @@ export type HeapReading = {
  */
 export type FootprintReading = {
   pid: number;
-  /** Chrome's own process name: `Browser`, `GPU Process`, `Renderer`, `Service: …`. */
+  /** Chrome's own process name: `Browser`, `GPU Process`, `Renderer`, `Service: ...`. */
   process: string;
   bytes: number;
 };
@@ -159,7 +159,7 @@ export type ThreadMetrics = {
  * restyles the same elements and lays out the same objects on a fast runner and a slow one.
  */
 export type RenderCounters = {
-  /** `UpdateLayoutTree` events — style recalculations. */
+  /** `UpdateLayoutTree` events - style recalculations. */
   styleRecalcs: number;
   /** Elements restyled, summed over every `UpdateLayoutTree`. */
   styleRecalcElements: number;
@@ -167,7 +167,7 @@ export type RenderCounters = {
   layouts: number;
   /** Objects that needed layout, summed over every `Layout`'s `dirtyObjects`. */
   layoutDirtyObjects: number;
-  /** Layouts run synchronously inside script — a script read geometry it had just invalidated. */
+  /** Layouts run synchronously inside script - a script read geometry it had just invalidated. */
   forcedLayouts: number;
 };
 
@@ -221,7 +221,7 @@ export type ReactCounters = {
 /**
  * Data-layer work over the stage, from the app's own `__dxosDataCounters` probes, summed over realms.
  *
- * Keyed by counter name (`sqlite.statements.select`, `automerge.saves`, …) so a probe can add a
+ * Keyed by counter name (`sqlite.statements.select`, `automerge.saves`, ...) so a probe can add a
  * counter without a harness change; the publisher maps a fixed set of names to columns.
  */
 export type DataCounters = {
@@ -246,7 +246,7 @@ export type RealmCpu = {
   samples: number;
   /**
    * `(idle)` ticks alone. `samples - idleSamples` is the realm's actual work, which counts
-   * `(program)` and `(garbage collector)` — see `IDLE_FRAMES` for why those are not idle.
+   * `(program)` and `(garbage collector)` - see `IDLE_FRAMES` for why those are not idle.
    */
   idleSamples: number;
 };
@@ -280,7 +280,7 @@ export type RealmLag = {
  * The counterpart to `RealmLag` measured from real traffic rather than a synthetic timer:
  * `queueWait` is how long a request sat before this realm's event loop picked it up, which is
  * exactly what a blocked loop does to everything waiting on it. `service` is what the handler then
- * cost, and `roundTrip` — recorded in the realm that ISSUED the call — is the total the caller
+ * cost, and `roundTrip` - recorded in the realm that ISSUED the call - is the total the caller
  * waited, which the other two cannot add up to because they do not include the transport.
  */
 export type RealmRpc = {
@@ -321,7 +321,7 @@ export type DiskMetrics = {
   writeBytes: number;
   reads: number;
   writes: number;
-  /** `jSync` calls — an fsync is the expensive operation a write amplification shows up as. */
+  /** `jSync` calls - an fsync is the expensive operation a write amplification shows up as. */
   syncs: number;
   /**
    * How many realms published counters.
@@ -334,9 +334,9 @@ export type DiskMetrics = {
 
 /** Bytes split by what the request was for. The code/API split is the point. */
 export type NetworkMetrics = {
-  /** Scripts, stylesheets, wasm, fonts, the document itself — the cost of loading the app. */
+  /** Scripts, stylesheets, wasm, fonts, the document itself - the cost of loading the app. */
   codeBytes: number;
-  /** `fetch`/`xhr` traffic to ANY host — the cost of using the app, analytics included. */
+  /** `fetch`/`xhr` traffic to ANY host - the cost of using the app, analytics included. */
   apiBytes: number;
   otherBytes: number;
   requests: number;
@@ -350,7 +350,7 @@ export type NetworkMetrics = {
   edgeApiBytes: number;
   edgeApiRequests: number;
   /**
-   * WebSocket FRAME bytes to the edge hosts — ECHO's replication traffic.
+   * WebSocket FRAME bytes to the edge hosts - ECHO's replication traffic.
    *
    * The `response` event cannot see this: a socket produces exactly one response, the 101 with an
    * empty body, so before frame accounting every data-syncing stage of the flow recorded 0 bytes
@@ -377,7 +377,7 @@ export type EndpointTraffic = { requests: number; bytes: number; frames: number 
  *
  * `longTask*`/`tbtMs` come from the page's Long Tasks API, `lag*` from a timer-drift probe in each
  * realm (the only one that can see the shared worker blocking), and `stillFrame*` from screencast
- * frame timestamps — a frame gap is the only one of the three that measures what the screen did.
+ * frame timestamps - a frame gap is the only one of the three that measures what the screen did.
  */
 export type ResponsivenessMetrics = {
   longTaskCount: number;
@@ -403,14 +403,14 @@ export type LatencyStep = {
 /**
  * Prompt-to-model latency over the stage, joined from every realm's work marks on their absolute time.
  *
- * Two quantities because a chat turn has two kinds of input: the user's prompt, and — on every later
- * turn of an agent loop — the previous response, whose tool calls must run before the next request.
+ * Two quantities because a chat turn has two kinds of input: the user's prompt, and - on every later
+ * turn of an agent loop - the previous response, whose tool calls must run before the next request.
  * Both are the time the app spends between having its input and asking the model.
  */
 export type RequestLatency = {
-  /** `chat.submit` → the first agent `ai.request` after it, one per submit. */
+  /** `chat.submit` -> the first agent `ai.request` after it, one per submit. */
   submitToRequestMs: number[];
-  /** An agent `ai.response` → the next agent `ai.request`, one per later turn. */
+  /** An agent `ai.response` -> the next agent `ai.request`, one per later turn. */
   turnToRequestMs: number[];
   /** The first submit's path: every mark between it and its request. NDJSON only. */
   submitPath: LatencyStep[];
@@ -420,7 +420,7 @@ export type RequestLatency = {
   realms: number;
 };
 
-/** One stage of one flow, in one mode — the unit both the NDJSON row and the PostHog event carry. */
+/** One stage of one flow, in one mode - the unit both the NDJSON row and the PostHog event carry. */
 export type StageRow = {
   flow: string;
   /** Matches the `id:` of the step in the flow's `.mdl` QA test. */
@@ -442,7 +442,7 @@ export type StageRow = {
 
   wallMs: number;
 
-  /** Summed `cpuTime` delta across every Chrome process — includes the shared worker and GPU. */
+  /** Summed `cpuTime` delta across every Chrome process - includes the shared worker and GPU. */
   cpuMsTotal: number;
   cpuMsByProcess: Record<string, number>;
   thread: ThreadMetrics;
@@ -451,7 +451,7 @@ export type StageRow = {
    *
    * `thread` above is the page alone. `cpuMsByProcess` separates a SHARED worker, which gets its
    * own process, but a dedicated worker runs as a thread inside the renderer process and is
-   * invisible there — this is the only field that attributes it.
+   * invisible there - this is the only field that attributes it.
    */
   threadByRealm: RealmThreadMetrics[];
   /** Profiler-measured CPU per realm, page and workers alike. Present in both modes. */

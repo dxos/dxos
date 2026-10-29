@@ -115,7 +115,7 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           ],
           provides: [],
           // Genuine runtime event: fired imperatively by `plugin-client`'s create-identity operation
-          // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
+          // (mirrored by identifier - see `ObservabilityEvents.IdentityCreatedEvent`).
           activatesOn: ObservabilityEvents.IdentityCreatedEvent,
         },
         () => import('./src/capabilities/privacy-notice.ts', { with: { type: 'module-url' } }),

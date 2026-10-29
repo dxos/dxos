@@ -25,7 +25,7 @@ const githubToken = () =>
  *   DX_EDGE_BASE_URL=https://preview.dxos.network DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true \
  *     moon run composer-app:bundle
  *   (cd packages/apps/composer-app && npx vite preview --port 4173)
- *   DX_DEMO_CLAUDE_TOKEN=… DX_DEMO_GITHUB_TOKEN=… node .agents/skills/autocue/scripts/driver.mjs \
+ *   DX_DEMO_CLAUDE_TOKEN=... DX_DEMO_GITHUB_TOKEN=... node .agents/skills/autocue/scripts/driver.mjs \
  *     --url http://localhost:4173 --out /tmp/demo
  *
  * `DX_DEMO_CLAUDE_TOKEN` is a `claude setup-token` token; `DX_DEMO_GITHUB_TOKEN` must be able to push to dxos/dxos.
@@ -155,7 +155,7 @@ export const steps = [
       }
       if (!(await page.evaluate(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude')))) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-        await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Claude' });
+        await demo.fill({ selector: 'input[placeholder="Filter..."]', value: 'Claude' });
         await demo.click({ selector: 'label.dx-switch:has(input[aria-label="Claude"])', label: 'Enable Claude' });
         await page.waitForFunction(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude'));
         await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', label: 'Space' });

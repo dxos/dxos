@@ -108,8 +108,8 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
     xterm.open(container);
 
     // Fitting a zero-sized container pins the terminal to its one-column minimum, and fitting
-    // before xterm's render service exists throws, so the observer's initial callback — which
-    // lands once the element is measurable and the renderer is up — drives the first fit too.
+    // before xterm's render service exists throws, so the observer's initial callback - which
+    // lands once the element is measurable and the renderer is up - drives the first fit too.
     const fit = () => {
       if (fitAddon && container.clientWidth > 0 && container.clientHeight > 0) {
         fitAddon.fit();

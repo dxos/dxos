@@ -42,7 +42,7 @@ describe('getOrCreate', () => {
         ),
     });
 
-  test('no existing match — returns the candidate as created', async ({ expect }) => {
+  test('no existing match - returns the candidate as created', async ({ expect }) => {
     const candidate = Obj.make(Contact, { email: 'new@example.test', name: 'New Person' });
     const { object, created } = await getOrCreate(Contact, candidate, { identity: { email: 'new@example.test' } })
       .pipe(Effect.provide(resolverLayer()))
@@ -52,7 +52,7 @@ describe('getOrCreate', () => {
     expect(object).toBe(candidate);
   });
 
-  test('existing match — merges into the existing object', async ({ expect }) => {
+  test('existing match - merges into the existing object', async ({ expect }) => {
     const existing = db.add(Obj.make(Contact, { email: 'dup@example.test' }));
     await db.flush();
 
@@ -73,7 +73,7 @@ describe('getOrCreate', () => {
     expect(object.name).toBe('Merged Name');
   });
 
-  test('no identity — always created', async ({ expect }) => {
+  test('no identity - always created', async ({ expect }) => {
     const candidate = Obj.make(Contact, { email: 'any@example.test' });
     const { created } = await getOrCreate(Contact, candidate)
       .pipe(Effect.provide(resolverLayer()))

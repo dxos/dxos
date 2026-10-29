@@ -108,7 +108,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         case 'delete':
           Trip.removeSegment(subject, action.segmentId);
           // The companion is resolved from the current selection (app-graph-builder), which only
-          // re-runs on selection change — not on `segments` mutation. So when the active segment is
+          // re-runs on selection change - not on `segments` mutation. So when the active segment is
           // deleted, clear the selection to re-resolve the companion to empty rather than leaving the
           // now-orphaned segment shown.
           if (action.segmentId === currentId) {
@@ -201,7 +201,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
     }
   }, [subject, invokePromise]);
 
-  // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
+  // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) - an "add segment" dropdown of
   // kinds, a "plan route" action, and a globe on/off toggle, composed as data rather than
   // hand-wired Toolbar children.
   const menuActions = useMenuBuilder(() => {

@@ -24,7 +24,7 @@ export const Create = Operation.make({
 });
 
 /**
- * Where the bytes come from. Mirrors `ContentBlock.ImageSource` rather than inventing a shape — it
+ * Where the bytes come from. Mirrors `ContentBlock.ImageSource` rather than inventing a shape - it
  * is how this repo already models "bytes, or a pointer to bytes".
  *
  * Two arms because their costs differ sharply: `base64` rides in the tool-call arguments and so
@@ -46,7 +46,7 @@ export const FileSource = Schema.Union([
  * Creates a file from serializable input, so an agent can reach it.
  *
  * Separate from {@link Create} rather than replacing it: `Create` takes a live browser `File`, which
- * is right for the upload UI and cannot render as JSON Schema — an operation whose input cannot is
+ * is right for the upload UI and cannot render as JSON Schema - an operation whose input cannot is
  * dropped from the registry silently, and so is invisible to any tool caller.
  *
  * Takes the database as a service rather than an input field, which is both what makes the input
@@ -121,7 +121,7 @@ export const Read = Operation.make({
 });
 
 /**
- * Names a file's bytes to the host that will sign a download URL for them — the reverse of
+ * Names a file's bytes to the host that will sign a download URL for them - the reverse of
  * {@link CreateFromUpload}.
  *
  * Host-internal: the MCP hosts' `createDownload` tool invokes it and signs the URL, since the

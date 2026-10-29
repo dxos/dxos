@@ -11,7 +11,7 @@ import { DevtoolsNamespace } from './namespace.ts';
 
 export const translations = [
   ...introspectTranslations,
-  // The panels' tables (credentials, feeds, …) read their column menus from react-ui-table.
+  // The panels' tables (credentials, feeds, ...) read their column menus from react-ui-table.
   ...tableTranslations,
   // The objects panel filters with react-ui-query's editor.
   ...queryTranslations,
@@ -63,7 +63,7 @@ export const translations = [
         'traces.label': 'Traces',
         'testing.label': 'Testing',
         // GitHub (deck-companion--github surface).
-        'github-loading.message': 'Loading…',
+        'github-loading.message': 'Loading...',
         'github-unavailable.message': 'GitHub feed unavailable.',
         'recent-prs.label_one': '{{count}} recent PR',
         'recent-prs.label_other': '{{count}} recent PRs',

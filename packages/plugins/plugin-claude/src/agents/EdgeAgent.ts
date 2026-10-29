@@ -418,8 +418,8 @@ const processOf = (chat: Chat.Chat, agent: string): Process.ID | undefined => {
 
 /**
  * The repositories the chat works on, as the process checks them out: its project's `repo`, then the
- * project's `repositories`, then the repositories bound to the chat itself — the only source a chat
- * outside a project has — each once. Read when the process is spawned, so the sandbox's checkout is
+ * project's `repositories`, then the repositories bound to the chat itself - the only source a chat
+ * outside a project has - each once. Read when the process is spawned, so the sandbox's checkout is
  * the chat's at its start.
  */
 export const checkoutsOf = (

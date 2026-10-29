@@ -43,7 +43,7 @@ export const createAccessor = <T extends AnyProperties>(
 /**
  * Sets the text value at the given path, applying the change as a minimal Automerge delta (via
  * `A.updateText`) rather than replacing the whole string. This preserves cursors/anchors and merges
- * cleanly with concurrent edits — use it to write an edited string back into a collaborative text field.
+ * cleanly with concurrent edits - use it to write an edited string back into a collaborative text field.
  */
 export const updateText = <T extends AnyProperties>(
   obj: T,

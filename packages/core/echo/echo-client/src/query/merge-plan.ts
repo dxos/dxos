@@ -20,7 +20,7 @@ import { compareOrderValues } from './working-set-executor.ts';
 
 /**
  * How the local engine merges in-process results with remote answers for one query, derived once from its
- * AST. See `docs/SYNC_QUERIES.md` §3.1–§3.4.
+ * AST. See `docs/SYNC_QUERIES.md` §3.1-§3.4.
  */
 export type MergePlan = {
   characteristics: QueryAST.Characteristics;

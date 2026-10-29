@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 /** Same constraint as tool names; prompt names surface as `/mcp__<server>__<name>`. */
 const PROMPT_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
-/** NSID of a registry key: `dxn:` prefix and `:<version>` tail stripped — the form ToolIds carry. */
+/** NSID of a registry key: `dxn:` prefix and `:<version>` tail stripped - the form ToolIds carry. */
 export const nsid = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');
 
 /** An opted-in skill with its derived prompt name and materialized instructions. */
@@ -91,12 +91,12 @@ const dedupeByKey = <T extends { readonly key: string }>(entries: readonly T[]):
   return [...byKey.values()];
 };
 
-/** Operation NSID → the skills naming it; membership here is what makes an operation reachable. */
+/** Operation NSID -> the skills naming it; membership here is what makes an operation reachable. */
 export const ownersOf = (skills: readonly McpSkill[]): Map<string, string[]> => {
   const owners = new Map<string, string[]>();
   for (const candidate of skills) {
     // A skill's `tools` entries are derived tool names (`Skill.toolDefinitions`), not operation
-    // NSIDs, so membership is keyed by the name a record derives — see {@link toolNameOf}.
+    // NSIDs, so membership is keyed by the name a record derives - see {@link toolNameOf}.
     for (const tool of candidate.skill.tools) {
       owners.set(tool, [...(owners.get(tool) ?? []), candidate.promptName]);
     }
@@ -107,7 +107,7 @@ export const ownersOf = (skills: readonly McpSkill[]): Map<string, string[]> => 
 /**
  * The key an operation record is governed by: its derived tool name, the form a skill's `tools` list
  * carries. Undefined when the record's key cannot derive a valid name, which makes it ungoverned
- * rather than aborting the surface — registry records arrive as untrusted JSON.
+ * rather than aborting the surface - registry records arrive as untrusted JSON.
  */
 export const toolNameOf = (record: Operation.PersistentOperation): string | undefined => {
   const key = Operation.getKey(record);

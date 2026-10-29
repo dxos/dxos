@@ -12,7 +12,7 @@ import { type Stage, StageWrite } from '../types/stage.ts';
 export type TranslationInput = { window: ContentBlock.Transcript[] };
 
 /**
- * Stage ③ (interface only / deferred): translate the newest block into `targetLanguage`.
+ * Stage (3) (interface only / deferred): translate the newest block into `targetLanguage`.
  * Conforms to the `Stage` contract and is inert until a translation backend is wired.
  */
 export const makeTranslationStage = (_targetLanguage = 'en'): Stage<TranslationInput> => ({

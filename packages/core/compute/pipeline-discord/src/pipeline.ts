@@ -55,8 +55,8 @@ export type RunSummary = {
 
 export const DiscordPipeline = {
   /**
-   * Default assembly over a crawl: persist → agent-profile → extract-questions → extract-facts →
-   * topics → answer-questions, drained through the commit sink so durable cursors advance only
+   * Default assembly over a crawl: persist -> agent-profile -> extract-questions -> extract-facts ->
+   * topics -> answer-questions, drained through the commit sink so durable cursors advance only
    * after a message clears every stage. Interruptible (structurally) and resumable: all state
    * lives in the provided stores.
    */

@@ -8,7 +8,7 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 
 /**
  * Per-path navtree expansion, persisted (localStorage) via the ViewState `local` backend keyed by
- * tree path — replaces the hand-rolled single-blob localStorage store. Only `open` is durable; the
+ * tree path - replaces the hand-rolled single-blob localStorage store. Only `open` is durable; the
  * `current` highlight is ephemeral (driven by the active layout) and never persisted.
  */
 export const navTreeOpenAspect = ViewState.define({

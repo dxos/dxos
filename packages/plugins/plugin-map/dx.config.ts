@@ -24,7 +24,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       Connect any table schema that contains latitude/longitude coordinates to a named Map object,
       and the plugin automatically queries the linked dataset and projects each row as a geographic marker.
 
-      The map viewport supports two rendering modes — a standard tile-based 2-D map and an interactive 3-D globe —
+      The map viewport supports two rendering modes - a standard tile-based 2-D map and an interactive 3-D globe -
       switchable at any time via the toggle operation.
       Each mode preserves the current center and zoom level so context is not lost when switching views.
 

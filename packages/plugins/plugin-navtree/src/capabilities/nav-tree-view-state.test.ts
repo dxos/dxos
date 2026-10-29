@@ -46,7 +46,7 @@ describe('navTreeOpenAspect', () => {
     first.set(navTreeOpenAspect, 'root~b', { open: true });
 
     // Second session (new registry + manager, same storage) mirrors a reload: the persisted paths and
-    // their `open` values are recovered via `contexts` + `get` — exactly how navtree seeds backingState.
+    // their `open` values are recovered via `contexts` + `get` - exactly how navtree seeds backingState.
     const second = makeManager(Registry.make(), storage);
     expect(second.contexts(navTreeOpenAspect).toSorted()).toEqual(['root~a', 'root~b']);
     expect(second.get(navTreeOpenAspect, 'root~a')).toEqual({ open: true });

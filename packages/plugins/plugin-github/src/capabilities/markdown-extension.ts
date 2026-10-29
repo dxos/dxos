@@ -14,7 +14,7 @@ import { Repo, TaskSet } from '@dxos/types';
 import { GITHUB_SOURCE } from '../constants.ts';
 import { githubLinks, githubReferences, referenceUrl } from '../extensions/index.ts';
 
-/** `owner/repo` — what `sync` writes as the name of the TaskSet mirroring a repository. */
+/** `owner/repo` - what `sync` writes as the name of the TaskSet mirroring a repository. */
 const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 
 /**
@@ -37,7 +37,7 @@ export default Capability.makeModule(
 
         // A full URL needs no object: a task's description or an outline gets the chip too. A bare
         // `#123` resolves against the repository of the project owning the edited object, so it
-        // needs one — the document, or whatever else the editor edits.
+        // needs one - the document, or whatever else the editor edits.
         const object = doc ?? subject;
         const db = object && Obj.getDatabase(object);
         if (!object || !db) {

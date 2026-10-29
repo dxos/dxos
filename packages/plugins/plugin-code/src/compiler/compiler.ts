@@ -51,7 +51,7 @@ export type Diagnostic = {
  * `.d.ts` files lazily from the playground CDN on first initialization.
  *
  * The compiler is intended to be instantiated once per page and reused across
- * operation invocations — the CDN fetch is the slow part and the
+ * operation invocations - the CDN fetch is the slow part and the
  * `LanguageService` benefits from cross-call caching of program state.
  *
  * Identical in spirit to `@dxos/plugin-script`'s `Compiler` (`packages/plugins/

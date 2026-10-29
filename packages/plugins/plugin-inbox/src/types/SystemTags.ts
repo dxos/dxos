@@ -21,10 +21,10 @@ import { Tagging, TagIndex } from '@dxos/schema';
  * (`DraftEmailAndOpen`, `useSendEmail`), never synced from a provider's own draft signal.
  *
  * The source is space-general (`Tag.CANONICAL_ORIGIN`), not mail-specific, so the same tag identities
- * apply to any object in the space — and `Tag.isProviderTag` reads it to keep these locally toggleable
+ * apply to any object in the space - and `Tag.isProviderTag` reads it to keep these locally toggleable
  * while foreign provider tags stay read-only (see `Tag.md` §"Tag origin").
  *
- * TODO(wittjosiah): Factor the registry below out — the *origin* now lives in `@dxos/echo`, but the
+ * TODO(wittjosiah): Factor the registry below out - the *origin* now lives in `@dxos/echo`, but the
  *   entries themselves are still mail-flavoured and belong in a shared tag package.
  */
 export const SYSTEM_TAG_SOURCE = Tag.CANONICAL_ORIGIN;
@@ -162,7 +162,7 @@ export const tagAtom = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string 
 
 /**
  * Toggles a canonical system tag on a member object, provisioning the container's tag index on first
- * use. Depends on `Database.Service` for `db` — run within a layer that provides it, or
+ * use. Depends on `Database.Service` for `db` - run within a layer that provides it, or
  * `.pipe(Effect.provide(Database.layer(db)))` from a plain `Database.Database`.
  */
 export const toggleTag = Effect.fn('SystemTags.toggleTag')(function* (

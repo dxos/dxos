@@ -20,7 +20,7 @@ export const translations = [
         'comment.placeholder': 'Enter comment...',
         'settings-standalone.label': 'Enable standalone thread creation',
         'anonymous.label': 'Anonymous',
-        'enter-to-send.message': 'Enter to add ⏎',
+        'enter-to-send.message': 'Enter to add \u23CE',
         'edit-message.label': 'Edit',
         'save-message.label': 'Save',
         'delete-message.label': 'Delete',

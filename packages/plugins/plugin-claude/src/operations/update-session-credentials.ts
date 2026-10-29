@@ -59,7 +59,7 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.UpdateSessionCr
         const refreshed = refresh ? recorded.filter(({ as }) => !revoke.includes(as)) : [];
         // Resolved before anything is written: a secret that fails to resolve halfway through would
         // leave the vault holding some of the request. Refreshed refs come first so an explicit entry
-        // for the same variable wins — `toVaultCredentials` keeps the last of a repeated name.
+        // for the same variable wins - `toVaultCredentials` keeps the last of a repeated name.
         const resolved = yield* toVaultCredentials([...refreshed, ...credentials]);
 
         // A name is unique within the vault, so writing one already present rotates it in place.

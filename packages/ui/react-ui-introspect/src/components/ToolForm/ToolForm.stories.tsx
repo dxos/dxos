@@ -34,7 +34,7 @@ const PLUGIN_IDS = [
 
 const PACKAGE_NAMES = ['@dxos/echo', '@dxos/react-ui', '@dxos/plugin-markdown', '@dxos/plugin-chess'];
 
-// `list_surfaces` has a single optional plugin-id field — the Combobox
+// `list_surfaces` has a single optional plugin-id field - the Combobox
 // should appear; clicking it opens a list of the IDs above.
 export const PluginPicker: Story = {
   args: {
@@ -59,7 +59,7 @@ export const NoPickerOptions: Story = {
 };
 
 // `list_plugins.id` is a substring search filter, not a known-id selector
-// — it intentionally has no picker annotation, so even with options
+// - it intentionally has no picker annotation, so even with options
 // available the field renders as a text input.
 export const ListPluginsHasNoPicker: Story = {
   args: {

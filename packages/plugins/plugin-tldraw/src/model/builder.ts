@@ -62,7 +62,7 @@ const handler: ContentHandler = {
 export const TldrawBuilder = IllustratorModel.makeBuilder({ schema: Tldraw.TLDRAW_SCHEMA, handler });
 
 /**
- * Apply commands straight to a content map, bypassing ECHO — for tests and tooling that hold
+ * Apply commands straight to a content map, bypassing ECHO - for tests and tooling that hold
  * raw tldraw records. The object-aware path is {@link TldrawBuilder}.
  */
 export const applyCommands = (content: ContentMap, commands: readonly Scene.Command[]) =>

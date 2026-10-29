@@ -22,7 +22,7 @@ import {
 } from './Dialect.ts';
 
 /**
- * A typename the registry has no object type for — an expected failure of the model's code, so it
+ * A typename the registry has no object type for - an expected failure of the model's code, so it
  * belongs in the effect's error channel rather than being a defect. `RuntimeProvider.runPromise`
  * surfaces it to the sandbox as a rejected promise either way.
  */
@@ -39,7 +39,7 @@ export class UnknownObjectTypeError extends Schema.TaggedError<UnknownObjectType
  * `await ops.thing(input)`.
  *
  * Every binding is a function taking and returning plain data, so this dialect is the one that
- * survives an out-of-process `Sandbox` — the facade is exactly the RPC surface such a sandbox would
+ * survives an out-of-process `Sandbox` - the facade is exactly the RPC surface such a sandbox would
  * expose. It is also the smaller thing to learn, at the cost of not being the API the rest of the
  * codebase is written in.
  */
@@ -95,7 +95,7 @@ export const PlainDialect: Dialect = {
           Effect.gen(function* () {
             const { db } = yield* Database.Service;
             // Matched on the typename rather than by URI: a registered type is indexed under its
-            // VERSIONED DXN, and the model names a type the same way it does in a query —
+            // VERSIONED DXN, and the model names a type the same way it does in a query -
             // unversioned. Objects only: a relation needs a source and target `make` cannot take.
             const type = db.registry
               .list()
@@ -135,33 +135,33 @@ export const PlainDialect: Dialect = {
 
     You have exactly one tool, \`eval\`, which runs the body of an async JavaScript function against
     this workspace and returns whatever that code printed. Nothing else is visible to you: a value
-    you do not \`print\` never reaches you. Do not use \`import\` or \`require\` — the API below is
+    you do not \`print\` never reaches you. Do not use \`import\` or \`require\` - the API below is
     in scope.
 
-    Prefer one \`eval\` call that does the whole job — query, inspect, change, print — over a call
+    Prefer one \`eval\` call that does the whole job - query, inspect, change, print - over a call
     per step. Print the specific values you need to reason about, not whole objects, and keep the
     output small. Stay on the objects the request names or the conversation is attached to: reading
     or changing others the request did not ask about spends calls and risks unasked-for writes.
 
     ### API
 
-    - \`print(...values)\` — adds a line to this call's output. Strings go through verbatim. An
-      object prints as a card: its type, id, label and fields, refs as \`→ type id "label"\`. Print
+    - \`print(...values)\` - adds a line to this call's output. Strings go through verbatim. An
+      object prints as a card: its type, id, label and fields, refs as \`-> type id "label"\`. Print
       the object itself, never \`JSON.stringify\` it. Anything else prints as JSON, long strings and
-      arrays cut with a \`…[+N chars]\` / \`… N more\` marker.
-    - \`print(await describe(obj))\` — the card plus counts of the object's relations, children and
-      referrers, with the call that fetches each — the only way to see that those exist.
+      arrays cut with a \`...[+N chars]\` / \`... N more\` marker.
+    - \`print(await describe(obj))\` - the card plus counts of the object's relations, children and
+      referrers, with the call that fetches each - the only way to see that those exist.
     - \`await relations(obj, 'out' | 'in', typename?)\`, \`await children(obj)\`,
-      \`await referrers(obj, typename?, field?)\` — the relations from or to an object, the objects
+      \`await referrers(obj, typename?, field?)\` - the relations from or to an object, the objects
       it is the parent of, and the objects whose ref fields point at it.
-    - \`await query(typename, props?)\` — objects of that typename, optionally narrowed by exact
+    - \`await query(typename, props?)\` - objects of that typename, optionally narrowed by exact
       property values, e.g. \`await query('example.com/type/Task', { status: 'open' })\`.
-    - \`await make(typename, props)\` — a new object; it is not stored until you add it.
-    - \`await add(obj)\` / \`await remove(obj)\` — store or delete an object.
-    - \`update(obj, (obj) => { obj.field = value; })\` — the only way to change a stored object.
-    - \`await flush()\` — waits for pending writes to land; call it before printing a final
+    - \`await make(typename, props)\` - a new object; it is not stored until you add it.
+    - \`await add(obj)\` / \`await remove(obj)\` - store or delete an object.
+    - \`update(obj, (obj) => { obj.field = value; })\` - the only way to change a stored object.
+    - \`await flush()\` - waits for pending writes to land; call it before printing a final
       confirmation.
-    - \`ref(obj)\` — a reference to an object you hold. A \`Ref<typename>\` field takes one, never
+    - \`ref(obj)\` - a reference to an object you hold. A \`Ref<typename>\` field takes one, never
       an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
       Where an operation's input takes references, pass \`ref(obj)\` too.
 

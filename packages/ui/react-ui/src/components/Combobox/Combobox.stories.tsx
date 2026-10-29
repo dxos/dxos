@@ -149,7 +149,7 @@ const AnchoredCombobox = ({ size = 'md' }: SizeArgs) => {
         <Typography.Text>
           Hello{' '}
           <span ref={anchor} data-testid={`anchor-${size}`}>
-            @{OPTIONS.find((option) => option.value === value[0])?.label ?? '…'}
+            @{OPTIONS.find((option) => option.value === value[0])?.label ?? '\u2026'}
           </span>
         </Typography.Text>
       </Group>
@@ -400,10 +400,10 @@ export const Test: Story = {
     await userEvent.clear(within(createPopup).getByRole('combobox'));
     await userEvent.keyboard('Al');
     await waitFor(() => expect(within(createPopup).getAllByRole('option')).toHaveLength(2));
-    await expect(within(createPopup).getAllByRole('option')[1]).toHaveAccessibleName('Create “Al”');
+    await expect(within(createPopup).getAllByRole('option')[1]).toHaveAccessibleName('Create "Al"');
     await userEvent.keyboard('{Backspace}{Backspace}Zed');
     await waitFor(() => expect(within(createPopup).getAllByRole('option')).toHaveLength(1));
-    await expect(within(createPopup).getByRole('option')).toHaveAccessibleName('Create “Zed”');
+    await expect(within(createPopup).getByRole('option')).toHaveAccessibleName('Create "Zed"');
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(body.queryByTestId('create-popup-md')).toBeNull());
     await expect(byTestId(canvasElement, 'created-md')).toHaveTextContent('Created: Zed');
@@ -416,11 +416,11 @@ export const Test: Story = {
     await userEvent.click(searchTrigger);
     const searchPopup = await body.findByTestId('search-popup-md');
     await expect(searchPopup).toHaveAttribute('aria-busy', 'true');
-    await expect(searchPopup).toHaveTextContent('Loading…');
+    await expect(searchPopup).toHaveTextContent('Loading...');
     await expect(searchPopup).not.toHaveTextContent('No results');
     await waitFor(() => expect(within(searchPopup).getAllByRole('option')).toHaveLength(5));
     await expect(searchPopup).not.toHaveAttribute('aria-busy');
-    await expect(searchPopup).not.toHaveTextContent('Loading…');
+    await expect(searchPopup).not.toHaveTextContent('Loading...');
     await userEvent.keyboard('12');
     await waitFor(() => expect(searchPopup).toHaveAttribute('aria-busy', 'true'));
     await waitFor(() => expect(within(searchPopup).getAllByRole('option')).toHaveLength(1));
@@ -517,7 +517,7 @@ const MultipleStory = () => {
           setItems((items) => [...items, option]);
           setValue((value) => [...value, option.value]);
         }}
-        createLabel={(query) => `Add tag “${query}”`}
+        createLabel={(query) => `Add tag "${query}"`}
         createIcon='ph--tag--regular'
       >
         <Combobox.Label>Tags</Combobox.Label>
@@ -573,7 +573,7 @@ export const TestMultiple: Story = {
 
     // 3. The create row has the Root's label and icon, and creating adds a chip.
     await userEvent.keyboard('Someday');
-    const create = await within(popup).findByRole('option', { name: 'Add tag “Someday”' });
+    const create = await within(popup).findByRole('option', { name: 'Add tag "Someday"' });
     // Icons resolve from the sprite asynchronously, which a cold run can take seconds over.
     await expect(create.querySelector('[data-scope="icon"]')?.getAttribute('data-icon')).toBe('ph--tag--regular');
     await userEvent.click(create);
@@ -591,7 +591,7 @@ export const TestMultiple: Story = {
     for (const name of ['A rather long tag name', 'Another long tag name', 'Yet another tag']) {
       await userEvent.clear(within(reopened).getByRole('combobox'));
       await userEvent.type(within(reopened).getByRole('combobox'), name);
-      await userEvent.click(await within(reopened).findByRole('option', { name: `Add tag “${name}”` }));
+      await userEvent.click(await within(reopened).findByRole('option', { name: `Add tag "${name}"` }));
     }
     await waitFor(() => expect(control.getBoundingClientRect().height).toBeGreaterThan(single * 1.5));
   },

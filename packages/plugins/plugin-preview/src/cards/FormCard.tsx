@@ -25,15 +25,15 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
 
 /**
  * Default/fallback card for any ECHO object.
- * Renders a `Form` against the object's schema — either the static schema
+ * Renders a `Form` against the object's schema - either the static schema
  * from `Obj.getSchema` or, for runtime/mutable schemas, the reactive
  * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
   const { t } = Hooks.useTranslation(PreviewNamespace.key);
   const [snapshot] = useObject(subject);
-  // Readonly cards default to the `static` presentation — plain DOM, undefined values
-  // omitted — which reads as a preview rather than a form. Editable cards keep the
+  // Readonly cards default to the `static` presentation - plain DOM, undefined values
+  // omitted - which reads as a preview rather than a form. Editable cards keep the
   // `compact` form layout. Callers can override either via the explicit `layout` prop.
   const resolvedLayout: FormPresentation = layout ?? (readonly ? 'static' : 'compact');
 

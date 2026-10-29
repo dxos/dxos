@@ -13,7 +13,7 @@ import { PROGRESS_PATH } from './config.ts';
 
 /**
  * Merges a snapshot's tasks into the shared `progress.json` by task name (read-modify-write). Safe
- * because the suite runs sequentially — one writer at a time; a concurrent runner would need
+ * because the suite runs sequentially - one writer at a time; a concurrent runner would need
  * per-process files or a lock.
  */
 const writeProgressFile = (snapshot: Progress.ProgressSnapshot, path: string): void => {
@@ -53,7 +53,7 @@ export type ProgressTask = {
 
 /**
  * A plain (non-Effect) progress task for the manual-loop tests (`extract-facts`, `html-vs-text`,
- * `brain-vs-rag`, …) that don't run through `runItemsBench`. It writes throttled snapshots to the
+ * `brain-vs-rag`, ...) that don't run through `runItemsBench`. It writes throttled snapshots to the
  * same shared `progress.json`, so every test reports live regardless of how it's structured.
  */
 export const trackProgress = (name: string, total?: number, path: string = PROGRESS_PATH): ProgressTask => {

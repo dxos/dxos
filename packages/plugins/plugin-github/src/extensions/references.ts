@@ -6,11 +6,11 @@ import { syntaxTree } from '@codemirror/language';
 import { type Extension, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-/** `#123` — a GitHub issue or pull-request reference. GitHub itself caps numbers well below this. */
+/** `#123` - a GitHub issue or pull-request reference. GitHub itself caps numbers well below this. */
 const REFERENCE = /(^|[^\w#/])#(\d{1,9})\b/g;
 
 /**
- * Nodes whose text is not prose: a `#` inside them is a fragment, a colour, or code — never a
+ * Nodes whose text is not prose: a `#` inside them is a fragment, a colour, or code - never a
  * reference. A heading is deliberately absent: `## Notes on #123` is prose after the marker.
  */
 const OPAQUE_NODES = new Set(['InlineCode', 'CodeText', 'FencedCode', 'CodeBlock', 'URL', 'Link', 'Autolink']);
@@ -19,7 +19,7 @@ export type GitHubReferenceResolver = (number: number) => string | undefined;
 
 export type GitHubReferencesOptions = {
   /**
-   * Target for a reference, or `undefined` to leave it undecorated — which is the answer whenever
+   * Target for a reference, or `undefined` to leave it undecorated - which is the answer whenever
    * the repository is unknown, since `#123` means nothing without one.
    */
   resolve: GitHubReferenceResolver;

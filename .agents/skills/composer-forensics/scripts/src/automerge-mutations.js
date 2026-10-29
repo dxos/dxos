@@ -130,17 +130,17 @@ export const inferMutationHypothesis = (changeOps, reified) => {
 
   if (setPct > 80) {
     notes.push(
-      `Ops are dominated by "set" (${setPct.toFixed(1)}%) — typical of repeated whole-value replacements (e.g. replacing entire arrays/maps) rather than granular list inserts.`,
+      `Ops are dominated by "set" (${setPct.toFixed(1)}%) - typical of repeated whole-value replacements (e.g. replacing entire arrays/maps) rather than granular list inserts.`,
     );
   }
   if (makeTextPct > 1) {
     notes.push(
-      `"makeText" accounts for ${makeTextPct.toFixed(1)}% of ops — many scalar/string fields are being materialized per change.`,
+      `"makeText" accounts for ${makeTextPct.toFixed(1)}% of ops - many scalar/string fields are being materialized per change.`,
     );
   }
   if (medianOps > 1000) {
     notes.push(
-      `Median ${medianOps.toLocaleString()} ops/change (${changeOps.opsPerChange.over10k} changes exceed 10k ops) — each edit carries heavy history.`,
+      `Median ${medianOps.toLocaleString()} ops/change (${changeOps.opsPerChange.over10k} changes exceed 10k ops) - each edit carries heavy history.`,
     );
   }
 
@@ -153,7 +153,7 @@ export const inferMutationHypothesis = (changeOps, reified) => {
 
   if (reified.objectCount <= 3 && changeOps.changeCount > 100) {
     notes.push(
-      `Only ${reified.objectCount} reified object(s) but ${changeOps.changeCount.toLocaleString()} changes — bloat is almost entirely historical mutations, not current payload size.`,
+      `Only ${reified.objectCount} reified object(s) but ${changeOps.changeCount.toLocaleString()} changes - bloat is almost entirely historical mutations, not current payload size.`,
     );
   }
 

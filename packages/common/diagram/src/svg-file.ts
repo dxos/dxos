@@ -142,7 +142,7 @@ const TINT_PERCENT = 10;
 /** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
 const TINT_STYLE = `fill:color-mix(in srgb, currentColor ${TINT_PERCENT}%, var(--surface-bg, transparent))`;
 
-/** `TINT_STYLE` precomputed for the file's light theme, as `color-mix(in srgb, …)` mixes it. */
+/** `TINT_STYLE` precomputed for the file's light theme, as `color-mix(in srgb, ...)` mixes it. */
 const tintFallback = (color?: Scene.Color): string => {
   const hex = TEXT_HEX[colorClass(color)?.split(' ')[0] ?? ''] ?? INK_HEX;
   const channel = (offset: number, source: string) => parseInt(source.slice(offset, offset + 2), 16);

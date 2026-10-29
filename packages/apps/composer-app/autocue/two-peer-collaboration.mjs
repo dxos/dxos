@@ -27,7 +27,7 @@ const ALICE_TEXT = 'Agenda: finalise the roadmap and assign owners.';
 const BOB_TEXT = 'Bob: I will draft the launch checklist by Friday.';
 const TIMEOUT = 60_000;
 
-/** The workspace segment of a pair-chain URL (`/w/<workspace>/…`). */
+/** The workspace segment of a pair-chain URL (`/w/<workspace>/...`). */
 const workspaceOf = (page) => {
   const [anchor, workspace] = new URL(page.url()).pathname.split('/').filter(Boolean);
   return anchor === 'w' ? workspace : undefined;

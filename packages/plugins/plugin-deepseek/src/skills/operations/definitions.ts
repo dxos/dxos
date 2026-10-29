@@ -18,7 +18,7 @@ export const InstallHarness = Operation.make({
     key: DXN.make('org.dxos.operation.deepseek.installHarness'),
     name: 'InstallDeepSeekHarness',
     description:
-      'Creates a sandbox, binds the space’s DeepSeek API key to it, and installs the DeepSeek harness CLI in it.',
+      "Creates a sandbox, binds the space's DeepSeek API key to it, and installs the DeepSeek harness CLI in it.",
     icon: 'px--deepseek--regular',
   },
   input: Schema.Struct({
@@ -29,7 +29,7 @@ export const InstallHarness = Operation.make({
       description: 'Base container image. Defaults to the sandbox service default.',
     }),
     harnessPackage: Schema.optional(Schema.String).annotate({
-      description: 'npm package providing the harness CLI. Defaults to the plugin’s pinned package.',
+      description: "npm package providing the harness CLI. Defaults to the plugin's pinned package.",
     }),
   }),
   output: Schema.Struct({
@@ -60,13 +60,13 @@ export const RunHarness = Operation.make({
       description:
         'DeepSeek model id, e.g. "deepseek-v4-flash" or "deepseek-v4-pro". Passed as DEEPSEEK_MODEL; ' +
         'the harness chooses its own default when omitted. One id serves both thinking and ' +
-        'non-thinking mode — there is no separate reasoner model.',
+        'non-thinking mode - there is no separate reasoner model.',
     }),
     args: Schema.optional(Schema.Array(Schema.String)).annotate({
       description: 'Extra CLI arguments, inserted before the prompt.',
     }),
     harnessBin: Schema.optional(Schema.String).annotate({
-      description: 'Harness executable name. Defaults to the plugin’s pinned binary.',
+      description: "Harness executable name. Defaults to the plugin's pinned binary.",
     }),
     cwd: Schema.optional(Schema.String).annotate({
       description: 'Absolute working directory for the run.',

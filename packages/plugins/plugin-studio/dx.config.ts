@@ -20,8 +20,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     name: 'Studio',
     author: 'DXOS',
     description: trim`
-      Studio is a creative-artifact tool for Composer. An Artifact is a media-agnostic unit of creative work — a
-      prompt paired with the variants generated (or uploaded) from it — spanning images, video, and future media,
+      Studio is a creative-artifact tool for Composer. An Artifact is a media-agnostic unit of creative work - a
+      prompt paired with the variants generated (or uploaded) from it - spanning images, video, and future media,
       discriminated by an open-string kind. The user authors the prompt, runs generation against a pluggable,
       kind-specific provider, and reviews the variants one at a time, all together in a gallery, or as cards.
 

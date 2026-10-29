@@ -13,7 +13,7 @@ import { join } from 'node:path';
  * fails an errno-checked parse in progress there (ICE candidates, SDP ports, GLib `getauxval`).
  * Freestanding, for glibc on x86_64 and aarch64, whose `struct sigaction` share this layout.
  *
- * Delete this file once Playwright ships a WebKit that restores errno itself — see `webkit-workarounds.md`.
+ * Delete this file once Playwright ships a WebKit that restores errno itself - see `webkit-workarounds.md`.
  */
 export const ERRNO_SHIM_SOURCE = `#define SA_SIGINFO_FLAG 4
 #define SIGNAL_COUNT 65

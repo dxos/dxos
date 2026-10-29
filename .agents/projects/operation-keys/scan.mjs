@@ -85,5 +85,5 @@ console.log(
 console.log('| DXN key | Package | File | `meta.name` | Skill |');
 console.log('| --- | --- | --- | --- | --- |');
 for (const row of rows) {
-  console.log(`| \`${row.key}\` | \`${row.pkg}\` | \`${row.rel}\` | ${row.name ?? '—'} | ${row.wired ? '✓' : ''} |`);
+  console.log(`| \`${row.key}\` | \`${row.pkg}\` | \`${row.rel}\` | ${row.name ?? '-'} | ${row.wired ? 'OK' : ''} |`);
 }

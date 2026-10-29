@@ -57,7 +57,7 @@ export const applyOpfsPragmas = (sqlite3: Sqlite3, db: number, options: OpfsPrag
  * Required before any raw (non-SQLite) read of the OPFS pool file so the main file is
  * authoritative and no committed data is stranded in the `-wal` sidecar. A harmless no-op
  * when the connection is not in WAL mode (per SQLite `wal_checkpoint` semantics).
- * Throws if the checkpoint is blocked or skipped (status ≠ 0), which would leave committed
+ * Throws if the checkpoint is blocked or skipped (status != 0), which would leave committed
  * frames in the sidecar and cause the serialized snapshot to be incomplete.
  */
 export const checkpointWal = (sqlite3: Sqlite3, db: number): void => {

@@ -60,7 +60,7 @@ const removeFileIfExists = async (file: string): Promise<boolean> => {
 const collectPathsToDelete = (profile: string): string[] => {
   if (profile === DEFAULT_PROFILE) {
     // Default profile: storage lands directly under the XDG roots (see
-    // @dxos/client-services/src/packlets/storage/util.ts — dataRoot
+    // @dxos/client-services/src/packlets/storage/util.ts - dataRoot
     // defaults to DX_DATA). Nuke the whole data/state/cache roots.
     return [DX_DATA, DX_STATE, DX_CACHE, getProfileConfigPath(DX_CONFIG, profile)];
   }
@@ -78,7 +78,7 @@ export const reset = Command.make(
   {
     hard: Options.Boolean('hard').pipe(
       Options.withDefault(false),
-      Options.withDescription('Required — deletes ALL local data for the current profile. No remote state is touched.'),
+      Options.withDescription('Required - deletes ALL local data for the current profile. No remote state is touched.'),
     ),
   },
   ({ hard }) =>

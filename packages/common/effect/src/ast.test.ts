@@ -245,7 +245,7 @@ describe('AST', () => {
 
 // Optionality and mutability ride on a node's `context` in v4, so any mapper that rebuilds a node
 // must carry it across. Losing it turns an optional key into a required one, which surfaces far from
-// the cause — a caller (or an LLM tool call) that legitimately omits the key fails with `Missing key`.
+// the cause - a caller (or an LLM tool call) that legitimately omits the key fails with `Missing key`.
 describe('mapAst', () => {
   /** Replaces every string leaf with a fresh node that carries no context, forcing ancestor rebuilds. */
   const replaceStrings = (ast: SchemaAST.AST): SchemaAST.AST =>

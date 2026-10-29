@@ -10,7 +10,7 @@ import { hasErrorTrace, runDx, withIsolatedHome } from '../testing/index.ts';
 /**
  * End-to-end subprocess test for `dx space list`. Uses a throwaway HOME so
  * the command operates on an empty data dir (no HALO identity, no spaces)
- * — the "just initialized the CLI" state.
+ * - the "just initialized the CLI" state.
  *
  * Correct behaviour in that state:
  *   - text mode: exit 0, stdout empty (or whitespace only).
@@ -19,7 +19,7 @@ import { hasErrorTrace, runDx, withIsolatedHome } from '../testing/index.ts';
  */
 
 describe('space list', () => {
-  test('fresh profile (no HALO) — exits 0, empty stdout, no error trace', ({ expect }) => {
+  test('fresh profile (no HALO) - exits 0, empty stdout, no error trace', ({ expect }) => {
     withIsolatedHome((home) => {
       const { stdout, stderr, status } = runDx(['space', 'list'], { home });
       if (status !== 0) {
@@ -32,7 +32,7 @@ describe('space list', () => {
     });
   });
 
-  test('fresh profile (no HALO) with --json — exits 0, stdout === "[]"', ({ expect }) => {
+  test('fresh profile (no HALO) with --json - exits 0, stdout === "[]"', ({ expect }) => {
     const home = fs.mkdtempSync('/tmp/dx-test-');
     try {
       const { stdout, stderr, status } = runDx(['--json', 'space', 'list'], { home });
@@ -52,7 +52,7 @@ describe('space list', () => {
     const { stdout, status } = runDx(['space', 'list', '--help']);
     expect(status).toBe(0);
     expect(stdout).toMatch(/--wait/);
-    // Make sure the description hints at the no-wait default — that's the
+    // Make sure the description hints at the no-wait default - that's the
     // user-facing contract.
     expect(stdout.toLowerCase()).toMatch(/wait|ready/);
   });

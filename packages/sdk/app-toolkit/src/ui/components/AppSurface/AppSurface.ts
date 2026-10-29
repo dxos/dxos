@@ -36,7 +36,7 @@ type IsAny<T> = 0 extends 1 & T ? true : false;
  * Filter disjunction across roles. Bindings from each filter are concatenated;
  * the resulting data type is the union.
  *
- * Use this when a single component should render for multiple roles — replaces
+ * Use this when a single component should render for multiple roles - replaces
  * the legacy `role: ['article', 'section']` array.
  */
 export const oneOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
@@ -83,13 +83,13 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 };
 
 //
-// Generic filter builders (role-agnostic — take a role token as first argument)
+// Generic filter builders (role-agnostic - take a role token as first argument)
 //
 
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
  *
- * An optional `predicate` narrows on the rest of the data — most useful for
+ * An optional `predicate` narrows on the rest of the data - most useful for
  * surfaces that distinguish variants by a flag (e.g. `editable`, `compact`)
  * without having to hand-roll a fully typed `Surface.Filter`.
  */
@@ -302,14 +302,14 @@ export type ObjectArticleProps<
 //
 // Article-shaped surface whose container resolves a Space (typically via
 // `useActiveSpace()` in the surface callback). Reuses the `Article` role token
-// — the deck plugin keeps passing standard `ArticleData` — and only specializes
+// - the deck plugin keeps passing standard `ArticleData` - and only specializes
 // the props the consumer expects by adding a non-null `space` field synthesized
 // at the surface boundary.
 //
 
 /**
  * Surface data for an article whose container receives a resolved Space.
- * `subject` from `ArticleData` is widened to optional — Space-scoped articles
+ * `subject` from `ArticleData` is widened to optional - Space-scoped articles
  * often render at routes whose subject is a literal id rather than an object,
  * and the container reads `space` (synthesized at the surface boundary) instead.
  */
@@ -452,7 +452,7 @@ export type ObjectPropertiesProps<
 //
 
 /**
- * Role token for the card header's leading depiction — a person's avatar, an organization's logo,
+ * Role token for the card header's leading depiction - a person's avatar, an organization's logo,
  * a type's glyph.
  *
  * Scoped to the card deliberately, rather than declared once per type: how an object is depicted
@@ -460,7 +460,7 @@ export type ObjectPropertiesProps<
  * row does not, and those surfaces keep resolving `IconAnnotation` through `Obj.getIcon`. A type
  * contributing here says how it looks IN A CARD, and says nothing about anywhere else.
  *
- * Unlike {@link CardContent}, a miss is not "render nothing" — every object needs some depiction —
+ * Unlike {@link CardContent}, a miss is not "render nothing" - every object needs some depiction -
  * so hosts check {@link Surface.useIsAvailable} and fall back. `CardIconSlot` packages that pair.
  */
 export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardIcon');
@@ -487,7 +487,7 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
   projection?: ProjectionModel;
   /** Paths to omit from the card body (caller-defined redundancy; e.g. Kanban hides pivot). Dynamic-schema cards honor this; fixed-shape cards may ignore. */
   ignorePaths?: ReadonlyArray<string>;
-  /** When true, card surfaces should render an editable variant of the subject (full-bleed editor) rather than a read-only preview. Hosts opt in per-cell — e.g. plugin-board passes editable for in-place editing in grid cells. */
+  /** When true, card surfaces should render an editable variant of the subject (full-bleed editor) rather than a read-only preview. Hosts opt in per-cell - e.g. plugin-board passes editable for in-place editing in grid cells. */
   editable?: boolean;
 } & Props;
 
@@ -499,7 +499,7 @@ export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subje
 /**
  * Role token for the `cardMasonry` role: several objects laid out as cards.
  *
- * The host supplies the objects — a task's artifacts, a record's attachments — rather than the
+ * The host supplies the objects - a task's artifacts, a record's attachments - rather than the
  * surface deriving them from a subject, which is what separates this from {@link Related}: the
  * caller already knows what belongs in the grid and only wants it rendered.
  */
@@ -529,7 +529,7 @@ export type CardMasonryData = {
   inline?: boolean;
   /**
    * The host's items for each card's menu, alongside the object's own: rendered once per card, it
-   * renders nothing and registers its items with the card's `menu` via `useMenuContribution` — the
+   * renders nothing and registers its items with the card's `menu` via `useMenuContribution` - the
    * same contract as a type's {@link CardMenu} surface, so a host adds actions such as removing the
    * object from its list without the card knowing what they mean.
    */
@@ -569,10 +569,10 @@ export const Popover: Role.Role<DialogData> = Role.make('org.dxos.role.popover')
 /**
  * Surface data for dialog/popover role.
  *
- * When `ComponentProps` is left as the default `any`, `props` is optional —
+ * When `ComponentProps` is left as the default `any`, `props` is optional -
  * unannotated callers can read `data.props` as `any | undefined`. When a caller
  * narrows the shape (e.g. `AppSurface.component<MyProps>(Dialog, id)`), `props`
- * becomes required and `data.props` is `MyProps` — no non-null assertion needed
+ * becomes required and `data.props` is `MyProps` - no non-null assertion needed
  * at the spread site.
  */
 export type DialogData<Component extends string = string, ComponentProps = any> = {

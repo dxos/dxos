@@ -29,7 +29,7 @@ describe('toSpaceUpdate', () => {
       current: 0,
       total: 12,
       synced: 98,
-      note: '4 objects · ↓6 ↑2',
+      note: '4 objects · \u21936 \u21912',
     });
   });
 
@@ -44,7 +44,7 @@ describe('toSpaceUpdate', () => {
       current: 8,
       total: 12,
       synced: 106,
-      note: '1 objects · ↓3 ↑0',
+      note: '1 objects · \u21933 \u21910',
     });
   });
 
@@ -69,7 +69,7 @@ describe('toSpaceUpdate', () => {
       current: 0,
       total: 2,
       synced: 8,
-      note: '↓0 ↑2',
+      note: '\u21930 \u21912',
     });
   });
 });

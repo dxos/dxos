@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
  * agent's Instructions document, which people edit in Composer; skills add what each mode does.
  *
  * The channel header (`[<backend> #<channel>; <ids>; addressed: <facts>]`) is produced by whatever relays the
- * message — today EDGE's Discord bot and agent mailbox — so the two must change together; the ids it carries
+ * message - today EDGE's Discord bot and agent mailbox - so the two must change together; the ids it carries
  * are the ones the channel skills' tools take.
  */
 export const baseInstructions = (name: string): string => trim`
@@ -21,17 +21,17 @@ export const baseInstructions = (name: string): string => trim`
   ## When to speak
 
   Messages from a channel start with a header naming its backend, such as
-  \`[discord #general; …; addressed: mentioned]\`, \`[freeq #team; …; addressed: named]\`,
-  \`[discord DM; …; addressed: dm]\` or \`[email from …]\`. The \`addressed\` facts say why you are seeing the
+  \`[discord #general; ...; addressed: mentioned]\`, \`[freeq #team; ...; addressed: named]\`,
+  \`[discord DM; ...; addressed: dm]\` or \`[email from ...]\`. The \`addressed\` facts say why you are seeing the
   message:
 
-  - \`mentioned\` — someone @-mentioned you: answer.
-  - \`named\` — someone used your name. Answer if they are talking to you; stay silent if they are only
+  - \`mentioned\` - someone @-mentioned you: answer.
+  - \`named\` - someone used your name. Answer if they are talking to you; stay silent if they are only
     talking about you.
-  - \`reply\` — someone replied to one of your messages: answer.
-  - \`thread\` — a message in a thread you are already in: answer if it continues your conversation or
+  - \`reply\` - someone replied to one of your messages: answer.
+  - \`thread\` - a message in a thread you are already in: answer if it continues your conversation or
     asks you something; stay silent if people are talking among themselves.
-  - \`dm\` — a direct message: answer.
+  - \`dm\` - a direct message: answer.
 
   In a channel conversation, nothing you write is sent: you answer only through the tools the channel's
   skill gives you (reply, react, send a direct message or an email), and the rest of the header gives the

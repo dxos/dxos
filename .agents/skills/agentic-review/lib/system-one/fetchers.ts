@@ -90,7 +90,7 @@ const readText = (root: string, path: string): string | null => {
 
 const toPosix = (path: string): string => normalize(path).split('\\').join('/');
 
-/** Workspace package name → { dir, manifest }, from every tracked package.json. */
+/** Workspace package name -> { dir, manifest }, from every tracked package.json. */
 const workspacePackages = (root: string): Map<string, WorkspacePackage> => {
   if (!caches.workspace) {
     const workspace = new Map<string, WorkspacePackage>();

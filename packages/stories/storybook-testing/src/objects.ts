@@ -9,7 +9,7 @@ import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
 /**
- * Adds objects to the space's root collection so plugin-space builds app-graph nodes for them —
+ * Adds objects to the space's root collection so plugin-space builds app-graph nodes for them -
  * making object-scoped graph actions (e.g. the comment toolbar) resolvable and the objects
  * navigable. Creates the root collection if the space has none: stories create their space via the
  * raw client API, which skips the space-plugin create flow that would otherwise set it up.

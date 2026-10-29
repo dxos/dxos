@@ -18,7 +18,7 @@ export const EFFECT_MODULE = 'effect.js';
  *   its `stats` counting the calls the program made through `env.HOST`.
  *
  * The program is compiled at module scope, so the only names it can reach are its bindings and the
- * module's own helpers — not `env`, and not the request.
+ * module's own helpers - not `env`, and not the request.
  */
 export const module = ({
   code,

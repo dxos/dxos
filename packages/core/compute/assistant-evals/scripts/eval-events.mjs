@@ -216,7 +216,7 @@ export const toEvents = (report, experiment) =>
     });
   });
 
-const percent = (score) => (score === undefined ? '–' : `${Math.round(score * 100)}%`);
+const percent = (score) => (score === undefined ? '-' : `${Math.round(score * 100)}%`);
 
 const seconds = (millis) => `${(millis / 1000).toFixed(1)}s`;
 
@@ -229,7 +229,7 @@ export const toSummary = (report) => {
     const failed = evaluation.results
       .flatMap((result) => result.scores.filter((score) => score.score < 1).map((score) => score.name))
       .filter((name, index, names) => names.indexOf(name) === index);
-    const status = evaluation.status === 'success' ? '✅' : '❌';
+    const status = evaluation.status === 'success' ? 'OK' : 'X';
     // evalite's reporter hardcodes each eval's duration to zero; the results carry the real one.
     const duration = sum(evaluation.results, (result) => result.duration);
     const { models, inputTokens, outputTokens } = usage(evaluation.results.flatMap((result) => result.traces));
@@ -268,7 +268,7 @@ const main = async () => {
   if (values.posthog) {
     const apiKey = process.env.DX_EVALS_POSTHOG_API_KEY;
     if (!apiKey) {
-      console.log('::notice::DX_EVALS_POSTHOG_API_KEY is unset — skipping the evaluation events.');
+      console.log('::notice::DX_EVALS_POSTHOG_API_KEY is unset - skipping the evaluation events.');
       return;
     }
     // A result whose run never reached the model has no link; the environment names the experiment

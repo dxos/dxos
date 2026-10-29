@@ -73,7 +73,7 @@ const BILLING_PLAN = trim`
 
   1. Metering events in production, queued locally so a Stripe outage delays usage but never loses it.
   2. October in shadow mode: a usage invoice is computed next to every real one and nobody is charged.
-  3. 30 days’ notice to every account owner, and a call for the five largest accounts.
+  3. 30 days' notice to every account owner, and a call for the five largest accounts.
   4. The first real usage invoices go out with the November cycle.
 
   ## Rules
@@ -113,7 +113,7 @@ const SOC2_POLICIES = trim`
 const RELEASE_NOTES = trim`
   # Cairn 1.8 release notes (draft)
 
-  Drafted by Scribe for Lucía’s review.
+  Drafted by Scribe for Lucía's review.
 
   **Cairn 1.8 ships the v2 remote cache.** Identical outputs are now stored once, so most teams store about a third less. Nothing changes for you unless you pin the cache protocol version.
 
@@ -136,7 +136,7 @@ const RELEASE_NOTES = trim`
 
 const offsiteAgenda = (links: InboxCrmLinks | undefined) => {
   const lodge = links ? link('Saltmarsh Lodge', links.orgs.saltmarsh) : 'Saltmarsh Lodge';
-  const wren = links ? link('Wren Calloway', links.people.wren) : 'the lodge’s events coordinator';
+  const wren = links ? link('Wren Calloway', links.people.wren) : "the lodge's events coordinator";
   const event = links?.events.offsite[0];
   return trim`
     # Offsite agenda
@@ -165,7 +165,7 @@ const offsiteAgenda = (links: InboxCrmLinks | undefined) => {
 
     ## Budget
 
-    Lodge, three nights full board: €14,200. Flights: about €6,800. Activities: €600.
+    Lodge, three nights full board: ${'\u20AC'}14,200. Flights: about ${'\u20AC'}6,800. Activities: ${'\u20AC'}600.
   `;
 };
 

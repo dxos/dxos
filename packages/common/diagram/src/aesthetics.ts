@@ -4,7 +4,7 @@
 
 //
 // Aesthetic rules: whether a diagram reads well as drawn, which the layout objective's counts
-// (crossings, bends, length) do not capture — arrows against the flow, labels on top of boxes, edges
+// (crossings, bends, length) do not capture - arrows against the flow, labels on top of boxes, edges
 // merged into one trunk, an entry point in the far corner of its group. Judged from `Content.layout`,
 // the text rendering of the page, by the same batched decision call as `Architecture`.
 //
@@ -60,7 +60,7 @@ export const RULES: readonly Architecture.Rule[] = [
     'traceable-arrows',
     'traceableArrows',
     'Each arrow can be followed from its start to its end.',
-    'Can a reader follow each arrow from its start to its end without ambiguity — no two arrows sharing a line ' +
+    'Can a reader follow each arrow from its start to its end without ambiguity - no two arrows sharing a line ' +
       'segment or merged into one trunk, no arrow running through a group it does not connect to, no long detours ' +
       'around the page, and few crossings?',
     {
@@ -83,7 +83,7 @@ export const RULES: readonly Architecture.Rule[] = [
     'compact',
     'compact',
     'The drawing is packed tightly: no large empty regions, groups sized to their content.',
-    'Is the drawing compact — no large empty regions between or inside groups, groups no bigger than what they ' +
+    'Is the drawing compact - no large empty regions between or inside groups, groups no bigger than what they ' +
       'hold, and boxes that are connected placed next to each other?',
     {
       true: 'The page is tightly packed; connected boxes are neighbours.',
@@ -94,8 +94,8 @@ export const RULES: readonly Architecture.Rule[] = [
     'groups-aligned',
     'groupsAligned',
     'Groups line up with each other rather than floating at arbitrary offsets.',
-    'Do the groups line up with one another — sharing a top edge or a left edge where they sit side by side or ' +
-      'stacked — rather than one group floating at an arbitrary height or offset beside another?',
+    'Do the groups line up with one another - sharing a top edge or a left edge where they sit side by side or ' +
+      'stacked - rather than one group floating at an arbitrary height or offset beside another?',
     {
       true: 'Groups share edges and read as one arrangement.',
       false: 'A group sits at an arbitrary offset from its neighbours.',
@@ -106,7 +106,7 @@ export const RULES: readonly Architecture.Rule[] = [
     'namesOnly',
     'Each box is labelled with a component name alone, without comments or qualifiers.',
     'Is every box labelled with just the name of what it is, with no comments, limits or qualifiers mixed into the ' +
-      'name (such as "no cap", "≤10" or a colon followed by a description)?',
+      'name (such as "no cap", "<=10" or a colon followed by a description)?',
     {
       true: 'Box labels are plain names; any commentary sits on arrows or not at all.',
       false: 'Some box label mixes a name with a comment, a limit or a description.',

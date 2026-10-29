@@ -127,7 +127,7 @@ export type UsePointerMachineOptions = {
   atoms: CanvasAtoms;
   /** Returns to Select once a creation gesture lands. */
   setTool: ToolsCommands['setTool'];
-  /** Drops a copy of the dragged nodes where the drag ends (⌘-drag). */
+  /** Drops a copy of the dragged nodes where the drag ends (Cmd-drag). */
   duplicate: DocumentIntentCommands['duplicate'];
   store: ViewStore;
   scene: View;
@@ -781,7 +781,7 @@ export const usePointerMachine = ({
             ...current,
             raw,
             delta: moveDelta(current.anchor, raw),
-            // Read on every move, so pressing or releasing ⌘ mid-drag switches between moving and copying.
+            // Read on every move, so pressing or releasing Cmd mid-drag switches between moving and copying.
             copy: event.metaKey && capabilities.create === true,
           });
           break;
@@ -1008,7 +1008,7 @@ export const usePointerMachine = ({
             }
             break;
           }
-          // ⌘-drag leaves the selection where it was and drops a copy, which becomes the selection.
+          // Cmd-drag leaves the selection where it was and drops a copy, which becomes the selection.
           if (!current.copy || !duplicate(current.ids, current.delta)) {
             projection.apply({ kind: 'move', ids: current.ids, delta: current.delta });
           }

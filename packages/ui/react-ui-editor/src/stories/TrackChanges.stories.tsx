@@ -25,7 +25,7 @@ const MAIN = 'The quick brown fox jumps over the lazy dog.';
 
 // A second author's proposal against main ("lazy" -> "sleepy"). Milestone B decouples the diff base
 // from the editor document, so this overlay is diffed vs MAIN and rebased into the (diverged) branch's
-// coordinates — it no longer strikes the tester's own new text (the collision the old overlay had).
+// coordinates - it no longer strikes the tester's own new text (the collision the old overlay had).
 const BOB = 'The quick brown fox jumps over the sleepy dog.';
 
 const SELF_COLOUR = 'var(--color-cyan-text)';
@@ -67,7 +67,7 @@ const Render = ({ branch, ...args }: RenderProps) => {
 /**
  * The tester's own live edits (self, via {@link trackChanges}) composed with a foreign author's
  * proposal (via {@link suggestions} with an explicit `base`). Because the foreign overlay is diffed
- * against MAIN — not the editor document — the tester's own typing is never mistaken for text the
+ * against MAIN - not the editor document - the tester's own typing is never mistaken for text the
  * foreign author would remove.
  */
 const ForeignAuthorRender = ({ branch, ...args }: RenderProps) => {
@@ -108,13 +108,13 @@ type Story = StoryObj<typeof meta>;
  * Interactive "Suggesting mode" (bind-to-branch): the editor is bound to a branch that starts equal to
  * MAIN, so it opens clean. Type to feel the tracked-change ergonomics:
  *
- * - Type — the added characters appear as an underlined, cyan insertion (character-level, so editing
+ * - Type - the added characters appear as an underlined, cyan insertion (character-level, so editing
  *   inside a word marks only the changed characters, not the whole word).
- * - Select text and delete it — the removed characters stay visible as a struck-through phantom
+ * - Select text and delete it - the removed characters stay visible as a struck-through phantom
  *   (`~~old~~`), because they are absent from the branch but present in main.
- * - Replace text — you get both at once, `~~old~~new`, at character granularity.
- * - Move the caret across a phantom with the arrow keys — it is stepped over as one unit.
- * - Press Backspace with the caret just after a phantom — the real branch text behind it is protected
+ * - Replace text - you get both at once, `~~old~~new`, at character granularity.
+ * - Move the caret across a phantom with the arrow keys - it is stepped over as one unit.
+ * - Press Backspace with the caret just after a phantom - the real branch text behind it is protected
  *   (the keystroke is swallowed rather than eating the hidden character).
  */
 export const Default: Story = {
@@ -123,8 +123,8 @@ export const Default: Story = {
 
 /**
  * A branch that has already diverged from main, so tracked changes render on mount without typing:
- * `swiftly ` inserted after "jumps" and `lazy ` deleted — both clean whole-word edits so the
- * character-level diff yields contiguous hunks. Deterministic — used for the render smoke test.
+ * `swiftly ` inserted after "jumps" and `lazy ` deleted - both clean whole-word edits so the
+ * character-level diff yields contiguous hunks. Deterministic - used for the render smoke test.
  */
 export const Divergent: Story = {
   args: { branch: 'The quick brown fox jumps swiftly over the dog.' },
@@ -156,10 +156,10 @@ export const Divergent: Story = {
 };
 
 /**
- * A foreign author's proposal (Bob: "lazy"→"sleepy") layered over the tester's own live edits. The
+ * A foreign author's proposal (Bob: "lazy"->"sleepy") layered over the tester's own live edits. The
  * overlay is diffed against MAIN (not the branch), so after the tester types, their new text is tracked
  * as a self-insertion and is NOT struck by Bob's overlay, while Bob's change still renders. This is the
- * multi-author case the old (diff-vs-document) overlay could not support. Deterministic — runs in CI.
+ * multi-author case the old (diff-vs-document) overlay could not support. Deterministic - runs in CI.
  */
 export const WithForeignAuthor: Story = {
   render: ForeignAuthorRender,
@@ -206,7 +206,7 @@ export const WithForeignAuthor: Story = {
       ).toContain('really'),
     );
 
-    // Critically, Bob's overlay does NOT strike the tester's new text — only "lazy" stays struck.
+    // Critically, Bob's overlay does NOT strike the tester's new text - only "lazy" stays struck.
     await waitFor(() => {
       const struck = suggestDeletes()
         .map((node) => node.textContent)

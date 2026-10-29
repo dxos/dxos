@@ -76,7 +76,7 @@ type Story = StoryObj<typeof meta>;
 export const Single: Story = {
   render: () => (
     <Outer asChild role='article' classNames='border-green-500' priority={1}>
-      <Leaf>Single asChild (non-compliant — see console)</Leaf>
+      <Leaf>Single asChild (non-compliant - see console)</Leaf>
     </Outer>
   ),
 };

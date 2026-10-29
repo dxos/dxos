@@ -31,17 +31,17 @@ export const ShutdownPlugin = (options: ShutdownPluginOptions = {}): Plugin => {
 
   const shutdown = async (signal: NodeJS.Signals) => {
     if (shuttingDown) {
-      // Second signal — bail out hard.
+      // Second signal - bail out hard.
       process.exit(1);
     }
     shuttingDown = true;
     if (!silent) {
-      process.stdout.write(`\n[vite-plugin-shutdown] received ${signal}, closing dev server…\n`);
+      process.stdout.write(`\n[vite-plugin-shutdown] received ${signal}, closing dev server...\n`);
     }
     try {
       await server?.close();
     } catch {
-      // Ignore — exit anyway.
+      // Ignore - exit anyway.
     }
     process.exit(exitCode);
   };

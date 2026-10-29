@@ -78,7 +78,7 @@ export type TeardownReport = { file: string; test: string; line: number; reason:
  * `after:` steps that could remove an object the run did not create.
  *
  * A teardown is safe when it removes something the test bound itself (a `capture:` or a named `given:`), or resolves
- * by a name the test's `given` guarantees is absent — constrained to the subject's own type, and throwing when nothing
+ * by a name the test's `given` guarantees is absent - constrained to the subject's own type, and throwing when nothing
  * matches. Resolving by type-and-index deletes whatever the space happens to hold first; resolving by name across
  * `Filter.everything()` deletes any object carrying that name, which the `given` precondition does not exclude.
  */
@@ -103,7 +103,7 @@ export const findUnsafeTeardowns = (file: string, text: string): TeardownReport[
     if (!inAfter || !/removeObjects/.test(line)) {
       return;
     }
-    // Only the invoke's own continuation lines — an `assert:` verifying removal legitimately queries the database and
+    // Only the invoke's own continuation lines - an `assert:` verifying removal legitimately queries the database and
     // must not be mistaken for victim selection.
     const step: string[] = [];
     for (let next = index; next < lines.length; next++) {

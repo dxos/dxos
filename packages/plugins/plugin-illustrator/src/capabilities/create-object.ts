@@ -45,7 +45,7 @@ export default Capability.makeModule(
             canvas,
           });
 
-          // Add the user-facing Drawing wrapper. Not hidden — this is the object the user sees
+          // Add the user-facing Drawing wrapper. Not hidden - this is the object the user sees
           // and navigates to. If this second write fails, roll back the canvas so we don't
           // leak an orphaned object into the space.
           return yield* Operation.invoke(

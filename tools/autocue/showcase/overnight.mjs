@@ -7,8 +7,8 @@
  * Records every showcase flow (`packages/{apps,plugins}/<pkg>/autocue/showcase.mjs`) unattended, in each variant
  * `--themes` names, and writes REPORT.md + report.json, so a night's run can be read in the morning and the failing flows fixed:
  *
- * - light: the showcase clip — 60 fps, no captions or ident, the `clip: <name>` step cut to the flow's `CLIP_MS`.
- * - dark: the demo — 30 fps, captions, the whole take trimmed of dead air and bookended by the Composer ident.
+ * - light: the showcase clip - 60 fps, no captions or ident, the `clip: <name>` step cut to the flow's `CLIP_MS`.
+ * - dark: the demo - 30 fps, captions, the whole take trimmed of dead air and bookended by the Composer ident.
  * - clip-dark: the light clip recorded in the dark theme, for a dark grid (`--themes clip-dark`).
  *
  * A failed take is retried, then logged and skipped; it never ends the run.
@@ -247,7 +247,7 @@ if (options.publish && !(THEMES.includes('light') && THEMES.includes('dark'))) {
   process.exit(2);
 }
 
-log(`${flows.length} flows → ${path.relative(ROOT, OUT)}`);
+log(`${flows.length} flows -> ${path.relative(ROOT, OUT)}`);
 const server = !(await up()) && !options['no-serve'] ? await serve() : undefined;
 if (!(await up())) {
   console.error('Composer is not answering on http://localhost:4173; start it or drop --no-serve');
@@ -266,8 +266,8 @@ for (const [index, file] of flows.entries()) {
   } catch (error) {
     // A flow that does not load is one failed row, not the end of the night's run.
     const name = path.basename(path.dirname(path.dirname(file)));
-    log(`${name}: FAILED to load — ${error.message}`);
-    results.push({ name, theme: '—', flow: path.relative(ROOT, file), attempts: 0, ok: false, error: error.message });
+    log(`${name}: FAILED to load - ${error.message}`);
+    results.push({ name, theme: '-', flow: path.relative(ROOT, file), attempts: 0, ok: false, error: error.message });
     continue;
   }
   const clipStep = module.steps.find((step) => step.name.startsWith('clip: '));
@@ -289,7 +289,7 @@ for (const [index, file] of flows.entries()) {
         break;
       }
     }
-    log(`${name} ${theme}: ${result.ok ? 'ok' : `FAILED — ${result.error}`}`);
+    log(`${name} ${theme}: ${result.ok ? 'ok' : `FAILED - ${result.error}`}`);
     results.push(result);
     writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(results, null, 2));
   }
@@ -302,7 +302,7 @@ for (const [index, file] of flows.entries()) {
       { light: variants.light.video, dark: variants.dark.video },
       keys,
     );
-    log(`${name}: published → ${outcome.published}`);
+    log(`${name}: published -> ${outcome.published}`);
     Object.assign(variants.dark, outcome);
     writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(results, null, 2));
   }
@@ -366,9 +366,9 @@ const minutes = ((Date.now() - started) / 60_000).toFixed(1);
 const passed = results.filter((result) => result.ok).length;
 const rows = results.map(
   (result) =>
-    `| ${result.name} | ${result.theme} | ${result.seconds ? `${result.seconds}s` : '—'} | ${
+    `| ${result.name} | ${result.theme} | ${result.seconds ? `${result.seconds}s` : '-'} | ${
       result.ok ? 'ok' : 'FAILED'
-    } | ${result.attempts} | ${result.video ? `\`${result.video}\`` : '—'} | ${result.published ?? '—'} | ${(
+    } | ${result.attempts} | ${result.video ? `\`${result.video}\`` : '-'} | ${result.published ?? '-'} | ${(
       result.error ?? ''
     )
       .replace(/\|/g, '\\|')

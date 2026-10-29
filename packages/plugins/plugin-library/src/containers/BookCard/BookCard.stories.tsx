@@ -12,7 +12,7 @@ import { Book } from '#types';
 
 import { BookCard } from './BookCard.tsx';
 
-// NOTE: build the ECHO object inside `render` — never pass a reactive ECHO object as a story `arg`,
+// NOTE: build the ECHO object inside `render` - never pass a reactive ECHO object as a story `arg`,
 // since Storybook deep-traverses/mutates args (which the ECHO proxy rejects outside `Obj.update`).
 type StoryArgs = { cover?: string; stars?: number; publicationYear?: number };
 

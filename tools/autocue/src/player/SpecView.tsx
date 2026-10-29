@@ -16,7 +16,7 @@ export type SpecViewProps = {
   onSelect: (chapter: number) => void;
 };
 
-/** `  - name: Play 1. e4  # note` → indent, list marker, key, value, comment, so each can be coloured. */
+/** `  - name: Play 1. e4  # note` -> indent, list marker, key, value, comment, so each can be coloured. */
 const LINE = /^(\s*)(- )?([A-Za-z][\w-]*:)?(.*?)(\s+#.*)?$/;
 
 /** Columns before a line's text, counting a list marker as indent. */

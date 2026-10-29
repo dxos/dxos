@@ -14,7 +14,7 @@ export const fixtureExists = (): boolean => existsSync(FIXTURE);
 
 /**
  * Normalizes a message body to clean Markdown. Gmail bodies are HTML; the raw markup pollutes
- * embeddings, wastes summarization tokens, and is unreadable in the responses markdown — so message
+ * embeddings, wastes summarization tokens, and is unreadable in the responses markdown - so message
  * text is cleaned once at load and every downstream consumer (facts, embeddings, summaries, display)
  * gets structured prose. `@dxos/markdown` `normalizeText` converts HTML via turndown and passes
  * plaintext through, mirroring the ingestion pipeline (see the html-to-markdown benchmark).
@@ -24,7 +24,7 @@ export const toMarkdown = (text: string): string => normalizeText(text);
 /** Which MIME body to use: prefer the native plain part, keep raw HTML, or take the native plain part. */
 export type BodyMode = 'auto' | 'html' | 'plain';
 
-// A text/plain part is usable if it has real content — some fixture messages carry a degenerate
+// A text/plain part is usable if it has real content - some fixture messages carry a degenerate
 // plain block (e.g. the literal "False") from a capture bug; those fall back to the HTML part.
 const isUsablePlain = (text: string): boolean => {
   const trimmed = text.trim();
@@ -63,7 +63,7 @@ const pickBody = (blocks: FixtureBlock[], mode: BodyMode): string => {
   if (mode === 'plain') {
     return plain && isUsablePlain(plain.text) ? plain.text : '';
   }
-  // auto: native plain if usable, else HTML→Markdown, else the normalized remaining text blocks.
+  // auto: native plain if usable, else HTML->Markdown, else the normalized remaining text blocks.
   if (plain && isUsablePlain(plain.text)) {
     return plain.text;
   }
@@ -76,7 +76,7 @@ const pickBody = (blocks: FixtureBlock[], mode: BodyMode): string => {
 // Reconstructs a message from a serialized fixture entry, minting a fresh id, and collapsing its MIME
 // text blocks into ONE clean text block per `mode` (so `Message.extractText` no longer concatenates
 // the html + plain alternatives). Retains sender, timestamp, thread, and properties (subject, to, cc,
-// references, snippet). Cross-object refs (`attachments`) are dropped — not in the fixture.
+// references, snippet). Cross-object refs (`attachments`) are dropped - not in the fixture.
 const reconstructMessage = (json: FixtureEntry, mode: BodyMode): Message.Message =>
   Message.make({
     created: json.created,

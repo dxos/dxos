@@ -17,6 +17,6 @@ export const graphTranslations: Record<string, string> = {
   'graph-family.same': 'Same as',
   'graph-family.other': 'Other',
   'relations.label': 'Relations',
-  'relations-loading.message': 'Walking the graph around this result…',
+  'relations-loading.message': 'Walking the graph around this result...',
   'relations-empty.message': 'No relations in the graph.',
 };

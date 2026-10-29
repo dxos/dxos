@@ -122,22 +122,28 @@ export const HoverAndSelect: Story = {
       timeout: 10_000,
     });
 
-    const term = segmentNamed(canvasElement, 'パン屋');
+    const term = segmentNamed(canvasElement, '\u30D1\u30F3\u5C4B');
     hover(term);
-    await waitFor(() => expect(canvasElement.querySelector('.cm-segment-hover')).toHaveTextContent('パン屋'));
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.cm-segment-hover')).toHaveTextContent('\u30D1\u30F3\u5C4B'),
+    );
 
     // Nothing is committed until the click: hovering alone must not select.
     await expect(canvasElement.querySelector('.cm-segment-selected')).toBeNull();
 
     press(term);
-    await waitFor(() => expect(canvasElement.querySelector('.cm-segment-selected')).toHaveTextContent('パン屋'));
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.cm-segment-selected')).toHaveTextContent('\u30D1\u30F3\u5C4B'),
+    );
 
-    // The selection survives the pointer moving on — that is what makes it a selection rather than
+    // The selection survives the pointer moving on - that is what makes it a selection rather than
     // a hover state, and what lets the toolbar act on it.
-    const other = segmentNamed(canvasElement, '小麦粉');
+    const other = segmentNamed(canvasElement, '\u5C0F\u9EA6\u7C89');
     hover(other);
-    await waitFor(() => expect(canvasElement.querySelector('.cm-segment-hover')).toHaveTextContent('小麦粉'));
-    await expect(canvasElement.querySelector('.cm-segment-selected')).toHaveTextContent('パン屋');
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.cm-segment-hover')).toHaveTextContent('\u5C0F\u9EA6\u7C89'),
+    );
+    await expect(canvasElement.querySelector('.cm-segment-selected')).toHaveTextContent('\u30D1\u30F3\u5C4B');
   },
 };
 
@@ -147,10 +153,12 @@ export const MostSpecificWins: Story = {
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(canvasElement.querySelectorAll('.cm-content').length).toBe(2), { timeout: 10_000 });
 
-    // 夜明け is a vocab segment inside the clause 夜明け前に; the clause is only reached off the term.
-    press(segmentNamed(canvasElement, '夜明け'));
-    await waitFor(() => expect(canvasElement.querySelector('.cm-segment-selected')).toHaveTextContent('夜明け'));
-    await expect(canvasElement.querySelector('.cm-segment-selected')).not.toHaveTextContent('前に');
+    // \u591C\u660E\u3051 is a vocab segment inside the clause \u591C\u660E\u3051\u524D\u306B; the clause is only reached off the term.
+    press(segmentNamed(canvasElement, '\u591C\u660E\u3051'));
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.cm-segment-selected')).toHaveTextContent('\u591C\u660E\u3051'),
+    );
+    await expect(canvasElement.querySelector('.cm-segment-selected')).not.toHaveTextContent('\u524D\u306B');
   },
 };
 
@@ -160,11 +168,11 @@ export const SelectionMirrorsAcrossPanes: Story = {
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(canvasElement.querySelectorAll('.cm-content').length).toBe(2), { timeout: 10_000 });
 
-    press(segmentNamed(canvasElement, '小麦粉'));
+    press(segmentNamed(canvasElement, '\u5C0F\u9EA6\u7C89'));
     await waitFor(async () => {
       const selected = [...canvasElement.querySelectorAll('.cm-segment-selected')].map((el) => el.textContent);
       // Source pane shows the term; the translation pane shows its counterpart, from the same id.
-      await expect(selected).toEqual(['小麦粉', 'flour']);
+      await expect(selected).toEqual(['\u5C0F\u9EA6\u7C89', 'flour']);
     });
   },
 };

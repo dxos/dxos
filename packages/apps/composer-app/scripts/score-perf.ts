@@ -13,8 +13,8 @@
 // counters alone, against `budgets-counters.json`, as the `composer-work` suite. Its timings are
 // inflated by the instruments and are never scored.
 //
-// `calibrate` reads one directory per run — a downloaded `perf-nightly` (or `perf-counters`) artifact
-// — and replaces the work-counter budgets with its proposal, leaving every other budget as it is.
+// `calibrate` reads one directory per run - a downloaded `perf-nightly` (or `perf-counters`) artifact
+// - and replaces the work-counter budgets with its proposal, leaving every other budget as it is.
 //
 // Run `score` once after every iteration has written its batch: a night's score is the median across
 // them. A low score never fails the job; only broken inputs do.
@@ -66,7 +66,7 @@ const relative = (file: string) => path.relative(APP_ROOT, file);
 /** A work counter's label leads with the stage, as the tables list stages; its id leads with the counter. */
 const labelOf = (id: string): string => {
   const [head, ...rest] = id.split(' > ');
-  return groupOfId(id) === WORK_GROUP ? `${rest.join(' > ')} › ${head}` : rest.join(' > ');
+  return groupOfId(id) === WORK_GROUP ? `${rest.join(' > ')} > ${head}` : rest.join(' > ');
 };
 
 const tables = (budgets: Record<string, Budget>, groupSuffix = '') =>
@@ -88,22 +88,22 @@ const renderDocs = (budgets: Record<string, Budget>, counters: Record<string, Bu
     `The desired range of every metric the perf nightly (\`.github/workflows/perf-nightly.yml\`, flow`,
     `\`${FLOW}\` in \`PERF.mdl\`) scores. Each value is the median across the night's iterations: a stage's`,
     'wall time, CPU (all processes) and work counters, and whole-run levels reduced as the dashboard',
-    'reduces them — the worst stage for memory and lag, the sum for blocking time and code shipped.',
+    'reduces them - the worst stage for memory and lag, the sum for blocking time and code shipped.',
     '',
-    'Scores run 0–1 (`packages/e2e/perf-harness/src/score/score.ts`): at or under the target scores 1, the',
+    'Scores run 0-1 (`packages/e2e/perf-harness/src/score/score.ts`): at or under the target scores 1, the',
     'limit scores 0.5, and past it the score falls to 0.2 one budget band further (in log space) and 0.1',
     'two bands further, floored at 0.01. A budgeted stage that failed in every iteration scores 0.01. The',
     'overall score is the geometric mean of the group scores, each the weighted geometric mean of its',
     'metrics.',
     '',
     'Timing budgets were calibrated on the CI runner (depot-ubuntu-24.04-8) from the nightly history in PostHog:',
-    'the target is the stable level before a known regression, the limit 1.35× it — about 3× the 10–13%',
-    'night-to-night spread a stage shows — widened where the evidence is thin (the task stages after',
-    'windowing, 1.5×), narrowed where the stage is mostly scripted waits (scroll, edit: 1.15–1.2×) and',
+    'the target is the stable level before a known regression, the limit 1.35× it - about 3× the 10-13%',
+    'night-to-night spread a stage shows - widened where the evidence is thin (the task stages after',
+    'windowing, 1.5×), narrowed where the stage is mostly scripted waits (scroll, edit: 1.15-1.2×) and',
     'doubled for `await-replication`, which waits on the network and carries half weight.',
     '',
     'Work-counter budgets (`<counter> > <stage>`, the `work` group) come from `score-perf.ts calibrate`',
-    'over several nights’ artifacts: the target is the median of each night’s median, the limit three',
+    "over several nights' artifacts: the target is the median of each night's median, the limit three",
     'measured spreads above it (at least 5% and one count). A count moves only when the code does more',
     'or less work, so these sit within a few percent where timings need 35%. Only user-driven stages are',
     'budgeted, and only counters that are non-zero and under 5% per-iteration spread there.',
@@ -113,7 +113,7 @@ const renderDocs = (budgets: Record<string, Budget>, counters: Record<string, Bu
     '## Counters-on pass',
     '',
     'The costed counters (`DX_PERF_COUNTERS=trace,calls,react`: a trace per stage and V8 precise',
-    'coverage) cost 7–29% of wall time, so a separate job runs them and scores only them, as the',
+    'coverage) cost 7-29% of wall time, so a separate job runs them and scores only them, as the',
     '`composer-work` suite; its timings are never scored or published.',
     '',
     tables(counters, ` (${relative(COUNTERS_BUDGETS_FILE)})`),

@@ -13,7 +13,7 @@ export default defineConfig({
     'hyperformula': 'src/hyperformula.js',
   },
   mainFields: ['browser', 'module', 'main'],
-  // The vendored dependency tree, inlined — that is what this package exists to ship.
+  // The vendored dependency tree, inlined - that is what this package exists to ship.
   bundle: [
     'hyperformula',
     'chevrotain',

@@ -21,8 +21,8 @@ describe('ThreadPlugin', () => {
       plugins: [ClientPlugin.make({}), ThreadPlugin.make()],
     });
 
-    // After autoStart: schema and OperationHandler auto-cascade. `CreateObject` is browser-only —
-    // its `CreateObjectEntry` carries a `customPanel` React component — so the node variant this
+    // After autoStart: schema and OperationHandler auto-cascade. `CreateObject` is browser-only -
+    // its `CreateObjectEntry` carries a `customPanel` React component - so the node variant this
     // test resolves does not contribute it.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),

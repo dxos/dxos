@@ -19,7 +19,7 @@ const describe = (cause: Cause.Cause<unknown>): string => {
 
 /**
  * Appends one frame: makes the media artifact (its `generator` set to the provider), parents it to
- * a new frame, appends the frame, and — when asked — generates it in the same call. Shared by
+ * a new frame, appends the frame, and - when asked - generates it in the same call. Shared by
  * `append-frame` and `create-storyboard`. Generation is a separate operation so a caller can batch
  * appends first; folding it in serves callers that cannot thread the returned ref (a scripted model).
  */
@@ -44,7 +44,7 @@ export const appendFrame = Effect.fn(function* (
       frame.notes = notes;
     });
   }
-  // Ref before parent edge on both hops: frame → artifact, storyboard → frame.
+  // Ref before parent edge on both hops: frame -> artifact, storyboard -> frame.
   Obj.setParent(artifact, frame);
   Storyboard.appendFrame(storyboard, frame);
   yield* Database.flush();

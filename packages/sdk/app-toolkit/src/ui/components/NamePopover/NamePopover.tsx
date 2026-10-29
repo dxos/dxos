@@ -22,7 +22,7 @@ type NamePopoverProps = PropsWithChildren<{
 
 /**
  * Name-entry popover anchored to its trigger (mirrors the object rename popover UX).
- * Enter or the submit button commits — an empty name is allowed; Escape or dismissal cancels.
+ * Enter or the submit button commits - an empty name is allowed; Escape or dismissal cancels.
  */
 const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit, onCancel }: NamePopoverProps) => {
   const [value, setValue] = useState('');

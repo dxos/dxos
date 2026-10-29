@@ -20,7 +20,7 @@ import { MarkdownBlock } from '../components/index.ts';
  * Controls for attributing what a row costs to mount.
  *
  * `baseline/mount` measures a whole feed with its fixtures already built and finds ~2ms for a row
- * with no editor against ~15ms for a row with one — while the same editor constructed into an
+ * with no editor against ~15ms for a row with one - while the same editor constructed into an
  * offscreen container costs 0.4ms (`baseline/construction`). These render the *same* rows through
  * the same chrome, differing only in what is inside them, so the gap can be attributed rather than
  * argued about.
@@ -35,7 +35,7 @@ export const TextItem = ({ content }: { content: ControlContent; message: Messag
 /** An editor with nothing but wrapping: no theme, no keymap, no markdown, no decoration. */
 const BARE: Extension[] = [EditorView.editable.of(false), EditorState.readOnly.of(true), EditorView.lineWrapping];
 
-/** Wrapping plus the theme — the extension the isolated profile shows to be nearly free. */
+/** Wrapping plus the theme - the extension the isolated profile shows to be nearly free. */
 const THEMED: Extension[] = [
   createBasicExtensions({ readOnly: true, editable: false, lineWrapping: true }),
   createThemeExtensions({ themeMode: 'light' }),
@@ -44,7 +44,7 @@ const THEMED: Extension[] = [
 /** The theme plus the markdown language: parsing, but nothing rendered from what it parsed. */
 const MARKDOWN: Extension[] = [...THEMED, createMarkdownExtensions()];
 
-/** Everything the item has bar its highlight layer — headings, lists and links drawn as themselves. */
+/** Everything the item has bar its highlight layer - headings, lists and links drawn as themselves. */
 const DECORATED: Extension[] = [...MARKDOWN, decorateMarkdown()];
 
 export const BareEditorItem = ({ content }: { content: ControlContent; message: Message.Message }) => (

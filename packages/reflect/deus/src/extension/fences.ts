@@ -58,7 +58,7 @@ const decorateLine = (builder: RangeSetBuilder<Decoration>, lineText: string, li
   // e.g. "req F-1.1: prose", "kind: PieceKind", "piece?: Piece"
   const lineMatch = trimmed.match(/^([\w][\w-]*)(?:\s+([\w][\w.-]*))?(\??)(\s*:)(.*)/s);
   if (!lineMatch) {
-    // No field pattern — still color any trailing " #" comment.
+    // No field pattern - still color any trailing " #" comment.
     const commentIdx = lineText.indexOf(' #', indent);
     if (commentIdx >= 0) {
       builder.add(abs(commentIdx + 1), abs(lineText.length), Decoration.mark({ class: 'cm-mdl-comment' }));
@@ -89,7 +89,7 @@ const decorateLine = (builder: RangeSetBuilder<Decoration>, lineText: string, li
     pos += 1;
   }
 
-  // Colon — last char of colonPart (colonPart matches \s*:).
+  // Colon - last char of colonPart (colonPart matches \s*:).
   const colonPos = pos + colonPart.length - 1;
   builder.add(abs(colonPos), abs(colonPos + 1), Decoration.mark({ class: 'cm-mdl-punct' }));
   pos += colonPart.length;
@@ -214,13 +214,13 @@ const buildDecorations = (view: EditorView): DecorationSet => {
               const typeTo = typeFrom + blockType.length;
               builder.add(typeFrom, typeTo, Decoration.mark({ class: `cm-mdl-block-${blockType}` }));
 
-              // Identifier (e.g. F-1, T-1, Color) — white/bright so it stands out.
+              // Identifier (e.g. F-1, T-1, Color) - white/bright so it stands out.
               if (id) {
                 const idFrom = typeTo + 1; // +1 for the space
                 const idTo = idFrom + id.length;
                 builder.add(idFrom, idTo, Decoration.mark({ class: 'cm-mdl-block-id' }));
 
-                // Label after colon — muted.
+                // Label after colon - muted.
                 if (colon && label) {
                   const labelFrom = idTo + colon.length;
                   builder.add(labelFrom, lineFrom + line.length, Decoration.mark({ class: 'cm-mdl-block-header' }));

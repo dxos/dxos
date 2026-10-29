@@ -7,7 +7,7 @@ import { userEvent, waitFor } from 'storybook/test';
 //
 // Addressing `Form` fields from a play function.
 //
-// A form consumer knows a field by its schema-declared label, not by a test id — and `Form` renders the
+// A form consumer knows a field by its schema-declared label, not by a test id - and `Form` renders the
 // label and the control as siblings under a field container, so these walk out from the label rather
 // than assuming a fixed nesting depth or that every themed control adopts the label's `for` target.
 //
@@ -35,7 +35,7 @@ export const control = <T extends HTMLElement>(root: HTMLElement, label: string)
   throw new Error(`Field "${label}" has no control.`);
 };
 
-/** The value shown on a select field's trigger — the schema value (`in-progress`). */
+/** The value shown on a select field's trigger - the schema value (`in-progress`). */
 export const selectValue = (root: HTMLElement, label: string): string => control(root, label).textContent ?? '';
 
 /**
@@ -59,7 +59,7 @@ export const selectOption = async (root: HTMLElement, label: string, option: str
   await userEvent.click(item);
 };
 
-/** Replace the text of a field and commit it — `autoSave` writes on blur. */
+/** Replace the text of a field and commit it - `autoSave` writes on blur. */
 export const typeInto = async (root: HTMLElement, label: string, text: string): Promise<void> => {
   const input = control<HTMLInputElement>(root, label);
   await userEvent.clear(input);

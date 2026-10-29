@@ -16,7 +16,7 @@ import { REFERENCE } from './util.ts';
 const partials = { bramble: Partial };
 
 /**
- * The Bramble Coffee Roasters space template — the content every new identity gets on first launch,
+ * The Bramble Coffee Roasters space template - the content every new identity gets on first launch,
  * and the template anyone can pick again from the create-space dialog.
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>

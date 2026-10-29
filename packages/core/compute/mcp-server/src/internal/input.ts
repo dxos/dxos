@@ -13,7 +13,7 @@ import { JsonSchema } from '@dxos/echo';
 
 /**
  * The two schemas an `invokeOperation` input travels through: `decode` validates the caller's raw
- * JSON, `encode` returns it to wire form — separate because decoding turns ref envelopes into live
+ * JSON, `encode` returns it to wire form - separate because decoding turns ref envelopes into live
  * `Ref`s, which do not survive an RPC boundary.
  */
 export type Codec = {
@@ -125,7 +125,7 @@ export const tolerateStringifiedRefs = (fields: Fields, inputSchema: JsonSchema.
 
 /**
  * Optionality is read off the AST rather than from `.schema`, which other key modifiers
- * (`Schema.mutableKey`) also expose — treating one of those as optional would re-emit a required
+ * (`Schema.mutableKey`) also expose - treating one of those as optional would re-emit a required
  * field as optional.
  */
 const isOptionalField = (

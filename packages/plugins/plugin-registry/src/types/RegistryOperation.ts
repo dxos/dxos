@@ -18,7 +18,7 @@ const PluginSummary = Schema.Struct({
   enabled: Schema.Boolean,
   active: Schema.Boolean.annotate({
     description:
-      'Whether any of the plugin’s modules have activated. An enabled plugin that is not active ' +
+      "Whether any of the plugin's modules have activated. An enabled plugin that is not active " +
       'contributes nothing yet, so its operations are absent from this host.',
   }),
 });
@@ -34,7 +34,7 @@ export const QueryPlugins = Operation.make({
     name: 'Query Plugins',
     description:
       'List the plugins installed on this host, each with whether it is enabled and whether it has ' +
-      'activated. What a plugin contributes — operations, types, skills — is only present once it is active.',
+      'activated. What a plugin contributes - operations, types, skills - is only present once it is active.',
     icon: 'ph--plugs--regular',
   },
   services: [Plugin.Service],
@@ -103,7 +103,7 @@ export const EnablePlugins = Operation.make({
     name: 'Enable Plugins',
     description:
       'Enable installed plugins by id. Dependencies are enabled with them. A plugin the host does ' +
-      'not have installed cannot be enabled here — it is reported as rejected.',
+      'not have installed cannot be enabled here - it is reported as rejected.',
     icon: 'ph--plugs-connected--regular',
   },
   services: [Plugin.Service],
@@ -123,7 +123,7 @@ export const EnablePlugins = Operation.make({
 
 /**
  * User-initiated, like {@link EnablePlugins}: loading runs code from the URL inside the host, so the
- * assistant offers it as a `plugin-url-prompt` surface and this runs on the user's click — it is
+ * assistant offers it as a `plugin-url-prompt` surface and this runs on the user's click - it is
  * never projected as an agent tool.
  */
 export const LoadPlugin = Operation.make({

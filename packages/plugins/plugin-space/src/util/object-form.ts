@@ -10,14 +10,14 @@ import { type Obj, Ref } from '@dxos/echo';
  * The operation suspends until the handle settles exactly once: with the object the user confirmed,
  * or with nothing when the dialog went away. Escape, the overlay, and the close affordance dismiss
  * the dialog without reaching any handler, so the dismissal is reported from the unmount cleanup
- * rather than from a cancel button — which is also why the two calls around it exist.
+ * rather than from a cancel button - which is also why the two calls around it exist.
  */
 export type ObjectFormHandle = {
   /** Settle, with the confirmed object or with nothing. Only the first call counts. */
   settle: (object?: Obj.Unknown) => void;
   /**
    * Report the dialog gone. Applied on a later task so that React StrictMode, which unmounts and
-   * immediately remounts every effect in development, does not read as a cancel — the remount calls
+   * immediately remounts every effect in development, does not read as a cancel - the remount calls
    * {@link ObjectFormHandle.retain} first and takes the dismissal back.
    */
   dismiss: () => void;

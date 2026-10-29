@@ -4,7 +4,7 @@
 
 // Renders an Effect Schema input (e.g. one of the `*Input` structs from
 // `@dxos/introspect-mcp/tools`) as an editable form using
-// `@dxos/react-ui-form`'s `Form.Root`. Thin wrapper — the form work happens
+// `@dxos/react-ui-form`'s `Form.Root`. Thin wrapper - the form work happens
 // in react-ui-form; this component glues it to the MCP tool spec shape.
 
 import * as Schema from 'effect/Schema';
@@ -26,9 +26,9 @@ export type ToolFormProps<S extends Schema.Codec<any, any>> = Util.ThemedClassNa
 /**
  * Default tool form: schema-driven fields + a submit action. For more
  * elaborate layouts, drop down to `Form.Root` from `@dxos/react-ui-form`
- * directly — this component is the convenience wrapper for the common case.
+ * directly - this component is the convenience wrapper for the common case.
  *
- * Prop name `onSave` matches react-ui-form's terminology — submitting the
+ * Prop name `onSave` matches react-ui-form's terminology - submitting the
  * form fires onSave with the validated values.
  */
 export const ToolForm = <S extends Schema.Codec<any, any>>({

@@ -28,9 +28,9 @@ export interface EntityIndex {
 export type Clock = {
   readonly now: () => number;
   readonly previous: () => number;
-  /** When the goal was created; `elapsed(goal, …)` measures from it. */
+  /** When the goal was created; `elapsed(goal, ...)` measures from it. */
   readonly createdAt: number;
-  /** When a fact was said, for `elapsed(F, …)`. */
+  /** When a fact was said, for `elapsed(F, ...)`. */
   readonly saidAt: (factId: string) => number | undefined;
 };
 

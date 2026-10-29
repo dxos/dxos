@@ -40,7 +40,7 @@ const MODEL = '[data-testid="lighthouse.model"]';
 let areasBefore = 0;
 
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 const visible = (locator, timeout = 1_500) =>
   locator
@@ -109,9 +109,9 @@ export const steps = [
     },
   },
   {
-    name: 'Hover a card’s location',
+    name: "Hover a card's location",
     run: async ({ demo, page }) => {
-      await caption(demo, 4, 'Hover a card’s location: where it is, how precisely, and links to the maps');
+      await caption(demo, 4, "Hover a card's location: where it is, how precisely, and links to the maps");
       const row = page.locator(`${RESULT} [data-testid="lighthouse.card.location"]`).first();
       await row.scrollIntoViewIfNeeded();
       await demo.hover({ selector: `${RESULT} [data-testid="lighthouse.card.location"] >> nth=0`, label: 'Location' });

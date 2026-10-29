@@ -35,7 +35,7 @@ export type MessageThreadProps = Util.ThemedClassName<{
   /**
    * When true, hide the composer textbox and activity indicator. Used for
    * channels whose source-of-truth lives elsewhere (e.g. externally-synced
-   * Slack/Discord channels keyed by a foreign id) — sending isn't meaningful
+   * Slack/Discord channels keyed by a foreign id) - sending isn't meaningful
    * because there is no local-write path back to the source.
    */
   readOnly?: boolean;
@@ -49,7 +49,7 @@ export type MessageThreadProps = Util.ThemedClassName<{
 /**
  * Pure message-thread UI: message list + composer textbox + activity
  * indicator, built on the `@dxos/react-ui-thread` primitives. Does not load
- * data or invoke operations — the caller passes messages and an `onSend`
+ * data or invoke operations - the caller passes messages and an `onSend`
  * callback. Used by `ChannelArticle` and `ThreadArticle`.
  */
 export const MessageThread = Util.composable<HTMLDivElement, MessageThreadProps>(

@@ -27,7 +27,7 @@ import { MessageState, NO_LABEL, URGENCY_SCALE } from './questions.ts';
 
 /**
  * Canned answers keyed by subject. The model itself is exercised live in `@dxos/ai`'s
- * `TypeSafeResolver`; what needs pinning here is the other half — that an answer becomes the right tag
+ * `TypeSafeResolver`; what needs pinning here is the other half - that an answer becomes the right tag
  * on the right message, and that a re-run asks about nothing.
  */
 // The choice key is the tag's URI (labels are not unique), so the fixture learns it when the space
@@ -123,7 +123,7 @@ const seedMailbox = Effect.fnUntraced(function* () {
   const { db } = yield* Database.Service;
   const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
   const feed = yield* Database.load(mailbox.feed);
-  // A user tag — the vocabulary the choice question is asked against.
+  // A user tag - the vocabulary the choice question is asked against.
   const billing = db.add(Obj.make(Tag.Tag, { label: 'Billing' }));
   billingTagUri = Obj.getURI(billing).toString();
   yield* Effect.promise(() =>

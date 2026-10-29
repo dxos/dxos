@@ -41,7 +41,7 @@ export {
 export type Lens<S = any, T = any> = LensShape<S, T>;
 export type Any = AnyLens;
 
-/** `Lens.from(property, codec)` — rename plus a total value conversion. */
+/** `Lens.from(property, codec)` - rename plus a total value conversion. */
 export const from = <P extends string, V>(
   property: P,
   codec: Codec<any, V> | string,
@@ -51,7 +51,7 @@ export const from = <P extends string, V>(
   codec,
 });
 
-/** `Lens.readOnly(property)` — projected for display, rejected on write. */
+/** `Lens.readOnly(property)` - projected for display, rejected on write. */
 export const readOnly = <P extends string>(property: P) => ({ kind: 'readOnly' as const, property });
 
 /** Project the base object into the target shape, as a detached snapshot. */

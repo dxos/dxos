@@ -85,7 +85,7 @@ export type ChatPromptProps = Merge<
     customActions?: Atom.Atom<ActionGraphProps>;
     /**
      * The graph node those actions were filed on. Keys the dictation session, because the mic that
-     * opens it is one of them and carries the same id — anything else here is a session this prompt
+     * opens it is one of them and carries the same id - anything else here is a session this prompt
      * would never hear.
      */
     nodeId?: string;

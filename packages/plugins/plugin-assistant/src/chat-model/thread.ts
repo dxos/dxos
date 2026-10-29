@@ -15,8 +15,8 @@ import { type OutboxEntry } from './outbox.ts';
 /**
  * Append order for {@link Feed.history}, which walks lineage positionally rather than by time.
  *
- * Position is authoritative but server-assigned: locally-written blocks — and every block until a
- * position authority acknowledges them — report `+Infinity`, and a query returns an unordered set, so
+ * Position is authoritative but server-assigned: locally-written blocks - and every block until a
+ * position authority acknowledges them - report `+Infinity`, and a query returns an unordered set, so
  * position alone leaves them in arbitrary order. `created` breaks those ties: sound locally, where one
  * conversation's messages come off one clock, and consulted only when position cannot decide.
  */
@@ -43,8 +43,8 @@ export type DeliveryRow = {
 export type ThreadProjection = {
   /**
    * The rows to render, in order: the turns, then the prompts the agent has not taken up yet.
-   * A prompt is ONE row from submit to its turn — keyed by its outbox id, or its queue entry's id
-   * after a reload — so it never shows twice and never remounts as the copies of it land.
+   * A prompt is ONE row from submit to its turn - keyed by its outbox id, or its queue entry's id
+   * after a reload - so it never shows twice and never remounts as the copies of it land.
    */
   messages: Message.Message[];
   /** Delivery state of the rows standing for prompts, by row id. */
@@ -60,10 +60,10 @@ export const EMPTY_THREAD: ThreadProjection = { messages: [], delivery: new Map(
 
 /**
  * The turns a thread should render: those reachable from the feed's head, so a rewind's abandoned turns
- * disappear from the view exactly as they disappear from the model's history — followed by the prompts
+ * disappear from the view exactly as they disappear from the model's history - followed by the prompts
  * still on their way to the agent, each with its delivery status.
  *
- * A pending `rewindFrom` truncates the view to what precedes it — the rewound-to prompt and everything
+ * A pending `rewindFrom` truncates the view to what precedes it - the rewound-to prompt and everything
  * after it, since the point of rewinding to a prompt is to re-ask it. The pointer is cleared by the next
  * append (which turns the fork into lineage), so a rewind that is never followed through stays visible
  * as a truncated thread with the prompt restored in the composer.
@@ -155,7 +155,7 @@ export const projectThread = ({
     }
   }
 
-  // Waiting entries this chat did not send (another device, or a reload) — they predate the outbox.
+  // Waiting entries this chat did not send (another device, or a reload) - they predate the outbox.
   for (const entry of entries) {
     if (!claimed.has(entry.id) && !isConsumed(entry) && !isInFlight(entry)) {
       tail.push(deliveryRow(entry.id, entry, entry.created, 'delivered', undefined));
@@ -189,7 +189,7 @@ const projectHistory = (
     if (index > 0 && !sorted.slice(index + 1).some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
       return collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded]);
     }
-    // Not present — a stale pointer (e.g. the message never replicated) — or already continued; fall
+    // Not present - a stale pointer (e.g. the message never replicated) - or already continued; fall
     // through to the feed's own lineage rather than blanking the thread.
   }
 

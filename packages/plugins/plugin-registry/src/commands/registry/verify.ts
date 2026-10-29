@@ -15,7 +15,7 @@ import { ClientService } from '@dxos/client';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSession } from './util.ts';
 
 /**
- * `dx registry verify` — publishes a `org.dxos.experimental.publisher.verification`
+ * `dx registry verify` - publishes a `org.dxos.experimental.publisher.verification`
  * record on the authenticated repo, with rkey = subject DID. Subject is given as a
  * handle or DID; handles are resolved through the public XRPC.
  *

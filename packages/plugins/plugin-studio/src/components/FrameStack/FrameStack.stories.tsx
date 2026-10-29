@@ -40,7 +40,7 @@ const GENERATED_ITEMS: Item[] = Array.from({ length: GENERATED_COUNT }, (_, inde
   const id = `g${index}`;
   return {
     id,
-    name: `${SHOTS[index % SHOTS.length]} — ${SUBJECTS[(index * 3) % SUBJECTS.length]}`,
+    name: `${SHOTS[index % SHOTS.length]} - ${SUBJECTS[(index * 3) % SUBJECTS.length]}`,
     src: index % 3 === 2 ? undefined : `https://picsum.photos/seed/studio-${id}/640/360`,
   };
 });
@@ -86,7 +86,7 @@ export const Default: Story = {};
 
 /**
  * Clicking a preview selects its frame; the placeholder row is selectable like any other. The
- * arrows move between frames and Enter picks one — react-ui-list's listbox grammar.
+ * arrows move between frames and Enter picks one - react-ui-list's listbox grammar.
  */
 export const TestSelect: Story = {
   play: async ({ canvasElement }) => {

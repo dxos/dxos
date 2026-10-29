@@ -34,7 +34,7 @@ type StoryProps = {
  * The scroll mechanism on its own.
  *
  * Deliberately free of messages, items and virtualization: plain rows in a `ScrollArea`, so what is
- * on screen is only the follow — its ramp up, its cruise, and its landing. When the feed's scrolling
+ * on screen is only the follow - its ramp up, its cruise, and its landing. When the feed's scrolling
  * feels wrong, this is where to tell a follow problem apart from a measurement one.
  */
 const DefaultStory = ({
@@ -192,7 +192,7 @@ export const Growing: Story = {
   args: { grow: true },
 };
 
-/** Slower and gentler — the dials, for comparing feel. */
+/** Slower and gentler - the dials, for comparing feel. */
 export const Gentle: Story = {
   args: { maxSpeed: 4, acceleration: 8 },
 };

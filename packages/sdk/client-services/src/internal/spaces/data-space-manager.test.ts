@@ -132,7 +132,7 @@ describe('DataSpaceManager', () => {
     expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
     expect(space.inner.spaceState.genesisCredential).to.exist;
 
-    // Reloading must not migrate it either — that is the behaviour the flag gates.
+    // Reloading must not migrate it either - that is the behaviour the flag gates.
     await peer.dataSpaceManager.close();
     peer.props.dataSpaceManager = undefined;
     await openAndClose(peer.dataSpaceManager);
@@ -200,7 +200,7 @@ describe('DataSpaceManager', () => {
 
     // Edge rejects a root whose documents have not replicated to it yet, so the report is retried.
     // The invitation accept flow disposes its context as soon as `acceptSpace` returns, and a retry
-    // scheduled on that context would be cancelled — leaving the space on its control feed forever.
+    // scheduled on that context would be cancelled - leaving the space on its control feed forever.
     const attempts: string[] = [];
     const reported = new Trigger<void>();
     const edgeHttpClient = {
@@ -387,7 +387,7 @@ describe('DataSpaceManager', () => {
 
     const refs = await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
 
-    // The id is unchanged — it was minted from the space key and no document can reproduce it.
+    // The id is unchanged - it was minted from the space key and no document can reproduce it.
     expect(space.id).to.equal(legacyId);
     expect(refs.spaceRootDocUrl).to.not.equal(directoryUrl);
 
@@ -460,7 +460,7 @@ describe('DataSpaceManager', () => {
     expect(reloaded.id).to.equal(legacyId);
     await reloaded.activate(new Context());
 
-    // Nothing calls migrateSpaceToRootDocument — opening the space is what anchors it.
+    // Nothing calls migrateSpaceToRootDocument - opening the space is what anchors it.
     await waitForCondition({ condition: () => peer.echoHost.getSpaceRootRefs(legacyId) !== undefined });
   });
 
@@ -502,7 +502,7 @@ describe('DataSpaceManager', () => {
     await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
 
     // Admit a second member, so the chain the document has to reproduce includes an admission
-    // credential and a role — not just genesis and this device.
+    // credential and a role - not just genesis and this device.
     const invitee = await peer.keyring.createKey();
     await peer.dataSpaceManager.admitMember({
       spaceKey: space.key,

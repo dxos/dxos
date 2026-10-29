@@ -128,13 +128,13 @@ const answerUntilIdle = async ({ demo, page }) => {
 
 /** Opens Plugins, filtered to `name`. On a fresh profile the first click can land while the navtree settles. */
 const openPlugins = async ({ demo, page }, name) => {
-  const filter = page.locator('input[placeholder="Filter…"]').first();
+  const filter = page.locator('input[placeholder="Filter..."]').first();
   for (let attempt = 0; attempt < 3 && !(await filter.isVisible()); attempt++) {
     await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
     await filter.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
   }
-  await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
-  await demo.type({ selector: 'input[placeholder="Filter…"]', value: name, label: 'Filter' });
+  await demo.fill({ selector: 'input[placeholder="Filter..."]', value: '', hud: false });
+  await demo.type({ selector: 'input[placeholder="Filter..."]', value: name, label: 'Filter' });
   await page.waitForTimeout(LINGER);
 };
 
@@ -165,7 +165,7 @@ export const steps = [
         composer.plugins().some((plugin) => plugin.id === 'org.dxos.plugin.claude' && plugin.enabled),
       ),
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Enable the Claude plugin', subtitle: 'Plugins → Claude' });
+      await demo.caption({ value: 'Enable the Claude plugin', subtitle: 'Plugins -> Claude' });
       await openPlugins({ demo, page }, 'Claude');
       await demo.click({ selector: 'input[id="org.dxos.plugin.claude-input"]', label: 'Enable Claude' });
       await page.locator('input[id="org.dxos.plugin.claude-input"]:checked').waitFor();
@@ -188,7 +188,7 @@ export const steps = [
           run: async ({ demo, page }) => {
             await demo.caption({
               value: `Have Claude ask ${ASKS[PERMISSIONS]}`,
-              subtitle: `Code settings → Coding agent permissions → ${PERMISSIONS}`,
+              subtitle: `Code settings -> Coding agent permissions -> ${PERMISSIONS}`,
             });
             await openPlugins({ demo, page }, 'Code');
             await demo.click({ selector: '[data-testid="pluginList.org.dxos.plugin.code"] button', label: 'Settings' });
@@ -292,7 +292,7 @@ export const steps = [
   {
     name: 'Assign the task to Claude Code',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Assign the task to Claude Code', subtitle: 'From the task’s menu' });
+      await demo.caption({ value: 'Assign the task to Claude Code', subtitle: "From the task's menu" });
       const row = `[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`;
       await demo.hover({ selector: row });
       await demo.click({ selector: `${row} >> [data-testid="taskList.item.actions"]`, label: 'Task actions' });

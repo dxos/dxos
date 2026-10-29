@@ -24,7 +24,7 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
      */
     className: mx(
       // Inline-size container for widget sizing (children use `max-w-[100cqi]`).
-      // NOTE: Use inline-size, not full size containment — `container-type: size` on the
+      // NOTE: Use inline-size, not full size containment - `container-type: size` on the
       // editor content breaks CodeMirror's viewport measurement, leaving blank gaps during
       // scroll until a click forces a re-measure.
       'dx-container-type-inline-size',

@@ -24,7 +24,7 @@ import unrelatedRaw from './testing/files/unrelated.md?raw';
 import { parseFixtureMessage } from './testing/load-fixture.ts';
 import { TEMPLATE_ID, TripMessageExtractor } from './trip-extractor.ts';
 
-// Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
+// Empty resolver - the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});
 
 // Mock LLM payloads. The fixture body is handed to a mocked `generateObject`, so the fixture text
@@ -57,7 +57,7 @@ const GATE_CHANGE_PAYLOAD = {
   ],
 };
 
-// No `provider` field — exercises the sender-domain + airline-prefix derivation in the extractor.
+// No `provider` field - exercises the sender-domain + airline-prefix derivation in the extractor.
 const AIR_FRANCE_PAYLOAD = {
   confirmationCode: 'AF999',
   segments: [
@@ -87,7 +87,7 @@ const SECOND_LEG_PAYLOAD = {
 
 // The SAME booking as UNITED_PAYLOAD, but a second email's LLM pass returns the PNR with
 // different casing/whitespace ("abc 123" vs "ABC123"). Two related emails for one booking must
-// still resolve to a single Trip — the confirmation-code dedup has to be representation-insensitive.
+// still resolve to a single Trip - the confirmation-code dedup has to be representation-insensitive.
 const SECOND_LEG_PNR_VARIANT_PAYLOAD = {
   confirmationCode: 'abc 123',
   segments: [
@@ -101,7 +101,7 @@ const SECOND_LEG_PNR_VARIANT_PAYLOAD = {
   ],
 };
 
-// One email with TWO connecting flights under a single PNR (LIS→AMS→JFK).
+// One email with TWO connecting flights under a single PNR (LIS->AMS->JFK).
 const MULTI_LEG_PAYLOAD = {
   confirmationCode: 'XU26Y4',
   segments: [
@@ -136,7 +136,7 @@ const NEARBY_LEG_PAYLOAD = {
   ],
 };
 
-// A leg far outside the gap (~3 months later) → its own Trip.
+// A leg far outside the gap (~3 months later) -> its own Trip.
 const FAR_LEG_PAYLOAD = {
   confirmationCode: 'FAR222',
   segments: [
@@ -193,35 +193,35 @@ describe('TripMessageExtractor', () => {
     expect(TripMessageExtractor.kinds).toContain('flight');
   });
 
-  test('match — United sender domain', ({ expect }) => {
+  test('match - United sender domain', ({ expect }) => {
     const result = TripMessageExtractor.match(parseFixtureMessage(unitedConfirmationRaw));
     expect(result.matched).toBe(true);
     expect(result.confidence ?? 0).toBeGreaterThan(0.5);
   });
 
-  test('match — KLM sender domain (no travel keyword in subject)', ({ expect }) => {
+  test('match - KLM sender domain (no travel keyword in subject)', ({ expect }) => {
     const result = TripMessageExtractor.match(parseFixtureMessage(klmConfirmationRaw));
     expect(result.matched).toBe(true);
     expect(result.reason).toBe('sender-domain');
   });
 
-  test('match — subject-only fallback', ({ expect }) => {
+  test('match - subject-only fallback', ({ expect }) => {
     const result = TripMessageExtractor.match(parseFixtureMessage(genericConfirmationRaw));
     expect(result.matched).toBe(true);
   });
 
-  test('match — unrelated message rejected', ({ expect }) => {
+  test('match - unrelated message rejected', ({ expect }) => {
     const result = TripMessageExtractor.match(parseFixtureMessage(unrelatedRaw));
     expect(result.matched).toBe(false);
   });
 
-  test('extract — no flight identity emits no objects', async ({ expect }) => {
+  test('extract - no flight identity emits no objects', async ({ expect }) => {
     const result = await extract(genericConfirmationRaw, {});
     expect(result.created).toEqual([]);
     expect(result.updated).toEqual([]);
   });
 
-  test('extract — first email creates Trip + Booking + flight Segment', async ({ expect }) => {
+  test('extract - first email creates Trip + Booking + flight Segment', async ({ expect }) => {
     const result = await extract(unitedConfirmationRaw, UNITED_PAYLOAD);
 
     expect(result.created).toHaveLength(3);
@@ -254,7 +254,7 @@ describe('TripMessageExtractor', () => {
     expect(result.relations).toEqual([]);
   });
 
-  test('extract — a multi-leg email creates one Trip + Booking with all segments', async ({ expect }) => {
+  test('extract - a multi-leg email creates one Trip + Booking with all segments', async ({ expect }) => {
     const result = await extract(unitedConfirmationRaw, MULTI_LEG_PAYLOAD);
 
     const trips = result.created.filter((obj) => Obj.instanceOf(Trip.Trip, obj));
@@ -281,7 +281,7 @@ describe('TripMessageExtractor', () => {
     expect((trips[0] as Trip.Trip).end).toBe('2026-05-18T19:15:00.000Z');
   });
 
-  test('extract — subsequent email updates the existing segment instead of creating a duplicate', async ({
+  test('extract - subsequent email updates the existing segment instead of creating a duplicate', async ({
     expect,
   }) => {
     // Email 1: original confirmation. Persist the resulting objects so the second extract() call
@@ -318,7 +318,7 @@ describe('TripMessageExtractor', () => {
     expect(segments).toHaveLength(1);
   });
 
-  test('extract — provider domain comes from the sender, name from the airline prefix', async ({ expect }) => {
+  test('extract - provider domain comes from the sender, name from the airline prefix', async ({ expect }) => {
     // The payload omits `provider`, so the extractor derives it: domain from the sender
     // (airfrance.com), name from the AF flight-number prefix.
     const result = await extract(AIR_FRANCE_RAW, AIR_FRANCE_PAYLOAD);
@@ -335,7 +335,7 @@ describe('TripMessageExtractor', () => {
     expect(segment.booking?.target?.id).toBe(booking.id);
   });
 
-  test('extract — links the provider to a matching Organization', async ({ expect }) => {
+  test('extract - links the provider to a matching Organization', async ({ expect }) => {
     const org = db.add(Organization.make({ name: 'Air France', website: 'https://airfrance.com' }));
     await db.flush();
 
@@ -345,7 +345,7 @@ describe('TripMessageExtractor', () => {
     expect(booking.provider?.ref?.target?.id).toBe(org.id);
   });
 
-  test('extract — a second leg under the same PNR is appended to the existing Trip', async ({ expect }) => {
+  test('extract - a second leg under the same PNR is appended to the existing Trip', async ({ expect }) => {
     // Email 1 creates a Trip; persist it so the second extract can discover the shared Booking.
     const first = await extract(unitedConfirmationRaw, UNITED_PAYLOAD);
     for (const obj of first.created) {
@@ -354,7 +354,7 @@ describe('TripMessageExtractor', () => {
     await db.flush();
     const trip = first.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
 
-    // Email 2: a different flight under the SAME confirmation code (ABC123) → appended to the
+    // Email 2: a different flight under the SAME confirmation code (ABC123) -> appended to the
     // existing Trip, not a new one.
     const second = await extract(unitedConfirmationRaw, SECOND_LEG_PAYLOAD);
     expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(false);
@@ -374,7 +374,7 @@ describe('TripMessageExtractor', () => {
     expect(trips[0].end).toBe('2026-06-10T15:00:00.000Z');
   });
 
-  test('extract — a second email whose PNR differs only in case/whitespace appends to the same Trip', async ({
+  test('extract - a second email whose PNR differs only in case/whitespace appends to the same Trip', async ({
     expect,
   }) => {
     // Email 1 creates a Trip under PNR "ABC123"; persist it.
@@ -386,7 +386,7 @@ describe('TripMessageExtractor', () => {
     const trip = first.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
 
     // Email 2: the SAME booking, but the LLM returned the PNR as "abc 123". This is one booking
-    // across two emails — it must append to the existing Trip, not spawn a duplicate.
+    // across two emails - it must append to the existing Trip, not spawn a duplicate.
     const second = await extract(unitedConfirmationRaw, SECOND_LEG_PNR_VARIANT_PAYLOAD);
     expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(false);
     expect(second.updated).toHaveLength(1);
@@ -401,7 +401,7 @@ describe('TripMessageExtractor', () => {
     expect(trips[0].segments).toHaveLength(2);
   });
 
-  test('extract — a separately-booked leg within the gap joins the nearby Trip', async ({ expect }) => {
+  test('extract - a separately-booked leg within the gap joins the nearby Trip', async ({ expect }) => {
     const first = await extract(unitedConfirmationRaw, UNITED_PAYLOAD);
     for (const obj of first.created) {
       db.add(obj);
@@ -409,7 +409,7 @@ describe('TripMessageExtractor', () => {
     await db.flush();
     const trip = first.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
 
-    // Different PNR (GAP111), but within 28 days of the trip → joins it with a new Booking + Segment.
+    // Different PNR (GAP111), but within 28 days of the trip -> joins it with a new Booking + Segment.
     const second = await extract(unitedConfirmationRaw, NEARBY_LEG_PAYLOAD);
     expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(false);
     expect(second.created.some((obj) => Obj.instanceOf(Booking.Booking, obj))).toBe(true);
@@ -425,14 +425,14 @@ describe('TripMessageExtractor', () => {
     expect(trips[0].segments).toHaveLength(2);
   });
 
-  test('extract — a leg beyond the gap starts a new Trip', async ({ expect }) => {
+  test('extract - a leg beyond the gap starts a new Trip', async ({ expect }) => {
     const first = await extract(unitedConfirmationRaw, UNITED_PAYLOAD);
     for (const obj of first.created) {
       db.add(obj);
     }
     await db.flush();
 
-    // ~3 months later under a different PNR → not grouped; a separate Trip.
+    // ~3 months later under a different PNR -> not grouped; a separate Trip.
     const second = await extract(unitedConfirmationRaw, FAR_LEG_PAYLOAD);
     expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(true);
 
@@ -444,7 +444,7 @@ describe('TripMessageExtractor', () => {
     expect(trips).toHaveLength(2);
   });
 
-  test('extract — recognises a train booking and creates a train Segment', async ({ expect }) => {
+  test('extract - recognises a train booking and creates a train Segment', async ({ expect }) => {
     const result = await extract(genericConfirmationRaw, TRAIN_PAYLOAD);
 
     const segment = result.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;

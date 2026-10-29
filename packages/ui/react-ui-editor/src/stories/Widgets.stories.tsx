@@ -4,7 +4,7 @@
 
 /**
  * Stories for the editor's widgets: XML tags matched by `xmlTags`, object links matched by
- * `objectLinks`, both rendered through one `widgetHost` — a CodeMirror widget creates a DOM
+ * `objectLinks`, both rendered through one `widgetHost` - a CodeMirror widget creates a DOM
  * placeholder, and React portals render content into it.
  */
 
@@ -114,7 +114,7 @@ const handlePreviewLookup = async ({ label }: PreviewLinkRef): Promise<PreviewLi
 
 /**
  * Module scope, not inside the story: a component type created per render is a new type each time,
- * and React remounts everything under it on every render — the editor and the preview's own state.
+ * and React remounts everything under it on every render - the editor and the preview's own state.
  */
 const PreviewWrapper = ({ children }: PropsWithChildren) => (
   <EditorPreviewProvider onLookup={handlePreviewLookup}>
@@ -146,7 +146,7 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
   );
 };
 
-/** Obsidian-style height suffix in the image label: `![Sketch|400](echo:///…)`. */
+/** Obsidian-style height suffix in the image label: `![Sketch|400](echo:///...)`. */
 const parseBlockHeight = (label = ''): number | undefined => {
   const match = /\|(\d+)$/.exec(label);
   return match ? Number.parseInt(match[1], 10) : undefined;
@@ -154,7 +154,7 @@ const parseBlockHeight = (label = ''): number | undefined => {
 
 /**
  * Fixed-height block that mirrors the plugin-markdown sketch embed: it renders at exactly the height
- * encoded in the label, so CM's reserved `estimatedHeight` and the measured height match — the setup
+ * encoded in the label, so CM's reserved `estimatedHeight` and the measured height match - the setup
  * that exercises the scroll/cull path (jitter, blank, flash, jump) without needing ECHO.
  */
 const FixedHeightPreview = ({ label, eid }: ObjectLinkProps) => {
@@ -172,10 +172,10 @@ const FixedHeightPreview = ({ label, eid }: ObjectLinkProps) => {
 /**
  * Faithfully mimics a Surface-backed embed (the real plugin-markdown block): the content mounts
  * asynchronously (like a Surface resolving) and runs an inner ResizeObserver (like the sketch's
- * auto-fit) that re-lays-out whenever the container size changes — including the 0↔height blips that
+ * auto-fit) that re-lays-out whenever the container size changes - including the 0<->height blips that
  * CM's scroll-culling produces as the node is detached and re-parented.
  *
- * NOTE: The scroll-*jump* on large scroll deltas is NOT specific to this async variant — verified via
+ * NOTE: The scroll-*jump* on large scroll deltas is NOT specific to this async variant - verified via
  * Playwright, `FixedHeightPreview` (plain inert div) jumps identically. It is CM's height-estimate
  * re-anchor, not the widget. See `StubWidget` and CM #1727.
  */
@@ -210,7 +210,7 @@ const SurfaceLikePreview = ({ label, eid }: ObjectLinkProps) => {
       style={{ height }}
       className='grid place-items-center border border-separator rounded-md bg-base-surface text-fg-muted'
     >
-      {resolved ? `Surface ${label} · ${height}px · ${eid}` : 'resolving…'}
+      {resolved ? `Surface ${label} · ${height}px · ${eid}` : 'resolving...'}
     </div>
   );
 };
@@ -219,7 +219,7 @@ const SurfaceLikePreview = ({ label, eid }: ObjectLinkProps) => {
 // Story
 //
 
-/** The block widgets a `![label](echo:…)` image can render as. */
+/** The block widgets a `![label](echo:...)` image can render as. */
 const imageWidgets: Record<string, WidgetDef<ObjectLinkProps>> = {
   card: {
     Component: PreviewBlockCard,
@@ -245,7 +245,7 @@ type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
   text?: string;
   /** XML tags rendered as widgets. */
   registry?: XmlWidgetRegistry;
-  /** The block widget for `![label](echo:…)`; none leaves images as text. */
+  /** The block widget for `![label](echo:...)`; none leaves images as text. */
   image?: keyof typeof imageWidgets;
   /** Answer the anchor chips' hover/click with a preview card. */
   preview?: boolean;
@@ -350,7 +350,7 @@ const previewText = trim`
 `;
 
 /**
- * Markdown image/link URLs (echo:///…) become widgets via `objectLinks`.
+ * Markdown image/link URLs (echo:///...) become widgets via `objectLinks`.
  * Inline anchors open their preview card on hover (the default) as well as click.
  */
 export const Preview: Story = {

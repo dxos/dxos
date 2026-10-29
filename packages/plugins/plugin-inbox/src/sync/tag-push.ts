@@ -8,20 +8,20 @@ import { type TagsByMessage } from './tag-diff.ts';
  * The pure half of the tag-push phase: turning a run's observed state into the three sides
  * {@link diffTags} needs, and its output into provider-vocabulary ops.
  *
- * Kept out of `mail-sync.ts` so each step is testable without a database, a provider, or a pipeline —
+ * Kept out of `mail-sync.ts` so each step is testable without a database, a provider, or a pipeline -
  * see `tag-push.test.ts`. The effectful orchestration (heads capture, index reads, `pushTags`) stays
  * in the harness. See `docs/TAG-SYNC.md`.
  */
 
-/** The shape both a live `TagIndex` and an `Obj.Snapshot` of one expose: tag uri → object ids. */
+/** The shape both a live `TagIndex` and an `Obj.Snapshot` of one expose: tag uri -> object ids. */
 export type TagIndexRecord = Readonly<Record<string, readonly string[]>>;
 
 /**
- * Inverts a tag index into `messageId → tag uris`, keeping only eligible tags.
+ * Inverts a tag index into `messageId -> tag uris`, keeping only eligible tags.
  *
  * The index is stored tag-major (sparse: tags are rare relative to messages) while reconciliation is
  * message-major, and restricting to `eligible` here rather than in the diff keeps every downstream map
- * small — a mailbox may carry thousands of user-tag associations the provider will never see.
+ * small - a mailbox may carry thousands of user-tag associations the provider will never see.
  */
 export const tagsFromIndex = (index: TagIndexRecord, eligible: ReadonlySet<string>): TagsByMessage => {
   const byMessage = new Map<string, Set<string>>();
@@ -73,7 +73,7 @@ export type ObservableChange =
 
 /** Accumulator the harness feeds from the change stream; see {@link createRemoteObserver}. */
 export type RemoteObserver = ObservedRemote & {
-  /** Message id → provider foreign id for everything this run touched, so most pushes need no query. */
+  /** Message id -> provider foreign id for everything this run touched, so most pushes need no query. */
   readonly foreignIds: ReadonlyMap<string, string>;
   readonly observe: (change: ObservableChange) => void;
 };
@@ -81,8 +81,8 @@ export type RemoteObserver = ObservedRemote & {
 /**
  * Collects the provider's reported state as changes pass through the pipeline.
  *
- * The harness cannot ask the provider for remote tag state after the fact — the delta is consumed by
- * the stream — so it is recorded in flight. Inserts record only `remoteTagUris`, deliberately not the
+ * The harness cannot ask the provider for remote tag state after the fact - the delta is consumed by
+ * the stream - so it is recorded in flight. Inserts record only `remoteTagUris`, deliberately not the
  * full `tagUris`: the difference between them is precisely the insert-time local tagging that must
  * push (see `Insert.remoteTagUris`).
  */
@@ -113,16 +113,16 @@ export const createRemoteObserver = (): RemoteObserver => {
 };
 
 /**
- * The provider's current tag state, as `base ⊕ (this run's delta)`.
+ * The provider's current tag state, as `base (+) (this run's delta)`.
  *
- * A message the delta never mentioned is unchanged at the provider, so it keeps its base entry — which
+ * A message the delta never mentioned is unchanged at the provider, so it keeps its base entry - which
  * is what makes an untouched message produce no traffic in either direction.
  *
  * **Inserted messages are why no base overlay is needed.** A message committed this run has no entry
- * in the persisted base, so a provider label on it looks like a local-only addition — except that this
+ * in the persisted base, so a provider label on it looks like a local-only addition - except that this
  * function also records the message's `remoteTagUris`, making the tag present on *both* the local and
  * remote sides with an empty base. The merge reads that as converged (both changed to the same value)
- * and emits nothing, while an insert-time local tag — absent from `remoteTagUris` — is local-only and
+ * and emits nothing, while an insert-time local tag - absent from `remoteTagUris` - is local-only and
  * pushes. Modelling the remote side accurately is sufficient; seeding the base separately would be a
  * second mechanism for the same outcome.
  */
@@ -161,10 +161,10 @@ export type TagPushOp = {
 };
 
 /**
- * Resolves the diff's push half into provider ops: message id → foreign id, tag uri → label id.
+ * Resolves the diff's push half into provider ops: message id -> foreign id, tag uri -> label id.
  *
  * Drops any message whose foreign id is unknown (never synced, or outside this run's resolution) and
- * any tag with no provider binding — both are unpushable rather than erroneous, and a run that
+ * any tag with no provider binding - both are unpushable rather than erroneous, and a run that
  * silently pushed a partial op would record a settled state it had not achieved.
  */
 export const resolvePushOps = ({

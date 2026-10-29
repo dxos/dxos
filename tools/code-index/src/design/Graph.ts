@@ -7,13 +7,13 @@
 import * as Schema from 'effect/Schema';
 
 /**
- * The candidate graph every design stage reads and writes. A node is a **file** — the unit the
- * hand-drawn corpus refers to with `%% ref` — carrying a card that describes it well enough for a
+ * The candidate graph every design stage reads and writes. A node is a **file** - the unit the
+ * hand-drawn corpus refers to with `%% ref` - carrying a card that describes it well enough for a
  * judge that never sees the code; symbol-level relations are lifted onto the files that declare
  * them, so one edge set serves imports and framework wiring alike.
  */
 
-/** The relations an explorer may follow, each lifted to file → file. */
+/** The relations an explorer may follow, each lifted to file -> file. */
 export const EDGE_KINDS = [
   'imports',
   'providesService',
@@ -51,7 +51,7 @@ export const NodeCard = Schema.Struct({
   iri: Schema.String,
   /** The primary declaration's name, else the file's basename. */
   label: Schema.String,
-  /** The primary declaration's derived class (`EffectService`, `Plugin`, …) or its syntactic kind. */
+  /** The primary declaration's derived class (`EffectService`, `Plugin`, ...) or its syntactic kind. */
   kind: Schema.String,
   path: Schema.String,
   package: Schema.optional(Schema.String),
@@ -131,7 +131,7 @@ export const fileOfSymbol = (iri: string): string => {
   return hash < 0 ? iri : iri.slice(0, hash);
 };
 
-/** `packages/core/echo/echo-client` → `core/echo`; a top-level package is its own area. */
+/** `packages/core/echo/echo-client` -> `core/echo`; a top-level package is its own area. */
 export const areaOf = (packagePath: string | undefined): string | undefined => {
   if (packagePath === undefined) {
     return undefined;
@@ -201,7 +201,7 @@ export const prune = (
 ): { kept: Set<string>; edges: Edge[] } => {
   const ranked = [...nodes].filter((node) => node.score >= threshold).sort((left, right) => right.score - left.score);
   const kept = new Set(keep ?? ranked.slice(0, budget).map((node) => node.iri));
-  // An existing relay stays usable, so a second cut (pruned set → diagram) can relay through it again.
+  // An existing relay stays usable, so a second cut (pruned set -> diagram) can relay through it again.
   const usable = edges.filter((edge) => kinds === undefined || edge.kind === RELAY || kinds.has(edge.kind));
 
   const direct = dedupe(usable.filter((edge) => kept.has(edge.from) && kept.has(edge.to)));

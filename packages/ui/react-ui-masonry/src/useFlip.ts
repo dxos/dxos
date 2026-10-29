@@ -23,7 +23,7 @@ export const prefersReducedMotion = () =>
  * Decide whether a layout transition should animate. Animate only genuine small
  * incremental edits on a stable container: a resize snaps (the whole grid moves),
  * and a zero add/remove delta means either the initial bulk render's height-settling
- * pass or a pure resize — both snap so the grid never animates into place from the
+ * pass or a pure resize - both snap so the grid never animates into place from the
  * degenerate all-heights-zero layout.
  */
 export const shouldAnimateReflow = ({
@@ -63,7 +63,7 @@ export const useFlip = ({ nodes, ids, rects, columnCount, containerWidth, enable
   const previousLayout = useRef<{ columnCount: number; containerWidth: number } | null>(null);
 
   useLayoutEffect(() => {
-    // Without committed positions this is the first non-empty layout — snap it (the initial
+    // Without committed positions this is the first non-empty layout - snap it (the initial
     // render), even for a small set that would otherwise read as a handful of added tiles.
     const hasPriorPositions = previous.current.size > 0;
     // Classify the reflow before recording new positions: added/removed relative to

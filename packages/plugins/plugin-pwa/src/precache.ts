@@ -12,7 +12,7 @@ export const UPDATE_CHECK_INTERVAL = Duration.minutes(15);
 
 /**
  * Progress envelope posted by the host's service worker while it precaches a build. The contract is
- * duplicated in `composer-app/src/sw.ts` so the worker bundle stays free of host code — keep in sync.
+ * duplicated in `composer-app/src/sw.ts` so the worker bundle stays free of host code - keep in sync.
  */
 export const PRECACHE_PROGRESS = 'dxos:precache-progress';
 

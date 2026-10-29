@@ -33,7 +33,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       belong to the Inbox plugin, which this one depends on.
 
       Credentials are a host, an account email, and a Bearer API token, validated against the live
-      session when the form is submitted — no OAuth. Sync is incremental: after the first run the
+      session when the form is submitted - no OAuth. Sync is incremental: after the first run the
       server's state string drives a bounded delta per run, and folder and keyword changes reconcile
       against messages already in the feed.
     `,

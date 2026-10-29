@@ -44,14 +44,14 @@ const DefaultStory = () => {
   }
 
   // The toolbar reads actions off the node named by `attendableId`, so the story must name the node the
-  // extension below contributes to — not an arbitrary string, which would render an empty toolbar.
+  // extension below contributes to - not an arbitrary string, which would render an empty toolbar.
   return <RecordArticle role='article' subject={org} attendableId={Obj.getURI(org).toString()} />;
 };
 
 /**
  * Stands in for a donor plugin (plugin-crm contributes the real Enrich action this way). plugin-space
- * must not depend on plugin-crm — that separation is the point of sourcing toolbar actions from the
- * graph — so the story contributes its own action rather than importing one.
+ * must not depend on plugin-crm - that separation is the point of sourcing toolbar actions from the
+ * graph - so the story contributes its own action rather than importing one.
  */
 const storyGraphBuilders = () =>
   Effect.runSync(

@@ -40,27 +40,27 @@ const debugOrigin = resolveDebugPortOrigin();
 print('Composer recovery mode');
 print(`Origin: ${window.location.origin}`);
 print('');
-print('You are in safe mode — no client, plugins, sync, or indexing until you choose an action.');
+print('You are in safe mode - no client, plugins, sync, or indexing until you choose an action.');
 print('');
-print('Footer actions (left → right):');
-print('  Boot    — try opening full Composer at /');
-print('  Reset   — wipe all data for this origin (export first!)');
-print('  Export  — download .dxprofile backup (SQLite + origin metadata)');
-print('  Import  — restore .dxprofile or raw .sqlite into this origin');
-print('  Logs    — download NDJSON logs for debugging');
-print('  Debug Port — let an agent run commands via composer-recovery.js');
+print('Footer actions (left -> right):');
+print('  Boot    - try opening full Composer at /');
+print('  Reset   - wipe all data for this origin (export first!)');
+print('  Export  - download .dxprofile backup (SQLite + origin metadata)');
+print('  Import  - restore .dxprofile or raw .sqlite into this origin');
+print('  Logs    - download NDJSON logs for debugging');
+print('  Debug Port - let an agent run commands via composer-recovery.js');
 print('');
-print('Header: Diagnostics — OPFS storage first, then client identity and spaces');
+print('Header: Diagnostics - OPFS storage first, then client identity and spaces');
 print('');
 print('Typical flows:');
-print("  App won't boot → Export → offline forensics → Import");
-print('  Need agent help → Debug Port → copy session id from log when it appears');
+print("  App won't boot -> Export -> offline forensics -> Import");
+print('  Need agent help -> Debug Port -> copy session id from log when it appears');
 print('');
 print(`Debug port server: ${debugOrigin}`);
 if (window.location.protocol === 'https:') {
-  print('HTTPS page → run agent with COMPOSER_RECOVERY_HTTPS=1 and mkcert-trusted cert.');
+  print('HTTPS page -> run agent with COMPOSER_RECOVERY_HTTPS=1 and mkcert-trusted cert.');
 } else {
-  print('HTTP page → plain HTTP debug server is fine.');
+  print('HTTP page -> plain HTTP debug server is fine.');
 }
 print('After opening Debug Port:');
 print('  node composer-recovery.js --session <id> "return dxos.recovery.status()"');
@@ -85,11 +85,11 @@ const exportProfileArchiveBytes = async (): Promise<Uint8Array> => {
 const recoveryHelpers: RecoveryHelpers = {
   booted: isRecoveryClientBooted,
   startClient: async () => {
-    print('Starting minimal client (no replication, no auto-activate spaces)…');
+    print('Starting minimal client (no replication, no auto-activate spaces)...');
     const started = performance.now();
     const client = await bootRecoveryClient();
     attachRecoveryHelpers(recoveryHelpers);
-    print(`Client started in ${(performance.now() - started).toFixed(0)} ms — dxos.client available`);
+    print(`Client started in ${(performance.now() - started).toFixed(0)} ms - dxos.client available`);
     return { identity: toPublicKey(client.halo.identity.get()?.identityKey)?.truncate() };
   },
   /** @deprecated Use {@link RecoveryHelpers.startClient}. */
@@ -101,7 +101,7 @@ const recoveryHelpers: RecoveryHelpers = {
   },
   sqlDiagnostics: async () => {
     if (isRecoveryClientBooted()) {
-      print('Stopping recovery client before OPFS read…');
+      print('Stopping recovery client before OPFS read...');
       await destroyRecoveryClient();
       mountDevtoolsHooks({});
       print('');
@@ -133,7 +133,7 @@ const recoveryHelpers: RecoveryHelpers = {
   }),
   inspectOpfsPool: OpfsPool.listFiles,
   compactDocuments: async (options) => {
-    print('Compacting linked Automerge documents (epoch migration)…');
+    print('Compacting linked Automerge documents (epoch migration)...');
     const started = performance.now();
     const result = await compactDocumentsInRecovery(options);
     print(
@@ -149,7 +149,7 @@ const recoveryHelpers: RecoveryHelpers = {
 
 attachRecoveryHelpers(recoveryHelpers);
 
-// Busy has two independent sources — a running action and a live debug port — so it is derived
+// Busy has two independent sources - a running action and a live debug port - so it is derived
 // rather than assigned: clearing it at the end of an action would otherwise hide an agent still
 // driving the page.
 let actionBusy = false;
@@ -199,7 +199,7 @@ const actions: Record<RecoveryAction, () => void> = {
     }),
 
   'boot': () => {
-    print('Booting Composer…');
+    print('Booting Composer...');
     window.location.href = '/';
   },
 
@@ -223,7 +223,7 @@ const actions: Record<RecoveryAction, () => void> = {
 
   'export': () =>
     void runAction('Export', async () => {
-      print('Exporting profile archive (.dxprofile with SQLite entry)…');
+      print('Exporting profile archive (.dxprofile with SQLite entry)...');
       const started = performance.now();
       const { byteLength, saved } = await recoveryHelpers.exportProfile();
       if (!saved) {
@@ -243,17 +243,17 @@ const actions: Record<RecoveryAction, () => void> = {
       return;
     }
     void runAction('Import', async () => {
-      print('Select .dxprofile or .sqlite file…');
-      print('Importing via OPFS worker (may take a minute for large profiles)…');
+      print('Select .dxprofile or .sqlite file...');
+      print('Importing via OPFS worker (may take a minute for large profiles)...');
       const { byteLength } = await recoveryHelpers.importSqlite();
       attachRecoveryHelpers(recoveryHelpers);
-      print(`Imported ${byteLength.toLocaleString()} bytes — run Diagnostics to verify.`);
+      print(`Imported ${byteLength.toLocaleString()} bytes - run Diagnostics to verify.`);
     });
   },
 
   'logs': () =>
     void runAction('Download logs', async () => {
-      print('Downloading logs from IDB log collector…');
+      print('Downloading logs from IDB log collector...');
       const started = performance.now();
       const { byteLength, saved } = await recoveryHelpers.downloadLogs();
       if (!saved) {

@@ -50,7 +50,7 @@ import {
  */
 
 /**
- * How a row was activated, so a host can tell a plain click from a modified one — e.g. opening the
+ * How a row was activated, so a host can tell a plain click from a modified one - e.g. opening the
  * task in a plank of its own rather than reusing the one the list reads into.
  */
 export type TaskSelectModifiers = { meta?: boolean };
@@ -148,7 +148,7 @@ export const TaskTreeNode = ({
     [tasks, groups, groupByStatus, hierarchical],
   );
 
-  // Selection is owned by `TaskList.Root`, so it is driven into the model rather than held there —
+  // Selection is owned by `TaskList.Root`, so it is driven into the model rather than held there -
   // otherwise selecting a task elsewhere (or clearing it from the edit pane) leaves the tree's own
   // current state stale.
   const previousSelected = useRef<string | undefined>(undefined);
@@ -184,7 +184,7 @@ export const TaskTreeNode = ({
     [model, registry, onCollapseToggle],
   );
 
-  // A list without a selection handler highlights nothing, and a group header is never selected —
+  // A list without a selection handler highlights nothing, and a group header is never selected -
   // activating one discloses it instead.
   const canSelect = useCallback(({ item }: { item: TaskNode }) => !!onTaskSelect && !!item.task, [onTaskSelect]);
 
@@ -195,8 +195,8 @@ export const TaskTreeNode = ({
     [onTaskSelect],
   );
 
-  // Restructuring is keyboard-driven: `Shift` moves the row where an unmodified arrow navigates —
-  // up/down reorder among siblings, left/right change depth — and `Tab`/`Shift+Tab` change depth
+  // Restructuring is keyboard-driven: `Shift` moves the row where an unmodified arrow navigates -
+  // up/down reorder among siblings, left/right change depth - and `Tab`/`Shift+Tab` change depth
   // too, as in an outliner. The focused row names its task through `data-object-id`, which is what
   // lets one tree-level handler serve every depth.
   const handleKeyDown = useCallback(
@@ -240,7 +240,7 @@ export const TaskTreeNode = ({
             return undefined;
         }
       })();
-      // A key that moves nothing is left alone — for `Tab`, so focus can still leave the list
+      // A key that moves nothing is left alone - for `Tab`, so focus can still leave the list
       // rather than being trapped on a row that cannot indent.
       if (placement) {
         event.preventDefault();
@@ -276,7 +276,7 @@ export const TaskTreeNode = ({
       // The hitbox's instruction is taken as given: dropping onto a row makes the task its child,
       // and the reorder zones at the row's edges are what place it before or after instead.
       // `reparent` is the shallow band under a last child, and is the only way out of a subtree
-      // for a drop past its final row — without it the task can only ever join that subtree.
+      // for a drop past its final row - without it the task can only ever join that subtree.
       const placement =
         instruction.type === 'reparent'
           ? // `desiredLevel` is absolute, so the number of ancestors to climb is the drop in depth.
@@ -345,7 +345,7 @@ export const TaskTreeNode = ({
       multiline
       virtual='measured'
       draggable={!!onTaskMove}
-      // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
+      // Any task can gain a sub-task, so a childless peer is still a drop target - without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren
       // Dragging past the last row is the obvious way to say "put it last"; without a target there

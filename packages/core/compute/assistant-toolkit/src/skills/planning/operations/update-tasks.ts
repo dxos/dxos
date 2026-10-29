@@ -51,7 +51,7 @@ type Resolved = { change: TaskChange; task?: Task.Task };
  * Creates, edits, assigns and unassigns the conversation's tasks. Every change is checked before any
  * is applied, so a malformed batch writes nothing and the model can resend it whole.
  *
- * Assignment always moves both halves together — the chat's checklist and the task's assignee — so
+ * Assignment always moves both halves together - the chat's checklist and the task's assignee - so
  * the checklist a conversation shows is the work its agent holds. Starting a task assigns it.
  */
 export default UpdateTasks.pipe(
@@ -73,7 +73,7 @@ export default UpdateTasks.pipe(
           resolved.push({ change });
           continue;
         }
-        // The schema decodes a ref on shape alone — its target may not be loaded — so the type is
+        // The schema decodes a ref on shape alone - its target may not be loaded - so the type is
         // checked here, where a ref to some other object would otherwise be handed back as a task.
         const target = yield* Database.load(change.task).pipe(Effect.orElseSucceed(() => undefined));
         if (!target || !Obj.instanceOf(Task.Task, target)) {

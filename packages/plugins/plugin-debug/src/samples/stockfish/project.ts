@@ -23,7 +23,7 @@ export type ProjectInput = { docs: DocsResult; tasks: TasksResult; skill: SkillR
 
 export type ProjectResult = { project: Project.Project; instructions: Instructions.Instructions };
 
-const INSTRUCTIONS = `Keep the Development skill enabled for the whole session — it carries how work \
+const INSTRUCTIONS = `Keep the Development skill enabled for the whole session - it carries how work \
 is tracked, where the code is written and what counts as evidence, and it applies to every turn \
 rather than to one task. Do not disable it to save context.
 
@@ -31,12 +31,12 @@ Build the MCP server described in BRIEF.md by working the task tree in order, an
 status as you finish it: the task list is how the reader follows this run.
 
 Write the code yourself in one sandbox, driving it through the Sandbox skill. The sandbox image \
-ships a coding agent of its own; do not delegate this project to it — it has none of this space's \
+ships a coding agent of its own; do not delegate this project to it - it has none of this space's \
 context, and its output would land on a container filesystem rather than in this project.
 
-Verify every stage before starting the next, and redeploy in the two that change Worker code — a \
-design or registration stage has nothing to deploy. File what you produce — the design, the Worker \
-URL, the tool responses — as artifacts on this project rather than leaving it in the chat. The \
+Verify every stage before starting the next, and redeploy in the two that change Worker code - a \
+design or registration stage has nothing to deploy. File what you produce - the design, the Worker \
+URL, the tool responses - as artifacts on this project rather than leaving it in the chat. The \
 claim URL that the first deploy prints is a bearer credential for the account: give it to me \
 directly and file it nowhere.
 
@@ -49,8 +49,8 @@ is the wrong step.`;
  *
  * The skill reaches a chat through `instructions.skills`, which is the only binding path: a Skill
  * object sitting in the space is not enabled by proximity. Binding makes it available; the text
- * above is what keeps it on. The Sandbox skill cannot be bound the same way — it is contributed by
- * a plugin under a key rather than stored here — so the text names it instead.
+ * above is what keeps it on. The Sandbox skill cannot be bound the same way - it is contributed by
+ * a plugin under a key rather than stored here - so the text names it instead.
  *
  * No `repo` and no `McpServer`: the repository is created in stage five and the server record in
  * stage four, and seeding either would name a URL that does not exist.

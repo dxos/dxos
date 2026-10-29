@@ -52,7 +52,7 @@ describe('storage metrics & garbage collection', () => {
 
     {
       const stats = await db.stats();
-      // Deletion is soft — the object and its document are still present until GC.
+      // Deletion is soft - the object and its document are still present until GC.
       expect(stats.objects).toEqual({ alive: 2, deleted: 1 });
       expect(stats.documents).toEqual(4);
     }
@@ -104,7 +104,7 @@ describe('storage metrics & garbage collection', () => {
     // Also gone from a `deleted`-inclusive query, which is what devtools and recovery surfaces use:
     // a collected object is no longer in the space, not a tombstone still sitting in it. Nothing
     // rebuilds the client's working set from the directory, so this holds only because the client
-    // evicts what the unlink removed — and polls because the unlink is applied on the host, so it
+    // evicts what the unlink removed - and polls because the unlink is applied on the host, so it
     // reaches the client as a replicated change rather than a local one.
     await expect
       .poll(
@@ -188,7 +188,7 @@ describe('storage metrics & garbage collection', () => {
     expect([...removed].sort()).toEqual(dropped.map((object) => object.id).sort());
     await db.flush();
 
-    // Dropped objects leave the client's view immediately — nothing rebuilds it from the directory,
+    // Dropped objects leave the client's view immediately - nothing rebuilds it from the directory,
     // so an object left in the working set would keep answering queries.
     const results = await db.query(Query.select(Filter.everything())).run();
     expect(results.map((object) => object.id)).toEqual([kept.id]);

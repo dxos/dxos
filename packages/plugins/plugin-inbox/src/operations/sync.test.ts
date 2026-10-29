@@ -87,7 +87,7 @@ describe('sync pipeline harness', () => {
     const binding = db.add(
       Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(feed) }),
     );
-    // Contact extraction is an allow-list — an unknown individual is not materialised — so give the
+    // Contact extraction is an allow-list - an unknown individual is not materialised - so give the
     // fixture's sender domains an Organization. These tests are about dedup and recovery, not about
     // the extraction policy (which has its own tests in `@dxos/extractor-lib`).
     for (const domain of new Set(RAWS.map(({ email }) => email.split('@')[1]))) {
@@ -97,7 +97,7 @@ describe('sync pipeline harness', () => {
     return { db, feed, tagIndex, binding };
   };
 
-  // Provider-agnostic mapping stage: raw → an `insert` Change (no contact resolution needed here).
+  // Provider-agnostic mapping stage: raw -> an `insert` Change (no contact resolution needed here).
   const mapStage: Stage.Stage<Raw, EmailStage.Change, never, never> = Stage.map('map', (raw: Raw) =>
     Effect.sync((): EmailStage.Change => ({
       _tag: 'insert',
@@ -174,7 +174,7 @@ describe('sync pipeline harness', () => {
     expect(cursorOf(binding)).toBe('20');
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(1);
 
-    // Run 2: recovery — resumes from the cursor, no fault. No duplicates.
+    // Run 2: recovery - resumes from the cursor, no fault. No duplicates.
     const stats2: Cursor.Stats = { newMessages: 0 };
     await EffectEx.runPromise(drain({ ...base, maxKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
 
@@ -191,7 +191,7 @@ describe('sync pipeline harness', () => {
 
     const calls: (readonly Cursor.CommitUnit[])[] = [];
     // A single stable reference reused across every unit in a run (the shape a per-run commit effect
-    // attaches) — so `commit` must invoke it once per page with every unit that attached it, not once
+    // attaches) - so `commit` must invoke it once per page with every unit that attached it, not once
     // per unit.
     const commitEffect: Cursor.CommitEffect = (units) =>
       Effect.sync(() => {
@@ -309,7 +309,7 @@ describe('sync pipeline harness', () => {
       ),
     );
 
-    // Both messages commit — the oversized attachment is skipped, not fatal to its message.
+    // Both messages commit - the oversized attachment is skipped, not fatal to its message.
     expect(stats.newMessages).toBe(2);
 
     // Only the small attachment produced a Blob on the feed.
@@ -340,7 +340,9 @@ describe('sync pipeline harness', () => {
     expect(withoutAttachment.attachments ?? []).toHaveLength(0);
   });
 
-  test('email stages compose in any order (Change → Change) ahead of the terminal toCommitUnit', async ({ expect }) => {
+  test('email stages compose in any order (Change -> Change) ahead of the terminal toCommitUnit', async ({
+    expect,
+  }) => {
     const { db, feed, binding } = await setup();
 
     type AttachmentRaw = Raw & { readonly attachments?: readonly EmailStage.Attachment[] };
@@ -375,8 +377,8 @@ describe('sync pipeline harness', () => {
     await EffectEx.runPromise(
       Stream.fromIterable([raw]).pipe(
         mapAttachmentStage,
-        // Swapped relative to the production pipelines (extractContacts before processAttachments) —
-        // both are Change → Change, so order doesn't matter; only toCommitUnit must run last.
+        // Swapped relative to the production pipelines (extractContacts before processAttachments) -
+        // both are Change -> Change, so order doesn't matter; only toCommitUnit must run last.
         EmailStage.extractContacts(),
         EmailStage.processAttachments(),
         EmailStage.toCommitUnit(),
@@ -456,7 +458,7 @@ describe('reconcileDrafts stage', () => {
 
   /**
    * Drives the reconcile-in-commit chain: pool sent drafts, flow the given synced changes through
-   * `reconcileDrafts` → `toCommitUnit` → the commit sink (which appends the canonical message and runs
+   * `reconcileDrafts` -> `toCommitUnit` -> the commit sink (which appends the canonical message and runs
    * the deferred draft removal), exactly as the provider sync ops do.
    */
   const runReconcile = (
@@ -541,7 +543,7 @@ describe('reconcileDrafts stage', () => {
     db.add(makeSentDraft(mailboxUri, 'gmail-msg-2'));
     await db.flush({ indexes: true });
 
-    // A synced message with an unrelated foreign id — must not match the sent draft above.
+    // A synced message with an unrelated foreign id - must not match the sent draft above.
     await runReconcile(db, mailbox, binding, [makeSyncedInsert('gmail-msg-other', 10)]);
     await db.flush({ indexes: true });
 

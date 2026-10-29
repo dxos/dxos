@@ -43,7 +43,7 @@ const notify = (title: string, message: string) => {
  * Inject the declared content script into already-open http/https tabs.
  * Declarative content scripts only load on navigations that happen *after*
  * install/update, so without this a freshly installed (or reloaded) extension
- * cannot message any tab that was already open — the panel's `sendMessage`
+ * cannot message any tab that was already open - the panel's `sendMessage`
  * fails with "Receiving end does not exist" until that tab is reloaded.
  */
 const injectContentScriptIntoOpenTabs = async (): Promise<void> => {
@@ -61,7 +61,7 @@ const injectContentScriptIntoOpenTabs = async (): Promise<void> => {
         await browser.scripting.executeScript({ target: { tabId: tab.id }, files });
       } catch {
         // Privileged/restricted tabs (Web Store, view-source, PDF viewer) reject
-        // injection and can never host the content script — skip them silently.
+        // injection and can never host the content script - skip them silently.
       }
     }),
   );
@@ -138,7 +138,7 @@ const main = async () => {
   // Registry refresh is connection-driven: a Composer content script announces
   // itself via PAGE_ACTIONS_READY (on page load, or via the on-install
   // injection below) and we refresh from that known-connected sender. The
-  // background never proactively messages a tab it hasn't heard from — probing
+  // background never proactively messages a tab it hasn't heard from - probing
   // a tab whose content script isn't attached yet is what produced spurious
   // "receiving end does not exist" errors on install/update.
 
@@ -146,7 +146,7 @@ const main = async () => {
   browser.runtime.onInstalled.addListener(() => {
     browser.contextMenus.create({
       id: 'image-action',
-      title: 'Create Thumbnail…',
+      title: 'Create Thumbnail...',
       contexts: ['image'],
     });
     void injectContentScriptIntoOpenTabs();

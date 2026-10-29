@@ -18,7 +18,7 @@ export type WithPersistentStorageOptions = {
 /**
  * Runs `fn` while no client worker holds the persistent client's storage.
  *
- * Rewriting OPFS from outside the client — importing a profile, say — needs the pool's sync access
+ * Rewriting OPFS from outside the client - importing a profile, say - needs the pool's sync access
  * handles released, and neither `client.destroy()` nor a page reload proves that: the handles belong
  * to the dedicated worker, which the browser tears down asynchronously after the document goes away.
  * A write that beats it fails with `NoModificationAllowedError`. The worker holds

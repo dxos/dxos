@@ -29,10 +29,10 @@ import { mx } from '@dxos/ui-theme';
  * Public shape of an item in the list. Mirrors what
  * `@dxos/introspect-mcp/tools`'s `createToolDefinitions` produces (title +
  * description) plus an `id` so the list can key rows and surface selection
- * state. Consumers may pass richer records — only these fields are read.
+ * state. Consumers may pass richer records - only these fields are read.
  */
 export type Tool = {
-  /** Stable identifier — typically the tool name (`list_packages`, etc.). */
+  /** Stable identifier - typically the tool name (`list_packages`, etc.). */
   id: string;
   /** Human-readable title surfaced to the user. */
   title: string;
@@ -41,7 +41,7 @@ export type Tool = {
 };
 
 //
-// Root — wraps `Listbox.Root` so descendant `ToolList.Item` rows participate in
+// Root - wraps `Listbox.Root` so descendant `ToolList.Item` rows participate in
 // the listbox's single-select model. `Listbox` itself supplies the selection context
 // (`useListboxSelection` reads back the active id), so `ToolList` doesn't ship its own.
 //
@@ -71,7 +71,7 @@ const ToolListRoot = ({ tools, selectedId, onSelect, children }: ToolListRootPro
 ToolListRoot.displayName = 'ToolList.Root';
 
 //
-// Content — the `role=listbox` container that renders rows from `tools`.
+// Content - the `role=listbox` container that renders rows from `tools`.
 //
 
 export type ToolListContentProps = Util.ThemedClassName<{
@@ -79,12 +79,12 @@ export type ToolListContentProps = Util.ThemedClassName<{
    * Optional render override for each row. Default renders title +
    * description via `<ToolList.Item>`. Override when you want extra row
    * content (badges, kbd hints, etc.). (Not `children` so the part can be a
-   * `composable` Slot target — see below.)
+   * `composable` Slot target - see below.)
    */
   renderItem?: (tool: Tool) => ReactNode;
 }>;
 
-// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref
+// `composable` so a parent `<... asChild>` (Slot) is respected - the injected className/ref
 // land on the listbox's content element.
 const ToolListContent = Util.composable<HTMLDivElement, ToolListContentProps>(
   ({ renderItem, ...props }, forwardedRef) => {
@@ -174,7 +174,7 @@ const ToolListItemDescription = ({ classNames, ...props }: ToolListItemDescripti
 ToolListItemDescription.displayName = 'ToolList.ItemDescription';
 
 //
-// ToolList namespace — drop-in or compose-it-yourself.
+// ToolList namespace - drop-in or compose-it-yourself.
 //
 // Default usage:
 //

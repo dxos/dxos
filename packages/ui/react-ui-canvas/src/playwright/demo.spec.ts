@@ -3,7 +3,7 @@
 //
 
 //
-// Records a walkthrough of the post-M4 fixes (`POST-M4.mdl`) as a video. Not a check — it asserts
+// Records a walkthrough of the post-M4 fixes (`POST-M4.mdl`) as a video. Not a check - it asserts
 // nothing, so it has no place in CI, where it only spends a browser's time and can fail on a cold
 // storybook. `DX_DEMO=1 pnpm exec playwright test --config=src/playwright/playwright.config.ts
 // src/playwright/demo.spec.ts` records it.

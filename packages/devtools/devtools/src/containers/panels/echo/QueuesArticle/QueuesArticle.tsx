@@ -16,7 +16,7 @@ import { type ArticleProps } from '../../types.ts';
 // import { DataSpaceSelector } from '../../../../containers/index.ts';
 // import { useDevtoolsState } from '../../../../hooks/index.ts';
 
-// TODO(queue-to-feed-migration): retains "Queue" naming — `FeedsArticle` already names the unrelated
+// TODO(queue-to-feed-migration): retains "Queue" naming - `FeedsArticle` already names the unrelated
 // hypercore feed-pipeline devtools panel (see ../FeedsArticle), so renaming this to `FeedsArticle` would
 // collide; needs a distinct name once this panel is rebuilt against `Feed.Feed`.
 export const QueuesArticle = ({ role }: ArticleProps) => {

@@ -71,7 +71,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       );
       if (edgeReplication) {
         // Best-effort, and deliberately not fatal: the preference is committed on the host and
-        // converges on its own, so only the local snapshot can fail here — and failing the operation
+        // converges on its own, so only the local snapshot can fail here - and failing the operation
         // on that discards a space that already exists.
         yield* Effect.tryPromise(() =>
           space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED),

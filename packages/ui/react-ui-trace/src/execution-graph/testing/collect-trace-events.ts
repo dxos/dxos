@@ -27,7 +27,7 @@ class TestClock extends Context.Service<TestClock, () => number>()(
  * for building deterministic span fixtures without spinning up a feed sink.
  *
  * Timestamps are produced by an internal monotonic counter so multiple synchronous writes
- * are ordered in insertion order — wall-clock `Date.now()` would otherwise tie and corrupt
+ * are ordered in insertion order - wall-clock `Date.now()` would otherwise tie and corrupt
  * the resulting graph for fast tests.
  *
  * The effect is run synchronously; any failure is rethrown so callers don't pay error
@@ -62,7 +62,7 @@ export const collectTraceEvents = <A, E>(
 /**
  * Wraps an effect so that {@link Trace.write} calls inside it tag their messages with the
  * given {@link Trace.Meta}. Nested `withMeta` scopes shadow the outer meta for their inner
- * effect — exactly the pattern needed to fixture multi-process traces (e.g. an agent
+ * effect - exactly the pattern needed to fixture multi-process traces (e.g. an agent
  * process containing nested operation processes).
  *
  * Implemented by re-providing a fresh {@link Trace.TraceService} layer over the existing

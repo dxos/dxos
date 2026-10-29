@@ -142,7 +142,7 @@ export const CustomActions: Story = {
               ),
             )
             .custom('filter', { label: 'Filter', placement: { zone: 'end' } }, () => (
-              <Input.Root placeholder='Filter…' aria-label='Filter' />
+              <Input.Root placeholder='Filter...' aria-label='Filter' />
             ))
             .subgraph(
               MenuBuilder.extend(TOOLBAR_OVERFLOW_ID, (group) =>
@@ -533,7 +533,7 @@ const LayoutStory = ({ contributors = [], narrow, asMenu }: StoryProps) => {
           <Button.Root data-testid='menu.trigger' icon='ph--list--regular' label='Menu' />
         </ActionMenu>
       ) : (
-        // Fills the story frame; resize the window and groups move into ⋮ by collapse rank, coming back as it widens.
+        // Fills the story frame; resize the window and groups move into : by collapse rank, coming back as it widens.
         <ActionToolbar {...menu} alwaysActive classNames={mx('_border border-separator', narrow && 'max-w-[20rem]')} />
       )}
     </div>
@@ -568,7 +568,7 @@ export const Groups: Story = {
   },
 };
 
-/** Other components extend the owner's named groups (interleaved by order), add a second row, and extend ⋮. */
+/** Other components extend the owner's named groups (interleaved by order), add a second row, and extend :. */
 export const Extended: Story = {
   render: () => <LayoutStory contributors={['review', 'transcription', 'presenter']} />,
   play: async ({ canvasElement }) => {
@@ -595,7 +595,7 @@ export const Extended: Story = {
   },
 };
 
-/** At a narrow width whole groups move into ⋮ by collapse rank, each as a submenu; unranked groups stay. */
+/** At a narrow width whole groups move into : by collapse rank, each as a submenu; unranked groups stay. */
 export const Narrow: Story = {
   render: () => <LayoutStory contributors={['review', 'transcription', 'presenter']} narrow />,
   play: async ({ canvasElement }) => {

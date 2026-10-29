@@ -29,7 +29,7 @@ export const ProjectModule = () => {
 
 /**
  * The project column: the real article surface for the project in the current template's space.
- * A template that seeds none (a CRM space, say) says so, rather than spinning forever — the chat
+ * A template that seeds none (a CRM space, say) says so, rather than spinning forever - the chat
  * and trace columns still work against the data it did seed.
  */
 const ProjectModuleContainer = ({ space }: { space: Space }) => {
@@ -53,7 +53,7 @@ const ProjectModuleContainer = ({ space }: { space: Space }) => {
 
   // The article's toolbar is enabled only while its `attendableId` has attention, and `ModuleContainer`
   // makes each cell attendable under its *positional* id, so without this the toolbar stays disabled.
-  // The id is the project's graph path, as the deck's plank uses in the app — the article hands it
+  // The id is the project's graph path, as the deck's plank uses in the app - the article hands it
   // to `LayoutOperation.Open` as a pivot and to `OpenObjectForm` as a target node. `contents` keeps
   // the attendable out of the layout, so the cell's height chain is unaffected.
   const attendableId = GraphPath.getObjectPathFromObject(project);

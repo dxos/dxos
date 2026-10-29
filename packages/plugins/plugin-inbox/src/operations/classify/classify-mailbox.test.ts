@@ -42,7 +42,7 @@ const FIXTURES: Fixture[] = [
   },
   {
     sender: { email: 'winner@lottery-claims.biz' },
-    subject: 'URGENT: You have won $1,000,000 — claim now',
+    subject: 'URGENT: You have won $1,000,000 - claim now',
     body: 'You are the lucky winner! Send your bank account details immediately to claim your prize before it expires.',
   },
   {
@@ -108,7 +108,7 @@ describe('ClassifyMailbox operation', { tags: ['model-fixture'] }, () => {
         expect(result.remaining).toBe(0);
 
         // The phishing message is spam; Bob's is personal without an LLM call; the rest get categories.
-        expect(yield* taggedSubjects(mailbox, 'Spam')).toEqual(['URGENT: You have won $1,000,000 — claim now']);
+        expect(yield* taggedSubjects(mailbox, 'Spam')).toEqual(['URGENT: You have won $1,000,000 - claim now']);
         expect(yield* taggedSubjects(mailbox, 'Personal')).toContain('Lunch on Thursday?');
 
         // Cursored: a rerun with nothing new classifies nothing (no further LLM spend).

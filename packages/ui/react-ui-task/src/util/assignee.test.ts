@@ -45,13 +45,13 @@ describe('getAssigneeDisplay', () => {
   test('without a session the actor falls back through name, email and DID', ({ expect }) => {
     expect(display({ role: 'assistant', name: 'Scout', email: 'scout@example.com' }).label).toEqual('Scout');
     expect(display({ role: 'assistant', email: 'scout@example.com' }).label).toEqual('scout@example.com');
-    expect(display({ role: 'assistant', identityDid: 'did:halo:abcdefghijklmnop' }).label).toEqual('did:halo:abc…');
+    expect(display({ role: 'assistant', identityDid: 'did:halo:abcdefghijklmnop' }).label).toEqual('did:halo:abc...');
   });
 
   test('an unresolved session is named by the tail of its object id', ({ expect }) => {
     const session = makeSession('Not loaded');
     const result = display({ role: 'assistant', subject: Ref.make(session) });
-    expect(result.label).toEqual(`…${session.id.slice(-8)}`);
+    expect(result.label).toEqual(`\u2026${session.id.slice(-8)}`);
     expect(result.icon).toEqual(AGENT_ICON);
     expect(result.session).toBeUndefined();
   });

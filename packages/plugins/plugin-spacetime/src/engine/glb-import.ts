@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
  *
  * Uses Babylon's SceneLoader to parse the GLB, extracts vertex/index data
  * from the loaded meshes, and constructs a Manifold solid.
- * Textures are ignored — we only extract geometry.
+ * Textures are ignored - we only extract geometry.
  */
 export const importGLB = async (
   data: ArrayBuffer,
@@ -31,7 +31,7 @@ export const importGLB = async (
   const blob = new Blob([data], { type: 'model/gltf-binary' });
   const blobUrl = URL.createObjectURL(blob);
 
-  // Suppress texture loading errors — we only need geometry.
+  // Suppress texture loading errors - we only need geometry.
   SceneLoader.ShowLoadingScreen = false;
 
   let container;
@@ -110,7 +110,7 @@ export const importGLB = async (
 };
 
 /**
- * Direct GLB binary parser — extracts geometry without Babylon's SceneLoader.
+ * Direct GLB binary parser - extracts geometry without Babylon's SceneLoader.
  * Handles files with external texture references that cause SceneLoader to fail.
  */
 export const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Manifold | null => {

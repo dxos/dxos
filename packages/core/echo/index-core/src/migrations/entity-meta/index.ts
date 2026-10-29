@@ -20,7 +20,7 @@ import queueInsertionId from './0011_queue_insertion_id.sql?raw';
 
 /**
  * Columns added to `objectMeta` after it first shipped, with the DDL that adds them. Databases in
- * the field hold any prefix of this history — some have none of these, some a few, fresh ones all —
+ * the field hold any prefix of this history - some have none of these, some a few, fresh ones all -
  * so 0002 probes the live table and adds exactly what is missing. Plain `.sql` cannot express that:
  * SQLite has no `ADD COLUMN IF NOT EXISTS`, and an unconditional ALTER fails with "duplicate
  * column" on any database that already has the column (including every fresh one, where 0001 just
@@ -48,7 +48,7 @@ const addMissingColumns = Effect.gen(function* () {
  * Entity-meta migrations, keyed `<id>_<name>` as `Migrator.fromRecord` expects.
  *
  * Order is load-bearing: 0003's indexes reference columns that 0002 guarantees. Ids must only ever
- * increase, and an applied migration must never be edited — nothing verifies its contents.
+ * increase, and an applied migration must never be edited - nothing verifies its contents.
  */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),

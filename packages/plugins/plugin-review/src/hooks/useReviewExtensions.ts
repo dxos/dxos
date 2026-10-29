@@ -38,7 +38,7 @@ export type ReviewExtensionsProps = {
   versioning: ReturnType<typeof useVersioning>;
   editor: VersionedEditor;
   identity: Identity.Info | null | undefined;
-  /** The document's live (main) content — the base the Suggesting overlays diff against. */
+  /** The document's live (main) content - the base the Suggesting overlays diff against. */
   mainContent: string | undefined;
   diffView: Markdown.Settings['diffView'];
 };
@@ -76,9 +76,9 @@ export const useReviewExtensions = ({
   const diffViewMode = diffViewSetting ?? 'suggest';
 
   // Route the inline suggestion Accept/Reject controls through the durable, undoable collaboration
-  // ops. The anchor is a cursor range over the parent (main) content — the editor is bound to main
-  // in suggest mode — and `branch` is the compare (author) branch key (`reviewBranch`).
-  // Optional: every call site already guards `invokePromise?.` — accept/reject are simply inert in
+  // ops. The anchor is a cursor range over the parent (main) content - the editor is bound to main
+  // in suggest mode - and `branch` is the compare (author) branch key (`reviewBranch`).
+  // Optional: every call site already guards `invokePromise?.` - accept/reject are simply inert in
   // hosts without an operation invoker (bare stories, headless scenario tests).
   const invokePromise = Hooks.useOptionalCapability(Capabilities.OperationInvoker)?.invokePromise;
   const handleAcceptChange = useCallback(
@@ -106,8 +106,8 @@ export const useReviewExtensions = ({
 
   // Ambient overlay Accept/Reject: unlike the single-branch compare path (which keys off
   // `reviewBranch`), the aggregated overlay identifies the target branch from the suggestion's
-  // author — the branch's creator DID, carried through `buildSuggestionSources`. Resolve it to the
-  // core branch key and route the same durable op. No matching core branch ⇒ no-op.
+  // author - the branch's creator DID, carried through `buildSuggestionSources`. Resolve it to the
+  // core branch key and route the same durable op. No matching core branch => no-op.
   const resolveAuthorBranch = useCallback(
     (author: string): string | undefined => {
       const branch = document?.history?.branches.find(
@@ -147,13 +147,13 @@ export const useReviewExtensions = ({
   );
 
   // Live-resolved suggestion sources for the ambient overlay, fed by the (invisible) provider
-  // bridge in the container; empty until a provider is contributed — the overlay
+  // bridge in the container; empty until a provider is contributed - the overlay
   // then simply renders nothing.
   const [suggestionSources, setSuggestionSources] = useState<SuggestionSource[]>([]);
 
   // The ambient multi-author suggestion overlay (shared with the markdown editor via `@dxos/ui-editor`,
   // the leaf both depend on) lives in its own compartment, reconfigured live as the resolved sources
-  // or the review mode change — it must never remount the editor (which would rebind automerge and
+  // or the review mode change - it must never remount the editor (which would rebind automerge and
   // lose scroll/selection).
   // Clicking a change in the document makes it current for every review surface: the companion accents
   // the matching card (see `suggestionGroupKey`).
@@ -171,7 +171,7 @@ export const useReviewExtensions = ({
 
   // In Suggesting mode the editor is bound to the user's own branch, so the foreign overlay diffs
   // each source against main (rebased into the document's coordinates) and EXCLUDES the user's own
-  // branch — self is shown by `trackChanges`, not doubled here. Off the suggesting path the overlay
+  // branch - self is shown by `trackChanges`, not doubled here. Off the suggesting path the overlay
   // diffs sources directly against the editor document (which is main). Authors the user has hidden
   // are filtered at the source (never per-decoration), so bars and counts stay consistent.
   const { hiddenAuthors } = useViewState(ReviewCapabilities.viewAspect, object.id);
@@ -183,7 +183,7 @@ export const useReviewExtensions = ({
   }, [ambientSuggesting, identity?.did, suggestionSources, hiddenAuthors]);
   const overlayBase = ambientSuggesting ? mainContent : undefined;
 
-  // The suggestion author's palette colour — the same colour as their banner tag and avatar — so
+  // The suggestion author's palette colour - the same colour as their banner tag and avatar - so
   // the inline markers attribute the change by colour. Resolved against the space members.
   const members = useMembers(Obj.getDatabase(object)?.spaceId);
   const suggestColour = useMemo(
@@ -191,7 +191,7 @@ export const useReviewExtensions = ({
     [activeBranch, members],
   );
 
-  // The current user's own suggestion-branch colour for Suggesting mode's tracked changes — the same
+  // The current user's own suggestion-branch colour for Suggesting mode's tracked changes - the same
   // hue as their avatar/banner, resolved via the shared helper so self reads consistently.
   const ownSuggestionBranch = document?.history?.branches.find(
     (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === identity?.did,
@@ -201,7 +201,7 @@ export const useReviewExtensions = ({
     [ownSuggestionBranch?.id, members],
   );
 
-  // Author palette hues for every active suggestion branch, keyed by creator DID — passed to the
+  // Author palette hues for every active suggestion branch, keyed by creator DID - passed to the
   // ambient provider so each author's overlay colour matches their avatar/banner hue (the same
   // helpers as the single-branch path above) instead of falling back to a hash.
   const suggestionAuthorBranches =
@@ -212,7 +212,7 @@ export const useReviewExtensions = ({
     for (const branch of suggestionAuthorBranches) {
       if (branch.creator) {
         // Pass the bare hue name: the ambient overlay resolves it via `suggestionHue` (which matches
-        // against the palette names), so a `var(--color-…)` string would never match and fall back to
+        // against the palette names), so a `var(--color-...)` string would never match and fall back to
         // a hash. Matches the form `CommentsArticle` passes.
         record[branch.creator] = authorHue(branch, members);
       }
@@ -222,7 +222,7 @@ export const useReviewExtensions = ({
   }, [authorHuesKey, members]);
 
   // The user's own tracked-changes layer (Suggesting mode only), isolated in its own memo so that
-  // `mainContent` — which changes on EVERY keystroke while editing main — never reaches the combined
+  // `mainContent` - which changes on EVERY keystroke while editing main - never reaches the combined
   // extensions. Otherwise a new extensions array each keystroke would make `useTextEditor` recreate
   // the view and drop the caret's focus. In Suggesting mode the editor is bound to the branch, so
   // `mainContent` (main) is stable across keystrokes; a merge to main updates the base via
@@ -261,7 +261,7 @@ export const useReviewExtensions = ({
 
   // Diff overlay over the live (editable) branch editor: the lightweight inline/gutter variants use
   // the custom versionDiff decorations; sideBySide uses the richer editable unified merge overlay
-  // (codemirror merge chunks with review-oriented colouring) — the branch stays editable in every
+  // (codemirror merge chunks with review-oriented colouring) - the branch stays editable in every
   // mode, so a reviewer can adjust the draft while seeing it diffed against the anchor.
   const compareOverlay = useMemo<Extension | undefined>(() => {
     if (compareActive && branchBaseContent !== undefined && diffViewMode !== 'suggest') {

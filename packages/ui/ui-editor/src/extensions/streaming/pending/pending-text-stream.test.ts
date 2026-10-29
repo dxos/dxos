@@ -46,9 +46,9 @@ describe('PendingTextStreamer', () => {
     const sink = memoryPendingTextSink();
     const streamer = new PendingTextStreamer(sink, { initialBufferMs: 1000, scheduler });
 
-    streamer.start({ placeholder: 'Recording…' });
+    streamer.start({ placeholder: 'Recording...' });
     streamer.push('hello world');
-    expect(sink.snapshot()).toMatchObject({ final: '', placeholder: 'Recording…' });
+    expect(sink.snapshot()).toMatchObject({ final: '', placeholder: 'Recording...' });
 
     scheduler.advance(1000);
     expect(sink.snapshot().final).toBe('hello world');

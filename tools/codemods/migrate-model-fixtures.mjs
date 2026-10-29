@@ -3,7 +3,7 @@
 //
 
 // Ports the recorded model fixtures from Effect 3 payloads to Effect 4 ones. The fixtures are
-// captured provider exchanges, so regenerating them needs live API credentials — the stored payloads
+// captured provider exchanges, so regenerating them needs live API credentials - the stored payloads
 // are migrated in place instead, as the JSON Schema corpus was.
 //
 // Three independent transforms (the third is defined with its data, below):
@@ -20,7 +20,7 @@
 //     output is part of the request the fixture is keyed on, so v4's emission changes are a key
 //     mismatch rather than a decode failure. Scoped deliberately: the rules below are transcribed
 //     from v4's actual output for these three tools, and the `ai` suite is the only one whose
-//     model-fixture tests run — every other suite skips them, so a store-wide rewrite would be
+//     model-fixture tests run - every other suite skips them, so a store-wide rewrite would be
 //     unverifiable invention. Those suites need regenerated fixtures when they are re-enabled.
 //
 // Usage: node tools/codemods/migrate-model-fixtures.mjs [store-dir]
@@ -44,8 +44,8 @@ const ERROR_TEXT_REPLACEMENTS = [
     from:
       'MalformedOutput: { "module": "Toolkit", "method": "Calculator.handle", "description": ' +
       '"Failed to decode tool call parameters for tool \'Calculator\' from:\\n\'{}\'", "cause": ' +
-      '{ readonly input: string }\n└─ ["input"]\n   └─ is missing }\ncaused by:\nParseError: ' +
-      '{ readonly input: string }\n└─ ["input"]\n   └─ is missing',
+      '{ readonly input: string }\n+- ["input"]\n   +- is missing }\ncaused by:\nParseError: ' +
+      '{ readonly input: string }\n+- ["input"]\n   +- is missing',
     to:
       "effect/ai/AiError/AiError: Toolkit.Calculator.handle: Invalid parameters for tool 'Calculator': " +
       'Missing key\n  at ["input"]\ncaused by:\neffect/ai/AiError/ToolParameterValidationError: ' +

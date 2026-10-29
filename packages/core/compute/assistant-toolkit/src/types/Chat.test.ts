@@ -52,7 +52,7 @@ describe('Chat', () => {
 
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
-        // field — a field was the edge that made Agent and Chat mutually dependent.
+        // field - a field was the edge that made Agent and Chat mutually dependent.
         expect(Object.keys(Chat.fields).sort()).toEqual([
           'feed',
           'instructions',
@@ -170,7 +170,7 @@ describe('Chat', () => {
         yield* Database.flush();
 
         // The chat works on the task; it does not take it. An owning checklist would re-parent it
-        // here — and again on every later update of the chat.
+        // here - and again on every later update of the chat.
         expect(Obj.getParent(delegated)?.id).toBe(owner.id);
         const own = Chat.addTask(db, chat, 'Draft an outline');
         expect(Obj.getParent(own)?.id).toBe(chat.id);
@@ -272,7 +272,7 @@ describe('Chat', () => {
           expect(history.items.map((item) => item.id)).toEqual([first.id, answer.id, retry.id]);
           expect(history.shallow).toBe(false);
 
-          // The abandoned turns are still in the log — a rewind hides, it does not delete.
+          // The abandoned turns are still in the log - a rewind hides, it does not delete.
           const all = yield* readFeed(feed);
           expect(all.map((item) => item.id)).toContain(abandoned.id);
           expect(all.map((item) => item.id)).toContain(abandonedAnswer.id);
@@ -366,7 +366,7 @@ const message = (text: string, sender: 'user' | 'assistant' = 'user') =>
   Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
 
 /**
- * Reads a feed's messages in append order — `Feed.history` walks lineage positionally, and a query
+ * Reads a feed's messages in append order - `Feed.history` walks lineage positionally, and a query
  * returns an unordered set.
  */
 const readFeed = (feed: Feed.Feed) =>

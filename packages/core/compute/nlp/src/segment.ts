@@ -18,8 +18,8 @@ export const SEGMENT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
  * LLM output schema. No offsets: the model quotes text verbatim and {@link alignSegments} computes
  * positions, because a model cannot count characters reliably but can copy a phrase exactly.
  *
- * Nesting is expressed three levels deep rather than recursively — `Schema.suspend` would let the
- * model return arbitrary depth, and every consumer here wants paragraph → sentence → clause/vocab.
+ * Nesting is expressed three levels deep rather than recursively - `Schema.suspend` would let the
+ * model return arbitrary depth, and every consumer here wants paragraph -> sentence -> clause/vocab.
  */
 const RawVocab = Schema.Struct({
   text: Schema.String.annotate({ description: 'The term exactly as it appears in the source.' }),
@@ -71,7 +71,7 @@ export type SegmentTextOptions = {
   kinds?: readonly SegmentKind[];
   /**
    * Pronunciation guide to attach to each vocabulary region (e.g. furigana, pinyin). Omitted, no
-   * reading is requested — a reading is noise for a script the learner can already pronounce.
+   * reading is requested - a reading is noise for a script the learner can already pronounce.
    */
   readingSystem?: string;
 };
@@ -116,7 +116,7 @@ const buildPrompt = (
     '  is discarded.',
     '- Cover the passage in order, without overlapping siblings.',
     `- Requested granularities: ${wanted.join(', ')}.`,
-    '- A vocab region is a word or fixed phrase worth learning — content words and idioms, not',
+    '- A vocab region is a word or fixed phrase worth learning - content words and idioms, not',
     '  function words, punctuation, or numbers.',
   ];
 
@@ -151,7 +151,7 @@ const buildPrompt = (
 
 /**
  * Analyzes a passage into nested paragraph / sentence / clause / vocabulary regions, then
- * deterministically aligns them to character offsets in the source — and, when a translation is
+ * deterministically aligns them to character offsets in the source - and, when a translation is
  * supplied, in the translation too.
  *
  * Provides the LanguageModel internally; residual requirement is {@link AiService.AiService}.
@@ -169,6 +169,6 @@ export const segmentText = (source: string, options: SegmentTextOptions = {}) =>
  *
  * Deliberately NOT the type of {@link segmentText}, which is an Effect program: a React consumer
  * takes this, and the caller wiring one up runs the program to a Promise at that boundary. The two
- * are not meant to unify — `Parser` and `parseText` stand in exactly the same relation.
+ * are not meant to unify - `Parser` and `parseText` stand in exactly the same relation.
  */
 export type Segmenter = (source: string, options?: SegmentTextOptions) => Promise<Segmentation>;

@@ -16,7 +16,7 @@ import { RemoteSession } from '@dxos/types';
  *
  * They exist to be called by a harness HOOK rather than by a model: a `mcp_tool` hook fires the
  * same call on every event it is bound to, with no judgment in between, so the write path has to be
- * idempotent and addressable by the one identifier every hook event carries — `sessionId`.
+ * idempotent and addressable by the one identifier every hook event carries - `sessionId`.
  */
 
 /**
@@ -73,13 +73,13 @@ export const RecordSession = Operation.make({
     created: Schema.Boolean,
     /**
      * What the caller should do next, if anything. A hook fires a fixed payload and cannot choose a
-     * space or write prose, so a call needing either is not an error — it is a call that needs one
+     * space or write prose, so a call needing either is not an error - it is a call that needs one
      * argument more, and the model reading this result is the one that can supply it.
      */
     instructions: Schema.optional(Schema.String),
     /**
      * The open tasks this session is assigned, so a report doubles as a reminder of what the
-     * session is for — the cheapest moment to notice drift is the heartbeat it already sends.
+     * session is for - the cheapest moment to notice drift is the heartbeat it already sends.
      */
     tasks: Schema.optional(
       Schema.Array(

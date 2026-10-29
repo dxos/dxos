@@ -98,7 +98,7 @@ export const layerMemory: Layer.Layer<ExtractedQuestionStore> = Layer.sync(Extra
   return {
     put: (question) =>
       Effect.sync(() => {
-        // First write wins, matching the SQL layer's `ON CONFLICT … DO NOTHING`.
+        // First write wins, matching the SQL layer's `ON CONFLICT ... DO NOTHING`.
         const key = `${question.messageId}#${question.question}`;
         if (!byKey.has(key)) {
           byKey.set(key, question);

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// Lightweight CORS-proxy helpers — intentionally free of heavy transitive
+// Lightweight CORS-proxy helpers - intentionally free of heavy transitive
 // dependencies so they can be bundled into workerd / browser environments
 // without pulling in protobufjs or similar node-only packages.
 

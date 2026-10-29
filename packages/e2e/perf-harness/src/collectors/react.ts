@@ -234,7 +234,7 @@ export const readReact = async (page: Attached | undefined): Promise<ReactReadin
  * The stage's React work, and its per-component breakdown written as an artifact.
  *
  * A missing opening reading means the page loaded during the stage (`boot`), so the whole closing
- * reading is the stage's — as is one that went BACKWARDS, which means the page reloaded and the
+ * reading is the stage's - as is one that went BACKWARDS, which means the page reloaded and the
  * counts restarted. `renderers` is a level and is taken from the close.
  */
 export const diffReact = (

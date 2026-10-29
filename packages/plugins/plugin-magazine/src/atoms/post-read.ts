@@ -16,7 +16,7 @@ const EMPTY_READ_SLICE: ReadSlice = { readAt: undefined };
 
 /**
  * This Post's `readAt`, sliced off its source Subscription's `postState`. Fires only when this
- * Post's `readAt` changes — sibling Posts' mutations are discarded without propagating.
+ * Post's `readAt` changes - sibling Posts' mutations are discarded without propagating.
  */
 export const postReadAtom = Atom.family((post: Subscription.Post) =>
   Atom.make<ReadSlice>((get) => {

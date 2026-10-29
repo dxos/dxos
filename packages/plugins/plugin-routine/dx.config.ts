@@ -23,8 +23,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Event-driven workflow automation engine for DXOS Composer.
-      A Routine pairs a trigger ("when" — a timer schedule or an incoming feed) with an action
-      ("then" — a persistent compute operation and instructions), enabling automated pipelines that
+      A Routine pairs a trigger ("when" - a timer schedule or an incoming feed) with an action
+      ("then" - a persistent compute operation and instructions), enabling automated pipelines that
       react to changes in real time without manual intervention.
 
       Routines are configured in their own article. A per-space TriggerDispatcher manages
@@ -59,7 +59,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
     ),
     // Dependency-mode: the specs resolve services (client, database, ...) lazily at
-    // slice-materialisation time, so activation needs nothing — and providing
+    // slice-materialisation time, so activation needs nothing - and providing
     // Capabilities.LayerSpec soft-orders this module before the process-manager snapshot.
     AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'module-url' } }), {
       name: 'LayerSpecs',

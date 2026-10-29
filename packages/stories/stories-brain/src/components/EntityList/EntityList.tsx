@@ -22,14 +22,14 @@ export type EntityListProps = Util.ThemedClassName<{
 
 /**
  * Entity column: the distinct entities mentioned across the facts (subject/object), derived from the
- * facts rather than message authors — so loaded documents populate it too. Selecting an entity sets
+ * facts rather than message authors - so loaded documents populate it too. Selecting an entity sets
  * the shared context (drives the list + graph views); clicking it again clears the context.
  *
  * Click-to-toggle: clicking the selected entity again clears the context. `Listbox` selects on a
  * row click but also selects-on-focus, and `focus` fires before `click` in a mouse gesture (with a
  * render committed in between), so by click time the row already reads as selected and a naive
  * toggle would always clear it. The pre-gesture selection is captured at pointer-down (before focus)
- * and the click toggles against that, so a single click selects and a re-click deselects — while the
+ * and the click toggles against that, so a single click selects and a re-click deselects - while the
  * listbox's selection-follows-focus keeps keyboard navigation working.
  */
 export const EntityList = ({ entities, selected, onSelect, classNames }: EntityListProps) => {

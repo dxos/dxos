@@ -5,7 +5,7 @@
 import { isTestLogFileEnabled, resolveTestLogFilePath, truncateTestLogFile } from './paths.ts';
 
 /**
- * Vitest `globalSetup` hook — truncates the test log file once in the parent process
+ * Vitest `globalSetup` hook - truncates the test log file once in the parent process
  * before worker threads start.
  */
 const globalSetup = (): void => {

@@ -47,7 +47,7 @@ export const useKubeAgentHandlers = ({
         }
       } catch (err: any) {
         setAgentStatus('error');
-        setValidationMessage(`Couldn’t check agent status: ${err.message}`);
+        setValidationMessage(`Couldn't check agent status: ${err.message}`);
       }
     } else {
       setAgentStatus('error');

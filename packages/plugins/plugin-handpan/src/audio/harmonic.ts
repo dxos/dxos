@@ -15,13 +15,13 @@ export type HarmonicPitchOptions = {
 
 export type HarmonicPitch = {
   frequency: number;
-  /** Fraction of spectral energy lying on the candidate's harmonics (0–1); low for noise. */
+  /** Fraction of spectral energy lying on the candidate's harmonics (0-1); low for noise. */
   harmonicity: number;
 };
 
 /**
  * Harmonic-sum pitch estimate over a magnitude spectrum: each candidate f0 scores
- * Σ m(k·f0)/k, which favours the true fundamental over its sub- and super-harmonics.
+ * Sigma m(k·f0)/k, which favours the true fundamental over its sub- and super-harmonics.
  * Applied to the post-onset spectral residual it isolates the newly struck note from
  * notes still ringing.
  */
@@ -78,7 +78,7 @@ export const harmonicPitch = (
 
 /**
  * Magnitude-weighted mean of f_k / k over the harmonics, each located by parabolic
- * interpolation of the log spectrum — upper harmonics divide the peak error by k.
+ * interpolation of the log spectrum - upper harmonics divide the peak error by k.
  */
 const refine = (
   magnitudes: Float32Array,

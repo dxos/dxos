@@ -22,13 +22,13 @@ export const Markdown = {
           return;
         }
         if (performance.now() > deadline) {
-          // Two distinct bugs land here — the editor state lagging the DOM write, and
+          // Two distinct bugs land here - the editor state lagging the DOM write, and
           // `composer.editorView` naming a different editor than the one filled (it points at
-          // whichever mounted last) — and only the actual document content tells them apart.
+          // whichever mounted last) - and only the actual document content tells them apart.
           const doc = editorView?.state.doc.toString();
           const state =
             doc != null ? `editor doc (${doc.length} chars): ${JSON.stringify(doc.slice(0, 80))}` : 'no editorView';
-          throw new Error(`editor never received the selection text: ${text} — ${state}`);
+          throw new Error(`editor never received the selection text: ${text} - ${state}`);
         }
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
@@ -54,7 +54,7 @@ export const Markdown = {
   getMarkdownLineText: (page: Page) =>
     Markdown.getMarkdownTextbox(page)
       // NOTE(thure): There will be two `span`s in the one `.cm-line`, and one of them is the selection caret containing
-      // the peer’s name; we instead want the in-flow text content which is an unadorned `span`.
+      // the peer's name; we instead want the in-flow text content which is an unadorned `span`.
       .locator('.cm-line > span:not([class=cm-collab-selectionCaret])')
       .first()
       .textContent(),

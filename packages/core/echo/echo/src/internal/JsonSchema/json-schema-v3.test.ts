@@ -16,7 +16,7 @@ import { toEffectSchema } from './json-schema.ts';
 //
 // Spaces hold JSON Schema written by Effect 3, so `toEffectSchema` stays a permanent read path:
 // it retires on space coverage, not on a release date. The fixture is every ECHO type exported by
-// `@dxos/types` as `toJsonSchema` emitted it on effect 3.21.4, and it cannot be regenerated —
+// `@dxos/types` as `toJsonSchema` emitted it on effect 3.21.4, and it cannot be regenerated -
 // v4 emits none of the `/schemas/*` sentinels below, so they survive only in already-stored data.
 //
 

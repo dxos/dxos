@@ -65,8 +65,8 @@ const OperationHandlerProviderSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        // Live view (not a one-shot snapshot): handlers contributed after materialization — e.g. by
-        // a plugin enabled later — still reach subsequent reads. The manager memoizes one atom per
+        // Live view (not a one-shot snapshot): handlers contributed after materialization - e.g. by
+        // a plugin enabled later - still reach subsequent reads. The manager memoizes one atom per
         // capability, so `reactive` reads the current contributions and re-merges when they change.
         const registry = yield* AtomRegistry.AtomRegistry;
         const sets = yield* Capability.atom(Capabilities.OperationHandler);
@@ -101,8 +101,8 @@ const OpaqueToolkitSpec = LayerSpec.make(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
         const pluginManager = yield* Plugin.Service;
-        // Latched on success only: a fire-and-forget activation left the very first read — the one
-        // a trigger-fired routine makes — returning a skill-less toolkit for the whole run, and a
+        // Latched on success only: a fire-and-forget activation left the very first read - the one
+        // a trigger-fired routine makes - returning a skill-less toolkit for the whole run, and a
         // latch set before the attempt made a failure permanent and silent.
         let skillsReady = false;
         const ensureSkills = Effect.suspend(() =>
@@ -145,7 +145,7 @@ const OperationsToRegistrySpec = LayerSpec.make(
         const registry = yield* Registry.Service;
         const pluginManager = yield* Plugin.Service;
         // The snapshot below is one-shot, so every handler module must have contributed before it
-        // runs. Today none declares an `activatesOn`, which makes that true by accident — a
+        // runs. Today none declares an `activatesOn`, which makes that true by accident - a
         // one-line gate on any of them would silently drop its definitions from the registry.
         // Pulling Idle first makes the requirement explicit and survives that change.
         yield* pluginManager.activate(ActivationEvents.Idle).pipe(
@@ -164,7 +164,7 @@ const OperationsToRegistrySpec = LayerSpec.make(
         );
         const definitions = sources.flat();
         // The only point every operation in the app is visible at once. Tool names derive from keys
-        // non-injectively (`Operation.toolName`), so two keys can claim one name — which the resolver
+        // non-injectively (`Operation.toolName`), so two keys can claim one name - which the resolver
         // would only surface once a model asked for it.
         const collisions = Operation.findToolNameCollisions(definitions);
         invariant(
@@ -256,7 +256,7 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
  * Application-scoped remote (EDGE) process manager: the progress meter's cancel control and the
  * process-control surface an agent asked for with `location: 'edge'` is spawned on. Uses the EDGE
  * implementation whenever an edge service is configured, otherwise a read-only no-op. One instance
- * serves every space — both cancel and process control take the space they address — so this stays
+ * serves every space - both cancel and process control take the space they address - so this stays
  * application-scoped even though processes are per-space.
  */
 const RemoteProcessManagerSpec = LayerSpec.make(
@@ -273,8 +273,8 @@ const RemoteProcessManagerSpec = LayerSpec.make(
         if (!edgeUrl) {
           return RemoteProcessManager.layerNoop;
         }
-        // Commands are queued into the process registry's own store, so a spawn issued offline — or
-        // while EDGE is mid-deploy — survives the reload rather than being lost at the call.
+        // Commands are queued into the process registry's own store, so a spawn issued offline - or
+        // while EDGE is mid-deploy - survives the reload rather than being lost at the call.
         const kvStore = yield* KeyValueStore.KeyValueStore;
         return EdgeProcessManager.fromClient(client, { kvStore, onConnected: onNetworkOnline });
       }),

@@ -8,7 +8,7 @@ import { WeakDictionary } from '@dxos/util';
 
 /**
  * Serializes a (scope-normalized) query into a stable cache key. Two calls that build the same
- * query AST share a key — and therefore a cached {@link QueryResult.QueryResult} — so the
+ * query AST share a key - and therefore a cached {@link QueryResult.QueryResult} - so the
  * per-instance `.atom` getter hands back the same atom over one underlying subscription.
  * A `debugLabel` does not change what a query returns, so it is left out of the key.
  */
@@ -35,7 +35,7 @@ const isOptionsClause = (node: unknown): node is QueryAST.QueryOptionsClause =>
  * Entries are held weakly: a result is reachable only while a caller variable or an active
  * `.atom`/`subscribe` finalizer references it. Once those drop, GC reclaims the result and the
  * {@link WeakDictionary}'s FinalizationRegistry evicts the dead key, so the cache cannot grow
- * without bound. An idle (unsubscribed) cached result is cheap — {@link QueryResult.QueryResult}
+ * without bound. An idle (unsubscribed) cached result is cheap - {@link QueryResult.QueryResult}
  * activates its context lazily on first subscribe.
  *
  * Callers must key on the already scope-normalized query (owning spaceId bound), so semantically

@@ -44,7 +44,7 @@ describe('ChatModel streaming', () => {
           traceMessage([partialBlockEvent(m1, 'Hello', true)]),
           traceMessage([partialBlockEvent(m1, 'Hello world.', false)]),
           traceMessage([partialBlockEvent(m1, 'Hello world. (stale)', true)]),
-          traceMessage([partialBlockEvent(m2, 'Working…', true)]),
+          traceMessage([partialBlockEvent(m2, 'Working...', true)]),
         ];
         const stubSession = yield* makeStubSession(chat, feed, batches);
         const stubAgentService: AgentService.Service = {
@@ -61,8 +61,8 @@ describe('ChatModel streaming', () => {
         });
 
         // Atoms only hold state while mounted (the UI mounts them via `useAtomValue`); subscribe
-        // with `immediate` before the request — a lazy subscription does not mount the atom graph
-        // until first read, so updates would be dropped — and collect snapshots so the in-flight
+        // with `immediate` before the request - a lazy subscription does not mount the atom graph
+        // until first read, so updates would be dropped - and collect snapshots so the in-flight
         // progression is observable too.
         const snapshots: string[][] = [];
         const unsubscribers = [
@@ -89,11 +89,11 @@ describe('ChatModel streaming', () => {
         // unfinalized partial was flushed into the pending list when the agent completed.
         const messages = observableRegistry.get(chatModel.messages);
         expect(messages.map(({ id }) => id)).toEqual([m1, m2]);
-        expect(texts(messages)).toEqual(['Hello world.', 'Working…']);
+        expect(texts(messages)).toEqual(['Hello world.', 'Working...']);
 
         // The growing m1 partial was upserted in place (a single entry per snapshot), and the
         // stale partial that arrived after finalization never surfaced. Transient two-phase
-        // artifacts (a brief [] on finalize, a brief duplicate on flush) are expected — the UI
+        // artifacts (a brief [] on finalize, a brief duplicate on flush) are expected - the UI
         // masks them via `Chat.Root`'s dedupe-by-id merge.
         expect(snapshots).toContainEqual(['Hel']);
         expect(snapshots).toContainEqual(['Hello']);
@@ -121,7 +121,7 @@ describe('ChatModel streaming', () => {
         const messageId = Obj.ID.random();
         const batches = [
           traceMessage([partialBlockEvent(messageId, 'Still', true)]),
-          traceMessage([partialBlockEvent(messageId, 'Still working…', false)]),
+          traceMessage([partialBlockEvent(messageId, 'Still working...', false)]),
         ];
 
         const idleSession = yield* makeStubSession(chat, feed, batches, { running: false });
@@ -173,7 +173,7 @@ describe('ChatModel streaming', () => {
 
         expect(activeSnapshots).toContain(true);
         expect(observableRegistry.get(chatModel.active)).toBe(false);
-        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Still working…']);
+        expect(texts(observableRegistry.get(chatModel.messages))).toEqual(['Still working...']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -195,7 +195,7 @@ describe('ChatModel streaming', () => {
           chat,
           feed,
           [traceMessage([partialBlockEvent(messageId, 'Still', true)])],
-          [traceMessage([partialBlockEvent(messageId, 'Still working…', false)])],
+          [traceMessage([partialBlockEvent(messageId, 'Still working...', false)])],
         );
 
         const observableRegistry = AtomRegistry.make();
@@ -290,8 +290,8 @@ describe('ChatModel streaming', () => {
         expect(snapshots.indexOf('connecting-mcp')).toBeLessThan(snapshots.indexOf('contacting-provider'));
         expect(attempts[snapshots.indexOf('contacting-provider')]).toBe(3);
 
-        // A streamed block no longer clears the phase line — an agentic turn streams a little and then
-        // works for a long time — it moves it to `generating`, and only the settled request clears
+        // A streamed block no longer clears the phase line - an agentic turn streams a little and then
+        // works for a long time - it moves it to `generating`, and only the settled request clears
         // it: the two empty snapshots are the subscription's immediate read and the settle.
         expect(snapshots.indexOf('contacting-provider')).toBeLessThan(snapshots.indexOf('generating'));
         expect(snapshots.filter((phase) => phase === undefined)).toHaveLength(2);

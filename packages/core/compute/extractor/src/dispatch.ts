@@ -36,7 +36,7 @@ export interface DispatchInput extends ExtractInput {
 export interface DispatchOptions {
   /**
    * Interpose before persistence. Defaults to identity (no-op). Returning `undefined` cancels
-   * the extraction — no objects or relations are written. This is the seam a preview/edit
+   * the extraction - no objects or relations are written. This is the seam a preview/edit
    * Dialog or a server-side policy hooks into.
    */
   readonly onProposal?: (result: ExtractResult) => Effect.Effect<ExtractResult | undefined>;
@@ -69,7 +69,7 @@ const pickExtractor = (
   );
 
   if (extractorId !== undefined) {
-    // Explicit invocation (e.g. the user picked this extractor from a menu) bypasses `match()` —
+    // Explicit invocation (e.g. the user picked this extractor from a menu) bypasses `match()` -
     // `match()` is only a heuristic pre-filter for auto-selection. Confidence is still recorded
     // when the extractor happens to match.
     const found = candidates.find((extractor) => extractor.id === extractorId);
@@ -101,7 +101,7 @@ const pickExtractor = (
  * or highest-confidence `match`, pre-filtered by `sourceTypes`), runs its `extract`, passes the
  * result through `onProposal`, then persists: created objects are `db.add`-ed, top-level
  * created/updated objects get a provenance relation (when a factory is supplied and the
- * extractor opts in), and extra relations are persisted verbatim. Tags are NOT applied here —
+ * extractor opts in), and extra relations are persisted verbatim. Tags are NOT applied here -
  * the consuming plugin interprets `result.tags`.
  */
 export const dispatch = (
@@ -141,7 +141,7 @@ export const dispatch = (
         return;
       }
       // The provenance factory returns `undefined` to opt out (e.g. when the source could not be
-      // resolved to a live ECHO object — a relation endpoint must be a live proxy, not a snapshot).
+      // resolved to a live ECHO object - a relation endpoint must be a live proxy, not a snapshot).
       const relation = options.provenance!({ source, object, extractorId: extractor.id, extractedAt, confidence });
       if (relation) {
         db.add(relation);

@@ -30,8 +30,8 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
  *
  * Killing a worker that was merely slow is the cost of being wrong, so the window is as long as it
  * can be: it must stay strictly below `LOCK_OR_RPC_WAIT_TIMEOUT` (15s), because the escalating
- * worker is itself terminated by its tab the moment that budget expires — a grace period at or
- * above it never fires at all — leaving the remainder for the terminate, the lock grant and the
+ * worker is itself terminated by its tab the moment that budget expires - a grace period at or
+ * above it never fires at all - leaving the remainder for the terminate, the lock grant and the
  * handshake that follow.
  */
 export const DEFAULT_DISPLACE_GRACE_TIMEOUT = 10_000;
@@ -45,7 +45,7 @@ export const DEFAULT_SHUTDOWN_TIMEOUT = 10_000;
 /**
  * Shuts down whichever worker currently holds `storageLockKey`, so its storage can be taken over.
  * A worker does this to its predecessor on startup; a caller rewriting the storage from outside
- * does it to free the lock, and must still wait for the lock itself — this only asks.
+ * does it to free the lock, and must still wait for the lock itself - this only asks.
  */
 export const displace = (storageLockKey: string, displaceChannel = displaceChannelFor(storageLockKey)): void => {
   const channel = new DisplaceChannel(displaceChannel);
@@ -73,7 +73,7 @@ export type RuntimeHandle = {
    * returns; it does not wait for the session to end. The scope is the session's lifetime: the
    * framework closes it when the tab's session lock releases (the tab closed or died), when a newer
    * connect attempt from the same tab supersedes this one, or when the worker shuts down. The
-   * protocols in context are the tab→worker server transport and the worker→tab client transport,
+   * protocols in context are the tab->worker server transport and the worker->tab client transport,
    * built into the same scope.
    */
   createSession(args: {
@@ -224,7 +224,7 @@ export const run = ({
     const runtimeScope = Effect.runSync(Scope.make());
     let owningClientId: string;
     // Live session per client, keyed by the connect attempt that claimed it. `supersede` tears the
-    // session down from this side — the only way to reclaim a slot whose tab abandoned it.
+    // session down from this side - the only way to reclaim a slot whose tab abandoned it.
     const sessionsByClient = new Map<string, { attempt: number; supersede: () => void }>();
 
     let releaseStorageLock: () => void;
@@ -233,7 +233,7 @@ export const run = ({
     });
 
     // Hold a dedicated liveness lock for the worker's whole lifetime. Clients watch this key to detect
-    // termination, so it must be held before `ready` is advertised — hence the awaited grant below.
+    // termination, so it must be held before `ready` is advertised - hence the awaited grant below.
     const livenessLockKey = `${storageLockKey}/liveness/${workerId}`;
     let releaseLivenessLock: () => void;
     const livenessLockHeld = new Promise<void>((resolve) => {
@@ -347,7 +347,7 @@ export const run = ({
         }
         case 'ping': {
           // Answered from the message loop itself, so the reply is proof that this worker is still
-          // draining its queue — the one thing that distinguishes it from a wedged incumbent.
+          // draining its queue - the one thing that distinguishes it from a wedged incumbent.
           endpoint.postMessage({ type: 'pong', nonce: message.nonce } satisfies WorkerProtocol.DedicatedWorkerMessage);
           break;
         }
@@ -375,7 +375,7 @@ export const run = ({
             log('ignoring start-session while shutting down', { clientId: message.clientId });
             break;
           }
-          // A newer attempt means the tab gave up on the session it already holds — its connect failed
+          // A newer attempt means the tab gave up on the session it already holds - its connect failed
           // after we handed out ports, so nothing on that side will ever close it. Tear it down here
           // or the clientId stays claimed for the worker's lifetime and every retry is discarded.
           if (current) {

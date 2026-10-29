@@ -212,7 +212,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
               icon='ph--git-branch--regular'
               label={t('create-branch.label')}
               // Forking a sub-branch off a branch (its tip or one of its revisions) is not yet
-              // supported — the core registry is flat, keyed by the root object, so the fork would
+              // supported - the core registry is flat, keyed by the root object, so the fork would
               // silently derive from main. Disable rather than mislead. Fork from main or a main
               // revision is allowed. See DESIGN.md (nested branch-of-branch follow-up). A fork-point
               // view is read-only and off-tip, so disable there too.

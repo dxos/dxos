@@ -29,7 +29,7 @@ const tone = (score: number) => (score >= 0.75 ? 'bg-emerald-500' : score >= 0.4
 
 /**
  * The drawing's layout scores, recomputed whenever its scene changes, with the overall score of each
- * version seen so far — so an agent redrawing in a loop shows its progression beside the picture.
+ * version seen so far - so an agent redrawing in a loop shows its progression beside the picture.
  */
 export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
   const { t } = UiHooks.useTranslation(IllustratorNamespace.key);
@@ -68,7 +68,7 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
                 <div data-testid='illustrator.scores'>
                   <Layout.Flex align='baseline' gap='sm'>
                     <span className='text-3xl font-medium tabular-nums' data-testid='illustrator.scores.overall'>
-                      {overall === undefined ? '—' : percent(overall)}
+                      {overall === undefined ? '-' : percent(overall)}
                     </span>
                     <span className='text-fg-muted'>overall</span>
                   </Layout.Flex>
@@ -76,7 +76,7 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
                     <ol className='flex flex-wrap items-center gap-1 text-xs tabular-nums' aria-label='versions'>
                       {history.map((score, index) => (
                         <li key={index} className='flex items-center gap-1'>
-                          {index > 0 && <span className='text-fg-muted'>→</span>}
+                          {index > 0 && <span className='text-fg-muted'>{'->'}</span>}
                           <span className={mx('rounded px-1 text-white', tone(score))}>{percent(score)}</span>
                         </li>
                       ))}

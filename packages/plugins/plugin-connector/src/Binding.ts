@@ -44,8 +44,8 @@ import * as SyncTemplate from './SyncTemplate.ts';
  * The binding between a local object (a Mailbox, a Calendar) and the remote feed a `Connection` syncs
  * into it: a `Cursor` targeting the object, authenticated by the connection's access token.
  *
- * A binding outlives its credential. Deleting a connection leaves the cursor in place — its synced
- * range, merge snapshots and delta token describe the remote *account*, not the credential — so the
+ * A binding outlives its credential. Deleting a connection leaves the cursor in place - its synced
+ * range, merge snapshots and delta token describe the remote *account*, not the credential - so the
  * binding goes dormant rather than away, and `find` reports the object as unbound until a connection
  * backs it again. Which is why almost everything here is keyed on the cursor or the target it binds.
  */
@@ -58,8 +58,8 @@ import * as SyncTemplate from './SyncTemplate.ts';
  * Entity id a ref addresses, or `undefined` if its URI is not an `echo:` EID.
  *
  * Refs must never be compared by raw `uri` string: one `echo:` EID has several spellings for the
- * same object — the canonical local `echo:///<id>`, the legacy local `echo:/<id>` still present in
- * persisted data, and the qualified `echo://<spaceId>/<id>` — so a cursor stored under one spelling
+ * same object - the canonical local `echo:///<id>`, the legacy local `echo:/<id>` still present in
+ * persisted data, and the qualified `echo://<spaceId>/<id>` - so a cursor stored under one spelling
  * would not match a freshly-made ref under another, and a binding would read as absent. `EID.parse`
  * (which `getEntityId` applies) normalizes all three.
  */
@@ -69,7 +69,7 @@ const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
 };
 
 /**
- * Navigation subject for a connection, for a caller that has to send the user to it — e.g. to
+ * Navigation subject for a connection, for a caller that has to send the user to it - e.g. to
  * reauthenticate after its provider rejected the stored credential.
  */
 export const connectionSubject = (spaceId: string, connectionId: string): string =>
@@ -78,7 +78,7 @@ export const connectionSubject = (spaceId: string, connectionId: string): string
 /**
  * True when `cursor` is an external-sync cursor authenticated by `connection`'s access token.
  * `Cursor` no longer relates to `Connection` directly (that coupling was removed to make `Cursor`
- * an infrastructure type) — a connection's cursors are found by matching `spec.source` against its
+ * an infrastructure type) - a connection's cursors are found by matching `spec.source` against its
  * `accessToken`. Fuzzy if an access token is ever shared across connections.
  */
 export const isForConnection = (
@@ -115,7 +115,7 @@ export type Binding = {
  * access token authenticates it, or `undefined` when the target has no such pair.
  *
  * Both halves are required because deleting a connection does not cascade to the cursors referencing
- * its access token, and a target holding such an orphan cannot sync — read as bound it would offer
+ * its access token, and a target holding such an orphan cannot sync - read as bound it would offer
  * neither Connect (suppressed by the binding) nor Sync (suppressed by the missing connection). Pure
  * over already-read lists so graph extensions and React hooks share one notion of "bound".
  */
@@ -140,7 +140,7 @@ export const find = (
  *
  * `Cursor` has no reverse-ref index on `spec.target` (it's one level below a discriminated-union
  * struct field, which the typed `Query.referencedBy` key doesn't reach), so this scans every cursor
- * in the space and filters — mirrors this plugin's other cursor lookups.
+ * in the space and filters - mirrors this plugin's other cursor lookups.
  */
 export const query = (target: Obj.Unknown): Effect.Effect<Binding | undefined, never, Database.Service> =>
   Effect.gen(function* () {
@@ -150,7 +150,7 @@ export const query = (target: Obj.Unknown): Effect.Effect<Binding | undefined, n
   });
 
 /**
- * The external-sync {@link Cursor} whose target is the given object (mailbox, calendar, …), when a
+ * The external-sync {@link Cursor} whose target is the given object (mailbox, calendar, ...), when a
  * connection still backs it. The cursor's `spec.source` is the access token that authenticates sync
  * for that object; credentials and sync re-invocation flow from it.
  */
@@ -160,7 +160,7 @@ export const queryCursor = (
   query(target).pipe(Effect.map((binding) => binding?.cursor));
 
 /**
- * External cursors targeting `target` that no {@link Connection} backs — dormant bindings, holding the
+ * External cursors targeting `target` that no {@link Connection} backs - dormant bindings, holding the
  * progress of a sync whose credential was deleted. They are kept rather than discarded (see
  * `prepare`): the synced range and merge snapshots they carry are what let a re-bind of the
  * same account resume instead of re-walking the whole horizon.
@@ -192,13 +192,13 @@ export const queryDormant = (target: Obj.Unknown): Effect.Effect<Cursor.External
 /**
  * Verdict of {@link checkAccount}.
  * - `match`: the target is already synced from this account, so its dormant binding may be resumed.
- * - `unknown`: nothing recorded on either side — bind, record, but start the sync from scratch.
+ * - `unknown`: nothing recorded on either side - bind, record, but start the sync from scratch.
  * - `mismatch`: the target holds another account's data; binding it here would merge two accounts.
  */
 export type AccountCheck = 'match' | 'unknown' | 'mismatch';
 
 /**
- * The remote account a bindable target (Mailbox, Calendar, …) mirrors, recorded on the target itself as
+ * The remote account a bindable target (Mailbox, Calendar, ...) mirrors, recorded on the target itself as
  * a foreign key `{ source: <service host>, id: <account> }`.
  *
  * The account describes the target, not the binding: it says whose data the object already holds, so it
@@ -239,8 +239,8 @@ export const checkAccount = (target: Obj.Unknown, source: string, account: strin
 /**
  * Finds the sync trigger of `connection`'s sync Routine: the trigger carries the connection as its
  * `input.connection`, so the reverse-ref from the connection reaches it whether or not a Routine owns
- * it. One Routine covers the whole account — its operation fans out over every binding at run time
- * (see {@link syncAll}) — so a binding added later needs no schedule of its own.
+ * it. One Routine covers the whole account - its operation fans out over every binding at run time
+ * (see {@link syncAll}) - so a binding added later needs no schedule of its own.
  */
 export const findTrigger = (connection: Connection.Connection) =>
   Effect.gen(function* () {
@@ -249,7 +249,7 @@ export const findTrigger = (connection: Connection.Connection) =>
   });
 
 /**
- * Finds `connection`'s sync Routine — the owner of its sync trigger. Deleting a connection must take
+ * Finds `connection`'s sync Routine - the owner of its sync trigger. Deleting a connection must take
  * this Routine with it, or the schedule keeps firing against a connection that is gone.
  */
 export const findRoutine = (
@@ -264,7 +264,7 @@ export const findRoutine = (
 /**
  * The sync trigger a Routine owns, read straight off its `triggers` array.
  *
- * Unlike {@link findTrigger} this needs no query, so it sees a Routine the caller just persisted — the
+ * Unlike {@link findTrigger} this needs no query, so it sees a Routine the caller just persisted - the
  * reverse-ref index lags a write, and a lookup racing it reports the Routine as missing.
  */
 export const triggerOfRoutine = (routine: Routine.Routine): Trigger.Trigger | undefined =>
@@ -297,7 +297,7 @@ export const triggerMonitorLayer = (
 
 /**
  * Force-runs a sync trigger through the monitor, which routes a `remote` trigger to EDGE and a local
- * one to the trigger dispatcher — the dispatcher being what carries the run's durable execution, so
+ * one to the trigger dispatcher - the dispatcher being what carries the run's durable execution, so
  * a batched sync continues past its first capped run. The synthetic tick stands in for the timer
  * event a scheduled fire would have supplied. `data` reaches a remote run too, through EDGE's force-run.
  */
@@ -318,8 +318,8 @@ export const fireTrigger = (
 
 /**
  * Builds a connection's sync Routine as a fully-wired but *unpersisted* draft: one Routine per
- * account, wrapping a trigger built from the connector's declared `sync.trigger` spec — running on
- * EDGE when the connector declares `remote`, otherwise locally — bound to the connector's own sync
+ * account, wrapping a trigger built from the connector's declared `sync.trigger` spec - running on
+ * EDGE when the connector declares `remote`, otherwise locally - bound to the connector's own sync
  * operation, whose input is the connection rather than any one binding. The operation fans out over
  * every binding at run time (see {@link syncAll}), so targets added or removed later are covered
  * without touching the Routine.
@@ -328,7 +328,7 @@ export const fireTrigger = (
  * fire event for pressed-first ordering, while a scheduled fire resolves it to nothing.
  *
  * Nothing is written here. The draft is shown editable in the create-routine form and persisted on
- * Save, so a sync Routine is never created behind the user's back — which is also why there is no
+ * Save, so a sync Routine is never created behind the user's back - which is also why there is no
  * in-flight dedupe: two racing callers open one dialog between them rather than persisting twice.
  */
 export const scaffoldRoutine = ({
@@ -365,7 +365,7 @@ export const scaffoldRoutine = ({
 
 const routineName = (connection: Connection.Connection): string => {
   const label = Obj.getLabel(connection) ?? connection.name;
-  return label ? `Sync — ${label}` : 'Sync';
+  return label ? `Sync - ${label}` : 'Sync';
 };
 
 //
@@ -382,15 +382,15 @@ const SYNC_CONCURRENCY = 2;
  * event) sorts that binding to the front, so the pressed target grabs a slot immediately while its
  * siblings queue.
  *
- * Isolation: every binding's outcome — output, typed failure, or defect — is collected, so one broken
+ * Isolation: every binding's outcome - output, typed failure, or defect - is collected, so one broken
  * binding neither interrupts a concurrent sibling mid-run (which could tear a feed-append from its
  * cursor advance) nor starves the queued rest. After every binding has had its turn, the worst outcome
  * is surfaced once: an auth expiry first (it is actionable), then the first failure, then the first
- * defect. HTTP 401s — arriving as typed provider failures or as defects — are retagged
+ * defect. HTTP 401s - arriving as typed provider failures or as defects - are retagged
  * {@link ConnectionAuthExpiredError} so the failure toast offers reauthentication.
  *
  * Continuation: a binding's `Operation.runAgain()` (a capped run with work left) is likewise collected
- * and re-raised once at the operation level — a dispatcher-driven run re-invokes the operation with
+ * and re-raised once at the operation level - a dispatcher-driven run re-invokes the operation with
  * the same event, and the durable per-binding cursors resume where they left off. A failure outranks
  * the re-raise; the capped binding's cursor resumes on the next scheduled run regardless.
  *
@@ -433,7 +433,7 @@ export const syncAll = <A, E, R>({
 
     const ordered = priority ? [...live].sort((a, b) => rank(a, priority) - rank(b, priority)) : live;
 
-    // Serialized invocation the reauth toast runs on click — data (operation key + input), not a live
+    // Serialized invocation the reauth toast runs on click - data (operation key + input), not a live
     // callback, since it rides on the error across the process boundary.
     const openConnection = Operation.prepare(LayoutOperation.Open, {
       subject: [connectionSubject(db.spaceId, connection.id)],
@@ -443,7 +443,7 @@ export const syncAll = <A, E, R>({
     const retag401 = (cause: unknown): ConnectionAuthExpiredError =>
       new ConnectionAuthExpiredError({ connectionId: connection.id, action: openConnection, cause });
 
-    // Every binding resolves to a tagged outcome so the fan-out never fails or dies mid-flight — one
+    // Every binding resolves to a tagged outcome so the fan-out never fails or dies mid-flight - one
     // broken binding must not interrupt a sibling between its feed append and cursor advance. Tagged
     // (rather than sentinel `undefined`) so a `void`-returning sync's outputs survive collection.
     type Outcome =
@@ -459,7 +459,7 @@ export const syncAll = <A, E, R>({
           Effect.provide(Database.layer(db)),
           Effect.map((output): Outcome => ({ kind: 'output', output })),
           // Provider 401s reach here typed (a handler that `Effect.result`s its API calls re-fails
-          // them) or as defects (a handler whose nested operation invocation `orDie`d them) — retag
+          // them) or as defects (a handler whose nested operation invocation `orDie`d them) - retag
           // on both channels.
           Effect.catch((error) =>
             Effect.succeed<Outcome>({ kind: 'failure', failure: isUnauthorizedError(error) ? retag401(error) : error }),
@@ -585,7 +585,7 @@ const rank = (cursor: Cursor.ExternalCursor, priority: string): number => (curso
  * Runs a connection's sync, by whichever path its connector declares.
  *
  * A connector with a `sync.trigger` spec is kept in sync by the connection's Routine, so the sync is
- * run by force-running that Routine's trigger — the dispatcher is what drives the run, including
+ * run by force-running that Routine's trigger - the dispatcher is what drives the run, including
  * `Operation.runAgain()` continuation, so a capped run finishes its remaining batches. `priority` (a
  * binding's cursor id) rides on the fire event for pressed-first ordering. Routines are only created
  * through the create-routine form, never silently: when the connection has none (deleted, or declined
@@ -623,7 +623,7 @@ export const runSync = ({
       ).pipe(
         Effect.asVoid,
         // Continuation is dispatcher-driven; a direct invocation surfaces `runAgain` as a defect.
-        // Accept the partial sync — an on-demand connector's next manual sync resumes the cursor.
+        // Accept the partial sync - an on-demand connector's next manual sync resumes the cursor.
         Effect.catchDefect((defect) =>
           Process.RunAgainError.is(defect)
             ? Effect.sync(() => log.info('sync capped; more on next run', { connectorId: connector.id }))
@@ -669,8 +669,8 @@ const fireSyncTrigger = ({
 
 /**
  * {@link runSync} with the sync button's recreation path: when the account's sync Routine is missing
- * (deleted, or declined at creation), the seeded create-routine form opens instead — over `subject` (a
- * bound target, or the connection itself) — and saving it runs the sync the press asked for.
+ * (deleted, or declined at creation), the seeded create-routine form opens instead - over `subject` (a
+ * bound target, or the connection itself) - and saving it runs the sync the press asked for.
  * Cancelling runs nothing. A routine that exists but is switched off gets a toast pointing at the
  * routines panel instead. Shared by every sync affordance: a target's sync button, the connection
  * article, and the connection's nav-tree action.
@@ -702,7 +702,7 @@ export const syncOrOfferRoutine = ({
         const created = result?.target;
         if (created) {
           // Forked, not yielded: the offer is done once the routine exists, and the caller waited
-          // for the dialog already — it should not also wait out the first sync.
+          // for the dialog already - it should not also wait out the first sync.
           Effect.runFork(
             syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
               Effect.catchTag('TriggerDisabledError', () => reportSyncRoutineDisabled(db.spaceId)),
@@ -746,11 +746,11 @@ const reportSyncRoutineDisabled = (spaceId: Key.SpaceId): Effect.Effect<void, ne
   }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('sync routine disabled toast failed', { error }))));
 
 /**
- * Runs the sync the user asked for by saving the offered create-routine form — the Sync button's
+ * Runs the sync the user asked for by saving the offered create-routine form - the Sync button's
  * recreation path and the connect flow's dialog both land here.
  *
  * The trigger comes off the created Routine rather than from a lookup: the reverse-ref index lags the
- * write, so {@link findTrigger} called this early reports the Routine as missing — which is what
+ * write, so {@link findTrigger} called this early reports the Routine as missing - which is what
  * silently dropped this sync. Nothing re-opens the dialog from here either; a save that somehow
  * produced no trigger logs and stops, rather than looping the user back into the form. A routine saved
  * switched off fails with {@link Trigger.TriggerDisabledError}.
@@ -777,12 +777,12 @@ export const syncCreatedRoutine = ({
   });
 
 /**
- * Syncs a single sync target (a Mailbox, Calendar, …) by way of its binding's connection: the
+ * Syncs a single sync target (a Mailbox, Calendar, ...) by way of its binding's connection: the
  * account's sync Routine runs with the pressed binding as `priority`, so this target syncs first while
  * its siblings queue behind it. No-op for an object that is not bound to a live connection.
  *
  * When the account's sync Routine is missing, the seeded create-routine form opens instead and saving
- * runs the sync — see {@link syncOrOfferRoutine}.
+ * runs the sync - see {@link syncOrOfferRoutine}.
  */
 export const sync = (
   target: Obj.Unknown,
@@ -823,7 +823,7 @@ export const sync = (
 
 /**
  * Removes a dormant binding, plus any per-binding sync Routine still pointed at it. The Routine owns its
- * trigger, so removing it takes the trigger too. An account-level Routine is not reached from here — it
+ * trigger, so removing it takes the trigger too. An account-level Routine is not reached from here - it
  * references the connection, never the cursor, so it is removed with the connection (see
  * {@link findRoutine}).
  */
@@ -839,7 +839,7 @@ export const remove = (cursor: Cursor.ExternalCursor): Effect.Effect<void, never
   });
 
 export type PrepareOptions = {
-  /** Object being bound (Mailbox, Calendar, …). */
+  /** Object being bound (Mailbox, Calendar, ...). */
   target: Obj.Unknown;
   /** Credential the connection authenticates with; its `source` keys the target's account record. */
   accessToken: AccessToken.AccessToken;
@@ -852,7 +852,7 @@ export type PrepareOptions = {
 /**
  * Settles what a target's existing state means for a new binding, and records the account it is now
  * synced from. Returns the cursor the caller should use, or `undefined` when it should create a fresh
- * one. Fails with {@link TargetAccountMismatchError} — before mutating anything — when the target
+ * one. Fails with {@link TargetAccountMismatchError} - before mutating anything - when the target
  * already syncs a different account.
  *
  * Resuming is gated on the account rather than on the target alone because the cursor is a resume
@@ -880,7 +880,7 @@ export const prepare = ({
     const orphaned = yield* queryDormant(target);
     // Scoped to the remote target being bound: a dormant cursor carrying no `externalId` is a
     // single-target binding, not a wildcard, so a multi-target connector must not inherit its `max` for
-    // an arbitrary calendar or board — that watermark is a provider timestamp, and everything older than
+    // an arbitrary calendar or board - that watermark is a provider timestamp, and everything older than
     // it would stay unfetched.
     const forThisTarget = (cursor: Cursor.ExternalCursor) =>
       externalId === undefined ? cursor.spec.externalId === undefined : cursor.spec.externalId === externalId;
@@ -915,7 +915,7 @@ export const prepare = ({
 
 /**
  * Tells the user why a completed sign-in bound nothing. The credential is real and the connection is
- * kept — only the binding is refused — so without this the flow looks like it simply did nothing. The
+ * kept - only the binding is refused - so without this the flow looks like it simply did nothing. The
  * accounts themselves are not named: a `Label` carries no interpolation params, and the log has them.
  */
 export const reportAccountMismatch: Effect.Effect<void, never, Operation.Service> = Effect.ignore(
@@ -930,8 +930,8 @@ export const reportAccountMismatch: Effect.Effect<void, never, Operation.Service
 /**
  * Bind `target` to an existing `connection` as a sync target: an external cursor authenticated by
  * the connection's access token, plus the recurring sync trigger the connector declares. Binding is
- * always a deliberate act — the connector-auth menu's reuse entry, or the coordinator completing a
- * sign-in — so nothing calls this on a user's behalf.
+ * always a deliberate act - the connector-auth menu's reuse entry, or the coordinator completing a
+ * sign-in - so nothing calls this on a user's behalf.
  */
 export const bind = ({
   connection,

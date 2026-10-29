@@ -36,7 +36,7 @@ const indexOf = (stylesheet: Stylesheet): StylesheetIndex => {
 };
 
 /**
- * Every ordered selection of one to four class names, shortest first — the selector keys a
+ * Every ordered selection of one to four class names, shortest first - the selector keys a
  * compound class list can match, in the precedence order `react-syntax-highlighter` applies them.
  */
 const classNameCombinations = (classNames: string[]): string[] => {

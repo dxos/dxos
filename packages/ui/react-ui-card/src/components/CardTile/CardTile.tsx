@@ -31,7 +31,7 @@ type CardTileRootProps = Util.ThemedClassName<
 >;
 
 /**
- * Shared mosaic tile shell: `Mosaic.Tile` → `Focus.Item` → `Card.Root`. The card is a `grid` card, so every
+ * Shared mosaic tile shell: `Mosaic.Tile` -> `Focus.Item` -> `Card.Root`. The card is a `grid` card, so every
  * header and row puts its leading cell (star, unread mark, avatar) in the start rail and its text on one
  * content edge.
  * Callers supply the inner `Card.Header`/`Card.Body` (typically via {@link CardTileHeader} + rows).

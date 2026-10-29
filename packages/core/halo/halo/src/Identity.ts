@@ -42,7 +42,7 @@ export const Info = Schema.Struct({
 export type Info = typeof Info.Type;
 
 /**
- * Whether a device is currently reachable. `removed` is terminal — the device was evicted from the
+ * Whether a device is currently reachable. `removed` is terminal - the device was evicted from the
  * identity rather than merely going offline.
  */
 export const Presence = Schema.Literals(['online', 'offline', 'removed']);
@@ -50,7 +50,7 @@ export type Presence = typeof Presence.Type;
 
 /**
  * Public view of a device belonging to the local identity. Replaces the legacy `Device` proxy
- * type (`deviceKey` → `key`).
+ * type (`deviceKey` -> `key`).
  */
 export const DeviceInfo = Schema.Struct({
   /** Hex-encoded device key. */
@@ -79,7 +79,7 @@ export type RecoveryKind = typeof RecoveryKind.Type;
  * two recovery credentials apart, nor know which of them is still usable.
  */
 export const RecoveryInfo = Schema.Struct({
-  /** Hex-encoded lookup key — the public handle used to revoke this credential. */
+  /** Hex-encoded lookup key - the public handle used to revoke this credential. */
   lookupKey: Schema.optional(Schema.String),
   /** User-visible name assigned at creation. */
   label: Schema.optional(Schema.String),
@@ -110,7 +110,7 @@ export type Credential = typeof Credential.Type;
  * call `setIdentity` without depending on `@dxos/client`.
  */
 export type EdgeIdentity = {
-  /** Identity DID (`did:halo:…`); EDGE keys connections by it. */
+  /** Identity DID (`did:halo:...`); EDGE keys connections by it. */
   readonly identityDid: string;
   /** Hex-encoded key of the local device. */
   readonly peerKey: string;
@@ -203,7 +203,7 @@ export type RecoverArgs =
  */
 /**
  * The service shape backing {@link Service}. Named (rather than inline in the `Context.Tag`) so
- * consumers referencing it — e.g. a capability typed `Context.Service.Shape<typeof Identity.Service>` —
+ * consumers referencing it - e.g. a capability typed `Context.Service.Shape<typeof Identity.Service>` -
  * name it portably instead of expanding its structure and leaking the transitive
  * {@link Invitation} types into their declaration emit (TS2883).
  */
@@ -231,7 +231,7 @@ export interface ServiceApi {
     deviceLabel?: string;
   }) => Effect.Effect<Info, IdentityError>;
   /**
-   * Id of the identity's personal (HALO) space — where its credentials live. `Option.none` when no
+   * Id of the identity's personal (HALO) space - where its credentials live. `Option.none` when no
    * identity exists. Derived asynchronously from the identity key, hence a verb rather than a field
    * on {@link Info}.
    */

@@ -40,7 +40,7 @@ const ALIGNS: readonly Layout.Align[] = ['start', 'center', 'end', 'baseline', '
 const JUSTIFIES: readonly Layout.Justify[] = ['start', 'center', 'end', 'between', 'around', 'evenly'];
 
 /**
- * `gap`/`align`/`justify` come off the node's static props and are handed to `Flex` unchanged —
+ * `gap`/`align`/`justify` come off the node's static props and are handed to `Flex` unchanged -
  * the aspect vocabulary in the template is the same closed set the primitive already takes.
  * `gap` defaults to the ramp's `sm`: a minimal template says nothing and gets sane spacing.
  */
@@ -101,7 +101,7 @@ const toOptions = (node: Node, scope: Scope, items: readonly unknown[]) =>
     return { value, label: asText(itemField(node, scope, item, 'label') ?? value) };
   });
 
-/** The connect surface a multi-select collection drives — senders only; reads come from state. */
+/** The connect surface a multi-select collection drives - senders only; reads come from state. */
 type MultiSelectDriver = {
   select: (id: string, shift?: boolean) => void;
   extendTo: (id: string) => void;
@@ -117,7 +117,7 @@ const isMultiSelectDriver = (value: unknown): value is MultiSelectDriver =>
 
 /**
  * The container kind with the attention aspect: focusing anywhere inside attends the container
- * (sticky), and the attended container's ring goes primary. Hook use forces a real component —
+ * (sticky), and the attended container's ring goes primary. Hook use forces a real component -
  * renderer entries are plain functions.
  */
 const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: string; gap?: Layout.Gap }>) => {
@@ -164,13 +164,13 @@ export const createReactRenderer = ({
   ),
 
   /**
-   * `columns`/`rows` turn the layout into a grid with explicit tracks — geometry lives in the
+   * `columns`/`rows` turn the layout into a grid with explicit tracks - geometry lives in the
    * template, not in renderer workarounds. Without them it is a flex row/column.
    */
   layout: ({ path, props, children }) => {
     const cols = tracks(props.columns);
     const rows = tracks(props.rows);
-    // `resizable` swaps the fixed tracks for a zag splitter — the divider between exactly two
+    // `resizable` swaps the fixed tracks for a zag splitter - the divider between exactly two
     // panes becomes draggable; more panes fall back to the grid, since the wrapper is two-pane.
     if (props.resizable === true && children.length === 2) {
       return <Splitter key={path} orientation={rows ? 'vertical' : 'horizontal'} panes={[children[0], children[1]]} />;
@@ -234,7 +234,7 @@ export const createReactRenderer = ({
     const options = toOptions(node, scope, items);
 
     // With a plural `data-selections` binding: a multi-select list driven by the module's
-    // capability instance (`capability="alias.name"`). The rows only mark and send — selection
+    // capability instance (`capability="alias.name"`). The rows only mark and send - selection
     // state is read back from the published slot the machine's onChange snapshots into.
     if (node.data?.selections) {
       const api = capabilityApi(scope, props.capability);
@@ -308,7 +308,7 @@ export const createReactRenderer = ({
   },
 
   /**
-   * Schema-driven editor over the bound object. The draft is the form's own private state — the
+   * Schema-driven editor over the bound object. The draft is the form's own private state - the
    * system deliberately does not see keystrokes; `save` surfaces the whole edit as one operation
    * (payload = validated values), `cancel` discards it. Keyed by the bound object's identity so a
    * changed master selection remounts a fresh draft.
@@ -349,7 +349,7 @@ export const createReactRenderer = ({
   /**
    * Filtering combobox. The input text and committed value are both published state: typing
    * dispatches `input`, choosing dispatches `select`, and the *caller* derives the filtered items
-   * from state — the component filters nothing, so MVU holds.
+   * from state - the component filters nothing, so MVU holds.
    */
   combobox: ({ path, node, props, data, handlers, scope }) => {
     const items = Array.isArray(data.items) ? data.items : [];
@@ -381,7 +381,7 @@ export const createReactRenderer = ({
 
   /**
    * Tab strip over published state: the current tab is the resolved `data-value`, choosing one
-   * dispatches `select`. The panels live in a sibling `switch` — tabs only set state.
+   * dispatches `select`. The panels live in a sibling `switch` - tabs only set state.
    */
   tabs: ({ path, node, data, handlers }) => (
     <Tabs.Root
@@ -415,14 +415,14 @@ export const createReactRenderer = ({
     </Layout.Flex>
   ),
 
-  // display:contents — a `show` inside a grid row must not break track placement with a box.
+  // display:contents - a `show` inside a grid row must not break track placement with a box.
   show: ({ path, children }) => (
     <div key={path} role='none' className='contents'>
       {children}
     </div>
   ),
 
-  // Structural only — `switch`/`show` render the matched branch's children directly, and
+  // Structural only - `switch`/`show` render the matched branch's children directly, and
   // `let`/`var` exist to declare names, never to render.
   match: () => null,
   fallback: () => null,

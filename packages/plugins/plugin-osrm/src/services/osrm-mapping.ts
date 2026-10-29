@@ -6,7 +6,7 @@ import type * as Place from '@dxos/plugin-trip/Place';
 import * as Routing from '@dxos/plugin-trip/Routing';
 
 //
-// Nominatim (geocoding) response → Place.
+// Nominatim (geocoding) response -> Place.
 //
 
 export type NominatimAddress = {
@@ -48,7 +48,7 @@ export const parsePlace = (results: readonly NominatimResult[], query: string): 
 };
 
 //
-// OSRM (routing) response → Route[].
+// OSRM (routing) response -> Route[].
 //
 
 export type OsrmStep = { name?: string; ref?: string; geometry?: { coordinates?: Array<[number, number]> } };

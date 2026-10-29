@@ -95,7 +95,7 @@ type SandboxEntry = {
  * per-command CPU, memory and file-size limits. Node and Bun only.
  *
  * A sandbox is `<root>/<sandboxId>/` holding its record and a `workspace/` that is the command's
- * working directory and `$HOME`; `/workspace/…` paths in file calls map onto it.
+ * working directory and `$HOME`; `/workspace/...` paths in file calls map onto it.
  */
 export class LocalSandboxBackend implements SandboxService.Backend {
   readonly kind = 'local';

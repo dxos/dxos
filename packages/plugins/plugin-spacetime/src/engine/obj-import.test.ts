@@ -29,7 +29,7 @@ describe('importOBJ', () => {
     // This test verifies the parser reads the data correctly even if the mesh isn't manifold.
     const solid = importOBJ(objText, wasm);
 
-    // Non-manifold meshes return null — this is expected for game models.
+    // Non-manifold meshes return null - this is expected for game models.
     // TODO(burdon): Add mesh repair (e.g., Manifold.merge) for non-manifold imports.
     if (solid) {
       expect(solid.getMesh().numTri).toBeGreaterThan(0);
@@ -43,7 +43,7 @@ describe('importOBJ', () => {
   });
 
   test('parses OBJ vertex and face data correctly', ({ expect }) => {
-    // Tetrahedron — simplest manifold solid.
+    // Tetrahedron - simplest manifold solid.
     const tetraObj = `
       v 1 1 1
       v 1 -1 -1

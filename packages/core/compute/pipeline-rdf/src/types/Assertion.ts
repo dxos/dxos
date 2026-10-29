@@ -8,7 +8,7 @@ import { EntityKind } from './Entity.ts';
 
 /**
  * A reference to an entity: `entity` is its key, `label` the surface form. The key is an absolute IRI where one is
- * known (`echo://…`, `did:…`, `mailto:…`, a URL), which is the same entity in every graph; otherwise it is a
+ * known (`echo://...`, `did:...`, `mailto:...`, a URL), which is the same entity in every graph; otherwise it is a
  * normalized slug, stored as an IRI local to the graph that mentions it (`Vocab.localEntityIri`).
  */
 export const EntityTerm = Schema.Struct({
@@ -29,7 +29,7 @@ export interface LiteralTerm extends Schema.Schema.Type<typeof LiteralTerm> {}
 
 /**
  * Subject/object is either a reference to an Entity or a literal value. The entity `id` is the
- * normalized slug (the join key — `DXOS` and `dxos` collapse to `dxos`); `label` keeps the original
+ * normalized slug (the join key - `DXOS` and `dxos` collapse to `dxos`); `label` keeps the original
  * surface form for display so casing/acronyms survive (`DXOS`, not `Dxos`). Tagged by `kind` because
  * ECHO stores only unions whose members share a single literal discriminator.
  */

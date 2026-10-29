@@ -12,11 +12,11 @@ import { fixtureExists, loadFixtureMessages, round, trackProgress, writeResults 
 
 /**
  * Measures throughput of `@dxos/markdown`'s `htmlToMarkdown` (linkedom + turndown) over the mailbox
- * feed's raw `text/html` bodies — a deterministic, no-LLM conversion. Reports input/output size,
+ * feed's raw `text/html` bodies - a deterministic, no-LLM conversion. Reports input/output size,
  * compression, and chars/sec, to gauge whether markdown conversion is cheap enough to run inline in
  * the ingestion pipeline (vs the current regex `stripHtml`).
  */
-describe.skipIf(!fixtureExists())('benchmark html→markdown throughput', () => {
+describe.skipIf(!fixtureExists())('benchmark html->markdown throughput', () => {
   test('converts message HTML bodies to markdown', ({ expect }) => {
     const messages = loadFixtureMessages({ body: 'html' }).filter((message) => Message.extractText(message).length > 0);
     const progress = trackProgress('html-to-markdown', messages.length);

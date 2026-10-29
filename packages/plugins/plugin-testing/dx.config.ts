@@ -33,7 +33,7 @@ const config: Plugin.PluginConfig<StorybookPluginOptions> = Plugin.config<Storyb
     AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'State',
-      // Shell state read by `Layout` on its first render — same class as the deck's `DeckState`.
+      // Shell state read by `Layout` on its first render - same class as the deck's `DeckState`.
       { activatesOn: ActivationEvents.Startup, provides: [StorybookCapabilities.LayoutState, AppCapabilities.Layout] },
       () => import('./src/capabilities/state.tsx', { with: { type: 'module-url' } }),
     ),

@@ -125,7 +125,7 @@ export type BackgroundFieldProps = {
  * when the background asks for it. Draws nothing for a background with neither grid nor washes.
  */
 export const BackgroundField = ({ background, tone, field, grid, gridHidden = false }: BackgroundFieldProps) => {
-  // `useId` answers colons, which a `url(#…)` reference cannot hold.
+  // `useId` answers colons, which a `url(#...)` reference cannot hold.
   const id = useId().replace(/:/g, '');
   if (!drawsField(background)) {
     return null;

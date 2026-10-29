@@ -140,7 +140,7 @@ describe('geo areas', () => {
     const model = applyOverrides(priced, { areas });
     const term = model.terms.find((term) => term.id === AREA_TERM);
     expect(term?.weight).toBe(2);
-    expect(term?.label).toBe('In “Near Wierzbno” or “Stary Mokotów”');
+    expect(term?.label).toBe('In "Near Wierzbno" or "Stary Mokotów"');
     const results = [
       flat('station', WIERZBNO[1], WIERZBNO[0]),
       flat('square', 52.205, 21.01),
@@ -158,7 +158,7 @@ describe('geo areas', () => {
     expect(required.terms.some((term) => term.id === AREA_TERM)).toBe(false);
     const penalised = rateAll({ ...required, penalty: 0.5 }, results);
     expect(penalised.get('station')?.missed).toEqual([]);
-    expect(penalised.get('far')?.missed).toEqual(['Inside “Near Wierzbno”']);
+    expect(penalised.get('far')?.missed).toEqual(['Inside "Near Wierzbno"']);
     expect(penalised.get('unknown')?.missed).toHaveLength(1);
     expect(penalised.get('far')?.score).toBe(0.5);
   });

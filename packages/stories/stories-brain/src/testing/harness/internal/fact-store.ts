@@ -15,7 +15,7 @@ export const factStoreFixtureExists = (): boolean => existsSync(FACT_STORE_FIXTU
 
 /**
  * Serializes facts to disk. RDF facts are plain subject-predicate-object records, so a JSON array
- * round-trips losslessly through `FactStore.putFacts` — the store re-derives its triples on load.
+ * round-trips losslessly through `FactStore.putFacts` - the store re-derives its triples on load.
  */
 export const saveFacts = (facts: readonly RDF.Fact[], path: string = FACT_STORE_FIXTURE): void => {
   mkdirSync(dirname(path), { recursive: true });
@@ -46,7 +46,7 @@ export const factEntities = (facts: readonly RDF.Fact[]): Set<string> => {
   return entities;
 };
 
-/** An in-memory `FactStore` layer preloaded with the given facts — used to inject a fixture. */
+/** An in-memory `FactStore` layer preloaded with the given facts - used to inject a fixture. */
 export const factStoreLayer = (facts: readonly RDF.Fact[]): Layer.Layer<FactStore> =>
   Layer.effect(
     FactStore,

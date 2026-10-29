@@ -12,7 +12,7 @@ import * as Position from '@dxos/util/Position';
 import * as Role from '../../../common/Role.ts';
 
 /**
- * One entry in a {@link Filter} — a role NSID plus the guard that validates the
+ * One entry in a {@link Filter} - a role NSID plus the guard that validates the
  * data shape when the Surface dispatcher is matching that role.
  */
 export type Binding = {
@@ -64,7 +64,7 @@ export const makeFilter = <TData>(token: Role.Role<TData>, guard?: (data: TData)
 };
 
 /**
- * Typed Surface consumer props — carries the role/data-shape contract via a
+ * Typed Surface consumer props - carries the role/data-shape contract via a
  * {@link Role.Role}. The `type` prop is required; the string `role` prop has
  * been removed from the consumer-facing API.
  */
@@ -83,7 +83,7 @@ export type Props<T extends Record<string, any> = Record<string, unknown>> = {
 } & MakeOptional<CoreProps<T>, 'id' | 'data'>;
 
 /**
- * Typed Surface consumer props — carries the role/data-shape contract via a
+ * Typed Surface consumer props - carries the role/data-shape contract via a
  * {@link Role.Role}. Available as a typed overload of the Surface component so
  * ad-hoc `type` fields on arbitrary spread props don't conflict with the
  * untyped consumer form.
@@ -136,7 +136,7 @@ export type CoreProps<T extends Record<string, any> = Record<string, unknown>> =
 export type ComponentProps<T extends Record<string, any> = Record<string, any>> = {
   /**
    * The resolved role NSID string (e.g. `org.dxos.role.article`). Present on
-   * matched components only — multi-role containers can branch on this value
+   * matched components only - multi-role containers can branch on this value
    * by comparing against a token's `.role` (e.g. `role === AppSurface.Section.role`).
    */
   role: string;
@@ -200,7 +200,7 @@ export type WebComponentDefinition<T extends Record<string, any> = any> = Readon
 export type Definition<T extends Record<string, any> = any> = ReactDefinition<T> | WebComponentDefinition<T>;
 
 /**
- * Typed React surface definition — role is derived from the filter's bindings.
+ * Typed React surface definition - role is derived from the filter's bindings.
  */
 export type TypedReactDefinition<
   T extends Record<string, any> = any,
@@ -208,7 +208,7 @@ export type TypedReactDefinition<
   Id extends string = string,
 > = Readonly<{
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    ? `Invalid id "${Id}": final segment must be camelCase - letters and digits, starting with a letter`
     : Id;
   filter: Filter<T>;
   position?: Position.Position;
@@ -221,7 +221,7 @@ export type TypedReactDefinition<
    * Maps the surface props onto the component's own props, so a plain container can be registered
    * directly instead of being wrapped in an adapter that unpacks `data`.
    *
-   * Prefer this over an inline `component: ({ data }) => <Container … />`: the mapper's input type
+   * Prefer this over an inline `component: ({ data }) => <Container ... />`: the mapper's input type
    * derives from the same `filter` that defines the surface's data shape, so the unpacking is
    * checked against the filter rather than restated by hand.
    *
@@ -241,7 +241,7 @@ export type TypedReactDefinition<
  */
 export type TypedWebComponentDefinition<T extends Record<string, any> = any, Id extends string = string> = Readonly<{
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    ? `Invalid id "${Id}": final segment must be camelCase - letters and digits, starting with a letter`
     : Id;
   filter: Filter<T>;
   tagName: string;

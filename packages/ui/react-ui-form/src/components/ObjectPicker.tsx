@@ -32,7 +32,7 @@ import { FormRoot } from './FormRoot.tsx';
 type PickerCreateProps = Pick<CreateOptions, 'createInitialValuePath' | 'createFieldMap'> & {
   /** The inline create form's schema; with `onCreate`, the popup offers a create row for an unmatched query. */
   createSchema?: Schema.Codec<any, any>;
-  /** The create row's text for the query (the translated `createOptionLabel`); `Create “{query}”` by default. */
+  /** The create row's text for the query (the translated `createOptionLabel`); `Create "{query}"` by default. */
   createLabel?: (query: string) => string;
   /** The create row's icon (`createOptionIcon`); a plus by default. */
   createIcon?: string;

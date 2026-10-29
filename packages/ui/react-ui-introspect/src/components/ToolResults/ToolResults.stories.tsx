@@ -25,7 +25,7 @@ type Story = StoryObj<typeof ToolResults>;
 
 // Mirrors the deployed introspect-mcp shape: top-level object whose values
 // are arrays of objects. The buggy renderer printed
-// `[object Object], [object Object], …` for these.
+// `[object Object], [object Object], ...` for these.
 const listPluginsEnvelope = {
   content: [
     {
@@ -73,7 +73,7 @@ const primitiveArrayEnvelope = {
   structuredContent: { tags: ['alpha', 'beta', 'gamma'] },
 };
 
-// `get_package` returns a single record under a singular key — the wrapper
+// `get_package` returns a single record under a singular key - the wrapper
 // should be peeled so the package's fields render directly.
 const getPackageEnvelope = {
   content: [

@@ -36,7 +36,7 @@ export const Initialize = Util.composable<HTMLDivElement, InitializeProps<any>>(
     return (
       <InitializeEmpty {...props} ref={forwardedRef}>
         {message && (
-          // A connected-but-empty target is a statement of fact, not something to act on — only the
+          // A connected-but-empty target is a statement of fact, not something to act on - only the
           // missing connection is, so the warning valence stays with it.
           <Banner.Root valence={connection ? 'info' : 'warning'}>
             <Banner.Title>{message}</Banner.Title>

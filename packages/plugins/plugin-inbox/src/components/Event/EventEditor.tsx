@@ -120,7 +120,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update],
   );
 
-  // Attendee input: commit each completed token (terminated by whitespace) as an attendee —
+  // Attendee input: commit each completed token (terminated by whitespace) as an attendee -
   // an `@<id>` reference resolves to a Person contact; otherwise it must be a well-formed email.
   // Committed tokens are removed from the input so the row reads as a blank "add attendee" slot.
   const actorListRef = useRef<EditorController | null>(null);
@@ -179,7 +179,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
   // The trailing control of each date row (all-day switch, duration select) takes the SAME fixed
   // width, so the two rows' leading date fields end at the same x and the controls line up as a
-  // column — which the nested grid used to provide.
+  // column - which the nested grid used to provide.
   const trailingClasses = 'shrink-0 min-w-32';
 
   return (

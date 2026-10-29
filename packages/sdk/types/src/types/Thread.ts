@@ -24,7 +24,7 @@ export type AgentMode = Schema.Schema.Type<typeof AgentMode>;
  * Per-thread AI agent configuration.
  *
  * Stored as an optional field on Thread. The agent's identity (display name,
- * DID) is deliberately NOT stored here — it is resolved at runtime via the
+ * DID) is deliberately NOT stored here - it is resolved at runtime via the
  * AgentIdentity Effect service so that renaming the agent globally affects
  * past threads too.
  */
@@ -48,7 +48,7 @@ export class Thread extends Type.makeObject<Thread>(DXN.make('org.dxos.type.thre
 ) {}
 
 /**
- * Thread schema before its messages moved into a feed; kept only as the source of the 0.2.0 → 0.3.0 migration.
+ * Thread schema before its messages moved into a feed; kept only as the source of the 0.2.0 -> 0.3.0 migration.
  * @deprecated Use {@link Thread}.
  */
 export class LegacyThread extends Type.makeObject<LegacyThread>(DXN.make('org.dxos.type.thread', '0.2.0'))(

@@ -23,7 +23,7 @@ type Options = {
 export const waitForSpace = async (
   client: Client,
   spaceKey: PublicKey,
-  // The space arrives over the `querySpaces` stream, so the wait spans a full RPC round trip —
+  // The space arrives over the `querySpaces` stream, so the wait spans a full RPC round trip -
   // a sub-second budget times out under a loaded CI shard rather than on a real failure.
   { timeout = 5_000, ready }: Options = {},
 ): Promise<Space> => {

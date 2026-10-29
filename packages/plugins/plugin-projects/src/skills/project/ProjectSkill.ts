@@ -51,7 +51,7 @@ export const operations: readonly Operation.Definition.Any[] = [
   OutlineOperation.GetOutline,
   OutlineOperation.UpdateOutline,
   // An agent needs `ListSessions` to find its own session object and assign work to itself.
-  // `RecordSession` is a harness-hook verb, not one a model should reach for — but the MCP host
+  // `RecordSession` is a harness-hook verb, not one a model should reach for - but the MCP host
   // governs by skill ("an operation named by no opted-in skill is exactly as uninvocable as one
   // that does not exist"), so the session-reporting hooks fail with `Unknown operation` unless it
   // is named here too.
@@ -78,13 +78,13 @@ export const operations: readonly Operation.Definition.Any[] = [
  * artifacts in an ECHO space, for both a project-scoped chat and an agent driving the projected
  * MCP verbs.
  *
- * It lives in this plugin because the plugin owns the verbs it drives — `Project` is a compute
+ * It lives in this plugin because the plugin owns the verbs it drives - `Project` is a compute
  * type, but a skill that cannot import its own operations can only name them and hope.
  *
  * TODO(wittjosiah): Factor back out to a lower layer so a headless host can serve it without the
  * plugins. Blocked on where the operations live: every verb below is defined by a plugin
  * (`plugin-space`, `plugin-tasks`, this one), so a lower home could only name them as strings
- * again — which is the failure mode that put the skill here. Moving the operation definitions
+ * again - which is the failure mode that put the skill here. Moving the operation definitions
  * down is the prerequisite, not moving the skill.
  *
  * The final key segment doubles as the projected MCP prompt name, so this skill answers to

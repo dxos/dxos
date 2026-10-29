@@ -32,7 +32,7 @@ const SYNC_SCAFFOLD_MESSAGE = 'Sync routine could not be scaffolded.' as const;
 export class ConnectionTestError extends BaseError.extend('ConnectionTestError', TEST_FAILED_MESSAGE) {}
 
 /**
- * A binding's sync could not be run at all — no handler is registered for the connector's sync
+ * A binding's sync could not be run at all - no handler is registered for the connector's sync
  * operation, or the space has no trigger monitor to force-run the schedule the connector declares.
  * Distinct from a sync that ran and failed, which the run's own process reports.
  */
@@ -45,7 +45,7 @@ export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError',
 /**
  * A trigger-declaring connector's connection has no sync routine (deleted, or declined at creation).
  * Sync is driven by the routine's trigger, and routines are only created through the create-routine
- * form — never silently — so the caller must (re)create it first: UI callers offer the seeded form
+ * form - never silently - so the caller must (re)create it first: UI callers offer the seeded form
  * (see `Binding.syncOrOfferRoutine`), headless callers skip the connection.
  */
 export class SyncRoutineMissingError extends BaseError.extend('SyncRoutineMissingError', SYNC_ROUTINE_MISSING_MESSAGE) {
@@ -85,7 +85,7 @@ export class ConnectorNotFoundError extends BaseError.extend('ConnectorNotFoundE
 
 /**
  * The space referenced by an in-flight connection flow could not be made
- * available — either it isn't registered with the client (e.g. the user
+ * available - either it isn't registered with the client (e.g. the user
  * signed out between OAuth start and callback) or it failed to become ready
  * (network, replication, etc.). Both cases are equivalent from the flow's
  * perspective: there's no space to write the connection into.

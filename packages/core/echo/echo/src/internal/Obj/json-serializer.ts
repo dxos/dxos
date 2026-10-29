@@ -144,7 +144,7 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, RelationSourceId, source);
     defineHiddenProperty(obj, RelationTargetId, target);
   } else {
-    // Honour the schema's TypeAnnotation kind — persisted `Type.Type` entities
+    // Honour the schema's TypeAnnotation kind - persisted `Type.Type` entities
     // (e.g. dynamic schemas loaded from a snapshot import) must brand as
     // `KindId = Type`, not Object, otherwise `Filter.type(Type.Type)` /
     // `Type.isType` skip them and the schema registry never picks them up.
@@ -292,7 +292,7 @@ export const objectStructureToJson = (objectId: EntityId, structure: EntityStruc
   const parent = EntityStructure.getParent(structure)?.['/'];
   const source = EntityStructure.getRelationSource(structure)?.['/'];
   const target = EntityStructure.getRelationTarget(structure)?.['/'];
-  // Included so the indexer sees the meta section (notably `convergenceKey`, the merge trigger) —
+  // Included so the indexer sees the meta section (notably `convergenceKey`, the merge trigger) -
   // matching the feed path, whose blocks carry `@meta` wholesale.
   const meta = structure.meta;
   const metaNotEmpty =

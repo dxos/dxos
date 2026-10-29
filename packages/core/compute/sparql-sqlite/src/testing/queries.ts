@@ -26,7 +26,7 @@ export const QUERIES: QueryDef[] = [
   },
   {
     id: 'Q2_entity',
-    description: 'pipeline-rdf buildSparql({entity}) — production shape: UNION + DISTINCT subselect + expand',
+    description: 'pipeline-rdf buildSparql({entity}) - production shape: UNION + DISTINCT subselect + expand',
     feature: 'UNION, subquery, DISTINCT',
     sparql: `${PREFIXES}SELECT ?fact ?p ?o WHERE {
   { SELECT DISTINCT ?fact WHERE { { ?fact sx:subject <${entityIri(40)}> } UNION { ?fact sx:object <${entityIri(40)}> } } }
@@ -35,7 +35,7 @@ export const QUERIES: QueryDef[] = [
   },
   {
     id: 'Q3_filtered',
-    description: 'buildSparql({subjectEntity, minConfidence}) — typed numeric FILTER',
+    description: 'buildSparql({subjectEntity, minConfidence}) - typed numeric FILTER',
     feature: 'FILTER with xsd:decimal cast',
     sparql: `${PREFIXES}SELECT ?fact ?p ?o WHERE {
   { SELECT DISTINCT ?fact WHERE { ?fact sx:subject <${entityIri(3)}> . ?fact sx:confidence ?conf . FILTER(xsd:decimal(?conf) >= 0.8) } }

@@ -96,7 +96,7 @@ export class Messenger {
       return;
     }
     this._closed = true;
-    // Disposing the context tears down every still-active subscription — each `listen` registers its
+    // Disposing the context tears down every still-active subscription - each `listen` registers its
     // transport unsubscribe via `onDispose`, and a handle unsubscribed manually has already cleared
     // its registration. The offline/online cycle keeps the messenger open (only signaling toggles),
     // so subscriptions are torn down only on a real close.

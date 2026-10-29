@@ -14,11 +14,11 @@ import { generateWithIdeogram } from './ideogram-client.ts';
 //   IDEOGRAM_API_KEY=<key> moon run plugin-ideogram:test -- ideogram-client.integration.test.ts
 //
 // `generateWithIdeogram` routes through the edge CORS proxy (the same path the app uses), so this
-// covers proxy → Ideogram → response mapping → auth, which the mock-based unit tests cannot. See
+// covers proxy -> Ideogram -> response mapping -> auth, which the mock-based unit tests cannot. See
 // `ideogram-mapping.test.ts` for the fast, offline mapping tests. This is the DXOS pattern for
 // testing a remote API: gate the network suite on the credential env var with `describe.skipIf`.
 //
-// NOTE: `/generate` produces a real image and consumes Ideogram credits on every run — kept to a
+// NOTE: `/generate` produces a real image and consumes Ideogram credits on every run - kept to a
 // single minimal request for that reason.
 //
 

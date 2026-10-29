@@ -5,7 +5,7 @@
 /**
  * A single hand-authored sample message used to seed inbox/search storybooks.
  * Deliberately schema-free (no `@dxos/types`/`@dxos/echo`/`@dxos/schema`) so that
- * `@dxos/plugin-testing` — which does not depend on those packages — can host it.
+ * `@dxos/plugin-testing` - which does not depend on those packages - can host it.
  */
 export type SampleMessage = {
   from: { email: string; name: string };

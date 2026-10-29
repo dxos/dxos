@@ -90,7 +90,7 @@ describe('Panproto runner', () => {
   });
 
   test('a lens is serializable data (round-trips through JSON via its own schema)', ({ expect }) => {
-    // The whole mapping is data — codecs are referenced by name, never inlined as closures — so a lens
+    // The whole mapping is data - codecs are referenced by name, never inlined as closures - so a lens
     // survives JSON. This is what a function-valued codec could never do.
     const json = JSON.parse(JSON.stringify(Schema.encodeSync(Panproto.Lens)(lens)));
     expect(Schema.decodeSync(Panproto.Lens)(json)).toEqual(lens);

@@ -22,7 +22,7 @@ const CACHE_DIR = join('node_modules', '.cache');
 
 // Each test gets its own temp copy of the fixture so the cache file lands at
 // a known path we control. The cache lives under <root>/node_modules/.cache/
-// dxos-introspect/core.json — relative to whatever monorepo root we point
+// dxos-introspect/core.json - relative to whatever monorepo root we point
 // the introspector at.
 
 describe('symbol cache reuse', { timeout: 30_000 }, () => {
@@ -60,7 +60,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     expect(cacheBytes.length).toBeGreaterThan(0);
 
     // Warm: pointing the same root at a fresh introspector should reuse the
-    // cache. We assert this by stat'ing — the file shouldn't be rewritten if
+    // cache. We assert this by stat'ing - the file shouldn't be rewritten if
     // every package was reused. (We can't easily mock extractSymbols inside
     // an async IIFE, so this stat-based assertion is the cleanest signal.)
     const intro2 = createIntrospector({ rootPath: root, cache: true, prewarm: true });
@@ -70,7 +70,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     intro2.dispose();
 
     // Fixture has 2 packages; cold run is well under 500ms but warm should
-    // be even faster — and crucially the file contents are identical.
+    // be even faster - and crucially the file contents are identical.
     // Threshold is generous to absorb CI disk/CPU contention; the byte-equality
     // assertion below is the real "no re-extraction" signal.
     expect(elapsed).toBeLessThan(5_000);
@@ -97,7 +97,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
 
     const cacheV1 = await readFile(cachePath, 'utf8');
 
-    // Touch one source file in pkg-a — should bump only pkg-a's mtime.
+    // Touch one source file in pkg-a - should bump only pkg-a's mtime.
     const target = join(root, 'packages/pkg-a/src/Task.ts');
     const original = await readFile(target, 'utf8');
     // Append a comment with a different timestamp so the bytes (and mtime)
@@ -105,7 +105,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     await new Promise((r) => setTimeout(r, 20));
     await writeFile(target, `${original}\n// touched at ${Date.now()}\n`);
 
-    // Warm pass — should reuse pkg-b but re-extract pkg-a.
+    // Warm pass - should reuse pkg-b but re-extract pkg-a.
     const intro2 = createIntrospector({ rootPath: root, cache: true, prewarm: true });
     await intro2.ready;
     intro2.dispose();

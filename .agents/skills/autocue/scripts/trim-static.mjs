@@ -7,24 +7,24 @@
  *
  * An agent-driven recording is mostly dead air: the browser holds one frame while the agent decides
  * the next gesture, so a 13-minute file can carry about a minute of motion. This keeps the first
- * `--max-static` seconds of each still stretch — long enough to read the screen — and drops the rest.
+ * `--max-static` seconds of each still stretch - long enough to read the screen - and drops the rest.
  *
  *   node trim-static.mjs --in demo.webm --out demo-trimmed.webm
  *
  * One ffmpeg decodes to raw frames, this script decides frame by frame, a second ffmpeg re-encodes
- * what survives. The decision is causal — a frame is dropped once the current still run has already
- * been held long enough — so it needs no lookahead and nothing is buffered but the frame in hand.
+ * what survives. The decision is causal - a frame is dropped once the current still run has already
+ * been held long enough - so it needs no lookahead and nothing is buffered but the frame in hand.
  *
  * Frames are compared on a strided sample of the Y plane, counting how many samples changed materially
  * rather than averaging the change: an exact comparison finds no still stretches at all (a caret or a
  * spinner moves a few pixels every frame), while a mean over the frame is dominated by frame area and
- * reads a small moving object — a dragged chess piece — as stillness.
+ * reads a small moving object - a dragged chess piece - as stillness.
  *
  * `--open <video>` / `--close <video>` bookend the trimmed demo with another clip (scaled and letterboxed
  * to the demo's frame); `--voiceover steps|<cues.json>` narrates the result with HeyGen (`voiceover.mjs`);
  * `--ident` uses the DXOS ident from `tools/autocue`, rendering it on first use.
  *
- * Needs a full ffmpeg — the one bundled with Playwright is a stripped build with no `rawvideo` and no
+ * Needs a full ffmpeg - the one bundled with Playwright is a stripped build with no `rawvideo` and no
  * PNG decoder, so frames cannot be fed back into it (`apt-get install ffmpeg`, or set `FFMPEG_PATH`).
  */
 
@@ -131,7 +131,7 @@ const ident = (id, format) => {
   );
   let file = find();
   if (!file || statSync(file).mtimeMs < newest) {
-    console.error(`rendering ${id} ident (${format})…`);
+    console.error(`rendering ${id} ident (${format})...`);
     const palette = [
       '--theme',
       options.theme,
@@ -341,7 +341,7 @@ if (options.report) {
   }
   const [decoderStatus] = await decoderClosed;
   if (decoderStatus !== 0) {
-    console.error(`ffmpeg decode failed (exit ${decoderStatus}) — statistics would be partial`);
+    console.error(`ffmpeg decode failed (exit ${decoderStatus}) - statistics would be partial`);
     process.exit(1);
   }
 
@@ -517,13 +517,13 @@ encoder.stdin.end();
 const [encoderStatus] = await encoderClosed;
 const [decodeStatus] = await decoderClosed;
 if (decodeStatus !== 0 || encoderStatus !== 0) {
-  console.error(`ffmpeg failed (decode ${decodeStatus}, encode ${encoderStatus}) — output is unusable`);
+  console.error(`ffmpeg failed (decode ${decodeStatus}, encode ${encoderStatus}) - output is unusable`);
   process.exit(1);
 }
 
 /**
  * Time-range annotations, so the steps survive outside the burned-in banner: Matroska chapters (which
- * `.webm` does carry — verified by reading them back) and an embedded WebVTT track, which is part of
+ * `.webm` does carry - verified by reading them back) and an embedded WebVTT track, which is part of
  * the WebM spec. A caption's source frame may itself have been dropped, so the remap walks forward to
  * the next surviving frame.
  */
@@ -543,8 +543,8 @@ const annotate = async () => {
     return (openFrames + kept) / options.fps;
   };
 
-  // Two captions issued back to back describe the same instant — the earlier one was never really on
-  // screen — and would otherwise become a zero-length chapter that players discard silently. The later
+  // Two captions issued back to back describe the same instant - the earlier one was never really on
+  // screen - and would otherwise become a zero-length chapter that players discard silently. The later
   // one wins: it describes what the viewer is about to see.
   const marks = captions
     .map((caption) => ({ ...caption, start: at(caption.frame) }))
@@ -768,7 +768,7 @@ const MEDIA = {
   folder: typeof options.folder === 'string' ? options.folder.replace(/^\/+|\/+$/g, '') : 'demos',
 };
 
-/** The package a flow lives in, from its path (`packages/plugins/plugin-markdown/autocue/…`). */
+/** The package a flow lives in, from its path (`packages/plugins/plugin-markdown/autocue/...`). */
 const flowPackage = timeline.flow?.match(/packages\/(?:[^/]+\/)*?([^/]+)\/autocue\//);
 
 const uploadName = (() => {
@@ -855,7 +855,7 @@ const addScreenshot = (url) => {
 const screenshot = options.screenshot && uploaded ? addScreenshot(uploaded) : undefined;
 
 /**
- * `<name>.autocue.json` beside the video: one demo of an autocue bundle (FORMAT.md) — the finished videos, the
+ * `<name>.autocue.json` beside the video: one demo of an autocue bundle (FORMAT.md) - the finished videos, the
  * chapters on their clock, and where the take was recorded. `pack.mjs` turns one or more of these into a player.
  */
 const writeSidecar = () => {

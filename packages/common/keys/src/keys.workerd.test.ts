@@ -38,7 +38,7 @@ describe('keys in workerd', () => {
 
   test('EntityId.deterministic is stable and avoids the platform RNG', ({ expect }) => {
     // Workerd forbids `crypto.getRandomValues()` in global scope, so deterministic() must be
-    // reachable at module-eval time — its stability doubles as that guard here.
+    // reachable at module-eval time - its stability doubles as that guard here.
     const first = EntityId.deterministic('org.dxos.type.person', '0.1.0');
     const second = EntityId.deterministic('org.dxos.type.person', '0.1.0');
     expect(first).toBe(second);

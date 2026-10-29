@@ -53,7 +53,7 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
-  // Lineage rides in item `@meta`, so it has to survive encode → append → query → dedupe.
+  // Lineage rides in item `@meta`, so it has to survive encode -> append -> query -> dedupe.
   test('soft fork lineage round-trips through a feed', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
@@ -365,7 +365,7 @@ describe('Feed', () => {
       const feed = db.add(Feed.make({ name: 'flaky' }));
       const john = Obj.make(TestSchema.Person, { name: 'john' });
 
-      // append() swallows the RPC error (matching the pre-existing contract) — it must not throw —
+      // append() swallows the RPC error (matching the pre-existing contract) - it must not throw -
       // but the core stays dirty for the background scheduler to retry. The retry may already have
       // run by the time this resolves (it's scheduled on the next microtask), so don't assert on
       // `callCount` until after an explicit flush forces it to settle.
@@ -452,7 +452,7 @@ describe('Feed', () => {
       db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
 
       // A closed endpoint abandons the append (and any retry) synchronously in the same failure
-      // that records `error` — wait for that state rather than a fixed delay, since callCount can
+      // that records `error` - wait for that state rather than a fixed delay, since callCount can
       // never advance past it once set.
       await waitForCondition({ condition: () => handle.error !== null, timeout: 2_500 });
       expect(callCount).toBe(1);
@@ -731,7 +731,7 @@ describe('Feed', () => {
       });
       yield* Database.flush();
 
-      // The stored ref must be a queue EID — not a synthesized ECHO URI.
+      // The stored ref must be a queue EID - not a synthesized ECHO URI.
       const ref = container.objects![0];
       expect(EID.isEID(ref.uri)).toBe(true);
       expect(EID.getEntityId(EID.parse(ref.uri))).toBe((queuePost as any).id);

@@ -14,7 +14,7 @@ import { getUri as getUriFromEntity } from './api.ts';
 
 /**
  * @param input schema, `Type.Type` entity, or a type URI (an `echo:` EID or a `dxn:` DXN).
- * @return type identifier URI — see {@link getSchemaURI}. A URI is returned verbatim. For a
+ * @return type identifier URI - see {@link getSchemaURI}. A URI is returned verbatim. For a
  * `Type.Type` entity, the URI of the schema it declares, symmetric with what
  * `Obj.make(typeEntity, ...)` stamps on `system.type`: a static declaration resolves to its
  * typename DXN, a persisted entity to its local `echo:///<objectId>`.
@@ -28,13 +28,13 @@ export const getTypeURIFromSpecifier = (input: Schema.Top | AnyEntity | URI.URI)
   if (input !== null && (typeof input === 'object' || typeof input === 'function') && KindId in input) {
     // `Type.Type` entity. Both in-memory and persisted forms expose the schema
     // they declare via `StaticTypeSchemaSlot`, whose URI is exactly what
-    // `Obj.make` stamps on `system.type` — a static declaration carries
-    // `TypeAnnotation` (→ typename DXN), a persisted entity's rebuilt schema
-    // carries `TypeIdentifierAnnotation` (→ local `echo:///<objectId>`).
+    // `Obj.make` stamps on `system.type` - a static declaration carries
+    // `TypeAnnotation` (-> typename DXN), a persisted entity's rebuilt schema
+    // carries `TypeIdentifierAnnotation` (-> local `echo:///<objectId>`).
     const schema = getStaticTypeSchema(input);
     if (schema != null) {
-      // Static types carry TypeAnnotation → DXN; persisted db types carry
-      // TypeIdentifierAnnotation → echo EID. In-memory makeObjectFromJsonSchema
+      // Static types carry TypeAnnotation -> DXN; persisted db types carry
+      // TypeIdentifierAnnotation -> echo EID. In-memory makeObjectFromJsonSchema
       // entities have neither (plain JSON Schema), so fall through to the EID path.
       const uri = getSchemaURI(schema);
       if (uri != null) {
@@ -43,7 +43,7 @@ export const getTypeURIFromSpecifier = (input: Schema.Top | AnyEntity | URI.URI)
     }
     return getUriFromEntity(input as AnyEntity);
   }
-  // A string specifier is already a branded URI — an `echo:` EID or a `dxn:` DXN.
+  // A string specifier is already a branded URI - an `echo:` EID or a `dxn:` DXN.
   assertArgument(EID.isEID(input) || DXN.isDXN(input), 'input', 'expected a type URI (EID or DXN)');
   return input;
 };
@@ -72,7 +72,7 @@ export const isInstanceOf = <S>(
 
   const schemaURI = getTypeURIFromSpecifier(schemaOrType);
 
-  // `object` is arbitrary input — read TypeId directly (it may be missing on
+  // `object` is arbitrary input - read TypeId directly (it may be missing on
   // non-entities) rather than via `getTypeURI` which asserts the URI is set.
   const type = (object as any)[TypeId];
   if (URI.isURI(type) && type === schemaURI) {
@@ -85,7 +85,7 @@ export const isInstanceOf = <S>(
   }
 
   if (!DXN.isDXN(schemaURI)) {
-    // EID-based schema URI — no typename match possible.
+    // EID-based schema URI - no typename match possible.
     return false;
   }
 

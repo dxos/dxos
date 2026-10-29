@@ -87,7 +87,7 @@ describe('ExtractMessage operation handler', () => {
     await builder.close();
   });
 
-  test('no matching extractor → operation fails', async ({ expect }) => {
+  test('no matching extractor -> operation fails', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Message.Message, ExtractedFrom.ExtractedFrom],
     });

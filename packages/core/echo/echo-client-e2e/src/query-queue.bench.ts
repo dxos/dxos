@@ -111,7 +111,7 @@ afterAll(async () => {
 
 describe('query queue', { tags: ['manual'], timeout: 300_000 }, () => {
   bench(
-    `write → cheap index answer (alone, ${TASK_COUNT} tasks)`,
+    `write -> cheap index answer (alone, ${TASK_COUNT} tasks)`,
     async () => {
       const before = [indexAnswers(alone)];
       write(aloneDb);
@@ -121,7 +121,7 @@ describe('query queue', { tags: ['manual'], timeout: 300_000 }, () => {
   );
 
   bench(
-    `write → every index answer (${HEAVY_COUNT} heavy + 1 cheap, ${TASK_COUNT} tasks)`,
+    `write -> every index answer (${HEAVY_COUNT} heavy + 1 cheap, ${TASK_COUNT} tasks)`,
     async () => {
       const before = all.map(indexAnswers);
       write(db);
@@ -131,7 +131,7 @@ describe('query queue', { tags: ['manual'], timeout: 300_000 }, () => {
   );
 
   bench(
-    `write → cheap index answer (behind ${HEAVY_COUNT} heavy, ${TASK_COUNT} tasks)`,
+    `write -> cheap index answer (behind ${HEAVY_COUNT} heavy, ${TASK_COUNT} tasks)`,
     async () => {
       const before = [indexAnswers(cheap)];
       write(db);

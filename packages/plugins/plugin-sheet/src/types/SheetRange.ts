@@ -72,11 +72,11 @@ export const cellClassNameForRange = ({ key, value }: Sheet.Sheet['ranges'][numb
 /** Plain numbers, formulas, and numeric literals such as `8%` or `$10000`, which the grid renders end-aligned. */
 const isNumericValue = (value: unknown): boolean =>
   typeof value === 'number' ||
-  (typeof value === 'string' && (value.startsWith('=') || /^[$€£]?-?[\d,]*\.?\d+%?$/.test(value)));
+  (typeof value === 'string' && (value.startsWith('=') || /^[$\u20AC£]?-?[\d,]*\.?\d+%?$/.test(value)));
 
 /**
  * Ranges that give a table's header row (an A1 range such as `A1:F1`) the heading style and end-align the headers of
- * its numeric columns — those whose every cell below the header is numeric — so they sit over their values.
+ * its numeric columns - those whose every cell below the header is numeric - so they sit over their values.
  */
 export const headerRanges = (cells: Record<string, Sheet.CellValue>, header: string): Sheet.Range[] => {
   const { from, to = from } = rangeFromA1Notation(header);

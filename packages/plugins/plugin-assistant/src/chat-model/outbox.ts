@@ -14,8 +14,8 @@ import { type ContentBlock } from '@dxos/types';
 export type OutboxState = 'sending' | 'submitted' | 'failed';
 
 /**
- * A prompt the reader sent from this chat, held from the moment of submit — before anything is
- * persisted — so the thread can show it at once. The thread reconciles it against the feed's queue
+ * A prompt the reader sent from this chat, held from the moment of submit - before anything is
+ * persisted - so the thread can show it at once. The thread reconciles it against the feed's queue
  * entry and the turn the agent runs from it (see `projectThread`).
  */
 export type OutboxEntry = {
@@ -48,7 +48,7 @@ export class PromptCancelledError extends BaseError.extend(
  */
 export class Outbox<T> {
   // Kept alive: the outbox is the only record of a prompt still being dispatched, and an atom nothing
-  // subscribes to is reset by the registry — between two submits with the thread unmounted, say.
+  // subscribes to is reset by the registry - between two submits with the thread unmounted, say.
   readonly entries = Atom.make<readonly OutboxEntry[]>([]).pipe(Atom.keepAlive);
 
   readonly #payloads = new Map<string, T>();

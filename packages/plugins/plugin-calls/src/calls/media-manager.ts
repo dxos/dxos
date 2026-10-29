@@ -99,7 +99,7 @@ export class MediaManager extends Resource {
    * Builds the black-canvas and inaudible-audio tracks that stand in for a disabled camera/mic.
    * Deferred out of `_open` and memoized: `canvas.captureStream()` and `new AudioContext()` cost
    * hundreds of ms of main thread, and this resource opens during the client-initialized
-   * activation wave — i.e. app startup — for a call the user may never make. Every consumer
+   * activation wave - i.e. app startup - for a call the user may never make. Every consumer
    * (join, and the camera/mic toggles the lobby exposes before joining) awaits this first, so
    * the cost lands on the first media interaction instead.
    *
@@ -110,7 +110,7 @@ export class MediaManager extends Resource {
   private async _ensurePlaceholderTracks(): Promise<void> {
     // The promise is memoized, not a done flag: a flag set before the await lets a concurrent
     // caller (camera-off then Join, from the lobby) return while the build is still running, so
-    // `_pushTracks` runs with no tracks and the late adoption below schedules no push — other
+    // `_pushTracks` runs with no tracks and the late adoption below schedules no push - other
     // participants see nothing until the next manual toggle.
     this._placeholderTracks ??= this.#buildPlaceholderTracks();
     return this._placeholderTracks;

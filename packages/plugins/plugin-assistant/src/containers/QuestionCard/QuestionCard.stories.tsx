@@ -40,7 +40,7 @@ const seed = (space: Space) => {
       whether enterprise accounts get an exception.
     `,
     options: [
-      { title: '30 days — no exception', description: 'Decline the refund, offer store credit.' },
+      { title: '30 days - no exception', description: 'Decline the refund, offer store credit.' },
       { title: '60 days for enterprise', description: 'Acme qualifies; approve the refund.' },
     ],
     actor: { role: 'assistant', name: 'Scout' },
@@ -109,7 +109,7 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
-        // Contributes the operation handlers, `AnswerQuestion` among them — without it every
+        // Contributes the operation handlers, `AnswerQuestion` among them - without it every
         // answer dies with NoHandlerError.
         AssistantPlugin.make(),
       ],
@@ -128,7 +128,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The story renders the body in both card roles, so every query matches twice — `getAllBy*` and the
+ * The story renders the body in both card roles, so every query matches twice - `getAllBy*` and the
  * first match, never `getBy*`, which throws on more than one.
  */
 const firstCard = (canvas: ReturnType<typeof within>, testId: string): HTMLElement => {

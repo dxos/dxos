@@ -39,10 +39,10 @@ type Story = StoryObj<typeof meta>;
  * project then answer "where things stand" questions from the extracted facts via the brain skill,
  * citing the source messages, instead of re-reading the mailbox.
  *
- * Scaffolding only — see `Live` to run the extraction.
+ * Scaffolding only - see `Live` to run the extraction.
  *
  * Test:
- * 1. Click "Set up project" — the article opens, named "Mailbox Facts — Work".
+ * 1. Click "Set up project" - the article opens, named "Mailbox Facts - Work".
  * 2. Context lists the Work mailbox; Routines shows "Analyze Mailbox" (scheduled, disabled).
  */
 export const Default: Story = {};
@@ -52,13 +52,13 @@ export const Default: Story = {};
  * the mailbox panel beside the article carries plugin-brain's `Analyze` action, so extraction is a
  * click rather than a manual setup.
  *
- * Out of CI (`!test`) — it needs a local model, and seeding mail alone exceeds the play-test budget.
+ * Out of CI (`!test`) - it needs a local model, and seeding mail alone exceeds the play-test budget.
  *
  * Test (needs `OLLAMA_ORIGINS="*" ollama serve`):
- * 1. Click "Set up project" — the article opens, named "Mailbox Facts — Work".
+ * 1. Click "Set up project" - the article opens, named "Mailbox Facts - Work".
  * 2. In the mailbox panel, run `Analyze` from the toolbar and wait for it to settle.
  * 3. Facts appear in the mailbox's Facts companion, attributed to the messages they came from.
- * 4. Open a project chat and ask "summarize where things stand with <sender>" — the reply is
+ * 4. Open a project chat and ask "summarize where things stand with <sender>" - the reply is
  *    grounded in those facts rather than a re-read of the mailbox.
  */
 export const Live: Story = {
@@ -93,7 +93,7 @@ export const Test: Story = {
     const button = await waitFor(() => canvas.getByTestId('projects.story.setup'), { timeout: 30_000 });
     await userEvent.click(button);
 
-    await waitFor(async () => expect(canvas.getByDisplayValue(/Mailbox Facts — Work/)).toBeInTheDocument(), {
+    await waitFor(async () => expect(canvas.getByDisplayValue(/Mailbox Facts \u2014 Work/)).toBeInTheDocument(), {
       timeout: 30_000,
     });
 

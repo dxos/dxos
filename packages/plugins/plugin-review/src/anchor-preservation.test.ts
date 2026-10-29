@@ -58,11 +58,15 @@ describe('anchor preservation', () => {
     const snapshot = await snapshotAnchor(thread, doc);
     invariant(snapshot, 'anchored document has a snapshot');
 
-    updateText(text, ['content'], CONTENT.replace(PHRASE, 'アシスタントが回答する'));
+    updateText(
+      text,
+      ['content'],
+      CONTENT.replace(PHRASE, '\u30A2\u30B7\u30B9\u30BF\u30F3\u30C8\u304C\u56DE\u7B54\u3059\u308B'),
+    );
     expect(anchoredText()).toBe('');
 
     restoreAnchor(snapshot);
-    expect(anchoredText()).toBe('アシスタントが回答する');
+    expect(anchoredText()).toBe('\u30A2\u30B7\u30B9\u30BF\u30F3\u30C8\u304C\u56DE\u7B54\u3059\u308B');
   });
 
   test('an edit elsewhere leaves the anchor alone', async ({ expect }) => {

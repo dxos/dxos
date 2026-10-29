@@ -41,7 +41,7 @@ export const make = () =>
           Prefer this whenever it applies: the bytes are fetched by the host and never pass through
           the conversation. The URL must be https and must not point at a private address.
         - \`{ "type": "base64", "mediaType": "image/png", "data": "..." }\` when you hold the bytes
-          yourself, such as an image you generated. Keep this under 1MB — the encoded payload counts
+          yourself, such as an image you generated. Keep this under 1MB - the encoded payload counts
           against the conversation, so a large file is slow and expensive before it is anything else.
 
         For a file that is already on your own disk -- a screenshot you just took, a screen
@@ -65,7 +65,7 @@ export const make = () =>
       `,
     }),
     agentCanEnable: true,
-    // Projected by the MCP hosts (`dx mcp serve`, EDGE's worker), so `file.createFromUpload` — the
-    // other half of their `createUpload` tool — is discoverable and invocable there.
+    // Projected by the MCP hosts (`dx mcp serve`, EDGE's worker), so `file.createFromUpload` - the
+    // other half of their `createUpload` tool - is discoverable and invocable there.
     mcpPrompt: true,
   });

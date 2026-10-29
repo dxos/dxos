@@ -50,7 +50,7 @@ export interface DevtoolsHook {
   openClientRpcServer: () => Promise<boolean>;
 
   /**
-   * Agent debug port — evaluates snippets delivered by a loopback `composer-recovery.js` server.
+   * Agent debug port - evaluates snippets delivered by a loopback `composer-recovery.js` server.
    * Off until explicitly started; never persisted.
    */
   debugPort: DebugPortController;
@@ -107,7 +107,7 @@ export const mountDevtoolsHooks = ({ client }: MountOptions) => {
     client,
     tracing: TRACE_PROCESSOR,
     // `resume` is a no-op unless this tab persisted a live session before the reload, so mounting the
-    // hook can never switch the port on by itself — it only carries an already-authorized session
+    // hook can never switch the port on by itself - it only carries an already-authorized session
     // across a navigation the user did not intend to end it (an OAuth redirect, a HMR reload).
     debugPort: (() => {
       const controller = getDebugPortController();

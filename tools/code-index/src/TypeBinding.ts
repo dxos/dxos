@@ -19,7 +19,7 @@ import * as Term from './worker/types/Term.ts';
 /**
  * The cross-file type pass (`design/TYPES.md`, "Binding"): reads every symbol's term from the file
  * graphs, binds the `typeof`/`returnOf` names it holds to the declaring symbols' terms, and asserts
- * the bound type as a further `deus:hasType` in its pass graph — a premise of every rule file, so
+ * the bound type as a further `deus:hasType` in its pass graph - a premise of every rule file, so
  * `15-types` sees bound layers.
  */
 

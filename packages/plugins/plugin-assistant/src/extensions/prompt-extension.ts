@@ -20,7 +20,7 @@ const promptHandlerFacet = Facet.define<OnRun, OnRun | null>({
   combine: (handlers) => handlers[0] ?? null,
 });
 
-// Module-level singleton — CM6 deduplicates by reference equality, preventing duplicate buttons
+// Module-level singleton - CM6 deduplicates by reference equality, preventing duplicate buttons
 // when the extension is contributed more than once.
 const promptPlugin = ViewPlugin.fromClass(
   class {

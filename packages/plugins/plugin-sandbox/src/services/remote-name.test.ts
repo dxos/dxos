@@ -16,7 +16,7 @@ describe('remoteName', () => {
   });
 
   test('falls back to the id when the name leaves nothing', ({ expect }) => {
-    expect(remoteName({ id: '01M3RH0NXYRAPE6VYYQTY3Q56H', name: '🙂' })).toBe('repo-qty3q56h');
+    expect(remoteName({ id: '01M3RH0NXYRAPE6VYYQTY3Q56H', name: '\u{1F642}' })).toBe('repo-qty3q56h');
     expect(remoteName({ id: '01M3RH0NXYRAPE6VYYQTY3Q56H' })).toBe('repo-qty3q56h');
   });
 

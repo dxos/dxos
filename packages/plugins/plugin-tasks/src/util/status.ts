@@ -9,13 +9,13 @@ import { Task } from '@dxos/types';
 export const ALL_STATUSES: readonly Task.Status[] = Task.StatusOptions.map(({ id }) => id);
 
 /**
- * The `status:` terms of a task query, as the status menu reads and writes them — so the menu and
+ * The `status:` terms of a task query, as the status menu reads and writes them - so the menu and
  * the query text are two views over one string (see `parseEnumTerms`).
  */
 export const STATUS_TERMS: EnumProperty<Task.Status> = { property: 'status', values: ALL_STATUSES };
 
 /**
- * `query` with a status choice written in as `status:` terms — the status menu's write, and the
+ * `query` with a status choice written in as `status:` terms - the status menu's write, and the
  * migration of a choice stored apart from the query.
  *
  * A query with a top-level `OR` takes no written term, so it is grouped first rather than dropping

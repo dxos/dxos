@@ -27,7 +27,7 @@ export type Input = Schema.Schema.Type<typeof Input>;
 
 /**
  * The provider's "sent" tag, returned by the send ops so the caller can tag the local draft with the
- * same tag its canonical synced copy will carry — Gmail's `SENT` label (a well-known id) or the JMAP
+ * same tag its canonical synced copy will carry - Gmail's `SENT` label (a well-known id) or the JMAP
  * account's Sent folder (a server-assigned id resolved by folder role). The `source`/`id` form the
  * tag's foreign key; `label` is a fallback used only when the tag doesn't exist yet (pre first sync).
  */

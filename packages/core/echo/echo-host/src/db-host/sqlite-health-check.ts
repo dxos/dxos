@@ -27,7 +27,7 @@ export const SQLITE_HEALTH_CHECK_TIMEOUT_MS = 15_000;
  * file header or schema root page is unreadable.
  *
  * Additionally runs `PRAGMA quick_check` when {@link RUN_SQLITE_QUICK_CHECK_ON_STARTUP}
- * is enabled. That walks every page and is O(dbSize) — slow on OPFS.
+ * is enabled. That walks every page and is O(dbSize) - slow on OPFS.
  */
 export const testSqlite = (): Effect.Effect<void, unknown, SqlClient.SqlClient> =>
   Effect.gen(function* () {

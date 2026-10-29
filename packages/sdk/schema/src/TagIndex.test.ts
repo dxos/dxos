@@ -155,7 +155,7 @@ describe('TagIndex (feed integration)', () => {
     const registry = Registry.make();
     const atom = TagIndex.taggedIdsAtom(tagIndex, urgent);
     // The first write creates the list; the later ones extend it in place, which must still yield a new
-    // value — a subscriber (React) compares by reference. Each write waits for the atom to emit, so a
+    // value - a subscriber (React) compares by reference. Each write waits for the atom to emit, so a
     // write that yields no new value hangs the test instead of passing.
     const values: (readonly string[])[] = [];
     let emitted: (() => void) | undefined;
@@ -182,7 +182,7 @@ describe('TagIndex (feed integration)', () => {
   });
 
   // Regression for DX-984: setTag/unsetTag must use push/splice (in-place), not spread-replace.
-  // Spread-replace causes O(n) Automerge ops per call → O(n²) total → multi-MiB documents.
+  // Spread-replace causes O(n) Automerge ops per call -> O(n²) total -> multi-MiB documents.
   test('setTag emits O(1) Automerge ops per append', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TagIndex.TagIndex] });
     const db = await peer.createDatabase();
@@ -203,9 +203,9 @@ describe('TagIndex (feed integration)', () => {
       }
       const totalOps = A.stats(core.getDoc()).numOps - opsBefore;
 
-      // push() → O(1) ops/call. Each ULID (~26 chars) costs ~27 Automerge ops when stored as text,
-      // so totalOps ≈ N * 27 ≈ 5,400.
-      // spread-replace → O(n) ops/call → totalOps ≈ N²/2 * 27 ≈ 540,000 for N=200.
+      // push() -> O(1) ops/call. Each ULID (~26 chars) costs ~27 Automerge ops when stored as text,
+      // so totalOps ~ N * 27 ~ 5,400.
+      // spread-replace -> O(n) ops/call -> totalOps ~ N²/2 * 27 ~ 540,000 for N=200.
       expect(totalOps).toBeLessThan(N * 50);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
@@ -235,8 +235,8 @@ describe('TagIndex (feed integration)', () => {
       }
       const totalOps = A.stats(core.getDoc()).numOps - opsBefore;
 
-      // splice() → O(1) ops/call → totalOps ≈ N.
-      // filter-replace → O(n) ops/call → totalOps ≈ N²/2 ≈ 20,000 for N=200.
+      // splice() -> O(1) ops/call -> totalOps ~ N.
+      // filter-replace -> O(n) ops/call -> totalOps ~ N²/2 ~ 20,000 for N=200.
       expect(totalOps).toBeLessThan(N * 5);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });

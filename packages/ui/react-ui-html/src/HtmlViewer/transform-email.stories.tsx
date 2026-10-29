@@ -68,7 +68,7 @@ export const Reply: Story = {
 };
 
 /**
- * A call-to-action on a painted background must keep the label its author chose — the accent override
+ * A call-to-action on a painted background must keep the label its author chose - the accent override
  * would otherwise put the app blue on the button's own blue. The plain link beside it still takes the
  * accent, since nothing is painted behind it.
  */
@@ -78,7 +78,7 @@ export const Button: Story = {
   },
 };
 
-/** A table layout that declares nothing — recolored like any other undeclared body since the layout
+/** A table layout that declares nothing - recolored like any other undeclared body since the layout
  * exemption was dropped. Authored colored backgrounds (header, button) survive; only light ones go. */
 export const Marketing: Story = {
   args: {
@@ -95,7 +95,7 @@ export const Example1: Story = {
 
 /**
  * Real mail declaring `color-scheme: light`. The declaration says the sender has no dark design of its
- * own — not that ours is unwelcome — so this is recolored like anything else. Both panes must differ.
+ * own - not that ours is unwelcome - so this is recolored like anything else. Both panes must differ.
  */
 export const Example2: Story = {
   args: {
@@ -105,7 +105,7 @@ export const Example2: Story = {
 
 /**
  * Real mail declaring `color-scheme: light dark` *and* shipping its own `@media (prefers-color-scheme:
- * dark)` rules — the one case that would be exempt from recoloring, if those rules survived. They do
+ * dark)` rules - the one case that would be exempt from recoloring, if those rules survived. They do
  * not: sanitization strips the `<style>` blocks carrying them (DESIGN.md Gap A), so
  * `applyAuthoredDarkRules` finds nothing and the body falls through to the recolor rather than
  * rendering light inside a dark app. Both panes must differ; when Gap A is closed this story is what

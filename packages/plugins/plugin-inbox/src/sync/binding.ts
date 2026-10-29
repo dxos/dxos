@@ -11,7 +11,7 @@ export const readBindingOptions = (binding: Cursor.ExternalCursor) => {
     return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
   }
 
-  // Reject NaN/Infinity/negative — these feed `subDays`, which would otherwise yield an invalid date.
+  // Reject NaN/Infinity/negative - these feed `subDays`, which would otherwise yield an invalid date.
   const syncBackDays = raw.syncBackDays;
   return {
     syncBackDays:

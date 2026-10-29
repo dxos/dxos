@@ -19,7 +19,7 @@ export type Host = {
  * Serves the middleware from a real http server on an ephemeral port.
  *
  * The client is exercised over an actual socket rather than against a mocked `fetch`, because the
- * parts most likely to break — the content-type gate, streamed stdin, a JSON body — only exist on
+ * parts most likely to break - the content-type gate, streamed stdin, a JSON body - only exist on
  * the wire.
  */
 export const startHost = async (options: ShellMiddleware.MakeOptions): Promise<Host> => {

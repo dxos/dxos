@@ -32,7 +32,7 @@ export interface OperationHandlerSet {
   definitions(): readonly Operation.Definition.Any[];
 
   /**
-   * Resolves a single operation's handler, loading only that operation's module — the
+   * Resolves a single operation's handler, loading only that operation's module - the
    * per-operation counterpart to the load-everything {@link handlers}. Resolves `undefined` when
    * the key is not in this set.
    */
@@ -90,7 +90,7 @@ export const reactive = (
 ): OperationHandlerSet => {
   let cached: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
   // Per-key promises are memoized so repeated `getHandlerFor` calls return the SAME promise until
-  // the contributions change — React `use` (useOperationHandler) relies on this thenable identity
+  // the contributions change - React `use` (useOperationHandler) relies on this thenable identity
   // to resume a suspended render instead of re-suspending on a fresh promise every retry.
   const perKey = new Map<string, Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>>();
   registry.subscribe(atom, () => {
@@ -174,7 +174,7 @@ export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
 /**
  * Creates a handler set from typed {@link Operation.LazyHandler} pairings: definitions are
  * enumerable without loading any handler body, resolving an operation imports only that
- * operation's module — per-operation loading instead of per-plugin — and each pairing is checked,
+ * operation's module - per-operation loading instead of per-plugin - and each pairing is checked,
  * so a definition cannot be wired to another operation's handler. Loaded handlers are cached per
  * key.
  *

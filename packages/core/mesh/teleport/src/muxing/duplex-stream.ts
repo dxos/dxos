@@ -48,7 +48,7 @@ export const connectDuplexStreams = <T>(
 /**
  * Reads a readable to completion, invoking `onChunk` for each chunk.
  *
- * Used in place of `for await (… of readable)`, which the DOM `ReadableStream` lib type does not
+ * Used in place of `for await (... of readable)`, which the DOM `ReadableStream` lib type does not
  * declare an async iterator for.
  */
 export const readAll = async <T>(

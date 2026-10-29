@@ -49,13 +49,13 @@ describe('zoom keeps the anchor centred', () => {
     expect(centredAfter).toEqual(anchor);
   });
 
-  test('zooming across the overflow→fit boundary holds the anchor', ({ expect }) => {
-    // 0.5 overflows (1500>1000), 0.25 fits (750<1000) — the pad changes from 0 to 125.
+  test('zooming across the overflow->fit boundary holds the anchor', ({ expect }) => {
+    // 0.5 overflows (1500>1000), 0.25 fits (750<1000) - the pad changes from 0 to 125.
     const { anchor, centredAfter } = zoomAnchor(0.5, 0.25, { left: 700, top: 500 });
     expect(centredAfter).toEqual(anchor);
   });
 
-  test('a fitting board centres — the ideal offset goes negative and the pad recentres', ({ expect }) => {
+  test('a fitting board centres - the ideal offset goes negative and the pad recentres', ({ expect }) => {
     // The point held at 0.5 (content 1000) can't be centred once the 0.25 board (750px) fits the 1000px
     // viewport: anchoredScroll returns a negative offset (below), which the browser clamps to 0, and the
     // pad margin then centres the board. This is the intended clamped fallback.

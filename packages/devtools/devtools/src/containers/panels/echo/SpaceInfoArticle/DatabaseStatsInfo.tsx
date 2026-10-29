@@ -15,8 +15,8 @@ interface DatabaseStatsInfoProps {
 }
 
 /**
- * Storage census for the space. Unlike sync state there is no subscription — `db.stats()` walks the
- * space's documents on the host — so it is polled, and slowly.
+ * Storage census for the space. Unlike sync state there is no subscription - `db.stats()` walks the
+ * space's documents on the host - so it is polled, and slowly.
  */
 export const DatabaseStatsInfo = ({ space }: DatabaseStatsInfoProps) => {
   const [stats, setStats] = useState<Database.DatabaseStats>();

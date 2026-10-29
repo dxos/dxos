@@ -16,7 +16,7 @@ import { type JmapCredentials } from './jmap-credentials.ts';
 /**
  * The requirements the underlying {@link Jmap}/{@link JmapMail} request functions carry (HTTP client
  * + JMAP credentials). {@link JmapMailApi.Live} bakes these in so the service methods themselves
- * require nothing — which is what lets a test satisfy {@link JmapMailApi} with a zero-dependency mock
+ * require nothing - which is what lets a test satisfy {@link JmapMailApi} with a zero-dependency mock
  * (no HTTP, no credentials, no live server).
  */
 type Requirements = HttpClient.HttpClient | JmapCredentials;
@@ -25,7 +25,7 @@ type Requirements = HttpClient.HttpClient | JmapCredentials;
  * Swappable JMAP API surface. `Live` delegates to the real {@link Jmap}/{@link JmapMail} request
  * functions; tests provide a data-backed mock. Making the JMAP dependency a service (rather than the
  * sync operation calling `Jmap.*`/`JmapMail.*` and hardcoding `FetchHttpClient.layer` internally) is
- * what lets the sync run against generated data with no live account — mirrors `GoogleMailApi`.
+ * what lets the sync run against generated data with no live account - mirrors `GoogleMailApi`.
  * Every request fails only with {@link JmapApiError}, and methods carry no requirements: `Live`
  * bakes them in (see {@link Requirements}) so a mock can satisfy the surface with no HTTP or creds.
  */
@@ -84,7 +84,7 @@ export interface JmapMailApiService {
 }
 
 /**
- * An in-memory JMAP dataset a {@link JmapMailApi.mock} serves — the session (account discovery), the
+ * An in-memory JMAP dataset a {@link JmapMailApi.mock} serves - the session (account discovery), the
  * folders (mailboxes), and the full emails the sync would fetch. Build one with `generateJmapDataset`
  * from this plugin's `./testing`.
  */
@@ -96,11 +96,11 @@ export interface JmapDataset {
   /** Attachment bytes keyed by `blobId`, served by `downloadBlob` for emails that carry one. */
   readonly blobs?: Readonly<Record<string, Uint8Array>>;
   /**
-   * Current `Email/get` state token — `emailGet` returns it and it's the newest `Email/changes` state.
+   * Current `Email/get` state token - `emailGet` returns it and it's the newest `Email/changes` state.
    * Set to exercise the incremental path; absent means "no delta support" (token capture returns undefined).
    */
   readonly state?: string;
-  /** Ordered `Email/changes` steps chaining `sinceState` → `newState`, each carrying the delta. */
+  /** Ordered `Email/changes` steps chaining `sinceState` -> `newState`, each carrying the delta. */
   readonly changeLog?: readonly JmapChangeStep[];
 }
 
@@ -117,7 +117,7 @@ export interface JmapChangeStep {
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 /**
- * Evaluates an `Email/query` filter against an email — enough of RFC 8621 §4.4.1 for the sync's
+ * Evaluates an `Email/query` filter against an email - enough of RFC 8621 §4.4.1 for the sync's
  * generated filter: the `after`/`before` window, `inMailbox`/`inMailboxOtherThan` folder scope, and
  * the AND/OR/NOT operator combinators. Unknown conditions are treated as matching.
  */
@@ -137,7 +137,7 @@ const matchesFilter = (email: JmapMail.Email, filter: unknown): boolean => {
   }
 
   const receivedAt = new Date(email.receivedAt).getTime();
-  // `after` is inclusive (>=), `before` is exclusive (<) — matches the sync's window semantics.
+  // `after` is inclusive (>=), `before` is exclusive (<) - matches the sync's window semantics.
   if (typeof filter.after === 'string' && receivedAt < new Date(filter.after).getTime()) {
     return false;
   }
@@ -201,7 +201,7 @@ export class JmapMailApi extends Context.Service<JmapMailApi, JmapMailApiService
   );
 
   /**
-   * Zero-dependency mock backed by an in-memory {@link JmapDataset} — for unit tests that drive the
+   * Zero-dependency mock backed by an in-memory {@link JmapDataset} - for unit tests that drive the
    * real sync pipeline with no live account. `emailQuery` honours the query filter (`after`/`before`
    * window + folder scope), the `receivedAt` sort, and `position`/`limit` pagination, so the sync's
    * window walk and pagination exercise realistically. Write methods are unsupported (die).

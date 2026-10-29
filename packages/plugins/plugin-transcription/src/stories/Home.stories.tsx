@@ -10,10 +10,10 @@
  * - Hold Space (or toggle Talk) and say "turn on the kitchen lights"; the request ends when you let go.
  *   Hands-free keeps the microphone open and ends a request at a short pause instead.
  * - Built for latency: the request is answered from the latest pass the moment it ends, before the
- *   closing pass; Low latency also skips the model's reasoning line (≈0.5 s sooner), except for
- *   requests that join two actions ("… and …"), which need it to make both calls.
+ *   closing pass; Low latency also skips the model's reasoning line (~0.5 s sooner), except for
+ *   requests that join two actions ("... and ..."), which need it to make both calls.
  * - Calls the model withholds (low confidence) are offered as suggestions rather than run.
- * - First use downloads the engine and both models (≈52 MB, kept in Cache Storage) and compiles the
+ * - First use downloads the engine and both models (~52 MB, kept in Cache Storage) and compiles the
  *   tools (several seconds, once per load).
  */
 
@@ -68,7 +68,7 @@ type Command = {
   answerMs: number;
 };
 
-const formatMs = (value?: number) => (value === undefined ? '–' : `${Math.round(value)} ms`);
+const formatMs = (value?: number) => (value === undefined ? '-' : `${Math.round(value)} ms`);
 
 /** Model loading and errors, beside the talk button. */
 const Status = ({ status, error, progress }: UseWhistleResult) => {
@@ -78,7 +78,7 @@ const Status = ({ status, error, progress }: UseWhistleResult) => {
     case 'loading':
       return <span className='text-fg-muted text-sm'>Loading models {Math.round(progress * 100)}%</span>;
     case 'preparing':
-      return <span className='text-fg-muted text-sm'>Preparing tools…</span>;
+      return <span className='text-fg-muted text-sm'>Preparing tools...</span>;
     default:
       return null;
   }
@@ -86,7 +86,7 @@ const Status = ({ status, error, progress }: UseWhistleResult) => {
 
 const CommandEntry = ({ command, onApply }: { command: Command; onApply: (call: NeedleCall) => void }) => (
   <div className='flex flex-col gap-1 p-2 rounded-sm border border-separator'>
-    <span className='font-medium'>“{command.text}”</span>
+    <span className='font-medium'>"{command.text}"</span>
     {command.applied.map(({ call, summary, error }, index) => (
       <div key={index} className='flex flex-col'>
         <span className={error ? 'text-error-text text-sm' : 'text-sm'}>{error ?? summary}</span>
@@ -255,9 +255,9 @@ const HomeStory = ({ lowLatency = true, handsFree: handsFreeProp = false }: Stor
             {heard ? (
               <em>{heard}</em>
             ) : listening ? (
-              'Listening…'
+              'Listening...'
             ) : (
-              'Try “turn on the kitchen lights and lock the front door”.'
+              'Try "turn on the kitchen lights and lock the front door".'
             )}
           </p>
         </Panel.Body>

@@ -6,7 +6,7 @@ import { Task } from '@dxos/types';
 import { getStyles } from '@dxos/ui-theme';
 
 /**
- * Every status, most active first — the order the picker offers and the order groups render in.
+ * Every status, most active first - the order the picker offers and the order groups render in.
  *
  * It must stay exhaustive: `buildStatusGroups` renders only the statuses named here, so a status
  * left off this list would take its tasks out of a grouped view entirely rather than merely sorting

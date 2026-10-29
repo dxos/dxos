@@ -38,7 +38,7 @@ type StoryArgs = {
   /** Prompts already queued on the feed, as a submit-while-busy leaves them. */
   queued?: string[];
   /**
-   * Holds the chat model `active` while leaving `streaming` false — a turn parked in a tool call.
+   * Holds the chat model `active` while leaving `streaming` false - a turn parked in a tool call.
    * This is the state the send/stop control has to get right, and no scripted model can hold it
    * still long enough to assert against.
    */

@@ -17,7 +17,7 @@ export type PickedSnapshot = {
 };
 
 /**
- * Run the picker → harvest flow in the active tab. The toolbar offers the
+ * Run the picker -> harvest flow in the active tab. The toolbar offers the
  * cached picker-context page actions for this URL; the chosen action id and
  * the harvested snapshot are returned for delivery. Returns `null` when the
  * user cancels or no picker actions are registered yet.

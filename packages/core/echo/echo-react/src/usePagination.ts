@@ -140,7 +140,7 @@ const createPaginationStore = <Q extends Query.Any, O>(
     subscribe: (onStoreChange: () => void) => {
       listeners.add(onStoreChange);
       if (listeners.size === 1) {
-        // Seeded (background identity refresh) → don't surface loading; otherwise it's a first load.
+        // Seeded (background identity refresh) -> don't surface loading; otherwise it's a first load.
         pointAtRange(displayItems.length === 0);
       }
       return () => {

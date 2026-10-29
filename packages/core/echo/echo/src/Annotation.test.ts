@@ -626,7 +626,7 @@ describe('Annotation', () => {
       const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       const a = Obj.make(Item, { name: 'a' });
-      // The annotation on `obj` holds a ref back to `obj`, so a loaded target forms a cycle —
+      // The annotation on `obj` holds a ref back to `obj`, so a loaded target forms a cycle -
       // the shallow snapshot copies the array without dereferencing its ref elements, so it tolerates this.
       Obj.update(obj, (obj) => Annotation.set(obj, RefOrderAnnotation, { typeA: [Ref.make(a), Ref.make(obj)] }));
 
@@ -651,7 +651,7 @@ describe('Annotation', () => {
 
       const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
 
-      // No surrounding Obj.update — Annotation.update opens its own change transaction.
+      // No surrounding Obj.update - Annotation.update opens its own change transaction.
       Annotation.update(obj, OrderAnnotation, (order) => {
         order.typeA.push('z');
       });

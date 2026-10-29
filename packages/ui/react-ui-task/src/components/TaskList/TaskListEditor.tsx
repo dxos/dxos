@@ -46,17 +46,17 @@ export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
   placeholder?: string;
   /**
-   * Edit a description under the title — the selected task's, or the new task's when creating, so a
+   * Edit a description under the title - the selected task's, or the new task's when creating, so a
    * task can be added with one. Off by default, matching `Root`'s `showDescription`: a markdown
    * field is several rows tall wherever it appears, which a single-line strip has no room for.
    */
   showDescription?: boolean;
   /** Placeholder for the description field; translated by default. */
   descriptionPlaceholder?: string;
-  /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
+  /** Editor extensions for the description field beyond its own - what the host's plugins contribute. */
   descriptionExtensions?: MarkdownEditableProps['extensions'];
   /**
-   * Only ever create — the pane ignores the selection instead of editing it. For a host whose detail
+   * Only ever create - the pane ignores the selection instead of editing it. For a host whose detail
    * lives elsewhere (a task plank opened from the row): there, a selected row would otherwise turn
    * the only create affordance into an editor, leaving no way to type a new task.
    */
@@ -71,11 +71,11 @@ export type TaskListEditorProps = ComposableProps<{
 /**
  * The detail half of the list: it edits whichever task is selected, and creates one when none is.
  *
- * Editing lives here rather than in the row because a row is 32px of shared subgrid — a field
+ * Editing lives here rather than in the row because a row is 32px of shared subgrid - a field
  * opening inside it moves everything around it. A pane below the list has room to be a field.
  *
  * The fields, and nothing else. A task's questions and its history belong to the surface that has
- * room to answer and to read — the detail article — and under a list they grew the strip by a line
+ * room to answer and to read - the detail article - and under a list they grew the strip by a line
  * per entry, pushing the list itself off the screen.
  */
 export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProps>(
@@ -107,7 +107,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
 
     // The create row's description, mirrored out of the field. A ref rather than state because the
     // create reads it in the same tick it commits the field, and `useEditable` calls back
-    // synchronously — a `setState` would still hold the previous render's text.
+    // synchronously - a `setState` would still hold the previous render's text.
     const draftDescription = useRef('');
     const [draft, setDraft] = useState('');
     // Set on the create row before the task exists, and sent with its draft.
@@ -128,7 +128,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     // The pane is a view onto whichever task is selected, so switching tasks replaces the text it
     // holds rather than carrying the previous one's across. The description ref is cleared here too:
     // the field remounts empty on the way back to creating, but `commit()` on an already-empty field
-    // never calls back — so text abandoned before a selection would otherwise ride along, unseen,
+    // never calls back - so text abandoned before a selection would otherwise ride along, unseen,
     // into the next task created.
     //
     // State rather than a ref for the previous id (React's adjust-state-on-prop-change pattern): a
@@ -148,8 +148,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           onTaskUpdate?.(task, { title });
         }
       } else if (title.length > 0 && !creating.current) {
-        // Nothing has committed the description yet — it is held open and the reader is in the
-        // title — so commit it here, before assembling the draft it belongs to.
+        // Nothing has committed the description yet - it is held open and the reader is in the
+        // title - so commit it here, before assembling the draft it belongs to.
         descriptionRef.current?.commit();
         const sentDescription = draftDescription.current;
         const description = sentDescription.trim();
@@ -200,7 +200,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     }, [draft, draftPriority, draftEstimate, files, task, current, onTaskCreate, onTaskUpdate]);
 
     // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
-    // and half a title would become one — clicking the list, the thread, or anywhere else would
+    // and half a title would become one - clicking the list, the thread, or anywhere else would
     // leave a stray behind. Creating takes Enter or Save, which are the deliberate acts.
     const handleTitleBlur = useCallback(() => {
       if (task && current) {
@@ -217,7 +217,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       [commitTitle],
     );
 
-    // Writes both fields and leaves, as cancelling does — the pane drops back to creating either
+    // Writes both fields and leaves, as cancelling does - the pane drops back to creating either
     // way, and only what it did with the pending text differs. Creating commits the description
     // itself (it is part of the draft), so this only has to for an edit.
     const handleSave = useCallback(() => {
@@ -248,7 +248,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
 
     // Throws away the pending edit and leaves: the pane drops back to creating, which is the same
     // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields. An
-    // abandoned create is cleared rather than reverted — a blur may already have committed text into
+    // abandoned create is cleared rather than reverted - a blur may already have committed text into
     // the field, and reverting would restore exactly that.
     const handleCancel = useCallback(() => {
       if (task && current) {
@@ -317,7 +317,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     }
 
     // On the list's template the pane has the rows' columns: the ordinal gutter it leaves empty, the
-    // status column takes the icon, and the title column takes the field — which is what puts the
+    // status column takes the icon, and the title column takes the field - which is what puts the
     // caret where the rows' titles start. Off it, the pane keeps a template of its own.
     const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
     // Valid only with a title: a task cannot be created, or renamed, to nothing.
@@ -345,7 +345,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           className,
         )}
         // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the variable says "the
-        // content track", and `Field.Root` hands it to the field it wraps — which in THIS grid names a different
+        // content track", and `Field.Root` hands it to the field it wraps - which in THIS grid names a different
         // column, and put the title in the controls' track.
         style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
@@ -361,7 +361,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         {/* Each cell placed by its track's name, as the rows' are. In the DOM the description follows the title, though
             the pickers sit beside it, so Tab runs from the title into the description before the trailing controls. */}
         {editing ? (
-          // The row's own status control — the same glyph and menu, so status is set where the task is read.
+          // The row's own status control - the same glyph and menu, so status is set where the task is read.
           <TaskStatusControl task={task} classNames={mx(TRACK.status, 'self-start')} onTaskUpdate={onTaskUpdate} />
         ) : (
           // Creating, there is no task to carry a status yet.
@@ -406,8 +406,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             data-testid='taskList.edit.description'
             classNames='row-start-2 col-[title/assignee] min-w-0'
           >
-            {/* A description is markdown, so it is edited as markdown. `editing` is held open — the pane IS the editor,
-                so there is nothing to click into — and the key remounts it per task, since a field held open never
+            {/* A description is markdown, so it is edited as markdown. `editing` is held open - the pane IS the editor,
+                so there is nothing to click into - and the key remounts it per task, since a field held open never
                 re-reads its subject. Creating, the field is uncontrolled: there is no task to read a value from, so it
                 holds the draft itself until the create collects it. */}
             <MarkdownEditable

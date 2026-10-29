@@ -40,7 +40,7 @@ export type SelectionItemBinding = {
 export type UseListSelectionReturn = {
   bind: (id: string, opts?: { disabled?: boolean }) => SelectionItemBinding;
   /**
-   * Clear the selection (single: `undefined`; multi: empty set). A no-op — no emission — when
+   * Clear the selection (single: `undefined`; multi: empty set). A no-op - no emission - when
    * nothing is selected, so repeated invocations (e.g. Escape presses) emit at most once.
    */
   clear: () => void;
@@ -55,7 +55,7 @@ const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value 
  * `single` mode: at most one selected id, selection follows focus by default. Matches the
  * `Listbox` behaviour and the WAI-ARIA listbox single-select pattern.
  *
- * `multi` mode: tracks a `Set<string>`. Selection does NOT follow focus by default — multi
+ * `multi` mode: tracks a `Set<string>`. Selection does NOT follow focus by default - multi
  * select usually pairs with an explicit toggle affordance (checkbox or keyboard Space) rather
  * than implicit focus-tracking.
  */
@@ -66,7 +66,7 @@ export const useListSelection: {
 
   // Latches whenever the consumer passes the `value` prop key (even as undefined). A controlled
   // single-select consumer (`selectedId: string | undefined`) must be able to clear to undefined
-  // without the row falling back to stale internal state — `useControllableState` keys on the
+  // without the row falling back to stale internal state - `useControllableState` keys on the
   // value's presence and mishandles that case, so we mirror useListDisclosure's hand-rolled controller here.
   const wasControlledRef = useRef(Object.prototype.hasOwnProperty.call(opts, 'value'));
   if (Object.prototype.hasOwnProperty.call(opts, 'value')) {
@@ -84,7 +84,7 @@ export const useListSelection: {
 
   const resolvedValue = isControlled ? value : internalValue;
 
-  // One mouse press selects twice before the next render — focus-follow, then click — while a
+  // One mouse press selects twice before the next render - focus-follow, then click - while a
   // controlled `value` is still stale, so single-select dedupes consecutive emissions. The ref
   // re-syncs to the resolved value each render, so a consumer that rejects the change is emitted
   // to again rather than silenced.

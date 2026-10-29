@@ -43,8 +43,8 @@ const timingHandlers = RpcTiming.applyMiddleware(TimingRpcs).toLayer(
 /**
  * A connected client over a fresh `MessageChannel`, with both middlewares in play.
  *
- * Shared by the tests rather than repeated, so the one cast — the client is built from the group
- * at runtime and its shape cannot be inferred through `Rpc.makeClient`'s `unknown` — lives once.
+ * Shared by the tests rather than repeated, so the one cast - the client is built from the group
+ * at runtime and its shape cannot be inferred through `Rpc.makeClient`'s `unknown` - lives once.
  */
 const connect = async (): Promise<{
   reportTiming: (payload: Record<string, never>) => Effect.Effect<{ queueWaitMs: number }>;
@@ -81,7 +81,7 @@ describe('rpc timing middleware', () => {
   test('the caller records its round trip, and a reader outside the realm can see it', async ({ expect }) => {
     // Round trip is the caller's quantity: queue wait and service time are both measured on the
     // server and neither covers the transport, so nothing else says what the caller actually
-    // waited. Client and server share one module instance here because both run in this process —
+    // waited. Client and server share one module instance here because both run in this process -
     // in the app they are different realms, each with its own counters.
     RpcTiming.resetStats();
 
@@ -106,7 +106,7 @@ describe('rpc timing middleware', () => {
 
   test('a call that FAILS still records its round trip', async ({ expect }) => {
     // The case the `ensuring` exists for: a call that fails after 30 s is exactly the one worth
-    // seeing, and a success-path recording would drop it — reporting a healthy round trip for a
+    // seeing, and a success-path recording would drop it - reporting a healthy round trip for a
     // realm whose calls are all timing out.
     RpcTiming.resetStats();
 

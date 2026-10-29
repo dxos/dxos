@@ -18,7 +18,7 @@ export default Capability.makeModule(
       id: Type.getTypename(Connection.Connection),
       // A custom panel rather than an `inputSchema`: the fields to show depend on which connector is
       // picked, which a single static schema cannot express. It also collapses what used to be two
-      // dialogs — service picker, then credentials — into one.
+      // dialogs - service picker, then credentials - into one.
       customPanel: CreateConnectionPanel,
       createObject: (props: { connectorId: string; values?: unknown }, options) =>
         Effect.gen(function* () {

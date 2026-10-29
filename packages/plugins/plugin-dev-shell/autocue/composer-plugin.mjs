@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * An agent works the Composer Plugin project template's parent task and four subtasks to write the World
- * Clock plugin, then the reader loads it from the plugin's dev server through Plugins → Dev Server, opens its
+ * Clock plugin, then the reader loads it from the plugin's dev server through Plugins -> Dev Server, opens its
  * Clocks page from the navtree group it adds, and adds two timezones. Everything happens in the first space
  * in the rail (My Space on a fresh profile).
  *
@@ -57,7 +57,7 @@ const PLUGIN_DIR = join(COMPOSER_APP, 'temp/plugins/world-clock');
 /** Written by the agent, so its presence means the take is under way and a replay must keep it. */
 const SOURCE = join(PLUGIN_DIR, 'src');
 
-/** `composerPlugin`'s default dev port, which Plugins → Dev Server loads from by default. */
+/** `composerPlugin`'s default dev port, which Plugins -> Dev Server loads from by default. */
 const DEV_MANIFEST = 'http://localhost:3967/manifest.json';
 
 /** The plugin's entry, which the dev server compiles on request: 404 until written, 500 while it does not parse. */
@@ -235,10 +235,10 @@ const openPluginSettings = async ({ demo, page }, plugin, { label } = {}) => {
   await showSidebar({ demo, page }, `settings.${plugin}`, label);
 };
 
-/** Plugins → Dev Server's one button, which reads Enable or Disable. */
+/** Plugins -> Dev Server's one button, which reads Enable or Disable. */
 const DEV_TOGGLE = '[data-testid="registrySettings.devPluginToggle"]';
 
-/** Plugins → Dev Server's Manifest URL field. */
+/** Plugins -> Dev Server's Manifest URL field. */
 const DEV_URL = '[data-testid="registrySettings.devPluginUrl"]';
 
 /** The type the plugin stores its timezones in, as the guide defines it. */
@@ -288,7 +288,7 @@ export const prepare = async ({ demo, page }, { codingDev }) => {
   if (codingDev) {
     // Dev Shell contributes the template in a browser.
     // On a fresh profile the first click can land while the navtree is still settling; retry it.
-    const filter = page.locator('input[placeholder="Filter…"]').first();
+    const filter = page.locator('input[placeholder="Filter..."]').first();
     // The registry reopens on whatever it last showed, which can be a plugin's page with no filter; Bundled
     // lists every bundled plugin, Dev Shell among them.
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -305,13 +305,13 @@ export const prepare = async ({ demo, page }, { codingDev }) => {
         break;
       }
     }
-    await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Dev Shell', hud: false });
+    await demo.fill({ selector: 'input[placeholder="Filter..."]', value: 'Dev Shell', hud: false });
     const toggle = page.locator('input[id="org.dxos.plugin.devShell-input"]');
     await toggle.waitFor({ state: 'visible', timeout: 10_000 });
     if (!(await toggle.isChecked())) {
       await toggle.click();
     }
-    await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
+    await demo.fill({ selector: 'input[placeholder="Filter..."]', value: '', hud: false });
   }
 
   // A take from before Dev Server loaded the plugin by URL, which persists in the profile, enabled
@@ -333,7 +333,7 @@ export const prepare = async ({ demo, page }, { codingDev }) => {
   }
 
   // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
-  // The rail's settings button rather than ⌘, which the filter input swallows while it has focus.
+  // The rail's settings button rather than Cmd, which the filter input swallows while it has focus.
   const model = page.locator('role=combobox[name="Remote language model"]').first();
   for (let attempt = 0; attempt < 3; attempt++) {
     await openPluginSettings({ demo, page }, 'org.dxos.plugin.assistant');

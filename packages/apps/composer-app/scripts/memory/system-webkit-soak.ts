@@ -3,7 +3,7 @@
 //
 
 /**
- * The memory-profile soak in the system's WebKit — the engine the native app embeds — rather than
+ * The memory-profile soak in the system's WebKit - the engine the native app embeds - rather than
  * Playwright's WebKit build, which differs in what it frees. A small WKWebView host (`--host`, built with
  * `swiftc -O scripts/memory/wkapp.swift -o ../../../.perf/wkapp`) loads the bundle behind the same
  * partition as `webkit-soak.ts`: every connection goes through the CONNECT proxy, which tunnels only to

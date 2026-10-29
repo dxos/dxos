@@ -84,14 +84,14 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
   // The chat's selection when the active provider serves it, else the provider's configured model.
   // A selection the provider does not serve (the chat picked Claude, then the user went offline) is
   // still what the process will run, so it is shown as an unavailable entry rather than silently
-  // displayed as the fallback — the picker and the request must agree.
+  // displayed as the fallback - the picker and the request must agree.
   const unavailable = useMemo<AiServicePreset | undefined>(() => {
     const unlisted = provider !== Provider.edge.id && fallbackPresets.length === 0;
     if (!chatModel || unlisted || presets.some((preset) => preset.model === chatModel)) {
       return undefined;
     }
     // Carries the provider that actually serves the model rather than the active one, which by
-    // definition does not — a resolver chain that still reaches it then can.
+    // definition does not - a resolver chain that still reaches it then can.
     const catalog = Model.byId(chatModel)[0];
     return {
       id: chatModel,

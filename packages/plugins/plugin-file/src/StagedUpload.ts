@@ -32,7 +32,7 @@ export type Source = {
 /**
  * `file.createFromUpload` for a host that stages uploads itself (`@dxos/mcp-server/LocalUpload`)
  * rather than on EDGE. Registered in place of the default handler, which adopts from EDGE's staging
- * area — a store these uploads never reach. The bytes go to the client's default blob backend
+ * area - a store these uploads never reach. The bytes go to the client's default blob backend
  * (EDGE when configured), exactly as a UI upload's would; with no backend they are stored inline,
  * which `Blob.fromBytes` caps at `Blob.MAX_INLINE_SIZE`.
  */

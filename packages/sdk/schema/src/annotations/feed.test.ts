@@ -15,7 +15,7 @@ class Mailbox extends Type.makeObject<Mailbox>(DXN.make('com.example.type.mailbo
   Schema.Struct({ feed: Ref.Ref(Feed.Feed) }).pipe(FeedAnnotation.set({ property: 'feed' })),
 ) {}
 
-/** Holds its feed under a different name — the case a hardcoded `.feed` cannot serve. */
+/** Holds its feed under a different name - the case a hardcoded `.feed` cannot serve. */
 class Journal extends Type.makeObject<Journal>(DXN.make('com.example.type.journal', '0.1.0'))(
   Schema.Struct({ entries: Ref.Ref(Feed.Feed) }).pipe(FeedAnnotation.set({ property: 'entries' })),
 ) {}

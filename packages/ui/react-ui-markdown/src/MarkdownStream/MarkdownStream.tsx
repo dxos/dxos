@@ -105,7 +105,7 @@ export type MarkdownStreamProps = Util.ThemedClassName<
 
       /**
        * Streaming cadence. See {@link StreamerOptions}.
-       * Use `'word'` or `'character'` to break large source chunks into smaller CM dispatches —
+       * Use `'word'` or `'character'` to break large source chunks into smaller CM dispatches -
        * useful when the AI service emits big partial blocks but you want a smoother typewriter
        * effect. Combine with `streamDelayMs` to add a per-token sleep.
        * Default: `'span'` (one CM dispatch per source chunk; current behaviour).
@@ -126,7 +126,7 @@ export type MarkdownStreamProps = Util.ThemedClassName<
     footer?: ReactNode;
 
     /**
-     * Extra CodeMirror extensions appended after the built-in stack — use for keymaps or
+     * Extra CodeMirror extensions appended after the built-in stack - use for keymaps or
      * other host-level behaviour (e.g. `Mod-d` to toggle debug) that should apply when the
      * document is focused.
      */
@@ -152,7 +152,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // against `undefined` and stamp `"undefined"` into the transcript snapshot.
     const contentRef = useRef(content ?? '');
 
-    // DOM node for the footer block widget — populated when its decoration mounts.
+    // DOM node for the footer block widget - populated when its decoration mounts.
     const [footerRoot, setFooterRoot] = useState<HTMLElement | null>(null);
 
     // Survives a context set before the view exists; flushed once it does (see `flushContext`).
@@ -208,7 +208,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       [onReset],
     );
 
-    // Apply a context that was set before the view existed — the dispatch in `setContext` is a no-op
+    // Apply a context that was set before the view existed - the dispatch in `setContext` is a no-op
     // until then, and a host mounting the controller has no way to know.
     useEffect(() => {
       const pending = pendingContextRef.current;

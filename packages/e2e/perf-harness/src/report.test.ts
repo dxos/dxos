@@ -102,8 +102,8 @@ describe('writePosthogBatch', () => {
   test('accumulates across iterations rather than truncating', ({ expect }) => {
     // The regression this exists for: the batch name carries the flow and mode but NOT the
     // iteration, so a truncating write made each of the nightly's ten iterations overwrite the
-    // last. A run that measured 100 stages published 10 — the iteration that happened to finish
-    // last — and the loss was invisible, because the log still read "captured 10 event(s)".
+    // last. A run that measured 100 stages published 10 - the iteration that happened to finish
+    // last - and the loss was invisible, because the log still read "captured 10 event(s)".
     const workspaceRoot = mkdtempSync(path.join(tmpdir(), 'perf-batch-'));
 
     const file = writePosthogBatch(workspaceRoot, 'flow-measure', [row({ stage: 'boot', iteration: 0 })]);
@@ -145,8 +145,8 @@ describe('disk columns', () => {
 
 describe('memory columns', () => {
   test('wasm linear memory is its own per-realm series', ({ expect }) => {
-    // No heap column counts it — `usedBytes` is the V8 heap and a wasm module's memory lives
-    // outside it — so before this a worker holding 64 MB of automerge read as 120 MB total.
+    // No heap column counts it - `usedBytes` is the V8 heap and a wasm module's memory lives
+    // outside it - so before this a worker holding 64 MB of automerge read as 120 MB total.
     const event = toPosthogEvent(row());
     expect(event.properties.wasmBytesTab).toBe(16_777_216);
     expect(event.properties.wasmBytesSharedWorker).toBe(67_108_864);
@@ -156,7 +156,7 @@ describe('memory columns', () => {
 
   test('shared wasm memory is reported beside the total, never folded into it', ({ expect }) => {
     // One `SharedArrayBuffer`-backed memory is visible in every realm it was posted to, and
-    // nothing in the readings identifies one allocation across realms — so the total carries the
+    // nothing in the readings identifies one allocation across realms - so the total carries the
     // EXCLUSIVE bytes only. Taking the largest realm's shared subtotal as the union undercounted
     // whenever two realms held different shared memories: 2 MB and 3 MB is 5 MB, not 3 MB.
     const event = toPosthogEvent(
@@ -174,7 +174,7 @@ describe('memory columns', () => {
 
   test('a failed footprint read is legible as absent rather than as zero memory', ({ expect }) => {
     // The memory-infra dump can fail or be pre-empted by another trace, and an empty reading sums
-    // to zero bytes — indistinguishable from an app holding no memory without this column.
+    // to zero bytes - indistinguishable from an app holding no memory without this column.
     const collected = toPosthogEvent(row());
     const failed = toPosthogEvent(row({ footprint: [], appFootprintBytes: 0 }));
 
@@ -224,7 +224,7 @@ describe('rpc columns', () => {
 
   test('a truncated sample ring is visible rather than silent', ({ expect }) => {
     // The middleware keeps a bounded ring, so a stage serving more calls than it holds reports a
-    // percentile over the stage's tail. `rpcCallsTotal` above `rpcSamples` is what says so — and
+    // percentile over the stage's tail. `rpcCallsTotal` above `rpcSamples` is what says so - and
     // the two must count the SAME ring: summing served and client samples into one column let the
     // 100 client samples mask a server ring truncated at 100 against 140 served calls.
     const event = toPosthogEvent(row());
@@ -311,7 +311,7 @@ describe('disjoint memory categories', () => {
 
   test('wasm is split by library, and subduction is not counted as automerge', ({ expect }) => {
     // Subduction ships as `automerge_subduction_wasm_bg.wasm`, so an automerge-first match would
-    // attribute all of it to automerge — the whole reason the classifier tests subduction first.
+    // attribute all of it to automerge - the whole reason the classifier tests subduction first.
     const event = toPosthogEvent(
       row({
         heap: [
@@ -346,8 +346,8 @@ describe('disjoint memory categories', () => {
   });
 
   test('wasm the module map does not account for still lands in a bucket', ({ expect }) => {
-    // A realm can report bytes with no map — a probe predating per-module attribution does exactly
-    // that — and the libraries summing to zero against a non-zero total would make the partition
+    // A realm can report bytes with no map - a probe predating per-module attribution does exactly
+    // that - and the libraries summing to zero against a non-zero total would make the partition
     // this file documents false.
     const event = toPosthogEvent(
       row({

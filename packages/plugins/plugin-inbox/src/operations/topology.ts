@@ -4,7 +4,7 @@
 
 /**
  * Topological ordering for contributed feed processors. Pure and ECHO-free so the ordering rules are
- * testable on their own — the cascade supplies the nodes, this decides what runs and in what order.
+ * testable on their own - the cascade supplies the nodes, this decides what runs and in what order.
  */
 
 /** The ordering contract a processor declares. */
@@ -15,7 +15,7 @@ export type Node = {
   readonly after?: readonly string[];
 };
 
-/** A node excluded from the run, and why — never dropped silently. */
+/** A node excluded from the run, and why - never dropped silently. */
 export type Excluded<T> = {
   readonly node: T;
   readonly reason: string;
@@ -31,7 +31,7 @@ export type Sorted<T> = {
 /**
  * Orders processors by their declared dependencies, excluding rather than failing on a bad graph.
  *
- * Three rules, all chosen so one bad contributor cannot break everyone else's run — the same
+ * Three rules, all chosen so one bad contributor cannot break everyone else's run - the same
  * principle as treating an unprovided service as a skip rather than a fault:
  *
  * - **Unknown `after` ids are ignored.** Naming a processor whose plugin is not installed is the
@@ -42,7 +42,7 @@ export type Sorted<T> = {
  *   reported by name so the offending contributor is identifiable.
  *
  * Ties are broken by contribution order, so the same set of processors always produces the same run
- * order — a topology that reshuffles between runs would make cursor behaviour irreproducible.
+ * order - a topology that reshuffles between runs would make cursor behaviour irreproducible.
  */
 export const sort = <T extends Node>(nodes: readonly T[]): Sorted<T> => {
   const excluded: Excluded<T>[] = [];
@@ -94,13 +94,13 @@ export const sort = <T extends Node>(nodes: readonly T[]): Sorted<T> => {
 };
 
 /**
- * Every node that transitively declares `after` on `id` — the set a failure of `id` invalidates.
+ * Every node that transitively declares `after` on `id` - the set a failure of `id` invalidates.
  *
  * This is what makes a failure cost only what actually consumed the failed output. Aborting by
  * position instead (everything later in the run order) strands processors that never depended on it:
  * `subscriptions` has no edge to `classify`, so a classification failure has no bearing on it.
  *
- * `id` itself is not included — the caller already knows it failed and reports it as `failed`, not
+ * `id` itself is not included - the caller already knows it failed and reports it as `failed`, not
  * `skipped`.
  */
 export const descendants = <T extends Node>(nodes: readonly T[], id: string): ReadonlySet<string> => {

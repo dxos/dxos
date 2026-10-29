@@ -39,7 +39,7 @@ const MeetingItem = ({ meeting }: MeetingItemProps) => {
   return (
     <Listbox.Item id={meeting.id} classNames='grid grid-cols-[1fr_auto] items-center' onClick={handleSelectMeeting}>
       <span className='truncate'>{label}</span>
-      {/* Visual affordance only — listbox options can't legally contain focusable
+      {/* Visual affordance only - listbox options can't legally contain focusable
           descendants, so the row itself drives selection via onClick above. */}
       <Button.Root tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
         {t('select-meeting.label')}

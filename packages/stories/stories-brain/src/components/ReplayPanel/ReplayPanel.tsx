@@ -187,7 +187,7 @@ const StepCard = ({ step }: { step: ReplayStep }) => {
         ))}
         <OutcomeTable step={step} />
         {step.failures.map((failure) => (
-          <Card.Text key={failure}>✗ {failure}</Card.Text>
+          <Card.Text key={failure}>X {failure}</Card.Text>
         ))}
       </Card.Section>
     </Card.Root>
@@ -196,16 +196,16 @@ const StepCard = ({ step }: { step: ReplayStep }) => {
 
 const PROPERTIES = ['wake', 'achieved', 'holds', 'blocks'] as const;
 
-/** An expectation cell: absent (`—`) when the step does not check it, `either` when it is explicitly unconstrained. */
+/** An expectation cell: absent (`-`) when the step does not check it, `either` when it is explicitly unconstrained. */
 const formatExpected = (value: boolean | null | undefined): string =>
-  value === undefined ? '—' : value === null ? 'either' : String(value);
+  value === undefined ? '-' : value === null ? 'either' : String(value);
 
-/** The wake cell names each wake with the facts behind it (`reply←f1`); other cells are the plain value. */
+/** The wake cell names each wake with the facts behind it (`reply<-f1`); other cells are the plain value. */
 const formatActual = (step: ReplayStep, property: (typeof PROPERTIES)[number]): string =>
   property === 'wake'
     ? step.wakes.length === 0
       ? 'false'
-      : step.wakes.map(({ label, facts }) => (facts.length > 0 ? `${label}←${facts.join(',')}` : label)).join(' ')
+      : step.wakes.map(({ label, facts }) => (facts.length > 0 ? `${label}<-${facts.join(',')}` : label)).join(' ')
     : String(step[property]);
 
 /** Expected against actual for each checked property; an actual that contradicts its expectation reads as an error. */
@@ -219,7 +219,7 @@ const OutcomeTable = ({ step }: { step: ReplayStep }) => (
         <StepTableRow key={property} label={property} data-property={property}>
           <StepTableCell tone='muted'>{formatExpected(expected)}</StepTableCell>
           <StepTableCell tone={mismatch ? 'error' : undefined} data-mismatch={mismatch ? '' : undefined}>
-            {mismatch && '✗ '}
+            {mismatch && 'X '}
             {formatActual(step, property)}
           </StepTableCell>
         </StepTableRow>
@@ -241,7 +241,7 @@ const FactTable = ({ fact }: { fact: ReplayStep['facts'][number] }) => (
         : [
             <StepTableRow key={field} label={field}>
               <StepTableCell tone={field === 'quote' ? 'muted' : undefined}>
-                {field === 'quote' ? `“${value}”` : value}
+                {field === 'quote' ? `"${value}"` : value}
               </StepTableCell>
             </StepTableRow>,
           ];

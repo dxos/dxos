@@ -59,7 +59,7 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
     HttpClientRequest.setHeader('accept', 'application/json'),
     httpClientWithTracerDisabled.execute,
     // Read status and body together. Google returns JSON on success and for most errors, but some
-    // failures (notably 401 on an expired grant) come back as an HTML error page — parse defensively
+    // failures (notably 401 on an expired grant) come back as an HTML error page - parse defensively
     // so a non-JSON body classifies as a typed `GoogleApiError` below rather than throwing a raw
     // `SyntaxError` defect that no caller can recognize as an auth failure. DELETE returns 204 with an
     // empty body, which parses to `{}`.

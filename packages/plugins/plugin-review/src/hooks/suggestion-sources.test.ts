@@ -55,7 +55,7 @@ describe('suggestionGroups', () => {
       source('did:alice', 'The fast brown fox jumps over the sleepy dog.'),
       source('did:bob', 'The swift brown fox leaps over the lazy dog.'),
     ]);
-    // Alice: quick→fast, lazy→sleepy; Bob: quick→swift, jumps→leaps.
+    // Alice: quick->fast, lazy->sleepy; Bob: quick->swift, jumps->leaps.
     expect(groups).toHaveLength(4);
     expect(groups.every((group) => group.colour === suggestionColour(group.author))).toBe(true);
     expect(groups.every((group) => BASE.slice(group.from, group.to) === group.removed)).toBe(true);
@@ -66,7 +66,7 @@ describe('suggestionGroups', () => {
       source('did:bob', 'The swift brown fox jumps over the lazy dog.'),
       source('did:alice', 'The fast brown fox jumps over the lazy dog.'),
     ]);
-    // Both change "quick" at the same offset → Alice before Bob.
+    // Both change "quick" at the same offset -> Alice before Bob.
     expect(groups.map((group) => [group.author, group.inserted])).toEqual([
       ['did:alice', 'fast'],
       ['did:bob', 'swift'],

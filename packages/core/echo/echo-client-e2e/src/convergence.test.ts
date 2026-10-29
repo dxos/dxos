@@ -27,7 +27,7 @@ describe('merge convergence', () => {
     await builder.close();
   });
 
-  // The field is assigned through meta inside an update — there is deliberately no dedicated setter.
+  // The field is assigned through meta inside an update - there is deliberately no dedicated setter.
   const setConvergenceKey = (object: Obj.Unknown, convergenceKey: string | undefined) =>
     Obj.update(object, (object) => {
       Obj.getMeta(object).convergenceKey = convergenceKey;
@@ -41,7 +41,7 @@ describe('merge convergence', () => {
 
   const liveTasks = (db: any) => db.query(Filter.type(TestSchema.Task)).run();
 
-  // The merge runs in the worker; redirects are read at the storage layer — deliberately, the
+  // The merge runs in the worker; redirects are read at the storage layer - deliberately, the
   // client keeps no merge surface beyond the resolver.
   const resolveMerged = (start: EntityId, entities: readonly Obj.Unknown[]): EntityId => {
     const byId = new Map(entities.map((entity) => [entity.id, entity]));
@@ -57,7 +57,7 @@ describe('merge convergence', () => {
 
   // `waitUntilHeadsReplicated` covers document replication, but queries read through the index,
   // which settles a tick later. A live query collapses duplicates on sight, so the barrier has to
-  // wait on the tombstone-inclusive view — which is also the only way to observe the pre-merge
+  // wait on the tombstone-inclusive view - which is also the only way to observe the pre-merge
   // pair at all.
   const waitForAllTasks = (db: any, count: number) =>
     waitForCondition({
@@ -92,7 +92,7 @@ describe('merge convergence', () => {
     const second = seed(db2, 'from peer 2');
     await db2.flush();
 
-    // Both duplicates have reached peer 1 — visible only through the tombstone-inclusive view,
+    // Both duplicates have reached peer 1 - visible only through the tombstone-inclusive view,
     // since the worker merges them as they index.
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await waitForAllTasks(db1, 2);
@@ -120,7 +120,7 @@ describe('merge convergence', () => {
     const second = seed(db2, 'from peer 2');
     await db2.flush();
 
-    // Both workers merge independently — the redundant execution the design accepts as safe
+    // Both workers merge independently - the redundant execution the design accepts as safe
     // because the result is deterministic, so they converge instead of fighting.
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
@@ -168,7 +168,7 @@ describe('merge convergence', () => {
 
     // No fold call anywhere: the late edit re-indexes the tombstoned loser, and the worker
     // carries the changed fields to the winner. Re-running the field-wise merge would not
-    // rescue this — it prefers the smallest id, which is the winner.
+    // rescue this - it prefers the smallest id, which is the winner.
     for (const db of [db1, db2]) {
       await waitForCondition({
         condition: async () => {
@@ -227,8 +227,8 @@ describe('merge convergence', () => {
     });
     await using db = await peer.createDatabase(spaceKey);
 
-    // Relations are not merge subjects; stamp the key on one anyway — as a legacy or hostile
-    // writer could, since the field is plain meta — and verify the worker refuses to act on it.
+    // Relations are not merge subjects; stamp the key on one anyway - as a legacy or hostile
+    // writer could, since the field is plain meta - and verify the worker refuses to act on it.
     const makeEmployment = () => {
       const person = db.add(Obj.make(TestSchema.Person, { name: 'someone' }));
       const organization = db.add(Obj.make(TestSchema.Organization, { name: 'somewhere' }));
@@ -298,7 +298,7 @@ describe('merge convergence', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
 
-    // Peer 2 adds two more duplicates and merges only the pair it created, in the same tick — a
+    // Peer 2 adds two more duplicates and merges only the pair it created, in the same tick - a
     // peer acting on a strict subset of the duplicates, which is what produces redirect chains
     // rather than one hop. Staged through the cores exactly as that peer's worker would write it:
     // loser redirected under the pre-edit watermark, winner recording what it absorbed.
@@ -321,7 +321,7 @@ describe('merge convergence', () => {
     await waitForLiveWinner(db1, globalMinimum);
     await waitForLiveWinner(db2, globalMinimum);
 
-    // Every id — including the one merged away twice — reaches the global minimum by following
+    // Every id - including the one merged away twice - reaches the global minimum by following
     // redirects transitively, and the straggler edit survived the chain collapse. Polled: the
     // live winner settles before the tombstoned members finish replicating, and a chain resolved
     // over a partial working set dead-ends at whichever hop is still missing.
@@ -348,13 +348,13 @@ describe('merge convergence', () => {
     await using db = await peer.createDatabase();
 
     // The smaller-id duplicate is deleted by the user; a live twin with the same key arrives
-    // later (a re-seed). Merging them would either crown the deleted entity the winner —
-    // vanishing every copy at once — or resurrect deleted data into the live one.
+    // later (a re-seed). Merging them would either crown the deleted entity the winner -
+    // vanishing every copy at once - or resurrect deleted data into the live one.
     const deletedTwin = seed(db, 'deleted by the user');
     db.remove(deletedTwin);
     const liveTwin = seed(db, 'seeded again');
 
-    // A sentinel pair under a different key that does merge — proof the worker pass ran and
+    // A sentinel pair under a different key that does merge - proof the worker pass ran and
     // examined this batch, rather than simply not having gotten to it yet.
     const sentinelFirst = db.add(Obj.make(TestSchema.Task, { title: 'sentinel first' }));
     setConvergenceKey(sentinelFirst, 'org.example.sentinel');

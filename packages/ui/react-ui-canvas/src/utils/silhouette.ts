@@ -70,7 +70,7 @@ export const polygonPath = (
   const ys = unit.map(({ y }) => y);
   const [left, right, top, bottom] =
     fit === 'circle' ? [-1, 1, -1, 1] : [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  // A sharp corner's mitred stroke reaches `inset / sin(θ/2)` past its vertex (θ the interior angle), so on a circle the
+  // A sharp corner's mitred stroke reaches `inset / sin(theta/2)` past its vertex (theta the interior angle), so on a circle the
   // vertices are pulled in by that much for the tips to stay on it; a rounded corner's stroke reaches only `inset`.
   const halfAngle = (Math.PI - (2 * Math.PI) / count) / 2;
   const reach = fit === 'circle' && radius <= 0 ? inset / Math.sin(halfAngle) : inset;
@@ -85,7 +85,7 @@ export const polygonPath = (
   if (radius <= 0 || scale === 0) {
     return `M ${points.map(({ x, y }) => `${round(x)} ${round(y)}`).join(' L ')} Z`;
   }
-  // A corner of interior angle θ, rounded by radius r, starts r / tan(θ/2) back along each edge.
+  // A corner of interior angle theta, rounded by radius r, starts r / tan(theta/2) back along each edge.
   const edge = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
   const back = Math.min(radius / Math.tan(halfAngle), edge / 2);
   const arc = back * Math.tan(halfAngle);

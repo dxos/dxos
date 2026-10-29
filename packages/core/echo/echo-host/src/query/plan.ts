@@ -94,7 +94,7 @@ export namespace QueryPlan {
 
     /**
      * Set when the planner has proved the step's {@link limit} can be applied by the feed scan
-     * itself — see `feedScanForLimit`. Absent means the limit must be applied downstream, after the
+     * itself - see `feedScanForLimit`. Absent means the limit must be applied downstream, after the
      * steps that would otherwise slice candidates out of an already-capped page.
      */
     feedScan?: FeedScan;
@@ -179,7 +179,7 @@ export namespace QueryPlan {
    * Select the objects holding a reference to `targetDXN`, straight off the reverse-reference index.
    *
    * Unlike an incoming {@link ReferenceTraversal} this needs no anchor in the working set, so it can
-   * name an entity that is absent from the graph — a named entity, or one a migration has renamed away.
+   * name an entity that is absent from the graph - a named entity, or one a migration has renamed away.
    */
   export type IncomingReferenceSelector = {
     _tag: 'IncomingReferenceSelector';
@@ -375,7 +375,7 @@ export namespace QueryPlan {
   /**
    * Aggregate the working set. `group`-kind entries partition it into contiguous groups by scalar
    * property values (with none, the whole set forms one group), ordered by the first occurrence of
-   * their key in the incoming (already-ordered) working set — this lets a preceding `OrderStep` also
+   * their key in the incoming (already-ordered) working set - this lets a preceding `OrderStep` also
    * control group order. Non-`group` aggregates are stamped on each member so a following group-level
    * `OrderStep` can order by them.
    *

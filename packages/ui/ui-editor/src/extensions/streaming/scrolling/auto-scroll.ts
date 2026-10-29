@@ -17,7 +17,7 @@ export const autoScrollEffect = StateEffect.define<boolean>();
 export type AutoScrollProps = {
   /**
    * If true, immediately jump to the bottom and re-pin whenever the size of the
-   * document view (the scroll container) changes — e.g. when a sidebar toggles
+   * document view (the scroll container) changes - e.g. when a sidebar toggles
    * or the window is resized. This avoids the visible "stuck near bottom" gap
    * that otherwise appears because the previous `scrollTop` no longer reaches
    * the new content height.
@@ -37,7 +37,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
   let firstUpdate = true;
   // Latches once the thread streams real content. Until then (initial open of a populated
   // thread, whose height grows only as widgets measure) we snap instantly; afterwards we follow
-  // the bottom smoothly — so the first paint jumps to the end, then streaming eases.
+  // the bottom smoothly - so the first paint jumps to the end, then streaming eases.
   let streamed = false;
 
   const setPinned = (pinned: boolean) => {
@@ -104,7 +104,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           if (delta > 0) {
             setPinned(true);
             // Before the thread has streamed any real content, height grows only from layout
-            // (widgets measuring on open) — snap instantly so we don't animate through the
+            // (widgets measuring on open) - snap instantly so we don't animate through the
             // backlog. Once content has streamed, follow the bottom smoothly with the spring,
             // including reflow frames interleaved with token edits. Both keep following until
             // the height stabilizes.
@@ -174,7 +174,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
         private readonly cleanup: () => void;
         constructor(view: EditorView) {
           // Re-pin check is throttled so the listener doesn't thrash while scrolling, but
-          // unpinning must be immediate — otherwise content arriving during the throttle
+          // unpinning must be immediate - otherwise content arriving during the throttle
           // window re-applies the crawl effect and yanks the viewport back to the bottom.
           // `debounceAndThrottle` (not bare `throttle`) guarantees a trailing call after the
           // gesture stops; a leading-only throttle drops the final at-bottom sample, leaving the

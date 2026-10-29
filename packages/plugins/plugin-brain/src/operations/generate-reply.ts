@@ -57,7 +57,7 @@ const senderLabel = (message: Message.Message): string | undefined =>
 const factLine = (fact: RDF.Fact): string => {
   const term = (value: RDF.Term) => (value.kind === 'entity' ? (value.label ?? value.entity) : value.literal);
   const { subject, predicate, object } = fact.assertion;
-  return `- ${term(subject)} — ${predicate} — ${term(object)} (${fact.factuality.value}, ${fact.recordedAt.slice(0, 10)})`;
+  return `- ${term(subject)} - ${predicate} - ${term(object)} (${fact.factuality.value}, ${fact.recordedAt.slice(0, 10)})`;
 };
 
 const generatePrompt = (options: { thread: string; facts: string; sender: string }): string => trim`
@@ -65,7 +65,7 @@ const generatePrompt = (options: { thread: string; facts: string; sender: string
   ${options.facts.length > 0 ? 'Use the known facts where relevant, hedging non-certain ones (factuality codes: CT certain, PR probable, PS possible; trailing "-" means negated).' : ''}
   Match the tone of the thread, be concise, and answer any questions the last message asks.
   Do not invent commitments or information that is not grounded in the thread or the facts.
-  Respond with ONLY the reply body text — no subject line, no salutation placeholders like [Name].
+  Respond with ONLY the reply body text - no subject line, no salutation placeholders like [Name].
 
   ${options.facts.length > 0 ? `Known facts about the participants:\n${options.facts}\n` : ''}
   Thread (oldest first):
@@ -76,7 +76,7 @@ const generatePrompt = (options: { thread: string; facts: string; sender: string
  * Drafts a grounded reply: gathers the message's thread (same normalized subject) from the mailbox
  * feed, looks up facts about the participants in the space fact store, and prompts the LLM for a
  * reply body. Accepts either the message to reply to or a reply draft (resolved via `inReplyTo`).
- * Fact lookup degrades to none on store failure — a reply can always be drafted; LLM failure surfaces
+ * Fact lookup degrades to none on store failure - a reply can always be drafted; LLM failure surfaces
  * as a typed {@link GenerateReplyError} so callers can recover (e.g. fall back to an empty draft).
  * Named export so the flow is unit-testable without the operation runtime.
  */

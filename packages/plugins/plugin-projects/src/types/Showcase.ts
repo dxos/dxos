@@ -22,7 +22,7 @@ export class Demonstrates extends Type.makeRelation<Demonstrates>(DXN.make('org.
 export const makeDemonstrates = (props: Relation.MakeProps<typeof Demonstrates>) => Relation.make(Demonstrates, props);
 
 /**
- * `Demonstrates` 0.1.0 → 0.2.0, whose source may be any object since a showcase is a presenter deck. Each edge keeps
+ * `Demonstrates` 0.1.0 -> 0.2.0, whose source may be any object since a showcase is a presenter deck. Each edge keeps
  * its id and endpoints; plugin-presenter turns the `Showcase` at its source into a `Presentation` in place.
  */
 export const demonstratesMigration = Migration.define({

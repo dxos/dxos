@@ -9,8 +9,8 @@ import { type QueryAST } from '@dxos/echo-protocol';
 /**
  * Scope targeting a space's automerge documents.
  *
- * With no `spaceId`, targets the owning space — i.e. the space of whichever database
- * executes the query — so callers can reference "this space" without looking up its id.
+ * With no `spaceId`, targets the owning space - i.e. the space of whichever database
+ * executes the query - so callers can reference "this space" without looking up its id.
  *
  * @example
  * ```ts
@@ -29,12 +29,12 @@ export const space = (options?: { id?: string; includeAllFeeds?: boolean }): Que
 /**
  * Scope targeting a code-shipped object/type registry.
  *
- * - `'local'`  — the in-process registry attached to the hypergraph (default).
- * - `'remote'` — a remote registry service (not yet implemented).
+ * - `'local'`  - the in-process registry attached to the hypergraph (default).
+ * - `'remote'` - a remote registry service (not yet implemented).
  *
  * @example
  * ```ts
- * // Discover all types — persisted in the space and code-shipped in the registry.
+ * // Discover all types - persisted in the space and code-shipped in the registry.
  * db.query(Filter.type(Type.Type).from(Scope.space(), Scope.registry()));
  * ```
  *
@@ -48,7 +48,7 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
 /**
  * Scope targeting a specific feed (by its underlying queue EID).
  *
- * To read only what follows a cursor, select with {@link Filter.feedCursor} — the bound is part of
+ * To read only what follows a cursor, select with {@link Filter.feedCursor} - the bound is part of
  * the query, not of the scope.
  *
  * @example

@@ -102,7 +102,7 @@ export class SqliteHeadsStore {
 
   /**
    * Deletes the heads row for a document. Paired with wiping the document's chunks during
-   * garbage collection — leaving the row behind would orphan it.
+   * garbage collection - leaving the row behind would orphan it.
    */
   remove(documentId: DocumentId): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {

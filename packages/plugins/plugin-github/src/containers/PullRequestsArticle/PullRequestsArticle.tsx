@@ -344,7 +344,7 @@ const useArrangedRows = (
   return useAtomValue(atom);
 };
 
-/** Tag registry keyed by the `Tag` object's uri — the id space `#tag` terms and `meta.tags` share. */
+/** Tag registry keyed by the `Tag` object's uri - the id space `#tag` terms and `meta.tags` share. */
 const useTagMap = (db: Database.Database): Tag.Map => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
   return useMemo(

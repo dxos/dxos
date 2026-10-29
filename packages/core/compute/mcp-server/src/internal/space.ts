@@ -13,7 +13,7 @@ export const idParameter = Schema.optional(SpaceId).annotate({
   description:
     'Space to operate on. Required for any operation that acts on a space: nothing is inferred, ' +
     'and a call that names no space is refused rather than run somewhere arbitrary. Take the value ' +
-    'from the caller, from whoami, or from a reference already in hand — never from guessing at ' +
+    'from the caller, from whoami, or from a reference already in hand - never from guessing at ' +
     'space names. Omit it for an operation that does not act on a space, or when a reference ' +
     'argument already names the space it belongs to.',
 });
@@ -22,7 +22,7 @@ export const idParameter = Schema.optional(SpaceId).annotate({
  * Resolves the target space for a tool call to the one the caller named, and to nothing else.
  *
  * Deliberately without a session default: the session's first space has no relationship to the
- * caller's task, so defaulting to it files work into an arbitrary space — and a listing tool is
+ * caller's task, so defaulting to it files work into an arbitrary space - and a listing tool is
  * how an agent is supposed to choose, not a fallback. `required` is what the operation itself says
  * ({@link view.requiresSpace}): a verb that acts on a space must be told which one, while a verb
  * that asks about the host runs without any.
@@ -85,7 +85,7 @@ const refUri = (record: Record<string, unknown>): string | undefined => {
  * An operation serializes a same-space reference as `echo:///<id>`, which is unambiguous only
  * while the space is implied by the call. Over MCP it is not: the agent carries the envelope back
  * in a later call with no memory of where it came from, and a tool given no `spaceId` targets the
- * *first* space in the session — so a reference minted anywhere else resolves to nothing.
+ * *first* space in the session - so a reference minted anywhere else resolves to nothing.
  *
  * Qualifying on the way out closes the loop: what the agent receives is what it can send back, and
  * {@link hintFromInput} reads the space straight off it. A reference that already names a space is

@@ -22,7 +22,7 @@ import { DXN } from '@dxos/keys';
  * Code mode runs the model's code somewhere other than this thread, and that code needs a database.
  * Rather than invent a protocol for it, the sandbox reuses the boundary the client already speaks:
  * the host serves `ClientServices` over a port, and the far side is an ordinary `EchoClient`. What
- * cannot cross that boundary is the type registry — a registered type is a runtime class — so the
+ * cannot cross that boundary is the type registry - a registered type is a runtime class - so the
  * far side rebuilds each type from its JSON schema, which is how this codebase already ships
  * schemas to a remote runtime.
  */

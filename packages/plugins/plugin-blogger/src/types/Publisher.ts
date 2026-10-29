@@ -9,7 +9,7 @@ import { BaseError } from '@dxos/errors';
 import { Connection } from '@dxos/link';
 
 // Provider-neutral draft DTO exchanged across the publisher capability boundary.
-// NOT an ECHO object — a plain Effect schema.
+// NOT an ECHO object - a plain Effect schema.
 export const PublisherDraft = Schema.Struct({
   id: Schema.String,
   text: Schema.String,

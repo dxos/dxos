@@ -34,7 +34,7 @@ const symbolFor = (icon: string): string | undefined => {
 
 /**
  * The sprite of every icon named in a module that reaches the bundle, the design system's own included (a Select's
- * caret, a dialog's close), so none falls back to fetching `/phosphor/…` from a host that has no such path.
+ * caret, a dialog's close), so none falls back to fetching `/phosphor/...` from a host that has no such path.
  */
 const iconSprite = (): Plugin => {
   const names = new Set<string>();

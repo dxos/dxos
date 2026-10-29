@@ -96,7 +96,7 @@ export type EchoEdgeSubductionReplicatorProps = {
  * {@link AutomergeReplicatorConnection}. Outbound repo messages are wrapped in a router
  * frame and sent to the edge.
  *
- * No automerge-repo sync, collection-query/state, or rate-limiting runs through this class —
+ * No automerge-repo sync, collection-query/state, or rate-limiting runs through this class -
  * Subduction's sedimentree protocol replaces those responsibilities.
  */
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
@@ -104,7 +104,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeHttpClient: EdgeHttpClient;
   /**
    * Coordinates cross-space lifecycle (`connect`/`disconnect`/`_handleReconnect`)
-   * — operations that touch the entire `_connections` map atomically. Per-space
+   * - operations that touch the entire `_connections` map atomically. Per-space
    * operations use {@link _spaceMutex} instead, so a slow restart on space A
    * cannot serialize behind / block `connectToSpace(B)`.
    */
@@ -114,7 +114,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
    * restart task fired from `onRestartRequested`. Restart tears down the WS
    * subscription and runs a fresh SUH handshake against the edge (seconds of
    * I/O), and under a single global mutex this blocked every other space's
-   * `host.spaces.create` → `connectToSpace` call, producing O(N) create-latency
+   * `host.spaces.create` -> `connectToSpace` call, producing O(N) create-latency
    * growth at space-creation boundaries. Per-space mutexes preserve the same-
    * space serialization invariant (`_openConnection`'s `invariant(!_connections.has)`,
    * single in-flight restart per space) without cross-space contention.
@@ -308,7 +308,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
         scheduleTask(
           this._ctx!,
           async () => {
-            // Per-space mutex (not the global `_mutex`) — the restart's heavy
+            // Per-space mutex (not the global `_mutex`) - the restart's heavy
             // I/O (`close()` + fresh SUH handshake on `open()`) must not block
             // `connectToSpace`/`disconnectFromSpace` for other spaces, which
             // was the O(N) create-latency cliff at space-creation boundaries.
@@ -433,7 +433,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           // close this connection (emitting peer-disconnected for its peer id) and open a fresh
           // one under a new connectionId. `emitCurrentState: false` is essential: the default
           // subscribe-time firing would restart the connection that was just created, and each
-          // restart re-subscribes — an unbounded restart loop.
+          // restart re-subscribes - an unbounded restart loop.
           this._onRestartRequested();
         },
         { emitCurrentState: false },
@@ -474,8 +474,8 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       // If a document is not present locally return true only if it already exists on edge.
       return remoteDocumentExists;
     }
-    // `reason` separates the expected cross-space denial — which fans out across every
-    // space-scoped peer each sync round — from a same-space document being wrongly refused.
+    // `reason` separates the expected cross-space denial - which fans out across every
+    // space-scoped peer each sync round - from a same-space document being wrongly refused.
     const allow = spaceId === this._spaceId;
     log.verbose('share policy probe', {
       documentId: params.documentId,
@@ -517,7 +517,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
     switch (payload.type) {
       case MESSAGE_TYPE_ERROR: {
-        // Edge → client restart signal for a specific connection lifetime.
+        // Edge -> client restart signal for a specific connection lifetime.
         // Match the edge-supplied `connectionId` against our local
         // `_connectionId` and tear down only on an exact match; mismatches
         // (or absent ids) refer to a sibling/prior connection and must be
@@ -623,7 +623,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
       case MESSAGE_TYPE_COLLECTION_QUERY:
-        // Invariant (not expressed in the protocol union): collection state flows edge → client
+        // Invariant (not expressed in the protocol union): collection state flows edge -> client
         // only; the edge never queries the client's collection state. An inbound query means a
         // protocol violation or a misbehaving peer, so surface it loudly instead of answering.
         throw new Error(
@@ -677,7 +677,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         await this.#sendEnveloped(message);
         return;
       case MESSAGE_TYPE_ERROR:
-        // Edge → client only; the client never originates an error on the subduction channel.
+        // Edge -> client only; the client never originates an error on the subduction channel.
         log.warn('dropping unexpected error outbound', { message: message.message });
         return;
       default: {

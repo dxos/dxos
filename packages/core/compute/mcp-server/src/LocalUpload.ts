@@ -340,8 +340,8 @@ const detectType = (bytes: Uint8Array, declared: string | undefined): string => 
 export const CreateUpload = Tool.make('createUpload', {
   description:
     'Returns a short-lived URL for uploading a local file directly to the space, bypassing the ' +
-    'conversation entirely. Use this for any file already on disk — screenshots, screen recordings, ' +
-    'logs, PDFs — since file bytes passed as tool arguments have to be generated token by token. ' +
+    'conversation entirely. Use this for any file already on disk - screenshots, screen recordings, ' +
+    'logs, PDFs - since file bytes passed as tool arguments have to be generated token by token. ' +
     'Upload the bytes with the returned command, then call the org.dxos.operation.file.createFromUpload ' +
     'operation with the uploadId to create the File object in a space. The URL expires in minutes.',
   parameters: Schema.Struct({

@@ -15,7 +15,7 @@ const LANGUAGE_CODES = [...Language.POPULAR].map(({ code }) => code).sort();
 export const Settings = Schema.Struct({
   /**
    * Language the reader opens on. Without it the selector fell back to whichever language sorted
-   * first by name — Arabic — for every learner, since the list is sorted for reading, not ranked.
+   * first by name - Arabic - for every learner, since the list is sorted for reading, not ranked.
    */
   language: Schema.optional(
     // A literal union rather than a string carrying `Format.OptionsAnnotation`: the form picks its

@@ -169,11 +169,11 @@ export const createTestTranscription = (): Message.Message[] => {
       sender: 'Mykola',
     },
     {
-      text: 'Yeah, that sounds great. Personally, I think AI will get deeply integrated into daily life—like assistants that don’t just answer questions but anticipate our needs.',
+      text: "Yeah, that sounds great. Personally, I think AI will get deeply integrated into daily life-like assistants that don't just answer questions but anticipate our needs.",
       sender: 'Rich',
     },
     {
-      text: 'That’s true, but there are risks too. If AI predicts too much, we might lose the sense of making decisions ourselves.',
+      text: "That's true, but there are risks too. If AI predicts too much, we might lose the sense of making decisions ourselves.",
       sender: 'Dima',
     },
     {
@@ -185,7 +185,7 @@ export const createTestTranscription = (): Message.Message[] => {
       sender: 'Mykola',
     },
     {
-      text: 'Exactly. And in science, too—AI models can suggest hypotheses humans wouldn’t think of, speeding up discoveries.',
+      text: "Exactly. And in science, too-AI models can suggest hypotheses humans wouldn't think of, speeding up discoveries.",
       sender: 'Rich',
     },
     {
@@ -232,7 +232,7 @@ export const createTestMailbox = (contacts?: Person.Person[]): Message.Message[]
       labels: ['Project'],
     },
     {
-      text: 'Subject: Meeting Rescheduled\n\nHi team,\n\nTomorrow’s product design meeting has been moved to Friday at 2pm. Please update your calendars.\n\nThanks,\nDavid',
+      text: "Subject: Meeting Rescheduled\n\nHi team,\n\nTomorrow's product design meeting has been moved to Friday at 2pm. Please update your calendars.\n\nThanks,\nDavid",
       sender: contacts?.[3] ?? 'david.lee@productdesign.io',
       labels: ['Project'],
     },

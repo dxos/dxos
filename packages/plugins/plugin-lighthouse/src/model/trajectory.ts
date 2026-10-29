@@ -4,11 +4,11 @@
 
 // A session's trajectory as a chat thread, as lighthouse's web UI (`web/src/trajectory.ts`) renders it:
 //
-//   input                → the person's prompt (a vote's feedback prompt as one line naming the results)
-//   decide               → a run row per narration: the line the agent said, then its tool calls
-//   act (per call)       → the call's outcome on its row: ok or failed, how long, a glance at its output
-//   extract (during act) → the results the call put into the graph, as pills on the same row
-//   report call          → a `surface` block with the picks
+//   input                -> the person's prompt (a vote's feedback prompt as one line naming the results)
+//   decide               -> a run row per narration: the line the agent said, then its tool calls
+//   act (per call)       -> the call's outcome on its row: ok or failed, how long, a glance at its output
+//   extract (during act) -> the results the call put into the graph, as pills on the same row
+//   report call          -> a `surface` block with the picks
 //
 // Message ids derive from the run and event, so re-deriving the thread on every new event updates rows in place.
 
@@ -46,7 +46,7 @@ const text = (value: string): ContentBlock.Text => ({ _tag: 'text', text: value 
 const status = (statusText: string): ContentBlock.Status => ({ _tag: 'status', statusText });
 
 const clip = (value: string, length: number) =>
-  value.length > length ? `${value.slice(0, length)}… (${value.length - length} more characters)` : value;
+  value.length > length ? `${value.slice(0, length)}\u2026 (${value.length - length} more characters)` : value;
 
 const asString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
 
@@ -66,7 +66,7 @@ const errorText = (output: unknown): string => {
   let value: unknown = output;
   if (typeof output === 'string') {
     try {
-      value = JSON.parse(output.replace(/… \[cut:[\s\S]*$/, ''));
+      value = JSON.parse(output.replace(/\u2026 \[cut:[\s\S]*$/, ''));
     } catch {
       return clip(output, 600) || 'failed';
     }
@@ -76,7 +76,7 @@ const errorText = (output: unknown): string => {
     return [
       asString(error.code) && `${asString(error.code)}:`,
       asString(error.message),
-      asString(error.hint) && `— ${asString(error.hint)}`,
+      asString(error.hint) && `- ${asString(error.hint)}`,
     ]
       .filter(Boolean)
       .join(' ');
@@ -85,7 +85,7 @@ const errorText = (output: unknown): string => {
 };
 
 /** A user prompt as the thread shows it: the prompt tag's source is rendered raw, so markup characters are swapped. */
-const promptText = (value: string) => value.replace(/&/g, '＆').replace(/</g, '＜').replace(/>/g, '＞');
+const promptText = (value: string) => value.replace(/&/g, '\uFF06').replace(/</g, '\uFF1C').replace(/>/g, '\uFF1E');
 
 const FEEDBACK_PREFIX = 'Feedback on the results panel';
 
@@ -112,10 +112,10 @@ const feedbackText = (value: string): string | undefined => {
     }
   }
   const parts = [
-    names.Liked.length && `👍 ${names.Liked.join(', ')}`,
-    names.Disliked.length && `👎 ${names.Disliked.join(', ')}`,
+    names.Liked.length && `\u{1F44D} ${names.Liked.join(', ')}`,
+    names.Disliked.length && `\u{1F44E} ${names.Disliked.join(', ')}`,
   ].filter(Boolean);
-  return `Votes: ${parts.join(' · ') || 'cleared'} — rebuild the ranking.`;
+  return `Votes: ${parts.join(' · ') || 'cleared'} - rebuild the ranking.`;
 };
 
 const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
@@ -436,7 +436,7 @@ export const toMessages = (
       Message.make({
         id: EntityId.deterministic(run, 'working'),
         sender: { role: 'assistant', name: 'Lighthouse' },
-        blocks: [status('Working…')],
+        blocks: [status('Working...')],
       }),
     );
   } else if (session.status === 'failed' || session.status === 'stopped') {

@@ -32,8 +32,8 @@ import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot.
 const TRANSIENT_CLIENT_STATUSES = new Set([401, 408, 425, 429]);
 
 /**
- * Whether EDGE refused the request outright — an unknown process key, a malformed request, a caller
- * without access — so sending it again would be refused again.
+ * Whether EDGE refused the request outright - an unknown process key, a malformed request, a caller
+ * without access - so sending it again would be refused again.
  */
 const isRejection = (error: unknown): boolean =>
   error instanceof EdgeCallFailedError &&
@@ -72,7 +72,7 @@ const callProcess = <A>(request: () => Promise<A>): Effect.Effect<A> =>
  * EDGE implementation of {@link RemoteProcessManager.Control}: the seven compute-service process
  * routes, addressed within one space.
  *
- * Every verb dies on failure — the interface carries no error channel (matching the local
+ * Every verb dies on failure - the interface carries no error channel (matching the local
  * `ProcessManager.Manager`), so a transport or host failure is a defect. This is deliberately unlike
  * `EdgeTriggerManager`'s polls, which swallow failures: a spawn or an input that silently did nothing
  * would leave the caller waiting on a process that does not exist.
@@ -159,7 +159,7 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
 });
 /**
  * Build from a `Client`, deferring edge-client creation until first use (identity may be absent at
- * boot). Consumed by `EdgeProcessManager.forSpace`, which is what a stack provides — this returns
+ * boot). Consumed by `EdgeProcessManager.forSpace`, which is what a stack provides - this returns
  * the `Control` surface, not a manager: `RemoteProcessManager.Service` is the tag that means
  * "processes on EDGE".
  */

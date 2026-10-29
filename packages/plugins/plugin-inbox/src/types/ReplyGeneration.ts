@@ -16,7 +16,7 @@ import * as Mailbox from './Mailbox.ts';
  * (see `InboxCapabilities.ReplyGenerator`).
  *
  * The contract lives here rather than with the generator because plugin-inbox owns the Mailbox and the
- * surfaces that call it, and the dependency runs the other way — a generator plugin depends on inbox.
+ * surfaces that call it, and the dependency runs the other way - a generator plugin depends on inbox.
  */
 export const Input = Schema.Struct({
   mailbox: Ref.Ref(Mailbox.Mailbox).annotate({

@@ -17,7 +17,7 @@ import * as GraphNode from './GraphNode.ts';
 import * as Retention from './Retention.ts';
 
 const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
-  // The caller's registry when one is supplied — reads must go through the registry the builder
+  // The caller's registry when one is supplied - reads must go through the registry the builder
   // writes to, or they never see its version bumps.
   const registry = props.registry ?? Registry.make();
   const builder = new GraphBuilder.ModelGraphBuilder<string>({ registry, ...props });

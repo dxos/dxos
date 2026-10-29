@@ -59,7 +59,7 @@ export type RunOptions = {
   readonly commit: CommitFn;
   /** Entity-reference resolver injected into each stage context (backend-agnostic). */
   readonly lookup?: EntityLookup;
-  /** Per-stage configuration (enabled / model / window). Absent → stage runs with its defaults. */
+  /** Per-stage configuration (enabled / model / window). Absent -> stage runs with its defaults. */
   readonly configs?: readonly StageConfig[];
   /** Default model when neither config nor stage specifies one. */
   readonly presetDefault?: DXN.DXN;
@@ -117,9 +117,9 @@ const windowTrigger = (
 
 /**
  * Runs the stage over a triggered slice, pairing its write with that slice. Per-stage `overflow`
- * enforces concurrency: `latest-wins → sliding` (a newer slice replaces the queued one), `skip-if-busy
- * → dropping` (new slices dropped while a run is in flight). Neither interrupts the in-flight run —
- * errors are logged + reported and swallowed (emit `undefined` → no commit), as before.
+ * enforces concurrency: `latest-wins -> sliding` (a newer slice replaces the queued one), `skip-if-busy
+ * -> dropping` (new slices dropped while a run is in flight). Neither interrupts the in-flight run -
+ * errors are logged + reported and swallowed (emit `undefined` -> no commit), as before.
  */
 const runStage = (
   stage: Stage<any, any>,

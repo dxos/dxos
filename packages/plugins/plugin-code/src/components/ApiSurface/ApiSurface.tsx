@@ -50,7 +50,7 @@ const Signature = ({ endpoint, types }: { endpoint: EndpointModel; types: Readon
     <span className='text-description'>)</span>
     {endpoint.output && (
       <>
-        <span className='text-description'> → </span>
+        <span className='text-description'> {'->'} </span>
         <TypeExpr expr={endpoint.output} types={types} />
       </>
     )}

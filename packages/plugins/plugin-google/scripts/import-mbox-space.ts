@@ -5,7 +5,7 @@
 /**
  * Imports a Gmail Takeout `.mbox` file into an ECHO space export (`.dx.json`), out of band.
  *
- * File in → file out: no live client or space is contacted. `SpaceTemplate` builds a space containing
+ * File in -> file out: no live client or space is contacted. `SpaceTemplate` builds a space containing
  * a Mailbox whose append-only feed holds one Message per email, then exports it to a single JSON
  * archive. Drop the archive into Composer (it imports via `client.spaces.import(...)`) to get the
  * mailbox as real, synced data.
@@ -17,9 +17,9 @@
  * With no `--in`, the bundled synthetic fixture (`scripts/fixtures/sample.mbox`) is used so the tool
  * is runnable out of the box.
  *
- * The mbox file is streamed rather than read into memory (real Takeout exports can be several GB —
+ * The mbox file is streamed rather than read into memory (real Takeout exports can be several GB -
  * too large for a single JS string) and messages are parsed/appended in bounded batches. `--limit`
- * caps how many messages are imported — useful to validate against a huge real export before
+ * caps how many messages are imported - useful to validate against a huge real export before
  * committing to a full run, since the final JSON archive is one in-memory string and a truly huge
  * mailbox risks exceeding `buffer.constants.MAX_STRING_LENGTH` on export.
  */
@@ -112,7 +112,7 @@ const MboxMailbox = (options: Options): SampleSpace.Partial<ImportResult> =>
               feed,
               mapped.map(({ message }) => message),
             );
-            // `SampleSpace.Tags` resolves each distinct label once — `Tag.findOrCreate` without a
+            // `SampleSpace.Tags` resolves each distinct label once - `Tag.findOrCreate` without a
             // foreign key scans every Tag in the space, so resolving per message-label pair turns
             // tagging into the dominant, ever-growing cost over a large import.
             yield* SampleSpace.tagBatch(
@@ -121,7 +121,7 @@ const MboxMailbox = (options: Options): SampleSpace.Partial<ImportResult> =>
             );
             imported += mapped.length;
             skipped += batch.length - mapped.length;
-            yield* Effect.log(`…${imported} imported, ${skipped} skipped`);
+            yield* Effect.log(`...${imported} imported, ${skipped} skipped`);
           }),
         );
 
@@ -142,10 +142,10 @@ const options = parseArgs(process.argv.slice(2));
 
 await EffectEx.runPromise(
   Effect.gen(function* () {
-    yield* Effect.log(`importing ${options.in}${options.limit !== undefined ? ` (limit ${options.limit})` : ''}…`);
+    yield* Effect.log(`importing ${options.in}${options.limit !== undefined ? ` (limit ${options.limit})` : ''}...`);
     const { result, json } = yield* buildArchive(mboxSpace(options), { identity: 'mbox importer' });
 
     yield* Effect.promise(() => writeFile(options.out, json + '\n', 'utf8'));
-    yield* Effect.log(`wrote ${options.out} — ${result.imported} messages imported, ${result.skipped} skipped`);
+    yield* Effect.log(`wrote ${options.out} - ${result.imported} messages imported, ${result.skipped} skipped`);
   }),
 );

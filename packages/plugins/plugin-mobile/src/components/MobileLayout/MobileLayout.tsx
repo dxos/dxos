@@ -113,7 +113,7 @@ export type { MobileLayoutPanelProps, MobileLayoutRootProps };
 /**
  * Prevents iOS (WKWebView) from shifting the layout when the keyboard appears.
  *
- * Scroll events and window.scrollY stay at 0 in this WKWebView setup — the shift is
+ * Scroll events and window.scrollY stay at 0 in this WKWebView setup - the shift is
  * caused by the browser's scroll-into-view for the focused input. We keep a window
  * scroll reset as belt-and-suspenders, and also monitor container scroll events.
  */
@@ -254,7 +254,7 @@ type IOSKeyboard = {
  * iPhone (portrait, points)
  * - Without predictive bar:  ~291 pt
  * - With predictive bar:     ~335 pt
- * - With accessory view:     ~380–420 pt
+ * - With accessory view:     ~380-420 pt
  *
  * Example:
  * - Viewport: 874 (entire screen)
@@ -332,7 +332,7 @@ const useIOSKeyboard = (): IOSKeyboard => {
             const offsetTop = vp?.offsetTop ?? 0;
             const scrollY = window.scrollY;
             if (offsetTop !== prevOffsetTop || scrollY !== prevScrollY) {
-              dbg(`Δ vpOffset=${offsetTop.toFixed(0)} scrollY=${scrollY.toFixed(0)}`);
+              dbg(`\u0394 vpOffset=${offsetTop.toFixed(0)} scrollY=${scrollY.toFixed(0)}`);
               prevOffsetTop = offsetTop;
               prevScrollY = scrollY;
             }

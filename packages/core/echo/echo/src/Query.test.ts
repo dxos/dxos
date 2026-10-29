@@ -794,7 +794,7 @@ describe('query api', () => {
     test('project is strictly typed to the query type properties', () => {
       const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
 
-      // `title` is `Schema.optional(Schema.String)` on Task — the projection and the filter it
+      // `title` is `Schema.optional(Schema.String)` on Task - the projection and the filter it
       // feeds both carry that exact value type, not `unknown`, through Query.project -> Filter.in.
       expectTypeOf(subquery.project('title')).toEqualTypeOf<Query.Projection<string | undefined>>();
       expectTypeOf(Query.project(subquery, 'title')).toEqualTypeOf<Query.Projection<string | undefined>>();
@@ -1134,7 +1134,7 @@ describe('query api', () => {
         });
         type Group = Query.Type<typeof query>;
         // `email`/`name`/`age` are optional on Person (partial schema); group/max/min are additionally
-        // nullable (missing/non-scalar members bucket under null) — so the value tracks the property type.
+        // nullable (missing/non-scalar members bucket under null) - so the value tracks the property type.
         expectTypeOf<Group['email']>().toEqualTypeOf<string | undefined | null>();
         expectTypeOf<Group['latest']>().toEqualTypeOf<string | undefined | null>();
         expectTypeOf<Group['oldest']>().toEqualTypeOf<number | undefined | null>();
@@ -1224,9 +1224,9 @@ describe('query api', () => {
       expect(Filter.annotation(Shape).ast).toEqual({ type: 'annotation', key: Shape.key });
       expect(Filter.annotation(Status, 'done').ast).toEqual({ type: 'annotation', key: Status.key, value: 'done' });
 
-      // @ts-expect-error — the value must match the annotation's type.
+      // @ts-expect-error - the value must match the annotation's type.
       Filter.annotation(Status, 1);
-      // @ts-expect-error — a struct-valued annotation cannot be compared.
+      // @ts-expect-error - a struct-valued annotation cannot be compared.
       Filter.annotation(Shape, { sides: 3 });
     });
   });

@@ -14,7 +14,7 @@ import * as SessionLink from './SessionLink.ts';
 
 /**
  * Marks a feed `Message` as queued agent input, pending processing. A queued message is the queue
- * entry, not a turn, so it never enters conversation history — the turn the agent runs from it
+ * entry, not a turn, so it never enters conversation history - the turn the agent runs from it
  * appends its own user message, which is what history shows.
  */
 export const QueuedAnnotation: Annotation.Annotation<boolean> = Annotation.make({
@@ -27,7 +27,7 @@ export const QueuedAnnotation: Annotation.Annotation<boolean> = Annotation.make(
  *
  * Written by the agent AFTER the turn it drove, never before: the mark is the ack in a queue, and an
  * ack written up front would drop the item on a process that dies mid-turn. Because it lands late,
- * an interrupted turn is redelivered — at-least-once, matching how tool results already behave.
+ * an interrupted turn is redelivered - at-least-once, matching how tool results already behave.
  */
 export const ConsumedAnnotation: Annotation.Annotation<boolean> = Annotation.make({
   id: 'org.dxos.annotation.consumed',
@@ -39,7 +39,7 @@ export const ConsumedAnnotation: Annotation.Annotation<boolean> = Annotation.mak
  *
  * Distinct from {@link ConsumedAnnotation}, which cannot serve this purpose: the ack lands only after
  * the turn, so between the agent dequeuing an entry and finishing with it the entry is still pending
- * — and the turn has meanwhile appended its own user message built from the entry's blocks, leaving
+ * - and the turn has meanwhile appended its own user message built from the entry's blocks, leaving
  * the same content rendered in both the queue and the thread. An in-flight entry stays in the pending
  * set, so a process that dies mid-turn still redelivers it; it is only held out of the queue view,
  * which the thread now speaks for.
@@ -80,7 +80,7 @@ export type SetAlarmProps = Alarm.MakeProps;
 
 /**
  * Maps between a session feed and reified session state: conversation history (resolving
- * `SessionLink` fork records), the pending input queue, and pending alarms — plus the writes that
+ * `SessionLink` fork records), the pending input queue, and pending alarms - plus the writes that
  * advance that state. The pending queue is a projection: an item is pending until it is marked with
  * {@link ConsumedAnnotation}; consumed items stay in the feed, and `Feed.remove` is only the
  * cancellation of a still-pending item.
@@ -116,7 +116,7 @@ export class SessionStore {
       const alarms: Alarm.Alarm[] = [];
       for (const item of items) {
         // A cancelled entry is removed from the feed, and `Feed.remove` leaves a tombstone that keeps
-        // the item's type and body (so it still looks queued) — skip it or a cancellation never takes.
+        // the item's type and body (so it still looks queued) - skip it or a cancellation never takes.
         if (Obj.isDeleted(item)) {
           continue;
         }
@@ -139,7 +139,7 @@ export class SessionStore {
    * Prepends linked history to `messages` when the feed contains a SessionLink.
    * Queries the feed for any SessionLink record; if found, loads messages from
    * the referenced feed up to and including `messageId` and prepends them.
-   * Queued entries never enter history — the turn driven from one appends its own user message.
+   * Queued entries never enter history - the turn driven from one appends its own user message.
    */
   reifyHistory(
     feed: Feed.Feed,
@@ -196,7 +196,7 @@ export class SessionStore {
    * Marks a queued item as taken up by the running turn, taking it out of the queue view without
    * taking it out of the pending set (see {@link InFlightAnnotation}).
    *
-   * Call it when the item is dequeued, BEFORE the work it drives — the opposite of {@link ack}.
+   * Call it when the item is dequeued, BEFORE the work it drives - the opposite of {@link ack}.
    */
   markInFlight(feed: Feed.Feed, item: Message.Message | Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
     Obj.update(item, (item) => Annotation.set(item, InFlightAnnotation, true));

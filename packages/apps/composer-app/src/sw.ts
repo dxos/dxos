@@ -20,7 +20,7 @@ const precacheTotal = new Set(precacheManifest.map((entry) => (typeof entry === 
 /**
  * Progress envelope consumed by `@dxos/plugin-pwa`'s update-progress module, which projects it into
  * the app's progress registry. Declared here rather than imported so the worker bundle stays free of
- * host code, mirroring `AssetCacheMessage` in `./asset-cache/service-worker.ts` — keep both in sync.
+ * host code, mirroring `AssetCacheMessage` in `./asset-cache/service-worker.ts` - keep both in sync.
  */
 const PRECACHE_PROGRESS = 'dxos:precache-progress';
 
@@ -28,7 +28,7 @@ const PRECACHE_PROGRESS = 'dxos:precache-progress';
 const PROGRESS_POST_INTERVAL = 25;
 
 // Sampled once at worker startup rather than per message: a worker evaluated alongside an active peer
-// is an update, a first install has none. Read later it races activation — the first install has
+// is an update, a first install has none. Read later it races activation - the first install has
 // already become `active` by the time the completion handler runs, mislabelling itself an update.
 const isUpdate = Boolean(self.registration.active);
 
@@ -66,8 +66,8 @@ self.serviceWorker?.addEventListener('statechange', () => {
 });
 
 // Workbox precaches entries strictly one at a time and settles each through exactly one of these
-// hooks — `cachedResponseWillBeUsed` with a hit when the entry is already cached, `cacheDidUpdate`
-// once it has been downloaded — so counting both yields one tick per completed manifest entry. This
+// hooks - `cachedResponseWillBeUsed` with a hit when the entry is already cached, `cacheDidUpdate`
+// once it has been downloaded - so counting both yields one tick per completed manifest entry. This
 // is the only progress workbox exposes for the install-time download that *is* the app update.
 addPlugins([
   {
@@ -92,14 +92,14 @@ addPlugins([
 // `ignoreURLParametersMatching` lets the precache router serve `icons.svg?nocache=N`
 // (and any other cache-busting query the host adds at runtime) from the precached
 // `icons.svg` entry. Without this, query-bearing URLs miss the precache and fall
-// through to the network — a guaranteed offline failure for the icons sprite.
+// through to the network - a guaranteed offline failure for the icons sprite.
 precacheAndRoute(precacheManifest, {
   ignoreURLParametersMatching: [/^nocache$/],
 });
 cleanupOutdatedCaches();
 
 // SPA navigation fallback. Composer's deep URLs (e.g. `/<spaceId>/types/...`) aren't direct
-// precache entries — without this, offline navigations 404. The handler routes all
+// precache entries - without this, offline navigations 404. The handler routes all
 // `mode: 'navigate'` requests to the precached `/index.html`, which boots the SPA and
 // resolves the route client-side.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
@@ -140,14 +140,14 @@ type AssetCacheMessage =
 
 /**
  * Control message workbox-window posts (via `Workbox.messageSkipWaiting`) when the user accepts
- * plugin-pwa's refresh toast. `injectManifest` builds ship no handler for it — unlike `generateSW`
- * builds, where workbox-build injects one — so the toast's action button is inert without this.
+ * plugin-pwa's refresh toast. `injectManifest` builds ship no handler for it - unlike `generateSW`
+ * builds, where workbox-build injects one - so the toast's action button is inert without this.
  */
 const SKIP_WAITING = 'SKIP_WAITING';
 
 // Lazy single-connection cache. The previous shape opened a fresh IDB connection
 // per call (one per `idbGet` / `idbPut` / `idbDelete` / `idbKeys`) and never
-// closed any of them — a real leak under heavy install/uninstall traffic since
+// closed any of them - a real leak under heavy install/uninstall traffic since
 // each call ran without the SW ever explicitly closing the handle. Caching the
 // open promise lets the SW reuse a single connection for its lifetime; the
 // browser tears it down when the SW is unregistered or evicted.
@@ -218,7 +218,7 @@ const idbKeys = async (): Promise<string[]> => {
  * In-memory mirror of the plugin-asset URL set so the fetch handler can decide
  * synchronously whether to take ownership of an event. Without this we'd have to
  * `event.respondWith` for every GET (since the IDB lookup is async), which preempts
- * Workbox's precache routing — the original cause of "site can't be reached" when
+ * Workbox's precache routing - the original cause of "site can't be reached" when
  * offline. Updated alongside IDB on every cache/evict message.
  */
 const pluginAssetUrls = new Set<string>();
@@ -242,7 +242,7 @@ const cachePluginAssets = async (pluginId: string, urls: readonly string[]): Pro
   await idbPut(pluginId, urls);
   // Per-URL fetching, tolerant: skip URLs already cached, and let individual failures
   // (e.g. a single unreachable asset while offline) pass through without aborting the
-  // batch. Replaces `cache.addAll` which is atomic — one offline URL would otherwise
+  // batch. Replaces `cache.addAll` which is atomic - one offline URL would otherwise
   // wipe out an entire successful precache for an installed plugin.
   await Promise.all(
     urls.map(async (url) => {
@@ -256,7 +256,7 @@ const cachePluginAssets = async (pluginId: string, urls: readonly string[]): Pro
           await cache.put(request, response);
         }
       } catch {
-        // Best effort — surfaces as a stale cache miss later, not a fatal error.
+        // Best effort - surfaces as a stale cache miss later, not a fatal error.
       }
     }),
   );

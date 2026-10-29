@@ -21,7 +21,7 @@ export type MarkdownBlockProps = Util.ThemedClassName<{
   text: string;
   /**
    * Drip appended text in per frame (the typewriter) instead of dispatching whole deltas. The
-   * source's chunk size is whatever the transport delivered — often a whole block — and painting
+   * source's chunk size is whatever the transport delivered - often a whole block - and painting
    * that in one frame reads as blocks appearing fully formed rather than an answer being written.
    * When it turns off (the turn ended), whatever is still queued lands at once.
    */
@@ -33,7 +33,7 @@ export type MarkdownBlockProps = Util.ThemedClassName<{
    */
   editable?: boolean;
   registry?: XmlWidgetRegistry;
-  /** The block widget for an object embedded as a card (`![label](echo://…)`). */
+  /** The block widget for an object embedded as a card (`![label](echo://...)`). */
   objectImage?: WidgetDef<ObjectLinkProps>;
   hits?: readonly HighlightRange[];
   /** Number of block widgets this item currently has mounted; 0 once it unmounts. */
@@ -43,7 +43,7 @@ export type MarkdownBlockProps = Util.ThemedClassName<{
 /**
  * One message as its own markdown document.
  *
- * Each item owns a document, so streaming appends and per-message editing stay local — where a
+ * Each item owns a document, so streaming appends and per-message editing stay local - where a
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
 export const MarkdownBlock = memo(
@@ -85,7 +85,7 @@ export const MarkdownBlock = memo(
       [editable, themeMode, registry, objectImage],
     );
 
-    // Deliberately NOT `useTextEditor`, which builds the view in a passive effect — i.e. after paint.
+    // Deliberately NOT `useTextEditor`, which builds the view in a passive effect - i.e. after paint.
     // The virtualizer measures each row as it mounts, so a row whose document does not exist yet
     // measures at chrome height and then grows, shifting every row below it. Constructing the view in
     // the layout phase gives the row its real height before the first paint, so it is measured once.
@@ -136,8 +136,8 @@ export const MarkdownBlock = memo(
         return;
       }
 
-      // A non-append (a rewrite, a view-type switch, a status tag changing) lands atomically —
-      // dripping a replacement would show the reader a half-rewritten document — and replaces only
+      // A non-append (a rewrite, a view-type switch, a status tag changing) lands atomically -
+      // dripping a replacement would show the reader a half-rewritten document - and replaces only
       // the span that differs, so the decorations and widgets either side of it survive.
       if (!text.startsWith(dispatchedRef.current)) {
         cancelAnimationFrame(dripRaf.current);
@@ -157,7 +157,7 @@ export const MarkdownBlock = memo(
       }
 
       // The typewriter: a bounded slice of the backlog per frame, so the cadence is a write rather
-      // than a paste and a burst still catches up within a second. XML tags land whole — a dripped
+      // than a paste and a burst still catches up within a second. XML tags land whole - a dripped
       // half-tag would flash literal markup before the parser can classify it.
       if (dripRaf.current) {
         return;
@@ -225,7 +225,7 @@ export const MarkdownBlock = memo(
     }, [widgets.length, onWidgetsChange]);
 
     // A block widget is measured once, when CodeMirror mounts it. Its content is React rendered into a
-    // portal, so anything that changes height afterwards — a disclosure opening, an image loading —
+    // portal, so anything that changes height afterwards - a disclosure opening, an image loading -
     // leaves the editor holding a stale height and drawing the lines below it over the widget.
     //
     // Observing the portal roots and asking for a re-measure is what keeps the document's geometry

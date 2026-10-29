@@ -25,8 +25,8 @@ const config: Plugin.PluginConfig = Plugin.config({
       The plugin is headless: it contributes one Connector entry that runs the
       Cloudflare OAuth flow through EDGE and stores the resulting grant as an
       AccessToken under the source "cloudflare.com". Anything that resolves
-      credentials through CredentialsService — an operation, an assistant tool,
-      a downstream plugin — can then call the Cloudflare v4 API on the user's
+      credentials through CredentialsService - an operation, an assistant tool,
+      a downstream plugin - can then call the Cloudflare v4 API on the user's
       behalf without asking for a token of its own.
 
       The grant is a working one, not a read-only peek: Workers, KV, R2, D1,

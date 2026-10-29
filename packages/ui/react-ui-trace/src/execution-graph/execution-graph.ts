@@ -125,7 +125,7 @@ export interface BuildExecutionGraphParams {
  *   2. `spanTreeToCommits` walks the tree and emits one commit per event, using the
  *      tree structure to decide which branch each commit belongs to and how to wire parents.
  *
- * Pure function — no signals or atoms.
+ * Pure function - no signals or atoms.
  */
 export type ExecutionGraph = {
   branches: string[];
@@ -191,7 +191,7 @@ const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallConte
 };
 
 /**
- * Visual representation of a single trace event — icon, log level, message string.
+ * Visual representation of a single trace event - icon, log level, message string.
  * `undefined` indicates that the event should not produce a commit.
  */
 interface EventPresentation {
@@ -282,14 +282,14 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
         };
       case 'toolCall': {
         // Operation-backed tool calls already have a dedicated routine span (Trace.OperationStart /
-        // Trace.OperationEnd) that produces its own commits — skip the duplicate toolCall commit
+        // Trace.OperationEnd) that produces its own commits - skip the duplicate toolCall commit
         // to avoid double-rendering.
         if (event.data.block.operationKey) {
           return undefined;
         }
         // Collapse the toolCall/toolResult pair: when the matching toolResult has arrived, the
         // result event is the visible commit and carries the success/error state. The toolCall
-        // itself only renders while still pending (i.e. no result yet) — same intent as an
+        // itself only renders while still pending (i.e. no result yet) - same intent as an
         // operation span that collapses to a single end commit once both boundaries are present.
         if (toolCallContext.resultByCallId.has(event.data.block.toolCallId)) {
           return undefined;
@@ -302,7 +302,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
         };
       }
       case 'toolResult': {
-        // Suppress results for operation-backed calls — those are covered by the routine span.
+        // Suppress results for operation-backed calls - those are covered by the routine span.
         const call = toolCallContext.callById.get(event.data.block.toolCallId);
         if (call?.operationKey) {
           return undefined;
@@ -535,11 +535,11 @@ const isCompletedSpan = (span: Span): boolean => {
  * we emit a single commit for the end event on the parent branch.
  *
  * When `collapseCompletedSpans` is enabled, any completed span collapses to that single
- * end commit — middle events, child sub-spans, and the begin fork are all omitted.
+ * end commit - middle events, child sub-spans, and the begin fork are all omitted.
  *
  * A *pending* span (one whose end event has not yet been recorded) is never collapsed:
  * its trailing events should keep rendering as middle commits on the span's own branch
- * — never as a fake "end" commit on the parent branch.
+ * - never as a fake "end" commit on the parent branch.
  *
  * Both nested spans and top-level spans (whose parent is the synthetic root) are eligible
  * once they have completed: a span with no inner activity is collapsed regardless of where
@@ -579,14 +579,14 @@ const isCollapsibleSpan = (span: Span, parent: Span | null, collapseCompletedSpa
  *  - emits the **first** event as a "begin" commit on the parent span's branch (fork);
  *  - emits **middle** events as commits on the span's own branch;
  *  - emits the **last** event as an "end" commit on the parent span's branch with two parents
- *    (the begin commit and the last commit on the span's own branch — a merge).
+ *    (the begin commit and the last commit on the span's own branch - a merge).
  *
  * Collapsible spans (`isCollapsibleSpan`) emit only the end commit on the parent branch with
- * a single parent — a tidier rendering for sub-operations that have no inner detail.
+ * a single parent - a tidier rendering for sub-operations that have no inner detail.
  *
  * Events are processed in categorical span-tree order: each span's begin events, its child
  * subtrees (depth-first), then its remaining events. Active-process running rows are inserted
- * at the end of each matching span block — not appended after the entire tree.
+ * at the end of each matching span block - not appended after the entire tree.
  */
 /** Branch tips as a commit's parent list; a branch with no commit yet contributes nothing. */
 const parentIds = (...tips: (Commit | undefined)[]): string[] =>
@@ -602,7 +602,7 @@ const spanTreeToCommits = (
   const details: ExecutionGraphDetailsMap = {};
   builder.addBranch(MAIN_BRANCH);
 
-  // Build a child → parent lookup using the tree's own structure (already correctly parented
+  // Build a child -> parent lookup using the tree's own structure (already correctly parented
   // when the tree was constructed, including sequential spans of the same process).
   const parentBySpan = new Map<Span, Span | null>();
   parentBySpan.set(root, null);
@@ -634,7 +634,7 @@ const spanTreeToCommits = (
     return false;
   };
 
-  // The branch name for a span is its pid — multiple sequential spans of the same process
+  // The branch name for a span is its pid - multiple sequential spans of the same process
   // (e.g. successive agent requests in one session) share a branch so they reuse a single lane.
   const branchOf = (span: Span | null): string => {
     if (!span || span.id === ROOT_SPAN_ID) {
@@ -655,7 +655,7 @@ const spanTreeToCommits = (
   //
   // Crucially, we never silently slip onto a *sibling* span's commit on a shared ancestor
   // branch. E.g. if a sub-span of agent A fires before A has any middle commits, we anchor
-  // to A.begin — not to whatever unrelated commit happens to be the latest on main.
+  // to A.begin - not to whatever unrelated commit happens to be the latest on main.
   // This keeps fork edges visually attached to the correct span even when sibling top-level
   // spans (different pids) overlap in time on main.
   const lastInSpanContext = (span: Span | null): string[] => {
@@ -729,14 +729,14 @@ const spanTreeToCommits = (
 
     // Classify based on event TYPE, not array index. A pending span's trailing
     // middle event (e.g. a user message awaiting an agent response) must not be
-    // mistaken for the span's end event — otherwise it would render on the
+    // mistaken for the span's end event - otherwise it would render on the
     // parent branch instead of the span's own branch.
     const isBeginEvent = isSpanBeginEvent(event);
     const isEndEvent = isSpanEndEvent(event);
     const parentSpan = findParentSpan(span);
     const collapsible = isCollapsibleSpan(span, parentSpan, collapseCompletedSpans);
 
-    // Descendants of a collapsed span emit no commits — inner activity is folded into the ancestor end row.
+    // Descendants of a collapsed span emit no commits - inner activity is folded into the ancestor end row.
     if (isUnderCollapsedAncestor(span)) {
       return;
     }
@@ -750,10 +750,10 @@ const spanTreeToCommits = (
     const ownBranch = branchOf(span);
 
     // A "process boundary" span is a concurrent child PROCESS (its own pid, differing from the
-    // parent's) with real sub-flow content (a middle event) — e.g. a delegated sub-agent. Such a
+    // parent's) with real sub-flow content (a middle event) - e.g. a delegated sub-agent. Such a
     // span gets its own lane: it forks onto its own branch at begin and collapses back to main at
     // end (so neither its lane nor its parent's lane dangles). A bare operation (begin+end only)
-    // collapses to a single commit and is NOT treated as a boundary — forking its transient begin
+    // collapses to a single commit and is NOT treated as a boundary - forking its transient begin
     // mid-stream would flash a throwaway lane.
     const ownPid = span.meta.pid;
     const parentPid = parentSpan?.meta.pid;
@@ -770,7 +770,7 @@ const spanTreeToCommits = (
     } else if (collapsible) {
       // Only the end event reaches here for collapsible spans.
       // Anchor to the parent span's structural context so the fork attaches to the parent
-      // — not to a sibling span's commit that happens to be the latest on the shared ancestor.
+      // - not to a sibling span's commit that happens to be the latest on the shared ancestor.
       branch = parentBranch;
       parents = lastInSpanContext(parentSpan);
     } else if (isBeginEvent) {
@@ -784,13 +784,13 @@ const spanTreeToCommits = (
       //
       // Parent #1 is the *immediate predecessor* on the parent branch (not the matching begin
       // commit). Pointing back to the begin commit creates a visual edge that skips over any
-      // sibling span's commits emitted between begin and end — e.g. when two top-level Routine
+      // sibling span's commits emitted between begin and end - e.g. when two top-level Routine
       // spans overlap on main, R1.end would otherwise draw an arrow back to R1.begin that
       // crosses over R2.begin. Anchoring to the previous main commit keeps main linear.
       //
       // A concurrent child process collapses all the way back to MAIN (merging its own branch),
       // rather than to its parent's branch: the parent (e.g. a supervisor whose turn already merged
-      // to main) would otherwise gain commits after its own merge and never re-collapse — leaving a
+      // to main) would otherwise gain commits after its own merge and never re-collapse - leaving a
       // dangling lane after the child finishes.
       branch = isProcessBoundary ? MAIN_BRANCH : parentBranch;
       parents = parentIds(builder.tipOf(branch), builder.tipOf(ownBranch));
@@ -1026,8 +1026,8 @@ export const CommitSelector = {
 };
 
 /**
- * Accumulates the commit list. Every lookup the graph makes while building — the tip of a branch,
- * a commit by id — is served from an index, because each is asked once per commit and a scan would
+ * Accumulates the commit list. Every lookup the graph makes while building - the tip of a branch,
+ * a commit by id - is served from an index, because each is asked once per commit and a scan would
  * make the whole build quadratic in the history.
  */
 class GraphBuilder {
@@ -1067,7 +1067,7 @@ class GraphBuilder {
   addCommit(commit: Commit) {
     this.addBranch(commit.branch);
     const index = this.#commits.push(commit) - 1;
-    // Duplicate ids survive until `doctor` drops them, and it keeps the first — so does this index.
+    // Duplicate ids survive until `doctor` drops them, and it keeps the first - so does this index.
     if (!this.#indexById.has(commit.id)) {
       this.#indexById.set(commit.id, index);
     }

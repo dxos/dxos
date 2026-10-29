@@ -63,7 +63,7 @@ export const RecordingSession = Capability.makeSingleton<Atom.Writable<Recording
 
 /**
  * Resolves entity references for live-transcription enrichment. Backend-agnostic (full-text, vector,
- * a remote service, …) so the headless driver depends on the function, not the database.
+ * a remote service, ...) so the headless driver depends on the function, not the database.
  */
 export type EntityLookup = EntityLookupFn;
 
@@ -73,7 +73,7 @@ export const EntityLookup = Capability.makeSingleton<EntityLookupFn>()(
 
 /**
  * Live transcription lifecycle, published by the driver for observers (toolbar spinner, testbench):
- * `recording` (mic capturing) → `draining` (mic off, finishing the pipeline) → `idle`.
+ * `recording` (mic capturing) -> `draining` (mic off, finishing the pipeline) -> `idle`.
  */
 export type PipelinePhase = 'idle' | 'recording' | 'draining';
 

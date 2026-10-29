@@ -29,7 +29,7 @@ describe('email pipeline (canonical assembly)', () => {
     await builder.close();
   });
 
-  test('EmailPipeline.run: summarize → extract-contacts → stats → extract-facts → threads', async ({ expect }) => {
+  test('EmailPipeline.run: summarize -> extract-contacts -> stats -> extract-facts -> threads', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Person.Person, Organization.Organization, Thread],
     });

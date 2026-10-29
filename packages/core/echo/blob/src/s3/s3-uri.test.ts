@@ -41,7 +41,7 @@ describe('s3 uri', () => {
     expect(regionFromHost('s3.amazonaws.com')).toBe('us-east-1');
   });
 
-  // WHATWG URL parsing resolves these away — and decodes %2E first, so encoding cannot save them.
+  // WHATWG URL parsing resolves these away - and decodes %2E first, so encoding cannot save them.
   // Reading the wrong object silently is worse than refusing to address it.
   test('refuses a key with a relative path segment', ({ expect }) => {
     expect(() => toHttpsUrl({ host: 'bucket.example.com', key: './file' })).toThrow(/relative path segment/);
@@ -49,7 +49,7 @@ describe('s3 uri', () => {
   });
 
   // A blob URI is replicated data, so on a headless host its endpoint is attacker-influenced input
-  // to a server-side fetch — and the unsigned read path needs no credential to reach one.
+  // to a server-side fetch - and the unsigned read path needs no credential to reach one.
   test('refuses a private or loopback endpoint', ({ expect }) => {
     for (const host of ['127.0.0.1', 'localhost', '169.254.169.254', '10.0.0.1', '192.168.1.1', '[::1]']) {
       expect(() => toHttpsUrl({ host, key: 'a/b' }), host).toThrow(/private or loopback host/);

@@ -108,7 +108,7 @@ const collect = (): { path: string; subject: Subject; entry: ChangelogEntry }[] 
 
 const event = process.env.GITHUB_EVENT_NAME;
 if (files.length === 0 && event && event !== 'pull_request') {
-  console.log(`Skipping on \`${event}\` — the decision check is diff-based.`);
+  console.log(`Skipping on \`${event}\` - the decision check is diff-based.`);
   process.exit(0);
 }
 

@@ -23,7 +23,7 @@ type ViewMode = 'form' | 'search';
 /**
  * Companion surface for a selected Segment. A toolbar toggles between the
  * schema-driven edit Form and the BookingSearch surface. Defaults to the Form
- * view; the user can switch either way — the toolbar drives the view, it is not
+ * view; the user can switch either way - the toolbar drives the view, it is not
  * a hard conditional.
  */
 export type SegmentArticleProps = AppSurface.ArticleProps<Segment.Segment, {}, Trip.Trip>;

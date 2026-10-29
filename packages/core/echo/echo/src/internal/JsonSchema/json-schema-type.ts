@@ -36,7 +36,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   /**
    * Generator function for this schema.
    * Mapped from {@link GeneratorAnnotationId}; mirrors `GeneratorAnnotationValue`, whose object
-   * form (`{ generator, args }`) is used by schemas like `Task` — a narrower contract here makes
+   * form (`{ generator, args }`) is used by schemas like `Task` - a narrower contract here makes
    * those schemas unserializable (`Operation.serialize` fails on any operation referencing them).
    */
   generator: Schema.optional(

@@ -10,7 +10,7 @@ import { OtelMetrics } from '../../src/extensions/otel/metrics.ts';
 
 // Smoke test for the metrics export path. Tagged `manual` so it never runs in CI.
 //
-// Against a local fake collector (no credentials needed) — asserts the payload:
+// Against a local fake collector (no credentials needed) - asserts the payload:
 //
 //   DX_RUN_MANUAL_TESTS=1 moon run observability:test -- --run test/e2e/metrics-export.test.ts
 //

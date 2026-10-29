@@ -18,7 +18,7 @@ export const ImageNode = Schema.Struct({
   type: Schema.Literal('image'),
   ...nodeBase,
   /** The linked picture. */
-  src: Schema.optional(Schema.String.annotate({ title: 'URL', description: 'Link to the image (https://…)' })),
+  src: Schema.optional(Schema.String.annotate({ title: 'URL', description: 'Link to the image (https://...)' })),
   /** What the picture shows, for those who cannot see it. */
   alt: Schema.optional(Schema.String.annotate({ title: 'Description' })),
   fit: Schema.optional(Schema.Literals(IMAGE_FITS).annotate({ title: 'Fit' })),

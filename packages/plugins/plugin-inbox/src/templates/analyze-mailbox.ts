@@ -24,7 +24,7 @@ const Input = Schema.Struct({
 
 /**
  * "Analyze Mailbox" automation template: a routine binding {@link InboxOperation.AnalyzeMailbox}
- * directly (kind: runnable) on a timer trigger — no model sits between the trigger and the cascade.
+ * directly (kind: runnable) on a timer trigger - no model sits between the trigger and the cascade.
  *
  * The unattended counterpart to the mailbox toolbar's Analyze action. Every tier the cascade spawns
  * keeps its own durable cursor, so a firing catches up on whatever arrived since the last one and
@@ -43,7 +43,7 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
       const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 
       return Wire.makeRoutine({
-        name: name ?? `Analyze — ${mailbox.name ?? 'Mailbox'}`,
+        name: name ?? `Analyze - ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({
           enabled: true,

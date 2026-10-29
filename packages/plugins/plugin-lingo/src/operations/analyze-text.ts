@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof LingoOperation.AnalyzeText> = LingoO
 
         // One analysis per subject AND language: an object can be translated into several
         // languages, and keying on the subject alone would have each one overwrite the last.
-        // Matched by filtering on the refs — a same-space ref stores an unqualified URI, so
+        // Matched by filtering on the refs - a same-space ref stores an unqualified URI, so
         // comparing `ref.uri` against `Obj.getURI` never matches and every run created a duplicate.
         const [existing] = yield* Database.query(
           Filter.type(Analysis.Analysis, { subject: subjectRef, language: languageRef }),
@@ -80,7 +80,7 @@ const handler: Operation.WithHandler<typeof LingoOperation.AnalyzeText> = LingoO
           target: translation,
           // Both options want a display NAME, not a tag: `segmentText` puts them in the prompt, and
           // "the source is in ja" reads as an instruction about a token. `code` is the source
-          // (inferred, and unnamed — hence the lookup); `name` already names the target.
+          // (inferred, and unnamed - hence the lookup); `name` already names the target.
           sourceLanguage: language.code ? Language.getDisplayName(language.code) : undefined,
           targetLanguage: language.name,
           readingSystem: Language.getReadingSystem(language.code),

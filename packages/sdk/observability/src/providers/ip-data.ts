@@ -17,7 +17,7 @@ import * as Observability from '../Observability.ts';
 
 const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
 
-// ipdata.co v1 response — city/region/latitude/longitude are nullable for some IPs (VPNs, CDNs, etc.),
+// ipdata.co v1 response - city/region/latitude/longitude are nullable for some IPs (VPNs, CDNs, etc.),
 // and the country field is named `country_name`, not `country`.
 const IPData = Schema.Struct({
   city: Schema.NullOr(Schema.String),

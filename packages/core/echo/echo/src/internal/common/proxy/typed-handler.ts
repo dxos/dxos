@@ -195,26 +195,26 @@ const copyHiddenProperties = (source: any, target: any): void => {
 // Object layering for an in-memory typed reactive object (`TypedReactiveHandler`).
 //
 // Unlike the database-backed handler (echo-client/echo-prototypes.ts), here USER DATA lives as
-// real OWN properties on the target — there is no document behind it. Only the per-object metadata
+// real OWN properties on the target - there is no document behind it. Only the per-object metadata
 // is relocated onto a prototype, so swapping handlers doesn't disturb the data shape:
 //
-//   proxy ──Proxy(target, REACTIVE_PROXY_HANDLER → TypedReactiveHandler)
-//     │         set/has/... traps run here; there is no `get` trap, so reads land on the target
-//     ▼
+//   proxy --Proxy(target, REACTIVE_PROXY_HANDLER -> TypedReactiveHandler)
+//     |         set/has/... traps run here; there is no `get` trap, so reads land on the target
+//     v
 //   target            the user's object. OWN enumerable props = user data ({ name, age, ... });
-//     │ [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
-//     ▼
+//     | [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
+//     v
 //   instanceState     `Object.create(TypedObjectPrototype)`. Holds the relocated symbol-keyed
-//     │ [[Prototype]] metadata as hidden props: [EventId] (root only), [ObjectDeletedId], [SchemaId],
-//     │               [TypeId], [TypeEntityId], cached [StaticTypeSchemaSlot], ... (Arrays are
-//     │               exempt — they keep their ReactiveArray chain and are never compacted.)
-//     ▼
+//     | [[Prototype]] metadata as hidden props: [EventId] (root only), [ObjectDeletedId], [SchemaId],
+//     |               [TypeId], [TypeEntityId], cached [StaticTypeSchemaSlot], ... (Arrays are
+//     |               exempt - they keep their ReactiveArray chain and are never compacted.)
+//     v
 //   TypedObjectPrototype     shared behaviour. Carries [symbolReactivePrototype]=true (so the
-//     │ [[Prototype]] "plain object" gates still treat the record as data) plus the system
-//     │               accessors [ChangeId], [ChangeKeyId], [StaticTypeSchemaSlot]. There is no get
-//     │               trap: a read of any of them resolves off this chain by ordinary lookup.
-//     ▼
-//   Object.prototype ──▶ null     a `getPrototypeOf` trap reports `Object.prototype` so consumers
+//     | [[Prototype]] "plain object" gates still treat the record as data) plus the system
+//     |               accessors [ChangeId], [ChangeKeyId], [StaticTypeSchemaSlot]. There is no get
+//     |               trap: a read of any of them resolves off this chain by ordinary lookup.
+//     v
+//   Object.prototype --> null     a `getPrototypeOf` trap reports `Object.prototype` so consumers
 //                     see a plain object; the real instanceState prototype stays hidden.
 //
 // Root vs nested: a root object owns an `[EventId]`; nested records share their root's reactivity
@@ -223,7 +223,7 @@ const copyHiddenProperties = (source: any, target: any): void => {
 //
 // `this` in the accessors below: the get trap calls `Reflect.get(target, prop, receiver)`, so
 // `this` is the PROXY (receiver) on the common path, or the raw target when read directly.
-// `getRawTarget(this)` normalizes to the underlying target — needed here because user data and the
+// `getRawTarget(this)` normalizes to the underlying target - needed here because user data and the
 // metadata chain both hang off the raw target, and `executeChange` keys the change context by it.
 //
 /**
@@ -301,7 +301,7 @@ const isInitialized = (echoRoot: object): boolean => EventId in echoRoot;
 /**
  * Move a record's per-object metadata (symbol-keyed hidden properties) onto a fresh instance-state
  * object inserted between the target and {@link TypedObjectPrototype}. The target keeps only its
- * user data as own properties. Arrays are exempt — they keep their own (ReactiveArray) prototype chain.
+ * user data as own properties. Arrays are exempt - they keep their own (ReactiveArray) prototype chain.
  */
 const compactMetadataToInstanceState = (target: ProxyTarget): void => {
   if (Array.isArray(target) || Object.getPrototypeOf(target) !== Object.prototype) {
@@ -312,7 +312,7 @@ const compactMetadataToInstanceState = (target: ProxyTarget): void => {
     const descriptor = Object.getOwnPropertyDescriptor(target, symbol)!;
     Object.defineProperty(state, symbol, descriptor);
     // Non-configurable symbols (e.g. `SchemaId`/`TypeId`, locked by `setSchema`/`setTypename` on
-    // objects decoded from JSON) cannot be deleted — leave them as an own property on the target,
+    // objects decoded from JSON) cannot be deleted - leave them as an own property on the target,
     // shadowing the copy on `state`; reads still resolve correctly since own properties take
     // precedence over the prototype chain.
     if (descriptor.configurable) {
@@ -576,7 +576,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Convert arrays to reactive arrays — the whole subtree, as construction does, not just the top
+    // Convert arrays to reactive arrays - the whole subtree, as construction does, not just the top
     // level: an array reached through an assigned record is proxied like any other and must be gated
     // and reactive too.
     if (Array.isArray(value) && !(value instanceof ReactiveArray)) {
@@ -640,10 +640,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
  * Structural shape (not `Type.AnyEntity`) because `internal/common/proxy/`
  * can't import the top-level `Type` module without a cycle. Every kind of
  * `Type.Type` entity satisfies this shape:
- *   - Static (`Type.makeObject(dxn)` pipe) — slot set directly on the object.
- *   - Persisted (echo-handler-wrapped) — slot exposed via that handler's
+ *   - Static (`Type.makeObject(dxn)` pipe) - slot set directly on the object.
+ *   - Persisted (echo-handler-wrapped) - slot exposed via that handler's
  *     `get` trap (rebuilds from `data.jsonSchema`).
- *   - In-memory pre-persist (`Type.makeObjectFromJsonSchema`) — slot exposed
+ *   - In-memory pre-persist (`Type.makeObjectFromJsonSchema`) - slot exposed
  *     via the `case StaticTypeSchemaSlot:` arm in this file's `get` trap.
  */
 export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Top };
@@ -653,7 +653,7 @@ export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Top };
  *
  * @param skipOwnStamp Skip stamping `TypeId`/`SchemaId` on `obj` itself (still recurses into
  *   children, which always get stamped). Used for objects decoded from JSON, whose own `TypeId`/
- *   `SchemaId` are already set by `setTypename`/`setSchema` as `configurable: false` — redefining
+ *   `SchemaId` are already set by `setTypename`/`setSchema` as `configurable: false` - redefining
  *   them here (with `configurable: true`) would throw.
  */
 const setSchemaProperties = (obj: any, schema: Schema.Top, typeSource?: TypeSource, skipOwnStamp = false) => {
@@ -716,7 +716,7 @@ const setChildSchemas = (obj: any, ast: SchemaAST.AST) => {
       try {
         elementAst = SchemaValidator.getTargetPropertyAst(obj, key);
       } catch {
-        // Property not in schema — treat as untyped so the proxy can still wrap it.
+        // Property not in schema - treat as untyped so the proxy can still wrap it.
         elementAst = Schema.Any.ast;
       }
       setNestedSchema(obj[key], elementAst);
@@ -774,7 +774,7 @@ const markEntityArrays = (target: any, ast: SchemaAST.AST) => {
 
 /**
  * Like {@link prepareTypedTarget}, for a target whose own `SchemaId`/`TypeId` are already stamped
- * and locked `configurable: false` — e.g. an object decoded from JSON via `setSchema`/`setTypename`
+ * and locked `configurable: false` - e.g. an object decoded from JSON via `setSchema`/`setTypename`
  * (see `objectFromJSON`). Validates and reactifies as usual, then stamps `SchemaId`/`TypeId` on
  * nested records/arrays only, leaving the target's own (locked) stamps untouched.
  */

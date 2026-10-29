@@ -13,7 +13,7 @@ import * as Lens from './Lens.ts';
 //
 // Source and target are both declared types, mirroring the real case (a `DataType.Task` and a
 // `GtdTask` written out beside it). They are local here because `@dxos/echo-panproto` sits in
-// `core/echo` and must not depend on `sdk/types` — the shipped example lens belongs with the types
+// `core/echo` and must not depend on `sdk/types` - the shipped example lens belongs with the types
 // it binds, not with the mechanism.
 //
 
@@ -41,7 +41,7 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.GtdTask',
     priority: Schema.optional(Schema.Number),
     estimateHours: Schema.optional(Schema.Number),
     createdBy: Schema.optional(Schema.String),
-    /** No counterpart on `Task` — overlay-backed. */
+    /** No counterpart on `Task` - overlay-backed. */
     context: Schema.optional(Schema.Literals(['@home', '@work'])),
     waitingOn: Schema.optional(Schema.String),
   }),
@@ -51,7 +51,7 @@ const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
 
 const makeLens = () =>
   Lens.make('org.dxos.test.lens.gtd', Task, GtdTask, {
-    // `title` and `description` match by name and type — absent from the mapping entirely.
+    // `title` and `description` match by name and type - absent from the mapping entirely.
     estimateHours: Lens.from('estimate', Lens.scale(1 / 60)),
     priority: Lens.from(
       'priority',
@@ -160,7 +160,7 @@ describe('Lens.put', () => {
 
     Lens.put(task, lens, { done: true });
     expect(task.status).to.eq('done');
-    // Everything the write did not name is untouched — this is what lets a concurrent peer's edits
+    // Everything the write did not name is untouched - this is what lets a concurrent peer's edits
     // to other properties survive.
     expect(task.title).to.eq('Write the design doc');
     expect(task.priority).to.eq('high');
@@ -247,7 +247,7 @@ describe('overlay storage', () => {
   });
 });
 
-describe('Lens.of — the live handle', () => {
+describe('Lens.of - the live handle', () => {
   test('reads project the base object', ({ expect }) => {
     const task = makeTask();
     const gtd = Lens.of(task, makeLens());
@@ -365,7 +365,7 @@ describe('registry', () => {
     expect(Lens.resolve(lens.id)).to.eq(lens);
     // "How else can I view this object?"
     expect(Lens.lensesFor(Task)).to.deep.eq([lens]);
-    // "What can this interface accept?" — the reverse lookup that lets one UI serve many sources.
+    // "What can this interface accept?" - the reverse lookup that lets one UI serve many sources.
     expect(Lens.sourcesFor(GtdTask)).to.deep.eq([lens]);
     expect(Lens.sourcesFor(Task)).to.deep.eq([]);
   });

@@ -14,7 +14,7 @@ import { bookLens } from './book-lens.ts';
 import { canPublishBook } from './hive.ts';
 import bookLexicon from './lexicons/buzz.bookhive.book.json';
 
-// ECHO-only fields (private) and catalog metadata not carried by buzz.bookhive.book — none may appear
+// ECHO-only fields (private) and catalog metadata not carried by buzz.bookhive.book - none may appear
 // in the encoded record.
 const FORBIDDEN_FIELDS = [
   'catalog',

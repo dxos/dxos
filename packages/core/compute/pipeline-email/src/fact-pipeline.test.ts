@@ -21,7 +21,7 @@ describe('email fact pipeline (facts-only assembly)', () => {
     await builder.close();
   });
 
-  test('EmailFactPipeline.run: stats → extract-facts', async ({ expect }) => {
+  test('EmailFactPipeline.run: stats -> extract-facts', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Person.Person, Organization.Organization, Thread],
     });

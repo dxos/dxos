@@ -24,7 +24,7 @@ const HEADINGS: Record<string, number> = {
  * Only an ATX heading has them: CommonMark closes one with a run of `#` that is either preceded by
  * a space or is all that remains, and that run is syntax. An ATX heading ending in `C#` keeps its
  * hash, since no space separates it from the word. The gate on the node name is what makes the
- * setext entries in `HEADINGS` safe — a setext heading's line is literal — even though the markdown
+ * setext entries in `HEADINGS` safe - a setext heading's line is literal - even though the markdown
  * configuration here currently parses one as a paragraph instead.
  */
 const headingTitle = (node: string, text: string): string => {
@@ -120,7 +120,7 @@ export type WalkthroughSidebarOptions = {
  * row per file it touches, each carrying its own change counts and each scrolling to what it names.
  * The row under the reader's eye is marked as current.
  *
- * Deliberately separate from {@link diffBlocks} — it only reads the document, so it can be added,
+ * Deliberately separate from {@link diffBlocks} - it only reads the document, so it can be added,
  * dropped or replaced by a host-rendered panel without touching how the chunks render.
  */
 export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Extension => [
@@ -131,7 +131,7 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
       readonly #onScroll = () => this.#scheduleMark();
 
       #entries: WalkthroughEntry[] = [];
-      /** Every row on the rail, section and file alike, in document order — the navigable sequence. */
+      /** Every row on the rail, section and file alike, in document order - the navigable sequence. */
       #rows: { from: number; element: HTMLElement }[] = [];
       /** The tree the outline was read from, so a background parse advancing it rebuilds the rail. */
       #tree?: Tree;
@@ -150,7 +150,7 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
 
       update(update: ViewUpdate): void {
         // Not `docChanged` alone: a long document is parsed in the background, so the sections past
-        // the first parse window appear on a later transaction that changes nothing — and a
+        // the first parse window appear on a later transaction that changes nothing - and a
         // read-only walkthrough never produces a document change at all.
         if (update.docChanged || syntaxTree(update.state) !== this.#tree) {
           this.#render();
@@ -274,7 +274,7 @@ export const walkthroughSidebar = (options: WalkthroughSidebarOptions = {}): Ext
         });
       }
 
-      /** The last row — section or file — whose target has passed the reading line. */
+      /** The last row - section or file - whose target has passed the reading line. */
       #markCurrent(): void {
         const { scrollTop, clientHeight } = this.#view.scrollDOM;
         const line = scrollTop + clientHeight * (options.threshold ?? 0.25);
@@ -305,7 +305,7 @@ const entryLabel = (entry: WalkthroughEntry, ownCounts: boolean): string => {
   if (announced.length > 0) {
     parts.push(announced);
   }
-  return parts.join(' — ');
+  return parts.join(' - ');
 };
 
 /** Built the way a row is, so a section with no removals is not announced as `-0`. */
@@ -315,7 +315,7 @@ const counts = ({ added, removed }: { added: number; removed: number }): string 
     .join(' ');
 
 /** Accessible name for a file row, whose counts the `stats` variant shows without the name. */
-const fileLabel = (file: WalkthroughFile): string => [file.name, counts(file)].filter(Boolean).join(' — ');
+const fileLabel = (file: WalkthroughFile): string => [file.name, counts(file)].filter(Boolean).join(' - ');
 
 /** Whether the rail would render the same rows, so an unchanged outline does not rebuild it. */
 const sameOutline = (left: WalkthroughEntry[], right: WalkthroughEntry[]): boolean =>
@@ -410,7 +410,7 @@ const walkthroughSidebarTheme = EditorView.theme({
   '.cm-walkthrough-added': { color: 'var(--color-cm-diff-add-gutter)' },
   '.cm-walkthrough-removed': { color: 'var(--color-cm-diff-remove-gutter)' },
 
-  // Collapsed: the section counts alone, as a rail beside the prose — a per-file breakdown needs
+  // Collapsed: the section counts alone, as a rail beside the prose - a per-file breakdown needs
   // the names beside it to mean anything.
   '.cm-walkthrough-sidebar[data-variant="stats"] .cm-walkthrough-name': { display: 'none' },
   '.cm-walkthrough-sidebar[data-variant="stats"] .cm-walkthrough-file': { display: 'none' },

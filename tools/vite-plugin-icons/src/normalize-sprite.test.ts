@@ -80,7 +80,7 @@ describe('normalizeSprite', () => {
       'fill:inherit',
       // Unknowable here, so not worth a warning.
       'fill:var(--dx-icon-color)',
-      // Not paint properties at all — the `-` sits where the separator would be.
+      // Not paint properties at all - the `-` sits where the separator would be.
       'fill-rule:nonzero',
       'stroke-width:16px',
       'stroke-linecap:round',

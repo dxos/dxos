@@ -128,7 +128,7 @@ export const SearchFilter: Story = {
     const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
     await waitFor(() => expect(getTileCount()).toBeGreaterThan(SEARCH_TERM_COUNT), { timeout: 12_000 });
 
-    // The filter box is a CodeMirror `QueryEditor` — the only editor in the calendar toolbar.
+    // The filter box is a CodeMirror `QueryEditor` - the only editor in the calendar toolbar.
     const getEditor = () => canvasElement.querySelector('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
     await waitFor(() => expect(getEditor()).toBeTruthy(), { timeout: 12_000 });
     const editor = getEditor();

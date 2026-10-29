@@ -20,7 +20,7 @@ export class Result extends Type.makeObject<Result>(DXN.make('org.dxos.type.prod
     // Stripped key/value metadata.
     properties: Schema.Record(Schema.String, Schema.Unknown),
     fetchedAt: Schema.optional(Schema.String),
-    // Note: user state (e.g. `starred`) is NOT on the immutable Result — it lives on the Search's tag
+    // Note: user state (e.g. `starred`) is NOT on the immutable Result - it lives on the Search's tag
     // index keyed by Result id (see Search.STARRED_TAG / Search.setStarred).
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),

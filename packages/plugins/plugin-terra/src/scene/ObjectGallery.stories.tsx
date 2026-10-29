@@ -31,12 +31,12 @@ const SPACING = 2.4;
 /** Neutral space backdrop, matching the planet scene's clear color. */
 const BACKGROUND_COLOR = new Color4(0.043, 0.051, 0.071, 1);
 
-/** Rod scale for the gallery's gizmo — sized to read clearly at this scene's fixed camera distance. */
+/** Rod scale for the gallery's gizmo - sized to read clearly at this scene's fixed camera distance. */
 const GIZMO_SCALE = 0.35;
 
 /**
  * Every form here keeps its authored orientation (right along +X, up along +Y, forward along +Z, no
- * extra rotation — see `object-forms.ts`), so the gizmo's basis is simply the world axes.
+ * extra rotation - see `object-forms.ts`), so the gizmo's basis is simply the world axes.
  */
 const GALLERY_BASIS = { right: Vector3.Right(), up: Vector3.Up(), forward: Vector3.Forward() };
 
@@ -162,5 +162,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** One instance of every object kind (boat, plane, satellite, tank, rocket), static, no globe — for inspecting shape and forward-facing orientation. */
+/** One instance of every object kind (boat, plane, satellite, tank, rocket), static, no globe - for inspecting shape and forward-facing orientation. */
 export const Default: Story = {};

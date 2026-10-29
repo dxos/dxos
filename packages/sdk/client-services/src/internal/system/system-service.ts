@@ -33,7 +33,7 @@ export type SystemServiceOptions = {
   getDiagnostics: () => Promise<Partial<Diagnostics['services']>>;
   /**
    * The embedder's controller, which outlives the stack; a reset is the
-   * `Closing → WipingStorage → Reset` chain on it.
+   * `Closing -> WipingStorage -> Reset` chain on it.
    */
   controller: Hook.ControllerService;
 };
@@ -83,7 +83,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
       this.#statusChanged.emit(SystemStatus.INACTIVE);
       // `Closing` tears the stack down under this very call, and under any request another session
       // has in flight: component finalizers are not re-entrant against live traffic. That holds only
-      // because every embedder shuts down or reloads immediately after `Reset` below — a reset that
+      // because every embedder shuts down or reloads immediately after `Reset` below - a reset that
       // left the worker serving would need a gate that fails new requests from here on.
       yield* Hook.emit(Events.Closing, undefined);
       yield* Hook.emit(Events.WipingStorage, undefined);
@@ -93,7 +93,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
 
     // Detached from the request fiber: `Closing` above closes the RPC route this very call is
     // served on, which would interrupt the chain before it ever wipes storage. Joining keeps the
-    // caller's timing — the join is interrupted, the chain is not.
+    // caller's timing - the join is interrupted, the chain is not.
     //
     // Single-flight over that fiber, because the RPC server dispatches concurrently and a detached
     // chain no longer dies with its caller: a second `reset` would otherwise emit the whole

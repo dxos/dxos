@@ -210,7 +210,7 @@ export const steps = [
       await clearPrompt(page);
       await demo.type({ selector: PROMPT, value: 'For ', delay: 70 });
       await demo.click({ selector: ADD_MENU, label: 'Add' });
-      await demo.click({ selector: '[data-testid="assistant.add-menu.object"]', label: 'Add object…' });
+      await demo.click({ selector: '[data-testid="assistant.add-menu.object"]', label: 'Add object...' });
       await demo.type({ selector: '[data-testid="search.dialog"] input', value: 'Rich' });
       await demo.click({
         selector: '[data-testid="search.dialog"] [role="option"]:has-text("Rich Burdon")',

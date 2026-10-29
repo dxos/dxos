@@ -3,11 +3,11 @@
 //
 
 /**
- * Discord Worker — Cloudflare Worker that handles Discord interaction webhooks.
+ * Discord Worker - Cloudflare Worker that handles Discord interaction webhooks.
  *
  * Slash commands:
- *   /connect <space-key> — Binds the current Discord guild/channel to a DXOS space.
- *   /track               — Posts the current thread as a Markdown document to the space.
+ *   /connect <space-key> - Binds the current Discord guild/channel to a DXOS space.
+ *   /track               - Posts the current thread as a Markdown document to the space.
  *
  * Authentication:
  *   Stateless DID-in-header. The Worker includes the bot DID in requests to EDGE.
@@ -240,7 +240,7 @@ const handleConnect = async (interaction: DiscordInteraction, env: Env): Promise
       interaction.application_id,
       interaction.token,
       `Connected guild **${guildName}** to space \`${spaceKey}\` (channel: ${channelId}).\n` +
-        `_Note: EDGE integration pending — connection not persisted._`,
+        `_Note: EDGE integration pending - connection not persisted._`,
     );
     return;
   }
@@ -300,8 +300,8 @@ const handleTrack = async (interaction: DiscordInteraction, env: Env): Promise<v
       await sendFollowup(
         interaction.application_id,
         interaction.token,
-        `Thread **${threadName}** tracked — ${messages.length} messages captured.\n` +
-          `_Note: EDGE integration pending — document not created in space._`,
+        `Thread **${threadName}** tracked - ${messages.length} messages captured.\n` +
+          `_Note: EDGE integration pending - document not created in space._`,
       );
       return;
     }
@@ -329,7 +329,7 @@ const handleTrack = async (interaction: DiscordInteraction, env: Env): Promise<v
     await sendFollowup(
       interaction.application_id,
       interaction.token,
-      `Thread **${threadName}** tracked — ${messages.length} messages captured.`,
+      `Thread **${threadName}** tracked - ${messages.length} messages captured.`,
     );
   } catch (err) {
     console.error('[worker] Track error:', err);

@@ -76,7 +76,7 @@ export const TaskSetArticle = ({
   const allTasks = useTasks(taskSet);
   // The toolbar's filter, as the mailbox composes its own: the query editor's text is what the
   // reader edits, its parse is what the list is narrowed by. The status menu is a second view over
-  // the same text — its choice lives in the text's `status:` terms — so there is one value, persisted
+  // the same text - its choice lives in the text's `status:` terms - so there is one value, persisted
   // per device and per set (see {@link TaskSetView.aspect}).
   const [filterText, setFilterText] = useFilterQuery(taskSet.id, filterEditorRef);
   const { values: statuses, rest } = useMemo(() => parseEnumTerms(filterText, STATUS_TERMS), [filterText]);
@@ -329,7 +329,7 @@ export const TaskSetArticle = ({
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
- * Which branches are open, held in {@link TaskSetView.aspect} as task id → open. The list speaks in
+ * Which branches are open, held in {@link TaskSetView.aspect} as task id -> open. The list speaks in
  * collapsed ids, so a change is written as the ids that entered (closed) or left (opened) the set,
  * and every other entry is kept as it was.
  */
@@ -393,7 +393,7 @@ const useFilterQuery = (
  *
  * Keyed by the task set's object id, not by the attendable: two task lists on one deck would
  * otherwise share a selection. The set lives in view state rather than in the article because the
- * host's toolbar reads it too — neither the rows nor the toolbar owns it.
+ * host's toolbar reads it too - neither the rows nor the toolbar owns it.
  *
  * Offered only when a plugin contributes a {@link TasksCapabilities.TaskAction}: the checkbox marks
  * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
@@ -411,9 +411,9 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
 };
 
 /**
- * The set's whole tree via transitive `childOf` — every task's ECHO parent is its holder, the set or a
- * parent task — in tree pre-order: roots in `tasks` order, each followed by its `subtasks`. The query
- * re-emits on membership changes only, never on a member's edit — `TaskList` rows subscribe themselves.
+ * The set's whole tree via transitive `childOf` - every task's ECHO parent is its holder, the set or a
+ * parent task - in tree pre-order: roots in `tasks` order, each followed by its `subtasks`. The query
+ * re-emits on membership changes only, never on a member's edit - `TaskList` rows subscribe themselves.
  */
 const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
   const atom = useMemo(() => {
@@ -475,7 +475,7 @@ const useArrangedTasks = (
   return useAtomValue(atom);
 };
 
-/** Tag registry keyed by the `Tag` object's uri — the id space `#tag` terms and `meta.tags` share. */
+/** Tag registry keyed by the `Tag` object's uri - the id space `#tag` terms and `meta.tags` share. */
 const useTagMap = (db: Database.Database | undefined): Tag.Map => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
   return useMemo(

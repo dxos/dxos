@@ -34,7 +34,7 @@ random.seed(0);
 const SEARCH_TERM = 'invoice';
 
 /**
- * Enriches a raw `SearchResult` with a best-match snippet and the sender's name as metadata —
+ * Enriches a raw `SearchResult` with a best-match snippet and the sender's name as metadata -
  * `toSearchResults` produces a generic snippet, but a `Message`'s full text and sender give a
  * better demo of the row layout.
  */
@@ -60,7 +60,7 @@ const DefaultStory = () => {
   const enrichedResults = useMemo(() => results.map((result) => enrichResult(result, query)), [results, query]);
 
   const handleSelect = useCallback((result: SearchResult) => {
-    // Storybook demo only — selection has no further destination.
+    // Storybook demo only - selection has no further destination.
     console.log('select', result.id);
   }, []);
 
@@ -72,7 +72,7 @@ const DefaultStory = () => {
     <div className='flex flex-col gap-2 p-2 max-w-[32rem]'>
       <input
         type='text'
-        placeholder='Search…'
+        placeholder='Search...'
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         className='px-2 py-1 border border-separator rounded'
@@ -130,11 +130,11 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const input = await canvas.findByPlaceholderText('Search…', undefined, { timeout: 10_000 });
+    const input = await canvas.findByPlaceholderText('Search...', undefined, { timeout: 10_000 });
     await userEvent.type(input, SEARCH_TERM);
 
     // The seeded corpus repeats "invoice" across several finance messages, so this should surface
-    // a proper multi-row match set — the end-to-end proof that FTS + ranking + rendering are wired.
+    // a proper multi-row match set - the end-to-end proof that FTS + ranking + rendering are wired.
     await waitFor(
       async () => {
         const rows = canvas.queryAllByRole('option');

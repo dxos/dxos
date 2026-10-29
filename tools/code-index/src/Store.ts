@@ -50,12 +50,12 @@ export type FileRecord = {
   readonly mtime: number;
 };
 
-/** A file's ledger record and its document as N-Triples — what a worker sends back. */
+/** A file's ledger record and its document as N-Triples - what a worker sends back. */
 export type EncodedDocument = FileRecord & {
   readonly triples: string;
 };
 
-/** What the ledger knows about a file — the incremental-indexing comparison key. */
+/** What the ledger knows about a file - the incremental-indexing comparison key. */
 export type FileState = FileRecord & {
   readonly graph: string;
 };
@@ -94,7 +94,7 @@ export type LayerOptions = {
 };
 
 export type ReasonOptions = {
-  /** Replace the reasoner's graph with this pass's conclusions (default false — derivations are returned only). */
+  /** Replace the reasoner's graph with this pass's conclusions (default false - derivations are returned only). */
   readonly materialize?: boolean;
 };
 
@@ -104,7 +104,7 @@ export interface Api {
   // Ledger.
   readonly getFile: (path: string) => Effect.Effect<FileRecord | undefined, StoreError>;
   readonly listFiles: (filter?: FileFilter) => Effect.Effect<FileRecord[], StoreError>;
-  /** Every committed file with its mtime — what an incremental pass diffs the working tree against. */
+  /** Every committed file with its mtime - what an incremental pass diffs the working tree against. */
   readonly fileStates: () => Effect.Effect<FileState[], StoreError>;
   readonly getMeta: (key: string) => Effect.Effect<string | undefined, StoreError>;
   readonly setMeta: (key: string, value: string) => Effect.Effect<void, StoreError>;
@@ -143,17 +143,17 @@ export interface Api {
   readonly select: (sparql: string) => Effect.Effect<Binding[], StoreError>;
   readonly ask: (sparql: string) => Effect.Effect<boolean, StoreError>;
   readonly construct: (sparql: string) => Effect.Effect<Quad[], StoreError>;
-  /** Typed graph access — an LDkit lens bound to this store's quads. */
+  /** Typed graph access - an LDkit lens bound to this store's quads. */
   readonly lens: <T extends LdkitSchema>(schema: T) => Lens<T>;
   readonly dump: () => Effect.Effect<string, StoreError>;
   readonly load: (turtle: string) => Effect.Effect<number, StoreError>;
   /**
    * Run N3 rules over the asserted facts; returns the derived quads. `materialize` replaces
-   * the derived graph with this pass's conclusions — derivations never outlive their premises.
+   * the derived graph with this pass's conclusions - derivations never outlive their premises.
    */
   readonly reason: (reasoner: string, rules: string, options?: ReasonOptions) => Effect.Effect<Quad[], StoreError>;
   /**
-   * Run every reasoner in order, each replacing its own graph — what an indexing pass closes with.
+   * Run every reasoner in order, each replacing its own graph - what an indexing pass closes with.
    * The graphs are maintained from the changes since the last call when the rule set is the one
    * they were computed with; see `design/NATIVE-BACKEND.md`.
    */
@@ -211,7 +211,7 @@ const JS_GRAPH_DIR = 'graph';
 /** Advanced by every write, before it lands, so a reasoning pass can tell its premises moved since. */
 const GENERATION_KEY = 'generation';
 
-/** {@link Reasoned} of the last completed reasoning pass — see {@link Api.isReasoned}. */
+/** {@link Reasoned} of the last completed reasoning pass - see {@link Api.isReasoned}. */
 const REASONED_KEY = 'reasoned';
 
 const Reasoned = Schema.fromJsonString(
@@ -396,7 +396,7 @@ const make = (dir: string, readOnly: boolean): Effect.Effect<Api, StoreError, Sq
             // A file's *first* commit, interrupted: the row announced the graph it was about to
             // write and is the same row that claims it live, at the mtime it was written for. Just
             // clearing `pending_graph` would leave a row asserting it is current with no facts at
-            // all — and an incremental pass, seeing the mtime match, would never reindex it. The
+            // all - and an incremental pass, seeing the mtime match, would never reindex it. The
             // row goes with the graph, so the next pass treats the file as new.
             yield* sql`DELETE FROM files WHERE path = ${row.path}`.pipe(
               Effect.mapError(fail('Failed to discard an unfinished first commit')),
@@ -528,7 +528,7 @@ const make = (dir: string, readOnly: boolean): Effect.Effect<Api, StoreError, Sq
           // The graph is announced as pending *before* the row goes, so a crash between the two
           // leaves it reachable through `pending_graph` and `reconcile` drops it on the next open.
           // The row alone is not enough: `reconcile` scans pending rows, not the quad store, so a
-          // graph whose row is already gone would never be found — and its quads keep answering
+          // graph whose row is already gone would never be found - and its quads keep answering
           // queries through the union default graph, making a deleted file's facts immortal.
           yield* sql`UPDATE files SET pending_graph = ${current.graph} WHERE path = ${path}`.pipe(
             Effect.mapError(fail('Failed to begin file removal')),
@@ -705,7 +705,7 @@ const make = (dir: string, readOnly: boolean): Effect.Effect<Api, StoreError, Sq
 
 /**
  * Opens (creating if absent, unless `readOnly`) the store rooted at `dir`; each database is a file
- * or directory inside it. Scoped — both databases close when the enclosing scope ends. A store
+ * or directory inside it. Scoped - both databases close when the enclosing scope ends. A store
  * written under another ontology version or backend is reset by a writer and refused by a reader.
  */
 export const layer = (dir: string, options: LayerOptions = {}): Layer.Layer<Store, StoreError> => {

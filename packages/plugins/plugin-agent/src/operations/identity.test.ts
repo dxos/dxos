@@ -38,7 +38,7 @@ describe('identityGroups', () => {
     expect(keys).not.toContain('bangkok');
   });
 
-  test('a person’s identities link entities minted under them, with no fact saying so', ({ expect }) => {
+  test("a person's identities link entities minted under them, with no fact saying so", ({ expect }) => {
     const groups = identityGroups([], [[PERSON, '@dmaretskyi', 'dmytro@braneframe.com']]);
     expect(expandKeys(['dmytro-braneframe-com'], groups)).toContain(PERSON);
     expect(expandKeys(['dmaretskyi'], groups)).toContain(PERSON);

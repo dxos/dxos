@@ -148,7 +148,7 @@ const corner = (from: Point, vertex: Point, to: Point, radius: number): Corner =
     return undefined;
   }
   const half = angle / 2;
-  // A corner of interior angle θ, rounded by radius r, starts r / tan(θ/2) back along each edge.
+  // A corner of interior angle theta, rounded by radius r, starts r / tan(theta/2) back along each edge.
   const back = Math.min(radius / Math.tan(half), lu / 2, lw / 2);
   const cross = -ux * wy + uy * wx;
   return {

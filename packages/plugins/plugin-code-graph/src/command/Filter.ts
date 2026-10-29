@@ -32,7 +32,7 @@ export const select = (nodes: readonly CodeGraph.Node[], filter: string): CodeGr
   return nodes.filter(matches);
 };
 
-/** A regular expression's own `|` belongs to it, so only top-level `|` outside `/…/` separate alternatives. */
+/** A regular expression's own `|` belongs to it, so only top-level `|` outside `/.../` separate alternatives. */
 const splitAlternatives = (filter: string): string[] => {
   if (/^\/.*\/[a-z]*$/.test(filter)) {
     return [filter];

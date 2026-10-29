@@ -11,7 +11,7 @@ import { join } from 'node:path';
 
 //
 // The single definition of what a working install looks like: every command, through both entry points.
-// Plain node with no dependencies, because it runs in two places — `cli:smoke` after packing and installing
+// Plain node with no dependencies, because it runs in two places - `cli:smoke` after packing and installing
 // the tarballs, and the `cli-foreign` CI job on a runner with no checkout, where the tree that built the
 // binary does not exist and there is no bun. Keeping one copy is the point: the checks drifted apart when
 // the job had its own inline version.
@@ -20,7 +20,7 @@ import { join } from 'node:path';
 //
 //   --hide  run each command in a mount namespace with <dir> replaced by an empty directory, which is how
 //           a single machine can approximate the foreign one. Skipped, loudly, where unprivileged
-//           namespaces are unavailable (the CI build container denies them) — that is what `cli-foreign`
+//           namespaces are unavailable (the CI build container denies them) - that is what `cli-foreign`
 //           covers instead.
 //
 
@@ -48,12 +48,12 @@ const platformBinary = join(modules, '@dxos', `cli-${platformKey}`, binaryName);
 
 for (const path of [launcher, platformBinary]) {
   if (!existsSync(path)) {
-    console.error(`[Verify] ${path} not found — was the package installed?`);
+    console.error(`[Verify] ${path} not found - was the package installed?`);
     process.exit(1);
   }
 }
 
-// Both packages declare a `dx` bin and npm links only one of them, so each is invoked by path — going
+// Both packages declare a `dx` bin and npm links only one of them, so each is invoked by path - going
 // through `node_modules/.bin/dx` would silently drop either the launcher (its platform mapping and
 // executable-bit recovery) or the standalone platform install.
 const entryPoints = [
@@ -66,7 +66,7 @@ let isolate = false;
 if (hide) {
   isolationDir = mkdtempSync(join(tmpdir(), 'dx-empty-'));
   const probe = spawnSync(...wrap('true', []), { encoding: 'utf8' });
-  // Any non-zero probe means isolation is unavailable, not just a failed bind — the container may refuse
+  // Any non-zero probe means isolation is unavailable, not just a failed bind - the container may refuse
   // to create the namespace at all (`unshare failed: Operation not permitted`).
   isolate = process.platform === 'linux' && !probe.error && probe.status === 0;
   if (isolate) {
@@ -74,7 +74,7 @@ if (hide) {
   } else {
     const reason = probe.error?.message ?? (`${probe.stderr ?? ''}`.trim() || `exit ${probe.status}`);
     console.log(`[Verify] Cannot hide ${hide} (${reason}).`);
-    console.log('[Verify] Self-containment is NOT verified here — the cli-foreign job covers it.');
+    console.log('[Verify] Self-containment is NOT verified here - the cli-foreign job covers it.');
   }
 }
 
@@ -97,9 +97,9 @@ for (const { label, command, prefix } of entryPoints) {
 
     if (result.status !== 0) {
       failures.push(description);
-      console.error(`[Verify]   ✗ ${description} (exit ${result.status ?? result.error})`);
+      console.error(`[Verify]   X ${description} (exit ${result.status ?? result.error})`);
       const lines = `${result.stdout ?? ''}${result.stderr ?? ''}`.split('\n').filter((line) => line.trim());
-      // Prefer lines that name a cause, but never swallow the output when none match — an unrecognised
+      // Prefer lines that name a cause, but never swallow the output when none match - an unrecognised
       // failure is exactly the one worth seeing.
       const named = lines.filter((line) => DIAGNOSTIC.test(line));
       const shown = named.length > 0 ? named.slice(0, 4) : lines.slice(-8);
@@ -115,14 +115,14 @@ for (const { label, command, prefix } of entryPoints) {
     const output = result.stdout.trim();
     if (!output) {
       failures.push(description);
-      console.error(`[Verify]   ✗ ${description} exited 0 but printed nothing.`);
+      console.error(`[Verify]   X ${description} exited 0 but printed nothing.`);
       continue;
     }
 
     if (args.length === 1 && args[0] === '--version') {
       versions.add(output);
     }
-    console.log(`[Verify]   ✓ ${description}`);
+    console.log(`[Verify]   OK ${description}`);
   }
 }
 
@@ -140,4 +140,4 @@ if (versions.size !== 1) {
   process.exit(1);
 }
 
-console.log(`[Verify] ✓ ${[...versions][0]} — ${entryPoints.length * COMMANDS.length} invocations`);
+console.log(`[Verify] OK ${[...versions][0]} - ${entryPoints.length * COMMANDS.length} invocations`);

@@ -84,7 +84,7 @@ export const React = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.discord.addReaction'),
     name: 'React in Discord',
-    description: 'Adds an emoji reaction to a Discord message, e.g. 👍 to acknowledge it without replying.',
+    description: 'Adds an emoji reaction to a Discord message, e.g. \u{1F44D} to acknowledge it without replying.',
     icon: 'ph--smiley--regular',
   },
   services: [Database.Service, DiscordBot.DiscordBotService],
@@ -92,7 +92,7 @@ export const React = Operation.make({
     agent,
     channel: Schema.String.annotate({ description: 'The Discord channel or thread id of the message.' }),
     message: Schema.String.annotate({ description: 'The message id (`message` in the header).' }),
-    emoji: Schema.String.annotate({ description: 'A unicode emoji, e.g. 👍.' }),
+    emoji: Schema.String.annotate({ description: 'A unicode emoji, e.g. \u{1F44D}.' }),
   }),
   output: Schema.Struct({}),
 });

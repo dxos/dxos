@@ -44,8 +44,8 @@ const TestLayer = AssistantTestLayer({
 const timeout = (base: number) => ({ timeout: LanguageModelFixture.isUpdateEnabled() ? base * 4 : base });
 
 /**
- * Both cases start from tasks that exist outside the conversation — a project's task borrowed by a
- * chat — which is where a title-keyed tool used to duplicate work. Resolving a title to a URI
+ * Both cases start from tasks that exist outside the conversation - a project's task borrowed by a
+ * chat - which is where a title-keyed tool used to duplicate work. Resolving a title to a URI
  * belongs to the Database skill, so the prompts name the URI directly.
  */
 describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
@@ -60,7 +60,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
         // Only the status move is asked for: left open-ended, the model reasonably asks how to renew a
         // domain it cannot reach, and a question blocks the task this test expects to see started.
         yield* agent.submitPrompt(
-          `Mark the existing task ${Obj.getURI(existing)} as started. That is all for now — do not ask anything.`,
+          `Mark the existing task ${Obj.getURI(existing)} as started. That is all for now - do not ask anything.`,
         );
         yield* agent.waitForCompletion();
 
@@ -89,7 +89,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
         yield* Database.flush();
 
         yield* agent.submitPrompt(
-          `Take the task ${Obj.getURI(dropped)} off my checklist — I am not working on it here.`,
+          `Take the task ${Obj.getURI(dropped)} off my checklist - I am not working on it here.`,
         );
         yield* agent.waitForCompletion();
 
@@ -106,7 +106,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
   );
 });
 
-/** A session and the chat it runs on — the one `Harness.getChat` resolves for the conversation. */
+/** A session and the chat it runs on - the one `Harness.getChat` resolves for the conversation. */
 const setupChat = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
   // The session's own chat, not a second one on the same feed: the harness resolves the

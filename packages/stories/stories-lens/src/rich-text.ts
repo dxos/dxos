@@ -9,7 +9,7 @@ import { Lens } from '@dxos/echo-panproto';
 import { Text } from '@dxos/schema';
 
 //
-// The rich-text lens: a `Text` object — whose `content` is a markdown string — viewed as a tree of
+// The rich-text lens: a `Text` object - whose `content` is a markdown string - viewed as a tree of
 // blocks. A *coded* lens rather than a mapping, because no per-property correspondence can express
 // parsing.
 //
@@ -27,7 +27,7 @@ export type BlockType = 'heading' | 'paragraph' | 'bullet';
 
 export type Mark = 'em' | 'strong' | 'code';
 
-/** A run of text carrying zero or more inline marks — what makes the lensed view *rich* text. */
+/** A run of text carrying zero or more inline marks - what makes the lensed view *rich* text. */
 export const Inline = Schema.Struct({
   text: Schema.String,
   marks: Schema.optional(Schema.Array(Schema.Literals(['em', 'strong', 'code']))),
@@ -41,7 +41,7 @@ export const Block = Schema.Struct({
   level: Schema.optional(Schema.Number),
   /** The block's inline runs, with the markdown syntax that produced them stripped. */
   content: Schema.Array(Inline),
-  /** `[start, end)` in the source string — the anchor a write splices over. */
+  /** `[start, end)` in the source string - the anchor a write splices over. */
   range: Schema.Tuple([Schema.Number, Schema.Number]),
 });
 
@@ -50,7 +50,7 @@ export type Block = Schema.Schema.Type<typeof Block>;
 /** The block's text with marks flattened away, for assertions and plain-text consumers. */
 export const blockText = (block: Block): string => block.content.map((run) => run.text).join('');
 
-/** One unmarked run — the common case when constructing a block by hand. */
+/** One unmarked run - the common case when constructing a block by hand. */
 export const plain = (text: string): readonly Inline[] => (text.length > 0 ? [{ text }] : []);
 
 /**
@@ -68,7 +68,7 @@ export const RICH_TEXT_LENS_ID = 'org.dxos.demo.lens.text-as-rich-text';
 
 //
 // Parsing. `@lezer/markdown` is already a dependency of `@dxos/react-ui-markdown` and every node
-// carries `from`/`to` source offsets, which is exactly the anchor this lens needs — a parser without
+// carries `from`/`to` source offsets, which is exactly the anchor this lens needs - a parser without
 // offsets would force whole-document rewrites on every edit.
 //
 
@@ -229,7 +229,7 @@ export const diffBlocks = (previous: readonly Block[], next: readonly Block[]): 
 
   // Every splice below is expressed in the ORIGINAL coordinates the blocks were parsed with, so they
   // must be emitted in DECREASING position: applying a later one first leaves every earlier offset
-  // valid. The tail append/remove sits at or beyond the last shared block, so it goes first — emitting
+  // valid. The tail append/remove sits at or beyond the last shared block, so it goes first - emitting
   // it after the loop would compute its offset from a block the loop had already resized.
   if (next.length > previous.length) {
     // Appended blocks: one insert at the end of the last shared block.
@@ -265,7 +265,7 @@ export const diffBlocks = (previous: readonly Block[], next: readonly Block[]): 
   return writes;
 };
 
-/** `Text` → `RichText`. */
+/** `Text` -> `RichText`. */
 export const RichTextLens: Lens.Lens<Text.Text, RichText> = Lens.register(
   Lens.coded(RICH_TEXT_LENS_ID, Text.Text, RichText, {
     get: (text) => ({ blocks: parseBlocks(text.content ?? '') }),

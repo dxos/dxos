@@ -13,7 +13,7 @@ const node = (id: string, label: string, x: number, y: number): Scene.WorldObjec
   elements: [{ kind: 'rect', id: 'frame', x: 0, y: 0, w: 128, h: 64, text: label }],
 });
 
-// Two boxes side by side, one below the first, and connectors A → B (right) and A → C (down).
+// Two boxes side by side, one below the first, and connectors A -> B (right) and A -> C (down).
 const SCENE: Scene.WorldObject[] = [
   node('a', 'Alpha', 0, 0),
   node('b', 'Beta', 256, 0),
@@ -54,16 +54,16 @@ describe('view', () => {
     const text = coordinates(SCENE);
     expect(text).toContain('canvas 12 × 8 cells');
     expect(text).toContain('box "Gamma": top-left (0, 6), size 4 × 2');
-    expect(text).toContain('arrow "Alpha" → "Beta" labelled "calls": (4, 1) → (6.3, 1) → (8, 1)');
+    expect(text).toContain('arrow "Alpha" -> "Beta" labelled "calls": (4, 1) -> (6.3, 1) -> (8, 1)');
   });
 
   test('ascii draws boxes, labels and arrowheads where a reader expects them', ({ expect }) => {
     const lines = ascii(SCENE).split('\n');
     const [alpha] = lines.flatMap((line, row) => (line.includes('Alpha') ? [row] : []));
-    expect(lines[alpha]).toMatch(/Alpha.*▶.*Beta/);
+    expect(lines[alpha]).toMatch(/Alpha.*\u25B6.*Beta/);
     const gamma = lines.findIndex((line) => line.includes('Gamma'));
     expect(gamma).toBeGreaterThan(alpha);
-    expect(lines.slice(alpha, gamma).some((line) => line.includes('▼'))).toBe(true);
+    expect(lines.slice(alpha, gamma).some((line) => line.includes('\u25BC'))).toBe(true);
   });
 
   test('a connector routed outside every box stays on the canvas', ({ expect }) => {
@@ -123,7 +123,7 @@ describe('view', () => {
       ],
     };
     expect(rows([a, b, implementsArrow])).toContain(
-      'arrow "Beta" → "Alpha" (dashed, hollow triangle head) runs left, row 1 to row 1',
+      'arrow "Beta" -> "Alpha" (dashed, hollow triangle head) runs left, row 1 to row 1',
     );
   });
 
@@ -131,8 +131,8 @@ describe('view', () => {
     expect(rows(SCENE).split('\n')).toEqual([
       'row 1 (top), left to right: "Alpha", "Beta"',
       'row 2 (bottom), left to right: "Gamma"',
-      'arrow "Alpha" → "Beta" labelled "calls" runs right, row 1 to row 1, 1 bends',
-      'arrow "Alpha" → "Gamma" runs down, row 1 to row 2',
+      'arrow "Alpha" -> "Beta" labelled "calls" runs right, row 1 to row 1, 1 bends',
+      'arrow "Alpha" -> "Gamma" runs down, row 1 to row 2',
       'no arrows cross',
     ]);
   });

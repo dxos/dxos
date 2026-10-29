@@ -53,7 +53,7 @@ const make = () =>
           - ${tool(CodeOperation.HelloWorld)}: sanity tool that writes a single src/hello.ts. Use when
             the user asks you to "build hello world" or to verify the file
             abstraction is wired up end-to-end.
-          - ${tool(CodeOperation.ResetProject)}: delete every file in the project. Destructive — only
+          - ${tool(CodeOperation.ResetProject)}: delete every file in the project. Destructive - only
             run when the user explicitly asks to clear or reset the project.
 
         Local build tools (compile + execute in the browser; no remote service):

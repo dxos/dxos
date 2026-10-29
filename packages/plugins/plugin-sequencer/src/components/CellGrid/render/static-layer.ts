@@ -61,7 +61,7 @@ export const drawCells = <T>({
   const h = viewport.cellHeight;
 
   // Row bands. Paint odd rows so the stripe pattern matches the TrackHeader's
-  // label backgrounds (which darken odd row indices) — keeps the frozen left
+  // label backgrounds (which darken odd row indices) - keeps the frozen left
   // column and the cell area visually in lockstep.
   if (style.rowBand) {
     ctx.fillStyle = style.rowBand;

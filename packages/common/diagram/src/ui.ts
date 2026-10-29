@@ -5,8 +5,8 @@
 //
 // MOSAIC (Model-Oriented System for Adaptive Interface Composition) UI-schematic dialect:
 // renders low-fidelity UI wireframes from the declarative app model. Phase 1 scope: a single
-// schema compiles to a form drawing — the recursive structure (nested objects, arrays) with each
-// control (input, switch, checkbox, select) as a rectangle and its label as text above — wrapped
+// schema compiles to a form drawing - the recursive structure (nested objects, arrays) with each
+// control (input, switch, checkbox, select) as a rectangle and its label as text above - wrapped
 // in the app-ontology containers (deck > plank > panel > form). Two renderers share the model:
 // ASCII (tests, chat) and scene commands (tldraw, via the standard dialect contract). Unrelated
 // to `react-ui-mosaic`. See `dialect.ts` for the extension mechanism this follows (mermaid is
@@ -19,7 +19,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import type * as Scene from './scene.ts';
 
 //
-// Drawing model. Plain data (one discriminated tree) — the intermediate model between the app
+// Drawing model. Plain data (one discriminated tree) - the intermediate model between the app
 // model (schema today; app-graph later) and the renderers.
 //
 
@@ -52,7 +52,7 @@ export type ArrayGroup = {
 
 export type FormChild = Control | Group | ArrayGroup;
 
-/** A form has no title of its own — the schema title belongs to the enclosing container. */
+/** A form has no title of its own - the schema title belongs to the enclosing container. */
 export type Form = { kind: 'form'; children: FormChild[] };
 export type Panel = { kind: 'panel'; label?: string; child: Form };
 export type Plank = { kind: 'plank'; label?: string; child: Panel };
@@ -61,7 +61,7 @@ export type Deck = { kind: 'deck'; planks: Plank[] };
 export type UiNode = Deck | Plank | Panel | Form | FormChild;
 
 //
-// Schema → drawing. Minimal v4 AST walking, self-contained (see @dxos/effect SchemaEx for the
+// Schema -> drawing. Minimal v4 AST walking, self-contained (see @dxos/effect SchemaEx for the
 // full-featured helpers): properties live on `Objects` nodes, `Schema.optional` is a
 // `T | undefined` union, arrays are `Arrays` with a single rest element.
 //
@@ -115,7 +115,7 @@ const childOf = (type: SchemaAST.AST, name: PropertyKey, path: string, depth: nu
     return { kind: 'array', label: label(name, base), path, item };
   }
 
-  // Nested struct: recurse. Declarations (refs, opaque types) fall through to a plain control —
+  // Nested struct: recurse. Declarations (refs, opaque types) fall through to a plain control -
   // walking into them risks unbounded recursion and they render as pickers anyway.
   if (depth > 0 && !isLiteralUnion(base)) {
     const properties = propertiesOf(base);
@@ -143,7 +143,7 @@ export const fromSchema = (schema: Schema.Top, options: FromSchemaOptions = {}):
   return { kind: 'form', children };
 };
 
-/** The schema's title annotation — container chrome, not form content. */
+/** The schema's title annotation - container chrome, not form content. */
 export const schemaTitle = (schema: Schema.Top): string | undefined => titleOf(schema.ast);
 
 /** Wrap a form in the app-ontology containers for a full schematic. */
@@ -350,7 +350,7 @@ export const compile = (node: UiNode, options: CompileOptions = {}): Scene.Comma
 };
 
 //
-// ASCII renderer — the interim/low-cost target over the same model.
+// ASCII renderer - the interim/low-cost target over the same model.
 //
 
 const GLYPHS: Record<ControlKind, string> = {

@@ -29,7 +29,7 @@ const toOperator = (text: string): Ast.ComparisonOperator | undefined => OPERATO
 
 /**
  * Parses dialect source (Soufflé-like: `head :- body.`, `not`/`!` negation, comparisons and
- * `N = count : { … }` aggregates) into a program.
+ * `N = count : { ... }` aggregates) into a program.
  * @throws ParseError on the first syntax error.
  */
 export const parse = (source: string): Ast.Program => {

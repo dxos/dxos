@@ -48,7 +48,7 @@ const sha256 = (data: string | Uint8Array): string => createHash('sha256').updat
 
 /**
  * The reporting configuration from the environment, or `undefined` when any credential is missing or
- * `CODE_INDEX_TELEMETRY=0` opts out — reviews are only worth running when their result can land.
+ * `CODE_INDEX_TELEMETRY=0` opts out - reviews are only worth running when their result can land.
  */
 export const config = (env: Record<string, string | undefined> = process.env): Config | undefined => {
   const apiKey = env.DX_POSTHOG_API_KEY;

@@ -14,12 +14,12 @@ import type * as Position from '@dxos/util/Position';
 import { type AppCapabilities } from '../app-framework/index.ts';
 
 export type ForTypeOptions<S extends Type.AnyObj> = {
-  /** Where the plugin's section shows the object — the resolved target's `path`. */
+  /** Where the plugin's section shows the object - the resolved target's `path`. */
   getPath: (target: { spaceId: SpaceId; objectId: string }) => string;
   /** Target label; defaults to the object's entity label. */
   getLabel?: (object: Type.InstanceType<S>) => string;
   /**
-   * Sort order among the targets resolved for one query — e.g. `Position.first` when the section is
+   * Sort order among the targets resolved for one query - e.g. `Position.first` when the section is
    * the type's home and outranks the generic collection/database answers.
    */
   position?: Position.Position;
@@ -31,7 +31,7 @@ export type ForTypeOptions<S extends Type.AnyObj> = {
  * The common custom-section resolver: load the queried object and, when it is an instance of the
  * given type, answer with the path the plugin's section shows it under.
  *
- * Sections built with `TypeSection.createTypeSectionExtension` never need a resolver — their url
+ * Sections built with `TypeSection.createTypeSectionExtension` never need a resolver - their url
  * binding ends in the typename, which is all plugin-space's generic section lookup needs. This is
  * for sections with a shape of their own (a virtual grouping node, a section id where the typename
  * would be), whose objects the generic resolvers can only place in the database subtree.

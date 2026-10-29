@@ -9,7 +9,7 @@ import { makeCorrectionStage, makeExtractionStage, makeSummarizationStage } from
 import { type Stage } from './types/index.ts';
 
 export type TranscriptionPipelineOptions = Omit<RunOptions, 'stages'> & {
-  /** Ordered stages to run; defaults to the standard correction → extraction → summarization set. */
+  /** Ordered stages to run; defaults to the standard correction -> extraction -> summarization set. */
   readonly stages?: readonly Stage<any, any>[];
 };
 

@@ -34,7 +34,7 @@ const outDir = prepareCanonicalDist(dirname);
 /**
  * Remove the inline dark-mode `<script>` that ThemePlugin injects into every
  * page's `<head>`. The MV3 extension CSP (`script-src 'self'`) forbids inline
- * scripts, and `extension_pages` — unlike a web build — cannot whitelist a hash
+ * scripts, and `extension_pages` - unlike a web build - cannot whitelist a hash
  * or nonce to permit one. The extension is dark-only (Container forces
  * `themeMode='dark'`), so `class="dark"` on each page covers first paint. The
  * injected `<style>` tags are left intact (inline styles are allowed).
@@ -53,7 +53,7 @@ const stripInlineThemeScript = (): Plugin => ({
       if (stripped === html) {
         // eslint-disable-next-line no-console
         console.warn(
-          '[composer-crx] stripInlineThemeScript: no inline theme script found — ThemePlugin output may have changed; verify extension pages stay CSP-clean.',
+          '[composer-crx] stripInlineThemeScript: no inline theme script found - ThemePlugin output may have changed; verify extension pages stay CSP-clean.',
         );
       }
       return stripped;
@@ -166,10 +166,10 @@ export default defineConfig({
           default_path: 'side_panel.html',
         },
         permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications', 'sidePanel'],
-        // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
+        // TODO(review): broad host permissions for arbitrary search providers - scope/curate before publishing.
         // Broad host access is required so the popup and background can fetch cross-origin
-        // (chat-agent, image-service) without CORS — extensions bypass CORS for hosts they
-        // hold permissions for — and so the content script can be injected on any page.
+        // (chat-agent, image-service) without CORS - extensions bypass CORS for hosts they
+        // hold permissions for - and so the content script can be injected on any page.
         host_permissions: ['http://*/*', 'https://*/*'],
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",

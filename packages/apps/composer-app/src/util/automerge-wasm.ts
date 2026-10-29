@@ -36,7 +36,7 @@ const memoizeInit = (init: () => Promise<unknown>): (() => Promise<void>) => {
  * Initializes the automerge wasm module for this realm (page or worker).
  *
  * The bundler resolves the automerge packages to their `slim` entrypoints (`slimWasm` in
- * vite.config.ts), which do no wasm work at module evaluation — so every realm must await this
+ * vite.config.ts), which do no wasm work at module evaluation - so every realm must await this
  * before its first automerge call. Enough for a realm that only runs an ECHO client against
  * services elsewhere; a realm that hosts echo also needs {@link initEchoHostWasm}. Idempotent.
  * URL inputs keep wasm-bindgen on `instantiateStreaming`.

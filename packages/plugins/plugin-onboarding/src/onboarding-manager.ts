@@ -65,7 +65,7 @@ export class OnboardingManager {
    * so it bails out instead of mutating state after the manager has been torn
    * down. Necessary because `OnboardingCapabilities.Onboarding` contributes the
    * manager synchronously and runs `initialize()` as a fire-and-forget
-   * background side-effect — `destroy()` can fire while async work is still
+   * background side-effect - `destroy()` can fire while async work is still
    * in flight.
    */
   private _destroyed = false;
@@ -127,7 +127,7 @@ export class OnboardingManager {
     if (this._identity) {
       // A device invitation targets a different identity, so accepting it requires deleting this
       // one; confirm via the reset dialog rather than dropping the invitation silently. Stop
-      // here — no recovery/agent provisioning for an identity the user may be about to abandon.
+      // here - no recovery/agent provisioning for an identity the user may be about to abandon.
       if (this._deviceInvitationCode !== undefined) {
         await this._confirmJoinNewIdentity();
         return;
@@ -216,7 +216,7 @@ export class OnboardingManager {
 
   /**
    * Picks up after the local identity was deleted in place. A plain logout (no `target`) lands where a
-   * first run does — the welcome screen, or a fresh identity where auth is disabled; a `target` means
+   * first run does - the welcome screen, or a fresh identity where auth is disabled; a `target` means
    * the caller already opened the join or recovery flow that brings the next identity in.
    */
   async onIdentityDeleted({ target }: { target?: string } = {}): Promise<void> {
@@ -286,7 +286,7 @@ export class OnboardingManager {
    * supported on this path -- magic-link login (`/account/login`) handles
    * recovery for real emails, and test emails are always fresh (no restore).
    *
-   * Resolves false when the signup did not complete — the email already has an
+   * Resolves false when the signup did not complete - the email already has an
    * account (the welcome dialog stays open so the user can log in instead), the
    * probe was inconclusive, or identity creation / redemption failed; in the latter
    * cases the URL params are left intact so a reload retries the signup.
@@ -302,7 +302,7 @@ export class OnboardingManager {
       return this._identity;
     });
 
-    // Errors are mapped inside the Effect — `runPromise` rejects with a FiberFailure, so the
+    // Errors are mapped inside the Effect - `runPromise` rejects with a FiberFailure, so the
     // typed errors are not matchable from a catch block. The catch-all matters: `initialize()` is a
     // fire-and-forget background side-effect, so a rejection here would vanish unhandled.
     const outcome = await EffectEx.runPromise(
@@ -427,7 +427,7 @@ export class OnboardingManager {
   }
 
   private async _createIdentity(): Promise<void> {
-    // `invokePromise` resolves with `{ error }` rather than rejecting, so rethrow it — otherwise a
+    // `invokePromise` resolves with `{ error }` rather than rejecting, so rethrow it - otherwise a
     // failed creation only surfaces later as an invariant defect.
     const { error } = await this._invokePromise(ClientOperation.CreateIdentity, {});
     if (error) {

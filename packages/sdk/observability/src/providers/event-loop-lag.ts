@@ -21,7 +21,7 @@ export const LAG_WINDOW_MS = 60_000;
 /**
  * Gap beyond which a late probe is read as the realm having been suspended rather than blocked.
  *
- * Browsers throttle or freeze timers in a hidden tab — and in the workers that tab owns — and the
+ * Browsers throttle or freeze timers in a hidden tab - and in the workers that tab owns - and the
  * machine can sleep, so an arbitrarily long gap is always possible for reasons that are not jank.
  * 10s because a main thread genuinely blocked that long means the app is hung rather than janky:
  * past this point the distinction stops paying, and a false reading is worse than a missed one.
@@ -37,7 +37,7 @@ export const MAX_PLAUSIBLE_LAG_MS = 10_000;
  *
  * The window is rotated by {@link rotate} rather than by the read, so {@link peakMs} is a plain
  * idempotent getter. A read that consumed the value would break as soon as it ran more than once
- * per window — which `RemoteMetrics` fan-out to a second processor, or a `flush()` landing next to
+ * per window - which `RemoteMetrics` fan-out to a second processor, or a `flush()` landing next to
  * a periodic collection, would both cause.
  */
 export class EventLoopLagTracker {
@@ -52,7 +52,7 @@ export class EventLoopLagTracker {
 
   /**
    * Discards the reference timestamp so the next probe cannot report lag.
-   * Called when the realm was legitimately not running — a hidden tab has its timers clamped to
+   * Called when the realm was legitimately not running - a hidden tab has its timers clamped to
    * once per second or worse, which would otherwise read as tens of seconds of event-loop lag.
    */
   suspend(): void {
@@ -64,7 +64,7 @@ export class EventLoopLagTracker {
    *
    * A gap past {@link MAX_PLAUSIBLE_LAG_MS} is discarded, not clamped: clamping would still report
    * a ceiling-valued stall that never happened. This has to hold without help from a visibility
-   * listener, because when timers are frozen outright **no probe fires during the freeze** — so
+   * listener, because when timers are frozen outright **no probe fires during the freeze** - so
    * nothing can mark the suspension before the first probe after it observes the entire gap.
    */
   sample(now: number): void {
@@ -93,7 +93,7 @@ export class EventLoopLagTracker {
 /**
  * Publishes how long this realm's event loop was blocked.
  *
- * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute —
+ * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute -
  * so the same provider distinguishes the tab from the shared and dedicated workers without any
  * per-realm wiring.
  */
@@ -105,7 +105,7 @@ export const eventLoopLagProvider = (): Observability.DataProvider =>
     scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
 
     // Belt to the tracker's braces. The clamp inside `sample` is what actually guarantees a frozen
-    // tab is not reported as lag — checking visibility when the probe fires cannot, since a frozen
+    // tab is not reported as lag - checking visibility when the probe fires cannot, since a frozen
     // timer does not fire until the tab is visible again. This listener additionally drops the
     // reference timestamp the moment visibility changes, so a gap under the clamp is discarded too.
     const doc = (globalThis as { document?: EventTarget & { visibilityState?: string } }).document;
@@ -116,7 +116,7 @@ export const eventLoopLagProvider = (): Observability.DataProvider =>
     }
 
     // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
-    // idempotent getter — see EventLoopLagTracker.
+    // idempotent getter - see EventLoopLagTracker.
     scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);
 
     ctx.onDispose(

@@ -913,7 +913,7 @@ export const MoleculeOverlay = ({
   const ordered = [...bodies]
     .filter((body) => !layout.focus || (body.zone === 'hub' && body.phase === 'docked'))
     .sort((a, b) => Number(a.phase === 'travelling') - Number(b.phase === 'travelling'));
-  // `useId` answers colons, which a `url(#…)` reference cannot hold.
+  // `useId` answers colons, which a `url(#...)` reference cannot hold.
   const base = useId().replace(/:/g, '');
   const depth = { raised: `${base}-raised`, inset: `${base}-inset` };
   // A sink shows once its agent has appeared, fading in with its channel; the sources and hub are always there.

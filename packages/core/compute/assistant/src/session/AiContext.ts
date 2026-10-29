@@ -75,7 +75,7 @@ export class Bindings {
  *
  * Lets {@link Binder.sync} skip its re-read when nothing here could have changed the bindings: the
  * re-read is a feed-scoped query, which waits for an index pass over every pending write, and it
- * exists only for read-your-writes — a binding written elsewhere arrives through the live query.
+ * exists only for read-your-writes - a binding written elsewhere arrives through the live query.
  */
 const bindingWrites = new Map<string, number>();
 
@@ -285,7 +285,7 @@ export class Binder extends Resource {
         results = await this.#bindingsQuery.run();
       } catch (error) {
         // The query's live subscription already keeps the bindings current, so a re-read that fails
-        // (an index query timing out under load) costs freshness, not correctness — and a caller
+        // (an index query timing out under load) costs freshness, not correctness - and a caller
         // running this between agent turns would otherwise fail the whole agent process on it.
         log.warn('bindings sync failed; keeping the current bindings', { error });
         return;
@@ -713,7 +713,7 @@ const refKey = (uri: URI.URI): URI.URI => {
  * Bindings in the order they were appended, which is the order the fold has to see them: a query
  * returns an unordered set, so an unsorted fold can apply a removal before the addition it undoes
  * and silently keep the object bound. Server-assigned position is authoritative; a locally-written
- * block has none yet and sorts last, which is correct — it is the newest.
+ * block has none yet and sorts last, which is correct - it is the newest.
  */
 const inAppendOrder = (items: readonly Binding[]): Binding[] =>
   EArray.sort(items, Order.mapInput(Order.Number, Feed.getPosition));

@@ -31,7 +31,7 @@ const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
 /**
  * Turns a registry catalog entry into a minimal Plugin object so we can reuse
  * {@link BaseRegistryArticle} for rendering. The synthesized plugin has no
- * modules — it exists only for display until the user installs it.
+ * modules - it exists only for display until the user installs it.
  */
 const toDisplayPlugin = (plugin: Plugin.Meta): Plugin.Plugin =>
   ({
@@ -88,7 +88,7 @@ export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegis
       return map;
     }, [sortedEntries]);
 
-    // Maps plugin id → current registry version (i.e. plugin.version from the catalog).
+    // Maps plugin id -> current registry version (i.e. plugin.version from the catalog).
     const versionById = useMemo(() => {
       const map: Record<string, string> = {};
       for (const entry of sortedEntries) {

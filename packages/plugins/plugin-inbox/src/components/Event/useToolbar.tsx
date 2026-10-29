@@ -14,7 +14,7 @@ export type UseEventToolbarActionsProps = {
   graph?: AppGraph.ReadableGraph;
   /** Graph node id of the event (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
-  /** Editing (draft) mode — disables the open + view-mode actions (irrelevant while editing). */
+  /** Editing (draft) mode - disables the open + view-mode actions (irrelevant while editing). */
   editing?: boolean;
   /** Disable the save action (e.g. when no integration is connected to sync against). */
   saveDisabled?: boolean;

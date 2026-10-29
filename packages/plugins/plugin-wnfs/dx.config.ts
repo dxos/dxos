@@ -22,7 +22,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       Decentralized, end-to-end encrypted file storage for DXOS Composer built on the Web Native File System (WNFS) protocol.
 
-      WNFS organizes files inside a cryptographic "dark forest" — a content-addressed private file system
+      WNFS organizes files inside a cryptographic "dark forest" - a content-addressed private file system
       where each write produces a new immutable root CID. Files are stored as IPLD blocks (CIDv1, sha2-256),
       cached locally in IndexedDB, and asynchronously replicated to the DXOS edge blob service as CAR archives.
       Uploads and reads are scoped to a DXOS Space; the forest root CID is persisted atomically on the
@@ -56,7 +56,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       {
         requires: [ClientCapabilities.Client],
         // The file plugin's start, not wnfs's own: wnfs contributes no surface, so nothing would
-        // ever fire its own start — and these are exactly what the blob backend above waits for.
+        // ever fire its own start - and these are exactly what the blob backend above waits for.
         provides: [WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
         activatesOn: FileEvents.Start,
       },

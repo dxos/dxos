@@ -16,7 +16,7 @@ import reportSession from './report-session.ts';
 
 const types = [RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet, Project.Project];
 
-/** The space the fixture's database belongs to — what a first report has to be told. */
+/** The space the fixture's database belongs to - what a first report has to be told. */
 const spaceId = Effect.map(Database.Service, ({ db }) => db.spaceId);
 
 /**

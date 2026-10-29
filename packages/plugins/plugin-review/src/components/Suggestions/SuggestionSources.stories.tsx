@@ -20,7 +20,7 @@ import { Branch } from '@dxos/versioning';
 import { STORY_AGENTS, seedAgentSuggestions } from '../../testing/index.ts';
 import { SuggestionSources, type SuggestionSourcesProps } from './SuggestionSources.tsx';
 
-// A single, deliberately distinct author/content for the second document — neither this DID nor this
+// A single, deliberately distinct author/content for the second document - neither this DID nor this
 // text overlaps `STORY_AGENTS`, so any trace of it (or of `STORY_AGENTS`' content) on the wrong side
 // of a swap is unambiguous.
 const SECOND_DOC_DID = 'did:agent:zephyr';
@@ -29,7 +29,7 @@ const SECOND_DOC_CONTENT = 'Zephyr proposes an entirely different rewrite of the
 /**
  * Seeds a single `kind:'suggestion'` branch with an arbitrary author/content, mirroring
  * `seedAgentSuggestions`'s internals but for one caller-supplied branch rather than the fixed
- * `STORY_AGENTS` pair — gives the second document content that can't be confused with the first's.
+ * `STORY_AGENTS` pair - gives the second document content that can't be confused with the first's.
  */
 const seedSingleSuggestion = async (doc: Markdown.Document, parent: Text.Text, did: string, content: string) => {
   const branch = await Branch.suggestion(doc, parent, did);
@@ -63,7 +63,7 @@ type StoryArgs = Pick<SuggestionSourcesProps, 'onResolved'> & {
 
 /**
  * Seeds a document with two agent-authored suggestion branches (reusing `seedAgentSuggestions` from
- * the `CommentsArticle` story) in a real ECHO space, then mounts `SuggestionSources` against it — the
+ * the `CommentsArticle` story) in a real ECHO space, then mounts `SuggestionSources` against it - the
  * seeding is async/DB-backed, so this is exercised via a play test rather than a static render. With
  * `swap`, a second document (one distinct author) and a Swap button are added so the same mounted
  * instance can be pointed at a different document.
@@ -169,7 +169,7 @@ export const Default: Story = {
 };
 
 /**
- * Regression test for the render-prop's core guarantee — no stale frame on document swap:
+ * Regression test for the render-prop's core guarantee - no stale frame on document swap:
  * - Swapping `document` on an already-mounted instance must never paint a frame showing the PREVIOUS
  *   document's resolved sources.
  * - The old `onResolved`-only + `useState`-in-parent design had this bug (the update lands post-commit,
@@ -188,7 +188,7 @@ export const SwapDocument: Story = {
     await waitFor(() => expect(text()).toContain(STORY_AGENTS[1].content), { timeout: 12_000 });
 
     // Swap to Doc B. Assert straight after the click (no `waitFor`) that no trace of Doc A's content
-    // survives — the stale frame this test guards against would show up right here, before Doc B's
+    // survives - the stale frame this test guards against would show up right here, before Doc B's
     // own probes have had any chance to resolve.
     const swap = swapButton();
     invariant(swap, 'swap-document button not rendered');

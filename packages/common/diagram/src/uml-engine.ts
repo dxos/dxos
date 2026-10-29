@@ -47,7 +47,7 @@ const ELK_DIRECTION: Record<Direction, string> = { TB: 'DOWN', BT: 'UP', LR: 'RI
 
 /**
  * Edges oriented for layering: inheritance, realization, and dependency point at abstractions,
- * which rank ABOVE their sources — so those edges are reversed for the engine (which lays out
+ * which rank ABOVE their sources - so those edges are reversed for the engine (which lays out
  * source-above-target), matching `relationRanks`.
  */
 const orientedEdges = (model: UmlModel): { from: string; to: string }[] =>
@@ -107,7 +107,7 @@ const elkPlace = async (
       'elk.direction': ELK_DIRECTION[direction],
       'elk.layered.spacing.nodeNodeBetweenLayers': String(gapMain),
       'elk.spacing.nodeNode': String(gapCross),
-      // Favors long straight chains over balanced centering — fewer jagged connectors.
+      // Favors long straight chains over balanced centering - fewer jagged connectors.
       'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
       // Keeps declaration order among otherwise-unconstrained siblings, so peers stay gathered.
       'elk.layered.considerModelOrder.strategy': 'PREFER_NODES',

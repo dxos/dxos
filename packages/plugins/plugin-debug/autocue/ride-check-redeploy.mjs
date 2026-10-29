@@ -58,7 +58,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'Ride Check is live',
-        subtitle: 'ride-check-demo.dxos.workers.dev — DXOS UI on a Cloudflare Worker',
+        subtitle: 'ride-check-demo.dxos.workers.dev - DXOS UI on a Cloudflare Worker',
       });
       await page.waitForTimeout(2_500);
       await demo.hover({ selector: '[data-testid="verdict.badge"]' });

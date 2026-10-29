@@ -5,7 +5,7 @@
 /**
  * Bytes and operations SQLite actually performed against storage.
  *
- * Read and write are REQUESTED bytes — the size of the buffer SQLite handed the VFS. For a write
+ * Read and write are REQUESTED bytes - the size of the buffer SQLite handed the VFS. For a write
  * that is also the delivered size, since a short write is an error the VFS reports rather than a
  * partial success. For a read it can exceed the delivered size, which is what `shortReads` is for:
  * SQLite asks for a full page past end-of-file during recovery and the VFS zero-fills the
@@ -244,7 +244,7 @@ const SQLITE_OK = 0;
  * Narrows the untyped VFS without a cast.
  *
  * `AccessHandlePoolVFS.create` returns `unknown`, and a predicate is how that becomes a typed
- * object — `as VfsLike` would assert a shape rather than establish one, and each method is
+ * object - `as VfsLike` would assert a shape rather than establish one, and each method is
  * optional below precisely because this check cannot prove they exist.
  */
 const isVfsLike = (value: unknown): value is VfsLike => typeof value === 'object' && value !== null;
@@ -257,7 +257,7 @@ const isVfsLike = (value: unknown): value is VfsLike => typeof value === 'object
  *
  * Always on, and cheap enough to be: two integer increments beside a synchronous
  * `FileSystemSyncAccessHandle` read, which is a syscall. A build-time flag would have been the
- * alternative, and it would mean the measured bundle is not the shipped one — the comparability
+ * alternative, and it would mean the measured bundle is not the shipped one - the comparability
  * problem this whole harness exists to avoid.
  */
 export const instrumentVfs = (vfs: unknown): void => {

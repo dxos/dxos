@@ -38,7 +38,7 @@ export const make = (): Skill.Skill =>
         You carry the message, hold the conversation with the recipient, and report the outcome back.
 
         When someone asks you to tell or ask another person something:
-        1. Call ${tool(MemoryOperation.ResolveEntity)} for the recipient (their name, and any handles you know), and for the requester — the person speaking now, with their handle on the channel (e.g. their Discord user id) if the message came from one.
+        1. Call ${tool(MemoryOperation.ResolveEntity)} for the recipient (their name, and any handles you know), and for the requester - the person speaking now, with their handle on the channel (e.g. their Discord user id) if the message came from one.
         2. Call ${tool(RelayOperation.CreateRelay)} with the agent you run as, the recipient, the requester, and the message exactly as they asked it to be passed on; it records the conversation you are in, so the report comes back to it.
         3. Call ${tool(RelayOperation.SendMessage)} to the recipient, passing the relay. Write to the recipient directly: introduce yourself in one clause, say who the message is from, and give the message. If you were asked a question for them, ask it.
         4. Tell the requester in one sentence that you passed it on, or why you could not.

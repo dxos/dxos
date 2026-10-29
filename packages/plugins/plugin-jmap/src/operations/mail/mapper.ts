@@ -16,7 +16,7 @@ import { JMAP_DOMAIN } from '../../constants.ts';
 /**
  * Result of mapping a JMAP email. `mailboxIds` (the folders the email is in) and `keywords` (the set
  * flags, e.g. `$flagged`) are propagated separately so the caller can apply the corresponding tags to
- * the immutable feed Message — mirrors the Gmail mapper's `labelIds`. Both axes are needed because JMAP
+ * the immutable feed Message - mirrors the Gmail mapper's `labelIds`. Both axes are needed because JMAP
  * splits folder membership (`mailboxIds`) from flags (`keywords`), unlike Gmail's single label list.
  */
 export type MappedEmail = {
@@ -39,7 +39,7 @@ export type AttachmentMetadata = {
   readonly name?: string;
   readonly mimeType?: string;
   readonly size?: number;
-  /** The part's `Content-ID` (angle brackets stripped, if present), if any — matches a `cid:` reference in an HTML body. */
+  /** The part's `Content-ID` (angle brackets stripped, if present), if any - matches a `cid:` reference in an HTML body. */
   readonly contentId?: string;
 };
 
@@ -64,7 +64,7 @@ const collectAttachments = (attachments: readonly JmapMail.EmailBodyPart[] | und
 /**
  * Extracts the raw HTML and plaintext bodies from a JMAP email (values fetched via
  * `fetchHTMLBodyValues`/`fetchTextBodyValues`). Returns `null` when the email has neither. No
- * HTML→markdown conversion — the markdown/plain views derive from these raw blocks in the component.
+ * HTML->markdown conversion - the markdown/plain views derive from these raw blocks in the component.
  */
 export const decodeBody = (email: JmapMail.Email): DecodedEmail | null => {
   const html = getBodyValue(email, email.htmlBody);
@@ -83,7 +83,7 @@ export const decodeBody = (email: JmapMail.Email): DecodedEmail | null => {
 
 /**
  * Builds an ECHO Message from a decoded (already body-normalized) JMAP email and an optional resolved
- * sender contact. Pure — contact resolution is done by the caller. Returns `null` when the email has
+ * sender contact. Pure - contact resolution is done by the caller. Returns `null` when the email has
  * no sender.
  */
 export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | undefined): MappedEmail | null => {
@@ -152,7 +152,7 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
 
 /**
  * Maps a JMAP email to an ECHO Message, resolving the sender against existing contacts. Composes
- * {@link decodeBody} → {@link mapToMessage}. Returns `null` when the email has no body or no sender.
+ * {@link decodeBody} -> {@link mapToMessage}. Returns `null` when the email has no body or no sender.
  */
 export const mapEmail: (email: JmapMail.Email) => Effect.Effect<MappedEmail | null, never, Resolver> =
   Effect.fnUntraced(function* (email) {

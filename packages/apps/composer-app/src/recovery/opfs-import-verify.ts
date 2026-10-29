@@ -25,7 +25,7 @@ const sampleMismatch = (source: Uint8Array, payload: Uint8Array): boolean => {
 };
 
 /**
- * Verify OPFS holds the imported SQLite database (async read — no SQLite, no worker).
+ * Verify OPFS holds the imported SQLite database (async read - no SQLite, no worker).
  * Import is a raw byte copy, so the payload must match the source exactly.
  */
 export const verifyOpfsSqliteImport = async (sourceBytes: Uint8Array): Promise<number> => {

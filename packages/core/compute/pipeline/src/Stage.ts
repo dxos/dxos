@@ -12,7 +12,7 @@ import * as Progress from './Progress.ts';
 
 /**
  * Overflow policy applied when a consumer cannot keep pace, mapped onto `Stream.buffer` strategies.
- * - `suspend`: back pressure — never drop (default; correct for email/document processing).
+ * - `suspend`: back pressure - never drop (default; correct for email/document processing).
  * - `sliding`: drop the oldest buffered item, keep the latest (correct for live transcription).
  * - `dropping`: drop the newest item when the buffer is full.
  */
@@ -22,8 +22,8 @@ export type Overflow = 'suspend' | 'sliding' | 'dropping';
 export const DEFAULT_BUFFER_SIZE = 16;
 
 /**
- * A pipeline stage: a pipeable `Stream → Stream` transform, the same shape `Stream.mapEffect` /
- * `Stream.filter` already have — generic over the *input* stream's own error/requirements (`E0`/
+ * A pipeline stage: a pipeable `Stream -> Stream` transform, the same shape `Stream.mapEffect` /
+ * `Stream.filter` already have - generic over the *input* stream's own error/requirements (`E0`/
  * `R0`) and unioning in the stage's own `E`/`R`, so stages compose in a `pipe` chain the same way
  * Effect's own Stream operators do. Authors build stages with {@link map} / {@link window} /
  * {@link batch} / {@link filter}; shared dependencies flow through `R`, provided once at the edge via
@@ -38,7 +38,7 @@ type BufferOptions = {
   /**
    * Per-stage overflow override; when set, a bounded buffer is inserted at the stage's async
    * boundary. For {@link map} the buffer sits *before* `mapEffect`, so under load it sheds/coalesces
-   * in-flight input (`sliding` keeps the latest queued item — true latest-wins — `dropping` drops
+   * in-flight input (`sliding` keeps the latest queued item - true latest-wins - `dropping` drops
    * new arrivals while a run is in flight). For {@link window} it sits after windowing (a window
    * must see every item), bounding output rate.
    */
@@ -70,8 +70,8 @@ const withBuffer =
  *
  * `Out`/`E`/`R` always infer from `fn`'s result; `In` only infers when the stage is composed inline
  * in a `pipe` (pinned by the upstream stream). Built as a standalone value, pin `In` by annotating
- * the callback parameter (`(item: T) => …`) or the binding (`const s: Stage<…> = …`). The four type
- * parameters are intentionally all-or-nothing: passing a partial list (e.g. `map<In, Out>(…)`) is a
+ * the callback parameter (`(item: T) => ...`) or the binding (`const s: Stage<...> = ...`). The four type
+ * parameters are intentionally all-or-nothing: passing a partial list (e.g. `map<In, Out>(...)`) is a
  * compile error rather than silently forcing `E`/`R` to `never` and rejecting a service-using `fn`.
  */
 export const map =
@@ -184,7 +184,7 @@ export const filter =
  * A pass-through stage that reports live progress to the {@link Progress} registry: it registers the
  * task (with an optional item `total`), advances the item index as each item flows through, marks the
  * task done only when the stream ends successfully, and marks it failed if the stream errors.
- * Progress is thus an artifact of the pipeline itself — the same stage works in the app (feeding a
+ * Progress is thus an artifact of the pipeline itself - the same stage works in the app (feeding a
  * reactive panel) and in tests (feeding a file sink).
  */
 export const track =

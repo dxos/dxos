@@ -33,7 +33,7 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
 /**
  * Settings panel for `@dxos/plugin-registry`. The dev-plugin section lets a
  * plugin author point Composer at a local Vite dev server (defaults to
- * `localhost:3967`) and toggle the dev plugin on/off persistently — boot will
+ * `localhost:3967`) and toggle the dev plugin on/off persistently - boot will
  * re-attach it on the next reload, surviving HMR-triggered reloads. If the
  * dev server is offline at boot, the toggle stays on and a warning is logged
  * (the manager's `failed` atom also surfaces a badge on the plugin list).
@@ -95,7 +95,7 @@ export const RegistrySettings = ({
 
   // Button label tracks the persisted intent, not the current load state, so
   // a transient "intent on but not loaded" combination still reads as
-  // "Disable Dev Plugin" — clicking it turns the intent off cleanly.
+  // "Disable Dev Plugin" - clicking it turns the intent off cleanly.
   const buttonLabel = busy
     ? t('dev-plugin.busy.label')
     : enabled

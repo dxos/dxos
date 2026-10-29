@@ -85,7 +85,7 @@ function publishPackage(packageDir: string): boolean {
 
   const packageJson = require(`../${packageJsonPath}`);
   if (published.has(`${packageJson.name}@${packageJson.version}`)) {
-    console.log(`[Publish] ✓ ${packageJson.name}@${packageJson.version} already published`);
+    console.log(`[Publish] OK ${packageJson.name}@${packageJson.version} already published`);
     return true;
   }
 
@@ -109,7 +109,7 @@ function publishPackage(packageDir: string): boolean {
     return false;
   }
 
-  console.log(`[Publish] ✓ ${packageJson.name}@${packageJson.version}`);
+  console.log(`[Publish] OK ${packageJson.name}@${packageJson.version}`);
   return true;
 }
 

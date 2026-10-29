@@ -52,7 +52,7 @@ export type ResponseLog = {
 
 /**
  * Opens an incremental responses markdown file, truncating it, and returns an `append` that writes
- * one titled block per call — so long runs stream their output to disk as each response completes
+ * one titled block per call - so long runs stream their output to disk as each response completes
  * (and partial results survive an interrupted run).
  */
 export const startResponseLog = (name: string): ResponseLog => {

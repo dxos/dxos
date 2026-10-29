@@ -12,7 +12,7 @@ import { useThemeContext } from './useThemeContext.ts';
 
 describe('useThemeContext', () => {
   // Error-reporting surfaces (e.g. the fatal dialog) must be able to render even
-  // when the provider is missing — including the vite dev dual-module case where
+  // when the provider is missing - including the vite dev dual-module case where
   // the provider supplied a different ThemeContext identity than the consumer's.
   test('falls back to the default theme without a provider', () => {
     const { result } = renderHook(() => useThemeContext());

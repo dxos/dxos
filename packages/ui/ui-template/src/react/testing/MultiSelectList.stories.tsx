@@ -15,7 +15,7 @@ import { MultiSelectList } from './MultiSelectList.tsx';
 
 //
 // SPIKE stories for the zag probe: the custom multi-select machine driving a list, and the stock
-// splitter machine framing the master-detail arrangement. No registry or template here — the
+// splitter machine framing the master-detail arrangement. No registry or template here - the
 // point is the machines standing alone as capabilities.
 //
 

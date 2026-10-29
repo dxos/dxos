@@ -21,7 +21,7 @@ import { navTreeOpenAspect } from './nav-tree-view-state.ts';
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
 const defaultOpen = false;
 
-/** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
+/** L0 (top-level workspace) paths are direct children of root - not part of the expandable tree model. */
 const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === GraphNode.RootId;
 
 /** Default state entries for initial tree structure. */
@@ -123,7 +123,7 @@ export default Capability.makeModule(
 
       // Deferred only far enough to leave the layout notification (writing item atoms synchronously here
       // would set state during the tree's render pass). Items whose path is not registered yet no longer
-      // need waiting out — they seed `current` from `activeIds` when they register.
+      // need waiting out - they seed `current` from `activeIds` when they register.
       queueMicrotask(handleUpdate);
     };
 

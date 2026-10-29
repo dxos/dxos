@@ -147,10 +147,10 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _runtime: EffectContext.Context<never>;
   readonly _repoProxy: RepoProxy;
 
-  // ── Object storage ──────────────────────────────────────────────────────
+  // -- Object storage ------------------------------------------------------
   /**
    * Loaded cores, held weakly: a space holds what the caller has open rather than everything it has
-   * ever read. A collected core takes its document handle and satisfaction request with it — see
+   * ever read. A collected core takes its document handle and satisfaction request with it - see
    * {@link _releaseObject}.
    */
   private readonly _objects = new ObjectCoreRegistry({ onRelease: (id) => this._releaseObject(id) });
@@ -172,7 +172,7 @@ export class EntityManager implements IDatabaseBinding {
    * Object ids whose backing document was determined to be not on local disk
    * via a `diskOnly` load probe. Used by `loadObjectCoreById` to bail out
    * of the wait without resolving when the doc would otherwise require
-   * network delivery — turning previously infinite stalls into a fast
+   * network delivery - turning previously infinite stalls into a fast
    * `undefined` return.
    */
   private readonly _unavailableObjects = new Set<EntityId>();
@@ -194,7 +194,7 @@ export class EntityManager implements IDatabaseBinding {
 
   private _ctx: Context | undefined;
 
-  // ── Events ──────────────────────────────────────────────────────────────
+  // -- Events --------------------------------------------------------------
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   /** Objects a local commit wrote, emitted synchronously after the commit and before {@link _updateEvent}. */
   readonly _localCommitEvent = new Event<ItemsUpdatedEvent>();
@@ -214,7 +214,7 @@ export class EntityManager implements IDatabaseBinding {
     return this._reconnected;
   }
 
-  // ── Automerge document state ────────────────────────────────────────────
+  // -- Automerge document state --------------------------------------------
   private _spaceRootDocHandle: DocHandleProxy<DatabaseDirectory> | null = null;
 
   /**
@@ -231,7 +231,7 @@ export class EntityManager implements IDatabaseBinding {
   /**
    * Object ids per document, the inverse of {@link _objectDocumentHandles}. Releasing one object's
    * core must not drop a document another loaded object is still mounted in, and a linked document
-   * can hold several — so the last object out is what makes the handle evictable, which this answers
+   * can hold several - so the last object out is what makes the handle evictable, which this answers
    * without a scan of the loaded set.
    */
   private readonly _documentObjects = new Map<DocHandleProxy<DatabaseDirectory>, Set<string>>();
@@ -244,7 +244,7 @@ export class EntityManager implements IDatabaseBinding {
 
   private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
 
-  // ── Update scheduling ────────────────────────────────────────────────────
+  // -- Update scheduling ----------------------------------------------------
   private _objectsForNextDbUpdate = new Set<string>();
   /** Objects the current local commit wrote, emitted by {@link #flushLocalCommit} once it ends. */
   readonly #objectsForLocalCommit = new Set<string>();
@@ -254,7 +254,7 @@ export class EntityManager implements IDatabaseBinding {
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
 
-  // ── Private event field ──────────────────────────────────────────────────
+  // -- Private event field --------------------------------------------------
   private readonly _rootChangedEvent = new Event<void>();
 
   /** Object ids the space root has started routing, as it gains them. */
@@ -325,7 +325,7 @@ export class EntityManager implements IDatabaseBinding {
     return this._linksAddedEvent;
   }
 
-  // ── Lifecycle ────────────────────────────────────────────────────────────
+  // -- Lifecycle ------------------------------------------------------------
 
   /**
    * Opens the entity manager: starts the repo and wires up update scheduling.
@@ -396,7 +396,7 @@ export class EntityManager implements IDatabaseBinding {
     this.opened.wake();
 
     // Restore device-local branch selections (e.g. after a reload) and re-bind each branched subtree
-    // to its selected branch — objects otherwise load on `main`.
+    // to its selected branch - objects otherwise load on `main`.
     if (this._branchStore) {
       await this._hydrateCurrentBranches();
     }
@@ -405,7 +405,7 @@ export class EntityManager implements IDatabaseBinding {
   private async _hydrateCurrentBranches(): Promise<void> {
     try {
       const entries = await this._branchStore!.load();
-      // Only selections whose branch still exists are installed — `switchBranch` records the
+      // Only selections whose branch still exists are installed - `switchBranch` records the
       // selection itself, so a stale entry (deleted branch) never leaves `getCurrentBranch`
       // reporting a branch the core is not actually bound to.
       const reapplied = new Set<string>();
@@ -422,7 +422,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Chains {@link BranchStore.save} calls so writes land in selection order — concurrent saves
+   * Chains {@link BranchStore.save} calls so writes land in selection order - concurrent saves
    * resolving out of order could otherwise persist a stale selection map.
    */
   private _persistChain: Promise<void> = Promise.resolve();
@@ -468,7 +468,7 @@ export class EntityManager implements IDatabaseBinding {
   async close(ctx?: Context): Promise<void> {
     this.#rejectOpenedUntilReopen();
     // A closed manager can be reopened (the database re-runs `openWithSpaceState`), and that path
-    // creates a core for every inline object in the directory — so cores and handles surviving the
+    // creates a core for every inline object in the directory - so cores and handles surviving the
     // close would be re-created over themselves.
     this.#closed = true;
     this.#lifetimeEnded.emit();
@@ -487,13 +487,13 @@ export class EntityManager implements IDatabaseBinding {
     await this._repoProxy.close(ctx);
   }
 
-  /** Whether the lifetime a load started in has ended — closed, or already replaced by a reopen. */
+  /** Whether the lifetime a load started in has ended - closed, or already replaced by a reopen. */
   #isStale(generation: number): boolean {
     return this.#closed || this.#generation !== generation;
   }
 
   /**
-   * A promise that rejects when the given lifetime ends, for a load to race its wait against — a
+   * A promise that rejects when the given lifetime ends, for a load to race its wait against - a
    * closed manager never satisfies a load's readiness predicate, so an unraced wait would hang
    * instead of settling. The caller races it immediately, so its rejection is always observed, and
    * disposes it once its wait settles.
@@ -510,7 +510,7 @@ export class EntityManager implements IDatabaseBinding {
     return { promise, dispose };
   }
 
-  // ── Core object operations ───────────────────────────────────────────────
+  // -- Core object operations -----------------------------------------------
 
   /** @deprecated Return only loaded objects. */
   allObjectCores(): ObjectCore[] {
@@ -527,7 +527,7 @@ export class EntityManager implements IDatabaseBinding {
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
     // A closed database has an empty working set, and every caller of this synchronous read already
-    // treats an absent core as unresolved — whereas throwing reaches the fire-and-forget query
+    // treats an absent core as unresolved - whereas throwing reaches the fire-and-forget query
     // paths that outlive the close (index hydration recomputing a result) as an unhandled
     // rejection. The throw below stays for a database that was never opened, which is a caller bug.
     if (this.#closed) {
@@ -550,7 +550,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Recreates a core from a document this space already holds — the case where the previous core was
+   * Recreates a core from a document this space already holds - the case where the previous core was
    * collected but its document did not go with it (an inline object in the space root, or a linked
    * document whose release was deferred).
    *
@@ -566,7 +566,7 @@ export class EntityManager implements IDatabaseBinding {
     }
     const core = this._createObjectInDocument(handle, objectId);
     // The handle is whatever the object was last bound to, which is the branch document while a
-    // branch is selected — so the fresh core has to carry that selection too, or `Obj.getBranch`
+    // branch is selected - so the fresh core has to carry that selection too, or `Obj.getBranch`
     // would report `main` for an object reading and writing a branch.
     core.branch = this.getCurrentBranch(objectId);
     return core;
@@ -684,7 +684,7 @@ export class EntityManager implements IDatabaseBinding {
     return row;
   }
 
-  /** The object's structure when it is the only thing its loaded document holds — the shape a JSON row can stand for. */
+  /** The object's structure when it is the only thing its loaded document holds - the shape a JSON row can stand for. */
   #soleObjectStructure(id: string, handle: DocHandleProxy<DatabaseDirectory>): EntityStructure | undefined {
     if (handle === this._spaceRootDocHandle || this._documentObjects.get(handle)?.size !== 1) {
       return undefined;
@@ -976,7 +976,7 @@ export class EntityManager implements IDatabaseBinding {
     };
 
     // Subscribed explicitly rather than through `Event.waitFor`, which unsubscribes only when its
-    // predicate matches and returns no handle — so a wait the cancellation below wins would leave
+    // predicate matches and returns no handle - so a wait the cancellation below wins would leave
     // its predicate running on every later update, for every load a teardown interrupted.
     let disposeUpdateListener: CleanupFn = () => {};
     const waitForUpdate = new Promise<void>((resolve) => {
@@ -1132,7 +1132,7 @@ export class EntityManager implements IDatabaseBinding {
             resolve(result);
           }
         });
-        // The listener above outlives a close, and its updates stop arriving — without this the
+        // The listener above outlives a close, and its updates stop arriving - without this the
         // batch would report an inactivity timeout rather than the cancellation that occurred.
         disposeCancellation = this.#lifetimeEnded.on(() => {
           clearTimeout(inactivityTimeoutTimer);
@@ -1548,7 +1548,7 @@ export class EntityManager implements IDatabaseBinding {
     this._reconnected.emit();
   }
 
-  // ── Document-handle public surface ───────────────────────────────────────
+  // -- Document-handle public surface ---------------------------------------
 
   getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
@@ -1612,7 +1612,7 @@ export class EntityManager implements IDatabaseBinding {
   /**
    * Fork the object and its referenced subtree into a new branch. Does not switch to it.
    *
-   * Storage/replication cost: each member's branch doc is a full `A.save` copy (history included —
+   * Storage/replication cost: each member's branch doc is a full `A.save` copy (history included -
    * deliberately, so `A.merge` back into main is a true shared-ancestry CRDT merge), and branch
    * docs join the space document list via the root registry (see `DatabaseRoot.getAllLinkedDocuments`),
    * so they replicate and export like linked object docs. O(subtree size x branch count).
@@ -1649,7 +1649,7 @@ export class EntityManager implements IDatabaseBinding {
     const members = await this._collectSubtree(rootCore);
     // Validate the whole subtree up front, before importing any documents: a member failing the
     // check mid-loop would otherwise leave already-imported branch docs orphaned in the repo. Fork
-    // only from main — the source doc is the member's current core doc, so a subtree switched to
+    // only from main - the source doc is the member's current core doc, so a subtree switched to
     // another branch would capture that branch's content (branch-of-branch is not yet supported).
     for (const member of members) {
       invariant(this._hasOwnDocument(member.id), 'cannot branch an inline object (promotion not yet implemented)');
@@ -1765,7 +1765,7 @@ export class EntityManager implements IDatabaseBinding {
    * Fold MAIN's changes into a branch across the subtree via `A.merge` (well-defined because the
    * branch shares fork ancestry with main), leaving the device on its current selection. The reverse
    * of {@link mergeBranch}: after syncing, the branch is "main + the branch's own changes", so a diff
-   * of branch vs main contains only the branch's edits — main's progress never reads as deletions.
+   * of branch vs main contains only the branch's edits - main's progress never reads as deletions.
    */
   async syncBranch(rootObjectId: string, name: string): Promise<void> {
     invariant(name !== 'main', 'cannot sync main into itself');
@@ -1864,7 +1864,7 @@ export class EntityManager implements IDatabaseBinding {
   /**
    * Core-level independent-instance branch binding: an ephemeral `ObjectCore` bound to the branch document
    * of one object, independent of the device-global selection (`switchBranch`) and of other
-   * bindings. The caller owns the returned core and must call `dispose` — bindings are never
+   * bindings. The caller owns the returned core and must call `dispose` - bindings are never
    * persisted (the {@link BranchStore} records only the device default, which bindings override
    * locally and never mutate). Reads resolve the branch doc; writes land on the branch doc only.
    */
@@ -1897,7 +1897,7 @@ export class EntityManager implements IDatabaseBinding {
     return {
       core,
       dispose: () => {
-        // Releases the binding's listeners only — the branch document itself stays (it is referenced
+        // Releases the binding's listeners only - the branch document itself stays (it is referenced
         // by the synced registry and keeps replicating).
         handle.off('change', onChange);
         for (const unsubscribe of core.subscriptions) {
@@ -1949,7 +1949,7 @@ export class EntityManager implements IDatabaseBinding {
     this._onObjectBoundToDocument(handle, memberId);
   }
 
-  // ── Document-handle private implementation ───────────────────────────────
+  // -- Document-handle private implementation -------------------------------
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   private async _loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
@@ -2136,7 +2136,7 @@ export class EntityManager implements IDatabaseBinding {
     if (!links) {
       return;
     }
-    // A reader that could not route an object to its document — an index hit, say — can once these
+    // A reader that could not route an object to its document - an index hit, say - can once these
     // arrive.
     const added = Object.keys(links).filter((objectId) => !this.#linkedObjectIds.has(objectId));
     if (added.length > 0) {
@@ -2350,7 +2350,7 @@ export class EntityManager implements IDatabaseBinding {
         if (!RepoClosedError.is(err)) {
           throw err;
         }
-        // The proxy closed under a load this manager started while open — its own `#closed` flag
+        // The proxy closed under a load this manager started while open - its own `#closed` flag
         // tracks a different object's lifetime, so it cannot stand in for this check.
         log('repo closed while links were resolving, abandoning load', logMeta);
         return;
@@ -2388,8 +2388,8 @@ export class EntityManager implements IDatabaseBinding {
    */
   #recoverWhenAvailable(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
     handle.once('available', () => {
-      // The wait outlives the space that started it, so a handle re-bound elsewhere — or a closed
-      // manager — must not recreate an evicted object.
+      // The wait outlives the space that started it, so a handle re-bound elsewhere - or a closed
+      // manager - must not recreate an evicted object.
       if (this.#isStale(generation) || this._objectDocumentHandles.get(objectId) !== handle) {
         return;
       }
@@ -2484,7 +2484,7 @@ export class EntityManager implements IDatabaseBinding {
       }
       if (DocumentUnavailableError.is(err)) {
         // Terminal for now, so the retry below would spin: the host has said it cannot produce this
-        // document. Recovery is armed rather than retried — the object stays bound to this handle,
+        // document. Recovery is armed rather than retried - the object stays bound to this handle,
         // so nothing would start a fresh load once the bytes do arrive.
         log.warn('object document is not available on the host', { objectId, automergeUrl: handle.url });
         this._onObjectUnavailable({ handle, objectId });
@@ -2500,7 +2500,7 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  // ── Private document change handlers ────────────────────────────────────
+  // -- Private document change handlers ------------------------------------
 
   private async _handleSpaceRootDocumentChange(
     spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
@@ -2664,7 +2664,7 @@ export class EntityManager implements IDatabaseBinding {
   };
 
   /**
-   * Drops objects whose directory entry was removed — a garbage-collection pass replicating in, or
+   * Drops objects whose directory entry was removed - a garbage-collection pass replicating in, or
    * a local {@link retainObjects}. Nothing else re-derives the working set from the directory, so an
    * object left here keeps answering queries long after its document is gone. An object whose
    * document is still being created is momentarily absent from the directory, so it is skipped.
@@ -2737,7 +2737,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Drops everything this space keeps beside a core once that core is gone — because the caller let
+   * Drops everything this space keeps beside a core once that core is gone - because the caller let
    * go of the object and it was collected, or because its directory entry was removed.
    *
    * `releaseDocument` separates the two: an unlinked object's document is dropped too (with the last
@@ -2758,7 +2758,7 @@ export class EntityManager implements IDatabaseBinding {
 
     if (!releaseDocument) {
       // The core was transient; its document is not. A collected core says nothing about whether the
-      // document is still being read — another object may share it, a load may be in flight — so the
+      // document is still being read - another object may share it, a load may be in flight - so the
       // document stays and the next read rebuilds the core from it.
       return;
     }
@@ -2859,8 +2859,8 @@ export class EntityManager implements IDatabaseBinding {
 
     // A ready handle does not mean the body arrived: a linked document settles empty while the peer
     // holding it is still replicating. The core is created either way so the object keeps one
-    // identity across the body landing, and carries the absence as `isBodyAvailable` — which the
-    // read paths check — instead of encoding it as a missing core.
+    // identity across the body landing, and carries the absence as `isBodyAvailable` - which the
+    // read paths check - instead of encoding it as a missing core.
     if (!core.isBodyAvailable) {
       this._onObjectUnavailable({ handle, objectId });
       return;
@@ -2966,7 +2966,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Clears the unavailable mark of every object whose body has now landed in its document — the
+   * Clears the unavailable mark of every object whose body has now landed in its document - the
    * other half of a core created against a document that settled without one.
    */
   private _markBodiesAvailable(objectIds: string[]): void {
@@ -3001,11 +3001,11 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  // ── Update scheduling ────────────────────────────────────────────────────
+  // -- Update scheduling ----------------------------------------------------
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private _emitDbUpdateEvents(_ctx: Context): void {
-    // Mid root-document swap there is nothing to emit against — listeners resolve cores through the
+    // Mid root-document swap there is nothing to emit against - listeners resolve cores through the
     // root. Pending ids are kept; `updateSpaceState` re-triggers after the swap.
     if (!this._spaceRootDocHandle) {
       return;

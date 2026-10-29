@@ -45,7 +45,7 @@ const lineStart = (doc: string, line: number): number =>
     .reduce((acc, text) => acc + text.length + 1, 0);
 
 // Runs `command` with the caret on `line` and returns the resulting document. A fresh view per call
-// (destroyed after) keeps the cases independent and cancels any pending measure — the source of the
+// (destroyed after) keeps the cases independent and cancels any pending measure - the source of the
 // former flakiness that had this suite gated out of CI.
 const run = (doc: string, line: number, command: Command): string => {
   const view = new EditorView({ state: EditorState.create({ doc, extensions }) });
@@ -81,7 +81,7 @@ describe('outliner commands', () => {
   });
 
   test('unindent carries the whole subtree with its parent', ({ expect }) => {
-    // Outdent "2.2" (with 2.2.1–2.2.3) from level 2 to level 1.
+    // Outdent "2.2" (with 2.2.1-2.2.3) from level 2 to level 1.
     expect(run(DOC, 3, indentItemLess)).to.eq(
       join(
         '- [ ] 1',
@@ -118,12 +118,12 @@ describe('outliner commands', () => {
   });
 
   test('delete removes the whole subtree under the caret item', ({ expect }) => {
-    // Caret on "2" (a parent): its descendants 2.1–2.3 go with it.
+    // Caret on "2" (a parent): its descendants 2.1-2.3 go with it.
     expect(run(DOC, 1, deleteItem)).to.eq(join('- [ ] 1', '- [ ] 3'));
   });
 
   test('delete acts on the block selection, scoped to each selected subtree', ({ expect }) => {
-    // Select "2.2" (owns 2.2.1–2.2.3); delete removes the whole subtree, not just its line.
+    // Select "2.2" (owns 2.2.1-2.2.3); delete removes the whole subtree, not just its line.
     const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
     try {
       view.dispatch({ effects: setBlockSelection.of([lineStart(DOC, 3)]) });
@@ -181,7 +181,7 @@ describe('outliner commands', () => {
   });
 
   // Converting an item that is already a link would replace it with a link to a NEW object named
-  // after the old label, orphaning the first — so the convert action is gated on this predicate.
+  // after the old label, orphaning the first - so the convert action is gated on this predicate.
   test('an item converted to a link is not convertible again', ({ expect }) => {
     const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
     try {

@@ -89,7 +89,7 @@ const tours = inputs.filter((file) => /^tour-\d+$/.test(name(file))).sort((a, b)
 const cells = inputs.filter((file) => !tours.includes(file));
 log(`${tours.length} tour clips, ${cells.length} grid clips in ${SOURCE}`);
 if (tours.length < 1 || tours.some((file, index) => step(file) !== index + 1)) {
-  console.error('need tour-1 … tour-<n>, numbered from 1 without gaps; see docs/SHOWCASE.md');
+  console.error('need tour-1 ... tour-<n>, numbered from 1 without gaps; see docs/SHOWCASE.md');
   process.exit(1);
 }
 
@@ -100,7 +100,7 @@ for (const file of inputs) {
   const source = path.join(SOURCE, file);
   const args = IMAGE.test(file) ? ['-loop', '1', '-t', options.still, '-i', source] : ['-i', source];
   const { code, output } = await run('ffmpeg', ['-v', 'error', '-y', ...args, '-vf', FRAME, ...ENCODE, out]);
-  log(`${file} → ${path.basename(out)}${code === 0 ? '' : ` FAILED: ${output.trim().split('\n').pop()}`}`);
+  log(`${file} -> ${path.basename(out)}${code === 0 ? '' : ` FAILED: ${output.trim().split('\n').pop()}`}`);
 }
 
 // The grid cells around the tours: fewer clips repeat, and layout.mjs keeps each repeat away from itself.
@@ -156,4 +156,4 @@ if (render.code !== 0) {
 copyFileSync(out, path.join(SOURCE, 'composite.mp4'));
 mkdirSync(path.join(ROOT, 'temp', 'composite'), { recursive: true });
 copyFileSync(out, path.join(ROOT, 'temp', 'composite', 'composite.mp4'));
-log(`composite → ${path.join(SOURCE, 'composite.mp4')}`);
+log(`composite -> ${path.join(SOURCE, 'composite.mp4')}`);

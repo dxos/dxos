@@ -101,7 +101,7 @@ describe('Journal', () => {
       const entry = await getOrCreateEntry(journal, db);
       await addBullet(entry, 'existing content');
 
-      // Simulate a second quick entry — should append, not overwrite.
+      // Simulate a second quick entry - should append, not overwrite.
       const sameEntry = await getOrCreateEntry(journal, db);
       await addBullet(sameEntry, 'new content');
 

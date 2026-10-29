@@ -384,7 +384,7 @@ const PredicateCard = ({ predicate }: { predicate: AgentKnowledgePredicate }) =>
             <Card.Text truncate>
               {predicate.vocabulary === 'brain'
                 ? t('agent-knowledge-predicate-minted.label')
-                : (predicate.vocabulary ?? '—')}
+                : (predicate.vocabulary ?? '-')}
             </Card.Text>
           ),
         },
@@ -504,7 +504,7 @@ type AgentKnowledgeNode = {
 type AgentKnowledgeEdge = {
   source: string;
   target: string;
-  /** `related`: entity → entity a fact relates it to; `owner`: goal → holder; `knows`: agent → entity. */
+  /** `related`: entity -> entity a fact relates it to; `owner`: goal -> holder; `knows`: agent -> entity. */
   kind: 'related' | 'owner' | 'knows';
 };
 

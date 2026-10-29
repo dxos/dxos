@@ -124,7 +124,7 @@ export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolki
   }).pipe(Effect.withSpan('McpToolkit.make'));
 
 /**
- * Connects, lists the server's tools and disconnects — a connection check that leaves nothing open.
+ * Connects, lists the server's tools and disconnects - a connection check that leaves nothing open.
  */
 export const probe = (options: Options): Effect.Effect<{ tools: string[] }, McpConnectionError> =>
   Effect.acquireUseRelease(
@@ -147,7 +147,7 @@ export const probe = (options: Options): Effect.Effect<{ tools: string[] }, McpC
  * Returns true when the error (or its wrapped cause) contains a 405 status code.
  *
  * `Effect.tryPromise` wraps thrown errors in `Cause.UnknownError`, which in v4 carries the original
- * on `cause` (it was `error` in v3) and leaves its own `message` unset — so it must be unwrapped.
+ * on `cause` (it was `error` in v3) and leaves its own `message` unset - so it must be unwrapped.
  */
 export const is405 = (error: unknown): boolean => {
   const cause = Cause.isUnknownError(error) ? error.cause : error;
@@ -247,7 +247,7 @@ const MESSAGE_LIMIT = 200;
 export const formatCause = (error: unknown): string => {
   const inner = Cause.isUnknownError(error) ? error.cause : error;
   const message = inner instanceof Error ? inner.message : Cause.isCause(error) ? Cause.pretty(error) : String(inner);
-  return message.length > MESSAGE_LIMIT ? `${message.slice(0, MESSAGE_LIMIT)}…` : message;
+  return message.length > MESSAGE_LIMIT ? `${message.slice(0, MESSAGE_LIMIT)}\u2026` : message;
 };
 
 /**

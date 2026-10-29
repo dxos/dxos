@@ -196,13 +196,13 @@ export const AddObject = Operation.make({
       'sheet, file, or collection goes into the space root collection; other types are only added to the space.',
     icon: 'ph--plus--regular',
   },
-  // Required: the caller names the database — an explicit spaceId, or a database provided in the
+  // Required: the caller names the database - an explicit spaceId, or a database provided in the
   // calling context (the app's create-object dispatch does the latter). The capability manager
   // carries the `DefaultParent` rules that file an object given no target; every host binds it.
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     // A union rather than two optional fields, so the schema itself admits exactly one form: a
-    // caller that cannot hold a live object — anything across an RPC boundary — describes one, and
+    // caller that cannot hold a live object - anything across an RPC boundary - describes one, and
     // the handler instantiates it against the space's type registry.
     object: Schema.Union([Obj.Unknown, ObjectDraft]).annotate({
       description: 'The object to add: an instantiated object, or a description of one to create.',
@@ -210,7 +210,7 @@ export const AddObject = Operation.make({
     // A reference is the only form that survives an RPC boundary, so a remote caller names the
     // target collection that way; in-process callers keep passing the live entity. Absent, the
     // object's type decides its parent (`DefaultParent`), in the database the runtime resolved from
-    // the space id — a database is never an input, since it cannot cross a process boundary.
+    // the space id - a database is never an input, since it cannot cross a process boundary.
     target: Schema.optional(Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)])).annotate({
       description:
         'The parent of the object, or a reference to it. A collection files it; any other object ' +
@@ -263,7 +263,7 @@ export const RemoveObjects = Operation.make({
 }).pipe(Operation.mutation('destructive'));
 
 /**
- * Reclaim the storage held by a space's deleted objects. Permanent — the objects are removed
+ * Reclaim the storage held by a space's deleted objects. Permanent - the objects are removed
  * from the space directory and their documents wiped, on this peer and, as the change
  * replicates, on every other.
  */
@@ -283,8 +283,8 @@ export const CollectGarbage = Operation.make({
 });
 
 /**
- * Remove every object from a space except its `SpaceProperties`. The root collection is kept —
- * `RootCollectionAnnotation` must keep resolving for the space to stay navigable — but emptied.
+ * Remove every object from a space except its `SpaceProperties`. The root collection is kept -
+ * `RootCollectionAnnotation` must keep resolving for the space to stay navigable - but emptied.
  *
  * The cleared objects are reclaimed rather than left as tombstones, so unlike
  * {@link RemoveObjects} this is permanent and deliberately has no undo mapping.
@@ -334,7 +334,7 @@ export const DeleteField = Operation.make({
  * - `draft` (default) builds it from the form's values on submit, so nothing is written if the
  *   dialog is dismissed.
  * - `live` adds it to the database before the form opens, so fields that resolve against the
- *   database — dynamic option lookups, autofill, inline refs, child objects — behave exactly as
+ *   database - dynamic option lookups, autofill, inline refs, child objects - behave exactly as
  *   they do after creation. A dismissal removes it again.
  */
 export const OpenObjectForm = Operation.make({
@@ -576,7 +576,7 @@ export const AddRelation = Operation.make({
     key: DXN.make('org.dxos.operation.space.addRelation'),
     name: 'Add Relation',
     description:
-      'Relate two objects. The relation is itself typed, so name a relation type the space knows — ' +
+      'Relate two objects. The relation is itself typed, so name a relation type the space knows - ' +
       'query the types to find one.',
     icon: 'ph--link--regular',
   },
@@ -670,7 +670,7 @@ export type DuplicateGroupResult = Schema.Schema.Type<typeof DuplicateGroupResul
 
 /**
  * Groups objects of a type that share an identity key. The rule is the `IdentitySpec` the owning
- * plugin contributes for that typename — the same rule the extractor uses to decide create vs
+ * plugin contributes for that typename - the same rule the extractor uses to decide create vs
  * merge, so a scan never disagrees with what extraction would have done.
  */
 export const FindDuplicates = Operation.make({
@@ -816,7 +816,7 @@ export const QueryObjects = Operation.make({
   input: Schema.Struct({
     in: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))).annotate({
       description:
-        'Restrict results to objects reachable from these ones (transitively) — a feed, a collection, ' +
+        'Restrict results to objects reachable from these ones (transitively) - a feed, a collection, ' +
         "a mailbox's feed. Queue-backed content is addressed this way.",
     }),
     typename: Schema.optional(typenameParameter),
@@ -829,8 +829,8 @@ export const QueryObjects = Operation.make({
     }),
     includeQueues: Schema.optional(Schema.Boolean).annotate({
       description:
-        'Also search the space queues (default false). Queue-backed content — mailbox emails, ' +
-        'calendar events — lives behind a feed ref and is invisible without this.',
+        'Also search the space queues (default false). Queue-backed content - mailbox emails, ' +
+        'calendar events - lives behind a feed ref and is invisible without this.',
     }),
   }),
   output: Schema.Struct({
@@ -905,9 +905,9 @@ export const QueryTypes = Operation.make({
     key: DXN.make('org.dxos.operation.space.queryTypes'),
     name: 'Query Types',
     description:
-      'List the types objects in this space can have — those persisted in the space and those the ' +
-      'host itself registers. Returns a summary per type — typename, version, kind, name, ' +
-      'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
+      'List the types objects in this space can have - those persisted in the space and those the ' +
+      'host itself registers. Returns a summary per type - typename, version, kind, name, ' +
+      'description, field names - or, for the typenames named, their full JSON Schema. Read the ' +
       "summary first and ask for a type's schema only when about to create or update one of it.",
     icon: 'ph--list--regular',
   },

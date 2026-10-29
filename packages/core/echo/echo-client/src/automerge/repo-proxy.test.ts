@@ -330,7 +330,7 @@ describe('RepoProxy', () => {
     }
   });
 
-  // Asserts the `pending → requesting → ready` state machine: when a doc is
+  // Asserts the `pending -> requesting -> ready` state machine: when a doc is
   // not on disk and is not reachable via the network, the worker-side disk
   // probe still settles and notifies the client, transitioning the handle
   // from `pending` to `requesting`. `whenReady()` continues to wait
@@ -361,7 +361,7 @@ describe('RepoProxy', () => {
     expect(handle.state).toEqual('requesting');
     expect(handle.isReady()).toBe(false);
 
-    // `whenReady()` must NOT resolve — there is no source for the doc on
+    // `whenReady()` must NOT resolve - there is no source for the doc on
     // disk or on the network.
     let readyResolved = false;
     void handle.whenReady().then(
@@ -850,7 +850,7 @@ describe('RepoProxy', () => {
 
   // `Resource` holds `_lifecycleState` at OPEN for the whole of `close()`, and the update job stays
   // set across `_close`'s `join()`, so a find landing inside the close passed both of those checks
-  // while the context was already disposed — the handle it returned could never reach the host.
+  // while the context was already disposed - the handle it returned could never reach the host.
   test('find reports the client going away once close has begun', async () => {
     const { dataService } = await setup();
     const [clientRepo] = createProxyRepos(dataService);
@@ -860,13 +860,13 @@ describe('RepoProxy', () => {
     const url = handle.url;
     invariant(url);
 
-    // The document is still in `_handles` here — `_close` clears the cache only after its `join()`
-    // — so this is also the cached-hit path, which reached no guard at all before: `_getOrLoadHandle`
+    // The document is still in `_handles` here - `_close` clears the cache only after its `join()`
+    // - so this is also the cached-hit path, which reached no guard at all before: `_getOrLoadHandle`
     // returned the cached handle before ever calling one.
     //
     // Not awaited, so the assertions run while the close is still in flight. `close()` awaits the
     // open promise before it starts, so the yield is what puts us inside the close rather than
-    // before it — and the lifecycle state is still OPEN throughout.
+    // before it - and the lifecycle state is still OPEN throughout.
     const closing = clientRepo.close();
     await yieldToEventLoop();
     expect(clientRepo.isOpen).to.be.false;
@@ -1339,7 +1339,7 @@ class UnavailableDataService extends DataServiceImpl {
 
 /**
  * Ends the first `subscribe` stream on demand, so the host runs the finalizer that forgets the
- * subscription while the client stays connected — the shape that made every later call on that
+ * subscription while the client stays connected - the shape that made every later call on that
  * subscription id fail with "Subscription not found".
  */
 class DroppableDataService extends DataServiceImpl {

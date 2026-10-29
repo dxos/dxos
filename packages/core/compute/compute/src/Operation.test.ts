@@ -39,7 +39,7 @@ describe('Operation visibility', () => {
     const op = Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY, name: 'Test Op' } });
     const annotated = op.pipe(Operation.visible);
     expect(Operation.isVisible(Operation.serialize(annotated))).toBe(true);
-    // The original definition is untouched — combinators return a fresh value.
+    // The original definition is untouched - combinators return a fresh value.
     expect(Operation.isVisible(Operation.serialize(op))).toBe(false);
   });
 
@@ -110,7 +110,7 @@ describe('findToolNameCollisions', () => {
   });
 
   // Kebab-casing is not injective: a camelCase segment and an already-hyphenated one converge. No key
-  // carries a hyphen today — the `operation-key-shape` rule forbids it — so this constructs the pair
+  // carries a hyphen today - the `operation-key-shape` rule forbids it - so this constructs the pair
   // rather than borrowing a real one, and stands as the regression test if one ever slips back in.
   test('catches a camelCase segment converging with an already-hyphenated one', ({ expect }) => {
     const collisions = Operation.findToolNameCollisions([
@@ -128,7 +128,7 @@ describe('tryToolNameFromKey', () => {
   });
 
   // Registry records arrive as JSON, so a key that cannot yield a valid name must cost only its own
-  // tool — the throwing variant would abort every tool in the projection.
+  // tool - the throwing variant would abort every tool in the projection.
   test('returns undefined for a key that cannot yield a valid name', ({ expect }) => {
     expect(Operation.tryToolNameFromKey('org.dxos.operation.9bad.go')).toBeUndefined();
     expect(Operation.tryToolNameFromKey('')).toBeUndefined();

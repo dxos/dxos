@@ -44,7 +44,7 @@ export type AssignOptions = {
 
 /**
  * Puts facts into named graphs: facts that share their provenance (source, speaker, time, quote, factuality,
- * extraction pass, …) share a graph, and a fact that differs in any of it starts another. A fact that already names
+ * extraction pass, ...) share a graph, and a fact that differs in any of it starts another. A fact that already names
  * a graph keeps it. Each fact gets its predicate IRI, and the id it will have once stored.
  */
 export const assign = (facts: readonly Fact[], { name, ontology = Ontology.DEFAULT }: AssignOptions = {}): Fact[] =>
@@ -123,7 +123,7 @@ const write = (quads: Iterable<Quad>, prefixes: Record<string, string>): string 
 
 /**
  * The facts as TriG: each graph's statements, then its provenance. The brain's namespace reads as `brain:`, and the
- * entities local to each graph as `g1:`, `g2:`, … so a graph-local entity is visibly not a shared one.
+ * entities local to each graph as `g1:`, `g2:`, ... so a graph-local entity is visibly not a shared one.
  */
 export const toTriG = (facts: readonly Fact[], ontology: Ontology.Ontology = Ontology.DEFAULT): string => {
   const quads = facts.flatMap((fact) => Mapping.factToTriples(fact, ontology));

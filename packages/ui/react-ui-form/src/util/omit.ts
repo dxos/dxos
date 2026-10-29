@@ -9,7 +9,7 @@ import { Annotation, Type } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 // TODO(burdon): Reconcile with @dxos/echo.
-// Distributive: applied per union member so `ExcludeId<A | B>` → `ExcludeId<A> | ExcludeId<B>` rather
+// Distributive: applied per union member so `ExcludeId<A | B>` -> `ExcludeId<A> | ExcludeId<B>` rather
 // than `Omit<InstanceType<A> | InstanceType<B>, 'id'>` (which would intersect away per-member narrowing).
 export type ExcludeId<S extends Schema.Codec<any, any> | Type.AnyEntity> = S extends Type.AnyEntity
   ? Omit<Type.InstanceType<S>, 'id'>
@@ -29,7 +29,7 @@ export const omitId = <S extends Schema.Codec<any, any> | Type.AnyEntity>(
 
 /**
  * Removes the `id` field where present, preserving the schema's shape. Recurses into unions so a
- * discriminated (create) schema keeps its discriminant — `Schema.omit('id')` is a struct operation and
+ * discriminated (create) schema keeps its discriminant - `Schema.omit('id')` is a struct operation and
  * would otherwise flatten the union, breaking variant rendering. A no-op when there is no `id` (plain
  * create structs that never carried one).
  */

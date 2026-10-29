@@ -8,7 +8,7 @@ import { Word } from '#types';
 
 const NOW = new Date('2026-01-01T00:00:00.000Z');
 
-// The drill's whole schedule lives in `applyReview` + `isDue`, and both are pure — so the Leitner
+// The drill's whole schedule lives in `applyReview` + `isDue`, and both are pure - so the Leitner
 // behaviour is worth pinning down here rather than through the article that renders it.
 describe('Word scheduling', () => {
   test('a correct answer advances one box; a miss drops straight to zero', ({ expect }) => {
@@ -30,8 +30,8 @@ describe('Word scheduling', () => {
     }
     expect(progress.box).toBe(Word.BOX_COUNT);
 
-    // `applyReview` still stamps a `dueAt` — the last interval is what a card in the final box would
-    // wait — so reaching BOX_COUNT is what has to take the word out of the drill, not the date.
+    // `applyReview` still stamps a `dueAt` - the last interval is what a card in the final box would
+    // wait - so reaching BOX_COUNT is what has to take the word out of the drill, not the date.
     const word = { progress };
     expect(Word.isDue(word, new Date('2100-01-01T00:00:00.000Z'))).toBe(false);
   });

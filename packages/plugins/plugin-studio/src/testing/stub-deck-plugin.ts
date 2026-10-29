@@ -14,7 +14,7 @@ import { DXN } from '@dxos/echo';
 
 /**
  * No-op handler for the one layout operation the storyboard invokes that belongs to the deck, which
- * stories do not install: opening the frame companion. `Select` is deliberately NOT stubbed — it
+ * stories do not install: opening the frame companion. `Select` is deliberately NOT stubbed - it
  * belongs to AttentionPlugin (in `corePlugins`), and a no-op would swallow the selection the stack
  * publishes, leaving `useSelection` empty and the companion dead.
  */

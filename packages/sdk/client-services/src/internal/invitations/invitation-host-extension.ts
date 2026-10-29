@@ -273,7 +273,7 @@ export class InvitationHostExtension
         });
       }
       // Only while the flow is still where this method left it. When `options` and `introduce` are
-      // dispatched in one drain — the overtaking this whole path exists to survive — the handlers
+      // dispatched in one drain - the overtaking this whole path exists to survive - the handlers
       // have already carried the state past CONNECTED, and re-emitting it here would rewind them.
       if (this._lastSetState === Invitation_State.CONNECTING) {
         this._setState(Invitation_State.CONNECTED);

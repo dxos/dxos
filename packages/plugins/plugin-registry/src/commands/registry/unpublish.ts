@@ -17,7 +17,7 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, deleteRecord, listRecords, resolveSessi
 const rkeyOf = (uri: string): string => uri.split('/').pop() ?? '';
 
 /**
- * `dx registry unpublish` — removes a plugin from the authenticated user's PDS:
+ * `dx registry unpublish` - removes a plugin from the authenticated user's PDS:
  * deletes the `plugin.profile` (rkey = key) and every `plugin.release`
  * (rkey = `<key>:<version>`). The registry indexer unindexes on its next sweep.
  * Hosted bundles in edge R2 are immutable and are not removed.

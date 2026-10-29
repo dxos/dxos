@@ -14,7 +14,7 @@ export type TransportConfig = {
   apiKey?: string;
   /**
    * The "My Data (DIY)" widget instance for local push, or the widget of a published app for cloud
-   * push. Discovered from the device rather than typed in — see {@link discoverWidgetId}.
+   * push. Discovered from the device rather than typed in - see {@link discoverWidgetId}.
    */
   widgetId?: string;
   /** Cloud push only: the published indicator app's id and token. */
@@ -60,7 +60,7 @@ const origin = (config: TransportConfig): { url: string; scheme: string } => {
  * Only the body is shared.
  *
  * Local is preferred: it avoids a round-trip through LaMetric's servers and works with no internet.
- * Both go through the caller's fetch because neither is reachable from a web view — the cloud answers
+ * Both go through the caller's fetch because neither is reachable from a web view - the cloud answers
  * a CORS preflight with 405, and the device is plain HTTP or a self-signed certificate on the LAN.
  */
 export const selectTransport = (config: TransportConfig, fetchImpl: FetchLike): LaMetricTransport | undefined => {

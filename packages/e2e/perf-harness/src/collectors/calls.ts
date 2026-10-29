@@ -30,7 +30,7 @@ export type CallCounter = {
 
 /**
  * A function's calls. With `callCount` and without `detailed`, V8 reports one range per function
- * whose count is its invocation count — exact, not sampled.
+ * whose count is its invocation count - exact, not sampled.
  */
 const callsOf = (fn: FunctionCoverage): number => fn.ranges[0]?.count ?? 0;
 

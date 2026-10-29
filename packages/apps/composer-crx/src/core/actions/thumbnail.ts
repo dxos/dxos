@@ -28,13 +28,13 @@ export const blobToDataUrl = async (blob: Blob): Promise<string> => {
 
 /**
  * Fetch and downscale an image to a JPEG thumbnail data URL. Returns
- * `undefined` on any failure — the thumbnail is best-effort and must never
+ * `undefined` on any failure - the thumbnail is best-effort and must never
  * fail the action.
  */
 export const captureThumbnail = async (url: string): Promise<string | undefined> => {
   try {
     // The URL is page-controlled (og:image), so gate it before fetching:
-    // public http(s) only, never loopback — a malicious page must not be able
+    // public http(s) only, never loopback - a malicious page must not be able
     // to direct extension-origin requests at local services.
     const parsed = new URL(url);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {

@@ -27,7 +27,7 @@ const config: Plugin.PluginConfig = Plugin.config({
 
       Columns are derived automatically from the schema's fields and persisted in a View object
       alongside the table. Rows can be inserted inline, sorted by column, filtered by tag or
-      global search, and deleted with multi-row selection — all changes are replicated in
+      global search, and deleted with multi-row selection - all changes are replicated in
       real-time across peers via ECHO.
 
       The plugin integrates deeply with the Composer lifecycle: a default Task table is created

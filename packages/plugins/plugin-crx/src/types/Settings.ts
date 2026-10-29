@@ -9,7 +9,7 @@ import * as Struct from 'effect/Struct';
 
 /**
  * User preferences that govern how Composer coordinates with the composer-crx
- * browser extension — both the page-actions bridge and the render-proxy. All fields
+ * browser extension - both the page-actions bridge and the render-proxy. All fields
  * are optional; defaults are applied by consumers when reading the atom.
  */
 export const Settings = Schema.Struct({

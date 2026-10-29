@@ -47,8 +47,8 @@ function readPackage(packageJson, context) {
   }
 
   // TypeScript 7 is the native compiler and ships no JS API (one returns in 7.1), so third-party
-  // tooling that calls into the API — typescript-eslint, typedoc, knip, madge, react-docgen,
-  // rolldown-plugin-dts — has to resolve the 6.x line while the workspace itself compiles with 7.
+  // tooling that calls into the API - typescript-eslint, typedoc, knip, madge, react-docgen,
+  // rolldown-plugin-dts - has to resolve the 6.x line while the workspace itself compiles with 7.
   // Converting the peer to a real dependency is what keeps it off the workspace's own `typescript`.
   if (!packageJson.name?.startsWith('@dxos/') && packageJson.peerDependencies?.typescript) {
     packageJson.dependencies = { ...packageJson.dependencies, typescript: TYPESCRIPT_API_VERSION };
@@ -118,7 +118,7 @@ function readPackage(packageJson, context) {
     }
 
     // Its published .d.ts does `import type ts from 'typescript'`, but the manifest lists typescript
-    // only as a devDependency — without this the type resolves to `any` in every consumer.
+    // only as a devDependency - without this the type resolves to `any` in every consumer.
     case '@valtown/codemirror-ts': {
       packageJson.dependencies['typescript'] = TYPESCRIPT_API_VERSION;
       break;

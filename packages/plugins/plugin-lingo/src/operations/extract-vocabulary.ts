@@ -124,7 +124,7 @@ const SYSTEM_PROMPT = trim`
   identical in the learner's own language.
 
   # Output
-  Respond with a JSON array only — no prose, no code fence. Each entry is an object with:
+  Respond with a JSON array only - no prose, no code fence. Each entry is an object with:
   - "term": the word as it appears in the text
   - "lemma": its dictionary form (omit when identical to "term")
   - "translation": the translation into the learner's language

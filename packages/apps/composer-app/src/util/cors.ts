@@ -9,8 +9,8 @@ export const nativeOrigins = (environment: string | undefined): ReadonlySet<stri
   environment === 'production' ? DESKTOP_ORIGINS : new Set([...DESKTOP_ORIGINS, DEV_SERVER_ORIGIN]);
 
 /**
- * Whether a request's `Origin` is this deployment's own — read off the request URL, so a channel or
- * preview alias needs no list — or one of `extraOrigins`.
+ * Whether a request's `Origin` is this deployment's own - read off the request URL, so a channel or
+ * preview alias needs no list - or one of `extraOrigins`.
  *
  * A missing `Origin` passes, for the same-origin GETs and HEADs that omit it; a handler serving only
  * non-GET methods, which always carry one, should reject a missing `Origin` itself.

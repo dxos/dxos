@@ -61,7 +61,7 @@ export const deusTerms = (sparql: string): string[] => {
   return [...new Set([...prefixed, ...full])];
 };
 
-/** A warning per `deus:` term the vocabulary lacks, naming the closest known ones — a typo otherwise returns `[]`. */
+/** A warning per `deus:` term the vocabulary lacks, naming the closest known ones - a typo otherwise returns `[]`. */
 export const unknownTermWarnings = (sparql: string, known: ReadonlySet<string>): string[] =>
   deusTerms(sparql)
     .filter((term) => !known.has(term))

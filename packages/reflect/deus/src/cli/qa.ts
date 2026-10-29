@@ -164,7 +164,7 @@ export const selectQa = (documents: readonly QaDocument[], { query, tag, suite, 
   const tests = specs.flatMap(({ file, text }) => parseTests(text, file));
   const suites = specs.flatMap(({ file, text }) => parseSuites(text, file));
 
-  // Two positionals resolve exactly — `<plugin> <testId>`. One is the loose substring filter, and a test id alone is
+  // Two positionals resolve exactly - `<plugin> <testId>`. One is the loose substring filter, and a test id alone is
   // genuinely ambiguous: QA-1 exists in more than one plugin.
   const [plugin, testId] = query.length >= 2 ? query : [undefined, undefined];
   const filter = query.length >= 2 ? undefined : query[0];

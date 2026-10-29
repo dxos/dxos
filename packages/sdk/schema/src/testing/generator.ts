@@ -87,7 +87,7 @@ export type RelationSpec = {
  * types, and creates `count` relations between randomly-paired source/target objects. The
  * relation's own properties are generated from their generator annotations (as for objects).
  *
- * Objects of the source/target types must already exist in the database — run
+ * Objects of the source/target types must already exist in the database - run
  * {@link createObjectFactory} for those types first.
  */
 export const createRelationFactory =

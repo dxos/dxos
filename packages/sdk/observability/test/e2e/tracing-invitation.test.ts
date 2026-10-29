@@ -20,7 +20,7 @@ import { identityProvider } from '../../src/providers/client-observability.ts';
 
 // Dev-only: this suite is permanently skipped in CI. It boots two Clients against
 // the real edge-main worker and emits spans to a real SigNoz ingestion endpoint.
-// There are no assertions on trace structure — this is a manual smoke for eyeballing
+// There are no assertions on trace structure - this is a manual smoke for eyeballing
 // the resulting trace tree in SigNoz. Run locally with:
 //
 // DX_OTEL_ENDPOINT=https://ingest.eu.signoz.cloud:443 \
@@ -85,14 +85,14 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
     const hostConfig = createEdgeConfig();
     const guestConfig = createEdgeConfig();
 
-    // Single observability instance — Node tracer provider is process-global.
+    // Single observability instance - Node tracer provider is process-global.
     const observability = await initTracing(hostConfig);
 
     // Use memory transport for peer-to-peer ONLY to dodge the known node-datachannel
     // SIGSEGV when two WebRTC stacks run in the same process
     // (see packages/sdk/client/src/services/local-client-services.ts line 86).
     // Signaling is intentionally NOT overridden: service-host builds EdgeSignalManager
-    // from edgeFeatures.signaling=true → real edge signaling is in use.
+    // from edgeFeatures.signaling=true -> real edge signaling is in use.
     const mkServices = (config: Config) =>
       new LocalClientServices({
         config,
@@ -108,7 +108,7 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
       await host.halo.createIdentity({ displayName: 'tracing-e2e-host' });
       await guest.halo.createIdentity({ displayName: 'tracing-e2e-guest' });
 
-      // Subscribe identity stream → stamp `did` (+ `deviceKey`/`deviceProfile`) on every span.
+      // Subscribe identity stream -> stamp `did` (+ `deviceKey`/`deviceProfile`) on every span.
       await EffectEx.runAndForwardErrors(Observability.addDataProvider(identityProvider(host.services.services)));
       await EffectEx.runAndForwardErrors(Observability.addDataProvider(identityProvider(guest.services.services)));
 
@@ -126,11 +126,11 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
       log.info('host space ready', { spaceId: space.id });
 
       console.log('### host: waiting for edge to catch up with the space');
-      // Pragmatic sleep instead of polling getSyncState — we don't need a strict sync
+      // Pragmatic sleep instead of polling getSyncState - we don't need a strict sync
       // guarantee for the test (trace capture is the point, not admission success).
       await sleep(10_000);
 
-      console.log('### host → guest: DELEGATED invitation + join');
+      console.log('### host -> guest: DELEGATED invitation + join');
       const [hostResult, guestResult] = await Promise.all(
         performInvitation({
           host: space,
@@ -169,6 +169,6 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
       await EffectEx.runAndForwardErrors(Observability.close());
     }
 
-    console.log(`### done — SigNoz filter: ctx.tag = '${clientTag}'`);
+    console.log(`### done - SigNoz filter: ctx.tag = '${clientTag}'`);
   });
 });

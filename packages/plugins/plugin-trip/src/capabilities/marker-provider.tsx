@@ -39,7 +39,7 @@ export const toLatLng = (geo?: ArrayLike<number | undefined> | undefined): LatLn
 
 const sameLatLng = (a: LatLngLiteral, b: LatLngLiteral): boolean => a.lat === b.lat && a.lng === b.lng;
 
-/** IATA code → coordinates, for geocoding places that carry a code but no explicit `geo`. */
+/** IATA code -> coordinates, for geocoding places that carry a code but no explicit `geo`. */
 const airportByIata = new Map<string, LatLngLiteral>(
   AIRPORTS.map(({ iata, location: { lat, lng } }) => [iata, { lat, lng }]),
 );
@@ -77,7 +77,7 @@ const segmentPoints = (seg: Segment.Segment): LatLngLiteral[] => {
   return points;
 };
 
-/** Origin → destination line for transport segments (skip accommodation / activity). */
+/** Origin -> destination line for transport segments (skip accommodation / activity). */
 const segmentLine = (seg: Segment.Segment): MapCapabilities.GeoLine | undefined => {
   if (seg.details._tag === 'accommodation' || seg.details._tag === 'activity') {
     return undefined;
@@ -94,7 +94,7 @@ const segmentLine = (seg: Segment.Segment): MapCapabilities.GeoLine | undefined 
 /**
  * Map line(s) for a segment. A planner-routed road segment carries a decoded polyline (`path`),
  * rendered as a chain of connected straight segments that follows the road; other transport
- * segments fall back to a single origin→destination arc.
+ * segments fall back to a single origin->destination arc.
  */
 /** Stroke color for plotted route legs. */
 const ROUTE_COLOR = '#22c55e';
@@ -120,12 +120,12 @@ const segmentAnchor = (seg: Segment.Segment): LatLngLiteral | undefined => segme
 
 /**
  * Reactive markers for a {@link Trip.Trip}: one marker per segment (at its anchor point, keyed by
- * segment id so attention selection round-trips) plus origin→destination arcs for transport
+ * segment id so attention selection round-trips) plus origin->destination arcs for transport
  * segments. Selection is single-mode against the trip's attendable context.
  */
 const useTripMarkers = (subject: Trip.Trip, { attendableId }: { attendableId?: string }): MapCapabilities.MarkerSet => {
   // Subscribe to the `segments` array and reactively load the ref targets (without this the refs
-  // read empty on first mount and stale after edits — see TripArticle).
+  // read empty on first mount and stale after edits - see TripArticle).
   const reactiveSubject = Obj.isObject(subject) ? subject : undefined;
   const [segmentRefs] = useObject(reactiveSubject, 'segments');
   const loaded = useObjects(segmentRefs ?? []);

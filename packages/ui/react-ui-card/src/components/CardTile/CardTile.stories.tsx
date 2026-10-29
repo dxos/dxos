@@ -22,7 +22,7 @@ const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) 
       onToggleStar={() => {}}
       title={
         <>
-          <span className='grow truncate font-medium'>Project kickoff — agenda and notes</span>
+          <span className='grow truncate font-medium'>Project kickoff - agenda and notes</span>
           <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>2:30 PM</span>
         </>
       }

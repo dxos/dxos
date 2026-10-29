@@ -89,7 +89,7 @@ const cidFor = (record: Record<string, unknown>): string => {
   return `bafyrei${(hash >>> 0).toString(16).padStart(8, '0')}`;
 };
 
-/** In-memory repo with deterministic uris/cids — no network, safe for tests and storybook. */
+/** In-memory repo with deterministic uris/cids - no network, safe for tests and storybook. */
 export const makeMock = (did = 'did:mock:alice'): MockRepo => {
   const records = new Map<string, Record<string, unknown>>();
   const toRecord = (key: string, value: Record<string, unknown>): RepoRecord => {
@@ -274,7 +274,7 @@ const proxyWrite = <A>(
   );
 };
 
-// Public XRPC GET reads against the PDS — no auth/Edge proxy needed; shared by live and public repos.
+// Public XRPC GET reads against the PDS - no auth/Edge proxy needed; shared by live and public repos.
 const makeReader = (
   client: HttpClient.HttpClient,
   pdsBaseUrl: string,
@@ -338,7 +338,7 @@ const makeLive = (client: HttpClient.HttpClient, creds: Credentials): Repo => ({
     ).pipe(Effect.asVoid),
 });
 
-// Public (unauthenticated) repo: reads work; writes fail — there are no credentials.
+// Public (unauthenticated) repo: reads work; writes fail - there are no credentials.
 const readOnly = () =>
   Effect.fail(new AtprotoRepoError({ message: 'Repo is read-only (public access; no credentials).' }));
 
@@ -365,7 +365,7 @@ export const layerLive = (options: { connection: Ref.Ref<Connection.Connection>;
 
 /**
  * Public read-only repo layer for an arbitrary handle/DID. Resolves the PDS from the handle and reads
- * via public XRPC (no auth) — used by the PDS browser to view any account's repo.
+ * via public XRPC (no auth) - used by the PDS browser to view any account's repo.
  */
 export const layerPublic = (handle: string) =>
   Layer.effect(

@@ -19,7 +19,7 @@ import { translationKey } from '#translations';
  */
 const DEFAULT_DELAY = 500;
 
-/** Once shown, how long the meter stays — a readout worth showing is worth reading. */
+/** Once shown, how long the meter stays - a readout worth showing is worth reading. */
 const DEFAULT_MIN_DURATION = 1_000;
 
 export type ProgressMeterProps = Util.ThemedClassName<
@@ -29,7 +29,7 @@ export type ProgressMeterProps = Util.ThemedClassName<
     selected?: number;
     onSelect?: (step: { index: number; id: string }) => void;
     /**
-     * Cancels a run in flight, and clears one that failed — where there is nothing left to cancel,
+     * Cancels a run in flight, and clears one that failed - where there is nothing left to cancel,
      * but the meter would otherwise hold its place with no way to dismiss it.
      */
     onCancel?: () => void;
@@ -88,7 +88,7 @@ const remainingDelay = (delay: number, since: number | undefined): number =>
 const useDeferredVisible = (present: boolean, delay: number, minDuration: number, since?: number): boolean => {
   const [visible, setVisible] = useState(present && remainingDelay(delay, since) === 0);
   // When it became visible, so `minDuration` counts from the render rather than from the moment
-  // `present` flipped — a meter held back by `delay` has not been on screen at all yet.
+  // `present` flipped - a meter held back by `delay` has not been on screen at all yet.
   const shownAt = useRef<number | undefined>(visible ? Date.now() : undefined);
 
   useEffect(() => {
@@ -136,8 +136,8 @@ type InnerProgressMeterProps = ProgressMeterProps & { state: ProgressModel.TaskP
  * and how to stop it.
  *
  * One component with one geometry, whatever the monitor reports. The parts are chosen from the
- * state — a {@link Steps} where the run declared a plan, a {@link Progress} fraction where the
- * phase counts and a sweep where it cannot, a crawl of the phases it has named — but the three rows
+ * state - a {@link Steps} where the run declared a plan, a {@link Progress} fraction where the
+ * phase counts and a sweep where it cannot, a crawl of the phases it has named - but the three rows
  * are always drawn, so a phase that stops being countable never changes the readout's height and
  * never moves the layout around it.
  */
@@ -154,7 +154,7 @@ export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressM
     const failed = status === 'error';
     // The producer only revises `elapsedMs` when it touches the task, so tick locally while active.
     const elapsedMs = useElapsed(state.startedAt, active, state.elapsedMs);
-    // One control, two jobs: it cancels a run in flight, and clears one that ended in an error —
+    // One control, two jobs: it cancels a run in flight, and clears one that ended in an error -
     // where there is nothing left to cancel, but the meter would otherwise hold its place with no
     // way to dismiss it. Clearing needs no `cancellable`: that flag says the PRODUCER can be
     // interrupted, which is irrelevant once the run is over. A finished run disables the control
@@ -231,7 +231,7 @@ export const InnerProgressMeter = Util.composable<HTMLDivElement, InnerProgressM
           <Status.Progress
             classNames='w-full self-center'
             value={fraction}
-            // Uncounted while it runs, and still uncounted when it fails — that is what fills the
+            // Uncounted while it runs, and still uncounted when it fails - that is what fills the
             // bar red rather than emptying it. A run that simply ended has nothing left to sweep.
             indeterminate={indeterminate && (active || failed)}
             error={failed}
@@ -274,7 +274,7 @@ const useElapsed = (startedAt: string | undefined, active: boolean, fallbackMs: 
  * The run's name, then the phases it has named so far, for the crawl to scroll through.
  *
  * The state carries only the note in flight, so the history is accumulated here: a crawl fed one
- * line at a time has nothing to scroll from and reads as a plain label. `startedAt` keys the run —
+ * line at a time has nothing to scroll from and reads as a plain label. `startedAt` keys the run -
  * a fresh one starts a fresh list rather than continuing the last one's.
  */
 const useNotes = (label: string | undefined, note: string | undefined, startedAt: string | undefined): string[] => {

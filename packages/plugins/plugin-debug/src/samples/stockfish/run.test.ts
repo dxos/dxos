@@ -38,8 +38,8 @@ import * as StockfishSpace from './StockfishSpace.ts';
  * The template is a plan meant to be RUN, and `sample.test.ts` only asserts the shape it ships in.
  * This covers the step after that: the space is instantiated, a chat is opened over its project
  * with the skills the plan names, and a real DeepSeek model is asked to pick the work up. What it
- * proves is the wiring a first run depends on — the template's instructions and skill reach the
- * session, the task ledger's verbs resolve, and the model can move the root task off `todo` — none
+ * proves is the wiring a first run depends on - the template's instructions and skill reach the
+ * session, the task ledger's verbs resolve, and the model can move the root task off `todo` - none
  * of which the archive test can see.
  *
  * Manual by tag, for two reasons: it spends a real model call, and the sandbox service the later
@@ -67,7 +67,7 @@ const MODEL = DXN.make('com.deepseek.model.deepseek-v4-pro.default');
  * resolve once a run also registers `plugin-sandbox`'s handlers against a live sandbox service, and
  * an unresolvable tool is dropped from the session toolkit rather than failing it. The DeepSeek
  * harness skill is deliberately absent: it drives the coding agent inside the sandbox image, and
- * the template's instructions forbid delegating this project to it — the harness driving this run
+ * the template's instructions forbid delegating this project to it - the harness driving this run
  * is ours.
  */
 const EXPECTED_SKILLS = [SkillManagerSkill.make(), ChatContextSkill.make(), ProjectSkill.make(), SandboxSkill.make()];

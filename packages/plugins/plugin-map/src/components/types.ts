@@ -4,7 +4,7 @@
 
 import { type LatLngLiteral, type MapMarkersProps } from '@dxos/react-ui-geo';
 
-/** Origin → destination arc (rendered as a great-circle line on the globe). `color` is an optional stroke color. */
+/** Origin -> destination arc (rendered as a great-circle line on the globe). `color` is an optional stroke color. */
 export type GeoLine = { source: LatLngLiteral; target: LatLngLiteral; color?: string };
 
 export type GeoControlProps = {

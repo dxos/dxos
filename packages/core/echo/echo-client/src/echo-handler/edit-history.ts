@@ -149,7 +149,7 @@ export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown =>
 };
 
 /**
- * @returns An immutable {@link Obj.Snapshot} of the object at the given historical heads — a detached
+ * @returns An immutable {@link Obj.Snapshot} of the object at the given historical heads - a detached
  * instance, not a pin on the live object. Every surface that wants the historical value renders this
  * snapshot; the live object is unaffected (nothing else in the app rewinds).
  */
@@ -163,7 +163,7 @@ export const checkoutVersionSnapshot = <T extends Obj.Unknown>(object: T, versio
 
 /**
  * @returns The object's history, oldest first: one entry per change to its document that touched the
- * object (or, given `property`, that property), with the value before and after — see `Obj.getChanges`.
+ * object (or, given `property`, that property), with the value before and after - see `Obj.getChanges`.
  *
  * Each change is diffed against the cumulative frontier of the changes before it in topological order
  * (as in {@link getEditHistoryWithDiffs}), so a change made concurrently with another still reports
@@ -233,7 +233,7 @@ export const getObjectChanges = <T extends Obj.Unknown>(
 
 /** Reconstructs the object over a historical view of its document as an immutable snapshot. */
 const snapshotAt = <T extends Obj.Unknown>(objectCore: ObjectCore, historical: Doc<any>): Obj.Snapshot<T> => {
-  // The core is transient — it exists only to produce the snapshot.
+  // The core is transient - it exists only to produce the snapshot.
   const versionCore = new ObjectCore();
   versionCore.id = objectCore.id;
   versionCore.doc = historical;

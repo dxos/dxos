@@ -9,7 +9,7 @@ import { Expando } from '@dxos/schema';
 
 /**
  * The snapshot persists a target as `Ref.uri`, and the redirect-recovery path turns that string back
- * into a ref. `Ref.uri` is an `echo:` EID, so it must be read with `EID.tryParse` — reading it as a
+ * into a ref. `Ref.uri` is an `echo:` EID, so it must be read with `EID.tryParse` - reading it as a
  * `dxn:` DXN always yielded `undefined`, and the resulting broken ref failed inside
  * `createSingleCursor`, which swallows its errors: the mailbox stayed unbound and its toolbar kept
  * offering Connect instead of Sync.

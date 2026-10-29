@@ -40,7 +40,7 @@ export type ChatActivityProps = Util.ThemedClassName<{
  *
  * The line stays up for as long as there is something to report: the setup stages before the first
  * token (a cold MCP server, a summarization pass, a re-issued request), the generation, each tool
- * call, and — once the turn settles with an alarm pending — the wait until the agent wakes itself.
+ * call, and - once the turn settles with an alarm pending - the wait until the agent wakes itself.
  * Only a fully idle agent renders nothing.
  *
  * The phase and the wake time arrive as props rather than being read from the chat context, so every

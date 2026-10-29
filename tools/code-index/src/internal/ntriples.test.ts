@@ -71,7 +71,7 @@ describe('documentTriples', () => {
       'language': 'typescript',
       'size': 1.5,
       'mtime': 1_700_000_000_000,
-      'hash': 'quote " backslash \\ newline \n return \r tab \t unicode é 𝄞',
+      'hash': 'quote " backslash \\ newline \n return \r tab \t unicode é \u{1D11E}',
       'imports': [],
       'importsType': [],
       'importsModule': [],

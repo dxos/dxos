@@ -56,7 +56,7 @@ export type RunnerOptions = {
   scale: string;
   iteration: number;
   page: Page;
-  /** Browser-level CDP target — the only one that answers `SystemInfo.getProcessInfo`. */
+  /** Browser-level CDP target - the only one that answers `SystemInfo.getProcessInfo`. */
   browserCdp: Cdp;
   debugPort: number;
   network: () => NetworkMetrics;
@@ -64,7 +64,7 @@ export type RunnerOptions = {
   /**
    * Where to write one screenshot per stage. Omit to take none.
    *
-   * Taken AFTER every boundary read, so the capture cannot land inside the interval it depicts —
+   * Taken AFTER every boundary read, so the capture cannot land inside the interval it depicts -
    * one `page.screenshot` per stage is a rounding error next to the flow, but only because it is
    * outside the measured window rather than because it is fast.
    */
@@ -162,7 +162,7 @@ export class StageRunner {
    * Installs the profiler and screencast after construction.
    *
    * Separate from the constructor because both need an attached page target, which does not exist
-   * until the app has booted — and `boot` is itself a measured stage.
+   * until the app has booted - and `boot` is itself a measured stage.
    */
   attachInstruments(instruments: Instruments): void {
     this.#instruments = instruments;
@@ -199,7 +199,7 @@ export class StageRunner {
     }
     const file = path.join(screenshotDir, `${id}.png`);
     // Never fatal, and that includes creating the directory: this runs after the stage's error
-    // boundary has closed, so a throw here rejects `stage()` before it pushes the measured row —
+    // boundary has closed, so a throw here rejects `stage()` before it pushes the measured row -
     // losing the measurement over its illustration.
     try {
       mkdirSync(screenshotDir, { recursive: true });
@@ -300,18 +300,18 @@ export class StageRunner {
     const networkDelta = diffNetwork(before.network, network());
     // Read BEFORE the refresh, so a realm is diffed against the same realm set the opening boundary
     // saw; one that appeared mid-stage is picked up by the refresh and reported whole, which is
-    // correct — it did all its work inside this stage.
+    // correct - it did all its work inside this stage.
     const threadByRealm = diffRealmThreadMetrics(before.threadByRealm, await readRealmThreadMetrics(this.#targets));
 
-    // Refreshed before the per-realm readings: a stage can BRING a realm into existence — `boot` is
-    // where the shared worker running ECHO first appears — and a set captured only at the opening
+    // Refreshed before the per-realm readings: a stage can BRING a realm into existence - `boot` is
+    // where the shared worker running ECHO first appears - and a set captured only at the opening
     // boundary would report that stage's heap as the page's alone.
     this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
 
     // AFTER the refresh, unlike the readings above, and the difference is load-bearing. SQLite runs
     // in the dedicated worker, and `boot` is the stage that creates it: read against the opening
     // set, boot found no instrumented realm at either boundary and reported `realms: 0` with no
-    // I/O, so opening the database and running migrations — the largest disk event in the flow —
+    // I/O, so opening the database and running migrations - the largest disk event in the flow -
     // was missing from every run. A realm that appeared during the stage contributes its whole
     // counters, which is right: it did that work inside this stage.
     const diskDelta = diffDisk(before.disk, await readDisk(this.#targets));
@@ -338,8 +338,8 @@ export class StageRunner {
     const traceCounters = await counterTrace?.stop().catch(() => undefined);
 
     // LAST of the closing reads, and at the boundary rather than sampled. It starts and ends a
-    // trace around one dump, which costs ~100 ms — an order of magnitude more than every other
-    // read here — so taking it first put the harness's own overhead, and whatever the app did
+    // trace around one dump, which costs ~100 ms - an order of magnitude more than every other
+    // read here - so taking it first put the harness's own overhead, and whatever the app did
     // during it, inside the CPU, thread, network, disk and RPC deltas that close the same stage.
     const footprint = await readProcessFootprint(browserCdp);
 
@@ -432,7 +432,7 @@ export class StageRunner {
   }
 
   /**
-   * A counter trace for the stage, or undefined when one cannot start — another trace is recording
+   * A counter trace for the stage, or undefined when one cannot start - another trace is recording
    * (the boot trace, which then carries the counts itself) or the browser refused.
    */
   async #startCounterTrace(id: string): Promise<CounterTrace | undefined> {

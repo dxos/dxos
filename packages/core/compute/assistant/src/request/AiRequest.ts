@@ -73,7 +73,7 @@ const isAuthenticationError = (error: unknown): error is AuthenticationError =>
  * Whether the provider rejected the request for permissions that have not yet propagated to the
  * key. Unlike the other authentication kinds (a missing, expired, or invalid key, which need a
  * credential change and never recover on their own), this one clears by itself, so it is the only
- * one worth re-issuing — `AuthenticationError.isRetryable` is `false` for all of them.
+ * one worth re-issuing - `AuthenticationError.isRetryable` is `false` for all of them.
  */
 const isInsufficientPermissions = (error: unknown): boolean =>
   isAuthenticationError(error) && error.reason.kind === 'InsufficientPermissions';
@@ -303,14 +303,14 @@ export class Request {
   /**
    * Reports a tool call the toolkit could not resolve back to the model, as a turn it can correct.
    *
-   * The provider raises this while DECODING its own response — it needs the tool's schema to decode
-   * the arguments — so the failure arrives before any tool call reaches the loop, and it kills the
+   * The provider raises this while DECODING its own response - it needs the tool's schema to decode
+   * the arguments - so the failure arrives before any tool call reaches the loop, and it kills the
    * whole turn. The usual causes are a skill whose instructions name a tool whose handler this host
    * never contributed, and a model inventing a name; both leave the reader with no reply at all.
    *
    * The tool call itself is lost: the provider discards the event batch it failed in, including the
    * `tool-params-end` the parser needs to complete the block, so nothing dangles in history that
-   * would need a matching tool result — a plain note is enough.
+   * would need a matching tool result - a plain note is enough.
    */
   #reportUnresolvedTool = (error: ToolNotFoundError): Effect.Effect<TurnResult, RunError, Trace.TraceService> =>
     Effect.gen({ self: this }, function* () {
@@ -473,7 +473,7 @@ export class Request {
 
       // A paused server-tool turn (e.g. Anthropic `pause_turn`) is not complete: the provider
       // expects the assistant content to be resent so it can finish executing the server tool.
-      // No local tool execution is needed — just another request.
+      // No local tool execution is needed - just another request.
       if (finishReason === 'pause') {
         return { messages, done: false, finishReason };
       }
@@ -502,7 +502,7 @@ export class Request {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       markWork('request.tools-begin');
       const toolCalls = this.getToolCalls();
-      // A turn can end with no calls to run — a turn recovered from an unresolvable tool call leaves
+      // A turn can end with no calls to run - a turn recovered from an unresolvable tool call leaves
       // none. Submitting anyway would append a tool message with no blocks, which the provider
       // rejects as empty content.
       if (toolCalls.length === 0) {

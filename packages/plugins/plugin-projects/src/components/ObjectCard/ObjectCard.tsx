@@ -90,7 +90,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete, 'data-testid
           <Tag.Tag classNames='justify-self-start'>{t('object-card.archived.label')}</Tag.Tag>
         </Card.Row>
       )}
-      {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —
+      {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it -
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
       <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />

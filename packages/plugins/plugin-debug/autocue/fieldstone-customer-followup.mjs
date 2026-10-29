@@ -169,7 +169,7 @@ export const steps = [
     narration:
       'Astrid runs engineering at Fieldstone. Her calendar: team rituals, one-on-ones, customers, and a follow-up with Okapi next week.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Astrid’s calendar');
+      await caption(demo, "Astrid's calendar");
       await demo.click({ selector: node('Alien Labs'), label: 'Alien Labs calendar' });
       await page
         .locator('[data-testid="deck.plank"] [data-date]')
@@ -216,7 +216,7 @@ export const steps = [
     name: 'Find the thread',
     narration: 'Five weeks ago Okapi, a customer, hit a cache-corruption incident.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Okapi’s incident, five weeks back in the inbox');
+      await caption(demo, "Okapi's incident, five weeks back in the inbox");
       await demo.click({ selector: node('Inbox'), label: 'Inbox' });
       const mailbox = page.locator('[data-testid="inbox.mailbox"]').first();
       await page
@@ -253,8 +253,8 @@ export const steps = [
     },
   },
   {
-    name: 'Read Nadia’s reply',
-    narration: 'Okapi’s engineering director has replied, with one more request.',
+    name: "Read Nadia's reply",
+    narration: "Okapi's engineering director has replied, with one more request.",
     run: async ({ demo, page }) => {
       await caption(demo, 'Nadia replies with one more request');
       const card = messageCard(page, CONTACT, REPLY);
@@ -306,7 +306,7 @@ export const steps = [
         await page.keyboard.press('Escape');
         await page.waitForTimeout(300);
       }
-      // Opening a contact reveals it under Database › People in the navtree; the tour keeps Database shut.
+      // Opening a contact reveals it under Database > People in the navtree; the tour keeps Database shut.
       await collapse(page, 'Database');
       await page.waitForTimeout(BEAT * 1.5);
     },
@@ -314,7 +314,7 @@ export const steps = [
   {
     name: 'Find the follow-up',
     narration:
-      'And the follow-up is on the calendar, a week out. Mail, contacts and calendar are one set of objects in the team’s space, on their own devices, synced through EDGE.',
+      "And the follow-up is on the calendar, a week out. Mail, contacts and calendar are one set of objects in the team's space, on their own devices, synced through EDGE.",
     run: async ({ demo, page }) => {
       await caption(demo, 'The follow-up, already on the calendar');
       const related = page

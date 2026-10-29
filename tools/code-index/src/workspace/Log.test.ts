@@ -84,7 +84,7 @@ describe('Log', () => {
   test('the fold recovers chat and canvas from the log alone', async () => {
     // The three events of one run carry the same `callId`, which is what lets the fold present a
     // run as code *and* its output. An earlier version minted the id after appending the call, so
-    // this asserted the broken shape — a replayed run whose output never arrived.
+    // this asserted the broken shape - a replayed run whose output never arrived.
     const callId = Events.newCallId();
     const state = await withLog((api) =>
       Effect.gen(function* () {

@@ -59,6 +59,6 @@ describe('QueryService wire schema', () => {
 });
 
 // A 4-byte (astral) character at char offset 8191 makes protobufjs's `utf8.read` overshoot its 8192-unit
-// flush boundary, then a later block spreads a stale, reused `chunk` slot — injecting a lone low-surrogate
+// flush boundary, then a later block spreads a stale, reused `chunk` slot - injecting a lone low-surrogate
 // (`\udfe9` for U+1F7E9) and shifting every following code unit. The corrupted string then breaks JSON.parse.
 const buildLargeString = (): string => 'a'.repeat(8191) + '\u{1F7E9}' + 'b'.repeat(8192) + 'TAIL';

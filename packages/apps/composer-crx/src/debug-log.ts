@@ -42,6 +42,6 @@ export const debugLog = (event: string, data?: unknown): void => {
       }),
     }).catch(() => {});
   } catch {
-    // Ignore — diagnostics must never affect runtime.
+    // Ignore - diagnostics must never affect runtime.
   }
 };

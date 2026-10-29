@@ -31,7 +31,7 @@ const MOSAIC_PLACEHOLDER_ORIENTATION_ATTR = 'mosaic-placeholder-orientation';
 const MOSAIC_PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
 // Location attribute: data-[mosaic-placeholder-location=0.5]. Identifies the
-// placeholder's slot in its container (0.5, 1.5, 2.5, …) so tests can target
+// placeholder's slot in its container (0.5, 1.5, 2.5, ...) so tests can target
 // a specific gap unambiguously without relying on layout-dependent indices.
 const MOSAIC_PLACEHOLDER_LOCATION_ATTR = 'mosaic-placeholder-location';
 
@@ -100,7 +100,7 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
         const sourceData = getSourceData(source);
         return (sourceData && eventHandlerRef.current.canDrop?.({ source: sourceData })) || false;
       },
-      // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+      // Reorder is a move, not a copy - otherwise the browser shows the green "+" copy cursor.
       getDropEffect: () => 'move',
       onDragEnter: () => {
         if (!scrollingRef.current) {

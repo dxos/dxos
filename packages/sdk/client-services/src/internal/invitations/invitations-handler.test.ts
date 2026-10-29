@@ -256,7 +256,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
         await waitForCondition({ condition: () => guests.some((g) => g.sink.lastState === Invitation_State.SUCCESS) });
         // Give the other racing guests a bounded window to settle before counting how many were
-        // admitted — a guest that loses the race is not guaranteed to reach an explicit ERROR
+        // admitted - a guest that loses the race is not guaranteed to reach an explicit ERROR
         // state promptly, so this polls rather than requiring every guest to reach a terminal
         // state, and tolerates the poll's own timeout rather than treating it as a failure.
         await waitForCondition({

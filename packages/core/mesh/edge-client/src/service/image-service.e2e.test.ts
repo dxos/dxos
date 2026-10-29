@@ -11,7 +11,7 @@ import * as Image from './Image.ts';
 
 // Live end-to-end checks against a deployed image-service worker. These hit the public network,
 // so they are gated behind DX_RUN_IMAGE_SERVICE_E2E and skipped in CI by default. The target is
-// never defaulted in code — opting in must name the worker explicitly:
+// never defaulted in code - opting in must name the worker explicitly:
 //
 //   DX_RUN_IMAGE_SERVICE_E2E=1 DX_IMAGE_SERVICE_URL=https://<image-service-worker> \
 //     moon run edge-client:test -- image-service.e2e.test.ts
@@ -20,7 +20,7 @@ import * as Image from './Image.ts';
 const ENABLED = /^(1|true)$/i.test(process.env.DX_RUN_IMAGE_SERVICE_E2E ?? '');
 const SERVICE_URL = process.env.DX_IMAGE_SERVICE_URL ?? '';
 if (ENABLED && !SERVICE_URL) {
-  throw new Error('DX_RUN_IMAGE_SERVICE_E2E is set but DX_IMAGE_SERVICE_URL is not — name the target worker.');
+  throw new Error('DX_RUN_IMAGE_SERVICE_E2E is set but DX_IMAGE_SERVICE_URL is not - name the target worker.');
 }
 
 // 32x32 RGB gradient PNG. The worker decodes + resizes the upload, so it rejects

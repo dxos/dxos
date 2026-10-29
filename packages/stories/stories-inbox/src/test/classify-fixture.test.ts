@@ -21,16 +21,16 @@ import { ContentBlock, Message, Person } from '@dxos/types';
 
 /**
  * Full-corpus classification run against the pulled real mailbox fixture and the LIVE Anthropic
- * API. Deliberately double-gated — the fixture is private (absent in CI) and the run spends real
- * money — so it only executes when invoked explicitly:
+ * API. Deliberately double-gated - the fixture is private (absent in CI) and the run spends real
+ * money - so it only executes when invoked explicitly:
  *
  * ```bash
- * DX_ANTHROPIC_API_KEY=… DX_RUN_CLASSIFY_FIXTURE=1 \
+ * DX_ANTHROPIC_API_KEY=... DX_RUN_CLASSIFY_FIXTURE=1 \
  *   pnpm --filter @dxos/stories-inbox exec vitest run --project=node src/test/classify-fixture.test.ts
  * ```
  *
  * Runs `ExtractCorrespondents` first (the Person allowlist), then `ClassifyMailbox` in batches of
- * ≤100 until the cursor reaches the head, and logs the label histogram.
+ * <=100 until the cursor reaches the head, and logs the label histogram.
  */
 const FIXTURE = process.env.DX_FIXTURE_NAME ?? 'mailbox';
 const ENABLED = fixtureExists(FIXTURE) && !!process.env.DX_ANTHROPIC_API_KEY && !!process.env.DX_RUN_CLASSIFY_FIXTURE;
@@ -65,7 +65,7 @@ const TestLayer = AssistantTestLayer({
 
 describe.skipIf(!ENABLED)(`classify fixture: "${FIXTURE}" (live LLM, opt-in)`, () => {
   it.effect(
-    'classifies the whole corpus in ≤100-message batches',
+    'classifies the whole corpus in <=100-message batches',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { db } = yield* Database.Service;
@@ -102,7 +102,7 @@ describe.skipIf(!ENABLED)(`classify fixture: "${FIXTURE}" (live LLM, opt-in)`, (
           expect(totals.batches).toBeLessThanOrEqual(10);
         }
 
-        // Label histogram: tag label → message count.
+        // Label histogram: tag label -> message count.
         const tags = yield* Database.query(Filter.type(Tag.Tag)).run;
         const histogram = Object.fromEntries(
           tags

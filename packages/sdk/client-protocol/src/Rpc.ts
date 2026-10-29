@@ -33,7 +33,7 @@ export type ServeOptions = {
 
 // A worker RPC client runs over a single MessagePort that multiplexes every request by id, so there
 // is no real per-connection concurrency limit. The `@effect/rpc` worker protocol backs the client
-// with a `Pool` that holds one worker for a request's whole lifetime — including long-lived streams.
+// with a `Pool` that holds one worker for a request's whole lifetime - including long-lived streams.
 // The pool's default concurrency of 1 therefore lets a single open stream (e.g. a subscription) block
 // every other call. Allow effectively-unbounded concurrent requests over the one worker instead.
 const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
@@ -163,7 +163,7 @@ export const serveOnRouter = <Rpcs extends Rpc.Any>(
 };
 
 /**
- * `group`'s handlers as the handlers of {@link Served} — the same group under middleware.
+ * `group`'s handlers as the handlers of {@link Served} - the same group under middleware.
  *
  * `Rpc.ToHandler` keys off an rpc's `_tag` alone and `AddMiddleware` preserves it, so both are the
  * same services; a middleware only widens what a handler MAY require. TypeScript cannot reduce
@@ -243,7 +243,7 @@ export const serve = <G, H extends Layer.Layer<never, never, never>>(
 
 /**
  * Serves whatever is registered with the ambient router on a {@link MessagePort} via the native
- * Worker runner protocol — the transport half of a worker session, without the stack around it.
+ * Worker runner protocol - the transport half of a worker session, without the stack around it.
  * The router is resolved on `open`, so a host that builds its stack later can be served.
  */
 export const serveRouterOnPort = (router: () => RpcRouter.Service, port: MessagePort): GroupServer =>

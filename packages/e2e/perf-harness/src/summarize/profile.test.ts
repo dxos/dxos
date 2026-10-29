@@ -13,7 +13,7 @@ const frame = (functionName: string) => ({
   columnNumber: 0,
 });
 
-/** root → render → layout, plus render → render (recursion); one sample every 1000 µs. */
+/** root -> render -> layout, plus render -> render (recursion); one sample every 1000 µs. */
 const PROFILE: CpuProfile = {
   nodes: [
     { id: 1, callFrame: { ...frame('(root)'), url: '' }, children: [2] },

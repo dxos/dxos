@@ -16,14 +16,14 @@ import { type PluginProfile, type PluginRelease } from '@dxos/protocols';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
 /**
- * `dx registry publish-package` — publishes both the mutable
+ * `dx registry publish-package` - publishes both the mutable
  * `plugin.profile` (rkey = key) and a `plugin.release`
  * (rkey = `<key>:<version>`) record to the authenticated user's PDS.
  *
  * The two writes are independent `putRecord` (upsert) calls; if the second fails the
  * first is left in place (the indexer treats a profile with no releases as
  * present-but-unpublishable, so a half-success is benign). Releases are conceptually
- * single-write per version but not enforced — see docs/registry-spec.md (Integrity).
+ * single-write per version but not enforced - see docs/registry-spec.md (Integrity).
  */
 export const publishPackage = Command.make(
   'publish-package',
@@ -35,7 +35,7 @@ export const publishPackage = Command.make(
     ),
     key: Options.String('key').pipe(
       Options.withDescription(
-        'Plugin key — a reverse-domain NSID (e.g. org.dxos.plugin.excalidraw); also the profile record rkey.',
+        'Plugin key - a reverse-domain NSID (e.g. org.dxos.plugin.excalidraw); also the profile record rkey.',
       ),
     ),
     name: Options.String('name').pipe(Options.withDescription('Human-readable package name.')),

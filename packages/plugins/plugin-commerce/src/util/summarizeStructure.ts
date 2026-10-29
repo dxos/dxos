@@ -84,7 +84,7 @@ export const structureCandidates = (html: string, options: SummarizeOptions = {}
 };
 
 /**
- * Render {@link structureCandidates} as a compact, ranked text block for the LLM — a far stronger
+ * Render {@link structureCandidates} as a compact, ranked text block for the LLM - a far stronger
  * signal for authoring an `itemLocator` than a raw HTML dump (which is lossy after truncation and
  * easy to mis-generalize, e.g. `advertCard` vs the indexed `advertCard-0`).
  */

@@ -212,11 +212,11 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
         const reused = loaded.validCount;
         const stale = loaded.staleCount;
         const fresh = total - reused;
-        // stderr only — MCP servers must keep stdout reserved for JSON-RPC.
+        // stderr only - MCP servers must keep stdout reserved for JSON-RPC.
         console.error(
           `[introspect] loaded symbol cache: ${reused}/${total} packages reused` +
             (stale > 0 ? ` (${stale} stale)` : '') +
-            (fresh > 0 ? ` — ${fresh} packages need extraction` : ''),
+            (fresh > 0 ? ` - ${fresh} packages need extraction` : ''),
         );
       }
     }
@@ -242,7 +242,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     // a future enhancement once we measure the cost on the real monorepo.
     pluginRecords = extractPlugins(rootPath, packages);
 
-    // Idiom scanning is regex-over-source — cheap relative to ts-morph parse —
+    // Idiom scanning is regex-over-source - cheap relative to ts-morph parse -
     // and the set is small enough that we can hold every idiom in memory.
     idioms = await scanIdioms({ rootPath });
 
@@ -251,7 +251,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
 
   const assertReady = (): void => {
     if (!initialized) {
-      throw new Error('Introspector not ready — await introspector.ready before calling API methods.');
+      throw new Error('Introspector not ready - await introspector.ready before calling API methods.');
     }
   };
 

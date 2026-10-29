@@ -54,7 +54,7 @@ export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
  * `{ project: Ref<org.dxos.type.project> }`.
  *
  * Derived from the operation's own schema rather than the tool-calling projection, because that
- * projection rewrites refs to URI strings — a shape `Operation.invoke` rejects.
+ * projection rewrites refs to URI strings - a shape `Operation.invoke` rejects.
  */
 export const describeInput = (schema: Schema.Top): string => {
   const ast = schema.ast;
@@ -72,7 +72,7 @@ export const describeInput = (schema: Schema.Top): string => {
  * A short, TypeScript-like label for a schema node.
  *
  * A reference is checked first: it is a declaration whose encoded side is a struct, so read
- * structurally it would claim to be a plain object — which is exactly the mistake that sends a
+ * structurally it would claim to be a plain object - which is exactly the mistake that sends a
  * model looking for the reference format by trial and error.
  */
 export const labelOf = (ast: SchemaAST.AST, depth: number): string => {

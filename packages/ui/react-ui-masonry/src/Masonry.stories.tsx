@@ -40,7 +40,7 @@ type PersonData = {
 };
 
 // A small fixed pool of inline (data-URI) images, cycled by index, so the bench is fully
-// self-contained — even the 500 preset issues zero network requests. Distinct hues keep cards varied.
+// self-contained - even the 500 preset issues zero network requests. Distinct hues keep cards varied.
 const IMAGE_POOL = [
   '#e11d48',
   '#db2777',
@@ -61,7 +61,7 @@ const IMAGE_POOL = [
     )}`,
 );
 
-// Generate plain (non-ECHO) data so even the largest preset mounts instantly — the masonry is a
+// Generate plain (non-ECHO) data so even the largest preset mounts instantly - the masonry is a
 // pure layout component, so seeding a database would only add unrelated cost. Variable notes and a
 // cycled image make cards differ in height and exercise the column-balancing layout.
 const createPeople = (count: number): PersonData[] =>

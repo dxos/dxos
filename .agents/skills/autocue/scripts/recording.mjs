@@ -51,7 +51,7 @@ export const gitInfo = (dir) => {
     dirty: !!git(root, 'status', '--porcelain', '--untracked-files=no'),
     remote: git(root, 'remote', 'get-url', 'origin')
       ?.replace(/^git@github\.com:/, 'https://github.com/')
-      // Never publish credentials embedded in the remote (`https://user:token@host/…`).
+      // Never publish credentials embedded in the remote (`https://user:token@host/...`).
       .replace(/^(https?:\/\/)[^/@]+@/, '$1')
       .replace(/\.git$/, '')
       // A sandbox proxy remote (`http://local_proxy@127.0.0.1:port/git/<owner>/<repo>`) names the repo last.

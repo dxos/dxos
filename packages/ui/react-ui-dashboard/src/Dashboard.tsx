@@ -296,7 +296,7 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
         <div className='grid gap-[3px]' style={{ gridTemplateRows: activityRows }}>
           {/* Zero-width spacer reserves the month-row height so day rows align with cell rows. */}
           <span aria-hidden className='text-xs'>
-            {'​'}
+            {'\u200B'}
           </span>
           {dayLabelRows.map((day) => (
             <span

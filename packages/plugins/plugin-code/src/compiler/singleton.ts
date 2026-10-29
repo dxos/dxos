@@ -26,7 +26,7 @@ export const getCompiler = async (): Promise<Compiler> => {
         return compiler;
       })
       .catch((err) => {
-        // Clear the cached promise so a subsequent caller can retry — otherwise
+        // Clear the cached promise so a subsequent caller can retry - otherwise
         // a transient CDN failure would poison the singleton for the page.
         _initialization = undefined;
         throw err;

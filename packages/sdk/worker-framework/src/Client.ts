@@ -125,7 +125,7 @@ export type Options = {
    * have occurred, when that many connect attempts received a port but failed to open the handle,
    * or when that many leader-lock steals have failed to produce a port (this tab's coordinator link
    * is broken, so no amount of re-election can help).
-   * Election keeps retrying afterwards — the callback lets the app escalate (e.g.
+   * Election keeps retrying afterwards - the callback lets the app escalate (e.g.
    * prompt or force a reload) instead of backing off silently forever. A common cause is stale
    * mixed-generation workers: a SharedWorker coordinator or dedicated worker running code from a
    * previous dev-server instance or app deploy alongside a freshly loaded page.
@@ -155,7 +155,7 @@ const DEFAULT_LEADER_RETRY_BACKOFF = 1_000;
 // Cap on the exponential backoff below, so a worker that fails indefinitely still retries on a
 // bounded interval rather than backing off forever.
 const MAX_LEADER_RETRY_BACKOFF = 30_000;
-// Consecutive failures before onPersistentFailure fires — late enough to skip transient races,
+// Consecutive failures before onPersistentFailure fires - late enough to skip transient races,
 // early enough that a user staring at a boot spinner gets a signal within a few seconds.
 const DEFAULT_MAX_LEADER_FAILURES = 4;
 // Time a worker gets to answer the probe that decides whether it is the wedged incumbent. Generous
@@ -194,7 +194,7 @@ export class Connection extends Resource {
   #coordinator: WorkerProtocol.WorkerCoordinator | undefined;
 
   // Timestamp (ms) of the last heartbeat seen from any leader. Seeded at open so "not yet observed"
-  // is measured from when we started listening — otherwise a tab that opens between two heartbeats
+  // is measured from when we started listening - otherwise a tab that opens between two heartbeats
   // reads the epoch as an infinitely stale leader and steals the lock from a healthy one.
   #lastLeaderHeartbeat = 0;
   // Timestamp (ms) of the last steal attempt; gates against thrashing re-election.
@@ -281,7 +281,7 @@ export class Connection extends Resource {
     this.#lastLeaderHeartbeat = Date.now();
     this.#coordinator = await this.#createCoordinator();
     this.#coordinator.onMessage.on(this._ctx, (message) => {
-      // `new-leader` is proof of life too, and it is the first thing a freshly elected leader sends —
+      // `new-leader` is proof of life too, and it is the first thing a freshly elected leader sends -
       // counting it avoids a steal in the window before its first heartbeat lands.
       if (message.type === 'leader-heartbeat' || message.type === 'new-leader') {
         this.#lastLeaderHeartbeat = Date.now();
@@ -300,7 +300,7 @@ export class Connection extends Resource {
     });
     this.#watchLeader(this._ctx);
     this.#connectTask.open();
-    // The connect task retries on its own, so its first run completing is not the readiness signal —
+    // The connect task retries on its own, so its first run completing is not the readiness signal -
     // only `#initialConnection` is. Bounding that first run separately would reject `open()` for a
     // follower whose leader is merely slow to hand out a port.
     this.#connectTask.schedule();
@@ -516,7 +516,7 @@ export class Connection extends Resource {
           return;
         }
         // The leader session itself failed (e.g. worker init/crash). The lock is released once this
-        // callback rejects, so re-enter the election after a backoff — otherwise this tab can never
+        // callback rejects, so re-enter the election after a backoff - otherwise this tab can never
         // host or reconnect to a worker again, leaving followers retrying `provide-port` forever.
         // Exponential backoff (capped) with jitter avoids a tight retry loop and lockstep retries.
         const jitteredBackoff = this.#backoffFor(this.#leaderFailureCount);
@@ -553,7 +553,7 @@ export class Connection extends Resource {
     // the worker keeps discarding them as duplicates rather than churning the session.
     const attempt = ++this.#connectAttempt;
     // Held for this attempt's lifetime and handed to the worker, which ends the session when it
-    // releases — the only way the worker learns that this tab closed or died.
+    // releases - the only way the worker learns that this tab closed or died.
     const sessionLockKey = `${this.#clientId}/session/${attempt}`;
     // Set when the worker reports that the session behind this attempt's ports could not be built.
     let sessionFailure: Error | undefined;
@@ -587,7 +587,7 @@ export class Connection extends Resource {
             if (!isAbortError(err)) {
               log.catch(err);
             }
-            // The attempt waits on this trigger, so a rejection has to wake it — an already-aborted
+            // The attempt waits on this trigger, so a rejection has to wake it - an already-aborted
             // `ctx.signal` rejects immediately, and this attempt would otherwise never finish or fail.
             granted.wake(err);
           });
@@ -629,7 +629,7 @@ export class Connection extends Resource {
             reject(sessionFailure);
           } else if (message.type === 'new-leader' || message.type === 'leader-heartbeat') {
             // Re-request on any sign of a live leader. A late-joining follower misses the one-shot
-            // `new-leader` broadcast, so its single initial `request-port` is its only chance —
+            // `new-leader` broadcast, so its single initial `request-port` is its only chance -
             // if that races the leader's handler registration or is dropped, the follower would
             // otherwise stall for the full port timeout (observed as a second tab that never starts).
             // Heartbeats (~1s) give it a recurring, idempotent retry; the worker de-dupes sessions
@@ -870,7 +870,7 @@ export class Connection extends Resource {
       log.catch(error);
     }
 
-    // The steal only evicts — the lock is released the moment the callback above returns — so without
+    // The steal only evicts - the lock is released the moment the callback above returns - so without
     // re-arming, a tab whose chain has ended takes the lock and hands it straight back.
     this.#watchLeader(this._ctx);
   }
@@ -1120,7 +1120,7 @@ class LeaderSession extends Resource {
    * Acts on an escalation only when the worker this tab owns is the one holding up the storage lock.
    *
    * The escalation is broadcast to every tab on that lock, and the issuer cannot name the incumbent
-   * — nothing tells a queued worker who holds the lock — so with three or more tabs an issuer-only
+   * - nothing tells a queued worker who holds the lock - so with three or more tabs an issuer-only
    * check has every bystander kill its own worker (F-3.5). Two local facts identify the culprit
    * instead: its liveness lock is still held, which `Worker.run` does over exactly the interval it
    * holds the storage lock, so a worker that already stood down is not killed twice nor reported;
@@ -1229,7 +1229,7 @@ const isWorker = (worker: WorkerProtocol.WorkerOrPort): worker is Worker => {
   return typeof Worker !== 'undefined' && worker instanceof Worker;
 };
 
-/** Settles with `promise`, or rejects as soon as `ctx` is disposed — whichever comes first. */
+/** Settles with `promise`, or rejects as soon as `ctx` is disposed - whichever comes first. */
 const untilDisposed = <T>(ctx: Context, promise: Promise<T>): Promise<T> =>
   new Promise<T>((resolve, reject) => {
     const removeDisposer = ctx.onDispose(() => reject(new ContextDisposedError()));

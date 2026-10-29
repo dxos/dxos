@@ -34,7 +34,7 @@ export const supportsCrossRealmMemory = (): boolean =>
   typeof (globalThis.performance as PerformanceWithMemory | undefined)?.measureUserAgentSpecificMemory === 'function';
 
 /**
- * Cross-realm usage — the only view of the shared and dedicated workers, since `performance.memory`
+ * Cross-realm usage - the only view of the shared and dedicated workers, since `performance.memory`
  * reports the calling realm alone. Resolves only after a GC, so sample it off the collection path.
  */
 export const measureCrossRealmMemory = async (): Promise<CrossRealmMemory | undefined> => {

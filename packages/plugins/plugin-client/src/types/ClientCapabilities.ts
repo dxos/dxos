@@ -30,7 +30,7 @@ export const InitializeTimeout = Capability.makeSingleton<number>()(
 /**
  * Ordering marker for modules that create typed objects: requiring `Schema` only orders after the
  * schema PROVIDERS, which says nothing about `SchemaDefs`, the fellow consumer that registers them.
- * `true` rather than `void` — the loader reads an `undefined` implementation as not contributed.
+ * `true` rather than `void` - the loader reads an `undefined` implementation as not contributed.
  */
 export const SchemaRegistered = Capability.makeSingleton<true>()(`${ClientNamespace.key}.capability.schemaRegistered`);
 export const Migration = Capability.make<Migration$.Migration[]>()(`${ClientNamespace.key}.capability.migration`);
@@ -39,7 +39,7 @@ export const AccountCache = Capability.makeSingleton<Atom.Writable<AccountCacheT
 );
 /**
  * Runs after the local identity is deleted in place, before the flow that brings in the next one.
- * `target` names that flow — `deviceInvitation` or `recoverIdentity` — and is absent for a plain
+ * `target` names that flow - `deviceInvitation` or `recoverIdentity` - and is absent for a plain
  * logout, which leaves the app with no identity for a contributor (e.g. onboarding) to resolve.
  */
 export type OnIdentityDeleted = (params: { target?: string }) => Effect.Effect<void, Error>;

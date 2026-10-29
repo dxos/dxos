@@ -14,7 +14,7 @@ import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
- * Discovery — list the available Bluesky sync targets reachable from a
+ * Discovery - list the available Bluesky sync targets reachable from a
  * connection's token. Always returns the three "self" targets (posts, likes,
  * bookmarks) plus one entry per saved feed in the user's preferences.
  *

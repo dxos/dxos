@@ -155,7 +155,7 @@ export const syncAgentAutomation = (
       }
 
       yield* makeRoutine({
-        name: `${agent.name ?? 'Agent'} — ${Obj.getLabel(target) ?? 'subscription'}`,
+        name: `${agent.name ?? 'Agent'} - ${Obj.getLabel(target) ?? 'subscription'}`,
         targetKey: subscription.uri,
         spec: Trigger.specFeed(feedObj),
         input: {
@@ -170,7 +170,7 @@ export const syncAgentAutomation = (
     // Timer wake: a synthetic prompt through the same relay path (no event, so no qualification).
     if (config.cron) {
       yield* makeRoutine({
-        name: `${agent.name ?? 'Agent'} — schedule`,
+        name: `${agent.name ?? 'Agent'} - schedule`,
         targetKey: `timer:${config.cron}`,
         spec: Trigger.specTimer(config.cron),
         input: {

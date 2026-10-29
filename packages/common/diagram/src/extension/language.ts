@@ -13,7 +13,7 @@ import { diagramLanguage } from './syntax.ts';
 /**
  * The fence dispatch point. Pass this alongside deus's `mdlBlockDescription` in
  * `createMarkdownExtensions({ codeLanguages: [...] })` and a ```diagram block inside a `.mdl`
- * document parses with the diagram grammar — a sibling of MDL's, not a nesting inside it. See
+ * document parses with the diagram grammar - a sibling of MDL's, not a nesting inside it. See
  * `docs/DSL.md`.
  */
 export const diagramBlockDescription = LanguageDescription.of({

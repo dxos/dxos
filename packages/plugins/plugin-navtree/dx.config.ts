@@ -25,7 +25,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       and objects, with open/current state persisted to localStorage across sessions.
 
       The plugin wires drag-and-drop rearrangement and cross-parent transfer of tree items via Pragmatic DnD,
-      and registers graph-action keyboard shortcuts (including the ⌘K / Ctrl+K command palette) through a
+      and registers graph-action keyboard shortcuts (including the ${'\u2318'}K / Ctrl+K command palette) through a
       global Keyboard singleton that tracks context as the user navigates.
 
       An operation handler for LayoutOperation.Expose expands ancestor paths on demand so that any

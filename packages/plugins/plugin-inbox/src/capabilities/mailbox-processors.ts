@@ -17,7 +17,7 @@ import { InboxCapabilities, InboxOperation } from '#types';
  * from. It also means a deployment without this module contributes nothing and scans nothing, which
  * is the honest behaviour.
  *
- * The `after` edges encode the cascade's real contract — classification consults the Person objects
+ * The `after` edges encode the cascade's real contract - classification consults the Person objects
  * the contacts pass creates, so a known sender is tagged personal and never billed to the model. The
  * cost tiers are a filter and a report label; the edges are what actually orders the run.
  *

@@ -20,7 +20,7 @@ type StoryArgs = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'markers'>;
 const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
   const [controller, setController] = useState<MapController>();
   const [key, setKey] = useState('');
-  // Substitute the `${key}` placeholder in a keyed tile URL (e.g. MapTiler); undefined → default OSM tiles.
+  // Substitute the `${key}` placeholder in a keyed tile URL (e.g. MapTiler); undefined -> default OSM tiles.
   const url = useMemo(() => urlProp?.replace('${key}', key), [urlProp, key]);
 
   const handleZoomAction = useMapZoomHandler(controller);
@@ -42,7 +42,7 @@ const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
         </Panel.Header>
       )}
       {/* Map.Root is headless (context only), so it sits outside Panel.Content; Panel.Content asChild
-          then targets the Leaflet frame (Map.Viewport) directly — no extra wrapper element. */}
+          then targets the Leaflet frame (Map.Viewport) directly - no extra wrapper element. */}
       <Map.Root ref={setController}>
         <Panel.Body asChild>
           <Map.Viewport>

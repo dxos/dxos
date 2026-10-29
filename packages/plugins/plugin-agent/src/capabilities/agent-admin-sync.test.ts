@@ -117,7 +117,7 @@ describe('AgentAdminSync', () => {
     expect(edge.calls).toEqual([`POST /compute/brain/${did}/admins {"identityKey":"${joining.toHex()}"}`]);
   });
 
-  test('a space EDGE does not name as the agent’s own, or one whose agent EDGE does not count this identity an admin of, is not synced', async ({
+  test("a space EDGE does not name as the agent's own, or one whose agent EDGE does not count this identity an admin of, is not synced", async ({
     expect,
   }) => {
     const claimed = agentSpace([

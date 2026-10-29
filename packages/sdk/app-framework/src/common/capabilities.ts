@@ -100,8 +100,8 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
 export const ReactSurface = Capability$.make<ReactSurface>()('org.dxos.app-framework.capability.reactSurface');
 
 // The requirement channel stays open: a command's services are supplied partly by the contributing
-// plugin and partly by the host — `CommandConfig` carries the host's global flags and is provided as
-// an ambient layer by the host binary — so no single side can discharge them all. `CommandServices`
+// plugin and partly by the host - `CommandConfig` carries the host's global flags and is provided as
+// an ambient layer by the host binary - so no single side can discharge them all. `CommandServices`
 // in @dxos/cli-util names what a host owes; hosts should type their layer with it.
 export type AnyCommand = Command$.Command<any, any, any, any, any>;
 
@@ -226,7 +226,7 @@ export type ProcessManagerRuntimeServices =
  * process-manager services.
  *
  * The shape mirrors {@link ManagedRuntime$.ManagedRuntime} but deliberately does
- * not expose `dispose` – lifecycle is driven by the host plugin manager.
+ * not expose `dispose` - lifecycle is driven by the host plugin manager.
  */
 export interface ProcessManagerRuntime {
   runPromise<A, E>(
@@ -269,7 +269,7 @@ export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHa
 );
 
 /**
- * Merged, contribution-ordered view over all {@link OperationHandler} contributions — the same
+ * Merged, contribution-ordered view over all {@link OperationHandler} contributions - the same
  * set the operation invoker resolves against. Provided by ProcessManagerPlugin.
  * @category Capability
  */

@@ -14,7 +14,7 @@ import type { FeedbackPluginOption } from './types.ts';
  * Plugin-picker field for the `area` slot of {@link SupportOperation.SupportRequest}.
  *
  * Mirrors the built-in {@link SelectField} (see `packages/ui/react-ui-form/src/components/Form/fields/SelectField.tsx`)
- * but renders the plugin name as the visible label with the id as a dim trailer — the plain
+ * but renders the plugin name as the visible label with the id as a dim trailer - the plain
  * SelectField only supports string-keyed options without rich labels.
  *
  * Binds `undefined` to Radix's reserved empty string: passing `undefined` itself would flip the
@@ -26,7 +26,7 @@ export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & 
   plugins: ReadonlyArray<FeedbackPluginOption>;
 };
 
-/** Reserved sentinel — Radix Select requires non-empty option values. */
+/** Reserved sentinel - Radix Select requires non-empty option values. */
 const CLEAR_VALUE = '__none__';
 
 export const AreaSelectField = ({

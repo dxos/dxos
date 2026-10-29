@@ -61,7 +61,7 @@ export const SwarmTraceCard = ({ messages = [], spaceCount = 0, available = true
                   classNames='text-xs'
                   data={{
                     receivedAt: new Date(received.receivedAt).toISOString(),
-                    // The wire tag list this broadcast was routed under — what a subscriber's coarse
+                    // The wire tag list this broadcast was routed under - what a subscriber's coarse
                     // swarm subscription matches against.
                     tags: Trace.messageToTags(received.message),
                     meta: received.message.meta,

@@ -29,7 +29,7 @@ import {
  * Which EDGE to run against.
  *
  * All three carry the `test+*@dxos.org` hatch that binds a run's identities to Hub accounts, which
- * the self-serve delete routes require — preview since dxos/edge#1026, which gated the hatch on its
+ * the self-serve delete routes require - preview since dxos/edge#1026, which gated the hatch on its
  * own `isTestAccountEnvironment` rather than on `isDevLikeEnvironment`. Staging and production do
  * not, and are absent here for that reason: a run there could not delete what it created.
  */
@@ -39,7 +39,7 @@ export type EdgeTarget = typeof EdgeTarget.Type;
 /**
  * Where the test-email hatch is open, hence where a run can bind accounts and clean up after itself.
  *
- * Every target this type admits, so it is presently total — kept as a predicate rather than deleted
+ * Every target this type admits, so it is presently total - kept as a predicate rather than deleted
  * because it is the check that stops a run it cannot undo, and the next target added (staging, a
  * one-off deployment) is far more likely to lack the hatch than to have it.
  */
@@ -76,18 +76,18 @@ export const EdgeStressSpec = Schema.Struct({
 
   /** Devices per identity; its length is the identity count and its sum the client count. */
   devicesPerIdentity: Schema.Array(PositiveInt).pipe(Schema.check(Schema.isMinLength(1))),
-  /** Create an EDGE agent per identity — an always-online member that can admit late joiners. */
+  /** Create an EDGE agent per identity - an always-online member that can admit late joiners. */
   agents: Schema.Boolean,
 
   /** Slot counts the generator draws within; a command that exceeds them fails its precondition. */
   maxSpaces: PositiveInt,
   maxDocumentsPerSpace: PositiveInt,
-  /** Commands that will *execute*, not commands drawn — most of a uniform draw is unreachable. */
+  /** Commands that will *execute*, not commands drawn - most of a uniform draw is unreachable. */
   maxCommands: PositiveInt,
   /**
    * How many command lists to draw from the seed; the longest is executed. `FastCheck.assert`
    * biases its first run toward tiny inputs (measured: 2 commands), so drawing and picking is what
-   * actually yields a long sequence — deterministically, since the seed fixes every draw.
+   * actually yields a long sequence - deterministically, since the seed fixes every draw.
    */
   sampleDraws: PositiveInt,
   /** Wall-clock budget; exhausting it stops issuing commands and proceeds to the final assertion. */
@@ -98,13 +98,13 @@ export const EdgeStressSpec = Schema.Struct({
   checkpoints: Schema.Boolean,
   /**
    * Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance, and
-   * is the nightly setting while finding 5 stands — a cut link crashes the peer.
+   * is the nightly setting while finding 5 stands - a cut link crashes the peer.
    */
   partitions: Schema.Boolean,
   /**
    * Run this plan instead of drawing one: the commands inline, or the path of a
    * `command-trace.jsonl` from an earlier run (its last `plan` entry is used). Turns a
-   * counterexample into a fixture — and lets one be shrunk by hand, since a sampled sequence has no
+   * counterexample into a fixture - and lets one be shrunk by hand, since a sampled sequence has no
    * fast-check shrinker.
    */
   plan: Schema.optionalKey(Schema.Union([Schema.String, Schema.Array(Schema.Unknown)])),
@@ -155,7 +155,7 @@ export type Real = {
  * Bound one call to a replicant.
  *
  * RPC to a replicant is created with `timeout: 0`, and the scheduler only rescues the run when a
- * replicant *dies* — a peer that is alive but stuck inside `flush` or a query hangs the orchestrator
+ * replicant *dies* - a peer that is alive but stuck inside `flush` or a query hangs the orchestrator
  * for as long as the run lasts, with no diagnosis. Every assertion-side call gets a deadline, so
  * that becomes a named failure against a named peer.
  */
@@ -229,7 +229,7 @@ const SYNC_BARRIER_MS = 30_000;
  *
  * Deliberately not an assertion. `getSyncState` is unreliable between EDGE and the client
  * (inkandswitch/subduction#286), so a peer that never reports caught-up is not evidence that its
- * data diverged — only the digest comparison that follows can say that. Failing here would turn a
+ * data diverged - only the digest comparison that follows can say that. Failing here would turn a
  * bad signal into a red run and, worse, would do it *before* the ground truth is ever read.
  */
 export const quiesce = async (real: Real, spaceSlot: number, clients: ClientIndex[]): Promise<boolean> => {
@@ -279,7 +279,7 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
  *
  * Self-serve only, deliberately. Each identity's first device deletes the spaces its identity
  * created and then itself (`DELETE /data/space/:id`, `/data/identity/:did`), authenticating with a
- * verifiable presentation it signs — the credential the run already holds, scoped to exactly the
+ * verifiable presentation it signs - the credential the run already holds, scoped to exactly the
  * data it created. There is no admin-key fallback: a shared secret that can delete anything is not
  * something a test should carry, and having one masks the case this cleanup is supposed to prove.
  *
@@ -391,7 +391,7 @@ export const assertEqualsModel = (model: Model, spaceSlot: number, client: Clien
  * Retry an assertion until it holds or the quiescence budget runs out.
  *
  * Convergence is a temporal property: a peer agrees *eventually*, and `quiesce` only proves that
- * each peer has nothing outstanding against EDGE — a document EDGE has not yet offered to the
+ * each peer has nothing outstanding against EDGE - a document EDGE has not yet offered to the
  * other device leaves both sides reporting caught up while their digests differ. A failure here
  * means it never converged, which is the property worth asserting.
  */

@@ -25,7 +25,7 @@ export type FileNode = {
 export const FILE_TREE_ROOT = 'root';
 
 /**
- * The changed files as a directory tree, directories before files and each alphabetical — the order
+ * The changed files as a directory tree, directories before files and each alphabetical - the order
  * GitHub's own file tree uses. A directory whose only child is another directory is folded into one
  * row (`src/components`), since a chain of single-entry folders is depth without information.
  */

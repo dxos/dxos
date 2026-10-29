@@ -27,7 +27,7 @@ const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
 
-// Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
+// Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception - webkit peers
 // there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
 // webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
 test.describe('Collaboration tests', () => {

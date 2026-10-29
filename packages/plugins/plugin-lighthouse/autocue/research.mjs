@@ -35,7 +35,7 @@ const RESULT = '[data-testid="lighthouse.result"]';
 const DETAIL = '[data-testid="lighthouse.detail"]';
 
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 const visible = (locator, timeout = 1_500) =>
   locator
@@ -93,7 +93,7 @@ export const steps = [
   },
   {
     // QA-1 `before`: Connect lighthouse.
-    name: 'setup: In Settings → Connections, add Lighthouse with the local URL and the API token',
+    name: 'setup: In Settings -> Connections, add Lighthouse with the local URL and the API token',
     setup: true,
     run: async ({ page }) => {
       // A dialog left open (a create flow that stepped back) would cover the navtree.
@@ -174,7 +174,7 @@ export const steps = [
     name: 'Watch results land',
     run: async ({ demo, page }) => {
       await caption(demo, 4, 'Results land in the masonry as the agent extracts them');
-      // The agent's searching is motion with little to read: the cut plays it fast, marked ⏩.
+      // The agent's searching is motion with little to read: the cut plays it fast, marked >>.
       await demo.speed({ factor: 3 });
       await waitForResults(page, 6, RESULTS_TIMEOUT);
       // A few more seconds of results landing, then normal speed to read the cards.

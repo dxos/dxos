@@ -103,7 +103,7 @@ export const Default: Story = {
 
 /**
  * First story on purpose. The prompt below is the implementing agent's own (Claude, 2026-07-23):
- * how it feels about this project, drawn live with the DSL it built — open the story and watch.
+ * how it feels about this project, drawn live with the DSL it built - open the story and watch.
  */
 export const Reflection: Story = {
   decorators,
@@ -113,7 +113,7 @@ export const Reflection: Story = {
     const prompt = trim`
       Draw how I feel about this project. I spent tonight building the drawing language you
       are using right now, so draw: a long winding path (a dotted curve) from three small
-      labeled boxes — "PIC", "D2", "SVG" — arriving at a small bright machine; above it a
+      labeled boxes - "PIC", "D2", "SVG" - arriving at a small bright machine; above it a
       face mid-thought with one raised eyebrow and half a smile, because the best moment of
       the night was realizing the reader has to derive origins from bounding boxes or the
       model's memory breaks the instant a human drags a shape; and an arrow looping from the
@@ -127,8 +127,8 @@ export const Reflection: Story = {
 };
 
 /**
- * End-to-end mental-model test: the agent draws a face, then — from its own read of the scene,
- * not the tldraw records — adds a hat WITHOUT redrawing the face. Asserts that the face's shape
+ * End-to-end mental-model test: the agent draws a face, then - from its own read of the scene,
+ * not the tldraw records - adds a hat WITHOUT redrawing the face. Asserts that the face's shape
  * records survive the second edit (an agent that rebuilt the canvas would replace them).
  *
  * Live AI and slow, so excluded from CI test runs (`tags: ['!test']`); run manually in storybook
@@ -144,7 +144,7 @@ export const DrawAndUpdateTest: Story = {
     await submitPrompt(canvasElement, 'Now add a hat (object id "hat") on top of the face. Do not redraw the face.');
     await waitForObjectRecords('hat', 1);
 
-    // The face must survive the follow-up edit — proof the agent edited the scene it read
+    // The face must survive the follow-up edit - proof the agent edited the scene it read
     // back rather than regenerating the canvas.
     const remaining = await countObjectRecords('face');
     if (remaining < faceShapes) {

@@ -87,7 +87,7 @@ export const deleteBranch = (obj: Obj.Unknown, name: string): void => {
 
 /**
  * Read the object's CURRENT decoded data on a branch, without switching the device selection or
- * holding a binding open — a one-shot read for review workflows (e.g. recomputing a diff against
+ * holding a binding open - a one-shot read for review workflows (e.g. recomputing a diff against
  * the compare branch to cherry-pick a hunk). Binding to `'main'` reads the live object.
  */
 export const getObjectOnBranch = async (obj: Obj.Unknown, name: string): Promise<DecodedAutomergePrimaryValue> => {

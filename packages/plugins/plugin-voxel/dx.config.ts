@@ -28,7 +28,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       A ghost cursor previews placement before committing, and a gizmo helper maintains
       spatial orientation.
 
-      Each world supports three tool modes — select, add, and remove — along with a HuePicker
+      Each world supports three tool modes - select, add, and remove - along with a HuePicker
       for coloring voxels with any theme hue. The toolbar also provides one-click shape
       generation (cube, wall, sphere, cylinder, tower) placed at the current cursor position,
       and a full Conway's Game of Life simulation that runs on the ground plane using

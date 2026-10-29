@@ -32,7 +32,7 @@ export type PluginInfo = {
 export type OperationField = {
   name: string;
   optional: boolean;
-  /** Rendered type, truncated — enough to choose a value, not a substitute for the schema. */
+  /** Rendered type, truncated - enough to choose a value, not a substitute for the schema. */
   type: string;
 };
 
@@ -51,12 +51,12 @@ export type OperationInfo = {
 };
 
 /**
- * `globalThis.composer` — the app-layer console namespace, the counterpart to `__DXOS__`/`dxos`
+ * `globalThis.composer` - the app-layer console namespace, the counterpart to `__DXOS__`/`dxos`
  * (client and ECHO). Populated as the app boots, so every member is optional; the declaration buys
  * type-checking at call sites, not a presence guarantee.
  *
  * An interface rather than a type alias so apps can declaration-merge their own debug hooks onto it
- * — a second `declare global { var composer }` elsewhere would collide with this one instead.
+ * - a second `declare global { var composer }` elsewhere would collide with this one instead.
  */
 export interface ComposerDevtools {
   manager?: PluginManager.PluginManager;
@@ -99,7 +99,7 @@ const fieldsOf = (schema: Schema.Top | undefined): OperationField[] | undefined 
     return {
       name: String(property.name),
       optional: SchemaAST.isOptional(property.type),
-      type: type.length > MAX_TYPE_LENGTH ? `${type.slice(0, MAX_TYPE_LENGTH)}…` : type,
+      type: type.length > MAX_TYPE_LENGTH ? `${type.slice(0, MAX_TYPE_LENGTH)}\u2026` : type,
     };
   });
 };
@@ -108,7 +108,7 @@ const fieldsOf = (schema: Schema.Top | undefined): OperationField[] | undefined 
  * Attaches the plugin/operation console API to `globalThis.composer`.
  *
  * Lives at the framework level rather than in a devtools plugin so it is present in any app and
- * does not depend on which plugins happen to be enabled — inspecting a broken plugin set is
+ * does not depend on which plugins happen to be enabled - inspecting a broken plugin set is
  * exactly when this is wanted.
  */
 export const setup = (manager: PluginManager.PluginManager): void => {
@@ -135,7 +135,7 @@ export const setup = (manager: PluginManager.PluginManager): void => {
     });
   };
 
-  // Definitions carry DXN-form keys, so accept either that or the bare NSID — same normalization
+  // Definitions carry DXN-form keys, so accept either that or the bare NSID - same normalization
   // the handler sets apply, so whatever `operations()` prints can be pasted straight into `invoke`.
   // `isDXN` is only a `dxn:` prefix check, so a hand-typed `dxn:` would throw out of `getName` and
   // abort the whole lookup; fall back to the raw key and let it miss as "Unknown operation".
@@ -192,7 +192,7 @@ export const setup = (manager: PluginManager.PluginManager): void => {
 
     // `invokePromise` does not validate its input: a payload missing a required field comes back
     // as `{ data: undefined }` with no error, and the operation quietly does nothing. Validating
-    // here turns that silent no-op into the error the caller expected — the whole point of an
+    // here turns that silent no-op into the error the caller expected - the whole point of an
     // operation carrying a schema.
     // Validated against the TYPE side: callers pass decoded values, so decoding the codec would
     // report a materialized `Ref` as malformed at a path no caller can address.
@@ -208,7 +208,7 @@ export const setup = (manager: PluginManager.PluginManager): void => {
       const issues = formatIssue(validation.failure.issue)
         .issues.map((issue) => `${issue.path?.join('.') || '(root)'}: ${issue.message}`)
         .join('; ');
-      throw new Error(`Invalid input for ${key} — ${issues}`);
+      throw new Error(`Invalid input for ${key} - ${issues}`);
     }
 
     const invoker = manager.capabilities.get(Capabilities.OperationInvoker);

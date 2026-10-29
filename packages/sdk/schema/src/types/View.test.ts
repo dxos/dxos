@@ -93,7 +93,7 @@ describe('Projection', () => {
   // display a customised superset of the underlying type's fields without mutating the type.
   // The bug: overrideSchema is stored in view.projection.schema but the field initialisation
   // loop still iterates jsonSchema (the base schema), so any field present only in the
-  // override is silently dropped — the table renders with fewer columns than intended.
+  // override is silently dropped - the table renders with fewer columns than intended.
   // TODO(wittjosiah): ViewModel.make stores overrideSchema in view.projection.schema but initializes
   // fields from jsonSchema (the base), so fields present only in the override are dropped. Unskip
   // once field initialization merges the override schema.
@@ -132,7 +132,7 @@ describe('Projection', () => {
     // The override schema is correctly stored in view.projection.schema.
     expect(Object.keys(view.projection.schema?.properties ?? {})).toContain('priority');
 
-    // When overrideSchema is provided the view's projection fields should reflect it —
+    // When overrideSchema is provided the view's projection fields should reflect it -
     // 'priority' only exists in the override, so it must appear in the projected fields.
     // FAILS: field initialisation uses jsonSchema (base), so only 'title' is projected
     // and 'priority' is silently absent.

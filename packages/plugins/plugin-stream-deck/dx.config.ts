@@ -18,7 +18,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     key: StreamDeckNamespace.key,
     name: 'Stream Deck',
     author: 'DXOS',
-    description: 'Project a space onto Stream Deck hardware — favorites on keys, progress and stats on dials.',
+    description: 'Project a space onto Stream Deck hardware - favorites on keys, progress and stats on dials.',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-stream-deck',
     icon: { key: 'ph--squares-four--regular', hue: 'cyan' },
     spec: 'PLUGIN.mdl',

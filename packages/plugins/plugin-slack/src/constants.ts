@@ -12,7 +12,7 @@ export const SLACK_API_BASE = 'https://slack.com/api';
  * OAuth scopes requested for the Slack connection.
  *
  * EDGE requests these as Slack's bot `scope` (not `user_scope`), so the stored token is the bot
- * token (`xoxb-…`) and agents post as the bot, never as the person who connected.
+ * token (`xoxb-...`) and agents post as the bot, never as the person who connected.
  *
  * Reading splits along Slack's conversation-type axis: `<type>:read` enumerates conversations
  * (discovery) and `<type>:history` reads messages (sync); `users:read` resolves user ids to names.

@@ -114,7 +114,7 @@ export interface Hypergraph extends Database.Queryable {
  * Distinct from {@link Database.Service}, which carries one space's database: an operation
  * declaring the database is declaring that it acts on a space, and callers that cannot name one
  * (a harness hook fires a fixed payload) are refused before the handler runs. This service is the
- * cross-space handle — query every space, or reach one by id with `getDatabase` — for the work
+ * cross-space handle - query every space, or reach one by id with `getDatabase` - for the work
  * that has to find its own space rather than be told it.
  */
 export class Service extends Context.Service<
@@ -153,7 +153,7 @@ export const makeService = (graph: Hypergraph): Service['Service'] => ({
  */
 export const layer = (graph: Hypergraph): Layer.Layer<Service> => Layer.succeed(Service, makeService(graph));
 
-/** The graph holds no database for the requested space — it is not open, or does not exist. */
+/** The graph holds no database for the requested space - it is not open, or does not exist. */
 export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', 'Space not found.') {}
 
 /**

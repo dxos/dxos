@@ -10,7 +10,7 @@ import { Database, Filter, Query, type Type } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
 /**
- * Deterministic DB-state assertion for a Scorer to check (TESTING.md dimension G) — real DB
+ * Deterministic DB-state assertion for a Scorer to check (TESTING.md dimension G) - real DB
  * state, not the agent's self-reported completion.
  */
 export const objectExists = <T extends Type.AnyEntity>(
@@ -35,7 +35,7 @@ export const findObject = <T extends Type.AnyEntity>(
   });
 
 /**
- * Every `CompleteBlock` event written to the space's trace feed during the run, in order —
+ * Every `CompleteBlock` event written to the space's trace feed during the run, in order -
  * the raw substrate for deterministic tool-invocation / transcript assertions (TESTING.md
  * dimension G), read from the durable feed rather than trusting the agent's own report.
  */
@@ -46,7 +46,7 @@ export const completedBlocks = (): Effect.Effect<
 > =>
   Effect.gen(function* () {
     // Waits for the sink's buffered writes to actually land, rather than guessing how long that
-    // takes — a fixed sleep would still race the last write under load.
+    // takes - a fixed sleep would still race the last write under load.
     yield* FeedTraceSink.flush();
 
     const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
@@ -65,7 +65,7 @@ export const completedBlocks = (): Effect.Effect<
 
 export interface ToolInvocation {
   readonly name: string;
-  /** Key of the Operation backing this call (e.g. `dxn:org.dxos.operation.assistantToolkit.updateTasks`) — a
+  /** Key of the Operation backing this call (e.g. `dxn:org.dxos.operation.assistantToolkit.updateTasks`) - a
    * stable match target, unlike `name` (a display/toolkit name that varies by provider/toolkit). Absent
    * for tool calls not backed by an Operation (provider-defined tools, MCP tools). */
   readonly operationKey?: string;

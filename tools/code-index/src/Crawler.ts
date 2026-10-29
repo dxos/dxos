@@ -42,8 +42,8 @@ export const DEFAULT_EXTENSIONS = [
 ];
 
 /**
- * Crawled whatever their extension. `.yml` is not in the extension set — a repository is full of
- * workflow and config YAML the index has no use for — but `moon.yml` carries the package layer.
+ * Crawled whatever their extension. `.yml` is not in the extension set - a repository is full of
+ * workflow and config YAML the index has no use for - but `moon.yml` carries the package layer.
  */
 export const DEFAULT_FILENAMES = ['moon.yml'];
 
@@ -56,7 +56,7 @@ const run = (args: string[], cwd: string): Effect.Effect<string, CrawlError> =>
     catch: (cause) => new CrawlError({ message: `git ${args.join(' ')} failed in ${cwd}`, cause }),
   });
 
-/** The git working-tree root containing `cwd` — the default indexing root. */
+/** The git working-tree root containing `cwd` - the default indexing root. */
 export const gitRoot = (cwd: string = process.cwd()): Effect.Effect<string, CrawlError> =>
   Effect.map(run(['rev-parse', '--show-toplevel'], cwd), (stdout) => stdout.trim());
 

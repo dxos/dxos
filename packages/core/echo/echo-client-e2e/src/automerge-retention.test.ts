@@ -16,7 +16,7 @@ import { type Checkpoint, aliveCount, capture, makePayload, report } from './tes
  * when the caller lets go of them? Harness and rationale: `./testing/retention.ts`.
  *
  * Unlike a feed object, an ECHO object is a thin proxy over an automerge document, so the payload is
- * not in the entity — it is in the document. So `docs.c` / `docs.h` matter as much as `objs` here,
+ * not in the entity - it is in the document. So `docs.c` / `docs.h` matter as much as `objs` here,
  * and releasing entities alone would not return the memory: an entity is released with its core, and
  * an unlinked object's document is released with the last object mounted in it.
  *
@@ -34,8 +34,8 @@ const HALF = OBJECT_COUNT / 2;
 /**
  * Far smaller than the feed suite's, and deliberately so: every object here is its own automerge
  * document, and both tests' documents accumulate in the one WASM instance this file's process
- * shares — releasing a handle returns JS memory, never WASM memory. The amplification is severe — a few MB of payload costs an
- * order of magnitude more heap and two orders more WASM — and past roughly 12MB of total payload
+ * shares - releasing a handle returns JS memory, never WASM memory. The amplification is severe - a few MB of payload costs an
+ * order of magnitude more heap and two orders more WASM - and past roughly 12MB of total payload
  * the WASM allocator aborts mid-`loadIncremental` (`__rg_oom` into a `RuntimeError: unreachable`),
  * after which every automerge call in the process, on any document, fails with "recursive use of an
  * object detected". Raise these numbers and the suite stops measuring retention and starts
@@ -115,7 +115,7 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
   });
 
   // Collection is the strongest release the client has: it unlinks the objects from the space
-  // directory, which drives `EntityManager._evictRemovedObjects` — and that now takes each object's
+  // directory, which drives `EntityManager._evictRemovedObjects` - and that now takes each object's
   // document with it, on both sides (`docs.c` and `docs.h` back to the space root alone) rather than
   // leaving the client's repo proxy holding a handle per document.
   test('collecting removed objects releases them', { timeout: 300_000 }, async ({ expect }) => {
@@ -131,13 +131,13 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     const refs = queried.map((object) => new WeakRef(object));
     const held = await capture('B: all held by the caller', checkpoints, db, refs);
 
-    // Removed from inside a helper so its frame — and the loop variable holding the last object —
+    // Removed from inside a helper so its frame - and the loop variable holding the last object -
     // is gone before the reading: a live stack slot keeps one object alive and reads as retention.
     removeAll(db, queried);
     // Drains the deferred full-text pass too: a batch still in flight would be reachable
     // from the checkpoint below and measured as retention.
     await db.flush({ secondaryIndexes: true });
-    // Removal alone is a soft delete — the object stays in the space directory, so nothing evicts.
+    // Removal alone is a soft delete - the object stays in the space directory, so nothing evicts.
     // Collection is what unlinks it, which is what `_evictRemovedObjects` watches for.
     await db.runGarbageCollection();
     // Drains the deferred full-text pass too: a batch still in flight would be reachable
@@ -157,7 +157,7 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
   });
 
   // `EntityManager._objects` used to hold an `ObjectCore` per object and shrink only when an object
-  // left the space directory — never because the caller dropped it — so a space's client-side
+  // left the space directory - never because the caller dropped it - so a space's client-side
   // footprint tracked everything it had ever loaded rather than what is open. This is the
   // automerge-side twin of the feed bug fixed in `FeedCoreRegistry`.
   test('dropping the caller reference releases objects', { timeout: 300_000 }, async ({ expect }) => {

@@ -22,7 +22,7 @@ export const PasswordField = ({
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
   if (presentationFor(presentation).isStatic) {
-    return <FormStaticValue value={'•'.repeat(value.length)} format={format} />;
+    return <FormStaticValue value={'*'.repeat(value.length)} format={format} />;
   }
 
   return (

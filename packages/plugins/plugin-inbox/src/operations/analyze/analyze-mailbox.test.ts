@@ -27,7 +27,7 @@ import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
 
 import { inboxMailboxProcessors } from '../../capabilities/mailbox-processors.ts';
 
-/** A service no layer in this test provides — the whole point of the stub below. */
+/** A service no layer in this test provides - the whole point of the stub below. */
 class MissingService extends Context.Service<MissingService, { readonly unused: true }>()(
   '@dxos/plugin-inbox/testing/MissingService',
 ) {}
@@ -36,7 +36,7 @@ class MissingService extends Context.Service<MissingService, { readonly unused: 
  * An operation declaring a service nothing contributes, standing in for the real misconfiguration:
  * a processor whose own plugin failed to provide something it declared. Purpose-built rather than
  * borrowed from a shipped operation, so the test exercises the gate itself and cannot be invalidated
- * by that operation later gaining or losing a dependency — which is exactly what happened when
+ * by that operation later gaining or losing a dependency - which is exactly what happened when
  * `AnalyzeMailbox` moved to plugin-brain.
  */
 const StubOperation = Operation.make({
@@ -57,7 +57,7 @@ const analyzeProcessor: InboxCapabilities.MailboxProcessor = {
 };
 
 /**
- * The processors plugin-inbox itself contributes, resolved through the real capability manager — the
+ * The processors plugin-inbox itself contributes, resolved through the real capability manager - the
  * cascade reads only contributions, so a test that stubbed a plan instead would exercise a path the
  * app never takes.
  */
@@ -75,7 +75,7 @@ const capabilityService = (processors: readonly InboxCapabilities.MailboxProcess
 
 /**
  * The cascade reads its processors from the capability and nothing else, so the test layer has to
- * contribute them the way the app does — `extraServices`, not an ambient `provideService`, because the
+ * contribute them the way the app does - `extraServices`, not an ambient `provideService`, because the
  * operation runtime resolves declared services through the ServiceResolver rather than the caller's
  * Effect context.
  */
@@ -210,7 +210,7 @@ describe('AnalyzeMailbox cascade', () => {
 
         // `tiers` is a SET: a caller naming the cheap LLM tier before the deterministic one must not
         // get a classification pass whose contact allow-list has not been built yet. Classification
-        // fails on the scripted model, which is what pins the order — the deterministic stages ran
+        // fails on the scripted model, which is what pins the order - the deterministic stages ran
         // first and the failure lands on the third stage, not the first.
         const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
@@ -244,7 +244,7 @@ describe('AnalyzeMailbox cascade', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        // The app's real condition: `AiService` is in the stack but no resolver claims the model —
+        // The app's real condition: `AiService` is in the stack but no resolver claims the model -
         // plugin-assistant contributes the Anthropic one on its own Start event, so a run before the
         // assistant is up asks for a model nobody serves. That is a precondition, not a fault: the
         // deterministic work stands, the cascade reports no failure, and each AI tier says why it did
@@ -293,8 +293,8 @@ describe('AnalyzeMailbox cascade', () => {
 
         // `analyze` declares `FactStore`, which only plugin-brain contributes; this layer has no such
         // provider, so the process invoker rejects at spawn time. That is the same class of unmet
-        // precondition as an absent `AiService` — the host app did not contribute something a tier
-        // declared — and must be reported the same way, or one uninstalled plugin turns a healthy
+        // precondition as an absent `AiService` - the host app did not contribute something a tier
+        // declared - and must be reported the same way, or one uninstalled plugin turns a healthy
         // mailbox's scan red and strands the deterministic work behind it.
         const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
@@ -322,7 +322,7 @@ describe('AnalyzeMailbox cascade', () => {
         const { mailbox } = yield* seedMailbox();
 
         // `classify` fails on the scripted model. `subscriptions` declares no edge
-        // to it, so it must still run — blocking by run POSITION would have stranded it purely for
+        // to it, so it must still run - blocking by run POSITION would have stranded it purely for
         // sitting later in the list, which is the whole point of taking the order from the DAG.
         const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
@@ -360,7 +360,7 @@ describe('AnalyzeMailbox cascade', () => {
         });
 
         // Contributed FIRST but declared `after: ['subscriptions']`, so running last is the topology
-        // doing its job — contribution order alone would have put it at the front.
+        // doing its job - contribution order alone would have put it at the front.
         expect(result.stages.map((stage) => stage.processor)).toEqual(['contacts', 'subscriptions', 'thirdParty']);
         expect(result.completed).toBe(3);
       },
@@ -391,7 +391,7 @@ describe('AnalyzeMailbox cascade', () => {
         const { mailbox } = yield* seedMailbox();
 
         // One contributor shipping a cycle must not cost everyone else their run, and the members must
-        // be named — silence here would look exactly like a pass that ran and found nothing.
+        // be named - silence here would look exactly like a pass that ran and found nothing.
         const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
@@ -444,7 +444,7 @@ describe('AnalyzeMailbox cascade', () => {
         const { mailbox } = yield* seedMailbox();
 
         // `analyze` declares after: ['summarize'], but `summarize` is not among the selected tiers, so
-        // that edge points at an absent processor and is ignored — leaving `analyze` with no path to
+        // that edge points at an absent processor and is ignored - leaving `analyze` with no path to
         // `classify`. It therefore RUNS despite the classification failure, and skips on its own unmet
         // precondition instead. Sharp but correct: a processor the caller excluded cannot constrain
         // anything, and `analyze` never consumed classification in the first place.

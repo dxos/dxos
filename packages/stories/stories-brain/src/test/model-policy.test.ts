@@ -12,7 +12,7 @@ import {
   resolveModelName,
 } from '../testing/harness/index.ts';
 
-// Deterministic coverage for the model-policy map — no fixture / model required.
+// Deterministic coverage for the model-policy map - no fixture / model required.
 
 describe('DEFAULT_MODEL_POLICY', () => {
   test('every default entry resolves to a real variant (no typos)', ({ expect }) => {
@@ -35,7 +35,7 @@ describe('resolveModel', () => {
     expect(resolveModelName('tag', { draft: 'gpt-oss-20b' })).toBe('claude-haiku');
   });
 
-  test('the name is matched as a substring (haiku → claude-haiku)', ({ expect }) => {
+  test('the name is matched as a substring (haiku -> claude-haiku)', ({ expect }) => {
     expect(resolveModel('tag', { tag: 'haiku' }).name).toBe('claude-haiku');
   });
 
@@ -53,7 +53,7 @@ describe('parseModelPolicyEnv', () => {
     expect(parseModelPolicyEnv('bogus=x,draft=gemma, ,')).toEqual({ draft: 'gemma' });
   });
 
-  test('empty / undefined → empty policy', ({ expect }) => {
+  test('empty / undefined -> empty policy', ({ expect }) => {
     expect(parseModelPolicyEnv('')).toEqual({});
     expect(parseModelPolicyEnv(undefined)).toEqual({});
   });

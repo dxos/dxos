@@ -4,7 +4,7 @@
 // Built as the demo for plugin-debug's "Chess MCP on Workers" space template: this is the artifact
 // stages two through four of that plan produce, so Composer has something real to call.
 //
-// Streamable HTTP on POST /mcp — no SSE, no session header, no state between requests. Every
+// Streamable HTTP on POST /mcp - no SSE, no session header, no state between requests. Every
 // request carries the position as FEN, which is what lets the Worker be evicted freely.
 //
 
@@ -16,7 +16,7 @@ const TOOLS = [
   {
     name: 'best_move',
     description:
-      'Search for the best move from a chess position. Returns the move in SAN, a centipawn score from White’s point of view, the depth reached, the number of nodes searched, and whether the node budget truncated the search.',
+      "Search for the best move from a chess position. Returns the move in SAN, a centipawn score from White's point of view, the depth reached, the number of nodes searched, and whether the node budget truncated the search.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -29,7 +29,7 @@ const TOOLS = [
   {
     name: 'evaluate_position',
     description:
-      'Statically evaluate a chess position without searching. Returns a centipawn score from White’s point of view, the side to move, the legal-move count, and whether the side to move is in check.',
+      "Statically evaluate a chess position without searching. Returns a centipawn score from White's point of view, the side to move, the legal-move count, and whether the side to move is in check.",
     inputSchema: {
       type: 'object',
       properties: { fen: { type: 'string', description: 'Position in Forsyth-Edwards Notation.' } },
@@ -42,7 +42,7 @@ const TOOLS = [
 const rpcError = (id, code, message) => ({ jsonrpc: '2.0', id, error: { code, message } });
 
 /**
- * Tool result. `isError` reports a failure the MODEL should see and correct — an unparseable FEN is
+ * Tool result. `isError` reports a failure the MODEL should see and correct - an unparseable FEN is
  * the model's mistake to fix, not a transport fault, so it must not become a JSON-RPC error.
  */
 const toolResult = (id, value, isError = false) => ({
@@ -153,7 +153,7 @@ export default {
 
     // A batch is a JSON array; each member is answered independently and notifications drop out.
     if (Array.isArray(message)) {
-      // An EMPTY batch is itself an invalid request, distinct from a batch of notifications — which
+      // An EMPTY batch is itself an invalid request, distinct from a batch of notifications - which
       // legitimately produces no responses and so answers 202.
       if (message.length === 0) {
         return json(rpcError(null, -32600, 'Invalid Request'), 400);

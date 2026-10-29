@@ -27,8 +27,8 @@ const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {
 
 /**
  * Reserved keys: `id`, plus any `~`-prefixed key (ECHO uses `~`-prefixed
- * string keys to brand entity instances and schemas — KindId,
- * SchemaKindId, SnapshotKindId, etc. — and the `~` namespace is reserved
+ * string keys to brand entity instances and schemas - KindId,
+ * SchemaKindId, SnapshotKindId, etc. - and the `~` namespace is reserved
  * for that purpose). They show up in `Object.keys` but aren't user data.
  */
 const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');

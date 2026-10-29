@@ -105,7 +105,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      // Offered on any plank that has a companion while the companion is off — deck-wide in flat mode,
+      // Offered on any plank that has a companion while the companion is off - deck-wide in flat mode,
       // per-plank while the deck slides.
       companion: companions.length > 0 && !isCompanionOpen(deck.companionPlanks, flatten, id),
     }),
@@ -160,7 +160,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
         if (part === 'complementary') {
           return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         }
-        // Close only this plank — desktop decks are not dependency chains, so no cascade.
+        // Close only this plank - desktop decks are not dependency chains, so no cascade.
         return invokePromise(LayoutOperation.Close, { subject: [id] });
       }
 

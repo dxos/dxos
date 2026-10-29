@@ -27,23 +27,23 @@ const unavailableService = (error: unknown): string | undefined => {
   }
 
   const message = (error as { message?: unknown }).message;
-  // The tag holds no whitespace or colons, so this stops before the rendered `: {"service":…}` suffix.
+  // The tag holds no whitespace or colons, so this stops before the rendered `: {"service":...}` suffix.
   return typeof message === 'string' ? /Service not available: ([^\s:]+)/.exec(message)?.[1] : undefined;
 };
 
 /**
- * Why a stage could not run, or `undefined` if it genuinely failed — the distinction the cascade turns
+ * Why a stage could not run, or `undefined` if it genuinely failed - the distinction the cascade turns
  * into `skipped` versus `failed`.
  *
  * A service the host app never contributed is a precondition, not a fault. The operation runtime
  * resolves a stage's declared `services` eagerly at spawn time, so an uninstalled plugin surfaces as a
  * `ServiceNotAvailableError` before the handler runs. Classifying that as a failure aborts the whole
  * cascade (`continueOnError` is off, because a later tier consumes the earlier one) and strands the
- * deterministic work behind it — a red meter for a mailbox with nothing wrong with it.
+ * deterministic work behind it - a red meter for a mailbox with nothing wrong with it.
  *
  * Deliberately uniform over the tag rather than per-stage: the set of soft preconditions is not a
  * property of the stage, it is "whatever this deployment did not contribute". `Database` and `Trace`
- * cannot be missing here — the cascade could not have spawned without them — so nothing real is
+ * cannot be missing here - the cascade could not have spawned without them - so nothing real is
  * swallowed, and the tag is named in the reason either way.
  */
 export const unmetPrecondition = (cause: Cause.Cause<unknown>): string | undefined => {

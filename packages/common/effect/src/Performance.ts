@@ -24,7 +24,7 @@ const MAX_DEPTH = 3;
 
 const summarize = (value: unknown, depth: number): unknown => {
   if (typeof value === 'string') {
-    return value.length > MAX_STRING_LENGTH ? `${value.slice(0, MAX_STRING_LENGTH)}…(${value.length} chars)` : value;
+    return value.length > MAX_STRING_LENGTH ? `${value.slice(0, MAX_STRING_LENGTH)}...(${value.length} chars)` : value;
   }
   if (value instanceof Uint8Array) {
     return `<Uint8Array ${value.length} bytes>`;

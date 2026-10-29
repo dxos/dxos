@@ -15,7 +15,7 @@ import { PERF_PORT } from './perf/server.ts';
 
 // 127.0.0.1, not localhost: localhost resolves to ::1 first, and Firefox fails ICE outright on a
 // page served over IPv6 loopback. Declared here rather than imported from `@dxos/composer-e2e`,
-// whose `e2e` task depends on this app's bundle — the import would close that into a cycle.
+// whose `e2e` task depends on this app's bundle - the import would close that into a cycle.
 // `DX_PERF_PORT` moves it, and the startup and dev configs serve there, so worktrees do not collide.
 export const INITIAL_URL = `http://127.0.0.1:${PERF_PORT ?? 4173}`;
 
@@ -29,9 +29,9 @@ export const here = path.dirname(fileURLToPath(import.meta.url));
  *   - `cold`: fresh browser context, no IDB, no module cache. First-ever-user
  *     experience; conflates "load app" with "create new identity from scratch".
  *   - `warm`: same context as cold, then `page.reload()`. Returning user in
- *     a still-running tab — IDB and bundle cache are warm.
+ *     a still-running tab - IDB and bundle cache are warm.
  *   - `warm-cold`: persistent context primed once, closed, then re-launched.
- *     IDB persists across launches but module cache is fresh — closest to a
+ *     IDB persists across launches but module cache is fresh - closest to a
  *     real returning user opening Composer in a new tab. (chromium-only)
  *   - `throttled-cold`: cold scenario with Fast 3G + 2× CPU emulated via CDP.
  *     Reveals bundle-size wins that local-disk loads don't expose. (chromium-only)
@@ -53,7 +53,7 @@ export type StartupReport = {
   domContentLoaded: number;
   /** Time the boot loader (native HTML/CSS) became visible. */
   bootLoaderVisible: number | null;
-  /** Total ms reported by `composer.profiler` (main:start → ready). */
+  /** Total ms reported by `composer.profiler` (main:start -> ready). */
   profilerTotal: number;
   /** Time the React Placeholder is dismissed and `<App>` first commits the real shell (`app-framework:first-interactive`). */
   firstInteractive: number | null;
@@ -84,7 +84,7 @@ export type StartupReport = {
     graphBodies: Array<{ id: string; kind: string; startTime: number }>;
   };
   /**
-   * Static module inventory probed from `composer.manager.getModules()` — the classification
+   * Static module inventory probed from `composer.manager.getModules()` - the classification
    * axes (wave, requires/provides) for joining against the timing data.
    */
   inventory: Array<{
@@ -111,9 +111,9 @@ export type StartupReport = {
   fetchedUrls: Array<{ url: string; bytes: number }>;
   /** Total Blocking Time (Lighthouse definition): sum of `duration - 50ms` for long tasks starting after first contentful paint; our trace ends at collection time. */
   tbt: number;
-  /** Raw Long Tasks API stats over the page's lifetime so far (not gated to the FCP→end window `tbt` uses). */
+  /** Raw Long Tasks API stats over the page's lifetime so far (not gated to the FCP->end window `tbt` uses). */
   longTasks: { count: number; max: number; total: number };
-  /** Stitched boot waterfall — named marks/measures sorted by start, ms relative to `navigationStart`. */
+  /** Stitched boot waterfall - named marks/measures sorted by start, ms relative to `navigationStart`. */
   waterfall: Array<{ name: string; start: number; end?: number }>;
 };
 
@@ -131,8 +131,8 @@ export const runSamplePath = (scenario: string): string => path.join(REPORT_DIR,
  * Appends one run's headline numbers to a per-scenario JSONL log. Separate from
  * {@link writeReport}, which keeps only the newest full report and so cannot express a sample
  * set: `--repeat-each` runs would each overwrite the last. The budget check needs the set
- * because a single startup sample decides nothing — repeats of one unchanged commit have spanned
- * 3828–7330 ms of `profilerTotal` in-container.
+ * because a single startup sample decides nothing - repeats of one unchanged commit have spanned
+ * 3828-7330 ms of `profilerTotal` in-container.
  */
 export const appendRunSample = (scenario: string, report: StartupReport): void => {
   mkdirSync(REPORT_DIR, { recursive: true });
@@ -209,7 +209,7 @@ export const trackNetwork = (
       bytes += size;
       urls.push({ url: response.url(), bytes: size });
     } catch {
-      // Ignore — some redirect / preflight responses can't be read.
+      // Ignore - some redirect / preflight responses can't be read.
     }
   });
   return () => ({ bytes, responses, urls });
@@ -226,7 +226,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     const bootMark = performance.getEntriesByName('boot:html-parsed')[0];
     const firstInteractiveMark = performance.getEntriesByName('app-framework:first-interactive')[0];
 
-    // Static inventory — the classification axes for joining against the timing data. Guarded:
+    // Static inventory - the classification axes for joining against the timing data. Guarded:
     // the manager global appears only after React mounts, and its shape is framework-internal.
     let inventory: unknown = null;
     try {
@@ -252,7 +252,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
         });
       }
     } catch {
-      // Best-effort — the report is still useful without the inventory.
+      // Best-effort - the report is still useful without the inventory.
     }
 
     const resources = (performance.getEntriesByType('resource') as PerformanceResourceTiming[]).map((entry) => ({
@@ -282,7 +282,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     const mainStartMark =
       performance.getEntriesByName('main:start')[0] ?? performance.getEntriesByName('startup:main:start')[0];
     const eventMeasures = performance.getEntriesByType('measure').filter((entry) => entry.name.startsWith('event:'));
-    // `client.initialize:*` marks come from the @dxos/client SDK — the longest single block
+    // `client.initialize:*` marks come from the @dxos/client SDK - the longest single block
     // on the boot critical path; picked up alongside the app-level milestones.
     const milestoneMarks = performance
       .getEntriesByType('mark')
@@ -394,10 +394,10 @@ const BENCHMARKS_HEADER = [
   '',
   'Auto-recorded by `src/playwright/startup.spec.ts` (production preview) and ',
   '`src/playwright/dev-startup.spec.ts` (vite dev). One row per scenario per harness run.',
-  '`profilerTotal` = `composer.profiler` (`main:start` → `Startup` activated).',
+  '`profilerTotal` = `composer.profiler` (`main:start` -> `Startup` activated).',
   '`navToReady` = wall-clock from `page.goto` until the user-account testid is visible.',
   '`fcp` = first contentful paint (the boot loader). `bytes` = sum of response bodies.',
-  '`tbtMs` = Total Blocking Time (Lighthouse definition, FCP → trace end).',
+  '`tbtMs` = Total Blocking Time (Lighthouse definition, FCP -> trace end).',
   '`top1` = slowest single module activation in this run.',
   '',
   '| timestamp (UTC) | git | dirty | scenario | browser | profilerTotal | navToReady | fcp | tbtMs | bytes (MB) | modules | top1 |',
@@ -417,12 +417,12 @@ const gitContext = (): { sha: string; dirty: boolean } => {
 
 const formatBenchmarkRow = (report: StartupReport): string => {
   const top = report.profile.slowestModules[0];
-  const topLabel = top ? `\`${top.name}\` (${top.duration})` : '—';
+  const topLabel = top ? `\`${top.name}\` (${top.duration})` : '-';
   const { sha, dirty } = gitContext();
   return [
     new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
     sha,
-    dirty ? '⚠' : '',
+    dirty ? '\u26A0' : '',
     report.scenario,
     process.env.PLAYWRIGHT_BROWSER || 'chromium',
     report.profilerTotal,

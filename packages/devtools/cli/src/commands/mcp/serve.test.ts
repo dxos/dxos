@@ -14,7 +14,7 @@ import { MCP_REQUEST_META, dxBin } from '../../testing/index.ts';
 
 /**
  * Protocol-level test for `dx mcp serve`: drives a real MCP session over stdio against an isolated
- * HOME (no identity — the projected surface comes from the operation registry, not from spaces).
+ * HOME (no identity - the projected surface comes from the operation registry, not from spaces).
  *
  * `runDx` cannot serve here: `spawnSync` closes stdin as soon as its input is written, and the
  * server exits with the stream rather than answering.
@@ -99,7 +99,7 @@ const SURFACE_TOOLS = ['queryOperations', 'invokeOperation', 'loadSkill'];
 
 /**
  * What the host used to answer with hand-written tools, reached as `queryOperations` rows now.
- * A space listing is deliberately absent: it belongs with `whoami`, and the two port together —
+ * A space listing is deliberately absent: it belongs with `whoami`, and the two port together -
  * see the TODO on `space-tools.ts`.
  */
 const PROJECTED_HOST_OPERATIONS = ['queryPlugins', 'queryTypes'];
@@ -224,7 +224,7 @@ const surfaceTests = (responses: () => Map<number, Response>) => {
     // not grow with the registry.
     expect(names).to.not.include('taskCreate');
 
-    // Every advertised schema declares an object — the response pass on the transport EDGE does
+    // Every advertised schema declares an object - the response pass on the transport EDGE does
     // not use.
     for (const tool of tools) {
       expect(tool.inputSchema.type, `${tool.name} input schema`).to.equal('object');
@@ -297,7 +297,7 @@ const surfaceTests = (responses: () => Map<number, Response>) => {
     expect(failure.content[0].text).to.include('spaceId');
   });
 
-  // What an agent reaches for first — which plugins, which spaces, which types — is dispatched like
+  // What an agent reaches for first - which plugins, which spaces, which types - is dispatched like
   // any other verb now; `whoami` is the one fact this host still answers with a tool of its own.
   test('dispatches a host verb that needs no space, on a profile with no spaces', ({ expect }) => {
     const names: string[] = getResult(2).tools.map((tool: { name: string }) => tool.name);
@@ -324,7 +324,7 @@ const surfaceTests = (responses: () => Map<number, Response>) => {
   });
 
   // A client renders these as the tool's safety badge, and an unset `destructiveHint` defaults to
-  // true — so a read tool that annotates nothing shows up as destructive. Per-operation safety
+  // true - so a read tool that annotates nothing shows up as destructive. Per-operation safety
   // moved to the `mutation` field of a queryOperations row, asserted above.
   test('advertises safety hints, with no read-only tool marked destructive', ({ expect }) => {
     const tools: { name: string; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } }[] =

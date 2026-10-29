@@ -7,11 +7,11 @@
  * These imports are ambiguous as they don't explicitly show which file is being imported.
  *
  * @example
- * // ❌ Bad
+ * // X Bad
  * import { foo } from '.';
  * import { bar } from '..';
  *
- * // ✅ Good
+ * // OK Good
  * import { foo } from './index';
  * import { bar } from '../index';
  */

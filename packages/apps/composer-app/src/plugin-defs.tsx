@@ -143,12 +143,12 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Transcription. On by default everywhere: the chat prompt picks the microphone up on its own —
+    // Transcription. On by default everywhere: the chat prompt picks the microphone up on its own -
     // it reads the plugin's capabilities optionally, so enabling it changes no other surface. Still
     // listed under labs below; the dedupe at the end collapses the two entries.
     TranscriptionPlugin.meta.profile.key,
 
-    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
+    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` - not preview, not a
     // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
       BloggerPlugin.meta.profile.key,

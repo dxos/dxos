@@ -27,10 +27,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../../../../..');
 
 /**
- * `~/demo ›` in grey and violet, led by an invisible OSC 777 mark the page counts, so a flow can wait for a
+ * `~/demo >` in grey and violet, led by an invisible OSC 777 mark the page counts, so a flow can wait for a
  * command to finish without parsing the screen.
  */
-const PROMPT = '\\[\\e]777;prompt\\a\\]\\[\\e[38;5;245m\\]~/demo\\[\\e[0m\\] \\[\\e[38;5;141m\\]›\\[\\e[0m\\] ';
+const PROMPT = '\\[\\e]777;prompt\\a\\]\\[\\e[38;5;245m\\]~/demo\\[\\e[0m\\] \\[\\e[38;5;141m\\]>\\[\\e[0m\\] ';
 
 const options = { port: 4180, cwd: process.cwd(), cols: 100, rows: 26, shell: 'bash' };
 const argv = process.argv.slice(2);

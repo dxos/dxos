@@ -16,8 +16,8 @@ import type { Message } from '@dxos/types';
 /**
  * Produces one turn of a conversation.
  *
- * The agent process owns everything around a turn — the input queue, alarms, tool-call redelivery,
- * delegation, skill hooks, tracing, hydration — and none of that is specific to how the turn is
+ * The agent process owns everything around a turn - the input queue, alarms, tool-call redelivery,
+ * delegation, skill hooks, tracing, hydration - and none of that is specific to how the turn is
  * generated. This is the one thing that is, so an alternative engine (e.g. a Claude Agent SDK host)
  * can be substituted without touching the process.
  *
@@ -29,7 +29,7 @@ export interface TurnProducer {
   /**
    * Runs a turn, appending messages to the feed and returning what it produced.
    *
-   * Must be interruptible — the process wraps the call and cancels it on interrupt.
+   * Must be interruptible - the process wraps the call and cancels it on interrupt.
    */
   runTurn(params: TurnRequest): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>;
 
@@ -54,7 +54,7 @@ export type MakeTurnProducerOptions = {
 };
 
 /**
- * Builds the producer for a conversation as a scoped effect — teardown registers with the scope
+ * Builds the producer for a conversation as a scoped effect - teardown registers with the scope
  * (`Effect.acquireRelease`/`addFinalizer`), so the process's scope owns the producer's lifetime.
  * The default drives DXOS's own `AiSession`.
  */

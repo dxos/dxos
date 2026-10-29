@@ -124,15 +124,15 @@ import {
 /**
  * Subduction needs the edge clients as well as the feature flag: the flag is set in config profiles
  * that configure no edge endpoint, and requiring a tag nothing provides would prune the specs that
- * declare it — silently taking the data space manager, and every service built on it, with them.
+ * declare it - silently taking the data space manager, and every service built on it, with them.
  */
 const subductionEnabled = (options: ServiceStackServices): boolean =>
   !!options.edgeFeatures?.subductionReplicator && !!options.edgeAvailable;
 
 /**
  * The client stack as a list of {@link LayerSpec.LayerSpec}s for a `LayerStack` to aggregate: each
- * spec declares the tags it needs and the tags it provides, so build order — and which specs are
- * built at all — follows from the graph rather than from a hand-written `provideMerge` chain.
+ * spec declares the tags it needs and the tags it provides, so build order - and which specs are
+ * built at all - follows from the graph rather than from a hand-written `provideMerge` chain.
  *
  * Two conventions carry the behaviour the chain used to encode:
  *
@@ -145,12 +145,12 @@ const subductionEnabled = (options: ServiceStackServices): boolean =>
  *   are made inside the spec body.
  *
  * The embedder supplies {@link ConfigService}, {@link Hook.Controller}, the SQL services, the
- * platform inputs and — when configured — the edge clients as the stack's ambient services.
+ * platform inputs and - when configured - the edge clients as the stack's ambient services.
  */
 /**
  * The client stack as {@link LayerSpec.LayerSpec}s for a `LayerStack` to aggregate: each spec
- * declares the tags it needs and the tags it provides, so build order — and which specs are built at
- * all — follows from the graph rather than from a hand-written `provideMerge` chain.
+ * declares the tags it needs and the tags it provides, so build order - and which specs are built at
+ * all - follows from the graph rather than from a hand-written `provideMerge` chain.
  *
  * Two conventions carry the behaviour the chain used to encode:
  *
@@ -163,7 +163,7 @@ const subductionEnabled = (options: ServiceStackServices): boolean =>
  *   pick which specs {@link clientServiceSpecs} returns.
  *
  * The embedder supplies {@link ConfigService}, {@link Hook.Controller}, the SQL services, the
- * platform inputs and — when configured — the edge clients as the stack's ambient services.
+ * platform inputs and - when configured - the edge clients as the stack's ambient services.
  */
 
 //
@@ -493,7 +493,7 @@ export const EdgeAgentManagerSpec = (options: ServiceStackServices) =>
     () => EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures }),
   );
 
-// Eager: nothing asks for its tag — it exists to subscribe to space changes across devices.
+// Eager: nothing asks for its tag - it exists to subscribe to space changes across devices.
 export const CrossDeviceSpaceSynchronizerSpec = LayerSpec.make(
   {
     affinity: 'application',
@@ -560,7 +560,7 @@ export const FeedSyncerSpec = LayerSpec.make(
 
 //
 // RPC services. Each handler keeps its own tag, and its registration with the router is a separate
-// spec — eager, because a registration provides nothing for anyone to ask for.
+// spec - eager, because a registration provides nothing for anyone to ask for.
 //
 
 export const RpcRouterSpec = LayerSpec.make(

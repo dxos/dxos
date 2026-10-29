@@ -170,7 +170,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
       icons: false,
       // Cosmetics only. The tooltip is `position: fixed` and CodeMirror computes its coordinates from
       // the cursor, so overriding `left`/`top` here measures them against the viewport instead of the
-      // cell — which pinned the completion list to the top-left corner of the window.
+      // cell - which pinned the completion list to the top-left corner of the window.
       tooltipClass: () =>
         mx(
           '-m-0! border border-h-0! [&>ul]:min-w-[198px]!',
@@ -319,8 +319,8 @@ const visitTree = (node: SyntaxNode, callback: (node: SyntaxNode) => boolean): b
 /**
  * Pins the completion tooltip to the editing cell rather than to the cursor.
  *
- * CodeMirror anchors it at the completion's start offset — a few pixels in from the cell's edge, and
- * further in the longer the expression before the function name — overlapping the cell's lower
+ * CodeMirror anchors it at the completion's start offset - a few pixels in from the cell's edge, and
+ * further in the longer the expression before the function name - overlapping the cell's lower
  * border. In a grid the cell is the meaningful anchor.
  *
  * Driven by a DOM observer rather than the plugin's `update`: CodeMirror creates and positions the
@@ -352,7 +352,7 @@ const anchorCompletionTooltip = ViewPlugin.fromClass(
         return;
       }
 
-      // The cell editor's own box, not `view.dom` — the editor sits inset within it.
+      // The cell editor's own box, not `view.dom` - the editor sits inset within it.
       const cell = (this._view.dom.closest('.dx-grid__cell-editor') ?? this._view.dom).getBoundingClientRect();
       const left = cell.left;
       const top = tooltip.classList.contains('cm-tooltip-below')

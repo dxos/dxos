@@ -41,7 +41,7 @@ describe('Database.addType', () => {
     expect(Type.getTypename(types[0])).to.eq(Type.getTypename(TestType));
   });
 
-  test('is idempotent — adding the same type twice reuses the persisted entity', async () => {
+  test('is idempotent - adding the same type twice reuses the persisted entity', async () => {
     const { db } = await builder.createDatabase();
     const first = await db.addType(TestType);
     const second = await db.addType(TestType);

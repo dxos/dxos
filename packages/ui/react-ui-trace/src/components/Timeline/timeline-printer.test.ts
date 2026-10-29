@@ -16,9 +16,9 @@ describe('renderTimelineAscii', () => {
     ];
     expect(`\n${renderTimelineAscii(commits, ['main'])}\n`).toMatchInlineSnapshot(`
       "
-      ●  first
-      ●  second
-      ●  third
+      *  first
+      *  second
+      *  third
       "
     `);
   });
@@ -38,11 +38,11 @@ describe('renderTimelineAscii', () => {
     ];
     expect(`\n${renderTimelineAscii(commits, ['main', 'feature'])}\n`).toMatchInlineSnapshot(`
       "
-      ●     baseline on main
-      ├──●  start feature
-      │  ●  implement
-      │  ●  polish
-      ◆──╯  merge feature into main
+      *     baseline on main
+      \u251C\u2500\u2500*  start feature
+      \u2502  *  implement
+      \u2502  *  polish
+      \u25C6\u2500\u2500\u256F  merge feature into main
       "
     `);
   });
@@ -61,15 +61,15 @@ describe('renderTimelineAscii', () => {
     ];
     expect(`\n${renderTimelineAscii(commits, ['main', 'alpha', 'beta'])}\n`).toMatchInlineSnapshot(`
       "
-      ●        baseline
-      ├──●     alpha start
-      ├──┼──●  beta start
-      │  ●  │  alpha work
-      │  │  ●  beta work
-      │  ●  │  alpha done
-      ◆──╯  │  merge alpha
-      │     ●  beta done
-      ◆─────╯  merge beta
+      *        baseline
+      \u251C\u2500\u2500*     alpha start
+      \u251C\u2500\u2500\u253C\u2500\u2500*  beta start
+      \u2502  *  \u2502  alpha work
+      \u2502  \u2502  *  beta work
+      \u2502  *  \u2502  alpha done
+      \u25C6\u2500\u2500\u256F  \u2502  merge alpha
+      \u2502     *  beta done
+      \u25C6\u2500\u2500\u2500\u2500\u2500\u256F  merge beta
       "
     `);
   });

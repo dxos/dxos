@@ -61,7 +61,7 @@ const getAccountEmail = (token: string, account: string | undefined) =>
     return userInfo.email;
   });
 
-/** `HttpClient.filterStatusOk` failure whose response is a 401/403 — an actual rejected grant. */
+/** `HttpClient.filterStatusOk` failure whose response is a 401/403 - an actual rejected grant. */
 const isGoogleAuthRejection = (error: unknown): boolean =>
   Predicate.isObject(error) &&
   error._tag === 'ResponseError' &&
@@ -70,7 +70,7 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
 
 /**
  * Google `testConnection`: probe the userinfo endpoint with the stored token. Retries transient
- * failures (network blips, CORS preflight hiccups — see `makeGoogleApiRequest`) the same way real
+ * failures (network blips, CORS preflight hiccups - see `makeGoogleApiRequest`) the same way real
  * sync does, so a single flaky request doesn't falsely report a healthy credential as expired. Only
  * an actual 401/403 (an expired or revoked grant) is surfaced as "reauthenticate"; any other failure
  * after retries exhausted is reported as a distinct, less alarming message.
@@ -136,7 +136,7 @@ export default Capability.makeModule(
         },
         sync: {
           operation: GoogleOperation.GoogleMailSync,
-          // What this connector binds — how `Mailbox` discovers it without naming Gmail.
+          // What this connector binds - how `Mailbox` discovers it without naming Gmail.
           targetTypename: Type.getTypename(Mailbox.Mailbox),
           // Single-target connector: no `getTargets`. The coordinator calls `materializeTarget`
           // (no remoteTarget) to create the Mailbox, then binds.

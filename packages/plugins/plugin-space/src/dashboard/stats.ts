@@ -36,7 +36,7 @@ export const typenameOf = (type: string): string => {
 
 /**
  * Counts shown while nothing is running. Derived from a single "everything" query rather than one
- * query per statistic — a peripheral display is a glance, not a report.
+ * query per statistic - a peripheral display is a glance, not a report.
  */
 export const toSpaceStats = (rows: readonly TypeCount[], plugins: number): SpaceStats => ({
   objects: countObjects(rows),

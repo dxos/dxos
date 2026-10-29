@@ -45,7 +45,7 @@ export const EdgeReplication = Schema.Literals(['disabled', 'enabled']);
 export type EdgeReplication = typeof EdgeReplication.Type;
 
 /**
- * A space membership entry. Membership (HALO) only — liveness/presence is a separate concern
+ * A space membership entry. Membership (HALO) only - liveness/presence is a separate concern
  * (see API_AUDIT.md §3.6).
  */
 export const Member = Schema.Struct({
@@ -63,7 +63,7 @@ export const Member = Schema.Struct({
 export type Member = typeof Member.Type;
 
 /**
- * Public view of a space. A plain snapshot — database access stays on the ECHO `Database`
+ * Public view of a space. A plain snapshot - database access stays on the ECHO `Database`
  * service keyed by {@link SpaceId}, not on this value.
  */
 export const Info = Schema.Struct({
@@ -96,7 +96,7 @@ export type CreateOptions = {
  */
 /**
  * The service shape backing {@link Service}. Named (rather than inline in the `Context.Tag`) so
- * consumers referencing it — e.g. a capability typed `Context.Service.Shape<typeof Space.Service>` — name
+ * consumers referencing it - e.g. a capability typed `Context.Service.Shape<typeof Space.Service>` - name
  * it portably instead of expanding its structure and leaking the transitive {@link Invitation}
  * types into their declaration emit (TS2883).
  */

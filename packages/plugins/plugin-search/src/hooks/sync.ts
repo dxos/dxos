@@ -13,7 +13,7 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
 };
 
 /**
- * Coarse type kind sniffed from an entity's properties, for `SearchResult.type`. Not an icon id —
+ * Coarse type kind sniffed from an entity's properties, for `SearchResult.type`. Not an icon id -
  * icons come from the type's `IconAnnotation` (see `toSearchResults`).
  */
 // TODO(burdon): Type name registry linked to schema?

@@ -15,7 +15,7 @@ export const DEFAULT_MODEL = 'claude-opus-5';
 
 /**
  * The built-in toolset that gives a managed agent bash, file operations and code execution inside
- * its session container. Dated identifier — Anthropic versions toolsets by release date.
+ * its session container. Dated identifier - Anthropic versions toolsets by release date.
  */
 export const DEFAULT_TOOLSET = 'agent_toolset_20260401';
 
@@ -37,7 +37,7 @@ export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
 /**
  * A Claude managed agent: the versioned configuration Anthropic stores and runs on your behalf.
  *
- * The object is the source of truth for the configuration; the Anthropic `agent_…` id lives in the
+ * The object is the source of truth for the configuration; the Anthropic `agent_...` id lives in the
  * object's foreign keys and `agentVersion` records the last deploy, both absent until first deploy.
  */
 export class ClaudeManagedAgent extends Type.makeObject<ClaudeManagedAgent>(
@@ -75,7 +75,7 @@ export class ClaudeManagedAgent extends Type.makeObject<ClaudeManagedAgent>(
 ) {}
 
 /**
- * The agent's `agent_…` id, held as a foreign key rather than a field: it identifies this object in
+ * The agent's `agent_...` id, held as a foreign key rather than a field: it identifies this object in
  * Anthropic's system, so a deployed agent is addressable with `Filter.foreignKeys`.
  */
 export const getAgentId = (agent: ClaudeManagedAgent): string | undefined =>

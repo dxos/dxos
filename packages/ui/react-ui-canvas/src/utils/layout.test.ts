@@ -16,7 +16,7 @@ const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 
   size,
 });
 
-/** a → b → c with a second branch a → d, all piled on the origin. */
+/** a -> b -> c with a second branch a -> d, all piled on the origin. */
 const fixture = (): View => ({
   id: 'scene',
   nodes: Object.fromEntries([node('a'), node('b'), node('c'), node('d')].map((node) => [node.id, node])),

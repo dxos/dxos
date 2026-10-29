@@ -23,10 +23,10 @@ import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '#type
  * returned tags to the owning Mailbox.
  *
  * Provenance has two paths. For a live space-db source it uses an `ExtractedFrom` relation
- * (Trip → message). Feed-stored messages are immutable Queue items that ECHO cannot use as
+ * (Trip -> message). Feed-stored messages are immutable Queue items that ECHO cannot use as
  * relation/Ref endpoints, so their association is recorded on the mutable Mailbox
- * (`Mailbox.recordExtraction`, keyed by message id → extracted object ids) — the same pattern
- * `tags` uses — and surfaced by `MessageHeader`.
+ * (`Mailbox.recordExtraction`, keyed by message id -> extracted object ids) - the same pattern
+ * `tags` uses - and surfaced by `MessageHeader`.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = InboxOperation.ExtractMessage.pipe(
   Operation.withHandler(
@@ -97,16 +97,16 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         const result = outcome.result;
 
         if (owningMailbox && result) {
-          // Apply tags. Requires a live message (Ref) — skipped for feed messages.
+          // Apply tags. Requires a live message (Ref) - skipped for feed messages.
           if (live && result.tags && result.tags.length > 0) {
             for (const tag of result.tags) {
               yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, tag, live, db));
             }
           }
 
-          // Record the message → extracted-object association on the Mailbox for feed messages
+          // Record the message -> extracted-object association on the Mailbox for feed messages
           // (the relation path above only covers live space-db sources). Only top-level objects
-          // (no parent — e.g. the Trip, not its child Segment/Booking) are recorded, matching the
+          // (no parent - e.g. the Trip, not its child Segment/Booking) are recorded, matching the
           // dispatcher's provenance gating.
           if (!sourceIsLive) {
             const topLevelIds = [...result.created, ...(result.updated ?? [])]
@@ -116,8 +116,8 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
           }
         }
 
-        // Flush (with index update) so a subsequent extraction's create-or-update queries — segment
-        // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
+        // Flush (with index update) so a subsequent extraction's create-or-update queries - segment
+        // by (number, depart-date) and Trip by Booking confirmation code (PNR) - observe the objects
         // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
         // appending segments to the existing one.
         yield* Database.flush({ indexes: true });

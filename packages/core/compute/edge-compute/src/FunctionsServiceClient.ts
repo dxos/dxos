@@ -38,7 +38,7 @@ export type FunctionDeployOptions = {
   /** Service-side function id in case this function is a re-upload of a previous version. */
   functionId?: string;
 
-  /** Owner identity DID (`did:halo:…`). Must equal the authenticated presenter DID. */
+  /** Owner identity DID (`did:halo:...`). Must equal the authenticated presenter DID. */
   ownerUri: string;
 
   runtime?: FunctionRuntimeKind;

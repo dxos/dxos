@@ -21,7 +21,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
  * Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}.
- * Triggers are created solely by the connector integration (the sync toggle → {@link Binding.createRoutine}),
+ * Triggers are created solely by the connector integration (the sync toggle -> {@link Binding.createRoutine}),
  * so this panel only observes and invokes them.
  */
 export const TriggersModule = () => {
@@ -124,7 +124,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                       onClick={() => handleInvoke(trigger)}
                       disabled={!state?.enabled || invokingId === trigger.id}
                     >
-                      {invokingId === trigger.id ? 'Invoking…' : 'Invoke now'}
+                      {invokingId === trigger.id ? 'Invoking...' : 'Invoke now'}
                     </Button.Root>
                   )}
                 </li>

@@ -95,7 +95,7 @@ describe('materialize', () => {
     await builder.close();
   });
 
-  test('writes contacts’ messages, attributed to the verified sender, then acks them', async ({ expect }) => {
+  test("writes contacts' messages, attributed to the verified sender, then acks them", async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: TYPES });
     const acks: string[][] = [];
     const result = await run(db, {

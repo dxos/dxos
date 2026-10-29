@@ -48,7 +48,7 @@ export const steps = [
         return;
       }
       await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'github', hud: false });
+      await demo.fill({ selector: 'input[placeholder="Filter..."]', value: 'github', hud: false });
       // The switch's input is visually hidden; its parent is the control a person clicks.
       await demo.click({ selector: 'role=switch[name="GitHub"] >> xpath=..', hud: false });
       await page.waitForFunction(
@@ -115,7 +115,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'Paste a pull request URL',
-        subtitle: 'the row is built from the URL — no GitHub call yet',
+        subtitle: 'the row is built from the URL - no GitHub call yet',
       });
       await demo.fill({ selector: INPUT, value: URL });
       await page.locator(`role=option[name="${ROW}"]`).waitFor({ state: 'visible', timeout: 10_000 });

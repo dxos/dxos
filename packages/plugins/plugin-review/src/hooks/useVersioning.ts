@@ -97,20 +97,20 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
       ? history?.versions.find((version) => version.id === selection.versionId)
       : undefined;
   // The fork point is read from the parent (never bindable), so a merged/archived branch resolves
-  // here too — its anchor heads remain reachable on the parent document.
+  // here too - its anchor heads remain reachable on the parent document.
   const activeFork =
     selection.kind === 'fork' ? history?.branches.find((branch) => branch.id === selection.branchId) : undefined;
 
   // The branch a checkpoint was taken on, but only while it is still ACTIVE (bindable): once a branch
   // is merged its registry entry is removed, so `db.branch` would throw. The merge folds the branch's
   // history into the parent, so a merged-branch checkpoint's heads become reachable on the root doc
-  // (read there instead — see `checkpointText`).
+  // (read there instead - see `checkpointText`).
   const checkpointBranch = activeVersion?.branch
     ? history?.branches.find((branch) => branch.key === activeVersion.branch && branch.status === 'active')
     : undefined;
 
-  // The core branch whose document backs the current view: the selected branch, or — when viewing a
-  // branch checkpoint on an active branch — the branch that checkpoint was taken on (its heads live
+  // The core branch whose document backs the current view: the selected branch, or - when viewing a
+  // branch checkpoint on an active branch - the branch that checkpoint was taken on (its heads live
   // in the branch doc).
   const boundBranch = (activeBranch && Branch.isCore(activeBranch) ? activeBranch : undefined) ?? checkpointBranch;
 
@@ -152,7 +152,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
     return Version.contentAt(branchParent, activeBranch.anchor);
   }, [activeBranch, branchParent]);
 
-  // The fork point: parent content at the fork's anchor — the read-only state the branch began from.
+  // The fork point: parent content at the fork's anchor - the read-only state the branch began from.
   const forkParent = useResolveRef(activeFork?.parent);
   const forkContent = useMemo(() => {
     if (!activeFork || !forkParent) {
@@ -162,8 +162,8 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   }, [activeFork, forkParent]);
 
   // A checkpoint on an ACTIVE branch reads/pins against the branch-bound Text (its heads live in the
-  // branch document). A base checkpoint — or a checkpoint on a since-merged branch, whose heads the
-  // merge folded into the root — resolves against the root target directly.
+  // branch document). A base checkpoint - or a checkpoint on a since-merged branch, whose heads the
+  // merge folded into the root - resolves against the root target directly.
   const versionTarget = useResolveRef(activeVersion?.target);
   const checkpointText = activeVersion ? (checkpointBranch ? branchBinding?.object : versionTarget) : undefined;
   const checkpointContent = useMemo(() => {
@@ -174,7 +174,7 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   }, [activeVersion, checkpointText]);
 
   // Viewing a checkpoint no longer pins the live Text: the editor renders `checkpointContent` (a
-  // detached snapshot read via `contentAt`), so only the editor shows history — the live object and
+  // detached snapshot read via `contentAt`), so only the editor shows history - the live object and
   // every other surface (sidebar title, tabs, backlinks) are unaffected.
 
   return {

@@ -54,7 +54,7 @@ const fieldNavExtension = (field: MessageField, navigate: (from: MessageField, d
 const getPersonLabel = (object: Obj.Unknown): string =>
   (Obj.instanceOf(Person.Person, object) ? object.fullName : undefined) ?? object.id;
 
-/** A person's email addresses — the values captured by the `'email'`-mode picker. */
+/** A person's email addresses - the values captured by the `'email'`-mode picker. */
 const getPersonValues = (object: Obj.Unknown): readonly string[] =>
   Obj.instanceOf(Person.Person, object) ? (object.emails ?? []).map(({ value }) => value) : [];
 

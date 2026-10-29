@@ -228,8 +228,8 @@ const awaitLoginToken = (server: LocalCallbackServer) =>
  * one of two ways:
  *
  * - `needsIdentity`: the address may bind a fresh Account but has no identity yet. Create one
- *   locally and retry with its DID; the hub then admits it directly — there is no token because
- *   there is nothing to recover — and we provision the agent as the gate does.
+ *   locally and retry with its DID; the hub then admits it directly - there is no token because
+ *   there is nothing to recover - and we provision the agent as the gate does.
  * - otherwise: the link went out by email (a token is never returned inline). Clicking it finishes
  *   the login here, because the hub redirects the browser to the local callback server rather than
  *   to the web app.
@@ -274,7 +274,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
           return yield* Effect.fail(
             new CommandError({
               message:
-                `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
+                `Hub did not admit ${email}. A gated hub only admits addresses with an account - ` +
                 'run `dx account signup <ACCESS-CODE>` to create one. ' +
                 recovery,
             }),
@@ -313,7 +313,7 @@ const COMPOSER_APPROVAL_TIMEOUT_MS = 10 * 60 * 1000;
  *
  * The CLI opens Composer with a loopback callback and a one-time state; Composer shows the state,
  * and on approval creates a known-public-key device invitation and hands its code to the callback.
- * The keypair travels inside the code, so the join needs no auth code — which is also why Composer
+ * The keypair travels inside the code, so the join needs no auth code - which is also why Composer
  * only ever sends it to a loopback address (see {@link CliLogin.parseCallback}).
  *
  * The Composer tab hosts the invitation, so it has to stay open until this command finishes.

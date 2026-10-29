@@ -43,7 +43,7 @@ const round = (value: number): number => Number(value.toPrecision(3));
  * runs of the same flow (one batch of iterations each).
  *
  * The target is the median across runs of each run's median. The spread is the larger of the
- * run-to-run CV of those medians and the per-iteration CV shrunk by √n — the latter alone, since two
+ * run-to-run CV of those medians and the per-iteration CV shrunk by sqrtn - the latter alone, since two
  * or three runs give a poor estimate of the former. The limit sits `bands` spreads above the target,
  * never less than `minHeadroom` and never less than one more count. A counter is left out when it is
  * zero in any run (the log scale cannot place a zero, and a stage that does none of that work has

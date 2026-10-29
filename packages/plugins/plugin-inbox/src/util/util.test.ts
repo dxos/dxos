@@ -408,7 +408,7 @@ describe('formatAge', () => {
   });
 
   test('a message just over a month old reads in months, never `0mo`', ({ expect }) => {
-    // 35d is 5 weeks — past the week cutoff, but `differenceInMonths` rounds down to 1.
+    // 35d is 5 weeks - past the week cutoff, but `differenceInMonths` rounds down to 1.
     expect(formatAge(ago(35 * DAY), now)).toBe('1mo');
   });
 });

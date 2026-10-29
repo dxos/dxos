@@ -10,7 +10,7 @@ export type PullRequestRef = {
 };
 
 // `[^/?#]`, and a word boundary after the number: an unanchored tail would read a query string as
-// part of the repository name and `…/pull/12x` as pull request 12, while a fixed delimiter set
+// part of the repository name and `.../pull/12x` as pull request 12, while a fixed delimiter set
 // would reject the trailing period or bracket a URL copied out of prose carries.
 const PULL_URL = /^https?:\/\/(?:www\.)?github\.com\/([^/?#]+)\/([^/?#]+)\/pull\/(\d+)(?![\w-])/i;
 
@@ -38,7 +38,7 @@ const API = 'https://api.github.com';
 /**
  * Fetches a public pull request and its diff straight from the browser. `api.github.com` answers
  * cross-origin and does not require a token for a public repository, so a story needs no credentials
- * — at the cost of the unauthenticated rate limit, which is per IP and easy to hit.
+ * - at the cost of the unauthenticated rate limit, which is per IP and easy to hit.
  */
 export const fetchPullRequest = async ({ owner, repo, number }: PullRequestRef): Promise<RemotePullRequest> => {
   const url = `${API}/repos/${owner}/${repo}/pulls/${number}`;

@@ -21,7 +21,7 @@ const CURSOR: Omit<DataSourceCursor, 'cursor'> = { spaceId: null, resourceId: nu
 
 /**
  * Most objects one pass reads; the engine asks for at most one transaction's worth. Independent of
- * how many bound variables a statement may carry — the indexes chunk their own SQL (see `chunkRows`).
+ * how many bound variables a statement may carry - the indexes chunk their own SQL (see `chunkRows`).
  */
 const INDEX_BATCH_SIZE = 500;
 
@@ -37,7 +37,7 @@ const readVersion = (cursors: DataSourceCursor[]): number => {
  * Secondary indexes are built from what is already indexed rather than from automerge or a feed,
  * which is what lets them lag: a burst of 300 edits moves one object's counter 300 times and is
  * caught up in a single pass. Tracking that counter as an ordinary cursor in `indexCursor` means a
- * secondary index is retired and rebuilt exactly like a primary one — by dropping its cursor name.
+ * secondary index is retired and rebuilt exactly like a primary one - by dropping its cursor name.
  */
 export class IndexedObjectSource implements IndexDataSource {
   readonly sourceName = 'index';

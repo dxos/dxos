@@ -144,7 +144,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
   return (
     <Toast.Provider>
-      {/* The plugin `ReactContext` capabilities — the theme plugin's `Tooltip.Provider` among them —
+      {/* The plugin `ReactContext` capabilities - the theme plugin's `Tooltip.Provider` among them -
           wrap `children` only, so the dialog and popover portals rendered as its siblings below sit
           outside them. Any `IconButton` there renders a `Tooltip.Trigger`, which throws rather than
           degrades when it finds no provider, taking the whole surface down with it. */}

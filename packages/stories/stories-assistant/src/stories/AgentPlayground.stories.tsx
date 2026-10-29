@@ -94,10 +94,10 @@ const LAYOUT = makeLayout();
  *
  * Try:
  * 1. Wait for the facts to fill: who owns the fix, the P0 priority, the "don't page Dima after 6pm" rule.
- * 2. As Rich: "Tell Dima the fix landed." — the message appears in Dima's panel.
- * 3. As Dima, reply — Kai reports back in Rich's panel.
- * 4. As Rich: "Take notes", then dictate (mic button) — the channel's mode becomes Note-taker and notes appear.
- * 5. As Josiah: "Interview me" — his channel switches to Interviewer.
+ * 2. As Rich: "Tell Dima the fix landed." - the message appears in Dima's panel.
+ * 3. As Dima, reply - Kai reports back in Rich's panel.
+ * 4. As Rich: "Take notes", then dictate (mic button) - the channel's mode becomes Note-taker and notes appear.
+ * 5. As Josiah: "Interview me" - his channel switches to Interviewer.
  */
 export const Playground: Story = {
   decorators: createDecorators({
@@ -116,8 +116,8 @@ export const Playground: Story = {
  * The model is EDGE's (Anthropic); live, so excluded from CI.
  *
  * Try:
- * 1. As Josiah: "Keep me posted about what Dima is working on." — a goal appears in the Goals tab with its watch.
- * 2. As Dima: "I'm working on the indexer migration." — a fact about Dima appears, and Josiah's chat gets an update.
+ * 1. As Josiah: "Keep me posted about what Dima is working on." - a goal appears in the Goals tab with its watch.
+ * 2. As Dima: "I'm working on the indexer migration." - a fact about Dima appears, and Josiah's chat gets an update.
  */
 export const PlaygroundRemote: Story = {
   decorators: createDecorators({
@@ -284,7 +284,7 @@ export const PlaygroundScripted: Story = {
 
     // 4. Rich says what he is working on, then asks for Dima's help: the request lands in Dima's panel and the relay
     // waits for her. Rich's own fact is recorded at the end of his turn, but it is about Rich, so nothing reaches
-    // Josiah — checked over a window, since a wrongly fired update would arrive after the fact is written.
+    // Josiah - checked over a window, since a wrongly fired update would arrive after the fact is written.
     await submitPrompt(rich, SCRIPTED_PROMPTS.working);
     await findInPanel(rich, SCRIPTED_REPLIES.workingNoted);
     await submitPrompt(rich, SCRIPTED_PROMPTS.needHelp);
@@ -300,7 +300,7 @@ export const PlaygroundScripted: Story = {
     await expect(occurrences(josiah, 'agent plugin')).toBe(0);
 
     // 5. Dima agrees: Kai reports back to Rich and closes the relay, and Josiah gets exactly one update that says
-    // what "that" is — the conversation reached the composer — rather than the bare quote. The watch and its goal
+    // what "that" is - the conversation reached the composer - rather than the bare quote. The watch and its goal
     // stay open for later updates.
     await submitPrompt(dima, SCRIPTED_PROMPTS.agree);
     await findInPanel(rich, SCRIPTED_REPLIES.helpReported);
@@ -329,9 +329,9 @@ export const PlaygroundScripted: Story = {
  * the facts it reads at the end of every turn. Live AI, so excluded from CI.
  *
  * Try:
- * 1. As Rich: "Let me know when Dima's indexer PR is up." — a goal and its watch appear under Goals.
- * 2. As Dima: "Still working on the indexer PR." — nothing reaches Rich.
- * 3. As Dima: "The indexer PR is up." — Rich is told, and the goal is achieved.
+ * 1. As Rich: "Let me know when Dima's indexer PR is up." - a goal and its watch appear under Goals.
+ * 2. As Dima: "Still working on the indexer PR." - nothing reaches Rich.
+ * 3. As Dima: "The indexer PR is up." - Rich is told, and the goal is achieved.
  */
 export const Goals: Story = {
   decorators: createDecorators({

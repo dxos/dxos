@@ -126,7 +126,7 @@ type Shot = {
   move?: (t: number) => Camera;
   camera?: Camera;
   reveal?: Reveal;
-  /** The whole frame at the leg's raw progress (0–1). */
+  /** The whole frame at the leg's raw progress (0-1). */
   frame?: (t: number) => Frame;
   /** Every clip plays during this leg, though there is no close-up (a drift). */
   live?: boolean;
@@ -136,7 +136,7 @@ type Shot = {
 
 /**
  * The shift loop's montage after the tour: meeting (the fourth tour clip), then the 2026-10-18 grid's other clips by
- * cell — explorer, map, chess, spacetime, explorer, chess, meeting, explorer, chess — so map and spacetime show once.
+ * cell - explorer, map, chess, spacetime, explorer, chess, meeting, explorer, chess - so map and spacetime show once.
  */
 const MONTAGE = [21, 6, 9, 1, 14, 15, 10, 12, 17, 13];
 
@@ -163,7 +163,7 @@ type TileProps = {
   index: number;
   /** The cell's frame; unset is the original small-radius tile. */
   border?: Border;
-  /** How much of the frame shows (0–1). */
+  /** How much of the frame shows (0-1). */
   strength?: number;
   /** A plank header strip and crop alignment (the console). */
   meta?: CellMeta;
@@ -767,7 +767,7 @@ export const Grid = ({
             />
             <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
               {(elapsed / 1_000).toFixed(1)}s / {(total / 1_000).toFixed(0)}s ·{' '}
-              {camera ? `${camera.zoom.toFixed(2)}×` : '—'}
+              {camera ? `${camera.zoom.toFixed(2)}×` : '-'}
             </Toolbar.Text>
           </Toolbar.Root>
         </div>
@@ -810,7 +810,7 @@ const frameAt = (shots: Shot[], time: number): Frame | undefined => {
   return camera && { camera };
 };
 
-/** The shot playing `time` ms into the path, and how far through it (0–1). */
+/** The shot playing `time` ms into the path, and how far through it (0-1). */
 const shotAt = (shots: Shot[], time: number): { shot: Shot; t: number } => {
   let start = 0;
   for (const shot of shots) {

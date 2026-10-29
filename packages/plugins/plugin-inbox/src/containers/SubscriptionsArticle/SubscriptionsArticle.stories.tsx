@@ -95,6 +95,6 @@ type Story = StoryObj<typeof meta>;
  *    (3 each, alphabetical), then Quiet Reads (1).
  * 2. Type "ship" in the toolbar filter. Only ShipFast remains; clear the filter and all four return.
  * 3. Type "zzz". The "No matching subscriptions." empty state shows.
- * 4. Check a sender's checkbox — the toolbar Remove button enables and shows the count.
+ * 4. Check a sender's checkbox - the toolbar Remove button enables and shows the count.
  */
 export const Default: Story = {};

@@ -16,8 +16,8 @@ import { PullRequestArticle } from '../PullRequestArticle/PullRequestArticle.tsx
 export type WalkthroughArticleProps = AppSurface.ObjectArticleProps<Walkthrough.Walkthrough>;
 
 /**
- * A walkthrough opened directly — from a search result, or a link written before the pull request
- * became the subject — shown as the review of the pull request it narrates.
+ * A walkthrough opened directly - from a search result, or a link written before the pull request
+ * became the subject - shown as the review of the pull request it narrates.
  *
  * The ref is resolved to a snapshot and the live object queried back by id: the article writes to
  * the pull request (approve, comment) through a ref of its own, which a snapshot cannot give.

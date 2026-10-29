@@ -98,7 +98,7 @@ const commentPrompt = ({
   <comment>
   ${textOf(message)}
   </comment>
-  A request to change the content — translate, rewrite, fix, shorten, extend, add or remove something — is a request
+  A request to change the content - translate, rewrite, fix, shorten, extend, add or remove something - is a request
   to edit the object in place: ${anchorText ? 'replace the text in <selection> (and nothing else) ' : 'change the object '}with your tools, and do not paste the new content into the reply.
   Your final message is posted to the thread as your reply, as it is: after an edit, say in one line what you changed;
   for a question, answer in under 80 words.

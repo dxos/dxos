@@ -58,14 +58,14 @@ const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOp
         }
       });
 
-      // Batch every removal so a single reactive notification fires — prevents an intermediate
+      // Batch every removal so a single reactive notification fires - prevents an intermediate
       // render where anchor is removed but thread still exists (mirrors the batchEvents pattern in restore.ts).
       batchEvents(() => {
         persisted.forEach((candidate) => db.remove(candidate));
         db.remove(thread);
       });
 
-      // Undo re-adds exactly what came out, so report the relation actually removed — restoring the
+      // Undo re-adds exactly what came out, so report the relation actually removed - restoring the
       // caller's stale draft alongside the real one duplicates the mark.
       const removed = persisted[0] ?? anchor;
 

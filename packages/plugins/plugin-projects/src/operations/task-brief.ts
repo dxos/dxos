@@ -23,7 +23,7 @@ export const projectContext = Effect.fnUntraced(function* (project: Project.Proj
  * Space content, wrapped so a reader can see where it begins and ends.
  *
  * The fence is longer than the longest backtick run the content holds, so content carrying a fence
- * of its own cannot close this one early and continue as if it were the prompt's own text — which
+ * of its own cannot close this one early and continue as if it were the prompt's own text - which
  * is the whole reason the block is delimited.
  */
 export const fenced = (content: string[]): string[] => {

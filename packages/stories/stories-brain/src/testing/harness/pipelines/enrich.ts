@@ -12,8 +12,8 @@ import { asStringArray, generateText, parseJsonObject } from '../llm.ts';
 import { type ModelVariant } from '../models.ts';
 import { type SummarizeOptions, type SummaryKind, summaryKindFor } from './summarize.ts';
 
-// Single per-message LLM pass (REPORT §5): the per-message enrichment stages — tag, summarize, and
-// salient-fact extraction — were three separate model calls that each re-read the message. Fold them
+// Single per-message LLM pass (REPORT §5): the per-message enrichment stages - tag, summarize, and
+// salient-fact extraction - were three separate model calls that each re-read the message. Fold them
 // into ONE prompt so the model reads the message once, cutting both latency and token cost. Triage-
 // aware: person mail asks for a full summary, org / bulk mail for a one-line label (see summarize.ts).
 // (This is the enrichment fold; the structured RDF fact pipeline in pipeline-rdf stays separate.)
@@ -37,7 +37,7 @@ export const buildEnrichPrompt = (kind: SummaryKind): string =>
     - spam: true if the email is spam or a cold marketing blast; then also include the tag "spam".
     - summary: ${
       kind === 'label'
-        ? 'ONE short line (< 10 words) — what kind of automated/organizational mail this is and who it is from (e.g. "Invoice from Acme").'
+        ? 'ONE short line (< 10 words) - what kind of automated/organizational mail this is and who it is from (e.g. "Invoice from Acme").'
         : 'a terse markdown bullet list (1-3 bullets); start each bullet with a verb or the sender name, never "The email".'
     }
     - facts: 0-6 concrete standalone facts asserted in the email (dates, amounts, commitments, names); [] if none.

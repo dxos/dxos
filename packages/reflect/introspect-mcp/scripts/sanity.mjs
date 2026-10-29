@@ -24,9 +24,9 @@ const launcher = resolve(here, 'inspect.mjs');
 const STARTUP_TIMEOUT_MS = 60_000;
 const HTTP_TIMEOUT_MS = 5_000;
 
-const checkpoint = (msg) => console.log(`✓ ${msg}`);
+const checkpoint = (msg) => console.log(`OK ${msg}`);
 const failure = (msg, detail) => {
-  console.error(`✗ ${msg}`);
+  console.error(`X ${msg}`);
   if (detail) {
     console.error(detail);
   }
@@ -68,7 +68,7 @@ const waitForUrl = () =>
       }
       if (Date.now() - startedAt > STARTUP_TIMEOUT_MS) {
         clearInterval(interval);
-        rejectUrl(new Error(`timed out after ${STARTUP_TIMEOUT_MS}ms — Inspector never printed a URL`));
+        rejectUrl(new Error(`timed out after ${STARTUP_TIMEOUT_MS}ms - Inspector never printed a URL`));
       }
     }, 200);
   });
@@ -82,7 +82,7 @@ try {
     failure('URL missing MCP_PROXY_AUTH_TOKEN query param', url);
   }
   const token = tokenMatch[1];
-  checkpoint(`auth token extracted (${token.slice(0, 8)}…)`);
+  checkpoint(`auth token extracted (${token.slice(0, 8)}...)`);
 
   const portMatch = url.match(/localhost:(\d+)/);
   if (!portMatch) {
@@ -93,7 +93,7 @@ try {
   const proxyPort = uiPort - 3 === 6274 ? 6277 : 6277;
   checkpoint(`UI listening on :${uiPort}, proxy expected on :${proxyPort}`);
 
-  // Probe the proxy's /config endpoint with the auth header — same path the
+  // Probe the proxy's /config endpoint with the auth header - same path the
   // browser hits before opening the WebSocket. 200 = proxy is up and the
   // token is correct.
   const controller = new AbortController();
@@ -116,14 +116,14 @@ try {
   }
   checkpoint(`proxy /config returned ${res.status}`);
 
-  // Verify the JSON shape — minimal proof the proxy is correctly configured.
+  // Verify the JSON shape - minimal proof the proxy is correctly configured.
   const cfg = await res.json().catch(() => null);
   if (!cfg) {
     failure(`proxy /config did not return JSON`);
   }
   checkpoint(`proxy /config responded with valid JSON`);
 
-  console.log('\n✅ Inspector + proxy authentication works end-to-end.');
+  console.log('\nOK Inspector + proxy authentication works end-to-end.');
   cleanup();
   process.exit(0);
 } catch (err) {

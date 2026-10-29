@@ -71,7 +71,7 @@ export type UseSceneKeysOptions = {
 
 /**
  * What a chord does in the state the view is in. Every chord itself comes from `KEY_BINDINGS`, so this
- * decides only what the action means here — Escape backs out of whatever is innermost (a drag, then a
+ * decides only what the action means here - Escape backs out of whatever is innermost (a drag, then a
  * selected control point, then the selection, then the scene itself), and Delete reads the same way.
  */
 export const useSceneKeys = ({
@@ -167,7 +167,7 @@ export const useSceneKeys = ({
           case 'stepForward':
             timeline.step(1);
             return;
-          // ⌘← and ⌘→ also go back and forward in the browser's history, which a jump must not do.
+          // Cmd<- and Cmd-> also go back and forward in the browser's history, which a jump must not do.
           case 'previousKey':
             timeline.jumpKey(-1);
             event.preventDefault();
@@ -264,7 +264,7 @@ export const useSceneKeys = ({
           onRedo();
           event.preventDefault();
           break;
-        // ⌘G is the browser's find-next, which a canvas with the focus takes for itself.
+        // CmdG is the browser's find-next, which a canvas with the focus takes for itself.
         case 'group':
           group();
           event.preventDefault();

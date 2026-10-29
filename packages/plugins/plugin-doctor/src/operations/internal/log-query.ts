@@ -17,7 +17,7 @@ export const HARD_LIMIT_SAMPLE = 25;
 const DEFAULT_LIMIT = 100;
 const DEFAULT_TOPK = 50;
 const DEFAULT_SAMPLE = 3;
-// Cap user regex source length as a coarse defense against ReDoS — pathological patterns
+// Cap user regex source length as a coarse defense against ReDoS - pathological patterns
 // can stall the main thread when matched against thousands of records.
 const MAX_REGEX_SOURCE_LENGTH = 256;
 
@@ -119,7 +119,7 @@ const parseTime = (value: string | number | undefined): number | undefined => {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : undefined;
   }
-  // Accept digit-only strings as epoch ms — assistants often serialize numbers as strings.
+  // Accept digit-only strings as epoch ms - assistants often serialize numbers as strings.
   if (/^-?\d+$/.test(value)) {
     const asNumber = Number(value);
     return Number.isFinite(asNumber) ? asNumber : undefined;
@@ -144,7 +144,7 @@ const formatField = (value: unknown): string => {
 };
 
 /**
- * Re-implementation of formatLine in scripts/query-logs.mjs — keep stable for downstream tooling.
+ * Re-implementation of formatLine in scripts/query-logs.mjs - keep stable for downstream tooling.
  */
 export const formatPrettyLine = (record: LogRecord): string => {
   const fileLine = record.f !== undefined || record.n !== undefined ? `${record.f ?? ''}:${record.n ?? ''}` : '';

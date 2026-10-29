@@ -13,7 +13,7 @@ import { renderTerrain } from './terrain.ts';
 import { useEasedHeadings } from './useEasedHeadings.ts';
 
 /**
- * Brightened relatives of the hues `scene/object-forms.ts` gives each kind in 3D — those materials
+ * Brightened relatives of the hues `scene/object-forms.ts` gives each kind in 3D - those materials
  * are tuned for a lit surface and read as near-black against a flat map.
  */
 const OBJECT_COLOR: Record<TerraObject.Kind, string> = {
@@ -45,7 +45,7 @@ export type TerraMapProps = {
 /**
  * Objects seen from above on an equirectangular grid: each one's planned route, where the current
  * leg started and where it ends, and the object itself pointing along its course. A companion to
- * the 3D view — everything is visible at once, and a click selects.
+ * the 3D view - everything is visible at once, and a click selects.
  */
 export const TerraMap = ({ objects, config, selectedId, onSelect, terrain = true }: TerraMapProps) => {
   const backdrop = useMemo(() => (terrain ? renderTerrain(config) : undefined), [terrain, config]);
@@ -123,7 +123,7 @@ TerraMap.displayName = 'TerraMap';
 
 type ObjectTrackProps = {
   object: SimObject;
-  /** Rendered facing, eased toward `state.bearing` — see `useEasedHeadings`. */
+  /** Rendered facing, eased toward `state.bearing` - see `useEasedHeadings`. */
   heading: number;
   selected: boolean;
   onSelect?: (id: string | undefined) => void;
@@ -135,7 +135,7 @@ const ObjectTrack = ({ object: { definition, state }, heading, selected, onSelec
   const route = useMemo(() => projectPath(state.route), [state.route]);
   const position = project(state.unit);
   // The leg's own endpoints rather than the definition's placed source/target, which only describe
-  // leg 0 — every later destination is derived, never stored.
+  // leg 0 - every later destination is derived, never stored.
   const origin = state.route.length > 0 ? project(state.route[0]) : undefined;
   // Closed-form kinds (rocket, satellite) have no route, so their destination is the placed one.
   const destination =

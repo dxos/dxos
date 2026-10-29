@@ -61,7 +61,7 @@ describe('AiSession.Session.getHistory', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('respects the fork cutoff — excludes source messages after messageId', () =>
+  it.effect('respects the fork cutoff - excludes source messages after messageId', () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const sourceFeed = db.add(Feed.make());
@@ -69,7 +69,7 @@ describe('AiSession.Session.getHistory', () => {
 
       const msg1 = makeMessage('a');
       const msg2 = makeMessage('b', 'assistant');
-      const msg3 = makeMessage('c — beyond fork point');
+      const msg3 = makeMessage('c - beyond fork point');
       yield* Feed.append(sourceFeed, [msg1, msg2, msg3]);
       yield* Feed.append(forkFeed, [
         // Fork at msg2; msg3 must be excluded.

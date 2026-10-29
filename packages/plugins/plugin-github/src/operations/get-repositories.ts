@@ -15,7 +15,7 @@ import { GitHubApi } from '../services/index.ts';
 import { toRepoDescriptor } from './repo.ts';
 
 /**
- * Discovery only — list GitHub repositories reachable from the connection's
+ * Discovery only - list GitHub repositories reachable from the connection's
  * token. Read-only: NO local Projects are created here. Materialization is
  * handled by the connector's `materializeTarget` when a binding is created.
  *
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
   GitHubOperation.GetGitHubRepositories.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ connection }) {
-        // TODO(wittjosiah): Mirror the Trello pattern — derive the db from the input ref's
+        // TODO(wittjosiah): Mirror the Trello pattern - derive the db from the input ref's
         //   target until the OperationInvoker has a `databaseResolver` and the operation
         //   can declare `services: [Database.Service]` directly.
         const target = connection.target;

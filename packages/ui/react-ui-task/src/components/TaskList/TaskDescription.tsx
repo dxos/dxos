@@ -15,14 +15,14 @@ export const DESCRIPTION_COMPONENTS = {
 
 export type TaskDescriptionProps = Util.ThemedClassName<{
   content: string;
-  /** Renderers beyond the row's own — a host's link anchor, say. */
+  /** Renderers beyond the row's own - a host's link anchor, say. */
   components?: MarkdownViewProps['components'];
 }>;
 
 /**
  * A task's description as it appears in a row. Shared by the flat list and the tree so the two
  * paths cannot drift on type scale or clamping; only the placement differs, which is the caller's
- * to supply — the flat row puts it in its own subgrid cell, the tree stacks it under the title
+ * to supply - the flat row puts it in its own subgrid cell, the tree stacks it under the title
  * inside the heading.
  */
 export const TaskDescription = ({ content, components, classNames }: TaskDescriptionProps) => (

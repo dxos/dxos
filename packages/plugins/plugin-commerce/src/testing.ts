@@ -7,7 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Provider, Result, Search } from '#types';
 
 //
-// Factories — return FRESH objects on each call. Stories that add objects to a space MUST use
+// Factories - return FRESH objects on each call. Stories that add objects to a space MUST use
 // these (an ECHO object can only belong to one database, so re-adding a shared singleton across
 // story remounts throws "Object already belongs to another database").
 //
@@ -111,7 +111,7 @@ export const makeSampleSearch = (provider: Provider.Provider): Search.Search =>
   });
 
 //
-// Singletons — for presentational stories that render a fixture as a prop WITHOUT adding it to a
+// Singletons - for presentational stories that render a fixture as a prop WITHOUT adding it to a
 // database. Never pass these to `db.add()` (use the factories above for that).
 //
 

@@ -19,8 +19,8 @@ export const SurfacesRequested = (role: string) =>
   ActivationEvent$.make('org.dxos.app-framework.event.surfacesRequested', role);
 
 /**
- * Demand signal for CLI commands. Fired by whoever is about to build a command tree — the `dx`
- * binary through {@link createCliApp}, the devtools terminal when its panel mounts — so command
+ * Demand signal for CLI commands. Fired by whoever is about to build a command tree - the `dx`
+ * binary through {@link createCliApp}, the devtools terminal when its panel mounts - so command
  * modules load when someone can actually run a command.
  *
  * A command tree is read ONCE, so this must be fired and awaited before the read: a command
@@ -30,7 +30,7 @@ export const SurfacesRequested = (role: string) =>
 export const CommandsRequested = ActivationEvent$.make('org.dxos.app-framework.event.commandsRequested');
 
 /**
- * Demand signal for space templates. Fired by whoever is about to offer a list of them — the create
+ * Demand signal for space templates. Fired by whoever is about to offer a list of them - the create
  * space dialog, and the debug plugin's space generator when its panel mounts.
  *
  * Template content is bulky, so the modules carrying it are gated here rather than contributing at
@@ -40,7 +40,7 @@ export const SpaceTemplatesRequested = ActivationEvent$.make('org.dxos.app-frame
 
 /**
  * Demand signal for plugin assets (each plugin's bundled `PLUGIN.mdl`). Fired by whoever is about to
- * read them — plugin-code's graph builder when a plugin's spec node is resolved.
+ * read them - plugin-code's graph builder when a plugin's spec node is resolved.
  *
  * Nothing reads a spec while the app boots, so the modules carrying them are gated here rather than
  * running with every plugin's startup. Fire and await this before a one-shot read.
@@ -50,7 +50,7 @@ export const PluginAssetsRequested = ActivationEvent$.make('org.dxos.app-framewo
 /**
  * Fired once by the host at main-thread idle after the app is interactive.
  *
- * For REGISTRATION contributions only — graph builders, operation handler sets, settings: the
+ * For REGISTRATION contributions only - graph builders, operation handler sets, settings: the
  * app-wide indexes a user can reach from anywhere (the navtree, the operation registry, a
  * settings read) and which therefore no single surface can gate. A feature's own modules ride
  * its plugin start event, fired when its surface renders; putting a feature body here instead

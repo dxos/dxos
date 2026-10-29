@@ -83,7 +83,7 @@ export const signup = Command.make(
       return yield* Effect.fail(
         new CommandError({
           message:
-            `Access code ${code} is not valid — it may be unknown, revoked, already redeemed, ` +
+            `Access code ${code} is not valid - it may be unknown, revoked, already redeemed, ` +
             'or the hub was unreachable.',
         }),
       );
@@ -176,7 +176,7 @@ const RECOVERY =
   'clear it before retrying.';
 
 /**
- * Email sign-up — {@link Account.signUpWithEmail} with the CLI's identity creation injected, and
+ * Email sign-up - {@link Account.signUpWithEmail} with the CLI's identity creation injected, and
  * the shared flow's typed errors translated to actionable CLI messages.
  */
 const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email }: MethodParams & { email: string }) {
@@ -196,7 +196,7 @@ const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email 
     Effect.catchTag('EmailProbeUnavailableError', () =>
       Effect.fail(
         new CommandError({
-          message: `Could not check whether ${email} already has an account. Nothing was created — try again.`,
+          message: `Could not check whether ${email} already has an account. Nothing was created - try again.`,
         }),
       ),
     ),

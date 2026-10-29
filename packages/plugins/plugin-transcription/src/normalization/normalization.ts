@@ -61,7 +61,7 @@ const _unused = trim`
     - The 'rangeId' field of the merged message should include 'messageId'-s and 'rangeId'-s of all messages that have been used to construct this message.
 
   # Punctuation and Capitalization:
-    - Do not rely on the original punctuation and capitalization—they may be incorrect.
+    - Do not rely on the original punctuation and capitalization-they may be incorrect.
     - Use logical reasoning to apply appropriate punctuation (e.g., period, comma, question mark, exclamation mark) and capitalization.
 
   # Restrictions:

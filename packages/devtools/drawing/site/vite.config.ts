@@ -15,7 +15,7 @@ import { type Prerendered, prerender } from './src/prerender.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Fills the page's `{{…}}` slots with engine output and serves the hero's `.dx.svg` beside it. */
+/** Fills the page's `{{...}}` slots with engine output and serves the hero's `.dx.svg` beside it. */
 const PrerenderPlugin = (): Plugin => {
   let prerendered: Promise<Prerendered> | undefined;
   const load = () => (prerendered ??= prerender(path.join(dirname, 'diagrams')));

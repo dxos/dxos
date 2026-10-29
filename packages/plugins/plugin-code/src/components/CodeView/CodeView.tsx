@@ -72,7 +72,7 @@ export type CodeViewProps = {
   onOpenExternal?: (line?: number) => void;
 };
 
-/** A read-only source file revealed at a symbol: where Ctrl/⌘-click on a code key in a spec lands. */
+/** A read-only source file revealed at a symbol: where Ctrl/Cmd-click on a code key in a spec lands. */
 export const CodeView = ({ label, path, content, symbol, error, onOpenExternal }: CodeViewProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const themeMode = Hooks.useThemeMode();

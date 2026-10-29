@@ -67,12 +67,12 @@ export type SpaceServices =
 export type ChatModelOptions = {
   /**
    * The model the chat's picker shows selected. The agent process reads the model off the chat, so
-   * this is stamped onto a chat that has not selected one before its first request — otherwise the
+   * this is stamped onto a chat that has not selected one before its first request - otherwise the
    * picker and the process would disagree about what the conversation runs on.
    */
   model?: DXN.DXN;
   // The provider is a global setting rather than the chat's, carried so the agent process resolves
-  // the (provider, id) pair — the catalog's shared model ids are ambiguous without it.
+  // the (provider, id) pair - the catalog's shared model ids are ambiguous without it.
   provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
   registry?: Registry.Registry;
@@ -105,7 +105,7 @@ export type ChatRequest = {
 
 export type ChatSendOptions = {
   /**
-   * Runs before the prompt is dispatched — after it is already showing — and a rejection fails the
+   * Runs before the prompt is dispatched - after it is already showing - and a rejection fails the
    * prompt. Lets a transient chat persist and flush its conversation feed so the agent can resolve it.
    */
   prepare?: () => Promise<void> | void;
@@ -124,7 +124,7 @@ export type ChatErrorAction = { readonly labelKey: string };
 
 /**
  * Display error for an over-quota (HTTP 429) rejection. Declares an {@link action} so the chat toast can
- * offer a usage-dashboard link declaratively — the UI renders whatever action an error declares rather
+ * offer a usage-dashboard link declaratively - the UI renders whatever action an error declares rather
  * than branching on the error type.
  */
 export class AiUsageQuotaError extends Error {
@@ -134,8 +134,8 @@ export class AiUsageQuotaError extends Error {
 /**
  * Matches an over-quota rejection (EDGE responds 429) in error text. The typed
  * {@link UsageQuotaExceededError} is wrapped deep in the cause chain and does not survive the
- * agent-process boundary — the failure is rendered to a string via `Cause.pretty`, which drops
- * nested causes — so detection also relies on the HTTP 429 that `@effect/ai`'s
+ * agent-process boundary - the failure is rendered to a string via `Cause.pretty`, which drops
+ * nested causes - so detection also relies on the HTTP 429 that `@effect/ai`'s
  * {@link AiError.HttpResponseError} embeds in its message (e.g. "... (429 POST ...").
  */
 const QUOTA_PATTERN = /\b429\b|rate.?limit|too many requests|usage quota|quota exceeded/i;
@@ -159,13 +159,13 @@ const describeAiError = (err: AiError.AiError): string =>
 
 /**
  * Matches an {@link AiModelNotAvailableError} in error text. Like the quota case, the typed error
- * does not always survive the agent-process boundary — the failure is rendered with `Cause.pretty`,
- * which drops nested causes — so detection also reads the message it stringifies to.
+ * does not always survive the agent-process boundary - the failure is rendered with `Cause.pretty`,
+ * which drops nested causes - so detection also reads the message it stringifies to.
  */
 const MODEL_UNAVAILABLE_PATTERN = /AI Model not available:\s*(\S+?):?(?=\s|$)/i;
 
 /**
- * Matches the first line of a stringified {@link AiError.AiError} ("…AiError: Module.method: detail"), the
+ * Matches the first line of a stringified {@link AiError.AiError} ("...AiError: Module.method: detail"), the
  * form a provider failure takes once it has crossed the agent-process boundary.
  */
 const AI_ERROR_PATTERN = /AiError: [\w$.]+: ([^\n]+)/;
@@ -400,7 +400,7 @@ export class ChatModel {
   }
 
   /**
-   * Resolves the chat's steering instructions, if any — the local `AiSession` used for system-prompt
+   * Resolves the chat's steering instructions, if any - the local `AiSession` used for system-prompt
    * formatting is feed-centric, so the ref is resolved here and handed down.
    */
   #getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
@@ -416,8 +416,8 @@ export class ChatModel {
   }
 
   /**
-   * Sends a prompt the reader typed: it joins {@link outbox} at once — the thread shows it in the
-   * same frame, before anything is persisted — and is then dispatched in submit order, as a request
+   * Sends a prompt the reader typed: it joins {@link outbox} at once - the thread shows it in the
+   * same frame, before anything is persisted - and is then dispatched in submit order, as a request
    * when the agent is idle and queued behind the running turn otherwise.
    *
    * Returns the outbox id, which is the prompt's thread row for its whole life.
@@ -545,7 +545,7 @@ export class ChatModel {
    *
    * The agent's input queue is feed state, so submitting is durable and ordered: the running turn is
    * left alone and the process takes this prompt up when it settles. {@link request} cannot serve
-   * this case — it cancels the in-flight turn to start its own — and the running request's
+   * this case - it cancels the in-flight turn to start its own - and the running request's
    * `waitForCompletion` already covers the queued turn, since the agent does not report completion
    * while its queue is non-empty.
    */
@@ -603,7 +603,7 @@ export class ChatModel {
     return () => {
       disposed = true;
       unsubscribe?.();
-      // The collector and its stream subscription outlive the unmount otherwise — one per remount,
+      // The collector and its stream subscription outlive the unmount otherwise - one per remount,
       // all feeding atoms nothing reads any more.
       const fiber = this.#observeFiber;
       if (fiber) {
@@ -854,7 +854,7 @@ export class ChatModel {
   }
 
   /**
-   * Drop in-flight streaming messages (cancel/interrupt — partial blocks are discarded).
+   * Drop in-flight streaming messages (cancel/interrupt - partial blocks are discarded).
    */
   #discardStreaming() {
     this.#registry.set(this.#streaming, []);

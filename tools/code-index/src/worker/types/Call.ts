@@ -5,7 +5,7 @@
 import * as Term from './Term.ts';
 
 /**
- * Calling a function type with argument types — shared by per-file inference and the cross-file
+ * Calling a function type with argument types - shared by per-file inference and the cross-file
  * pass, which binds a deferred `returnOf` with exactly the rules the call site would have used.
  */
 

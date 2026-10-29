@@ -14,7 +14,7 @@ import { Ibkr } from '#types';
 
 import { PortfolioReportDetail } from './PortfolioReportDetail.tsx';
 
-// Mirrors live Flex output: no levelOfDetail attribute — the aggregate row per instrument has an
+// Mirrors live Flex output: no levelOfDetail attribute - the aggregate row per instrument has an
 // empty openDateTime, and each tax-lot row carries its own. Symbols/amounts are fictional.
 const SAMPLE_XML = `<FlexQueryResponse queryName="Composer" type="AF">
 <FlexStatements count="1">

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Server-side handler factory + response shapers + logger interface —
+// Server-side handler factory + response shapers + logger interface -
 // everything callers need to plug DXOS introspection into an MCP-compatible
 // host without pulling in the stdio/HTTP server machinery.
 //

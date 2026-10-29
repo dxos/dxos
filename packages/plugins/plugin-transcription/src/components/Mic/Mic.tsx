@@ -29,7 +29,7 @@ export type MicProps = {
 /**
  * Connects the {@link SystemButton.Mic} and {@link MicSettings} to the recording session and settings
  * capabilities, and enumerates available audio inputs. Mounted from the toolbar's custom action, so
- * capability hooks resolve — every surface that offers dictation (a document, a chat prompt) gets
+ * capability hooks resolve - every surface that offers dictation (a document, a chat prompt) gets
  * this same control that way, rather than a copy of it.
  */
 export const Mic = ({ docId }: MicProps) => {
@@ -58,7 +58,7 @@ export const Mic = ({ docId }: MicProps) => {
   const [devices, setDevices] = useState<AudioInputDevice[]>([]);
   // Bumped once the microphone is granted. WebKit withholds both `deviceId` and `label` from
   // `enumerateDevices` until a capture permission exists, so the list enumerated at mount is empty
-  // and `devicechange` does not fire for a permission grant — leaving the picker permanently blank.
+  // and `devicechange` does not fire for a permission grant - leaving the picker permanently blank.
   const [devicesToken, setDevicesToken] = useState(0);
   // Set when the microphone was refused, so the control can say so where a toast cannot reach.
   const [microphoneDenied, setMicrophoneDenied] = useState(false);
@@ -81,8 +81,8 @@ export const Mic = ({ docId }: MicProps) => {
   // Recording must not begin until the microphone has actually been granted. Asking here rather than
   // letting the driver open the stream is what makes the refusal legible: the OS prompt is raised by
   // the tap that asked for it, and a denial stops the session instead of leaving a recording UI running
-  // against silence. `permissions.query` is not usable for this — WebKit does not support the
-  // `microphone` descriptor — so the request itself is the probe, and its stream is released again
+  // against silence. `permissions.query` is not usable for this - WebKit does not support the
+  // `microphone` descriptor - so the request itself is the probe, and its stream is released again
   // because the driver opens its own.
   const ensureMicrophone = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -104,7 +104,7 @@ export const Mic = ({ docId }: MicProps) => {
       return true;
     } catch {
       // Surfaced on the button rather than as a toast: the mobile layout renders no toast surface,
-      // so a refusal there produced no feedback at all — the microphone simply did nothing.
+      // so a refusal there produced no feedback at all - the microphone simply did nothing.
       setMicrophoneDenied(true);
       return false;
     }

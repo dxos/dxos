@@ -28,7 +28,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Input aria-label='Note' data-testid={`input-${size}`} />
     <Field.Root>
       <Field.Label>API key</Field.Label>
-      <PasswordInput ignorePasswordManagers placeholder='sk-…' data-testid={`key-${size}`} />
+      <PasswordInput ignorePasswordManagers placeholder='sk-...' data-testid={`key-${size}`} />
     </Field.Root>
     <Field.Root disabled>
       <Field.Label>Locked</Field.Label>

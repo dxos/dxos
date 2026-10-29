@@ -25,7 +25,7 @@ import { busy, setBusy } from '../../state/busy.ts';
 /**
  * Pending (not-yet-committed) text injected from an external source.
  * `final` is the accumulated finalized text; `interim` is the volatile in-flight tail; `placeholder`
- * is shown while both are empty (e.g. "Recording…"). `anchor` is the document position the text will
+ * is shown while both are empty (e.g. "Recording..."). `anchor` is the document position the text will
  * be inserted at; it is mapped through document changes so it survives concurrent edits.
  */
 export type PendingTextState = {
@@ -220,12 +220,12 @@ const pendingDecorations = EditorView.decorations.compute([pendingTextState], (s
  * Marks the content element while the preview is on screen.
  *
  * `@codemirror/view`'s own placeholder keys off an empty document, and pending text is a decoration
- * rather than document content — so dictating into an empty editor draws the placeholder underneath
+ * rather than document content - so dictating into an empty editor draws the placeholder underneath
  * the words being spoken. That placeholder takes no condition, so it is suppressed from the DOM side
  * instead (see {@link styles}).
  *
  * Conditioned exactly as the decoration is: the placeholder goes when the preview arrives to cover
- * it, not when the mic is tapped — opening a session paints nothing, and blanking the hint before
+ * it, not when the mic is tapped - opening a session paints nothing, and blanking the hint before
  * there is anything to read in its place would only empty the field.
  */
 const pendingAttributes = EditorView.contentAttributes.compute([pendingTextState], (state) => {
@@ -313,7 +313,7 @@ const styles = EditorView.theme({
   '.cm-pending-text-interim': {
     opacity: 0.6,
   },
-  // Keep the "Recording…" indicator (text + spinner) on a single line.
+  // Keep the "Recording..." indicator (text + spinner) on a single line.
   '.cm-pending-text-indicator': {
     whiteSpace: 'nowrap',
   },

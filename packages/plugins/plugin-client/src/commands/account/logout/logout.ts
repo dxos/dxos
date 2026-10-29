@@ -46,7 +46,7 @@ export const logout = Command.make(
     );
     // Recreate the (now empty) data root: the client's SQLite storage opens a file inside it
     // without creating the directory first, so leaving it absent makes every later command fail
-    // with "unable to open database file" — including the login this logout exists to enable.
+    // with "unable to open database file" - including the login this logout exists to enable.
     yield* fs.makeDirectory(path, { recursive: true });
     if (json) {
       yield* Console.log(JSON.stringify({ profile, loggedOut: true }, null, 2));

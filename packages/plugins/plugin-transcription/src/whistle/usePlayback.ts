@@ -10,7 +10,7 @@ import { type Recording } from './recording.ts';
 export type Playback = {
   /** Id of the range playing, if any. */
   playing?: string;
-  /** Plays `start`–`end` seconds of the recording once, stopping whatever was playing. */
+  /** Plays `start`-`end` seconds of the recording once, stopping whatever was playing. */
   play: (id: string, start: number, end: number) => void;
   stop: () => void;
 };

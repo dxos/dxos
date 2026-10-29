@@ -4,11 +4,11 @@
 
 //
 // Text in another diagram language, out as ours. Every source language already compiles to
-// `Scene.Command[]`, and the DSL already prints those, so a converter is the two halves joined —
+// `Scene.Command[]`, and the DSL already prints those, so a converter is the two halves joined -
 // which is why adding a dialect costs nothing here.
 //
 // The output is the POST-layout form, and there is no other option: the DSL has no unpositioned
-// node to emit. That is the point of converting — you run mermaid once to get a layout, then keep
+// node to emit. That is the point of converting - you run mermaid once to get a layout, then keep
 // the result as something you can hand-tune, diff and review. See `docs/DSL.md`. Mermaid input is
 // deprecated everywhere else, so this is also how an existing mermaid source moves to the DSL.
 //
@@ -50,7 +50,7 @@ export const mermaidSource: Source = {
   compile: (source) => Effect.promise(() => MermaidEngine.compile(source)),
 };
 
-/** Mermaid flowchart without the ELK pass — the simple layered placement in `mermaid.ts`. */
+/** Mermaid flowchart without the ELK pass - the simple layered placement in `mermaid.ts`. */
 export const mermaidLayeredSource: Source = {
   id: 'mermaid-layered',
   description: "Mermaid flowchart with the dialect's own layered placement rather than ELK.",

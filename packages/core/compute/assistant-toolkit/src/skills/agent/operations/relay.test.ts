@@ -52,7 +52,7 @@ describe('Agent relay (control plane)', () => {
         const processes = yield* processManager.list({ target });
         expect(processes.length).toBeGreaterThanOrEqual(1);
 
-        // Terminate before the turn runs — this test proves delivery, not the LLM turn.
+        // Terminate before the turn runs - this test proves delivery, not the LLM turn.
         for (const handle of processes) {
           if (handle.status.state === Process.State.RUNNING) {
             yield* handle.terminate();

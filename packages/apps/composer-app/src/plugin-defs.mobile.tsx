@@ -16,7 +16,7 @@ export type { PluginConfig, State } from './plugin-defs.core.tsx';
 /**
  * Fixed mobile set: core infrastructure (with `isMobile` selecting headless Deck + `MobilePlugin` as
  * the root renderer) plus Assistant, Markdown, Projects with the Tasks it declares as a dependency,
- * and Transcription. Selection is build-time — swapping this file in via `DX_PLUGIN_SET=mobile` —
+ * and Transcription. Selection is build-time - swapping this file in via `DX_PLUGIN_SET=mobile` -
  * rather than a runtime flag, so a plugin with no mobile surface never enters the bundle.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
@@ -30,7 +30,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
 ];
 
 /**
- * Plugin keys enabled by default for the mobile set — the same plugins listed in
+ * Plugin keys enabled by default for the mobile set - the same plugins listed in
  * {@link getPlugins}.
  */
 export const getDefaults = (_: PluginConfig): string[] => [

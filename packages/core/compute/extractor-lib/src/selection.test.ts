@@ -52,7 +52,7 @@ describe('shouldExtractContact', () => {
     }
   });
 
-  test('deny beats allow — a newsletter from a known Organization is skipped', ({ expect }) => {
+  test('deny beats allow - a newsletter from a known Organization is skipped', ({ expect }) => {
     const index = indexWith(Organization.make({ name: 'DXOS', website: 'dxos.org' }));
     expect(shouldExtractContact('alice@dxos.org', { listUnsubscribe: '<https://dxos.org/u>' }, index)).toBe(false);
     expect(shouldExtractContact('alice@dxos.org', { bulk: true }, index)).toBe(false);
@@ -122,7 +122,7 @@ describe('isAutomatedSender', () => {
     expect(isAutomatedSender('alice@dxos.org', {})).toBe(false);
   });
 
-  test('the role pattern is a prefix, not an equality — the bug that let bulk billing through', ({ expect }) => {
+  test('the role pattern is a prefix, not an equality - the bug that let bulk billing through', ({ expect }) => {
     // `shouldExtractContact` shares the check, so the same senders are denied on the bulk path even
     // when they arrive with an outbound claim.
     const index = indexWith();

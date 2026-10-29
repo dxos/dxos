@@ -56,7 +56,7 @@ export const AttachImage = Operation.make({
  * Fetches avatars and logos for every Person / Organization missing an `image`: Gravatar by email
  * hash for people, the organization's domain logo (Clearbit, favicon fallback) for organizations.
  * Each candidate goes through the {@link AttachImage} hardening (SSRF guard, size/type caps,
- * re-hosted on the image service). Idempotent — subjects with an image are never touched.
+ * re-hosted on the image service). Idempotent - subjects with an image are never touched.
  */
 export const EnrichImages = Operation.make({
   meta: {
@@ -96,7 +96,7 @@ export const EnrichImages = Operation.make({
  * from known ECHO data and links it via a `ProfileOf` relation. Re-runs refresh
  * `lastResearchedAt` without regenerating the document body (which is user/agent-owned after
  * creation). Content enrichment (web research, dossier writing) is the agentic path composed from
- * research sources — this operation owns structure and provenance only.
+ * research sources - this operation owns structure and provenance only.
  */
 export const ResearchPerson = Operation.make({
   meta: {
@@ -162,8 +162,8 @@ export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 20;
 /**
  * Cursored CRM pipeline over a mailbox's message feed: extracts contacts for new messages past the
  * persisted feed cursor (same gate and identity dedup as mail sync), optionally scaffolding a
- * Profile per new contact. Idempotent — the cursor is a coarse skip and the space's identity index
- * is the precise backstop — so it is safe to fire per feed item from a trigger; each invocation
+ * Profile per new contact. Idempotent - the cursor is a coarse skip and the space's identity index
+ * is the precise backstop - so it is safe to fire per feed item from a trigger; each invocation
  * catches up and extra firings process nothing.
  */
 export const ProcessMailbox = Operation.make({

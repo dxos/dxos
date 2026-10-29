@@ -51,7 +51,7 @@ export const GlobeControl = Util.composable<HTMLDivElement, GlobeControlProps>(
     const topology = useTopology(zoomLevel);
 
     // Capture the initial position once at mount and convert to a rotation. Passing rotation
-    // directly bypasses the center→rotation effect chain in Globe.Canvas (which can race with
+    // directly bypasses the center->rotation effect chain in Globe.Canvas (which can race with
     // the first paint) and avoids feedback loops when updates bubble back through onChange.
     const initialRotation = useMemo(() => (center ? positionToRotation(geoToPosition(center)) : undefined), []);
     const initialZoom = useMemo(() => zoom, []);

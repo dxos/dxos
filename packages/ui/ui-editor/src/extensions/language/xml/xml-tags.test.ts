@@ -30,7 +30,7 @@ import { type XmlWidgetDef, getXmlTextChild, xmlTags } from './xml-tags.ts';
 //
 // These are characterization tests: they lock in the CURRENT observable behavior of `xmlTags`'s
 // decoration builder before it is optimized (viewport-aware rebuilds). They read the real decoration
-// field through the public `EditorView.decorations` facet — not the DOM — so they are independent of
+// field through the public `EditorView.decorations` facet - not the DOM - so they are independent of
 // happy-dom's lack of layout and survive internal refactors. Each registry entry is given a recording
 // `factory` widget so the built widget's props (id) can be inspected.
 //
@@ -140,7 +140,7 @@ const createView = (doc: string, { registry = {}, bookmarks, setWidgets }: Creat
   });
 };
 
-/** Force a complete parse + full decoration rebuild, then read — the ground-truth builder output. */
+/** Force a complete parse + full decoration rebuild, then read - the ground-truth builder output. */
 const rebuild = async (view: EditorView): Promise<Descriptor[]> => {
   forceParsing(view, view.state.doc.length, 5_000);
   view.dispatch({ effects: widgetRebuildEffect.of(null) });
@@ -248,7 +248,7 @@ describe('xmlTags decorations', () => {
     // Reported from the assistant chat: `<reasoning>` flashed as literal markup for the frame between
     // the opening tag arriving and its first content character. Streaming factories decline while
     // their content is empty (`text ? new Widget(text) : null`), and the scan used to skip the
-    // decoration entirely when they did — leaving the raw tag on screen, which is the one thing this
+    // decoration entirely when they did - leaving the raw tag on screen, which is the one thing this
     // scan exists to prevent.
     test('an unclosed streaming tag is hidden even when its factory declines', async ({ expect }) => {
       const doc = 'intro\n\n<think>';
@@ -283,7 +283,7 @@ describe('xmlTags decorations', () => {
 
     // The frame before the opening tag is even complete. A chunk boundary can land mid-tag, so the
     // tail is `<reasoni` with no `>` yet; the scan matches on a complete opening tag, so that text
-    // was left undecorated and rendered as literal markup until the `>` arrived — the same flash as
+    // was left undecorated and rendered as literal markup until the `>` arrived - the same flash as
     // the declining-factory case above, one tick earlier.
     test('a partially received opening tag is hidden', async ({ expect }) => {
       const doc = 'intro\n\n<thin';
@@ -346,8 +346,8 @@ describe('xmlTags decorations', () => {
     // partial-merge branch, which re-walks the last element and ADDS its decoration again without
     // removing the old one (the merge only filters out `streaming` decorations), so the last widget is
     // duplicated. In a live editor the parse-completion full rebuild (see the "settles" test below)
-    // masks this transiently. When the optimization fixes the merge, flip `test.fails` → `test`.
-    test.fails('appending at the tail — synchronous incremental result matches a full rebuild', async ({ expect }) => {
+    // masks this transiently. When the optimization fixes the merge, flip `test.fails` -> `test`.
+    test.fails('appending at the tail - synchronous incremental result matches a full rebuild', async ({ expect }) => {
       const view = createView(seed, { registry });
       await rebuild(view);
       view.dispatch({ changes: { from: view.state.doc.length, insert: '\n\ntrailing text' } });
@@ -357,7 +357,7 @@ describe('xmlTags decorations', () => {
       view.destroy();
     });
 
-    test('appending at the tail — settles to a correct decoration set', async ({ expect }) => {
+    test('appending at the tail - settles to a correct decoration set', async ({ expect }) => {
       const view = createView(seed, { registry });
       await rebuild(view);
       view.dispatch({ changes: { from: view.state.doc.length, insert: '\n\ntrailing text' } });
@@ -485,7 +485,7 @@ describe('xmlTags widget state', () => {
     stubWidget(view, 'a').toDOM(view);
 
     // Replacing the document rebuilds decorations into fresh widget instances, but `StubWidget.eq`
-    // (id equality) makes CodeMirror keep the rendered DOM — so the rebuilt instance has no root and
+    // (id equality) makes CodeMirror keep the rendered DOM - so the rebuilt instance has no root and
     // an update routed through the decoration set would find nothing to re-render.
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: doc },
@@ -507,7 +507,7 @@ describe('xmlTags widget state', () => {
     await rebuild(view);
     view.dispatch({ effects: widgetUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
 
-    // The widget mounts now — scrolled into CodeMirror's viewport, or portaled after the initial render.
+    // The widget mounts now - scrolled into CodeMirror's viewport, or portaled after the initial render.
     const widget = stubWidget(view, 'a');
     widget.toDOM(view);
     expect(mounted.find((state) => state.id === 'a')?.props.blocks).toEqual(['A']);
@@ -519,7 +519,7 @@ describe('xmlTags widget state', () => {
 // Widget context.
 //
 // The host publishes the context widgets call back through (`MarkdownStreamController.setContext`),
-// and it necessarily arrives *after* the first decoration build — the controller does not exist until
+// and it necessarily arrives *after* the first decoration build - the controller does not exist until
 // the editor mounts. A widget captures its props when its decoration is built, so unless the context
 // effect both rebuilds decorations and defeats widget reuse, every widget is left holding
 // `context: undefined` for the life of the document and every callback through it silently no-ops.
@@ -547,13 +547,13 @@ describe('xmlTags widget context', () => {
 
   // CodeMirror draws a replacement widget (same id, `eq` false after a context change) BEFORE
   // destroying the old instance; the old instance's destroy must not wipe the replacement's
-  // registration — that orphaned the live placeholder with no portal until a view-mode toggle.
+  // registration - that orphaned the live placeholder with no portal until a view-mode toggle.
   test('a context rebuild does not unregister the replacement widget', async ({ expect }) => {
     let published: WidgetState[] = [];
     const view = createView(doc, { registry: contextRegistry, setWidgets: (widgets) => (published = widgets) });
     await rebuild(view);
 
-    // Simulate the draw cycle: the initial widget mounts, then the context effect replaces it —
+    // Simulate the draw cycle: the initial widget mounts, then the context effect replaces it -
     // new instance draws (mounted), old instance is destroyed afterwards.
     const before = stubWidget(view, 'a');
     before.toDOM(view);
@@ -621,11 +621,11 @@ describe('xmlTags widget context', () => {
 //
 // Widget content.
 //
-// A streaming tag's widget id is keyed on its opening position alone — its end moves on every chunk —
+// A streaming tag's widget id is keyed on its opening position alone - its end moves on every chunk -
 // so the id cannot tell CodeMirror that the tag's content changed. Once the tag closes, the run keeps
 // growing in place (the assistant re-renders a whole message as one `<toolkit>` payload per turn), and
 // an id-only `eq` left the reader looking at the widget built from the first chunk until the view was
-// rebuilt from scratch — the "reload the chat and everything is there" symptom.
+// rebuilt from scratch - the "reload the chat and everything is there" symptom.
 //
 
 describe('xmlTags widget content', () => {

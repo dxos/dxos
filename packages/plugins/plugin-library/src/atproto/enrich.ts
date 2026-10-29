@@ -9,7 +9,7 @@ import { lookupHiveBook } from '../operations/bookhive.ts';
 import { browserCorsProxy } from '../operations/cors.ts';
 import { getHiveId } from './hive.ts';
 
-/** Set a catalog field only when it is currently empty — never overwrite a local edit. */
+/** Set a catalog field only when it is currently empty - never overwrite a local edit. */
 const setIfEmpty = (book: Obj.Unknown, path: readonly string[], value: unknown): void => {
   if (value == null || (Array.isArray(value) && value.length === 0)) {
     return;
@@ -24,7 +24,7 @@ const setIfEmpty = (book: Obj.Unknown, path: readonly string[], value: unknown):
 /**
  * Fill a book's catalog from its linked BookHive record. Imported books carry only the identity fields
  * present on the wire record (title/authors/identifiers); the rich metadata (cover, genres, description,
- * page count, …) lives in BookHive's catalog, so it is fetched by hive id and merged into empty fields
+ * page count, ...) lives in BookHive's catalog, so it is fetched by hive id and merged into empty fields
  * only. No-op when the book is unlinked or offline.
  */
 export const enrichBook = async (object: unknown): Promise<void> => {

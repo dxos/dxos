@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.Restore> = CommentO
 
       // Batch both additions so a single reactive notification fires after both objects
       // are in the database. Previously a sleep(100) separated the two calls to prevent
-      // a crash in Relation.setSource(anchor) during an intermediate render — batching
+      // a crash in Relation.setSource(anchor) during an intermediate render - batching
       // eliminates the intermediate render entirely without any artificial delay.
       batchEvents(() => {
         db.add(thread);

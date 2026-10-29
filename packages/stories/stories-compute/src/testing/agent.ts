@@ -182,7 +182,7 @@ const CODE: Scenario = {
       thought: () => 'Found it: the shared state is not reset between runs.',
       tool: 'edit_file',
       args: ({ keywords }) => ({ path: `src/${slug(keywords.slice(0, 2))}.ts`, hunks: 2 }),
-      result: () => '+14 −22',
+      result: () => '+14 -22',
     },
     {
       thought: () => 'Verifying the fix.',

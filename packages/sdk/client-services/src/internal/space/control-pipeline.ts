@@ -114,7 +114,7 @@ export class ControlPipeline {
 
   /**
    * Feeds a credential that came from the space's credentials document rather than a feed. Processing
-   * is idempotent by credential id, so a credential the feed already delivered is a no-op — which is
+   * is idempotent by credential id, so a credential the feed already delivered is a no-op - which is
    * what lets both sources run during the migration window.
    */
   async processDocumentCredential(credential: Credential): Promise<boolean> {
@@ -141,7 +141,7 @@ export class ControlPipeline {
     log('starting...');
     await this._pipeline.start();
     // Started strictly after `pipeline.start()`: a consumer that races the start can obtain the
-    // iterator's generator before it is running — the generator then finishes immediately and
+    // iterator's generator before it is running - the generator then finishes immediately and
     // polling it spins the microtask queue, starving the thread (boot wedge).
     setTimeout(async () => {
       void this._consumePipeline(ctx);

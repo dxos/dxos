@@ -15,7 +15,7 @@ const personKeys = (person: Person.Person): string[] =>
 const orgKeys = (org: Organization.Organization): string[] =>
   [org.name].filter((value): value is string => typeof value === 'string' && value.length > 0);
 
-// Reconciliation table: normalized entity id (as produced by the extractor) → canonical ECHO URI.
+// Reconciliation table: normalized entity id (as produced by the extractor) -> canonical ECHO URI.
 // ECHO objects remain the source of truth (spec §4); this table lets advisory facts point at them.
 export const buildEntityIndex = (
   objects: readonly (Person.Person | Organization.Organization)[],

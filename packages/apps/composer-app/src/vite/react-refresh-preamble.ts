@@ -11,7 +11,7 @@ const PREAMBLE_ID = '/@dxos-react-refresh-preamble';
  * Re-inject React Fast Refresh's preamble under Vite's full-bundle dev mode.
  *
  * `@vitejs/plugin-react` still wraps every component module with the refresh registration, whose
- * footer throws `@vitejs/plugin-react can't detect preamble` when `window.$RefreshReg$` is unset —
+ * footer throws `@vitejs/plugin-react can't detect preamble` when `window.$RefreshReg$` is unset -
  * and its own `vite:react-refresh-fbm` hook does not deliver it there. The hook runs and returns
  * the tag (verified by calling it directly), but the tag never reaches the served document; a
  * probe injecting both from one `order: 'pre'` hook showed a `<meta>` arrive and an inline

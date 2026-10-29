@@ -16,7 +16,7 @@ import { Task } from '@dxos/types';
 
 //
 // The object lens against a real database: an automerge-backed `Task` viewed through a
-// second declared type. There is one object in the database throughout — the lens is a view of it.
+// second declared type. There is one object in the database throughout - the lens is a view of it.
 //
 // The two-peer test is the point of the whole design: one peer drives the object through its
 // canonical type while the other drives the same object through the lens, and both survive. That only
@@ -32,7 +32,7 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.GtdTask',
     done: Schema.optional(Schema.Boolean),
     stage: Schema.optional(Schema.Literals(['todo', 'started', 'done'])),
     urgency: Schema.optional(Schema.Number),
-    /** Neither of these exists on `Task` — both are overlay-backed. */
+    /** Neither of these exists on `Task` - both are overlay-backed. */
     context: Schema.optional(Schema.Literals(['@home', '@work'])),
     waitingOn: Schema.optional(Schema.String),
   }),
@@ -135,7 +135,7 @@ describe('object lens over a database-backed object', () => {
     const view = Lens.get(reloaded, lens);
     expect(view.context).to.eq('@home');
     expect(view.waitingOn).to.eq('review');
-    // The base properties are intact too — the overlay is stored beside them, not instead of them.
+    // The base properties are intact too - the overlay is stored beside them, not instead of them.
     expect(view.title).to.eq('Land the object lens');
     expect(view.stage).to.eq('started');
   });

@@ -40,7 +40,7 @@ export const noopMonitor: Monitor = {
 };
 
 /**
- * True for the monitor {@link layerNoop} provides, which carries no live source at all — consumers
+ * True for the monitor {@link layerNoop} provides, which carries no live source at all - consumers
  * fall back to whatever they do when the tag is unset rather than subscribing to it.
  */
 export const isNoop = (monitor: Monitor): boolean => monitor === noopMonitor;
@@ -49,7 +49,7 @@ export const layerNoop: Layer.Layer<Service> = Layer.succeed(Service, noopMonito
 
 /**
  * One received swarm broadcast: the `google.protobuf.Any.value` bytes of a `dxos.compute.TraceMessage`
- * plus the envelope's tag list. The tags are not just routing metadata — the wire payload drops ref
+ * plus the envelope's tag list. The tags are not just routing metadata - the wire payload drops ref
  * meta fields (`trigger`), so decode needs them to restore cancel addressing.
  */
 export interface SwarmTraceBroadcast {

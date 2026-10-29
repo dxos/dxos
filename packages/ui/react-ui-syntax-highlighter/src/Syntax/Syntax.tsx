@@ -67,8 +67,8 @@ type SyntaxRootProps = PropsWithChildren<{
 }>;
 
 /**
- * Headless context provider. Selects JSON mode when the `data` prop is passed at all — even
- * `data={undefined}` — so loading states render an empty JSON view rather than flipping to
+ * Headless context provider. Selects JSON mode when the `data` prop is passed at all - even
+ * `data={undefined}` - so loading states render an empty JSON view rather than flipping to
  * text mode (which would trip `Syntax.Filter`'s JSON-only guard). Mode is chosen by prop
  * presence, not value.
  */

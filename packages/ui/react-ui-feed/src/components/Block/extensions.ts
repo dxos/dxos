@@ -26,7 +26,7 @@ import { highlights, highlightTheme } from './highlight.ts';
 
 export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;
-  /** The block widget for `![label](echo://…)` — an object embedded as a card; none by default. */
+  /** The block widget for `![label](echo://...)` - an object embedded as a card; none by default. */
   objectImage?: WidgetDef<ObjectLinkProps>;
   editable?: boolean;
   themeMode?: 'light' | 'dark';
@@ -40,7 +40,7 @@ export type ItemExtensionOptions = {
  * this module rather than a tidiness. `EditorView.theme()` mints a new `StyleModule` and a new
  * generated class on every call, so a set built per item injects one stylesheet per row and
  * invalidates the whole document's style each time it does. Measured at ~14ms per row against ~2ms
- * for the identical set shared (`baseline/mount`) — six times the cost of the first fill, for
+ * for the identical set shared (`baseline/mount`) - six times the cost of the first fill, for
  * stylesheets that are all the same.
  *
  * Extensions are descriptors, not instances: a `StateField` or `ViewPlugin` in a shared array is
@@ -111,7 +111,7 @@ const build = (registry: XmlWidgetRegistry | undefined, editable: boolean, theme
  * An item's editor never scrolls on the block axis: it is auto-height and the feed around it is
  * what scrolls, so its content fits by construction.
  *
- * Left to `auto`, that invariant is broken transiently by any widget that changes height — a tool
+ * Left to `auto`, that invariant is broken transiently by any widget that changes height - a tool
  * block's disclosure animating open grows the content every frame while `requestMeasure` lands the
  * editor's new height a frame later, so the scroller is a frame short throughout and paints a
  * scrollbar for the length of the animation. The inline axis keeps `auto`; a wide payload still

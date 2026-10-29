@@ -285,7 +285,7 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         // Return a string + explicit source map (not the `RolldownMagicString` object): under the
         // Vite pipeline the transform result's `code` must be a string, so returning the object leaks
         // downstream as `[object Object]`. The map keeps dev breakpoints / stack traces aligned past
-        // the injected preamble `var __dxlog_file=…` line. (Returning the object only works in pure
+        // the injected preamble `var __dxlog_file=...` line. (Returning the object only works in pure
         // Rolldown / with `experimental.nativeMagicString`.)
         return {
           code: ms.toString(),

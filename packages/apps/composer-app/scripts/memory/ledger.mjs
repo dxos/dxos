@@ -6,7 +6,7 @@
  * Reconciled memory ledger: private footprint per process, split into the
  * allocator nodes that account for it, resident wasm, and the residual.
  *
- * Private footprint is the only quantity that sees everything — memory-infra has
+ * Private footprint is the only quantity that sees everything - memory-infra has
  * no wasm dump provider, so `BackingStore::AllocateWasmMemory` pages appear in no
  * allocator node and a `WebAssembly` shim per realm is what names them.
  *
@@ -312,7 +312,7 @@ try {
   await browserCdp.trySend('Memory.setPressureNotificationsSuppressed', { suppressed: true });
 
   // Auto-attach paused, so the probe is installed before a realm runs its first
-  // script — a worker that has already instantiated its module is unrecoverable.
+  // script - a worker that has already instantiated its module is unrecoverable.
   browserCdp.on('Target.attachedToTarget', async ({ sessionId, targetInfo }) => {
     if (['iframe', 'page', 'service_worker', 'shared_worker', 'worker'].includes(targetInfo.type)) {
       await browserCdp.trySend('Page.enable', {}, sessionId);
@@ -338,8 +338,8 @@ try {
    *
    * A dedicated worker attaches through its creating page's session, not the
    * browser's, and taking that session's auto-attach away from Playwright deadlocks
-   * boot. Polling wins the only race that matters — a worker instantiates its
-   * module well after the target appears — and the probe is idempotent.
+   * boot. Polling wins the only race that matters - a worker instantiates its
+   * module well after the target appears - and the probe is idempotent.
    */
   const probeNewRealms = async () => {
     const seen = new Set();
@@ -634,7 +634,7 @@ try {
    *
    * A wasm memory is one `Memory Tag 255` region whose VSIZE is exactly its
    * `byteLength`, so matching the probe's sizes against these gives the RESIDENT
-   * share — `byteLength` alone is what was committed, and untouched pages of a
+   * share - `byteLength` alone is what was committed, and untouched pages of a
    * grown memory never reach the footprint.
    */
   const readAnonRegions = (pid) => {
@@ -689,7 +689,7 @@ try {
         stdio: ['ignore', 'pipe', 'ignore'],
       });
       // Per pid, because a run has more than one app renderer and one file would
-      // hold whichever was written last — reliably the smallest, not the subject.
+      // hold whichever was written last - reliably the smallest, not the subject.
       const file = vmOut.replace(/(\.[^.]+)?$/, `-${pid}$1`);
       writeFileSync(file, output);
       return file;
@@ -877,7 +877,7 @@ try {
       const attributed = await readRealms(label, { withSnapshots: true });
       // Keyed by target id rather than zipped by index: the second enumeration can return a
       // different set, which assigned one realm's attribution to another. `${type} ${url}` is no
-      // better a key — two dedicated workers running the same bundle share it.
+      // better a key - two dedicated workers running the same bundle share it.
       const byTargetId = new Map(attributed.map((realm) => [realm.targetId, realm]));
       for (const realm of realms) {
         realm.attribution = byTargetId.get(realm.targetId)?.attribution ?? null;

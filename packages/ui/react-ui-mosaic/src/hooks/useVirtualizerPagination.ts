@@ -28,7 +28,7 @@ const nextPageIndexThreshold = (itemCount: number, threshold: number): number =>
   itemCount > threshold ? itemCount - threshold : itemCount - 1;
 
 /**
- * True when the loaded window is shorter than the viewport — nothing to scroll, so the user can
+ * True when the loaded window is shorter than the viewport - nothing to scroll, so the user can
  * never arm the scroll-based triggers. The window must be extended anyway or the list is stuck on
  * whatever the first page happened to be (a mailbox whose 10 tall rows fit the plank exactly showed
  * one page forever). Bounded by `usePagination`'s own exhaustion check: `getNext` no-ops once a page

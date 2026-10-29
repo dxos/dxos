@@ -15,7 +15,7 @@ const fixture = path.resolve(dirname, 'stderr-filter.fixture.ts');
  * APIs production code uses: `console.warn` (where `warnAfterTimeout` from
  * @dxos/debug writes) AND `process.stderr.write` (defence in depth).
  *
- * Bun bypasses `process.stderr.write` for `console.warn` — overriding only
+ * Bun bypasses `process.stderr.write` for `console.warn` - overriding only
  * one channel is the bug this PR fixes. The fixture exercises BOTH so a
  * regression in either channel is caught immediately.
  */

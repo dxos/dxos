@@ -52,8 +52,8 @@ const ClientLayerSpec = LayerSpec.make(
         const client = yield* Capability.get(ClientCapabilities.Client);
         // The capability is contributed while `initialize()` is still in flight, so every
         // initialized-only getter (`client.spaces`, `client.halo`) would throw for any layer built
-        // before it settles. Bounded by the same budget the client capability resolved — a shorter
-        // one here would fail a host that deliberately widened it — so a handshake that never
+        // before it settles. Bounded by the same budget the client capability resolved - a shorter
+        // one here would fail a host that deliberately widened it - so a handshake that never
         // completes fails the materialization instead of leaving it pending forever.
         const timeout = yield* Capability.get(ClientCapabilities.InitializeTimeout);
         yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout }));
@@ -132,7 +132,7 @@ const EdgeHttpClientLayerSpec = LayerSpec.make(
  * Space-scoped database/feed services resolved from the `Client`'s space
  * registry. One spec for both so the `client.spaces.get` / `waitUntilReady`
  * round-trip only happens once per space slice. Fails hard if the context is
- * missing a `space` id or the client cannot resolve it — both indicate a
+ * missing a `space` id or the client cannot resolve it - both indicate a
  * configuration bug in the layer graph.
  */
 const DatabaseLayerSpec = LayerSpec.make(
@@ -156,7 +156,7 @@ const DatabaseLayerSpec = LayerSpec.make(
 
 /**
  * The cross-space graph, application-scoped because it is not about any one space: it is the handle
- * for work that must find which space holds something before it can act on it — the case a
+ * for work that must find which space holds something before it can act on it - the case a
  * space-affinity {@link Database.Service} cannot serve, since asking for it already presumes an
  * answer.
  */

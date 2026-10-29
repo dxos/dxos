@@ -14,7 +14,7 @@ const NAVIGATION_PLUGIN = 'org.dxos.plugin.navigation';
 
 /**
  * A resolved target as callers see it. `AppCapabilities.NavigationTarget` additionally carries the
- * resolver's `position`, which orders these before they are returned and is of no use downstream — so it
+ * resolver's `position`, which orders these before they are returned and is of no use downstream - so it
  * stays out of the wire format (it also holds `Position.last`, an Infinity that would not survive JSON).
  */
 const TargetSchema = Schema.Struct({
@@ -26,8 +26,8 @@ const TargetSchema = Schema.Struct({
 /**
  * The single entry point for turning an object URI into a path {@link LayoutOperation.Open} can take.
  *
- * Most navigation knows its own destination — a message opened from a mailbox can spell the mailbox
- * path itself — but generic surfaces (a card, a search result, an agent following a reference) hold an
+ * Most navigation knows its own destination - a message opened from a mailbox can spell the mailbox
+ * path itself - but generic surfaces (a card, a search result, an agent following a reference) hold an
  * object and no idea where it lives in the tree. This fans out to every contributed
  * `AppCapabilities.NavigationTargetResolver`, so the answer comes from whichever plugin owns the
  * object's home, and returns targets in resolver `position` order: one that knows the object's real

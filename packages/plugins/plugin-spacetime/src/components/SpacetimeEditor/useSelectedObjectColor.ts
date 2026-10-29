@@ -52,7 +52,7 @@ export const useSelectedObjectColor = ({
   const hueRef = useRef(hue);
   hueRef.current = hue;
 
-  // Selection → picker.
+  // Selection -> picker.
   useEffect(() => {
     const object = findObject(scene, selectedObjectId);
     if (object?.color && object.color !== hueRef.current) {
@@ -60,7 +60,7 @@ export const useSelectedObjectColor = ({
     }
   }, [scene, selectedObjectId, onHueChange]);
 
-  // Picker → object, on a change of the picker only (not on mount, which would stamp the picker's
+  // Picker -> object, on a change of the picker only (not on mount, which would stamp the picker's
   // colour on the selection before the selection had a chance to be adopted); a no-op when the
   // picker just adopted the object's colour.
   const lastHueRef = useRef(hue);

@@ -3,7 +3,7 @@
 //
 
 /**
- * Long-soak memory tracker: samples JS heap (no forced GC — observe true growth),
+ * Long-soak memory tracker: samples JS heap (no forced GC - observe true growth),
  * backing store, and OS-level RSS of every chromium child process, every
  * `interval` seconds for `minutes` minutes. Prints a CSV-ish timeline.
  *

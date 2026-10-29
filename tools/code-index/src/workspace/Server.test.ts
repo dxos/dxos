@@ -31,7 +31,7 @@ import * as Sandbox from './Sandbox.ts';
 /**
  * Stops the real `code-index serve` under Bun with a browser attached. A tab holds the `Watch`
  * stream and Vite's HMR websocket open for as long as it lives, and Bun's `http.Server.close` waits
- * on an upgraded socket forever — which only shows in Bun, so this cannot run in-process.
+ * on an upgraded socket forever - which only shows in Bun, so this cannot run in-process.
  */
 
 const BIN = fileURLToPath(new URL('../../bin/code-index.ts', import.meta.url));

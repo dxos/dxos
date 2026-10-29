@@ -38,7 +38,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       repositories you want to track.  On each sync pass the plugin pulls
       organizations and their members into ECHO as Organization and Person
       objects, and mirrors every repository as a Project and every issue or
-      pull request as a Task — with open mapping to "todo" and closed mapping
+      pull request as a Task - with open mapping to "todo" and closed mapping
       to "done".
 
       Edits made locally to issue title, description, or open/closed status

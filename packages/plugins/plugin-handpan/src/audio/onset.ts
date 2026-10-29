@@ -14,7 +14,7 @@ export type OnsetDetectorOptions = {
   compression?: number;
   /**
    * Per-frame decay of the running spectral peak that magnitudes are normalized by, so detection
-   * does not depend on input level (a distant microphone is 20–40 dB quieter than a close one).
+   * does not depend on input level (a distant microphone is 20-40 dB quieter than a close one).
    */
   peakDecay?: number;
   /** Lowest peak normalized against; keeps background noise from being amplified to full scale. */

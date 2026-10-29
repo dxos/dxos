@@ -9,7 +9,7 @@ import type * as SlideTheme from '@dxos/plugin-presenter/SlideTheme';
 
 import deck from './echo.md?raw';
 
-/** The architecture drawings the deck embeds, by the diagram id its `{{…}}` placeholders name. */
+/** The architecture drawings the deck embeds, by the diagram id its `{{...}}` placeholders name. */
 export type EchoDeckDrawings = Readonly<Record<string, Drawing.Drawing>>;
 
 const PLACEHOLDER = /\{\{([a-z-]+)\}\}/g;

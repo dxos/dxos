@@ -28,7 +28,7 @@ type StoryArgs = {
 };
 
 // SegmentArticle defaults booking-less segments to its BookingSearch view, which resolves
-// capabilities — so the story needs a PluginManager (not just a client provider).
+// capabilities - so the story needs a PluginManager (not just a client provider).
 const seed = (space: Space) => {
   const { trip, segments, bookings } = new TripBuilder()
     .addFlight(0, { confirmed: true })

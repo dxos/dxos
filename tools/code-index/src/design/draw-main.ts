@@ -59,7 +59,7 @@ const program = Effect.gen(function* () {
     )}\n`,
   );
   for (const entry of ranked) {
-    console.log(`${entry === winner ? '*' : ' '} ${entry.name.padEnd(20)} overall ${entry.overall?.toFixed(2) ?? '—'}`);
+    console.log(`${entry === winner ? '*' : ' '} ${entry.name.padEnd(20)} overall ${entry.overall?.toFixed(2) ?? '-'}`);
   }
 });
 

@@ -8,7 +8,7 @@ import { type Message, type Thread } from '@dxos/types';
 
 import { shouldTriggerAgent } from './should-trigger-agent.ts';
 
-// `shouldTriggerAgent` is a pure predicate over the schema shapes — these tests
+// `shouldTriggerAgent` is a pure predicate over the schema shapes - these tests
 // build plain object literals shaped like Message/Thread to avoid the ECHO proxy's
 // `Obj.update`-only mutation guard.
 const makeMessage = (role: 'user' | 'assistant' | undefined, text: string): Message.Message =>

@@ -127,9 +127,9 @@ export const exitPortal = (camera: Camera, portal: Node, child: Bounds): Camera 
   };
 };
 
-/** A portal filling this share of the viewport (on its tighter axis) leaves the rest of its layer fully shown… */
+/** A portal filling this share of the viewport (on its tighter axis) leaves the rest of its layer fully shown... */
 const FADE_START = 0.25;
-/** …and this share hides it: zooming into a portal fades out what is around it, and zooming out fades it back. */
+/** ...and this share hides it: zooming into a portal fades out what is around it, and zooming out fades it back. */
 const FADE_END = 0.75;
 
 /**
@@ -178,7 +178,7 @@ export const DRILL_ANIMATION_MS = 1000;
 export const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 /**
- * The camera at progress `t` (0–1, un-eased) along the smooth zoom-and-pan path between two cameras; pure, so a
+ * The camera at progress `t` (0-1, un-eased) along the smooth zoom-and-pan path between two cameras; pure, so a
  * frame-by-frame renderer gets the same camera for the same frame. `duration` is the path's natural length in ms.
  */
 export const interpolateCamera = (

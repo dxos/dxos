@@ -38,7 +38,7 @@ export const AccountContainer = () => {
   const [requestEmail, setRequestEmail] = useState('');
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
-  // Single shared instance keeps the VP-auth handshake (request → 401 → signed
+  // Single shared instance keeps the VP-auth handshake (request -> 401 -> signed
   // retry) at one round-trip per session instead of one per panel.
   const hubHttp = useHubHttpClient();
   const { openAccountPage } = useAccountUrl();

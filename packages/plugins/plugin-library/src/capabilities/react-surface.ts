@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bookArticle',
-        // The main article only — not a companion plank (which carries a `variant`).
+        // The main article only - not a companion plank (which carries a `variant`).
         filter: AppSurface.object(AppSurface.Article, Book.Book, (data) => !data.variant),
         component: BookArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),

@@ -23,7 +23,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Input placeholder='Disabled' aria-label='Disabled' disabled />
     <Input
       start={<Icon.Icon icon='ph--magnifying-glass--regular' />}
-      placeholder='Find…'
+      placeholder='Find...'
       aria-label='Find'
       data-testid={`start-${size}`}
     />

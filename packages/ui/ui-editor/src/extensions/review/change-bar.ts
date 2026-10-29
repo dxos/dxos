@@ -7,7 +7,7 @@ import { EditorView, GutterMarker, gutter } from '@codemirror/view';
 
 /**
  * A change-bar gutter marker: a vertical bar tinted with the author's colour. Full line height by
- * default; `rows` caps it to that many text rows (in `lh` units) — a BLOCK-insert proposal renders
+ * default; `rows` caps it to that many text rows (in `lh` units) - a BLOCK-insert proposal renders
  * as a widget occupying the top rows of its host line, and the bar must cover the proposal's rows
  * without tinting the host line's own text below it.
  */
@@ -63,7 +63,7 @@ const changeBarTheme = EditorView.baseTheme({
 
 /**
  * Providers of per-line change bars. `enables` adds the single shared gutter (+ theme) once when any
- * provider is present — identical extension instances dedupe — so own edits (`trackChanges`) and foreign
+ * provider is present - identical extension instances dedupe - so own edits (`trackChanges`) and foreign
  * suggestions (`suggestions`) share one bar column rather than stacking separate gutters. The gutter is
  * built inside `enables` so its `markers` can read this same facet.
  */
@@ -88,7 +88,7 @@ export const changeBars = (provider: ChangeBarProvider): Extension => changeBarP
 /**
  * Keeps the change-bar column mounted with no markers. Hosts that toggle review overlays install this
  * once alongside their compartments, so entering/leaving Suggesting reconfigures marker providers
- * inside an existing gutter instead of adding and removing the column — which shifted the text and
+ * inside an existing gutter instead of adding and removing the column - which shifted the text and
  * flickered on every mode switch.
  */
 export const changeBarGutter: Extension = changeBarProviders.of(() => RangeSet.empty);

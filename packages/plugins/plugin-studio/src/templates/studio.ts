@@ -33,7 +33,7 @@ const PROJECT_SKILL_KEYS = [StudioSkill.key, 'org.dxos.skill.project'] as const;
  * "Studio" project template: the default project with the studio brief and skill, one Lightbox
  * (parented to the project so it persists with the create op's single `Database.add` cascade and is
  * deleted with the project), and one starter task on the ledger. Nothing on the Project marks it as
- * studio — the template is the only distinction.
+ * studio - the template is the only distinction.
  */
 export const studioTemplate: ProjectCapabilities.Template = {
   id: STUDIO_TEMPLATE_ID,

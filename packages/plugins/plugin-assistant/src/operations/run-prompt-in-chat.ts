@@ -60,7 +60,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
           });
         }
         // The model is the chat's, so the provider has to be the one that serves THAT model rather
-        // than whichever the settings now name — a chat outlives a provider change.
+        // than whichever the settings now name - a chat outlives a provider change.
         const model = chat.session?.model ?? preset?.model;
         const location = Agent.chatLocation(chat);
         const session = yield* AgentService.getSession(chat, {

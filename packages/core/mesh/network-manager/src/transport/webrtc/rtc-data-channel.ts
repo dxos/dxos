@@ -23,7 +23,7 @@ export type DataChannelHandlers = {
  * Pipes an `RTCDataChannel` to the wire-protocol stream, using the channel's own send buffer as the
  * stream's backpressure signal.
  *
- * Whoever holds the channel object runs this — the tab for a direct transport, the worker for a
+ * Whoever holds the channel object runs this - the tab for a direct transport, the worker for a
  * proxied one after the channel has been transferred to it. The channel may still be connecting.
  *
  * @returns A disposer that detaches from the stream and closes the channel.
@@ -79,7 +79,7 @@ export const bindDataChannel = (
    * attached separately.
    *
    * Inbound: a message can be dispatched before this context sees the `open` event, and dropping
-   * that first frame stalls the wire protocol's handshake for good — so reading starts on whichever
+   * that first frame stalls the wire protocol's handshake for good - so reading starts on whichever
    * of the two arrives first.
    */
   const attachInbound = () => {
@@ -100,7 +100,7 @@ export const bindDataChannel = (
 
   /**
    * Outbound: `send` throws while the channel is still `connecting`, so the wire protocol is not
-   * piped into it — and the transport does not report itself connected — until it is really open.
+   * piped into it - and the transport does not report itself connected - until it is really open.
    */
   const attachOutbound = () => {
     if (writable || disposed) {

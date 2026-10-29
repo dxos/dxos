@@ -10,7 +10,7 @@
  */
 export type PeerId = string & { __peerId: true };
 
-// ─── Classical automerge-repo sync protocol ───────────────────────────────────
+// --- Classical automerge-repo sync protocol -----------------------------------
 // These types mirror upstream `@automerge/automerge-repo` `Message` variants
 // (see `automerge-repo/src/network/messages.ts`). They are the wire protocol
 // of the classical automerge-repo sync state machine, not DXOS extensions.
@@ -148,7 +148,7 @@ export const MESSAGE_TYPE_ERROR = 'error';
  * frame can be emitted before the handshake completes.
  *
  * The `connectionId` field is a DXOS extension carried on the subduction
- * channel only. Edge → client errors with `connectionId` are restart signals
+ * channel only. Edge -> client errors with `connectionId` are restart signals
  * for a specific {@link EdgeSubductionReplicatorConnection} lifetime; the
  * client matches it against its local `_connectionId` and tears down only
  * that connection. The field is optional so the same type can carry
@@ -163,7 +163,7 @@ export type ErrorProtocolMessage = {
   metadata?: Record<string, unknown>;
 };
 
-// ─── Subduction transport / control protocol ──────────────────────────────────
+// --- Subduction transport / control protocol ----------------------------------
 // Frames produced and consumed by `@automerge/automerge-repo`'s subduction
 // transport bridge (`NetworkAdapterTransport`) plus the DXOS-side envelope
 // and reconnect marker. Carried by the Edge subduction channel
@@ -190,7 +190,7 @@ export const MESSAGE_TYPE_SUBDUCTION_FRAME = 'subduction-frame';
  * `@automerge/automerge-repo/src/subduction/network.ts`. Do not redefine the
  * value; if upstream renames it, update {@link MESSAGE_TYPE_SUBDUCTION_CONNECTION}.
  *
- * On the Edge subduction channel this frame never appears top-level — it is
+ * On the Edge subduction channel this frame never appears top-level - it is
  * always wrapped in a {@link SubductionFrameEnvelope}. In-memory subduction
  * adapters carry it directly.
  */
@@ -233,14 +233,14 @@ export const MESSAGE_TYPE_SUBDUCTION_BATCH = 'subduction-batch';
  *
  * @remarks
  * A throughput optimization over sending each {@link SubductionFrameEnvelope} separately: at bulk
- * sync (hundreds–thousands of frames) the per-frame cost is dominated by transport overhead —
- * one WebSocket message + router relay + edge storage transaction inbound, and one edge→router
- * subrequest outbound — none of which is the (cheap) opaque-byte handling itself. Coalescing
+ * sync (hundreds-thousands of frames) the per-frame cost is dominated by transport overhead -
+ * one WebSocket message + router relay + edge storage transaction inbound, and one edge->router
+ * subrequest outbound - none of which is the (cheap) opaque-byte handling itself. Coalescing
  * frames amortizes that overhead across the batch.
  *
  * All `frames` share the envelope's `connectionId` (batching never mixes connections). The
  * array is non-empty and ordered; receivers MUST feed the frames to the subduction transport in
- * array order so the byte stream stays FIFO. The handshake frame is never batched — session
+ * array order so the byte stream stays FIFO. The handshake frame is never batched - session
  * establishment stays a lone {@link SubductionFrameEnvelope} so it is version-independent.
  *
  * Decoders accept both this and {@link SubductionFrameEnvelope}; emitters gate multi-frame
@@ -253,7 +253,7 @@ export type SubductionBatchEnvelope = {
   frames: SubductionConnectionMessage[];
 };
 
-// ─── DXOS collection sync protocol ────────────────────────────────────────────
+// --- DXOS collection sync protocol --------------------------------------------
 // DXOS extension on top of the automerge-repo Message type, used by
 // `CollectionSynchronizer` to negotiate per-collection sync state. Carried
 // by both the classical and subduction channels.
@@ -295,7 +295,7 @@ export const MESSAGE_TYPE_COLLECTION_STATE = 'collection-state';
  * a collection.
  *
  * @remarks
- * DXOS-specific. The `state` payload shape is implementation-defined — today
+ * DXOS-specific. The `state` payload shape is implementation-defined - today
  * it is a `{ documents: Record<DocumentId, Heads[]> }` map produced by the
  * edge from `Subduction.getAllHeads()`, but the type leaves this open for
  * alternative encodings.
@@ -321,7 +321,7 @@ export type CollectionStateMessage = {
   metadata?: Record<string, unknown>;
 };
 
-// ─── Channel-level unions ─────────────────────────────────────────────────────
+// --- Channel-level unions -----------------------------------------------------
 
 /**
  * Union of every message that flows through the **classical automerge-repo**
@@ -332,7 +332,7 @@ export type CollectionStateMessage = {
  * request / sync / doc-unavailable / ephemeral / error) with DXOS's
  * collection-sync extension (collection-query / collection-state).
  *
- * Does NOT include subduction transport frames or the reconnect marker —
+ * Does NOT include subduction transport frames or the reconnect marker -
  * those live on a separate channel; see {@link SubductionProtocolMessage}.
  */
 export type AutomergeProtocolMessage =
@@ -349,7 +349,7 @@ export type AutomergeProtocolMessage =
 
 /**
  * Union of every message that flows through the subduction channel **in
- * process** — i.e. between automerge-repo's `NetworkAdapterTransport` and the
+ * process** - i.e. between automerge-repo's `NetworkAdapterTransport` and the
  * DXOS adapter / replicator layer, before wire encoding.
  *
  * @remarks
@@ -381,7 +381,7 @@ export type SubductionProtocolMessage =
  * of a `RouterMessage` targeting the subduction service.
  *
  * @remarks
- * The wire counterpart of {@link SubductionProtocolMessage} — identical except
+ * The wire counterpart of {@link SubductionProtocolMessage} - identical except
  * that {@link SubductionConnectionMessage} is replaced by
  * {@link SubductionFrameEnvelope}, which wraps it together with the originator's
  * `connectionId` so the peer can drop stale frames from previous connection

@@ -22,7 +22,7 @@ type DeployScriptProps = {
   script: Script.Script;
   /** Identity-bound EDGE HTTP client, read inside the deploy so a missing EDGE URL fails it rather than throwing. */
   getEdgeHttpClient: () => EdgeHttpClient;
-  /** Owner identity DID (`did:halo:…`); deployment fails without one. */
+  /** Owner identity DID (`did:halo:...`); deployment fails without one. */
   ownerDid?: string;
   db: Database.Database;
   fn?: Operation.PersistentOperation;

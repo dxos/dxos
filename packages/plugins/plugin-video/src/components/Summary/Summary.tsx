@@ -32,7 +32,7 @@ export type SummaryProps = {
  *
  * Like {@link Transcript}, this owns the CodeMirror `EditorView` locally and never carries it in a
  * React prop. This is deliberate: the video article keeps a cross-origin player iframe mounted, and
- * React's dev render-logger walks changed props' object graphs — an `EditorView` reaches the global
+ * React's dev render-logger walks changed props' object graphs - an `EditorView` reaches the global
  * `window` (via its DOMObserver) and the logger would descend into `window[0]` (the iframe) and throw
  * a cross-origin `SecurityError`. Rendering the summary through a generic Surface (the markdown
  * plugin's editor) reintroduces that prop and crashes the article; this local editor avoids it.

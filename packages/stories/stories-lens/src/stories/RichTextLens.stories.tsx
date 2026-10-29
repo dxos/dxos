@@ -22,7 +22,7 @@ import { BlockList, RichTextEditor } from '../RichTextEditor.tsx';
 // One `Text` object, two editors: the core markdown editor on the stored string, and a basic
 // ProseMirror editor on the lensed block tree. Neither knows about the other.
 //
-// This is the case a per-property mapping cannot express — parsing — so the lens is *coded*. What
+// This is the case a per-property mapping cannot express - parsing - so the lens is *coded*. What
 // makes it collaborative is that every block carries its source range, so a block edit splices that
 // range alone and the markdown editor's character-level automerge edits survive alongside it.
 //
@@ -31,7 +31,7 @@ import { BlockList, RichTextEditor } from '../RichTextEditor.tsx';
  * Put the caret at the end of a CodeMirror line and type.
  *
  * `userEvent.click` reports no pointer coordinates, and CodeMirror derives the caret from
- * `clientX`/`clientY` — so a plain click on a line lands at document position 0 instead, silently
+ * `clientX`/`clientY` - so a plain click on a line lands at document position 0 instead, silently
  * typing into the wrong block. Clicking past the right edge of the line's box maps to its end.
  */
 const typeAtEndOfLine = async (line: HTMLElement, text: string) => {
@@ -65,13 +65,13 @@ const SideBySideStory = () => {
 
   return (
     <div className='dx-cover grid grid-cols-3 gap-3 p-trim-md overflow-hidden'>
-      <DemoPanel label='Markdown — the string as stored' testId='markdown-panel'>
+      <DemoPanel label='Markdown - the string as stored' testId='markdown-panel'>
         <MarkdownEditor text={text} />
       </DemoPanel>
-      <DemoPanel label='Rich text — the lensed block tree' testId='rich-text-panel'>
+      <DemoPanel label='Rich text - the lensed block tree' testId='rich-text-panel'>
         <RichTextEditor text={text} />
       </DemoPanel>
-      <DemoPanel label='Blocks — what the lens projects' testId='blocks-panel'>
+      <DemoPanel label='Blocks - what the lens projects' testId='blocks-panel'>
         <BlockList text={text} />
       </DemoPanel>
     </div>
@@ -89,15 +89,15 @@ const CollaborationStory = () => {
   return (
     <div className='grid grid-rows-2 gap-3 p-trim-md h-full overflow-hidden'>
       {index === 0 ? (
-        <DemoPanel label={`Peer ${index} — markdown, the string as stored`} testId='markdown-panel'>
+        <DemoPanel label={`Peer ${index} - markdown, the string as stored`} testId='markdown-panel'>
           <MarkdownEditor text={text} />
         </DemoPanel>
       ) : (
-        <DemoPanel label={`Peer ${index} — rich text, the lensed block tree`} testId='rich-text-panel'>
+        <DemoPanel label={`Peer ${index} - rich text, the lensed block tree`} testId='rich-text-panel'>
           <RichTextEditor text={text} />
         </DemoPanel>
       )}
-      <DemoPanel label={`Peer ${index} — blocks`} testId='blocks-panel'>
+      <DemoPanel label={`Peer ${index} - blocks`} testId='blocks-panel'>
         <BlockList text={text} />
       </DemoPanel>
     </div>
@@ -153,7 +153,7 @@ export const Spec: Story = {
 
     await waitFor(() => expect(find('pm-editor')).toBeInTheDocument(), { timeout: 15_000 });
 
-    // The lens parsed the stored markdown into blocks, each carrying the range it came from — derived
+    // The lens parsed the stored markdown into blocks, each carrying the range it came from - derived
     // from the source here rather than hardcoded, because the range IS the claim.
     const title = DEMO_MARKDOWN.split('\n')[0];
     const blocks = find('block-list');
@@ -186,7 +186,7 @@ export const Spec: Story = {
 
     // Weight and slant are asserted on `font-variation-settings`, NOT `font-weight`/`font-style`.
     // The theme sets `font-synthesis: none` and pins `'wght' 400` at `:root`, so `font-weight: 700`
-    // computes as 700 and still renders as regular — which is exactly how bold shipped broken while a
+    // computes as 700 and still renders as regular - which is exactly how bold shipped broken while a
     // `fontWeight` assertion passed. The variation axes are what the variable font actually reads.
     const axes = (element: HTMLElement) => getComputedStyle(element).fontVariationSettings;
     await expect(axes(paragraph)).toContain('"wght" 400');
@@ -195,7 +195,7 @@ export const Spec: Story = {
     await expect(axes(heading2)).toContain('"wght" 600');
     await expect(axes(em)).toContain('"slnt" -10');
 
-    // Bullets are a real list, with markers — a bare `li` outside a `ul` renders none.
+    // Bullets are a real list, with markers - a bare `li` outside a `ul` renders none.
     const list = editor.querySelector<HTMLElement>('ul')!;
     await expect(list).toBeInTheDocument();
     await expect(list.querySelectorAll('li')).toHaveLength(2);
@@ -208,7 +208,7 @@ export const Spec: Story = {
     await userEvent.click(editor.querySelector<HTMLElement>('h1')!);
     await userEvent.keyboard('EDIT');
 
-    // Assert against the STORED string — the lens's whole claim is about what it wrote.
+    // Assert against the STORED string - the lens's whole claim is about what it wrote.
     await waitFor(
       async () => {
         const stored = find('raw-content').textContent ?? '';
@@ -216,8 +216,8 @@ export const Spec: Story = {
         // caret was, markers preserved. A bare `toContain('EDIT')` would also pass for an edit that
         // landed in the wrong block, or in front of the `#`.
         await expect(stored).toContain('# One object, two editorsEDIT');
-        // Every other line survived verbatim. A whole-document rewrite — or a lens that re-serialized
-        // the tree — would show up right here.
+        // Every other line survived verbatim. A whole-document rewrite - or a lens that re-serialized
+        // the tree - would show up right here.
         await expect(stored).toContain('## Why it merges');
         await expect(stored).toContain('- Each block remembers its `source range`');
         await expect(stored).toContain('- So an edit splices that range alone');
@@ -236,7 +236,7 @@ export const Spec: Story = {
     await expect(line).toBeInTheDocument();
     await typeAtEndOfLine(line, 'SYNC');
 
-    // The edit went into the last bullet in the SOURCE — assert that before anything downstream, so a
+    // The edit went into the last bullet in the SOURCE - assert that before anything downstream, so a
     // caret that landed in the wrong block fails here rather than passing on a looser check later.
     await waitFor(
       async () =>
@@ -263,7 +263,7 @@ export const Spec: Story = {
     );
 
     // The heading is still a heading. A source edit that landed at offset 0 would demote it to a
-    // paragraph by pushing text in front of the `#` — which is exactly how the bad caret was caught.
+    // paragraph by pushing text in front of the `#` - which is exactly how the bad caret was caught.
     await expect(editor.querySelector('h1')?.textContent).toBe('One object, two editorsEDIT');
     // Marks survive an edit from the source side, since the lens re-parses rather than re-serializing.
     await expect(editor.querySelector('strong')?.textContent).toBe('what is stored');

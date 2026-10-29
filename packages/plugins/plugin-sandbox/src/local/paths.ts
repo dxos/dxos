@@ -12,8 +12,8 @@ import { isAbsolute, join, normalize, relative, sep } from 'node:path';
 export const WORKSPACE_PATH = '/workspace';
 
 /**
- * Maps a sandbox path to the host path it lives at: `/workspace/…` and relative paths resolve
- * inside `workspaceDir`. Any other absolute path, or one that climbs out with `..`, is refused —
+ * Maps a sandbox path to the host path it lives at: `/workspace/...` and relative paths resolve
+ * inside `workspaceDir`. Any other absolute path, or one that climbs out with `..`, is refused -
  * file transfer must never become a way to read or write the host outside the sandbox.
  */
 export const resolveSandboxPath = (workspaceDir: string, path: string): string => {

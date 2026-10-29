@@ -12,7 +12,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
 /**
- * A reusable bundle of skills the agent works in — interviewer, note-taker, relay (docs/ONTOLOGY.md
+ * A reusable bundle of skills the agent works in - interviewer, note-taker, relay (docs/ONTOLOGY.md
  * §3 "Mode"). Owned by the agent; a chat's current mode is recorded on the chat (see {@link getCurrent}).
  */
 export class Mode extends Type.makeObject<Mode>(DXN.make('org.dxos.type.agent.mode', '0.1.0'))(

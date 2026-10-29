@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Dsl, type Semantic } from '@dxos/diagram';
 
 /**
- * What a `display.diagram` panel carries: plugin-illustrator's semantic diagram DSL (`.dx`) — the
+ * What a `display.diagram` panel carries: plugin-illustrator's semantic diagram DSL (`.dx`) - the
  * `diagram`, `group`, `node` and `edge` statements `SemanticEngine` lays out. The log stores the
  * source as written, once it reads without errors, so the web UI compiles exactly what the model
  * wrote. Kept free of DOM, Node and framework code: the host, the web UI and its worker share it.
@@ -34,8 +34,8 @@ const position = (text: string, offset: number): string => {
 
 /**
  * Reads a DSL source the way the engine will, failing on any error with its position so the model
- * can fix the line, and on a document with no `node` to draw. Warnings — a placement hint the
- * engine had to relax — still draw, so they pass.
+ * can fix the line, and on a document with no `node` to draw. Warnings - a placement hint the
+ * engine had to relax - still draw, so they pass.
  */
 export const check = (source: string): Result.Result<string, Problem> => {
   const { diagram, problems } = Dsl.read(source);
@@ -82,7 +82,7 @@ export type Edge = {
   readonly from: string;
   readonly to: string;
   readonly label?: string;
-  /** A relationship word (`extends`, `owns`, `depends-on`, …); absent is a plain `->`. */
+  /** A relationship word (`extends`, `owns`, `depends-on`, ...); absent is a plain `->`. */
   readonly relation?: string;
 };
 
@@ -181,8 +181,8 @@ export const print = ({
 };
 
 /**
- * A graph handed over as a value — by the sandbox, from code that builds a diagram out of query
- * rows — or stored by `display.diagram` before it took the DSL, whose `direction` and `kind` it
+ * A graph handed over as a value - by the sandbox, from code that builds a diagram out of query
+ * rows - or stored by `display.diagram` before it took the DSL, whose `direction` and `kind` it
  * still reads.
  */
 const GraphValue = Schema.Struct({

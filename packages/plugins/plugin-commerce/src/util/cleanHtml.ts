@@ -47,8 +47,8 @@ export type CleanHtmlOptions = {
  * suitable for handing to an LLM to author a scrape template.
  *
  * Removes scripts/styles/media and noisy attributes (inline styles, event handlers, long
- * `data:`/`blob:` URLs), keeps structural attributes (`data-*`, `class`, `href`, `src`, aria, …),
- * collapses whitespace, and truncates. The engine feeds THIS to the LLM — not the raw page —
+ * `data:`/`blob:` URLs), keeps structural attributes (`data-*`, `class`, `href`, `src`, aria, ...),
+ * collapses whitespace, and truncates. The engine feeds THIS to the LLM - not the raw page -
  * so the model can see the repeating listing structure within token limits.
  */
 export const cleanHtml = (html: string, { maxLength = 64_000 }: CleanHtmlOptions = {}): string => {

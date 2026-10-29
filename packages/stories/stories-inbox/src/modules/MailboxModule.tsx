@@ -32,8 +32,8 @@ const MailboxModuleContainer = ({ space, attendableId }: { space: Space; attenda
   const selectionId = mailbox ? GraphPath.getObjectPathFromObject(mailbox) : attendableId;
   useEffect(() => {
     // This story renders the article outside the NavTree, whose traversal normally materializes the
-    // mailbox's graph node as a side effect. Without that, graph.actions(id) — which the connector
-    // plugin's "Connect" action depends on — always returns empty.
+    // mailbox's graph node as a side effect. Without that, graph.actions(id) - which the connector
+    // plugin's "Connect" action depends on - always returns empty.
     if (mailbox) {
       AppGraph.expandPath(graph, GraphPath.getObjectPathFromObject(mailbox));
     }
@@ -45,7 +45,7 @@ const MailboxModuleContainer = ({ space, attendableId }: { space: Space; attenda
 
   // `ModuleContainer` makes each cell attendable under its *positional* id, but the article advertises
   // the mailbox object path (above), so without this the article is never the attended entity and
-  // anything gated on attention — toolbar menus, selection — stays inert. `contents` keeps the
+  // anything gated on attention - toolbar menus, selection - stays inert. `contents` keeps the
   // attendable out of the layout so the cell's height chain is unaffected.
   return selectionId ? (
     <AttendableContainer id={selectionId} classNames='contents'>

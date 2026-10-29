@@ -25,7 +25,7 @@ import { FactsCompanion } from './FactsCompanion.tsx';
 // space, so `FactsCompanion` (space-scoped via `useActiveSpace`) renders real facts.
 const registry = makeFactStoreRegistry();
 
-/** Minimal RDF fact fixture (subject —predicate→ object) for the viewer. */
+/** Minimal RDF fact fixture (subject -predicate-> object) for the viewer. */
 const fact = (id: string, subject: string, predicate: string, object: string): RDF.Fact => ({
   id,
   assertion: {
@@ -78,5 +78,5 @@ type Story = StoryObj<typeof meta>;
 /** Renders the space's extracted facts via the `FactViewer`. */
 export const Default: Story = {};
 
-// NOTE: no interactive `play` test — the seeded-space facts don't resolve in the headless storybook test
+// NOTE: no interactive `play` test - the seeded-space facts don't resolve in the headless storybook test
 // runner; the story renders live in the running storybook (dev server).

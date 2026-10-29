@@ -37,15 +37,15 @@ const UNKNOWN_SENDER: StoryActor = {
 type StoryArgs = {
   /** Person rows to render, in order; the first is the sender. */
   actors?: StoryActor[];
-  /** Emails to seed a Person for — an actor NOT listed here exercises the create-contact affordance. */
+  /** Emails to seed a Person for - an actor NOT listed here exercises the create-contact affordance. */
   contacts?: string[];
 };
 
 /**
- * Header.Root chrome composing shared Row.* primitives — the structure both article headers use.
+ * Header.Root chrome composing shared Row.* primitives - the structure both article headers use.
  *
  * Live rather than static: the star owns its state, and each avatar resolves its actor's contact, so
- * hovering one opens that Person's card (or offers to create the Person when the space has none —
+ * hovering one opens that Person's card (or offers to create the Person when the space has none -
  * always a click, never the hover).
  */
 const DefaultStory = ({ actors = [KNOWN_SENDER] }: StoryArgs) => {

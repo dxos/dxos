@@ -7,7 +7,7 @@
 // exits non-zero if any test is EMPTY or ERROR. Run: node scripts/analyze-results.mjs
 //
 // This is a mechanical gate (did the test produce non-degenerate output?). Answer/summary QUALITY is
-// a separate concern — see the LLM-judge task in TASKS.md.
+// a separate concern - see the LLM-judge task in TASKS.md.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
@@ -50,7 +50,7 @@ const primaryCount = (doc) => {
   }
   if (Array.isArray(doc.rows) && doc.rows.length) {
     // Fact rows carry `facts`/`processed`; graded rows (model-ladder, classify-sender) carry item
-    // counts (`n`/`scored`) with accuracy instead — fall back to the row count so a graded run whose
+    // counts (`n`/`scored`) with accuracy instead - fall back to the row count so a graded run whose
     // rows have no fact tally isn't mis-flagged EMPTY.
     const summed = doc.rows.reduce((sum, r) => sum + (r.facts ?? r.processed ?? r.n ?? r.scored ?? 0), 0);
     return summed || doc.rows.length;

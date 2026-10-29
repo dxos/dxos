@@ -23,7 +23,7 @@ export type MigrateOptions = {
   record: Record<string, unknown>;
 };
 
-// A single lazily-initialized engine — `Panproto.init()` loads the bundled wasm once per process.
+// A single lazily-initialized engine - `Panproto.init()` loads the bundled wasm once per process.
 let enginePromise: Promise<Panproto> | undefined;
 const engine = (): Promise<Panproto> => (enginePromise ??= Panproto.init());
 
@@ -73,6 +73,6 @@ export const migrate = async ({
   }
 
   const compiled = builder.compile();
-  // `liftJson` is typed `unknown` — its output shape is the target lexicon record, not statically known.
+  // `liftJson` is typed `unknown` - its output shape is the target lexicon record, not statically known.
   return compiled.liftJson(record, sourceVertex) as Record<string, unknown>;
 };

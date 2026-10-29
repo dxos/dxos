@@ -99,7 +99,7 @@ export type EditorProps = {
 export const Editor = ({ value, extensions, onChange }: EditorProps) => {
   const themeMode = Hooks.useThemeMode();
   // The callback goes through a ref: an inline `onChange` closure changes identity every render,
-  // and keying the editor on it would recreate CodeMirror — and drop focus — on each keystroke.
+  // and keying the editor on it would recreate CodeMirror - and drop focus - on each keystroke.
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const readOnly = !onChange;
@@ -113,7 +113,7 @@ export const Editor = ({ value, extensions, onChange }: EditorProps) => {
         ...(readOnly ? [] : [mirrorTo((next) => onChangeRef.current?.(next))]),
       ],
     }),
-    // An editable editor owns its text once mounted, so it must NOT key on `value` — recreating it
+    // An editable editor owns its text once mounted, so it must NOT key on `value` - recreating it
     // on every keystroke would lose the cursor. A read-only one has no such state, and keys on
     // `value` so an externally changed document is picked up.
     [themeMode, extensions, readOnly, readOnly ? value : null],
@@ -131,7 +131,7 @@ export type OperationLogProps = {
 };
 
 /**
- * The operation log as a proper list (never a hand-rolled map of spans): a read-only Listbox —
+ * The operation log as a proper list (never a hand-rolled map of spans): a read-only Listbox -
  * flat rows, keyboard traversal for free, `Empty` when nothing has been dispatched yet.
  */
 export const OperationLog = ({ entries }: OperationLogProps) => (

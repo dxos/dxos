@@ -30,7 +30,7 @@ export type ComposeUpdateProps = {
 };
 
 const factLine = (fact: RDF.Fact): string => {
-  const quote = fact.assertion.quote ? ` — "${fact.assertion.quote}"` : '';
+  const quote = fact.assertion.quote ? ` - "${fact.assertion.quote}"` : '';
   const speaker = fact.attribution.agentLabel ? ` (said by ${fact.attribution.agentLabel})` : '';
   return `- ${BrainService.factText(fact)}${quote}${speaker}`;
 };

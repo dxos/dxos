@@ -19,7 +19,7 @@ import { ALL_PROCESS_ENVIRONMENTS, type ProcessEnvironment, filterTraceMessages 
 import { TracePanel, type TracePanelProps } from './TracePanel.tsx';
 
 // Raw Trace.Message[] captured from a live sub-agent delegation via `dxosDumpTrace()`. External
-// JSON → typed at this boundary; `buildExecutionGraph` only reads `meta`/`events`.
+// JSON -> typed at this boundary; `buildExecutionGraph` only reads `meta`/`events`.
 const messages = (subAgentDelegationFixture as unknown as Trace.Message[])
   .slice()
   .sort((a, b) => (a.events[0]?.timestamp ?? 0) - (b.events[0]?.timestamp ?? 0));
@@ -195,7 +195,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * A captured sub-agent delegation: the supervisor, its tool calls and the spawned sub-agent, as the
- * process tree and the commit graph. Click a process to narrow the trace to it; ⌘-click adds one.
+ * process tree and the commit graph. Click a process to narrow the trace to it; Cmd-click adds one.
  */
 export const Default: Story = { args: {} };
 

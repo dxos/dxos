@@ -88,7 +88,7 @@ export default Capability.makeModule(
     const cacheCapabilityAtom = yield* Capability.atom(AssistantCapabilities.CompanionChatCache);
 
     const extensions = yield* Effect.all([
-      // AI section group — created here so it shows only when the assistant plugin is active.
+      // AI section group - created here so it shows only when the assistant plugin is active.
       AppGraphBuilder.createExtension({
         id: GraphPath.GroupSegments.ai,
         match: AppNodeMatcher.whenSpace,

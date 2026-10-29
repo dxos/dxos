@@ -108,7 +108,7 @@ export const MediaArtifactForm = ({
     : true;
   const { graph } = ToolkitHooks.useAppGraph();
   // The deck expands a plank's node; an artifact hosted by another article (a storyboard frame) has
-  // a node of its own that nothing else expands, and an unexpanded node has no actions — no Connect.
+  // a node of its own that nothing else expands, and an unexpanded node has no actions - no Connect.
   useEffect(() => {
     if (!graph || !nodeId || nodeId === attendableId) {
       return;
@@ -181,7 +181,7 @@ export const MediaArtifactForm = ({
 
   // The op publishes a progress monitor under the artifact's id for as long as it runs, so a
   // generation started before this form mounted (navigated away and back, or an agent's) reads as
-  // busy too — `generating` alone dies with the component.
+  // busy too - `generating` alone dies with the component.
   const running = ToolkitHooks.useProgressMonitor(`${StudioNamespace.key}/${artifactId}`) !== undefined;
 
   // A produced variant with a persisted jobId is an in-flight async job whose op is no longer

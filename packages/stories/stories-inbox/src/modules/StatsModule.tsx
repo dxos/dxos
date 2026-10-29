@@ -7,5 +7,5 @@ import React from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as DebugSurface from '@dxos/plugin-debug/DebugSurface';
 
-/** The transient-stats panel — plugin-debug's surface rendering the sync telemetry store. */
+/** The transient-stats panel - plugin-debug's surface rendering the sync telemetry store. */
 export const StatsModule = () => <Surface.Surface type={DebugSurface.Stats} limit={1} />;

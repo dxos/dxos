@@ -30,7 +30,7 @@ import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
 import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
- * Cancel target for a remote (EDGE) run — the {@link Manager.cancel} argument. Addressed by `trigger`
+ * Cancel target for a remote (EDGE) run - the {@link Manager.cancel} argument. Addressed by `trigger`
  * (the stable cross-boundary key) in `space`; `pid` is carried for correlation/telemetry only. Ids are
  * strings to keep this interface free of `@dxos/keys` value imports.
  */
@@ -48,7 +48,7 @@ export interface Snapshot extends Process.Data {
   /**
    * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
    * Distinguishes hybernation waiting on more queued turn work from hybernation waiting only on
-   * background children — the difference between `runToCompletion` and `runUntilSettled`, which
+   * background children - the difference between `runToCompletion` and `runUntilSettled`, which
    * cannot be told apart remotely without it.
    */
   readonly alarmDueAt: number | null;
@@ -82,7 +82,7 @@ export interface EventPage {
   /**
    * Cursor for the next read: the `seq` of the next unread event. A read at `cursor` returns events
    * with `seq >= cursor`, so a read at or beyond the end returns an empty page whose `cursor` is the
-   * current end — which is how a caller subscribes to new events only.
+   * current end - which is how a caller subscribes to new events only.
    */
   readonly cursor: number;
   /**
@@ -140,7 +140,7 @@ export interface ListRequest {
  * A remote host cannot be handed a process definition (it is a closure), so {@link spawn} names one
  * of the host's built-in processes by its `Process.key`.
  *
- * One manager serves all of a client's spaces — the space travels with each call — so a stack needs
+ * One manager serves all of a client's spaces - the space travels with each call - so a stack needs
  * no instance per space.
  *
  * Effects carry no error channel, matching the local manager: transport and host failures surface as
@@ -186,12 +186,12 @@ export interface Manager {
   readonly processTree: Effect.Effect<readonly Process.Process[]>;
   /**
    * Writable so {@link Manager.spawn} publishes into the same atom the aggregate `Process.Manager`
-   * reads — otherwise a remote spawn is invisible in the process tree.
+   * reads - otherwise a remote spawn is invisible in the process tree.
    */
   readonly processTreeAtom: Atom.Writable<readonly Process.Process[]>;
 
   /**
-   * Cancels the current run of a remote (edge) trigger — its in-flight execution and `runAgain`
+   * Cancels the current run of a remote (edge) trigger - its in-flight execution and `runAgain`
    * continuation chain; the trigger itself stays enabled so its schedule keeps firing. Optional:
    * absent in {@link layerNoop} (local-only deployments have no remote runtime to cancel on).
    */
@@ -199,7 +199,7 @@ export interface Manager {
 
   /**
    * Process control, when the remote host offers it. Absent in {@link layerNoop} and in managers
-   * built without an edge client — a monitor-only manager can read and cancel but not spawn.
+   * built without an edge client - a monitor-only manager can read and cancel but not spawn.
    */
   readonly control?: Control;
 
@@ -209,7 +209,7 @@ export interface Manager {
    *
    * Deliberately NOT a `ProcessManager.Manager`: a remote process is not a local one and consuming
    * code picks between the two itself (unifying them, where a caller wants that, belongs a layer
-   * above — `AgentService` does it per session).
+   * above - `AgentService` does it per session).
    */
   readonly spawn?: <_Input, _Output, _Rpcs extends Rpc.Any = never>(
     options: SpawnOptions<_Input, _Output, _Rpcs>,
@@ -233,7 +233,7 @@ export interface Manager {
  * What {@link Manager.spawn} takes: the space to spawn in, the host's key for the process, and the
  * `Process.SpawnOptions` a remote host can honour.
  *
- * Only the `key` crosses the wire — the host resolves it against the processes it hosts — so a
+ * Only the `key` crosses the wire - the host resolves it against the processes it hosts - so a
  * definition is not what identifies a remote process. It supplies the input/output codecs and the
  * RPC group, which is the only reason it is accepted at all; without it the returned handle is a
  * metadata and lifecycle view whose typed surface throws until `Handle.hydrate` attaches one.
@@ -250,13 +250,13 @@ export interface SpawnOptions<_Input = unknown, _Output = unknown, _Rpcs extends
   readonly annotations?: Annotation.Dictionary;
   /**
    * Deduplication token for this spawn (see {@link Idempotent}). A caller that re-issues the same
-   * spawn under the same key — a retry, a reload, a second click — gets the process already spawned
+   * spawn under the same key - a retry, a reload, a second click - gets the process already spawned
    * or already queued rather than a second one.
    */
   readonly idempotencyKey?: string;
 }
 
-/** {@link Manager.list} filters — `ListRequest` plus the one filter the host does not index. */
+/** {@link Manager.list} filters - `ListRequest` plus the one filter the host does not index. */
 export interface ListOptions extends ListRequest {
   readonly parentProcessId?: Process.ID;
 }
@@ -407,7 +407,7 @@ const assertJsonSafe = (annotations: Annotation.Dictionary): void => {
 };
 
 /**
- * Whether a value is what `JSON.parse` could have produced — checked structurally, since a value
+ * Whether a value is what `JSON.parse` could have produced - checked structurally, since a value
  * compared against its own round trip matches however lossy its encoding was.
  */
 const isJsonValue = (value: unknown, seen: Set<object>): boolean => {

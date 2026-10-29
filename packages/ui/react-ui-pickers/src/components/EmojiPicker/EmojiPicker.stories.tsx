@@ -20,7 +20,7 @@ const meta = {
 export default meta;
 
 const ToolbarButtonStory = (props: EmojiPickerProps) => {
-  const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '😀');
+  const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '\u{1F600}');
 
   return (
     <Toolbar.Root>
@@ -30,7 +30,7 @@ const ToolbarButtonStory = (props: EmojiPickerProps) => {
 };
 
 const BlockStory = (props: EmojiPickerProps) => {
-  const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '😀');
+  const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '\u{1F600}');
 
   return (
     <div>
@@ -38,7 +38,7 @@ const BlockStory = (props: EmojiPickerProps) => {
         {...props}
         emoji={emoji}
         onChangeEmoji={setEmoji}
-        onClickClear={() => setEmoji(props.defaultEmoji ?? '😀')}
+        onClickClear={() => setEmoji(props.defaultEmoji ?? '\u{1F600}')}
       />
     </div>
   );
@@ -47,13 +47,13 @@ const BlockStory = (props: EmojiPickerProps) => {
 export const ToolbarButton: StoryObj<EmojiPickerProps> = {
   render: ToolbarButtonStory,
   args: {
-    defaultEmoji: '😀',
+    defaultEmoji: '\u{1F600}',
   },
 };
 
 export const Block: StoryObj<EmojiPickerProps> = {
   render: BlockStory,
   args: {
-    defaultEmoji: '😀',
+    defaultEmoji: '\u{1F600}',
   },
 };

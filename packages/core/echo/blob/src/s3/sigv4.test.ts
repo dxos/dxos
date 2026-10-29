@@ -8,7 +8,7 @@ import { encodeObjectKey, formatTimestamps, presignUrl, sha256Hex, signRequest, 
 
 /**
  * Credentials and timestamp from the published AWS SigV4 examples. The expected signatures below are
- * AWS's own — they are what makes these tests evidence that the implementation is correct, rather
+ * AWS's own - they are what makes these tests evidence that the implementation is correct, rather
  * than merely self-consistent.
  */
 const CREDENTIALS = {
@@ -37,7 +37,7 @@ describe('sigv4', () => {
     expect(encodeObjectKey('space id/a b.png')).toBe('space%20id/a%20b.png');
   });
 
-  // https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html — GET Object.
+  // https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html - GET Object.
   test('matches the AWS GET Object header-auth vector', async ({ expect }) => {
     const headers = await signRequest({
       method: 'GET',

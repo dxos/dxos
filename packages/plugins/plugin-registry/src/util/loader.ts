@@ -61,7 +61,7 @@ const loadFailures = new Map<string, Error>();
  * Builds a registrable plugin for an installed record **without importing its module**.
  *
  * The record cached the plugin's own metadata at install time, which is everything the manager
- * needs to catalog it — including `dependsOn`, so dependency resolution works on a plugin whose
+ * needs to catalog it - including `dependsOn`, so dependency resolution works on a plugin whose
  * code has never run. That makes `enable` the first moment third-party code executes, rather than
  * every `dx` invocation paying for every installed plugin.
  *
@@ -84,7 +84,7 @@ export const makeInstalledPlugin = (record: PluginRecord): Plugin.Plugin | undef
   //
   // A failed import degrades to a plugin contributing nothing rather than propagating: the
   // manager resolves lazy plugins inside its initialization chain, so a throw here becomes a
-  // `PluginInitializationError` that takes down every `dx` command — including the `plugin list`
+  // `PluginInitializationError` that takes down every `dx` command - including the `plugin list`
   // and `plugin remove` the user needs to get out of it. The failure is recorded instead, and
   // `plugin list` reads it back.
   const loader: Plugin.LazyLoader<void> = () =>
@@ -105,7 +105,7 @@ export const getLoadFailure = (id: string): Error | undefined => loadFailures.ge
 /**
  * Turns a profile's records into plugins the manager can register.
  *
- * Compiled-in plugins have no `source` and are skipped — the binary already supplies them.
+ * Compiled-in plugins have no `source` and are skipped - the binary already supplies them.
  */
 export const makeInstalledPlugins = (records: readonly PluginRecord[]): Plugin.Plugin[] =>
   records

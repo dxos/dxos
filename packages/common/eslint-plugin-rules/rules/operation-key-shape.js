@@ -10,12 +10,12 @@ import { dirname, join } from 'node:path';
 /**
  * The canonical shape: `<root>.operation.<domain>.<verbNoun>`.
  *
- * `<domain>` is the defining package, which is what makes this checkable at all — a rule can read
+ * `<domain>` is the defining package, which is what makes this checkable at all - a rule can read
  * package.json, where a judgement like "name it after the subject" could never be verified.
  */
 const KEY_RE = /^(org\.dxos|com\.example|org\.example)\.operation\.([a-z][a-zA-Z0-9]*)\.([a-z][a-zA-Z0-9]*)$/;
 
-/** A fixture may omit the domain — `com.example.operation.fib` names no package and owns none. */
+/** A fixture may omit the domain - `com.example.operation.fib` names no package and owns none. */
 const FIXTURE_KEY_RE = /^(com\.example|org\.example)\.operation\.([a-z][a-zA-Z0-9]*)(\.[a-z][a-zA-Z0-9]*)*$/;
 
 /**
@@ -238,7 +238,7 @@ export default {
     },
     messages: {
       notLiteral:
-        'Operation key must be a string literal, not built by a helper — otherwise the key cannot be found by searching for it.',
+        'Operation key must be a string literal, not built by a helper - otherwise the key cannot be found by searching for it.',
       badShape: 'Operation key "{{key}}" must match `<root>.operation.<package>.<verbNoun>`.',
       wrongDomain: 'Operation key "{{key}}" must use the defining package as its domain: expected "{{domain}}".',
       fixtureRoot:
@@ -257,7 +257,7 @@ export default {
 
     /**
      * Resolves a bare identifier to the string a module-scope `const` initialises it with, so a
-     * `const KEY = '...'` indirection is still held to the shape rules — the key is greppable, it
+     * `const KEY = '...'` indirection is still held to the shape rules - the key is greppable, it
      * is just named once. Anything the scope analysis cannot pin down stays unresolved.
      */
     const literalOf = (node) => {
@@ -370,7 +370,7 @@ export default {
           return;
         }
 
-        // Anything else — a helper call or a template literal — hides the key.
+        // Anything else - a helper call or a template literal - hides the key.
         const key = literalOf(value);
         if (key !== undefined) {
           check(value, key);

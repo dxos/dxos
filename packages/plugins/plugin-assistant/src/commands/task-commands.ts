@@ -23,7 +23,7 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
       }
       Chat.addTask(db, chat, title);
       await db.flush();
-      return { summary: `Created task “${title}”.` };
+      return { summary: `Created task "${title}".` };
     },
   },
   {
@@ -97,7 +97,7 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
         followUp: trim`
           The user delegated EXACTLY these task(s) with the /task:run command: ${runnable.map((task) => `"${task.title}"`).join(', ')}.
           They are queued and will execute in the background. Acknowledge in one short
-          sentence now, and when their completion is reported, acknowledge briefly and stop —
+          sentence now, and when their completion is reported, acknowledge briefly and stop -
           the user scoped this run to those tasks only, so never delegate, start, or work on
           any other task.
         `,
@@ -154,4 +154,4 @@ const resolveSelectors = (args: string, tasks: readonly Task.Task[]) => {
 };
 
 const summarize = (verb: string, tasks: readonly Task.Task[]): string =>
-  `${verb} ${tasks.map((task) => `“${task.title}”`).join(', ')}.`;
+  `${verb} ${tasks.map((task) => `"${task.title}"`).join(', ')}.`;

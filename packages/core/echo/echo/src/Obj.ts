@@ -134,9 +134,9 @@ const defaultMeta = (): internal.EntityMeta => ({
 /**
  * Props type for object creation with a given type. Accepts a `Type.AnyObj`
  * entity and derives the instance shape via `Type.InstanceType`. Relation-kind
- * entities are rejected at the type level — use `Relation.MakeProps` for those.
+ * entities are rejected at the type level - use `Relation.MakeProps` for those.
  *
- * When the schema is the unconstrained `Type.AnyObj` (`Obj<unknown>` — e.g. a
+ * When the schema is the unconstrained `Type.AnyObj` (`Obj<unknown>` - e.g. a
  * dynamic type from `schemaRegistry.register`), the instance shape is not
  * statically known, so data props widen to `Record<string, unknown>` and the
  * caller can pass arbitrary fields without a cast.
@@ -147,8 +147,8 @@ export type MakeProps<S extends Type.AnyObj> = {
   [Parent]?: Unknown;
   // When the resolved instance has no known data keys, widen to a permissive
   // record (the `Obj<unknown>` case); otherwise use the precise property shape.
-  // `[keyof …] extends [never]` is wrapped in tuples so the check is
-  // non-distributive — a `never` instance type (e.g. when narrowing collapses
+  // `[keyof ...] extends [never]` is wrapped in tuples so the check is
+  // non-distributive - a `never` instance type (e.g. when narrowing collapses
   // the schema) stays a single branch instead of distributing to `never`.
 } & ([keyof Entity.Properties<Type.InstanceType<S>>] extends [never]
   ? Record<string, unknown>
@@ -371,7 +371,7 @@ export type CloneOptions = {
   /**
    * Recursively clone referenced objects.
    * - `'parent'`: clone only refs whose target is transitively parented under the clone root (children
-   *   that cascade-delete with it); shared refs (registry operations, context objects, …) are copied as-is.
+   *   that cascade-delete with it); shared refs (registry operations, context objects, ...) are copied as-is.
    * - `'all'`: clone every referenced object recursively.
    * Omit for a shallow clone (refs copied as-is).
    */
@@ -515,13 +515,13 @@ export type ID = EntityId;
  * }
  * ```
  *
- * Only accepts `Type.AnyObj` — use `Relation.instanceOf` for relations and
+ * Only accepts `Type.AnyObj` - use `Relation.instanceOf` for relations and
  * `Type.isType(value)` to test for `Type.Type` meta-schema entities.
  *
  * @performance O(1) type-URI comparison with a typename fallback; no schema validation.
  */
 export const instanceOf: {
-  // Reject `Type.Type` at the type level — those are meta-schema entities, not
+  // Reject `Type.Type` at the type level - those are meta-schema entities, not
   // object instances. Use `Type.isType(value)` instead.
   <T extends Type.Type>(
     type: T,
@@ -529,7 +529,7 @@ export const instanceOf: {
     // eslint-disable-next-line @typescript-eslint/unified-signatures
     ..._error: ['ERROR: Obj.instanceOf does not accept Type.Type; use Type.isType(value) instead']
   ): never;
-  // Reject relation types — use `Relation.instanceOf` instead.
+  // Reject relation types - use `Relation.instanceOf` instead.
   <R extends Type.AnyRelation>(
     type: R,
     _hint?: never,
@@ -598,7 +598,7 @@ export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOpti
 /**
  * Get the object's mnemonic: the last 6 characters of its id, uppercased.
  * Short enough to read out or type, and stable for the life of the object, so it is how a
- * person names a particular object — in a log line, a UI chip, or `Filter.mnemonic(...)`.
+ * person names a particular object - in a log line, a UI chip, or `Filter.mnemonic(...)`.
  * Accepts both reactive objects and snapshots.
  *
  * @example
@@ -654,7 +654,7 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
  * Accepts both reactive objects and snapshots.
  *
  * @idiom org.dxos.echo.objGetDatabase
- *   applies: Reaching an object's database — to query, add, or remove — when the surrounding Space is not otherwise needed
+ *   applies: Reaching an object's database - to query, add, or remove - when the surrounding Space is not otherwise needed
  *   instead-of: `getSpace(obj)?.db` (resolving the whole Space just to read its `.db`)
  *   uses: {@link getDatabase}
  *
@@ -665,7 +665,7 @@ export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.
 
 /**
  * Get the branch this object instance is bound to: `'main'` for the canonical object, or the branch of
- * a `db.branch()` independent instance. The branch is a property of the instance — two instances of the
+ * a `db.branch()` independent instance. The branch is a property of the instance - two instances of the
  * same object id on different branches each report their own branch.
  *
  * @performance O(1) slot read.
@@ -673,7 +673,7 @@ export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.
 export const getBranch = (obj: Unknown): string => internal.getBranch(obj);
 
 /**
- * Get an immutable snapshot of the object at the given historical heads — a detached instance, not a
+ * Get an immutable snapshot of the object at the given historical heads - a detached instance, not a
  * pin on the live object. Only the surface that asks for it sees the historical value; the live
  * object and every other surface are unaffected. The functional alternative to a read-time-travel pin.
  *
@@ -706,7 +706,7 @@ export type GetChangesOptions<K extends string = string> = {
  * @example
  * ```ts
  * for (const { time, before, after } of Obj.getChanges(task, { property: 'status' })) {
- *   console.log(new Date(time), before, '→', after);
+ *   console.log(new Date(time), before, '->', after);
  * }
  * ```
  *
@@ -864,7 +864,7 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
 /**
  * Get the icon annotation for the object (or any entity), resolved via its type-level
  * `IconAnnotation`. Accepts both reactive entities and snapshots, and either Objects or
- * Relations — the underlying schema-based lookup works for both.
+ * Relations - the underlying schema-based lookup works for both.
  *
  * Returns the full `{ icon, hue }` annotation; callers wanting just the icon name typically
  * write `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
@@ -944,7 +944,7 @@ const parentRefsChild = (parent: Any, childId: EntityId): boolean => {
  * If a parent (or any transitive parent) is deleted, the object will be deleted.
  * Only objects are allowed to have a parent.
  *
- * The parent must hold a ref to the child (in its data, or in an object annotation — e.g.
+ * The parent must hold a ref to the child (in its data, or in an object annotation - e.g.
  * `Chat.CompanionChatAnnotation`); a ref-less edge currently only warns while call sites are swept.
  *
  * @performance O(n) in parent size: scans the parent data and annotations for a ref to the child before the O(1) write.
@@ -1211,11 +1211,11 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 /**
  * Create a reactive snapshot atom for an ECHO object or ref.
  * Use inside atom computations (e.g. `Atom.make((get) => get(Obj.atom(ref)))`) to subscribe
- * to a ref's target — the atom re-fires when the target loads or changes.
+ * to a ref's target - the atom re-fires when the target loads or changes.
  *
  * @idiom org.dxos.echo.objAtomReactive
  *   applies: Subscribing to a ref's target inside an atom computation or a non-React reactive context
- *   instead-of: `ref.target` — synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never notifies when it becomes available
+ *   instead-of: `ref.target` - synchronous and not reactive; returns `undefined` when the target isn't loaded yet and never notifies when it becomes available
  *   uses: {@link atom}
  *   related: org.dxos.echo-react.useObjectReactive
  *

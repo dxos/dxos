@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { type Organization, type Person } from '@dxos/types';
 
 /**
- * Candidate image URLs for a contact, best first. Pure derivation — no network: the caller attempts
+ * Candidate image URLs for a contact, best first. Pure derivation - no network: the caller attempts
  * each candidate through the hardened attach-image path (which validates, size-caps, and re-hosts),
  * and the services are chosen so a miss is a clean failure rather than a placeholder:
  *

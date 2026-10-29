@@ -54,7 +54,7 @@ const pickTarget = (targets: readonly Type.Target[], volatile: Volatile): Type.T
   return undefined;
 };
 
-/** Seed the frontier with the configured top-level channels (idempotent — only when empty). */
+/** Seed the frontier with the configured top-level channels (idempotent - only when empty). */
 const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, StateStore.StateStore> =>
   Effect.gen(function* () {
     const existing = yield* StateStore.listTargets();
@@ -69,8 +69,8 @@ const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, Stat
 /**
  * One bounded crawl step: fetch the next page for the top frontier target and return the events it
  * produces. `Option.none` when the frontier is exhausted for this run. Durable writes here are
- * limited to lifecycle bookkeeping that is safe at fetch time (pending→active, fetch-error, thread
- * discovery — all idempotent); cursor advancement and terminal `done` status belong to {@link commit}.
+ * limited to lifecycle bookkeeping that is safe at fetch time (pending->active, fetch-error, thread
+ * discovery - all idempotent); cursor advancement and terminal `done` status belong to {@link commit}.
  */
 const advance = (
   config: Type.Config,
@@ -97,7 +97,7 @@ const advance = (
       );
     }
 
-    // A source fetch can fail (typed error) OR die (defect — e.g. dfx/proxy surfacing a 403 as a
+    // A source fetch can fail (typed error) OR die (defect - e.g. dfx/proxy surfacing a 403 as a
     // throw). Either way it is isolated to this target: mark it errored and continue with the rest
     // of the frontier rather than aborting the whole crawl.
     const fetched = yield* Effect.exit(
@@ -111,7 +111,7 @@ const advance = (
     if (Exit.isFailure(fetched)) {
       const error = Cause.squash(fetched.cause);
       const reason = error instanceof Error ? error.message : String(error);
-      yield* Effect.logWarning(`crawl: skipping ${target.id} — ${reason}`);
+      yield* Effect.logWarning(`crawl: skipping ${target.id} - ${reason}`);
       yield* StateStore.setStatus(target.id, 'error', reason);
       volatile.done.add(target.id);
       return Option.some(Chunk.fromIterable(events));
@@ -122,7 +122,7 @@ const advance = (
       events.push({ _tag: 'Message', target: current, message });
     }
 
-    // Push discovered threads on top of the frontier ⇒ they are drained before this target resumes.
+    // Push discovered threads on top of the frontier => they are drained before this target resumes.
     // Idempotent (existing ids are ignored), so safe at fetch time.
     if (config.descendThreads && target.depth < (config.maxDepth ?? Number.POSITIVE_INFINITY)) {
       yield* StateStore.pushTargets(
@@ -152,7 +152,7 @@ const advance = (
 
 /**
  * The crawl as a pull-based stream of typed events. All resumable state lives in the
- * {@link StateStore}; interrupting the stream (or hitting `maxSteps`) is safe — a later stream over
+ * {@link StateStore}; interrupting the stream (or hitting `maxSteps`) is safe - a later stream over
  * the same store refetches from the last COMMITTED cursor (see {@link commit}). Compose with
  * `@dxos/pipeline` stages and drain with `Pipeline.run({ sink: Crawler.commit })`.
  */

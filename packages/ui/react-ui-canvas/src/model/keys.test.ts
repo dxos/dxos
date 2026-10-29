@@ -51,7 +51,7 @@ describe('keys', () => {
     }
     expect(shortcutLabel({ key: 'Home' })).toBe('Home');
     expect(shortcutLabel({ key: 'z', meta: true, shift: true })).toMatch(/Z$/);
-    expect(shortcutLabel({ key: 'ArrowLeft', alt: true })).toMatch(/←$/);
+    expect(shortcutLabel({ key: 'ArrowLeft', alt: true })).toMatch(/\u2190$/);
     // A shifted digit reads as its key cap, since Shift is already shown.
     expect(shortcutLabel({ key: ')', shift: true })).toMatch(/0$/);
     expect(shortcutLabel({ key: '!', shift: true })).toMatch(/1$/);

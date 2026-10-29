@@ -9,7 +9,7 @@ export type InvalidationHint = {
   spaceIds?: ReadonlySet<SpaceId>;
   queueIds?: ReadonlySet<EntityId>;
   /**
-   * Canonical typenames (version-less) — see {@link canonicalTypename}.
+   * Canonical typenames (version-less) - see {@link canonicalTypename}.
    * A type filter matches every version of a typename, so invalidation keys on the bare typename.
    * Query scopes are canonicalized the same way, so hints and scopes compare with a plain set overlap.
    */

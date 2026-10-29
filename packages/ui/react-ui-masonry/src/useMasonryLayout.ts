@@ -15,7 +15,7 @@ export const ESTIMATED_TILE_HEIGHT = 280;
 /**
  * Tile heights measured anywhere in the app, keyed by the caller's `cacheKey`, the tile id, and the
  * column width the tile was measured at. Module scope on purpose: a grid unmounts whenever its tab
- * or route does, and re-measuring from scratch is what makes a remount wait — hidden — for the
+ * or route does, and re-measuring from scratch is what makes a remount wait - hidden - for the
  * layout to settle. With a warm entry the first layout is already final, so the grid can be shown on
  * the first frame.
  *
@@ -62,7 +62,7 @@ export type MasonryLayout = LayoutResult & {
   measured: boolean;
   cachedAtFirstLayout: boolean | undefined;
   /**
-   * Ids the layout has some height for — measured now, or remembered from a previous mount or width.
+   * Ids the layout has some height for - measured now, or remembered from a previous mount or width.
    * Anything outside this set is sitting at a guess and should not be painted.
    */
   knownIds: ReadonlySet<string>;
@@ -87,7 +87,7 @@ export type UseMasonryLayoutOptions = {
   perimeter?: boolean;
   /**
    * Scope for remembered tile heights, e.g. the collection's URI. Omit when ids are not stable and
-   * unique across the app (the default index ids are not) — heights are then per-instance, and a
+   * unique across the app (the default index ids are not) - heights are then per-instance, and a
    * remount re-measures.
    */
   cacheKey?: string;
@@ -232,7 +232,7 @@ export const useMasonryLayout = ({
     }
 
     // Height for each tile, best source first: measured this mount, remembered at this exact column
-    // width (as good as measured — the tile has not reflowed), remembered at some other width (a
+    // width (as good as measured - the tile has not reflowed), remembered at some other width (a
     // close estimate, since content usually dominates), else the running average.
     if (cachedAtFirstLayout.current === undefined && containerWidth > 0) {
       cachedAtFirstLayout.current = allCached(cacheKey, ids, columnWidth);

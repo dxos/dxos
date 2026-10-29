@@ -144,7 +144,7 @@ export class TermStore {
   /** Approximate quad count at the last ANALYZE (re-run when the store doubles). */
   #analyzedAt = 0;
   #approxCount = 0;
-  /** Term key → id; bounded, cleared wholesale when full. */
+  /** Term key -> id; bounded, cleared wholesale when full. */
   #cache = new Map<string, number>();
   #dtIds = new Map<string, number>();
   #dtIris = new Map<number, string>();
@@ -223,7 +223,7 @@ export class TermStore {
     return this.#dtIds.get(iri) ?? -1;
   }
 
-  /** Interns terms (creating missing ones) and returns key → id. */
+  /** Interns terms (creating missing ones) and returns key -> id. */
   intern(encs: Map<string, Enc>): Map<string, number> {
     const ids = new Map<string, number>();
     let todo: { key: string; enc: Enc; seed: number }[] = [];
@@ -312,7 +312,7 @@ export class TermStore {
     this.insertIds(rows);
     this.#approxCount += rows.length;
     if (this.autoAnalyze && this.#approxCount >= 2 * Math.max(this.#analyzedAt, 2000)) {
-      // Without planner statistics SQLite guesses join orders and picks badly (Q6: 570 ms → 2 ms).
+      // Without planner statistics SQLite guesses join orders and picks badly (Q6: 570 ms -> 2 ms).
       this.sql.exec('ANALYZE');
       this.#analyzedAt = this.#approxCount;
       this.sql.exec(`INSERT OR REPLACE INTO meta (k, v) VALUES ('analyzedAt', ?)`, String(this.#analyzedAt));

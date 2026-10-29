@@ -7,7 +7,7 @@ import type * as Theme from '@dxos/react-ui/Theme';
 export const translationKey = '@dxos/react-ui-transcription';
 
 /**
- * Strings for the controls this package renders. Owned here rather than by a consuming plugin —
+ * Strings for the controls this package renders. Owned here rather than by a consuming plugin -
  * a component that renders no text until a caller names a namespace cannot be dropped into a story
  * or another package without that caller also shipping its strings.
  */

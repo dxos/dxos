@@ -34,7 +34,7 @@ export type UseNoteAnalyzerOptions = {
   silent?: boolean;
   /** Input gain (dB) applied before analysis and the visualizers. */
   gain?: number;
-  /** Strike sensitivity (0–1). */
+  /** Strike sensitivity (0-1). */
   sensitivity?: number;
   /** Note templates to detect chords against; `undefined` reports single notes only. */
   chordTemplates?: ChordTemplate[];

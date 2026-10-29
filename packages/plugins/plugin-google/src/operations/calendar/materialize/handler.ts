@@ -15,7 +15,7 @@ import { CalendarForeignKeyWrongTypeError } from '../../../errors.ts';
 
 /**
  * Find-or-create the local Calendar materialized for this remote calendar id.
- * Idempotent within a space — keyed by `Obj.Meta.keys` matching
+ * Idempotent within a space - keyed by `Obj.Meta.keys` matching
  * `{ source: 'com.google', id }`.
  */
 const findOrCreateCalendar = (remoteId: string, name: string) =>
@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGoogleCal
           return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
-        //   have it provided by the OperationInvoker — composer's invoker is wired
+        //   have it provided by the OperationInvoker - composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;

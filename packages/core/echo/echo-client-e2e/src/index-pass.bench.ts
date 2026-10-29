@@ -13,7 +13,7 @@ import { parseBenchCount } from './testing/bench-util.ts';
 
 //
 // What an index request costs when there is little or nothing to index. Composer asks for one on every flush, so
-// the floor of a pass — finding no new input, then re-running the live queries it would invalidate — is paid far
+// the floor of a pass - finding no new input, then re-running the live queries it would invalidate - is paid far
 // more often than a pass that indexes anything.
 //
 // One peer holds OBJECT_COUNT objects with LIVE_QUERY_COUNT live queries over them. `nothing changed` requests an

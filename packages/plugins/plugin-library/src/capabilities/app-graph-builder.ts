@@ -22,7 +22,7 @@ import { Book } from '#types';
 import { LibraryNamespace } from '../namespace.ts';
 import { LIBRARY_KEY, getBooksPath } from '../paths.ts';
 
-/** The companion segment/variant for the notes editor — shared with its surface binding. */
+/** The companion segment/variant for the notes editor - shared with its surface binding. */
 export const NOTES_COMPANION_VARIANT = 'notes';
 
 /** Matches a Book object node, so its notes companion appears alongside the book article. */

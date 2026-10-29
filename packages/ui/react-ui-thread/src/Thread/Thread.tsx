@@ -51,7 +51,7 @@ export type ThreadRootProps = PropsWithChildren<
  * Headless root of a thread. Provides message-tile context (metadata resolver,
  * injected renderers, callbacks). Requires an ambient `Dnd.Root` ancestor,
  * within which `Thread.Messages` renders its virtual stack. Renders no DOM of
- * its own — wrap the visible thread chrome in `Thread.Content`.
+ * its own - wrap the visible thread chrome in `Thread.Content`.
  */
 const ThreadRoot = ({
   children,
@@ -159,7 +159,7 @@ export type ThreadHeaderProps = Omit<
 /**
  * Thread header row: caret (rail) · snippet (content) · controls. Owns its own
  * `[rail · 1fr · controls]` grid so the trailing controls align with message-tile
- * controls (which use the same template) — no grid is leaked in from the caller.
+ * controls (which use the same template) - no grid is leaked in from the caller.
  */
 const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
   ({ title, timestamp, detached, current, controls, onSelect, ...props }, forwardedRef) => {
@@ -223,7 +223,7 @@ type MessageGroupItem = { kind: 'group'; id: string; messages: MessageType.Messa
 /**
  * A divider row between groups: day-labeled (calendar-day boundary) or plain
  * (a same-day gap exceeding `gapDividerMs`). Day boundaries take priority
- * when both coincide on the same message — see `groupMessages`.
+ * when both coincide on the same message - see `groupMessages`.
  */
 type DividerItem = { kind: 'divider'; id: string; label?: string };
 

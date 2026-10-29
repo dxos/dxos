@@ -18,8 +18,8 @@ export type FileCardProps = AppSurface.ObjectCardProps<File.File>;
 
 /**
  * A file's card body: an image or a video's first frame as the poster, any other kind as its type
- * and size. Rendered into the `AppSurface.CardContent` slot — the host owns `Card.Root` and the
- * header with the file's name — so a file embedded in a chat, or previewed from a link, shows what
+ * and size. Rendered into the `AppSurface.CardContent` slot - the host owns `Card.Root` and the
+ * header with the file's name - so a file embedded in a chat, or previewed from a link, shows what
  * it holds rather than a form of its properties.
  */
 export const FileCard = ({ subject: file }: FileCardProps) => {
@@ -61,7 +61,7 @@ FileCard.displayName = 'FileCard';
 
 export default FileCard;
 
-/** `1.2 MB` — the unit that keeps the number under four digits. */
+/** `1.2 MB` - the unit that keeps the number under four digits. */
 const formatSize = (bytes: number): string => {
   const units = ['B', 'KB', 'MB', 'GB'];
   let value = bytes;

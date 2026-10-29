@@ -18,7 +18,7 @@ export const CUSTOM_PROVIDER_ID = 'custom';
 
 /**
  * `localStorage` key prefix for redirect-flow OAuth pending state. The key
- * itself is built via {@link pendingConnectionStorageKey} — call sites
+ * itself is built via {@link pendingConnectionStorageKey} - call sites
  * shouldn't concatenate the prefix manually.
  */
 const CONNECTION_PENDING_KEY_PREFIX = 'dxos:connection-pending:' as const;
@@ -42,7 +42,7 @@ export const CONNECTIONS_SECTION_ID = 'connections';
 export const CONNECTIONS_SECTION_TYPE = `org.dxos.plugin.connector.space-settings`;
 
 /**
- * Deck navigation subject for a specific connection inside a space — used
+ * Deck navigation subject for a specific connection inside a space - used
  * to open a freshly created connection after the finalization step. The
  * connections section is nested under the space's settings section, so the
  * subject must include the `settings` segment to resolve through the graph.
@@ -51,7 +51,7 @@ export const connectionDeckSubject = (spacePath: string, connectionId: string): 
   `${connectionsDeckSubject(spacePath)}/${connectionId}`;
 
 /**
- * Deck navigation subject for a space's Connections section itself — where to land when a specific
+ * Deck navigation subject for a space's Connections section itself - where to land when a specific
  * connection stops existing, since its own subject no longer resolves once it is deleted.
  */
 export const connectionsDeckSubject = (spacePath: string): string =>

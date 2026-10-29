@@ -10,7 +10,7 @@ import { type ThemeColorParams, cssColorToOklch, processEmailColors } from './tr
 
 // Email-specific rules layered on the sandbox's base CSS.
 const EMAIL_CSS = [
-  // Links take the app accent so authored link colors don't render illegibly against the app surface —
+  // Links take the app accent so authored link colors don't render illegibly against the app surface -
   // even for emails not otherwise recolored. The accent token is referenced directly: custom properties
   // inherit across the shadow boundary and resolve in the shadow's render context (correct light/dark).
   // Button-style links (own background) are excluded so their design is preserved.
@@ -24,15 +24,15 @@ const EMAIL_CSS = [
   'font:inherit;font-size:13px;line-height:1;letter-spacing:1px;color:inherit;',
   'background:color-mix(in oklab, currentColor 16%, transparent);}',
   '.dx-email-quote-toggle:hover{background:color-mix(in oklab, currentColor 28%, transparent);}',
-  // `Domino.svg` sizes the icon with Tailwind utilities, which do not cross the shadow boundary — the
-  // app's stylesheet is not in this root — so the sprite is sized here instead.
+  // `Domino.svg` sizes the icon with Tailwind utilities, which do not cross the shadow boundary - the
+  // app's stylesheet is not in this root - so the sprite is sized here instead.
   '.dx-email-quote-toggle svg{width:1em;height:1em;flex-shrink:0;fill:currentColor;}',
   // Normalizes typography to the app font so themed mail reads natively. Gated on the class the theming
   // transform adds, so a body left as authored keeps its own type.
   '.dx-email-themed *:not(code):not(pre):not(code *):not(pre *){font-family:inherit!important;line-height:1.5!important;}',
 ].join('');
 
-// Wrappers email clients use for quoted reply/forward history (the content that follows "On … wrote:").
+// Wrappers email clients use for quoted reply/forward history (the content that follows "On ... wrote:").
 const QUOTE_SELECTORS = [
   '.gmail_quote_container',
   '.gmail_quote',
@@ -43,7 +43,7 @@ const QUOTE_SELECTORS = [
   'blockquote[type="cite"]',
 ].join(',');
 
-/** The shadow host, which survives content rebuilds — where transform state outlives a re-parse. */
+/** The shadow host, which survives content rebuilds - where transform state outlives a re-parse. */
 const getHost = (root: HTMLElement): HTMLElement | undefined => {
   const shadow = root.getRootNode();
   return shadow instanceof ShadowRoot ? (shadow.host as HTMLElement) : undefined;
@@ -55,7 +55,7 @@ const getHost = (root: HTMLElement): HTMLElement | undefined => {
  * quote.
  *
  * The open state is stored on the host element rather than in React, because the content is re-parsed
- * on every rebuild (a theme change, say) while the host persists — so an opened quote stays open
+ * on every rebuild (a theme change, say) while the host persists - so an opened quote stays open
  * without the dialect needing to be stateful.
  */
 const collapseQuotedReply: HtmlTransform = (root) => {
@@ -120,10 +120,10 @@ const sitsOnPaintedBackground = (element: Element, root: Element): boolean => {
  *
  * Checking the anchor's own inline background is not enough: the near-universal email button is a
  * painted `<td>`/`<div>` wrapping a bare `<a>`, which would otherwise have its white label rewritten
- * to the app accent — blue on blue. This mirrors the recolor policy, which likewise leaves text alone
+ * to the app accent - blue on blue. This mirrors the recolor policy, which likewise leaves text alone
  * once the sender painted something behind it.
  *
- * Runs after theming, so it sees the backgrounds that actually survived `stripContentBackgrounds` —
+ * Runs after theming, so it sees the backgrounds that actually survived `stripContentBackgrounds` -
  * a link whose light background was dropped is back on the app surface and does want the accent.
  */
 const markButtonLinks: HtmlTransform = (root) => {
@@ -161,13 +161,13 @@ const readThemeParams = (container: Element): ThemeColorParams | undefined => {
 /**
  * The light/dark policy. Only one thing earns an exemption from recoloring: a sender's own dark design
  * that is actually on screen. Everything else is recolored to the app theme, whatever it declared and
- * whatever its layout — a body rendering as a white sheet inside a dark app is not a dark mode, and a
+ * whatever its layout - a body rendering as a white sheet inside a dark app is not a dark mode, and a
  * `color-scheme: light` declaration says the sender has no dark design of their own, not that ours is
  * unwelcome.
  *
  * Dropping the old table-layout exemption cost little: it was there to preserve bulk-mail *design*,
  * but sanitization strips `<style>` (DESIGN.md §2), so it only ever preserved inline styles and table
- * structure. Intentional colored backgrounds still survive either way — `stripContentBackgrounds`
+ * structure. Intentional colored backgrounds still survive either way - `stripContentBackgrounds`
  * drops only *light* ones.
  */
 const themeBody: HtmlTransform = (root, { colorScheme, mode }) => {
@@ -195,12 +195,12 @@ export type EmailDialectOptions = {
  * The email dialect for `Html`: quoted-reply collapse, link handling, `cid:` resolution, and the
  * light/dark policy.
  *
- * A plain function, not a hook — nothing here is stateful. Transform state lives on the host element
+ * A plain function, not a hook - nothing here is stateful. Transform state lives on the host element
  * and the color scheme arrives in the transform context, so a caller builds this inline on every
  * render; `Html` keys rebuilds on `key`, not on identity.
  */
 export const emailDialect = ({ resolveSrc }: EmailDialectOptions = {}): HtmlDialect => ({
-  // Constant: the dialect's behaviour no longer varies by option, only by what the document declares —
+  // Constant: the dialect's behaviour no longer varies by option, only by what the document declares -
   // which the base already tracks (`colorScheme`) and keys rebuilds on.
   key: 'email',
   css: EMAIL_CSS,

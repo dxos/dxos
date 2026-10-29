@@ -110,8 +110,8 @@ export type TranscriptSegment = {
 
 /**
  * Parse YouTube's timed-text caption XML into ordered segments. Handles both formats YouTube serves:
- * the legacy `<text start="0" dur="1.5">…</text>` (seconds) and the InnerTube format-3
- * `<p t="4220" d="1180">…</p>` (milliseconds, cue text may contain nested `<s>` word spans). Empty or
+ * the legacy `<text start="0" dur="1.5">...</text>` (seconds) and the InnerTube format-3
+ * `<p t="4220" d="1180">...</p>` (milliseconds, cue text may contain nested `<s>` word spans). Empty or
  * untimed cues are skipped.
  */
 export const parseTimedText = (xml: string): TranscriptSegment[] => {

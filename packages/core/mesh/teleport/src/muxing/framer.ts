@@ -290,7 +290,7 @@ export const decodeFrame = (
 
 export const encodeFrame = (payload: Uint8Array): Uint8Array => {
   if (payload.length > MAX_FRAME_PAYLOAD) {
-    // `setUint16` would wrap, and the peer would read the overflow as further frames — silently
+    // `setUint16` would wrap, and the peer would read the overflow as further frames - silently
     // desynchronising the stream rather than failing here.
     throw new RangeError(`Frame payload exceeds ${MAX_FRAME_PAYLOAD} bytes: ${payload.length}.`);
   }

@@ -40,7 +40,7 @@ const ROOT = '../../';
  * Disable `@tailwindcss/vite`'s `hotUpdate` hook under Vite's full-bundle dev mode.
  *
  * `vite dev --experimentalBundle` routes `hotUpdate` through Rolldown's plugin bridge, whose
- * options object carries no `server` and whose context carries no `environment` — so the hook
+ * options object carries no `server` and whose context carries no `environment` - so the hook
  * throws on its first dereference and takes the whole rebuild with it (`TypeError: Cannot read
  * properties of undefined (reading 'environments')`, then `(reading 'name')` once `server` is
  * supplied). Its job is to invalidate the generated CSS in Vite's module graph when a scanned
@@ -188,21 +188,21 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
           watch: isVitest
             ? null
             : {
-                // Stop build outputs from driving HMR — they are the root of the
+                // Stop build outputs from driving HMR - they are the root of the
                 // `main.css` HMR storm.
                 //
                 // Tailwind's `@source` scanning (see `src/main.css`) registers its
                 // scanned source files as Vite watch dependencies of the compiled
                 // theme CSS. Tailwind's own scanner respects `.gitignore` (and the
                 // `@source not` directives), so it never *scans* `dist/`. BUT the
-                // scanner hands Vite a coarse `dir-dependency` glob — e.g.
-                // `{**/*.html,**/*.ts,**/*.tsx}` — and Vite re-expands that glob
+                // scanner hands Vite a coarse `dir-dependency` glob - e.g.
+                // `{**/*.html,**/*.ts,**/*.tsx}` - and Vite re-expands that glob
                 // itself, ignoring only `node_modules` (not `.gitignore`, not the
                 // `@source not` negations). The re-expansion therefore sweeps in
                 // every `packages/*/dist/**/*.d.ts` (`.d.ts` matches `**/*.ts`),
                 // making each emitted declaration file a watch-dependency of
                 // `main.css`. A single package rebuild emits dozens of `.d.ts` in a
-                // tight burst, and each write re-invalidates the theme — 40+ HMR
+                // tight burst, and each write re-invalidates the theme - 40+ HMR
                 // pings for `main.css` in one second, repeating on every rebuild.
                 //
                 // Ignoring build outputs in the watcher is also semantically
@@ -210,7 +210,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
                 // export condition (see `vite-plugin-import-source`), so `dist/`
                 // is never consumed at runtime and its churn should never trigger
                 // HMR. Vite concatenates these patterns with its built-in ignores
-                // (`**/node_modules/**`, `**/.git/**`, …), so this is purely
+                // (`**/node_modules/**`, `**/.git/**`, ...), so this is purely
                 // additive.
                 //
                 // `<root>/.claude/**` covers agent worktrees checked out under the
@@ -219,7 +219,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
                 // every agent-side edit burst or checkout invalidates the theme in
                 // the user's dev server. The pattern is anchored at the resolved
                 // repo root (not `**/.claude/**`) because chokidar matches against
-                // absolute paths — a bare pattern would match *everything* when the
+                // absolute paths - a bare pattern would match *everything* when the
                 // dev server itself runs from inside a worktree whose path contains
                 // a `.claude` segment. `*.log` covers runtime log sinks (e.g.
                 // vite-plugin-log's `app.log` in the app root), which are appended
@@ -236,7 +236,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
               // Processes CSS nesting syntax.
               postcssNesting(),
               // Resolves @reference/@apply in `.pcss` files (e.g. lit-grid, lit-ui), which the
-              // @tailwindcss/vite plugin skips — its transform filter only matches `.css`.
+              // @tailwindcss/vite plugin skips - its transform filter only matches `.css`.
               // Theme `.css` files are compiled by @tailwindcss/vite first (enforce: 'pre'),
               // so this plugin's quick-bail check passes them through untouched.
               tailwindcssPostcss(),
@@ -254,7 +254,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
     },
     hotUpdate({ type, file, modules }) {
       // Everything below is an optimization of Vite's per-module dev graph, which full-bundle dev
-      // mode does not have — and Rolldown's plugin bridge passes no `environment` there, so the
+      // mode does not have - and Rolldown's plugin bridge passes no `environment` there, so the
       // first dereference would throw and fail the rebuild instead of updating the page.
       if (bundledDev) {
         return;
@@ -267,8 +267,8 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
       }
 
       // Every content file Tailwind scans is registered as a dependency of the
-      // theme CSS — Vite models it as a file-only entry node whose importer is
-      // `main.css` — so each source-file save invalidates `main.css` and
+      // theme CSS - Vite models it as a file-only entry node whose importer is
+      // `main.css` - so each source-file save invalidates `main.css` and
       // re-runs the monorepo-wide Tailwind scan. During an edit wave that
       // serializes one full scan per save. Drop the theme-dep entries from the
       // update (the changed module itself still hot-updates immediately) and
@@ -327,7 +327,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
   };
 
   // The Tailwind Vite plugins are `enforce: 'pre'`, so they compile theme CSS (resolving
-  // `@import 'tailwindcss'`, @source, @plugin, @theme) before the postcss chain runs —
+  // `@import 'tailwindcss'`, @source, @plugin, @theme) before the postcss chain runs -
   // postcss-import never sees the raw Tailwind directives. Scan roots come from the @source
   // directives in main.css (relative to that file); no project-root base is needed.
   return [...tailwindcssVite().map(skipHotUpdateInBundledDev), themePlugin];

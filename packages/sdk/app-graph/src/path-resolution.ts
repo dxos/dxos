@@ -41,7 +41,7 @@ export type ResolvedPair = {
 };
 
 /**
- * One pair's outcome. Exactly one of `nodeId`/`candidateId` is set — `candidateId` is the id the node
+ * One pair's outcome. Exactly one of `nodeId`/`candidateId` is set - `candidateId` is the id the node
  * *would* have, so callers can keep addressing an unresolved pair by what it asked for. A pair with
  * no candidate at all (an unknown key) is `null`.
  */
@@ -60,7 +60,7 @@ export type RepresentedNode = {
 
 /** Reserved words that can never be registered as a `urlKey`, duplicated from `UrlPath.isReservedKey`
  * (rather than imported) to keep app-graph free of an app-toolkit dependency. A key declared by a
- * binding — including the `anchor` and `linked` tiers — is never reserved. */
+ * binding - including the `anchor` and `linked` tiers - is never reserved. */
 const RESERVED_URL_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
 const isReservedUrlKey = (key: string): boolean =>
@@ -72,7 +72,7 @@ const isReservedUrlKey = (key: string): boolean =>
  * (each with a `log.warn`). A single key may legitimately be shared by more than one extension (e.g. plugin-space
  * declares `collection` on both the root-collection children connector and the nested-collection
  * children connector, which together address any object reachable through a space's collection tree),
- * so keys are NOT deduped here — {@link buildKeyTable} groups the sharers under one key and forward
+ * so keys are NOT deduped here - {@link buildKeyTable} groups the sharers under one key and forward
  * resolution matches a node produced by any of them. Shared with {@link buildUrlKeyTable} so the
  * reservation rule is expressed exactly once.
  */
@@ -106,7 +106,7 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtensi
 
 /**
  * Build the global `urlKey -> extensionIds` table from the builder's current extensions. Recomputed
- * on every call — cheap (a synchronous scan of already-registered extensions) and always current, so
+ * on every call - cheap (a synchronous scan of already-registered extensions) and always current, so
  * activating/deactivating plugins can never leave a stale table around. A key maps to the ordered list
  * of every extension that declared it (usually one); forward resolution treats a node produced by any
  * of them as a match for the key.
@@ -134,7 +134,7 @@ export type UrlKeyTableEntry = { key: string; hasId: boolean; anchor: boolean };
 
 /**
  * Build the `urlKey -> { key, hasId }` table consumed by `UrlPath.parse`, straight from the
- * builder's current `urlKey`/`urlKeyHasId` declarations — the "registration, not parser" property
+ * builder's current `urlKey`/`urlKeyHasId` declarations - the "registration, not parser" property
  * the URL grammar requires. Callers (the layout url-handler) pass this to `UrlPath.parse`
  * to tokenize a pathname into a pair chain.
  */
@@ -152,7 +152,7 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
     const anchor = false;
     const existing = table.get(key);
     if (existing && existing.hasId !== hasId) {
-      // Extensions that share a key must agree on their kind — the parse table has one entry per key.
+      // Extensions that share a key must agree on their kind - the parse table has one entry per key.
       // A mismatch is a declaration bug; keep the first and warn.
       log.warn('conflicting kind for shared URL prefix key', { key, extension: extension.id });
       continue;
@@ -166,7 +166,7 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
  * Materialize a candidate qualified node id and confirm it exists: expand its ancestors, then check
  * the node is known. Returns the id on success, `null` otherwise.
  *
- * Expansion only triggers population — the objects behind it load out of band — so on a cold
+ * Expansion only triggers population - the objects behind it load out of band - so on a cold
  * restore the check can run before the node lands and report a false absence. Waiting for a node
  * that has not arrived is the caller's job ({@link resolveKeyId} races one deadline across every
  * candidate), so this stays immediate and a speculative candidate falls through at once.
@@ -182,7 +182,7 @@ const materializeCandidate = async (
 
 /**
  * Resolve a single `(key, id)` pair to a qualified node id, anchored at the workspace base. Resolution
- * is fully explicit — no search. Each binding for the key yields at most one candidate:
+ * is fully explicit - no search. Each binding for the key yields at most one candidate:
  *   1. Without a resolver (the preferred deterministic case), the node its shape addresses by the id
  *      ({@link GraphBuilder.urlCandidate}); a singleton addresses its fixed node.
  *   2. With a {@link GraphBuilder.PathResolver} (recursive/mutable shapes, i.e. nested collections), the
@@ -229,7 +229,7 @@ const resolveKeyId = async (
     return { candidateId };
   }
 
-  // One deadline for the pair, raced across every candidate — per-candidate waits run serially, so
+  // One deadline for the pair, raced across every candidate - per-candidate waits run serially, so
   // N key-sharing extensions would multiply the caller's bound by N. Dynamic candidates wait too:
   // they name the recursive shapes (nested collections) whose containers are the slowest to
   // materialize, which is exactly what the wait exists for.
@@ -274,7 +274,7 @@ const resolveUrlAsync = async (
 
   // The chain partitions into `[item, linked*]` groups: a linked pair resolves against the
   // preceding ITEM, and item pairs resolve against the workspace base, so groups are independent.
-  // Running them concurrently is what keeps the caller's per-pair deadline a wall-clock bound —
+  // Running them concurrently is what keeps the caller's per-pair deadline a wall-clock bound -
   // resolving serially spends it once per plank, and a multi-plank cold deep link then exceeds the
   // module activation timeout, which disables the plugin rather than degrading to not-found.
   const groups: Array<number[]> = [];
@@ -326,7 +326,7 @@ const resolveUrlAsync = async (
 
 /**
  * Resolve a parsed URL's pair chain to graph node ids, walking left to right. Resolution is fully
- * explicit — each binding's shape names its candidate (a resolver locates data-dependent ones); there is
+ * explicit - each binding's shape names its candidate (a resolver locates data-dependent ones); there is
  * no generic search. {@link representNode} is the reverse.
  *
  * An unknown key, or a key whose extension produces no matching node, yields `null` at that index;

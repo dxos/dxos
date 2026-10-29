@@ -8,8 +8,8 @@ import { Message } from '@dxos/types';
 
 /**
  * Selects messages carrying a system tag (Inbox/Sent/Draft), given member ids already resolved from
- * the mailbox's `TagIndex`. A bare `Filter.tag` can't do this — feed/drafts carry no `meta.tags` of
- * their own, membership lives in `TagIndex` instead — so selection is by id. Scope (`.from(...)`) is
+ * the mailbox's `TagIndex`. A bare `Filter.tag` can't do this - feed/drafts carry no `meta.tags` of
+ * their own, membership lives in `TagIndex` instead - so selection is by id. Scope (`.from(...)`) is
  * the caller's job. An empty `ids` selects nothing (correct pre-sync/no-drafts-yet behavior).
  */
 export const buildSystemTagSelection = (ids: readonly EntityId[]): Filter.Any =>
@@ -18,15 +18,15 @@ export const buildSystemTagSelection = (ids: readonly EntityId[]): Filter.Any =>
 /**
  * Wraps a view filter (from `buildSearchSelection` or {@link buildSystemTagSelection}) in the
  * whole-thread semi-join: a thread qualifies if ANY of its messages match `viewFilter`, and the
- * returned query then selects EVERY message sharing that thread's `threadId` — an uncorrelated
- * `threadId IN (SELECT threadId FROM ... WHERE <viewFilter>)` semi-join — so callers see whole
+ * returned query then selects EVERY message sharing that thread's `threadId` - an uncorrelated
+ * `threadId IN (SELECT threadId FROM ... WHERE <viewFilter>)` semi-join - so callers see whole
  * threads, not only the directly-matching members.
  *
  * The result is a UNION of that semi-join with the directly-matching messages, because a message with
- * no `threadId` satisfies neither side of the semi-join and would otherwise never appear — see the
+ * no `threadId` satisfies neither side of the semi-join and would otherwise never appear - see the
  * comment on the union below.
  *
- * `matchesScope` is the *subquery's* scope — which messages are eligible to qualify a thread — and
+ * `matchesScope` is the *subquery's* scope - which messages are eligible to qualify a thread - and
  * may differ from the outer query's own scope. For example, the free-text view filter only ever
  * matches feed messages (too complex to also scope free text across the whole space), while a
  * system-tag selection's ids may resolve on either side. Callers apply their own `.from(scopes)` to
@@ -40,7 +40,7 @@ export const buildThreadSemiJoin = (
   const matches = Query.select(viewFilter).from(matchesScope);
   const wholeThreads = Query.select(Filter.type(Message.Message, { threadId: Filter.in(matches.project('threadId')) }));
   // Unioned with the direct matches because a message with no `threadId` can satisfy neither side of
-  // the semi-join — it has no id to be found by, and it projects nothing into the subquery — so it
+  // the semi-join - it has no id to be found by, and it projects nothing into the subquery - so it
   // would vanish from the list entirely. Drafts, transcriptions and assistant-authored messages all
   // take that shape. A threadless match therefore stands in for its own thread. Threaded messages
   // match both arms; the union de-duplicates by id.

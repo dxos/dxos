@@ -179,7 +179,7 @@ export const checkPr = ({
   }
   for (const review of reviews) {
     if (!review.finalized) {
-      fail(`review \`${review.slug}\` is not finalized — run \`finalize.ts --slug=${review.slug}\`.`);
+      fail(`review \`${review.slug}\` is not finalized - run \`finalize.ts --slug=${review.slug}\`.`);
     }
     if (review.error) {
       fail(`review \`${review.slug}\` has an unreadable index: ${review.error}`);
@@ -192,7 +192,7 @@ export const checkPr = ({
   }
   if (result.unresolved.length > 0) {
     fail(
-      `${result.unresolved.length} issue(s) are still \`unresolved\` — fix each, or mark it \`resolved\`/\`ignored\` in its REVIEW.md index.`,
+      `${result.unresolved.length} issue(s) are still \`unresolved\` - fix each, or mark it \`resolved\`/\`ignored\` in its REVIEW.md index.`,
     );
   }
 
@@ -218,7 +218,7 @@ export const checkPr = ({
 
 /** Markdown report of a {@link PrCheck}, for the terminal and the CI step summary. */
 export const renderPrCheck = (check: PrCheck): string => {
-  const lines = [`## Agentic review — ${check.ok ? 'pass' : 'needs attention'}`, ''];
+  const lines = [`## Agentic review - ${check.ok ? 'pass' : 'needs attention'}`, ''];
   if (check.prLoc === 0) {
     lines.push('Nothing to review: the PR changes only lockfiles, generated files, or review stores.');
     return lines.join('\n');
@@ -231,7 +231,7 @@ export const renderPrCheck = (check: PrCheck): string => {
     lines.push(`- drift since \`${check.latest.slug}\`: ${(check.drift * 100).toFixed(1)}% (${check.driftLoc} LOC)`);
   }
   if (check.problems.length > 0) {
-    lines.push('', ...check.problems.map((problem) => `- ❌ ${problem}`));
+    lines.push('', ...check.problems.map((problem) => `- X ${problem}`));
   }
   if (check.unresolved.length > 0) {
     lines.push(

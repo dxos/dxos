@@ -20,7 +20,7 @@ import * as AccessToken from './AccessToken.ts';
 //
 // Spec.
 //
-// What a cursor tracks progress against — a source-driven pipeline is either syncing an external,
+// What a cursor tracks progress against - a source-driven pipeline is either syncing an external,
 // credentialed remote source into a local target (`external`), or processing one internal source
 // into a local consumer (`feed`, e.g. a mailbox's message feed into a fact store). Both kinds share
 // `source`/`target`; only `external` carries the remote-specific fields (credential, foreign id,
@@ -32,13 +32,13 @@ export const ExternalSpec = Schema.Struct({
   kind: Schema.Literal('external'),
   /** Credential authenticating the remote source. */
   source: Ref.Ref(AccessToken.AccessToken),
-  /** Local root object synced into (Mailbox, Kanban, Project, …). */
+  /** Local root object synced into (Mailbox, Kanban, Project, ...). */
   target: Ref.Ref(Obj.Unknown),
   /** Remote foreign id (board id, calendar id, channel id, etc.). */
   externalId: Schema.String.pipe(Schema.optional),
   /** Cached display label for the remote target. */
   label: Schema.String.pipe(Schema.optional),
-  /** Provider-specific options; opaque here — providers validate their shape. */
+  /** Provider-specific options; opaque here - providers validate their shape. */
   options: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /** Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`); drives 3-way merge. */
   snapshots: Schema.Record(Schema.String, Schema.Any).pipe(Annotation.RawStringAnnotation.set(true), Schema.optional),
@@ -49,7 +49,7 @@ export const ExternalSpec = Schema.Struct({
    */
   token: Schema.String.pipe(Schema.optional),
   /**
-   * Automerge heads of the target's tag index as of the last completed sync — the base for
+   * Automerge heads of the target's tag index as of the last completed sync - the base for
    * bidirectional tag reconciliation (`plugin-inbox/docs/TAG-SYNC.md`). Read back with
    * `Obj.getVersion` to recover what the index looked like then, without storing a shadow copy.
    *
@@ -185,7 +185,7 @@ export const recordError = (cursor: Cursor, message: string): void => {
 };
 
 /**
- * Reads `cursor.spec.snapshots[foreignId]` typed as `T` — the last-seen remote fields an external
+ * Reads `cursor.spec.snapshots[foreignId]` typed as `T` - the last-seen remote fields an external
  * sync recorded for a foreign id, driving the per-field three-way merge (see the `mergeField`/
  * `mergeDeep` primitives in `@dxos/app-toolkit`'s `ConnectorSync`). Returns undefined if absent.
  */
@@ -241,7 +241,7 @@ const snapshotEquals = (left: unknown, right: unknown): boolean => {
  * Points an external cursor at a new credential, keeping every progress field (`max`/`min`,
  * `snapshots`, `token`) so the next run resumes instead of re-walking the horizon. Clears `lastError`,
  * which described the run that failed under the old credential. The caller owns the check that the new
- * credential is for the same remote account — resuming another account's watermark would skip its data.
+ * credential is for the same remote account - resuming another account's watermark would skip its data.
  */
 export const rebindSource = (cursor: ExternalCursor, source: Ref.Ref<AccessToken.AccessToken>): void => {
   Obj.update(cursor, (cursor) => {
@@ -256,7 +256,7 @@ export const rebindSource = (cursor: ExternalCursor, source: Ref.Ref<AccessToken
 /** Reads the opaque delta-resume token, or undefined when no incremental sync has captured one yet. */
 export const readToken = (cursor: ExternalCursor): string | undefined => cursor.spec.token;
 
-/** Writes the opaque delta-resume token — the incremental resume position, independent of `max`/`min`. */
+/** Writes the opaque delta-resume token - the incremental resume position, independent of `max`/`min`. */
 export const writeToken = (cursor: ExternalCursor, token: string): void => {
   Obj.update(cursor, (cursor) => {
     if (cursor.spec.kind !== 'external') {
@@ -279,7 +279,7 @@ export const readDeltaIds = (cursor: ExternalCursor): readonly string[] => curso
  * self-inconsistent. The damaging order is token-then-heads: the next run reads its delta from the
  * advanced token while diffing against stale heads, so every tag the previous run pulled reads as a
  * local-only change. Usually that re-pushes a tag the provider already has (a no-op), but if the
- * remote moved in between it re-applies a tag the provider deliberately removed — and the diff sees no
+ * remote moved in between it re-applies a tag the provider deliberately removed - and the diff sees no
  * conflict, so nothing catches it. One update makes the pair advance or neither.
  *
  * Omitted fields are left untouched, so a provider with no delta token can still record heads. A new
@@ -386,7 +386,7 @@ export type ResolveWindowsOptions = {
   readonly minKey: number;
   /** Reference "now" (injected for testability). */
   readonly now: Date;
-  /** The sync horizon — see {@link resolveHorizon}. */
+  /** The sync horizon - see {@link resolveHorizon}. */
   readonly horizon: Date;
 };
 
@@ -394,7 +394,7 @@ export type ResolveWindowsOptions = {
  * Resolves the forward and backward windows a bidirectional run covers this pass:
  *  - never synced (`maxKey === 0`): backward-only over `[horizon, end)`, walked newest-first.
  *  - synced before: forward covers `(max, end)`, walked oldest-first so an interrupted run advances
- *    `max` gap-free; backward covers `[horizon, min)` (newest-first — it never advances `max`, so no
+ *    `max` gap-free; backward covers `[horizon, min)` (newest-first - it never advances `max`, so no
  *    gap to strand) only while the horizon hasn't reached `min` (unset `min` treated as `max`).
  * {@link completeBackfill} clamps `min` to the horizon once the backward half exhausts, stopping the
  * backward window until a wider `syncBackDays` moves the horizon below `min` again.
@@ -413,7 +413,7 @@ export const resolveWindows = ({ maxKey, minKey, now, horizon }: ResolveWindowsO
 };
 
 /**
- * Extends the synced range and stamps run status — the range-tracking write seam (in place of
+ * Extends the synced range and stamps run status - the range-tracking write seam (in place of
  * {@link advance}). Raises `max` on a new high-water mark; lowers `min` on a new low-water mark
  * (`minKey: 0` leaves `min` untouched). `format` defaults to the decimal {@link formatKey}.
  *
@@ -465,8 +465,8 @@ export const completeBackfill = (cursor: Cursor, horizonKey: number): void => {
 //
 // Shared machinery for running a cursor's pipeline: a Layer providing per-run state and a commit sink
 // appending a page of output to the target feed. `db` comes from `Database.Service` in Requirements.
-// Provider-specific stages live in the consumer. Reads only the cursor's progress fields — never
-// `spec` — so it runs identically for `external` and `feed` cursors.
+// Provider-specific stages live in the consumer. Reads only the cursor's progress fields - never
+// `spec` - so it runs identically for `external` and `feed` cursors.
 //
 
 export type Stats = { newMessages: number };
@@ -492,14 +492,14 @@ export type State = {
   readonly foreignKeySource: string;
   /** High-water key at run start; items at/below it are already committed. */
   readonly maxKey: number;
-  /** Low-water key at run start, or 0 when unset — only meaningful when {@link trackRange}. */
+  /** Low-water key at run start, or 0 when unset - only meaningful when {@link trackRange}. */
   readonly minKey: number;
   /** Whether this run maintains `cursor.min` alongside `cursor.max` (opt-in; see {@link Cursor.min}). */
   readonly trackRange: boolean;
   /** Foreign ids already committed (seeded from the feed, extended as pages commit). */
   readonly dedupSet: Set<string>;
   /**
-   * foreignId → EntityId map for the delta's messages, built only when a `reconcileFilter` is supplied so
+   * foreignId -> EntityId map for the delta's messages, built only when a `reconcileFilter` is supplied so
    * the reconcile branch can resolve an already-committed message's EntityId to retag/remove it. Absent
    * on the add-only path.
    */
@@ -508,7 +508,7 @@ export type State = {
   readonly formatCursor: (key: number) => string;
   /** Mutable run tally, read back by the caller after the run. */
   readonly stats: Stats;
-  /** Mutable run-observed key extent — see {@link Extent}. */
+  /** Mutable run-observed key extent - see {@link Extent}. */
   readonly extent: Extent;
   /**
    * Foreign ids of delta items handled so far under the run's starting token, seeded from
@@ -530,7 +530,7 @@ export type CommitUnit = {
   readonly foreignId: string;
   /** Monotonic provider key (e.g. `internalDate` / `updated` epoch-ms) used to advance the cursor. */
   readonly key: number;
-  /** Deferred writes, each run (and traced) on its own span inside the commit flush — see {@link CommitEffect}. */
+  /** Deferred writes, each run (and traced) on its own span inside the commit flush - see {@link CommitEffect}. */
   readonly commitEffects?: readonly CommitEffect[];
 };
 
@@ -559,9 +559,9 @@ export type LayerOptions = Omit<
   readonly trackRange?: boolean;
   /** Caller-supplied accumulator to read the run's observed key {@link Extent} back afterward. */
   readonly extent?: Extent;
-  /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} — set per pipeline when its commit page size warrants it. */
+  /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} - set per pipeline when its commit page size warrants it. */
   readonly dedupSeedTail?: number;
-  /** Overrides {@link DEFAULT_DEDUP_SEED_PAGE_SIZE} — lower it for a feed of larger objects. */
+  /** Overrides {@link DEFAULT_DEDUP_SEED_PAGE_SIZE} - lower it for a feed of larger objects. */
   readonly dedupSeedPageSize?: number;
   /**
    * The type that carries `foreignKeySource` keys, for a feed that also holds objects without them (a
@@ -581,7 +581,7 @@ export type LayerOptions = Omit<
 
 /**
  * Builds the run Layer, seeding the committed-id dedup set from a bounded tail read of the feed (see
- * {@link DEFAULT_DEDUP_SEED_TAIL}) — closes the append→advance crash window without decoding the whole
+ * {@link DEFAULT_DEDUP_SEED_TAIL}) - closes the append->advance crash window without decoding the whole
  * feed, since the queue and space-db share no transaction.
  *
  * TODO(wittjosiah): Drop the seed entirely once feed + cursor writes can commit transactionally.
@@ -603,7 +603,7 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
             type: options.dedupSeedType,
           })
         : new Set<string>();
-      // Only reconcile runs build the foreignId → EntityId map, and only for the delta's messages.
+      // Only reconcile runs build the foreignId -> EntityId map, and only for the delta's messages.
       const foreignIndex =
         feed && options.reconcileFilter
           ? yield* seedForeignIndex(feed, options.foreignKeySource, options.reconcileFilter)
@@ -620,7 +620,7 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
     }),
   );
 
-/** Appends the page's objects to the feed — the durable write that must precede the space-db mutations. */
+/** Appends the page's objects to the feed - the durable write that must precede the space-db mutations. */
 const appendObjects = Effect.fn('cursor.commit.appendToFeed')(function* (
   feed: Feed.Feed,
   units: readonly CommitUnit[],
@@ -632,7 +632,7 @@ const appendObjects = Effect.fn('cursor.commit.appendToFeed')(function* (
   }
 });
 
-// TODO(wittjosiah): Remove — bound the reactive cascade instead of forcing a paint gap per page.
+// TODO(wittjosiah): Remove - bound the reactive cascade instead of forcing a paint gap per page.
 // Yields a macrotask so the browser paints the appended objects before this page's space-db mutations
 // run; otherwise append + reactive cascade run as one synchronous burst that blocks paint.
 const paintYield = Effect.fn('cursor.commit.paintYield')(function* () {
@@ -659,7 +659,7 @@ const runCommitEffects = Effect.fn('cursor.commit.commitEffects')(function* (uni
 
 /**
  * Extends the cursor to the page's key extent and records the units as committed. Raises `max`
- * unconditionally; lowers `min` only when range-tracking — so a single-directional run never touches
+ * unconditionally; lowers `min` only when range-tracking - so a single-directional run never touches
  * `min`, and a range-tracking run gets the symmetric watermark rule regardless of which half the page
  * came from (see {@link resolveWindows}).
  */
@@ -667,7 +667,7 @@ const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
   state: State,
   units: readonly CommitUnit[],
 ) {
-  // Fold only real keys — objectless units carry `key: 0` and must not disturb `max`/`min`.
+  // Fold only real keys - objectless units carry `key: 0` and must not disturb `max`/`min`.
   const keys = units.map((unit) => unit.key).filter((key) => key > 0);
   if (keys.length > 0) {
     extendRange(
@@ -684,11 +684,11 @@ const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
 });
 
 /**
- * Commits one page of pipeline output — the single place non-idempotent writes happen. Use as the
+ * Commits one page of pipeline output - the single place non-idempotent writes happen. Use as the
  * `Pipeline.run` sink after `Stream.grouped(pageSize)`.
  *
  * The feed append runs first, then space-db mutations; the two share no transaction, so a crash
- * between them leaves the page in the feed with the cursor un-advanced — the next run re-fetches it and
+ * between them leaves the page in the feed with the cursor un-advanced - the next run re-fetches it and
  * the feed-seeded dedup set drops it (advancing first would lose items). No mid-run flush (per-page
  * flushes were O(n²)); the caller flushes once at the end, so a crash only loses this run's in-memory
  * cursor advance + space mutations.
@@ -715,7 +715,7 @@ export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; read
 
 /**
  * Commits a page to a DB target (no feed) via an idempotent upsert. `write` does the provider-specific
- * find-by-foreign-key → update-or-create and returns whether a new object was created (counted into
+ * find-by-foreign-key -> update-or-create and returns whether a new object was created (counted into
  * `stats`). Cursor advance + run status land in the same write, like {@link commit}. Idempotent, so a
  * crash before the flush is safe: the next run re-upserts.
  */
@@ -745,7 +745,7 @@ export const upsertCommit =
  * The set half of {@link dedupStage}, keyed only by foreign id. Runs on the raw id/handle stream
  * *before* the expensive full-item fetch, so a run never downloads an already-committed item: the
  * boundary days a bidirectional run re-lists are mostly covered by the seeded `dedupSet`. Only a
- * fast-path filter — {@link dedupStage} runs after the fetch as the backstop and does the key-range
+ * fast-path filter - {@link dedupStage} runs after the fetch as the backstop and does the key-range
  * check. Reads {@link Service}; provider-agnostic via `getForeignId`.
  */
 export const skipCommitted = <In>(
@@ -758,7 +758,7 @@ export const skipCommitted = <In>(
 
 /**
  * Reusable dedup stage: drops items already committed (`dedupSet`) and items strictly inside the synced
- * range (`minKey < key < maxKey`) — a cheap shortcut past the already-synced middle. Boundary keys fall
+ * range (`minKey < key < maxKey`) - a cheap shortcut past the already-synced middle. Boundary keys fall
  * through to `dedupSet`, since items can share a key. A single-directional run keeps the original
  * `key < maxKey` shortcut. Folds every considered item's key into {@link State.extent} *before* the
  * drop decision, so a capped range-tracking run shrinks its window even when a whole page drops (see
@@ -768,7 +768,7 @@ export const skipCommitted = <In>(
  * An item `isDelta` marks came from a provider change feed (arrival order), not a key window, so its key is a
  * provider date that says nothing about what was synced: it skips the range shortcut. A range run splits ownership
  * at the backward window's low mark instead (`minKey`, or `maxKey` while `min` is unset; a never-synced cursor
- * leaves everything to the backward window) — the delta keeps keys at or above it, and leaves keys below it to the
+ * leaves everything to the backward window) - the delta keeps keys at or above it, and leaves keys below it to the
  * backward window, which lists that range by key. A delta item never lowers `extent.minKey`, so it cannot mark
  * unscanned history as synced, and every one it drops is recorded in {@link State.deltaHandled}.
  */
@@ -818,7 +818,7 @@ export const dedupStage = <In>(
 
 /**
  * Caps a stream at `limit`, reporting each surviving item via `onTaken` so the caller can tell a
- * truncated run (`taken === limit` → re-run) from an exhausted one. Placed after {@link dedupStage} so it
+ * truncated run (`taken === limit` -> re-run) from an exhausted one. Placed after {@link dedupStage} so it
  * counts only genuinely-new items. Reads no {@link Service}, but lives here as part of the per-run
  * bounding family.
  */
@@ -834,7 +834,7 @@ export const boundStage =
  * Default dedup-seed bound, applied to *each* end of the feed's insertion order (see
  * {@link seedDedupSet}). Only the two re-fetched boundaries (`key === max`, `key === min`) plus a
  * crash-orphaned page need seeding; the strict interior is dropped by {@link dedupStage}'s range check.
- * Sized with headroom over a typical commit page size — override via {@link LayerOptions.dedupSeedTail}.
+ * Sized with headroom over a typical commit page size - override via {@link LayerOptions.dedupSeedTail}.
  */
 const DEFAULT_DEDUP_SEED_TAIL = 500;
 
@@ -847,7 +847,7 @@ const DEFAULT_DEDUP_SEED_TAIL = 500;
 const DEFAULT_DEDUP_SEED_PAGE_SIZE = 50;
 
 /**
- * Builds a foreignId → EntityId map for the messages a reconcile run targets, selected by the caller's
+ * Builds a foreignId -> EntityId map for the messages a reconcile run targets, selected by the caller's
  * `reconcileFilter`. Unlike {@link seedDedupSet}'s bounded tail read, reconciliation must resolve *any*
  * already-committed message (a label change can target one far older than the seed tail), but only the
  * delta's messages, not the whole feed. Foreign ids come off `Obj.getMeta(item)` (feed messages live in a
@@ -883,7 +883,7 @@ type SeedBounds = { readonly tail: number; readonly pageSize: number };
  * The `key === max` and `key === min` boundaries both re-fetch inclusively and aren't dropped by the
  * strict-interior range check, so both must be seeded. They sit at *opposite* ends of insertion order:
  * a backfill commits `max` first and walks older, so `max`'s item is the OLDEST insertion while `min`'s
- * (plus any crash-orphaned page) is the newest — a newest-only tail would age `max` out and re-commit
+ * (plus any crash-orphaned page) is the newest - a newest-only tail would age `max` out and re-commit
  * the newest message every run. Seeding both ends covers both boundaries however forward/backward
  * interleave.
  */

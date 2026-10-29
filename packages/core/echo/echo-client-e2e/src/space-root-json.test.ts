@@ -17,7 +17,7 @@ import { deferHandlers, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
 /**
- * A space root that holds only links is read from JSON — the boot cache's or the host's — and its Automerge
+ * A space root that holds only links is read from JSON - the boot cache's or the host's - and its Automerge
  * document loads only when the client writes to it.
  */
 describe('space root JSON', () => {

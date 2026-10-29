@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 /**
  * Resolve the NDJSON log file path for Vitest runs.
  *
- * Precedence: `DX_TEST_LOG_FILE` → `EDGE_TEST_LOG_FILE` (legacy edge name) → `<cwd>/test.log`.
+ * Precedence: `DX_TEST_LOG_FILE` -> `EDGE_TEST_LOG_FILE` (legacy edge name) -> `<cwd>/test.log`.
  */
 export const resolveTestLogFilePath = (cwd = process.cwd()): string =>
   process.env.DX_TEST_LOG_FILE ?? process.env.EDGE_TEST_LOG_FILE ?? join(cwd, 'test.log');

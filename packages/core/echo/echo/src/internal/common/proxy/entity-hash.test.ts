@@ -57,7 +57,7 @@ describe('entity Hash/Equal traits', () => {
     expect(Hash.hash(duplicate)).to.eq(Hash.hash(person));
   });
 
-  test('distinct ids, identical contents — not equal', ({ expect }) => {
+  test('distinct ids, identical contents - not equal', ({ expect }) => {
     const first = Obj.make(TestSchema.Person, { name: 'Alice' });
     const second = Obj.make(TestSchema.Person, { name: 'Alice' });
     expect(Equal.equals(first, second)).to.be.false;
@@ -136,7 +136,7 @@ const makeEmployment = (role: string) =>
   });
 
 /**
- * Fabricate the state ECHO forbids — a second live proxy over an entity that already has one
+ * Fabricate the state ECHO forbids - a second live proxy over an entity that already has one
  * (`createProxy` caches by target; the database asserts a single `core.rootProxy`).
  */
 const duplicateProxy = (person: TestSchema.Person): TestSchema.Person => {

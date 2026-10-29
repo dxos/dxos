@@ -9,8 +9,8 @@ import { type RelationshipRollup } from './rollups.ts';
 import { type TopicDraft } from './topics.ts';
 
 /**
- * Everything the corpus pass has computed; the digest is a Query-mode view over it (spec §3③
- * briefings) — assembled on demand, never materialized as ECHO.
+ * Everything the corpus pass has computed; the digest is a Query-mode view over it (spec §3(3)
+ * briefings) - assembled on demand, never materialized as ECHO.
  */
 export type DigestInput = {
   readonly threads: readonly Thread[];
@@ -58,7 +58,7 @@ export const buildDigest = (input: DigestInput, options: DigestOptions): Digest 
   narrative: '',
 });
 
-/** Render the skeleton as plain text — the prompt payload for narration, and a fallback briefing. */
+/** Render the skeleton as plain text - the prompt payload for narration, and a fallback briefing. */
 export const renderDigest = (digest: Digest): string =>
   [
     `Inbox digest (${digest.generatedAt})`,
@@ -67,7 +67,7 @@ export const renderDigest = (digest: Digest): string =>
     `Stalled: ${digest.stalledThreads.join(', ') || 'none'}`,
     `Due commitments: ${
       digest.dueCommitments
-        .map((commitment) => `${commitment.who} → ${commitment.what} (${commitment.dueBy})`)
+        .map((commitment) => `${commitment.who} -> ${commitment.what} (${commitment.dueBy})`)
         .join('; ') || 'none'
     }`,
     // `Top topics: ${digest.topTopics.map((topic) => `${topic.label} (${topic.threadCount})`).join('; ') || 'none'}`,
@@ -75,7 +75,7 @@ export const renderDigest = (digest: Digest): string =>
 
 /**
  * Optionally add an LLM briefing over the skeleton, using the editable `digest` prompt. Degrades to
- * the un-narrated digest on failure — the skeleton is always available.
+ * the un-narrated digest on failure - the skeleton is always available.
  */
 export const narrateDigest = async (
   digest: Digest,

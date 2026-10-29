@@ -29,14 +29,14 @@ describe('usePresets', () => {
   const TestLayer = TestDatabaseLayer({ types: [Chat.Chat, Feed.Feed, Text.Text, Message.Message, Task.Task] });
 
   // No plugins registered: the Ollama manager capability stays absent, which is the browser build the
-  // chat's picker runs in — presets then come straight from the edge catalog.
+  // chat's picker runs in - presets then come straight from the edge catalog.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
     <PluginManagerProvider.Root value={pluginManager}>{children}</PluginManagerProvider.Root>
   );
 
   // The selection round-trips through `Chat.session`, so it only moves if what is read back out of the
-  // object still carries the model — the defect that left the picker showing the fallback forever.
+  // object still carries the model - the defect that left the picker showing the fallback forever.
   test('picking a preset moves the selection', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());

@@ -64,7 +64,7 @@ const freshIds = (rng: () => number): IdBundle => ({
 });
 
 // Embeds every id in the structural positions that broke in the field: a DXN (space + entity in one
-// `echo://…/…` string), the same entity referenced twice, an id nested inside a tool-result JSON
+// `echo://.../...` string), the same entity referenced twice, an id nested inside a tool-result JSON
 // string, a bare UUID, and a timestamp outside a `timestamp` key.
 const buildPrompt = (ids: IdBundle): unknown => ({
   content: [
@@ -87,7 +87,7 @@ describe('fixture match-key invariance (fuzz)', { tags: ['manual'] }, () => {
 
   test('normalized key is invariant under a fresh, same-shape id substitution', ({ expect }) => {
     for (let seed = 0; seed < ROUNDS; seed++) {
-      // Two independent id bundles → the concrete id VALUES differ, the STRUCTURE is identical.
+      // Two independent id bundles -> the concrete id VALUES differ, the STRUCTURE is identical.
       const left = __testing.normalizeForMatching(buildPrompt(freshIds(makeRng(seed))), DEFAULT_DYNAMIC_VALUE_PATTERNS);
       const right = __testing.normalizeForMatching(
         buildPrompt(freshIds(makeRng(seed ^ 0x9e3779b9))),
@@ -97,9 +97,9 @@ describe('fixture match-key invariance (fuzz)', { tags: ['manual'] }, () => {
     }
   });
 
-  test('distinct ids do not collapse — repeated id is one placeholder, two ids are two', ({ expect }) => {
+  test('distinct ids do not collapse - repeated id is one placeholder, two ids are two', ({ expect }) => {
     const ids = freshIds(makeRng(42));
-    // entityA appears twice, entityB once → normalized form must keep three distinct placeholder
+    // entityA appears twice, entityB once -> normalized form must keep three distinct placeholder
     // occurrences with only two distinct placeholders, or a swapped-relationship prompt would falsely match.
     const oneEntity = __testing.normalizeForMatching(
       buildPrompt({ ...ids, entityB: ids.entityA }),
@@ -110,7 +110,7 @@ describe('fixture match-key invariance (fuzz)', { tags: ['manual'] }, () => {
   });
 
   test('a space-shaped run flanked by more base32 chars is not matched', ({ expect }) => {
-    // SPACE_ID_PATTERN's boundaries — (?<![A-Z2-7]) … (?![A-Z2-7]) — must reject a B…{32} run that is
+    // SPACE_ID_PATTERN's boundaries - (?<![A-Z2-7]) ... (?![A-Z2-7]) - must reject a B...{32} run that is
     // only part of a longer token; otherwise normalization would corrupt an unrelated identifier.
     const embedded = [{ text: `A${`B${'A'.repeat(32)}`}A` }];
     expect(__testing.normalizeForMatching(embedded, DEFAULT_DYNAMIC_VALUE_PATTERNS)).toEqual(embedded);
@@ -155,7 +155,7 @@ const collectFixturePrompts = (): { suite: string; file: string; prompt: unknown
   return prompts;
 };
 
-// Fuzzes the invariant against every committed fixture prompt — the real corpus surfaces id FORMS a
+// Fuzzes the invariant against every committed fixture prompt - the real corpus surfaces id FORMS a
 // synthetic prompt might not (nested references, provider-specific fields). Replaces each run-varying
 // token in the real prompt with a fresh same-shape value and asserts the normalized key is unchanged.
 describe('fixture match-key invariance (real corpus)', { tags: ['manual'] }, () => {
@@ -182,7 +182,7 @@ describe('fixture match-key invariance (real corpus)', { tags: ['manual'] }, () 
         return replacement;
       });
       if (remap.size === 0) {
-        continue; // Prompt carries no dynamic ids — nothing to fuzz.
+        continue; // Prompt carries no dynamic ids - nothing to fuzz.
       }
       mutatedCount++;
       const original = __testing.normalizeForMatching(prompt, DEFAULT_DYNAMIC_VALUE_PATTERNS);

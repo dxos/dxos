@@ -25,7 +25,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     name: 'File',
     author: 'DXOS',
     description: trim`
-      FilePlugin enables DXOS Composer to store and preview binary files — images, videos, and PDFs — as
+      FilePlugin enables DXOS Composer to store and preview binary files - images, videos, and PDFs - as
       first-class ECHO objects. Uploaded bytes are routed through a pluggable backend system: the built-in
       inline backend serialises the file directly onto the ECHO document, while external backends (e.g. WNFS)
       can be contributed by other plugins.

@@ -40,7 +40,7 @@ export const danglingRefsDiagnostic: DiagnosticProvider = {
               issues.push({
                 id: `${db.spaceId}:${(obj as { id?: string }).id ?? 'unknown'}:${path.join('.')}:dangling`,
                 severity: 'error',
-                message: `Dangling reference at "${path.join('.')}" → ${ref.uri}.`,
+                message: `Dangling reference at "${path.join('.')}" -> ${ref.uri}.`,
                 subjectLabel: labelObject(obj),
                 spaceId: db.spaceId,
               });

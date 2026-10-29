@@ -15,10 +15,10 @@ import { Annotation, type Obj } from '@dxos/echo';
  */
 export type ConnectorAuthAnnotationValue = {
   /**
-   * Connectors offered for this type. A resolver computes them per-object at runtime — e.g. studio
+   * Connectors offered for this type. A resolver computes them per-object at runtime - e.g. studio
    * resolves the id from the artifact's `kind` via the `GenerationService` capabilities. It runs
    * inside the graph's atom body, so a resolver must read capabilities through `get` (via
-   * `capabilities.atom(...)`) — a synchronous `getAll` sees an empty list on a cold load, before the
+   * `capabilities.atom(...)`) - a synchronous `getAll` sees an empty list on a cold load, before the
    * providing plugin has activated, and is never re-run.
    */
   connectorIds:
@@ -30,8 +30,8 @@ export type ConnectorAuthAnnotationValue = {
       ) => readonly string[]);
   /**
    * Bind the object itself as the new connection's first sync target (e.g. an empty Mailbox). Also
-   * selects the connected-state check: `true` ⇒ an external-sync `Cursor` targets the object; otherwise
-   * ⇒ the space has a `Connection` for one of `connectorIds`.
+   * selects the connected-state check: `true` => an external-sync `Cursor` targets the object; otherwise
+   * => the space has a `Connection` for one of `connectorIds`.
    */
   bindTarget?: boolean;
 };

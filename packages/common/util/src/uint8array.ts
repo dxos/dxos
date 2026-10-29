@@ -56,7 +56,7 @@ export const encodeUint8ArrayToJson = (bytes: Uint8Array): EncodedUint8Array => 
 
 /**
  * Type-guard that returns true iff `value` is the DAG-JSON bytes form produced by
- * {@link encodeUint8ArrayToJson} — an object with exactly one key `'/'` whose value is an
+ * {@link encodeUint8ArrayToJson} - an object with exactly one key `'/'` whose value is an
  * object with exactly one string key `bytes`.
  */
 export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array => {

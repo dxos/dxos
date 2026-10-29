@@ -153,7 +153,7 @@ describe('worker sandbox in a Web Worker', () => {
   test('reports a worker that fails to load', async () => {
     const { runOn, echo } = await setup();
     // Without the load failure reaching the host, it would wait out its budget on a handshake that
-    // never comes — so no timeout is given, and returning at all is part of the assertion.
+    // never comes - so no timeout is given, and returning at all is part of the assertion.
     const broken = WorkerSandbox.make({
       echo,
       spawn: WorkerSandboxBrowser.spawn(

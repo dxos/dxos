@@ -38,7 +38,7 @@ export const ZoomControls = (props: ControlProps): JSX.Element => {
         onClick={() => props.onAction?.('zoom-out')}
         title='Zoom out'
       >
-        <span class='text-xl'>−</span>
+        <span class='text-xl'>-</span>
       </button>
     </div>
   );
@@ -54,7 +54,7 @@ export const ActionControls = (props: ControlProps): JSX.Element => {
         onClick={() => props.onAction?.('start')}
         title='Start'
       >
-        <span class='text-xl'>▶</span>
+        <span class='text-xl'>&#x25B6;</span>
       </button>
       <button
         type='button'
@@ -63,7 +63,7 @@ export const ActionControls = (props: ControlProps): JSX.Element => {
         onClick={() => props.onAction?.('toggle')}
         title='Toggle'
       >
-        <span class='text-xl'>🌍</span>
+        <span class='text-xl'>&#x1F30D;</span>
       </button>
     </div>
   );

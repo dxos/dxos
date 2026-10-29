@@ -41,7 +41,7 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
       }
       const bytes = yield* Blob.read(blob);
       // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
-      // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+      // `BlobPart` only covers `ArrayBuffer`-backed views - a gap between the DOM lib types and
       // the TS standard lib, not fixable by typing `bytes` differently.
       return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
     }).pipe(

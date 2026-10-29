@@ -4,7 +4,7 @@
 
 /**
  * Splits a raw input line into argv tokens. Supports single/double-quoted segments so quoted
- * strings with spaces survive. Intentionally simple — anything needing real shell semantics belongs
+ * strings with spaces survive. Intentionally simple - anything needing real shell semantics belongs
  * in a real shell.
  */
 export const tokenize = (input: string): string[] => {

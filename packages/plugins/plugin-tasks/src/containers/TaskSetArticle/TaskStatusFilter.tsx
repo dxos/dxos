@@ -17,7 +17,7 @@ export type TaskStatusFilterProps = {
   /** The statuses the list shows. Every status is the unfiltered state. */
   value: readonly Task.Status[];
   onChange: (value: readonly Task.Status[]) => void;
-  /** Whether anything narrows the list — the query too, not just the statuses this menu hides. */
+  /** Whether anything narrows the list - the query too, not just the statuses this menu hides. */
   active?: boolean;
 };
 
@@ -26,7 +26,7 @@ export type TaskStatusFilterProps = {
  *
  * A menu rather than a row of toggles: nine statuses would fill the toolbar, and hiding a status is
  * a decision a reader makes once and reads off the trigger afterwards. Multi-select, so the menu
- * stays open across several toggles — picking one value and closing is single-select behaviour.
+ * stays open across several toggles - picking one value and closing is single-select behaviour.
  *
  * A view over the query rather than state of its own: the caller derives `value` from the query's
  * `status:` terms and writes a change back into them (see `parseEnumTerms`), so the menu and the
@@ -38,7 +38,7 @@ export const TaskStatusFilter = ({ value, onChange, active }: TaskStatusFilterPr
   const filtered = selected.size < ALL_STATUSES.length;
   const narrowed = active || filtered;
 
-  // The group carries no items of its own — it is the context that makes the items checkboxes rather
+  // The group carries no items of its own - it is the context that makes the items checkboxes rather
   // than radios, and the menu stay open while they are toggled.
   const group = useMemo(
     () =>

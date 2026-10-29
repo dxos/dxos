@@ -21,8 +21,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       Generic game host plugin that provides shared infrastructure for local-first,
       multi-player turn-based games inside DXOS Composer. The plugin owns the base
-      \`Game\` ECHO type — which stores players and a reference to variant-specific
-      state — and drives the two-stage game-creation flow (variant picker + optional
+      \`Game\` ECHO type - which stores players and a reference to variant-specific
+      state - and drives the two-stage game-creation flow (variant picker + optional
       input form).
 
       Game variants (chess, tic-tac-toe, and others) are contributed by separate

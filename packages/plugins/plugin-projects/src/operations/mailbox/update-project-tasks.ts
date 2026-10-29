@@ -32,12 +32,12 @@ const PROJECT_TASKS_CURSOR_KEY_ID = 'projectTasks';
 
 /**
  * The shared request-tracking pipeline: every feed message from one of the tracked senders becomes
- * a task in the project's task set, keyed by message id so reruns never duplicate — and never
+ * a task in the project's task set, keyed by message id so reruns never duplicate - and never
  * resurrect a task the user completed or edited. Exported for `CreateTrackingProject`'s backfill.
  *
  * Cursored on the SUBJECT rather than the feed's owner: several projects track the same mailbox with
  * different senders, so a shared watermark would let one project's run skip messages another had not
- * seen. Tasks stay keyed by message id, so the cursor is pure saving — a replayed message is still a
+ * seen. Tasks stay keyed by message id, so the cursor is pure saving - a replayed message is still a
  * no-op, which is what makes advancing it safe.
  */
 export const syncProjectTasks = (project: Project.Project, mailbox: Mailbox.Mailbox, senders: readonly string[]) =>
@@ -50,7 +50,7 @@ export const syncProjectTasks = (project: Project.Project, mailbox: Mailbox.Mail
     // `>=`, not `>`: two messages can share a `created` timestamp, and excluding the boundary would
     // drop the second one permanently once the first advanced the cursor past it. Re-examining the
     // boundary instant each run is bounded (the messages sharing one timestamp) and costs nothing,
-    // because `upsertTask` keys on the message id — the same boundary re-fetch the Gmail sync does.
+    // because `upsertTask` keys on the message id - the same boundary re-fetch the Gmail sync does.
     const pending = messages.filter((message) => {
       const key = Date.parse(message.created);
       return Number.isFinite(key) && key >= cursorKey;

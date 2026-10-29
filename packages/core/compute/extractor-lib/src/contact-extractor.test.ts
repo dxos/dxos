@@ -39,7 +39,7 @@ describe('extractContact', () => {
 
   /**
    * The regression this guards: run over a real mailbox, the ungated extractor produced 101 Person
-   * objects — `no-reply@`, `mailer-daemon@`, `invoice+statements+acct_…@stripe.com` and friends.
+   * objects - `no-reply@`, `mailer-daemon@`, `invoice+statements+acct_...@stripe.com` and friends.
    */
   test('creates nothing for a machine sender', async ({ expect }) => {
     for (const email of [

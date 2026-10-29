@@ -3,7 +3,7 @@
 //
 
 //
-// Grades `.mmd` diagrams on one 0–1 scale: the layout objective's constraints and cost terms, plus the
+// Grades `.mmd` diagrams on one 0-1 scale: the layout objective's constraints and cost terms, plus the
 // architecture rules (`Architecture.RULES`) judged by System One in one batched decision call per
 // diagram, by Jev (`TYPESAFE_API_KEY`) or, with `--judge clef|clef-flash`, Clef on Workers AI
 // (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`); without credentials the architecture rows report an
@@ -12,7 +12,7 @@
 // `Aesthetics` rules from it, `--image` shows Clef the rendered PNG instead, `--no-title` drops
 // the caption so only the diagram is judged, `--runs N` averages the architecture scores over N calls, and
 // `--json out.json` writes the scores, and `--layering down` restricts the layerings the engine chooses among.
-// Run: `moon run plugin-illustrator:judge-diagrams -- /abs/path/x.mmd …` (vite-node; bun cannot load elkjs).
+// Run: `moon run plugin-illustrator:judge-diagrams -- /abs/path/x.mmd ...` (vite-node; bun cannot load elkjs).
 //
 
 import * as Effect from 'effect/Effect';
@@ -128,7 +128,7 @@ const program = Effect.gen(function* () {
   const results = yield* Effect.forEach(paths, (path) => judgeFile(resolve(path)), { concurrency: 4 });
   for (const { name, graph, scores } of results) {
     console.log(
-      `\n${name}: ${graph.nodes.length} nodes, ${graph.groups.length} groups, ${graph.edges.length} edges — overall ${Score.overall(scores)?.toFixed(2) ?? '—'}`,
+      `\n${name}: ${graph.nodes.length} nodes, ${graph.groups.length} groups, ${graph.edges.length} edges - overall ${Score.overall(scores)?.toFixed(2) ?? '-'}`,
     );
     for (const { kind, id, score, error, detail, spread } of scores) {
       const value = error

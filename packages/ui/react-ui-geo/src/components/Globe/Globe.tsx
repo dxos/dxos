@@ -174,7 +174,7 @@ const GlobeRoot = forwardRef<GlobeController | null, GlobeRootProps>(
 
     // The controller is built by Globe.Canvas and registered here; Globe.Root re-exposes it via its
     // ref. Held in state (not a ref) so that when Globe.Canvas registers a new controller, Root
-    // re-renders and the imperative handle below updates — re-running consumer effects keyed on the
+    // re-renders and the imperative handle below updates - re-running consumer effects keyed on the
     // controller (e.g. useDrag/useWheel) once the canvas mounts.
     const [controller, setController] = useState<GlobeController | null>(null);
     const registerController = useCallback((next: GlobeController | null) => setController(next), []);
@@ -278,7 +278,7 @@ const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styl
     return timer(() => createLayers(topology as Topology, features, styles));
   }, [topology, features, styles]);
 
-  // Update rotation when the center changes. Preserve current zoom — callers can set zoom
+  // Update rotation when the center changes. Preserve current zoom - callers can set zoom
   // independently via the `zoom` prop or `setZoom` on the controller.
   useEffect(() => {
     if (center) {
@@ -359,7 +359,7 @@ const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styl
       },
     };
     // Keep the controller IDENTITY stable: only rebuild on these mount-stable deps. Deliberately
-    // exclude `center`/`translation`/`rotation` — they are read here as closure snapshots, and
+    // exclude `center`/`translation`/`rotation` - they are read here as closure snapshots, and
     // callers pass them as inline literals (e.g. `rotation={[0, 0, 0]}`), so a fresh reference every
     // render would rebuild the controller, re-fire `registerController`, re-render Root, hand a new
     // controller back through the consumer's `ref={setController}`, and loop forever. `projection`
@@ -379,7 +379,7 @@ const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styl
   // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
   // Keep the context alpha-enabled: when a style set omits `background`, `renderLayers`
   // clears to transparent so the canvas's themed CSS background (below) shows through the
-  // area outside the globe — correct in both light and dark mode.
+  // area outside the globe - correct in both light and dark mode.
   const generator = useMemo(
     () => canvas && projection && geoPath(projection, canvas.getContext('2d')),
     [canvas, projection],
@@ -395,7 +395,7 @@ const GlobeCanvas = ({ projection: projectionProp, fit, topology, features, styl
           .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
           .rotate(rotation ?? [0, 0, 0]);
 
-        // Provide a view-center for per-frame culling — only meaningful for
+        // Provide a view-center for per-frame culling - only meaningful for
         // projections that present a single visible hemisphere (e.g.
         // orthographic). For Mercator/transverse-mercator the whole sphere
         // is always visible, so we skip culling.

@@ -15,7 +15,7 @@ export const key = 'org.dxos.skill.chatContext';
 
 const instructions = trim`
   You can bind objects into the chat's context so later turns can see them, and unbind them again.
-  Reading and writing the objects themselves — including types, relations and tags — is the
+  Reading and writing the objects themselves - including types, relations and tags - is the
   Database skill's job (plugin-space).
 `;
 

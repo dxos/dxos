@@ -25,7 +25,7 @@ const MAX_DEPTH = 10;
  * Compiles a query AST to one `WITH RECURSIVE` statement: each AST node is a CTE of `(id, rank, ord)`
  * rows, and the final SELECT joins the result ids back to their bodies.
  *
- * Compilation is pure — it never reads the store — so any clause that would need a read to express
+ * Compilation is pure - it never reads the store - so any clause that would need a read to express
  * (feeds, aggregates, semver ranges) throws {@link UnsupportedQueryError} instead of degrading to an
  * in-memory evaluation.
  *

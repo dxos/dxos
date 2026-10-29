@@ -33,7 +33,7 @@ describe('wasm memory probe', () => {
     expect(instantiated.instances).toBe(before.instances + 1);
     expect(instantiated.bytes).toBe(before.bytes + PAGE_BYTES);
 
-    // Linear memory only grows, and `buffer` is replaced when it does — the reason the stats read
+    // Linear memory only grows, and `buffer` is replaced when it does - the reason the stats read
     // `byteLength` at every call rather than remembering the size at instantiation.
     if (memory instanceof WebAssembly.Memory) {
       memory.grow(2);

@@ -24,7 +24,7 @@ export type WidgetPanelProps = PropsWithChildren<
 
 /**
  * A chat widget that reads as one line of prose with a disclosure caret at its end, opening onto
- * its detail — the shared shape of every collapsible widget in the thread.
+ * its detail - the shared shape of every collapsible widget in the thread.
  */
 export const WidgetPanel = ({
   icon,
@@ -45,7 +45,7 @@ export const WidgetPanel = ({
     onChangeOpen={onChangeOpen}
     lazyMount={lazyMount}
     // `w-0 min-w-full`: the editor sizes its content line to its widest child, so a wide payload
-    // would stretch the whole line — carrying the summary row out of view and scrolling the
+    // would stretch the whole line - carrying the summary row out of view and scrolling the
     // editor instead of the payload. Zero width removes this widget from that calculation, and
     // the min-width then takes the line's own width, which is what bounds the payload's scroller.
     classNames='w-0 min-w-full'

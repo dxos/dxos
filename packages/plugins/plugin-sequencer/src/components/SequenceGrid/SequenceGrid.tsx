@@ -67,7 +67,7 @@ export type SequenceGridProps = {
   onResizeNote?: (pitch: number, startTime: number, newDuration: number) => void;
   /**
    * Other tracks to paint underneath the active sequence in a subdued color.
-   * Cells from these tracks are non-interactive — toggle gestures always target
+   * Cells from these tracks are non-interactive - toggle gestures always target
    * the active sequence.
    */
   overlayTracks?: Array<{ sequence: Sequence.Sequence; track: Track.Track }>;
@@ -311,7 +311,7 @@ export const SequenceGrid = ({
     registry.set(atoms.cells, cells);
   }, [registry, atoms.cells, notes, overlayCellInputs, minPitch, maxPitch, beatsPerCell, trackColor, drawPreview]);
 
-  // Mirror playhead (beats → column units, accounting for beatsPerCell).
+  // Mirror playhead (beats -> column units, accounting for beatsPerCell).
   useEffect(() => {
     registry.set(atoms.playhead, playhead === null ? null : playhead / beatsPerCell);
   }, [registry, atoms.playhead, playhead, beatsPerCell]);
@@ -495,7 +495,7 @@ export const SequenceGrid = ({
     [],
   );
 
-  // Loop-marker projection — read viewport (scrollX, cellWidth, zoomX) reactively
+  // Loop-marker projection - read viewport (scrollX, cellWidth, zoomX) reactively
   // and measure the container so the overlay sizes track the grid pane.
   const viewport = useAtomValue(atoms.viewport);
   const { ref: paneRef, width: paneWidth = 0, height: paneHeight = 0 } = useResizeDetector<HTMLDivElement>();
@@ -518,7 +518,7 @@ export const SequenceGrid = ({
     const visibleHeight = Math.max(0, paneHeight - cellGridHeaders.top);
     const centeredScrollY = Math.max(0, gridHeight / 2 - visibleHeight / 2);
     registry.set(atoms.viewport, { ...viewport, scrollY: centeredScrollY });
-    // viewport is intentionally omitted from the dep list — we want this to
+    // viewport is intentionally omitted from the dep list - we want this to
     // fire only on paneHeight changes, not every viewport tick (which would
     // re-center after the user scrolls).
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -555,7 +555,7 @@ export const SequenceGrid = ({
   }, [registry, atoms.playhead, atoms.viewport, paneWidth, cellGridHeaders.left, beatsPerBar, beatsPerCell]);
   const resolvedLoopEnd = loopEnd ?? sequence.length;
   const resolvedLoopStart = loopStart ?? 0;
-  // Loop range is allowed to extend beyond the current sequence length — the
+  // Loop range is allowed to extend beyond the current sequence length - the
   // ScoreArticle grows sequences to match on commit. Cap at a generous maximum
   // (256 beats = 64 bars at 4/4) so dragging stays bounded.
   const loopMaxBeats = Math.max(sequence.length, 256);

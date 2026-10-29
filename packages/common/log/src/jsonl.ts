@@ -8,7 +8,7 @@ import { type LogEntry } from './context.ts';
 /**
  * Compact JSONL log record with short property names for small serialized size.
  *
- * Field names are intentionally one character to keep on-disk / on-wire size minimal —
+ * Field names are intentionally one character to keep on-disk / on-wire size minimal -
  * a single record can be emitted thousands of times per session.
  */
 export type LogRecord = {
@@ -58,7 +58,7 @@ export type SerializeToJsonlOptions = {
 /**
  * Serialize a {@link LogEntry} to a single compact JSON line (no trailing newline).
  *
- * Returns `undefined` for entries at TRACE level — callers can use this to skip them.
+ * Returns `undefined` for entries at TRACE level - callers can use this to skip them.
  *
  * The output is compatible with newline-delimited JSON (NDJSON / JSONL): join multiple
  * results with `\n` for a stream / file representation.
@@ -66,7 +66,7 @@ export type SerializeToJsonlOptions = {
  * Context is taken from {@link LogEntry.computedContext}, which has already flattened
  * nested objects to strings (see `stringifyOneLevel` in `context.ts`), so the resulting
  * `c` field is a JSON string of a flat `Record<string, primitive>` map. The function
- * does **not** truncate context — callers that care about line size should set their own
+ * does **not** truncate context - callers that care about line size should set their own
  * cap before calling, or trim post-hoc.
  */
 export const serializeToJsonl = (entry: LogEntry, opts: SerializeToJsonlOptions = {}): string | undefined => {

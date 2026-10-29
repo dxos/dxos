@@ -9,7 +9,7 @@
  * whose next gesture depends on what the last one rendered cannot be expressed, and a `do:` step with
  * no operation behind it cannot be performed at all. This keeps one browser and one recording context
  * alive behind a loopback HTTP server, so the agent issues `click`/`fill`/`drag` as separate turns and
- * reads the result — or a screenshot — before choosing the next one.
+ * reads the result - or a screenshot - before choosing the next one.
  *
  *   node driver.mjs --port 7333 --url http://localhost:4173 --out /tmp/demo
  *   curl -sS localhost:7333/cmd -d '{"op":"click","selector":"[data-testid=x]"}'
@@ -32,7 +32,7 @@
  * itself and records from webview snapshots. Either way `tauri/recorder.mjs` records it.
  * The ops, the overlay and flow scripts are the same; `page` is `tauri/page.mjs`'s Playwright-shaped adapter.
  *
- * `--caption-position top|middle|bottom` (bottom) places step captions, and `--caption-background <0–1>` (0.6) sets
+ * `--caption-position top|middle|bottom` (bottom) places step captions, and `--caption-background <0-1>` (0.6) sets
  * the opacity of their panel, which is blurred behind so the type stays legible. `--caption-colors white-on-black` or
  * `black-on-white` fixes the title's and captions' colours whatever the page's theme.
  *
@@ -81,7 +81,7 @@ const parseArgs = () => {
     'ready-timeout': 180_000,
     'settle': 5_000,
     'feed': 'top-right',
-    // Where captions sit (`top`, `middle` or `bottom`), and their background's opacity (0–1, translucent by default).
+    // Where captions sit (`top`, `middle` or `bottom`), and their background's opacity (0-1, translucent by default).
     'caption-position': 'bottom',
     'caption-background': 0.6,
     // `white-on-black` or `black-on-white` for the title and captions; unset, floating panels invert the page's theme.
@@ -165,7 +165,7 @@ mkdirSync(options.out, { recursive: true });
 
 /**
  * Binding to loopback is not access control: any page the browser has open can POST here cross-origin
- * in `no-cors` mode, and while the response is opaque to it the command still runs — `eval` and `goto`
+ * in `no-cors` mode, and while the response is opaque to it the command still runs - `eval` and `goto`
  * included. A token in a non-safelisted header cannot be set by such a request (it would force a
  * preflight, which this server never approves), so requiring one closes that path.
  */
@@ -411,7 +411,7 @@ const locator = (command) =>
   command.text ? page.getByText(command.text, { exact: !!command.exact }) : page.locator(command.selector);
 
 /**
- * What a viewer would call the element — its accessible name or visible text before its testid — so the
+ * What a viewer would call the element - its accessible name or visible text before its testid - so the
  * feed reads "Click New space" rather than a selector.
  */
 const describe = async (target, command) => {
@@ -532,7 +532,7 @@ let booted = false;
 
 /**
  * The flow script `run` last executed and the 0-based index of its next step, so a bare `run` resumes
- * where the previous one stopped — "carry on" needs no bookkeeping from the caller.
+ * where the previous one stopped - "carry on" needs no bookkeeping from the caller.
  */
 /**
  * `state` is what `status` reports while a backgrounded `run` is in flight: `setup` (off-camera steps),
@@ -823,7 +823,7 @@ const handlers = {
   },
   /**
    * A slow, stepped mouse drag rather than `dragTo`. The chess board's drop targets come from
-   * pragmatic-drag-and-drop, which only arms its drop zones after it sees movement — a single
+   * pragmatic-drag-and-drop, which only arms its drop zones after it sees movement - a single
    * synthetic jump lands on `canDrop` having never fired.
    */
   drag: async (command) => {
@@ -894,7 +894,7 @@ const handlers = {
       async ({ key, input, spaceId }) => {
         window.__demoOverlay?.wrapInvoke();
         if (!globalThis.composer?.invoke) {
-          throw new Error('composer.invoke is unavailable — the app has not finished mounting');
+          throw new Error('composer.invoke is unavailable - the app has not finished mounting');
         }
         return globalThis.composer.invoke(key, input, spaceId ? { spaceId } : undefined);
       },
@@ -927,8 +927,8 @@ const handlers = {
    * first failure and leaves `next` on the failed step, so a fixed script is retried from there.
    *
    * `restart: true` reloads the app and `replay: true` (implied by `restart`) first brings it to the
-   * state `from` expects by running every earlier step off camera — skipping any whose `done` check
-   * already holds — so a flow can be picked up at any step after a reload, a crash or a new session.
+   * state `from` expects by running every earlier step off camera - skipping any whose `done` check
+   * already holds - so a flow can be picked up at any step after a reload, a crash or a new session.
    */
   run: async (command) => {
     flow.state = 'running';
@@ -1089,7 +1089,7 @@ const MAX_BODY = 64 * 1024;
 
 const server = createServer((request, response) => {
   // Headers are complete before the first `data` event, so the token is checked before a single byte of
-  // body is buffered — an unauthorized caller cannot make this process accumulate anything.
+  // body is buffered - an unauthorized caller cannot make this process accumulate anything.
   if (request.headers[TOKEN_HEADER] !== token) {
     response.writeHead(403, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ ok: false, error: `missing or bad ${TOKEN_HEADER}` }));
@@ -1151,7 +1151,7 @@ const server = createServer((request, response) => {
   });
 });
 
-// Loopback only, and token-gated — this server drives a real browser and takes arbitrary `eval`.
+// Loopback only, and token-gated - this server drives a real browser and takes arbitrary `eval`.
 server.listen(options.port, '127.0.0.1', () => {
   // Also written to the output directory so a caller can read it without scraping stdout.
   writeFileSync(path.join(options.out, 'token'), token);

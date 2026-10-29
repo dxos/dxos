@@ -35,7 +35,7 @@ const createTestItems = (n: number) =>
   );
 
 // Stateful items plus a same-container reorder handler so the stories actually apply drops
-// (the container is headless — reordering is the consumer's responsibility).
+// (the container is headless - reordering is the consumer's responsibility).
 const useReorderableStack = () => {
   // Create items at render time to avoid Storybook serialization issues with ECHO objects.
   const [items, setItems] = useState(() => createTestItems(NUM_ITEMS));

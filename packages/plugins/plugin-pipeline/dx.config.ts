@@ -18,7 +18,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       A multi-column Kanban-style pipeline plugin for DXOS Composer.
       Each Pipeline holds an ordered set of Columns; each Column is backed by a ViewModel whose query
-      can select any ECHO object type — messages, contacts, documents, or custom types — from the active space.
+      can select any ECHO object type - messages, contacts, documents, or custom types - from the active space.
 
       Columns are fully configurable through the Settings companion panel, where users can add, rename,
       reorder, and delete columns and edit the underlying query and projection for each column.

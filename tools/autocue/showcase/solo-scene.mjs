@@ -7,7 +7,7 @@
  * Runs an actor-scene story with every actor in its own headless browser, each a real client on the dev EDGE
  * network, and steps them together: the first actor seeds the space and shares an invitation and the scene's target,
  * the rest join with it, then every page seeks to each step and the driver waits for their documents to agree.
- * Reports the join timeline, each step's seek and catch-up time, and whether the documents converged — the
+ * Reports the join timeline, each step's seek and catch-up time, and whether the documents converged - the
  * counterpart of `probe-scene.mjs`, which runs every actor in one page on an in-memory network.
  *
  *   node solo-scene.mjs --story stories-stories-agent-collaboration--echo [--actors 16] [--step 1000]

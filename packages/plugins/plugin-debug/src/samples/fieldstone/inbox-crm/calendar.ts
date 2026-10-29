@@ -116,7 +116,7 @@ const TEAM_SYNC_NOTES = [
   'SOC 2: evidence collection owners. Hiring loop updates.',
   'Release train for 1.8: what is in, what slips.',
   'Customer roundup: Northpine renewal, Meridian review, Brightwater trial.',
-  'Incident review: last week’s pages and the noisy alerts to fix.',
+  "Incident review: last week's pages and the noisy alerts to fix.",
 ];
 
 /** Planning notes for each sprint, in rotation. */
@@ -148,7 +148,7 @@ const PRODUCT_REVIEW_NOTES = [
 const NORTHPINE_NOTES = [
   'SSO rollout, then their dedicated region request.',
   'Seat count for renewal; build-time savings report.',
-  'Cache hit rate on their Bazel monorepo; next quarter’s plans.',
+  "Cache hit rate on their Bazel monorepo; next quarter's plans.",
 ];
 
 /** Notes for Hana's first 1:1, the only one before the reference date. */

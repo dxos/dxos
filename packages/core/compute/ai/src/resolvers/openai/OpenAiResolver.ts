@@ -21,7 +21,7 @@ export const make = () =>
     },
     Provider.openai.id,
     Effect.gen(function* () {
-      // Derive the id → model-layer map from the OpenAI provider's catalog models (id → back-end name).
+      // Derive the id -> model-layer map from the OpenAI provider's catalog models (id -> back-end name).
       const modelMap: Partial<
         Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>
       > = {};

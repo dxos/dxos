@@ -152,7 +152,7 @@ export const seedExportPoolImportAndHypercoreWrite = async (): Promise<unknown> 
     throw new Error('Exported OPFS payload is not a valid SQLite database');
   }
 
-  // Production recovery wipes origin storage before importing — the import must leave
+  // Production recovery wipes origin storage before importing - the import must leave
   // the pool with spare files or the next boot cannot create journal/WAL files.
   await OpfsPool.wipe();
   await OpfsPool.writeDatabase(exported);

@@ -6,11 +6,11 @@
 // `grid-template-areas`, so each region is positioned by name (`tools`,
 // `form`, `results`) instead of fragile column/row math:
 //
-//   ┌──────────┬──────────┐
-//   │ tools    │          │
-//   ├──────────┤  results │
-//   │ form     │          │
-//   └──────────┴──────────┘
+//   +----------+----------+
+//   | tools    |          |
+//   +----------+  results |
+//   | form     |          |
+//   +----------+----------+
 //
 // The left column stacks the tool list (top) and the form for the selected
 // tool (bottom). The right column spans both rows for the run output.
@@ -47,7 +47,7 @@ const SAMPLE_TOOLS: Tool[] = [
   {
     id: 'list_schemas',
     title: 'List schemas',
-    description: 'List ECHO-registered types — anything passing through Type.makeObject({ typename, version }).',
+    description: 'List ECHO-registered types - anything passing through Type.makeObject({ typename, version }).',
   },
 ];
 
@@ -137,7 +137,7 @@ const Playground = () => {
 
 /**
  * Story-only stand-in for the real `<ToolForm>`. Keeps the storybook
- * standalone — the production component will accept an Effect Schema and
+ * standalone - the production component will accept an Effect Schema and
  * render via `react-ui-form`.
  */
 const MockToolForm = ({ toolId, onRun }: { toolId: string; onRun: (args: Record<string, unknown>) => void }) => {
@@ -183,7 +183,7 @@ type Story = StoryObj<typeof Playground>;
 export const Default: Story = {};
 
 /**
- * Composition story — show the same data via custom row content (just
+ * Composition story - show the same data via custom row content (just
  * titles, no descriptions) to verify the namespace API.
  */
 export const TitlesOnly: Story = {

@@ -7,7 +7,7 @@ import { type Locator, type Page, expect } from '@playwright/test';
 // TODO(wittjosiah): If others find this useful, factor out the thread plugin.
 export const Thread = {
   createComment: async (page: Page, plankLocator: Locator, comment: string) => {
-    // A narrow plank collapses the action into the toolbar's ⋮ menu, which renders its items in a portal once opened.
+    // A narrow plank collapses the action into the toolbar's : menu, which renders its items in a portal once opened.
     const inlineButton = plankLocator.getByTestId('comments.comment.add');
     const overflow = plankLocator.getByTestId('toolbar.overflow');
     await expect(inlineButton.or(overflow).first()).toBeVisible();
@@ -87,7 +87,7 @@ export const Thread = {
       await expect(Thread.getThread(page, text)).toHaveAttribute('aria-current', 'location');
     } catch (err) {
       throw new Error(
-        `marker not on "${text}" — threads: ${await Thread.describeThreads(page)}; comments: ${await Thread.describeComments(page)}`,
+        `marker not on "${text}" - threads: ${await Thread.describeThreads(page)}; comments: ${await Thread.describeComments(page)}`,
         { cause: err },
       );
     }

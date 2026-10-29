@@ -63,13 +63,13 @@ export const iconSize = (size: Size | null): CSSProperties =>
  * Snaps an arbitrary numeric value to the nearest valid Tailwind size token.
  *
  * The function tries progressively coarser series in order until a match is found:
- * 1. Exact match — returns the value as-is if it is already a valid `Size`.
- * 2. Zero or negative — clamps to `0`.
- * 3. Sub-half values (`< 0.5`) — maps to the `'px'` token (1 px).
- * 4. Half-step series (0.5 increments, e.g. 1.5, 2.5 …).
- * 5. Whole-number series (1, 2, 3 …).
- * 6. Double series (even numbers: 2, 4, 6 …).
- * 7. Quadruple series (multiples of 4: 4, 8, 12 …).
+ * 1. Exact match - returns the value as-is if it is already a valid `Size`.
+ * 2. Zero or negative - clamps to `0`.
+ * 3. Sub-half values (`< 0.5`) - maps to the `'px'` token (1 px).
+ * 4. Half-step series (0.5 increments, e.g. 1.5, 2.5 ...).
+ * 5. Whole-number series (1, 2, 3 ...).
+ * 6. Double series (even numbers: 2, 4, 6 ...).
+ * 7. Quadruple series (multiples of 4: 4, 8, 12 ...).
  * 8. Falls back to `defaultSize` if no series matches.
  *
  * @param value - Numeric size to snap (in Tailwind spacing units, where 1 unit = 0.25 rem).

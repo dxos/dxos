@@ -153,7 +153,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       await manager.setSpaceRootRefs(spaceId, { spaceRootDocUrl, credentialsDocUrl });
       expect(manager.getSpaceRootRefs(spaceId)?.spaceRootDocUrl).to.equal(spaceRootDocUrl);
 
-      // Rotating the directory must not disturb the immutable root — the upsert writes only root_doc_url.
+      // Rotating the directory must not disturb the immutable root - the upsert writes only root_doc_url.
       const rotated = await manager.assignRootToSpace(spaceId, { lease: await directory() });
       rotatedDirectoryId = rotated.documentId;
       expect(manager.getSpaceRootRefs(spaceId)?.spaceRootDocUrl).to.equal(spaceRootDocUrl);
@@ -279,7 +279,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
 
   test('createSpaceRoot leaves a space key-derived and unanchored', async () => {
     // The ECHO-layer default: `createSpaceRoot` makes the DIRECTORY only. Anchoring is
-    // `createSpaceWithRootDocument`, which nothing here calls on its own — a caller opts in.
+    // `createSpaceWithRootDocument`, which nothing here calls on its own - a caller opts in.
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => {
       void dispose();
@@ -352,7 +352,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       expect(host.spaceIds).to.deep.equal([spaceId]);
       expect(host.spaces).to.have.length(1);
 
-      // Open space root without passing URL — should resolve from persistent store
+      // Open space root without passing URL - should resolve from persistent store
       const root = await host.openSpaceRoot(Context.default(), spaceId);
       expect(root).to.exist;
       expect(root.getSpaceKey()).to.equal(spaceKey.toHex());

@@ -40,7 +40,7 @@ export type TestSqliteStorageAdapter = {
  * Opens a migrated {@link SqliteStorageAdapter} over a fresh SQLite runtime.
  * `dispose` closes the adapter and tears down the runtime.
  *
- * `callbacks` lets a test wait for a write to actually land — `save` no-ops once the adapter is
+ * `callbacks` lets a test wait for a write to actually land - `save` no-ops once the adapter is
  * closed, so sleeping and hoping an auto-save fired first silently drops it.
  */
 export const createTestSqliteStorageAdapter = async (

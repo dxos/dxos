@@ -49,7 +49,7 @@ type StoryArgs = {
 /**
  * Renders a plain `react-ui-editor` over the sample text with the `pos` decoration extension: each
  * word is coloured by its Universal POS tag. `Mock` uses the offline stub tagger (no key needed);
- * `LLM` tags via the edge AI service. No plugin manager / ECHO space — just the editor + extension.
+ * `LLM` tags via the edge AI service. No plugin manager / ECHO space - just the editor + extension.
  */
 const DefaultStory = ({ ai }: StoryArgs) => {
   const themeMode = Hooks.useThemeMode();

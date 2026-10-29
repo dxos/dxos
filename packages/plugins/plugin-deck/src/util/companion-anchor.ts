@@ -5,7 +5,7 @@
 /**
  * The planks the deck actually lays out: `flatten` collapses the stack to the current (last) plank,
  * surfacing the rest as breadcrumbs. The companion anchors within this set, never within `deck.active`
- * — anchoring it to a plank that is not rendered would place it outside every tile (and serialize a URL
+ * - anchoring it to a plank that is not rendered would place it outside every tile (and serialize a URL
  * that restores that way).
  */
 export const getRenderedPlanks = (active: readonly string[], flatten: boolean | undefined): string[] => {
@@ -23,7 +23,7 @@ export const getRenderedPlanks = (active: readonly string[], flatten: boolean | 
  * Flat mode lays out one plank at a time, so the companion is a property of the deck rather than of the
  * plank: moving between articles keeps the pane in whatever state it was left in, and closing it once
  * closes it everywhere. Which TAB it shows still resolves per plank, from the plank's own companions and
- * the globally-selected variant. Stacked mode keeps the flag per plank — several planks are visible at
+ * the globally-selected variant. Stacked mode keeps the flag per plank - several planks are visible at
  * once, so each carries its own.
  *
  * A deck holding no flag at all follows the same split: flat opens its single pane, while stacked stays
@@ -50,7 +50,7 @@ export const isAnyCompanionOpen = (
 
 /**
  * Whether a plank whose companion flag is `open` actually shows the pane. A plank with no companions
- * (the plugin registry, settings) has nothing to show, so it renders closed without clearing the flag —
+ * (the plugin registry, settings) has nothing to show, so it renders closed without clearing the flag -
  * flat mode's flag is deck-wide, and navigating back to a document must find the pane still open.
  * `companions` is undefined until read, which counts as open so a plank that has companions never lays
  * out collapsed first.
@@ -122,8 +122,8 @@ export type ResolveCompanionPlankOptions = {
 
 /**
  * The plank whose companion a subject targets. A qualified companion id carries its plank as the parent
- * path; a bare `~<variant>` carries none — the form `useShowItem` and the comment/transcript operations
- * pass — so it anchors to the caller's plank, else the attended one.
+ * path; a bare `~<variant>` carries none - the form `useShowItem` and the comment/transcript operations
+ * pass - so it anchors to the caller's plank, else the attended one.
  */
 export const resolveCompanionPlank = ({
   subject,

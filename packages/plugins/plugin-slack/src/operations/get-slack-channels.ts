@@ -51,7 +51,7 @@ const conversationKind = (conversation: SlackApi.SlackConversation): string => {
 };
 
 /**
- * Discovery only — list Slack conversations reachable from the connection's
+ * Discovery only - list Slack conversations reachable from the connection's
  * token and return one descriptor per item. Read-only: NO local Channel objects
  * are created here. Materialization happens via `materializeTarget` when a
  * binding is created.

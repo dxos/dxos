@@ -49,7 +49,7 @@ describe('branching', () => {
     await createBranch(root, 'b1');
     await db.flush();
 
-    // No new objects in the space — branching forks documents, not object identities.
+    // No new objects in the space - branching forks documents, not object identities.
     expect(db.getTotalNumberOfObjects()).toBe(before);
     expect(new Set(db.getAllObjectIds())).toEqual(beforeIds);
 
@@ -168,7 +168,7 @@ describe('branching', () => {
     await createBranch(root, 'snap', { fromHeads: { [root.id]: rootHeadsV0, [child.id]: childHeadsV0 } });
     await switchBranch(root, 'snap');
 
-    // Both the root AND the child are at their scrubbed (v0) state — not the latest (v1).
+    // Both the root AND the child are at their scrubbed (v0) state - not the latest (v1).
     expect(root.title).toBe('root-v0');
     expect(child.content).toBe('child-v0');
 
@@ -238,7 +238,7 @@ describe('branching', () => {
     const { db, root } = await setup();
     // Create a concurrent edit in the root's history: edit the tip, then edit again from the
     // pre-edit frontier. Linear replay of all changes interleaves the siblings and can never
-    // reproduce the single-head frontier — the fork must use the ancestor closure.
+    // reproduce the single-head frontier - the fork must use the ancestor closure.
     const baseHeads = heads(root);
     Obj.update(root, (root: any) => {
       root.title = 'root-live';
@@ -251,7 +251,7 @@ describe('branching', () => {
     await db.flush();
     // History is now non-linear (the live edit and the concurrent sibling are both frontier heads).
     // The exact count is environment-dependent (automerge change batching), so assert only that the
-    // frontier branched — the point is that a linear replay could not reproduce `liveHeads`.
+    // frontier branched - the point is that a linear replay could not reproduce `liveHeads`.
     expect(heads(root).length).toBeGreaterThan(1);
     expect(heads(root)).not.toEqual(liveHeads);
 

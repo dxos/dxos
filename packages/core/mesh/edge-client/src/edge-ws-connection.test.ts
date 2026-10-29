@@ -281,7 +281,7 @@ class DeferredBlob extends Blob {
 
   override async arrayBuffer(): Promise<ArrayBuffer> {
     // `await` (not a bare `return`) so the listener attaches to `#result` synchronously,
-    // during dispatch, rather than one microtask later — otherwise resolving out of
+    // during dispatch, rather than one microtask later - otherwise resolving out of
     // dispatch order has no effect once every deferred promise is already settled.
     return await this.#result;
   }

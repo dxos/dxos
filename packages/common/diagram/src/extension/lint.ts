@@ -11,7 +11,7 @@ import { parse, read, toScene } from '../dsl/parse.ts';
 
 export type LintOptions = {
   /**
-   * Also report the layout diagnostics — overlaps, a connector through a node, a label that does
+   * Also report the layout diagnostics - overlaps, a connector through a node, a label that does
    * not fit. Off by default because a document being typed is briefly nonsense; the bench and the
    * agent loop both want it on.
    */
@@ -21,7 +21,7 @@ export type LintOptions = {
 /**
  * What is wrong with a document: everything `parse` found, and optionally everything
  * `Diagnostics.analyze` finds in the scene it produced, each carrying the range of the statement
- * or element that produced it — a layout error is only actionable when it points at the box it is
+ * or element that produced it - a layout error is only actionable when it points at the box it is
  * about. Separate from the CodeMirror wrapper so it needs no editor, which is also how the
  * agent-facing path reports the same problems.
  */

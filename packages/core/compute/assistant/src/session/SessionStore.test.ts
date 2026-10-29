@@ -56,7 +56,7 @@ describe('SessionStore', () => {
       }).pipe(Effect.provide(TestLayer)),
     );
 
-    it.effect('respects the fork cutoff — excludes messages after messageId', () =>
+    it.effect('respects the fork cutoff - excludes messages after messageId', () =>
       Effect.gen(function* () {
         const { db } = yield* Database.Service;
         const sourceFeed = db.add(Feed.make());
@@ -64,7 +64,7 @@ describe('SessionStore', () => {
 
         const msg1 = makeMessage('a');
         const msg2 = makeMessage('b', 'assistant');
-        const msg3 = makeMessage('c — after fork');
+        const msg3 = makeMessage('c - after fork');
         yield* Feed.append(sourceFeed, [msg1, msg2, msg3]);
 
         yield* Feed.append(forkFeed, [
@@ -115,7 +115,7 @@ describe('SessionStore', () => {
       }).pipe(Effect.provide(TestLayer)),
     );
 
-    it.effect('drops queue entries from history — the turn appends its own message', () =>
+    it.effect('drops queue entries from history - the turn appends its own message', () =>
       Effect.gen(function* () {
         const { db } = yield* Database.Service;
         const feed = db.add(Feed.make());
@@ -165,13 +165,13 @@ describe('SessionStore', () => {
         // A queue entry is never history; the turn's own message is (appended by the request).
         expect(state.history).toEqual([]);
 
-        // Still in the feed — only filtered out of the pending projection.
+        // Still in the feed - only filtered out of the pending projection.
         const items = yield* Feed.query(feed, Filter.type(Message.Message)).run;
         expect(items.map((item) => item.id)).toContain(entry.id);
       }).pipe(Effect.provide(TestLayer)),
     );
 
-    // The ack lands after the turn, so an interrupted turn must leave the entry pending — this is
+    // The ack lands after the turn, so an interrupted turn must leave the entry pending - this is
     // what makes a rehydrated process redeliver it rather than silently drop it.
     it.effect('an entry whose turn never acked stays pending', () =>
       Effect.gen(function* () {

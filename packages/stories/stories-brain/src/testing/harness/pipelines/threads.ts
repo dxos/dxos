@@ -41,7 +41,7 @@ const PROMPT = trim`
   Summarize the email thread below as a terse markdown bullet list (2-4 bullets): what it is about,
   who is involved, and any decisions or outstanding items.
   Rules:
-  - Start each bullet with a verb, name, or topic — never with "The thread", "This email", or "The sender".
+  - Start each bullet with a verb, name, or topic - never with "The thread", "This email", or "The sender".
   - No preamble, heading, labels, or quotes. Output ONLY the bullets.
   - Keep each bullet under ~15 words.
 `;

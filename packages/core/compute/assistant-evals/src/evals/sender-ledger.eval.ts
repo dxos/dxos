@@ -25,7 +25,7 @@ import { getDefaultSkills } from '../skills.ts';
 // feed-triggered routine uses. The input batches two messages from the SAME sender so one run also
 // exercises the dedupe instruction: a correct run yields exactly one ledger table, filed exactly
 // once into the project's artifacts, holding exactly one row for that sender.
-// TODO(burdon): Authored without a live run (no DX_ANTHROPIC_API_KEY in the authoring session) —
+// TODO(burdon): Authored without a live run (no DX_ANTHROPIC_API_KEY in the authoring session) -
 // verify live before trusting pass rates.
 
 const PROJECT_NAME = 'Inbox Research';
@@ -42,7 +42,7 @@ const INSTRUCTIONS = trim`
   - List the project's artifacts to find the Sender Ledger table. If it does not exist, create it
     and file it into the project's artifacts.
   - For each message, upsert the sender's row: create it if missing, otherwise increment count and
-    update lastSeen from the message date. Never create a second row — or a second table — for a
+    update lastSeen from the message date. Never create a second row - or a second table - for a
     sender that already has one.
 `;
 
@@ -151,7 +151,7 @@ const task = createEvalRunner({
 // Skipped: `table.create` fails headless with `Invalid draft for org.dxos.type.table: view: Missing
 // key` (and `org.dxos.type.view: query.ast: Missing key`) on every attempt, so the routine can never
 // file its table. Unskip once table creation works under the eval harness.
-evalite.skip('Projects — sender-ledger routine maintains one filed table', {
+evalite.skip('Projects - sender-ledger routine maintains one filed table', {
   data: [{ input: { messages: MESSAGES } }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

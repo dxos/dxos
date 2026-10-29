@@ -32,7 +32,7 @@ export type DecisionModel = Schema.Schema.Type<typeof DecisionModel>;
 
 export const Settings = Schema.Struct({
   /**
-   * What `Model.defaultDecisionModel` resolves to — the model behind every decision whose caller did
+   * What `Model.defaultDecisionModel` resolves to - the model behind every decision whose caller did
    * not pin one. Unset means Cloudflare's Clef on Workers AI, which answers through EDGE with no key.
    */
   decisionModel: Schema.optional(
@@ -42,7 +42,7 @@ export const Settings = Schema.Struct({
     }),
   ),
   /**
-   * Calls System One directly at this URL instead of through EDGE — for a self-hosted or regional
+   * Calls System One directly at this URL instead of through EDGE - for a self-hosted or regional
    * endpoint that sends CORS headers. Unset routes through EDGE, which works with no key connected.
    */
   endpoint: Schema.optional(
@@ -59,7 +59,7 @@ export const Settings = Schema.Struct({
     }),
   ),
   /**
-   * Calls Clairic directly at this URL instead of through EDGE — for a local proxy to Workers AI, or an
+   * Calls Clairic directly at this URL instead of through EDGE - for a local proxy to Workers AI, or an
    * EDGE without the Clairic route. Sent no credential: the endpoint authenticates upstream itself.
    */
   extractionEndpoint: Schema.optional(

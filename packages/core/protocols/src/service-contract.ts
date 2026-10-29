@@ -26,7 +26,7 @@ export type RequestOptions = {
  * The still-packed request/response envelope a backend moves.
  *
  * `google.protobuf.Any` itself rather than a structural twin of it, so an envelope is the same type
- * wherever it travels — a generated message field, a signalling payload, or an RPC frame.
+ * wherever it travels - a generated message field, a signalling payload, or an RPC frame.
  */
 export type AnyEnvelope = Any;
 

@@ -251,7 +251,7 @@ export const getEchoRoot = (target: object, depth = 0): object => {
 
 /**
  * The in-memory variant's read-only gate key (see `assertMutable`): the root target that a change
- * context is opened against, or `undefined` while the root does not yet own an `[EventId]` — an object
+ * context is opened against, or `undefined` while the root does not yet own an `[EventId]` - an object
  * under construction is not gated, which is what lets `init` fill it before any context exists.
  *
  * Every target of one object answers the same key, so a nested record and an array are gated by the

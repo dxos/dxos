@@ -44,9 +44,9 @@ export type Options = {
 
 /**
  * Options for the preload entry point. Adds an optional progress hook so hosts
- * can drive a boot-loader counter (`Loading plugins (3/12)…`) as remote plugin
- * manifests resolve. Resolution order is *not* deterministic — each entry races
- * its own network fetch — so callers should treat `loaded` as a count, not an
+ * can drive a boot-loader counter (`Loading plugins (3/12)...`) as remote plugin
+ * manifests resolve. Resolution order is *not* deterministic - each entry races
+ * its own network fetch - so callers should treat `loaded` as a count, not an
  * index. Failures are still swallowed; `loaded` advances on both success and
  * recoverable failure so the counter always reaches `total`.
  */
@@ -254,7 +254,7 @@ const loadFromManifest = (
     // static <link> tags.
     if (!manifest.dev) {
       // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
-      // subsequent reload would fetch the manifest from the network — and fail when the
+      // subsequent reload would fetch the manifest from the network - and fail when the
       // plugin's host is offline, dropping the plugin from the runtime.
       const cachedUrls =
         manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
@@ -289,7 +289,7 @@ const loadFromManifest = (
     // Append stylesheets only after the entry imports cleanly and meta validation
     // passes. If we did this earlier and the import or meta checks failed, the
     // `<link>` tags would leak into the host DOM with no plugin to own their
-    // teardown — `uninstall` only runs for plugins the manager actually accepted.
+    // teardown - `uninstall` only runs for plugins the manager actually accepted.
     // In dev mode, Vite injects styles at runtime via the module graph, so static
     // <link> tags would duplicate (or 404, since CSS chunks aren't pre-built).
     if (!manifest.dev) {
@@ -300,7 +300,7 @@ const loadFromManifest = (
 
 /**
  * Preloads previously persisted remote plugins from storage. Per-entry failures
- * are logged and swallowed — the returned effect always succeeds with whichever
+ * are logged and swallowed - the returned effect always succeeds with whichever
  * plugins loaded cleanly, so a single bad entry can't block the host's startup.
  */
 export const preload = (options: PreloadOptions = {}): Effect.Effect<Plugin.Plugin[], never> =>
@@ -370,7 +370,7 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
         return yield* Effect.fail(new RemotePluginLoadError({ context: { locator, reason: 'invalid-locator' } }));
       }
       const { plugin, manifest } = yield* loadFromManifest(locator, cache);
-      // Production manifests can't collide with a builtin id — that would make
+      // Production manifests can't collide with a builtin id - that would make
       // the registered plugin permanently inaccessible. Dev manifests are
       // allowed to collide because the manager shadow primitive handles the
       // overlap (dev plugin takes the id slot for the session, original is
@@ -392,7 +392,7 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
  * Removes a previously installed remote plugin: drops the persisted entry, evicts cached
  * assets, and removes any stylesheet `<link>` tags that {@link loadFromManifest} appended.
  *
- * Cache eviction failures are logged and swallowed — the persisted entry has already been
+ * Cache eviction failures are logged and swallowed - the persisted entry has already been
  * dropped so the user-visible state is consistent regardless of whether the platform
  * cache cooperated.
  */

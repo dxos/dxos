@@ -55,7 +55,7 @@ export type NeedleAnswer = {
 export type AssistantConfig = {
   modelUrl: string;
   tools: NeedleTool[];
-  /** Environment facts (`key: value; …`), never instructions: the model does not follow prose here. */
+  /** Environment facts (`key: value; ...`), never instructions: the model does not follow prose here. */
   system?: string;
 };
 

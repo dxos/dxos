@@ -221,8 +221,8 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> &
 };
 
 /**
- * Below `lg` an open sidebar is a non-modal drawer — the machine owns its dismissal (Escape, a tap
- * outside, a swipe toward the edge), the edge swipe that opens it and its ARIA — and the content
+ * Below `lg` an open sidebar is a non-modal drawer - the machine owns its dismissal (Escape, a tap
+ * outside, a swipe toward the edge), the edge swipe that opens it and its ARIA - and the content
  * stays mounted so the CSS can slide it; at `lg` it is a plain landmark and the machine stays
  * closed. The machine moves the panel on `transform` during a drag; `main.css` slides it on
  * `inset-inline-start`, so the two never meet.

@@ -27,7 +27,7 @@ type Harness = ReturnType<typeof useMarkdownEditorBinding>;
 /**
  * Headless executor for {@link ReviewScenario}s: mounts the REAL binding pipeline
  * (`useMarkdownEditorBinding`) through `renderHook` and a REAL `EditorView` wired the way
- * `MarkdownEditorContent` wires it — the automerge source and the binding's extensions in a live
+ * `MarkdownEditorContent` wires it - the automerge source and the binding's extensions in a live
  * compartment, reconfigured (never recreated) when the binding changes. The storybook executor runs
  * the same scenarios against the full plugin stack; this one runs them in a unit test.
  */

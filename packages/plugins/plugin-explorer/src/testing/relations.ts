@@ -31,7 +31,7 @@ export type ConnectedOrgsOptions = {
 /**
  * Populate a database with Organizations, People, and HasConnection relations between organizations.
  * Uses `createObjectFactory` to generate Org/Person properties from their `GeneratorAnnotation`s,
- * then `createRelationFactory` to wire HasConnection relations (Org→Org) between them, spreading
+ * then `createRelationFactory` to wire HasConnection relations (Org->Org) between them, spreading
  * the connections across the available kinds.
  */
 export const generateConnectedOrgs = async (
@@ -41,7 +41,7 @@ export const generateConnectedOrgs = async (
 ): Promise<ConnectedOrgsResult> => {
   const specs: TypeSpec[] = [
     { type: Organization.Organization, count: organizationCount },
-    // Person has a Ref to Organization — generator fills it from objects already in db.
+    // Person has a Ref to Organization - generator fills it from objects already in db.
     { type: Person.Person, count: personCount },
   ];
 
@@ -63,7 +63,7 @@ export const generateConnectedOrgs = async (
 };
 
 /**
- * Build a TreeNode hierarchy: Root → Sector → Organization (leaf).
+ * Build a TreeNode hierarchy: Root -> Sector -> Organization (leaf).
  * Organizations are deterministically bucketed into `SECTORS` so the demo has visible groups.
  */
 export const buildOrgHierarchy = (organizations: Obj.Any[], sectors: readonly string[] = SECTORS): TreeNode => {

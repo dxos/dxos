@@ -52,7 +52,7 @@ export const Pages: Story = {
   },
 };
 
-/** A long document must not rasterise every page up front — that is what took the tab down. */
+/** A long document must not rasterise every page up front - that is what took the tab down. */
 export const Long: Story = {
   args: { url: longUrl },
   play: async ({ canvasElement }) => {

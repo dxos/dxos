@@ -36,18 +36,18 @@ const HIER_EDGE_PREFIX = '__tree_hier__:';
 
 /**
  * Horizontal link generator: x is the horizontal (depth) axis, y the vertical (breadth) axis.
- * Our cartesian coordinates already map x→horizontal / y→vertical, so feed them straight through.
+ * Our cartesian coordinates already map x->horizontal / y->vertical, so feed them straight through.
  */
 const linkPath = linkHorizontal<any, { x: number; y: number }>()
   .x((d) => d.x)
   .y((d) => d.y);
 
 /**
- * Bidirectional Reingold–Tilford "tidy tree" layout (see
+ * Bidirectional Reingold-Tilford "tidy tree" layout (see
  * https://observablehq.com/@observablehq/plot-tree-tidy). The focus node is the root, drawn at the
  * centre. Outgoing edges (the root, then each descendant, is the edge source) form a spanning tree
  * fanning out to the **right**, one column per hop. Inbound edges (an edge whose target is the root)
- * place their source on the **left** as a terminal leaf — the graph is not explored beyond those
+ * place their source on the **left** as a terminal leaf - the graph is not explored beyond those
  * sources. Cross edges and nodes the directed view does not reach are dropped. Hierarchy links get a
  * `linkHorizontal` `path` recomputed from current endpoints every tick so curves track moving nodes.
  */
@@ -55,7 +55,7 @@ export class GraphTreeProjector<
   NodeData = any,
   Options extends GraphTreeProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
-  // Snapshots taken right after mergeData — doTreeLayout reads from these because it overwrites
+  // Snapshots taken right after mergeData - doTreeLayout reads from these because it overwrites
   // layout.graph.edges with the synthesized hierarchy edges.
   #dataNodes: GraphLayoutNode<NodeData>[] = [];
   #dataEdges: GraphLayoutEdge<NodeData>[] = [];
@@ -126,7 +126,7 @@ export class GraphTreeProjector<
     const nodesById = new Map(dataNodes.map((node) => [node.id, node]));
     const makeDatum = (id: string): HierDatum => ({ id, node: nodesById.get(id) });
 
-    // Directed outgoing adjacency (edge.source → edge.target), in stable edge order.
+    // Directed outgoing adjacency (edge.source -> edge.target), in stable edge order.
     const outgoing = new Map<string, string[]>();
     for (const edge of this.#dataEdges) {
       const list = outgoing.get(edge.source.id) ?? [];
@@ -154,7 +154,7 @@ export class GraphTreeProjector<
       frontier = next;
     }
 
-    // Left side: sources of edges whose target is the focus (inbound), placed as terminal leaves — the
+    // Left side: sources of edges whose target is the focus (inbound), placed as terminal leaves - the
     // graph is not explored beyond them. Skip any already reached by the outgoing tree.
     const leftSources: string[] = [];
     for (const edge of this.#dataEdges) {
@@ -195,7 +195,7 @@ export class GraphTreeProjector<
     focusNode.type = TREE_NODE_TYPE_ROOT;
     placed.push(focusNode);
 
-    // Right side: depth → +x; breadth shifted so the root's breadth maps to the vertical centre.
+    // Right side: depth -> +x; breadth shifted so the root's breadth maps to the vertical centre.
     const rightBreadth = rightPoint.x;
     rightPoint.each((d) => {
       if (d.data.id === focusId || !d.data.node) {
@@ -206,7 +206,7 @@ export class GraphTreeProjector<
       placed.push(d.data.node);
     });
 
-    // Left side: depth → -x (mirrored); breadth shifted so the root maps to the vertical centre.
+    // Left side: depth -> -x (mirrored); breadth shifted so the root maps to the vertical centre.
     const leftBreadth = leftPoint.x;
     leftPoint.each((d) => {
       if (d.data.id === focusId || !d.data.node) {
@@ -217,12 +217,12 @@ export class GraphTreeProjector<
       placed.push(d.data.node);
     });
 
-    // Only render placed nodes — neighbourhood nodes the directed view doesn't reach are dropped.
+    // Only render placed nodes - neighbourhood nodes the directed view doesn't reach are dropped.
     this.layout.graph.nodes = placed;
 
     // Synthesize hierarchy edges for both sides; paths are filled by onTickFrame from current positions.
-    // Left-side links are reversed so the rendered edge keeps the real inbound direction (source → focus)
-    // rather than the layout's parent → child (focus → source) orientation.
+    // Left-side links are reversed so the rendered edge keeps the real inbound direction (source -> focus)
+    // rather than the layout's parent -> child (focus -> source) orientation.
     const edges: GraphLayoutEdge<NodeData>[] = [];
     const addLinks = (root: HierarchyPointNode<HierDatum>, reverse = false) => {
       root.links().forEach((link) => {

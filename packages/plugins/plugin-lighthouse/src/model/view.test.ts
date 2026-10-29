@@ -59,7 +59,7 @@ const flats: Rateable[] = [
     'lh:adminFee': [700],
     'lh:areaM2': [70],
     'schema:numberOfRooms': [2],
-    'lh:district': ['Śródmieście'],
+    'lh:district': ['\u015Aródmie\u015Bcie'],
     'lh:amenity': ['balcony'],
   }),
   // A metro station: never has a rent, so a rent filter does not apply to it.
@@ -123,7 +123,7 @@ describe('deriving filters from the results', () => {
     expect(byId.get('lh:district')!.options!.map((o) => [o.label, o.count])).toEqual([
       ['Mokotów', 2],
       ['Wola', 2],
-      ['Śródmieście', 1],
+      ['\u015Aródmie\u015Bcie', 1],
     ]);
     expect(byId.get('lh:amenity')).toMatchObject({ kind: 'values', multi: true });
     expect(byId.get('is:lh:amenity=balcony')).toMatchObject({ kind: 'flag', label: 'Has a balcony' });
@@ -183,7 +183,7 @@ describe('applying the view', () => {
                 label: 'District',
                 kind: 'values',
                 prop: 'lh:district',
-                values: ['wola', 'Śródmieście'],
+                values: ['wola', '\u015Aródmie\u015Bcie'],
               },
             ],
           },
@@ -287,8 +287,8 @@ describe('live counts', () => {
       ],
     };
     const c = facetCounts(flats, view, district);
-    // a, b, d (rooms ≥ 2) and the metro station (rooms not applicable to it… so it is out).
-    expect(Object.fromEntries(c.options!)).toEqual({ wola: 1, mokotów: 1, śródmieście: 1 });
+    // a, b, d (rooms >= 2) and the metro station (rooms not applicable to it... so it is out).
+    expect(Object.fromEntries(c.options!)).toEqual({ 'wola': 1, 'mokotów': 1, '\u015Bródmie\u015Bcie': 1 });
     const area = facets.find((f) => f.id === 'lh:areaM2')!;
     expect(facetCounts(flats, {}, area, { bins: 4 }).histogram).toEqual([1, 1, 0, 2]);
     expect(filterFor(area)).toEqual({
@@ -304,7 +304,7 @@ describe('words and cleaning', () => {
   it('describes filters and sorts in plain words', () => {
     expect(
       describeFilter({ id: 't', label: 'Total monthly cost', kind: 'range', value: { prop: 'x:y' }, max: 6000 }),
-    ).toBe('Total monthly cost ≤ 6000');
+    ).toBe('Total monthly cost <= 6000');
     expect(
       describeFilter({ id: 'd', label: 'District', kind: 'values', prop: 'lh:district', values: ['Wola', 'Mokotów'] }),
     ).toBe('District: Wola or Mokotów');

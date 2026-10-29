@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// DX-1059: this client is already DID-only — it never writes the deprecated `identity_key`
+// DX-1059: this client is already DID-only - it never writes the deprecated `identity_key`
 // (proto field 2). The dual-read fallback that still gates removing that field lives on the
 // edge side (which relays peers from not-yet-migrated senders); nothing here needs it.
 

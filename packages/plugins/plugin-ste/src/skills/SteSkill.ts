@@ -75,17 +75,17 @@ export const make = () =>
         - Use American English spelling.
 
         Frequent replacements:
-        - accomplish, perform → do
-        - additional → more
-        - begin, initiate → start
-        - ensure, verify → make sure that
-        - obtain → get
-        - utilize → use
-        - prior to → before
-        - in order to → to
-        - however → but
-        - require → be necessary, must
-        - determine → calculate, find
+        - accomplish, perform -> do
+        - additional -> more
+        - begin, initiate -> start
+        - ensure, verify -> make sure that
+        - obtain -> get
+        - utilize -> use
+        - prior to -> before
+        - in order to -> to
+        - however -> but
+        - require -> be necessary, must
+        - determine -> calculate, find
 
         ## 5. Safety instructions
 

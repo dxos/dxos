@@ -20,8 +20,8 @@ import { Rng, store } from './common.ts';
 // LOAD
 //
 
-// `wnfs/web` does no wasm work at module evaluation — top-level await in a bundle graph trips
-// WebKit's TDZ bug (see composer-app's `slimWasm`) — so this single chokepoint initializes
+// `wnfs/web` does no wasm work at module evaluation - top-level await in a bundle graph trips
+// WebKit's TDZ bug (see composer-app's `slimWasm`) - so this single chokepoint initializes
 // explicitly, clearing the memo on failure so a transient error does not disable wnfs for good.
 let wasmReady: Promise<unknown> | undefined;
 

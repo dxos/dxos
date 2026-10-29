@@ -22,7 +22,7 @@ const plain = (side: ReadonlyMap<string, { add: readonly string[]; remove: reado
   Object.fromEntries([...side].map(([id, change]) => [id, { add: [...change.add], remove: [...change.remove] }]));
 
 describe('diffTags', () => {
-  test('all three sides agree — nothing to do', ({ expect }) => {
+  test('all three sides agree - nothing to do', ({ expect }) => {
     const state = tags({ m1: [STARRED] });
     const diff = diffTags({ base: state, local: state, remote: state, eligible: ELIGIBLE });
     expect(plain(diff.push)).toEqual({});
@@ -40,7 +40,7 @@ describe('diffTags', () => {
     expect(plain(diff.pull)).toEqual({});
   });
 
-  test('local-only remove pushes — archive is the inbox tag coming off', ({ expect }) => {
+  test('local-only remove pushes - archive is the inbox tag coming off', ({ expect }) => {
     const diff = diffTags({
       base: tags({ m1: [INBOX] }),
       local: tags({ m1: [] }),
@@ -73,7 +73,7 @@ describe('diffTags', () => {
     expect(plain(diff.push)).toEqual({});
   });
 
-  test('both sides added the same tag — converged, no traffic', ({ expect }) => {
+  test('both sides added the same tag - converged, no traffic', ({ expect }) => {
     const diff = diffTags({
       base: tags({ m1: [] }),
       local: tags({ m1: [STARRED] }),
@@ -84,7 +84,7 @@ describe('diffTags', () => {
     expect(plain(diff.pull)).toEqual({});
   });
 
-  test('both sides removed the same tag — converged', ({ expect }) => {
+  test('both sides removed the same tag - converged', ({ expect }) => {
     const diff = diffTags({
       base: tags({ m1: [STARRED] }),
       local: tags({ m1: [] }),
@@ -97,12 +97,12 @@ describe('diffTags', () => {
 
   /**
    * Membership is a boolean on each side, so `local !== base && remote !== base` forces
-   * `local === remote` — both flipped to the negation of base. There is no opposed-edit case to
+   * `local === remote` - both flipped to the negation of base. There is no opposed-edit case to
    * resolve, and therefore no conflict policy to apply. This test is the guard: it fails the moment
    * a third state (a tombstone, a tri-state, a per-tag payload) makes a conflict representable, which
    * is exactly when a policy would need deciding.
    */
-  test('an opposed conflict is unrepresentable — every (base, local, remote) triple resolves', ({ expect }) => {
+  test('an opposed conflict is unrepresentable - every (base, local, remote) triple resolves', ({ expect }) => {
     const outcomes = new Set<string>();
     for (const base of [false, true]) {
       for (const local of [false, true]) {
@@ -115,7 +115,7 @@ describe('diffTags', () => {
           });
           const pushed = diff.push.get('m1');
           const pulled = diff.pull.get('m1');
-          // Never both directions for one tag — that is what an unresolved conflict would look like.
+          // Never both directions for one tag - that is what an unresolved conflict would look like.
           expect(pushed !== undefined && pulled !== undefined).toBe(false);
           outcomes.add(pushed ? 'push' : pulled ? 'pull' : 'none');
         }
@@ -157,7 +157,7 @@ describe('diffTags', () => {
   });
 });
 
-describe('diffTags — first sync', () => {
+describe('diffTags - first sync', () => {
   test('pushes nothing and pulls everything the remote has', ({ expect }) => {
     const diff = diffTags({
       base: undefined,
@@ -172,7 +172,7 @@ describe('diffTags — first sync', () => {
   });
 });
 
-describe('diffTags — base-less additive reconcile', () => {
+describe('diffTags - base-less additive reconcile', () => {
   test('pushes what the remote lacks and pulls what the local lacks', ({ expect }) => {
     const diff = diffTags({
       base: undefined,

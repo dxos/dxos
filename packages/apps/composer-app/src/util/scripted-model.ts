@@ -31,7 +31,7 @@ const QUERIES: readonly { label: string; input: Record<string, unknown> }[] = [
  * Tool calls to `toolName` since the user's latest prompt.
  *
  * A user message right after a tool result is a mid-loop injection (a reminder), not a new prompt,
- * so it does not reset the count — otherwise one injection would restart the 20 turns forever.
+ * so it does not reset the count - otherwise one injection would restart the 20 turns forever.
  */
 export const countTurnsSincePrompt = (prompt: Prompt.Prompt, toolName: string): number => {
   let count = 0;
@@ -66,7 +66,7 @@ const generate: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
       delay: TURN_DELAY,
       parts: [
         reasoning(`All ${SCRIPTED_QUERY_TURNS} queries returned; summarizing.`),
-        text(`Done — ran ${SCRIPTED_QUERY_TURNS} database queries across ${QUERIES.length} query shapes.`),
+        text(`Done - ran ${SCRIPTED_QUERY_TURNS} database queries across ${QUERIES.length} query shapes.`),
       ],
     };
   }

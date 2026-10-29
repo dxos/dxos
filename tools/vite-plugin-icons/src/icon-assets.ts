@@ -14,7 +14,7 @@ export type IconAssets = {
   dir: string;
   /**
    * Copy the catalog into the build output (default `true`). `false` serves it from the dev server
-   * only — for a host whose dev sprite can trail the modules it serves but whose builds must not
+   * only - for a host whose dev sprite can trail the modules it serves but whose builds must not
    * carry thousands of files.
    */
   copy?: boolean;
@@ -23,7 +23,7 @@ export type IconAssets = {
 /**
  * Serves an icon-set catalog as individual SVGs under `{route}/...`, so runtime icon
  * resolvers (e.g. @dxos/react-ui's IconRegistry) can fetch glyphs that weren't statically
- * referenced — icons used only by runtime-loaded plugins.
+ * referenced - icons used only by runtime-loaded plugins.
  *
  * In dev: middleware streams from `dir`. In build: assets are copied into the output dir unless `copy` is false.
  */

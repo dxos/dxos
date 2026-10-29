@@ -26,8 +26,8 @@ export type MediaStreamRecorderProps = {
  * Records a microphone track to 16-bit PCM chunks.
  *
  * Capture is done directly against the Web Audio graph rather than through a `MediaRecorder` WAV
- * polyfill. The polyfill produced empty buffers under WebKit — Safari, and therefore the Tauri
- * webview on both macOS and iOS — while working in Chromium, which made transcription look like a
+ * polyfill. The polyfill produced empty buffers under WebKit - Safari, and therefore the Tauri
+ * webview on both macOS and iOS - while working in Chromium, which made transcription look like a
  * service failure: audio was captured, uploaded and answered, but the upload was a bare WAV header.
  * Owning the graph also means owning the {@link AudioContext}, which is what lets us resume it:
  * WebKit starts every context suspended, and a suspended context feeds an audio node nothing.
@@ -72,7 +72,7 @@ export class MediaStreamRecorder implements AudioRecorder {
     this._onChunk = onChunk;
   }
 
-  // `@synchronized` serializes start/stop so a rapid stop→start cycle (e.g. React StrictMode's
+  // `@synchronized` serializes start/stop so a rapid stop->start cycle (e.g. React StrictMode's
   // double-mount) cannot build a second graph over a context that is still tearing down.
   @synchronized
   async start(): Promise<void> {
@@ -85,7 +85,7 @@ export class MediaStreamRecorder implements AudioRecorder {
     let node: AudioWorkletNode | ScriptProcessorNode;
     try {
       // WebKit hands back a suspended context and only a user gesture may resume it. Recording always
-      // begins from a tap, so this resolves — but without it every downstream node receives silence,
+      // begins from a tap, so this resolves - but without it every downstream node receives silence,
       // which is indistinguishable from a muted microphone.
       if (context.state === 'suspended') {
         await context.resume();
@@ -140,8 +140,8 @@ export class MediaStreamRecorder implements AudioRecorder {
 
   /**
    * Prefers an {@link AudioWorkletNode}, whose processing runs off the main thread. Falls back to the
-   * deprecated `ScriptProcessorNode` when the worklet module cannot be loaded — a bundler that does
-   * not emit it, or a page whose CSP refuses the fetch — because a deprecated capture path is worth
+   * deprecated `ScriptProcessorNode` when the worklet module cannot be loaded - a bundler that does
+   * not emit it, or a page whose CSP refuses the fetch - because a deprecated capture path is worth
    * more than none, and the previous silent failure is exactly what this replaces.
    */
   async #createCaptureNode(context: AudioContext): Promise<AudioWorkletNode | ScriptProcessorNode> {

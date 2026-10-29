@@ -10,13 +10,13 @@ import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from './capabilities/app-graph-bu
 
 const PROJECT_TYPENAME = Type.getTypename(Project.Project)!;
 
-/** Canonical path to a project's navtree row — the AI group's Projects section. */
+/** Canonical path to a project's navtree row - the AI group's Projects section. */
 export const getProjectPath = (spaceId: string, projectId: string): string =>
   GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.ai, PROJECT_TYPENAME, projectId);
 
 /**
  * Path to a chat on a project's Chats branch. A project's chats are parented to it, so they are
- * absent from the assistant's own Chats section (which lists only unparented chats) — this branch
+ * absent from the assistant's own Chats section (which lists only unparented chats) - this branch
  * is the only place the navtree shows them, and the only path that opens them.
  */
 export const getProjectChatPath = (spaceId: string, projectId: string, chatId: string): string =>

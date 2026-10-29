@@ -12,7 +12,7 @@ import { basename, dirname, join, relative } from 'node:path';
  */
 const sourceTargets = (target: unknown): string[] => {
   if (typeof target === 'string') {
-    // Anything outside `dist` is checked in — that includes root-level compat shims a package
+    // Anything outside `dist` is checked in - that includes root-level compat shims a package
     // publishes alongside `src` (`./module-stub.mjs`, `./testing.js`).
     return target.startsWith('./') && !target.startsWith('./dist/') ? [target] : [];
   }
@@ -39,7 +39,7 @@ const distTargets = (target: unknown): string[] => {
 
 /**
  * The entry points a package publishes. Packages that predate the `source` condition point straight
- * at `dist`, so map those back through the layout the build mirrors — without it the real entry is
+ * at `dist`, so map those back through the layout the build mirrors - without it the real entry is
  * never registered and every file in the package reads as unused.
  */
 const entryTargets = (target: unknown): string[] => {
@@ -74,7 +74,7 @@ const AUXILIARY_ENTRY = [
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
   // Ambient declarations and module augmentations: TypeScript picks these up from `include`, so
-  // nothing ever imports them. Scoped to checked-in locations — a bare `**` would pull the
+  // nothing ever imports them. Scoped to checked-in locations - a bare `**` would pull the
   // generated `dist/types` tree into the analysis.
   '*.d.ts',
   'src/**/*.d.ts',
@@ -101,7 +101,7 @@ const PROJECT = [
 ];
 
 /**
- * Dependencies a workspace's build config names as bare strings rather than importing — Vite's
+ * Dependencies a workspace's build config names as bare strings rather than importing - Vite's
  * `optimizeDeps.include` and `dedupe` lists are the bulk of them. Dropping these would silently
  * regress bundling, so treat a string literal in a config file as a use.
  */
@@ -146,7 +146,7 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
- * Files a build config points at by path rather than importing — vite `resolve.alias` replacements
+ * Files a build config points at by path rather than importing - vite `resolve.alias` replacements
  * are the common case. The alias target is a real module that would otherwise read as unreferenced.
  */
 const configuredEntry = (dir: string): string[] => {
@@ -158,7 +158,7 @@ const configuredEntry = (dir: string): string[] => {
 };
 
 /**
- * Files the package resolves by name at runtime rather than importing — `ThemePlugin` reads its
+ * Files the package resolves by name at runtime rather than importing - `ThemePlugin` reads its
  * injected dark-mode script this way. Deleting one breaks the build only when a bundler runs.
  */
 const pathResolvedEntry = (dir: string): string[] => {
@@ -197,8 +197,8 @@ const viteConfig = (dir: string): string =>
 
 /**
  * The balanced `{...}` or quoted string that follows `<key>:`, or '' when the key is absent.
- * Scanning the whole config instead would sweep in paths that are not entry points — an app's
- * `src/main.tsx`, a CRX's `src/background.ts` — and silently mark them reachable for knip.
+ * Scanning the whole config instead would sweep in paths that are not entry points - an app's
+ * `src/main.tsx`, a CRX's `src/background.ts` - and silently mark them reachable for knip.
  */
 const configProperty = (source: string, key: string): string => {
   const start = source.search(new RegExp(`\\b${key}\\s*:`));
@@ -242,7 +242,7 @@ const viteBundledPackages = (dir: string): string[] =>
  * `@lezer/generator`), so resolve each candidate's `bin` entries to match it.
  */
 /**
- * Files a moon task names directly — an esbuild `--alias` target or a script its command runs.
+ * Files a moon task names directly - an esbuild `--alias` target or a script its command runs.
  * Neither is reachable through an import.
  */
 const moonReferencedEntry = (dir: string): string[] => {
@@ -271,7 +271,7 @@ const moonInvokedDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
- * Dependencies declared only to satisfy another dependency's peer requirement — `zone.js` backs
+ * Dependencies declared only to satisfy another dependency's peer requirement - `zone.js` backs
  * OpenTelemetry's web auto-instrumentation. Nothing imports them, but dropping one breaks install.
  */
 const peerSatisfyingDependencies = (dir: string, names: string[]): string[] => {
@@ -286,7 +286,7 @@ const peerSatisfyingDependencies = (dir: string, names: string[]): string[] => {
 
 /**
  * Dependencies a package only ever imports a type from. `--strict` does not credit a type-only
- * import, on the reasoning that nothing needs the package at runtime — but the emitted `.d.ts`
+ * import, on the reasoning that nothing needs the package at runtime - but the emitted `.d.ts`
  * still references it, so a consumer's typecheck resolves it and it belongs in `dependencies`.
  * Scoped to names the package actually type-imports, so one it never mentions is still reported.
  */
@@ -319,7 +319,7 @@ const bundledDependencies = (dir: string): string[] =>
 const DX_PLUGIN_GEN_INPUT = 'src/capabilities/index.{ts,tsx}';
 
 /**
- * Files the shared root configs reach into a workspace for by path — the vitest browser log setup
+ * Files the shared root configs reach into a workspace for by path - the vitest browser log setup
  * is loaded this way. Nothing in the owning workspace imports them.
  */
 const ROOT_REFERENCED = globSync(['*.config.{ts,mts}', 'vitest/**/*.{ts,mjs}']).flatMap((file) => {
@@ -333,15 +333,15 @@ const ROOT_REFERENCED = globSync(['*.config.{ts,mts}', 'vitest/**/*.{ts,mjs}']).
  * The root's own dependencies are deliberately not audited. They are consumed by moon task commands
  * and the shared vitest/vite bases rather than by the handful of files knip attributes to the root
  * workspace, so nearly all of them read as unused; removing them breaks `pnpm install` on peer
- * resolution. Auditing them needs a pass of its own. The workspace itself still has to be analysed —
- * it is what supplies `vitest` and friends to every other package — so this ignores the
+ * resolution. Auditing them needs a pass of its own. The workspace itself still has to be analysed -
+ * it is what supplies `vitest` and friends to every other package - so this ignores the
  * dependencies rather than the workspace. Drop this to see the root backlog.
  */
 const rootManifest = JSON.parse(readFileSync('package.json', 'utf8'));
 
 /**
  * Every workspace package's public entry points, mapped to source. Knip resolves a cross-package
- * import through the published conditions, and for a type-only import that is `types` — which
+ * import through the published conditions, and for a type-only import that is `types` - which
  * points into `dist/types`. That exists after a build and not on a clean checkout, so without this
  * the same command reports different results locally and in CI.
  */
@@ -367,12 +367,12 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
  * The bundler resolves those against the workspace that declares the dependency, so it has to carry
  * them even though no source file in the repo imports them. `reveal.js` ships a markdown plugin
  * that imports `marked` and declares no dependencies at all, so unlike `--bundlePackage` this
- * cannot be read off a manifest — only an app bundle surfaces it.
+ * cannot be read off a manifest - only an app bundle surfaces it.
  */
 /**
  * Dependencies knip's traversal does not credit. It stops short of a file whose only route to an
- * entry point is indirect — a barrel's `export *`, or a dynamic `import()` whose specifier carries
- * an explicit `.ts`/`.tsx` extension (as `rewriteRelativeImportExtensions` requires) — so a package
+ * entry point is indirect - a barrel's `export *`, or a dynamic `import()` whose specifier carries
+ * an explicit `.ts`/`.tsx` extension (as `rewriteRelativeImportExtensions` requires) - so a package
  * whose single use of a dependency sits behind one reads as unused even though the symbol is called
  * at runtime and the build resolves it. Verified per entry by adding a direct import at the package
  * entry, which clears the finding.
@@ -381,7 +381,7 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
   // `functions/edge-function.ts` calls `SchemaAST.getPropertySignatures`, and reaches the entry only
   // as `src/index.ts` -> `./functions` -> `./edge-function`.
   'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
-  // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` —
+  // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` -
   // an extensioned dynamic import, which knip's traversal does not follow.
   'packages/sdk/app-toolkit': ['@dxos/react-ui-syntax-highlighter'],
   // `src/open.ts` is reached only from the `drawing` bin (`src/bin/cli.ts`), which the production pass
@@ -441,11 +441,11 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
-  // `index.html` links these by path rather than importing them, so no module graph reaches them —
+  // `index.html` links these by path rather than importing them, so no module graph reaches them -
   // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
   'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
   // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
-  // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
+  // from there, so the package has to resolve from `docs/node_modules` - astro's own optional
   // dependency is not reachable from the emitted chunk.
   'docs': [
     'sharp',
@@ -499,8 +499,8 @@ for (const manifest of globSync(
   }
 
   // Libraries are reachable from their declared entry points, which is what makes unreferenced
-  // files (and the dependencies only they import) detectable. Apps declare none — their entry is an
-  // `index.html` knip cannot see — so treat their whole source tree as reachable instead.
+  // files (and the dependencies only they import) detectable. Apps declare none - their entry is an
+  // `index.html` knip cannot see - so treat their whole source tree as reachable instead.
   const declared = [...new Set([...Object.values(exports), ...Object.values(imports)].flatMap(entryTargets))];
 
   // `files` ships legacy CJS compat shims (`testing.js`) that no `exports` condition names, but
@@ -516,7 +516,7 @@ for (const manifest of globSync(
   const isApp = globSync(`${dir}/index.html`).length > 0;
 
   // What the package itself declares as its entry points. Only these decide whether the whole-source
-  // fallback applies — a supplemental reference must never make a package look fully mapped.
+  // fallback applies - a supplemental reference must never make a package look fully mapped.
   const entry = [...declared, ...published, ...substitutes, ...viteEntryPoints(dir)];
 
   // Reached by path from a build config rather than declared, so they extend the entry set without

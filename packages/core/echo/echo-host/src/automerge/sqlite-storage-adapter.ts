@@ -283,7 +283,7 @@ const upsertChunks = (
 /**
  * Key space `SubductionStorageBridge` writes into this same table, as
  * `[SUBDUCTION_PREFIX, <family>, <sedimentreeId>, ...]`. Disjoint from a document's classical
- * `<documentId>-*` keys, so collection has to sweep it explicitly — on the subduction transport it
+ * `<documentId>-*` keys, so collection has to sweep it explicitly - on the subduction transport it
  * holds most of the document's bytes.
  */
 export const SUBDUCTION_PREFIX = 'subduction';
@@ -323,19 +323,19 @@ export const decodeKey = (encoded: string): StorageKey =>
 const SEPARATOR_UPPER_BOUND = String.fromCharCode(SEPARATOR.charCodeAt(0) + 1);
 
 /**
- * Half-open bounds selecting exactly the descendants of `prefix` — keys continuing with the
+ * Half-open bounds selecting exactly the descendants of `prefix` - keys continuing with the
  * separator, not merely with the same text. Anchoring on `prefix + SEPARATOR` rather than on
  * `prefix` is what makes this a segment-boundary match: the bounds then differ at the character
  * immediately after the prefix, so only the separator falls between them. A range anchored on
  * `prefix` itself would compare nothing past the prefix and so would also return a sibling whose
- * segment merely starts with the same text (prefix `…-doc1` matching key `…-doc1X-…`) — a different
+ * segment merely starts with the same text (prefix `...-doc1` matching key `...-doc1X-...`) - a different
  * document's chunks. Since the key layout is protocol, that must not depend on segment charset.
  *
  * Exact regardless of what segments contain: a key is in range iff the byte after `prefix` is `>=`
  * separator and `<` its successor, i.e. is the separator. UTF-8 cannot smuggle those bytes into a
  * multi-byte sequence (continuation and lead bytes are all `>= 0x80`).
  *
- * Excludes `prefix` itself, which callers select separately — {@link loadRange} must still return a
+ * Excludes `prefix` itself, which callers select separately - {@link loadRange} must still return a
  * key stored at exactly the queried prefix (the `subduction-ids-<sid>` shape does this).
  */
 export const descendantRange = (prefix: string): { lower: string; upper: string } => ({

@@ -98,7 +98,7 @@ describe('DeepSeekResolver', () => {
         // A second, usage-less finish part would make a consumer reading the last one see no usage.
         expect(finishParts.length).toBe(1);
         // Usage only rides the stream when `stream_options.include_usage` was requested, which is
-        // what EDGE meters on — a regression here bills every streamed request as usage_missing.
+        // what EDGE meters on - a regression here bills every streamed request as usage_missing.
         expect(finish).toBeDefined();
         const usage = (finish as { usage: { inputTokens: { total: number }; outputTokens: { total: number } } }).usage;
         expect(usage.inputTokens.total).toBeGreaterThan(0);

@@ -20,7 +20,7 @@ export const Breadcrumbs = ({ path, nameOf, onSelect }: BreadcrumbsProps) => (
   <nav className='flex items-center gap-1 text-sm font-mono'>
     {path.map((id, index) => (
       <Fragment key={`${index}:${id}`}>
-        {index > 0 && <span className='text-fg-subtle'>›</span>}
+        {index > 0 && <span className='text-fg-subtle'>&#x203A;</span>}
         {/* The root is home whatever its scene is called. */}
         {index === 0 ? (
           <Button.Root

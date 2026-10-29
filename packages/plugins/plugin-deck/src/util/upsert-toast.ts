@@ -5,8 +5,8 @@
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 /**
- * Adds a toast, replacing any live toast that shares its id. The toaster renders by `id` — it is the
- * React key, and `onDismissToast` matches on it — so appending a repeat id stacks two identical
+ * Adds a toast, replacing any live toast that shares its id. The toaster renders by `id` - it is the
+ * React key, and `onDismissToast` matches on it - so appending a repeat id stacks two identical
  * toasts and collides the key. A repeat dispatch updates the live toast rather than opening a second.
  */
 export const upsertToast = (

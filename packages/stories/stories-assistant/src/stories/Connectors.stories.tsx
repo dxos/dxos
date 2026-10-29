@@ -114,7 +114,7 @@ export const WithGmail: Story = {
 /**
  * Agent-facing connector prompt surface. The chat is seeded with an assistant turn that emits an
  * `integration-prompt` surface (the `<surface role='integration-prompt' data='{"service":"gmail.com"}' />`
- * content block) so the connector prompt renders inline — the model would emit this, instead of failing,
+ * content block) so the connector prompt renders inline - the model would emit this, instead of failing,
  * when a request needs a service the user has not connected (see the Connectors skill).
  */
 export const WithConnectorPrompt: Story = {

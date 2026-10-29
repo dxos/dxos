@@ -24,7 +24,7 @@ export const useIdentity = (): Identity.Info | undefined => {
     () =>
       Atom.make(Identity.identity.pipe(Stream.provideContext(services), Stream.map(Option.getOrUndefined)), {
         // The stream emits the current identity, but only after its first (async) subscription
-        // tick — until then the atom would sit at `Result.Initial` and callers would see "no
+        // tick - until then the atom would sit at `Result.Initial` and callers would see "no
         // identity" for the first render(s) even when one already exists. Seed it with the
         // service's synchronous snapshot so the current identity is available on the very first
         // render; the stream's value takes over as soon as it arrives (and covers post-mount

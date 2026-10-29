@@ -43,7 +43,7 @@ export const buildInlineObjectDocument = ({
   });
 
 /**
- * Whether a document holds only creation changes — the deterministic ones migrating peers write, which depend on
+ * Whether a document holds only creation changes - the deterministic ones migrating peers write, which depend on
  * nothing. Its object is then still the inline copy as some peer saw it, and no one has edited it through a link.
  */
 export const isUntouchedSinceCreation = (doc: A.Doc<DatabaseDirectory>): boolean =>

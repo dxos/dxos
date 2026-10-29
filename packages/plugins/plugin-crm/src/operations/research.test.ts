@@ -54,7 +54,7 @@ describe('Research operations', () => {
         expect(Obj.getParent(document)?.id).toBe(person.id);
         const text = yield* Database.load(document.content);
         expect(text.content).toContain('## Overview');
-        expect(text.content).toContain('Priya Adebayo — Partner at Ventura Advisors.');
+        expect(text.content).toContain('Priya Adebayo - Partner at Ventura Advisors.');
         expect(text.content).toContain('- Email: padebayo@ventura-advisors.example');
         expect(text.content).toContain('Ventura Advisors (https://ventura-advisors.example)');
         expect(text.content).toContain('## Sources');
@@ -64,7 +64,7 @@ describe('Research operations', () => {
         expect(relation).toBeDefined();
         expect(relation && Relation.getSource(relation)?.id).toBe(document.id);
         expect(relation?.lastResearchedAt).toBeDefined();
-        expect(relation?.summary).toBe('Priya Adebayo — Partner at Ventura Advisors.');
+        expect(relation?.summary).toBe('Priya Adebayo - Partner at Ventura Advisors.');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

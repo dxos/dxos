@@ -37,7 +37,7 @@ export type SuggestionSource = {
   content: string;
   /**
    * The text this proposal was authored against (its branch's fork anchor). Diffing against it rather
-   * than the live document keeps the diff to what THIS author changed — otherwise text the reader has
+   * than the live document keeps the diff to what THIS author changed - otherwise text the reader has
    * typed since the fork, which the proposal cannot contain, reads as the author deleting it.
    * Falls back to {@link SuggestionsOptions.base}, then the editor's document.
    */
@@ -50,7 +50,7 @@ export type SuggestionsOptions = {
   /**
    * The accepted base (`main`) each source is diffed against. When given, a source is diffed
    * `base` vs `source.content` and its hunks are rebased into the editor document's coordinates (see
-   * {@link rebaseHunks}) — so a foreign author's proposal decorates the right span even after the user's
+   * {@link rebaseHunks}) - so a foreign author's proposal decorates the right span even after the user's
    * own branch (the editor document) has diverged from `base`. Omit to diff each source directly against
    * the editor document (the standalone single-branch behaviour).
    */
@@ -69,7 +69,7 @@ export type SuggestionsOptions = {
   /**
    * Invoked when a change is accepted. When provided, the container owns the mutation (routing the
    * accept through a durable operation that merges the hunk to the parent), so the extension does NOT
-   * splice locally — it only dismisses the widget. Absent ⇒ the extension splices the source's text
+   * splice locally - it only dismisses the widget. Absent => the extension splices the source's text
    * into the document directly (standalone use).
    */
   onAccept?: (hunk: DiffHunk, author: string) => void;
@@ -105,8 +105,8 @@ type SuggestionState = {
 
 /**
  * Google-Docs-style multi-author suggestion overlay: renders each change between the editor's
- * document (the base) and every {@link SuggestionSource} in place — the removed original struck
- * through, the proposed replacement shown beside it, tinted with the author's colour — with hover
+ * document (the base) and every {@link SuggestionSource} in place - the removed original struck
+ * through, the proposed replacement shown beside it, tinted with the author's colour - with hover
  * Accept/Reject controls in the (non-clipped) tooltip layer. Overlapping suggestions from different
  * authors stack deterministically (by
  * offset, then author). Accept splices the source's version of that hunk into the document (merging
@@ -126,7 +126,7 @@ export const suggestions = ({
     const doc = state.doc.toString();
     // With an explicit base, diff each source against it and rebase the hunks into the (possibly
     // diverged) document; without one, diff directly against the document (the original behaviour).
-    // The base↔doc char diff is the same for every source sharing a base, so compute each one once.
+    // The base<->doc char diff is the same for every source sharing a base, so compute each one once.
     const charHunksFor = new Map<string, Hunk[]>();
     const all: TaggedHunk[] = [];
     for (const source of sources) {
@@ -138,13 +138,13 @@ export const suggestions = ({
         charHunksFor.set(sourceBase, charHunks);
       }
       // Edits the document already carries relative to the SAME anchor have been accepted, so they are
-      // no longer suggestions — matched by content (accepting shifts every later offset) and BEFORE
+      // no longer suggestions - matched by content (accepting shifts every later offset) and BEFORE
       // grouping, since a group coalesces several hunks and would never match one of them.
       const applied = sourceBase === undefined ? undefined : new Set(diffHunks(sourceBase, doc).map(editKey));
       const authored = diffHunks(anchor, source.content);
       const pending = applied === undefined ? authored : authored.filter((hunk) => !applied.has(editKey(hunk)));
-      // Matched delimiter pairs (e.g. `**` … `**`) become one hunk so the pair reviews and applies
-      // atomically — accepting half a pair leaves broken syntax.
+      // Matched delimiter pairs (e.g. `**` ... `**`) become one hunk so the pair reviews and applies
+      // atomically - accepting half a pair leaves broken syntax.
       const paired = pairMarkupHunks(pending, anchor);
       const grouped = group ? groupHunks(paired, anchor, group) : paired;
       const hunks = charHunks === undefined ? grouped : rebaseHunksWith(charHunks, grouped);
@@ -160,7 +160,7 @@ export const suggestions = ({
 
   /**
    * Has this change already landed in the document? Diffing a proposal against the revision its author
-   * wrote on keeps the diff to their edits, but it also keeps reporting them after they are accepted —
+   * wrote on keeps the diff to their edits, but it also keeps reporting them after they are accepted -
    * the branch still differs from its own fork anchor. A change whose proposed text is already present
    * (and whose replaced text is gone) has been applied, so it is no longer a suggestion.
    */
@@ -193,7 +193,7 @@ export const suggestions = ({
         continue;
       }
       // A pure BLOCK insertion renders wholly inside its widget, occupying the TOP rows of its host
-      // line — a full-height gutter bar would tint the host line's own text too, so its bar is
+      // line - a full-height gutter bar would tint the host line's own text too, so its bar is
       // capped to the proposal's rows.
       if (hunk.removed === '' && hunk.inserted.endsWith('\n')) {
         const from = state.doc.lineAt(hunk.from).from;
@@ -261,7 +261,7 @@ export const suggestions = ({
 
 /**
  * Reports the change under a click, so the host can reveal it on its other surfaces (the review
- * companion accents the matching card). The click is not consumed — the caret still lands where the
+ * companion accents the matching card). The click is not consumed - the caret still lands where the
  * reader put it.
  */
 const selectHandler = (
@@ -301,7 +301,7 @@ const suggestTooltip = (
   onReject?: (hunk: DiffHunk, author: string) => void,
 ): Extension => {
   // The controls are anchored to the hunk, not the pointer, and the same instance is returned for
-  // every position within it — a fresh tooltip per pointer position makes them flicker and jump as the
+  // every position within it - a fresh tooltip per pointer position makes them flicker and jump as the
   // pointer crosses the change.
   const tooltips = new Map<string, Tooltip>();
   return hoverTooltip(
@@ -362,7 +362,7 @@ const createControls = (
           event.preventDefault();
           if (onAccept) {
             // The container owns the mutation (durable cherry-pick op); the op's edit flows back and
-            // re-diffs the hunk away. Dismiss for immediate feedback — do not splice locally (that
+            // re-diffs the hunk away. Dismiss for immediate feedback - do not splice locally (that
             // would double-apply the change onto the parent).
             view.dispatch({ effects: dismissEffect.of(suggestionKey(hunk, hunk.author)) });
             onAccept(hunk, hunk.author);
@@ -385,7 +385,7 @@ export type SuggestChangesOptions = {
   /** The proposal (e.g. a branch's content) whose changes are suggested over the editor's document. */
   proposal: string;
   /**
-   * Author colour for the inline markers — pass the branch author's palette colour (e.g.
+   * Author colour for the inline markers - pass the branch author's palette colour (e.g.
    * `var(--color-<hue>-text)`) so the suggestion reads with the author's consistent colour. Defaults
    * to the success colour for a standalone (author-agnostic) review.
    */
@@ -395,7 +395,7 @@ export type SuggestChangesOptions = {
 };
 
 /**
- * Single-source suggestion overlay — the common case of one proposal (e.g. a branch) reviewed against
+ * Single-source suggestion overlay - the common case of one proposal (e.g. a branch) reviewed against
  * the editor's document. A thin wrapper over {@link suggestions}.
  */
 export const suggestChanges = ({
@@ -435,7 +435,7 @@ class SuggestionWidget extends WidgetType {
   override toDOM(): HTMLElement {
     // Only the CORE text carries the coloured chrome (underline/bar): leading and trailing newline
     // runs render as plain unstyled text, so a proposal that starts or ends with a paragraph break
-    // still breaks the layout without drawing stray bar/underline fragments on empty rows — and a
+    // still breaks the layout without drawing stray bar/underline fragments on empty rows - and a
     // whitespace-only proposal (a bare paragraph break) previews as an unmarked break.
     const inserted = this.#hunk.inserted;
     const core = inserted.replace(/^\n+/, '').replace(/\n+$/, '');
@@ -463,14 +463,14 @@ class SuggestionWidget extends WidgetType {
 
   // Pointer events must reach the editor: ignoring them left the preview inert, so hovering it never
   // opened the accept/reject tooltip and clicking at or past a trailing preview never moved the caret.
-  // Everything else (input, composition) stays ignored — the preview is not editable text.
+  // Everything else (input, composition) stays ignored - the preview is not editable text.
   override ignoreEvent(event: Event): boolean {
     return !(event instanceof MouseEvent || event instanceof PointerEvent);
   }
 }
 
 const suggestTheme = EditorView.baseTheme({
-  // The replaced original: a plain, de-emphasised strikethrough — no fill, so overlapping deletions
+  // The replaced original: a plain, de-emphasised strikethrough - no fill, so overlapping deletions
   // from multiple authors on the same span don't stack into a coloured mess.
   '& .cm-suggest-delete': {
     textDecoration: 'line-through',

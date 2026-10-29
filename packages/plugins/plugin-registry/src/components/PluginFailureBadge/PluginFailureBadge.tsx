@@ -22,7 +22,7 @@ export type PluginFailureBadgeProps = {
  * Compact warning glyph rendered next to a plugin's name when it has failed
  * to load or activate. Clicking the icon opens a popover that names the phase
  * (load / activation), the reason (timeout / error), and the underlying error
- * message — enough for an operator to tell "remote host is offline" apart
+ * message - enough for an operator to tell "remote host is offline" apart
  * from "the plugin crashed".
  */
 export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) => {

@@ -20,7 +20,7 @@ const isRecord = (value: unknown): value is { readonly [key: string]: DecodedAut
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
- * Accept an individual change from `branch` at an anchored region — a partial cherry-pick into the
+ * Accept an individual change from `branch` at an anchored region - a partial cherry-pick into the
  * current branch, without merging the whole branch. Recomputes the LATEST diff between the current
  * (bound) content and the compare branch, finds the hunk overlapping the anchor, and splices the
  * compare branch's current text in. No-op if the anchor no longer maps to a changed hunk.

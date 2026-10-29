@@ -26,7 +26,7 @@ const DEFAULT_CRON = '0 7 * * *';
 const PROJECT_INSTRUCTIONS = trim`
   This project maintains a fact base extracted from the mailbox bound into its context, and answers
   questions from it.
-  When asked to summarize a sender, thread, or topic — or "where things stand" with someone — use
+  When asked to summarize a sender, thread, or topic - or "where things stand" with someone - use
   the fact tools (Summarize Subject / Query Facts) FIRST rather than re-reading the mailbox, and
   cite the source messages the facts came from. Fall back to reading mail only for detail the facts
   do not carry.
@@ -37,7 +37,7 @@ const PROJECT_INSTRUCTIONS = trim`
  * chats, and a starter routine that runs `BrainOperation.AnalyzeMailbox` on a schedule.
  *
  * The routine binds the operation directly rather than an instructions prompt, so the trigger loop
- * is deterministic — the extraction model runs inside the operation, not around it. Extracted facts
+ * is deterministic - the extraction model runs inside the operation, not around it. Extracted facts
  * land in the space fact store keyed by provenance, so they are queryable by any session but are
  * not artifacts the project owns. Only applies to a Mailbox subject.
  */
@@ -55,7 +55,7 @@ export const mailboxFacts: ProjectCapabilities.Template = {
       const mailbox = subject;
 
       const project = Templates.scaffoldProject({
-        name: name ?? `Mailbox Facts — ${mailbox.name ?? 'Mailbox'}`,
+        name: name ?? `Mailbox Facts - ${mailbox.name ?? 'Mailbox'}`,
         text: PROJECT_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
         objects: [Ref.make(mailbox)],

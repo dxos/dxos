@@ -8,7 +8,7 @@ import { describe, it } from 'vitest';
 import rule from '../rules/operation-key-shape.js';
 
 // The rule derives the expected domain from the package containing the linted file, so the fixture
-// is a package on disk named `@dxos/plugin-markdown` — its domain is therefore `markdown`.
+// is a package on disk named `@dxos/plugin-markdown` - its domain is therefore `markdown`.
 const filename = new URL('./__fixtures__/operation-keys/src/MarkdownOperation.ts', import.meta.url).pathname;
 const testFile = new URL('./__fixtures__/operation-keys/src/MarkdownOperation.test.ts', import.meta.url).pathname;
 
@@ -86,7 +86,7 @@ describe('operation-key-shape', () => {
           code: "Operation.make({ meta: { key: makeKey('create') }, input: 1, output: 2 });",
           errors: [{ messageId: 'notLiteral' }],
         },
-        // A const indirection is followed rather than waved through — it hid a stale key in a test.
+        // A const indirection is followed rather than waved through - it hid a stale key in a test.
         {
           filename,
           code: [

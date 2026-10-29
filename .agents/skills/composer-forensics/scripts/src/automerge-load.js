@@ -111,7 +111,7 @@ export const benchLoadDocument = (dbPath, documentId) => {
   console.log('==============');
   console.log(`database:    ${dbPath}`);
   console.log('');
-  console.log('StorageSubsystem-style (merge chunks → single loadIncremental):');
+  console.log('StorageSubsystem-style (merge chunks -> single loadIncremental):');
   console.log(`  ${formatMs(result.mergedMs)}`);
   console.log('');
   console.log('Per-chunk (first load, then loadIncremental):');

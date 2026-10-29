@@ -11,7 +11,7 @@ import { type Page } from '@playwright/test';
  * Mocked by default rather than live for two reasons: an unauthenticated suite shares GitHub's 60
  * requests/hour with every other runner on the same egress address, and the Claude Code sandbox's
  * GitHub gateway answers `405` to the CORS preflight that `Accept: application/vnd.github+json`
- * triggers — so a live fetch fails there for a reason that has nothing to do with the code. Set
+ * triggers - so a live fetch fails there for a reason that has nothing to do with the code. Set
  * `DX_E2E_LIVE_GITHUB=true` to skip the interception and read the real pull request.
  */
 

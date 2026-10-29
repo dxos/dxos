@@ -77,7 +77,7 @@ const makeRestLayer = (token: string, tokenKind: TokenKind): Layer.Layer<Discord
  *
  * Composes dfx's `DiscordRESTMemoryLive` (which brings its own in-memory rate-limit store) with a `DiscordConfig`
  * carrying the token, sent to the {@link DiscordEndpoint}. Through the proxy, `baseUrl` stays at the real Discord host
- * so the proxy's URL rewrite and `Authorization` → `X-Cors-Proxy-Authorization` remap fire uniformly.
+ * so the proxy's URL rewrite and `Authorization` -> `X-Cors-Proxy-Authorization` remap fire uniformly.
  *
  * Used by the credential-form validation flow, which holds a raw token that hasn't yet been persisted as an
  * `AccessToken`.

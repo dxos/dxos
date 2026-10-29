@@ -6,7 +6,7 @@
 // CodeMirror support for the template grammar: XML syntax plus this language's rules.
 //
 // The base grammar comes from `@codemirror/lang-xml`; what is added here is the part XML cannot
-// know — which tags exist, and what the three attribute prefixes mean. Deliberately in its own
+// know - which tags exist, and what the three attribute prefixes mean. Deliberately in its own
 // subpath so the model stays free of editor dependencies.
 //
 
@@ -66,7 +66,7 @@ const templateLinter = linter((view): Diagnostic[] => {
 //
 // XML sees one kind of tag and one kind of attribute. This language has a closed tag set and four
 // attribute families, and which family an attribute belongs to is the single most important thing
-// to read off a template — a `data-` reads, an `on-` writes.
+// to read off a template - a `data-` reads, an `on-` writes.
 //
 
 // Theme utility classes, not an editor theme block: the palette is the app's, and an invented

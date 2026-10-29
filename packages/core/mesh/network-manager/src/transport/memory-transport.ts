@@ -167,7 +167,7 @@ export class MemoryTransport implements Transport {
       MemoryTransport._connections.delete(this._remoteInstanceId);
 
       // Detach both directions. Cancelling the readables instead would destroy the wire-protocol
-      // streams — including the peer's — where the `unpipe` this replaced only detached them.
+      // streams - including the peer's - where the `unpipe` this replaced only detached them.
       // Only the peer that won the connect race holds the pipes, and either peer may close first,
       // so both sides are torn down here rather than whichever one `close()` was called on.
       const remote = this._remoteConnection;

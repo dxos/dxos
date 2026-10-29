@@ -70,7 +70,7 @@ export const change = <T>(obj: T, callback: ChangeCallback<T>): void => {
   // This order is important for EchoReactiveHandler which handles ChangeId in the proxy trap.
   //
   // The direct-callback fallback (no `[ChangeId]`) now only applies to true snapshots and
-  // schemaless feed items (unresolvable type at decode time, see `makeDecodedEntityLive`) — live
+  // schemaless feed items (unresolvable type at decode time, see `makeDecodedEntityLive`) - live
   // feed-backed objects carry a `[ChangeId]` (via `TypedReactiveHandler`) same as any other typed
   // reactive object, so they take the `changeFn` branch above like automerge-backed objects do.
   const changeFn = (obj as any)[ChangeId];

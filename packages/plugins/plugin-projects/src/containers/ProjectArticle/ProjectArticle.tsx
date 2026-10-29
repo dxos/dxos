@@ -82,11 +82,11 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const space = useSpace(db?.spaceId);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
   // and a sync `.target` read would leave the section permanently missing. `useResolveRef` tracks
-  // loading without tracking mutations — the sub-editors and section surfaces subscribe themselves,
+  // loading without tracking mutations - the sub-editors and section surfaces subscribe themselves,
   // so an edit inside instructions/outline/tasks re-renders those, not this article.
   const instructions = useResolveRef(project.instructions);
   // The Tasks section embeds plugin-tasks' section surface for the linked TaskSet (never its
-  // components — the boundary is surfaces/operations only).
+  // components - the boundary is surfaces/operations only).
   const taskSet = useResolveRef(project.taskSet);
   // The project's scratch outline (created lazily by its chats).
   const outline = useResolveRef(project.outline);
@@ -127,8 +127,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
   const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
 
-  // A session starting is what the chart is for, so a delegation run from this app — the toolbar or
-  // a row's menu — brings the pipeline into view. Read off the invoker's own events rather than
+  // A session starting is what the chart is for, so a delegation run from this app - the toolbar or
+  // a row's menu - brings the pipeline into view. Read off the invoker's own events rather than
   // inferred from the chat query, which also emits as a project's history hydrates and would open
   // the chart on every project that has ever had a session.
   useEffect(() => {
@@ -279,7 +279,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
                   {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
 
-                  {/* Standing context (inputs bound into every project session) — deliberately a
+                  {/* Standing context (inputs bound into every project session) - deliberately a
                       separate labeled section from Artifacts (outputs the project owns). */}
                   {instructions && (
                     <Form.FieldSet label={t('context.label')}>
@@ -404,7 +404,7 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
  * The checked rows of the project's task set, in the order the list shows them.
  *
  * The set is the multi-selection `react-ui-attention` holds under the task set's own id, which is
- * exactly what the embedded `TaskSetArticle` writes — the rows and this toolbar read one set and
+ * exactly what the embedded `TaskSetArticle` writes - the rows and this toolbar read one set and
  * neither owns it. Ordered by the tree walk rather than by tick order: what a reader means by
  * "these tasks" is the order they read them in, not the order they happened to tick them.
  */
@@ -427,7 +427,7 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
       tasks.forEach((task) => {
         get(Obj.atomProperty(task, 'subtasks'));
         // The delegate action arms on whether the agent already holds a checked row, and delegation
-        // writes both fields — without tracking them the bar would keep offering rows already handed over.
+        // writes both fields - without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
       });
@@ -476,7 +476,7 @@ const useToolbarActions = ({
   onTogglePipeline,
 }: ToolbarActionsProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  // The handler resolves `Database.Service`, which only the space context supplies — without this
+  // The handler resolves `Database.Service`, which only the space context supplies - without this
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
 
@@ -551,8 +551,8 @@ const useToolbarActions = ({
           },
           () => void createChat(),
         )
-        // Beside create-chat rather than in the overflow: it is the same gesture — start a session
-        // — and it is dead until rows are checked, so a reader who checks some needs to see it.
+        // Beside create-chat rather than in the overflow: it is the same gesture - start a session
+        // - and it is dead until rows are checked, so a reader who checks some needs to see it.
         .action(
           'delegate-tasks',
           {

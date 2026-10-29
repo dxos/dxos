@@ -32,5 +32,5 @@ export const authorHue = (branch: Branch.Branch, members: readonly MemberLike[])
   return member?.identityKey ? hexToHue(member.identityKey) : stringToHue(branch.creator);
 };
 
-/** The CSS text-colour token for a hue — the same colour the author's avatar/tag uses. */
+/** The CSS text-colour token for a hue - the same colour the author's avatar/tag uses. */
 export const hueColour = (hue: Hue): string => `var(--color-${hue}-text)`;

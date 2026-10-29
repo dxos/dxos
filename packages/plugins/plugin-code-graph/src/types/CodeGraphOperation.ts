@@ -52,7 +52,7 @@ export const Inspect = Operation.make({
     key: DXN.make('org.dxos.operation.codeGraph.inspect'),
     name: 'Inspect Code Resource',
     description:
-      'Returns one resource’s facts from the code index. `target` is an IRI, a file path or its tail, a package name, a symbol name, or an ECHO typename.',
+      "Returns one resource's facts from the code index. `target` is an IRI, a file path or its tail, a package name, a symbol name, or an ECHO typename.",
     icon: 'ph--info--regular',
   },
   input: Schema.Struct({
@@ -171,8 +171,8 @@ export const SetLayout = Operation.make({
       'Chooses how the canvas places the boxes:',
       '`illustrator` (the semantic engine: boxes on a grid, arrows routed through the gutters),',
       '`force` (a force-directed layout snapped to slots), `rank` (rows by dependency rank, fewest crossings),',
-      'or `diagram` (the illustrator’s full drawing, read-only).',
-      'With `grouped`, the illustrator layout and drawing frame each package’s boxes together.',
+      "or `diagram` (the illustrator's full drawing, read-only).",
+      "With `grouped`, the illustrator layout and drawing frame each package's boxes together.",
     ].join(' '),
     icon: 'ph--layout--regular',
   },

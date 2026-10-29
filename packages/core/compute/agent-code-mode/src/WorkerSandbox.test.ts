@@ -173,7 +173,7 @@ describe('worker sandbox', () => {
     await db.flush();
 
     // A mutator, not a patch: the worker holds its own ECHO client, so these are live objects and
-    // `update` is the ordinary one — nothing about this code knows it is running off-thread.
+    // `update` is the ordinary one - nothing about this code knows it is running off-thread.
     const output = await run(`
       const tasks = await query('${TASK_TYPENAME}', { status: 'open' });
       for (const task of tasks) {
@@ -264,7 +264,7 @@ describe('worker sandbox', () => {
   test('reports a worker that dies before the channel exists', async () => {
     // The entry module is missing, so the thread dies while loading it and never connects. The
     // host is waiting on a handshake that will never come, which is a hang unless the dead worker
-    // is watched from BEFORE the channel opens — and a hang here costs the caller its whole
+    // is watched from BEFORE the channel opens - and a hang here costs the caller its whole
     // budget and then blames a timeout it never hit. CI found this the hard way, by running the
     // suite without the package's own build.
     const { runWithEntry } = await setup();

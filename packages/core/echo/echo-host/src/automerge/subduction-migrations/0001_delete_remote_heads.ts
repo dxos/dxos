@@ -56,7 +56,7 @@ export type DeleteSubductionRemoteHeadsResult = {
 };
 
 /**
- * Deletes every stored Subduction remote-heads record — `[SUBDUCTION_PREFIX, 'remote-heads', <sedimentreeId>,
+ * Deletes every stored Subduction remote-heads record - `[SUBDUCTION_PREFIX, 'remote-heads', <sedimentreeId>,
  * <peerId>]`, one per document per remote peer it has synced with. A repair for profiles those records have bloated.
  *
  * The records cache what a peer last reported having. `SubductionSource` replays them when a document attaches (into
@@ -64,9 +64,9 @@ export type DeleteSubductionRemoteHeadsResult = {
  * The heads Subduction exchanges while syncing are computed from the local sedimentree, never read from here, so
  * deleting the records loses no document data and changes nothing about what gets synced. Edge used to come back
  * under a new Subduction identity after every restart, which is how a long-lived profile collects one record per
- * document per restart — the bulk of the table.
+ * document per restart - the bulk of the table.
  *
- * Deleting only moves pages to SQLite's freelist, so the file is then vacuumed (see `vacuum`) — gated on the
+ * Deleting only moves pages to SQLite's freelist, so the file is then vacuumed (see `vacuum`) - gated on the
  * freelist, not on this run's count, so a run interrupted between the delete and the vacuum finishes the job when
  * rerun. A vacuum that fails propagates: the caller must not record the repair as done.
  */
@@ -117,7 +117,7 @@ const vacuumFreePages: Effect.Effect<number, SqlError.SqlError, SqlClient.SqlCli
  *   kept rows. Deleting the records in place would rewrite nearly every table page per batch, because they are
  *   scattered across the table in insertion order: minutes of OPFS I/O on a 700 MB profile.
  * - Otherwise: deletes in key order, `batchSize` rows per statement, so an interrupted run keeps what it deleted and
- *   a rerun resumes. Each batch is cut at an existing key rather than selected with `IN (SELECT … LIMIT)`, which
+ *   a rerun resumes. Each batch is cut at an existing key rather than selected with `IN (SELECT ... LIMIT)`, which
  *   would materialize the batch in a temp B-tree.
  */
 const deleteRecords = ({

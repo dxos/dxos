@@ -69,7 +69,7 @@ export type ActionsOptions = {
 };
 
 /**
- * The connector-auth action group for an object — the single source shared by the standalone
+ * The connector-auth action group for an object - the single source shared by the standalone
  * `ConnectorAuthMenu` component (plugin-assistant, which renders its children as a dropdown menu) and
  * owning plugins' `app-graph-builder` extensions (studio/ibkr/inbox, which contribute it to an object
  * toolbar). Always a single dropdown group so both renderings are identical.
@@ -78,7 +78,7 @@ export type ActionsOptions = {
  * "Connect X" entry per connector with an auth flow. Returns `[]` when there is nothing to offer.
  * Contribute this from an extension's `actionGroups:` callback so `graph.actions(nodeId)` picks it up
  * with the group's `type` intact. Children carry Effect `data`, so execute them with `useActionRunner`
- * (`Menu.Root onAction`) — for the coordinator/database context it provides.
+ * (`Menu.Root onAction`) - for the coordinator/database context it provides.
  */
 export const actions = ({
   connectorIds,
@@ -123,7 +123,7 @@ export const actions = ({
             connector: allConnectors.find((entry) => entry.id === connection.connectorId),
             target: existingTarget,
           }).pipe(
-            // Reuse is a deliberate click, so a refusal has to say so — unlike the silent automatic
+            // Reuse is a deliberate click, so a refusal has to say so - unlike the silent automatic
             // bind. The graph extension filters contradicting connections out of this menu, but the
             // standalone `ConnectorAuthMenu` offers them, and there the failure was invisible.
             Effect.catchTag('TargetAccountMismatchError', (error) =>
@@ -160,7 +160,7 @@ export const GROUP_ID = 'connectorAuth';
 
 /**
  * The Connect group as a disabled trigger with nothing inside it, for a bindable object that has
- * nothing to offer — no provider plugin registered for its type, or every existing connection belongs
+ * nothing to offer - no provider plugin registered for its type, or every existing connection belongs
  * to another account. Dropping the control instead reads as "this kind of object cannot be connected",
  * which is wrong; a disabled Connect says the capability exists and is currently unavailable. Pairs
  * with {@link actions}, which returns `[]` in exactly that case.

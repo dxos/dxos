@@ -176,7 +176,7 @@ describe('rename migration', () => {
  * Hashes of the changes this client has written to `object`'s document, in order.
  *
  * Not the document's heads: the host writes its own root change to the same document as it
- * initialises its copy, and that change can arrive at any point — including between a baseline and
+ * initialises its copy, and that change can arrive at any point - including between a baseline and
  * the assertion that compares against it, which then reads a second head as a modification. What
  * these assertions mean is that the migration, which writes through this client, added nothing.
  */

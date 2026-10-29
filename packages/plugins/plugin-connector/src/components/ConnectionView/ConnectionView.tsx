@@ -60,7 +60,7 @@ export type ConnectionViewProps = {
   onRename?: (name: string) => void;
   /**
    * The stored name, which is absent for a connection that has never been renamed. Distinct from
-   * `title`, which falls back to the account or connector label — seeding the field with that
+   * `title`, which falls back to the account or connector label - seeding the field with that
    * fallback would persist it on the first focus-and-blur and freeze a label that should keep
    * tracking the account.
    */
@@ -82,7 +82,7 @@ export type ConnectionViewProps = {
  * sync/change-targets/delete actions, and the list of sync bindings (each with
  * its status and, when the connector defines one, a schema-driven options form).
  *
- * Pure presentation — every capability-resolved value and handler arrives as a
+ * Pure presentation - every capability-resolved value and handler arrives as a
  * prop so the component mounts in storybook without a PluginManager.
  */
 export const ConnectionView = ({
@@ -128,7 +128,7 @@ export const ConnectionView = ({
                     <Input.Root
                       // Remounted when the stored name changes. The input is uncontrolled, so
                       // React would otherwise keep the old text after a replicated rename
-                      // arrives — and the next blur would write that stale value back over it.
+                      // arrives - and the next blur would write that stale value back over it.
                       key={name ?? ''}
                       // The stored name, not `title`: an unnamed connection shows the account
                       // or connector label there, and seeding it here would persist that
@@ -262,7 +262,7 @@ export const ConnectionView = ({
 /**
  * One sync binding, rendered as a settings item ({@link Form.Field} in action mode): the binding's
  * name is the item label, its sync status the description, any sync error the validation slot, and
- * — when the target is missing — a remove button in the control slot. When the connector declares
+ * - when the target is missing - a remove button in the control slot. When the connector declares
  * an options schema and the target is live, a schema-driven options form follows the item; it keeps
  * the default (flat) variant so its fields render inline rather than each in its own settings-card border.
  *
@@ -282,7 +282,7 @@ const BindingRow = ({
   const { t } = Hooks.useTranslation(ConnectorNamespace.key);
   const [resolvedTarget] = useObject(binding.spec.target);
   const missing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
-  // Label precedence: explicit binding label → remote id → the target's own label → its type's
+  // Label precedence: explicit binding label -> remote id -> the target's own label -> its type's
   // translated label (single-target connectors leave a binding without a label/externalId, e.g.
   // Gmail's Mailbox). Sync status lives in the description, so the label never describes sync progress.
   const targetTypename = resolvedTarget ? Obj.getTypename(resolvedTarget) : undefined;

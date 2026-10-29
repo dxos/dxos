@@ -41,7 +41,7 @@ export interface IndexDataSource {
   /**
    * Marks the start/end of one `IndexEngine.update` pass, letting a source reuse the
    * cursor-independent part of its read across every index updated in that pass. Cursors differ per
-   * index, so the diff itself cannot be shared — only the underlying snapshot. Optional: a source
+   * index, so the diff itself cannot be shared - only the underlying snapshot. Optional: a source
    * with no expensive shared read can omit both.
    */
   beginPass?(): void;

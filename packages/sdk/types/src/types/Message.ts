@@ -15,7 +15,7 @@ import * as ContentBlock from './ContentBlock.ts';
 
 /**
  * A file or object attached to a message, separate from its (textual/streamed) `blocks`. The
- * preferred way to link a message to a stored object (e.g. a `Blob`) — see
+ * preferred way to link a message to a stored object (e.g. a `Blob`) - see
  * {@link ContentBlock.Reference} for the deprecated block-based alternative.
  */
 export const Attachment = Schema.Struct({
@@ -23,7 +23,7 @@ export const Attachment = Schema.Struct({
   name: Schema.optional(Schema.String),
   /** Reference to the attached object (e.g. a `Blob` or `File`). */
   ref: Ref.Ref(Obj.Unknown),
-  /** The source message's `Content-ID` for this attachment, if any — matches a `cid:` reference in an HTML body. */
+  /** The source message's `Content-ID` for this attachment, if any - matches a `cid:` reference in an HTML body. */
   contentId: Schema.optional(Schema.String),
 });
 

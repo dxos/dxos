@@ -49,13 +49,13 @@ describe('parseChallengeHeader', () => {
   });
 
   test('the scheme is ignored inside a quoted auth-param', ({ expect }) => {
-    // `Bearer realm="…"` declares Bearer alone. Reading a challenge out of its quoted value would
+    // `Bearer realm="..."` declares Bearer alone. Reading a challenge out of its quoted value would
     // retry an unrelated 401 and run a non-idempotent request twice.
     expect(parseChallengeHeader(`Bearer realm="VerifiablePresentation challenge=${CHALLENGE}"`)).toBeUndefined();
     expect(parseChallengeHeader('Basic realm="use VerifiablePresentation challenge=TODO instead"')).toBeUndefined();
   });
 
-  test('a later scheme’s challenge is not read as the VP one', ({ expect }) => {
+  test("a later scheme's challenge is not read as the VP one", ({ expect }) => {
     // The VP challenge here carries no `challenge` param; taking Bearer's would sign a challenge
     // that was never issued to this scheme.
     expect(

@@ -13,9 +13,9 @@ import { type Config, getEnvString } from './config.ts';
  * Keeping a single resolver ensures the same tag identifies a session across
  * edge and telemetry tiers. Precedence:
  *
- *   1. `config.runtime.app.env.DX_TELEMETRY_TAG` — the explicit, deterministic
+ *   1. `config.runtime.app.env.DX_TELEMETRY_TAG` - the explicit, deterministic
  *      path. Populated from `.env`/build-time by the app's config loaders.
- *   2. `process.env.DX_TELEMETRY_TAG` — Node-only, for dev/CI convenience.
+ *   2. `process.env.DX_TELEMETRY_TAG` - Node-only, for dev/CI convenience.
  *
  * Returns `undefined` when unset; callers should no-op on undefined rather
  * than stamping empty strings.

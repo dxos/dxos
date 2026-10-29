@@ -56,7 +56,7 @@ export const spaceLayer = (
     //   2. the space designated as default by the settings space;
     //   3. the first user-visible space.
     // This keeps profiles created outside composer-app (which is what designates
-    // a default space on identity creation) usable — the alternative
+    // a default space on identity creation) usable - the alternative
     // is a "Space not found" throw deep inside CredentialsService.
     const resolveSpace = () => {
       if (!fallbackToPersonalSpace) {
@@ -79,8 +79,8 @@ export const spaceLayer = (
   });
 
   // When no space can be resolved we install a stub whose `db` getter throws
-  // on access — preserves the existing semantics for commands that *do* need
-  // a db — but the release callback must NOT touch `db` or it will throw
+  // on access - preserves the existing semantics for commands that *do* need
+  // a db - but the release callback must NOT touch `db` or it will throw
   // during teardown (e.g. after a command emits a friendly error and
   // returns early). A shared sentinel object short-circuits the release.
   const NO_DB_STUB = {
@@ -153,7 +153,7 @@ export const flushAndSync = Effect.fn(function* (opts?: Database.FlushOptions) {
  *
  * `dx` force-exits the moment a command returns, so replication that is merely queued is lost with
  * the process. A command that provisions spaces (`dx account signup`) must therefore drain all of
- * them, not just the one it wrote to — the settings space carries the default-space designation,
+ * them, not just the one it wrote to - the settings space carries the default-space designation,
  * without which the next device resolves no default space at all.
  */
 export const syncAllToEdge = Effect.fn(function* () {

@@ -26,7 +26,7 @@ export type PredicateListProps = Util.ThemedClassName<{
  *
  * Click-to-toggle mirrors {@link EntityList}: `Listbox` selects on focus, and `focus` fires before
  * `click` in a mouse gesture, so the pre-gesture selection is captured at pointer-down and the click
- * toggles against that — a single click selects, a re-click deselects, keyboard nav still works.
+ * toggles against that - a single click selects, a re-click deselects, keyboard nav still works.
  */
 export const PredicateList = ({ predicates, selected, onSelect, classNames }: PredicateListProps) => {
   const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);

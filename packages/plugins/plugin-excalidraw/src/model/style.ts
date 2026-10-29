@@ -9,7 +9,7 @@
 
 import { type Scene } from '@dxos/diagram';
 
-/** Scene palette → excalidraw stroke colors (tldraw-compatible hues). */
+/** Scene palette -> excalidraw stroke colors (tldraw-compatible hues). */
 const COLOR_TO_HEX: Record<Scene.Color, string> = {
   'black': '#1e1e1e',
   'grey': '#9fa8b2',

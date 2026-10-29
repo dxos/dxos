@@ -10,7 +10,7 @@ import { SentenceBuffer } from './sentence-buffer.ts';
 import { type TranscribeConfig, type TranscribeFn, Transcriber } from './transcriber.ts';
 
 export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
-  /** Audio source — browser `MediaStreamRecorder` or any `AudioRecorder` implementation. */
+  /** Audio source - browser `MediaStreamRecorder` or any `AudioRecorder` implementation. */
   recorder: AudioRecorder;
   /** Optional ASR transport override (default: `fetch` to the edge transcription service). */
   transcribe?: TranscribeFn;
@@ -27,7 +27,7 @@ export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
   drainSilenceMs?: number;
 };
 
-/** Imperative handle to a running ASR → pipeline session. */
+/** Imperative handle to a running ASR -> pipeline session. */
 export type AsrPipeline = {
   /** Open the recorder + transcriber. */
   open: () => Promise<void>;
@@ -44,7 +44,7 @@ export type AsrPipeline = {
 /**
  * The single end-to-end wiring: an ASR source ({@link Transcriber}) feeding the live orchestration
  * engine ({@link runLivePipeline}). Every consumer (editor driver, message-list recording, stories)
- * differs only by recorder, stages, and commit sink — this is the one place audio → text → stages →
+ * differs only by recorder, stages, and commit sink - this is the one place audio -> text -> stages ->
  * sink is assembled.
  */
 export const runAsrPipeline = ({

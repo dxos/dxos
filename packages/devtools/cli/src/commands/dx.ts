@@ -11,7 +11,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 
 /**
- * Root flags, declared as SHARED so they parse anywhere in the argv — `dx --json space list` as well
+ * Root flags, declared as SHARED so they parse anywhere in the argv - `dx --json space list` as well
  * as `dx space list --json`. A plain `Command.make` config is only parsed when `dx` itself is the
  * leaf command, which makes every pre-subcommand root flag an unknown token.
  */
@@ -80,7 +80,7 @@ const readRootBoolean = (argv: readonly string[], name: string, alias?: string):
 /**
  * {@link CommandConfig} for the whole tree, resolved from the root flags declared above.
  *
- * `Command.provide` only wraps the command's OWN handler — a subcommand never sees it — so the root
+ * `Command.provide` only wraps the command's OWN handler - a subcommand never sees it - so the root
  * flags have to be read off argv and provided as an ambient layer instead. Values and defaults
  * mirror the flag declarations above; keep the two in step.
  */

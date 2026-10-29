@@ -13,7 +13,7 @@ export type TreeNodeState = {
 };
 
 export type StaticTreeModelOptions<T extends { id: string }> = {
-  /** Children of a node; `undefined` or empty marks a leaf. Required — there is no shape to guess. */
+  /** Children of a node; `undefined` or empty marks a leaf. Required - there is no shape to guess. */
   getChildren: (item: T) => readonly T[] | undefined;
   /** Merged over the derived defaults (`id`, `label`, and `parentOf`/`count` for branches). */
   getProps?: (item: T, path: string[]) => Partial<TreeItemDataProps>;
@@ -43,7 +43,7 @@ export interface StaticTreeModel<T extends { id: string }> extends TreeModel<T> 
  *
  * `Tree`'s only entry point is five atom families, which is the right shape for a store that is
  * already reactive per node (ECHO, a live app graph) but roughly a hundred lines of plumbing for a
- * caller that just holds an array — the cost that kept `ObjectsTree`, `ProcessTree` and the stories
+ * caller that just holds an array - the cost that kept `ObjectsTree`, `ProcessTree` and the stories
  * on hand-rolled renderers instead. Open/current state is owned here, keyed by path, so the same
  * node appearing at two paths stays independent.
  */

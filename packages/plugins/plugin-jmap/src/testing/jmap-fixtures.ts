@@ -18,9 +18,9 @@ export interface GenerateJmapDatasetOptions {
   senders?: number;
   /** Custom (user) folder names, in addition to the always-present system folders. */
   folders?: readonly string[];
-  /** Seed for deterministic output (same seed → same dataset). */
+  /** Seed for deterministic output (same seed -> same dataset). */
   seed?: number;
-  /** `receivedAt` window. Defaults to [now − 90 days, now]. */
+  /** `receivedAt` window. Defaults to [now - 90 days, now]. */
   start?: Date;
   end?: Date;
   /** Prefix for email + thread ids, so disjoint datasets (e.g. date bands) don't collide. Defaults to `eml`. */
@@ -40,7 +40,7 @@ const SYSTEM_FOLDERS: readonly JmapMail.Mailbox[] = [
   { id: 'mb-junk', name: 'Junk', role: 'junk' },
 ];
 
-/** The session a {@link JmapMailApi.mock} serves — a single mail account discovered at `apiUrl`. */
+/** The session a {@link JmapMailApi.mock} serves - a single mail account discovered at `apiUrl`. */
 const SESSION = {
   apiUrl: 'https://jmap.test/api/',
   username: 'test@jmap.test',
@@ -50,7 +50,7 @@ const SESSION = {
 
 /**
  * Deterministically generates a {@link JmapDataset} for driving {@link JmapMailApi.mock} in unit
- * tests — no live account. Emails are ordered ascending by `receivedAt` and spread across the
+ * tests - no live account. Emails are ordered ascending by `receivedAt` and spread across the
  * [start, end] window (all in the Inbox) so the sync's window walk + pagination exercise realistically.
  * Mirrors `generateGmailDataset`.
  */

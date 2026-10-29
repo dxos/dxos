@@ -14,7 +14,7 @@ import { type ExtractDocument, type ExtractOptions, Ontology } from '../types/in
 import { type DocumentFacts, extractDocFacts, extractTranscriptFacts } from './extract-facts.ts';
 
 /**
- * Indexing stage: extract → link (slug) → persist into the {@link FactStore}, building the fact
+ * Indexing stage: extract -> link (slug) -> persist into the {@link FactStore}, building the fact
  * database subsequent stages can query from context. Incremental: a document whose content hash
  * matches the stored cursor is skipped entirely (no LLM call, no duplicate facts) and dropped from
  * the stream. A CHANGED source currently appends new competing facts (append-only model) and
@@ -29,7 +29,7 @@ export const indexFactsStage = (
       const hash = hashText(doc.text);
       const prev = yield* store.cursor(doc.source);
       if (prev === hash) {
-        // Source is unchanged — skip extraction to avoid LLM work and duplicate facts.
+        // Source is unchanged - skip extraction to avoid LLM work and duplicate facts.
         return undefined;
       }
       // The predicates the store has learned are shown to the extractor, so each document reuses earlier ones.

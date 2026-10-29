@@ -354,6 +354,6 @@ describe('deus changelog check', () => {
   test('a non-pull-request CI event skips the check', async ({ expect }) => {
     const { exit, output } = await run(['changelog', 'check', '--base', 'no-such-ref'], { GITHUB_EVENT_NAME: 'push' });
     expect(Exit.isSuccess(exit)).toBe(true);
-    expect(output).toEqual(['Skipping on `push` — the changelog check is diff-based.']);
+    expect(output).toEqual(['Skipping on `push` - the changelog check is diff-based.']);
   });
 });

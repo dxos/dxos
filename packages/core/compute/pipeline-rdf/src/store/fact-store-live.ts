@@ -32,7 +32,7 @@ import { FactStore, type FactStoreApi } from './fact-store.ts';
 //
 // Live implementations of {@link FactStore}. Kept separate from the tag so operation definitions
 // (which reference the tag in `services:`) never pull the SPARQL/SQLite machinery into their
-// import closure — see `@dxos/pipeline-rdf/fact-store`.
+// import closure - see `@dxos/pipeline-rdf/fact-store`.
 //
 
 export type Options = {

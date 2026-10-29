@@ -58,7 +58,7 @@ describe('SubductionPolicy', () => {
     // Expected: the client's findWithProgress for the server's url stays
     // out of `'ready'` and the handle never gains a `doc()`.
     //
-    // Implication for client-side gating: ✅ `authorizePut` is the
+    // Implication for client-side gating: OK `authorizePut` is the
     // primary lever for refusing inbound replication.
     test('authorizePut on client denies inbound writes from permissive server', async () => {
       const gate = createDenyGate();
@@ -91,12 +91,12 @@ describe('SubductionPolicy', () => {
     // Hypothesis: `authorizeFetch` is server-side of the FETCH RPC only;
     // it does NOT fire on the inbound proactive-push path. The SKILL doc
     // calls this out for the SERVER's `authorizeFetch`; this test pins the
-    // same asymmetry on the CLIENT side — i.e. the client cannot use its
+    // same asymmetry on the CLIENT side - i.e. the client cannot use its
     // own `authorizeFetch` to refuse inbound proactive pushes.
     //
     // Expected: doc replicates despite the client denying every fetch.
     //
-    // Implication for client-side gating: ❌ `authorizeFetch` is NOT a
+    // Implication for client-side gating: X `authorizeFetch` is NOT a
     // usable knob for refusing inbound bytes. The client must use
     // `authorizePut` instead.
     test('authorizeFetch on client does NOT gate inbound proactive push', async () => {
@@ -127,7 +127,7 @@ describe('SubductionPolicy', () => {
     // Expected: client receives docB (allowed sedimentree) but not docA
     // (denied sedimentree).
     //
-    // Implication: ✅ per-sedimentree client-side gating works via
+    // Implication: OK per-sedimentree client-side gating works via
     // `authorizePut`. This is the building block for the DXOS-style
     // per-space gate (compute the doc's space from its DocumentId, allow
     // only authorized spaces). Note: we rely on `SedimentreeId.toString()`
@@ -202,7 +202,7 @@ describe('SubductionPolicy', () => {
     // denying any put whose `requestor.toString() === server1Signer.peerId()`,
     // the client receives `docFromServer2.url` but not `docFromServer1.url`.
     //
-    // Implication: ✅ per-peer gating works — provided we know the peer's
+    // Implication: OK per-peer gating works - provided we know the peer's
     // signer key up front. For DXOS this means binding subduction peer-id
     // to space-id needs out-of-band metadata (the peer-id is not in the
     // `AutomergeReplicatorConnection` today).
@@ -248,7 +248,7 @@ describe('SubductionPolicy', () => {
     // `authorizePut` hook is invoked multiple times across both docs and
     // denial of A does not interfere with the running entry for B.
     //
-    // Implication: ✅ failure isolation holds. Useful for the DXOS gate:
+    // Implication: OK failure isolation holds. Useful for the DXOS gate:
     // denying out-of-space puts will not poison the running sync state
     // for in-space docs.
     test('authorizePut denial does NOT poison subsequent allowed sedimentrees', async () => {
@@ -287,7 +287,7 @@ describe('SubductionPolicy', () => {
 
       // We expect `authorizePut` to have been called at least once total
       // (B's commit). Whether A's denial is retried by heal is a separate
-      // characterization — we don't pin the count tightly because the
+      // characterization - we don't pin the count tightly because the
       // subduction heal scheduler may retry the denied entry.
       expect(counters.authorizePut).to.be.greaterThan(0);
 
@@ -300,7 +300,7 @@ describe('SubductionPolicy', () => {
   //
   // Client owns the doc; we want to know whether ANY hook on the client
   // side can prevent its own Repo from pushing that doc to a connected
-  // permissive server. Each test below is expected to FAIL to gate — the
+  // permissive server. Each test below is expected to FAIL to gate - the
   // assertions are written so an upstream fix that adds an outbound-push
   // hook will surface as a clean test failure.
   describe('client-as-source negative results', () => {
@@ -310,7 +310,7 @@ describe('SubductionPolicy', () => {
     //
     // Expected: server still receives the doc.
     //
-    // Implication: ❌ Client-side `authorizePut` cannot prevent the
+    // Implication: X Client-side `authorizePut` cannot prevent the
     // client from pushing its own data out. To stop outbound push, the
     // SERVER must deny via its own `authorizePut`, OR the channel must
     // not exist (see `authorizeConnect on client (initiator) nukes the
@@ -351,10 +351,10 @@ describe('SubductionPolicy', () => {
     // each connected peer, so the policy's fetch hook fires per peer
     // per broadcast.
     //
-    // Expected: client (the source) denies `authorizeFetch` → server
+    // Expected: client (the source) denies `authorizeFetch` -> server
     // does NOT receive the doc within 1.5s.
     //
-    // Implication: ✅ The CLIENT (as data source) CAN gate outbound
+    // Implication: OK The CLIENT (as data source) CAN gate outbound
     // proactive push by denying `authorizeFetch`. This is a stronger
     // client-side capability than the SKILL doc currently documents.
     test('authorizeFetch on client DOES gate outbound proactive push (empirical correction)', async () => {
@@ -384,7 +384,7 @@ describe('SubductionPolicy', () => {
     // Hypothesis: `filterAuthorizedFetch` is bypassed by proactive push
     // on either side.
     //
-    // Expected: server still receives. ❌ `filterAuthorizedFetch` is
+    // Expected: server still receives. X `filterAuthorizedFetch` is
     // bridge-dead under proactive push on either side.
     test('filterAuthorizedFetch on client does NOT gate outbound proactive push', async () => {
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
@@ -408,14 +408,14 @@ describe('SubductionPolicy', () => {
 
     // Hypothesis: `authorizeConnect` IS the only nuclear knob. Denying it
     // on the initiator (client, via `role: 'connect'`) tears down the
-    // channel entirely → nothing flows in either direction.
+    // channel entirely -> nothing flows in either direction.
     //
     // Expected: server never sees client's doc; client never sees
     // server's doc.
     //
-    // Implication: 💥 If the client wants to refuse ALL outbound data
+    // Implication: \u{1F4A5} If the client wants to refuse ALL outbound data
     // to a specific peer, `authorizeConnect` is the only mechanism the
-    // current bridge offers — and it severs both directions.
+    // current bridge offers - and it severs both directions.
     test('authorizeConnect on client (initiator) nukes the channel (nuclear control)', async () => {
       const gate = createDenyGate();
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
@@ -458,7 +458,7 @@ describe('SubductionPolicy', () => {
     // Expected: client receives server2's doc, never server1's doc.
     // Connect counter shows two invocations (one allow, one deny).
     //
-    // Implication: ✅ per-peer connect gating works. Effective on the
+    // Implication: OK per-peer connect gating works. Effective on the
     // client side for refusing entire peers (as opposed to per-doc).
     test('authorizeConnect: per-peer denial in star topology', async () => {
       const server1Signer = MemorySigner.generate();
@@ -472,7 +472,7 @@ describe('SubductionPolicy', () => {
         subductionPolicies: { client: clientPolicy },
       });
       const [client, server1, server2] = repos;
-      // Only the permissive `client`↔`server2` pair (connection 1) is awaited: `server1` denies
+      // Only the permissive `client`<->`server2` pair (connection 1) is awaited: `server1` denies
       // `authorizeConnect`, so its pair never binds and requiring it would hang.
       await connectAdapters(adapters, { repoPairs: [repoPairs[1]] });
 
@@ -497,13 +497,13 @@ describe('SubductionPolicy', () => {
 
     // Hypothesis: the role matrix requires at least one peer to be
     // `'connect'`, and either side denying `authorizeConnect` should
-    // refuse the handshake — confirming `authorizeConnect` symmetry.
+    // refuse the handshake - confirming `authorizeConnect` symmetry.
     //
     // Expected: with `host: 'accept'` / `client: 'connect'` and the
     // ACCEPTING side (host) denying connect, the handshake still fails;
     // the doc does not reach the client.
     //
-    // Implication: ✅ either side denying `authorizeConnect` is
+    // Implication: OK either side denying `authorizeConnect` is
     // sufficient.
     test('authorizeConnect: denial on responder side also blocks handshake', async () => {
       const gate = createDenyGate();
@@ -532,15 +532,15 @@ describe('SubductionPolicy', () => {
 
     // Hypothesis: `authorizeConnect` fires once per successful handshake;
     // `reconnectAdapters` (peer-disconnected + peer-candidate) drives a
-    // fresh handshake → hook fires again.
+    // fresh handshake -> hook fires again.
     //
     // Expected: counter strictly monotonic across reconnect cycles; at
     // least N+1 invocations after N reconnects (the +1 covers the
     // initial connect).
     //
-    // Implication: ℹ️ if you flip `authorizeConnect`'s observable
+    // Implication: Note: if you flip `authorizeConnect`'s observable
     // behavior at runtime (closure mutation), you need a reconnect to
-    // realize the change — `shareConfigChanged()` does NOT re-trigger
+    // realize the change - `shareConfigChanged()` does NOT re-trigger
     // `authorizeConnect` (it re-syncs document entries, not handshakes).
     test('authorizeConnect: fires once per handshake; reconnect re-invokes', async () => {
       const { policy: clientPolicy, counters } = createCountingPolicy();
@@ -573,18 +573,18 @@ describe('SubductionPolicy', () => {
   describe('authorizeFetch + filterAuthorizedFetch invocation conditions', () => {
     // EMPIRICAL CORRECTION: the prior SKILL-doc-aligned hypothesis was
     // that `authorizeFetch` does NOT fire on proactive push. Observed
-    // reality: it DOES fire (≥ 2 invocations in a 2-peer push setup).
+    // reality: it DOES fire (>= 2 invocations in a 2-peer push setup).
     // The hook is consulted by the HOLDER for every peer it broadcasts
     // to.
     //
     // Expected: `authorizeFetch` counter > 0 in BOTH the proactive
     // push and the explicit fetch flows.
     //
-    // Implication: ✅ `authorizeFetch` is the per-peer per-sedimentree
+    // Implication: OK `authorizeFetch` is the per-peer per-sedimentree
     // gate for OUTBOUND data flow on the holder. Combined with
     // `authorizePut` on the receiver, this gives a fully client-side
     // gate for both directions.
-    // Two topologies with a 5s poll and a 10s wait between them, so the 15s default cannot cover it —
+    // Two topologies with a 5s poll and a 10s wait between them, so the 15s default cannot cover it -
     // same reason the two-phase `authorizePut` test below names its own budget.
     test('authorizeFetch fires on BOTH proactive push and explicit fetch (empirical)', async () => {
       // Half 1: proactive push. Hook fires when host broadcasts.
@@ -601,10 +601,10 @@ describe('SubductionPolicy', () => {
       const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
       await waitForSubductionSave(pushRepos);
       // Assert the host-side hook fired BEFORE the client issues any
-      // explicit `find` — proves it was the proactive broadcast (not a
+      // explicit `find` - proves it was the proactive broadcast (not a
       // later fetch) that consulted `authorizeFetch`.
       // Empirical: >= 1 (observed 2 locally). Don't pin an exact
-      // count — the bridge may batch or invoke twice per broadcast
+      // count - the bridge may batch or invoke twice per broadcast
       // (once at connect-time-sync, once per `#save`).
       // Polled rather than read once: the broadcast is asynchronous, and polling the counter
       // issues no `find`, so the "before any explicit fetch" property still holds.
@@ -688,8 +688,8 @@ describe('SubductionPolicy', () => {
       await waitForSubductionSave(fetchRepos);
       await reconnectAdapters(fetchAdapters, { repoPairs: fetchRepoPairs });
       // `reconnectAdapters` alone only re-drives an entry whose last sync settled `no-peers`; one
-      // that settled `all-failed` is left to heal backoff (100→200→…→6400 ms), which overruns the
-      // window. `shareConfigChanged()` is the documented reset for both — see the subduction skill.
+      // that settled `all-failed` is left to heal backoff (100->200->...->6400 ms), which overruns the
+      // window. `shareConfigChanged()` is the documented reset for both - see the subduction skill.
       fetchClient.shareConfigChanged();
       await expect
         .poll(async () => (await fetchClient.find<{ text?: string }>(fetchHandle.url)).doc()?.text, {
@@ -701,7 +701,7 @@ describe('SubductionPolicy', () => {
 
     // Without an explicit subscribe, `filterAuthorizedFetch` is not
     // consulted. So even a filter returning the empty list cannot
-    // prune anything in this setup — both docs replicate via the
+    // prune anything in this setup - both docs replicate via the
     // unfiltered broadcast.
     test('filterAuthorizedFetch cannot prune anything without explicit subscribers', async () => {
       // Two docs, server filters to neither. Replication still happens
@@ -737,7 +737,7 @@ describe('SubductionPolicy', () => {
   // and gates inbound writes; this block characterizes the identities
   // visible to the receiver.
   describe('authorizePut requestor vs author in 3-peer chain', () => {
-    // Hypothesis (per SKILL doc): in a chain A → B → C, when commits
+    // Hypothesis (per SKILL doc): in a chain A -> B -> C, when commits
     // flow from A through B to C, C's `authorizePut` sees
     // `requestor === B`'s peer-id (immediate sender) and
     // `author === A`'s peer-id (original signer of the commit).
@@ -814,7 +814,7 @@ describe('SubductionPolicy', () => {
     // Expected: A's doc never reaches `'ready'` at C; a B-authored
     // doc (control) does.
     //
-    // Implication: ✅ `author` is a usable knob for
+    // Implication: OK `author` is a usable knob for
     // origin-attribution gating, IF the bridge surfaces what the test
     // above hypothesises.
     test('authorizePut deny-by-author blocks original signer even with permissive relay', async () => {
@@ -867,8 +867,8 @@ describe('SubductionPolicy', () => {
   // Sister tests to the existing `'shareConfigChanged() retries after
   // subductionPolicy denial flips to allow'` in
   // `automerge-repo-subduction.test.ts`. Probe the recovery shape for
-  // `authorizePut` deny↔allow flips and characterize what happens when
-  // you flip from allow → deny mid-flight.
+  // `authorizePut` deny<->allow flips and characterize what happens when
+  // you flip from allow -> deny mid-flight.
   describe('mutation and recovery', () => {
     // EMPIRICAL FINDING (recovery shape after `authorizePut` denial):
     //
@@ -880,10 +880,10 @@ describe('SubductionPolicy', () => {
     //   1. `host.shareConfigChanged()` + `client.shareConfigChanged()`
     //      after the flip does not deliver the doc within 1.5s.
     //   2. `reconnectAdapters` (full peer-disconnected + peer-candidate
-    //      cycle on both sides) does deliver the doc — the connection-
+    //      cycle on both sides) does deliver the doc - the connection-
     //      generation bump re-drives the holder's stuck
     //      `lastSyncResult === 'all-failed'` push.
-    test('authorizePut deny → allow recovers via reconnect', async () => {
+    test('authorizePut deny -> allow recovers via reconnect', async () => {
       const gate = createDenyGate();
       let allowPut = false;
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
@@ -939,10 +939,10 @@ describe('SubductionPolicy', () => {
     // generation change. We assert: within a bounded 1.5s window,
     // the doc still does not arrive.
     //
-    // Implication: ⏱ document the recovery delay — the gap between
+    // Implication: timer document the recovery delay - the gap between
     // denial and natural recovery is non-trivial and `shareConfigChanged`
     // is the only fast path.
-    test('authorizePut deny → allow without shareConfigChanged() stays denied within window', async () => {
+    test('authorizePut deny -> allow without shareConfigChanged() stays denied within window', async () => {
       const gate = createDenyGate();
       let allowPut = false;
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
@@ -982,16 +982,16 @@ describe('SubductionPolicy', () => {
       expect(progress.peek().state).to.not.equal('ready');
     });
 
-    // Hypothesis: flipping `authorizePut` from allow → deny on the
+    // Hypothesis: flipping `authorizePut` from allow -> deny on the
     // receiver blocks subsequent pushes, because every inbound commit
     // hits `authorizePut`.
     //
     // Expected: client's view of the doc stays at the pre-flip text
     // for at least the negative window.
     //
-    // Implication: ✅ `authorizePut` on the receiver is the only
+    // Implication: OK `authorizePut` on the receiver is the only
     // client-side hook that reliably revokes ongoing subscription
-    // access. `authorizeFetch` allow→deny on the holder is NOT a
+    // access. `authorizeFetch` allow->deny on the holder is NOT a
     // reliable revoke knob: a new commit triggers BOTH a batch-sync
     // round (gated by `authorizeFetch`, the denial logs as `WARN ...
     // failed to send requested data`) AND a `LooseCommit` broadcast
@@ -1000,7 +1000,7 @@ describe('SubductionPolicy', () => {
     // `LooseCommit` path races the denial and frequently wins,
     // delivering the commit anyway. See the `subduction-policy` skill
     // for the source-level breakdown.
-    test('authorizePut allow → deny blocks subsequent pushes', async () => {
+    test('authorizePut allow -> deny blocks subsequent pushes', async () => {
       const gate = createDenyGate();
       let denyPut = false;
       const { repos, adapters, repoPairs } = await createHostClientRepoTopology({
@@ -1043,12 +1043,12 @@ describe('SubductionPolicy', () => {
   // These tests verify the recipe end-to-end and probe which half is
   // actually load-bearing for the DXOS (proactive-push) use case.
   describe('recipe verification', () => {
-    // Hypothesis: receiver denies put + server denies fetch → doc
+    // Hypothesis: receiver denies put + server denies fetch -> doc
     // never reaches receiver via either path.
     //
     // Expected: client's findWithProgress stays out of `'ready'`.
     //
-    // Implication: ✅ this is the formal recipe under the current
+    // Implication: OK this is the formal recipe under the current
     // bridge. Heavy-handed but reliable.
     test('authorizePut(receiver) + authorizeFetch(server) blocks via both paths', async () => {
       const gate = createDenyGate();
@@ -1082,13 +1082,13 @@ describe('SubductionPolicy', () => {
 
     // Hypothesis: even when the receiver explicitly fetches (`find`),
     // the bytes have to land through the `authorizePut` codepath, so a
-    // denying receiver still blocks. If the bridge has a leak here —
-    // i.e. an explicit-fetch response bypasses `authorizePut` — this
+    // denying receiver still blocks. If the bridge has a leak here -
+    // i.e. an explicit-fetch response bypasses `authorizePut` - this
     // test catches it.
     //
     // Strategy: doc-before-connect pattern so `find()` issues a fetch.
     //
-    // Implication (predicted): ✅ `authorizePut` covers both push and
+    // Implication (predicted): OK `authorizePut` covers both push and
     // fetch ingest paths.
     test('authorizePut(receiver) also blocks explicit fetch', async () => {
       const gate = createDenyGate();
@@ -1130,7 +1130,7 @@ describe('SubductionPolicy', () => {
     // Expected: with the server denying `authorizePut` and the client
     // permissive, the client's push does NOT land at the server.
     //
-    // Implication: 🚨 if cross-space pollution on the DO is intolerable,
+    // Implication: \u{1F6A8} if cross-space pollution on the DO is intolerable,
     // the only fix is a DO-side `authorizePut` (or upstream advertise
     // hook).
     test('server-side authorizePut is the only effective gate against client outbound push', async () => {

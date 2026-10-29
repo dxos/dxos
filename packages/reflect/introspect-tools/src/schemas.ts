@@ -25,8 +25,8 @@ import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './limits.ts';
  * (e.g. `@dxos/react-ui-introspect`'s ToolForm) read this annotation off
  * the field's AST and render a Combobox over the matching list.
  *
- * The kind names a domain rather than a specific tool — e.g. `plugin-id`
- * means "any tool that emits plugin ids works" — so adding a new tool
+ * The kind names a domain rather than a specific tool - e.g. `plugin-id`
+ * means "any tool that emits plugin ids works" - so adding a new tool
  * doesn't require new picker plumbing.
  */
 export const PickerAnnotationId = '@dxos/introspect-tools/picker';
@@ -61,7 +61,7 @@ export const ListOptionsInput = Schema.Struct({
   compact: Schema.optional(Schema.Boolean).annotate({
     title: 'Compact',
     description: trim`
-      If true, returns only the most-essential identifying fields for each item — about 1/4 the response size.
+      If true, returns only the most-essential identifying fields for each item - about 1/4 the response size.
       Use when discovering what exists before drilling in.
     `,
   }),
@@ -142,13 +142,13 @@ export const GetSymbolInput = Schema.Struct({
 //
 // Plugins / surfaces / capabilities / operations / schemas
 //
-// Main's API exposes a single optional `id` filter on each of these — the
+// Main's API exposes a single optional `id` filter on each of these - the
 // plugin id (e.g. "org.dxos.plugin.markdown"). `listPlugins` accepts a
 // `PluginFilter` object with `id` for substring matching.
 //
 
 export const ListPluginsInput = Schema.Struct({
-  // No picker annotation — this is a free-form substring filter, not an
+  // No picker annotation - this is a free-form substring filter, not an
   // exact-match selector. Picking from the list of known plugin ids would
   // defeat the purpose of `list_plugins`.
   id: Schema.optional(Schema.String).annotate({
@@ -190,7 +190,7 @@ export const ListIdiomsInput = Schema.Struct({
 });
 
 //
-// Inferred TypeScript types — handy for downstream consumers.
+// Inferred TypeScript types - handy for downstream consumers.
 //
 
 export type ListPackagesArgs = typeof ListPackagesInput.Type;

@@ -14,7 +14,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-// `/plugin` entrypoints used here for the same reason as `corePlugins()` —
+// `/plugin` entrypoints used here for the same reason as `corePlugins()` -
 // see `@dxos/plugin-testing/src/core.ts` for the rationale.
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';

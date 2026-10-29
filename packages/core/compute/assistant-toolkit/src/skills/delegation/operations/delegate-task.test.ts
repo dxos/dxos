@@ -32,7 +32,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 /**
- * A project conversation. Delegation records the task on the CHAT's checklist either way — the
+ * A project conversation. Delegation records the task on the CHAT's checklist either way - the
  * project parent is here so the tests cover the shape the app actually runs.
  */
 const makeProjectAgent = Effect.gen(function* () {

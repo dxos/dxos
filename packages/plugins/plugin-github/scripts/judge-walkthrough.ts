@@ -9,7 +9,7 @@ import { basename, join } from 'node:path';
 /**
  * Runs the LLM judge over blind walkthrough packets.
  *
- *   DX_ANTHROPIC_API_KEY=… node --experimental-strip-types scripts/judge-walkthrough.ts evals/judge
+ *   DX_ANTHROPIC_API_KEY=... node --experimental-strip-types scripts/judge-walkthrough.ts evals/judge
  *
  * A packet is a directory of fixture folders, each holding `diff.patch` and one `<letter>.md` per
  * anonymised variant (see `judge-packet.ts prepare`). One request per fixture grades every document
@@ -24,11 +24,11 @@ const FALLBACK_RUBRIC = [
   'Grade each document 1-5 on four dimensions. Write the reason first, then the number, so the',
   'number is the conclusion of an argument rather than a first impression.',
   '',
-  '1. order — does each section build on the last, core of the change first? File-sort order is 1.',
-  '2. why — does the prose give the constraint, the failure avoided, the alternative rejected?',
+  '1. order - does each section build on the last, core of the change first? File-sort order is 1.',
+  '2. why - does the prose give the constraint, the failure avoided, the alternative rejected?',
   '   Prose that narrates what the diff already shows is 1.',
-  '3. load — could a reviewer who has not seen this code follow it in one pass?',
-  '4. trust — does anything read as invented: a motive the diff cannot support, a number with no',
+  '3. load - could a reviewer who has not seen this code follow it in one pass?',
+  '4. trust - does anything read as invented: a motive the diff cannot support, a number with no',
   '   source, a symbol the patch never shows? Nothing invented is 5.',
 ].join('\n');
 

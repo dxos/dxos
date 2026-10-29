@@ -23,7 +23,7 @@ const DECODED_BYTE_LENGTH = 20;
 const ENCODED_LENGTH = 42;
 
 /**
- * RFC4648 base-32 alphabet (uppercase A–Z and digits 2–7).
+ * RFC4648 base-32 alphabet (uppercase A-Z and digits 2-7).
  */
 const RFC4648_BASE32_PATTERN = /^[A-Z2-7]+$/;
 

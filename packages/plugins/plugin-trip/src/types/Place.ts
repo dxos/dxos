@@ -8,7 +8,7 @@ import { Annotation } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 
 /**
- * Generic location shape. Embedded inline — not an ECHO Type.makeObject.
+ * Generic location shape. Embedded inline - not an ECHO Type.makeObject.
  * Uniform across modes so Table and Map views work without per-variant branching.
  */
 export const Place = Schema.Struct({

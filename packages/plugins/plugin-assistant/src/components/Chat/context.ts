@@ -28,7 +28,7 @@ export type ChatRequestTiming = {
 
 /**
  * What the chat's parts act through: handles that hold still for the life of the chat. Kept apart
- * from {@link ChatThreadContextValue}, which changes with every streamed block — a consumer
+ * from {@link ChatThreadContextValue}, which changes with every streamed block - a consumer
  * re-renders whenever its context does, so the toolbar, the composer and the checklist re-rendered
  * per block of every turn when the two were one context.
  */
@@ -84,8 +84,8 @@ export type ChatReportContextValue = {
   submit: (text: string) => void;
 };
 
-// Defaulted (unlike `ChatContext`) so a surface rendered outside a chat — a storybook, a standalone
-// preview — drops its report instead of throwing.
+// Defaulted (unlike `ChatContext`) so a surface rendered outside a chat - a storybook, a standalone
+// preview - drops its report instead of throwing.
 export const [ChatReportContextProvider, useChatReportContext] = createContext<ChatReportContextValue>('ChatReport', {
   submit: () => {},
 });

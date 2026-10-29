@@ -49,7 +49,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.CreateRelay> = RelayO
       const task = TaskSet.addTask(
         db,
         taskSet,
-        title.length > TITLE_LENGTH ? `${title.slice(0, TITLE_LENGTH - 1)}…` : title,
+        title.length > TITLE_LENGTH ? `${title.slice(0, TITLE_LENGTH - 1)}\u2026` : title,
         {
           description: text,
           assignee: { role: 'assistant', name: agent.name, subject: Ref.make(agent) },

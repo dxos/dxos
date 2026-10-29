@@ -7,8 +7,8 @@
 // relation graph outward, trying candidate positions for each still-unplaced group next to its
 // placed neighbour (above/below preferred, connecting nodes axis-aligned) and keeping the
 // highest-scoring one. The final layout is the better of the search and the rank packing, under
-// one score: +1 per straight connector, −1 per crossing. Entirely custom by necessity — ELK and
-// dagre are one-shot global optimizers with no scoring callback or incremental placement API —
+// one score: +1 per straight connector, -1 per crossing. Entirely custom by necessity - ELK and
+// dagre are one-shot global optimizers with no scoring callback or incremental placement API -
 // but either can still lay out a group's interior or contribute a candidate to the same scorer.
 // See `docs/DESIGN.md`.
 //
@@ -73,8 +73,8 @@ const bends = (route: readonly Point[]): number => {
 };
 
 /**
- * Layout score over the placed subset: +1 per straight or single-bend (L) route, −1 per crossing
- * pair. Routes come from the cheap Z-router — the score ranks candidates, the A* router draws
+ * Layout score over the placed subset: +1 per straight or single-bend (L) route, -1 per crossing
+ * pair. Routes come from the cheap Z-router - the score ranks candidates, the A* router draws
  * the final picture.
  */
 export const scoreLayout = (model: UmlModel, rects: Map<string, Rect>): number => {
@@ -243,7 +243,7 @@ export type CompileOptions = Omit<GridCompileOptions, 'route'> & {
 
 /**
  * Compile via the scored search, falling back to whichever of {search, rank packing} scores
- * higher — the search is greedy, so the packing occasionally beats it.
+ * higher - the search is greedy, so the packing occasionally beats it.
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = GRID * 6 } = options;

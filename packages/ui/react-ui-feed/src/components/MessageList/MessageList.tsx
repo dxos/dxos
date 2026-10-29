@@ -58,7 +58,7 @@ export type MessageChromeProps = PropsWithChildren<{
 export type MessageRange = { startIndex: number; endIndex: number };
 
 /**
- * The imperative handle a host outside the feed's context drives the list through — the successor
+ * The imperative handle a host outside the feed's context drives the list through - the successor
  * of a document controller, shrunk to what a message-indexed feed needs. Everything else (range,
  * census, debug) is context, read via {@link useMessageList}.
  */
@@ -75,7 +75,7 @@ type MessageListContextValue = {
   model: FeedModel;
   renderer: MessageRenderer;
   registry?: XmlWidgetRegistry;
-  /** The block widget for an object embedded as a card (`![label](echo://…)`); the host supplies one that can render a card. */
+  /** The block widget for an object embedded as a card (`![label](echo://...)`); the host supplies one that can render a card. */
   objectImage?: WidgetDef<ObjectLinkProps>;
   Chrome: ComponentType<MessageChromeProps>;
   Custom?: ComponentType<{ content: ItemContent & { kind: 'custom' }; message: Message.Message }>;
@@ -84,7 +84,7 @@ type MessageListContextValue = {
   range?: MessageRange;
   /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
   currentIndex: number;
-  /** Whether the reader is resting on the tail — what a scroll-to-bottom affordance hides against. */
+  /** Whether the reader is resting on the tail - what a scroll-to-bottom affordance hides against. */
   atEnd: boolean;
   /** Whether the list is keeping the tail in view itself; an affordance to return there has no place while it is. */
   following: boolean;
@@ -92,7 +92,7 @@ type MessageListContextValue = {
   navigation: FeedNavigation;
   /** Rows mounted right now: the window the reader is paying for. */
   mountedRows: number;
-  /** Block widgets mounted across every mounted item — what the visible window actually costs. */
+  /** Block widgets mounted across every mounted item - what the visible window actually costs. */
   mountedWidgets: number;
   reportWidgets: (id: string, count: number) => void;
   /** Rows that moved on screen against the scroll, counted per animation frame. */
@@ -105,7 +105,7 @@ type MessageListContextValue = {
   windowRef: React.RefObject<HTMLDivElement | null>;
   /** Absolute position of the first mounted row: what that element is translated by (§7). */
   offset: number;
-  /** Extent of the whole document, reserved space included — what the thumb is scaled against. */
+  /** Extent of the whole document, reserved space included - what the thumb is scaled against. */
   sizerExtent: number;
   first: number;
   last: number;
@@ -125,7 +125,7 @@ export type ScrollToOptions = {
 const [MessageListProvider, useMessageListContext] = Hooks.createContext<MessageListContextValue>(MESSAGE_LIST_NAME);
 
 /**
- * What an item renders with — split from the list's context because that one changes on every
+ * What an item renders with - split from the list's context because that one changes on every
  * scroll (range, offset, cursor), and a consumer re-renders whenever its context does: every mounted
  * row would be rebuilt per frame of a scroll that moved none of them.
  */
@@ -138,7 +138,7 @@ const [MessageListItemProvider, useMessageListItemContext] =
   Hooks.createContext<MessageListItemContextValue>(MESSAGE_LIST_NAME);
 
 /**
- * The list's state and scroll controls, for parts that live outside the viewport — a toolbar's
+ * The list's state and scroll controls, for parts that live outside the viewport - a toolbar's
  * find-next, a statusbar's range readout.
  */
 export const useMessageList = (consumerName = 'useMessageList') => {
@@ -187,14 +187,14 @@ export type MessageListRootProps = PropsWithChildren<{
    * iteration (`loadBefore`/`loadAfter`, consumed when the window reaches an edge). `fromMessages`
    * adapts a plain array; ECHO/queue bindings adapt outside this package.
    *
-   * What is NOT here, deliberately: search hits (decorations — `DecorationsProvider` + an item's
+   * What is NOT here, deliberately: search hits (decorations - `DecorationsProvider` + an item's
    * `useDecorations`), selection (`ItemSelectionProvider` + `useItemSelection`), `streamingId` and
    * `isAnchor` (model concerns). The list neither knows nor routes cross-cutting per-item data.
    */
   model: FeedModel;
   renderer?: MessageRenderer;
   registry?: XmlWidgetRegistry;
-  /** The block widget for an object embedded as a card (`![label](echo://…)`). */
+  /** The block widget for an object embedded as a card (`![label](echo://...)`). */
   objectImage?: WidgetDef<ObjectLinkProps>;
   /**
    * Chrome wrapper; receives the item as `children`. Defaults to a bare frame.
@@ -204,7 +204,7 @@ export type MessageListRootProps = PropsWithChildren<{
    */
   Chrome?: ComponentType<MessageChromeProps>;
   /**
-   * Renders a `custom` item. The engine's own kinds are documents — markdown in CodeMirror, HTML —
+   * Renders a `custom` item. The engine's own kinds are documents - markdown in CodeMirror, HTML -
    * and both build their content asynchronously enough to be measured wrong once. A host component
    * whose height is settled at first paint is the control case: if a feed of those still moves, the
    * fault is the list; if it does not, the fault is in what the item is building.
@@ -216,7 +216,7 @@ export type MessageListRootProps = PropsWithChildren<{
   debug?: boolean;
   /**
    * Estimated row height before measurement. A function is worth supplying whenever the feed's
-   * rows differ widely — a one-line prompt beside a long answer — because a single number is wrong
+   * rows differ widely - a one-line prompt beside a long answer - because a single number is wrong
    * for both.
    */
   estimateSize?: number | ((message: Message.Message, index: number) => number);
@@ -226,8 +226,8 @@ export type MessageListRootProps = PropsWithChildren<{
   stickyBottom?: boolean;
   /**
    * Blank lines kept below the last row, part of the resting view: the tail sits that much clear
-   * of the viewport's end (breathing room above a composer). A constant number in the sizer —
-   * lines × the viewport's line-height — not a mode the list has (§7).
+   * of the viewport's end (breathing room above a composer). A constant number in the sizer -
+   * lines × the viewport's line-height - not a mode the list has (§7).
    */
   tailLines?: number;
   overscan?: number;
@@ -244,7 +244,7 @@ const DEFAULT_ESTIMATE = 120;
 /**
  * Headless root of a feed: owns the placement, the selection group and the model-to-item mapping.
  * Renders no DOM of its own, so a toolbar or statusbar that reads its state can sit outside the
- * scroll container — the scrolling part is `MessageList.Viewport`.
+ * scroll container - the scrolling part is `MessageList.Viewport`.
  */
 const MessageListRoot = ({
   children,
@@ -307,7 +307,7 @@ const MessageListRoot = ({
   // There is no running average here and no re-base built on one. Both existed because the old
   // engine could only revise the rows below the last one it had measured, so a feed opened at its
   // tail kept a document sized by the opening guess and had to be rebuilt from the top to correct
-  // it — which moved every offset in the list at once. A measurement is kept against the row's id
+  // it - which moved every offset in the list at once. A measurement is kept against the row's id
   // and consulted from the anchor, so a wrong estimate is wrong only for rows nobody has seen (§8).
   const extents = useMemo(
     () => ({
@@ -321,8 +321,8 @@ const MessageListRoot = ({
 
   // A constant input to the sizer: lines × the viewport's line-height, read once per mount. The
   // previous design derived a viewport-sized reserve from the tail's measured extents (so the last
-  // prompt could reach the top), which was several moving parts — measurements, the stops policy,
-  // a freshness freeze — and never reliable. A constant cannot oscillate.
+  // prompt could reach the top), which was several moving parts - measurements, the stops policy,
+  // a freshness freeze - and never reliable. A constant cannot oscillate.
   const [reserve, setReserve] = useState(0);
   useEffect(() => {
     if (!viewport || !tailLines) {
@@ -400,7 +400,7 @@ const MessageListRoot = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const revisionOf = useCallback((id: string) => revisions.current.get(id) ?? 0, [revisionsVersion]);
 
-  // The follow is an aspect the host composes, not part of the window (SPEC §Aspects) — the intent,
+  // The follow is an aspect the host composes, not part of the window (SPEC §Aspects) - the intent,
   // its withdrawal by a backwards scroll, and the glide all live there.
   const follow = useFollow({
     scrollerRef,
@@ -413,7 +413,7 @@ const MessageListRoot = ({
   });
 
   // What a reader would call flicker: a row moving on screen by more than the scroll moved, sampled
-  // once per frame so the reading is of what was painted. Only while debugging — it reads every
+  // once per frame so the reading is of what was painted. Only while debugging - it reads every
   // mounted row's box every frame.
   const jumps = useJumpDetector(viewport, debug);
 
@@ -447,7 +447,7 @@ const MessageListRoot = ({
         return;
       }
 
-      // Already at rest: arm the follow and do nothing else — the jump re-anchors from estimates,
+      // Already at rest: arm the follow and do nothing else - the jump re-anchors from estimates,
       // which visibly moves a reader who has not moved (seen on submit while pinned).
       const scroller = scrollerRef.current;
       if (scroller && scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop <= 32) {
@@ -602,7 +602,7 @@ type MessageListViewportExtra = Pick<ScrollAreaRootProps, 'autoHide' | 'native' 
   /** Inline gutter of each row, as a page Container's. */
   gutter?: 'sm' | 'md' | 'lg';
   /**
-   * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
+   * Chrome pinned over the scroller - a scroll-to-bottom pill, a "new messages" badge.
    *
    * Mounted inside `ScrollArea.Root` because it is positioned and does not scroll, so nothing has
    * to enter the flex-height chain the placement measures.
@@ -617,7 +617,7 @@ type MessageListViewportExtra = Pick<ScrollAreaRootProps, 'autoHide' | 'native' 
  * placement needs only the element being scrolled, which `ScrollArea.Viewport` publishes.
  */
 /**
- * Whether a message renders to nothing under the current renderer — e.g. a stats-only turn, whose
+ * Whether a message renders to nothing under the current renderer - e.g. a stats-only turn, whose
  * block the renderer deliberately maps to no output. The message stays in the model (identity,
  * stops, search all see it); only its chrome is withheld, so the reader is not shown an empty row
  * with a toolbar.
@@ -661,7 +661,7 @@ const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportE
           message={message}
           revision={revisionOf(message.id)}
           index={index}
-          // The row div always exists — the measurement pass walks the window's children by index —
+          // The row div always exists - the measurement pass walks the window's children by index -
           // but an empty render mounts no chrome inside it, so it measures at zero and takes no space.
           empty={isEmptyContent(renderer(message), Boolean(Custom))}
           selected={selectedIds?.has(message.id) ?? false}
@@ -725,7 +725,7 @@ type MessageListRowProps = {
 
 /**
  * One mounted row. Memoized because the window re-renders on every scroll event and after every
- * measurement, and nothing in a row depends on where the window is — only on its own props.
+ * measurement, and nothing in a row depends on where the window is - only on its own props.
  */
 const MessageListRow = memo(({ message, index, empty, selected, gutter, Chrome, onSelect }: MessageListRowProps) => {
   // Opted out of the React Compiler: `memo` already re-renders this row when its revision changes,
@@ -734,7 +734,7 @@ const MessageListRow = memo(({ message, index, empty, selected, gutter, Chrome, 
   return (
     // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
     // in the browser, in the same frame; placing each row ourselves meant re-placing every row
-    // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
+    // below it on every frame of the change - 177 re-placements for one disclosure opening (§6).
     <div data-object-id={message.id} {...windowRowProps(index, message.id)}>
       {!empty && (
         <Layout.Container gutter={gutter}>
@@ -765,7 +765,7 @@ type MessageListItemExtra = {
 
 /**
  * One message, rendered by the kind its renderer resolves. Exposed so a host can render a message
- * outside the scrolling window — a pinned message, a preview — through the same path.
+ * outside the scrolling window - a pinned message, a preview - through the same path.
  */
 const MessageListItem = Util.composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
   // Opted out of the React Compiler: it would cache `renderer(message)` on the message's identity,
@@ -789,7 +789,7 @@ const MessageListItem = Util.composable<HTMLDivElement, MessageListItemExtra>(({
   );
 
   return (
-    // The outlines are the item and the block-level children of its document — which is exactly what
+    // The outlines are the item and the block-level children of its document - which is exactly what
     // the virtualizer measures and what a widget's late paint changes.
     <div
       {...Util.composableProps(props, {
@@ -834,10 +834,10 @@ type MessageListNavExtra = {
 
 /**
  * The step and jump controls, on the same seam as the arrow keys and the rails (SPEC F-3.2), so a
- * reader who switches between them does not change places. Lives outside the viewport — Root is
+ * reader who switches between them does not change places. Lives outside the viewport - Root is
  * headless precisely so chrome like this can sit in a toolbar.
  *
- * While any of its buttons has focus, ArrowUp/Down step and Meta(Ctrl)+Arrow jumps to the ends —
+ * While any of its buttons has focus, ArrowUp/Down step and Meta(Ctrl)+Arrow jumps to the ends -
  * the same keymap the viewport itself carries, so focus landing on the toolbar does not change
  * what the keys mean.
  */

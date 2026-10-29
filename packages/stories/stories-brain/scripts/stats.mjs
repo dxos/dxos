@@ -4,7 +4,7 @@
 
 // Live view of the research bench's shared progress file. The benches stream throttled snapshots to
 // `fixtures/local/results/progress.json` (see testing/harness/progress.ts); this renders them as a
-// refreshing table with a per-task rate and ETA — the signal that was missing when a full extract
+// refreshing table with a per-task rate and ETA - the signal that was missing when a full extract
 // run silently ground on for hours. (`bench --stats` runs this same view inline; use this script to
 // watch a run started elsewhere, e.g. in another terminal or backgrounded.)
 //

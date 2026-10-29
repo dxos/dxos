@@ -166,7 +166,7 @@ const implausibleWins = (dir: string, targets: ReadonlyArray<MetricComparison>, 
 const noBudget = (ids: ReadonlyArray<string>): string[] =>
   ids.length > 0
     ? [
-        `note: ${ids.length} target${ids.length === 1 ? ' has' : 's have'} no nightly budget, usually because the metric was too noisy to calibrate: ${ids.slice(0, 5).join(', ')}${ids.length > 5 ? ', …' : ''}`,
+        `note: ${ids.length} target${ids.length === 1 ? ' has' : 's have'} no nightly budget, usually because the metric was too noisy to calibrate: ${ids.slice(0, 5).join(', ')}${ids.length > 5 ? ', ...' : ''}`,
       ]
     : [];
 
@@ -187,7 +187,7 @@ const voidReasons = (
     between: changed.length > 0 ? [`the harness differs between the arms: ${changed.join(', ')}`] : [],
     frozen:
       freeze && freeze.hash !== current
-        ? [`the harness changed since \`pnpm perf freeze\` (${freeze.hash} → ${current})`]
+        ? [`the harness changed since \`pnpm perf freeze\` (${freeze.hash} -> ${current})`]
         : [],
   };
 };
@@ -416,7 +416,7 @@ export const compareRun = async (options: CompareOptions): Promise<CompareResult
                 .join(' ')}`
             : ''
         }`,
-        `base ${options.base} ${base.commit.slice(0, 9)} → HEAD ${candidate.commit.slice(0, 9)}  harness ${session.harness}`,
+        `base ${options.base} ${base.commit.slice(0, 9)} -> HEAD ${candidate.commit.slice(0, 9)}  harness ${session.harness}`,
         ...(conditions ? [`under ${conditions}`] : []),
         `${roundCount} rounds, ${elapsedMinutes(session)} min, load ${load.toFixed(1)}/${cores}  ${path.relative(root, dir)}`,
         ...reasons.map((reason) => `harness change allowed, so the verdict covers it too: ${reason}`),

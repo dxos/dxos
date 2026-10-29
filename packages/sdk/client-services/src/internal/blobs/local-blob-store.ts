@@ -39,7 +39,7 @@ export const makeLocalBlobStore: Effect.Effect<LocalBlobStore, never, SqlClient.
     put: (key, data, { contentType, uploaded = false } = {}) => {
       const now = Date.now();
       // Content addressing makes the stored bytes identical, so a conflict only ever learns an
-      // upload or a content type — it never clears either.
+      // upload or a content type - it never clears either.
       return EffectEx.runPromise(
         sql`
           INSERT INTO blobs (hash, type, size, data, created_at, uploaded_at)

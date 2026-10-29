@@ -9,9 +9,9 @@ export type MediaKind = 'video' | 'audio';
 export type GenerateInput = {
   type: MediaKind;
   prompt: string;
-  /** Provider-specific avatar / character identifier. Optional — providers that don't use one ignore it. */
+  /** Provider-specific avatar / character identifier. Optional - providers that don't use one ignore it. */
   avatarId?: string;
-  /** Provider-specific voice identifier. Optional — providers that don't use one ignore it. */
+  /** Provider-specific voice identifier. Optional - providers that don't use one ignore it. */
   voiceId?: string;
 };
 
@@ -36,9 +36,9 @@ export type ProviderCallOptions = {
 };
 
 /**
- * Provider-agnostic interface for media generation back-ends (HeyGen, Veo, Sora, …). Generation is
+ * Provider-agnostic interface for media generation back-ends (HeyGen, Veo, Sora, ...). Generation is
  * split into `enqueue` (submit, returns a job id) and `awaitResult` (poll to completion) so a
- * long-running job survives navigation/remount — the caller persists the job id between the two.
+ * long-running job survives navigation/remount - the caller persists the job id between the two.
  * `generate` is the convenience composition. Providers that don't model avatars/voices return `[]`.
  */
 export interface GenerationProvider {

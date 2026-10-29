@@ -31,7 +31,7 @@ export type FeatureSeed = {
 export const FEATURES: readonly FeatureSeed[] = [
   {
     name: 'Go / no-go',
-    description: 'One word for the next three hours — go, maybe or no-go — with the reasons under it.',
+    description: 'One word for the next three hours - go, maybe or no-go - with the reasons under it.',
     feat: 'F-1',
     requirements: [
       { id: 'F-1.1', text: 'The verdict covers the next three hours.' },

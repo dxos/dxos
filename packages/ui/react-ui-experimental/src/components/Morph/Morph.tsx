@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 /**
  * Builds an n-point star SVG path with alternating outer/inner radii around (cx, cy).
- * First vertex sits at the top (angle = -π/2).
+ * First vertex sits at the top (angle = -pi/2).
  */
 const buildStarPath = (cx: number, cy: number, outerR: number, innerR: number, points: number): string => {
   const cmds: string[] = [];
@@ -55,12 +55,12 @@ const CIRCLE_PATH = buildCirclePath(50, 50, 10);
 export type MorphProps = Util.ThemedClassName<{
   /** Pixel size of the rendered SVG (square). */
   size?: number;
-  /** Duration of one segment (star↔circle) in seconds. Full cycle = 4× this value. */
+  /** Duration of one segment (star<->circle) in seconds. Full cycle = 4× this value. */
   duration?: number;
 }>;
 
 /**
- * Infinite morph cycle: 6-point star → small circle → 8-point star → small circle → 6-point star.
+ * Infinite morph cycle: 6-point star -> small circle -> 8-point star -> small circle -> 6-point star.
  * Inspired by https://motion.dev/tutorials/react-path-morphing.
  */
 export const Morph = ({ classNames, size = 32, duration = 2 }: MorphProps) => {

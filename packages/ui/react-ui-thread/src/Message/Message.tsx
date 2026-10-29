@@ -218,8 +218,8 @@ const TextBlock = ({
     () => ({
       initialValue: text,
       extensions: [
-        // Edit mode is authorisation enough — the control that gets here is already gated on
-        // `isAuthor` — and a mid-edit flip to read-only makes the editor drop input silently.
+        // Edit mode is authorisation enough - the control that gets here is already gated on
+        // `isAuthor` - and a mid-edit flip to read-only makes the editor drop input silently.
         createBasicExtensions({ readOnly: !editing }),
         createThemeExtensions({ themeMode }),
         command({ mentions }),
@@ -473,7 +473,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
       continues={continues}
       controls={controls}
       // Selecting a tile is how the host reveals what it refers to (a suggestion's range in the
-      // document), so the whole tile is the target — the accent marks which one is showing.
+      // document), so the whole tile is the target - the accent marks which one is showing.
       onClick={onMessageSelect ? handleSelect : undefined}
       aria-current={currentMessageId === message.id ? 'location' : undefined}
       classNames={[
@@ -508,7 +508,7 @@ export type MessageGroupProps = {
  * Groups consecutive same-sender messages (see `Thread.Messages`'s grouping
  * window) into a single tile: one heading (author + first message's
  * timestamp) followed by one body per message, stacked in order. Per-message
- * edit/delete controls are not shown per-row in a group — v1 shows them for
+ * edit/delete controls are not shown per-row in a group - v1 shows them for
  * the group's first message only, since the heading/controls layout is keyed
  * to a single message.
  */

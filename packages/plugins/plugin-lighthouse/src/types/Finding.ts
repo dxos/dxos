@@ -35,7 +35,7 @@ export class Finding extends Type.makeObject<Finding>(DXN.make('org.dxos.type.li
     /** CURIEs, e.g. `schema:Restaurant`. */
     types: Schema.Array(Schema.String),
     images: Schema.Array(Schema.String),
-    /** CURIE → values, as lighthouse returns them. */
+    /** CURIE -> values, as lighthouse returns them. */
     properties: Schema.Record(
       Schema.String,
       Schema.Array(Schema.Union([Schema.String, Schema.Number, Schema.Boolean])),

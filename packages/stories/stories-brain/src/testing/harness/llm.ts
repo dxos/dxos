@@ -10,14 +10,14 @@ import * as Schedule from 'effect/Schedule';
 import { AiService } from '@dxos/ai';
 import { DXN } from '@dxos/keys';
 
-// Bounded exponential backoff before degrading — absorbs transient failures (chiefly remote rate
+// Bounded exponential backoff before degrading - absorbs transient failures (chiefly remote rate
 // limits) during a long unattended run, so a 429 burst doesn't silently poison a whole tier's
 // results. Permanent failures (e.g. an unresolved model) just cost three quick retries then degrade.
 const RETRY = Schedule.exponential('2 seconds').pipe(Schedule.upTo({ times: 3 }));
 
 // Per-call timeout. Must be GENEROUS: a slow model (a 30B or a reasoning model on a long prompt) that
 // times out degrades to empty and scores as *inaccurate*, conflating "slow" with "bad". Give it room
-// to finish — latency is measured separately, so slowness is captured honestly rather than as failure.
+// to finish - latency is measured separately, so slowness is captured honestly rather than as failure.
 // `LLM_TIMEOUT` (seconds) overrides; the overnight driver raises it well above any real completion.
 const DEFAULT_TIMEOUT: Duration.Input = process.env.LLM_TIMEOUT
   ? `${Math.max(1, Number(process.env.LLM_TIMEOUT))} seconds`
@@ -44,7 +44,7 @@ export const generateText = (
       Effect.retry(RETRY),
       Effect.map((response) => response.text),
       // `catchAllCause`, not `orElse`: a malformed remote error response makes @effect/ai throw a
-      // ParseError while *constructing* its own AiError — a DEFECT, which orElse does not catch. That
+      // ParseError while *constructing* its own AiError - a DEFECT, which orElse does not catch. That
       // defect would otherwise escape and abort the whole run mid-way. Degrade any cause to empty.
       Effect.catchCause(() => Effect.succeed('')),
     );

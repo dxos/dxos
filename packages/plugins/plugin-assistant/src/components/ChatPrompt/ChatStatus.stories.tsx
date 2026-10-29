@@ -42,7 +42,7 @@ export const Tokens: Story = {
   },
 };
 
-/** A pending alarm with no turn to report on — the pill exists for the alarm alone. */
+/** A pending alarm with no turn to report on - the pill exists for the alarm alone. */
 export const AlarmOnly: Story = {
   args: {
     alarm: { wakeAt: WAKE_AT, message: 'Check the build' },
@@ -69,7 +69,7 @@ export const Running: Story = {
 
 /**
  * The alarm slot, which is the only part of the pill sourced from feed state rather than from the
- * turn — so a regression in it would otherwise be invisible until someone set an alarm by hand.
+ * turn - so a regression in it would otherwise be invisible until someone set an alarm by hand.
  */
 export const TestAlarm: Story = {
   args: {
@@ -80,7 +80,7 @@ export const TestAlarm: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const alarm = await canvas.findByTestId('assistant.chat-status.alarm', {}, { timeout: 10_000 });
-    // The wake time as a clock, in the viewer's locale — the same helper the component renders with.
+    // The wake time as a clock, in the viewer's locale - the same helper the component renders with.
     await expect(alarm).toHaveTextContent(formatWakeAt(WAKE_AT));
     // The reminder is the hover text, so a long one does not stretch the pill.
     await expect(alarm).toHaveAttribute('title', 'Check the build');

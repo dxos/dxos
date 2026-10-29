@@ -9,7 +9,7 @@ import { EID } from '@dxos/keys';
 
 import * as Trace from './Trace.ts';
 
-// DX-1125: the swarm broadcast tag/filter/wire helpers. The tag format is a cross-repo contract —
+// DX-1125: the swarm broadcast tag/filter/wire helpers. The tag format is a cross-repo contract -
 // the edge producer (functions-service) derives the same strings independently, so these lock it in.
 
 const message = (
@@ -115,7 +115,7 @@ describe('Trace.encodeTraceMessage / decodeTraceMessage', () => {
     expect(Trace.messageToTags(decoded)).toEqual(['type:status.update', 'pid:p9', 'space:SPACE9']);
   });
 
-  // The wire payload deliberately drops ref meta fields (`trigger`) — they travel only as envelope
+  // The wire payload deliberately drops ref meta fields (`trigger`) - they travel only as envelope
   // tags. A consumer that needs the trigger (e.g. cancel addressing) must get it back at decode, or
   // downstream guards silently no-op (the mailbox-sync cancel bug).
   test('restores meta.trigger from the envelope tags the payload encoding drops', ({ expect }) => {
@@ -138,7 +138,7 @@ describe('Trace.encodeTraceMessage / decodeTraceMessage', () => {
     expect(decoded.meta.trigger).toBeUndefined();
   });
 
-  // `conversation` is the other ref the payload drops, and it is what `matchesFilter` compares — so a
+  // `conversation` is the other ref the payload drops, and it is what `matchesFilter` compares - so a
   // conversation-filtered subscription (the coarse tag `subscriptionTagForFilter` prefers) receives
   // the broadcast and then discards it unless decode restores the ref.
   test('restores meta.conversation from the envelope tags', ({ expect }) => {

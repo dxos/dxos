@@ -10,11 +10,11 @@ import { type ActiveTopic, type ActiveTopicsResult, populatedChecklist, topicSlu
 // Morning-review artifacts for the Active Topics experiment (spec 2026-07-13). The string renderers
 // are pure (unit-tested); `writeActiveTopicsReports` performs the filesystem writes.
 
-const check = (value: boolean): string => (value ? '✓' : '✗');
+const check = (value: boolean): string => (value ? 'OK' : 'X');
 
 const pct = (value: number): string => `${Math.round(value * 100)}%`;
 
-/** Escape a value for a markdown table cell — `|` would split the row, newlines break it. */
+/** Escape a value for a markdown table cell - `|` would split the row, newlines break it. */
 const escapeCell = (value: string): string => value.replace(/\|/g, '\\|').replace(/\r?\n+/g, ' ');
 
 /**
@@ -81,7 +81,7 @@ export const renderIndex = (
 
 /** A per-active-topic report: status · threads · task outline · facts · drafts. */
 export const renderTopicReport = (topic: ActiveTopic): string => {
-  const lines: string[] = [`# ${topic.name}`, '', `_Confidence ${pct(topic.confidence)} — ${topic.rationale}_`, ''];
+  const lines: string[] = [`# ${topic.name}`, '', `_Confidence ${pct(topic.confidence)} - ${topic.rationale}_`, ''];
 
   lines.push('## Status', '', topic.status.trim().length > 0 ? topic.status.trim() : '_(none)_', '');
 
@@ -130,7 +130,7 @@ export const serializeActiveTopics = ({ active, suggested }: ActiveTopicsResult)
 /** Writes `index.md`, one `<slug>.md` per active topic, and `active-topics.json` into `dir`. */
 export const writeActiveTopicsReports = (dir: string, result: ActiveTopicsResult): void => {
   mkdirSync(dir, { recursive: true });
-  // One resolved slug per active topic — shared by the index links and the report filenames.
+  // One resolved slug per active topic - shared by the index links and the report filenames.
   const slugs = uniqueSlugs(result.active);
   const slugFor = (topic: ActiveTopic): string => slugs.get(topic) ?? topicSlug(topic.name);
   writeFileSync(join(dir, 'index.md'), renderIndex(result, slugFor));

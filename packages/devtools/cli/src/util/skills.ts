@@ -6,7 +6,7 @@ import * as Layer from 'effect/Layer';
 
 // Per-symbol subpath imports so the CLI's `bun run --conditions=source` only walks plugin source
 // files that are free of React-component imports. The plugin root barrels re-export the whole tree
-// (including React components that transitively pull `react-aria-components` — whose `source`
+// (including React components that transitively pull `react-aria-components` - whose `source`
 // export condition advertises a TS file that isn't shipped in its dist, causing Bun resolution to
 // fail).
 import { OpaqueToolkit } from '@dxos/ai';

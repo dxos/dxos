@@ -40,7 +40,7 @@ export const translations = [
         'incoming.label': 'Referenced by',
         'command-open.label': 'Command',
         'command.label': 'Command',
-        'command.placeholder': 'Clear the graph, show the ECHO exports, what depends on…',
+        'command.placeholder': 'Clear the graph, show the ECHO exports, what depends on...',
         'command-run.label': 'Run command',
         'command-close.label': 'Close command bar',
         'command-listen.label': 'Speak a command',

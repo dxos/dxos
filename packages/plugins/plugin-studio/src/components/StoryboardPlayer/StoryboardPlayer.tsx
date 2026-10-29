@@ -35,7 +35,7 @@ export type StoryboardPlayerProps = Util.ThemedClassName<{
 }>;
 
 /**
- * Plays a storyboard's frames back to back in one player — a view-time splice: one `<video>` whose
+ * Plays a storyboard's frames back to back in one player - a view-time splice: one `<video>` whose
  * source advances on `ended`, and stills that advance on a timer. No file is produced; see the
  * design doc for the ffmpeg.wasm splice that would.
  */
@@ -83,7 +83,7 @@ export const StoryboardPlayer = ({
     <Panel.Root {...Util.composableProps({ classNames }, attentionAttributes)}>
       <Panel.Header>
         <Toolbar.Root>
-          {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
+          {/* Laid out by hand - nav + position, the title centred, close - as one grid child rather
               than a grid on the root: the root brackets its children with focus sentinels, which
               would take the first and last cells. */}
           <Layout.Grid cols={['auto', 'fill', 'auto']} align='center' gap='xs' classNames='grow'>

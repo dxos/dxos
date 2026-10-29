@@ -15,7 +15,7 @@ import { translations } from '#translations';
 
 import { Transcript } from './Transcript.tsx';
 
-// Inline format: `[m:ss](url?t=s) >> Speaker text` — timestamp → gutter, `>>` → speaker widget, text inline.
+// Inline format: `[m:ss](url?t=s) >> Speaker text` - timestamp -> gutter, `>>` -> speaker widget, text inline.
 const SAMPLE_TRANSCRIPT = [
   '[0:02](https://youtu.be/dQw4w9WgXcQ?t=2) >> Welcome everyone to the show.',
   '[0:15](https://youtu.be/dQw4w9WgXcQ?t=15) >> Thanks for having me, glad to be here.',

@@ -41,7 +41,7 @@ export type MenuItemChrome = {
   disabled?: boolean;
   hidden?: boolean;
   testId?: string;
-  /** Shown beside the label; a record is keyed by host platform (`macos`, `windows`, …). */
+  /** Shown beside the label; a record is keyed by host platform (`macos`, `windows`, ...). */
   keyBinding?: string | Partial<Record<string, string>>;
   /** Applied to the button element rendered for this action. */
   classNames?: ClassNameValue;
@@ -66,7 +66,7 @@ export type MenuActionChrome = MenuItemChrome & {
 
 export type MenuActionProperties = MenuActionChrome & {
   /**
-   * Per-surface chrome overrides, keyed by `disposition` — lets one action declare multiple
+   * Per-surface chrome overrides, keyed by `disposition` - lets one action declare multiple
    * dispositions (e.g. `['toolbar', 'list-item']`) yet render appropriately in each: a primary
    * toolbar button here, a plain context-menu row there. Applied by the surface bridge that
    * already knows which disposition it's rendering (`graphActions`'s `surface` option,
@@ -85,7 +85,7 @@ type DropdownMenuItemGroupChrome = MenuItemChrome & {
   icon: string;
   /**
    * Whether the dropdown trigger shows a trailing caret. Defaults to `true`.
-   * Set to `false` when the icon already signals a menu (e.g. an overflow ⋮).
+   * Set to `false` when the icon already signals a menu (e.g. an overflow :).
    */
   caretDown?: boolean;
   /** When true, the trigger icon/label reflects the active child action. */

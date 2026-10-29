@@ -26,8 +26,8 @@ const whenDictatable = GraphNodeMatcher.whenAll(
   GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Chat.Chat)),
 );
 
-// The control owns recording state, mode, device selection, and entity-extraction — interactions the
-// action model cannot express (press-and-hold, an embedded dropdown, a live device list) — so it renders
+// The control owns recording state, mode, device selection, and entity-extraction - interactions the
+// action model cannot express (press-and-hold, an embedded dropdown, a live device list) - so it renders
 // via the custom toolbar variant rather than a plain toggle action. The node is static (state lives in
 // the control), keeping the toolbar's action atom stable across recording changes.
 const makeMicAction = (docId: string, disposition: string) =>

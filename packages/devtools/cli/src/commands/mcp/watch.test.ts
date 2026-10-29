@@ -98,7 +98,7 @@ const STRATEGIES: readonly Strategy[] = [
     name: 'binary',
     start: (dir) => {
       const pluginDir = path.join(dir, 'plugin');
-      // Nested, so the watch has to be recursive to see it — as a real plugin's `src/**` is.
+      // Nested, so the watch has to be recursive to see it - as a real plugin's `src/**` is.
       fs.mkdirSync(path.join(pluginDir, 'src', 'nested'), { recursive: true });
       fs.writeFileSync(path.join(pluginDir, 'src', 'nested', 'marker.txt'), 'v1\n');
       fs.writeFileSync(path.join(dir, 'server.ts'), BUNDLED_FIXTURE);
@@ -150,7 +150,7 @@ describe('dx mcp serve --watch', () => {
   }
 
   // The tests driving the supervisor directly are fast but skip the CLI runtime and run from
-  // whatever cwd vitest has — so they missed the defect this covers. `--watch` runs its child with
+  // whatever cwd vitest has - so they missed the defect this covers. `--watch` runs its child with
   // `--conditions=source`, bun resolves `tsconfig.json` from the cwd rather than from the file it
   // compiles, and an MCP client launches `dx` from the user's own project. Without a tsconfig
   // carrying `experimentalDecorators`, `@synchronized` died on `descriptor.value` during client
@@ -248,7 +248,7 @@ const driver = (child: ChildProcessWithoutNullStreams) => {
       }
     }
   });
-  // Drained so a timeout can say why — without a reader the child's diagnostics sit in a pipe
+  // Drained so a timeout can say why - without a reader the child's diagnostics sit in a pipe
   // nobody ever sees.
   child.stderr.on('data', (chunk) => stderr.push(String(chunk)));
 
@@ -278,7 +278,7 @@ const runSupervisor = (options: unknown) =>
   });
 
 /**
- * Ends the supervisor's stdin — its own shutdown path, which also reaps the server it spawned —
+ * Ends the supervisor's stdin - its own shutdown path, which also reaps the server it spawned -
  * and escalates to SIGKILL only if that stalls. A bare SIGKILL would orphan the spawned server.
  */
 const stop = async (child: ChildProcessWithoutNullStreams) => {

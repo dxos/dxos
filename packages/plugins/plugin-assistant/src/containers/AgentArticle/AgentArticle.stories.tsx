@@ -37,7 +37,7 @@ type StoryArgs = {
 };
 
 // Hoisted out of `args` because Storybook's CSF arg traversal walks every value
-// and tries to mutate `.id` on each entry — which throws on ECHO `Type.Type`
+// and tries to mutate `.id` on each entry - which throws on ECHO `Type.Type`
 // entities (Type.makeObject returns an immutable proxy). Keeping the spec here
 // dodges the traversal entirely.
 const defaultSpec: TypeSpec[] = [

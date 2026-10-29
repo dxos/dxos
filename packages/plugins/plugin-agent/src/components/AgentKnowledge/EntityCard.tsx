@@ -178,7 +178,7 @@ export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
       >
         <Card.Row icon={TYPE_ICON} end={onClose && <Card.Action system='close' onClick={onClose} />}>
           <EntityCardField label={t('entity-card-type.label')}>
-            <Card.Text truncate>{card.type ?? '—'}</Card.Text>
+            <Card.Text truncate>{card.type ?? '-'}</Card.Text>
           </EntityCardField>
         </Card.Row>
         <Card.Row icon={NAME_ICON}>

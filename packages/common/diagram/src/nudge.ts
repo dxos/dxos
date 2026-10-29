@@ -8,7 +8,7 @@ import { type Rect } from './uml-grid.ts';
 type Point = Scene.Point;
 type Axis = 'h' | 'v';
 
-/** One axis-aligned segment of a line: `points[start] → points[start + 1]`. */
+/** One axis-aligned segment of a line: `points[start] -> points[start + 1]`. */
 type Run = { owner: number; start: number; axis: Axis; coord: number; lo: number; hi: number };
 
 /** A routed connector: its orthogonal polyline and the boxes its ends are attached to. */
@@ -212,7 +212,7 @@ const channelsOf = (cache: LineCache, lines: readonly Point[][], movable: number
   return channels;
 };
 
-/** Side (−1, 0, +1 across the run) the line turns toward at the run's low or high end; 0 at a terminal. */
+/** Side (-1, 0, +1 across the run) the line turns toward at the run's low or high end; 0 at a terminal. */
 const turn = (lines: readonly Point[][], run: Run, end: 'lo' | 'hi'): number => {
   const points = lines[run.owner];
   const startIsLow = along(run.axis, points[run.start]) < along(run.axis, points[run.start + 1]);

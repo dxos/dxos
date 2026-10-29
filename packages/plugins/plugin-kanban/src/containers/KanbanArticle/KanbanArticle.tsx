@@ -119,7 +119,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
 
   // TODO(wittjosiah): pass refs (not loaded objects) through to the kanban
   //   board and let `KanbanCard` subscribe to its own ref via `useObject`.
-  //   Today this atom subscribes to *every* item — any one changing causes the
+  //   Today this atom subscribes to *every* item - any one changing causes the
   //   container (and the model's per-column atoms) to recompute. With cards
   //   subscribing themselves, the container only needs the refs and the
   //   per-card render is independent. Requires:

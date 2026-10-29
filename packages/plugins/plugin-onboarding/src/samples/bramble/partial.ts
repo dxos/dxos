@@ -57,7 +57,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('bramb
       // collection or a project rather than sitting loose on the root.
       yield* SampleSpace.collection('Welcome', [Ref.make(docs.tour), Ref.make(docs.about)]);
 
-      // Contacts — organizations, people and the views over them live directly in the space DB.
+      // Contacts - organizations, people and the views over them live directly in the space DB.
       // They are not collection-item types; the database viewer surfaces them.
       const organizations = yield* partials.organizations();
       const people = yield* partials.people(organizations);

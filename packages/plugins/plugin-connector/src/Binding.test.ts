@@ -89,7 +89,7 @@ describe('live bindings', () => {
   /**
    * Deleting a `Connection` cascade-deletes the access token it owns but leaves the cursors that
    * referenced it, and a target holding such a dormant binding can neither sync (no credential) nor offer
-   * Connect if the binding counts as connected — the mailbox that lost its Gmail connection ended up with
+   * Connect if the binding counts as connected - the mailbox that lost its Gmail connection ended up with
    * no button at all. These cover the one predicate both actions now key on.
    */
 
@@ -285,7 +285,7 @@ describe('Binding.sync', () => {
     Operation.withHandler((toast) => Effect.sync(() => void toasts.push(toast.id))),
   );
 
-  test('force-runs the sync trigger of the target’s account', async ({ expect }) => {
+  test("force-runs the sync trigger of the target's account", async ({ expect }) => {
     const { target, trigger } = await setup();
 
     await run(target);
@@ -411,7 +411,7 @@ describe('Binding.scaffoldRoutine', () => {
     Expando.Expando,
   ];
 
-  test('wires an account-level trigger to the connector’s sync operation', async ({ expect }) => {
+  test("wires an account-level trigger to the connector's sync operation", async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
@@ -425,8 +425,8 @@ describe('Binding.scaffoldRoutine', () => {
     expect(trigger?.enabled).toBe(true);
     // A connector that does not declare `sync.remote` gets a local trigger, with nothing stored.
     expect(trigger?.remote).toBeUndefined();
-    // The input names the account, not any one binding — the operation fans out over the bindings at
-    // run time — plus the pressed-first hint the fire event resolves.
+    // The input names the account, not any one binding - the operation fans out over the bindings at
+    // run time - plus the pressed-first hint the fire event resolves.
     expect(Object.keys(trigger?.input ?? {}).sort()).toEqual(['connection', 'priority']);
     expect(trigger?.input?.connection?.uri).toBe(Ref.make(connection).uri);
     expect(trigger?.input?.priority).toBe('{{event.data.priority}}');
@@ -460,7 +460,7 @@ describe('Binding.scaffoldRoutine', () => {
       await Binding.findTrigger(connection).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise),
     ).toBeUndefined();
 
-    // Adding the draft cascades to its owned trigger, and the account's trigger is then findable —
+    // Adding the draft cascades to its owned trigger, and the account's trigger is then findable -
     // the reverse-ref the sync button uses.
     db.add(routine);
     await db.flush({ indexes: true });
@@ -483,7 +483,7 @@ describe('Binding.scaffoldRoutine', () => {
 
     const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
 
-    expect(routine.name).toBe('Sync — work@example.com');
+    expect(routine.name).toBe('Sync - work@example.com');
   });
 
   test('findRoutine locates the saved routine so deleting the connection takes it too', async ({ expect }) => {
@@ -520,7 +520,7 @@ describe('binding lifecycle', () => {
   };
 
   /**
-   * A dormant binding — cursor kept, connection gone — is the state a disconnect leaves behind. Whether
+   * A dormant binding - cursor kept, connection gone - is the state a disconnect leaves behind. Whether
    * its progress may be resumed is decided by the account recorded on the *target*, since that says whose
    * data the target's feed already holds; the credential that would have said so is deleted with its
    * connection.
@@ -619,7 +619,7 @@ describe('binding lifecycle', () => {
     expect((await cursors()).map((cursor) => cursor.id)).toEqual([cursor.id]);
     // No schedule is restored, and none is created: the sync Routine belonged to the connection the
     // disconnect deleted, and a Routine for the new one is only ever made through the create-routine
-    // form — which the next sync affordance offers, since `findTrigger` reports none.
+    // form - which the next sync affordance offers, since `findTrigger` reports none.
     expect(await triggers()).toHaveLength(0);
     expect(await run(Binding.findTrigger(connection))).toBeUndefined();
   });
@@ -688,7 +688,7 @@ describe('binding lifecycle', () => {
     const rebound = await bind(anonymous, target);
     await db.flush({ indexes: true });
 
-    // Unknown is not a contradiction, so the bind succeeds — but nothing is inherited, and the
+    // Unknown is not a contradiction, so the bind succeeds - but nothing is inherited, and the
     // dormant cursor is left intact for a later bind that can confirm the account.
     expect(rebound.max).toBeUndefined();
     expect((await cursors()).map((cursor) => cursor.id)).toContain(rebound.id);
@@ -830,7 +830,7 @@ describe('Binding.syncAll', () => {
   test('fans out to each binding', async ({ expect }) => {
     const { db, connection, cursor } = await setup();
     // A trigger in the space changes nothing: the operation is the routine's runnable, so its
-    // handler never routes through triggers (that would recurse) — it always syncs the bindings.
+    // handler never routes through triggers (that would recurse) - it always syncs the bindings.
     await addConnectionSyncTrigger(db, connection);
 
     const result = await invokeSync(connection);
@@ -936,7 +936,7 @@ describe('Binding.syncAll', () => {
     expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
   });
 
-  test('retags a 401 buried in a wrapper’s cause', async ({ expect }) => {
+  test("retags a 401 buried in a wrapper's cause", async ({ expect }) => {
     const { connection, cursor } = await setup();
     // `MailSyncError.wrap()` leaves the provider's 401 reachable only via `cause`.
     failFor.set(Ref.make(cursor).uri, { _tag: 'MailSyncError', cause: { code: 401 } });
@@ -972,7 +972,7 @@ describe('Binding.syncAll', () => {
     expect(outcome.success.outputs).toHaveLength(2);
   });
 
-  test('a failure outranks a sibling’s runAgain', async ({ expect }) => {
+  test("a failure outranks a sibling's runAgain", async ({ expect }) => {
     const { db, connection, cursor, token } = await setup();
     const second = await addCursor(db, token);
     runAgainFor.add(Ref.make(cursor).uri);
@@ -998,7 +998,7 @@ describe('Binding.syncAll', () => {
     expect(synced).toEqual([Ref.make(cursor).uri]);
   });
 
-  test('auto-sync of a scheduled connector force-runs the account routine’s trigger', async ({ expect }) => {
+  test("auto-sync of a scheduled connector force-runs the account routine's trigger", async ({ expect }) => {
     const { db, connection } = await setup();
     const trigger = await addConnectionSyncTrigger(db, connection);
     const connector = makeConnector({ scheduled: true, auto: true });

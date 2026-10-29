@@ -18,7 +18,7 @@ export const Position = Schema.Struct({
 
 export type Position = Schema.Schema.Type<typeof Position>;
 
-/** Where a cell sits and how many grid cells it spans — the engine's `GridPosition`, persisted. */
+/** Where a cell sits and how many grid cells it spans - the engine's `GridPosition`, persisted. */
 export const CellLayout = Position.pipe(
   Schema.fieldsAssign({ w: Schema.optional(Schema.Number), h: Schema.optional(Schema.Number) }),
 );
@@ -37,5 +37,5 @@ export const BoardLayout = Schema.Struct({
 
 export type BoardLayout = Schema.Schema.Type<typeof BoardLayout>;
 
-/** A 7×5 board with no items — the persisted default for a new board. */
+/** A 7×5 board with no items - the persisted default for a new board. */
 export const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };

@@ -14,7 +14,7 @@ import { type FeedObjectCore } from './feed-object-core.ts';
  * caller is holding rather than clobbering a not-yet-appended local change. That guarantee is only
  * meaningful while something still holds the entity: with no holder there is no identity to
  * preserve, and the next read can mint a fresh instance. Holding cores strongly therefore bought
- * nothing and made a feed's footprint track everything it had ever hydrated — a one-shot query over
+ * nothing and made a feed's footprint track everything it had ever hydrated - a one-shot query over
  * a large feed stayed resident for the life of the handle.
  *
  * Entries are keyed by entity in a `WeakMap`, so a core lives exactly as long as its entity;
@@ -30,7 +30,7 @@ export class FeedCoreRegistry {
   readonly #entities = new Map<EntityId, WeakRef<Entity.Unknown>>();
 
   // Prunes the id index as entities are collected. Lookup prunes too, so this only bounds ids that
-  // are never looked up again — the common case for a feed that is read once and moved past.
+  // are never looked up again - the common case for a feed that is read once and moved past.
   readonly #finalizer = new FinalizationRegistry<EntityId>((id) => {
     if (this.#entities.get(id)?.deref() === undefined) {
       this.#entities.delete(id);
@@ -86,7 +86,7 @@ export class FeedCoreRegistry {
     }
   }
 
-  /** Cores still reachable — the feed's resident working set, after pruning collected entries. */
+  /** Cores still reachable - the feed's resident working set, after pruning collected entries. */
   get size(): number {
     let count = 0;
     for (const _core of this.values()) {

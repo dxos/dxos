@@ -16,7 +16,7 @@ export type ResolverMap = Record<string, ResolverType<any, any>>;
  * Service for resolving existing ECHO objects from external/extracted data. Keyed by typename,
  * each resolver maps an identity input (e.g. `{ email }`, `{ domain }`) to an existing object
  * when one exists. This is the identity backbone shared by extractors (merge vs create) and by
- * deterministic mappers (e.g. calendar attendee email → Person).
+ * deterministic mappers (e.g. calendar attendee email -> Person).
  */
 export class Resolver extends Context.Service<
   Resolver,

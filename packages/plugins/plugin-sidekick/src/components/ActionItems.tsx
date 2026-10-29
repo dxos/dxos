@@ -31,7 +31,7 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
         <p className='text-sm text-fg-muted italic'>{t('no-action-items.label')}</p>
       ) : (
         // Non-selectable: each row carries its own `completed` checkbox state, not a
-        // list-selection highlight — so this renders the plain ARIA list structure.
+        // list-selection highlight - so this renders the plain ARIA list structure.
         <List variant='unordered' className='space-y-1'>
           {items.map((item) => (
             <ListItem key={item.id} className='flex items-center gap-2 text-sm'>

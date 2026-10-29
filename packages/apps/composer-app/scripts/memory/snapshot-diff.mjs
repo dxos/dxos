@@ -126,7 +126,7 @@ const diff = (a, b, label) => {
     if (r.dSize < 50_000) {
       continue;
     }
-    console.log(`  +${String(MB(r.dSize)).padStart(7)}MB (+${r.dCount} → ${r.bCount})  ${r.key.slice(0, 90)}`);
+    console.log(`  +${String(MB(r.dSize)).padStart(7)}MB (+${r.dCount} -> ${r.bCount})  ${r.key.slice(0, 90)}`);
   }
 };
 
@@ -151,7 +151,7 @@ for (const t of targetsB) {
   const aggB = await snapshotAgg(t);
   const aggA = aggsA.get(t.id);
   if (aggA) {
-    diff(aggA, aggB, `${t.type} t=${wait1}s → t=${wait2}s`);
+    diff(aggA, aggB, `${t.type} t=${wait1}s -> t=${wait2}s`);
   }
 }
 

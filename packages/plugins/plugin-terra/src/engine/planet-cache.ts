@@ -6,7 +6,7 @@ import { type Planet, type TerraConfigValues, generatePlanet } from './generate-
 
 /**
  * Retention budget across all cached planets. Generation is deterministic in the config, so a
- * planet is safe to reuse indefinitely — the only cost is memory, and it is substantial: the
+ * planet is safe to reuse indefinitely - the only cost is memory, and it is substantial: the
  * triangle-soup mesh is ~94MB at the default resolution of 256 and ~377MB at 512. The budget keeps
  * the working set (the current planet plus the one the user just came from) resident while
  * bounding what a long session can accumulate.
@@ -15,7 +15,7 @@ const DEFAULT_MAX_BYTES = 256 * 1024 * 1024;
 
 /**
  * Retained size of one scatter placement: two three-number arrays plus four scalars, each a boxed
- * 64-bit value with array and object overhead. An estimate — the point is that scatter counts
+ * 64-bit value with array and object overhead. An estimate - the point is that scatter counts
  * against the budget at all, not that it is counted to the byte.
  */
 const SCATTER_ENTRY_BYTES = 200;
@@ -41,7 +41,7 @@ export type PlanetCacheOptions = {
 /**
  * Caches generated planets by config, so remounting the article (a resize, opening the companion,
  * navigating back) re-renders the existing mesh instead of paying the multi-second rebuild. Held
- * outside the React tree — see `TerraCapabilities.PlanetCache`.
+ * outside the React tree - see `TerraCapabilities.PlanetCache`.
  */
 export class PlanetCache {
   // Iteration order is the LRU order (least-recent first); `resolve` re-inserts on a hit to move the entry to the end.
@@ -73,7 +73,7 @@ export class PlanetCache {
     return this.#misses;
   }
 
-  /** Whether {@link resolve} would return without generating — lets callers skip debouncing work that costs nothing. */
+  /** Whether {@link resolve} would return without generating - lets callers skip debouncing work that costs nothing. */
   has(config: TerraConfigValues): boolean {
     return this.#entries.has(planetKey(config));
   }
@@ -105,7 +105,7 @@ export class PlanetCache {
     this.#misses = 0;
   }
 
-  /** Drops least-recently-used entries down to the budget, always keeping the newest — a single planet may exceed it on its own. */
+  /** Drops least-recently-used entries down to the budget, always keeping the newest - a single planet may exceed it on its own. */
   #evict(): void {
     for (const [key, entry] of this.#entries) {
       if (this.#bytes <= this.#maxBytes || this.#entries.size <= 1) {

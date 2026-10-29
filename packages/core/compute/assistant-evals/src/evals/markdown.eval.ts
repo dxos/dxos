@@ -38,7 +38,7 @@ const draftTask = createEvalRunner({
   scored: true,
 });
 
-evalite('Markdown — draft a document', {
+evalite('Markdown - draft a document', {
   data: [{ input: null }],
   trialCount: 3,
   task: draftTask,
@@ -73,7 +73,7 @@ const appendTask = createEvalRunner({
     Open the document and confirm its content is empty.
 
     Use the markdown Update operation (org.dxos.operation.markdown.update) to append this exact line
-    without providing oldString (omit oldString entirely — do not pass an empty string):
+    without providing oldString (omit oldString entirely - do not pass an empty string):
     "${APPENDED_LINE}"
 
     Open the document again and confirm the content is exactly "${APPENDED_LINE}"
@@ -84,7 +84,7 @@ const appendTask = createEvalRunner({
   scored: true,
 });
 
-evalite('Markdown — append text to empty document', {
+evalite('Markdown - append text to empty document', {
   data: [{ input: null }],
   trialCount: 3,
   task: appendTask,

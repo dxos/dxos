@@ -72,7 +72,7 @@ export type OutlineProps = Util.ThemedClassName<{
  * A vertical rail of horizontal ticks, each representing an anchor marker in a
  * scrollable document. The rows tile the full height, so hovering anywhere in the rail activates
  * the nearest tick: it (and its neighbours, with a distance falloff) extends rightward in a wave.
- * A single popover — anchored to the tick the reader is at — shows the
+ * A single popover - anchored to the tick the reader is at - shows the
  * marker's title/description. Markers whose range intersects `visibleRange` render at full
  * opacity; the rest are dimmed.
  */
@@ -83,7 +83,7 @@ type Row = { marker: OutlineMarker; index: number; span: { from: number; to: num
  * Evenly spreads `markers` over at most `capacity` rows, keeping the first and last.
  *
  * Each rendered tick then stands for the span up to the next one, so a thinned rail still covers
- * the whole document — a position between two ticks belongs to the one above it, rather than to
+ * the whole document - a position between two ticks belongs to the one above it, rather than to
  * nothing.
  */
 const thin = (markers: OutlineMarker[], capacity: number): Row[] => {
@@ -113,7 +113,7 @@ export const Outline = ({
   const rowsRef = useRef<Array<HTMLButtonElement | null>>([]);
   // Two ways to be *at* a tick, kept apart: the pointer is over one, or the rail has focus and the
   // reader has navigated to one. Conflating them means leaving with the mouse cannot dismiss the
-  // card — the keyboard position immediately puts it back.
+  // card - the keyboard position immediately puts it back.
   const [pointer, setPointer] = useState<number | null>(null);
   const [navigated, setNavigated] = useState<number | null>(null);
   // The rail is bounded by whatever contains it. Measured rather than assumed, because the same
@@ -147,20 +147,20 @@ export const Outline = ({
     [visibleRange],
   );
 
-  // Not "has focus" — "is being driven by the keyboard". A click focuses a tick too, and gating on
+  // Not "has focus" - "is being driven by the keyboard". A click focuses a tick too, and gating on
   // focus left the card up after the pointer had gone: the reader clicked, moved away, and the
   // keyboard position they never asked for kept it open.
   const [keyboard, setKeyboard] = useState(false);
 
   // Whichever the reader is actually using. The pointer is the more direct statement, so it wins by
-  // default — but not once the arrows are in play: clicking a tick and then pressing an arrow leaves
+  // default - but not once the arrows are in play: clicking a tick and then pressing an arrow leaves
   // the pointer resting where it was clicked, and a pointer that always wins pins the card to a tick
   // the reader has already navigated away from. Pointing again takes it back (`onPointerEnter`).
   const shown = keyboard ? (navigated ?? pointer) : (pointer ?? navigated);
 
   // A backstop while a card is up: the pointer arriving anywhere outside the rail clears it.
   //
-  // The tick's own leave is enough for a plain hover, and is not enough after a click — the popover
+  // The tick's own leave is enough for a plain hover, and is not enough after a click - the popover
   // that opens brings focus guards that sit over the page, and the tick never sees the pointer go.
   // Verified with a real pointer: hovering away cleared it, clicking and then hovering away did not.
   // Asking the document is the one question no overlay can intercept.
@@ -195,7 +195,7 @@ export const Outline = ({
     }
   }, [shown]);
 
-  // Wave falloff: a Gaussian (normal-distribution) bell centred on the tick shown — a rounded
+  // Wave falloff: a Gaussian (normal-distribution) bell centred on the tick shown - a rounded
   // peak with inflected shoulders that flatten toward rest, rather than a dome. `WAVE_SPREAD` is
   // the standard deviation (in rows).
   const widthFor = useCallback(
@@ -212,7 +212,7 @@ export const Outline = ({
   );
 
   // Arrow keys walk the rail. The ticks are buttons, so tab reaches the rail and the arrows then
-  // move within it — the roving behaviour a vertical list of controls is expected to have. The step
+  // move within it - the roving behaviour a vertical list of controls is expected to have. The step
   // while the keyboard is still on a tick; and clamped to `rows`, since thinning can leave the ref
   // array longer than the rail it now renders.
   const handleKeyDown = useCallback(
@@ -223,7 +223,7 @@ export const Outline = ({
       }
 
       // Navigation wins where the host offers it: a focused tick is a place in the document, so the
-      // arrows move through the document rather than through the rail's own ticks — which are
+      // arrows move through the document rather than through the rail's own ticks - which are
       // thinned, and so are not one-to-one with anything the reader is counting.
       if (onNavigate) {
         event.preventDefault();
@@ -249,7 +249,7 @@ export const Outline = ({
 
   // While the rail has focus, the shown tick follows where the reader has got to.
   //
-  // Navigation steps items and the rail shows ticks, and the two are not one-to-one — so after an
+  // Navigation steps items and the rail shows ticks, and the two are not one-to-one - so after an
   // arrow press the popover would otherwise describe the tick the pointer last touched rather than
   // the place the reader is now. Derived from the visible range, so it tracks the list however the
   // reader moved: the arrows, the toolbar, or the scrollbar.
@@ -280,11 +280,11 @@ export const Outline = ({
           width: `${width}px`,
           height: bounded ? '100%' : `${natural}px`,
         }}
-        // Published so a test can ask *why* a card is up — the pointer being over a tick, or the
-        // keyboard having navigated to one — rather than only that it is (§12).
+        // Published so a test can ask *why* a card is up - the pointer being over a tick, or the
+        // keyboard having navigated to one - rather than only that it is (§12).
         data-pointer={pointer ?? ''}
         data-navigated={navigated ?? ''}
-        // And which of the two is actually being shown, since that is the invariant — the reader
+        // And which of the two is actually being shown, since that is the invariant - the reader
         // sees one card, not two states (§12).
         data-shown={shown ?? ''}
         // A pointer anywhere in the rail ends the keyboard's claim on what is shown: the reader has
@@ -299,7 +299,7 @@ export const Outline = ({
         ref={containerRef}
       >
         {/* Ticks are a fixed height, so a document with fewer markers than the rail can hold does not
-            fill it — and they are centred rather than stacked at the top, which reads as the rail
+            fill it - and they are centred rather than stacked at the top, which reads as the rail
             having been cut short. Centring is the rail's own business; where the *rail* sits is its
             container's. */}
         {rows.map((row, index) => {
@@ -313,7 +313,7 @@ export const Outline = ({
               // Full-width row; flexes to fill a bounded rail height (min height keeps it hoverable
               // when the rail is unbounded), so any point in the rail maps to a tick. The focus
               // ring is suppressed because focus already shows as the tick extending and
-              // darkening — an outline around an invisible full-width row reads as a stray box.
+              // darkening - an outline around an invisible full-width row reads as a stray box.
               // `flex-1` with `min-h-0`: the rows share whatever height the rail has, so N markers
               // spread over the full range rather than stacking at their natural pitch and leaving
               // the rest blank. Thinning above guarantees they never need less than the pitch.
@@ -329,7 +329,7 @@ export const Outline = ({
                 setKeyboard(false);
               }}
               // Cleared on the tick that set it, rather than on the rail. A rail-level leave is
-              // synthesised from over/out pairs and was observed not firing at all — the card
+              // synthesised from over/out pairs and was observed not firing at all - the card
               // stayed up after the pointer had gone, in the browser and in a test. Moving between
               // ticks does not flicker: the leave and the next enter land in one batch.
               onPointerLeave={() => setPointer((current) => (current === index ? null : current))}
@@ -352,7 +352,7 @@ export const Outline = ({
 
         {/* A separate anchor, and the ticks are never wrapped.
             Wrapping the shown tick in `Popover.Anchor` changes the element type at that position, so
-            React unmounts and remounts that button — and a destroyed element never receives
+            React unmounts and remounts that button - and a destroyed element never receives
             `pointerleave`, which is why the card would not dismiss when the pointer left. Verified
             with a real pointer: `data-pointer` stayed on the tick after the pointer had gone.
             A zero-height anchor moved to the shown tick's offset keeps every tick stable; the
@@ -364,7 +364,7 @@ export const Outline = ({
       {hoveredMarker && (
         <Popover.Content
           // Keyed to the tick: the popover measures its anchor when it mounts, and moving the anchor
-          // to a different element does not make it measure again — the card stayed put while the
+          // to a different element does not make it measure again - the card stayed put while the
           // pointer walked the rail, drifting further from the tick with every step. Remounting per
           // tick is what makes it re-measure.
           key={hoveredMarker.id}

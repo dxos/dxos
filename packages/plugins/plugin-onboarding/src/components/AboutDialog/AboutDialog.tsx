@@ -34,7 +34,7 @@ const ENV_LABELS: Record<string, string> = {
 
 const REPO = 'https://github.com/dxos/dxos';
 
-/** Safe `new URL(...)` — returns the parsed URL or undefined when the input is malformed. */
+/** Safe `new URL(...)` - returns the parsed URL or undefined when the input is malformed. */
 const parseUrl = (url: string): URL | undefined => {
   try {
     return new URL(url);

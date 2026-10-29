@@ -115,7 +115,7 @@ export const translatorLayer: Layer$.Layer<TranslatorService, never, Capability$
   TranslatorService,
 );
 
-/** A writer scoped to a single plugin's compartment — the only way to mutate the stats store. */
+/** A writer scoped to a single plugin's compartment - the only way to mutate the stats store. */
 export type StatsCompartment = Readonly<{
   /** Replace this compartment's value. */
   set: (stats: unknown) => void;
@@ -126,9 +126,9 @@ export type StatsCompartment = Readonly<{
 /**
  * A generic, reactive store for stats/telemetry, partitioned into one compartment per plugin. Every
  * consumer can READ the entire store (all compartments) reactively, but can only WRITE its own
- * compartment — obtained via `compartment(pluginKey)` with the plugin's own key (`meta.profile.key`).
+ * compartment - obtained via `compartment(pluginKey)` with the plugin's own key (`meta.profile.key`).
  * Currently in-memory (discarded on reload); persistence may be layered on later, so the name is not
- * tied to transience. Contributed by a host plugin (plugin-debug) — writers resolve it with
+ * tied to transience. Contributed by a host plugin (plugin-debug) - writers resolve it with
  * `Capability.getAll` so writing is a no-op when no host is loaded (e.g. production without devtools).
  * @category Capability
  */
@@ -137,7 +137,7 @@ export type StatsPanelStore = Readonly<{
   statsAtom: Atom.Writable<Record<string, unknown>>;
   /** Read one plugin's compartment. */
   get: (pluginKey: string) => unknown;
-  /** A writer scoped to one plugin's compartment — the only write path. */
+  /** A writer scoped to one plugin's compartment - the only write path. */
   compartment: (pluginKey: string) => StatsCompartment;
 }>;
 
@@ -148,8 +148,8 @@ export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>()('org.dxos
 
 /**
  * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
- * `urlKey` declarations and node→extension provenance that URL resolution (`@dxos/app-graph`'s
- * `path-resolution.ts`) reads and reverse-maps — neither derivable from `graph` alone.
+ * `urlKey` declarations and node->extension provenance that URL resolution (`@dxos/app-graph`'s
+ * `path-resolution.ts`) reads and reverse-maps - neither derivable from `graph` alone.
  */
 export type AppGraph = AppGraphBuilder$.GraphBuilder;
 
@@ -221,9 +221,9 @@ export type SettingsSync = {
   conflicts(prefix: string): readonly string[];
   /** Which settings this device keeps to itself, by prefix. */
   readonly pinned: Atom.Atom<AppSettings.DeviceSettings>;
-  /** Keep one key on this device — the per-key counterpart of {@link takeLocal}. */
+  /** Keep one key on this device - the per-key counterpart of {@link takeLocal}. */
   pinKey(prefix: string, key: string): void;
-  /** Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}. */
+  /** Hand one key back to the account - the per-key counterpart of {@link rejoinAccount}. */
   unpinKey(prefix: string, key: string): void;
 };
 
@@ -273,7 +273,7 @@ export const McpServer = Capability$.make<Connection.Builtin>()('org.dxos.app-fr
 export type PluginAsset = Readonly<{
   /** Owning plugin id (matches `Plugin.Meta.id`). */
   pluginId: string;
-  /** Path within the plugin package — typically equal to `Plugin.Meta.spec`. */
+  /** Path within the plugin package - typically equal to `Plugin.Meta.spec`. */
   path: string;
   /** Raw text content. */
   content: string;
@@ -318,7 +318,7 @@ export const SpaceTemplate = Capability$.make<SpaceTemplate>()('org.dxos.app-fra
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
- * supplied by the active-space resolver — BYOK-aware resolvers wrap their HTTP client with
+ * supplied by the active-space resolver - BYOK-aware resolvers wrap their HTTP client with
  * `Header.byokLayer(...)`; the rest carry it through unused.
  */
 export const AiModelResolver = Capability$.make<
@@ -342,7 +342,7 @@ export type AnchorSort = {
  */
 export const AnchorSort = Capability$.make<AnchorSort>()('org.dxos.app-framework.capability.anchorSort');
 
-/** Anchor→text resolution contributed per typename by plugins whose objects support cursor-range anchors. */
+/** Anchor->text resolution contributed per typename by plugins whose objects support cursor-range anchors. */
 export type AnchorResolver = Readonly<{
   key: string;
   /** Resolve an anchor (`"${fromCursor}:${toCursor}"`) to the text it spans, or `undefined` when unresolvable. */
@@ -421,9 +421,9 @@ export type NavigationTarget = {
   /** Object type. */
   type: string;
   /**
-   * Sort order among the targets resolved for one query. A resolver that only produces a generic path —
+   * Sort order among the targets resolved for one query. A resolver that only produces a generic path -
    * the database subtree, which guarantees every ECHO object *a* path but is not where the tree shows
-   * it — declares `Position.last`, so a resolver that knows the object's canonical home (its collection,
+   * it - declares `Position.last`, so a resolver that knows the object's canonical home (its collection,
    * a type section) is preferred. Only the resolver knows how specific its answer is, hence a declared
    * position rather than path sniffing by the caller.
    */
@@ -440,7 +440,7 @@ export type NavigationQuery = {
  * When called without a query, returns the plugin's default navigable pages.
  *
  * Requires `Database.Service`: a resolver turns an object URI into a path, which means loading the
- * object. The caller derives the database from the query's space and provides the layer — see
+ * object. The caller derives the database from the query's space and provides the layer - see
  * `NavigationOperation.ResolveNavigationTargets`, the one entry point that runs every resolver.
  * @category Capability
  */
@@ -471,14 +471,14 @@ export const UnsavedChanges = Capability$.make<UnsavedChanges>()('org.dxos.app-f
  *
  * Three-valued because the caller's responses to a missing node are opposites: it waits for one that
  * is merely late and fails fast on one that is absent. `absent` is therefore reserved for a store
- * that actually answered — an unreachable edge or an unparseable id is `unknown`.
+ * that actually answered - an unreachable edge or an unparseable id is `unknown`.
  * @category Capability
  */
 export type NavigationTargetVerdict = 'exists' | 'absent' | 'unknown';
 
 /**
  * Loads/verifies a navigation target so graph resolution can materialize its node. Contributed by the
- * plugin that owns object storage (plugin-client), consumed by layout plugins — this is the
+ * plugin that owns object storage (plugin-client), consumed by layout plugins - this is the
  * abstraction that keeps layout plugins from depending on the client for loading. `load` loads the
  * object into local ECHO when present locally (so a URL-driven restore materializes the plank's
  * node), and resolves `exists` if the object is present locally or, as a fallback, remotely. A
@@ -508,7 +508,7 @@ export const NavigationHandler = Capability$.make<NavigationHandler>()(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
 
-/** A transient progress monitor handle — the update side of one registry entry. */
+/** A transient progress monitor handle - the update side of one registry entry. */
 export type ProgressMonitor = Progress.TaskHandle;
 
 /**
@@ -524,7 +524,7 @@ export type ProgressRegistry = Readonly<{
   /** One provider's reactive state, by name (stable/memoized per name). */
   monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
   /**
-   * Register (or resume) a provider and mark it running. Pass `onCancel` to make it cancellable — the
+   * Register (or resume) a provider and mark it running. Pass `onCancel` to make it cancellable - the
    * meter then shows a cancel control that invokes {@link ProgressRegistry.cancel}.
    */
   register: (name: string, options?: { label?: string; total?: number; onCancel?: () => void }) => ProgressMonitor;
@@ -542,7 +542,7 @@ export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
 );
 
 /**
- * The app's update channel, contributed by whichever plugin owns updates on this platform —
+ * The app's update channel, contributed by whichever plugin owns updates on this platform -
  * `plugin-native` for the desktop OTA updater, `plugin-pwa` for the service worker. Exactly one
  * contributes at a time, so a settings surface can render either without knowing which it got.
  * @category Capability
@@ -554,7 +554,7 @@ export const UpdateManager = Capability$.makeSingleton<AppUpdate$.Manager>()(
 export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
 
 /**
- * Observability event registration — contributed by the plugin that owns the operation, consumed by
+ * Observability event registration - contributed by the plugin that owns the operation, consumed by
  * a listener over the invocation stream so the operation itself stays free of telemetry.
  * @category Capability
  */

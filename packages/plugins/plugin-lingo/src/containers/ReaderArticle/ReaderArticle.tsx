@@ -33,7 +33,7 @@ import { useSourceText } from './useSourceText.ts';
 export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
 /**
- * Companion reading view for any object with text — a markdown document, an email, a transcript.
+ * Companion reading view for any object with text - a markdown document, an email, a transcript.
  *
  * Read-only and non-destructive: it renders a copy of the source text with the reader's vocabulary
  * revealed, so the document keeps whatever editor its own plugin gives it.
@@ -42,7 +42,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   const { t } = UiHooks.useTranslation(LingoNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Attention sits on the article this companion accompanies, not on the companion itself, so the
-  // subject's URI is what `ActionToolbar`'s `useAttention` has to match — otherwise the toolbar is
+  // subject's URI is what `ActionToolbar`'s `useAttention` has to match - otherwise the toolbar is
   // permanently disabled.
   const attentionId = (subject && Obj.getURI(subject)) ?? attendableId;
   const settings = useAtomValue(Hooks.useCapability(LingoCapabilities.Settings));
@@ -55,7 +55,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   const languages = useQuery(db, Filter.type(Language.Language));
   const relations = useQuery(db, Filter.type(HasSubject.HasSubject));
 
-  // Languages already translating THIS object, by code — the tick in the selector, and what decides
+  // Languages already translating THIS object, by code - the tick in the selector, and what decides
   // whether the run button has to create one first.
   const translated = useMemo(() => {
     const codes = new Map<string, Language.Language>();
@@ -87,7 +87,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
 
   const [languageCode, setLanguageCode] = useState<string | undefined>();
   // Settings before the first option: the list is sorted for reading, so falling straight through to
-  // it opened every reader on Arabic. A language already created for this object still wins — it is
+  // it opened every reader on Arabic. A language already created for this object still wins - it is
   // the one with a translation attached.
   const preferred = options.some(({ code }) => code === settings.language)
     ? settings.language
@@ -129,7 +129,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
 
   // Remembers every deck this component created, keyed by language: `deck` comes from a query that
   // refreshes a tick after `db.add`, so a second "add" pressed before then would see no deck and
-  // create another for the same language. A map rather than one slot — switching language and back
+  // create another for the same language. A map rather than one slot - switching language and back
   // within that window would otherwise evict the entry that was about to be reused.
   const createdDecks = useRef(new Map<string, Vocabulary.Vocabulary>());
   const ensureDeck = useCallback(() => {
@@ -270,7 +270,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
 
     // TESTING.md B5: pressing again on an unchanged document must come back from the stored
     // `Analysis` rather than spend a second translation. The guard belongs here because the
-    // `AnalyzeText` call below passes `refresh: true`, which deliberately bypasses its own cache —
+    // `AnalyzeText` call below passes `refresh: true`, which deliberately bypasses its own cache -
     // and `TranslatePassage`, the expensive half, has no cache at all. An analysis whose
     // segmentation failed still has work left, so an empty `segments` is not a hit.
     if (stored && !Analysis.isStale(stored, text) && stored.segments.length > 0) {
@@ -299,7 +299,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
 
       // Persist the translation the moment it arrives, rather than letting `AnalyzeText` be the only
       // writer: the translation is the expensive artifact, and a failed segmentation must not throw
-      // it away — that is what left the panel reading "Not translated yet." after a successful run.
+      // it away - that is what left the panel reading "Not translated yet." after a successful run.
       const translation = result.data?.text;
       const sourceCode = result.data?.sourceCode;
       if (sourceCode && target.code !== sourceCode) {

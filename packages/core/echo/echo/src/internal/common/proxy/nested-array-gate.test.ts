@@ -28,7 +28,7 @@ const expectGated = (label: string, mutate: () => void) => {
 
 /**
  * The read-only gate reads its key off the target's prototype, so an array left as a plain `Array`
- * anywhere in the tree would be ungated — mutable outside `Obj.update()` and notifying nobody.
+ * anywhere in the tree would be ungated - mutable outside `Obj.update()` and notifying nobody.
  * Assignment therefore reactifies its whole subtree, as construction does; these pin that.
  */
 describe('nested array mutations are gated at every depth', () => {

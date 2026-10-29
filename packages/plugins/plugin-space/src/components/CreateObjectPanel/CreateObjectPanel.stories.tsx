@@ -26,7 +26,7 @@ const mockOptions: CreateObjectOption[] = [
 ];
 
 // The story always supplies `target`, so `CreateObjectPanel` never renders the space picker that
-// would read these — an empty, honestly-typed array avoids forcing fixture data through a cast.
+// would read these - an empty, honestly-typed array avoids forcing fixture data through a cast.
 const mockSpaces: Space[] = [];
 
 const DefaultStory = () => {
@@ -83,7 +83,7 @@ export const Default: Story = {
 
 // Verifies the type filter matches the contributing plugin name, not just the type label:
 // typing "Kanban" surfaces "Table" (contributed by the Kanban plugin) even though the label
-// "Table" contains no match for the query — impossible before plugin/description were searchable.
+// "Table" contains no match for the query - impossible before plugin/description were searchable.
 export const FilterByPlugin: Story = {
   render: DefaultStory,
   play: async () => {

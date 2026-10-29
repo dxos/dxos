@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 // QueryAST is referenced indirectly through the `Map` class type
-// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// (Ref.Ref(View.View) -> View.View -> QueryAST.Query) in the emitted .d.ts; the
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Annotation, DXN, Format, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';

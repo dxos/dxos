@@ -12,7 +12,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Feature, LegacyFeature, Showcase, Spec } from '#types';
 
 /**
- * `Feature` 0.1.0 → 0.2.0: `in-progress` leaves the status (work is read from linked tasks), and each subfeature record
+ * `Feature` 0.1.0 -> 0.2.0: `in-progress` leaves the status (work is read from linked tasks), and each subfeature record
  * becomes a feature whose `parent` is the migrated one, so it can carry a description and requirements of its own.
  */
 export const featureSubfeatures = Migration.define({
@@ -143,7 +143,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
 };
 
 /**
- * `Feature` 0.2.0 → 0.3.0: features leave projects for specs. Each project's map becomes a spec that names the
+ * `Feature` 0.2.0 -> 0.3.0: features leave projects for specs. Each project's map becomes a spec that names the
  * project, each parent's subfeatures become the features of a spec the parent owns, and canvas positions move from the
  * feature onto its spec's layout. The specs made so far are held per database in this migration's own closure.
  */

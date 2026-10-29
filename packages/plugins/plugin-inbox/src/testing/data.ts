@@ -12,7 +12,7 @@ import { Mailbox } from '#types';
 
 import { Builder } from './builder.ts';
 
-/** Fixture tag dictionary — keys are stable across runs so builder can reference them. */
+/** Fixture tag dictionary - keys are stable across runs so builder can reference them. */
 export const LABELS: Record<string, { label: string }> = Object.fromEntries(
   (['important', 'investor', 'team', 'eng', 'work', 'personal'] as const).map((label) => [
     `fixture-tag-${label}`,
@@ -22,7 +22,7 @@ export const LABELS: Record<string, { label: string }> = Object.fromEntries(
 
 /**
  * Initializes a mailbox with linked messages in the given database. `threads` is the size of the
- * thread-id pool messages are randomly assigned to (fewer threads → larger conversations → fewer
+ * thread-id pool messages are randomly assigned to (fewer threads -> larger conversations -> fewer
  * grouped tiles in conversation view).
  */
 export const initializeMailbox = async (db: Database.Database, count = 0, threads = 10): Promise<Mailbox.Mailbox> => {

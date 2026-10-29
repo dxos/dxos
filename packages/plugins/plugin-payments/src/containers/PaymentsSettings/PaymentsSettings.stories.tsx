@@ -48,7 +48,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** No payments URL configured yet — the purchase buttons are disabled. */
+/** No payments URL configured yet - the purchase buttons are disabled. */
 export const Default: Story = {
   args: {
     settings: {},

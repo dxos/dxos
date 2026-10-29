@@ -151,7 +151,7 @@ export const coordinates = (objects: readonly Scene.WorldObject[], cell = 32): s
   }
   for (const path of paths) {
     lines.push(
-      `arrow ${name(path.from)} → ${name(path.to)}${path.label ? ` labelled "${path.label}"` : ''}: ${path.points.map(at).join(' → ')}`,
+      `arrow ${name(path.from)} -> ${name(path.to)}${path.label ? ` labelled "${path.label}"` : ''}: ${path.points.map(at).join(' -> ')}`,
     );
   }
   return lines.join('\n');
@@ -212,14 +212,14 @@ export const rows = (objects: readonly Scene.WorldObject[]): string => {
     const bends = path.points.length > 2 ? `, ${path.points.length - 2} bends` : '';
     const drawn = describe(path.style);
     lines.push(
-      `arrow ${name(path.from)} → ${name(path.to)}${drawn ? ` (${drawn})` : ''}${path.label ? ` labelled "${path.label}"` : ''} runs ${way}${span}${bends}`,
+      `arrow ${name(path.from)} -> ${name(path.to)}${drawn ? ` (${drawn})` : ''}${path.label ? ` labelled "${path.label}"` : ''} runs ${way}${span}${bends}`,
     );
   }
   // A crossing is the one thing a reader sees at a glance that no row or direction implies, so it is stated.
   const byRef = new Map(paths.map((path) => [path.ref, path]));
   const arrow = (ref: string) => {
     const path = byRef.get(ref);
-    return path ? `${name(path.from)} → ${name(path.to)}` : ref;
+    return path ? `${name(path.from)} -> ${name(path.to)}` : ref;
   };
   const crossings = analyze(objects).diagnostics.filter(({ code }) => code === 'edge-crossing');
   lines.push(
@@ -243,21 +243,21 @@ const DOWN = 2;
 const LEFT = 4;
 const RIGHT = 8;
 const GLYPHS: Record<number, string> = {
-  [UP | DOWN]: '│',
-  [LEFT | RIGHT]: '─',
-  [DOWN | RIGHT]: '┌',
-  [DOWN | LEFT]: '┐',
-  [UP | RIGHT]: '└',
-  [UP | LEFT]: '┘',
-  [UP | DOWN | RIGHT]: '├',
-  [UP | DOWN | LEFT]: '┤',
-  [LEFT | RIGHT | DOWN]: '┬',
-  [LEFT | RIGHT | UP]: '┴',
-  [UP | DOWN | LEFT | RIGHT]: '┼',
-  [UP]: '│',
-  [DOWN]: '│',
-  [LEFT]: '─',
-  [RIGHT]: '─',
+  [UP | DOWN]: '\u2502',
+  [LEFT | RIGHT]: '\u2500',
+  [DOWN | RIGHT]: '\u250C',
+  [DOWN | LEFT]: '\u2510',
+  [UP | RIGHT]: '\u2514',
+  [UP | LEFT]: '\u2518',
+  [UP | DOWN | RIGHT]: '\u251C',
+  [UP | DOWN | LEFT]: '\u2524',
+  [LEFT | RIGHT | DOWN]: '\u252C',
+  [LEFT | RIGHT | UP]: '\u2534',
+  [UP | DOWN | LEFT | RIGHT]: '\u253C',
+  [UP]: '\u2502',
+  [DOWN]: '\u2502',
+  [LEFT]: '\u2500',
+  [RIGHT]: '\u2500',
 };
 
 /**
@@ -302,7 +302,7 @@ export const ascii = (objects: readonly Scene.WorldObject[], { column = 8, row =
   };
 
   for (const frame of boxes.filter(({ frame }) => frame)) {
-    const { left, top } = drawBox(frame, '┄', '┆', '┌┐└┘');
+    const { left, top } = drawBox(frame, '\u2504', '\u2506', '\u250C\u2510\u2514\u2518');
     if (frame.label) {
       write(top, left + 2, ` ${frame.label} `);
     }
@@ -335,13 +335,13 @@ export const ascii = (objects: readonly Scene.WorldObject[], { column = 8, row =
   for (let r = 0; r < height; r++) {
     for (let c = 0; c < width; c++) {
       if (bits[r][c]) {
-        text[r][c] = GLYPHS[bits[r][c]] ?? '┼';
+        text[r][c] = GLYPHS[bits[r][c]] ?? '\u253C';
       }
     }
   }
 
   for (const box of boxes.filter(({ frame }) => !frame)) {
-    const { left, top, right, bottom } = drawBox(box, '─', '│', '╭╮╰╯');
+    const { left, top, right, bottom } = drawBox(box, '\u2500', '\u2502', '\u256D\u256E\u2570\u256F');
     for (let r = top + 1; r < bottom; r++) {
       for (let c = left + 1; c < right; c++) {
         put(r, c, ' ');
@@ -354,9 +354,10 @@ export const ascii = (objects: readonly Scene.WorldObject[], { column = 8, row =
 
   for (const path of paths) {
     const [a, b] = path.points.slice(-2);
-    const glyph = Math.abs(b.x - a.x) >= Math.abs(b.y - a.y) ? (b.x > a.x ? '▶' : '◀') : b.y > a.y ? '▼' : '▲';
+    const glyph =
+      Math.abs(b.x - a.x) >= Math.abs(b.y - a.y) ? (b.x > a.x ? '\u25B6' : '\u25C0') : b.y > a.y ? '\u25BC' : '\u25B2';
     // The head sits on the last cell outside the target box, where the line meets its border.
-    const [dr, dc] = glyph === '▶' ? [0, -1] : glyph === '◀' ? [0, 1] : glyph === '▼' ? [-1, 0] : [1, 0];
+    const [dr, dc] = glyph === '\u25B6' ? [0, -1] : glyph === '\u25C0' ? [0, 1] : glyph === '\u25BC' ? [-1, 0] : [1, 0];
     put(rowOf(b.y) + dr, col(b.x) + dc, glyph);
     if (path.label) {
       const middle = path.points[Math.floor((path.points.length - 1) / 2)];

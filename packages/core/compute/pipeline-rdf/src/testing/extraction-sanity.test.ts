@@ -18,7 +18,7 @@ import { type DocumentFacts, extractFactsStage } from '../stages/index.ts';
 import { type ExtractDocument } from '../types/index.ts';
 
 // Minimal control for the extraction pipeline: run ONE model over a handful of trivial one-sentence
-// documents — no email parsing, no chunking, no model swaps — to isolate LLM/adapter behaviour and
+// documents - no email parsing, no chunking, no model swaps - to isolate LLM/adapter behaviour and
 // latency from any downstream confounders. Extraction is left at its default (strict generateObject,
 // then lenient generateText fallback) on purpose, so the per-chunk logs reveal whether the model's
 // output actually decodes into facts. Opt-in (needs a running Ollama), so CI and bare checkouts skip:

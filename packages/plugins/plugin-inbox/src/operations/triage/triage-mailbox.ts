@@ -60,8 +60,8 @@ const findOrCreateTriageTag = (db: Pick<Database.Database, 'query' | 'add'>, id:
  * Triages the mailbox's messages: labels them with the space's own tags and a priority band, and files
  * what a message asks of the reader as tasks.
  *
- * One decision call per message answers all three questions at once — needs a reply, which label,
- * how urgent — and each answer is applied only if its confidence clears the threshold, so an unsure
+ * One decision call per message answers all three questions at once - needs a reply, which label,
+ * how urgent - and each answer is applied only if its confidence clears the threshold, so an unsure
  * model leaves the message alone rather than guessing. Messages already carrying one of these tags
  * are skipped, which makes a re-run cheap and idempotent without a cursor.
  */

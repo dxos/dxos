@@ -117,14 +117,14 @@ const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(naviga
 
 const KEY_GLYPHS: Record<string, string> = {
   ' ': 'Space',
-  'ArrowUp': '↑',
-  'ArrowDown': '↓',
-  'ArrowLeft': '←',
-  'ArrowRight': '→',
+  'ArrowUp': '\u2191',
+  'ArrowDown': '\u2193',
+  'ArrowLeft': '\u2190',
+  'ArrowRight': '\u2192',
   'Escape': 'Esc',
-  'Backspace': '⌫',
-  'Delete': '⌦',
-  'Enter': '↩',
+  'Backspace': '\u232B',
+  'Delete': '\u2326',
+  'Enter': '\u21A9',
   'Home': 'Home',
 };
 
@@ -147,9 +147,9 @@ export const shortcutLabel = (binding: KeyBinding): string => {
   const key =
     KEY_GLYPHS[binding.key] ?? (binding.shift ? SHIFTED_DIGITS[binding.key] : undefined) ?? binding.key.toUpperCase();
   const modifiers = [
-    binding.alt ? (IS_MAC ? '⌥' : 'Alt+') : '',
-    binding.shift ? (IS_MAC ? '⇧' : 'Shift+') : '',
-    binding.meta ? (IS_MAC ? '⌘' : 'Ctrl+') : '',
+    binding.alt ? (IS_MAC ? '\u2325' : 'Alt+') : '',
+    binding.shift ? (IS_MAC ? '\u21E7' : 'Shift+') : '',
+    binding.meta ? (IS_MAC ? '\u2318' : 'Ctrl+') : '',
   ].join('');
   return `${modifiers}${key}`;
 };

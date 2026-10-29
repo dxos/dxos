@@ -21,7 +21,7 @@ import { Mailbox } from '#types';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded with
 // a mailbox binding, plus the ambient services a provider's sync entry point requires. Published as
-// `@dxos/plugin-inbox/testing/sync` on its own subpath — a provider plugin's own sync tests build on it,
+// `@dxos/plugin-inbox/testing/sync` on its own subpath - a provider plugin's own sync tests build on it,
 // while `./testing` stays free of `@dxos/compute` for consumers (e.g. Playwright) that only want the
 // lighter helpers.
 
@@ -39,7 +39,7 @@ export const SYNC_TEST_TYPES = [
   Blob.Blob,
 ];
 
-/** Seeds a mailbox binding (external-sync cursor authenticated by a Connection's access token → Mailbox). */
+/** Seeds a mailbox binding (external-sync cursor authenticated by a Connection's access token -> Mailbox). */
 export const seedMailboxBinding = async (
   builder: EchoTestBuilder,
   {
@@ -59,7 +59,7 @@ export const seedMailboxBinding = async (
     max?: string;
     /** Seeds the cursor's `min` watermark, as if a prior run already backfilled down to this key. */
     min?: string;
-    /** Seeds `spec.options` (e.g. `syncBackDays`, `filter`) — read via `readBindingOptions`. */
+    /** Seeds `spec.options` (e.g. `syncBackDays`, `filter`) - read via `readBindingOptions`. */
     options?: Record<string, unknown>;
   },
 ) => {
@@ -83,8 +83,8 @@ export const seedMailboxBinding = async (
 /**
  * Gives every sender in a generated dataset an Organization at its domain.
  *
- * Contact extraction is an allow-list — an unknown individual is not materialised (see
- * `shouldExtractContact`) — and these fixtures generate senders at random domains. Tests about the
+ * Contact extraction is an allow-list - an unknown individual is not materialised (see
+ * `shouldExtractContact`) - and these fixtures generate senders at random domains. Tests about the
  * sync pipeline wiring contacts through call this so they exercise that wiring rather than the
  * extraction policy, which has its own tests in `@dxos/extractor-lib`.
  */
@@ -110,7 +110,7 @@ export type SenderDataset = {
   readonly emails?: readonly { readonly from?: readonly { readonly email: string }[] | null }[];
 };
 
-/** Sender domains in a dataset — Gmail records the From header, JMAP a structured `from` list. */
+/** Sender domains in a dataset - Gmail records the From header, JMAP a structured `from` list. */
 const senderDomainsOf = (dataset: SenderDataset): string[] =>
   [...(('messages' in dataset ? dataset.messages : dataset.emails) ?? [])]
     .map((message) => {
@@ -127,7 +127,7 @@ const senderDomainsOf = (dataset: SenderDataset): string[] =>
 /**
  * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The
  * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
- * never touches `Operation` — it is provided (unavailable invoker) only to satisfy the requirement
+ * never touches `Operation` - it is provided (unavailable invoker) only to satisfy the requirement
  * channel. `Trace.TraceService` defaults to a noop writer; pass a custom trace layer to observe
  * `status.update` events from the sync.
  */

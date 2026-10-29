@@ -25,7 +25,7 @@ export const Send = Operation.make({
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent sending the email.' }),
     to: Schema.String.annotate({ description: 'The recipient address.' }),
-    subject: Schema.String.annotate({ description: 'The subject; a reply keeps the thread’s subject.' }),
+    subject: Schema.String.annotate({ description: "The subject; a reply keeps the thread's subject." }),
     text: Schema.String.annotate({ description: 'The body, as plain text.' }),
     thread: Schema.optional(
       Schema.String.annotate({ description: 'The thread token (`thread` in the header) of the email it answers.' }),

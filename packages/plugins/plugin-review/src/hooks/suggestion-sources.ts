@@ -21,11 +21,11 @@ import { idHue, stringToHue } from '@dxos/util';
 export type ResolvedSuggestionBranch = {
   author: string;
   content: string;
-  /** The parent text at the branch's fork anchor — what this author's proposal was written against. */
+  /** The parent text at the branch's fork anchor - what this author's proposal was written against. */
   base?: string;
   /**
    * The author's palette hue (from their identity), when known. Aligns the suggestion's colour with
-   * the author's avatar/tag colour; absent ⇒ a stable hue is derived from the author id.
+   * the author's avatar/tag colour; absent => a stable hue is derived from the author id.
    */
   hue?: string;
 };
@@ -39,7 +39,7 @@ export const suggestionHue = (author: string, hue?: string): (typeof idHue)[numb
   idHue.find((entry) => entry === hue) ?? stringToHue(author);
 
 /**
- * CSS text colour for a suggestion author, from the shared hue palette — the same colour the author's
+ * CSS text colour for a suggestion author, from the shared hue palette - the same colour the author's
  * avatar/tag uses. Drives both the inline editor markers and the review cards so a suggestion reads
  * with its author's consistent colour across surfaces.
  */
@@ -48,7 +48,7 @@ export const suggestionColour = (author: string, hue?: string): string =>
 
 /**
  * Build the {@link SuggestionSource}s the multi-author overlay renders from a document's resolved
- * suggestion branches — one source per author, coloured by {@link suggestionColour}. Ordered by
+ * suggestion branches - one source per author, coloured by {@link suggestionColour}. Ordered by
  * author DID so overlapping hunks stack deterministically regardless of branch enumeration order.
  */
 export const buildSuggestionSources = (branches: ResolvedSuggestionBranch[]): SuggestionSource[] =>
@@ -68,18 +68,18 @@ export const suggestionGroupKey = (group: SuggestionGroup): string =>
 
 /**
  * Flatten every {@link SuggestionSource} into the per-author grouped changes the review layer renders
- * as cards — one card per {@link groupHunks} group. Anchored in `base`, ordered by offset then author
+ * as cards - one card per {@link groupHunks} group. Anchored in `base`, ordered by offset then author
  * so the card list matches the editor overlay's stacking order.
  */
 export const suggestionGroups = (base: string, sources: SuggestionSource[], policy?: GroupPolicy): SuggestionGroup[] =>
   sources
     .flatMap((source) => {
       // Diff against the revision this author wrote on (their branch's fork anchor) and rebase into
-      // `base` coordinates — the same treatment the editor overlay gives, so the reader's own edits
+      // `base` coordinates - the same treatment the editor overlay gives, so the reader's own edits
       // never surface as somebody else's proposed change.
       const anchor = source.base ?? base;
       // Edits the document already carries relative to the SAME anchor have been accepted, so they are
-      // no longer suggestions — matched by content (accepting shifts every later offset) and BEFORE
+      // no longer suggestions - matched by content (accepting shifts every later offset) and BEFORE
       // grouping, since a card coalesces several hunks and would never match one of them.
       const editKey = (hunk: DiffHunk) => `${hunk.removed}\u241f${hunk.inserted}`;
       const applied = source.base === undefined ? undefined : new Set(diffHunks(source.base, base).map(editKey));

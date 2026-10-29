@@ -13,7 +13,7 @@ import { Actor, type Person } from '@dxos/types';
 import * as TestCase from './TestCase.ts';
 import * as TestPlan from './TestPlan.ts';
 
-/** What a run was executed against — structured, because this is what a reader filters on later. */
+/** What a run was executed against - structured, because this is what a reader filters on later. */
 export const Target = Schema.Struct({
   /** Git sha, tag, or PR number. */
   ref: Schema.optional(Schema.String),
@@ -25,13 +25,13 @@ export const Target = Schema.Struct({
 export interface Target extends Schema.Schema.Type<typeof Target> {}
 
 /**
- * A reference to evidence. Not a type of its own — the target is whatever the artifact already is
+ * A reference to evidence. Not a type of its own - the target is whatever the artifact already is
  * (Document, File, recording), so only the caption and kind live here.
  */
 export const ArtifactRef = Schema.Struct({
   kind: Schema.Literals(['screenshot', 'video', 'log', 'document', 'other']),
   caption: Schema.optional(Schema.String),
-  /** Whatever the artifact already is — a Document, a File, a recording. */
+  /** Whatever the artifact already is - a Document, a File, a recording. */
   target: Ref.Ref(Obj.Unknown),
 });
 export interface ArtifactRef extends Schema.Schema.Type<typeof ArtifactRef> {}
@@ -46,7 +46,7 @@ export const CapturedCase = Schema.Struct({
 });
 export interface CapturedCase extends Schema.Schema.Type<typeof CapturedCase> {}
 
-/** Per-step outcome. Positional — index n corresponds to `TestCase.steps[n]`. */
+/** Per-step outcome. Positional - index n corresponds to `TestCase.steps[n]`. */
 export const StepResult = Schema.Struct({
   status: TestCase.ResultStatus,
   /** Why it failed, or the constraint that blocked it. */
@@ -56,7 +56,7 @@ export const StepResult = Schema.Struct({
 export interface StepResult extends Schema.Schema.Type<typeof StepResult> {}
 
 /**
- * The outcome of one case within one run. An inline struct of `TestRun.results` — it has no life
+ * The outcome of one case within one run. An inline struct of `TestRun.results` - it has no life
  * outside its run and is never referenced from elsewhere, so it is not an object.
  */
 export const Result = Schema.Struct({
@@ -80,11 +80,11 @@ export class TestRun extends Type.makeObject<TestRun>(DXN.make('org.dxos.type.qa
     /**
      * The cases the run set out to cover, captured at `startRun`. The rollup and `pushResult`
      * validation both read this rather than the plan, so editing the plan mid-run cannot change
-     * what the run was measured against — nor reject a result for a case it still counts.
+     * what the run was measured against - nor reject a result for a case it still counts.
      */
     cases: Schema.mutable(Schema.Array(CapturedCase)),
     target: Schema.optional(Target),
-    /** Who ran it — a person or an agent, like any other actor in the system. */
+    /** Who ran it - a person or an agent, like any other actor in the system. */
     runner: Schema.optional(Actor.Actor),
     /** Which of before/test/after actually ran (QA dialect Rule 8). */
     stages: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
@@ -101,7 +101,7 @@ export const instanceOf = (value: unknown): value is TestRun => Obj.instanceOf(T
 
 /**
  * The rollup, over the captured case keys rather than over the results: a captured key with no
- * result counts as `skipped`, and an empty capture is `skipped` before precedence is consulted —
+ * result counts as `skipped`, and an empty capture is `skipped` before precedence is consulted -
  * otherwise a run covering nothing would fall through to `passed`. So `passed` requires a
  * non-empty capture in which every case reported `passed`.
  */

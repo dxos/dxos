@@ -46,7 +46,7 @@ export const make = ({
   // Create model layers with the client dependency provided.
   const createModelLayer = (model: string) => ChatCompletionsAdapter.layer(model).pipe(Layer.provide(clientLayer));
 
-  // Derive the id → model-layer map from the provider's catalog models (id → back-end name).
+  // Derive the id -> model-layer map from the provider's catalog models (id -> back-end name).
   const modelMap: Partial<Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>> =
     {};
   for (const model of models) {

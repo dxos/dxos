@@ -9,7 +9,7 @@ import { deriveThreadId } from '../internal/threading.ts';
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
- * Per-sender relationship aggregate (spec §3③ relationship rollups). Computed values, not ECHO
+ * Per-sender relationship aggregate (spec §3(3) relationship rollups). Computed values, not ECHO
  * mutations: `Person` is a closed, canonical schema the pipeline must not write onto, so rollups are
  * consumed by the digest / callers (join back to a Person via the lowercased email and the
  * fact-index reconciliation table); materialization waits for a proper schema home.

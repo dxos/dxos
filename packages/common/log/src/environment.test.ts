@@ -179,7 +179,7 @@ describe('inferEnvironmentName', () => {
   });
 
   test('node: process without versions.node is not detected as node', ({ expect }) => {
-    // e.g. a userland `process`-like object — should fall through to unknown.
+    // e.g. a userland `process`-like object - should fall through to unknown.
     const scope = { process: { pid: 1, versions: {} } };
     const parts = splitId(inferEnvironmentName({ scope }));
     expect(parts.scope).toBe('unknown');

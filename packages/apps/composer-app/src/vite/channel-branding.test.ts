@@ -38,7 +38,7 @@ describe('channelVariant', () => {
 
   test('an unset environment is a local build, not a channel', ({ expect }) => {
     // `environment` defaults to `process.env.DX_ENVIRONMENT`, so passing `undefined` reads the
-    // ambient value — a developer who exports one (a machine name, say) fails this otherwise.
+    // ambient value - a developer who exports one (a machine name, say) fails this otherwise.
     vi.stubEnv('DX_ENVIRONMENT', '');
     expect(channelVariant('build', '')).toBeUndefined();
     expect(channelVariant('build', undefined)).toBeUndefined();

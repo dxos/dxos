@@ -58,12 +58,12 @@ class SurfaceProfilerStore {
   /**
    * Records an entry and schedules a deferred notification to avoid re-render loops.
    * `_snapshot` is rebuilt only when the deferred notification actually fires
-   * ({@link _notifySync}) — not here — so `getSnapshot` stays referentially stable for any
+   * ({@link _notifySync}) - not here - so `getSnapshot` stays referentially stable for any
    * synchronous re-invocation React makes within the same commit (e.g. the tearing check a
    * profiled subscriber's own `useSyncExternalStore` runs right after this Profiler's
    * `onRender` callback). Rebuilding it synchronously here would change what `getSnapshot`
    * returns before listeners are told, which React reads as a torn store and forces an
-   * immediate re-render — and if the re-rendering component is itself profiled, that
+   * immediate re-render - and if the re-rendering component is itself profiled, that
    * re-render re-triggers `record`, looping forever.
    */
   record(entry: SurfaceProfilerEntry) {
@@ -100,7 +100,7 @@ class SurfaceProfilerStore {
 
   /**
    * Defers notification to the next animation frame to break the
-   * Profiler onRender → record → notify → re-render → onRender loop.
+   * Profiler onRender -> record -> notify -> re-render -> onRender loop.
    */
   private _scheduleNotify() {
     if (!this._pendingNotify) {

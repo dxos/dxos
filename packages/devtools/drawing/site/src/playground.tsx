@@ -200,7 +200,7 @@ const openInComposer = ({ composer, report }: Elements, language: Language, text
   const tab = window.open('', '_blank');
   if (tab) {
     tab.opener = null;
-    tab.document.title = 'Opening drawing…';
+    tab.document.title = 'Opening drawing...';
   }
   composer.setAttribute('aria-busy', 'true');
   Effect.runFork(

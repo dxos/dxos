@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
  *
  * Registered by `bin.ts` after the root command and plugin layer have been
  * built. The REPL uses this to re-enter the CLI without spawning a new
- * `bun` process per keystroke — every command reuses the already-activated
+ * `bun` process per keystroke - every command reuses the already-activated
  * plugin layer, which saves several seconds of DXOS startup cost per
  * command.
  *

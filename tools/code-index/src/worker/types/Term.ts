@@ -5,7 +5,7 @@
 //
 
 /**
- * The type term the propagator emits — see `design/TYPES.md`. Symbols are IRIs; everything else is
+ * The type term the propagator emits - see `design/TYPES.md`. Symbols are IRIs; everything else is
  * TypeScript's structural vocabulary. Constructors normalize, so two equal types have equal
  * {@link text}.
  */
@@ -50,16 +50,16 @@ export type Param = { readonly type: Type; readonly optional: boolean; readonly 
 export type Pending = 'widen' | 'settle' | 'nonNullish' | 'noUndefined';
 
 export type Type =
-  /** Inference gave up here, and says why — distinct from TypeScript's own `unknown` primitive. */
+  /** Inference gave up here, and says why - distinct from TypeScript's own `unknown` primitive. */
   | { readonly kind: 'unresolved'; readonly reason: string }
   | { readonly kind: 'primitive'; readonly name: PrimitiveName }
   /** `fresh` marks a literal TypeScript widens when it flows into a mutable location; not part of the identity. */
   | { readonly kind: 'literal'; readonly value: string | number | boolean | bigint; readonly fresh: boolean }
-  /** `origin` is the source span of the type syntax a ref was read from — not part of the identity. */
+  /** `origin` is the source span of the type syntax a ref was read from - not part of the identity. */
   | { readonly kind: 'ref'; readonly iri: string; readonly args: readonly Type[]; readonly origin?: Span }
   /** The type of a named value, bound later by the cross-file pass (`Bind.ts`). */
   | { readonly kind: 'typeof'; readonly iri: string; readonly pending: readonly Pending[] }
-  /** What calling `callee` with arguments of these types returns — deferred like `typeof`. */
+  /** What calling `callee` with arguments of these types returns - deferred like `typeof`. */
   | {
       readonly kind: 'returnOf';
       readonly callee: Type;
@@ -86,7 +86,7 @@ export type Kind = Type['kind'];
 
 const unresolvedByReason = new Map<string, Type>();
 
-/** A position inference could not type, with the reason — the bucket an improvement would move. */
+/** A position inference could not type, with the reason - the bucket an improvement would move. */
 export const unresolved = (reason: string): Type => {
   let found = unresolvedByReason.get(reason);
   if (!found) {
@@ -243,7 +243,7 @@ export const union = (members: readonly Type[]): Type => {
 };
 
 /**
- * `boolean` built from two fresh literals widens to `boolean` — it already is — but must not be
+ * `boolean` built from two fresh literals widens to `boolean` - it already is - but must not be
  * mistaken for a non-widening one; identity is the only marker needed.
  */
 const freshBoolean: Type = { kind: 'primitive', name: 'boolean' };
@@ -271,7 +271,7 @@ export const intersection = (members: readonly Type[]): Type => {
   return kept.length === 1 ? kept[0] : { kind: 'intersection', members: kept };
 };
 
-/** Remove `undefined` (and with `nullish`, `null`) from a union — optionality, `!`. */
+/** Remove `undefined` (and with `nullish`, `null`) from a union - optionality, `!`. */
 export const without = (type: Type, names: readonly PrimitiveName[]): Type => {
   if (isDeferred(type)) {
     return owe(type, names.includes('null') ? 'nonNullish' : 'noUndefined');
@@ -304,7 +304,7 @@ export const widen = (type: Type): Type => {
   return isDeferred(type) ? owe(type, 'widen') : type;
 };
 
-/** Drop freshness without widening — the literal becomes a declared one (`as const`, annotations). */
+/** Drop freshness without widening - the literal becomes a declared one (`as const`, annotations). */
 export const settle = (type: Type): Type => {
   if (type.kind === 'literal' && type.fresh) {
     return literal(type.value);
@@ -350,7 +350,7 @@ export const isPartial = (type: Type): boolean => {
   }
 };
 
-/** Number of term nodes — the emission budget. */
+/** Number of term nodes - the emission budget. */
 export const size = (type: Type): number => {
   switch (type.kind) {
     case 'returnOf':

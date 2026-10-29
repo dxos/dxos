@@ -14,7 +14,7 @@ import * as Position from '@dxos/util/Position';
 import { Home, NavBranch } from '#components';
 
 // 'group' covers AppNode.makeGroup's navtree section-group nodes (Communications, Content,
-// Assistant, System, …) — they carry no role, only disposition, so without it mobile pushed a
+// Assistant, System, ...) - they carry no role, only disposition, so without it mobile pushed a
 // blank panel for every category row except the role:'branch' ones (e.g. Settings).
 const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end', 'group'];
 

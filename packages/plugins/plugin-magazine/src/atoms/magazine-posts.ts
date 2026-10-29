@@ -13,13 +13,13 @@ import { publishedTimestamp } from '../util/date.ts';
 import { postTagsAtom } from './post-tags.ts';
 
 /**
- * Tile filter mode. Mutually exclusive — `default` shows everything except archived,
+ * Tile filter mode. Mutually exclusive - `default` shows everything except archived,
  * `starred` filters to starred posts, `archived` shows only archived posts.
  */
 export type MagazineView = 'default' | 'starred' | 'archived';
 
 /**
- * Ordered Posts referenced by the Magazine, derived directly from the `magazine.posts` refs — no
+ * Ordered Posts referenced by the Magazine, derived directly from the `magazine.posts` refs - no
  * query. Fires when the refs array changes (membership/order) or when a ref resolves. Resolving each
  * ref here, rather than a `reference('posts').from(Scope.space(...))` query, avoids the cross-feed
  * fan-out that returned each curated Post once per feed scope.
@@ -35,7 +35,7 @@ const magazinePostsAtom = Atom.family((magazine: Magazine.Magazine) =>
 /**
  * Whether a Post is visible under a given view. Depends ONLY on the Post's tag slice + view, so
  * read-state changes never wake it (and effect-atom dedupes the boolean). Keyed by a structurally-equal tuple key
- * `[post, view]` rather than a nested family — the intermediate of a nested family is
+ * `[post, view]` rather than a nested family - the intermediate of a nested family is
  * only weakly held and could be GC'd out from under its mounted leaf atoms.
  */
 const postVisibilityAtom = Atom.family((key: readonly [Subscription.Post, MagazineView]) =>

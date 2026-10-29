@@ -21,7 +21,7 @@ import { Relay } from './definitions.ts';
 /**
  * The relay pattern (plugin-projects PLAN.md phase C): one trigger per subscribed feed runs this
  * relay, which qualifies the event with a cheap model and, when relevant, forwards it onto the
- * chat's durable session (the process input queue) — multiplexing and filtering in one construct,
+ * chat's durable session (the process input queue) - multiplexing and filtering in one construct,
  * with no intermediate staging feed.
  */
 const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(

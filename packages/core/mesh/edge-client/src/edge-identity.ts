@@ -7,7 +7,7 @@ import { type Presentation } from '@dxos/protocols/buf/dxos/halo/credentials_pb'
 export interface EdgeIdentity {
   peerKey: string;
   /**
-   * Identity DID (`did:halo:…`) — the public identity segment of the edge WebSocket path.
+   * Identity DID (`did:halo:...`) - the public identity segment of the edge WebSocket path.
    * The router keys connections by the DID.
    */
   identityDid: string;

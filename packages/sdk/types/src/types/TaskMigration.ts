@@ -57,9 +57,9 @@ export class LegacyTaskSet extends Type.makeObject<LegacyTaskSet>(DXN.make('org.
 type Plan = {
   /** Legacy task ids not yet migrated; a transform for an id outside it means the plan is stale. */
   pending: Set<string>;
-  /** Sub-tasks per legacy parent id, in their old flat-list order — written by the parent's transform. */
+  /** Sub-tasks per legacy parent id, in their old flat-list order - written by the parent's transform. */
   children: Map<string, Obj.Unknown[]>;
-  /** Parent per child id where the parent is already migrated — the child appends itself on migration. */
+  /** Parent per child id where the parent is already migrated - the child appends itself on migration. */
   late: Map<string, Task.Task>;
 };
 
@@ -157,8 +157,8 @@ const isSameSpace = (db: Database.Database, ref: Ref.Ref<Obj.Unknown>): boolean 
 };
 
 /**
- * `org.dxos.type.task` 0.5.0 → 0.6.0: `parentTask` becomes the parent's ordered `subtasks`, and each
- * sub-task's ECHO parent moves from the set to its parent task — across sets too, so a sub-task
+ * `org.dxos.type.task` 0.5.0 -> 0.6.0: `parentTask` becomes the parent's ordered `subtasks`, and each
+ * sub-task's ECHO parent moves from the set to its parent task - across sets too, so a sub-task
  * filed in another set than its parent joins the parent's. Runs before {@link taskSetMigration},
  * which needs the parent edges this writes.
  */
@@ -193,8 +193,8 @@ export const taskMigration = Migration.define({
 });
 
 /**
- * `org.dxos.type.taskSet` 0.3.0 → 0.4.0: `tasks` keeps only the roots. An entry is dropped when its
- * task's parent task lists it — not merely when its parent edge is a task, since a legacy root may
+ * `org.dxos.type.taskSet` 0.3.0 -> 0.4.0: `tasks` keeps only the roots. An entry is dropped when its
+ * task's parent task lists it - not merely when its parent edge is a task, since a legacy root may
  * still carry a task-parented edge, which is healed back to the set instead.
  */
 export const taskSetMigration = Migration.define({

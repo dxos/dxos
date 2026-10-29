@@ -25,7 +25,7 @@ export default defineConfig({
     'crypto': 'node:crypto',
     'worker_threads': 'node:worker_threads',
   },
-  // The vendored dependency tree, inlined — that is what this package exists to ship.
+  // The vendored dependency tree, inlined - that is what this package exists to ship.
   bundle: [
     'events',
     'events-universal',

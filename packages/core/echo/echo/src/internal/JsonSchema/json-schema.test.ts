@@ -803,7 +803,7 @@ describe('json-to-effect', () => {
   // An unconstrained value type serializes to the empty schema, so v4 emits no `additionalProperties`
   // and the document reads as a closed struct. Operations persist their input schema through this
   // round-trip (`Operation.serialize`), so losing it turned a property bag into a struct that accepts
-  // nothing — and the re-emitted tool schema was rejected by the model provider outright.
+  // nothing - and the re-emitted tool schema was rejected by the model provider outright.
   test('an open record survives the round-trip', ({ expect }) => {
     const input = Schema.Struct({ properties: Schema.Record(Schema.String, Schema.Any) });
 

@@ -93,7 +93,7 @@ describe('stream', () => {
     }),
   );
 
-  // chunkSize: 'character' is the smallest cadence — one CM dispatch per character of plain
+  // chunkSize: 'character' is the smallest cadence - one CM dispatch per character of plain
   // text. XML fragments are still atomic.
   it.effect('chunkSize "character" splits text spans char-by-char and keeps tags atomic', ({ expect }) =>
     Effect.gen(function* () {
@@ -102,7 +102,7 @@ describe('stream', () => {
     }),
   );
 
-  // Default `chunkSize: 'span'` preserves the original behaviour — tests above already cover it.
+  // Default `chunkSize: 'span'` preserves the original behaviour - tests above already cover it.
   it.effect('chunkSize defaults to "span"', ({ expect }) =>
     Effect.gen(function* () {
       const result = yield* testStreamer('Hello world');

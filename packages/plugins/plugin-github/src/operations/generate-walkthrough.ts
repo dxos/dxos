@@ -35,7 +35,7 @@ const MODEL = 'com.anthropic.model.claude-sonnet-5.default';
 /**
  * Generate a walkthrough of a pull request.
  *
- * Only the I/O is here — fetch the pull request, fetch its diff, run the model — because that is the
+ * Only the I/O is here - fetch the pull request, fetch its diff, run the model - because that is the
  * part a test cannot reach. The decisions live in {@link generateWalkthrough}.
  */
 const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough> =
@@ -101,7 +101,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
             total: result.total,
           };
         }).pipe(
-          // The meter stays open forever without a terminal, and the sentinel is all the UI shows —
+          // The meter stays open forever without a terminal, and the sentinel is all the UI shows -
           // the failure itself goes to the log.
           // `onExit`, not `tapError`: the model call and the database both surface as DEFECTS rather
           // than typed errors, and interruption raises neither. A meter with no terminal stays open

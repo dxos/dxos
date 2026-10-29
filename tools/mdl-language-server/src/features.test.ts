@@ -151,7 +151,7 @@ describe('hover', () => {
   test("a reviewed item's line shows its verdict", ({ expect }) => {
     const { workspace, document, at } = setup();
     const value = hoverText(hover(workspace, document, at('req F-1.1')));
-    expect(value).toContain('**Done** — The action is registered.');
+    expect(value).toContain('**Done** - The action is registered.');
     expect(value).toContain('**Code:** [packages/a/src/a.ts#openThing](file:///repo/packages/a/src/a.ts#L5)');
   });
 });
@@ -161,7 +161,7 @@ describe('review verdicts', () => {
     const { workspace, document } = setup();
     const hints = inlayHints(workspace, document);
     const labels = hints.map(({ label }) => hintText(label));
-    expect(labels).toEqual(['✓ Done · </> openThing · </> a.test.ts', '✗ Missing · no code']);
+    expect(labels).toEqual(['OK Done · </> openThing · </> a.test.ts', 'X Missing · no code']);
     const [, code] = typeof hints[0].label === 'string' ? [] : hints[0].label;
     expect(code?.location).toMatchObject({ uri: 'file:///repo/packages/a/src/a.ts', range: { start: { line: 4 } } });
   });
@@ -175,10 +175,10 @@ describe('review verdicts', () => {
         command?.arguments,
       ]),
     ).toEqual([
-      [16, '✓ Done', undefined],
+      [16, 'OK Done', undefined],
       [16, '</> openThing', ['file:///repo/packages/a/src/a.ts', 4]],
       [16, '</> a.test.ts', ['file:///repo/packages/a/src/a.test.ts', 0]],
-      [21, '✗ Missing', undefined],
+      [21, 'X Missing', undefined],
       [21, 'no code', undefined],
     ]);
   });

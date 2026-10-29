@@ -79,7 +79,7 @@ describe('tailwind classes', () => {
     expect(isValidClass('bg-rose-bg')).toBe(true);
     expect(isValidClass('bg-neutral-bg-hover')).toBe(true);
     expect(isValidClass('text-blue-text')).toBe(true);
-    // Semantic aliases (name → source hue).
+    // Semantic aliases (name -> source hue).
     expect(isValidClass('bg-primary-surface')).toBe(true);
     expect(isValidClass('bg-error-bg')).toBe(true);
   });

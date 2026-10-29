@@ -98,7 +98,7 @@ export const ListRelays = Operation.make({
   }),
 });
 
-/** `chat`: appended to a Composer chat; `channel`: posted through a channel backend (Discord, freeq, …). */
+/** `chat`: appended to a Composer chat; `channel`: posted through a channel backend (Discord, freeq, ...). */
 export const DeliveryChannel = Schema.Literals(['chat', 'channel']);
 export type DeliveryChannel = Schema.Schema.Type<typeof DeliveryChannel>;
 

@@ -19,7 +19,7 @@ import { GitHubNamespace } from '../namespace.ts';
 /**
  * Where a previewed link's repository, pull request or issue comes from. The plugin's default fetches it from
  * the GitHub API with the space's connection token (anonymously when there is none); a host that
- * contributes one — a story, a test, an offline build — replaces the fetch.
+ * contributes one - a story, a test, an offline build - replaces the fetch.
  */
 export type GitHubLinkSource = (
   link: GitHubLink,
@@ -38,7 +38,7 @@ export const FileImportInput = Schema.Struct({
   base: Schema.optional(Schema.String),
   /** The object the marker binds; absent on first import. */
   object: Schema.optional(Ref.Ref(Obj.Unknown)),
-  /** The object's Automerge heads at the last sync: apply the base → content change as of these. */
+  /** The object's Automerge heads at the last sync: apply the base -> content change as of these. */
   heads: Schema.optional(Schema.Array(Schema.String)),
 });
 export interface FileImportInput extends Schema.Schema.Type<typeof FileImportInput> {}
@@ -76,7 +76,7 @@ export type FileMapping = {
   readonly type: Type.AnyObj;
   /** Pull: create the object, or apply a remote change to it. */
   readonly import: Operation.Definition<FileImportInput, FileImportOutput>;
-  /** Push: render the object as file content. Absent → the mapping is pull-only. */
+  /** Push: render the object as file content. Absent -> the mapping is pull-only. */
   readonly export?: Operation.Definition<FileExportInput, FileExportOutput>;
   /** Largest file the engine imports for this mapping; larger files are skipped and reported. Default 1 MiB. */
   readonly maxBytes?: number;

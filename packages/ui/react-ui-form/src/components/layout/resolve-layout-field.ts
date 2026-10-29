@@ -22,7 +22,7 @@ export type ResolvedLayoutField = {
   /** Resolved `title` annotation for the field, if any. */
   title?: string;
   /**
-   * Set when the field resolves to a nested struct carrying a `LabelAnnotation` —
+   * Set when the field resolves to a nested struct carrying a `LabelAnnotation` -
    * the type literal whose computed label should render in place of the struct's
    * sub-fields. Undefined for ordinary (non-auto-labelled) fields.
    */
@@ -72,7 +72,7 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
   }
 
   // Normalized leaf type (optional unwrapped, refinements stripped, signature-level
-  // annotations merged) — matches how `getProperties` feeds `FormFieldDispatch`.
+  // annotations merged) - matches how `getProperties` feeds `FormFieldDispatch`.
   const { type: baseType } = SchemaEx.getBaseType(prop.type);
   // As `getProperties` does: `Schema.optional(S).annotate(...)` annotates the union `getBaseType` strips, so those
   // annotations carry over; key annotations (v3's `PropertySignature.annotations`) hang off the type's context and win.

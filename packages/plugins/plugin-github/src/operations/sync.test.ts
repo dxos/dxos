@@ -68,7 +68,7 @@ const githubFetch =
     return body === undefined ? new Response('Not Found', { status: 404 }) : Response.json(body);
   };
 
-describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
+describe('plugin-github sync - push (snapshot diff -> PATCH)', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -196,7 +196,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     expect(calls).toBe(0);
   });
 
-  test('local status flip → PATCH state', async ({ expect }) => {
+  test('local status flip -> PATCH state', async ({ expect }) => {
     const { db, binding } = await setup({
       '5678': { title: 'Investigate flake', description: 'desc', status: 'todo' },
     });
@@ -224,7 +224,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     expect(updateIssueInput?.state).toBe('closed');
   });
 
-  test('locally-edited repo description → PATCH /repos', async ({ expect }) => {
+  test('locally-edited repo description -> PATCH /repos', async ({ expect }) => {
     const { db, binding, local } = await setup({
       '1234': { name: 'composer', description: 'composer monorepo' },
     });
@@ -247,7 +247,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     expect(updateRepoInput).toEqual({ description: 'rewritten' });
   });
 
-  test('repo rename diverges locally → logged but NOT pushed', async ({ expect }) => {
+  test('repo rename diverges locally -> logged but NOT pushed', async ({ expect }) => {
     const { db, binding, local } = await setup({
       '1234': { name: 'composer', description: 'composer monorepo' },
     });

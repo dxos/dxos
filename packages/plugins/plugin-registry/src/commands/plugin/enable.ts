@@ -23,7 +23,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
     return yield* Effect.fail(new PluginNotFoundError(id));
   }
 
-  // Already-enabled is not a failure — `enable` states the desired end state, and a user
+  // Already-enabled is not a failure - `enable` states the desired end state, and a user
   // scripting it should not have to branch on whether they already ran it.
   if (!manager.getEnabled().includes(id)) {
     yield* manager.enable(id);

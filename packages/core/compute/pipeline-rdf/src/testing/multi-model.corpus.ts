@@ -8,8 +8,8 @@ import { type Assertion, type ExtractDocument } from '../types/index.ts';
 // Gold-standard corpus for the multi-model extraction benchmark: each document is paired with the RDF
 // facts a correct extraction should yield, so the benchmark can score precision/recall/F1 in addition
 // to raw counts. Sentences are single, unambiguous propositions spanning distinct predicate shapes
-// (employment, membership, location, temporal, dependency, authorship, family, …); predicates follow
-// the extraction rules (e.g. `is a` for membership, `has role` for a job, timeless present, "works for" → "works at").
+// (employment, membership, location, temporal, dependency, authorship, family, ...); predicates follow
+// the extraction rules (e.g. `is a` for membership, `has role` for a job, timeless present, "works for" -> "works at").
 
 /** One expected fact as surface strings (subject/predicate/object) for a document. */
 export type ExpectedFact = { readonly subject: string; readonly predicate: string; readonly object: string };
@@ -91,7 +91,7 @@ export type Accuracy = {
 
 const EXPECTED_BY_SOURCE = new Map(EVAL_DOCS.map((entry) => [entry.source, entry.expected]));
 
-// Loose surface-string match: lowercase, trim, collapse whitespace AND hyphens (so "is-a" ≈ "is a"),
+// Loose surface-string match: lowercase, trim, collapse whitespace AND hyphens (so "is-a" ~ "is a"),
 // drop trailing punctuation.
 const normalize = (value: string): string =>
   value
@@ -103,7 +103,7 @@ const normalize = (value: string): string =>
 const termLabel = (term: Assertion['subject']): string =>
   term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
-// Two surfaces "align" when equal or one contains the other after normalization — tolerates phrasing
+// Two surfaces "align" when equal or one contains the other after normalization - tolerates phrasing
 // drift ("Greek philosopher" vs "philosopher", "is a" vs "is-a") while still requiring the right terms.
 const aligns = (left: string, right: string): boolean => {
   const a = normalize(left);

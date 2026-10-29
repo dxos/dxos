@@ -99,7 +99,7 @@ const deleteSnapshot = (accessTokenId: string | undefined): void => {
 
 /**
  * `Effect.tryPromise` wraps a rejected promise in `UnknownError`, whose own `.message` is a
- * generic boilerplate string — the real cause lives in its `.cause` property, so unwrap it before
+ * generic boilerplate string - the real cause lives in its `.cause` property, so unwrap it before
  * logging or it is silently lost.
  */
 const describeError = (error: unknown): string => {
@@ -244,11 +244,11 @@ const finalizeRedirect = Effect.fnUntraced(function* (
     const completeResult = yield* invoker.invoke(OnboardingOperation.CompleteOAuthRegistration, {
       registrationToken: params.registrationToken,
     });
-    // Re-derive the verified email server-side from the registrationToken — it is never carried in
+    // Re-derive the verified email server-side from the registrationToken - it is never carried in
     // the redirect URL. kms-service rejects the flow before issuing a registrationToken when the
     // provider returns no email, so this invariant should never fire in practice.
     const email = completeResult?.email;
-    invariant(email, 'email missing from completeRegistration — kms-service should have rejected no-email flows');
+    invariant(email, 'email missing from completeRegistration - kms-service should have rejected no-email flows');
 
     // Redeem the invitation code with the email to mint the hub Account.
     yield* Account.redeemAccessCode({

@@ -8,7 +8,7 @@ import * as Config2 from '../Config2.ts';
 
 /**
  * A snapshot of a plugin's declared dependencies resolved to concrete installed versions at build
- * time (`{ "@dxos/app-framework": "0.8.3", "react": "19.2.0", … }`). The host derives SDK
+ * time (`{ "@dxos/app-framework": "0.8.3", "react": "19.2.0", ... }`). The host derives SDK
  * compatibility from the subset it shares with the plugin (the externalized `@dxos/*` packages).
  */
 export const DependencyMapSchema = Schema.Record(Schema.String, Schema.String);
@@ -16,7 +16,7 @@ export type DependencyMap = Schema.Schema.Type<typeof DependencyMapSchema>;
 
 /**
  * Filename of the entry module every plugin must publish at the root of its bundle.
- * The host dynamic-imports `<manifest URL base>/index.mjs` directly — no per-plugin
+ * The host dynamic-imports `<manifest URL base>/index.mjs` directly - no per-plugin
  * configuration. `composerPlugin` outputs the bundle under this name so plugin authors
  * never have to think about it.
  */
@@ -26,9 +26,9 @@ export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
  * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
  *
  * Emitted by `@dxos/app-framework/vite-plugin`'s `composerPlugin` (see
- * `MANIFEST_ASSET_NAME`). Lists every file the plugin needs at runtime — the entry
+ * `MANIFEST_ASSET_NAME`). Lists every file the plugin needs at runtime - the entry
  * module ({@link PLUGIN_ENTRY_FILENAME}) plus any sibling CSS, code-split chunks,
- * fonts, etc. — so the host can eagerly precache the whole bundle for offline use.
+ * fonts, etc. - so the host can eagerly precache the whole bundle for offline use.
  * Paths in `assets` are relative to the manifest's URL.
  */
 export const PluginManifestSchema = Schema.Struct({
@@ -45,7 +45,7 @@ export const PluginManifestSchema = Schema.Struct({
 });
 export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
 
-// ─── ATProto-native registry view ────────────────────────────────────────────
+// --- ATProto-native registry view --------------------------------------------
 
 /**
  * A single installable release of a plugin, projected from a `plugin.release`
@@ -76,7 +76,7 @@ export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
  * (`author`) is resolved separately from the publisher DID/handle.
  */
 export const PluginProfileSchema = Schema.Struct({
-  /** Reverse-domain NSID — the plugin's globally-unique key and the `plugin.profile` rkey (e.g. `org.dxos.plugin.excalidraw`). */
+  /** Reverse-domain NSID - the plugin's globally-unique key and the `plugin.profile` rkey (e.g. `org.dxos.plugin.excalidraw`). */
   key: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /** Plugin display name. */
   name: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
@@ -88,7 +88,7 @@ export const PluginProfileSchema = Schema.Struct({
   source: Schema.optional(Schema.String),
   /** Tags to help categorize the plugin. */
   tags: Schema.optional(Schema.Array(Schema.String)),
-  /** Preview images — theme-keyed screenshot URLs shown on the plugin's card. */
+  /** Preview images - theme-keyed screenshot URLs shown on the plugin's card. */
   screenshots: Schema.optional(Schema.Array(Config2.Screenshot)),
   /** Icon identifier resolvable by `@ch-ui/icons` (e.g. `ph--sparkle--regular`), with an optional palette hue. */
   icon: Schema.optional(Config2.Icon),
@@ -104,7 +104,7 @@ export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
 /**
  * A single hydrated plugin entry returned by `GET /registry/plugins`.
  *
- * This is an indexer-assembled *view* — analogous to emdash's `PackageView` — projected
+ * This is an indexer-assembled *view* - analogous to emdash's `PackageView` - projected
  * from four ATProto record types: `plugin.profile`, `plugin.release`,
  * `publisher.profile`, and `publisher.verification`. It is NOT a direct serialization
  * of any single ATProto record.
@@ -119,17 +119,17 @@ export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
  *   install target.
  */
 export const PluginViewSchema = Schema.Struct({
-  // ── Addressing / provenance (indexer-derived) ────────────────────────────
+  // -- Addressing / provenance (indexer-derived) ----------------------------
   /**
    * `at://` URI of the source `plugin.profile` record.
-   * Globally unique and stable — never changes after the record is published.
+   * Globally unique and stable - never changes after the record is published.
    */
   uri: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
-  /** Publisher DID, e.g. `did:plc:abc…`. Cryptographic identity; never changes. */
+  /** Publisher DID, e.g. `did:plc:abc...`. Cryptographic identity; never changes. */
   did: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /**
    * Publisher AT Protocol handle at index time, e.g. `alice.bsky.social`.
-   * Display-only — handles can be reassigned; never use as a stable key.
+   * Display-only - handles can be reassigned; never use as a stable key.
    */
   handle: Schema.optional(Schema.String),
   /** Unix ms when the indexer last assembled this entry. */
@@ -140,13 +140,13 @@ export const PluginViewSchema = Schema.Struct({
    */
   labels: Schema.Array(Schema.String),
 
-  // ── Verbatim profile record content ─────────────────────────────────────
+  // -- Verbatim profile record content -------------------------------------
   profile: PluginProfileSchema,
 
-  // ── Releases (projected from plugin.release records) ────────────────────
+  // -- Releases (projected from plugin.release records) --------------------
   /**
    * All known releases for this package, ordered newest-first.
-   * Powers the version picker directly — no separate endpoint needed.
+   * Powers the version picker directly - no separate endpoint needed.
    */
   releases: Schema.Array(PluginReleaseSchema),
   /**
@@ -170,7 +170,7 @@ export const GetPluginsResponseBodySchema = Schema.Struct({
 });
 export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsResponseBodySchema>;
 
-// ─── Publisher records ────────────────────────────────────────────────────────
+// --- Publisher records --------------------------------------------------------
 
 /** Content of a `publisher.profile` ATProto record. Display metadata for a publisher DID. */
 export const PublisherProfileSchema = Schema.Struct({
@@ -193,7 +193,7 @@ export const PublisherVerificationSchema = Schema.Struct({
 });
 export type PublisherVerification = Schema.Schema.Type<typeof PublisherVerificationSchema>;
 
-// ─── NSID constants ───────────────────────────────────────────────────────────
+// --- NSID constants -----------------------------------------------------------
 
 /** NSID constants for the four `org.dxos.experimental.*` record collections. */
 export const NSID = {

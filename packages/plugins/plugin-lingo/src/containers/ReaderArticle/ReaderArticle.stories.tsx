@@ -36,7 +36,7 @@ import { ReaderArticle } from './ReaderArticle.tsx';
  *
  * Routed rather than sequential because the reader has more than one model-bearing operation and
  * they share one service; matching on each system prompt keeps a call from consuming another
- * operation's turn. An unmatched call fails loudly, which is what we want — it means an operation
+ * operation's turn. An unmatched call fails loudly, which is what we want - it means an operation
  * reached the model without the story deciding what it should say.
  */
 const scriptedAi = ScriptedLanguageModel.scriptedAiService([
@@ -47,7 +47,7 @@ const scriptedAi = ScriptedLanguageModel.scriptedAiService([
   },
   {
     // The tooltip's add action, which is reachable in the story whenever `translateUnknownWords` is
-    // on — an unrouted call fails loudly, so the first click on an unknown word broke the story.
+    // on - an unrouted call fails loudly, so the first click on an unknown word broke the story.
     name: 'translate-term',
     match: ScriptedLanguageModel.promptIncludes('You translate a single term for a language learner'),
     turns: [
@@ -126,7 +126,7 @@ const meta = {
               space.db.add(vocabulary);
               words.forEach((word) => space.db.add(word));
 
-              const document = Markdown.make({ name: '朝の市場', content: TEST_PASSAGE });
+              const document = Markdown.make({ name: '\u671D\u306E\u5E02\u5834', content: TEST_PASSAGE });
               space.db.add(document.content.target!);
               space.db.add(document);
 

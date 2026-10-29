@@ -16,7 +16,7 @@ import { blackhole } from './testing/bench-util.ts';
 // Property-access cost of an ECHO object relative to a plain JS object, across the three object
 // storage kinds. Complements `echo.bench.ts`, which measures database operations (insert / select /
 // update / delete, each with a flush); no measured body here ever flushes, so what is left is the
-// per-access cost of the reactive proxy itself — the surface an API optimization would move. Flushes
+// per-access cost of the reactive proxy itself - the surface an API optimization would move. Flushes
 // happen only in row teardown, outside every timed window (see `flushing`).
 //
 // Reading is a proxy `get` trap; writing must go through `Obj.update`, since a direct assignment on
@@ -24,15 +24,15 @@ import { blackhole } from './testing/bench-util.ts';
 // `Obj.update` transaction (change context + batched notification) on top of the `set` trap, so the
 // batched row below reports what that transaction costs when amortized over ten sets.
 //
-// `make` rows price construction: `Obj.make` against a plain object literal, and — for the
-// persisted kinds — `Obj.make` plus `db.add`, since an object that never reaches the database is
+// `make` rows price construction: `Obj.make` against a plain object literal, and - for the
+// persisted kinds - `Obj.make` plus `db.add`, since an object that never reaches the database is
 // already covered by the unpersisted row. They run last in each block on purpose: they are the only
 // rows that grow the database, and running them first would leave every read and write after them
 // measuring a doc inflated by the preceding row rather than the pool the block set up. Ordering only
-// settles this within a block — across blocks it is the per-kind database above that does.
+// settles this within a block - across blocks it is the per-kind database above that does.
 //
 // The `x1` rows carry ~85ns of tinybench per-callback overhead, which swamps anything cheaper than
-// it — every plain-object row is below that floor. Recover a per-operation cost that cancels it with
+// it - every plain-object row is below that floor. Recover a per-operation cost that cancels it with
 // `(mean(x10) - mean(x1)) / 9` rather than reading a fast `x1` row directly.
 //
 
@@ -52,7 +52,7 @@ const BENCH_OPTIONS = { time: 300 };
 // iteration, and within a row nothing flushes, so a long window would grow the document enough to
 // distort the tail of that row (and strain memory). Uniform across all four kinds so the make rows
 // stay comparable to each other. hz is normalized, so a shorter window costs resolution (a wider rme),
-// not correctness — the whole file is sized to run in about a minute.
+// not correctness - the whole file is sized to run in about a minute.
 const MAKE_BENCH_OPTIONS = { time: 120 };
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
@@ -86,7 +86,7 @@ class WideBenchObject extends Type.makeObject<WideBenchObject>(DXN.make('com.exa
 // Module-level setup, awaited before any `describe` registers, so every bench body below stays
 // synchronous. An `async` body would add a microtask turn (~50-100ns) to every sample, which is an
 // order of magnitude above a plain property read and would collapse the whole matrix into noise.
-// Safe because `*.bench.ts` is outside the test runner's `include` — this file is only ever loaded
+// Safe because `*.bench.ts` is outside the test runner's `include` - this file is only ever loaded
 // by an explicit `vitest bench` run.
 const storagePaths = [createTmpPath(), createTmpPath(), createTmpPath(), createTmpPath()];
 process.once('exit', () => {
@@ -107,7 +107,7 @@ const openDatabase = async (storagePath: string) => {
 };
 
 // A database per persisted kind and width rather than one shared between them. Every row mutates the
-// database it runs against — `make` adds objects that persist across rows — so on a shared database
+// database it runs against - `make` adds objects that persist across rows - so on a shared database
 // each block would be measured against a database sized by whichever blocks happened to run before
 // it, by an amount that varies with their iteration counts.
 const automergeDb = await openDatabase(storagePaths[0]);
@@ -133,8 +133,8 @@ const widePadding: Record<string, string> = Object.fromEntries(
 const makeWideProps = (index: number) => ({ ...widePadding, ...makeProps(index) });
 
 // One pool per kind. Rotating over many objects rather than hammering one keeps a single value or
-// branch from warming into a best case that never occurs in production, and — for the write
-// benches — stops ten consecutive stores to one property from being dead-store eliminated.
+// branch from warming into a best case that never occurs in production, and - for the write
+// benches - stops ten consecutive stores to one property from being dead-store eliminated.
 const plainPool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) => makeProps(index));
 const unpersistedPool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) =>
   Obj.make(BenchObject, makeProps(index)),
@@ -162,13 +162,13 @@ await feedWideDb.flush();
 
 // Flushes a persisted row's database once, before its warmup phase. tinybench `setup` is awaited, so
 // the drain completes before any iteration runs; it has to be `setup` and not `teardown`, which
-// tinybench fires without awaiting — an async flush there overlaps the next row's iterations and is
+// tinybench fires without awaiting - an async flush there overlaps the next row's iterations and is
 // still in flight at `afterAll`. Without any per-row drain, pending changes accumulate across the
 // whole block, and `DataService.update` ships them in a single RPC under a 30s timeout; a block's
 // worth on 250-field objects does not fit.
 //
 // Before warmup only, not before run: a flush leaves background persistence settling for a while,
-// and draining right before the timed phase put that settling inside it — feed writes read 2x and
+// and draining right before the timed phase put that settling inside it - feed writes read 2x and
 // an automerge make row went bimodal. Warmup exists to absorb exactly that transient, so the drain
 // sits ahead of it and the run phase sees steady state. Pending state is then bounded to one row's
 // warmup plus run, which the drain of the next row carries.
@@ -183,7 +183,7 @@ const valuePool = Array.from({ length: VALUE_POOL_SIZE }, () => Math.floor(Math.
 const labelPool = Array.from({ length: VALUE_POOL_SIZE }, (unusedValue, index) => `label-${index}`);
 
 // Every constructed object is parked here. Escape analysis scalar-replaces an allocation that never
-// leaves the frame — the allocation disappears and the row reports a speed no caller can observe,
+// leaves the frame - the allocation disappears and the row reports a speed no caller can observe,
 // which is the most common way an allocation bench lies. Storing into a heap array that outlives the
 // frame forces the object to escape. (`db.add` already does this for the persisted kinds; the ring
 // is what covers plain and unpersisted, and keeps all four measuring the same shape of work.)
@@ -216,7 +216,7 @@ afterAll(async () => {
   await automergeWideDb.flush();
   await feedWideDb.flush();
   // Closes the peers and disposes their storage. The exit handler above only unlinks the directory,
-  // and cannot await this — which is why the close belongs here, where a hook can be async.
+  // and cannot await this - which is why the close belongs here, where a hook can be async.
   await builder.close();
   // vitest's default hook budget is 10s, sized for unit tests. Draining four databases and closing
   // four peers is legitimately slower than that; the 30s RPC timeout inside `flush` still fires as a
@@ -426,7 +426,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(automergeDb, BENCH_OPTIONS),
     );
 
-    // `make` here is construction plus `db.add` — the object has to reach the database for the row
+    // `make` here is construction plus `db.add` - the object has to reach the database for the row
     // to mean anything, and the proxy alone is already priced by the unpersisted row above.
     bench(
       'make x1 (Obj.make + db.add)',
@@ -535,10 +535,10 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
 });
 
 // Same matrix over the wide object. Kept as separate bench bodies rather than parameterized over the
-// narrow ones for the same monomorphism reason as above — a wide and a narrow object are different
+// narrow ones for the same monomorphism reason as above - a wide and a narrow object are different
 // hidden classes, so sharing a load site between them would make it polymorphic and slow both.
 describe(
-  `property access (plain vs echo) — wide object, ${WIDE_FIELD_COUNT} fields`,
+  `property access (plain vs echo) - wide object, ${WIDE_FIELD_COUNT} fields`,
   { tags: ['manual'], timeout: 300_000 },
   () => {
     describe('plain object', () => {

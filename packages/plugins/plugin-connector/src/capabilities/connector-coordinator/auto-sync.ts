@@ -21,11 +21,11 @@ import { SyncRoutineMissingError } from '../../errors.ts';
  * connection populates without the user pressing "Sync now". No-op unless the connector opts in via
  * `sync.auto`. Runs through {@link Binding.runSync}, so a trigger-declaring connector's sync is
  * driven by its routine's trigger (the dispatcher carries continuation for the unbounded first sync);
- * a missing routine — the user cancelled the create-routine form — skips the auto sync entirely.
+ * a missing routine - the user cancelled the create-routine form - skips the auto sync entirely.
  *
  * Forked: a first sync walks the whole remote history, and the setup flows it hangs off (the OAuth
  * finalize handler, the sync-targets dialog submit) must return before it finishes. Failures are
- * surfaced by the sync process itself — the auth-expired toast rides on `Process.Process.error` — so
+ * surfaced by the sync process itself - the auth-expired toast rides on `Process.Process.error` - so
  * nothing propagates back to the caller. `priority` names a binding just created, so the sync waits for
  * it to replicate and runs it first.
  */

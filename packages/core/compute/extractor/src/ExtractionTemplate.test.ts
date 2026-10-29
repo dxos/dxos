@@ -108,7 +108,7 @@ describe('template extractor + dispatch', () => {
         ),
     });
 
-  test('extract — LLM payload becomes a Contact with the template tag', async ({ expect }) => {
+  test('extract - LLM payload becomes a Contact with the template tag', async ({ expect }) => {
     const source = db.add(Obj.make(Note, { text: 'Reach Ada at ada@example.test' }));
     await db.flush();
 
@@ -129,7 +129,7 @@ describe('template extractor + dispatch', () => {
     expect(result.tags).toEqual([{ label: 'contact', hue: 'emerald' }]);
   });
 
-  test('dispatch — persists created object and a provenance relation', async ({ expect }) => {
+  test('dispatch - persists created object and a provenance relation', async ({ expect }) => {
     const source = db.add(Obj.make(Note, { text: 'Reach Bo at bo@example.test' }));
     await db.flush();
 
@@ -162,7 +162,7 @@ describe('template extractor + dispatch', () => {
     expect(relations).toHaveLength(1);
   });
 
-  test('dispatch — onProposal returning undefined cancels all writes', async ({ expect }) => {
+  test('dispatch - onProposal returning undefined cancels all writes', async ({ expect }) => {
     const source = db.add(Obj.make(Note, { text: 'Reach Cy at cy@example.test' }));
     await db.flush();
 

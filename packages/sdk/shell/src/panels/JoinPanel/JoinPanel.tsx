@@ -464,7 +464,7 @@ export const JoinPanel = ({
         onHaloInvitationCancel: () => joinState.context.halo.invitationObservable?.cancel(),
         onSpaceInvitationCancel: () => joinState.context.space.invitationObservable?.cancel(),
         onHaloInvitationAuthenticate: (authCode: string) => {
-          // todo(thure): Is this necessary? Shouldn’t the observable emit this?
+          // todo(thure): Is this necessary? Shouldn't the observable emit this?
           joinSend({ type: 'authenticateHaloVerificationCode' });
           return joinState.context.halo.invitationObservable?.authenticate(authCode);
         },

@@ -6,7 +6,7 @@ import React, { type CSSProperties } from 'react';
 
 import { type LayoutName, type SlideFrontmatter, isSafeUrl } from '#markdown';
 
-// A function-call color (`rgb(…)`, `oklch(…)`, …), a hex color, or a bare keyword such as `teal`.
+// A function-call color (`rgb(...)`, `oklch(...)`, ...), a hex color, or a bare keyword such as `teal`.
 const COLOR = /^(#[0-9a-f]{3,8}|(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^;{}]*\)|[a-z]+)$/i;
 const DATA_VIDEO = /^data:video\//i;
 

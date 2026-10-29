@@ -39,7 +39,7 @@ const FEATURE = `${IMAGES} [data-testid="lighthouse.input-image.feature"]`;
 const RESULT = `${PLANK} [data-testid="lighthouse.result"]`;
 
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 const shot = async (page, name) => {
   if (SCREENS) {

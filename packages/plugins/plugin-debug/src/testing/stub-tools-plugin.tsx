@@ -49,7 +49,7 @@ const stubGraphBuilder = Capability.inlineModule(
           ]),
       }),
       // The pages hang off the branch by a connector of their own, as a real tool plugin's do, so
-      // they only exist once the branch is expanded — the case a restored selection has to survive.
+      // they only exist once the branch is expanded - the case a restored selection has to survive.
       AppGraphBuilder.createExtension({
         id: 'stubToolPages',
         match: GraphNodeMatcher.whenNodeType(STUB_TOOLS_TYPE),

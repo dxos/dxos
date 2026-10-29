@@ -26,7 +26,7 @@ export type CommentComposerProps = {
 };
 
 /**
- * The comment field, its target and its buttons — rendered as a band under the pull request header
+ * The comment field, its target and its buttons - rendered as a band under the pull request header
  * when the comment is about the pull request, and inside {@link LineCommentPopover} when it is
  * about one line of a diff.
  */

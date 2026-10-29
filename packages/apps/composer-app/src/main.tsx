@@ -108,7 +108,7 @@ declare const __DX_DEV_SERVER_BOOT_ID__: string;
 declare const __DX_DEBUG_PORT_SESSION__: string;
 
 // Merged onto `@dxos/app-framework/Devtools`'s `ComposerDevtools` (the type behind `globalThis.composer`)
-// rather than declared fresh — a second `declare global { var composer }` here would collide with
+// rather than declared fresh - a second `declare global { var composer }` here would collide with
 // its declaration and resolve every member to `{}` (see `playwright/globals.d.ts`).
 declare module '@dxos/app-framework/Devtools' {
   interface ComposerDevtools {
@@ -124,7 +124,7 @@ declare module '@dxos/app-framework/Devtools' {
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
-    /** Vite HMR API — present only in dev, `undefined` in production bundles. */
+    /** Vite HMR API - present only in dev, `undefined` in production bundles. */
     hot?: { dispose(cb: () => void): void };
   }
 
@@ -132,7 +132,7 @@ declare global {
     DEV: string;
     /** Startup stall window override in SECONDS; dev only. */
     VITE_DX_STARTUP_TIMEOUT?: string;
-    /** Log per-plugin activation in the boot loader — see `verboseStatus` below. */
+    /** Log per-plugin activation in the boot loader - see `verboseStatus` below. */
     VITE_DX_BOOT_VERBOSE?: string;
     /** `memory` keeps the database out of OPFS; see `workers/dedicated-worker.ts`. */
     VITE_DX_STORAGE?: string;
@@ -150,7 +150,7 @@ declare global {
 const bootStatus = (text: string) => App.bootLoader?.status({ humanized: text });
 
 // Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
-// from a true page boot. Dev-only — production has no HMR and the diagnostic
+// from a true page boot. Dev-only - production has no HMR and the diagnostic
 // would just be noise. `import.meta.env.DEV` is statically replaced at build
 // time, so the whole block tree-shakes out of prod bundles.
 const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) : '';
@@ -205,7 +205,7 @@ const whenIdle = (timeout: number): Promise<void> =>
 /** Stands in for the prespawned worker when the worker is deferred, so nothing spawns at load. */
 const NOT_PRESPAWNED: PrespawnedWorker = { take: () => undefined, dispose: () => {} };
 
-// Cross-tab reload coordination for persistent worker failures (dev only — see
+// Cross-tab reload coordination for persistent worker failures (dev only - see
 // `onPersistentWorkerFailure` below). The sessionStorage guard makes each tab escalate at most
 // once per tab session, so a failure that reloads don't fix cannot loop the reloads.
 const DEV_RELOAD_CHANNEL = 'dxos-dev-worker-reload';
@@ -223,10 +223,10 @@ if (import.meta.env?.DEV) {
  *
  * `isPwa` (not `'serviceWorker' in navigator`) is the SW gate because that
  * property is `true` in every modern browser whether or not a worker is
- * actually registered. On non-PWA builds (`DX_PWA=false` → `selfDestroying`
+ * actually registered. On non-PWA builds (`DX_PWA=false` -> `selfDestroying`
  * VitePWA, e.g. `labs.composer.space`) there is no active registration, and
  * the SW-backed cache's first call is `await navigator.serviceWorker.ready`
- * which resolves only when one exists — hangs forever otherwise, freezing
+ * which resolves only when one exists - hangs forever otherwise, freezing
  * `Install` indefinitely with no timeout.
  *
  * Each branch dynamic-imports its impl so vite emits per-platform chunks instead
@@ -272,7 +272,7 @@ const main = async () => {
   // a BENCHMARKS row without remembering `?profiler=1`. Production explicitly
   // opts in (or out) via the URL parameter.
   // `isTrue`'s second argument is a strictness flag, not a default, so the absent-parameter
-  // case has to be handled here — passing the default through it silently disabled the dev
+  // case has to be handled here - passing the default through it silently disabled the dev
   // profiler (strict mode requires the parameter, which is exactly what is missing).
   const profilerParam = url.searchParams.get(PARAM_PROFILER);
   const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
@@ -312,15 +312,15 @@ const main = async () => {
   });
   log.addProcessor(logProcessor.processor);
 
-  // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
+  // Devtools convenience - also surfaced via the help panel and ResetDialog UI.
   globalThis.downloadLogs = () => downloadLogs(logStore);
 
   startupMark('dynamic-imports:start');
-  bootStatus('Loading framework…');
+  bootStatus('Loading framework...');
 
   // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
   // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
-  // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
+  // complete before anything touches automerge (slim entrypoints - see util/automerge-wasm.ts).
   const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
     await Promise.all([
       import('@dxos/config'),
@@ -337,12 +337,12 @@ const main = async () => {
     /** Enable debug-level OTEL log export for this device (persisted across reloads, works in workers). */
     enableDebugLogs: () => {
       void Observability.storeOtelLogLevel(APP_KEY, 'debug');
-      log.info('otel debug log level enabled — reload to apply');
+      log.info('otel debug log level enabled - reload to apply');
     },
     /** Remove the debug override and revert to the default INFO log level. */
     disableDebugLogs: () => {
       void Observability.storeOtelLogLevel(APP_KEY, null);
-      log.info('otel debug log level override removed — reload to apply');
+      log.info('otel debug log level override removed - reload to apply');
     },
     /** Return the active OTEL log level override, or null if using the default. */
     getLogLevel: async (): Promise<string | null> => {
@@ -357,7 +357,7 @@ const main = async () => {
   AppMigrations.define();
 
   startupMark('config:start');
-  bootStatus('Reading configuration…');
+  bootStatus('Reading configuration...');
 
   let config = await setupConfig();
   if (shouldRunStorageResetMigration(getEnvString(config, 'DX_ENVIRONMENT'))) {
@@ -395,7 +395,7 @@ const main = async () => {
   void watchWindowCorners(isTauri);
 
   // Read the persisted opt-out state up front so we can suppress PostHog's heavy
-  // instrumentation (session recorder, dead-clicks autocapture) at init time —
+  // instrumentation (session recorder, dead-clicks autocapture) at init time -
   // opting out after init only stops event capture, not script loading.
   const [observabilityDisabled, observabilityGroup] = await Promise.all([
     Observability.isObservabilityDisabled(APP_KEY),
@@ -430,7 +430,7 @@ const main = async () => {
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
     const transferredBytes = Math.round(resources.reduce((total, resource) => total + (resource.transferSize ?? 0), 0));
     // Flatten the top-5 modules into individual primitive keys (`top1Module`,
-    // `top1Ms`, …) — observability `Attributes` only accept string | number |
+    // `top1Ms`, ...) - observability `Attributes` only accept string | number |
     // boolean | undefined, and per-key fields are easier to filter on in
     // PostHog than a JSON blob.
     const summary: Record<string, string | number | boolean | undefined> = {
@@ -559,10 +559,10 @@ const main = async () => {
   const useSingleClientMode = isTauri && isMobile;
 
   startupMark('services:start');
-  bootStatus('Starting services…');
+  bootStatus('Starting services...');
 
   // Decide the deployment mode for client services. The factory is a dumb switch on
-  // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
+  // `runtime.client.services_mode` - the app is responsible for picking the right mode from its
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
   // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
   // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
@@ -597,7 +597,7 @@ const main = async () => {
       new SharedWorker(new URL('./workers/coordinator-worker.ts', import.meta.url), {
         type: 'module',
         // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts, so suffix the name
-        // with the server boot id — a restarted server then gets a fresh coordinator instead of
+        // with the server boot id - a restarted server then gets a fresh coordinator instead of
         // attaching to a stale-code instance that new pages cannot negotiate with.
         name: `dxos-coordinator-worker${__DX_DEV_SERVER_BOOT_ID__ && `-${__DX_DEV_SERVER_BOOT_ID__}`}`,
       }),
@@ -606,7 +606,7 @@ const main = async () => {
     // Stale mixed-generation workers (tabs from before a dev-server restart) present as an endless
     // boot spinner with only a console warning; in dev, force every same-origin tab through one
     // coordinated reload so all generations converge. Production relies on the fatal dialog via the
-    // startup timeout (tagged for telemetry — see ResetDialog).
+    // startup timeout (tagged for telemetry - see ResetDialog).
     onPersistentWorkerFailure: (error) => {
       log.error('worker connection failing persistently', { error });
       if (import.meta.env?.DEV && !sessionStorage.getItem(DEV_RELOAD_GUARD_KEY)) {
@@ -639,7 +639,7 @@ const main = async () => {
     // A follower tab never takes the worker, which would otherwise hold its place on the storage lock.
     .finally(() => prespawnedWorker.dispose());
 
-  // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
+  // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled -
   // tying the flag to it would make the flag silently do nothing.
   if (__DX_DEBUG_PORT_SESSION__) {
     const { getDebugPortController } = await import('@dxos/client/devtools');
@@ -687,10 +687,10 @@ const main = async () => {
   // `meta` + a `Plugin.lazy(...)` stub, so building the plugin array doesn't
   // pull any plugin's body. The plugin manager loads the real plugin
   // (separate Rollup chunk) on first `enable`. Remote plugin preload is
-  // network-bound — the boot loader's counter follows that until the
+  // network-bound - the boot loader's counter follows that until the
   // plugin manager (post-React mount) takes over with module-activation
   // progress.
-  bootStatus('Loading plugins…');
+  bootStatus('Loading plugins...');
   const builtinPlugins = getPlugins(conf);
   const assetCache = await createAssetCache(isPwa, isTauri);
   const remotePluginsResult = await EffectEx.runPromise(
@@ -699,10 +699,10 @@ const main = async () => {
       onPluginLoaded: (loaded, total) => {
         // Pass `range` so the loader updates the existing line in place
         // ("Loading plugins (3/12)") instead of appending a fresh entry per
-        // tick — keeps the visible log compact.
+        // tick - keeps the visible log compact.
         App.bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
-        // The ring spans two phases — remote-plugin preload (0 → 50%) and
-        // module activation (50 → 100%, driven from `Placeholder` once
+        // The ring spans two phases - remote-plugin preload (0 -> 50%) and
+        // module activation (50 -> 100%, driven from `Placeholder` once
         // React mounts). Splitting the range keeps it monotonic across
         // the boundary.
         App.bootLoader?.progress((loaded / total) * 0.5);
@@ -710,8 +710,8 @@ const main = async () => {
     }),
   );
 
-  bootStatus('Building Composer…');
-  // Park the ring at 50% — preload done, activation about to take over.
+  bootStatus('Building Composer...');
+  // Park the ring at 50% - preload done, activation about to take over.
   App.bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
@@ -768,7 +768,7 @@ const main = async () => {
         fallbackRender={(props) => <ErrorFallback {...props} error={error} />}
       >
         {/* `react-ui`'s own namespace ships with no plugin to register it, unlike every sibling
-            (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
+            (`react-ui-card`, `-form`, ...) which a plugin re-exports - so without this the primitives'
             keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
             icon-only button. */}
         <Theme.Provider
@@ -802,7 +802,7 @@ const main = async () => {
       fallback: Fallback,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
       // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`
-      // relays startup progress into it and dismisses it — no placeholder here.
+      // relays startup progress into it and dismisses it - no placeholder here.
       pluginLoader,
       onPluginRemove,
       pluginRegistryProvider,
@@ -810,7 +810,7 @@ const main = async () => {
       defaults,
       cacheEnabled: true,
       safeMode,
-      // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
+      // The useLoading state machine ticks every `debounce` ms (Loading -> FadeIn -> FadeOut -> Done),
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
       // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
       debounce: 200,
@@ -827,7 +827,7 @@ const main = async () => {
 
   const root = document.getElementById('root');
   if (!root) {
-    // `index.html` always ships a `#root` element — its absence means the document itself
+    // `index.html` always ships a `#root` element - its absence means the document itself
     // failed to load correctly, which no in-tree fallback can recover from.
     throw new Error('composer main: #root element not found');
   }

@@ -11,7 +11,7 @@ import { translationKey } from '#translations';
 import { type AssigneeDisplay, PERSON_ICON, getAssigneeDisplay } from '../util/assignee.ts';
 
 /**
- * The label and glyph for a task's assignee, resolving its contact and subject refs — shared by the
+ * The label and glyph for a task's assignee, resolving its contact and subject refs - shared by the
  * list's pill and the properties row so the two cannot name the same assignee differently.
  */
 export const useAssigneeDisplay = (assignee?: Actor.Actor): AssigneeDisplay => {

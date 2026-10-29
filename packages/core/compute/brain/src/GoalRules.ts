@@ -310,7 +310,7 @@ export class GoalRules {
           }
           const ref = constant(first);
           if (ref === undefined) {
-            // `elapsed(F, …)` over facts: each fact in working memory starts its own clock.
+            // `elapsed(F, ...)` over facts: each fact in working memory starts its own clock.
             for (const { saidAt } of this.#facts.values()) {
               after(saidAt + length);
             }

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Regenerates `src/vite/optimize-deps.ts` — the static `optimizeDeps.include` list.
+// Regenerates `src/vite/optimize-deps.ts` - the static `optimizeDeps.include` list.
 //
 // Starts a `vite serve` against a throwaway cache dir so the dependency scan actually runs (vite
 // skips the scan whenever a valid cache exists), then writes every entrypoint the scan resolved.
@@ -40,7 +40,7 @@ const packageName = (id) => id.split('/', id[0] === '@' ? 2 : 1).join('/');
 
 // The scan resolves each dep from whichever module imported it; `include` resolves from the app
 // root, where a dep reached only through a `@dxos/*` package is not visible under pnpm. Recording
-// importers lets those be listed in vite's nested `parent > … > child` form instead of dropped.
+// importers lets those be listed in vite's nested `parent > ... > child` form instead of dropped.
 const importers = new Map();
 const recordImporters = {
   name: 'record-dep-importers',
@@ -52,7 +52,7 @@ const recordImporters = {
 };
 
 // A crawl that fails to resolve one import aborts the whole scan, leaving only the list this run
-// regenerates — which would then rewrite itself from its own stale input. Fail instead.
+// regenerates - which would then rewrite itself from its own stale input. Fail instead.
 let scanFailure;
 const logger = createLogger();
 
@@ -158,7 +158,7 @@ try {
     console.log(`Dropped ${dropped.length} dep(s) with no root-resolvable owner: ${dropped.join(', ')}`);
   }
 
-  // A crawl can also come back near-empty without erroring — a missing prerequisite leaves most of
+  // A crawl can also come back near-empty without erroring - a missing prerequisite leaves most of
   // the graph unreachable rather than unresolvable. The short list it yields still type-checks, so
   // without a floor the loss only resurfaces as reload-per-plugin churn in someone else's `serve`.
   // The boot path alone accounts for several hundred entries; anything this low is a broken run.
@@ -177,13 +177,13 @@ writeFileSync(
 // Copyright 2026 DXOS.org
 //
 
-// GENERATED FILE — regenerate with \`moon run composer-app:gen-optimize-deps\`.
+// GENERATED FILE - regenerate with \`moon run composer-app:gen-optimize-deps\`.
 
 /**
  * Every dependency entrypoint the app reaches, pre-bundled by vite's optimizer up front.
  *
- * Vite's dependency scan is all-or-nothing — one unresolvable import anywhere in the crawl aborts
- * it and pre-bundles nothing — and it runs only when there is no valid optimizer cache, so the
+ * Vite's dependency scan is all-or-nothing - one unresolvable import anywhere in the crawl aborts
+ * it and pre-bundles nothing - and it runs only when there is no valid optimizer cache, so the
  * damage outlives the start that caused it: every dep is then discovered mid-session, one
  * re-optimize and full page reload per plugin family. Listing the deps statically keeps
  * pre-bundling independent of the scan. Entries reached only through a \`@dxos/*\` package do not

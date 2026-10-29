@@ -14,7 +14,7 @@ import { parsePullRequestReference } from '../github-link.ts';
 import { GitHubNamespace } from '../namespace.ts';
 
 /**
- * The row for text naming a pull request, labelled with the parts the text itself spells out — the
+ * The row for text naming a pull request, labelled with the parts the text itself spells out - the
  * dialog asks on every keystroke, so GitHub is not consulted.
  */
 export const matchPullRequestQuery: SearchCapabilities.QueryAction['match'] = (text) => {

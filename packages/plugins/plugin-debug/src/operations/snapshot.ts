@@ -40,7 +40,7 @@ const makeTranslate =
     return undefined;
   };
 
-/** ECHO objects summarize to identity — a snapshot must be O(planks), never O(space). */
+/** ECHO objects summarize to identity - a snapshot must be O(planks), never O(space). */
 const summarizeSubject = (data: unknown) => {
   if (data == null || typeof data !== 'object') {
     return undefined;
@@ -60,7 +60,7 @@ const summarizeSubject = (data: unknown) => {
   return undefined;
 };
 
-/** The comment threads on an object, with their messages loaded — the review companion's view of it. */
+/** The comment threads on an object, with their messages loaded - the review companion's view of it. */
 const collectComments = async (subject: unknown) => {
   if (!Obj.isObject(subject)) {
     return undefined;
@@ -96,7 +96,7 @@ const collectComments = async (subject: unknown) => {
 
 const OPERATION_DXN = /dxn:[^/]+/;
 
-/** Flattens the node's actions with one level of group expansion — what a menu would show. */
+/** Flattens the node's actions with one level of group expansion - what a menu would show. */
 const collectActions = (
   graph: Parameters<typeof AppGraph.getActions>[0],
   translate: Translate,
@@ -136,7 +136,7 @@ const collectSurfaces = () => {
   }));
 };
 
-/** The app's own report of what an operation just did — read the way a user reads it, off the DOM. */
+/** The app's own report of what an operation just did - read the way a user reads it, off the DOM. */
 const collectToasts = () => {
   if (typeof document === 'undefined') {
     return [];

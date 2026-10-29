@@ -22,8 +22,8 @@ const config: Plugin.PluginConfig = Plugin.config({
 
     Books are created with a type-ahead backed by BookHive's public catalog, which resolves a title
     to its authors, cover, and genres. The public face of a book carries an atproto record annotation,
-    so the generic atproto companion can publish it as a buzz.bookhive.book record on the user's PDS —
-    a concrete demonstration of the ECHO ↔ atproto publishing model.
+    so the generic atproto companion can publish it as a buzz.bookhive.book record on the user's PDS -
+    a concrete demonstration of the ECHO <-> atproto publishing model.
   `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-library',
     icon: { key: 'ph--book-open--regular', hue: 'amber' },

@@ -78,7 +78,7 @@ describe('eventsSpan', () => {
 
 describe('defaultTripName', () => {
   test('formats a date range', ({ expect }) => {
-    expect(defaultTripName('2026-06-08T00:00:00.000Z', '2026-06-14T00:00:00.000Z')).toBe('Trip · Jun 8 – Jun 14');
+    expect(defaultTripName('2026-06-08T00:00:00.000Z', '2026-06-14T00:00:00.000Z')).toBe('Trip · Jun 8 - Jun 14');
   });
 
   test('handles a single date and the empty case', ({ expect }) => {
@@ -120,7 +120,7 @@ describe('buildTripFromEvents', () => {
     const trip = buildTripFromEvents(db, events);
     await db.flush();
 
-    expect(trip.name).toBe('Trip · Jun 8 – Jun 10');
+    expect(trip.name).toBe('Trip · Jun 8 - Jun 10');
     expect(trip.start).toBe('2026-06-08T09:00:00.000Z');
     expect(trip.end).toBe('2026-06-10T17:00:00.000Z');
     const segments = Trip.getSegments(trip);

@@ -262,7 +262,7 @@ export const useFocusGroup = ({
       // A trap's edges are handled by its sentinels; a groupper's contents tab out through them.
       if (axis && !tabbable && !limited && !onContainer && !ignored('Tab')) {
         // Park focus on the boundary and let the browser tab onward from there, so a mover is one
-        // stop without this having to answer where the next one is — including at the end of the
+        // stop without this having to answer where the next one is - including at the end of the
         // document, where the answer is the browser's own chrome.
         const sentinels = sentinelsRef.current;
         if (sentinels) {

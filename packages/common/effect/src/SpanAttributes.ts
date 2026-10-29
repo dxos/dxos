@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 /**
- * Attribute naming the space a span's work ran in. One key everywhere — ECHO, the process runtime,
- * the stores, the AI stack — so one filter finds all of a space's work.
+ * Attribute naming the space a span's work ran in. One key everywhere - ECHO, the process runtime,
+ * the stores, the AI stack - so one filter finds all of a space's work.
  */
 export const SPACE_ID = 'spaceId';
 

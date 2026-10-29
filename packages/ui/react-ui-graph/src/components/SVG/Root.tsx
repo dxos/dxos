@@ -24,7 +24,7 @@ export type RootProps = Util.ThemedClassName<PropsWithChildren<SVGContextOptions
  * Makes the SVG context available to child nodes.
  * Automatically resizes the SVG element, which expands to fit the container.
  *
- * NOTE: Uses `ResizeObserver` directly rather than `react-resize-detector` — the latter's
+ * NOTE: Uses `ResizeObserver` directly rather than `react-resize-detector` - the latter's
  * `useResizeDetector` was flaky in our Storybook environment (sometimes never fired its
  * initial measurement), leaving the SVG stuck at `opacity-0` with no rendered content.
  */

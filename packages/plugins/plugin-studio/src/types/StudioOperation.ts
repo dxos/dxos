@@ -106,7 +106,7 @@ export const CreateStoryboard = Operation.make({
     name: 'Create storyboard',
     icon: 'ph--film-strip--regular',
     description: trim`
-      Creates a storyboard — an ordered sequence of frames, each showing one media artifact — with
+      Creates a storyboard - an ordered sequence of frames, each showing one media artifact - with
       any frames given (each a name, kind, prompt and provider config, as append-frame takes).
       Pass the project you are working in so the storyboard is filed into its artifacts. Pass
       generate: true to produce every frame's media in the same call, else generate each frame's
@@ -143,7 +143,7 @@ export const AppendFrame = Operation.make({
     icon: 'ph--frame-corners--regular',
     description: trim`
       Appends a frame to a storyboard. Creates the frame's media artifact (image or video) with the
-      given prompt as its draft config; nothing is generated unless generate: true — else call
+      given prompt as its draft config; nothing is generated unless generate: true - else call
       generate on the returned artifact to produce it. Use list-providers first to learn which
       provider handles the kind and which extra config keys (e.g. a model) it needs.
     `,

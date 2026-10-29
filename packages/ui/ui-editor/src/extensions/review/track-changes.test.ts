@@ -30,7 +30,7 @@ describe('trackChanges', () => {
 
   test('undo re-instates a deletion (un-delete) and clears the phantom', ({ expect }) => {
     const view = mount(MAIN, [history(), trackChanges({ main: MAIN, colour: 'var(--dx-accent)' })]);
-    // Delete the "bravo\n" block on the branch → a phantom appears.
+    // Delete the "bravo\n" block on the branch -> a phantom appears.
     view.dispatch({ changes: { from: 6, to: 12, insert: '' } });
     expect(view.dom.querySelector('.cm-track-delete')).not.toBeNull();
     expect(view.state.doc.toString()).toBe('alpha\ncharlie');
@@ -44,7 +44,7 @@ describe('trackChanges', () => {
   });
 
   test('a changed line renders a gutter change-bar in the author colour', ({ expect }) => {
-    // Branch inserts " extra" on the first line → that line gets a change-bar; an unchanged line does not.
+    // Branch inserts " extra" on the first line -> that line gets a change-bar; an unchanged line does not.
     const view = mount('alpha extra\nbravo\ncharlie');
     const bars = view.dom.querySelectorAll<HTMLElement>('.cm-change-bar');
     expect(bars.length).toBe(1);
@@ -54,7 +54,7 @@ describe('trackChanges', () => {
 
   test('a new-paragraph insertion bars only the text line, not the trailing blank line', ({ expect }) => {
     // The branch inserts a new first paragraph "intro\n\n" before "alpha"; the trailing paragraph break
-    // must not tag the blank line — exactly one bar, on the inserted text line.
+    // must not tag the blank line - exactly one bar, on the inserted text line.
     const view = mount('intro\n\nalpha\nbravo\ncharlie');
     expect(view.dom.querySelectorAll('.cm-change-bar')).toHaveLength(1);
     view.destroy();
@@ -71,7 +71,7 @@ describe('trackChanges', () => {
   });
 
   // Selections do not respect word edges. Cutting into the words at each end fuses the survivors, and a
-  // word-level hunk then reads as "delete both words, insert this fused one" — rendering a phantom of
+  // word-level hunk then reads as "delete both words, insert this fused one" - rendering a phantom of
   // both whole words plus a bogus insertion (`writte` + inserted `ngest`) instead of a plain deletion.
   test('a deletion that cuts into words at both ends strikes only what was removed', ({ expect }) => {
     const main = 'the revision it was written on, so two people can suggest changes';
@@ -87,7 +87,7 @@ describe('trackChanges', () => {
 
   // Deleting `suggest change` from `suggest changes` leaves an `s`, and that survivor is equally the
   // tail of `changes` or the head of `suggest`. The minimal edit is ambiguous, so the strike must be
-  // slid to the word boundary — otherwise it keeps the `s` of `suggest` and strikes `uggest changes`.
+  // slid to the word boundary - otherwise it keeps the `s` of `suggest` and strikes `uggest changes`.
   test('an ambiguous deletion strikes from the word boundary', ({ expect }) => {
     const main = 'so two people can suggest changes to the same';
     const cut = 'suggest change';

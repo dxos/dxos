@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-// Form-input surfaces. Each consumes the whole surface envelope — the form renderer's own props ride
-// alongside `data` — so they are registered without a `props` mapper.
+// Form-input surfaces. Each consumes the whole surface envelope - the form renderer's own props ride
+// alongside `data` - so they are registered without a `props` mapper.
 
 import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';

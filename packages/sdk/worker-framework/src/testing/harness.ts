@@ -16,9 +16,9 @@ import * as WorkerProtocol from '../WorkerProtocol.ts';
 type LinkMode =
   /** Messages flow both ways. */
   | 'up'
-  /** Nothing sent reaches a peer and inbound messages queue until the link is `up` again — a blocked main thread. */
+  /** Nothing sent reaches a peer and inbound messages queue until the link is `up` again - a blocked main thread. */
   | 'paused'
-  /** Nothing flows either way and inbound messages are lost — a dead SharedWorker port. */
+  /** Nothing flows either way and inbound messages are lost - a dead SharedWorker port. */
   | 'broken';
 
 export type HubCoordinator = WorkerProtocol.WorkerCoordinator & {
@@ -139,7 +139,7 @@ export const createHub = () => {
 /**
  * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
  * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
- * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
+ * tab whose SharedWorker link died - it can still take Web Locks, so it can still evict a leader.
  */
 export const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => ({
   onMessage: new Event<WorkerProtocol.CoordinatorMessage>(),
@@ -148,7 +148,7 @@ export const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => (
 
 /** Control surface over one in-process worker instance. */
 export type WorkerHandle = {
-  /** Stops the worker processing or sending messages while keeping its locks — a CPU-hung worker. */
+  /** Stops the worker processing or sending messages while keeping its locks - a CPU-hung worker. */
   pause(): void;
   /** Delivers everything queued while paused, in order. */
   resume(): void;
@@ -156,7 +156,7 @@ export type WorkerHandle = {
   /**
    * Wedges the worker for good: nothing is delivered into it again, its displacement channel
    * included. A paused worker still services the `BroadcastChannel` the displacement handshake runs
-   * on — a blocked event loop does not, which is the state forced termination exists for.
+   * on - a blocked event loop does not, which is the state forced termination exists for.
    */
   wedge(): void;
   readonly wedged: boolean;
@@ -184,7 +184,7 @@ type WorkerFactoryOptions = {
 
 /**
  * Minimal MessagePort-backed dedicated worker running the real {@link Worker.run} loop, with a no-op
- * runtime unless one is given — exercises leader election and port exchange without a service runtime.
+ * runtime unless one is given - exercises leader election and port exchange without a service runtime.
  */
 export const createWorkerFactory =
   (
@@ -267,7 +267,7 @@ export const createWorkerFactory =
         return;
       }
       // `Worker.run` builds its displacement channel synchronously, so this window captures that one
-      // channel — there is no handle on it otherwise. Matched by name so a channel some other code
+      // channel - there is no handle on it otherwise. Matched by name so a channel some other code
       // opens inside the window is not silenced by `wedge()`.
       const displaceChannelName = displaceChannelFor(storageLockKey);
       const OriginalBroadcastChannel = globalThis.BroadcastChannel;
@@ -430,7 +430,7 @@ export const createRecordingWorker = (
   const sessionClosedEvent = new Event<string>();
   const runtimeClosed = new Trigger();
   let shutdown: (() => void) | undefined;
-  // Sessions whose `createSession` must fail before one succeeds — a runtime that cannot serve a tab.
+  // Sessions whose `createSession` must fail before one succeeds - a runtime that cannot serve a tab.
   let sessionFailures = 0;
 
   const createWorker = createWorkerFactory(storageLockKey, {

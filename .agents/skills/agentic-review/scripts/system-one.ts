@@ -10,7 +10,7 @@
 //
 // Usage:
 //   bun system-one.ts [--slug=<slug> | --dir=<store>]   fill a prepared review's fragments
-//   bun system-one.ts --file=<path> [--file=…] [--rule=<id> …]   probe files, print verdicts
+//   bun system-one.ts --file=<path> [--file=...] [--rule=<id> ...]   probe files, print verdicts
 //
 // Options: --base=<ref> (diff base for context; default the review's base, or the merge-base
 // with origin/main for a full-project review), --threshold=0.8, --uncertain=0.15, --lift=0.15,
@@ -183,7 +183,7 @@ const guardedReview = async (
   if (predicted > maxCostUsd) {
     console.error(
       [
-        `system-one: refusing — predicted cost $${predicted.toFixed(2)} exceeds the $${maxCostUsd} ceiling (${plan.stats.requests} round-one requests, ~${plan.stats.estimatedTokens} tokens).`,
+        `system-one: refusing - predicted cost $${predicted.toFixed(2)} exceeds the $${maxCostUsd} ceiling (${plan.stats.requests} round-one requests, ~${plan.stats.estimatedTokens} tokens).`,
         'A review this large belongs to subagents (plan usage), not System One: spawn one subagent per',
         'group as staged in STAGING.md. Pass --max-cost=<usd> only when a human approved the spend.',
       ].join('\n'),
@@ -318,7 +318,9 @@ if (values.file?.length) {
       ([ruleId, { reason, groups }]) =>
         `- \`${ruleId}\` (${reason}): review groups ${groups.join(', ')} as staged in STAGING.md`,
     ),
-    ...followUps.map(({ ruleId, nn, files }) => `- \`${ruleId}\` → append to \`groups/${nn}.md\`: ${files.join(', ')}`),
+    ...followUps.map(
+      ({ ruleId, nn, files }) => `- \`${ruleId}\` -> append to \`groups/${nn}.md\`: ${files.join(', ')}`,
+    ),
     ...result.oversized.map(
       ({ ruleId, file }) => `- \`${ruleId}\` on \`${file}\`: question too large beside its state`,
     ),
@@ -328,7 +330,7 @@ if (values.file?.length) {
     '',
     `- model: ${values.model}${client ? '' : ' (dry run: nothing was sent)'}`,
     `- base for context: \`${base ?? 'none'}\``,
-    `- thresholds: violation ≥ ${settings.threshold}; uncertain ≥ ${settings.uncertain} and ≥ the rule's median across this run + ${settings.lift} (rules with ${settings.minSample}+ verdicts); context fetched when asked with ≥ ${settings.need}`,
+    `- thresholds: violation >= ${settings.threshold}; uncertain >= ${settings.uncertain} and >= the rule's median across this run + ${settings.lift} (rules with ${settings.minSample}+ verdicts); context fetched when asked with >= ${settings.need}`,
     `- verdicts: ${counts.violation} violations written to fragments, ${counts.uncertain} uncertain, ${counts.clean} clean, ${counts.unanswered} unanswered`,
     `- left for an agentic reviewer: ${followUpLines.length} batch(es)`,
     '',
@@ -342,7 +344,7 @@ if (values.file?.length) {
     [
       ...report,
       '',
-      `Still needs an agentic reviewer — spawn one subagent per line (${followUpLines.length} in all); every other group is already judged. A follow-up reviews only its listed files against its one rule and appends diagnostics to the named fragment.`,
+      `Still needs an agentic reviewer - spawn one subagent per line (${followUpLines.length} in all); every other group is already judged. A follow-up reviews only its listed files against its one rule and appends diagnostics to the named fragment.`,
       '',
       ...followUpLines,
     ].join('\n'),

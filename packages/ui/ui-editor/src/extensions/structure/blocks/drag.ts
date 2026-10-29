@@ -42,7 +42,7 @@ export type BlockDragOptions = {
    */
   clampX?: boolean;
   /**
-   * Maps a block to the range it visually occupies for the collapse/preview/placeholder — its subtree for
+   * Maps a block to the range it visually occupies for the collapse/preview/placeholder - its subtree for
    * the outliner. Defaults to the block's own range (markdown blocks). The grips and drop-index logic still
    * use `getBlocks` (own, non-overlapping ranges).
    */
@@ -95,16 +95,16 @@ const DRAG_THRESHOLD = 4;
 
 // The gutters on each side of the content, where the grip (left) and menu (right) float, centered within.
 // `GUTTER_WIDTH` (2rem) is the strip width;
-// `CONTENT_WIDTH` reserves one on each side (`4rem` = 2×2rem) and centers the column — keep the two in sync.
+// `CONTENT_WIDTH` reserves one on each side (`4rem` = 2×2rem) and centers the column - keep the two in sync.
 // Shared by the grip (`drag.ts`), menu (`menu.ts`), and the outliner content (`outliner.ts`).
-// Both utilities need `!`: CodeMirror's own `.ͼ1 .cm-content` rule sets `margin: 0` at a higher
+// Both utilities need `!`: CodeMirror's own `.\u037C1 .cm-content` rule sets `margin: 0` at a higher
 // specificity, which otherwise drops the centering and collapses both gutters onto one side.
 export const GUTTER_WIDTH = 32; // 2rem
 export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-4rem)]! mx-auto!';
 
 const GRIP_ICON = 'ph--dots-six-vertical--regular';
 
-// A grip's target placement — the POINT it centres on, not its top-left corner — computed in the measure
+// A grip's target placement - the POINT it centres on, not its top-left corner - computed in the measure
 // read phase and applied in the write phase. The element is centred on it by a CSS
 // `translate(-50%, -50%)` rather than by subtracting half of a hard-coded size here, so the grip's box can follow
 // the theme without the grip drifting off its row.
@@ -126,7 +126,7 @@ const hoveredBlockField = StateField.define<number | null>({
 
 // Tracks the block under the pointer (by its vertical position, so it works over the text, the gutter,
 // or the margin) and publishes it to `hoveredBlockField` so that block's grip can show. Listens on the
-// scroller — which spans the gutter and content — so moving from the text toward the grip doesn't clear
+// scroller - which spans the gutter and content - so moving from the text toward the grip doesn't clear
 // it; the hover clears only when the pointer leaves the editor. Dispatches only when the block changes.
 const createHoverPlugin = (getBlocks: BlockDragOptions['getBlocks'], dragPlugin: ReturnType<typeof createDragPlugin>) =>
   ViewPlugin.fromClass(
@@ -290,7 +290,7 @@ const dragDecoField = StateField.define<DecorationSet>({
   provide: (field) => EditorView.decorations.from(field),
 });
 
-/** Manages the armed press → click / drag lifecycle, the drop placeholder, and pointer tracking. */
+/** Manages the armed press -> click / drag lifecycle, the drop placeholder, and pointer tracking. */
 const createDragPlugin = (
   getBlocks: BlockDragOptions['getBlocks'],
   moveBlocks: BlockDragOptions['moveBlocks'],
@@ -339,7 +339,7 @@ const createDragPlugin = (
         return this.#sourceIndices;
       }
 
-      // Abort an in-flight drag when a concurrent/external edit lands — the stored indices would otherwise
+      // Abort an in-flight drag when a concurrent/external edit lands - the stored indices would otherwise
       // resolve against a changed document on drop.
       update(update: ViewUpdate) {
         if (this.#sourceIndices && update.docChanged) {
@@ -386,7 +386,7 @@ const createDragPlugin = (
 
       // A press without drag: move the caret to the end of the block (collapsing any text selection) and
       // update the block selection in the same transaction (so the field doesn't treat the caret move as a
-      // clear). A plain press toggles a single-block selection — selecting only this block, or clearing it
+      // clear). A plain press toggles a single-block selection - selecting only this block, or clearing it
       // when it is already the sole selection; shift toggles it within the set. The block's `from` is its
       // selection identity; the caret goes to its `to`.
       #click(index: number, shiftKey: boolean) {
@@ -486,7 +486,7 @@ const createDragPlugin = (
         return getExtent ? getExtent(this.view.state, block) : block;
       }
 
-      // Start of the first block after `pos`, or the document end when there is none — the point a collapse
+      // Start of the first block after `pos`, or the document end when there is none - the point a collapse
       // extends to so it swallows the trailing blank/separator.
       #nextStartAfter(pos: number): number {
         const next = getBlocks(this.view.state).find((block) => block.from > pos);
@@ -632,7 +632,7 @@ const createDragPlugin = (
           this.#preview.style.transform = `translate(${left}px, ${top}px)`;
         }
         // Preview the target indent level (from `getDropIndent`) by indenting the content WITHIN the
-        // container — the container and grip stay put, only the text shifts to show where it will land.
+        // container - the container and grip stay put, only the text shifts to show where it will land.
         if (this.#previewContent) {
           const indentOffset = this.#dropIndent?.offset ?? 0;
           this.#previewContent.style.transform = `translate(${PREVIEW_OFFSET.x + indentOffset}px, ${PREVIEW_OFFSET.y}px)`;
@@ -644,8 +644,8 @@ const createDragPlugin = (
       }
 
       // The slot the pointer is over: the first non-source block whose vertical midpoint is below the
-      // pointer. The dragged (collapsed) blocks are skipped — including blocks inside a dragged extent
-      // (a parent's children share its collapse but are not source indices) — so the drop gap, and thus
+      // pointer. The dragged (collapsed) blocks are skipped - including blocks inside a dragged extent
+      // (a parent's children share its collapse but are not source indices) - so the drop gap, and thus
       // the placeholder, always lands on a visible block, never inside the lifted group where the
       // collapse decoration would absorb it.
       #dropIndexAt(clientY: number): number {
@@ -760,8 +760,8 @@ const createDragPlugin = (
         }
 
         // A side:-1 block widget sitting inside a collapse (including at its end) is absorbed by the
-        // block-replace and renders nothing — the gap would vanish for that update. Snap such positions
-        // to that collapse's START, which renders before it — the source's own slot, a no-op drop, so
+        // block-replace and renders nothing - the gap would vanish for that update. Snap such positions
+        // to that collapse's START, which renders before it - the source's own slot, a no-op drop, so
         // the position is right.
         let placeholderPos = dropIndex < blocks.length ? blocks[dropIndex].from : this.view.state.doc.length;
         const atCollapse = collapses.find((range) => placeholderPos > range.from && placeholderPos <= range.to);
@@ -785,7 +785,7 @@ const createDragPlugin = (
 
 const dragTheme = EditorView.theme({
   // The grip is a floating overlay (see `createGripOverlay`) pinned just left of the content, so it tracks
-  // a centered content column — a CodeMirror gutter is stuck at the scroller edge and can't. Positioned
+  // a centered content column - a CodeMirror gutter is stuck at the scroller edge and can't. Positioned
   // via fixed coordinates (viewport space), refreshed on layout/scroll. The inner box supplies the hover
   // affordance; this only pins/sizes it.
   '.cm-blockDragHandle': {
@@ -889,7 +889,7 @@ export const createBlockDrag = ({
 
 /**
  * Floating grip overlay, one per active block (caret / hovered / selected), pinned just left of the
- * content's left edge — unlike a CodeMirror gutter (stuck at the scroller edge) it tracks a `max-width` +
+ * content's left edge - unlike a CodeMirror gutter (stuck at the scroller edge) it tracks a `max-width` +
  * `mx-auto` centered content column. Positions come from `coordsAtPos` (real DOM geometry, not the height
  * map) and refresh on layout and scroll; presses arm the drag plugin. Grips whose row is scrolled out of
  * the editor are dropped.
@@ -935,7 +935,7 @@ const createGripOverlay = (
 
       #onScroll = () => this.#schedule();
 
-      // A keyed measure runs in CodeMirror's measure cycle — after layout, including the initial one — so
+      // A keyed measure runs in CodeMirror's measure cycle - after layout, including the initial one - so
       // `coordsAtPos` is valid (unlike a bare `rAF` fired before first layout). Requests coalesce by key.
       #measure = {
         key: this,
@@ -948,7 +948,7 @@ const createGripOverlay = (
       }
 
       #read(view: EditorView): GripPosition[] {
-        // While dragging, the static grip is hidden — the drag preview carries its own handle instead.
+        // While dragging, the static grip is hidden - the drag preview carries its own handle instead.
         if (view.plugin(dragPlugin)?.dragging) {
           return [];
         }

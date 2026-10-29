@@ -145,7 +145,7 @@ const index = Command.make(
         ].join('\n'),
       );
     }),
-).pipe(Command.withDescription('Index the repository (incremental — only files whose mtime changed).'));
+).pipe(Command.withDescription('Index the repository (incremental - only files whose mtime changed).'));
 
 const withStore = <A, E, R>(
   root: Option.Option<string>,
@@ -323,7 +323,7 @@ const types = Command.make(
               .join(', ')}`,
             `${targets.length} files in ${seconds(Date.now() - started)}: ${score.agree} agree, ${score.partial} partial, ${score.unresolved} unresolved, ${score.deferred} deferred, ${score.disagree} disagree, ${score.skipped} skipped; ${bound} bound across files` +
               (scored > 0
-                ? ` — ${((100 * (score.agree + score.partial)) / scored).toFixed(1)}% of answered agree`
+                ? ` - ${((100 * (score.agree + score.partial)) / scored).toFixed(1)}% of answered agree`
                 : ''),
           ].join('\n'),
       );
@@ -510,5 +510,5 @@ export const command = Command.make('code-index', serveFlags, serveHandler).pipe
   ]),
 );
 
-/** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */
+/** Runs one command; `Layer.launch` is not involved - every command opens and closes its own store. */
 export const run = Command.runWith(command, { version: VERSION });

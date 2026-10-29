@@ -231,8 +231,8 @@ describe('DOCS', () => {
         // No label: the fixture's task type declares no label field.
         expect(lines[0]).toMatch(/^com\.example\.type\.task \w+$/);
         expect(lines).toContain('  title: "Write"');
-        expect(lines.some((line) => /^ {2}owner: → com\.example\.type\.person \w+ "Ada"$/.test(line))).toBe(true);
-        expect(lines.some((line) => /^ {2}parent: → com\.example\.type\.project \w+ "Launch"$/.test(line))).toBe(true);
+        expect(lines.some((line) => /^ {2}owner: -> com\.example\.type\.person \w+ "Ada"$/.test(line))).toBe(true);
+        expect(lines.some((line) => /^ {2}parent: -> com\.example\.type\.project \w+ "Launch"$/.test(line))).toBe(true);
         expect(lines).toContain('  relations: in: assigned ×1');
         expect(lines).toContain('  referenced by: project.tasks ×1');
 

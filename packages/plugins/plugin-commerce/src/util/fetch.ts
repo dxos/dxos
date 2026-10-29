@@ -35,7 +35,7 @@ export type FetchPageOptions = {
   render?: boolean;
   // CSS selector to await before reading rendered HTML (only when rendering).
   waitForSelector?: string;
-  // Render in a focused (foreground) tab — helps sites that gate background tabs.
+  // Render in a focused (foreground) tab - helps sites that gate background tabs.
   active?: boolean;
 };
 

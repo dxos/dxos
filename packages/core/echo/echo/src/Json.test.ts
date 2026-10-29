@@ -21,7 +21,7 @@ const makeStubDb = (objects: Record<string, unknown>): Database.Database => {
 };
 
 /**
- * Run a value through the replacer's public contract — `JSON.stringify(value, replacer)` —
+ * Run a value through the replacer's public contract - `JSON.stringify(value, replacer)` -
  * then re-parse the result so tests can assert on plain JS shapes. This mirrors the way
  * the JSON highlighter invokes the replacer in production.
  */
@@ -141,7 +141,7 @@ describe('createRefReplacer', () => {
     });
   });
 
-  test('depth budget counts ref hops, not tree depth — a ref deep in a plain tree still resolves', () => {
+  test('depth budget counts ref hops, not tree depth - a ref deep in a plain tree still resolves', () => {
     // A ref nested under arbitrarily many plain objects is one ref hop from the root, so
     // `depth: 1` resolves it. `depth: 0` leaves it encoded.
     const innerId = EntityId.random();
@@ -158,7 +158,7 @@ describe('createRefReplacer', () => {
   test('inlines refs when invoked through safeStringify (production path)', () => {
     // `JsonHighlighter` runs the replacer through `@dxos/util/safeStringify`, whose inner
     // wrapper short-circuits the root call without forwarding it to the user's filter. The
-    // replacer must therefore work on a per-call basis — not as a one-shot root tree walk.
+    // replacer must therefore work on a per-call basis - not as a one-shot root tree walk.
     // This regression-tests that integration: the `content` ref must inline.
     const targetId = EntityId.random();
     const target = { toJSON: () => ({ name: 'README content' }) };

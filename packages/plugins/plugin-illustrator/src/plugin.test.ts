@@ -16,7 +16,7 @@ await Harness.preload({ plugins: [ClientPlugin.make({}), IllustratorPlugin.make(
 
 describe('IllustratorPlugin', () => {
   // Canvas is written to the database by every variant's create flow, so the plugin that owns the
-  // type must register it — registering it from a renderer plugin breaks the others when disabled.
+  // type must register it - registering it from a renderer plugin breaks the others when disabled.
   test('registers both the Drawing and Canvas schemas', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), IllustratorPlugin.make()],

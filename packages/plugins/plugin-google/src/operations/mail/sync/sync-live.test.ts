@@ -23,7 +23,7 @@ import {
 import { googleSyncLiveServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /**
- * Bidirectional tag sync against a REAL Gmail account — the one layer the mock cannot answer, because
+ * Bidirectional tag sync against a REAL Gmail account - the one layer the mock cannot answer, because
  * what is being tested is Gmail's actual behaviour rather than our model of it.
  *
  * Skipped unless `.secrets/` holds credentials (see `TESTING.md`). It WRITES labels, so it asserts the
@@ -63,7 +63,7 @@ describeLive('gmail tag sync (live)', { timeout: 120_000 }, () => {
     }
     const json = await response.json();
     if (!response.ok) {
-      throw new Error(`gmail ${path} → ${response.status}: ${JSON.stringify(json)}`);
+      throw new Error(`gmail ${path} -> ${response.status}: ${JSON.stringify(json)}`);
     }
     return json;
   };
@@ -133,7 +133,7 @@ describeLive('gmail tag sync (live)', { timeout: 120_000 }, () => {
   test('a locally applied star reaches Gmail, and a Gmail label reaches the tag index', async ({ expect }) => {
     const { db, mailbox, connection, binding } = await seed();
 
-    // Run 1 — pull real mail and record the reconciliation base.
+    // Run 1 - pull real mail and record the reconciliation base.
     const first = await sync(db, connection, binding);
     expect(first.newMessages).toBeGreaterThan(0);
 
@@ -147,16 +147,16 @@ describeLive('gmail tag sync (live)', { timeout: 120_000 }, () => {
 
     const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
 
-    // Local → provider: star one message in the tag index.
+    // Local -> provider: star one message in the tag index.
     const starred = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('starred'), label: 'Starred' });
     const starredUri = Obj.getURI(starred).toString();
     Tagging.set(local, starredUri, { index: tagIndex });
 
-    // Provider → local: label a different message at Gmail directly.
+    // Provider -> local: label a different message at Gmail directly.
     await gmail(`/messages/${remoteGmailId}/modify`, { method: 'POST', body: { addLabelIds: ['IMPORTANT'] } });
     await db.flush({ indexes: true });
 
-    // Run 2 — pushes the star, pulls the label.
+    // Run 2 - pushes the star, pulls the label.
     await sync(db, connection, binding);
 
     expect(await labelsOf(localGmailId)).toContain('STARRED');

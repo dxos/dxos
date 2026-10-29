@@ -12,7 +12,7 @@ import { isTruthy } from '@dxos/util';
 import { type ChatEvent } from '../components/Chat/events.ts';
 
 /**
- * CodeMirror keymap shared by the chat document (Thread) and the prompt editor — pressing
+ * CodeMirror keymap shared by the chat document (Thread) and the prompt editor - pressing
  * Mod-Arrow keys when either editor is focused emits the corresponding `ChatEvent` on the
  * shared event bus.
  */

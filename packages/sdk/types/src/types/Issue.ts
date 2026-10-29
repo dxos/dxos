@@ -38,7 +38,7 @@ export class Issue extends Type.makeObject<Issue>(DXN.make('org.dxos.type.issue'
       Annotation.GeneratorAnnotation.set('lorem.sentence'),
     ),
 
-    /** Canonical web URL — stored rather than derived, since only the host knows its URL shape. */
+    /** Canonical web URL - stored rather than derived, since only the host knows its URL shape. */
     url: Format.URL.pipe(Schema.annotate({ title: 'URL' }), Schema.optional),
 
     state: State.pipe(Schema.annotate({ title: 'State' })),
@@ -63,6 +63,6 @@ export const make = (props: Obj.MakeProps<typeof Issue>): Issue => Obj.make(Issu
 /** Returns true when value is an Issue object. */
 export const instanceOf = (value: unknown): value is Issue => Obj.instanceOf(Issue, value);
 
-/** `owner/repo#123` — derived, so it cannot disagree with the parts it is built from. */
+/** `owner/repo#123` - derived, so it cannot disagree with the parts it is built from. */
 export const reference = (issue: Pick<Issue, 'owner' | 'repo' | 'number'>): string =>
   `${issue.owner}/${issue.repo}#${issue.number}`;

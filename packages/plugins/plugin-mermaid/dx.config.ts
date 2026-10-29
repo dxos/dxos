@@ -21,7 +21,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       Generate diagrams from simple text-based definitions using Mermaid syntax.
       Create flowcharts, sequence diagrams, class diagrams, state diagrams, entity-relationship
-      diagrams, Gantt charts, pie charts, Git graphs, mindmaps, and timelines — all from
+      diagrams, Gantt charts, pie charts, Git graphs, mindmaps, and timelines - all from
       plain-text source embedded directly in your documents.
 
       The plugin integrates with the markdown editor as a CodeMirror extension.

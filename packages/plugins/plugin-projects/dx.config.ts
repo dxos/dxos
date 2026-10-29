@@ -94,7 +94,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
       () => import('./src/capabilities/subject-context.ts', { with: { type: 'module-url' } }),
     ),
-    // Injects `Assign to agent`, an `Assign to <agent>` per agent, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
+    // Injects `Assign to agent`, an `Assign to <agent>` per agent, `Copy prompt` and `Move to...` into plugin-tasks' task rows.
     Capability.lazyModule(
       'TaskAction',
       // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.

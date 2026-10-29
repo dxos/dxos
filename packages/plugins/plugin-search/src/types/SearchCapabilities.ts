@@ -28,7 +28,7 @@ export type QueryActionContext = {
 };
 
 /**
- * Something the search dialog can do with the text typed into it other than search for it — import
+ * Something the search dialog can do with the text typed into it other than search for it - import
  * the pull request a pasted URL names, say. The dialog offers it above the results and opens the
  * object it answers with.
  */

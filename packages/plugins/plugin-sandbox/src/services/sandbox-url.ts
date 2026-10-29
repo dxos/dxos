@@ -21,7 +21,7 @@ export type EdgeContext = {
 /**
  * Base URL of the sandbox-service REST API.
  *
- * Normally `<edge>/sandbox`, derived from `runtime.services.edge.url` — sandbox-service is reached
+ * Normally `<edge>/sandbox`, derived from `runtime.services.edge.url` - sandbox-service is reached
  * through the EDGE entrypoint like every other service. `runtime.services.sandbox.url` stays as the
  * override for a worker that is not behind EDGE (a local `wrangler dev` on port 8792).
  */
@@ -36,7 +36,7 @@ export const getSandboxServiceUrl = (config: Config): string => {
 /**
  * Whether a credential may be put on the wire to `url`.
  *
- * HTTPS, or a loopback host — `runtime.services.sandbox.url` exists to point at a local
+ * HTTPS, or a loopback host - `runtime.services.sandbox.url` exists to point at a local
  * `wrangler dev`, which is plain HTTP but never leaves the machine. Any other `http://` target is a
  * credential in cleartext across a network, so the presentation is withheld rather than sent.
  */

@@ -24,7 +24,7 @@ type StoryArgs = {
 
 /**
  * The seeded mailbox's one thread opened from its most recent message, beside the JSON of the
- * selected message — summaries in particular come from a separate annotation feed rather than from
+ * selected message - summaries in particular come from a separate annotation feed rather than from
  * the message.
  */
 const DefaultStory = () => (
@@ -38,7 +38,7 @@ const meta = {
     types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
     plugins: [InboxPlugin.make(), PreviewPlugin.make(), StoryModulesPlugin()],
     onInit: async ({ space }) => {
-      // Thread pool of size 1 assigns every seeded message the same threadId — a single
+      // Thread pool of size 1 assigns every seeded message the same threadId - a single
       // conversation of exactly `length` messages, oldest to newest.
       const mailbox = await initializeMailbox(space.db, length, 1);
       // Half the conversation carries a derived summary, so the summary tile renders from a

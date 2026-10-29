@@ -33,7 +33,7 @@ export type S3HostOptions = {
  * Binds `@dxos/blob/s3` to a space's database.
  *
  * Lives here rather than in `blob-s3` because it needs `credentialsLayerFromDatabase`, which lives
- * here — reusing it rather than reading `AccessToken` objects directly is what keeps a
+ * here - reusing it rather than reading `AccessToken` objects directly is what keeps a
  * server-custodied token resolving through EDGE instead of yielding its placeholder. Keeping it out
  * of `blob-s3` also keeps that package free of `@dxos/echo`, so it stays registrable anywhere.
  *

@@ -45,7 +45,7 @@ type ExtrudeState = {
   startT: number;
   /** Manifold solid at the start of this extrusion (cloned). */
   baseSolid: Manifold;
-  /** Pre-computed bounding box — cached to avoid repeated WASM calls during drag. */
+  /** Pre-computed bounding box - cached to avoid repeated WASM calls during drag. */
   baseBBox: { min: number[]; max: number[] };
   /** Timestamp of last move update (for throttling). */
   lastMoveTime: number;
@@ -81,7 +81,7 @@ const projectRayOntoNormal = (
 
   const denom = a * c - b * b;
   if (Math.abs(denom) < 1e-10) {
-    // Lines are parallel — return 0.
+    // Lines are parallel - return 0.
     return 0;
   }
 
@@ -144,7 +144,7 @@ export class ExtrudeTool implements Tool {
       ctx.selection.highlightMesh.setEnabled(false);
     }
 
-    // Deep-copy the solid via getMesh() roundtrip — avoids heavyweight CSG union
+    // Deep-copy the solid via getMesh() roundtrip - avoids heavyweight CSG union
     // and ensures the clone shares no internal WASM state with the original.
     const { Manifold } = ctx.manifold;
     const baseSolid = new Manifold(currentSolid.getMesh());
@@ -241,7 +241,7 @@ export class ExtrudeTool implements Tool {
       distance = snapToGrid(facePos + distance) - facePos;
     }
 
-    // No significant drag — clean up without creating a new solid.
+    // No significant drag - clean up without creating a new solid.
     // This avoids unnecessary WASM allocations on clicks without drag.
     if (Math.abs(distance) < DISTANCE_EPSILON) {
       this._state.baseSolid.delete();

@@ -20,7 +20,7 @@ import { printProfileCreated } from './util.ts';
 
 // `edgeFeatures` must match Composer's defaults (see composer-app/dx.yml): without
 // `signaling: true` the client silently falls back to an isolated in-memory signal manager and
-// device invitations hang at "Connecting…" (host and guest never meet in the swarm).
+// device invitations hang at "Connecting..." (host and guest never meet in the swarm).
 const makeTemplate = (edgeUrl: string) => trim`
   version: 1
   runtime:

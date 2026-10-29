@@ -19,7 +19,7 @@ export type TrackHeaderProps = {
 /**
  * Frozen left column listing row labels. Translates vertically in sync with viewport scroll.
  *
- * Row dividers and alternating shading intentionally MATCH the canvas — opaque borders
+ * Row dividers and alternating shading intentionally MATCH the canvas - opaque borders
  * and opaque alternating fills make the labels look out of phase with the cell area
  * even when the y-positions align. We mirror the canvas's transparent-overlay model
  * here so the frozen column reads as a direct continuation of the grid.

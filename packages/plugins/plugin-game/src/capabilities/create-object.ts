@@ -35,7 +35,7 @@ export default Capability.makeModule(
             .createVariant(input ?? {})
             .pipe(Effect.provideService(Database.Service, Database.makeService(options.db)));
 
-          // Add variant state to the database. Stays hidden — it's referenced by Game and
+          // Add variant state to the database. Stays hidden - it's referenced by Game and
           // shouldn't appear as a top-level item in the user's space.
           yield* Operation.invoke(
             SpaceOperation.AddObject,
@@ -51,7 +51,7 @@ export default Capability.makeModule(
             variant: stateObject,
           });
 
-          // Add the user-facing Game wrapper. Not hidden — this is the object the user sees
+          // Add the user-facing Game wrapper. Not hidden - this is the object the user sees
           // and navigates to. If this second write fails, roll back the variant state so we
           // don't leak an orphaned object into the space.
           return yield* Operation.invoke(

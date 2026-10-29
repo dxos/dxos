@@ -446,7 +446,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 /**
  * Ollama decodes `tool_calls[].function.arguments` into a map and rejects a string with 400, while
- * OpenAI specifies that string — so the encoding follows the format rather than the value.
+ * OpenAI specifies that string - so the encoding follows the format rather than the value.
  */
 const encodeToolParams = (part: Prompt.ToolCallPart, apiFormat: ApiFormat): string | Record<string, unknown> => {
   if (apiFormat === 'ollama') {
@@ -969,7 +969,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                 }
               });
 
-            // Buffer lines across chunk boundaries — newline-delimited frames and UTF-8
+            // Buffer lines across chunk boundaries - newline-delimited frames and UTF-8
             // characters can be split across network chunks.
             const decoder = new TextDecoder();
             let pendingLine = '';

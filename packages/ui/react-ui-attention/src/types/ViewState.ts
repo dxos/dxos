@@ -25,9 +25,9 @@ export interface Aspect<T, Encoded = T> {
 /**
  * Identity helper that pins the value type from the schema while keeping the literal `key`/`backend`.
  * Declares an aspect of per-context UI state (selection, scroll, view mode, split) read/written via
- * {@link Manager} — through `useViewState`/`useViewStateActions` in React or the
+ * {@link Manager} - through `useViewState`/`useViewStateActions` in React or the
  * `AttentionCapabilities.ViewState` capability in operations. Durability is the `backend`'s: `local`
- * survives reloads (best-effort — degrades to in-memory when storage is blocked), `memory` is
+ * survives reloads (best-effort - degrades to in-memory when storage is blocked), `memory` is
  * session-only.
  *
  * @idiom org.dxos.react-ui-attention.viewState

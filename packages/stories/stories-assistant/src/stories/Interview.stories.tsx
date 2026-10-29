@@ -255,10 +255,10 @@ const waitForSpace = async (
  * interviewee's profile panel and the agent's state (mode, counts, facts, knowledge graph).
  *
  * Test:
- * 1. Enter "Hi, I am Rich." — the agent resolves Rich (the panel title changes) and asks what he is focused on.
- * 2. Enter any answer — two facts about what Rich works on and two proposed goals appear in the panel.
- * 3. Enter any answer — a fact about the blocker appears.
- * 4. Enter any answer — both goals become Confirmed and the agent summarizes.
+ * 1. Enter "Hi, I am Rich." - the agent resolves Rich (the panel title changes) and asks what he is focused on.
+ * 2. Enter any answer - two facts about what Rich works on and two proposed goals appear in the panel.
+ * 3. Enter any answer - a fact about the blocker appears.
+ * 4. Enter any answer - both goals become Confirmed and the agent summarizes.
  */
 export const Default: Story = {
   decorators,
@@ -328,10 +328,10 @@ export const TestInterviewScripted: Story = {
  * identity, so no key reaches the browser. Live AI, so excluded from CI.
  *
  * Steps:
- * 1. Enter "Hi, I am Rich." — the agent states its purpose, resolves you (the panel title becomes your name) and asks one open question.
- * 2. Describe a goal with a deadline (e.g. "Get the interlocutor demo working end to end by the end of October.") — a proposed goal and facts appear in the panel.
- * 3. Answer its follow-ups (why, obstacles, who is involved) — each answer adds facts.
- * 4. When it reads your goals back, confirm them — the goals become Confirmed and the agent summarizes.
+ * 1. Enter "Hi, I am Rich." - the agent states its purpose, resolves you (the panel title becomes your name) and asks one open question.
+ * 2. Describe a goal with a deadline (e.g. "Get the interlocutor demo working end to end by the end of October.") - a proposed goal and facts appear in the panel.
+ * 3. Answer its follow-ups (why, obstacles, who is involved) - each answer adds facts.
+ * 4. When it reads your goals back, confirm them - the goals become Confirmed and the agent summarizes.
  */
 export const Live: Story = {
   decorators: createDecorators({

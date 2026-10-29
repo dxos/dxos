@@ -26,8 +26,8 @@ export const translations = [
       [ThreadNamespace.key]: {
         'plugin.name': 'Chat',
         'channel-title.label': 'Title',
-        'message.placeholder': 'Reply…',
-        'activity.message': 'Processing…',
+        'message.placeholder': 'Reply...',
+        'activity.message': 'Processing...',
         'anonymous.label': 'Anonymous',
         'delete-message-block.label': 'Delete message block',
         'detached-thread.label': 'Referenced content was removed',
@@ -72,7 +72,7 @@ export const translations = [
         'meeting-summary.label': 'Summary',
         'summarize.label': 'Summarize',
         'summarizing.label': 'Creating summary...',
-        'create-summary.message': 'A summary doesn’t exist for this meeting yet. Create one now?',
+        'create-summary.message': "A summary doesn't exist for this meeting yet. Create one now?",
 
         'icon-pin.label': 'Pin video',
         'icon-unpin.label': 'Unpin video',

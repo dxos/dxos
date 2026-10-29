@@ -35,7 +35,7 @@ export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 /**
  * What is open in a workspace. Derived from the URL, which is the record of it, so this is never
- * persisted and never written by hand — {@link applyActive} is its only writer.
+ * persisted and never written by hand - {@link applyActive} is its only writer.
  */
 export const OpenDeck = Schema.Struct({
   /** Item IDs of planks currently active. A singleton list renders fullbleed; 2+ render as a sliding deck. */
@@ -54,13 +54,13 @@ export const defaultOpenDeck: OpenDeck = { active: [], inactive: [] };
 /** A workspace's persisted deck preferences: how its planks look, not which ones are open. */
 export const StoredDeck = Schema.Struct({
   /**
-   * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
+   * Absolute widths in rem, keyed by item id - a plank keeps its width wherever it sits. The companion's
    * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
    */
   plankSizing: Schema.mutableKey(PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
-   * Named planks, as name → the plank id holding that name. A name makes a plank behave like a browser
+   * Named planks, as name -> the plank id holding that name. A name makes a plank behave like a browser
    * tab: opening under a name that is already taken replaces its holder in place. A plank's detail is
    * the plank holding its detail name (see `detailName`); a flattened deck shows that one in the
    * companion rather than opening it, so detail names outlive their holder's plank and are pruned only
@@ -74,7 +74,7 @@ export type StoredDeck = Schema.Schema.Type<typeof StoredDeck>;
 export type DeckState = StoredDeck & OpenDeck;
 
 /**
- * Deck key for the "no workspace resolved yet" sentinel — the initial `activeDeck` of a fresh profile,
+ * Deck key for the "no workspace resolved yet" sentinel - the initial `activeDeck` of a fresh profile,
  * held until the plugin that owns spaces switches to a real workspace. Not a graph node id, so it is
  * never serialized into the URL (see the deck's url-handler).
  */
@@ -113,13 +113,13 @@ export const StoredDeckState = Schema.Struct({
   sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
   /**
    * Openness of the deck-level complementary sidebar on desktop, and of the whole companion drawer on
-   * mobile — read it through {@link getCompanionSelection} rather than directly, which is what keeps
+   * mobile - read it through {@link getCompanionSelection} rather than directly, which is what keeps
    * the two meanings apart.
    */
   complementarySidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
   /**
    * Which panel that sidebar shows: a deck-level companion variant on desktop, but the selected *plank*
-   * companion on mobile, where the drawer has no planks to hang `companionPlanks` off — see
+   * companion on mobile, where the drawer has no planks to hang `companionPlanks` off - see
    * {@link getCompanionSelection} for the platform-correct read.
    */
   complementarySidebarPanel: Schema.optional(Schema.String),
@@ -150,11 +150,11 @@ export type CompanionSelection = {
  * The plank companion the host is showing, in one shape for consumers outside the layout (e.g. the
  * assistant provisioning a chat for the plank). The deck marks the pane open per plank
  * (`companionPlanks`) and keeps the chosen tab in global view state, while the mobile drawer has no
- * planks and holds both in `complementarySidebar*` — that split is a layout detail, not one every
+ * planks and holds both in `complementarySidebar*` - that split is a layout detail, not one every
  * consumer should have to re-derive.
  *
- * Both sets of fields can be *written* on either platform — a URL restore invokes `UpdateCompanion`
- * without knowing the host — so it is this read, not the writes, that makes the answer correct: each
+ * Both sets of fields can be *written* on either platform - a URL restore invokes `UpdateCompanion`
+ * without knowing the host - so it is this read, not the writes, that makes the answer correct: each
  * branch consults only the fields its host actually renders from and ignores the other's.
  */
 export const getCompanionSelection = (

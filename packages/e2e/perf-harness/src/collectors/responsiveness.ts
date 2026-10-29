@@ -21,7 +21,7 @@ const LAG_INTERVAL_MS = 16;
  * Installs the timer-drift probe and the long-task observer before any page script runs.
  *
  * Two probes rather than one because they see different things: the Long Tasks API reports work on
- * the main thread only, while drift is measurable in ANY realm — and the realm that blocks under a
+ * the main thread only, while drift is measurable in ANY realm - and the realm that blocks under a
  * large space is usually the shared worker, which no page-side API can observe.
  */
 export const installProbes = async (page: Page): Promise<void> => {
@@ -59,11 +59,11 @@ export const installProbes = async (page: Page): Promise<void> => {
 /**
  * Installs the drift probe in a non-page realm, idempotently.
  *
- * `addInitScript` reaches the page and its frames only, so the shared worker — the realm that
- * actually blocks when a space gets large — needs the probe pushed in over CDP. The idempotence
+ * `addInitScript` reaches the page and its frames only, so the shared worker - the realm that
+ * actually blocks when a space gets large - needs the probe pushed in over CDP. The idempotence
  * guard is `__perfLagArmed` rather than the sample array, because the drain DEFINES that array: a
  * realm born mid-stage is drained at that stage's closing boundary before it is ever probed, and a
- * guard on the array then reported `present` for the rest of the run while no interval existed —
+ * guard on the array then reported `present` for the rest of the run while no interval existed -
  * every worker lag column read zero.
  */
 export const WORKER_PROBE_EXPRESSION = `(() => {
@@ -110,7 +110,7 @@ const drainPage = (page: Page): Promise<Samples> =>
  * Drains the drift probe from a non-page realm over CDP.
  *
  * `Runtime.evaluate` against the worker's own context, because there is no Playwright handle for a
- * shared worker — and a shared worker blocked for 800 ms on a ref-resolution storm is the failure
+ * shared worker - and a shared worker blocked for 800 ms on a ref-resolution storm is the failure
  * this whole metric exists to catch.
  */
 export const WORKER_DRAIN_EXPRESSION =
@@ -144,14 +144,14 @@ export const percentile = (values: number[], fraction: number): number => {
   }
   const sorted = [...values].sort((left, right) => left - right);
   // Nearest-rank: `ceil(fraction * n) - 1`. `floor(fraction * n)` overshoots by one whenever the
-  // product is an integer — p95 of 20 samples would return the maximum (index 19) rather than
+  // product is an integer - p95 of 20 samples would return the maximum (index 19) rather than
   // index 18, which reports the worst sample as if it were the 95th percentile.
   const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1));
   return Math.round(sorted[index]);
 };
 
 /**
- * Total Blocking Time over the stage — each long task's duration above 50 ms.
+ * Total Blocking Time over the stage - each long task's duration above 50 ms.
  *
  * Not gated to a paint event as the Lighthouse definition is: a stage that starts long after first
  * contentful paint has no such gate, so every long task inside it blocks an interaction the user

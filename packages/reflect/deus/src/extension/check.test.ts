@@ -67,7 +67,7 @@ describe('mdl lint', () => {
 
     test('missing decider', ({ expect }) => {
       expect(messages(block('decision D-1: Use X.\n  date: 2026-10-20'))).toEqual([
-        'Decision is missing `by:` — name the user: or agent: that made it.',
+        'Decision is missing `by:` - name the user: or agent: that made it.',
       ]);
     });
 
@@ -79,7 +79,7 @@ describe('mdl lint', () => {
 
     test('agent decision without principal', ({ expect }) => {
       expect(messages(block('decision D-1: Use X.\n  by: agent:claude-code'))).toEqual([
-        'Agent decision is missing `for:` — name the user: the agent acted for.',
+        'Agent decision is missing `for:` - name the user: the agent acted for.',
       ]);
     });
 
@@ -115,13 +115,13 @@ describe('mdl lint', () => {
 
     test('agent question without principal', ({ expect }) => {
       expect(messages(block('question Q-1: X or Y?\n  by: agent:claude-code'))).toEqual([
-        'Agent question is missing `for:` — name the user: the agent acted for.',
+        'Agent question is missing `for:` - name the user: the agent acted for.',
       ]);
     });
 
     test('missing asker', ({ expect }) => {
       expect(messages(block('question Q-1: X or Y?'))).toEqual([
-        'Question is missing `by:` — name the user: or agent: that made it.',
+        'Question is missing `by:` - name the user: or agent: that made it.',
       ]);
     });
   });
@@ -166,13 +166,13 @@ describe('mdl lint', () => {
 
     test('edited decision', ({ expect }) => {
       expect(checkChangelogChange(spec('X', d1), spec('X', decision('D-1', 'Use Z.'), d2))).toEqual([
-        'Decision D-1 was edited — the changelog is append-only; supersede it instead.',
+        'Decision D-1 was edited - the changelog is append-only; supersede it instead.',
       ]);
     });
 
     test('removed decision', ({ expect }) => {
       expect(checkChangelogChange(spec('X', d1, d2), spec('Y', d2, decision('D-3', 'Use Z.')))).toEqual([
-        'Decision D-1 was removed — the changelog is append-only; supersede it instead.',
+        'Decision D-1 was removed - the changelog is append-only; supersede it instead.',
       ]);
     });
 
@@ -184,7 +184,7 @@ describe('mdl lint', () => {
 
     test('out of sequence id', ({ expect }) => {
       expect(checkChangelogChange(spec('X', d1), spec('Y', d1, decision('D-3', 'Use Z.')))).toEqual([
-        'Decision D-3 is out of sequence — the next id is D-2.',
+        'Decision D-3 is out of sequence - the next id is D-2.',
       ]);
     });
 
@@ -211,19 +211,19 @@ describe('mdl lint', () => {
 
       test('edited question', ({ expect }) => {
         expect(checkChangelogChange(spec('X', d1, q1), spec('X', d1, question('Q-1', 'X or Z?')))).toEqual([
-          'Question Q-1 was edited — the changelog is append-only; ask a new question instead.',
+          'Question Q-1 was edited - the changelog is append-only; ask a new question instead.',
         ]);
       });
 
       test('removed question', ({ expect }) => {
         expect(checkChangelogChange(spec('X', d1, q1), spec('X', d1, d2))).toEqual([
-          'Question Q-1 was removed — the changelog is append-only; answer it with a decision instead.',
+          'Question Q-1 was removed - the changelog is append-only; answer it with a decision instead.',
         ]);
       });
 
       test('out of sequence id', ({ expect }) => {
         expect(checkChangelogChange(spec('X', d1, q1), spec('X', d1, q1, question('Q-3', 'Z?')))).toEqual([
-          'Question Q-3 is out of sequence — the next id is Q-2.',
+          'Question Q-3 is out of sequence - the next id is Q-2.',
         ]);
       });
 
@@ -237,7 +237,7 @@ describe('mdl lint', () => {
         const a1 = decision('D-2', 'Y.', '\n  answers: Q-1');
         expect(
           checkChangelogChange(spec('X', d1, q1, a1), spec('X', d1, q1, a1, decision('D-3', 'Z.', '\n  answers: Q-1'))),
-        ).toEqual(['Decision D-3 answers Q-1, which D-2 already answered — supersede D-2 instead.']);
+        ).toEqual(['Decision D-3 answers Q-1, which D-2 already answered - supersede D-2 instead.']);
         expect(
           checkChangelogChange(
             spec('X', d1, q1, a1),
@@ -480,7 +480,7 @@ describe('mdl references and dependencies', () => {
     expect(lint(spec('See org.test.alpha#F-1.'))).toEqual([
       {
         source: 'mdl/ref',
-        message: '`org.test.alpha` is not a dependency; add `uses org.test.alpha: …` under ## Dependencies.',
+        message: '`org.test.alpha` is not a dependency; add `uses org.test.alpha: ...` under ## Dependencies.',
       },
     ]);
   });

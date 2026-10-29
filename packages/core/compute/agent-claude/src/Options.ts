@@ -13,7 +13,7 @@ import type { Options as SdkOptions } from '@anthropic-ai/claude-agent-sdk';
 export const READ_ONLY_TOOLS: readonly string[] = ['Read', 'Grep', 'Glob'];
 
 /**
- * Scoped deny rules, which apply in every permission mode including `bypassPermissions` — so they
+ * Scoped deny rules, which apply in every permission mode including `bypassPermissions` - so they
  * survive a later loosening of {@link make}'s defaults.
  */
 export const DENY_RULES: readonly string[] = ['Bash(rm *)', 'Bash(git push *)', 'Bash(git reset *)'];
@@ -36,7 +36,7 @@ export type MakeOptions = {
  * Builds the SDK options for a host turn.
  *
  * `dontAsk` denies anything that would otherwise prompt, which is what makes a host with no
- * approval UI safe to run unattended — the alternative modes either block forever waiting on a
+ * approval UI safe to run unattended - the alternative modes either block forever waiting on a
  * prompt nobody can answer (`default`) or hand an unwatched process write access
  * (`acceptEdits`, `bypassPermissions`). Denied calls are still reported, so a real permission
  * surface can be designed from what actual workloads asked for rather than from guesswork.
@@ -45,7 +45,7 @@ export type MakeOptions = {
  * whose hooks would otherwise fire inside this nested agent.
  */
 /**
- * The SDK scopes tool execution to `cwd` but never tells the agent about it — left alone it assumes
+ * The SDK scopes tool execution to `cwd` but never tells the agent about it - left alone it assumes
  * the repository root, builds absolute paths from there, and burns a failed tool call per turn
  * before the error message reveals the real directory.
  */

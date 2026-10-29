@@ -66,7 +66,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     // TODO(burdon): Add log marker like this to logging lib. Auto add between tests?
     // TODO(burdon): Enable new Error to take second context obj: new Error('msg', {}).
-    log('————————————————————————————————————————');
+    log('----------------------------------------');
 
     const topic2 = PublicKey.random();
 

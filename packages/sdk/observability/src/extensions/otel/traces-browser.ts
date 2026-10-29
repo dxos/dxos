@@ -88,7 +88,7 @@ export class OtelTraces {
 
   /**
    * Forcibly flush the BatchSpanProcessor. Call before process exit / page unload
-   * to avoid losing queued spans (which manifests as "Missing Span" in SigNoz —
+   * to avoid losing queued spans (which manifests as "Missing Span" in SigNoz -
    * their already-exported children reference a parent that never made it to OTLP).
    */
   public async flush(): Promise<void> {
@@ -100,7 +100,7 @@ export class OtelTraces {
    * which forces a final export then terminates all span processors.
    *
    * Terminal and effectively one-shot: safe to call after `flush()`, but
-   * `flush()` MUST NOT be called after `close()` — shutdown stops further
+   * `flush()` MUST NOT be called after `close()` - shutdown stops further
    * exporting, so subsequent `close()`/`flush()` calls resolve without
    * emitting new spans.
    */

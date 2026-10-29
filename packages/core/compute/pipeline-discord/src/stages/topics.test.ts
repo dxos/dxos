@@ -82,13 +82,13 @@ describe('topics + persons over ECHO', () => {
     expect(channelTopics.length).toBe(2);
     expect(channelTopics.map((topic) => topic.startMessageId).sort()).toEqual(['1000', '1001']);
 
-    // Only Alice asked a question ("Should Composer use OPFS…?") → exactly one Person, linked
+    // Only Alice asked a question ("Should Composer use OPFS...?") -> exactly one Person, linked
     // from her agent profile by DXN.
     expect(result.persons.length).toBe(1);
     expect(result.persons[0].fullName).toBe('Alice');
     expect(Obj.getKeys(result.persons[0], 'discord.com')[0]?.id).toBe('Alice');
     const alice = result.agents.find((agent) => agent.label === 'Alice');
-    // The linkage is the Person's canonical ECHO URI (`echo://…`; historical profiles may carry DXNs).
+    // The linkage is the Person's canonical ECHO URI (`echo://...`; historical profiles may carry DXNs).
     expect(alice?.ref).toMatch(/^(echo:|dxn:)/);
   });
 });

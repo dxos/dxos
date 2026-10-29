@@ -17,7 +17,7 @@ import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
 import { OtelHarness } from '../../../testing/otel-harness.ts';
 import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
 
-/** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
+/** {@link seedMailboxBinding} with this provider's identity - the shared fixture defaults to neither. */
 const seedGmailBinding = (
   builder: EchoTestBuilder,
   options: Omit<Parameters<typeof seedMailboxBinding>[1], 'source' | 'connectorId'> = {},
@@ -25,14 +25,14 @@ const seedGmailBinding = (
 
 // Benchmarks the sync stack across dataset sizes to surface O(n²) growth (e.g. per-message
 // commit/append time rising with N), verifying at every size that the expected spans (root, fetch,
-// per-commit-phase) are still emitted — a span check on a trivial dataset wouldn't say anything about
+// per-commit-phase) are still emitted - a span check on a trivial dataset wouldn't say anything about
 // the run that actually matters. Gated by `DX_BENCH` so it never runs in normal CI; sizes overridable
 // via `DX_BENCH_SIZES=1000,5000,10000`. Run:
 //
 //   DX_BENCH=1 moon run plugin-inbox:test -- sync-bench.test.ts
 //
 // LOCAL-ONLY FIDELITY CAVEAT: this in-process `EchoTestBuilder` harness reproduces LOCAL costs (index
-// growth, automerge change cost, commit) but NOT the client→worker RPC / EDGE-replication contention
+// growth, automerge change cost, commit) but NOT the client->worker RPC / EDGE-replication contention
 // that dominated the real-app `appendToFeed` stall. Treat per-message growth here as a lower bound;
 // the replication-channel contention needs the real app (or a harness with a replication target).
 const SIZES = (process.env.DX_BENCH_SIZES ?? '1000,4000')
@@ -104,7 +104,7 @@ describe.runIf(process.env.DX_BENCH)('runGoogleSync benchmark', () => {
       }));
 
       // eslint-disable-next-line no-console
-      console.log(`\n=== dataset size ${size} → ${newMessages} synced (wall ${round(wallMs)}ms) ===`);
+      console.log(`\n=== dataset size ${size} -> ${newMessages} synced (wall ${round(wallMs)}ms) ===`);
       // eslint-disable-next-line no-console
       console.table(table);
 
@@ -115,7 +115,7 @@ describe.runIf(process.env.DX_BENCH)('runGoogleSync benchmark', () => {
       }
     }
 
-    // Growth summary: per-message time for each stage as N grows. A flat column ≈ linear scaling; a
+    // Growth summary: per-message time for each stage as N grows. A flat column ~ linear scaling; a
     // rising column is the O(n²) signal to chase down.
     if (SIZES.length > 1) {
       const growth = [...perMessageByStage.entries()].map(([stage, series]) => {

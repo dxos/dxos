@@ -173,7 +173,7 @@ describe('Feed query pagination', () => {
     expect(fromStart.map((obj) => (obj as TestSchema.Task).title)).toEqual(['a', 'b', 'c', 'd']);
 
     // A limited read from the start takes the first items by position, not whichever the scan met
-    // first — a page of items a reader cannot act on would stall it with work still behind them.
+    // first - a page of items a reader cannot act on would stall it with work still behind them.
     const firstPage = await db
       .query(
         Query.select(Filter.feedCursor({ begin: Feed.START }))
@@ -238,7 +238,7 @@ describe('Feed query pagination', () => {
     await db.flush();
     const feedUri = Feed.getFeedUri(feed)!;
 
-    // An automerge object carries no position, so the bound has no answer to give — better a refusal
+    // An automerge object carries no position, so the bound has no answer to give - better a refusal
     // than a query that silently returns everything. The start sentinel bounds nothing, but it is
     // still a cursor and is refused just the same rather than quietly running unbounded.
     for (const cursor of [Feed.Cursor.make('0'), Feed.START]) {
@@ -290,7 +290,7 @@ describe('Feed query pagination', () => {
   test('a limited read covers items appended after the last flush', async ({ expect }) => {
     const { db, feed } = await setupFeedWithTasks(builder, ['a', 'b']);
     await db.flush();
-    // Unpositioned until a position authority assigns one — a natural read still has to see it.
+    // Unpositioned until a position authority assigns one - a natural read still has to see it.
     await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'c' })]);
 
     const newest = await db

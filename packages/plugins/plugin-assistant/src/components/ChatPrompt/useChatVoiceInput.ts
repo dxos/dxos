@@ -27,7 +27,7 @@ const RECORDER_INTERVAL_MS = 200;
  */
 export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditorController | null>): void => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
-  // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
+  // Voice input is optional: tolerate the transcription plugin being absent (no session => inactive).
   const [session, setSession] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
   const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
@@ -57,7 +57,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
       wordIntervalMs: settings?.wordIntervalMs ?? 80,
     });
     // Deliberately not started here. `start` opens the pending-text block, which paints the
-    // "Recording…" placeholder and its confirm/discard affordances the moment the mic is tapped —
+    // "Recording..." placeholder and its confirm/discard affordances the moment the mic is tapped -
     // occupying the prompt before there is anything to confirm. The block is opened lazily by the
     // first transcription instead (see `handleSegments`), so tapping the mic changes nothing visible
     // and text simply appears when it arrives.
@@ -132,7 +132,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
     onSegments: handleSegments,
   });
 
-  // `useTranscriber` only constructs (and eventually closes) the transcriber — opening it is the
+  // `useTranscriber` only constructs (and eventually closes) the transcriber - opening it is the
   // consumer's job, and this hook never did, so `Transcriber._open` never ran, its recorder never
   // started, and no audio was captured. The placeholder appeared and nothing ever replaced it.
   useEffect(() => {

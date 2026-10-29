@@ -128,7 +128,7 @@ describe('layoutTimeline', () => {
   });
 
   test('the sub-agent delegation fixture', ({ expect }) => {
-    // External JSON → typed at this boundary; `buildExecutionGraph` reads only `meta`/`events`.
+    // External JSON -> typed at this boundary; `buildExecutionGraph` reads only `meta`/`events`.
     const messages = (subAgentFixture as unknown as Trace.Message[])
       .slice()
       .sort((left, right) => (left.events[0]?.timestamp ?? 0) - (right.events[0]?.timestamp ?? 0));

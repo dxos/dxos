@@ -9,13 +9,13 @@ import { buildThreads } from './internal/threads.ts';
 import { type TagResult } from './stages/tag.ts';
 
 // The topics pipeline (productized from the research harness): tag each message, then cluster its
-// threads into `Topic` objects with LLM summaries. Pure orchestration — the LLM-bearing steps (`tag`,
+// threads into `Topic` objects with LLM summaries. Pure orchestration - the LLM-bearing steps (`tag`,
 // `summarize`) are INJECTED so this is unit-testable with stubs; the plugin-inbox operation wires them
 // to the AI service and applies the results (tags via `Mailbox.applyTag`, topics + `AnchoredTo`
 // relations into the space). One-shot + resumable-lite: `limit` bounds a run, `skipMessage` /
 // `skipTopic` let a re-run resume past what a previous invocation already tagged / materialized.
 
-/** Per-message tag output — applied to the mailbox tag index by the caller. */
+/** Per-message tag output - applied to the mailbox tag index by the caller. */
 export type MessageTags = {
   readonly messageId: string;
   readonly tags: readonly string[];
@@ -24,11 +24,11 @@ export type MessageTags = {
 
 export type TopicsPipelineInput = {
   readonly messages: readonly Message.Message[];
-  /** Mailbox owner email — steers thread-state inference in `buildThreads`. */
+  /** Mailbox owner email - steers thread-state inference in `buildThreads`. */
   readonly ownerEmail: string;
-  /** Wall-clock ISO timestamp for `buildThreads` idle/state inference (injected — no `Date.now()` here). */
+  /** Wall-clock ISO timestamp for `buildThreads` idle/state inference (injected - no `Date.now()` here). */
   readonly now: string;
-  /** Cap messages tagged this run (resumable-lite); undefined → all. */
+  /** Cap messages tagged this run (resumable-lite); undefined -> all. */
   readonly limit?: number;
   /** Skip a message already tagged by a previous run (resume). */
   readonly skipMessage?: (messageId: string) => boolean;
@@ -43,7 +43,7 @@ export type TopicsPipelineInput = {
   readonly topicOptions?: TopicOptions;
   /** Progress hook: phase `'tag'` (per message) or `'topic'` (per summarized topic). */
   readonly onProgress?: (phase: 'tag' | 'topic', current: number, total: number) => void;
-  /** Cooperative cancellation — checked between messages; aborting stops after the current item. */
+  /** Cooperative cancellation - checked between messages; aborting stops after the current item. */
   readonly signal?: AbortSignal;
 };
 
@@ -56,7 +56,7 @@ export type TopicsPipelineDeps = {
 export type TopicsPipelineResult = {
   readonly messageTags: readonly MessageTags[];
   /**
-   * Summarized topic drafts (plain values, not ECHO objects — excludes any skipped by `skipTopic` /
+   * Summarized topic drafts (plain values, not ECHO objects - excludes any skipped by `skipTopic` /
    * dropped by `keepTopic`). The caller decides what to do with them: materialize `Topic` objects, or
    * write them to `Mailbox.topicSuggestions` for the user to curate.
    */
@@ -66,7 +66,7 @@ export type TopicsPipelineResult = {
 const messageIdOf = (message: Message.Message): string => String(message.properties?.messageId ?? message.id);
 
 /**
- * Runs the topics pipeline: tag (bounded/resumable) → `buildThreads` → `clusterThreads` →
+ * Runs the topics pipeline: tag (bounded/resumable) -> `buildThreads` -> `clusterThreads` ->
  * `summarizeTopics`. Returns per-message tags and the summarized topic drafts for the caller to
  * materialize or suggest. Tagging failures degrade per message (the injected `tag` should not
  * reject); clustering is deterministic.
@@ -78,7 +78,7 @@ export const runTopicsPipeline = async (
   const { messages, ownerEmail, now, limit, skipMessage, skipTopic, keepTopic, topicOptions, onProgress, signal } =
     input;
 
-  // Phase 1 — tag each not-yet-tagged message, bounded by `limit`. Stop early if cancelled.
+  // Phase 1 - tag each not-yet-tagged message, bounded by `limit`. Stop early if cancelled.
   const pending = messages.filter((message) => !skipMessage?.(messageIdOf(message)));
   const toTag = limit !== undefined ? pending.slice(0, limit) : pending;
   const messageTags: MessageTags[] = [];
@@ -89,12 +89,12 @@ export const runTopicsPipeline = async (
     onProgress?.('tag', index + 1, toTag.length);
   }
 
-  // Cancelled during tagging — skip the (LLM) topic phase and return what was tagged.
+  // Cancelled during tagging - skip the (LLM) topic phase and return what was tagged.
   if (signal?.aborted) {
     return { messageTags, topicDrafts: [] };
   }
 
-  // Phase 2 — cluster threads into topic drafts (deterministic), summarize the new ones.
+  // Phase 2 - cluster threads into topic drafts (deterministic), summarize the new ones.
   const threads = buildThreads(messages, { ownerEmail, now });
   const drafts = clusterThreads(threads, topicOptions);
   // const fresh = drafts.filter((draft: TopicDraft) => !skipTopic?.(draft.label) && (keepTopic?.(draft) ?? true));

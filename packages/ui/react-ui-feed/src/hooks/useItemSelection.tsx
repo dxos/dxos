@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, type PropsWithChildren, createContext, useCallback, useContext } from 'react';
 
-/** What an item can do about its own selection — the item-side face of the host's selection model. */
+/** What an item can do about its own selection - the item-side face of the host's selection model. */
 export type ItemSelection = {
   selected: boolean;
   /** Additive when the gesture says so (meta/ctrl); the mode is the provider's business. */
@@ -26,7 +26,7 @@ export type ItemSelectionProviderProps = PropsWithChildren<ItemSelectionValue>;
  * through props. Selection is model-space ids, so virtualization is untouched: an unmounted item is
  * still selected, and mounts knowing it.
  *
- * The provider is deliberately the thinnest thing that works — a set and a callback. Mode policies
+ * The provider is deliberately the thinnest thing that works - a set and a callback. Mode policies
  * (single | multi | range) belong to `react-ui-list`'s `useListSelection`, which a host composes
  * *above* this provider; teaching this package about modes would be rebuilding that hook.
  */
@@ -37,7 +37,7 @@ export const ItemSelectionProvider = ({ selectedIds, onSelect, children }: ItemS
 /**
  * The whole selection value, for a component that renders many items in one pass.
  *
- * A row loop cannot call `useItemSelection` per row — hooks do not run in loops — so the viewport
+ * A row loop cannot call `useItemSelection` per row - hooks do not run in loops - so the viewport
  * reads the value once and derives per-row state; item-shaped components use the per-id hook.
  */
 export const useItemSelectionValue = (): ItemSelectionValue => useContext(ItemSelectionContext);

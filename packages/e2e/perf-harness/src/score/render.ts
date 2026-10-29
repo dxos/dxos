@@ -20,7 +20,7 @@ export const formatValue = (value: number, unit: Budget['unit']): string => {
   return unit === 'count' ? round(value) : `${round(value)} ${unit}`;
 };
 
-const STATUS_MARK: Record<Status, string> = { good: '✅', expected: '🟡', over: '🔴' };
+const STATUS_MARK: Record<Status, string> = { good: 'OK', expected: '\u{1F7E1}', over: '\u{1F534}' };
 
 const escapeCell = (text: string) => text.replaceAll('|', '\\|');
 
@@ -52,7 +52,7 @@ export const renderBudgetTables = (rows: ReadonlyArray<BudgetRow>): string => {
 export const renderReport = (title: string, report: ScoreReport): string => {
   const over = report.metrics.filter(({ status }) => status === 'over');
   return [
-    `### ${title} — score ${report.overall.toFixed(3)}`,
+    `### ${title} - score ${report.overall.toFixed(3)}`,
     '',
     `${report.metrics.length} metrics, ${over.length} past their limit` +
       (report.unbudgeted.length > 0 ? `, ${report.unbudgeted.length} with no budget` : '') +

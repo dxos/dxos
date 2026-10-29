@@ -21,8 +21,8 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
 export type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
 
 /**
- * A system-generated turn carrying no reader words — the shape a trigger, or the planning skill's
- * continuation nudge, takes — followed by the answer it produced. Kept separate from the main
+ * A system-generated turn carrying no reader words - the shape a trigger, or the planning skill's
+ * continuation nudge, takes - followed by the answer it produced. Kept separate from the main
  * generator so a story can assert this case without the other fixtures on screen.
  */
 export const createSyntheticTurnGenerator = (): MessageGenerator[] => [
@@ -33,7 +33,7 @@ export const createSyntheticTurnGenerator = (): MessageGenerator[] => [
         {
           _tag: 'text',
           disposition: 'synthetic',
-          text: 'Your checklist still has unchecked items — continue working before finishing.',
+          text: 'Your checklist still has unchecked items - continue working before finishing.',
         },
       ]),
       createMessage('assistant', [{ _tag: 'text', text: 'Picking up the next unchecked item.' }]),

@@ -4,8 +4,8 @@
 
 // Live crawl demo (node): seeds a set of Discord channels and runs the basic pipeline into a
 // persistent SQLite file, so subsequent runs resume and the questions demo replays over it.
-//   DISCORD_TOKEN=…  [DISCORD_CRAWL_CHANNELS=id,id,…] [DISCORD_CRAWL_DB=path] [DISCORD_MAX_DAYS=30]
-//   [DX_ANTHROPIC_API_KEY=…]  moon run plugin-discord:crawl-demo
+//   DISCORD_TOKEN=...  [DISCORD_CRAWL_CHANNELS=id,id,...] [DISCORD_CRAWL_DB=path] [DISCORD_MAX_DAYS=30]
+//   [DX_ANTHROPIC_API_KEY=...]  moon run plugin-discord:crawl-demo
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import type * as ConfigError from 'effect/Config';

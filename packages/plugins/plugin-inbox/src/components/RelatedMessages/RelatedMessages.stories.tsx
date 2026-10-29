@@ -71,7 +71,7 @@ type Story = StoryObj<typeof meta>;
  * Ages span every unit the row can show, newest first.
  *
  * Test:
- * 1. Each row ends with a short age — `now`, `45m`, `5h`, `3d`, `3w`, `6mo` — reading down.
+ * 1. Each row ends with a short age - `now`, `45m`, `5h`, `3d`, `3w`, `6mo` - reading down.
  * 2. The first subject is long enough to truncate; its age stays fully visible at the right,
  *    between the subject and the arrow.
  */

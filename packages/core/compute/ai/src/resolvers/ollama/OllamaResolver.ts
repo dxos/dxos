@@ -26,7 +26,7 @@ export const make = ({
   endpoint = DEFAULT_OLLAMA_ENDPOINT,
   // Ollama's CORS preflight rejects the `traceparent` header Effect's HttpClient injects for
   // distributed tracing (a local model server participates in no trace), so disable propagation by
-  // default — otherwise browser calls to Ollama fail the preflight. Callers may override.
+  // default - otherwise browser calls to Ollama fail the preflight. Callers may override.
   transformClient = (client) =>
     HttpClient.transformResponse(client, Effect.provideService(HttpClient.TracerPropagationEnabled, false)),
   provider = Provider.ollama.id,

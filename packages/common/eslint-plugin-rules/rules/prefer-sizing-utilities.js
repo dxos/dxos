@@ -5,20 +5,20 @@
 /**
  * Prefer the `dx-*` sizing utilities over hand-rolled Tailwind equivalents.
  *
- * The repo accumulated ~140 hand-rolled spellings of three intents — `flex-1 min-h-0`,
- * `grow min-w-0 min-h-0`, `h-full w-full` — which read as arbitrary combinations rather than as a
+ * The repo accumulated ~140 hand-rolled spellings of three intents - `flex-1 min-h-0`,
+ * `grow min-w-0 min-h-0`, `h-full w-full` - which read as arbitrary combinations rather than as a
  * decision about how the parent sizes the element. The utilities name the intent, so a reader does
  * not have to reconstruct it from the properties.
  *
  * Also flags a sizing utility stacked on top of what it already applies.
  *
  * @example
- * // ❌ Bad
+ * // X Bad
  * <div className='flex-1 min-h-0 min-w-0' />
  * <div className='h-full w-full' />
  * <div className='dx-expand h-full' />
  *
- * // ✅ Good
+ * // OK Good
  * <div className='dx-grow' />
  * <div className='dx-fill' />
  * <div className='dx-expand' />
@@ -53,7 +53,7 @@ const COMBINATIONS = [
 const COMPOSITIONS = [{ classes: ['dx-grow', 'dx-fill'], suggestion: 'dx-expand' }];
 
 /**
- * Overflow values that already zero the automatic minimum size — the ones that make the box a
+ * Overflow values that already zero the automatic minimum size - the ones that make the box a
  * scroll container.
  *
  * `overflow-clip` is deliberately absent: it clips without scrolling, so it is NOT a scroll
@@ -70,7 +70,7 @@ const ATTRIBUTES = new Set(['className', 'classNames', 'class']);
 
 /**
  * Only unprefixed classes are considered. A variant (`hover:`, `md:`, `[&>svg]:`) retargets the
- * class — at a state, a breakpoint, or a descendant — so `[&>svg]:w-full [&>svg]:h-full` is a rule
+ * class - at a state, a breakpoint, or a descendant - so `[&>svg]:w-full [&>svg]:h-full` is a rule
  * about the SVG, not about this element, and the variants of a pair are not necessarily equal.
  */
 const unprefixed = (className) => !className.includes(':');
@@ -125,7 +125,7 @@ export default {
       }
 
       // A minimum next to a clip. The overflow already did it, so the class is a no-op that reads
-      // as though it were load-bearing — the single biggest source of confusion about `min-*-0`.
+      // as though it were load-bearing - the single biggest source of confusion about `min-*-0`.
       const overflow = classes.filter(unprefixed).find((cls) => CLIPS.test(cls));
       if (overflow) {
         const minimum = MINIMUMS.find((cls) => present.has(cls));
@@ -134,7 +134,7 @@ export default {
         }
       }
 
-      // Two utilities that compose into a third — the long spelling of one name.
+      // Two utilities that compose into a third - the long spelling of one name.
       const composition = COMPOSITIONS.find(({ classes: needed }) => needed.every((cls) => present.has(cls)));
       if (composition) {
         context.report({

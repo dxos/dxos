@@ -16,7 +16,7 @@ const OBJECT_COUNT = 600;
 
 /**
  * Records the bound-variable count of every statement the node SQLite driver executes, by wrapping
- * `DatabaseSync.prototype.prepare` — the one place all of `@effect/sql-sqlite-node`'s paths pass
+ * `DatabaseSync.prototype.prepare` - the one place all of `@effect/sql-sqlite-node`'s paths pass
  * through, so no index can add a wide statement that escapes this.
  *
  * Node SQLite caps `SQLITE_LIMIT_VARIABLE_NUMBER` far higher than the 100 Durable Object SQLite
@@ -94,7 +94,7 @@ describe('SQLite bound-variable limit', () => {
       await peer.host.updateIndexes();
 
       // The real read path: a client query answered from the indexes the pass above wrote. Every
-      // object must come back — an indexing pass that threw part way leaves the rest silently
+      // object must come back - an indexing pass that threw part way leaves the rest silently
       // unfindable, which is how the production outage presented.
       const objects = await db.query(Query.select(Filter.everything()).limit(OBJECT_COUNT * 2)).run();
       expect(objects).to.have.length(OBJECT_COUNT);

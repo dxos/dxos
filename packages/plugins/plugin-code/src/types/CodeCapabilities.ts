@@ -18,7 +18,7 @@ export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Se
 /**
  * Diagnostic shape mirroring `compiler.Diagnostic`. Re-declared here (rather
  * than re-exported) to keep this types module free of compiler-runtime
- * dependencies — operation results carry this shape over the wire.
+ * dependencies - operation results carry this shape over the wire.
  */
 export type Diagnostic = {
   readonly path?: string;
@@ -53,7 +53,7 @@ export type ProjectBuildState = {
   readonly lastRun?: RunState;
 };
 
-/** Map of `CodeProject.id` → most-recent build/run record. */
+/** Map of `CodeProject.id` -> most-recent build/run record. */
 export type BuildRunState = Readonly<Record<string, ProjectBuildState | undefined>>;
 
 /**

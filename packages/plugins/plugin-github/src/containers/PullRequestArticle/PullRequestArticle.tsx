@@ -91,7 +91,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const [status, setStatus] = useState<Status>();
-  // The live state where it has arrived, the stored one until then — an absent status is unknown,
+  // The live state where it has arrived, the stored one until then - an absent status is unknown,
   // not "open", and GitHub accepts an approval on a merged pull request rather than rejecting it.
   const state = status?.state ?? subject.state;
   const [tab, setTab] = useState<Tab>('overview');
@@ -486,7 +486,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         : t('ci-status.unknown.label'),
       branches:
         subject.headBranch &&
-        (subject.baseBranch ? `${subject.headBranch} → ${subject.baseBranch}` : subject.headBranch),
+        (subject.baseBranch ? `${subject.headBranch} -> ${subject.baseBranch}` : subject.headBranch),
     }),
     [reference, state, status, subject.headBranch, subject.baseBranch, t],
   );

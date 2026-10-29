@@ -51,8 +51,8 @@ const selectModes = (): readonly SkillMode[] => {
  * For each model variant the same prompt runs once per skill mode, over the same message feed, with
  * the pre-computed fact-store fixture (brain) or a freshly-embedded vector index (rag) injected.
  *
- * A blind LLM-judge then grades every arm against the SAME ground truth — coverage of a gold
- * salient-point set and faithfulness to the source corpus — plus a blind pairwise vote vs. the
+ * A blind LLM-judge then grades every arm against the SAME ground truth - coverage of a gold
+ * salient-point set and faithfulness to the source corpus - plus a blind pairwise vote vs. the
  * database baseline. Facts "help" iff a fact-backed arm beats the baseline on coverage without
  * losing faithfulness. Scores + the raw summaries are written side-by-side to `<name>.md`; disable
  * the (expensive) grading pass with `EVAL_SCORE=0`.

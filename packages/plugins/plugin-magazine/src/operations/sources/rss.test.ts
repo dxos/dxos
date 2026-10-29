@@ -169,7 +169,7 @@ describe('fetchRss', () => {
   });
 
   test('handles deeply nested HTML in description without exceeding parser limits', async ({ expect }) => {
-    // Build nested HTML 200 levels deep — well past fast-xml-parser's default 100-tag cap.
+    // Build nested HTML 200 levels deep - well past fast-xml-parser's default 100-tag cap.
     let nested = 'leaf';
     for (let index = 0; index < 200; index++) {
       nested = `<div>${nested}</div>`;
@@ -231,7 +231,7 @@ describe('fetchRss', () => {
       "Government gets a say in 'trusted partner' access, and that worries policy experts\n\n![](https://image.theregister.com/?imageId=261924&width=800)",
     );
 
-    // <content:encoded> HTML is unwrapped from CDATA and converted to markdown — no raw block tags survive.
+    // <content:encoded> HTML is unwrapped from CDATA and converted to markdown - no raw block tags survive.
     expect(post.content).toBeDefined();
     expect(post.content).toContain('After postponing a planned signing');
     expect(post.content).not.toMatch(/<\/?(p|div|h[1-6]|ul|ol|li|a|span)\b/i);

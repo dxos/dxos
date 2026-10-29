@@ -85,7 +85,7 @@ describe('parseError', () => {
 
   // The agent runs in a separate process; on failure the cause is rendered to a string via
   // `Cause.pretty` (which drops nested causes) before it reaches parseError. EDGE rejects an
-  // over-quota request with 429, whose message embeds the status — this is the exact string the
+  // over-quota request with 429, whose message embeds the status - this is the exact string the
   // chat receives.
   test('detects an EDGE 429 in the pretty-printed process failure (string)', ({ expect }) => {
     const err =
@@ -142,7 +142,7 @@ describe('parseError', () => {
     expect(parseError(err).message).toBe('The model is not available: dxn:com.anthropic.model.claude-opus-4-8.default');
   });
 
-  // The stringified form appends the error's context, so the model is not the end of the string —
+  // The stringified form appends the error's context, so the model is not the end of the string -
   // the trailing separator must not be captured as part of the model id.
   test('names the model once the failure has been stringified by the process boundary', ({ expect }) => {
     const err =

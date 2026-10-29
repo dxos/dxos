@@ -34,7 +34,7 @@ export const assertsWithDetail = (schema: Schema.Top, value: unknown): void => {
     const detail = formatIssue(issue)
       .issues.map(({ message, path }) => (path && path.length > 0 ? `${path.join('.')}: ${message}` : message))
       .join('; ');
-    throw new Error(detail.length > 0 ? `Schema validation failed — ${detail}` : 'Schema validation failed', {
+    throw new Error(detail.length > 0 ? `Schema validation failed - ${detail}` : 'Schema validation failed', {
       cause: issue,
     });
   }

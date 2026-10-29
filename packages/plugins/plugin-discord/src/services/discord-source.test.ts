@@ -128,8 +128,8 @@ describe('DiscordSource live crawl', () => {
       );
 
       console.log(
-        `\nCrawled — ${agents.length} agents, ${report.factCount} facts` +
-          (summary.errored > 0 ? ` (${summary.errored} channel(s) skipped — no access)` : ''),
+        `\nCrawled - ${agents.length} agents, ${report.factCount} facts` +
+          (summary.errored > 0 ? ` (${summary.errored} channel(s) skipped - no access)` : ''),
       );
       for (const topic of report.topics) {
         console.log(`  ${topic.label}  (agents ${topic.agents}, mentions ${topic.mentions})`);
@@ -137,11 +137,11 @@ describe('DiscordSource live crawl', () => {
       if (dumpFacts) {
         console.log(`\nFacts (${facts.length}):`);
         for (const fact of facts) {
-          console.log(`  ${fact.agent ?? '?'}  ${fact.subject} —${fact.predicate}→ ${fact.object}   (${fact.source})`);
+          console.log(`  ${fact.agent ?? '?'}  ${fact.subject} -${fact.predicate}-> ${fact.object}   (${fact.source})`);
         }
       }
 
-      // A clean completion is the smoke signal. Content depends on activity in the lookback window —
+      // A clean completion is the smoke signal. Content depends on activity in the lookback window -
       // a quiet channel legitimately yields zero facts, so hint rather than fail.
       expect(summary.done).toBe(true);
       if (report.factCount === 0) {

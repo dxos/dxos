@@ -8,14 +8,14 @@ import { addons } from 'storybook/preview-api';
 /**
  * Recovers a story whose module graph was pulled out from under it.
  *
- * Vite's dependency optimizer re-runs whenever it meets a dep it has not pre-bundled — during an
- * editing session, typically the moment a new `import` is typed — and every module URL it had
+ * Vite's dependency optimizer re-runs whenever it meets a dep it has not pre-bundled - during an
+ * editing session, typically the moment a new `import` is typed - and every module URL it had
  * already issued is invalidated at that instant. A request in flight then rejects with "Failed to
  * fetch dynamically imported module" and the iframe stays blank until someone reloads it by hand.
  *
  * `optimizeDeps.ignoreOutdatedRequests` (see `main.ts`) covers the pre-bundled `deps/*` half of
  * this. A story's own `?t=<timestamp>` source URL can still lose the race, and Storybook swallows
- * that rejection — it reaches neither `window` nor its own error events, surfacing only as
+ * that rejection - it reaches neither `window` nor its own error events, surfacing only as
  * `STORY_MISSING`. Hence the index check below rather than an error listener.
  */
 

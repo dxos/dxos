@@ -36,7 +36,7 @@ describe('createBasicExtensions readOnly', () => {
   }
 
   test('allows programmatic dispatches (no userEvent) when readOnly is true', ({ expect }) => {
-    // Streaming consumers (e.g. MarkdownStream) populate the doc programmatically — those
+    // Streaming consumers (e.g. MarkdownStream) populate the doc programmatically - those
     // transactions must pass even though the editor is read-only to the user.
     const state = EditorState.create({
       doc: 'hello',

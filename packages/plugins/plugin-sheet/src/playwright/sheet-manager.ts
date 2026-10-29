@@ -40,7 +40,7 @@ export class SheetManager {
   }
 
   async commit(key: string): Promise<void> {
-    // TODO(thure): Why do we need to wait? Enter is ignored otherwise…
+    // TODO(thure): Why do we need to wait? Enter is ignored otherwise...
     await this.page.waitForTimeout(500);
     await this.press(key);
   }

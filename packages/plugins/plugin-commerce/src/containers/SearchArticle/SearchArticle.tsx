@@ -68,7 +68,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     [search, db, starredUri],
   );
 
-  // Select a result by URI — updates attention context so useSelection returns the new id.
+  // Select a result by URI - updates attention context so useSelection returns the new id.
   const handleSelect = useCallback(
     (resultId: string) => {
       void invokePromise(LayoutOperation.Select, {

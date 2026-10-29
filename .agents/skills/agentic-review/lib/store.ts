@@ -13,7 +13,7 @@ import { type ParsedFrontmatter, parseFrontmatter } from './frontmatter.ts';
 
 export const REVIEWS_DIR = '.agents/reviews';
 
-// Per-run manifest mapping group number → { ruleId, severity, title }, so
+// Per-run manifest mapping group number -> { ruleId, severity, title }, so
 // finalize can enforce the rule-fixed severity independently of what a subagent
 // wrote in its fragment header.
 export const GROUPS_MANIFEST = 'groups.json';
@@ -27,7 +27,7 @@ export type GroupManifestEntry = {
   files: string[];
 };
 
-/** `groups.json`'s shape: group number (zero-padded) → its manifest entry. */
+/** `groups.json`'s shape: group number (zero-padded) -> its manifest entry. */
 export type GroupsManifest = Record<string, GroupManifestEntry>;
 
 /** A value a REVIEW.md frontmatter field may hold before serialization. */
@@ -47,7 +47,7 @@ export const FULL_BASE = 'full';
 
 /**
  * Short review id used as the `<review_id>` prefix in issue ids (`<id>-<seq>`).
- * Store dirs are the short sha; accept a legacy `…-<sha>` dir name too.
+ * Store dirs are the short sha; accept a legacy `...-<sha>` dir name too.
  */
 export const reviewIdFromStore = (storeDirName: string, commit: string | null | undefined): string => {
   if (/^[0-9a-f]{7,40}$/i.test(storeDirName)) {
@@ -64,14 +64,14 @@ export const reviewIdFromStore = (storeDirName: string, commit: string | null | 
 };
 
 /**
- * Review store directory name: just the short commit sha. Branch is omitted —
+ * Review store directory name: just the short commit sha. Branch is omitted -
  * the commit already identifies the reviewed tree, and keeps paths short.
  */
 export const reviewSlug = (_branch: string | null | undefined, short: string): string => short;
 
 /**
- * Reject a `--slug` that is not a single safe path component — no separators,
- * no `.`/`..` — so a store path can never escape `.agents/reviews` (prepare
+ * Reject a `--slug` that is not a single safe path component - no separators,
+ * no `.`/`..` - so a store path can never escape `.agents/reviews` (prepare
  * recursively removes `<store>/groups`, finalize overwrites `<store>/REVIEW.md`).
  */
 export const assertSafeSlug = (slug: string): string => {

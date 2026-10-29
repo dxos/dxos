@@ -18,8 +18,8 @@ import { Message } from '@dxos/types';
 import { InboxOperation, Mailbox } from '#types';
 
 /**
- * Extracts unsubscribe affordances from every feed message — the `List-Unsubscribe` header the sync
- * mapper recorded, falling back to an unsubscribe-shaped body link — and replaces the mailbox's
+ * Extracts unsubscribe affordances from every feed message - the `List-Unsubscribe` header the sync
+ * mapper recorded, falling back to an unsubscribe-shaped body link - and replaces the mailbox's
  * `subscriptions` record with the per-sender aggregation. Mechanical (no LLM); idempotent by
  * construction (wholesale replace of derived state).
  */
@@ -94,7 +94,7 @@ const handler = InboxOperation.ExtractSubscriptions.pipe(
         ),
       );
 
-      // Aggregate per sender and replace the mailbox record wholesale — reruns converge rather than
+      // Aggregate per sender and replace the mailbox record wholesale - reruns converge rather than
       // append, so the operation is idempotent without a cursor.
       const subscriptions = Mailbox.deriveSubscriptions(carrying, Mailbox.getUnsubscribeAffordance);
       Obj.update(mailbox, (mailbox) => {

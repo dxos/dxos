@@ -60,7 +60,7 @@ const seedMailbox = Effect.fnUntraced(function* () {
       ),
     ]),
   );
-  // Only Bob is a known contact — the gate that keeps this tier affordable.
+  // Only Bob is a known contact - the gate that keeps this tier affordable.
   db.add(Obj.make(Person.Person, { fullName: 'Bob', emails: [{ value: 'bob@known.example.com' }] }));
   yield* Effect.promise(() => db.flush());
   return { db, mailbox };

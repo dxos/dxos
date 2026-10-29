@@ -80,7 +80,7 @@ export type AdmitMemberOptions = {
 export type CreateSpaceOptions = {
   /**
    * Anchor the space on a space root document, taking its id from that document instead of from the
-   * space key. Defaults to the `automergeCredentials` runtime flag, which is off — so a space is
+   * space key. Defaults to the `automergeCredentials` runtime flag, which is off - so a space is
    * key-derived unless the flag opts in. Ignored for an imported space, which brings its own root.
    */
   useSpaceRootDocument?: boolean;

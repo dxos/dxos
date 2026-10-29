@@ -21,8 +21,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-freeq',
     spec: 'PLUGIN.mdl',
     description: trim`
-      Integrates freeq — an IRCv3 chat service that authenticates users via AT
-      Protocol / Bluesky identities — as a live channel backend for the DXOS
+      Integrates freeq - an IRCv3 chat service that authenticates users via AT
+      Protocol / Bluesky identities - as a live channel backend for the DXOS
       Composer thread plugin. The plugin connects to a freeq server over
       WebSocket, authenticates over the ATPROTO-CHALLENGE SASL mechanism, joins
       an IRC channel, streams inbound messages in real time, and sends outbound
@@ -39,7 +39,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     // Single module contributes both the connection manager and the channel backend
-    // (see channel-backend.ts) — same-wave modules cannot `waitFor` each other's contributions.
+    // (see channel-backend.ts) - same-wave modules cannot `waitFor` each other's contributions.
     // Contributes both the connection manager and the channel backend (see channel-backend.ts).
     Capability.lazyModule(
       'FreeqChannelBackend',

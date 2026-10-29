@@ -340,7 +340,7 @@ export class LocalClientServices implements ClientServicesProvider {
       this._services = makeServicesFromRpc(this._rpc, EffectContext.empty());
     } catch (err) {
       // `_isOpen` is still false at this point, so `close()` would return before disposing
-      // anything: without this the runtime — and the OPFS worker its layer owns — leaks on every
+      // anything: without this the runtime - and the OPFS worker its layer owns - leaks on every
       // failed open.
       await this._closeStack();
       throw err;

@@ -82,7 +82,7 @@ describe('feed migrations', () => {
   );
 
   // The initial migration must reproduce the shape earlier releases created. The legacy test below
-  // cannot catch a drift here — it seeds from this same file, so both sides of it move together.
+  // cannot catch a drift here - it seeds from this same file, so both sides of it move together.
   it.effect('primary keys keep the nullability the pre-migration DDL produced', () =>
     Effect.gen(function* () {
       yield* migrate;

@@ -33,7 +33,7 @@ export class Research extends Type.makeObject<Research>(DXN.make('org.dxos.type.
     run: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     /** Immutable Finding entries: the session's picks and the results the person starred. */
     feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
-    /** Per-Finding tags keyed by tag uri → Finding ids (the `starred` flag — see {@link STARRED_TAG}). */
+    /** Per-Finding tags keyed by tag uri -> Finding ids (the `starred` flag - see {@link STARRED_TAG}). */
     tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     lastRunAt: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(

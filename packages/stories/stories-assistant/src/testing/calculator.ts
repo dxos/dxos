@@ -167,7 +167,7 @@ const make = () =>
       source: trim`
         {{! Calculator }}
 
-        Perform ALL arithmetic with the calculate tool — never compute in your head. The tool
+        Perform ALL arithmetic with the calculate tool - never compute in your head. The tool
         accepts + - * / ^ ( ) and postfix ! (factorial), e.g. "10!" or "(1+2)*3".
       `,
     }),

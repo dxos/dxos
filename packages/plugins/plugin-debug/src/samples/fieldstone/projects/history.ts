@@ -93,7 +93,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 2, minutes: 50 },
     by: 'omar',
     brief:
-      'Pick up “Content-address artifacts by BLAKE3 digest”. Key blobs by the BLAKE3 digest of their bytes and ' +
+      'Pick up "Content-address artifacts by BLAKE3 digest". Key blobs by the BLAKE3 digest of their bytes and ' +
       'keep the v1 action key as an alias that resolves to the digest. The v2 protocol draft is in ' +
       'docs/protocol/v2.md.',
     summary:
@@ -117,10 +117,10 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 1, minutes: 20 },
     by: 'felix',
     brief:
-      'Do “Exponential backoff in the CLI client on 429 and 503”: start at 100 ms, double to 10 s with full ' +
+      'Do "Exponential backoff in the CLI client on 429 and 503": start at 100 ms, double to 10 s with full ' +
       'jitter, give up after six attempts and fall back to a local build.',
     summary:
-      '#379 adds backoff with full jitter to the CLI’s HTTP client and falls back to a local build after six ' +
+      "#379 adds backoff with full jitter to the CLI's HTTP client and falls back to a local build after six " +
       'attempts. A fake-timer test covers both 429 and 503.',
     work: {
       kind: 'code',
@@ -140,7 +140,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 2, minutes: 100 },
     by: 'omar',
     brief:
-      'Work “Move the CAS index from SQLite to the sharded KV store”: 256 shards by the first digest byte, ' +
+      'Work "Move the CAS index from SQLite to the sharded KV store": 256 shards by the first digest byte, ' +
       'dual-write for a week, then a backfill. Hand the pull request to Reviewer before you mark it for review.',
     summary:
       '#388 is up and Reviewer passed it: sharded writes behind a flag, dual-write to SQLite, and a resumable ' +
@@ -163,7 +163,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 35,
     by: 'omar',
     brief:
-      'Review #388 for “Review the CAS index migration pull request”. Run the full suite and the backfill against ' +
+      'Review #388 for "Review the CAS index migration pull request". Run the full suite and the backfill against ' +
       'the staging snapshot, and report any key that is lost or written twice.',
     summary:
       'Approved #388. The full suite is green and the staging backfill moved 2,418,903 keys with none lost or ' +
@@ -185,7 +185,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 2, minutes: 70 },
     by: 'felix',
     brief:
-      'Build “R2 storage backend behind the blob-store interface”. Same BlobStore interface as S3, multipart ' +
+      'Build "R2 storage backend behind the blob-store interface". Same BlobStore interface as S3, multipart ' +
       'above 64 MB, and a per-tenant switch in config.',
     summary:
       '#395 adds an R2 BlobStore with multipart uploads above 64 MB and a per-tenant backend setting. Unit tests ' +
@@ -208,7 +208,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 1, minutes: 70 },
     by: 'omar',
     brief:
-      'Urgent: “Fix cache-key collision on concurrent writes”. Two writers on one action key can interleave the ' +
+      'Urgent: "Fix cache-key collision on concurrent writes". Two writers on one action key can interleave the ' +
       'index write and the blob write. Make the index write a compare-and-set on the digest and return 409 to the ' +
       'loser.',
     summary:
@@ -232,7 +232,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 1, minutes: 30 },
     by: 'omar',
     brief:
-      'Follow-up to #402: “Regression test for concurrent writes to one key”. 64 writers, one key, 30 seconds, and ' +
+      'Follow-up to #402: "Regression test for concurrent writes to one key". 64 writers, one key, 30 seconds, and ' +
       'fail on any row whose digest does not match its blob.',
     summary:
       '#404 adds TestConcurrentWritesOneKey. On main before #402 it fails with 17 bad rows in 30 seconds; with #402 ' +
@@ -254,7 +254,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 60,
     by: 'felix',
     brief:
-      'Do “Integration tests against R2”: run the blob-store conformance suite against the r2-ci bucket in the ' +
+      'Do "Integration tests against R2": run the blob-store conformance suite against the r2-ci bucket in the ' +
       'integration workflow.',
     summary:
       'The suite fails in TestMultipartAbort: the abort returns 404 NoSuchUpload. Everything else passes. Marking ' +
@@ -267,7 +267,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
       error: 'TestMultipartAbort failed 2 of 3 runs: 404 NoSuchUpload',
       summary:
         'With -count=3, TestMultipartAbort failed twice out of three with the same 404, so it depends on timing. ' +
-        'The backend code looks right; the bucket’s lifecycle rule is the next suspect. Leaving the task failed.',
+        "The backend code looks right; the bucket's lifecycle rule is the next suspect. Leaving the task failed.",
     },
     work: {
       kind: 'code',
@@ -287,7 +287,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 3, minutes: 120 },
     by: 'omar',
     brief:
-      'Take “Size-aware LRU eviction for the edge tier”: evict by bytes, weighted by 24-hour hit count. Benchmark ' +
+      'Take "Size-aware LRU eviction for the edge tier": evict by bytes, weighted by 24-hour hit count. Benchmark ' +
       'it against the September edge trace.',
     summary:
       '#418 replaces count-based eviction with a byte budget weighted by 24-hour hits. Replaying the September edge ' +
@@ -310,7 +310,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 2, minutes: 80 },
     by: 'anika',
     brief:
-      'Do “Signed download URLs with a 15-minute expiry”. Bind the signature to the tenant and the digest; the CLI ' +
+      'Do "Signed download URLs with a 15-minute expiry". Bind the signature to the tenant and the digest; the CLI ' +
       'follows the redirect.',
     summary:
       '#419 answers GETs for blobs over 8 MB with a 302 to a signed storage URL, bound to tenant and digest and ' +
@@ -333,7 +333,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 1, minutes: 45 },
     by: 'anika',
     brief:
-      'Start “Export eviction and hit-rate metrics to Prometheus”: per-tenant hit rate, bytes evicted and eviction ' +
+      'Start "Export eviction and hit-rate metrics to Prometheus": per-tenant hit rate, bytes evicted and eviction ' +
       'reason, on the edge dashboard.',
     summary:
       'Draft #420 exports the three metrics and adds panels to the edge dashboard. The eviction reason label ' +
@@ -356,7 +356,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 1, minutes: 25 },
     by: 'lucia',
     brief:
-      'Write “Write the cache v1 to v2 migration guide” for customers: what changes, how to opt in, how to roll ' +
+      'Write "Write the cache v1 to v2 migration guide" for customers: what changes, how to opt in, how to roll ' +
       'back. One page.',
     summary:
       'Drafted the guide in this project: what changes, opting in, rolling back, and a short FAQ. Customers who pin ' +
@@ -377,7 +377,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     followUp: { days: 2, minutes: 35 },
     by: 'felix',
     brief:
-      'Start on “A cairn warm command that prefetches a branch’s artifacts”: find the branch’s last green build and ' +
+      'Start on "A cairn warm command that prefetches a branch\'s artifacts": find the branch\'s last green build and ' +
       'fetch its outputs in parallel.',
     summary:
       'Draft #427 adds `cairn warm <branch>` with 8 parallel downloads. There is no last-green-build endpoint yet, ' +
@@ -403,7 +403,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
       'Draft the 1.8 release notes from the merged pull requests and the migration guide. The v2 cache goes in the ' +
       'first three lines.',
     summary:
-      'Drafted “Cairn 1.8 release notes”: the v2 cache and its dedup numbers first, then signed URLs, eviction, ' +
+      'Drafted "Cairn 1.8 release notes": the v2 cache and its dedup numbers first, then signed URLs, eviction, ' +
       'the CLI changes and a link to the migration guide. Eviction and signed URLs are still in review and marked.',
     work: {
       kind: 'docs',
@@ -424,7 +424,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 110,
     by: 'june',
     brief:
-      'Do “Emit a metering event per cache hit and per GB stored”: count hits in the API middleware, sample stored ' +
+      'Do "Emit a metering event per cache hit and per GB stored": count hits in the API middleware, sample stored ' +
       'bytes hourly, and queue both locally.',
     summary:
       '#374 counts hits in the API middleware and samples stored bytes per tenant every hour, into a disk-backed ' +
@@ -446,7 +446,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 140,
     by: 'june',
     brief:
-      'Do “Batch metering events to Stripe Meters every 5 minutes”: up to 500 events a batch and one idempotency ' +
+      'Do "Batch metering events to Stripe Meters every 5 minutes": up to 500 events a batch and one idempotency ' +
       'key per batch.',
     summary:
       '#386 drains the queue every 5 minutes in batches of up to 500 with a key per batch. I replayed a day of ' +
@@ -468,7 +468,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 160,
     by: 'june',
     brief:
-      'Do “Map Alien Labs tenants to Stripe customers”: a customer and a usage subscription for every tenant. Ask ' +
+      'Do "Map Alien Labs tenants to Stripe customers": a customer and a usage subscription for every tenant. Ask ' +
       'June if an organization with several tenants is unclear.',
     summary:
       '#397 creates one Stripe customer per organization and one usage subscription per tenant, as June decided. A ' +
@@ -500,7 +500,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 65,
     by: 'june',
     brief:
-      'Do “Idempotent handling of Stripe invoice webhooks”: record event ids and make invoice.paid and ' +
+      'Do "Idempotent handling of Stripe invoice webhooks": record event ids and make invoice.paid and ' +
       'invoice.payment_failed safe to replay.',
     summary:
       '#405 records each Stripe event id in a new stripe_events table and skips repeats. Replaying one invoice.paid ' +
@@ -522,10 +522,10 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 120,
     by: 'june',
     brief:
-      'Do “Shadow invoices for October next to the flat-rate bill”. Store the usage price beside the real invoice ' +
+      'Do "Shadow invoices for October next to the flat-rate bill". Store the usage price beside the real invoice ' +
       'and flag every tenant whose bill moves more than 25%.',
     summary:
-      '#413 computes a usage-priced shadow invoice per tenant and a report. On September’s numbers, 9 of 212 ' +
+      "#413 computes a usage-priced shadow invoice per tenant and a report. On September's numbers, 9 of 212 " +
       'tenants would move by more than 25%, 7 of them down. The list is in the pull request for June.',
     work: {
       kind: 'code',
@@ -543,9 +543,9 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     start: [15, 11, 0],
     minutes: 30,
     by: 'lucia',
-    brief: 'Write the “Billing FAQ for existing customers”: ten questions, two sentences each.',
+    brief: 'Write the "Billing FAQ for existing customers": ten questions, two sentences each.',
     summary:
-      'Wrote the FAQ: ten questions, from “Will my bill go up?” to “Can I cap my spend?”. Every number comes from ' +
+      'Wrote the FAQ: ten questions, from "Will my bill go up?" to "Can I cap my spend?". Every number comes from ' +
       'the billing migration plan.',
     work: { kind: 'docs', doc: 'Billing FAQ', sources: ['Billing migration plan', 'Shadow invoice report'] },
   },
@@ -558,7 +558,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 90,
     by: 'tomas',
     brief:
-      'Start the “Usage page in the dashboard”: stored GB, hits and projected bill for this cycle, from the same ' +
+      'Start the "Usage page in the dashboard": stored GB, hits and projected bill for this cycle, from the same ' +
       'numbers the invoice uses.',
     summary:
       'Draft #424 has the page and its API call. The projected bill needs the shadow invoice endpoint from #413, ' +
@@ -666,7 +666,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     work: { kind: 'docs', doc: 'SOC 2 policy set', sources: ['Storage lifecycle rules', 'Support restore requests'] },
     question: {
       to: 'anika',
-      text: 'How long do we keep a deleted tenant’s build artifacts: 30 days or 90?',
+      text: "How long do we keep a deleted tenant's build artifacts: 30 days or 90?",
       context:
         'The policy needs one number. Support has restored artifacts for two tenants who deleted by mistake, both ' +
         'within a week.',
@@ -684,7 +684,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 85,
     by: 'astrid',
     brief:
-      'Answer Meridian’s security questionnaire from the policy set. Mark any answer that rests on a policy not yet ' +
+      "Answer Meridian's security questionnaire from the policy set. Mark any answer that rests on a policy not yet " +
       'approved.',
     summary:
       'Answered 118 of 140 questions from the policy set. The other 22 rest on the vendor policy, still in review, ' +
@@ -704,7 +704,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 34,
     by: 'anika',
     brief:
-      'Do “Enforce MFA on the dashboard for organization owners”: owners without a second factor get the setup ' +
+      'Do "Enforce MFA on the dashboard for organization owners": owners without a second factor get the setup ' +
       'screen and cannot skip it.',
     summary:
       'Stopped: enforcing MFA here locks out owners of SSO-only organizations, who cannot enroll a factor in the ' +
@@ -732,7 +732,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 6,
     by: 'astrid',
     brief: 'Sweep the inbox and the issue tracker for anything billing-related since last week and file tasks.',
-    summary: 'Filed “Decide the per-GB and per-hit prices” for June, from the Stripe thread and issue #362.',
+    summary: 'Filed "Decide the per-GB and per-hit prices" for June, from the Stripe thread and issue #362.',
     work: { kind: 'triage', sources: ['Stripe usage-based billing thread', 'Issue #362: usage pricing?'] },
   },
   {
@@ -745,7 +745,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 4,
     by: 'astrid',
     brief: 'File whatever the auditor emails need from us.',
-    summary: 'Filed “Pick an auditor for the Type I report” for Astrid, with the three quotes from the inbox.',
+    summary: 'Filed "Pick an auditor for the Type I report" for Astrid, with the three quotes from the inbox.',
     work: { kind: 'triage', sources: ['Three auditor quotes in the inbox'] },
   },
   {
@@ -757,8 +757,8 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     start: [47, 8, 20],
     minutes: 3,
     by: 'anika',
-    brief: 'Sweep last night’s storage alerts and open issues and file anything real.',
-    summary: 'Filed “Garbage-collect blobs orphaned by failed uploads” in the backlog, from issue #381.',
+    brief: "Sweep last night's storage alerts and open issues and file anything real.",
+    summary: 'Filed "Garbage-collect blobs orphaned by failed uploads" in the backlog, from issue #381.',
     work: { kind: 'triage', sources: ['Issue #381: 40 GB of unreferenced blobs on staging'] },
   },
   {
@@ -786,7 +786,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 2,
     by: 'anika',
     brief: 'The pentest firm replied overnight. File it.',
-    summary: 'Filed “Schedule the external penetration test” for Anika with the firm’s availability.',
+    summary: 'Filed "Schedule the external penetration test" for Anika with the firm\'s availability.',
     work: { kind: 'triage', sources: ['Penetration test firm availability'] },
   },
   {
@@ -798,8 +798,8 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     start: [27, 8, 10],
     minutes: 5,
     by: 'felix',
-    brief: 'Sweep this week’s issues tagged storage and file the follow-ups.',
-    summary: 'Filed “Switch beta tenants to the R2 backend” for Builder, after the integration tests.',
+    brief: "Sweep this week's issues tagged storage and file the follow-ups.",
+    summary: 'Filed "Switch beta tenants to the R2 backend" for Builder, after the integration tests.',
     work: { kind: 'triage', sources: ['Issue #398: move beta tenants to R2'] },
   },
   {
@@ -812,7 +812,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 4,
     by: 'astrid',
     brief: 'Sweep the inbox and issues for anything about the dashboard and file the follow-ups.',
-    summary: 'Filed “Ship the Cairn dashboard as a Composer plugin” for Builder, from issue #407.',
+    summary: 'Filed "Ship the Cairn dashboard as a Composer plugin" for Builder, from issue #407.',
     work: { kind: 'triage', sources: ['Issue #407: ship the dashboard as a Composer plugin'] },
   },
   {
@@ -852,7 +852,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 3,
     by: 'lucia',
     brief: 'Customers have been asking about the v2 beta. File it.',
-    summary: 'Filed “Invite three design partners to the cache v2 beta” for Lucía.',
+    summary: 'Filed "Invite three design partners to the cache v2 beta" for Lucía.',
     work: { kind: 'triage', sources: ['Two customer emails asking about the v2 beta'] },
   },
   {
@@ -865,7 +865,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 4,
     by: 'omar',
     brief: 'File the 1.8 release task, depending on everything that has to land first.',
-    summary: 'Filed “Cut the Cairn 1.8 release” for Builder, depending on eviction, signed URLs and the release notes.',
+    summary: 'Filed "Cut the Cairn 1.8 release" for Builder, depending on eviction, signed URLs and the release notes.',
     work: { kind: 'triage', sources: ['Milestone 1.8 shipped'] },
   },
 ];
@@ -1100,7 +1100,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
           tool: 'editFile',
           say: pick(random, [`Changing ${file}.`, `Writing the change in ${file}.`, `Editing ${file}.`]),
           input: { path: file, branch },
-          result: `Applied ${between(random, 1, 6)} hunks to ${file} (+${added} −${between(random, 0, added)})`,
+          result: `Applied ${between(random, 1, 6)} hunks to ${file} (+${added} -${between(random, 0, added)})`,
         });
       }
       const flaky = pick(random, files);
@@ -1114,7 +1114,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
         tool: 'editFile',
         say: `Fixing the failure in ${flaky}.`,
         input: { path: flaky, branch },
-        result: `Applied 1 hunk to ${flaky} (+${between(random, 2, 12)} −${between(random, 1, 6)})`,
+        result: `Applied 1 hunk to ${flaky} (+${between(random, 2, 12)} -${between(random, 1, 6)})`,
       });
       while (pool.length < count) {
         const file = pick(random, files);
@@ -1179,7 +1179,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
         tool: 'readPullRequest',
         say: `Reading #${work.pr}.`,
         input: { repo: 'alien-labs/cairn', number: work.pr },
-        result: `#${work.pr}: ${between(random, 8, 24)} files changed, +${between(random, 600, 1400)} −${between(random, 100, 400)}`,
+        result: `#${work.pr}: ${between(random, 8, 24)} files changed, +${between(random, 600, 1400)} -${between(random, 100, 400)}`,
       });
       for (const file of work.files) {
         steps.push({
@@ -1430,7 +1430,7 @@ export const planRuns = (now: number): Plan => {
         pid: pid(),
         begin: followBegin,
         end: followEnd,
-        brief: { at: followBegin - 2_000, text: `Carry on with “${title}” from where you stopped.` },
+        brief: { at: followBegin - 2_000, text: `Carry on with "${title}" from where you stopped.` },
         summary: { at: followEnd - 5_000, text: seed.summary },
         steps: layout(steps.slice(cut), followBegin, followEnd, random, pid),
       });

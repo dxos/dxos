@@ -119,7 +119,7 @@ export const groupIntoRuns = (
 
     // Determine status from OperationEnd events. Precedence: failure beats incomplete beats success.
     // A `RunAgainError` (Operation.runAgain) is recorded as a failure tagged with the run-again error
-    // code, but the run will be re-invoked — surface it as `incomplete`, neither success nor hard failure.
+    // code, but the run will be re-invoked - surface it as `incomplete`, neither success nor hard failure.
     // Fall back to the legacy message for events persisted before `errorCode` existed.
     const isRunAgain = (data: { errorCode?: string; error?: string }): boolean =>
       data.errorCode === Process.RUN_AGAIN_ERROR_CODE ||

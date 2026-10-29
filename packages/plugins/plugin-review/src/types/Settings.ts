@@ -9,7 +9,7 @@ import * as Struct from 'effect/Struct';
 
 /**
  * Determines how new comment threads (on any subject) are wired up to the comment-thread AI agent.
- * The agent's identity (name, DID) is resolved at runtime via the AgentIdentity capability — this
+ * The agent's identity (name, DID) is resolved at runtime via the AgentIdentity capability - this
  * setting only controls whether and when the agent fires.
  *
  * - `off`: comments are plain user-only threads (no agent).

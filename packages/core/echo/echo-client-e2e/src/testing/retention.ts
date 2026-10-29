@@ -8,7 +8,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 /**
  * Shared harness for retention suites: does a subsystem release its objects once the caller lets go?
  *
- * Retention is asserted with `WeakRef` liveness rather than a byte threshold — an integer count of
+ * Retention is asserted with `WeakRef` liveness rather than a byte threshold - an integer count of
  * surviving objects is machine-independent, where a heap delta needs a tolerance band that a loaded
  * CI host defeats. Heap is measured at every checkpoint and printed regardless, since the absolute
  * footprint is what the memory-usage project is targeting, and `db.stats()` residency is printed
@@ -42,7 +42,7 @@ export type ReportScale = {
  * Repeated collection with a macrotask turn between passes: a single `gc()` leaves
  * `FinalizationRegistry` callbacks and `WeakRef` clears pending, so a reading taken straight after
  * it still counts collected objects as live. One pass per link of the release chain, and an object
- * loaded on demand hangs off a longer one than an eagerly linked object did — the count is what the
+ * loaded on demand hangs off a longer one than an eagerly linked object did - the count is what the
  * assertion is about, so the passes have to outlast the chain rather than measure it.
  */
 export const settle = async (): Promise<void> => {
@@ -56,7 +56,7 @@ export const aliveCount = (refs: WeakRef<object>[]): number => refs.filter((ref)
 
 /**
  * WASM linear memory, from the probe `tools/vitest/leak-setup.ts` installs under `DX_DEBUG_LEAKS`.
- * Automerge documents live here, outside `heapUsed`, and this memory is never returned to the OS —
+ * Automerge documents live here, outside `heapUsed`, and this memory is never returned to the OS -
  * so for an automerge-backed suite it is the column that moves. Undefined when unprobed rather than
  * zero, so an absent measurement cannot be mistaken for "no WASM memory".
  */

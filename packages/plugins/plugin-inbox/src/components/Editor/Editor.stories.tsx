@@ -41,7 +41,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { placeholder: 'Write your message…', value: 'Hi there,\n\nThanks for the update — looks good to me.' },
+  args: { placeholder: 'Write your message...', value: 'Hi there,\n\nThanks for the update - looks good to me.' },
 };
 
 export const Markdown: Story = {
@@ -53,5 +53,5 @@ export const Plain: Story = {
 };
 
 export const Compact: Story = {
-  args: { compact: true, placeholder: 'Message…' },
+  args: { compact: true, placeholder: 'Message...' },
 };

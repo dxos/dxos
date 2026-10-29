@@ -28,8 +28,8 @@ import { DEFAULT_SUBJECT, SUBJECT as SUBJECT_OVERRIDE } from './defs.ts';
 // The subject to index. Defaults to Nicole Gudmand; override with `SUBJECT`.
 const SUBJECT = SUBJECT_OVERRIDE ?? DEFAULT_SUBJECT;
 
-// Finds every fact for a subject in the fact store (deterministic — no LLM), then follows those
-// facts back to the source messages (the fact→source bridge). Writes the facts to JSON and the
+// Finds every fact for a subject in the fact store (deterministic - no LLM), then follows those
+// facts back to the source messages (the fact->source bridge). Writes the facts to JSON and the
 // source messages to a sister markdown file.
 describe.skipIf(!factStoreFixtureExists() || !fixtureExists())('find all facts for a subject', () => {
   test('lists every fact for the subject and resolves the source messages', async ({ expect }) => {
@@ -37,7 +37,7 @@ describe.skipIf(!factStoreFixtureExists() || !fixtureExists())('find all facts f
     const messages = loadFixtureMessages();
     const slug = slugify(SUBJECT);
 
-    // The exact-slug store query — the path the Brain skill's QueryFacts tool uses. Extractors slug
+    // The exact-slug store query - the path the Brain skill's QueryFacts tool uses. Extractors slug
     // the same person differently, so this can miss; kept as an informational cross-check.
     const exactSlugFacts = await EffectEx.runPromise(
       Effect.gen(function* () {
@@ -46,7 +46,7 @@ describe.skipIf(!factStoreFixtureExists() || !fixtureExists())('find all facts f
       }).pipe(Effect.provide(factStoreLayer(facts))),
     );
 
-    // Fact→source bridge with token-substring matching — the robust subject lookup + source messages.
+    // Fact->source bridge with token-substring matching - the robust subject lookup + source messages.
     const retrieval = buildSubjectIndex(facts, messages).retrieve(SUBJECT, messages.length);
 
     log.info('subject facts', {
@@ -84,8 +84,8 @@ describe.skipIf(!factStoreFixtureExists() || !fixtureExists())('find all facts f
       body: retrieval.facts.map((fact) => `- **${fact.subject}** ${fact.predicate} **${fact.object}**`).join('\n'),
     });
     for (const message of retrieval.messages) {
-      const excerpt = message.text.length > 500 ? `${message.text.slice(0, 500)} …` : message.text;
-      responseLog.append({ title: `Source — ${message.subject || message.source}`, body: excerpt });
+      const excerpt = message.text.length > 500 ? `${message.text.slice(0, 500)} ...` : message.text;
+      responseLog.append({ title: `Source - ${message.subject || message.source}`, body: excerpt });
     }
 
     expect(retrieval.facts.length).toBeGreaterThan(0);

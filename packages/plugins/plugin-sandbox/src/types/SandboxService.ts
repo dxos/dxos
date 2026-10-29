@@ -20,7 +20,7 @@ import type {
 } from '../services/SandboxClient.ts';
 
 /**
- * A sandbox request that could not be carried out — the backend failed, not the command: a command
+ * A sandbox request that could not be carried out - the backend failed, not the command: a command
  * exiting non-zero is an {@link ExecResult}, never this.
  */
 export class SandboxError extends BaseError.extend('SandboxError', 'Sandbox request failed.') {}

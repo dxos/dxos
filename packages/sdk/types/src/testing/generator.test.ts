@@ -22,7 +22,7 @@ import { stripUndefined } from '@dxos/util';
 
 import { Message, Organization, Person, Pipeline } from '../types/index.ts';
 
-// Local relation type (Person → Person) with only optional props, so the generated relation's
+// Local relation type (Person -> Person) with only optional props, so the generated relation's
 // properties come entirely from annotations / endpoints.
 const Knows = Type.makeRelation(DXN.make('org.dxos.relation.knows', '0.1.0'))({
   source: Person.Person,

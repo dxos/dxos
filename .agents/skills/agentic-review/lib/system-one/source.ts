@@ -145,7 +145,7 @@ export const exportSignatures = (text: string): string[] =>
     .filter((line) => EXPORT_NAME_RE.test(line) || /^export\s+(?:\*|\{)/.test(line))
     .map((line) => (line.length > 160 ? `${line.slice(0, 157)}...` : line));
 
-/** Split an identifier into lower-case words: `makeSpaceIndex` → `make`, `space`, `index`. */
+/** Split an identifier into lower-case words: `makeSpaceIndex` -> `make`, `space`, `index`. */
 export const identifierWords = (name: string): string[] =>
   name
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')

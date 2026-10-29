@@ -31,16 +31,16 @@ const CardOptionsContext = createContext<Pick<AppSurface.CardMasonryData, 'CardM
 /**
  * Several objects as cards, laid out in as many columns as the host gives it room for.
  *
- * The host hands the grid what belongs in it — a task's artifacts, a record's attachments — so this
+ * The host hands the grid what belongs in it - a task's artifacts, a record's attachments - so this
  * renders a list it is given rather than deriving one from a subject the way `RelatedArticle` does.
  * Each card is the generic {@link ObjectCard}: label and depiction from the schema's annotations,
  * body from the type's own `CardContent` surface, and a menu of the object's actions (open, add to
- * collection) to which the host adds its own through `CardMenu` — removing the object from the host's
+ * collection) to which the host adds its own through `CardMenu` - removing the object from the host's
  * list, say. A host may also show placeholder cards for objects it is still adding.
  *
  * A `compact` grid zooms rather than transforms: zoom scales the layout box too, so the masonry
- * measures a width a third wider and lays out full-size cards in the columns that fit it — two in a
- * companion — which then paint at three quarters of their size.
+ * measures a width a third wider and lays out full-size cards in the columns that fit it - two in a
+ * companion - which then paint at three quarters of their size.
  */
 export const CardMasonry = ({
   objects: refs,
@@ -52,7 +52,7 @@ export const CardMasonry = ({
 }: CardMasonryProps) => {
   // Resolved reactively rather than through `ref.target`: on a cold load the targets are not in
   // memory yet, and a synchronous read would leave the grid permanently empty. `ref.atom` tracks
-  // loading without tracking mutations — a rename re-renders only its card, which subscribes itself.
+  // loading without tracking mutations - a rename re-renders only its card, which subscribes itself.
   const objectsAtom = useMemo(() => Atom.make((get) => refs.map((ref) => get(ref.atom)).filter(isNonNullable)), [refs]);
   const objects = useAtomValue(objectsAtom);
   const tiles = useMemo<Tile[]>(

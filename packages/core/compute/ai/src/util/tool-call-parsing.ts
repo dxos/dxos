@@ -16,8 +16,8 @@ import { log } from '@dxos/log';
  * The streamed `tool-params-start`, `tool-params-delta`, and `tool-params-end` parts are not
  * affected.
  *
- * A stream that fails because tool call parameters did not parse ends cleanly instead — as an
- * `InvalidOutputError` failure or, depending on the provider, a raw `SyntaxError` defect — since
+ * A stream that fails because tool call parameters did not parse ends cleanly instead - as an
+ * `InvalidOutputError` failure or, depending on the provider, a raw `SyntaxError` defect - since
  * the raw delta parts consumers read have all been emitted by then.
  */
 export const withoutToolCallParsing = <

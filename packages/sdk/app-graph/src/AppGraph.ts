@@ -26,7 +26,7 @@ import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryPar
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module
 // because the store stamps the brand symbols at class-definition time and the operations reach into
-// the store — split across files those are mutually recursive imports, and the class body runs
+// the store - split across files those are mutually recursive imports, and the class body runs
 // against an uninitialized binding.
 //
 
@@ -270,7 +270,7 @@ export class GraphImpl implements WritableGraph {
    * The node as the model holds it right now.
    *
    * A flush applies its writes inside {@link batch}, which bumps the version once at the end, so
-   * reading {@link Graph._node} from a write path yields the value from before the batch — and
+   * reading {@link Graph._node} from a write path yields the value from before the batch - and
    * `addNode` merges onto what it reads, so that would silently undo an earlier write in the
    * same flush.
    * @internal
@@ -311,7 +311,7 @@ export class GraphImpl implements WritableGraph {
   readonly _connections = Atom.family<string, Atom.Atom<Node.Node[]>>((key) => {
     const parts = key ? primaryParts(key) : [];
     // An empty id (e.g. `useConnections(graph, undefined, ...)`) yields a key with two parts but no
-    // id — treat that as no connections rather than throwing.
+    // id - treat that as no connections rather than throwing.
     if (parts.length < 2 || !parts[0]) {
       return Atom.make((): Node.Node[] => []);
     }
@@ -629,12 +629,12 @@ export const waitForPath = (
 /**
  * Resolves when the node exists in the graph; immediately if it already does.
  *
- * The graph is populated asynchronously — connectors expand a level at a time and the objects
- * behind them load out of band — and {@link expandSync} is fire-and-forget, so a consumer that needs
+ * The graph is populated asynchronously - connectors expand a level at a time and the objects
+ * behind them load out of band - and {@link expandSync} is fire-and-forget, so a consumer that needs
  * a specific node has no completion to await and would otherwise poll for it.
  *
  * Deliberately unbounded: whether a node is merely late or will never arrive is the caller's
- * question, so the deadline belongs at the call site (`Effect.timeout`). Interrupting is safe —
+ * question, so the deadline belongs at the call site (`Effect.timeout`). Interrupting is safe -
  * the subscription is released on interruption.
  */
 export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> =>
@@ -857,7 +857,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
       const dataChanged = !shallowEqual(existing.data, data);
       const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
       // `changed` is on the visit log because counting `existing node` lines alone measures how often a
-      // node was re-offered, not how often it actually changed — two very different costs.
+      // node was re-offered, not how often it actually changed - two very different costs.
       const changed = typeChanged || dataChanged || propertiesChanged;
       log('existing node', {
         id,
@@ -873,7 +873,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
           ...rest,
           type,
           data,
-          // Merged, not replaced, so several extensions can each contribute properties to one node —
+          // Merged, not replaced, so several extensions can each contribute properties to one node -
           // which makes a key one generation sets and the next omits impossible to clear. A builder
           // that varies a property must emit it on every generation, `false`/`undefined` included.
           properties: { ...existing.properties, ...properties },
@@ -988,7 +988,7 @@ export const addEdge = <T extends WritableGraph>(graph: T, edgeArg: Edge): T => 
   const internal = getInternal(graph);
   // Deduping is `_setEdge`'s job and it does it by edge id in O(1); the membership check that used
   // to guard this built the source's whole edge record per edge, which is quadratic on a wide fan-out.
-  // No log line here — it runs per edge of every flush, and building the entry costs more than the write.
+  // No log line here - it runs per edge of every flush, and building the entry costs more than the write.
   internal._setEdge(edgeArg.source, edgeArg.target, relationId);
   return graph;
 };
@@ -1017,7 +1017,7 @@ export const removeEdge = <T extends WritableGraph>(graph: T, edgeArg: Edge, rem
 
   if (removeOrphans) {
     // Asked of the model directly rather than through `_edges`, whose adjacency read rebuilds an
-    // O(E) index on every version bump — quadratic when a connector drops all of its nodes at once.
+    // O(E) index on every version bump - quadratic when a connector drops all of its nodes at once.
     for (const endpoint of [edgeArg.source, edgeArg.target]) {
       if (endpoint !== GraphNode.RootId && !internal._model.hasEdges(endpoint)) {
         removeNodes(graph, [endpoint]);

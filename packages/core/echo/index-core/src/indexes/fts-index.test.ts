@@ -684,7 +684,7 @@ describe('FtsIndex', () => {
 
       const defaultQuery = { query: 'Shared', spaceId: null, includeAllQueues: false, queues: null } as const;
 
-      // No type scope — both match.
+      // No type scope - both match.
       const unscoped = yield* index.query(defaultQuery);
       expect(unscoped).toHaveLength(2);
       const nullScope = yield* index.query({ ...defaultQuery, typeDxns: null });

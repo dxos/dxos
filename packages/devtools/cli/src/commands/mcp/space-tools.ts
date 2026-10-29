@@ -36,7 +36,7 @@ type SpaceInfo = Schema.Schema.Type<typeof SpaceInfo>;
  *   way every other verb is reached. It is blocked on the session reaching an operation handler as
  *   a service: neither half can be derived from a client, because EDGE's MCP worker has none and
  *   resolves identity and spaces from the OAuth grant instead. That is also why a space listing
- *   cannot port on its own — one reading `client.spaces` works on this host and cannot work on
+ *   cannot port on its own - one reading `client.spaces` works on this host and cannot work on
  *   that one, so the worker would keep a hand-written listing and the duplication would survive
  *   the port. Duplicated meanwhile with edge's `src/mcp/space-tools.ts`, and the two have already
  *   drifted (this one reports `displayName`, edge's reports `haloSpaceId`).
@@ -44,12 +44,12 @@ type SpaceInfo = Schema.Schema.Type<typeof SpaceInfo>;
 export const WhoAmI = Tool.make('whoami', {
   description:
     'Returns the authenticated DXOS identity and the data spaces this session can operate on, each ' +
-    'with its name and member count — refer to a space by name when talking to the user, and pass ' +
+    'with its name and member count - refer to a space by name when talking to the user, and pass ' +
     'its id when calling a tool.',
   parameters: Tool.EmptyParams,
   success: Schema.Struct({
-    // The DID, not the identity key: it is the identity's public name — what EDGE authorizes
-    // against and what every other surface reports — where the key is an implementation detail.
+    // The DID, not the identity key: it is the identity's public name - what EDGE authorizes
+    // against and what every other surface reports - where the key is an implementation detail.
     identityDid: Schema.String,
     displayName: Schema.optional(Schema.String),
     spaces: Schema.Array(SpaceInfo).annotate({
@@ -85,7 +85,7 @@ export const spaceHandlers = (server: LocalServer) =>
   });
 
 /**
- * Describes the session's spaces. The session's own list is the set — it is what dispatch accepts —
+ * Describes the session's spaces. The session's own list is the set - it is what dispatch accepts -
  * and the client supplies the labels. Best-effort per field: a space whose properties or membership
  * cannot be read is still listed, with whatever did resolve.
  */

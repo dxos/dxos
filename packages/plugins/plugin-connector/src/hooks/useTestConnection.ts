@@ -27,7 +27,7 @@ export type TestConnectionStatus =
   | 'testing'
   /** The stored credential authenticated successfully. */
   | 'valid'
-  /** The stored credential was rejected — {@link UseTestConnectionResult.error} carries the reason. */
+  /** The stored credential was rejected - {@link UseTestConnectionResult.error} carries the reason. */
   | 'invalid'
   /** The connector declares no `testConnection`, so validity can't be probed. */
   | 'unsupported';
@@ -90,7 +90,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
     async (controller) => {
       // Every early exit clears `testing`, including these: a probe may already have been in flight
       // when its subject went away, and the superseding run returns here without ever reaching the
-      // code that would clear the flag — leaving the button disabled on "Testing…" for good.
+      // code that would clear the flag - leaving the button disabled on "Testing..." for good.
       if (!connection || !connector) {
         setTesting(false);
         return;
@@ -124,7 +124,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
         setError(undefined);
       } else {
         setStatus('invalid');
-        // A defect (unexpected throw) leaves no typed failure — fall back to a generic message.
+        // A defect (unexpected throw) leaves no typed failure - fall back to a generic message.
         setError(Option.getOrUndefined(Cause.findErrorOption(exit.cause))?.message ?? 'Connection test failed.');
       }
     },

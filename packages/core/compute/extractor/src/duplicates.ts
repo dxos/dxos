@@ -9,14 +9,14 @@ import { type Database, Obj, type Type } from '@dxos/echo';
 import { type IdentitySpec, identityKeys } from './IdentitySpec.ts';
 
 /**
- * A set of objects the engine believes are the same entity — the "duplicate tuple". Membership is
+ * A set of objects the engine believes are the same entity - the "duplicate tuple". Membership is
  * the transitive closure over shared identity keys, so `A~B` by email and `B~C` by foreign key put
  * all three in one group.
  */
 export interface DuplicateGroup<S extends Type.AnyObj = Type.AnyObj> {
   /** The identity keys shared by at least two members; what the UI shows as the reason. */
   readonly keys: readonly string[];
-  /** Members in `EntityId` order — `objects[0]` is the survivor {@link planMerge} would pick. */
+  /** Members in `EntityId` order - `objects[0]` is the survivor {@link planMerge} would pick. */
   readonly objects: readonly Type.InstanceType<S>[];
 }
 
@@ -24,7 +24,7 @@ export interface DuplicateGroup<S extends Type.AnyObj = Type.AnyObj> {
  * Groups objects that share at least one identity key. Pure: takes the candidates rather than
  * querying, so it is trivially testable and reusable over a filtered subset.
  *
- * Singletons are dropped — only groups of two or more are returned, ordered largest first so the
+ * Singletons are dropped - only groups of two or more are returned, ordered largest first so the
  * review UI shows the worst offenders before the marginal ones.
  */
 export const findDuplicates = <S extends Type.AnyObj>(
@@ -102,7 +102,7 @@ export const findDuplicates = <S extends Type.AnyObj>(
 
 /**
  * The outcome of merging a group, computed without writing anything. `preview` is a detached
- * object carrying the merged fields — the Form the user confirms binds to it, so a cancelled
+ * object carrying the merged fields - the Form the user confirms binds to it, so a cancelled
  * merge leaves the database untouched.
  */
 export interface MergePlan<S extends Type.AnyObj = Type.AnyObj> {
@@ -113,7 +113,7 @@ export interface MergePlan<S extends Type.AnyObj = Type.AnyObj> {
 
 /**
  * Picks the survivor and folds every member into a detached preview object. The survivor is the
- * lowest `EntityId` — deterministic, and the same rule `.agents/projects/object-merging/` uses, so
+ * lowest `EntityId` - deterministic, and the same rule `.agents/projects/object-merging/` uses, so
  * the two never disagree about which object is canonical.
  *
  * Field precedence follows the fold order (survivor first, then losers by id), which is why the
@@ -136,7 +136,7 @@ export const planMerge = <S extends Type.AnyObj>(spec: IdentitySpec<S>, group: D
  * Applies a plan: folds the losers into the survivor, transfers their foreign keys so every
  * external lookup now lands on the survivor, and removes them.
  *
- * `overrides` is the user-edited preview — when supplied its fields are assigned over the merged
+ * `overrides` is the user-edited preview - when supplied its fields are assigned over the merged
  * result, so an edit made in the confirmation Form wins even where the survivor already had a value.
  *
  * LIMITATION: references to a loser are not rewritten. `Message.sender.contact` lives in immutable
@@ -156,7 +156,7 @@ export const applyMerge = <S extends Type.AnyObj>(
         transferKeys(survivor, loser);
       }
       // Assigned, not merged: `spec.merge` only fills gaps, so an edit to a field the survivor
-      // already had was silently discarded. The confirmed draft is the user's decision — it wins.
+      // already had was silently discarded. The confirmed draft is the user's decision - it wins.
       if (overrides) {
         Obj.updateFrom(survivor, overrides);
       }
@@ -169,7 +169,7 @@ export const applyMerge = <S extends Type.AnyObj>(
     return survivor;
   });
 
-/** Ascending `EntityId` order — ULIDs are lexicographically sortable, so this is creation order. */
+/** Ascending `EntityId` order - ULIDs are lexicographically sortable, so this is creation order. */
 const compareById = (a: { id: string }, b: { id: string }): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /** Copies a loser's foreign keys onto the survivor so external ids keep resolving after removal. */

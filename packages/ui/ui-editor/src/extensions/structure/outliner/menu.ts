@@ -13,7 +13,7 @@ import { treeFacet } from './tree.ts';
 
 // The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.
 // No size constant: the trigger is a square `dx-button` whose box follows the size scale, so it is centred on a point
-// by CSS (`translate(-50%, -50%)`) — see `.cm-outliner-menu` below.
+// by CSS (`translate(-50%, -50%)`) - see `.cm-outliner-menu` below.
 
 export type MenuOptions = {
   icon?: string;
@@ -52,7 +52,7 @@ export const menu = (options: MenuOptions = {}): Extension => [
         container.appendChild(this.tag);
 
         // Capture-phase on the document, not `container`: the trigger is `position: fixed`, so its
-        // coordinates go stale when ANY ancestor scrolls — and when the editor grows to fit its
+        // coordinates go stale when ANY ancestor scrolls - and when the editor grows to fit its
         // content the scroller is the surrounding plank, which never fires on `scrollDOM`.
         const handler = () => this.scheduleUpdate();
         this.cleanup = addEventListener(document, 'scroll', handler, { capture: true, passive: true });

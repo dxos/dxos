@@ -28,7 +28,7 @@ export const translations = [
       [LibraryNamespace.key]: {
         'plugin.name': 'Library',
         'search-book.label': 'Search books',
-        'search-book.placeholder': 'Search the BookHive catalog…',
+        'search-book.placeholder': 'Search the BookHive catalog...',
         'layout-masonry.label': 'Cards',
         'layout-table.label': 'Table',
         'empty-books.label': 'No books yet',

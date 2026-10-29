@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { runDx, withIsolatedHome } from '../testing/index.ts';
 
 /**
- * End-to-end subprocess tests for `dx plugin add` / `remove` against a fixture plugin — a directory
+ * End-to-end subprocess tests for `dx plugin add` / `remove` against a fixture plugin - a directory
  * carrying a `manifest.json` and an entry module whose default export is the factory `Plugin.make`
  * produces, which is the shape a published third-party plugin ships.
  *
@@ -70,7 +70,7 @@ describe('plugin add --dev', () => {
     TIMEOUT,
   );
 
-  // With no terminal to prompt, consent has to be refusal — a script must say `--yes`.
+  // With no terminal to prompt, consent has to be refusal - a script must say `--yes`.
   test(
     'refuses to install without confirmation, naming --yes',
     ({ expect }) => {
@@ -194,7 +194,7 @@ describe('a broken install', () => {
     ({ expect }) => {
       withIsolatedHome((home) => {
         runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
-        // Point the record at a directory that no longer holds an entry module — the state a user
+        // Point the record at a directory that no longer holds an entry module - the state a user
         // reaches by moving or deleting a linked checkout.
         const contents = fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8');
         fs.writeFileSync(
@@ -203,7 +203,7 @@ describe('a broken install', () => {
         );
 
         // The plugin manager resolves lazy plugins inside its init chain, so an unhandled import
-        // failure here would fail every command — including the ones needed to recover.
+        // failure here would fail every command - including the ones needed to recover.
         const { status } = runDx(['--json', 'plugin', 'list'], { home });
         expect(status).toBe(0);
 

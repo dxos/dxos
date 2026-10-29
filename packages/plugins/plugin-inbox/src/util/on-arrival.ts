@@ -24,7 +24,7 @@ import { isAiServiceUnavailable } from '../operations/extractor/index.ts';
 /**
  * Runs configured auto-on-arrival extractors for a batch of just-synced messages. Selects the
  * highest-confidence extractor that exceeds the mailbox threshold and invokes
- * {@link InboxOperation.ExtractMessage}. Failures are swallowed — the AI service may be absent
+ * {@link InboxOperation.ExtractMessage}. Failures are swallowed - the AI service may be absent
  * during startup and will catch up on the next sync.
  */
 export const runOnArrivalExtractors = (mailbox: Mailbox.Mailbox, messages: readonly Message.Message[]) =>
@@ -67,7 +67,7 @@ export const runOnArrivalExtractors = (mailbox: Mailbox.Mailbox, messages: reado
         ).pipe(
           Effect.catch((err) => {
             // The AI service can be momentarily absent from the process-manager LayerStack during
-            // startup. Treat that as a deferrable skip — a later sync re-attempts.
+            // startup. Treat that as a deferrable skip - a later sync re-attempts.
             if (isAiServiceUnavailable(err)) {
               log.info('auto-on-arrival extract skipped: AI service not ready', { messageId: message.id });
             } else {
@@ -83,7 +83,7 @@ export const runOnArrivalExtractors = (mailbox: Mailbox.Mailbox, messages: reado
 /**
  * Pipeline stage wrapping {@link runOnArrivalExtractors}: runs the mailbox's configured on-arrival
  * extractors (AI and others) for each item's message, passing the item through unchanged.
- * Self-gating: a no-op when the mailbox has no extractors enabled. Sender→contact extraction is
+ * Self-gating: a no-op when the mailbox has no extractors enabled. Sender->contact extraction is
  * handled unconditionally by `@dxos/pipeline-email`'s `EmailStage.extractContacts`; this stage
  * covers the remaining, config-gated extractors.
  *

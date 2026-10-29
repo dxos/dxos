@@ -15,7 +15,7 @@ export const renderDial = (spec: Dashboard.MetricSpec): Protocol.DialFeedback =>
     case 'progress': {
       return {
         title: spec.title,
-        value: spec.detail ?? (spec.ratio === undefined ? '…' : `${Math.round(spec.ratio * 100)}%`),
+        value: spec.detail ?? (spec.ratio === undefined ? '\u2026' : `${Math.round(spec.ratio * 100)}%`),
         bar: spec.ratio,
       };
     }

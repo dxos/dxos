@@ -28,7 +28,7 @@ import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
  * How a handle for a remotely hosted process delivers ephemeral trace.
  *
  * The distinction this covers is what a reader SEES DURING a turn. The host flushes its event ring
- * at the end of an invocation, so a subscription that pages that ring cannot show a turn arriving —
+ * at the end of an invocation, so a subscription that pages that ring cannot show a turn arriving -
  * it renders whole, after the fact, however well the provider streamed. Given a live trace source
  * the handle replays what the host already has and then takes the rest as it is pushed.
  */
@@ -98,7 +98,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
       }).pipe(Effect.provide(registryLayer())),
     );
 
-    // The page plus the empty page that ends the replay — bounded, not a loop. The polled path would
+    // The page plus the empty page that ends the replay - bounded, not a loop. The polled path would
     // still be reading: the host above never settles, which is the whole reason a turn cannot be
     // watched through it.
     expect(reads).toBe(2);
@@ -122,7 +122,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
   test('falls back to polling the ring when the monitor is the noop', async ({ expect }) => {
     // `layerNoop` says the deployment HAS no live source, so it must behave as if the tag were
     // unset. Taken as live, its empty stream ends the subscription as soon as the ring's replay is
-    // drained — which, for a reader that subscribes before the turn it wants to watch, is before a
+    // drained - which, for a reader that subscribes before the turn it wants to watch, is before a
     // single event exists. That silently delivered nothing to every local-only deployment.
     const collected = await EffectEx.runPromise(
       Effect.gen(function* () {
@@ -136,7 +136,7 @@ describe('RemoteProcessHandle ephemeral trace', () => {
 
   test('falls back to polling the ring with no live source', async ({ expect }) => {
     // Unchanged behaviour where no swarm monitor is provided (local-only deployments, tests): the
-    // subscription pages the ring, so it still delivers — just not until the host has flushed.
+    // subscription pages the ring, so it still delivers - just not until the host has flushed.
     const collected = await EffectEx.runPromise(
       Effect.gen(function* () {
         const handle = yield* makeHandle(makeControl([traceMessage('buffered')]));
@@ -262,7 +262,7 @@ const traceMessage = (text: string): Trace.Message =>
 
 /**
  * A host whose ring holds `buffered` and which never settles, so a polled subscription stays open
- * — the shape that makes the difference between the two paths observable.
+ * - the shape that makes the difference between the two paths observable.
  */
 /** A host whose log holds only outputs; an input appends `reply` (when given) and ends the process. */
 const makeOutputLog = (initial: readonly string[], initialState: Process.State, reply?: string) => {

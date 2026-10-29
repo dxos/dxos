@@ -12,7 +12,7 @@ import type * as Store from './Store.ts';
 
 /**
  * The whole-graph counts behind `vocabulary` and `stats`, computed once at the end of an indexing
- * pass and kept in SQLite `meta`: on this repository each is a scan of two million quads (10–15 s),
+ * pass and kept in SQLite `meta`: on this repository each is a scan of two million quads (10-15 s),
  * which a reader would otherwise pay on its first call.
  */
 
@@ -41,7 +41,7 @@ const META_KEY = 'summary';
 
 /**
  * What the graph actually contains, rather than what the indexer asserts. The distinction matters:
- * the classes and relations an agent most wants — `EffectLayer`, `providesService` — are concluded
+ * the classes and relations an agent most wants - `EffectLayer`, `providesService` - are concluded
  * by the N3 rules and appear nowhere in the JSON-LD context. The prefix test is a `HAVING`, not a
  * `FILTER`, so it runs once per term rather than once per quad (about 5x faster on this repository).
  */

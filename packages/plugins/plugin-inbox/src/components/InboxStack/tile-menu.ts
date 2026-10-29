@@ -12,7 +12,7 @@ export type TileMenuItem = {
 };
 
 export type TileMenuOptions = {
-  /** The message the entries act on — a conversation tile passes its latest, as its star does. */
+  /** The message the entries act on - a conversation tile passes its latest, as its star does. */
   messageId: string;
   /** Sender address; `Ignore sender` is meaningless without one. */
   senderEmail?: string;

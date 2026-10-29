@@ -37,7 +37,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
 
       // Navigate to the trip and kick off the planning skill in the background. Both are
       // side-effects that depend on app capabilities absent in headless/test runs, so failures are
-      // logged rather than fatal — the trip is already created and returned.
+      // logged rather than fatal - the trip is already created and returned.
       yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(trip)] }).pipe(
         Effect.catch((error) => {
           log.catch(error);

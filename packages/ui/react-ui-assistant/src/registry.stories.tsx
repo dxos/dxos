@@ -16,13 +16,13 @@ import { assistantRegistry } from './registry.tsx';
 import { BACKGROUND_TOOL } from './renderer.ts';
 import { translations } from './translations.ts';
 
-// Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
+// Shared across stories: the store is the thread's, not an item's - a widget's state has to survive
 // the item unmounting as the reader scrolls past it.
 const store = createWidgetStateStore();
 
 /**
  * Every tag {@link assistantRegistry} registers, rendered through the shipping path: the document
- * the renderer emits, in the feed's own `MarkdownBlock` — the container a thread mounts per
+ * the renderer emits, in the feed's own `MarkdownBlock` - the container a thread mounts per
  * message. One story per tag, so a widget can be worked on in isolation without driving a whole
  * conversation.
  */
@@ -114,7 +114,7 @@ export const TestAllWidgetsFit: Story = {
 export const SyntheticTurn: Story = {
   args: {
     content:
-      '<synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
+      '<synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session - it flagged a problem with the merge going through while checks were pending.</synthetic>',
   },
 };
 
@@ -146,13 +146,13 @@ export const Synthetic: Story = {
 
 /**
  * Synthetic turns beside a tool run: both are one line of prose with the disclosure caret at its
- * end — a one-liner, a multi-line wake-up, and a long nudge with a checklist.
+ * end - a one-liner, a multi-line wake-up, and a long nudge with a checklist.
  */
 const SYNTHETIC_VARIANTS = trim`
   <synthetic>Continue.</synthetic>
 
   <synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).
-  Poll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>
+  Poll the agent session - it flagged a problem with the merge going through while checks were pending.</synthetic>
 
   <synthetic>
   Completed the checklist:
@@ -207,7 +207,7 @@ export const Reasoning: Story = {
 
 export const Status: Story = {
   args: {
-    content: '<status>Searching the workspace…</status>',
+    content: '<status>Searching the workspace...</status>',
   },
 };
 
@@ -451,7 +451,7 @@ export const ToolkitCodeModeNamed: Story = {
         displayName: 'Create task',
         displayIcon: 'ph--check-square--regular',
       },
-      result('tc-1', 'eval', { output: 'Created task 01J9…', ok: true }),
+      result('tc-1', 'eval', { output: 'Created task 01J9...', ok: true }),
     ]),
   },
 };

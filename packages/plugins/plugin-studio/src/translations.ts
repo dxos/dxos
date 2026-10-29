@@ -62,7 +62,7 @@ export const translations = [
       [StudioNamespace.key]: {
         'plugin.name': 'Studio',
         'generate.label': 'Generate',
-        'generating.label': 'Generating…',
+        'generating.label': 'Generating...',
         'create.label': 'Create artifact',
         'generate-error.title': 'Generation failed',
         'close.label': 'Close',

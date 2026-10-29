@@ -69,7 +69,7 @@ describe('bindCanvasStore', () => {
     bound.dispose();
   });
 
-  test('a linked drawing’s frame on a third drawing opens it, and an edit keeps the frame’s own child id', async ({
+  test("a linked drawing's frame on a third drawing opens it, and an edit keeps the frame's own child id", async ({
     expect,
   }) => {
     const { db, graph } = await builder.createDatabase();

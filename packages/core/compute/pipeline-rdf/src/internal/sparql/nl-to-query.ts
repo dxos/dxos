@@ -40,7 +40,7 @@ const PROMPT = trim`
   - subjectEntity: an entity slug constrained to the subject position.
   - predicate: a verb phrase. It matches a stored predicate whose label or synonyms share its words, so
     include it ONLY when the relation is likely to appear in the data. For broad "who/what relates to X" questions,
-    prefer entity alone — an over-specific predicate that doesn't match returns nothing.
+    prefer entity alone - an over-specific predicate that doesn't match returns nothing.
   - minConfidence: a lower bound on confidence.
 
   Examples:

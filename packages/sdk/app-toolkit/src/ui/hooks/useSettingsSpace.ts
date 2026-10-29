@@ -19,7 +19,7 @@ import * as AppSpace from '../../echo/AppSpace.ts';
  *
  * `undefined` until the space resolves: a profile may not have one on first load (it arrives via
  * identity setup or the migration), which is why this subscribes to the space list rather than
- * reading it once — {@link AppSpace.getSettingsSpace} on its own never re-renders the caller.
+ * reading it once - {@link AppSpace.getSettingsSpace} on its own never re-renders the caller.
  */
 export const useSettingsSpace = (): Space | undefined => {
   const client = useClient();
@@ -38,7 +38,7 @@ export const useSettingsSpaceProperties = (): [
  * Reactive lookup of the space designated as the default target for unscoped content.
  *
  * The designation lives on the settings space properties, so this re-resolves both when the space
- * list changes and when the user picks a different default — on this device or another.
+ * list changes and when the user picks a different default - on this device or another.
  */
 export const useDefaultSpace = (): Space | undefined => {
   const client = useClient();

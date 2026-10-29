@@ -23,7 +23,7 @@ import { settingsAtom } from './settings.ts';
  *
  * Analysis settings (model/provider/strict) are read live from the atom registry at invoke time and
  * OVERRIDE the cascade's run options, so a story or local setup can retarget analysis (e.g. to Ollama)
- * without a rebuild — the reason the menu item read them this way too.
+ * without a rebuild - the reason the menu item read them this way too.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

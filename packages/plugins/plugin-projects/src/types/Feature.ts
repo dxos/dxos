@@ -139,8 +139,8 @@ export const make = (props: Obj.MakeProps<typeof Feature>): Feature =>
 export const instanceOf = (value: unknown): value is Feature => Obj.instanceOf(Feature, value);
 
 /**
- * Whether adding `source → target` to the `DependsOn` edges would close a cycle, i.e. `source` is already
- * reachable from `target`. Returns the path `target … source` when it would, so the caller can name it.
+ * Whether adding `source -> target` to the `DependsOn` edges would close a cycle, i.e. `source` is already
+ * reachable from `target`. Returns the path `target ... source` when it would, so the caller can name it.
  */
 export const findDependencyCycle = (
   edges: readonly (readonly [source: string, target: string])[],
@@ -182,7 +182,7 @@ export const getLink = (feature: Feature | Obj.Snapshot<Feature>): DXN.DXN | und
 export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
 
 /**
- * Where a spec opens on GitHub: a URL is kept; a repo path (`packages/…/PLUGIN.mdl#F-3`) opens its file on the
+ * Where a spec opens on GitHub: a URL is kept; a repo path (`packages/.../PLUGIN.mdl#F-3`) opens its file on the
  * default branch, without the block anchor, which GitHub cannot resolve inside an `.mdl` file.
  */
 export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): string =>

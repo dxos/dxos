@@ -125,9 +125,9 @@ const saveNumber = (name: string, value: number) => {
   }
 };
 
-/** Per-frame decay of the recent peak level (≈8 s half-life at ~90 frames/s), slower than a note's tail. */
+/** Per-frame decay of the recent peak level (~8 s half-life at ~90 frames/s), slower than a note's tail. */
 const PEAK_DECAY = 0.999;
-/** A frame counts as sounding only above this fraction of the recent peak level (−20 dB). */
+/** A frame counts as sounding only above this fraction of the recent peak level (-20 dB). */
 const RELATIVE_LEVEL = 0.1;
 /** Absolute floor (RMS) below which nothing counts as sounding. */
 const MIN_LEVEL = 0.002;

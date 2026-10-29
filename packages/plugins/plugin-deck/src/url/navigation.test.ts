@@ -89,7 +89,7 @@ describe('getCandidateEntityIds', () => {
     expect(getCandidateEntityIds(`${MAILBOX_ID}${SEPARATOR}all-mail`, SEPARATOR)).toEqual([MAILBOX_ID]);
   });
 
-  // The mirror image: `…/database/<typeSlug>/<objectId>`.
+  // The mirror image: `.../database/<typeSlug>/<objectId>`.
   test('type slug first, object id last', ({ expect }) => {
     expect(getCandidateEntityIds(`example.com-type-Contact${SEPARATOR}${MESSAGE_ID}`, SEPARATOR)).toEqual([MESSAGE_ID]);
   });

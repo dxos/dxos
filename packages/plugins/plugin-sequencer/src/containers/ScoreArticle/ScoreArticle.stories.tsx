@@ -33,7 +33,7 @@ const SAMPLE_PATTERN: Pattern = {
     {
       id: 's1',
       trackId: 't1',
-      name: 'Lead — verse',
+      name: 'Lead - verse',
       length: 16,
       notes: [60, 62, 64, 65, 67, 69, 71, 72].map((pitch, index): Note.Note => ({
         pitch,
@@ -45,7 +45,7 @@ const SAMPLE_PATTERN: Pattern = {
     {
       id: 's2',
       trackId: 't2',
-      name: 'Bass — verse',
+      name: 'Bass - verse',
       length: 16,
       notes: [36, 36, 43, 43, 41, 41, 38, 38].map((pitch, index): Note.Note => ({
         pitch,
@@ -72,7 +72,7 @@ const SAMPLE_PATTERN: Pattern = {
 };
 
 type StoryArgs = {
-  /** Lead-sheet text — when set, parsed and applied via applyLeadSheetToScore. */
+  /** Lead-sheet text - when set, parsed and applied via applyLeadSheetToScore. */
   text?: string;
   /** Plain pattern (tracks + sequences) used when `text` is not provided. */
   pattern?: Pattern;

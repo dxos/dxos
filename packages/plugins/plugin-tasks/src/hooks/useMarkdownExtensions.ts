@@ -11,7 +11,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 
 /**
  * Editor extensions other plugins contribute (e.g. plugin-github's `#123` decoration and link
- * chips), read by the component that builds the editor — the same contract `MarkdownArticle`
+ * chips), read by the component that builds the editor - the same contract `MarkdownArticle`
  * honours for markdown documents. There is no document here; the edited object (the outline, the
  * task set) stands in for it, so a contribution can resolve against the project that owns it.
  */

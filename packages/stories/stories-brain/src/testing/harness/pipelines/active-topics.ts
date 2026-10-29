@@ -79,7 +79,7 @@ export const makeActiveTopicsDeps = (policy?: ModelPolicy): ActiveTopicsDeps => 
 
     tasks: async (context) => {
       const prompt = trim`
-        List the concrete ACTION ITEMS the owner should do for this topic — short imperative phrases.
+        List the concrete ACTION ITEMS the owner should do for this topic - short imperative phrases.
         If there are none, return []. Respond with ONLY a JSON array of strings.
         Topic: ${context.draft.name}
         Threads:

@@ -3,11 +3,11 @@
 //
 
 /**
- * Agent identities, end to end. Alice turns on Settings › Plugins › Agent › "Create identities for agents" and adds
- * Kai in her space's Settings › Agents: EDGE mints its identity and its own space, Kai joins her space as a member,
- * and Profile › Agents lists it with Alice as its admin. She invites Bob into Kai's space, which makes him an admin
+ * Agent identities, end to end. Alice turns on Settings > Plugins > Agent > "Create identities for agents" and adds
+ * Kai in her space's Settings > Agents: EDGE mints its identity and its own space, Kai joins her space as a member,
+ * and Profile > Agents lists it with Alice as its admin. She invites Bob into Kai's space, which makes him an admin
  * too, and tells Kai about the team offsite in Lisbon. Bob, who is not in Alice's space, adds Kai to his own space from
- * its Members panel and asks it what is planned: Kai answers there from what Alice told it — recorded side by side,
+ * its Members panel and asks it what is planned: Kai answers there from what Alice told it - recorded side by side,
  * one browser per person.
  *
  * @mdl packages/plugins/plugin-agent/PLUGIN.mdl test QA-5
@@ -38,7 +38,7 @@ const QUESTION = 'Check your memory: what do we have so far for the offsite?';
 const TIMEOUT = 60_000;
 /** Creating an agent provisions its identity and space on EDGE before the space reaches the client. */
 const PROVISION_TIMEOUT = 120_000;
-/** A live agent turn on EDGE (spawn, tools, model) took 15–90 s when probed. */
+/** A live agent turn on EDGE (spawn, tools, model) took 15-90 s when probed. */
 const REPLY_TIMEOUT = 240_000;
 /** How long a reply must stay unchanged to count as finished: a turn streams, then runs its tools. */
 const SETTLED_MS = 4_000;
@@ -65,7 +65,7 @@ const waitFor = async (predicate, { timeout = TIMEOUT, what }) => {
   }
 };
 
-/** The workspace segment of the URL (`/w/<workspace>/…`). */
+/** The workspace segment of the URL (`/w/<workspace>/...`). */
 const workspaceOf = (page) => {
   const [anchor, workspace] = new URL(page.url()).pathname.split('/').filter(Boolean);
   return anchor === 'w' ? decodeURIComponent(workspace) : undefined;
@@ -182,7 +182,7 @@ const enableIdentities = async (page, gesture) => {
   await waitFor(() => isOn(toggle), { what: `"${SETTING}" to be on` });
 };
 
-/** Opens the agent's chat from the current space's Settings › Agents, whose list opens an agent on click. */
+/** Opens the agent's chat from the current space's Settings > Agents, whose list opens an agent on click. */
 const openAgent = async (peer) => {
   const { page } = peer;
   await openSpaceSettings(peer, 'agentPlugin.agentsSection');
@@ -333,14 +333,14 @@ export const steps = [
   },
   {
     name: `Alice turns on "${SETTING}"`,
-    subtitle: 'QA-5 step 1: Settings › Plugins › Agent; it is off by default, and agents work without identities',
+    subtitle: 'QA-5 step 1: Settings > Plugins > Agent; it is off by default, and agents work without identities',
     run: async ({ peers: { alice } }) => {
       await enableIdentities(alice.page, (locator) => alice.click(locator));
       await alice.page.waitForTimeout(1_500);
     },
   },
   {
-    name: `Alice adds an agent named ${AGENT} in ${HOME}'s Settings › Agents`,
+    name: `Alice adds an agent named ${AGENT} in ${HOME}'s Settings > Agents`,
     subtitle: 'QA-5 step 2: its identity and its own space are minted on EDGE',
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
@@ -384,7 +384,7 @@ export const steps = [
     },
   },
   {
-    name: `Alice opens Profile › Agents: ${AGENT} is listed`,
+    name: `Alice opens Profile > Agents: ${AGENT} is listed`,
     subtitle: 'QA-5 step 4: the agents she administers, read from her own spaces',
     run: async ({ peers: { alice } }) => {
       await openAgentsPanel(alice);
@@ -397,7 +397,7 @@ export const steps = [
   },
   {
     name: `Alice invites Bob into ${AGENT}'s space`,
-    subtitle: "QA-5 step 5: Kai's space from its row, then Settings › Members",
+    subtitle: "QA-5 step 5: Kai's space from its row, then Settings > Members",
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
       // The agent's own space is named after it.
@@ -444,7 +444,7 @@ export const steps = [
     },
   },
   {
-    name: `Bob opens Profile › Agents: ${AGENT} is listed`,
+    name: `Bob opens Profile > Agents: ${AGENT} is listed`,
     subtitle: "QA-5 step 7: whoever can edit the agent's space administers the agent",
     run: async ({ peers: { bob } }) => {
       await openAgentsPanel(bob);
@@ -469,7 +469,7 @@ export const steps = [
     },
   },
   {
-    name: `Bob adds ${AGENT} to "${OTHER}" from Members › Add from contacts`,
+    name: `Bob adds ${AGENT} to "${OTHER}" from Members > Add from contacts`,
     subtitle: "QA-5 step 10: as Kai's admin he can, and Kai becomes a member of the space; EDGE checks it",
     run: async ({ peers: { bob } }) => {
       const { page } = bob;
@@ -479,7 +479,7 @@ export const steps = [
       await bob.click(page.getByTestId('contact-picker.trigger').first());
       await bob.click(page.getByTestId('contact-picker.item').filter({ hasText: AGENT }).first());
       await bob.click(page.getByTestId('contactPicker.add'));
-      // The space lists it among its members, and holds Kai's presence, which its Settings › Agents lists.
+      // The space lists it among its members, and holds Kai's presence, which its Settings > Agents lists.
       await waitFor(() => listsAgentAsMember(page), { what: `${OTHER} to list ${AGENT} among its members` });
       await waitFor(() => holdsAgent(page, OTHER), { what: `${OTHER} to hold ${AGENT}` });
     },

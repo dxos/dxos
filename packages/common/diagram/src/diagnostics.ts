@@ -18,7 +18,7 @@ export const Severity = Schema.Literals(['error', 'warning']);
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
 /**
- * `error` codes are objective defects — the picture is wrong, not merely busy — and gate CI.
+ * `error` codes are objective defects - the picture is wrong, not merely busy - and gate CI.
  * `warning` codes are quality metrics that trend rather than pass/fail; they are golden-filed so
  * a layout change reads as a reviewable diff instead of a threshold argument.
  */
@@ -43,7 +43,7 @@ export const SEVERITY: Record<Code, Severity> = {
   'edge-overlap': 'warning',
 };
 
-/** A schema so operations can return diagnostics to the agent — the repair loop. */
+/** A schema so operations can return diagnostics to the agent - the repair loop. */
 export const Diagnostic = Schema.Struct({
   code: Code,
   severity: Severity,
@@ -76,7 +76,7 @@ export type Metrics = {
   containers: number;
   /** Smallest gap from a container to its nearest container (Infinity with fewer than two). */
   frameGapMin: number;
-  /** Spread (max − min) of each container's nearest-neighbour gap; 0 when gutters are uniform. */
+  /** Spread (max - min) of each container's nearest-neighbour gap; 0 when gutters are uniform. */
   frameGapSpread: number;
 };
 
@@ -335,7 +335,7 @@ const simplify = (points: readonly Point[]): Point[] =>
     });
 
 /**
- * Connector pieces joined at a junction in free space — a bus trunk and its spokes — as one connector: a
+ * Connector pieces joined at a junction in free space - a bus trunk and its spokes - as one connector: a
  * piece ending on another away from any node's border, without running along it, belongs to it.
  */
 const busesOf = (pieces: readonly Connector[], rects: readonly Rect[]): Connector[][] => {
@@ -475,7 +475,7 @@ const overlapArea = (a: Rect, b: Rect): number => {
 
 /**
  * Strict enclosure: the inner rect fits inside AND is smaller. Two identical rects are stacked
- * nodes — the strongest overlap — not a container and its member.
+ * nodes - the strongest overlap - not a container and its member.
  */
 const contains = (outer: Rect, inner: Rect): boolean =>
   outer.x - EPSILON <= inner.x &&
@@ -487,7 +487,7 @@ const contains = (outer: Rect, inner: Rect): boolean =>
 /**
  * Length of the segment's run through the rect's INTERIOR (Liang-Barsky). A connector legitimately
  * terminating at a node only touches its border, so an interior run identifies a route drawn
- * across a node it does not belong to — no knowledge of the edge's terminals required.
+ * across a node it does not belong to - no knowledge of the edge's terminals required.
  */
 const interiorRun = ([start, end]: Segment, rect: Rect): number => {
   const dx = end.x - start.x;
@@ -615,7 +615,7 @@ export const layoutLabel = (text: string, weight: Scene.Weight, { w, h }: { w: n
     return { lines, size, lineH, overflow: true };
   }
   const kept = lines.slice(0, maxLines);
-  kept[maxLines - 1] = `${kept[maxLines - 1].slice(0, Math.max(0, perLine - 1)).trimEnd()}…`;
+  kept[maxLines - 1] = `${kept[maxLines - 1].slice(0, Math.max(0, perLine - 1)).trimEnd()}\u2026`;
   return { lines: kept, size, lineH, overflow: true };
 };
 
@@ -833,6 +833,6 @@ export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }:
   };
 };
 
-/** Errors only — the set that gates CI and that an agent must fix before the diagram is usable. */
+/** Errors only - the set that gates CI and that an agent must fix before the diagram is usable. */
 export const errors = (report: Report): readonly Diagnostic[] =>
   report.diagnostics.filter(({ severity }) => severity === 'error');

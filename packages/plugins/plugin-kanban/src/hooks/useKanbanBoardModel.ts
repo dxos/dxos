@@ -76,7 +76,7 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
     [pivotFieldIdAtom, arrangementAtom, projection],
   );
 
-  // Per-column slice of arrangement so each column’s items atom only depends on that column’s ids.
+  // Per-column slice of arrangement so each column's items atom only depends on that column's ids.
   const columnArrangementAtomFamily = useMemo(
     () =>
       Atom.family<string, Atom.Atom<KanbanLayout.ColumnStructure>>((columnValue: string) =>
@@ -91,7 +91,7 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
     [effectiveByColumnAtom],
   );
 
-  // Items for a single column: filter all items by pivot field, sort by this column’s ids, then append new items.
+  // Items for a single column: filter all items by pivot field, sort by this column's ids, then append new items.
   const itemsAtomFamily = useMemo(
     () =>
       Atom.family<string, Atom.Atom<T[]>>((columnValue: string) =>

@@ -21,7 +21,7 @@ export const WorkflowTable = ({ items }: { items: any[] }) => {
     items.map(({ id, name, display_title, conclusion, pull_requests, updated_at }) => ({
       id: chalk.dim.blue(id),
       name: chalk.gray(name),
-      conclusion: !conclusion ? chalk.gray('…') : conclusion === 'success' ? chalk.bold.green('✔') : chalk.red('✗'),
+      conclusion: !conclusion ? chalk.gray('...') : conclusion === 'success' ? chalk.bold.green('OK') : chalk.red('X'),
       updated: chalk.blue(relativeTime(Date.parse(updated_at).valueOf())),
       branch: chalk.bold.gray(formatPullRequest(pull_requests)),
       title: chalk.dim.green(display_title),

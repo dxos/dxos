@@ -61,7 +61,7 @@ describe('toJsonSchema wire shape', () => {
   test('optional fields are the bare type, omitted from `required`', () => {
     const jsonSchema = toJsonSchema(Contact);
 
-    // NOT `anyOf: [T, {type: 'null'}]` — optionality is carried by `required` alone.
+    // NOT `anyOf: [T, {type: 'null'}]` - optionality is carried by `required` alone.
     expect(jsonSchema.properties!.email).not.toHaveProperty('anyOf');
     expect(jsonSchema.properties!.age).not.toHaveProperty('anyOf');
     expect(jsonSchema.required).toEqual(expect.arrayContaining(['name', 'active', 'kind']));

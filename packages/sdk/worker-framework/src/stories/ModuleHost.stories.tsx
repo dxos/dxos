@@ -38,9 +38,9 @@ const ModulePanel = ({ connection, info }: { connection: ModuleHostConnection; i
       try {
         const parsed: unknown = JSON.parse(args);
         const value = await connection.invoke(name, method, ...(Array.isArray(parsed) ? parsed : [parsed]));
-        setResult(`${method} → ${JSON.stringify(value)}`);
+        setResult(`${method} -> ${JSON.stringify(value)}`);
       } catch (err) {
-        setResult(`${method} ✗ ${errorMessage(err)}`);
+        setResult(`${method} \u2717 ${errorMessage(err)}`);
       }
     },
     [connection, info, args],

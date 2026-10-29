@@ -37,8 +37,8 @@ export type BranchStatus = Schema.Schema.Type<typeof BranchStatus>;
  * A draft branch of a parent Text forked at a specific revision (anchor heads).
  *
  * The record is product metadata only (label, status, provenance). For core branches (`key` set)
- * the branch content is an ECHO-core branch of the parent object itself — same object id, shared
- * automerge history, CRDT merge-back — owned by the space-root branch registry, which `key` indexes.
+ * the branch content is an ECHO-core branch of the parent object itself - same object id, shared
+ * automerge history, CRDT merge-back - owned by the space-root branch registry, which `key` indexes.
  * Legacy content-copy branches (pre core-branching) carry a separate forked Text in `content` and
  * merge textually; they remain readable/mergeable until migrated (convergence plan stage 4).
  */
@@ -54,7 +54,7 @@ export const Branch = Schema.Struct({
   status: BranchStatus,
   createdAt: Schema.String,
   creator: Schema.optional(Schema.String),
-  /** Branch intent: one `suggestion` per author (review model) vs an explicit `draft` fork. Absent ⇒ draft. */
+  /** Branch intent: one `suggestion` per author (review model) vs an explicit `draft` fork. Absent => draft. */
   kind: Schema.optional(Schema.Literals(['suggestion', 'draft'])),
   mergedAt: Schema.optional(Schema.String),
 }).mapFields(Struct.map(Schema.mutableKey));

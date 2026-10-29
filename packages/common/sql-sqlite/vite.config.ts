@@ -21,7 +21,7 @@ export default defineConfig({
     'platform/sql-storage-node': 'src/platform/sql-storage-node.ts',
     'platform/sql-storage-workerd': 'src/platform/sql-storage-workerd.ts',
   },
-  // Undeclared dep, reached only through this package — inlined rather than left for
+  // Undeclared dep, reached only through this package - inlined rather than left for
   // consumers to resolve.
   bundle: ['@effect/sql-sqlite-wasm'],
   // Both this package and `@effect/sql-sqlite-wasm` import the upstream wa-sqlite; the DXOS

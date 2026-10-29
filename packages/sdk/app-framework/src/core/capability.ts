@@ -30,7 +30,7 @@ export class Service extends Context.Service<Service, CapabilityManager.Capabili
 ) {}
 
 /**
- * Module id of the activation currently executing — set by the loader around each module's
+ * Module id of the activation currently executing - set by the loader around each module's
  * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
  * timing) can attribute itself to the module without threading the id through every body.
  */
@@ -41,7 +41,7 @@ export const CurrentModuleId: Context.Reference<string | undefined> = Context.Re
 
 /**
  * Every module id whose `activate` body is on the current fiber's call stack, not just the
- * innermost — a body may fire an activation event, and that event's wave must not wait on a module
+ * innermost - a body may fire an activation event, and that event's wave must not wait on a module
  * it is running inside. Such a wait only ends at the activation timeout, which the failure
  * supervisor reads as a broken plugin and disables.
  */
@@ -77,7 +77,7 @@ export const getAll = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[], nev
 
 /**
  * Get a single capability from the capability manager, if one is contributed.
- * Never fails — use this over {@link get} when the capability's absence (e.g. an optional plugin
+ * Never fails - use this over {@link get} when the capability's absence (e.g. an optional plugin
  * isn't loaded) is a legitimate case to handle rather than an error.
  * @param interfaceDef The interface definition of the capability.
  * @returns The first capability implementation, or `Option.none()` if none is contributed.
@@ -212,7 +212,7 @@ declare const CapabilityBrand: unique symbol;
 
 /**
  * Phantom identifier of a capability in the Effect context.
- * Branded by the capability's NSID (a string literal) and arity — never by the service type —
+ * Branded by the capability's NSID (a string literal) and arity - never by the service type -
  * so the requirement channel names only local string literals, keeping module bodies'
  * declaration emit portable without per-file annotations. This mirrors Effect's own tags, whose
  * requirement identity is a nominal token (the `Self` class of `Context.Tag`/`Effect.Service`),
@@ -225,7 +225,7 @@ export interface CapabilityIdentifier<Id extends string, A extends Arity> {
 /**
  * Live, reactive view over all contributions to a multi capability.
  * The collection is not a barrier: entries may be added or removed as plugins are
- * enabled/disabled — consume reactively.
+ * enabled/disabled - consume reactively.
  */
 export interface Contributions<T> {
   /**
@@ -253,7 +253,7 @@ export interface Contributions<T> {
  * unchanged. The tag's runtime `key` equals the capability `identifier`.
  */
 // `S` defaults to `any` (not `string`): `Context.Tag` is invariant in its identifier, so a bare
-// annotation like `Tag<Example>` — meaning "a singleton tag of this service type, any NSID" —
+// annotation like `Tag<Example>` - meaning "a singleton tag of this service type, any NSID" -
 // must be assignable from every concrete `Tag<Example, "the.actual.nsid">`; defaulting to `string`
 // would reject all of them since neither is a subtype of the other under invariance.
 export interface Tag<T, S extends string = any>
@@ -282,17 +282,17 @@ export interface AnyTag extends Context.Key<CapabilityIdentifier<any, Arity>, an
  * Compile-time error surfaced when the service type is omitted from the curried factory form.
  * Mirrors Effect's `MissingSelfGeneric` guard on `Effect.Service`/`Context.Tag`: the service type
  * cannot be inferred (it is unrelated to the identifier string), so omitting it would silently
- * widen the identifier to `string` and make the requirement check vacuous — this turns that
+ * widen the identifier to `string` and make the requirement check vacuous - this turns that
  * footgun into a message instead.
  */
-type MissingServiceType = 'Missing service type — write make<T>()(nsid) / makeSingleton<T>()(nsid)';
+type MissingServiceType = 'Missing service type - write make<T>()(nsid) / makeSingleton<T>()(nsid)';
 
 /** Identifier-string parameter, validated as a well-formed NSID at compile time via {@link DXN.Name}. */
 type NsidParam<S extends string> = [DXN.Name<S>] extends [never]
   ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)`
   : S;
 
-// Runtime tag construction — the phantom brand (`CapabilityIdentifier`) and `InterfaceDef` member
+// Runtime tag construction - the phantom brand (`CapabilityIdentifier`) and `InterfaceDef` member
 // are type-only, so assembling the concrete tag object requires a controlled cast at this boundary
 // (as Effect's own tag constructors do internally). Isolated here so call sites stay cast-free.
 const buildTag = <T, S extends string, A extends Arity>(identifier: S, arity: A) =>
@@ -302,12 +302,12 @@ const buildTag = <T, S extends string, A extends Arity>(identifier: S, arity: A)
   }) as unknown as A extends 'multi' ? MultiTag<T, S> : Tag<T, S>;
 
 /**
- * Defines a multi (registry) capability — the default: an open registry contributed to by
+ * Defines a multi (registry) capability - the default: an open registry contributed to by
  * many modules, yielding a live {@link Contributions} collection.
  *
  * Preferred (curried) form captures the NSID string literal, so the requirement channel stays
- * precise and portable — the same shape Effect uses for `Context.Tag`/`Effect.Service`:
- * `make<T>()('org.dxos…capability')`. The service type `T` is explicit (it cannot be inferred);
+ * precise and portable - the same shape Effect uses for `Context.Tag`/`Effect.Service`:
+ * `make<T>()('org.dxos...capability')`. The service type `T` is explicit (it cannot be inferred);
  * the NSID `S` is inferred as a literal in the second call.
  *
  * The single-call form `make<T>(nsid)` is a transitional shim that widens `S` to `string`
@@ -372,7 +372,7 @@ export type Any = Capability<any>;
  * Union of the raw capability-entry shapes a module's `activate` may return, accepted alongside
  * typed {@link Contribution}s so the manager can ingest an already-expanded entry (the shape
  * {@link CapabilityManager.contribute} stores) without re-branding it. Authored modules return
- * {@link Contribution}s instead — only those are checked against a declared `provides`.
+ * {@link Contribution}s instead - only those are checked against a declared `provides`.
  */
 export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]] | readonly [Any, ...Any[]];
 
@@ -382,7 +382,7 @@ export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]]
 
 /**
  * Brand symbol carried by every {@link Contribution}. Exported only so the manager layer
- * ({@link CapabilityManager.isContribution}) can detect contributions at runtime — not part of
+ * ({@link CapabilityManager.isContribution}) can detect contributions at runtime - not part of
  * the plugin-authoring API. Not tagged internal: `stripInternal` would drop it from the declarations
  * while the {@link Contribution} brand still names it.
  */
@@ -391,13 +391,13 @@ export type ContributionTypeId = typeof ContributionTypeId;
 
 /**
  * A single typed contribution returned from a module's activate, branded by the capability's
- * identifier (NSID + arity) rather than its full tag — so a module body's inferred return type
+ * identifier (NSID + arity) rather than its full tag - so a module body's inferred return type
  * names only local string literals, never the (possibly non-portable) service type `T`, keeping
  * declaration emit portable. The value-type safety is enforced at the {@link contribute} call, where
  * `T` is naturally in scope; downstream only the capability identity matters (completeness check).
  * Carries one value for a singleton capability, n values for a multi capability.
  */
-// `Id` is a capability identifier (`CapabilityIdentifier<S, A>`) — left unconstrained because
+// `Id` is a capability identifier (`CapabilityIdentifier<S, A>`) - left unconstrained because
 // `Context.Service.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
 // an explicit bound; the default documents the intended shape.
 export interface Contribution<Id = CapabilityIdentifier<string, Arity>> {
@@ -412,8 +412,8 @@ export type AnyContribution = Contribution;
 
 /**
  * The capability identifier (NSID + arity) of a tag. Extracted from our own {@link Tag}/
- * {@link MultiTag} `S` parameter rather than via Effect's `Context.Service.Identifier`, which — for a
- * generic tag parameter — falls through to its `TagClassShape` branch and yields the raw tag
+ * {@link MultiTag} `S` parameter rather than via Effect's `Context.Service.Identifier`, which - for a
+ * generic tag parameter - falls through to its `TagClassShape` branch and yields the raw tag
  * (leaking the service type again). Singleton checked first; a singleton never matches the multi
  * arm and vice versa (the arity brand differs).
  */
@@ -477,7 +477,7 @@ export type ProvidesReturn<Provides extends readonly AnyTag[]> = Provides extend
   : Contribution<ProvidedIds<Provides>> | ReadonlyArray<Contribution<ProvidedIds<Provides>>>;
 
 /**
- * The capability identifiers of a provides tuple — the provides-side parallel to
+ * The capability identifiers of a provides tuple - the provides-side parallel to
  * {@link Requirements}. Contributions and the completeness check compare identities by these
  * (NSID + arity) rather than by the full tag, so neither leaks the service type.
  */
@@ -550,7 +550,7 @@ export interface Module<Options = void> {
 
 /**
  * A package.json export/import condition a module loads under, via {@link ModuleSpec}'s
- * `environments` — `'browser'`, `'tauri'`, `'node'` and `'workerd'` in this repo.
+ * `environments` - `'browser'`, `'tauri'`, `'node'` and `'workerd'` in this repo.
  *
  * Deliberately an open string rather than a union: conditions are defined by whichever build tool
  * resolves the package, so the framework has no business enumerating them (a consumer targeting
@@ -587,7 +587,7 @@ type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly An
  * The spec is available without importing the chunk (dependency ordering happens before
  * code-splitting resolves) and the loaded default export is type-checked against it. The
  * returned {@link Module} is opaque with respect to requires/provides/props, parameterized
- * only by `Options` — this is what eliminates TS2883 at every call site.
+ * only by `Options` - this is what eliminates TS2883 at every call site.
  * The lazy pairing of {@link makeModule}.
  * @param name The export name (e.g., 'AppGraphBuilder') - used to auto-compute module IDs.
  * @param spec The requires/provides declaration, matching the module authoring site.
@@ -640,9 +640,9 @@ export const lazyModule = <
 
 /**
  * Helper to define an eager module body with the same spec-carrying shape as
- * {@link lazyModule} — for bodies that are plain values (translations, schema) or too small
+ * {@link lazyModule} - for bodies that are plain values (translations, schema) or too small
  * to justify a chunk, so plugin definitions stay a uniform chain of spec-carrying modules.
- * @param name The module name — used to auto-compute module IDs.
+ * @param name The module name - used to auto-compute module IDs.
  * @param spec The requires/provides declaration.
  * @param activate The module body.
  */
@@ -702,7 +702,7 @@ export type MakerOptions<
  * `defaults.activatesOn` sets the family's default demand gate: modules made by the maker are
  * event-mode on it unless the call site declares its own `activatesOn`. This is how a capability
  * owner makes the well-behaved activation the default for every provider (e.g. operation
- * handlers park until an operation is invoked) — startup is not assumed.
+ * handlers park until an operation is invoked) - startup is not assumed.
  *
  * `defaults.environments` does the same for the runtime axis: a family declares the conditions its
  * modules load under once here (every runtime for schema and operation handlers, `browser` and
@@ -726,7 +726,7 @@ export const moduleMaker =
   ): Module<Options> => {
     // Correlation cast: `provides` is required, so the spread needs a concrete tuple; when
     // options are absent `Extra` resolves to its `readonly []` default, making it the correct
-    // value. `requires` needs no such fallback — it stays optional all the way to the boundary.
+    // value. `requires` needs no such fallback - it stays optional all the way to the boundary.
     const extra = (options?.provides ?? []) as Extra;
     return lazyModule(
       options?.name ?? defaultName,

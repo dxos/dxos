@@ -12,7 +12,7 @@ import { type RealmCpu } from '../types.ts';
  * V8 sampling interval.
  *
  * The default 1000 µs. Accepted rather than minimized because `diagnose` rows are never trended
- * nor compared against `measure` rows — the profile exists so a regression `measure` detected
+ * nor compared against `measure` rows - the profile exists so a regression `measure` detected
  * arrives with its callstack instead of needing a reproduction. Do not read the overhead as small:
  * profiling every realm alongside the screencast slowed a 200-task render by an order of
  * magnitude, which is why `diagnose` needs its own (much larger) timeouts.
@@ -42,7 +42,7 @@ export type ProfileSession = {
  *
  * `(program)` is deliberately NOT here, though it looks like a sibling. V8's `EntryForVMState` maps
  * only `IDLE` to `(idle)`; `JS`, `COMPILER`, `OTHER` and `EXTERNAL` all map to `(program)`, which is
- * the realm doing work V8 could not attribute to a script — native code, compilation, an external
+ * the realm doing work V8 could not attribute to a script - native code, compilation, an external
  * callback. Counting it as idle understated every realm's CPU. Measured across the 36 profiles of
  * one run: 69,591 `(idle)` samples against 1,958 `(program)`, the latter concentrated in the page
  * on render-heavy stages, so Chrome does report real idleness as `(idle)` and `(program)` was
@@ -80,7 +80,7 @@ const sampledCpuMs = (profile: CpuProfile): { cpuMs: number; samples: number; id
  *
  * Per stage AND per target: a whole-run profile attributes nothing to the step that regressed, and a page-only profile misses the shared worker
  * that does the database work. Files are named for the stage they cover, which is the whole reason
- * the profile is worth keeping — a reviewer reading a regression should not have to reconstruct
+ * the profile is worth keeping - a reviewer reading a regression should not have to reconstruct
  * which stage an artifact belongs to.
  */
 export const startProfiling = (outputDir: string): ProfileSession => {

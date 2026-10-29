@@ -64,7 +64,7 @@ export type LabelsResponse = Schema.Schema.Type<typeof LabelsResponse>;
 // https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get
 //
 
-/** A `MessagePart` body: inline data (≤ ~size), or an `attachmentId` to fetch separately when large. */
+/** A `MessagePart` body: inline data (<= ~size), or an `attachmentId` to fetch separately when large. */
 export const MessagePartBody = Schema.Struct({
   size: Schema.Number,
   data: Schema.optional(Schema.String),
@@ -80,10 +80,10 @@ export const Header = Schema.Struct({
 export type Header = Schema.Schema.Type<typeof Header>;
 
 /**
- * A MIME part of a message. Recursive: multipart parts (e.g. `multipart/mixed`) nest further parts —
+ * A MIME part of a message. Recursive: multipart parts (e.g. `multipart/mixed`) nest further parts -
  * attachments are leaf parts carrying `filename` and `body.attachmentId`. `headers` carries the part's
  * own MIME headers (e.g. `Content-ID`, used to match an inline attachment to a `cid:` reference in an
- * HTML body) — distinct from `Message.payload.headers`, which are the top-level message headers.
+ * HTML body) - distinct from `Message.payload.headers`, which are the top-level message headers.
  */
 const _Part = Schema.Struct({
   mimeType: Schema.String,
@@ -99,7 +99,7 @@ export const Message = Schema.Struct({
   id: Schema.String,
   threadId: Schema.String,
   // Not present on every real message (e.g. some messages without any labels) despite the Gmail
-  // API reference implying it's always populated — `mapToMessage` defaults to `[]`.
+  // API reference implying it's always populated - `mapToMessage` defaults to `[]`.
   labelIds: Schema.optional(Schema.Array(Schema.String)),
   snippet: Schema.String,
   internalDate: Schema.String,
@@ -131,7 +131,7 @@ export type ListMessagesResponse = Schema.Schema.Type<typeof ListMessagesRespons
 //
 
 /**
- * users.getProfile — only `historyId` (the delta-resume token) is used by incremental sync. Optional
+ * users.getProfile - only `historyId` (the delta-resume token) is used by incremental sync. Optional
  * defensively: a provider/dataset without delta support returns none, which keeps sync on the
  * `max`/`min` window scan.
  */
@@ -152,7 +152,7 @@ const HistoryMessage = Schema.Struct({
 
 /**
  * One `users.history.list` record: message additions/deletions and per-message label changes since the
- * prior `historyId` (RFC-style delta). Every sub-list is optional — a record carries only the change
+ * prior `historyId` (RFC-style delta). Every sub-list is optional - a record carries only the change
  * kinds that occurred.
  */
 export const HistoryRecord = Schema.Struct({

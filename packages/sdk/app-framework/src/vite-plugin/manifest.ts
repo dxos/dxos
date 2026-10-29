@@ -51,7 +51,7 @@ export const toBuildMeta = (meta: Plugin.Meta, version: string, dependencies?: R
  * manifest URL, and persists them via the platform `PluginAssetCache` so the
  * plugin works offline. For production builds the entry module is always
  * {@link ENTRY_FILENAME} and must appear in `assets`. For dev-server manifests
- * pass `devEntry` (a path relative to the manifest URL) — the host then imports
+ * pass `devEntry` (a path relative to the manifest URL) - the host then imports
  * the entry directly from the dev server and skips offline caching, since the
  * full asset graph isn't enumerable until build time.
  *

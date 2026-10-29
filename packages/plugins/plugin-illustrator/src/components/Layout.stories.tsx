@@ -71,7 +71,7 @@ const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange:
       extensions: [
         createBasicExtensions({ lineNumbers: true }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        // Standard lezer tags, so the theme's own highlight style colors it — no bespoke style.
+        // Standard lezer tags, so the theme's own highlight style colors it - no bespoke style.
         diagramLanguage({ layout: true }),
         listener({ onChange: ({ text }) => onChange(text) }),
       ],
@@ -227,9 +227,9 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
               {` · ${report.metrics.nodes} nodes · ${report.metrics.connectors} connectors · ${report.metrics.crossings} crossings · ${report.metrics.bends} bends · gap spread ${report.metrics.frameGapSpread}`}
               {result && (
                 <div className='text-fg-muted'>
-                  {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · ${result.chosen.candidate.arrangement} · ${result.chosen.candidate.layering} · align ${result.chosen.candidate.alignment} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates — `}
+                  {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · ${result.chosen.candidate.arrangement} · ${result.chosen.candidate.layering} · align ${result.chosen.candidate.alignment} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates - `}
                   {result.chosen.evaluation.terms
-                    .map(({ id, value, weighted }) => `${id} ${value}×→${weighted.toFixed(1)}`)
+                    .map(({ id, value, weighted }) => `${id} ${value}×->${weighted.toFixed(1)}`)
                     .join(' · ')}
                 </div>
               )}
@@ -250,7 +250,7 @@ const meta = {
   title: 'plugins/plugin-illustrator/components/Layout',
   render: Bench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  // A bench for looking at layouts, not a test: the large diagrams take 30–40 s each to lay out headless.
+  // A bench for looking at layouts, not a test: the large diagrams take 30-40 s each to lay out headless.
   tags: ['!test'],
   parameters: { layout: 'fullscreen' },
   args: { lattice: 0, arrangement: 'auto', layering: 'auto', alignment: 'auto' },
@@ -283,7 +283,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Basic: three packages × three types — inheritance fan-in, has-many chain, fan-in — small enough to argue over. */
+/** Basic: three packages × three types - inheritance fan-in, has-many chain, fan-in - small enough to argue over. */
 export const Basic: Story = { args: { source: BASIC.trim() } };
 export const Echo: Story = { args: { source: echo } };
 export const Assistant: Story = { args: { source: assistant } };

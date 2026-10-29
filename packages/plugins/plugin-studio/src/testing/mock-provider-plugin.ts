@@ -48,8 +48,8 @@ export const mockImageUrl = (prompt: string, index = 0, aspectRatio: '16x9' | '1
 
 /**
  * A keyless `kind: 'image'` provider for stories: `generate` answers with picsum images seeded by a
- * hash of the prompt, so a frame's picture follows its words — regenerating the same prompt gives
- * the same image, a different prompt a different one — without a network credential.
+ * hash of the prompt, so a frame's picture follows its words - regenerating the same prompt gives
+ * the same image, a different prompt a different one - without a network credential.
  */
 export const mockGenerationService: GenerationService.GenerationService = {
   kind: 'image',

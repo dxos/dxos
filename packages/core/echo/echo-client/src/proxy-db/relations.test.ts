@@ -37,11 +37,11 @@ describe('Relations', () => {
       }),
     );
 
-    // Deleting the source only marks it. Resolution is deleted-agnostic — deletion is a query-pipeline
-    // filter, not a resolution gate — so the relation keeps resolving its endpoints to the deleted object.
+    // Deleting the source only marks it. Resolution is deleted-agnostic - deletion is a query-pipeline
+    // filter, not a resolution gate - so the relation keeps resolving its endpoints to the deleted object.
     db.remove(person);
 
-    // getSourceURI always works — reads the stored raw DXN reference.
+    // getSourceURI always works - reads the stored raw DXN reference.
     expect(Relation.getSourceURI(relation)).toBeDefined();
 
     const source = Relation.getSource(relation);

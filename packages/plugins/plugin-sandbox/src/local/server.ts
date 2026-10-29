@@ -41,10 +41,10 @@ const MAX_PUBLISHED = 256;
  * Serves `backend` on the loopback interface as one `POST /<method>` per backend method with a JSON
  * body; file contents travel as base64 so binary files survive.
  *
- * This is how a runtime that cannot spawn processes — the Tauri webview — reaches local sandboxes:
+ * This is how a runtime that cannot spawn processes - the Tauri webview - reaches local sandboxes:
  * the desktop shell starts this server as a sidecar and the webview calls it through `HttpBackend.make`.
  *
- * `POST /publish` additionally serves one of a sandbox's directories read-only at `GET /files/<key>/…`,
+ * `POST /publish` additionally serves one of a sandbox's directories read-only at `GET /files/<key>/...`,
  * without the token: the loaders that fetch what a sandbox built (the plugin manifest, `import()`, the
  * desktop app's asset cache) cannot send a header, so the key in the path is the credential. It is 128
  * random bits, minted per call and forgotten when the helper exits.

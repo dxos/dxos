@@ -84,7 +84,7 @@ const storyOptions = {
         TasksPlugin.make(),
         CrmPlugin.make(),
         // Contributes the space templates (Northwind Sales, Tidepool, Chess MCP) as space
-        // templates — the ones the app's create-space dialog offers.
+        // templates - the ones the app's create-space dialog offers.
         DebugPlugin.make(),
         // Contributes the Sandbox skill and its operations: without it the agent has no
         // command-execution tool and answers every shell task as blocked.
@@ -113,8 +113,8 @@ const storyOptions = {
 };
 
 /**
- * Persistent storage for the story a human drives: the spaces the templates create — and the
- * conversations held in them — survive a reload, so switching back to a template reopens its work
+ * Persistent storage for the story a human drives: the spaces the templates create - and the
+ * conversations held in them - survive a reload, so switching back to a template reopens its work
  * rather than scaffolding it again. The toolbar's checkbox turns it off; the function form reads
  * the choice at mount, which is when the client boots.
  */
@@ -122,7 +122,7 @@ const persistentDecorators = createDecorators(() => ({
   ...storyOptions,
   config: isPersistent() ? config.persistent : config.remote,
   // A profile imported from the toolbar lands here: plugins resolve before the client starts, which
-  // is the only moment this tab has yet to open the database. Never fatal — the harness renders
+  // is the only moment this tab has yet to open the database. Never fatal - the harness renders
   // nothing until `lazyPlugins` resolves, so a rejection here would leave a blank story rather than
   // one booted on the profile the import did not replace.
   lazyPlugins: async () => {
@@ -187,16 +187,16 @@ const waitForResponse = async (canvasElement: HTMLElement, needle: string, timeo
 /**
  * Project-bound chat over a live AI stack, in three columns: the project, its chat, and the trace
  * panel. The toolbar lists the contributed space templates; picking one resets the space to that
- * template's content — project, mailbox, accounts, documents — and binds a fresh chat to the
+ * template's content - project, mailbox, accounts, documents - and binds a fresh chat to the
  * project it created. Instructions (text + sentinel commands) reach the system prompt through that
  * binding.
  *
  * Test:
  * 1. Wait for the chat prompt to activate (context chips show "Voyage" and "Instructions").
- * 2. Send "What project are you assisting with?" — the reply names Voyage and ends with AHOY.
- * 3. Send "$track buy milk" — the reply is exactly "TRACKED: buy milk" (plus AHOY per the instructions).
- * 4. Type "$" in the prompt — the autocomplete offers `$track`.
- * 5. Pick "Tidepool — Offline sync v2" — the project column shows that work-stream with its task
+ * 2. Send "What project are you assisting with?" - the reply names Voyage and ends with AHOY.
+ * 3. Send "$track buy milk" - the reply is exactly "TRACKED: buy milk" (plus AHOY per the instructions).
+ * 4. Type "$" in the prompt - the autocomplete offers `$track`.
+ * 5. Pick "Tidepool - Offline sync v2" - the project column shows that work-stream with its task
  *    tree and documents, and the chat starts empty against it.
  */
 export const Default: Story = {

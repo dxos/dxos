@@ -28,9 +28,9 @@
  */
 
 const TEMPLATE = 'Bramble Coffee Roasters';
-const THREAD = 'Spring blend v1 — feedback';
+const THREAD = 'Spring blend v1 - feedback';
 const CONTACT = 'Priya Shah';
-const EVENT = 'Spring Blend cupping — Hatch';
+const EVENT = 'Spring Blend cupping - Hatch';
 const PROJECT = 'Spring Blend Launch';
 const PROTOCOL = 'Spring blend tasting protocol';
 
@@ -134,7 +134,7 @@ export const steps = [
   },
   {
     name: 'Who is asking',
-    narration: 'Priya runs Hatch’s coffee program. Her card shows the cupping already booked.',
+    narration: "Priya runs Hatch's coffee program. Her card shows the cupping already booked.",
     run: async ({ demo, page }) => {
       await caption(demo, 'Who is asking: Priya at Hatch');
       const card = page
@@ -215,7 +215,7 @@ export const steps = [
   {
     name: 'Close',
     narration:
-      'The roastery’s mail, calendar, projects and roasts live on its own devices and sync through EDGE, and an agent can pick up the brief.',
+      "The roastery's mail, calendar, projects and roasts live on its own devices and sync through EDGE, and an agent can pick up the brief.",
     run: async ({ demo, page }) => {
       await caption(demo, 'One space for the whole roastery');
       await demo.click({ selector: node('Inbox'), label: 'Inbox' });

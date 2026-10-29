@@ -55,8 +55,8 @@ const recordFailure = (url: string): void => {
 };
 
 /**
- * Recovers from a lazy chunk whose asset no longer exists — the state a session left open across a deploy
- * lands in, where Vite's `preloadHelper` reports `Unable to preload CSS for …` and the route stays broken.
+ * Recovers from a lazy chunk whose asset no longer exists - the state a session left open across a deploy
+ * lands in, where Vite's `preloadHelper` reports `Unable to preload CSS for ...` and the route stays broken.
  * The page is reloaded once per session so the new index replaces the stale one; the session-scoped guard
  * keeps a genuinely broken build from reloading forever, in which case the error is left to propagate.
  */

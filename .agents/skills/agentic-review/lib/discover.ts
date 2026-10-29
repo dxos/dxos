@@ -51,7 +51,7 @@ export const listRepoFiles = (): Set<string> => {
 };
 
 /** Compile a grep pattern as a RegExp, tolerating a pattern that isn't valid
- * regex by matching it literally — a rule may reasonably write a plain string. */
+ * regex by matching it literally - a rule may reasonably write a plain string. */
 const compileGrep = (pattern: string): RegExp => {
   try {
     return new RegExp(pattern);
@@ -138,7 +138,7 @@ export type RuleGroup = { n: number; rule: Rule; files: string[]; scope?: 'full'
  * Group matched rules for subagents, favoring focus over packing: one group is a
  * single rule over a bounded chunk of its files. Rules are never merged together.
  *
- * When `maxGroups > 0`, every matched file is still covered — slot budget is
+ * When `maxGroups > 0`, every matched file is still covered - slot budget is
  * shared across rules (at least one group each) and each rule's files are split
  * evenly into its slots (chunk size grows as needed). If there are more rules
  * than `maxGroups`, the budget expands to one group per rule so files are never

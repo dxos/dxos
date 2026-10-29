@@ -11,9 +11,9 @@ import { defaultTx } from '../theme/defaultTheme.ts';
 import { initialSafeArea } from './useSafeArea.ts';
 
 // Failing soft (rather than throwing) keeps error-reporting surfaces renderable:
-// the fatal dialog itself consumes this hook, and a missing provider — including
+// the fatal dialog itself consumes this hook, and a missing provider - including
 // the vite dev dual-module split, where the mounted ThemeProvider holds a
-// different ThemeContext identity than this consumer — would otherwise crash the
+// different ThemeContext identity than this consumer - would otherwise crash the
 // dialog meant to report the original error.
 const fallbackContextValue: Theme.ThemeContextValue = {
   tx: defaultTx,

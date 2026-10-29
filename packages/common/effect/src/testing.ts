@@ -86,7 +86,7 @@ export namespace TestHelpers {
    * Bind the HTTP client to whatever `globalThis.fetch` is when the effect runs.
    *
    * `FetchHttpClient.Fetch` is a `Context.Reference` whose default is cached on first read for the
-   * life of the process, so a test that stubs the global afterwards is ignored — every request after
+   * life of the process, so a test that stubs the global afterwards is ignored - every request after
    * the first keeps using the first test's stub (and, for a `Response` instance, its consumed body).
    *
    * Example:

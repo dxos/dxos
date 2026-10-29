@@ -26,31 +26,31 @@ const SLICE_MS = 10_000;
 
 /** W3C WebDriver key codepoints for the key names Playwright uses. */
 const KEYS = {
-  Backspace: '',
-  Tab: '',
-  Enter: '',
-  Shift: '',
-  Control: '',
-  Alt: '',
-  Escape: '',
+  Backspace: '\uE003',
+  Tab: '\uE004',
+  Enter: '\uE007',
+  Shift: '\uE008',
+  Control: '\uE009',
+  Alt: '\uE00A',
+  Escape: '\uE00C',
   Space: ' ',
-  PageUp: '',
-  PageDown: '',
-  End: '',
-  Home: '',
-  ArrowLeft: '',
-  ArrowUp: '',
-  ArrowRight: '',
-  ArrowDown: '',
-  Insert: '',
-  Delete: '',
-  Meta: '',
+  PageUp: '\uE00E',
+  PageDown: '\uE00F',
+  End: '\uE010',
+  Home: '\uE011',
+  ArrowLeft: '\uE012',
+  ArrowUp: '\uE013',
+  ArrowRight: '\uE014',
+  ArrowDown: '\uE015',
+  Insert: '\uE016',
+  Delete: '\uE017',
+  Meta: '\uE03D',
   ...Object.fromEntries(
     Array.from({ length: 12 }, (_, index) => [`F${index + 1}`, String.fromCharCode(0xe031 + index)]),
   ),
 };
 
-/** `KeyK` → `k`, `Digit1` → `1`, a named key → its codepoint, a single character → itself. */
+/** `KeyK` -> `k`, `Digit1` -> `1`, a named key -> its codepoint, a single character -> itself. */
 const keyValue = (name) => {
   if (KEYS[name]) {
     return KEYS[name];
@@ -325,7 +325,7 @@ export const createTauriPage = ({ session, input = 'webdriver' }) => {
     }
 
     /**
-     * Waits until the first match can take a pointer at its center — visible, enabled, and on top there —
+     * Waits until the first match can take a pointer at its center - visible, enabled, and on top there -
      * scrolling it into view first, as Playwright's actionability checks do. Answers the point.
      */
     async #actionable(timeout = defaultTimeout, { enabled = true } = {}) {

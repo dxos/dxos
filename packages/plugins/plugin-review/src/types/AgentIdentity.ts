@@ -11,7 +11,7 @@ import { ReviewNamespace } from '../namespace.ts';
  *
  * Resolved via a Capability contribution at plugin activation, never stored on
  * Thread.Thread. Renaming the agent globally (e.g. via plugin settings)
- * immediately affects gating and sender metadata on every opted-in thread —
+ * immediately affects gating and sender metadata on every opted-in thread -
  * past and future.
  *
  * - `name`: display name and @mention token (case-insensitive match).

@@ -18,11 +18,11 @@ import { DeckSchema } from '#types';
 
 /**
  * Companion nodes for a plank; `undefined` until the first read, which is a commit after
- * mount — a caller that lays out from this needs to tell "not read yet" from "none".
+ * mount - a caller that lays out from this needs to tell "not read yet" from "none".
  *
  * The node's companion-connections atom is read in a commit-phase effect rather than during render.
  * Subscribing to it during render (via `useConnections`/`useAtomValue`) recomputes the shared atom and
- * synchronously notifies its other subscribers — notably navtree items rendering the same node — which
+ * synchronously notifies its other subscribers - notably navtree items rendering the same node - which
  * surfaces as a React "cannot update a component while rendering a different component" warning. Reading
  * it from an effect defers that notification to the commit phase where cross-component updates are allowed.
  * A layout effect, so a plank with no companions re-renders without its pane before the first paint.

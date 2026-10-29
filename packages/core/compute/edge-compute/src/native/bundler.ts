@@ -89,7 +89,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
             // NOTE: Compute the module directory via `fileURLToPath`, not
             // `new URL('.', import.meta.url)`. Vite's library-mode build treats the latter as an
             // asset reference and base64-inlines the resolved `.ts` module as a
-            // `data:video/mp2t;base64,…` data URL, so `resolveDir` becomes garbage in `dist` and
+            // `data:video/mp2t;base64,...` data URL, so `resolveDir` becomes garbage in `dist` and
             // the bundler can no longer resolve `@dxos/compute-runtime` /
             // `@dxos/functions-runtime-cloudflare`.
             resolveDir: dirname(fileURLToPath(import.meta.url)),

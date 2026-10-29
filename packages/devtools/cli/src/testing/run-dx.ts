@@ -47,7 +47,7 @@ export type RunDxResult = {
   stdout: string;
   stderr: string;
   status: number | null;
-  /** The HOME used — a tmp dir when `isolateHome` was set, otherwise the caller's. */
+  /** The HOME used - a tmp dir when `isolateHome` was set, otherwise the caller's. */
   home: string;
 };
 
@@ -55,7 +55,7 @@ export type RunDxResult = {
  * Spawn `./bin/dx` with the given args. Returns a plain result struct so the
  * caller can assert on exit code + streams without dealing with Effect.
  *
- * The caller is responsible for cleanup when using `isolateHome: true` —
+ * The caller is responsible for cleanup when using `isolateHome: true` -
  * the helper returns `home` so the test can `fs.rmSync(home, { recursive, force })`.
  * If cleanup is inconvenient, wrap the call in a `try/finally`.
  */
@@ -80,7 +80,7 @@ export const runDx = (args: string[], options: RunDxOptions = {}): RunDxResult =
       NO_COLOR: '1',
       // These assertions are about the CLI's own stdout: proto's shims switch to an NDJSON
       // reporter when they detect an agent environment (`AI_AGENT`) and announce that on stdout,
-      // once per HOME — which every isolated HOME here is.
+      // once per HOME - which every isolated HOME here is.
       PROTO_REPORTER: 'text',
       ...options.env,
     },

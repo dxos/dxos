@@ -260,7 +260,7 @@ export const ForceGraph = (props: { content: string }) => {
               title={collapsed().has(group) ? 'expand' : 'collapse'}
               onClick={() => toggle(group)}
             >
-              {collapsed().has(group) ? '▸' : '▾'} {group} ({count})
+              {collapsed().has(group) ? '>' : 'v'} {group} ({count})
             </button>
           )}
         </For>
@@ -317,7 +317,7 @@ export const ForceGraph = (props: { content: string }) => {
                   {node.members ? `${node.label} ×${node.members}` : node.label}
                 </text>
               </Show>
-              <title>{`${node.label} — ${node.score.toFixed(2)}`}</title>
+              <title>{`${node.label} - ${node.score.toFixed(2)}`}</title>
             </g>
           )}
         </For>

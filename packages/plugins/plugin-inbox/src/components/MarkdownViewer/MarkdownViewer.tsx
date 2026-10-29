@@ -36,7 +36,7 @@ export type MarkdownViewerProps = Util.ThemedClassName<{
 }>;
 
 /**
- * Read-only CodeMirror viewer for markdown/plain text (message bodies, event descriptions, …).
+ * Read-only CodeMirror viewer for markdown/plain text (message bodies, event descriptions, ...).
  * Owns the shared read-only core (basic extensions, theme, markdown) and inbox message rendering when
  * `loadRemoteImages` is set; callers may append extra extensions via `extensions`.
  */

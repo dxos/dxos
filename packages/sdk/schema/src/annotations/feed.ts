@@ -10,7 +10,7 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 /**
  * Identifies a schema as an object that owns a canonical feed, naming the property that holds the
  * `Ref<Feed>`. Carrying the property name (rather than a bare `true`) is what lets a generic host
- * resolve the feed without hardcoding `.feed` — see {@link getFeedRef}.
+ * resolve the feed without hardcoding `.feed` - see {@link getFeedRef}.
  */
 export const FeedAnnotation = Annotation.make({
   id: 'org.dxos.annotation.feed',

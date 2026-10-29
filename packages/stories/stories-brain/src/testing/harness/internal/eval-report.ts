@@ -103,13 +103,13 @@ const orderedModes = (scores: readonly VariantScore[], baseline: SkillMode): Ski
   return [baseline, ...modes.filter((mode) => mode !== baseline)];
 };
 
-/** The metric matrix — one coverage row and one faithfulness row per model, modes as columns. */
+/** The metric matrix - one coverage row and one faithfulness row per model, modes as columns. */
 const scoreMatrix = (scores: readonly VariantScore[], modes: readonly SkillMode[]): string => {
   const header = `| model | metric | ${modes.join(' | ')} |`;
   const rule = `| --- | --- | ${modes.map(() => '---').join(' | ')} |`;
   const cell = (score: VariantScore, mode: SkillMode, pick: (arm: ArmScore) => string): string => {
     const arm = score.arms.find((candidate) => candidate.mode === mode);
-    return arm ? pick(arm) : '—';
+    return arm ? pick(arm) : '-';
   };
   const rows = scores.flatMap((score) => [
     `| ${score.model} | coverage | ${modes
@@ -135,14 +135,14 @@ const pairwiseMatrix = (scores: readonly VariantScore[], baseline: SkillMode): s
   const rows = scores.map((score) => {
     const cells = candidates.map((candidate) => {
       const pair = score.pairwise.find((entry) => entry.candidate === candidate);
-      return pair ? label(pair.winner, candidate) : '—';
+      return pair ? label(pair.winner, candidate) : '-';
     });
     return `| ${score.model} | ${cells.join(' | ')} |`;
   });
   const winRate = candidates.map((candidate) => {
     const pairs = scores.map((score) => score.pairwise.find((entry) => entry.candidate === candidate)).filter(Boolean);
     const wins = pairs.filter((pair) => pair!.winner === 'candidate').length;
-    return pairs.length ? `${wins}/${pairs.length}` : '—';
+    return pairs.length ? `${wins}/${pairs.length}` : '-';
   });
   return [header, rule, ...rows, `| **win-rate** | ${winRate.join(' | ')} |`].join('\n');
 };
@@ -164,11 +164,11 @@ export const renderComparison = (options: {
 
   const goldList = goldPoints.length
     ? goldPoints.map((point, index) => `${index + 1}. ${point}`).join('\n')
-    : '_(no gold points — judge unavailable or empty corpus)_';
+    : '_(no gold points - judge unavailable or empty corpus)_';
   const pairwise = pairwiseMatrix(scores, baseline);
 
   const scoreSection = {
-    title: `Scores — subject "${subject}", judge ${judge}`,
+    title: `Scores - subject "${subject}", judge ${judge}`,
     body: [
       `Prompt: \`${prompt}\``,
       '',
@@ -184,7 +184,7 @@ export const renderComparison = (options: {
   };
 
   const modelSections = scores.map((score) => ({
-    title: `${score.model} — arms side-by-side`,
+    title: `${score.model} - arms side-by-side`,
     body: modes
       .map((mode) => {
         const arm = score.arms.find((candidate) => candidate.mode === mode);
@@ -194,7 +194,7 @@ export const renderComparison = (options: {
         const stat = `coverage ${pct(arm.coverage)} (${arm.covered}/${arm.gold}) · faithfulness ${pct(
           arm.faithfulness,
         )} (${arm.supported}/${arm.claims})`;
-        return `### ${mode} — ${stat}\n\n${arm.response.trim() || '_(empty response)_'}`;
+        return `### ${mode} - ${stat}\n\n${arm.response.trim() || '_(empty response)_'}`;
       })
       .join('\n\n'),
   }));

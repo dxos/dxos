@@ -41,7 +41,7 @@ export type GraphSwarmProjectorOptions = GraphProjectorOptions & {
   spawnRadius?: number;
   /** Hard cap on per-tick velocity. */
   maxVelocity?: number;
-  /** Per-force weights — match Swarm's normalisation (divided by 100 on apply). */
+  /** Per-force weights - match Swarm's normalisation (divided by 100 on apply). */
   alignment?: number;
   cohesion?: number;
   separation?: number;
@@ -51,7 +51,7 @@ export type GraphSwarmProjectorOptions = GraphProjectorOptions & {
   avoidance?: number;
   /**
    * Number of previous positions retained per boid (one per simulation tick). The visible
-   * tail spans roughly `trailLength * maxVelocity` pixels — at 60 fps a value of 30 is
+   * tail spans roughly `trailLength * maxVelocity` pixels - at 60 fps a value of 30 is
    * about a half-second streak. Dense per-tick sampling avoids the "snap" artifact a
    * coarser sample interval introduces when only the head moves between samples.
    */
@@ -87,7 +87,7 @@ const DEFAULTS: Required<
  * Boids projector. One simulation timer (d3 `timer`) drives the tick; nodes are
  * the boids, with `vx/vy/ax/ay` carried alongside `x/y`. Edges are kept in the
  * layout (unless `edges: false`) so the renderer still draws them between connected boids, but they do
- * NOT exert a link force — boid motion is governed purely by alignment, cohesion
+ * NOT exert a link force - boid motion is governed purely by alignment, cohesion
  * and separation, with viewBox-wrap at the SVG bounds.
  */
 export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData, GraphSwarmProjectorOptions> {
@@ -96,13 +96,13 @@ export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData
   #cursor: { x: number; y: number } | null = null;
 
   override findNode(): GraphLayoutNode<NodeData> | undefined {
-    // Boids have no spatial index — drag isn't supported in this variant.
+    // Boids have no spatial index - drag isn't supported in this variant.
     return undefined;
   }
 
   /**
    * Tell the projector where the pointer is, in SVG model coordinates (the same space
-   * `node.x/y` live in — center origin, post-zoom). Pass `null` (or omit args) on
+   * `node.x/y` live in - center origin, post-zoom). Pass `null` (or omit args) on
    * pointer-leave to disable cursor avoidance.
    */
   setCursor(x?: number | null, y?: number | null): void {
@@ -166,7 +166,7 @@ export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData
         node.ax ??= 0;
         node.ay ??= 0;
       }
-      // Default render radius — matches the force projector default.
+      // Default render radius - matches the force projector default.
       node.r ??= 6;
       // Reset the trail history. On fresh entry (`prev` from force/lattice/...) the field
       // is undefined; on re-entry from a prior swarm session the layout node is reused and
@@ -263,7 +263,7 @@ export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData
           const dist = Math.sqrt(distSq);
 
           if (dist < SEPARATION_DISTANCE) {
-            // Push away — inverse-distance weighting matches the canvas variant.
+            // Push away - inverse-distance weighting matches the canvas variant.
             sepX += (-dx / dist) * (1 / dist);
             sepY += (-dy / dist) * (1 / dist);
             sepActive = true;
@@ -323,7 +323,7 @@ export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData
       b.vy = vy;
 
       // Push the pre-integration position into history every tick. Dense sampling means
-      // the path-end shifts by a sub-pixel amount per frame — the curve evolves
+      // the path-end shifts by a sub-pixel amount per frame - the curve evolves
       // continuously and the tail-end gradient stop tracks smoothly, avoiding the snap
       // / flicker a sparser sample interval would introduce.
       if (trailLength > 0) {
@@ -362,7 +362,7 @@ export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData
     }
 
     // Edge geometry: quadratic Bézier with control at the origin so every edge bends
-    // toward the center — visually echoing the bundle projector's centre-routed
+    // toward the center - visually echoing the bundle projector's centre-routed
     // curves while staying cheap to compute. The renderer's `applyPositions` reads
     // `edge.path` directly when present.
     for (const edge of this.layout.graph.edges) {

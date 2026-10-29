@@ -24,7 +24,7 @@ export const isPluginRegistryAvailable = (enabled: readonly string[]): boolean =
 
 export const Open = Operation.make({
   meta: {
-    // Not `…appToolkit.open` — that is LayoutOperation's, and a shared key makes the pair
+    // Not `...appToolkit.open` - that is LayoutOperation's, and a shared key makes the pair
     // unresolvable by key alone. Matches its sibling `openPluginRegistry`.
     key: DXN.make('org.dxos.operation.appToolkit.openSettings'),
     name: 'Open Settings',

@@ -26,7 +26,7 @@ export type FilePropertiesProps = AppSurface.ObjectPropertiesProps<File.File>;
  * Properties for a {@link File}: where its bytes actually live.
  *
  * Two values, because they answer different questions and have different lifetimes. The **reference**
- * is the stored URI — `s3://<bucket>/<space>/<hash>` or `ni:///sha-256;…` — which names the backend
+ * is the stored URI - `s3://<bucket>/<space>/<hash>` or `ni:///sha-256;...` - which names the backend
  * and survives forever; it is what to quote when asking "where did this go?". The **URL** is what a
  * browser can fetch right now, and for a private bucket that is a presigned URL which expires, hence
  * the regenerate control rather than a value presented as permanent.

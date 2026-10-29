@@ -213,7 +213,7 @@ describe('CanvasController', () => {
 
     test("fit frames the scene's shapes; fitSelection frames the selection", ({ expect }) => {
       const { registry, atoms, controller } = setup();
-      // Both rectangles span x 0–768 and y 0–128; at most true size, each frame is centred in the 1024 × 768 view.
+      // Both rectangles span x 0-768 and y 0-128; at most true size, each frame is centred in the 1024 × 768 view.
       controller.navigation.fit();
       expect(registry.get(atoms.camera)).toEqual({ zoom: 1, x: 128, y: 320 });
       controller.selection.select(['a']);

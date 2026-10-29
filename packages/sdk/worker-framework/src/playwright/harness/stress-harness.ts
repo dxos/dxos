@@ -12,7 +12,7 @@ export type StressStatus = {
   /** True once the connection has opened and an RPC client exists. */
   connected: boolean;
   clientId: string | undefined;
-  /** Worker INSTANCE identity — equal across tabs iff they share one worker. */
+  /** Worker INSTANCE identity - equal across tabs iff they share one worker. */
   workerId: string | undefined;
   leaderId: string | undefined;
   isOwner: boolean;
@@ -111,11 +111,11 @@ export const installStressHarness = (): (() => Promise<void>) => {
     },
     blockMainThread: (durationMs) => {
       // Deferred to a macrotask so the driver's `evaluate` round-trip completes before the thread
-      // stops answering — otherwise the command itself times out instead of the tab going dark.
+      // stops answering - otherwise the command itself times out instead of the tab going dark.
       setTimeout(() => {
         const end = Date.now() + durationMs;
         while (Date.now() < end) {
-          // Busy spin — starves this tab's leader heartbeat so peers judge it stale.
+          // Busy spin - starves this tab's leader heartbeat so peers judge it stale.
         }
       }, 0);
     },

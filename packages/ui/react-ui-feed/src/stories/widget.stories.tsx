@@ -31,11 +31,11 @@ type Story = StoryObj<FeedStoryProps>;
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
 /** Row re-placements one disclosure costs today: 177 over 19 frames, ~11 rows a frame. */
-// One toggle's animation: the rows after the panel move each frame (the browser reflows them — the
+// One toggle's animation: the rows after the panel move each frame (the browser reflows them - the
 // engine writes nothing), and with the tail followed, the glide moves the whole mounted window as
 // well while the growth is paid back to the end. The pre-glide pin was 260; with the glide the
 // travel itself moves every mounted row per frame, so the honest ceiling is the animation's length
-// times the window — a regression past this is a second mover, not a longer animation.
+// times the window - a regression past this is a second mover, not a longer animation.
 const REPLACEMENT_CEILING = 400;
 
 const settle = async (frames = 30) => {
@@ -109,8 +109,8 @@ export const Reopened: Story = {
 /**
  * Toggling a widget near the tail is the reader's business, not the follow's.
  *
- * The reader sits at the bottom (which arms the follow) and opens a panel. The document grows —
- * exactly as it does when content streams — but nothing arrived: correcting for it snaps the feed
+ * The reader sits at the bottom (which arms the follow) and opens a panel. The document grows -
+ * exactly as it does when content streams - but nothing arrived: correcting for it snaps the feed
  * so the content's bottom meets the viewport's, yanking the toggle out from under the pointer
  * (reported live). The follow chases growth only within a beat of a model change, so here the
  * panel opens downward and the widget's top holds still.
@@ -123,7 +123,7 @@ export const ToggleAtTail: Story = {
     // inside that beat would legitimately be followed.
     await settle(80);
 
-    // At the tail — the follow armed — then find the last widget on screen and open it.
+    // At the tail - the follow armed - then find the last widget on screen and open it.
     const panels = canvas.getAllByTestId('feed.widget');
     const panel = panels[panels.length - 1];
     const before = panel.getBoundingClientRect().top;

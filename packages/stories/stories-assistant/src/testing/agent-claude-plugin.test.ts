@@ -13,8 +13,8 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import { AgentClaudePlugin } from './agent-claude-plugin.ts';
 
 /**
- * Diagnostic for the `WithClaudeAgent` stall: activates the plugin in a bare manager — no story, no
- * client, no browser — and asserts the producer contribution is visible. Distinguishes "the plugin
+ * Diagnostic for the `WithClaudeAgent` stall: activates the plugin in a bare manager - no story, no
+ * client, no browser - and asserts the producer contribution is visible. Distinguishes "the plugin
  * never activates" from "activation collides with the story stack".
  */
 describe('AgentClaudePlugin', () => {

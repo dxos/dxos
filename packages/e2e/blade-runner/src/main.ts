@@ -134,7 +134,7 @@ const start = async () => {
   }
 
   // A spec file replaces the spec wholesale rather than merging, so without this every one-off
-  // variant of a run — another EDGE, cleanup off, a fixed plan — needed a config file of its own.
+  // variant of a run - another EDGE, cleanup off, a fixed plan - needed a config file of its own.
   const props = plan();
   const overrides = argv.spec === undefined ? undefined : parseSpecOverride(argv.spec);
 
@@ -143,7 +143,7 @@ const start = async () => {
 };
 
 /**
- * `--spec '{"edge":"dev","cleanup":false}'` — only the fields a run changes. Returned as
+ * `--spec '{"edge":"dev","cleanup":false}'` - only the fields a run changes. Returned as
  * `object` rather than a record so the merge needs no cast.
  */
 const parseSpecOverride = (text: string): object => {

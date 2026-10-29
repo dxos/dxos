@@ -9,9 +9,9 @@ import * as Schema from 'effect/Schema';
 import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 /**
- * Provenance relation. Source = the extracted object (Booking, Segment, …).
+ * Provenance relation. Source = the extracted object (Booking, Segment, ...).
  * Target = the source Message. One relation per created object so callers
- * can walk Booking → Message and Segment → Message independently.
+ * can walk Booking -> Message and Segment -> Message independently.
  */
 export class ExtractedFrom extends Type.makeRelation<ExtractedFrom>(
   DXN.make('org.dxos.relation.extractedFrom', '0.1.0'),

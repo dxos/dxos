@@ -6,18 +6,18 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 
 /**
- * What one change to the model actually was — told, never inferred.
+ * What one change to the model actually was - told, never inferred.
  *
  * The virtualizer's anchor survives a prepend only if it knows the prepend happened (SPEC F-7.1);
  * the engine used to reconstruct that by scanning for the previous first id, which is the model's
  * knowledge recovered from its absence. Here the model says so. The identity scan still exists in
- * exactly one place — `replace`, the adapter for hosts that hand over a whole new array — because
+ * exactly one place - `replace`, the adapter for hosts that hand over a whole new array - because
  * that is the one caller that genuinely does not know.
  */
 export type ListChange = {
   prepended?: number;
   appended?: number;
-  /** Ids whose content changed in place — a streaming tail, an edit. */
+  /** Ids whose content changed in place - a streaming tail, an edit. */
   updated?: readonly string[];
 };
 
@@ -32,7 +32,7 @@ export type ListModelOptions<T> = {
  *
  * Two faces on one state, deliberately: a plain synchronous face (`count`, `at`, `subscribe`) that
  * the virtualizer consumes without dragging an atom registry into every story and test, and an
- * atom face (`rowsAtom`) for hosts that live in atom-land — derivations (stops, decorations,
+ * atom face (`rowsAtom`) for hosts that live in atom-land - derivations (stops, decorations,
  * readouts) hang off the atom rather than becoming parallel props. Both are the same array; the
  * subscribe face is not a fallback but the binding's contract.
  */
@@ -96,13 +96,13 @@ export class ListModel<T> {
     this.#publish({ prepended: items.length });
   }
 
-  /** An item changed in place — same identity, new content. */
+  /** An item changed in place - same identity, new content. */
   update(id: string): void {
     this.#publish({ updated: [id] });
   }
 
   /**
-   * Replace one item with a successor of the same identity — the streaming case for *frozen*
+   * Replace one item with a successor of the same identity - the streaming case for *frozen*
    * items. An ECHO object mutates and `update` announces it; a schema-made message is frozen, so
    * the chunk arrives as a fresh value under the old id. Same event either way: `updated`.
    */

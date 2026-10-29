@@ -59,8 +59,8 @@ import {
 const ANIMATION_DURATION = 200;
 
 // TODO(burdon): Multi-select + keyboard move/resize.
-// TODO(burdon): Zoom/overview + toolbar (port from the previous Board — deferred).
-// TODO(burdon): Pluggable coordinate origin (top-left vs centre) as a projection — deferred.
+// TODO(burdon): Zoom/overview + toolbar (port from the previous Board - deferred).
+// TODO(burdon): Pluggable coordinate origin (top-left vs centre) as a projection - deferred.
 
 //
 // Context
@@ -123,13 +123,13 @@ type BoardRootProps = PropsWithChildren<{
   /** Render each backdrop cell's `x,y` coordinate (debugging aid). Off by default. */
   debug?: boolean;
   /**
-   * Pads the scrollable area by half the viewport on each side so any cell — including the corners —
+   * Pads the scrollable area by half the viewport on each side so any cell - including the corners -
    * can be scrolled to the centre of the viewport. Off by default.
    */
   overscroll?: boolean;
   /**
    * Milliseconds the drag must dwell on a target cell before the resolver runs against it. While
-   * sweeping across cells faster than this, the other tiles stay put — so a tile can be dragged
+   * sweeping across cells faster than this, the other tiles stay put - so a tile can be dragged
    * over/past existing ones and only displaces them once the drag settles. 0 = immediate.
    */
   settleDelay?: number;
@@ -208,7 +208,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     const viewportRef = useRef<HTMLDivElement | null>(null);
 
     // Anchor (unscaled content point at the viewport centre) captured just before an incremental zoom.
-    // Captured here — before `onZoomChange` shrinks the board — because on a zoom-out commit the browser
+    // Captured here - before `onZoomChange` shrinks the board - because on a zoom-out commit the browser
     // clamps scrollLeft to the smaller board, so an anchor read afterwards (in the zoom effect) would be
     // taken from an already-shifted scroll and hold the wrong point. `zooming` gates re-capture: while a
     // zoom animation is in flight the live scroll is mid-transition, so a rapid second zoom must reuse
@@ -240,7 +240,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       scrollFrameRef.current = requestAnimationFrame(step);
     }, []);
 
-    // Track the scroll viewport's size (always — used both for overscroll padding and for centering the
+    // Track the scroll viewport's size (always - used both for overscroll padding and for centering the
     // board when it is smaller than the viewport, see Board.Viewport / `center`).
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
     useEffect(() => {
@@ -303,7 +303,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         if (smooth) {
           smoothScrollTo(el, targetLeft, targetTop);
         } else {
-          // Instant jump (no rAF animation) — the board must already be centered on the first paint.
+          // Instant jump (no rAF animation) - the board must already be centered on the first paint.
           cancelAnimationFrame(scrollFrameRef.current);
           el.scrollLeft = targetLeft;
           el.scrollTop = targetTop;
@@ -529,8 +529,8 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
   const voidX = zoom < 1 ? bounds.width * (1 - zoom) : 0;
   const voidY = zoom < 1 ? bounds.height * (1 - zoom) : 0;
   // Left/top pad that centres a board smaller than the viewport (0 when it overflows). Computed
-  // explicitly (shared with the scroll/zoom-anchor math) rather than via `m-auto`, which — combined
-  // with the negative right margin below — would shove the board to one side and void the left/top.
+  // explicitly (shared with the scroll/zoom-anchor math) rather than via `m-auto`, which - combined
+  // with the negative right margin below - would shove the board to one side and void the left/top.
   const { x: padX, y: padY } = boardPad({ viewport: viewportSize, board: bounds, zoom, overscroll });
 
   return (
@@ -541,7 +541,7 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
       // `shrink-0`: as a flex item the board must keep its full width, else the row container shrinks
       // it and the right-hand overflow (incl. the overscroll margin) collapses.
       data-dx-board-viewport='true'
-      // No CSS transform transition — Board.Container drives the zoom (scale + scroll together) per
+      // No CSS transform transition - Board.Container drives the zoom (scale + scroll together) per
       // frame so the focal point stays fixed while zooming.
       className={mx('relative shrink-0', classNames)}
       style={{
@@ -602,7 +602,7 @@ const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, 
 
   // Keep the board anchored while zooming: animate the scale AND the scroll together each frame so the
   // anchor stays at the viewport centre for the whole animation (no post-animation shift). The anchor
-  // is the centre of mass of the selected tiles, or — if nothing is selected — the current viewport
+  // is the centre of mass of the selected tiles, or - if nothing is selected - the current viewport
   // centre held fixed. Runs on zoom changes only (skips mount).
   const prevZoomRef = useRef(zoom);
   const mountedRef = useRef(false);
@@ -616,7 +616,7 @@ const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, 
     }
 
     const { selected, overscroll, layout, cellSize, gap, margin } = anchorState.current;
-    // Capture the viewport size once — stable during the animation in a real pane (and avoids a
+    // Capture the viewport size once - stable during the animation in a real pane (and avoids a
     // fluctuating measurement mid-animation).
     const viewport = { width: element.clientWidth, height: element.clientHeight };
     const board = element.querySelector<HTMLElement>('[data-dx-board-viewport]');
@@ -644,7 +644,7 @@ const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, 
       }
       anchor = { x: sumX / ids.length, y: sumY / ids.length };
     } else if (pendingAnchor.current) {
-      // An incremental zoom captured the pre-zoom centre before the board (and scroll) shrank — use it
+      // An incremental zoom captured the pre-zoom centre before the board (and scroll) shrank - use it
       // rather than the now-clamped scroll. Kept (not cleared) so a rapid follow-up zoom reuses it.
       anchor = pendingAnchor.current;
     } else {
@@ -658,7 +658,7 @@ const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, 
     }
 
     // Drive the zoom ourselves (scale + scroll together) each frame, so the anchor stays at the
-    // viewport centre for the whole animation — the selected tiles are the focal point, not the
+    // viewport centre for the whole animation - the selected tiles are the focal point, not the
     // board's top-left. We set the scale imperatively (overriding React's inline transform for the
     // ~duration); it lands on React's value at the end.
     const from = prevZoom;
@@ -670,7 +670,7 @@ const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, 
         board.style.transform = scale === 1 ? '' : `scale(${scale})`;
         // Animate the footprint with the scale, not just the paint: a CSS transform leaves the
         // scrollable area at the layout size, so without this the scroll area stays sized for the
-        // FINAL zoom while a frame's scroll target is computed for the (larger) intermediate scale —
+        // FINAL zoom while a frame's scroll target is computed for the (larger) intermediate scale -
         // the target overflows the collapsed scroll area and clamps (worst once the board fits). The
         // margins mirror Board.Viewport so the board lands exactly on React's values at the end.
         board.style.marginLeft = `${pad.x}px`;
@@ -702,7 +702,7 @@ const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, 
   }, [zoom]);
 
   // Custom edge auto-scroll: engage only within a narrow edge band and ramp speed gently, so
-  // scrolling starts near the edge (not early) and is smooth — pragmatic's `autoScrollForElements`
+  // scrolling starts near the edge (not early) and is smooth - pragmatic's `autoScrollForElements`
   // uses a large percentage-based hitbox at a fixed speed, with no public knob to soften either.
   // `dragover` drives it for tile moves (native HTML5 drag); `pointermove` (only while a resize is
   // active) drives it for the resize gesture. Both are gated so idle hover/scrollbar drags don't scroll.
@@ -755,7 +755,7 @@ const BoardContainer = Util.composable<HTMLDivElement>(({ children, ...props }, 
 
     const onDragOver = (event: DragEvent) => {
       // Mark the drag as handled so the browser's own (fast, jumpy) native autoscroll stays off and
-      // only this custom, ramped scroll runs — otherwise the two compound into large uncontrolled jumps.
+      // only this custom, ramped scroll runs - otherwise the two compound into large uncontrolled jumps.
       event.preventDefault();
       track(event.clientX, event.clientY);
     };
@@ -923,7 +923,7 @@ const BOARD_ZOOM_NAME = 'Board.Zoom';
 
 type BoardZoomProps = Util.ThemedClassName<{}>;
 
-// A compact −/+ zoom control (reusing the shared IconButton). Stepping is clamped to [minZoom, 1].
+// A compact -/+ zoom control (reusing the shared IconButton). Stepping is clamped to [minZoom, 1].
 const BoardZoom = ({ classNames }: BoardZoomProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const { zoom, minZoom, zoomIn, zoomOut } = useBoardContext(BOARD_ZOOM_NAME);
@@ -970,7 +970,7 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
 
   // The visible region as a fraction of the board, derived purely from live DOM geometry (the scaled
   // board rect vs the viewport rect). Reading the actual transform each update keeps the outline exact
-  // even mid-zoom — deriving it from scroll + the React zoom would lag the animation (scroll moves per
+  // even mid-zoom - deriving it from scroll + the React zoom would lag the animation (scroll moves per
   // frame while zoom is already at its final value) and the outline would jump.
   const [view, setView] = useState({ left: 0, top: 0, width: 0, height: 0 });
   useEffect(() => {

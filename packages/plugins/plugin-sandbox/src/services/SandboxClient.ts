@@ -92,7 +92,7 @@ export type ExposePortOptions = {
 
 /**
  * Ceiling on any single sandbox request. The service bounds the container call itself, so this is
- * the backstop for the service never answering at all — which is what a hung `exec` looked like from
+ * the backstop for the service never answering at all - which is what a hung `exec` looked like from
  * here: an unbounded `fetch` with no signal, wrapped in an uninterruptible `Effect.promise`, held a
  * connection open for forty minutes while the operation above it had already been terminated.
  */
@@ -127,7 +127,7 @@ export type AuthHeaderProvider = () => Promise<string | undefined>;
  * own root, so a path is appended directly.
  *
  * The service authenticates every route and requires membership of the space in the path, unless its
- * `EDGE_CONFIG.sandbox.noAuth` is set — so `_authHeader` is what keeps this client working once that
+ * `EDGE_CONFIG.sandbox.noAuth` is set - so `_authHeader` is what keeps this client working once that
  * flag is turned off, not something the current deployment already refuses requests without.
  *
  * Requests go through the Effect `HttpClient` rather than bare `fetch` for two reasons beyond
@@ -215,8 +215,8 @@ export class SandboxClient {
   }
 
   /**
-   * Reads a file. Without `encoding` the service chooses per file — text as `utf-8`, anything else
-   * as `base64` — and reports its choice in the result; see {@link readFileBytes} for the decoded form.
+   * Reads a file. Without `encoding` the service chooses per file - text as `utf-8`, anything else
+   * as `base64` - and reports its choice in the result; see {@link readFileBytes} for the decoded form.
    */
   readFile(
     spaceId: string,
@@ -237,7 +237,7 @@ export class SandboxClient {
 
   /**
    * Reads a file as bytes plus its MIME type. Text arrives utf-8 and is re-encoded; binary arrives
-   * base64 and is decoded — so an image round-trips byte for byte. The type is the service's own
+   * base64 and is decoded - so an image round-trips byte for byte. The type is the service's own
    * detection, never guessed from the path: a `.png` holding something else must not be served as one.
    */
   readFileBytes(spaceId: string, sandboxId: string, path: string): RequestEffect<{ bytes: Uint8Array; type: string }> {
@@ -301,7 +301,7 @@ export class SandboxClient {
  * Executes one request whose JSON answer is decoded against `schema`; see {@link execute}.
  *
  * With `checkStatus`, a non-2xx response fails as an `HttpClientError` carrying its status rather
- * than as a body that does not decode — what lets a caller tell "not found" from "broken".
+ * than as a body that does not decode - what lets a caller tell "not found" from "broken".
  */
 export const send = <T>(
   request: HttpClientRequest.HttpClientRequest,
@@ -323,7 +323,7 @@ export const send = <T>(
 /**
  * Executes one request: JSON body when there is one, answer read by `read`, bounded by `timeout`,
  * and scoped so the response body is released even when the effect fails or is interrupted.
- * Deliberately no retry — `exec` is not idempotent, and re-running a command that may already have
+ * Deliberately no retry - `exec` is not idempotent, and re-running a command that may already have
  * taken effect is worse than reporting the failure.
  */
 const execute = <T>(

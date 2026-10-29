@@ -163,7 +163,7 @@ describe('Store', () => {
 
   const REASONER = 'test';
 
-  // A rule of the store's own, kept trivial — what to ship is `rules/50-example.n3`'s business.
+  // A rule of the store's own, kept trivial - what to ship is `rules/50-example.n3`'s business.
   const RULES = `
     @prefix deus: <${Ontology.PREFIX}>.
     { ?a deus:imports ?b } => { ?a deus:importsTestFile ?b }.
@@ -187,7 +187,7 @@ describe('Store', () => {
     // The same file, reindexed without the import: the conclusion must go with its premise.
     await withStore((store) => store.putDocument(document('src/a.ts', 4)));
     expect(await withStore((store) => store.match(undefined, Ontology.imports))).toHaveLength(0);
-    // Still there until the rules are rerun — materialized conclusions are only as fresh as the pass.
+    // Still there until the rules are rerun - materialized conclusions are only as fresh as the pass.
     expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);
 
     await withStore((store) => store.reason(REASONER, RULES, { materialize: true }));
@@ -205,7 +205,7 @@ describe('Store', () => {
       { ?a deus:importsTestFile ?b } => { ?a deus:importsModule "echoed" }.
     `;
     expect(await withStore((store) => store.reason(REASONER, echo))).toEqual([]);
-    // Another reasoner does see it — that is how reasoners compose.
+    // Another reasoner does see it - that is how reasoners compose.
     expect(await withStore((store) => store.reason('downstream', echo))).toHaveLength(1);
   });
 

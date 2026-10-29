@@ -8,7 +8,7 @@ export type TreeLayoutSlots = {
   text?: string;
   /**
    * Per-leaf fill colour derived from the node's `data` (e.g. by domain object type); when it returns
-   * a value it overrides the `node` slot's fill. Keeps the layouts domain-agnostic — the consumer
+   * a value it overrides the `node` slot's fill. Keeps the layouts domain-agnostic - the consumer
    * injects the mapping (e.g. plugin-explorer's `getNodeFillForObject`).
    */
   nodeFill?: (data: unknown) => string | null | undefined;

@@ -11,13 +11,13 @@ import { mx } from '@dxos/ui-theme';
 import { HandpanNamespace } from '../../namespace.ts';
 
 export type NoteDisplayProps = {
-  /** Handpan notation label (`D`, `1`…); omitted when nothing is detected. */
+  /** Handpan notation label (`D`, `1`...); omitted when nothing is detected. */
   label?: string;
   pitch?: string;
   frequency?: number;
   /** Offset from the matched note, in cents. */
   cents?: number;
-  /** Pitch clarity, 0–1. */
+  /** Pitch clarity, 0-1. */
   clarity?: number;
   percussive?: boolean;
   /** The note is no longer sounding: shown muted as the last note played. */
@@ -55,7 +55,7 @@ export const NoteDisplay = ({
       <Layout.Grid cols={[1, 'auto', 1]} align='end' gap='md' classNames='w-full'>
         <span />
         <span className='text-6xl font-semibold tabular-nums' data-testid='handpan.note-display.label'>
-          {percussive ? t('percussive.label') : (label ?? '–')}
+          {percussive ? t('percussive.label') : (label ?? '-')}
         </span>
         <span className='text-2xl text-fg-muted pb-1'>{percussive ? '' : (pitch ?? '')}</span>
       </Layout.Grid>

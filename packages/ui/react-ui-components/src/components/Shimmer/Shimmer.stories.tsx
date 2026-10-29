@@ -24,12 +24,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    children: 'Thinking…',
+    children: 'Thinking...',
   },
 };
 
 /**
- * Demonstrates the default truncate behavior — long text in a constrained parent
+ * Demonstrates the default truncate behavior - long text in a constrained parent
  * stays on a single line and ellipsizes rather than wrapping.
  */
 export const LongText: Story = {
@@ -54,7 +54,7 @@ export const WithCustomColor: Story = {
 };
 
 /**
- * Inspects the dimmed fallback without changing OS settings — the decorator
+ * Inspects the dimmed fallback without changing OS settings - the decorator
  * unconditionally applies the same declarations the production CSS uses
  * inside `@media (prefers-reduced-motion: reduce)`. The `force-reduced-motion`
  * class is local to this story and does NOT exist anywhere else in the codebase.

@@ -13,7 +13,7 @@ import { ContentBlock } from '@dxos/types';
  *
  * The same group is declared as the agent process's `rpcs` (so its handlers run on the host's
  * server fiber, writing queued messages and alarms to the conversation feed) and used by {@link HarnessService}
- * Tier B to dispatch over the discovered host's `Handle.rpc` — keeping both ends on one contract.
+ * Tier B to dispatch over the discovered host's `Handle.rpc` - keeping both ends on one contract.
  */
 export const HarnessControl = RpcGroup.make(
   Rpc.make('setAlarm', {

@@ -4,11 +4,11 @@
 
 //
 // Projects Mermaid flowchart text onto the neutral graph, so a story can demonstrate the
-// source → projection → renderer path end to end.
+// source -> projection -> renderer path end to end.
 //
 // This is a story fixture, not the real dialect: the design puts the Mermaid dialect in
 // plugin-illustrator with a span-aware parser and a canonical printer for write-back. What matters
-// here is the shape of the boundary — text in, neutral graph plus provenance out, and the renderer
+// here is the shape of the boundary - text in, neutral graph plus provenance out, and the renderer
 // downstream of both.
 //
 

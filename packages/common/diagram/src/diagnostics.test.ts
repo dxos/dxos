@@ -340,7 +340,7 @@ describe('box labels', () => {
     const truncated = layoutLabel('RemoteProcessHandleWithLongName and then some more words', 'm', { w: 192, h: 40 });
     expect(truncated.overflow).toBe(true);
     expect(truncated.lines).toHaveLength(1);
-    expect(truncated.lines[0].endsWith('…')).toBe(true);
+    expect(truncated.lines[0].endsWith('\u2026')).toBe(true);
   });
 
   test('label-overflow reports what the renderer cannot show, not text it wraps', ({ expect }) => {

@@ -113,7 +113,7 @@ export const ProcessTile = ({ data: item, onRemove }: ProcessTileProps) => {
     <ProcessCard
       location={item.location}
       handle={item.handle}
-      progress={`frame ${frame ?? '—'}`}
+      progress={`frame ${frame ?? '-'}`}
       onRemove={() => onRemove?.(item)}
     >
       <canvas

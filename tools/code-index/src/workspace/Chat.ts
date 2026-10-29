@@ -16,7 +16,7 @@ import type * as Events from './Events.ts';
 import * as Log from './Log.ts';
 
 /**
- * The terminal chat. Same log, same agent, same sandbox as the webui — it just renders the event
+ * The terminal chat. Same log, same agent, same sandbox as the webui - it just renders the event
  * stream as lines instead of panels, which makes it the cheapest way to exercise a turn end to
  * end without a browser.
  */
@@ -38,30 +38,30 @@ const TERMINAL: readonly string[] = ['TurnEnded', 'TurnFailed'];
 export const render = (event: Events.Event, streamed: ReadonlySet<string> = new Set()): string | undefined => {
   switch (event._tag) {
     case 'UserMessage':
-      return `${BOLD}› ${event.text}${RESET}`;
+      return `${BOLD}> ${event.text}${RESET}`;
     case 'AssistantDelta':
       // Printed by the caller without a newline, as it arrives.
       return undefined;
     case 'AssistantMessage':
       return event.messageId !== undefined && streamed.has(event.messageId) ? '' : `${event.text}`;
     case 'ToolCall':
-      return `${DIM}exec ›${RESET}\n${DIM}${event.code.trim()}${RESET}`;
+      return `${DIM}exec >${RESET}\n${DIM}${event.code.trim()}${RESET}`;
     case 'ToolResult':
       return `${event.ok ? DIM : RED}${event.output.trim() || '(no output)'}${RESET}`;
     case 'Presented':
       // The point of the CLI is to see whether the agent actually displayed something, so a
       // presentation is printed in full rather than summarised.
       return [
-        `${CYAN}┌─ ${event.kind}${event.title ? `: ${event.title}` : ''}${RESET}`,
-        ...event.content.split('\n').map((line) => `${CYAN}│${RESET} ${line}`),
-        `${CYAN}└─${RESET}`,
+        `${CYAN}+- ${event.kind}${event.title ? `: ${event.title}` : ''}${RESET}`,
+        ...event.content.split('\n').map((line) => `${CYAN}|${RESET} ${line}`),
+        `${CYAN}+-${RESET}`,
       ].join('\n');
     case 'CanvasCleared':
       return `${DIM}(canvas cleared)${RESET}`;
     case 'StepRetried':
-      return `${RED}⚠ ${event.message} Retrying.${RESET}`;
+      return `${RED}Warning: ${event.message} Retrying.${RESET}`;
     case 'TurnFailed':
-      return `${RED}⚠ ${event.message}${RESET}`;
+      return `${RED}Warning: ${event.message}${RESET}`;
     // Boundaries and metadata: real events, but nothing a reader of the transcript needs to see.
     case 'TurnEnded':
     case 'TitleSet':
@@ -71,7 +71,7 @@ export const render = (event: Events.Event, streamed: ReadonlySet<string> = new 
 
 export type Options = {
   readonly projectId: string;
-  /** A single turn to run, then exit — how a test or a script drives the agent. */
+  /** A single turn to run, then exit - how a test or a script drives the agent. */
   readonly prompt?: string;
 };
 
@@ -96,7 +96,7 @@ export const run = ({
     const streamed = new Set<string>();
     const printer = yield* log.stream(projectId, from).pipe(
       // A one-shot run ends at the event that closes the turn; an interactive one tails forever.
-      // Stopping on the event rather than on a timer is what makes the output complete — a fixed
+      // Stopping on the event rather than on a timer is what makes the output complete - a fixed
       // sleep drops the tail of any turn whose last events land after it, which on a loaded machine
       // is most of them.
       // `takeUntil` is inclusive, which is the point: the closing event has to be printed (a
@@ -115,7 +115,7 @@ export const run = ({
     );
 
     if (prompt !== undefined) {
-      // The turn's own failure is recorded as `TurnFailed`, which is a line worth printing — so the
+      // The turn's own failure is recorded as `TurnFailed`, which is a line worth printing - so the
       // exit is held, the printer is joined (it stops itself at that event), and only then does the
       // failure propagate. Failing first would close the scope and interrupt the printer mid-tail.
       const exit = yield* Effect.exit(agent.turn({ projectId, text: prompt }));
@@ -130,7 +130,7 @@ export const run = ({
     // The loop is a plain recursion over one blocking read: a terminal has no backpressure to
     // model and this keeps ^C handling with the runtime rather than in a signal handler.
     const next: Effect.Effect<void, Log.LogError> = Effect.gen(function* () {
-      const line = yield* Effect.promise(() => readline.question(`${YELLOW}› ${RESET}`));
+      const line = yield* Effect.promise(() => readline.question(`${YELLOW}> ${RESET}`));
       const text = line.trim();
       if (text.length === 0) {
         return yield* next;

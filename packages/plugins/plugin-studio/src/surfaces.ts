@@ -20,7 +20,7 @@ export type VariantContent = {
 
 /**
  * Role token for rendering a single variant's content, filtered by `contentType`. Studio ships
- * defaults (`image/*` → `<img>`, `video/*` → `<video>`); a plugin overrides for a contentType via a
+ * defaults (`image/*` -> `<img>`, `video/*` -> `<video>`); a plugin overrides for a contentType via a
  * higher-priority (`Position.first`) surface.
  */
 export const VariantRenderer: Role.Role<{

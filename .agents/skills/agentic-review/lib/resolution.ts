@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The `## Index` section of REVIEW.md — one bullet per issue. Agents flip the
+// The `## Index` section of REVIEW.md - one bullet per issue. Agents flip the
 // status field as they address findings; `unresolved.ts` scrapes unresolved rows
 // across runs.
 //
@@ -66,7 +66,7 @@ export const parseResolutionEntries = (text: string): ResolutionEntry[] => {
   if (unparsed.length > 0) {
     const [{ line, text: bad }] = unparsed;
     throw new Error(
-      `index:${line}: unparseable line ${JSON.stringify(bad)} — expected \`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>\` (notes belong in the appendix)`,
+      `index:${line}: unparseable line ${JSON.stringify(bad)} - expected \`- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>\` (notes belong in the appendix)`,
     );
   }
   return entries;

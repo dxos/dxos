@@ -32,7 +32,7 @@ export class HiggsfieldCredentialError extends BaseError.extend(
 
 /**
  * Builds the Higgsfield connector entry: the API takes a two-part `Key <id>:<secret>` credential, so
- * the form has two fields joined into one `AccessToken.token` (source `higgsfield.ai`) — studio's
+ * the form has two fields joined into one `AccessToken.token` (source `higgsfield.ai`) - studio's
  * `CredentialsService` lookup yields a single string, which the provider splits back into the header.
  * Validation failures are `Effect.fail`, never a throw: a defect bypasses the dialog's failure handler.
  */

@@ -3,7 +3,7 @@
 //
 
 // @ts-nocheck - This file is injected as a raw JS string into <head> by ThemePlugin (readFileSync).
-// It runs in the browser, not Node.js — browser globals (window, document) are intentional.
+// It runs in the browser, not Node.js - browser globals (window, document) are intentional.
 // Must remain valid JavaScript (no TypeScript-specific syntax).
 
 // Applies the .dark class to <html> synchronously before any other scripts run so that the

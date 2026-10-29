@@ -113,7 +113,7 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
   operationIcon: Schema.optional(Schema.String),
 
   /**
-   * Human-readable label for the call where the tool name says nothing about what it does — a code-mode
+   * Human-readable label for the call where the tool name says nothing about what it does - a code-mode
    * `eval`, named after the operations its code invokes. Presentational only: unlike `operationName`,
    * it does not claim an operation backs the call.
    */
@@ -226,7 +226,7 @@ export const Stats = Schema.TaggedStruct('stats', {
 export type Stats = Schema.Schema.Type<typeof Stats>;
 /**
  * Claude-like message
- * ⎿ Done (15 tool uses · 21.5k tokens (→21.1k ←0.4k) · 1m 13.5s)
+ * |_ Done (15 tool uses · 21.5k tokens (->21.1k <-0.4k) · 1m 13.5s)
  */
 // TODO(burdon): String builder.
 // TODO(burdon): Move to UI (and use translations).
@@ -241,8 +241,8 @@ export const createStatsMessage = ({ message, model, usage, toolCalls, duration 
         verbose &&
           paren(
             [
-              `→${String(Unit.Thousand(usage.inputTokens ?? 0))}`,
-              `←${String(Unit.Thousand(usage.outputTokens ?? 0))}`,
+              `->${String(Unit.Thousand(usage.inputTokens ?? 0))}`,
+              `<-${String(Unit.Thousand(usage.outputTokens ?? 0))}`,
             ].join(' '),
           ),
       ]
@@ -409,7 +409,7 @@ export const Suggestion = Schema.TaggedStruct('suggestion', {
 export type Suggestion = Schema.Schema.Type<typeof Suggestion>;
 /**
  * A suggested edit to a document: replace `before` with `after` at an anchored range. Rendered as a
- * review tile (struck original → proposed text) with Accept/Reject; the surrounding container maps it
+ * review tile (struck original -> proposed text) with Accept/Reject; the surrounding container maps it
  * back to the author's suggestion branch (see plugin-review / `@dxos/versioning`).
  */
 export const Change = Schema.TaggedStruct('change', {
@@ -485,7 +485,7 @@ export type Toolkit = Schema.Schema.Type<typeof Toolkit>;
 /**
  * Request to render a registered UI surface inline in the conversation.
  * Emitted by the model (via the `<surface>` tag) so an agent can render an interactive
- * affordance — e.g. a connector prompt to authenticate a service it needs — instead of
+ * affordance - e.g. a connector prompt to authenticate a service it needs - instead of
  * failing silently. The `role` selects which surface renders; `data` is passed to it.
  */
 export const Surface = Schema.TaggedStruct('surface', {

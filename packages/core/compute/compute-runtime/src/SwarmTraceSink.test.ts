@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 
 import * as SwarmTraceSink from './SwarmTraceSink.ts';
 
-// DX-1125: the producer sink is the inverse of the feed sink — it broadcasts ephemeral messages and
+// DX-1125: the producer sink is the inverse of the feed sink - it broadcasts ephemeral messages and
 // ignores durable ones / messages without a space.
 
 const makeMessage = (opts: { space?: string; isEphemeral: boolean; type: string }) =>

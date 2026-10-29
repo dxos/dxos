@@ -7,7 +7,7 @@ import React from 'react';
 import { mx } from '@dxos/ui-theme';
 
 export type LevelMeterProps = {
-  /** Input level as linear RMS (0–1). */
+  /** Input level as linear RMS (0-1). */
   level?: number;
   /** Level (linear RMS) above which input counts as a sounding note. */
   threshold?: number;

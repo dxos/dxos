@@ -23,8 +23,8 @@ import { McpServer } from '@dxos/mcp-server';
 import { chatLayer, operationHandlers } from '../../util/index.ts';
 
 /**
- * What this host wires beneath the projected surface — echo's registry holding the operations and
- * skills, the invoke seam and session spaces (`McpServer.Host`) — plus the live client, which
+ * What this host wires beneath the projected surface - echo's registry holding the operations and
+ * skills, the invoke seam and session spaces (`McpServer.Host`) - plus the live client, which
  * `whoami` reads for the session's identity and the surface's own contract does not describe.
  */
 export type LocalServer = {
@@ -36,7 +36,7 @@ export type LocalServer = {
 /**
  * The local MCP host: the operations the CLI already runs and the skills it curates, in one echo
  * registry the projection queries directly. `dx mcp serve` is the deployed server's local twin, so
- * every difference from EDGE is host-layer — no OAuth grant to narrow the session (it sees every
+ * every difference from EDGE is host-layer - no OAuth grant to narrow the session (it sees every
  * visible space), operations run in-process instead of over a service binding, and the registry is
  * the client's own hypergraph registry rather than one hydrated from an RPC
  * (`McpServer.hydrateRegistry`).
@@ -53,7 +53,7 @@ export const makeLocalServer = Effect.fn(function* (
   const capabilities = yield* Capability.Service;
   // Captured so an invocation can erase its own requirements: the tool handlers this host backs
   // are invoked by the MCP server layer, which knows nothing of the CLI's services. The capability
-  // and plugin managers ride along because operations declare them — `queryPlugins` reads what
+  // and plugin managers ride along because operations declare them - `queryPlugins` reads what
   // this host assembled, and the space verbs reach the client through its capability.
   const ambient = yield* Effect.context<ClientService | Capability.Service | Plugin.Service>();
 
@@ -70,7 +70,7 @@ export const makeLocalServer = Effect.fn(function* (
 
   // The client's own hypergraph registry, not a separate instance: plugin-routine's registry-sync
   // already fills it with the capability-contributed skills and serialized operation handlers, so
-  // only the directly-imported extras are added here — and only when their key is not already
+  // only the directly-imported extras are added here - and only when their key is not already
   // registered, so this host never re-registers what the sync owns.
   const registry = client.graph.registry;
   const registered = (key: string) => registry.getByURI(`dxn:${normalizeKey(String(key))}`) != null;

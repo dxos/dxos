@@ -22,7 +22,7 @@ const ROOT_DIR = process.env.ROOT_DIR;
 
 type SenderCount = { readonly sender: string; readonly count: number };
 
-describe('email parquet → Message', () => {
+describe('email parquet -> Message', () => {
   test('maps an email row to a Message with a text body block', ({ expect }) => {
     const row: ParquetRow = {
       message_id: '<abc@example.com>',

@@ -36,7 +36,7 @@ export const seedComments = async (
       Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'user', name: 'Alice' },
-        blocks: [{ _tag: 'text', text: `Comment on “${phrase}”.` }],
+        blocks: [{ _tag: 'text', text: `Comment on "${phrase}".` }],
       }),
     ]);
     space.db.add(

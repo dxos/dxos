@@ -19,7 +19,7 @@ import { JmapApiError, JmapCredentialInvalidError } from '../errors.ts';
 
 /**
  * Manual-credential form for the JMAP connector. JMAP auth is a server-issued Bearer API token
- * (Fastmail: Settings → Privacy & Security → Integrations), outside any OAuth flow, so the host,
+ * (Fastmail: Settings -> Privacy & Security -> Integrations), outside any OAuth flow, so the host,
  * email, and token are collected directly.
  */
 const JmapCredentialFormSchema = Schema.Struct({

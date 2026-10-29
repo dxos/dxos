@@ -12,7 +12,7 @@ import { CardAnnotation } from '@dxos/schema';
 import * as Language from './Language.ts';
 
 /**
- * A named deck of words for one language ("Chapter 3", "News vocabulary", …).
+ * A named deck of words for one language ("Chapter 3", "News vocabulary", ...).
  *
  * The deck holds no word list: membership lives on the word's `vocabulary` ref, so appending a
  * word from an extraction is one write and the deck view is an ordinary reactive query.

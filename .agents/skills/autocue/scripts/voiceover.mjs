@@ -9,7 +9,7 @@
  *   node voiceover.mjs --in demo.webm --cues cues.json [--out demo.voiced.webm] [--voice <id|name>] [--speed 1]
  *   node voiceover.mjs --voices                       # list Starfish voices (id, name, language, gender)
  *
- * `cues.json` is `[{ "at": 0.4, "text": "This is Composer." }, …]`, times in seconds of the input video.
+ * `cues.json` is `[{ "at": 0.4, "text": "This is Composer." }, ...]`, times in seconds of the input video.
  * Reads `HEYGEN_API_KEY` from the environment, else from `.secrets/heygen.env` at the repo root.
  */
 
@@ -42,7 +42,7 @@ const apiKey = (() => {
   // A harness worktree's `.secrets/` starts empty, so the primary checkout's is read too.
   const primary = ROOT.split(`${path.sep}.claude${path.sep}worktrees${path.sep}`)[0];
   const roots = [...new Set([ROOT, primary])];
-  // `.env` is `op inject -i .env.tpl -o .env` output (`export HEYGEN_API_KEY="…"`); never committed.
+  // `.env` is `op inject -i .env.tpl -o .env` output (`export HEYGEN_API_KEY="..."`); never committed.
   for (const file of roots.map((root) => path.join(root, '.env')).filter((candidate) => existsSync(candidate))) {
     const match = readFileSync(file, 'utf8').match(/^(?:export )?HEYGEN_API_KEY=(.+)$/m);
     if (match?.[1].trim()) {
@@ -81,7 +81,7 @@ const heygen = async (method, route, body) => {
   }
   const json = await response.json().catch(() => ({}));
   if (!response.ok || json.error) {
-    throw new Error(`${method} ${route} → ${response.status}: ${JSON.stringify(json.error ?? json).slice(0, 400)}`);
+    throw new Error(`${method} ${route} -> ${response.status}: ${JSON.stringify(json.error ?? json).slice(0, 400)}`);
   }
   return json;
 };

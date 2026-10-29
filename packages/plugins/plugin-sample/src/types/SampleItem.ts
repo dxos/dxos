@@ -14,7 +14,7 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 // `Type.makeObject` registers this schema as an ECHO type with a globally unique typename.
 // The typename is used for storage, queries, and cross-plugin type resolution.
-// The class name IS the TypeScript instance type — no separate `type` alias needed.
+// The class name IS the TypeScript instance type - no separate `type` alias needed.
 export class SampleItem extends Type.makeObject<SampleItem>(DXN.make('org.dxos.type.sample', '0.1.0'))(
   Schema.Struct({
     // Fields are `Schema.optional` because ECHO objects start with undefined fields

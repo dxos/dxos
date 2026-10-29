@@ -18,7 +18,7 @@ export const AGENT_HOST_PATH = '/api/dev-shell/agent-host';
 /**
  * Env var naming the directory the middleware materializes its prebaked scripts into. Exported as a
  * name rather than a path because the value is decided by the host at mount time, and the script is
- * referenced through the shell's own expansion — the harness's only privileged verb stays
+ * referenced through the shell's own expansion - the harness's only privileged verb stays
  * "run this script".
  */
 export const SCRIPTS_ENV = 'DX_DEV_SHELL_SCRIPTS';
@@ -28,7 +28,7 @@ export const APPLY_EDITS_SCRIPT = 'apply-edits.mjs';
 
 /**
  * Env var naming the host's root, injected into every script by the middleware. Not a developer
- * setting — the vite plugin decides the root (cwd by default) and writes it here so the prebaked
+ * setting - the vite plugin decides the root (cwd by default) and writes it here so the prebaked
  * editor can refuse paths outside it.
  */
 export const ROOT_ENV = 'DX_DEV_SHELL_ROOT';
@@ -74,7 +74,7 @@ export type ApplyEditsPayload = {
   edits: readonly Edit[];
 };
 
-/** What the prebaked editor prints to stdout — the same shape whether or not it succeeded. */
+/** What the prebaked editor prints to stdout - the same shape whether or not it succeeded. */
 export type ApplyEditsResult = {
   /** False means nothing was written at all: the batch is all-or-nothing. */
   applied: boolean;
@@ -92,7 +92,7 @@ export type ExecOptions = {
 /**
  * Runs a script on the host and resolves with its result.
  *
- * A non-zero exit is a result, not a failure — the model is expected to read `stderr` and try
+ * A non-zero exit is a result, not a failure - the model is expected to read `stderr` and try
  * again. Only an unreachable or non-JSON-answering host fails, which in practice means the vite
  * plugin is not mounted (a deployed Composer has no dev server at all).
  */
@@ -102,7 +102,7 @@ export const exec = async (request: Request, { signal, path = PATH }: ExecOption
     response = await fetch(path, {
       method: 'POST',
       // The host requires this content type, which a cross-origin page cannot send without a
-      // preflight it never answers — so only same-origin callers reach the shell.
+      // preflight it never answers - so only same-origin callers reach the shell.
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(request),
       signal,
@@ -115,7 +115,7 @@ export const exec = async (request: Request, { signal, path = PATH }: ExecOption
     });
   }
 
-  // A dev server that never mounted the route answers 404, which is the likeliest failure by far —
+  // A dev server that never mounted the route answers 404, which is the likeliest failure by far -
   // worth naming, since "404" on its own reads as a bug in the caller.
   if (response.status === 404) {
     throw new DevShellError({

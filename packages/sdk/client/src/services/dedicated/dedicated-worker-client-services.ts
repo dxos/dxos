@@ -45,7 +45,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       onConnect: async ({ clientToWorker, workerToClient }) => {
         const config = options.config ?? new Config();
 
-        // Serve the tab's WebRTC RTCService to the worker over the worker→client port. Imported
+        // Serve the tab's WebRTC RTCService to the worker over the worker->client port. Imported
         // lazily so the RTC stack is only pulled in when a worker connection opens.
         const { RtcService, createIceProvider } = await import('@dxos/network-manager');
         const iceProviders = config.get('runtime.services.iceProviders');
@@ -56,7 +56,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         this.#rtcServer = serveRtcService(workerToClient, rtcService);
         await this.#rtcServer.open();
 
-        // Client services over the client→worker port. The framework's session lock tells the worker
+        // Client services over the client->worker port. The framework's session lock tells the worker
         // when this tab goes away.
         this.#services = new ClientServicesProxy(clientToWorker);
         await this.#services.open();

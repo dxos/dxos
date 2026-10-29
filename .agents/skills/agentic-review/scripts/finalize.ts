@@ -65,7 +65,7 @@ const asRecord = (value: unknown): Record<string, unknown> | null => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return null;
   }
-  // Validated non-null, non-array object above — safe to treat as a string-keyed record.
+  // Validated non-null, non-array object above - safe to treat as a string-keyed record.
   const record: Record<string, unknown> = {};
   for (const [key, entryValue] of Object.entries(value)) {
     record[key] = entryValue;
@@ -251,7 +251,7 @@ const finalizeStore = (storeDir: string): FinalizeResult => {
   merged.sort(compareDiagnostics);
 
   const reviewId = reviewIdFromStore(slug, asString(review.data.commit));
-  // Fresh from groups → assign ids; REVIEW re-read → keep existing ids.
+  // Fresh from groups -> assign ids; REVIEW re-read -> keep existing ids.
   const numbered: IssuedDiagnostic[] = fromGroups
     ? assignIssueIds(merged, reviewId)
     : merged.map((diagnostic, index) => ({ ...diagnostic, id: diagnostic.id ?? `${reviewId}-${index + 1}` }));
@@ -275,7 +275,7 @@ const finalizeStore = (storeDir: string): FinalizeResult => {
     try {
       priorStatuses = new Map(readIndexEntries(storeDir, review.body ?? '').map(({ id, status }) => [id, status]));
     } catch (error) {
-      // A corrupt index must not abort finalize, but surface it —
+      // A corrupt index must not abort finalize, but surface it -
       // silently resetting every issue to unresolved would hide lost statuses.
       const message = error instanceof Error ? error.message : String(error);
       console.error(`warning: ${slug} index unparseable (${message}); statuses reset to unresolved.`);

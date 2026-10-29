@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
  *
  * Why not `react-resize-detector` directly: its `targetRef` API doesn't pick up a ref whose
  * `.current` is set later than the hook runs, and the returned-`ref` API forces the consumer to
- * forward a callback ref through their own component — which is awkward for class refs.
+ * forward a callback ref through their own component - which is awkward for class refs.
  * This hook returns a setter so the consumer assigns it directly to `<div ref={setRef}>`.
  */
 export const useContainerSize = (): {

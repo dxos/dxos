@@ -153,7 +153,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
     invariant(space, 'Expected a default space.');
 
-    // A project owning a task set owning the task — the shape the row action runs against.
+    // A project owning a task set owning the task - the shape the row action runs against.
     const { project } = await harness.runPromise(
       Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: space.id }),
     );
@@ -169,7 +169,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Filed under the project, so it reaches that project's navtree rather than the space root.
     expect(Obj.getParent(chat)?.id).toBe(project.id);
 
-    // Still owned by the set it came from — the chat works on the task, it does not take it. An
+    // Still owned by the set it came from - the chat works on the task, it does not take it. An
     // owning checklist would re-parent it and drop it out of the project's task list.
     expect(Obj.getParent(task)?.id).toBe(taskSet.id);
 
@@ -235,7 +235,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
       ),
     );
 
-    // One chat for the whole selection, holding the tasks in the order the caller listed them —
+    // One chat for the whole selection, holding the tasks in the order the caller listed them -
     // which is the order the list showed them, not the order they were ticked.
     expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([tasks[2].id, tasks[0].id]);
 
@@ -283,7 +283,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     invariant(space, 'Expected a default space.');
 
     // One chat is filed under one project and told to file its output there, so a list drawn from
-    // two has no answer. Unreachable from the UI — a checked set comes from a single list — but the
+    // two has no answer. Unreachable from the UI - a checked set comes from a single list - but the
     // operation is a skill verb an agent calls with any refs.
     const taskIn = async (name: string, title: string) => {
       const { project } = await harness.runPromise(
@@ -419,7 +419,7 @@ const setup = async (assistant: AssistantOptions.AssistantPluginOptions = {}) =>
   const harness = await Harness.createComposerTestApp({
     // Tasks is declared in Projects' `dependsOn`; Assistant supplies the `CreateChat` handler.
     // Routine is what provides `RemoteProcessManager`, which Assistant's `AgentService` spec
-    // requires — without it that spec is pruned and every delegation fails to resolve `AgentService`.
+    // requires - without it that spec is pruned and every delegation fails to resolve `AgentService`.
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),

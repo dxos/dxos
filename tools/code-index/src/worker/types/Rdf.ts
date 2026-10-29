@@ -13,7 +13,7 @@ import * as Term from './Term.ts';
 /**
  * Type terms as JSON-LD nodes for the file graph (`design/TYPES.md`, "RDF"). Node IRIs are hashes of
  * the canonical text, so a type used twice in a file is one node, and the same type in two files is
- * the same IRI — each graph asserting identical facts about it.
+ * the same IRI - each graph asserting identical facts about it.
  */
 
 /** Terms larger than this are scored but not emitted: the facts would outweigh their use. */
@@ -169,7 +169,7 @@ const REFERENCES = new Set(
 );
 
 /**
- * The quads a set of type nodes stands for — what the JSON-LD parser would produce from them, for a
+ * The quads a set of type nodes stands for - what the JSON-LD parser would produce from them, for a
  * reasoner that writes type terms without going through a document.
  */
 export const toQuads = (nodes: readonly Emitted[]): Quad[] =>

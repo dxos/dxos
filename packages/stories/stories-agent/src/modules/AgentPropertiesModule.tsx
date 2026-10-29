@@ -16,7 +16,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
  * The space's first agent's configuration as Composer's Properties panel shows it: the Agent schema's fields
- * (name, instructions, model…), then the plugin surfaces contributing to the Agent's object properties.
+ * (name, instructions, model...), then the plugin surfaces contributing to the Agent's object properties.
  */
 export const AgentPropertiesModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const space = Hooks.useActiveSpace();

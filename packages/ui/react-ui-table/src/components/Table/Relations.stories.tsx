@@ -164,10 +164,10 @@ export const Default: Story = {
     // but dx-grid's internal cell registry (used by `cellReadonly` and the
     // edit-request dispatcher) is filled in lazily. If `keydown` lands
     // before the registry has the row, `dispatchEditRequest` short-circuits
-    // and the combobox never opens — that's the "Unable to find combobox"
+    // and the combobox never opens - that's the "Unable to find combobox"
     // flake. Wait for the first row of each grid to render non-empty
     // content (a reliable proxy for "registry populated") BEFORE scrolling
-    // — once we scroll the second grid to column 4, dx-grid virtualizes
+    // - once we scroll the second grid to column 4, dx-grid virtualizes
     // columns 0-3 out of the DOM, so `grid.0.0` becomes unreachable.
     await waitFor(
       async () => {

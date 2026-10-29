@@ -14,7 +14,7 @@ import { foreignKeyEquals, mergeForeignKeys, resolveTradingViewSymbol } from './
 // `resolveTradingViewSymbol` takes a snapshot (what `useObject` yields in the UI); mirror that here.
 const symbolFor = (instrument: Ibkr.Instrument) => resolveTradingViewSymbol(Obj.getSnapshot(instrument));
 
-// Fictional tickers only — this is a public repo (never real holdings).
+// Fictional tickers only - this is a public repo (never real holdings).
 
 describe('resolveTradingViewSymbol', () => {
   test('prefers the explicit TradingView foreign key over derived fields', ({ expect }) => {

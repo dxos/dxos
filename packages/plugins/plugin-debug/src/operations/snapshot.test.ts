@@ -24,7 +24,7 @@ describe('DebugOperation.Snapshot', () => {
 
     const snapshot = await harness.runPromise(Operation.invoke(DebugOperation.Snapshot, {}));
 
-    // No deck plugin — the layout section degrades rather than failing the call.
+    // No deck plugin - the layout section degrades rather than failing the call.
     expect(snapshot.layout).toBeUndefined();
     // Attention is part of the harness core, so the section is present (and empty).
     expect(snapshot.attention).toEqual([]);

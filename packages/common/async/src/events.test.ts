@@ -31,7 +31,7 @@ describe('Event', () => {
     const debouncePromise = debounced.waitForCount(1);
 
     // Listeners fire synchronously on emit, so the pure count is exact immediately and the
-    // debounced listener (200ms) has not fired yet — no wall-clock wait needed.
+    // debounced listener (200ms) has not fired yet - no wall-clock wait needed.
     event.emit(true);
     event.emit(true);
     event.emit(true);

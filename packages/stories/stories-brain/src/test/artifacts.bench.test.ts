@@ -37,10 +37,10 @@ import {
   ARTIFACT_PROFILES,
 } from './defs.ts';
 
-// Qualitative artifacts for the overnight report — the outputs to eyeball, not graded scores:
-//   topics.md        — the mailbox's topics, each summarized, with its threads.
-//   profiles.md      — contact profiles built from the FULL fact store (facts as accumulated memory).
-//   drafts-sample.md — sample reply drafts, the bar (haiku) beside the best open-weight model.
+// Qualitative artifacts for the overnight report - the outputs to eyeball, not graded scores:
+//   topics.md        - the mailbox's topics, each summarized, with its threads.
+//   profiles.md      - contact profiles built from the FULL fact store (facts as accumulated memory).
+//   drafts-sample.md - sample reply drafts, the bar (haiku) beside the best open-weight model.
 // Produced by a single canonical model over a wider corpus slice so they aren't thin.
 
 const runWith = <Value>(
@@ -111,7 +111,7 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
         messages: messages.length,
       });
 
-      // --- Topics: the canonical corpus pipeline — deterministic thread clustering (subject-token
+      // --- Topics: the canonical corpus pipeline - deterministic thread clustering (subject-token
       // Jaccard + shared participants), LLM-enriched per-topic summaries, materialized as `Topic`
       // ECHO objects. Reuses @dxos/pipeline-email rather than ad-hoc LLM clustering. ---
       {
@@ -132,8 +132,8 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
         //     title: `${topic.name} (${topic.threadIds.length} threads)`,
         //     body:
         //       `${topic.summary.trim()}\n\n` +
-        //       `**Keywords:** ${topic.keywords.join(', ') || '—'}\n` +
-        //       `**Participants:** ${topic.participants.join(', ') || '—'}\n\n` +
+        //       `**Keywords:** ${topic.keywords.join(', ') || '-'}\n` +
+        //       `**Participants:** ${topic.participants.join(', ') || '-'}\n\n` +
         //       `**Threads:**\n${topic.threadIds.map((id) => `- ${subjectById.get(id) ?? id}`).join('\n')}`,
         //   }));
         // writeResponses('topics', sections.length ? sections : [{ title: 'topics', body: '_(no topics produced)_' }]);
@@ -155,7 +155,7 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
           const prompt =
             `Write a concise profile of ${subject.display} using ONLY the extracted facts below (a mailbox's ` +
             'accumulated memory of this person). Cover: who they are, what they work on, the topics discussed, ' +
-            'and the state of the relationship / any open items. 1–2 short paragraphs, no preamble.\n\n' +
+            'and the state of the relationship / any open items. 1-2 short paragraphs, no preamble.\n\n' +
             `FACTS:\n${factLines}`;
           const profile = await runWith(model, generateText(model.model, model.provider, prompt, '300 seconds'));
           sections.push({ title: `${subject.display} (${retrieval.factCount} facts)`, body: profile.trim() });
@@ -165,7 +165,7 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
         writeResponses('profiles', sections.length ? sections : [{ title: 'profiles', body: '_(no profiles)_' }]);
         log.info('profiles', { subjects: subjects.map((subject) => subject.slug) });
       } else {
-        log.warn('profiles skipped — no fact store fixture');
+        log.warn('profiles skipped - no fact store fixture');
       }
 
       // --- Sample drafts: the bar (haiku) beside the best open-weight model, on replyable messages. ---
@@ -178,7 +178,7 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
           }
           const barDraft = await runWith(model, draftReply(message, model));
           if (barDraft.skipped) {
-            continue; // Bulk/no-reply mail — correctly not drafted.
+            continue; // Bulk/no-reply mail - correctly not drafted.
           }
           const openDraft = await runWith(bestOpen, draftReply(message, bestOpen));
           const excerpt = Message.extractText(message).slice(0, 600).trim();
@@ -186,8 +186,8 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
             title: `${sections.length + 1}. ${subjectOf(message)}`,
             body:
               `**From ${senderOf(message)}:**\n\n${excerpt}\n\n` +
-              `**Reply — ${model.name} (bar):**\n\n${barDraft.draft}\n\n` +
-              `**Reply — ${bestOpen.name} (best open):**\n\n${openDraft.draft}`,
+              `**Reply - ${model.name} (bar):**\n\n${barDraft.draft}\n\n` +
+              `**Reply - ${bestOpen.name} (best open):**\n\n${openDraft.draft}`,
           });
           progress.advance();
         }

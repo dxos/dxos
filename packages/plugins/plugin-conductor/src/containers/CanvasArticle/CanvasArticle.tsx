@@ -45,7 +45,7 @@ export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.Canva
 /**
  * The board on the scene engine (MIGRATION.md M4): `Canvas` over an ECHO store of the board's own
  * layout, with the compute projection keeping the compute graph in step. The editor's own canvas,
- * graph model and monitor are gone — the store is the persistence and the projection is the mirror.
+ * graph model and monitor are gone - the store is the persistence and the projection is the mirror.
  */
 export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: CanvasArticleProps) => {
   const controller = useGraphController(subject);

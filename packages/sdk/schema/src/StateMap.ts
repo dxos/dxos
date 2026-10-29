@@ -16,7 +16,7 @@ import { shallowEqual } from '@dxos/util';
  * mutable metadata for each object, keyed by object id.
  *
  * The companion to immutable feed/queue objects: the objects are immutable, so their mutable
- * per-item state (read-marker, hero image, snippet, …) lives here on a child object referenced
+ * per-item state (read-marker, hero image, snippet, ...) lives here on a child object referenced
  * from the feed's host (see {@link Obj.setParent}). Use this for non-tag metadata; boolean labels
  * (starred, archived) belong in the tag model ({@link TagIndex} / {@link Tagging}) so they share
  * the space-wide `Tag` registry.
@@ -71,7 +71,7 @@ const sliceFamily = Atom.family((key: SliceKey) =>
 );
 
 /**
- * Reactive per-key slice of a StateMap. Fires only when the value at `id` changes — sibling keys'
+ * Reactive per-key slice of a StateMap. Fires only when the value at `id` changes - sibling keys'
  * mutations are discarded without propagating. Memoized via `Atom.family`.
  */
 export const atom = <S extends object>(stateMap: StateMap, id: EntityId): Atom.Atom<Partial<S>> =>
@@ -98,7 +98,7 @@ export const bind = <S extends object = Record<string, unknown>>(stateMap: State
     });
   };
 
-  // Existence check via `Object.keys` — ECHO's reactive record proxy auto-vivifies missing keys on
+  // Existence check via `Object.keys` - ECHO's reactive record proxy auto-vivifies missing keys on
   // direct access, so `record[id]` is not reliably `undefined` for absent ids.
   const has = (record: StateRecord, id: EntityId): boolean => Object.keys(record).includes(id);
 

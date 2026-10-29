@@ -49,7 +49,7 @@ const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
 
 // Captured by `onInit` so the play function can reach the space the story rendered. Keyed per
 // story: the module is shared across the file's stories, and a later story polling a single shared
-// slot would pick up the PREVIOUS story's space — whose client is already destroyed — and hang.
+// slot would pick up the PREVIOUS story's space - whose client is already destroyed - and hang.
 const storySpaces = new Map<string, Space>();
 
 const captureSpaceFor =
@@ -68,7 +68,7 @@ const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  throw new Error('onInit never ran — the story has no space');
+  throw new Error('onInit never ran - the story has no space');
 };
 
 /** Waits for the chat the story plugin creates asynchronously on SpacesAvailable. */
@@ -96,7 +96,7 @@ const meta: Meta<typeof ModuleContainer> = {
   render: ModuleContainer,
   parameters: storyParameters,
   // Spawns the real SDK and spends real tokens. `manual` is the repo's opt-in tag (vitest.tags.ts),
-  // skipped unless DX_RUN_MANUAL_TESTS=1 — which `moon run stories-assistant:test-storybook-live`
+  // skipped unless DX_RUN_MANUAL_TESTS=1 - which `moon run stories-assistant:test-storybook-live`
   // sets. A computed tag would break storybook's static indexer.
   tags: ['manual'],
 };
@@ -146,7 +146,7 @@ export const WithSidecar: Story = {
     // 1. The turn reached the RENDERED thread.
     //
     // Scoped to `document.body`, not `canvasElement`: the module layout renders outside the story
-    // root, so a canvas-scoped query never sees the thread — which is what made this look for a long
+    // root, so a canvas-scoped query never sees the thread - which is what made this look for a long
     // time like a broken render path rather than a mis-scoped assertion.
     await expect(messages.length, 'nothing reached the feed').toBeGreaterThan(0);
     // Asserted against the document's text rather than a testing-library matcher: the token appears
@@ -158,11 +158,11 @@ export const WithSidecar: Story = {
     }
     await expect(document.body.innerText, 'the turn never reached the rendered thread').toContain(MAGIC_TOKEN);
 
-    // 2. The allowed Read call and its result survived the trip, still correlated by name — the
+    // 2. The allowed Read call and its result survived the trip, still correlated by name - the
     //    SDK omits the name on results, so this is the projection's stateful correlation working
     //    end to end rather than in a unit test.
     const blocks = messages.flatMap((message) => [...message.blocks]);
-    // The agent's first Read commonly fails — the SDK requires an absolute path — and it retries.
+    // The agent's first Read commonly fails - the SDK requires an absolute path - and it retries.
     // The claim under test is that a SUCCEEDING read round-trips, so select that pair rather than
     // the first attempt.
     const readResult = require_(
@@ -176,7 +176,7 @@ export const WithSidecar: Story = {
       (block): block is ContentBlock.ToolCall =>
         block._tag === 'toolCall' && block.toolCallId === readResult.toolCallId,
     );
-    // The result carries the tool's name only because the projector correlated it with this call —
+    // The result carries the tool's name only because the projector correlated it with this call -
     // the SDK omits the name on results.
     await expect(readCall?.name, 'the Read result was not correlated with a call').toBe('Read');
     // The fixture's token proves the projected result carries what was actually on disk.
@@ -187,7 +187,7 @@ export const WithSidecar: Story = {
     const denied = blocks.find(
       (block): block is ContentBlock.ToolResult => block._tag === 'toolResult' && block.error !== undefined,
     );
-    await expect(denied, 'nothing was denied — the permission posture is not being enforced').toBeDefined();
+    await expect(denied, 'nothing was denied - the permission posture is not being enforced').toBeDefined();
     await expect(end?.denials, 'the SDK reported no permission denials').toBeGreaterThan(0);
   },
 };
@@ -202,7 +202,7 @@ export const WithSidecar: Story = {
  * Runs in the test runner but NOT under `storybook dev` where DXOS services are unreachable: the
  * plugin stack stalls in `SpaceProxy._initializeDb` waiting on EDGE and blows `useApp`'s 30s budget
  * (`Edge connection closed` on the remote config, `ERR_CONNECTION_REFUSED` on local). {@link Console}
- * is the variant that opens in a browser. Not caused by the agent host — every client-backed story
+ * is the variant that opens in a browser. Not caused by the agent host - every client-backed story
  * here behaves the same.
  */
 export const ConsoleModule: Story = {
@@ -213,7 +213,7 @@ export const ConsoleModule: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Resolving the surface is the assertion: the prompt box only exists if the role bound.
-    await canvas.findByPlaceholderText('Ask the agent…', undefined, { timeout: 60_000 });
+    await canvas.findByPlaceholderText('Ask the agent...', undefined, { timeout: 60_000 });
   },
 };
 
@@ -232,12 +232,12 @@ export const Console: Story = {
  * The assistant's OWN chat, with turns produced by the Claude Agent SDK instead of `AiSession`.
  *
  * This is the end state M3c is after: the sidecar wired in as a `TurnProducer`, so the normal chat
- * input drives it and the normal Chat surface renders it — no bespoke console, no writing to the
+ * input drives it and the normal Chat surface renders it - no bespoke console, no writing to the
  * feed from outside.
  *
  * NOT WORKING YET, and excluded from the suite (`!test`) rather than left red. With the producer
  * contributed the story never reaches a space or a chat (60s, both waits time out), while
- * {@link WithSidecar} — same stack, no producer — passes. The producer module does not appear in the
+ * {@link WithSidecar} - same stack, no producer - passes. The producer module does not appear in the
  * activation log at all, so the suspicion is that it never activates rather than that it fails.
  * Diagnose that before touching anything else; see TASKS.md.
  */

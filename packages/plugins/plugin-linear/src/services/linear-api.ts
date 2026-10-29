@@ -136,7 +136,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
 
 /**
  * Loads the access token directly and returns its `token` value. Used by callers that only have
- * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+ * an external-sync cursor's `spec.source` - the cursor no longer relates to `Connection`.
  */
 export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
   Layer.effect(
@@ -190,7 +190,7 @@ const GraphQLEnvelope = <T>(dataSchema: Schema.Codec<T>) =>
  * POST a GraphQL operation to Linear. Returns the typed `data` payload on
  * success, or fails with {@link LinearGraphQLError} when Linear replies 200 OK
  * with a non-empty `errors` array (which it does for permission/validation
- * issues — these are NOT transport-level failures).
+ * issues - these are NOT transport-level failures).
  */
 const linearGraphQL = <T>(
   query: string,
@@ -281,7 +281,7 @@ const VIEWER_QUERY = /* GraphQL */ `
   }
 `;
 
-/** GET-equivalent — authenticated user profile for `onTokenCreated`. */
+/** GET-equivalent - authenticated user profile for `onTokenCreated`. */
 export const fetchViewer = (): LinearEffect<Viewer> =>
   linearGraphQL(VIEWER_QUERY, {}, Schema.Struct({ viewer: ViewerSchema })).pipe(Effect.map((d) => d.viewer));
 
@@ -443,7 +443,7 @@ export const fetchTeamIssues = (teamId: string, options: { since?: string } = {}
 /**
  * Map a Linear workflow-state category to a {@link Task} status. Linear has
  * five categories (plus an optional `triage`); the Task model has three. The
- * mapping is intentionally lossy and one-way — we don't push status back, so
+ * mapping is intentionally lossy and one-way - we don't push status back, so
  * round-trip ambiguity isn't an issue in pull-only mode.
  */
 export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'started' | 'done' => {
@@ -462,7 +462,7 @@ export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'started' | 'do
 };
 
 /**
- * Linear priorities are 0–4 (0=No priority, 1=Urgent, 2=High, 3=Medium, 4=Low).
+ * Linear priorities are 0-4 (0=No priority, 1=Urgent, 2=High, 3=Medium, 4=Low).
  * Map to `Task.priority`'s string enum. Returns undefined for No priority so
  * the field stays empty rather than reading as "none" deliberately set.
  */
@@ -489,7 +489,7 @@ export const priorityNumberToTaskPriority = (
  * reader can agree on without knowing the team's scale.
  *
  * The buckets are the Fibonacci points each size is usually written as, with
- * anything larger folding into `xl` — an 800-point issue is not a new size, it
+ * anything larger folding into `xl` - an 800-point issue is not a new size, it
  * is the same "very large". Returns undefined for 0 or absent, so the field
  * stays empty rather than reading as a deliberate `xs`.
  */
@@ -516,8 +516,8 @@ export const estimatePointsToTaskEstimate = (points: number | undefined): Task.E
  * Reverse of {@link estimatePointsToTaskEstimate}. Each size pushes the
  * representative point value of its bucket, so a round-trip is stable: a size
  * that came from 5 goes back as 5, and one that came from 13 goes back as 8.
- * That last case is lossy by construction — the size does not carry which
- * large number it was — and is why a local edit is what triggers the push.
+ * That last case is lossy by construction - the size does not carry which
+ * large number it was - and is why a local edit is what triggers the push.
  */
 export const taskEstimateToEstimatePoints = (estimate: Task.Estimate | undefined): number | undefined => {
   switch (estimate) {
@@ -538,7 +538,7 @@ export const taskEstimateToEstimatePoints = (estimate: Task.Estimate | undefined
 
 /**
  * Reverse of {@link priorityNumberToTaskPriority}. Used when pushing local
- * priority edits back to Linear. We never produce 0 (No priority) on push —
+ * priority edits back to Linear. We never produce 0 (No priority) on push -
  * the Task model treats absent as "no opinion", so a round-tripped issue
  * keeps whatever priority it had on Linear if local has none.
  */
@@ -562,15 +562,15 @@ export const taskPriorityToPriorityNumber = (
 
 /**
  * Reverse of {@link stateTypeToTaskStatus}. Used to pick a Linear workflow
- * state when pushing a local status change. The Task → state-type mapping is
+ * state when pushing a local status change. The Task -> state-type mapping is
  * lossy in one direction (canceled and completed both map to `done`), so on
  * push we pick a single canonical Linear state-type per Task status:
  *
- * - `todo`        → `unstarted`
- * - `started` → `started`
- * - `done`        → `completed`
- * - `failed`      → `canceled` (Linear has no failure category)
- * - `cancelled`   → `canceled`
+ * - `todo`        -> `unstarted`
+ * - `started` -> `started`
+ * - `done`        -> `completed`
+ * - `failed`      -> `canceled` (Linear has no failure category)
+ * - `cancelled`   -> `canceled`
  *
  * Callers resolve the resulting state-type to an actual workflow-state ID via
  * {@link fetchTeamWorkflowStates} per team.
@@ -591,7 +591,7 @@ export const taskStatusToStateType = (status: NonNullable<Task.Task['status']>):
 };
 
 //
-// Workflow states (needed to map Task.status → Linear state ID on push)
+// Workflow states (needed to map Task.status -> Linear state ID on push)
 //
 
 const WorkflowStateSchema = Schema.Struct({
@@ -664,8 +664,8 @@ const IssueUpdateResponseSchema = Schema.Struct({
  * explicitly set are sent (so `description: undefined` is dropped, vs. `null`
  * or empty string which Linear treats as a clear).
  *
- * `stateId` must be a state from the issue's team — see
- * {@link fetchTeamWorkflowStates}. `priority` is the 0–4 numeric form (use
+ * `stateId` must be a state from the issue's team - see
+ * {@link fetchTeamWorkflowStates}. `priority` is the 0-4 numeric form (use
  * {@link taskPriorityToPriorityNumber}); `estimate` is the team's estimate
  * unit (typically points).
  *
@@ -674,7 +674,7 @@ const IssueUpdateResponseSchema = Schema.Struct({
  */
 /**
  * `description`, `priority`, and `estimate` accept `null` to clear the field
- * on Linear. `undefined` means "leave unchanged" — Linear treats the two
+ * on Linear. `undefined` means "leave unchanged" - Linear treats the two
  * distinctly. `title` and `stateId` cannot meaningfully be cleared.
  */
 export type IssueUpdateInput = {

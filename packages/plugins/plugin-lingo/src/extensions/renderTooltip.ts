@@ -13,7 +13,7 @@ export type TooltipHandlers = {
   /** Files the hovered segment into the active deck; absent when no deck is selected. */
   onAdd?: (props: SegmentTooltipProps) => void;
   /**
-   * The deck's terms. A segment already held has nothing to add, so the action is withheld — the
+   * The deck's terms. A segment already held has nothing to add, so the action is withheld - the
    * analysis alone cannot answer this, since a merged analyzed segment looks identical to a new one.
    */
   lookup?: VocabularyLookup;
@@ -27,7 +27,7 @@ export type TooltipHandlers = {
  * Strips inline markdown from a quoted span.
  *
  * The text is sliced from the document, not from the rendered view, so a term inside emphasis
- * arrives as `**パン屋**`. Deliberately syntax-only -- the span is a fragment, so parsing it as
+ * arrives as `**\u30D1\u30F3\u5C4B**`. Deliberately syntax-only -- the span is a fragment, so parsing it as
  * markdown would be heavier and no more correct.
  */
 const plain = (text: string): string =>
@@ -55,7 +55,7 @@ export const createTooltipRenderer =
       root.append(Domino.of('span').text(segment.gloss));
     }
 
-    // `plain` first, as the label above does: the deck holds `パン屋`, not `**パン屋**`, so looking up
+    // `plain` first, as the label above does: the deck holds `\u30D1\u30F3\u5C4B`, not `**\u30D1\u30F3\u5C4B**`, so looking up
     // the raw markdown offers to add a term that is already there.
     if (onAdd && !lookup?.(normalizeToken(plain(text)))?.wordId) {
       const label = t(segment.kind === 'vocab' ? 'add-word.label' : 'add-phrase.label');

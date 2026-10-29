@@ -71,7 +71,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             </ToolkitObjectCard.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
-            {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
+            {/* TODO(burdon): Remove this section - move the related actions into the object menu. */}
             <Layout.Flex column gap='form'>
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
@@ -88,7 +88,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 {/* `self-start` so the group sizes to its icons rather than stretching this column. */}
                 <RelatedTypeFilter classNames='self-start' types={types} onToggle={toggle} />
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
-                    which shares this column — the scroll padding is the article's to own, not theirs. */}
+                    which shares this column - the scroll padding is the article's to own, not theirs. */}
                 {/* `centered={false}`: centred columns drift right of the record card above them, which shares
                     this column. `scroll={false}`: the article's viewport scrolls the cards with the record. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
@@ -111,8 +111,8 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
  * Toolbar actions for the record, sourced from its own app-graph node (`disposition: 'toolbar'`).
  *
  * The record view is type-agnostic, so it must not know which actions a given type affords. Any plugin
- * contributes them to the object's node instead — plugin-crm donates enrichment for `Person` /
- * `Organization` — which keeps plugin-space free of a dependency on them and makes each action appear
+ * contributes them to the object's node instead - plugin-crm donates enrichment for `Person` /
+ * `Organization` - which keeps plugin-space free of a dependency on them and makes each action appear
  * only for the types that declare it.
  */
 const useMenuActions = (

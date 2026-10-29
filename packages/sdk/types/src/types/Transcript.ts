@@ -30,7 +30,7 @@ export class Transcript extends Type.makeObject<Transcript>(DXN.make('org.dxos.t
     summaryUpdatedAt: Schema.optional(Schema.String),
 
     /**
-     * Deictic / anaphoric references the summarization stage resolved (e.g. "I" → the speaker).
+     * Deictic / anaphoric references the summarization stage resolved (e.g. "I" -> the speaker).
      */
     resolvedReferents: Schema.optional(
       Schema.mutable(
@@ -45,7 +45,7 @@ export class Transcript extends Type.makeObject<Transcript>(DXN.make('org.dxos.t
     ),
 
     /**
-     * The pipeline configuration that drove this transcript (absent → default preset).
+     * The pipeline configuration that drove this transcript (absent -> default preset).
      * Typed loosely to avoid a dependency cycle from `@dxos/types` into the pipeline package;
      * consumers resolve it to a `PipelineConfig`.
      */

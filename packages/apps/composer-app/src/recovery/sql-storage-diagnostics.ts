@@ -107,14 +107,14 @@ const summarizeHaloFeed = (
 
 /**
  * Inspect OPFS pool + SQLite (no DXOS client boot). Reads the OPFS payload asynchronously,
- * then queries it through an in-memory SQLite (deserialize) — safe on the main thread and
+ * then queries it through an in-memory SQLite (deserialize) - safe on the main thread and
  * never touches the OPFS pool sync access handles.
  */
 export const runSqlStorageDiagnostics = async (
   log: (message: string) => void = () => {},
 ): Promise<SqlStorageDiagnosticsResult> => {
   const started = performance.now();
-  log('SQL storage diagnostics (no client boot)…');
+  log('SQL storage diagnostics (no client boot)...');
   log('');
 
   log('OPFS pool');

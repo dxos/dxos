@@ -36,7 +36,7 @@ export const Toolbox = Util.composable<HTMLDivElement, ToolboxProps>(
               items={skills.map(({ name, description, tools }) => ({
                 name,
                 description,
-                subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+                subitems: tools.map((toolId) => ({ name: `\u2219 ${safeToolId(toolId)}` })),
               }))}
             />
           )}
@@ -47,7 +47,7 @@ export const Toolbox = Util.composable<HTMLDivElement, ToolboxProps>(
               items={activeSkills.map(({ target }) => ({
                 name: target?.name ?? '',
                 description: target?.description ?? '',
-                subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+                subitems: target?.tools.map((toolId) => ({ name: `\u2219 ${safeToolId(toolId)}` })),
               }))}
             />
           )}
@@ -58,7 +58,7 @@ export const Toolbox = Util.composable<HTMLDivElement, ToolboxProps>(
               items={services.map(({ service: { serviceId, name, description } }) => ({
                 name: name ?? serviceId,
                 description,
-                // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
+                // subitems: tools.map(({ name, description }) => ({ name: `* ${name}`, description })),
               }))}
             />
           )}

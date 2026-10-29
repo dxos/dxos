@@ -290,7 +290,7 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = an
    *
    * When consuming this stream from a short-lived parent effect (e.g. React
    * `useEffect` that `runPromise(Effect.forEach(subscribe))` and returns), fork
-   * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} — the
+   * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} - the
    * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
    * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
    * on dispose.
@@ -325,7 +325,7 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = an
    * (i.e. only background children remain in flight).
    *
    * Unlike {@link runToCompletion}, this does NOT wait for background children (e.g. delegated
-   * sub-agents) to finish — so a supervisor's chat turn returns as soon as its reply is complete,
+   * sub-agents) to finish - so a supervisor's chat turn returns as soon as its reply is complete,
    * while sub-agents continue running and report back out of band. Still waits through
    * alarm-pending hybernation (more queued turn work). Defects on {@link State.FAILED}.
    */
@@ -372,7 +372,7 @@ export const bothGuards = (first: Guard, second: Guard): Guard => ({
  */
 export interface SpawnOptions {
   /**
-   * Parent process ID — child inherits the parent's trace context.
+   * Parent process ID - child inherits the parent's trace context.
    * Inside a process, its {@link ManagerService} defaults this to that process; pass `undefined`
    * explicitly to spawn a detached process.
    */
@@ -460,7 +460,7 @@ export interface LocationOptions {
 /**
  * Every process this client can see or run, local and remote, behind one surface.
  *
- * The reads span both runtimes, so they answer "is my process running, wherever it runs" — which is
+ * The reads span both runtimes, so they answer "is my process running, wherever it runs" - which is
  * what a UI renders and what a caller holding no handle can ask. The control verbs take a
  * {@link Location}: a remote process is not a local one, so the caller still names where it runs,
  * but no longer has to hold both managers to do so.
@@ -588,7 +588,7 @@ export const ExitedEvent = Trace.EventType('process.exited', {
 });
 
 /**
- * Renders spawned processes as a forest: top-level rows use "- ", nested rows use ├── / └── / │.
+ * Renders spawned processes as a forest: top-level rows use "- ", nested rows use +-- / +-- / |.
  */
 export const prettyProcessTree = (tree: readonly Process[]): string => {
   if (tree.length === 0) {
@@ -637,12 +637,12 @@ export const prettyProcessTree = (tree: readonly Process[]): string => {
     if (isRoot) {
       lines.push(`- ${formatLabel(node)}`);
     } else {
-      const branch = isLast ? '└── ' : '├── ';
+      const branch = isLast ? '\u2514\u2500\u2500 ' : '\u251C\u2500\u2500 ';
       lines.push(`${prefix}${branch}${formatLabel(node)}`);
     }
 
     const children = childrenByParent.get(String(node.pid)) ?? [];
-    const nextPrefix = isRoot ? '  ' : `${prefix}${isLast ? '    ' : '│   '}`;
+    const nextPrefix = isRoot ? '  ' : `${prefix}${isLast ? '    ' : '\u2502   '}`;
     children.forEach((child, index) => {
       walk(child, nextPrefix, index === children.length - 1, false);
     });

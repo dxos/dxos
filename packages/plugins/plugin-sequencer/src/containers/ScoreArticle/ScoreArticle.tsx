@@ -29,7 +29,7 @@ export type ScoreArticleProps = AppSurface.ObjectArticleProps<Score.Score>;
 const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 // Default fallback pitch range for sound generators that need a definite
-// span — the schema leaves track.minPitch / track.maxPitch optional, and the
+// span - the schema leaves track.minPitch / track.maxPitch optional, and the
 // editor falls back to A0..C8 (full 88-key piano) when they're missing.
 const DEFAULT_MIN_PITCH = 21;
 const DEFAULT_MAX_PITCH = 108;
@@ -37,7 +37,7 @@ const DEFAULT_MAX_PITCH = 108;
 const newTrack = (index: number): Track.Track => ({
   id: newId(),
   name: `Track ${index + 1}`,
-  // `hue` is intentionally left unset — TrackList / SequenceGrid resolve it
+  // `hue` is intentionally left unset - TrackList / SequenceGrid resolve it
   // via `hueFor(track)`, which hashes the track id into a stable color when
   // no explicit hue is set.
   patches: [
@@ -74,7 +74,7 @@ const parseTimeSignature = (input: string | undefined): number => {
 
   const match = /^(\d+)\s*\/\s*\d+$/.exec(input.trim());
   const beats = match ? Number(match[1]) : NaN;
-  // Reject zero / negative / non-integer / non-finite — beatsPerBar=0 would break
+  // Reject zero / negative / non-integer / non-finite - beatsPerBar=0 would break
   // every downstream position computation.
   return Number.isFinite(beats) && beats >= 1 ? Math.floor(beats) : 4;
 };
@@ -295,7 +295,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
 
   // Tone.js audio playback. The ScorePlayer is rebuilt whenever the Score structure
   // changes; play/stop is driven by isPlaying. The playhead animation runs in
-  // parallel via rAF — visually accurate within a few ms of the audio.
+  // parallel via rAF - visually accurate within a few ms of the audio.
   const playerRef = useRef<ScorePlayer | null>(null);
   if (playerRef.current === null) {
     playerRef.current = new ScorePlayer();
@@ -331,7 +331,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     const startedAt = performance.now();
     const beatsPerSecond = score.tempo / 60;
     // Match the ScorePlayer's effective loop range so the visual playhead loops
-    // in lockstep with the audio (start → end → wrap → start).
+    // in lockstep with the audio (start -> end -> wrap -> start).
     // Trust the score-level loopStart/loopEnd directly;
     // the loop is allowed to extend past activeSequence.length.
     const loopStartBeats = Math.max(0, score.loopStart ?? 0);

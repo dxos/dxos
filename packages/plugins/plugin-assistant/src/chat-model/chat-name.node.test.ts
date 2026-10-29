@@ -74,7 +74,7 @@ const layer = (agent?: MakeTurnProducer) =>
 
 describe('ChatModel naming', { timeout: 30_000 }, () => {
   it.live(
-    'names a chat on Composer’s agent after its first prompt',
+    "names a chat on Composer's agent after its first prompt",
     Effect.fn(
       function* ({ expect }) {
         const { chat, chatModel } = yield* setup();

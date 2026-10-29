@@ -37,7 +37,7 @@ export type ServeOptions<ClientRpcs extends Rpc.Any = Rpc.Any> = ServerOptions &
 /**
  * A registry of rpc groups that any number of transports serve. Each provider registers its own
  * group with {@link Service.serve}, so no single place enumerates the services a transport carries;
- * {@link Service.attach} then serves everything registered — before or after — over one transport.
+ * {@link Service.attach} then serves everything registered - before or after - over one transport.
  */
 export interface Service {
   /**
@@ -246,8 +246,8 @@ const makeTransport = (parent: Parent): Effect.Effect<Transport, never, Scope.Sc
       addRoute: (registration) =>
         Effect.gen(function* () {
           invariant(!routes.has(registration), `rpc router: registration already routed: '${registration.prefix}'`);
-          // The server lives in a scope of its own so the route can be dropped — when its
-          // registration closes — without taking the transport's other routes with it.
+          // The server lives in a scope of its own so the route can be dropped - when its
+          // registration closes - without taking the transport's other routes with it.
           const routeScope = yield* Scope.fork(transportScope, 'sequential');
           const route: Route = {
             prefix: registration.prefix,

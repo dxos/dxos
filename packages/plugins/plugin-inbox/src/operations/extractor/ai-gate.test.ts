@@ -39,7 +39,7 @@ describe('isAiServiceUnavailable', () => {
   });
 
   test('does not throw when context is null', ({ expect }) => {
-    // The predicate runs inside catch handlers — a deref on a null `context` would convert the
+    // The predicate runs inside catch handlers - a deref on a null `context` would convert the
     // intended soft skip into an unhandled failure.
     expect(isAiServiceUnavailable({ context: null, message: 'unrelated' })).toBe(false);
   });

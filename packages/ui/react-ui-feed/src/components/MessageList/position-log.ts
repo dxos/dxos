@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const EPSILON = 1;
 
 export type PositionStats = {
-  /** Rows whose offset changed after they were laid out — every one of these is a visible flicker. */
+  /** Rows whose offset changed after they were laid out - every one of these is a visible flicker. */
   shifts: number;
   /** Windows where offsets did not increase with index; a row was placed over its neighbour. */
   breaks: number;
@@ -18,10 +18,10 @@ export type PositionStats = {
 
 export type PositionShift = { index: number; from: number; to: number; delta: number };
 
-/** Recent shifts kept for inspection — enough to see whether one row type moves or all of them. */
+/** Recent shifts kept for inspection - enough to see whether one row type moves or all of them. */
 const TRACE_LIMIT = 40;
 
-/** `key` is the virtualizer's item key — the message id, via `getItemKey`. */
+/** `key` is the virtualizer's item key - the message id, via `getItemKey`. */
 export type PositionKey = number | string | bigint;
 
 export type PositionEntry = { key: PositionKey; index: number; start: number };
@@ -36,13 +36,13 @@ const EMPTY: PositionStats = { shifts: 0, breaks: 0 };
  *
  * A virtualized list is only still if a row's offset, once laid out, does not change: rows above the
  * reader are measured as they mount, and any correction there pushes everything below it. Scrolling
- * **up** is where this shows, because that is the direction in which unmeasured rows enter — going
+ * **up** is where this shows, because that is the direction in which unmeasured rows enter - going
  * down, the rows above have already been measured.
  *
  * Positions are recorded **relative to the viewport** (`start - scrollOffset`), not as absolute
  * document offsets, because those two answer different questions. Measuring a row for the first time
  * re-lays every row below it, and the virtualizer compensates by moving `scrollTop` the same
- * distance — the offsets all change and the reader sees nothing. What a reader sees is a row landing
+ * distance - the offsets all change and the reader sees nothing. What a reader sees is a row landing
  * somewhere else on screen, which is what this counts.
  *
  * Two invariants:

@@ -42,7 +42,7 @@ describe('MergeTrip', () => {
   test('merges a trip into the nearest trip within the gap and deletes it', async ({ expect }) => {
     const segA = Segment.make({ details: { _tag: 'flight', number: 'AA-1', departAt: '2026-06-01T10:00:00.000Z' } });
     const tripA = addTrip({ name: 'A', start: '2026-06-01T10:00:00.000Z', end: '2026-06-01T13:00:00.000Z' }, [segA]);
-    // 4 days later — well within the default 28-day gap.
+    // 4 days later - well within the default 28-day gap.
     const segB = Segment.make({ details: { _tag: 'train', number: 'TT-2', departAt: '2026-06-05T10:00:00.000Z' } });
     const tripB = addTrip({ name: 'B', start: '2026-06-05T10:00:00.000Z', end: '2026-06-05T12:00:00.000Z' }, [segB]);
     await db.flush();
@@ -63,7 +63,7 @@ describe('MergeTrip', () => {
   test('is a no-op when no other trip lies within the gap', async ({ expect }) => {
     const segA = Segment.make({ details: { _tag: 'flight', number: 'AA-1', departAt: '2026-06-01T10:00:00.000Z' } });
     addTrip({ name: 'A', start: '2026-06-01T10:00:00.000Z', end: '2026-06-01T13:00:00.000Z' }, [segA]);
-    // ~6 months later — far beyond the gap.
+    // ~6 months later - far beyond the gap.
     const segB = Segment.make({ details: { _tag: 'flight', number: 'BB-1', departAt: '2026-12-01T10:00:00.000Z' } });
     const tripB = addTrip({ name: 'B', start: '2026-12-01T10:00:00.000Z', end: '2026-12-01T12:00:00.000Z' }, [segB]);
     await db.flush();

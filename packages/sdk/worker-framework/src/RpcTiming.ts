@@ -38,7 +38,7 @@ export class Middleware extends RpcMiddleware.Service<Middleware, { provides: Me
 export type Options = {
   /**
    * Minimum queue-wait or service duration (ms) before emitting a log line.
-   * Defaults to 100 — tuned for 100–1000 ms worker lag signals, not sub-10 ms noise.
+   * Defaults to 100 - tuned for 100-1000 ms worker lag signals, not sub-10 ms noise.
    */
   readonly minLogMs?: number;
 };
@@ -73,7 +73,7 @@ export type ClientSample = {
  *
  * Cumulative rather than windowed because the reader is out of process: a harness that takes two
  * readings subtracts them and gets the interval between, and nothing has to agree in advance on
- * where a window starts. The maxima are the exception — a max cannot be differenced — which is why
+ * where a window starts. The maxima are the exception - a max cannot be differenced - which is why
  * the samples travel alongside.
  */
 export type Totals = {
@@ -150,7 +150,7 @@ export const recordSample = (sample: Sample): void => {
   }
 };
 
-/** Records one completed call as the caller saw it — see {@link ClientSample}. */
+/** Records one completed call as the caller saw it - see {@link ClientSample}. */
 export const recordClientSample = (sample: ClientSample): void => {
   trace.metrics.distribution(ROUND_TRIP_METRIC, sample.roundTripMs / 1_000, DURATION_META);
   totals.clientCalls += 1;
@@ -199,7 +199,7 @@ export const getReadout = (): Readout => ({
 });
 
 // Published at module scope rather than on the first recorded call, so a realm that served no RPC
-// in an interval is distinguishable from one that was never instrumented — a zero and an absence
+// in an interval is distinguishable from one that was never instrumented - a zero and an absence
 // read identically from the counters alone.
 Object.assign(globalThis, { [RPC_TIMING_GLOBAL]: getReadout });
 
@@ -239,7 +239,7 @@ const shouldLog = (options: Options, queueWaitMs: number | undefined, serviceMs:
 const timedGroups = new WeakMap<object, unknown>();
 
 /**
- * Attaches {@link Middleware} to every RPC in a group. Idempotent — applying it to an
+ * Attaches {@link Middleware} to every RPC in a group. Idempotent - applying it to an
  * already-wrapped group returns the same instance.
  */
 export const applyMiddleware = <Rpcs extends Rpc.Any>(
@@ -302,7 +302,7 @@ export const serverLayer = (options?: Options): Layer.Layer<Middleware> =>
  * Round trip is the caller's quantity and cannot be derived from the server's two: it adds the
  * transport in both directions to them, so a worker reporting 2 ms of queue wait and 3 ms of
  * service while the tab waits 400 ms says the time went somewhere neither number covers.
- * `ensuring` rather than a success path, so a failed or interrupted call is counted too — one that
+ * `ensuring` rather than a success path, so a failed or interrupted call is counted too - one that
  * fails after 30 s is the case worth seeing.
  */
 export const clientLayer = (): Layer.Layer<RpcMiddleware.ForClient<Middleware>> =>

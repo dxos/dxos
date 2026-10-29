@@ -9,7 +9,7 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 import { PERF_PORT } from './perf/server.ts';
 
 /**
- * Production startup harness config — `vite preview`, same as `playwright.config.ts`, but scoped
+ * Production startup harness config - `vite preview`, same as `playwright.config.ts`, but scoped
  * to `startup.spec.ts`.
  *
  * Its own config because the harness records benchmark rows rather than asserting behaviour: we do

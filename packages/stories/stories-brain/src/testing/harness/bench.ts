@@ -36,7 +36,7 @@ export const reportBenchmark = (
 };
 
 /**
- * The core reusable harness for the per-item Phase 1 tests: pipes every item (message, thread, …)
+ * The core reusable harness for the per-item Phase 1 tests: pipes every item (message, thread, ...)
  * through a stage that runs `perItem` under each model variant's AI backend, captures the per-item
  * results, and derives comparable metrics via `evaluate`. A variant that errors is recorded as an
  * `error` row rather than aborting the comparison (see `runBenchmark`). Results are written to JSON.
@@ -82,14 +82,14 @@ export const runItemsBench = <Item, Result>(options: {
                       if (responseLog && render) {
                         const index = (counters.get(variant.name) ?? 0) + 1;
                         counters.set(variant.name, index);
-                        responseLog.append({ title: `${variant.name} — ${index}`, body: render(result) });
+                        responseLog.append({ title: `${variant.name} - ${index}`, body: render(result) });
                       }
                     }),
                   ),
                 ),
               ),
             ),
-            // Live progress (current/total message index) → shared progress.json.
+            // Live progress (current/total message index) -> shared progress.json.
             Stage.track(options.name, { total: options.items.length, label: options.name }),
             Pipeline.run({ sink }),
           )

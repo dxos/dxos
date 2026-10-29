@@ -21,7 +21,7 @@ export type DebugProps = Util.ThemedClassName<{
  * The table over whatever probes are registered (SPEC follow-up: generic debug mechanism, built
  * once and reused by future react-ui components rather than re-invented per surface).
  *
- * Values are sampled once per animation frame while mounted — the model is not reactive over
+ * Values are sampled once per animation frame while mounted - the model is not reactive over
  * values by design, so the table is the only thing paying for sixty reads a second. Grouped by the
  * probe's `group`, in fixed tracks so a changing digit moves nothing beside it.
  */

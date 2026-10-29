@@ -20,7 +20,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       Visual project management using customizable kanban boards to track workflow progress.
       Organize any ECHO type into drag-and-drop columns defined by a single-select field, move cards
-      between stages, and reorder both columns and cards — all changes are persisted to ECHO and
+      between stages, and reorder both columns and cards - all changes are persisted to ECHO and
       replicated to collaborators in real time.
 
       Kanban boards come in two variants: view-variant boards source their cards through a linked

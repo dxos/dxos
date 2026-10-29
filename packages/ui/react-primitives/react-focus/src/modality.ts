@@ -6,7 +6,7 @@
 export const KEYBOARD_MODALITY_ATTR = 'data-w-keyboard';
 
 // Keys that move focus. A character key typed into a field is not navigation, so it must not
-// flip the modality — that is the distinction consumers rely on to tell a click-driven focus
+// flip the modality - that is the distinction consumers rely on to tell a click-driven focus
 // change from a keyboard-driven one.
 const NAVIGATION_KEYS = new Set([
   'Tab',

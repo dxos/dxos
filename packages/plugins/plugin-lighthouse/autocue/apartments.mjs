@@ -23,7 +23,7 @@ import { steps as research } from './research.mjs';
 const SUBTITLE = 'from plugin-lighthouse/PLUGIN.mdl QA-2';
 const NAME = 'Warsaw apartments';
 const GOAL =
-  '2-room apartments for rent in central Warsaw (Śródmieście, Wola, Mokotów) under 6000 PLN total with a balcony, near metro';
+  '2-room apartments for rent in central Warsaw (\u015Aródmie\u015Bcie, Wola, Mokotów) under 6000 PLN total with a balcony, near metro';
 
 const BEAT = 2_500;
 
@@ -34,7 +34,7 @@ const PHOTO = `${RESULT}:has(img)`;
 const DETAIL = '[data-testid="lighthouse.detail"]';
 
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 const visible = (locator, timeout = 1_500) =>
   locator

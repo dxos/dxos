@@ -13,17 +13,17 @@ import { existsSync, readFileSync } from 'node:fs';
 const BAR_WIDTH = 16;
 
 const STATUS = {
-  pending: { icon: '◦', color: chalk.dim },
-  running: { icon: '▶', color: chalk.cyan },
-  done: { icon: '✔', color: chalk.green },
-  error: { icon: '✗', color: chalk.red },
+  pending: { icon: '\u25E6', color: chalk.dim },
+  running: { icon: '>', color: chalk.cyan },
+  done: { icon: 'OK', color: chalk.green },
+  error: { icon: 'X', color: chalk.red },
 };
 const statusOf = (name) => STATUS[name] ?? { icon: '?', color: chalk.white };
 
 /** `93s` under a minute, else `1m03s`, else `1h02m`. */
 export const duration = (ms) => {
   if (!Number.isFinite(ms) || ms < 0) {
-    return '—';
+    return '-';
   }
   const totalSeconds = Math.round(ms / 1000);
   if (totalSeconds < 60) {
@@ -43,10 +43,10 @@ const bar = (current, total) => {
     return ' '.repeat(BAR_WIDTH);
   }
   const filled = Math.max(0, Math.min(BAR_WIDTH, Math.round((current / total) * BAR_WIDTH)));
-  return chalk.green('█'.repeat(filled)) + chalk.dim('·'.repeat(BAR_WIDTH - filled));
+  return chalk.green('#'.repeat(filled)) + chalk.dim('·'.repeat(BAR_WIDTH - filled));
 };
 
-// Elapsed for an in-flight task: its own `elapsedMs` if the reporter set one, else now − startedAt.
+// Elapsed for an in-flight task: its own `elapsedMs` if the reporter set one, else now - startedAt.
 const elapsedOf = (task, nowMs) => {
   if (Number.isFinite(task.elapsedMs)) {
     return task.elapsedMs;
@@ -63,7 +63,7 @@ const readSnapshot = (file) => {
     return { snapshot: JSON.parse(readFileSync(file, 'utf8')) };
   } catch {
     // A concurrent writer may catch us mid-write; the caller reuses the previous frame.
-    return { error: 'progress file busy…' };
+    return { error: 'progress file busy...' };
   }
 };
 
@@ -96,7 +96,7 @@ export const renderProgress = (file, nowMs, label = file) => {
     const { icon, color } = statusOf(status);
     const elapsedMs = elapsedOf(task, nowMs);
 
-    // Suite-level stub: status + elapsed only — no bar/rate/ETA (its `current` never advances).
+    // Suite-level stub: status + elapsed only - no bar/rate/ETA (its `current` never advances).
     if (isStub(task)) {
       const elapsed = status === 'pending' ? '' : duration(elapsedMs);
       return color(`${icon}  ${chalk.dim(name.padEnd(nameWidth))}  ${status.padEnd(BAR_WIDTH)} ${chalk.dim(elapsed)}`);
@@ -106,10 +106,10 @@ export const renderProgress = (file, nowMs, label = file) => {
     const remaining = total && current < total && rate > 0 ? ((total - current) / rate) * 1000 : NaN;
     const count = total ? `${current}/${total}` : `${current}`;
     const percent = total ? `${Math.round((current / total) * 100)}%` : '';
-    const rateText = Number.isFinite(rate) ? `${rate.toFixed(2)}/s` : '—';
-    const elapsedText = status === 'pending' ? '—' : duration(elapsedMs);
-    const etaText = status === 'running' ? duration(remaining) : status === 'pending' ? '—' : 'done';
-    const note = task.note ? chalk.dim(`  ${task.note}`) : task.error ? chalk.red(`  ⚠ ${task.error}`) : '';
+    const rateText = Number.isFinite(rate) ? `${rate.toFixed(2)}/s` : '-';
+    const elapsedText = status === 'pending' ? '-' : duration(elapsedMs);
+    const etaText = status === 'running' ? duration(remaining) : status === 'pending' ? '-' : 'done';
+    const note = task.note ? chalk.dim(`  ${task.note}`) : task.error ? chalk.red(`  Warning: ${task.error}`) : '';
     return (
       `${color(icon)}  ${name.padEnd(nameWidth)}  ${bar(current, total)} ${`${count} ${percent}`.padEnd(11)} ` +
       `${rateText.padEnd(9)} ${elapsedText.padEnd(8)} ${etaText.padEnd(8)}${note}`
@@ -124,10 +124,10 @@ export const renderProgress = (file, nowMs, label = file) => {
   const summary = chalk.dim(
     `${doneCount} done, ${errorCount ? chalk.red(`${errorCount} error`) : '0 error'}, ${tasks.length} tasks` +
       (totalSum ? ` · ${curSum}/${totalSum} items` : '') +
-      ` · updated ${snapshot.updatedAt ?? '—'}`,
+      ` · updated ${snapshot.updatedAt ?? '-'}`,
   );
 
-  const title = chalk.bold('research bench — live stats') + chalk.dim(`   (${label})`);
+  const title = chalk.bold('research bench - live stats') + chalk.dim(`   (${label})`);
   return [title, '', header, ...lines, '', summary].join('\n');
 };
 

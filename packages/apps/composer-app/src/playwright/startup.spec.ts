@@ -25,7 +25,7 @@ import {
 const WARM_READY_TIMEOUT_MS = 90_000;
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
-// `process.exit` at spec-collection time — keeps the playwright report and
+// `process.exit` at spec-collection time - keeps the playwright report and
 // HTML output meaningful even when this constraint is the cause.
 test.beforeAll(() => {
   if (process.env.DX_PWA !== 'false') {
@@ -34,7 +34,7 @@ test.beforeAll(() => {
 });
 
 /**
- * Registers a `longtask` PerformanceObserver before any page script runs — `collectStartupReport`
+ * Registers a `longtask` PerformanceObserver before any page script runs - `collectStartupReport`
  * reads the accumulated entries from `window.__longTasks` to compute Total Blocking Time.
  */
 const observeLongTasks = async (page: Page): Promise<void> => {
@@ -49,7 +49,7 @@ const observeLongTasks = async (page: Page): Promise<void> => {
         }).observe({ type: 'longtask', buffered: true });
       }
     } catch {
-      // Long Tasks API unsupported in this browser (firefox/webkit) — `__longTasks` stays empty.
+      // Long Tasks API unsupported in this browser (firefox/webkit) - `__longTasks` stays empty.
     }
   });
 };
@@ -59,7 +59,7 @@ test.describe.serial('Startup timing harness', () => {
   test.setTimeout(120_000);
   // Retries are allowed HERE, unlike the gated suites: this harness never runs in CI (its tasks are
   // manual, outside the `:e2e-ci*` pool) and records benchmark rows rather than gating a merge, so a
-  // retry costs a rerun, not a masked defect — and the un-root-caused warm-reload ResetDialog race
+  // retry costs a rerun, not a masked defect - and the un-root-caused warm-reload ResetDialog race
   // otherwise throws away a whole sample row.
   test.describe.configure({ retries: 2 });
 
@@ -140,7 +140,7 @@ test.describe.serial('Startup timing harness', () => {
   test('warm-cold start (persisted identity, fresh tab)', async ({ playwright, browserName }, testInfo) => {
     test.skip(browserName !== 'chromium', 'persistent context flow currently exercised only on chromium');
 
-    // Closer to a real returning user — IDB persists in `userDataDir` across
+    // Closer to a real returning user - IDB persists in `userDataDir` across
     // launches, but the module cache is cleared because the browser process
     // has fully closed. Separates "load app" from "create new identity",
     // which the regular `cold` scenario conflates.
@@ -269,7 +269,7 @@ test.describe.serial('Startup timing harness', () => {
   test('boot loader paints before bundle is parsed', async ({ browser }) => {
     // Verifies the native-DOM loader (inline in `index.html`) is on screen
     // before `main.tsx` finishes executing. The capture has to happen *at*
-    // `DOMContentLoaded` — not later via a locator query — because by the
+    // `DOMContentLoaded` - not later via a locator query - because by the
     // time Playwright would actuate one, React may already have committed
     // its replacement and dismissed the loader. We register a one-shot
     // listener inside `addInitScript` (which runs before any page script)

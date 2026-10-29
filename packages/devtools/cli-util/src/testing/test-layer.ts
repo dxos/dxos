@@ -17,7 +17,7 @@ import { CommandConfig } from '../services/index.ts';
 import { TestConsole } from './test-console.ts';
 
 // Annotated explicitly: without it, `Effect.provide(TestLayer)` at call sites infers the
-// remaining requirement as `any` instead of `never` — a chained `Layer.provideMerge` generic
+// remaining requirement as `any` instead of `never` - a chained `Layer.provideMerge` generic
 // composition TypeScript can't carry through an exported const without help.
 export const TestLayer: Layer.Layer<
   ClientService | CommandConfig | ConfigService | TestConsole.TestConsole,

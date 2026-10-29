@@ -9,15 +9,15 @@ import { type Obj, type Type } from '@dxos/echo';
 //
 // The object lens: one live ECHO object viewed through a second declared type. Unlike the wire lens
 // (`Panproto`), which crosses the serialization boundary to a foreign record, nothing here creates a
-// second object — reads project the base object and writes invert onto it.
+// second object - reads project the base object and writes invert onto it.
 //
 
 /** A path into an ECHO object (the argument to `Obj.getValue`/`Obj.setValue`). */
 export type KeyPath = readonly (string | number)[];
 
 /**
- * A total value conversion between a source and a target property. `decode` runs source → target,
- * `encode` target → source; both directions must be defined for the property to be writable.
+ * A total value conversion between a source and a target property. `decode` runs source -> target,
+ * `encode` target -> source; both directions must be defined for the property to be writable.
  */
 export type Codec<A = any, B = any> = {
   readonly decode: (value: A) => B;
@@ -25,8 +25,8 @@ export type Codec<A = any, B = any> = {
 };
 
 /**
- * A target property computed from named source properties. `from` declares the read dependency —
- * it is the complement made explicit, and it scopes the reactive subscription — and `put` returns
+ * A target property computed from named source properties. `from` declares the read dependency -
+ * it is the complement made explicit, and it scopes the reactive subscription - and `put` returns
  * only the source properties that change, so write-minimality is enforced by the signature rather
  * than by convention. Omitting `put` yields a read-only computed property.
  */
@@ -37,7 +37,7 @@ export type Derived<S = any, V = any, K extends keyof S = keyof S> = {
 };
 
 /**
- * `Lens.from(property, codec)` — rename plus a total value conversion.
+ * `Lens.from(property, codec)` - rename plus a total value conversion.
  *
  * The codec is typed on the present value: an unset source property short-circuits to `undefined`
  * without calling it, so an optional target property does not force every codec to handle `undefined`.
@@ -49,7 +49,7 @@ export type Converted<S = any, V = any> = {
   readonly codec: Codec<any, NonNullable<V>> | string;
 };
 
-/** `Lens.readOnly(property)` — projected for display, rejected on write. */
+/** `Lens.readOnly(property)` - projected for display, rejected on write. */
 export type ReadOnly<S = any> = {
   readonly kind: 'readOnly';
   readonly property: keyof S & string;
@@ -90,7 +90,7 @@ export type Coverage = {
   readonly explicit: readonly string[];
   /** Target properties auto-mapped by name and compatible type. */
   readonly automatic: readonly string[];
-  /** Target properties with no counterpart — stored in the annotation dictionary. */
+  /** Target properties with no counterpart - stored in the annotation dictionary. */
   readonly overlaid: readonly string[];
   /** Source properties absent from the view; restored by `put` from the live object. */
   readonly dropped: readonly string[];

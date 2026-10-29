@@ -33,7 +33,7 @@ export type MakeOptions = {
 export const make = ({ feed, cwd, maxTurns, path }: MakeOptions) => {
   let session: string | undefined;
 
-  // A scoped effect to match `MakeTurnProducer`; nothing to release — the host is reached over HTTP
+  // A scoped effect to match `MakeTurnProducer`; nothing to release - the host is reached over HTTP
   // and each turn is a single request.
   return Effect.succeed({
     // The SDK owns tool binding, so no DXOS skills are bound to this conversation and the process's

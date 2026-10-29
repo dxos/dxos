@@ -32,13 +32,13 @@ const BACKGROUND_THRESHOLD = Duration.seconds(1);
  *
  * Generous because each attempt is one real macrotask: a woken continuation crosses several promise
  * boundaries, and on a runner saturated by the rest of the suite twenty turns of the event loop was
- * not enough to drain them — the pump gave up with the last model call still outstanding. The loop
+ * not enough to drain them - the pump gave up with the last model call still outstanding. The loop
  * exits the moment the count is reached, so the ceiling costs a passing run nothing; the vitest
  * timeout is what a real hang fails against.
  */
 const MAX_ATTEMPTS = 200;
 
-/** Bound on {@link drain}, which always runs to completion — it is waiting to prove a NEGATIVE. */
+/** Bound on {@link drain}, which always runs to completion - it is waiting to prove a NEGATIVE. */
 const MAX_DRAIN_ATTEMPTS = 20;
 
 /** Latches holding a tool call open with no real time passing. */

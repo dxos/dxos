@@ -76,7 +76,7 @@ test.describe('Collection tests', () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection' });
     await host.expandSection('spacePlugin.collectionsSection');
-    // Create an item inside the collection, then disclose it — a childless collection has no toggle.
+    // Create an item inside the collection, then disclose it - a childless collection has no toggle.
     await host.createObject({ type: 'Collection', nth: 0 });
     await host.expandCollection(0);
     await expect(host.getObjectLinks()).toHaveCount(2);

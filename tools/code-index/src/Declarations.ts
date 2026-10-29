@@ -10,8 +10,8 @@ import * as Ontology from './Ontology.ts';
 import type * as Store from './Store.ts';
 
 /**
- * Where a name is declared, best first. A bare name routinely has several declarations — the real
- * one plus a test double (`const proxyFetchLegacy = vi.fn()`) or a story's local — and the first row
+ * Where a name is declared, best first. A bare name routinely has several declarations - the real
+ * one plus a test double (`const proxyFetchLegacy = vi.fn()`) or a story's local - and the first row
  * of an unordered query is whichever the evaluator met first, so the ranking is the point.
  */
 

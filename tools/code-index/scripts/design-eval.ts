@@ -165,7 +165,7 @@ type Shown = {
   kept: number;
   precision: number;
   recall: number;
-  /** Share of shown files System One judges as belonging (probability ≥ 0.5). */
+  /** Share of shown files System One judges as belonging (probability >= 0.5). */
   judged: number;
   /** Share of shown files that are tests, stories, generated, internal or file-local. */
   internal: number;
@@ -232,7 +232,7 @@ const program = Effect.gen(function* () {
   for (const area of areas) {
     const source = readFileSync(join(root, DIAGRAMS, area.file), 'utf8');
     const refs = refsOf(source);
-    console.log(`\n# ${area.name}: ${refs.length} refs — ${area.prompt}`);
+    console.log(`\n# ${area.name}: ${refs.length} refs - ${area.prompt}`);
 
     const explorers: Record<string, ExplorerRun> = {};
     const timed = <E, R>(effect: Effect.Effect<Graph.Candidates, E, R>) =>
@@ -405,7 +405,7 @@ const mean = (values: readonly number[]) =>
 const report = (results: readonly AreaResult[]): string => {
   const lines: string[] = [];
   const explorerNames = [...new Set(results.flatMap((result) => Object.keys(result.explorers)))];
-  lines.push('### (a) Explorer recall (hand-drawn refs ⊆ candidates)', '');
+  lines.push('### (a) Explorer recall (hand-drawn refs subset of candidates)', '');
   lines.push(`| area | refs | ${explorerNames.map((name) => `${name} recall | ${name} nodes`).join(' | ')} |`);
   lines.push(`| --- | --- | ${explorerNames.map(() => '--- | ---').join(' | ')} |`);
   for (const result of results) {
@@ -413,7 +413,7 @@ const report = (results: readonly AreaResult[]): string => {
       `| ${result.name} | ${result.refs.length} | ${explorerNames
         .map((name) => {
           const entry = result.explorers[name];
-          return entry ? `${percent(entry.recall)}${entry.error ? ' (failed)' : ''} | ${entry.nodes}` : '— | —';
+          return entry ? `${percent(entry.recall)}${entry.error ? ' (failed)' : ''} | ${entry.nodes}` : '- | -';
         })
         .join(' | ')} |`,
     );
@@ -449,7 +449,7 @@ const report = (results: readonly AreaResult[]): string => {
   );
   for (const result of results) {
     lines.push(
-      `| ${result.name} | ${result.diagram?.variant ?? '—'} | ${result.diagram?.overall?.toFixed(2) ?? '—'} | ${result.handDrawn?.overall?.toFixed(2) ?? '—'} | ${result.diagram?.nodes ?? '—'} | ${result.diagram ? percent(result.diagram.recall) : '—'} |`,
+      `| ${result.name} | ${result.diagram?.variant ?? '-'} | ${result.diagram?.overall?.toFixed(2) ?? '-'} | ${result.handDrawn?.overall?.toFixed(2) ?? '-'} | ${result.diagram?.nodes ?? '-'} | ${result.diagram ? percent(result.diagram.recall) : '-'} |`,
     );
   }
   lines.push('');
@@ -510,7 +510,7 @@ const report = (results: readonly AreaResult[]): string => {
   );
   for (const result of results) {
     lines.push(
-      `| ${result.name} | ${(result.explorers.bfs?.ms ?? 0) / 1000}s | ${result.explorers.llm ? `${result.explorers.llm.ms / 1000}s` : '—'} | ${result.usage.zoomMs / 1000}s | ${result.usage.calls} | ${result.usage.cached} | ${result.usage.inputTokens} | $${result.usage.usd.toFixed(4)} |`,
+      `| ${result.name} | ${(result.explorers.bfs?.ms ?? 0) / 1000}s | ${result.explorers.llm ? `${result.explorers.llm.ms / 1000}s` : '-'} | ${result.usage.zoomMs / 1000}s | ${result.usage.calls} | ${result.usage.cached} | ${result.usage.inputTokens} | $${result.usage.usd.toFixed(4)} |`,
     );
   }
   return `${lines.join('\n')}\n`;

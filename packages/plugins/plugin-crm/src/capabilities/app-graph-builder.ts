@@ -39,7 +39,7 @@ const CRM_TYPES: Type.AnyEntity[] = [Organization.Organization, Person.Person];
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // CRM section group — created here so it only appears when the CRM plugin is active and
+      // CRM section group - created here so it only appears when the CRM plugin is active and
       // hides when it has no children (i.e. the space has no organizations or people).
       AppGraphBuilder.createExtension({
         id: GraphPath.GroupSegments.crm,
@@ -111,15 +111,15 @@ export default Capability.makeModule(
                       { spaceId: db.spaceId },
                     );
                   }
-                  // The operations above only render the skeleton from what ECHO already knows —
+                  // The operations above only render the skeleton from what ECHO already knows -
                   // every section beyond Details is emitted empty on purpose. Filling them is the
                   // agent's job, which the CRM skill already instructs ("Enrich Profile documents in
-                  // place…"), so the action runs both halves: skeleton first (instant, no model), then
+                  // place..."), so the action runs both halves: skeleton first (instant, no model), then
                   // the agent against it.
                   //
                   // The subject rides along as a bound context object rather than a persisted
                   // `Instructions`, and `background` keeps the run in the process monitor instead of
-                  // opening a chat. Images are the agent's too, via the skill's `attach-image` tool —
+                  // opening a chat. Images are the agent's too, via the skill's `attach-image` tool -
                   // `EnrichImages` is set-scoped (it walks everything missing an image) and would fire
                   // at objects the user never asked about.
                   yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {

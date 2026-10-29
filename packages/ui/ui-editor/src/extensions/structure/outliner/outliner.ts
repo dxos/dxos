@@ -30,7 +30,7 @@ export type OutlinerProps = {
   ghost?: GhostOptions;
   /**
    * Presentation only: no editing affordances. Drops the drag grips, the floating menu, and the
-   * gutters reserved for them — a read-only surface (a card preview) has nothing to grab and no room
+   * gutters reserved for them - a read-only surface (a card preview) has nothing to grab and no room
    * to spare. Pair with `readOnly` on the basic extensions, which is what actually blocks edits.
    */
   readonly?: boolean;
@@ -193,7 +193,7 @@ const decorations = () => [
     },
 
     // The drag preview clones the selected rows, whose content is shifted horizontally to preview the
-    // drop indent — so the highlight must come from the (full-width) container, not the cloned lines,
+    // drop indent - so the highlight must come from the (full-width) container, not the cloned lines,
     // to span the editor width regardless of the indent level.
     '.cm-blockDragPreview': {
       backgroundImage: 'linear-gradient(var(--color-cm-highlight-surface), var(--color-cm-highlight-surface))',

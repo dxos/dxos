@@ -25,7 +25,7 @@ import { WebSearchSkill } from '../skills/index.ts';
 // on its own. If the instructions's registry skill is bound by its registry DXN ref, resolution
 // stays in the registry and succeeds. If it is re-wrapped with `Ref.make` first (minting an
 // EID ref to an object that only exists in the registry, never in the DB), the persisted ref
-// dangles — in production the DB query blocks for its full 30s timeout; with a fresh binder here
+// dangles - in production the DB query blocks for its full 30s timeout; with a fresh binder here
 // it simply resolves to nothing.
 
 const TestLayer = AssistantTestLayer({
@@ -46,7 +46,7 @@ describe('Skill binding resolution (registry refs)', () => {
         db.registry.add([WebSearchSkill.make()]);
 
         // Create a instructions referencing the skill purely by registry URI. Once added to the
-        // DB its skill ref is a resolver-backed registry ref — exactly the ref `prompt.ts`
+        // DB its skill ref is a resolver-backed registry ref - exactly the ref `prompt.ts`
         // binds.
         const instructions = yield* Database.add(
           Instructions.make({

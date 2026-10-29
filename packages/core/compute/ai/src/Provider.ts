@@ -7,7 +7,7 @@
 import { DXN } from '@dxos/keys';
 
 /**
- * A model provider: who serves models. The id is a DXN so the set is open — third-party providers
+ * A model provider: who serves models. The id is a DXN so the set is open - third-party providers
  * are defined under their own reverse-DNS id, and the provider itself is pure metadata (its models
  * are the catalog entries that name it; see {@link Model.forProvider}).
  */
@@ -26,7 +26,7 @@ type MakeOptions = Omit<Provider, 'id'>;
 
 /**
  * Constructs a provider from its NSID. The NSID is validated at compile time (its final segment must
- * be camelCase — no hyphens) and at runtime, mirroring {@link DXN.make}.
+ * be camelCase - no hyphens) and at runtime, mirroring {@link DXN.make}.
  */
 export const make: {
   <Id extends string>(

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * What the agent is told about its one tool. The API declarations are read from the same `.d.ts`
- * the sandbox is written against, so the documentation cannot drift from the surface — a new host
+ * the sandbox is written against, so the documentation cannot drift from the surface - a new host
  * call is documented by existing.
  */
 
@@ -68,19 +68,19 @@ const focus = await storage.get('focus');
 print('focus is', focus);
 `.trim();
 
-/** The system prompt. Names the one hard rule — nothing is shown unless it is displayed. */
+/** The system prompt. Names the one hard rule - nothing is shown unless it is displayed. */
 export const systemPrompt = (): string =>
   [
     'You are a code-architecture analyst working over an RDF index of a TypeScript monorepo.',
     '',
     'You have exactly one tool: `exec`, which runs TypeScript in a sandbox. Everything you can do,',
-    'you do by writing code — querying the index, remembering things, and showing results.',
+    'you do by writing code - querying the index, remembering things, and showing results.',
     'Each `exec` runs in a fresh process: nothing you declared in an earlier call exists in the next',
     'one, so a snippet that draws must query what it draws (or read it back from `storage`).',
     '',
     'THE RULE THAT MATTERS: the user sees only what you publish through the `display` API. They do',
     'not see your prose, your code, its output, or anything you print. If you have an answer worth',
-    'giving, `display` it — a diagram, a table, or markdown — and only then summarise it in a',
+    'giving, `display` it - a diagram, a table, or markdown - and only then summarise it in a',
     'sentence. An answer described but never displayed has not been given.',
     '',
     'Prefer a `display.diagram` when the answer is a shape (dependencies, layering, a flow) and a',
@@ -88,18 +88,18 @@ export const systemPrompt = (): string =>
     'the finished result.',
     '',
     "DIAGRAM DSL. `display.diagram` takes plugin-illustrator's semantic DSL; say what is related and,",
-    'only where it matters, roughly where — the engine places boxes on a grid and routes the arrows:',
+    'only where it matters, roughly where - the engine places boxes on a grid and routes the arrows:',
     '- `diagram flow=down|up|right|left` (optional, first).',
-    '- `node <id> ["Label"] [placement…] [ref="<IRI or path>"]`; ids are bare words (A-z 0-9 _ -) or',
-    '  quoted; `node edge group diagram cell via bus` must be quoted as ids. Labels ≤ 17 characters.',
-    '- `group <id> ["Label"] [below|above|right-of|left-of <group>] { node… edge… }` — a frame; no nesting.',
+    '- `node <id> ["Label"] [placement...] [ref="<IRI or path>"]`; ids are bare words (A-z 0-9 _ -) or',
+    '  quoted; `node edge group diagram cell via bus` must be quoted as ids. Labels <= 17 characters.',
+    '- `group <id> ["Label"] [below|above|right-of|left-of <group>] { node... edge... }` - a frame; no nesting.',
     '- `edge A -> B ["label"]`, or a relationship word for what it MEANS (left end = child, whole, owner,',
     '  "one" side): `extends implements composes owns one-to-many many-to-many depends-on`. `edge A -> B, C`',
     '  fans out; add `bus` for one shared trunk.',
     '- Placement, only to fix something: `right-of X`, `left-of X`, `below X`, `above X`, `same-row X`,',
     '  `same-col X`; prefix `~` for a preference. Start with none; unhinted layouts are searched hardest.',
     "- Groups and boxes share one id namespace: a group may not take a box's id. `#` starts a comment.",
-    '- Big diagrams are fine — 30–40 boxes in 3–5 groups lay out — but keep edges under ~1.5× the boxes:',
+    '- Big diagrams are fine - 30-40 boxes in 3-5 groups lay out - but keep edges under ~1.5× the boxes:',
     '  pass `reduce: true` on a graph value to drop transitive edges, and label only edges that say something.',
     "Put the IRI a query returned in each box's `ref`: the user clicks a box to see that resource. Build each",
     'box from one row (`rows.map((row) => ({ id: row.name, ref: row.pkg }))`), never by zipping two arrays.',
@@ -122,7 +122,7 @@ export const systemPrompt = (): string =>
     '```',
   ].join('\n');
 
-/** The `exec` tool's own description — the API surface, so the model can write code from the schema alone. */
+/** The `exec` tool's own description - the API surface, so the model can write code from the schema alone. */
 export const toolDescription = (): string =>
   [
     'Runs TypeScript in a sandbox and returns whatever it printed plus its final value. Top-level',

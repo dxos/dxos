@@ -240,7 +240,7 @@ export const makeFromDatabase = async ({
   const type = allTypes.find((t) => Type.getTypename(t) === typename || Type.getURI(t) === typename);
   invariant(type, `Type not found: ${typename}`);
   // `type` is a `Type.Type` entity (type-kind brand). The kind it *describes*
-  // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via
+  // lives in the `TypeAnnotation` on the rebuilt Effect Schema - read it via
   // `Entity.getKind` rather than the entity-level `Type.isObject` guard.
   const effectSchema = Type.getSchema(type);
   invariant(Entity.getKind(effectSchema) === Entity.Kind.Object, `Schema is not an object schema: ${typename}`);

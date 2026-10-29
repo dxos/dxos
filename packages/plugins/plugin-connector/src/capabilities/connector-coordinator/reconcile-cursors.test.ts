@@ -64,7 +64,7 @@ describe('reconcileCursors', () => {
     ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>,
   );
 
-  // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
+  // Never invoked here - `ConnectorSync` requires an operation, and this test only exercises
   // cursor reconciliation.
   const SyncExampleTarget = Operation.make({
     meta: { key: DXN.make('com.example.operation.test.reconcileCursors.sync') },

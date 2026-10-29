@@ -21,7 +21,7 @@ import { type Identity } from '../Identity.ts';
 
 //
 // The identity subsystem's contract: the interfaces its consumers depend on and the tags that carry
-// them. Nothing here imports an implementation, so depending on the contract cannot drag one in —
+// them. Nothing here imports an implementation, so depending on the contract cannot drag one in -
 // which a tag typed against an implementation class silently does, even through a type-only import.
 //
 

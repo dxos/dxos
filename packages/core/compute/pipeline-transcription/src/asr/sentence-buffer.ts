@@ -9,7 +9,7 @@ import { type ContentBlock } from '@dxos/types';
  *
  * A run of `.`/`!`/`?` followed by whitespace or end-of-string terminates a sentence; an ellipsis
  * (`..`+) is treated as non-terminal so mid-thought pauses keep accumulating. Abbreviations are not
- * special-cased — this is a deterministic heuristic, not a full sentence tokenizer.
+ * special-cased - this is a deterministic heuristic, not a full sentence tokenizer.
  */
 export const splitSentences = (text: string): { sentences: string[]; rest: string } => {
   const sentences: string[] = [];

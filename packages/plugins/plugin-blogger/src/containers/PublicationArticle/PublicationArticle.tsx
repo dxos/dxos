@@ -124,7 +124,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   const postRefs = publication.posts;
   // `useObjects` subscribes to each post ref's resolution (and later mutations) via `Obj.atom(ref)`,
   // re-rendering this component once cold-loaded refs resolve. We only need it as a recompute
-  // trigger below — the tile data still reads the live `.target` (not the snapshots `useObjects`
+  // trigger below - the tile data still reads the live `.target` (not the snapshots `useObjects`
   // returns) because `PostCard` re-subscribes to the live post itself via its own `useObject` call.
   // Mirrors the identical `.target`-cold-load fix applied via `useObjects` in
   // plugin-trip/TripArticle.tsx (see its comment on the same defect).
@@ -140,8 +140,8 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   );
 
   const instructionsRef = publication.instructions;
-  // Reactive resolution trigger: `useObject` on a `Ref` subscribes via `Obj.atom(ref)` — the
-  // `org.dxos.echo-react.useObjectReactive` idiom — and calls `ref.load()` internally, re-rendering
+  // Reactive resolution trigger: `useObject` on a `Ref` subscribes via `Obj.atom(ref)` - the
+  // `org.dxos.echo-react.useObjectReactive` idiom - and calls `ref.load()` internally, re-rendering
   // this component once the target resolves. The returned snapshot is discarded; we re-read the
   // live `.target` below because `MarkdownArticle` needs the live object (`Obj.isObject` /
   // `Obj.getDatabase`, used for file upload and `@`-link queries), not a snapshot.

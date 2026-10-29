@@ -12,7 +12,7 @@ import { getFieldPublishFlags } from './annotation.ts';
 
 // A partially-published struct (`meta`), a mirrored struct (`link`, whose unannotated fields are
 // visible via an external record, with one field forced private), plus non-optional published,
-// optional published (annotation applied before `Schema.optional`), and private fields — exercises the
+// optional published (annotation applied before `Schema.optional`), and private fields - exercises the
 // union/refinement unwrapping, the struct descent, and visibility inheritance/override.
 const Meta = Schema.Struct({
   shown: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),

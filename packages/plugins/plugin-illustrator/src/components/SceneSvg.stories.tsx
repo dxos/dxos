@@ -181,7 +181,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** UML definition rendered straight to SVG via the grid dialect — no canvas editor involved. */
+/** UML definition rendered straight to SVG via the grid dialect - no canvas editor involved. */
 export const Default: Story = {
   args: {
     source: CLASS_DIAGRAM,
@@ -223,7 +223,7 @@ export const Dagre: Story = {
   },
 };
 
-/** ELK layered placement (layer sweep + Brandes-Köpf) — the constraint-capable engine. */
+/** ELK layered placement (layer sweep + Brandes-Köpf) - the constraint-capable engine. */
 export const Elk: Story = {
   args: {
     source: COMPLEX_DIAGRAM,
@@ -241,7 +241,7 @@ export const GridComplex: Story = {
 
 /**
  * Rule-based grouping: the inheritance tree (Node/Container/Leaf) renders as a tree, the longest
- * dependency chain (Query → Index → Registry → Codec) as an arrows-up column, each in its own
+ * dependency chain (Query -> Index -> Registry -> Codec) as an arrows-up column, each in its own
  * framed group; leftovers pack around them.
  */
 export const Rules: Story = {
@@ -253,7 +253,7 @@ export const Rules: Story = {
 
 /**
  * Scored placement search: the chain anchors the center; groups place next to their neighbours
- * where the score (+1 straight, −1 crossing) is highest; the better of {search, packing} wins.
+ * where the score (+1 straight, -1 crossing) is highest; the better of {search, packing} wins.
  */
 export const Search: Story = {
   args: {

@@ -14,7 +14,7 @@ import { deleteRemoteHeads } from './0001_delete_remote_heads.ts';
 import { selfCheckpointedFragments } from './0002_self_checkpointed_fragments.ts';
 
 /**
- * Data migrations over the Subduction records in `automerge_chunks` — rewrites that need the
+ * Data migrations over the Subduction records in `automerge_chunks` - rewrites that need the
  * engine or a sweep, unlike the schema DDL in `migrations/chunks`. Each lives in its own numbered
  * file and is recorded in `automerge_subduction_migrations` when it reports itself done; a later
  * open skips it. Order is the order here, and a migration that throws stops the run so the ones
@@ -22,8 +22,8 @@ import { selfCheckpointedFragments } from './0002_self_checkpointed_fragments.ts
  *
  * EVERY MIGRATION MUST BE IDEMPOTENT. Applying and recording are separate commits, and an open can
  * die between them, so a migration reruns against a database it already changed and must change
- * nothing the second time. The ledger is a performance optimization only — it saves the rerun's
- * sweep of every stored record on every open — never what makes a migration safe: a database must
+ * nothing the second time. The ledger is a performance optimization only - it saves the rerun's
+ * sweep of every stored record on every open - never what makes a migration safe: a database must
  * be correct with the migration applied any number of times, with or without its ledger row.
  */
 export const MIGRATIONS: readonly Migration[] = [deleteRemoteHeads, selfCheckpointedFragments];

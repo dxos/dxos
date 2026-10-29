@@ -138,7 +138,7 @@ export const generator = () => ({
           (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && Binding.targets(cursor, mailbox),
         );
         invariant(binding, 'Mailbox has no sync binding');
-        // Matched by entity id (`Binding.isForConnection`), not by ref-prop equality — a raw filter
+        // Matched by entity id (`Binding.isForConnection`), not by ref-prop equality - a raw filter
         // compares `echo:` URI spellings, which vary for one object and can never-match.
         const connections = await space.db.query(Filter.type(Connection.Connection)).run();
         const connection = connections.find((candidate) => Binding.isForConnection(binding, candidate));

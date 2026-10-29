@@ -22,7 +22,7 @@ import { getDebugPortController } from '@dxos/react-client/devtools';
 import { DebugOperationError } from '../../operations/errors.ts';
 
 /**
- * The debug console's command set — the introspection surface an agent uses over the debug port
+ * The debug console's command set - the introspection surface an agent uses over the debug port
  * (operations, snapshot, plugin management), driveable by hand. Operations are invoked through the
  * same invoker the agent path uses, so the two surfaces cannot drift.
  */
@@ -32,7 +32,7 @@ export type DebugCli = {
 };
 
 export type DebugCliOptions = {
-  /** Receives each command result as printed — the clipboard source for "copy last result". */
+  /** Receives each command result as printed - the clipboard source for "copy last result". */
   onResult?: (text: string) => void;
 };
 

@@ -56,8 +56,8 @@ const stem = (word: string): string => {
 /**
  * Normalize a predicate to a relation key for matching: lowercase, collapse whitespace, drop leading
  * auxiliary/copula/article words, and light-stem the head verb. Inflection / case / auxiliary variants
- * collapse (e.g. `Works at` / `is working at` / `worked at` → `work at`). True synonyms (`at` vs `for`,
- * `works` vs `employed by`) are NOT merged — that needs a controlled vocabulary (deferred). Idempotent.
+ * collapse (e.g. `Works at` / `is working at` / `worked at` -> `work at`). True synonyms (`at` vs `for`,
+ * `works` vs `employed by`) are NOT merged - that needs a controlled vocabulary (deferred). Idempotent.
  */
 export const normalize = (predicate: string): string => {
   const tokens = predicate
@@ -75,7 +75,7 @@ export const normalize = (predicate: string): string => {
 };
 
 /**
- * The display form of a predicate or an inverse: lowercase kebab-case (`Works at` → `works-at`, `Known by` →
+ * The display form of a predicate or an inverse: lowercase kebab-case (`Works at` -> `works-at`, `Known by` ->
  * `known-by`), so labels the extractor, the ontology and a UI author each write read as one vocabulary. Unlike
  * {@link normalize} it keeps the words as said (no stemming, no dropped copula), since it is shown, not matched.
  * Idempotent.

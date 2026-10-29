@@ -21,7 +21,7 @@ export type GraphLatticeProjectorOptions = GraphRadialProjectorOptions & {
  * Lays out nodes as a square-as-possible grid that fits the container.
  * Extends `GraphRadialProjector` to inherit the tween (`updateNode` + `animate`),
  * so switching to / from this layout animates each node from its current
- * position to the grid cell — and the initial mount can also "grow" from
+ * position to the grid cell - and the initial mount can also "grow" from
  * existing positions if seeded with a prior projector's layout.
  */
 export class GraphLatticeProjector<
@@ -52,7 +52,7 @@ export class GraphLatticeProjector<
     const sortBy = this.options.sortBy ?? ((n: GraphLayoutNode) => (n.data as any)?.label ?? n.id);
     nodes.sort((a, b) => sortBy(a).localeCompare(sortBy(b)));
 
-    // Columns ≈ √N so the grid stays as square as possible.
+    // Columns ~ sqrtN so the grid stays as square as possible.
     const columns = Math.max(1, Math.ceil(Math.sqrt(count)));
     const rows = Math.ceil(count / columns);
 

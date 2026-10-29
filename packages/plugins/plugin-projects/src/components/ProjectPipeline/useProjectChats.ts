@@ -12,7 +12,7 @@ import { type Space } from '@dxos/react-client/echo';
 
 /**
  * The chats filed under a project, live. Every chat in the space, narrowed by the parent walk: the
- * query re-emits when one is added — which is exactly when a session begins.
+ * query re-emits when one is added - which is exactly when a session begins.
  */
 export const useProjectChats = (space: Space | undefined, project: Project.Project): Chat.Chat[] => {
   const allChats = useQuery(space?.db, Filter.type(Chat.Chat));

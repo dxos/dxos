@@ -61,7 +61,7 @@ export const runHooks = <R>({
           invariant(Obj.instanceOf(Operation.PersistentOperation, record), 'Hook function must be an operation.');
           const operation = Operation.deserialize(record);
           // Hooks carry no event payload (the spec is a bare tag), so the input template is passed
-          // through verbatim — the hook's operation reads any conversation state it needs itself.
+          // through verbatim - the hook's operation reads any conversation state it needs itself.
           yield* invoke(operation, { ...hook.input }, hook);
         }).pipe(
           Effect.catchCause((cause) =>

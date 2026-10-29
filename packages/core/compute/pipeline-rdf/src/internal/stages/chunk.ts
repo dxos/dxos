@@ -27,7 +27,7 @@ export const chunk = (text: string, maxChars: number = DEFAULT_MAX_CHUNK_CHARS):
   };
 
   for (const sentence of segmentSentences(trimmed)) {
-    // A single sentence over the budget can't be packed — flush, then hard-split it.
+    // A single sentence over the budget can't be packed - flush, then hard-split it.
     if (sentence.length > maxChars) {
       flush();
       for (let offset = 0; offset < sentence.length; offset += maxChars) {

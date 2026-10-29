@@ -33,7 +33,7 @@ export const decodeEntities = (input: string): string =>
  * Block-level tag boundaries (paragraphs, divs, headings, list items, line breaks)
  * are converted to newlines so paragraph structure survives the stripping.
  *
- * Decodes entities up front so entity-encoded HTML (`&lt;p&gt;...&lt;/p&gt;` — common in
+ * Decodes entities up front so entity-encoded HTML (`&lt;p&gt;...&lt;/p&gt;` - common in
  * RSS `<description>` payloads, especially under fast-xml-parser stopNodes) gets stripped
  * the same as raw HTML. Without that, the encoded tags would survive stripping and only
  * decode at the end, leaking literal `<p>` into the output.
@@ -71,7 +71,7 @@ export const makeSnippet = (text: string, length: number = DEFAULT_SNIPPET_LENGT
   const clipped = text.slice(0, length);
   const lastSpace = clipped.lastIndexOf(' ');
   const base = lastSpace > length * 0.6 ? clipped.slice(0, lastSpace) : clipped;
-  return `${base.trimEnd()}…`;
+  return `${base.trimEnd()}...`;
 };
 
 export const extractImageUrls = (html: string): string[] => {

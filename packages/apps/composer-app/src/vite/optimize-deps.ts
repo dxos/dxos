@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-// GENERATED FILE — regenerate with `moon run composer-app:gen-optimize-deps`.
+// GENERATED FILE - regenerate with `moon run composer-app:gen-optimize-deps`.
 
 /**
  * Every dependency entrypoint the app reaches, pre-bundled by vite's optimizer up front.
  *
- * Vite's dependency scan is all-or-nothing — one unresolvable import anywhere in the crawl aborts
- * it and pre-bundles nothing — and it runs only when there is no valid optimizer cache, so the
+ * Vite's dependency scan is all-or-nothing - one unresolvable import anywhere in the crawl aborts
+ * it and pre-bundles nothing - and it runs only when there is no valid optimizer cache, so the
  * damage outlives the start that caused it: every dep is then discovered mid-session, one
  * re-optimize and full page reload per plugin family. Listing the deps statically keeps
  * pre-bundling independent of the scan. Entries reached only through a `@dxos/*` package do not

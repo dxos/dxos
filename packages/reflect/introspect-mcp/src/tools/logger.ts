@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// Tool-call logging — drives future tool prioritization.
+// Tool-call logging - drives future tool prioritization.
 //
 // Every tool call is logged; failed structured queries that fall through to
 // search_code (when added in a later phase) get logged separately. This is
-// intentionally minimal — appending JSONL is enough for the analysis we want
+// intentionally minimal - appending JSONL is enough for the analysis we want
 // to do later, and keeps the runtime dependency surface small.
 
 import { appendFile, mkdir } from 'node:fs/promises';

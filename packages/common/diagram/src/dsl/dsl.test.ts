@@ -60,7 +60,7 @@ const roundTrip = (source: string) => printCommands(parse(source).commands);
 
 describe('dsl round trip', () => {
   for (const [name, source] of Object.entries({ KITCHEN_SINK, COMMANDS, AWKWARD_IDS, NEGATIVES })) {
-    test(`print(parse(x)) === x — ${name}`, ({ expect }) => {
+    test(`print(parse(x)) === x - ${name}`, ({ expect }) => {
       expect(parse(source).problems).toEqual([]);
       expect(roundTrip(source)).toEqual(source);
     });
@@ -222,7 +222,7 @@ describe('dsl round-trip hazards', () => {
 
   //
   // The exponent support the printer needs also admits `1e309`, which `parseFloat` turns into
-  // Infinity — an infinite coordinate poisons layout and cannot be printed back, so `parse` must
+  // Infinity - an infinite coordinate poisons layout and cannot be printed back, so `parse` must
   // refuse what `print` refuses.
   //
   for (const [name, source] of Object.entries({

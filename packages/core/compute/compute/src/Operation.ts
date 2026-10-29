@@ -152,8 +152,8 @@ export const LazyHandlerTypeId = '~@dxos/operation/LazyHandler' as const;
 export type LazyHandlerTypeId = typeof LazyHandlerTypeId;
 
 /**
- * A definition paired with the module that implements it. The pairing is TYPED — the loaded
- * module's default must be `WithHandler<Def>` for the same `Def` — so a definition can no longer be
+ * A definition paired with the module that implements it. The pairing is TYPED - the loaded
+ * module's default must be `WithHandler<Def>` for the same `Def` - so a definition can no longer be
  * wired to another operation's handler and fail only at dispatch.
  */
 export interface LazyHandler<Def extends Definition.Any = Definition.Any> {
@@ -481,7 +481,7 @@ export interface DurableDefinition<_Input, _Output, _Requirements = never, _Rpcs
 
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `DurableHandler.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
-  // structural fields would block `Durable<…, never>` from being assignable to `Durable.Any`.
+  // structural fields would block `Durable<..., never>` from being assignable to `Durable.Any`.
   // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
   // See design spec §4.4.
   readonly rpcs: RpcGroup.RpcGroup<any>;
@@ -590,7 +590,7 @@ export interface DurableProps {
    *
    * Declared here beside `services` because a host cannot know them: it resolves a process by key
    * and has no view of the types that process queries. Unregistered, a TYPED query silently matches
-   * nothing — a queue append succeeds and the read back returns empty, which reads as a lost write
+   * nothing - a queue append succeeds and the read back returns empty, which reads as a lost write
    * rather than a missing schema.
    */
   readonly types?: readonly Type.AnyEntity[];
@@ -693,7 +693,7 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
 const TOOL_NAME_KEY_PREFIX = 'org.dxos.operation.';
 
 /**
- * Derives the model-facing tool name for an operation from its DXN key — never from `meta.name`,
+ * Derives the model-facing tool name for an operation from its DXN key - never from `meta.name`,
  * which is display copy and must stay freely editable without renaming the tool the model calls.
  * The key's namespace segment prefixes the name, which is what removes the cross-skill collisions
  * that a bare verb produced (three skills each claimed `create`).
@@ -704,8 +704,8 @@ const TOOL_NAME_KEY_PREFIX = 'org.dxos.operation.';
  * guarantee tool-name uniqueness. Two such keys are an authoring error, caught in the two places both
  * keys are visible at once: {@link findToolNameCollisions} over a whole set, and the tool resolver.
  *
- * @example `org.dxos.operation.markdown.create` → `markdown-create`
- * @example `org.dxos.operation.assistantToolkit.addArtifact` → `assistant-toolkit-add-artifact`
+ * @example `org.dxos.operation.markdown.create` -> `markdown-create`
+ * @example `org.dxos.operation.assistantToolkit.addArtifact` -> `assistant-toolkit-add-artifact`
  */
 export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.key);
 
@@ -718,7 +718,7 @@ export const toolNameFromKey = (key: string): string => {
   return name;
 };
 
-/** Shape every derived tool name must have — the model-facing identifier contract. */
+/** Shape every derived tool name must have - the model-facing identifier contract. */
 const TOOL_NAME_REGEXP = /^[a-z][a-z0-9-_]*$/;
 
 const deriveToolName = (key: string): string => {
@@ -730,7 +730,7 @@ const deriveToolName = (key: string): string => {
 const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
 /**
- * {@link toolNameFromKey} for a key that is not known to be well-formed — a record off the wire, whose
+ * {@link toolNameFromKey} for a key that is not known to be well-formed - a record off the wire, whose
  * `@meta.key` is untrusted JSON. Returns undefined instead of failing, so one malformed entry costs its
  * own tool rather than every tool in the projection.
  */
@@ -743,7 +743,7 @@ export const tryToolNameFromKey = (key: string): string | undefined => {
  * Groups a set of operations by derived tool name, returning only the names claimed more than once.
  *
  * {@link toolName} is not injective (see its note), so a set of registry-unique keys can still
- * collide. Call this wherever a complete operation set is assembled — the resolver sees keys one at a
+ * collide. Call this wherever a complete operation set is assembled - the resolver sees keys one at a
  * time and can only catch a collision once a colliding name is actually requested.
  */
 export const findToolNameCollisions = (operations: readonly Definition.Any[]): Map<string, readonly DXN.DXN[]> => {
@@ -776,7 +776,7 @@ export type InvokeRemote = <I, O, E>(
 
 /**
  * Database record of an operation.
- * The registry `key` and `version` live in the object meta — access via
+ * The registry `key` and `version` live in the object meta - access via
  * `Obj.getMeta(record).key` and `Obj.getMeta(record).version`.
  */
 // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
@@ -928,7 +928,7 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
 };
 
 /**
- * Translatable label — a plain string or an i18next-style `[key, options]` tuple.
+ * Translatable label - a plain string or an i18next-style `[key, options]` tuple.
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
@@ -972,7 +972,7 @@ export const NotifyOptionsAnnotation = Annotation.make({
 });
 
 /**
- * A serializable reference to an operation invocation — the target operation's key plus its input.
+ * A serializable reference to an operation invocation - the target operation's key plus its input.
  * Describes a deferred/late-bound invocation that must survive a serialization boundary (e.g. riding
  * on a process-failure error, or persisted) where a live {@link Definition} cannot. Resolve the key
  * with `OperationHandlerSet.getHandlerByKey` and hand the result to the invoker. Carries no functions,
@@ -986,7 +986,7 @@ export interface SerializedInvocation {
 }
 
 /**
- * Builds a {@link SerializedInvocation} from a live {@link Definition} and its input — the serializable
+ * Builds a {@link SerializedInvocation} from a live {@link Definition} and its input - the serializable
  * counterpart to a direct `invoke`, for describing an invocation that must cross a serialization
  * boundary (e.g. a deferred toast action). Resolve it later with `OperationHandlerSet.getHandlerByKey`.
  */
@@ -1008,7 +1008,7 @@ export interface InvokeOptions {
    */
   notify?: NotifyOptions;
   /**
-   * URI of the conversation feed (queue) — today always an EID, but typed as
+   * URI of the conversation feed (queue) - today always an EID, but typed as
    * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`
    * at the point of use.
    * Passed to the process environment so nested operations can resolve HarnessService and related services.
@@ -1027,7 +1027,7 @@ export interface InvokeOptions {
 }
 
 /**
- * Annotation that marks an operation as idempotent — safe to retry even if a previous execution
+ * Annotation that marks an operation as idempotent - safe to retry even if a previous execution
  * was interrupted mid-handler. When absent the operation is treated as non-idempotent, and the
  * process runtime will fail (rather than re-run) any handler that was interrupted.
  */
@@ -1046,7 +1046,7 @@ export const isIdempotent = (op: Definition.Any): boolean =>
 
 /**
  * Attaches an annotation to an operation definition, returning a new definition.
- * Combinators never mutate their input — operation definitions are module-level singletons
+ * Combinators never mutate their input - operation definitions are module-level singletons
  * shared across handler sets, skills, and the registry, so a fresh value keeps the
  * annotated definition distinct from any other reference to the original.
  *
@@ -1065,7 +1065,7 @@ export const annotate =
 
 /**
  * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
- * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
+ * manual invocation). Absent => internal: invoked programmatically by plugins and hidden from pickers.
  *
  * Same polarity as the schema-level `Annotation.UserType`: operations are hidden by default, since most
  * are internal plugin machinery and only a minority are user-facing.
@@ -1077,7 +1077,7 @@ export const VisibleAnnotation = Annotation.make({
 
 /**
  * The operation's effect on state: `none` is side-effect free, `write` mutates but is not
- * irreversible, `destructive` deletes or otherwise cannot be undone. Absent ⇒ unclassified, which
+ * irreversible, `destructive` deletes or otherwise cannot be undone. Absent => unclassified, which
  * consumers treat conservatively (an MCP client badges the tool as possibly destructive).
  */
 export const MutationAnnotation = Annotation.make({
@@ -1088,7 +1088,7 @@ export const MutationAnnotation = Annotation.make({
 export type Mutation = Schema$.Schema.Type<typeof MutationAnnotation.schema>;
 
 /**
- * Pipeable combinator classifying the operation's effect on state — see {@link MutationAnnotation}.
+ * Pipeable combinator classifying the operation's effect on state - see {@link MutationAnnotation}.
  * Apply at the definition site: `Operation.make({ ... }).pipe(Operation.mutation('none'))`.
  */
 export const mutation = (value: Mutation) => annotate(MutationAnnotation, value);
@@ -1105,21 +1105,21 @@ export const visible = annotate(VisibleAnnotation, true);
 
 /**
  * Returns true when an operation is annotated as visible on user-facing surfaces (trigger/automation
- * pickers, manual invocation). Reads from the persisted operation — the form every consumer holds.
+ * pickers, manual invocation). Reads from the persisted operation - the form every consumer holds.
  */
 export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
 
 /**
- * Pipeable combinator that marks an operation idempotent — see {@link IdempotentAnnotation}. Apply at
+ * Pipeable combinator that marks an operation idempotent - see {@link IdempotentAnnotation}. Apply at
  * the definition site: `Operation.make({ ... }).pipe(Operation.idempotent)`.
  */
 export const idempotent = annotate(IdempotentAnnotation, true);
 
 /**
  * What an operation requires of the process that invokes it, in the vocabulary of the permission
- * system that interprets it (`@dxos/permission` requirements). Present ⇒ the runtime refuses the
- * call unless the invoking process holds a guard that admits it; absent ⇒ the operation is never
+ * system that interprets it (`@dxos/permission` requirements). Present => the runtime refuses the
+ * call unless the invoking process holds a guard that admits it; absent => the operation is never
  * checked, which is what keeps permissions opt-in.
  */
 export const RequiresAnnotation = Annotation.make({
@@ -1280,7 +1280,7 @@ export const withInvocationOptions = (options: InvokeOptions): Layer.Layer<Servi
 //
 
 /**
- * Persistent operation schema v0.1.0 — `key` and `version` are stored as data properties.
+ * Persistent operation schema v0.1.0 - `key` and `version` are stored as data properties.
  * @deprecated Use {@link PersistentOperation} (v0.2.0) instead; the `key` and `version` now live in the object meta.
  */
 export class PersistentOperation_v0_1_0 extends Type.makeObject<PersistentOperation_v0_1_0>(
@@ -1322,7 +1322,7 @@ const _migration = Migration.define({
 
 /**
  * Schema migrations exported by this module.
- * Exported as an array for extensibility — append future versions here.
+ * Exported as an array for extensibility - append future versions here.
  */
 export const migrations = [_migration];
 

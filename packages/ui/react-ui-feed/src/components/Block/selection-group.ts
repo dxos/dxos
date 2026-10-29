@@ -9,7 +9,7 @@ import { createContext, useContext, useMemo } from 'react';
  * Coordinates selection across the items of one feed.
  *
  * Each item is its own editor with its own selection state, and `drawSelection` paints that state
- * whether or not the view has focus — so without a coordinator every message the reader has ever
+ * whether or not the view has focus - so without a coordinator every message the reader has ever
  * selected in stays highlighted at once. The feed has one selection, so claiming it in one item
  * collapses it everywhere else.
  */
@@ -36,7 +36,7 @@ export const createSelectionGroup = (): SelectionGroup => {
           continue;
         }
         // Collapsing re-enters this listener for `other`, but with an empty selection, which claims
-        // nothing — so the cascade terminates after one pass.
+        // nothing - so the cascade terminates after one pass.
         other.dispatch({ selection: { anchor: 0 } });
       }
     },

@@ -84,7 +84,7 @@ describe('CollectionSynchronizer', () => {
   });
 
   test('pushes state to all interested peers on setLocalCollectionState', async ({ expect }) => {
-    // Push covers peers that queried us before we had state — `onCollectionStateQueried`
+    // Push covers peers that queried us before we had state - `onCollectionStateQueried`
     // silently drops that case; without this push the asker would wait up to POLL_INTERVAL
     // for its polling loop to retry (further gated by MIN_QUERY_INTERVAL).
     const peerId1 = 'peer1' as PeerId;
@@ -112,7 +112,7 @@ describe('CollectionSynchronizer', () => {
 
     expect(sentStates.map((m) => m.peerId).sort()).to.deep.equal([peerId1, peerId2].sort());
     // `_broadcastLocalState` wraps in `withoutEmptyHeads`, so compare against the
-    // wire form (deep-equal — not strict-equal — because the wrapper allocates).
+    // wire form (deep-equal - not strict-equal - because the wrapper allocates).
     const expectedWire = withoutEmptyHeads(STATE_1);
     for (const sent of sentStates) {
       expect(sent.state).to.deep.equal(expectedWire);
@@ -170,8 +170,8 @@ describe('CollectionSynchronizer', () => {
   test('re-emits for a stalled peer that keeps repeating an out-of-sync state', async ({ expect }) => {
     // Regression: `onRemoteStateReceived` used to skip the diff whenever the incoming state
     // matched the previous one, regardless of whether that state was in sync with ours. A peer
-    // stuck advertising stale heads therefore silenced `peerCollectionStateUpdated` — and with
-    // it the `_handleCollectionSync` replication retry — no matter how often the poll re-queried
+    // stuck advertising stale heads therefore silenced `peerCollectionStateUpdated` - and with
+    // it the `_handleCollectionSync` replication retry - no matter how often the poll re-queried
     // it. Observed in the wild as a document stalled for 10 minutes across ~48 identical polls,
     // cleared only by a reconnect.
     const peerId = 'peer1' as PeerId;
@@ -323,7 +323,7 @@ describe('CollectionSynchronizer', () => {
   });
 
   test('peerCollectionStateUpdated fires with newDocsAppeared=false for edge peer orphans', async ({ expect }) => {
-    // peerId prefix must satisfy `isEdgePeerId` — anchored on the SUBDUCTION_REPLICATOR
+    // peerId prefix must satisfy `isEdgePeerId` - anchored on the SUBDUCTION_REPLICATOR
     // service name from `@dxos/protocols`.
     const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
     const collectionId = 'collection-test';
@@ -365,7 +365,7 @@ describe('CollectionSynchronizer', () => {
   });
 
   // Field regression (stuck-sync report): an edge peer's `getAllHeads()` mixes raw commit tips
-  // with fragment heads, so it legitimately reports a superset of the host's change tips —
+  // with fragment heads, so it legitimately reports a superset of the host's change tips -
   // sharing one head is convergence. Sharing none is real divergence, and only that case may be
   // reported as `different`; conflating the two either spams repair or hides a stuck document.
   describe('edge head-set asymmetry', () => {
@@ -791,7 +791,7 @@ describe('CollectionSynchronizer', () => {
         expect(span.endAttributes).toEqual({ 'ctx.outcome': 'synced', 'ctx.connections': 2, 'ctx.disconnects': 1 });
       });
 
-      test('ends when a new connection’s first comparison is already synced', async ({ expect }) => {
+      test("ends when a new connection's first comparison is already synced", async ({ expect }) => {
         const synchronizer = await openSynchronizer();
         synchronizer.setLocalCollectionState(collectionId, STATE_1);
         synchronizer.onConnectionOpen(edgePeer(1));

@@ -19,7 +19,7 @@ export class WorkerConnectionError extends BaseError.extend('WorkerConnectionErr
  * A worker ignored the cooperative displacement signal for its whole grace period and had to be
  * killed by the tab owning its handle. Raised at error level because a worker that stops servicing
  * its event loop is a fault rather than routine displacement, so it reaches error telemetry; its
- * {@link BaseError.context} carries what triage needs — the storage lock, both worker ids, the
+ * {@link BaseError.context} carries what triage needs - the storage lock, both worker ids, the
  * grace period that elapsed, and the side that raised it.
  */
 export class WorkerTerminationError extends BaseError.extend(
@@ -31,7 +31,7 @@ export class WorkerTerminationError extends BaseError.extend(
  * A worker ignored displacement and the tab owning it could not kill it, because its handle exposes
  * no termination capability (a bare `MessagePort`: closing it leaves the worker holding both locks).
  * Reported at error level and kept distinct from {@link WorkerTerminationError} because the outcome
- * is the opposite one — the storage lock is still held and the successor will still fail.
+ * is the opposite one - the storage lock is still held and the successor will still fail.
  */
 export class WorkerNotTerminableError extends BaseError.extend(
   'WorkerNotTerminableError',

@@ -80,8 +80,8 @@ export type InputPanelProps = Util.ThemedClassName<{
 }>;
 
 /**
- * Inputs column: a tabbed source selector feeding the pipeline — a markdown Document editor (with POS
- * decorations), a Dataset picker (sample inbox → message previews), and a Record tab whose mic button
+ * Inputs column: a tabbed source selector feeding the pipeline - a markdown Document editor (with POS
+ * decorations), a Dataset picker (sample inbox -> message previews), and a Record tab whose mic button
  * captures a transcript. The toolbar's run trigger hands the active tab's input to the parent.
  */
 export const InputPanel = ({
@@ -104,7 +104,7 @@ export const InputPanel = ({
   const [count, setCount] = useState(defaultDatasetCount);
   const [transcript, setTranscript] = useState('');
 
-  // The effective dataset — falls back to the first when `datasetId` hasn't caught up (e.g. datasets
+  // The effective dataset - falls back to the first when `datasetId` hasn't caught up (e.g. datasets
   // loaded after mount). Both the Select display and the emitted payload use this, so they can't desync.
   const dataset = datasets.find((item) => item.id === datasetId) ?? datasets[0];
 

@@ -11,7 +11,7 @@ import { type PatternStep, type Scopes, type ValueDeclaration, buildScopes, isFu
 import * as Term from './Term.ts';
 
 /**
- * Local type propagation over one file's AST — `design/TYPES.md`. Every rule either yields what
+ * Local type propagation over one file's AST - `design/TYPES.md`. Every rule either yields what
  * `tsc` would, or {@link Term.unresolved}. Memoized per node; cycles bail out.
  */
 
@@ -471,7 +471,7 @@ export const infer = (context: InferContext): Inference => {
       return Term.unresolved('type-reference');
     }
     const written = typeArgumentsOf(node)?.map(typeFromSyntax) ?? [];
-    // Qualified: `Effect.Effect<…>`, only through an import binding.
+    // Qualified: `Effect.Effect<...>`, only through an import binding.
     if (name.type === 'TSQualifiedName') {
       const path: string[] = [];
       let root: Node | undefined = name;
@@ -528,7 +528,7 @@ export const infer = (context: InferContext): Inference => {
 
   /**
    * A reference to a local alias. `tsc` names the result after the alias unless the right-hand side
-   * is a type it already has — a keyword, literal, array, tuple, or interface reference — and then
+   * is a type it already has - a keyword, literal, array, tuple, or interface reference - and then
    * the alias is transparent. Naming is always TypeScript-equivalent; expanding is only done where
    * `tsc` certainly does.
    */
@@ -833,7 +833,7 @@ export const infer = (context: InferContext): Inference => {
     return result;
   };
 
-  /** Whether a function expression gets a contextual type from where it sits — then its unannotated parts are not ours to infer. */
+  /** Whether a function expression gets a contextual type from where it sits - then its unannotated parts are not ours to infer. */
   const isContextuallyTyped = (fn: Node): boolean => {
     let current = fn;
     let parent = scopes.parent(current);
@@ -1008,7 +1008,7 @@ export const infer = (context: InferContext): Inference => {
     return found;
   };
 
-  /** Whether a block's last statement is a `return` — the cheap proof that the end is unreachable. */
+  /** Whether a block's last statement is a `return` - the cheap proof that the end is unreachable. */
   const endsInReturn = (block: Node): boolean => {
     const last = childList(block, 'body').at(-1);
     return last?.type === 'ReturnStatement';
@@ -1043,7 +1043,7 @@ export const infer = (context: InferContext): Inference => {
 
   let narrowable: Set<ValueDeclaration> | undefined;
 
-  /** Declarations with any reference in a guard position — computed once per file. */
+  /** Declarations with any reference in a guard position - computed once per file. */
   const narrowableDeclarations = (): Set<ValueDeclaration> => {
     if (narrowable) {
       return narrowable;
@@ -1591,7 +1591,7 @@ export const infer = (context: InferContext): Inference => {
     return explicit?.length === typeParams.length ? Term.ref(localIri(name), explicit) : Term.unresolved('construct');
   };
 
-  /** Whether `fn` is the generator passed to `Effect.gen` — decided from the call, so it does not depend on evaluation order. */
+  /** Whether `fn` is the generator passed to `Effect.gen` - decided from the call, so it does not depend on evaluation order. */
   const isGeneratorArgument = (fn: Node): boolean => {
     let current = fn;
     let parent = scopes.parent(current);

@@ -9,7 +9,7 @@
  *
  * IMPORTANT: a trace that has never been formatted keeps its entire capture site reachable. V8 holds
  * the captured frames structurally until `Error.prototype.stack` is read, and every frame holds a
- * strong reference to that frame's receiver — so retaining an unformatted `StackTrace` retains the
+ * strong reference to that frame's receiver - so retaining an unformatted `StackTrace` retains the
  * `this` of each function that was on the stack at capture time. Records that outlive their capture
  * site (diagnostics, registries, caches) must therefore store the formatted string rather than the
  * `StackTrace` itself. Keeping one in a never-pruned module-level container leaked an entire ECHO
@@ -18,8 +18,8 @@
 /**
  * Whether a `stack` line is a frame rather than a header.
  *
- * V8 prefixes the frames with the error's own header line (`Error`), JavaScriptCore — Safari, and
- * tauri's WKWebView — emits no header and starts at the first frame, so the number of lines before
+ * V8 prefixes the frames with the error's own header line (`Error`), JavaScriptCore - Safari, and
+ * tauri's WKWebView - emits no header and starts at the first frame, so the number of lines before
  * the first frame is engine-dependent and cannot be a constant. Matching an `@` anywhere is safe
  * only because the captured error is always message-less, so a header is never more than `Error`.
  */
@@ -29,14 +29,14 @@ export class StackTrace {
   private _error: Error | undefined;
   private _frames: string[] | undefined;
 
-  // NOTE: Captured in the constructor body, not a field initializer — an initializer adds its own
+  // NOTE: Captured in the constructor body, not a field initializer - an initializer adds its own
   // frame, which would shift the `skipFrames` offsets every caller passes.
   constructor() {
     this._error = new Error();
   }
 
   /**
-   * Formats on first use, then releases the captured frames — and with them the capture site.
+   * Formats on first use, then releases the captured frames - and with them the capture site.
    *
    * The `Error` is dropped before formatting, not after: releasing the capture site is the whole
    * point, so it must not be contingent on `stack` being present or `split` succeeding.

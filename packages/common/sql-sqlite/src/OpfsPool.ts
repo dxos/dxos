@@ -6,7 +6,7 @@
 
 /**
  * Async access to the wa-sqlite AccessHandlePoolVFS file pool: raw export/import of the
- * SQLite payload and pool forensics. Safe on the main thread — never takes sync access
+ * SQLite payload and pool forensics. Safe on the main thread - never takes sync access
  * handles, so it can run alongside (read) or instead of (write) the OPFS sqlite worker.
  */
 
@@ -169,7 +169,7 @@ export const isValidSqliteDatabase = (bytes: Uint8Array): boolean => {
   return true;
 };
 
-/** List OPFS pool blobs (async read — safe alongside an open OPFS sqlite worker). */
+/** List OPFS pool blobs (async read - safe alongside an open OPFS sqlite worker). */
 export const listFiles = async (): Promise<FileSummary[]> => {
   const directory = await getOpfsDirectory();
   const files = await openPoolFiles(directory);
@@ -247,7 +247,7 @@ export const readDatabase = async (dbFilename: string = DEFAULT_DB_FILENAME): Pr
 };
 
 /**
- * Write raw SQLite bytes into the OPFS pool file for `dbFilename` (async — requires no
+ * Write raw SQLite bytes into the OPFS pool file for `dbFilename` (async - requires no
  * live OPFS sqlite worker holding sync access handles on the pool).
  */
 export const writeDatabase = async (database: Uint8Array, dbFilename: string = DEFAULT_DB_FILENAME): Promise<void> => {

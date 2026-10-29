@@ -19,7 +19,7 @@ export interface JoinDialogProps
 export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const titleId = Hooks.useId('joinDialog__title');
-  // todo(thure): This doesn’t work within an iframe on iOS Safari.
+  // todo(thure): This doesn't work within an iframe on iOS Safari.
   const { height } = Hooks.useVisualViewport();
   return (
     <AlertDialog.Root

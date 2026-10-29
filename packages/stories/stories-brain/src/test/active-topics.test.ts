@@ -114,7 +114,7 @@ describe('classifyTopics', () => {
     rationale: '',
   });
 
-  test('active = confidence ≥ threshold, capped at top, highest first', ({ expect }) => {
+  test('active = confidence >= threshold, capped at top, highest first', ({ expect }) => {
     const { active, suggested } = classifyTopics(
       [scored('a', 0.9), scored('b', 0.55), scored('c', 0.8), scored('d', 0.7)],
       { threshold: 0.6, top: 2 },
@@ -142,7 +142,7 @@ describe('assembleActiveTopic + checklist', () => {
     });
     expect(topic.kind).toBe('active');
     expect(topic.confidence).toBe(0.82);
-    expect(topic.tasks.name).toBe('q2 report — tasks');
+    expect(topic.tasks.name).toBe('q2 report - tasks');
     expect(topic.tasks.content.target?.content).toBe('- [ ] Review draft');
     expect(populatedChecklist(topic)).toEqual({ status: true, facts: true, tasks: true, drafts: true });
   });
@@ -180,7 +180,7 @@ describe('runActiveTopics', () => {
       properties: { subject, messageId: `<${from}:${created}>` },
     });
 
-  // A recent person thread (last from Alice → awaiting-mine) and a recent org thread.
+  // A recent person thread (last from Alice -> awaiting-mine) and a recent org thread.
   const messages = () => [
     msg('Project alpha', 'alice@x.com', '2026-01-09T10:00:00.000Z'),
     msg('RE: Project alpha', 'alice@x.com', '2026-01-10T09:00:00.000Z'),
@@ -219,7 +219,7 @@ describe('report renderers', () => {
     status: 'Awaiting Alice on the budget.',
     facts: ['alice owns q2 report'],
     tasks: ['Review draft', 'Send budget'],
-    drafts: [{ threadId: 'q2 report', draft: 'Thanks — will review by Friday.' }],
+    drafts: [{ threadId: 'q2 report', draft: 'Thanks - will review by Friday.' }],
   });
 
   test('index lists active (with checklist + link) and suggested rows', ({ expect }) => {
@@ -241,6 +241,6 @@ describe('report renderers', () => {
     expect(report).toContain('- [ ] Review draft');
     expect(report).toContain('- [ ] Send budget');
     expect(report).toContain('- alice owns q2 report');
-    expect(report).toContain('Thanks — will review by Friday.');
+    expect(report).toContain('Thanks - will review by Friday.');
   });
 });

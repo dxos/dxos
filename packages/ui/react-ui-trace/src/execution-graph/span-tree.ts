@@ -40,13 +40,13 @@ export interface SpanMeta {
 /**
  * A span in the trace hierarchy.
  *
- * Each span represents a single bounded unit of work — an operation invocation or an
+ * Each span represents a single bounded unit of work - an operation invocation or an
  * agent request. Spans are opened by `OperationStart` / `Trace.AgentRequestBegin` events and
  * closed by their matching `OperationEnd` / `Trace.AgentRequestEnd` events. A single process
  * (pid) may produce multiple sequential spans (for example, an agent session that serves
  * three prompts produces three sibling spans sharing the agent's pid).
  *
- * `events` contains the bounded events for this span only — child spans' events are not
+ * `events` contains the bounded events for this span only - child spans' events are not
  * duplicated here. `children` contains sub-spans that opened while this span was active.
  */
 export interface Span {
@@ -114,7 +114,7 @@ const freezeSpan = (span: MutableSpan): Span => ({
 export interface BuildSpanTreeOptions {
   /**
    * If provided, caps how many *non-boundary* events (status updates, partial blocks, etc.)
-   * are retained — only the most recent `eventLimit` of them survive. Span boundary events
+   * are retained - only the most recent `eventLimit` of them survive. Span boundary events
    * (`OperationStart` / `OperationEnd` / `Trace.AgentRequestBegin` / `Trace.AgentRequestEnd`) are *always*
    * retained regardless of the limit, because dropping them would orphan their child spans
    * and collapse them onto the root branch.
@@ -157,7 +157,7 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
   allEvents.sort((a, b) => a.timestamp - b.timestamp);
 
   // The limit caps verbose middle events (status/partial-block) only. Span boundary events
-  // are always retained so the parent/child structure of older spans isn't dropped — losing a
+  // are always retained so the parent/child structure of older spans isn't dropped - losing a
   // begin event detaches every descendant and collapses them onto the root branch.
   const events = applyEventLimit(allEvents, options.eventLimit);
 
@@ -169,7 +169,7 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
   const openSpans = new Map<string, MutableSpan>();
 
   // Most-recent span for each pid, open OR already closed. Used as the parent fallback for a
-  // child process whose parent span has already ended — e.g. a delegated sub-agent runs
+  // child process whose parent span has already ended - e.g. a delegated sub-agent runs
   // concurrently and its begin event arrives after the supervisor's turn (its parent) closed.
   // Without this the child would nest at the root and render on its own top-level lane, reusing
   // a sibling's released lane instead of forking off its parent.
@@ -177,7 +177,7 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
 
   // Every span ever opened, including ones later superseded by a same-pid begin event before
   // getting an end event (§15 "interleaved same-pid begin/end pairs"). `openSpans` only tracks
-  // the *current* span per pid, so a superseded span — which will never receive an end event —
+  // the *current* span per pid, so a superseded span - which will never receive an end event -
   // would otherwise be unreachable by the timeout sweep below.
   const allSpans: MutableSpan[] = [];
 
@@ -227,7 +227,7 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
         noteTimestamp(span, event.timestamp);
         openSpans.delete(pid);
       } else {
-        // End event without a matching begin — attach to root so the event isn't lost.
+        // End event without a matching begin - attach to root so the event isn't lost.
         root.events.push(event);
         noteTimestamp(root, event.timestamp);
       }
@@ -245,10 +245,10 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
     }
   }
 
-  // Force-close spans the runtime never reported the end of (crash, dropped connection, etc.) —
+  // Force-close spans the runtime never reported the end of (crash, dropped connection, etc.) -
   // otherwise they stay open forever and the UI renders them as stuck mid-flight. Walks every
   // span ever opened (not just `openSpans`) so a span superseded by a later same-pid begin event
-  // — which never receives its own end event — is force-closed too. Skipped when `now` isn't
+  // - which never receives its own end event - is force-closed too. Skipped when `now` isn't
   // supplied so callers that don't care about wall-clock staleness are unaffected.
   if (options.now !== undefined) {
     const now = options.now;
@@ -369,7 +369,7 @@ const SPAN_TIMEOUT_MESSAGE = 'No end event was recorded for this span; it was cl
 
 /**
  * Synthesizes the end event that closes an abandoned span, matching the event type its begin
- * event opened it with (`OperationStart` → `OperationEnd`, `Trace.AgentRequestBegin` → `Trace.AgentRequestEnd`).
+ * event opened it with (`OperationStart` -> `OperationEnd`, `Trace.AgentRequestBegin` -> `Trace.AgentRequestEnd`).
  */
 const makeTimeoutEndEvent = (span: MutableSpan, timestamp: number): Trace.FlatEvent => {
   const beginEvent = span.events[0]!;

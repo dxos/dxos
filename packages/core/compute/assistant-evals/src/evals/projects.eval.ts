@@ -51,7 +51,7 @@ const entityId = (uri: string): string => {
   return (eid && EID.getEntityId(eid)) ?? uri;
 };
 
-/** The project, its task set and the tasks on it — the ledger every scorer below reads. */
+/** The project, its task set and the tasks on it - the ledger every scorer below reads. */
 const ledger = Scorer.shared(
   Effect.gen(function* () {
     const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
@@ -189,7 +189,7 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite('Projects — a project chat turns its outline into a task ledger', {
+evalite('Projects - a project chat turns its outline into a task ledger', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

@@ -49,7 +49,7 @@ export type ClientServicesStackOptions = {
 /**
  * The configured query evaluation path, if any. `EchoHost` falls back to `DX_ECHO_QUERY_EXECUTOR`
  * and then to the compiled SQL executor, so an unset field stays undefined rather than defaulting
- * here — one default, at the point the option enters the host.
+ * here - one default, at the point the option enters the host.
  */
 const queryExecutorFromConfig = (config: Config): QueryExecutorMode | undefined => {
   switch (config.get('runtime.client.queryExecutor')) {
@@ -80,7 +80,7 @@ export const runtimePropsFromConfig = (
  * The client services stack: the {@link clientServiceSpecs} graph aggregated by a {@link LayerStack},
  * over the ambient services the embedder provides beneath it.
  *
- * Specs are built on demand — resolving a tag builds what that tag needs and nothing else — except
+ * Specs are built on demand - resolving a tag builds what that tag needs and nothing else - except
  * the `eager` ones (rpc registrations, lifecycle subscriptions, replicators), which this layer builds
  * as it is created, since nothing would ever ask for them. Reach a service with
  * `ServiceResolver.resolve`, which this layer provides alongside the stack; emit `Opening` and

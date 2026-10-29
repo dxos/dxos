@@ -85,7 +85,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         },
       });
 
-      // Gate the comment-thread agent. Identity is optional — if no capability
+      // Gate the comment-thread agent. Identity is optional - if no capability
       // is contributed we simply never trigger. Schedule (not invoke) so the
       // user's message commit returns immediately and the agent runs out-of-band.
       const identities = yield* Capability.getAll(AgentIdentity.AgentIdentity);
@@ -132,7 +132,7 @@ const persistThread = Effect.fnUntraced(function* ({
   });
   // Persist the thread + its relation BEFORE dropping the draft, so the comment is always in one
   // of the two rendered lists (query results or drafts). Removing the draft first left a frame in
-  // which the persisted relation was not yet queryable and the draft was gone — the comment
+  // which the persisted relation was not yet queryable and the draft was gone - the comment
   // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
   yield* Operation.invoke(SpaceOperation.AddObject, { object: thread }, { spaceId: db.spaceId });
   const { relation } = yield* Operation.invoke(
@@ -147,7 +147,7 @@ const persistThread = Effect.fnUntraced(function* ({
   );
 
   // Persisting spans two awaits, during which a `Delete` for this comment can run. It sees the
-  // anchor still listed as a draft, drops that entry, and returns — so without this the thread
+  // anchor still listed as a draft, drops that entry, and returns - so without this the thread
   // persisted above survives a delete the user already issued. The draft entry doubles as the
   // claim on this comment: finding it already gone means a concurrent delete consumed it, so
   // undo the persist rather than clearing an entry that is no longer ours.

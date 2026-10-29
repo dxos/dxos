@@ -13,7 +13,7 @@ import { Annotation, Obj } from '@dxos/echo';
 
 /**
  * Which projection of the thread the reader sees. A view is a filter over blocks, applied by the
- * renderer — the model always carries everything.
+ * renderer - the model always carries everything.
  *
  * - `summary`: only conversational text (prompts and replies).
  * - `normal`: everything except reasoning.
@@ -33,7 +33,7 @@ export type ChatView = Schema.Schema.Type<typeof ChatView>;
  * speaks, so a host can pipe these straight through.
  */
 export type ChatThreadEvent =
-  /** A suggestion or select option was chosen — the text is ready to submit. */
+  /** A suggestion or select option was chosen - the text is ready to submit. */
   | { type: 'submit'; text: string }
   /** Soft-fork the thread from the given message (the prompt toolbar's rewind). */
   | { type: 'rewind'; id: string }
@@ -45,7 +45,7 @@ export type ChatThreadEvent =
 /**
  * Where a prompt the reader sent stands on its way to the agent, messenger style.
  *
- * - `sent`: the client holds it (one tick) — shown the moment it is submitted, before anything persists.
+ * - `sent`: the client holds it (one tick) - shown the moment it is submitted, before anything persists.
  * - `delivered`: the agent's input queue holds it (two ticks); unread until the agent takes it up.
  * - `read`: the agent took it up (two coloured ticks).
  * - `failed`: it never reached the queue; the row offers remove (the agent retries what it receives).
@@ -66,7 +66,7 @@ export const DeliveryAnnotation: Annotation.Annotation<DeliveryStatus> = Annotat
 /**
  * The row's delivery status, if it has one. Takes any message-shaped value because not every row is an
  * ECHO object: a folded tool run, or a patched streaming copy, is a plain spread, which carries no
- * annotations — and `Annotation.get` throws on one rather than reading it as absent.
+ * annotations - and `Annotation.get` throws on one rather than reading it as absent.
  */
 export const getDelivery = (message: object): DeliveryStatus | undefined =>
   Obj.isObject(message) || Obj.isSnapshot(message)

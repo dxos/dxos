@@ -336,7 +336,7 @@ export const Pending: Story = {
   decorators: [withSlideSurface],
   args: { kind: 'pending' },
   play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByText('Loading…', undefined, LOAD_TIMEOUT)).toBeVisible();
+    await expect(await within(canvasElement).findByText('Loading...', undefined, LOAD_TIMEOUT)).toBeVisible();
   },
 };
 

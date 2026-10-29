@@ -6,7 +6,7 @@ import { createSignal } from 'solid-js';
 
 /**
  * The project id lives in the URL (`/p/<id>`), so a session is a link and a reload keeps its
- * place. When the URL names nothing, the last project opened in this browser is used — remembered
+ * place. When the URL names nothing, the last project opened in this browser is used - remembered
  * here rather than asked of the server, because "last opened" is a property of this tab's user.
  */
 

@@ -10,7 +10,7 @@ import { runSandboxWorker } from './WorkerSandboxRuntime.ts';
 
 export type ServeOptions = {
   /**
-   * Runs before the sandbox touches ECHO — where an app initializes what its bundle defers, e.g.
+   * Runs before the sandbox touches ECHO - where an app initializes what its bundle defers, e.g.
    * the Automerge wasm a slim build does not load at import time.
    */
   readonly beforeStart?: () => Promise<void>;
@@ -18,7 +18,7 @@ export type ServeOptions = {
 
 /**
  * Serves one evaluation in this Web Worker: the init arrives as the first message, with the
- * channel's port transferred alongside it — a Web Worker has no `workerData`.
+ * channel's port transferred alongside it - a Web Worker has no `workerData`.
  *
  * Exported rather than run on import so an app's own worker module can call it after its setup.
  * The listener is attached synchronously, so the start message cannot arrive before it.

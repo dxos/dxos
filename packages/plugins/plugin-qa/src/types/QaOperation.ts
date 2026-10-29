@@ -48,7 +48,7 @@ export const SetCase = Operation.make({
     title: Schema.String,
     description: Schema.optional(Schema.String),
     steps: Schema.optional(Schema.Array(TestCase.Step)),
-    /** Tag objects to set in the case's ECHO meta — tags are not a field on the case. */
+    /** Tag objects to set in the case's ECHO meta - tags are not a field on the case. */
     tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag))),
   }),
   output: Schema.Struct({

@@ -28,7 +28,7 @@ export const readLinkTitle = (url: URL): string | undefined => {
     ? `${chars
         .slice(0, MAX_TITLE_LENGTH - 1)
         .join('')
-        .trimEnd()}…`
+        .trimEnd()}\u2026`
     : collapsed;
 };
 

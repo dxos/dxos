@@ -17,7 +17,7 @@ import { findKanbanForBoard, makeEmptyKanbanForBoard } from './sync.ts';
  * Eagerly materializes an empty local Kanban for a remote Trello board so an
  * external-sync `Cursor` can be created against it. Find-or-create keyed on the
  * board's foreign key, so re-running for the same board returns the existing
- * Kanban without duplicating it. The Kanban is left empty here — cards are
+ * Kanban without duplicating it. The Kanban is left empty here - cards are
  * reconciled on the first `SyncTrelloBoard` run.
  */
 const handler: Operation.WithHandler<typeof TrelloOperation.MaterializeTrelloTarget> =
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.MaterializeTrelloTar
           );
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
-        //   have it provided by the OperationInvoker — composer's invoker is wired
+        //   have it provided by the OperationInvoker - composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;

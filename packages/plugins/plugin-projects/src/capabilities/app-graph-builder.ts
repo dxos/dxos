@@ -33,7 +33,7 @@ import { refId } from '../operations/feature/util.ts';
 import { inboxResearch } from '../templates/index.ts';
 
 /**
- * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
+ * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group -
  * a section root node plus a child per `Project`, each opening via the regular object/article surface
  * (`ProjectArticle`). The section's label and icon derive from the `Project` schema annotations; it is
  * suppressed when the space has no projects. The header `+` action creates a new Project (via the
@@ -207,7 +207,7 @@ export const SESSIONS_SEGMENT = 'sessions';
 
 /**
  * One URL binding for everything a project contains, shared with the type section that addresses the
- * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
+ * project itself - so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
  * `project/<id>+sessions+<session>` a session. The path is fixed only as far as the Project section;
  * what varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
  * Every extension under the key must share this one path, or a node's address forks by connector.
@@ -220,7 +220,7 @@ const PROJECT_URL: AppGraphBuilder.UrlBinding = {
 
 /**
  * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
- * tagged because the Artifacts branch wraps a project the same way — without the tag a surface
+ * tagged because the Artifacts branch wraps a project the same way - without the tag a surface
  * matching on the shape alone renders whichever branch it saw first for both.
  */
 export type ChatsBranch = { branch: 'chats'; project: Project.Project };
@@ -233,7 +233,7 @@ export const isChatsBranch = (data: unknown): data is ChatsBranch =>
 
 /**
  * A virtual "Chats" branch under each project's navtree row, mirroring the Artifacts branch beside
- * it — a project accumulates conversations, and flat under the project row they crowded out
+ * it - a project accumulates conversations, and flat under the project row they crowded out
  * everything else it owns.
  *
  * Virtual for the same reason Artifacts is: the branch stands for no ECHO object, so it carries the
@@ -272,8 +272,8 @@ export const createProjectChatsExtension = () =>
   });
 
 /**
- * The Chats branch's children. Ownership is the ECHO parent edge (no `Project` schema field) — the
- * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
+ * The Chats branch's children. Ownership is the ECHO parent edge (no `Project` schema field) - the
+ * same edge every companion chat uses - so what is project-specific is only the DISPLAY: project
  * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
  * Addressed as the project's (see {@link PROJECT_URL}), not under plugin-assistant's `chat` key,
@@ -309,9 +309,9 @@ export const createProjectChatsChildrenExtension = () =>
   });
 
 /**
- * Every task in the project's set as a hidden child of the project node, so `…/project/<id>/<taskId>`
+ * Every task in the project's set as a hidden child of the project node, so `.../project/<id>/<taskId>`
  * resolves and a row can open the task as its own plank. Hidden because the ledger is the Tasks tab,
- * not the nav tree — the nodes exist to be addressed, never listed.
+ * not the nav tree - the nodes exist to be addressed, never listed.
  *
  * The node's data is the `Task` object itself, so it picks up the standard object companions and the
  * `TaskArticle` surface matches it like any other object.
@@ -341,7 +341,7 @@ export const createProjectTasksExtension = () =>
 
 /**
  * Start a chat in project scope, on the project's navtree row. The `ProjectArticle` toolbar owns its
- * own create-chat button rather than sharing this one — the two surfaces are expected to diverge as
+ * own create-chat button rather than sharing this one - the two surfaces are expected to diverge as
  * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
  */
 export const createProjectActionExtension = () =>
@@ -399,7 +399,7 @@ export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
 /**
  * A virtual "Artifacts" branch under each project's navtree row, mirroring the Artifacts section of
  * `ProjectArticle`. Virtual because a project's artifacts are a ref array on the project itself, not
- * a collection — there is no ECHO object for the branch to stand for, so it carries the project as
+ * a collection - there is no ECHO object for the branch to stand for, so it carries the project as
  * its `data` and {@link createProjectArtifactsActionExtension} matches on that.
  *
  * Separate from {@link createProjectChatsExtension}: both connect children to a project node and the
@@ -424,7 +424,7 @@ export const createProjectArtifactsExtension = () =>
           type: ARTIFACTS_SECTION_TYPE,
           // Wrapped, not the bare project: every Project-matching extension here (chats, actions,
           // and this one) keys off `Obj.instanceOf(Project)`, so a branch carrying the project as its
-          // own data matched them all — it grew its own Artifacts child, forever. The wrapper is
+          // own data matched them all - it grew its own Artifacts child, forever. The wrapper is
           // matched only by {@link createProjectArtifactsActionExtension}.
           data: { branch: 'artifacts', project } satisfies ArtifactsBranch,
           properties: {

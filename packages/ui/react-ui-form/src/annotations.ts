@@ -23,7 +23,7 @@ export type OptionsLookup = {
   readonly load: (values: any) => Effect.Effect<readonly OptionsLookupEntry[], unknown>;
   readonly combobox?: boolean;
   /**
-   * List every loaded option before anything is typed (a combobox over a small, known catalogue —
+   * List every loaded option before anything is typed (a combobox over a small, known catalogue -
    * models, voices), rather than only once the query narrows a remote search.
    */
   readonly eager?: boolean;

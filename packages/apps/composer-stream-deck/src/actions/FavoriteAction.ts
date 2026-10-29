@@ -25,7 +25,7 @@ export type FavoriteHost = {
  */
 export class FavoriteAction extends SingletonAction {
   // Elgato documents an `@action({ UUID })` decorator, but it only assigns this field, and Node has
-  // no native decorator support — the bundler emitted a decorated class *expression*, which is
+  // no native decorator support - the bundler emitted a decorated class *expression*, which is
   // invalid JS. Assigning the field directly is equivalent and needs no lowering.
   override readonly manifestId = FAVORITE_ACTION_UUID;
 

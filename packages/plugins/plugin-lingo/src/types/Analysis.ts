@@ -21,7 +21,7 @@ import * as Language from './Language.ts';
  */
 export class Analysis extends Type.makeObject<Analysis>(DXN.make('org.dxos.type.lingo.analysis', '0.1.0'))(
   Schema.Struct({
-    /** The object whose text was analyzed — a document, an email, a transcript. */
+    /** The object whose text was analyzed - a document, an email, a transcript. */
     subject: Ref.Ref(Obj.Unknown),
     language: Ref.Ref(Language.Language),
     /** Hash of the analyzed source text; diverges when the document is edited. */
@@ -30,7 +30,7 @@ export class Analysis extends Type.makeObject<Analysis>(DXN.make('org.dxos.type.
     targetHash: Schema.optional(Schema.String),
     /**
      * The translation itself. Stored alongside the ranges because the paired offsets are only
-     * meaningful against this exact text — re-translating would move them.
+     * meaningful against this exact text - re-translating would move them.
      */
     translation: Schema.optional(Schema.String),
     segments: Schema.mutable(Schema.Array(Segment)),

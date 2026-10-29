@@ -39,7 +39,7 @@ const Measured = ({ label, classNames, children }: PropsWithChildren<{ label: st
       <div className='sticky top-0 flex justify-between px-2 py-1 text-xs bg-base-surface'>
         <span className='font-mono'>{label}</span>
         <span className={mx('font-mono', constrained ? 'text-emerald-500' : 'text-rose-500')}>
-          {height === undefined ? '—' : `${height}px`}
+          {height === undefined ? '-' : `${height}px`}
         </span>
       </div>
       {children}
@@ -121,14 +121,14 @@ export const ParentTypes = {
 
 /**
  * Isolates which single property constrains a grid item. `flex-1` and `h-full` are both inert
- * here — only `min-h-0` prevents the automatic minimum size from growing the track.
+ * here - only `min-h-0` prevents the automatic minimum size from growing the track.
  */
 export const WhichPropertyFires = {
   render: () => (
     <div className='p-4 flex flex-col gap-6'>
       <p className='max-w-2xl text-sm text-fg-muted'>
         Identical grid parents, varying only the child. This is why `dx-expand` works without the author knowing the
-        parent's display type — and why `flex-1` next to `grid` is not a bug.
+        parent's display type - and why `flex-1` next to `grid` is not a bug.
       </p>
       <div className='flex flex-wrap gap-6'>
         {[
@@ -154,7 +154,7 @@ export const WhichPropertyFires = {
 };
 
 /**
- * What `min-*-0` actually does — the class this vocabulary exists to demystify.
+ * What `min-*-0` actually does - the class this vocabulary exists to demystify.
  *
  * It is read as "makes things scroll". It does not: it says the element MAY BE SHORTER THAN ITS
  * CONTENT. Without it, an item's minimum height is its content height, so it shoves its siblings
@@ -167,7 +167,7 @@ export const ShrinkingVersusShoving = {
       <div className='p-4 flex flex-col gap-6'>
         <p className='max-w-2xl text-sm text-fg-muted'>
           Identical 260px columns: a body holding 900px of content, then a 40px footer. Watch the footer, not the
-          scrollbar — the failure on the left is a displaced sibling, and nothing scrolls in either box.
+          scrollbar - the failure on the left is a displaced sibling, and nothing scrolls in either box.
         </p>
         <div className='flex flex-wrap gap-6'>
           <Frame title='no dx-shrink' note='body claims its content height; footer is pushed out of view'>
@@ -188,7 +188,7 @@ export const ShrinkingVersusShoving = {
           </Frame>
           {/* The point most likely to save someone an afternoon: a clip says the same thing, so a
               `min-*-0` beside one is dead weight that reads as though it were holding the layout up. */}
-          <Frame title='overflow-hidden alone' note='a clip zeroes the same minimum — dx-shrink adds nothing here'>
+          <Frame title='overflow-hidden alone' note='a clip zeroes the same minimum - dx-shrink adds nothing here'>
             <div className='flex flex-col h-full'>
               <Measured label='overflow-hidden' classNames='overflow-hidden'>
                 <Tall />
@@ -204,14 +204,14 @@ export const ShrinkingVersusShoving = {
 
 /**
  * `dx-grow` constrains without clipping, so an overflowing child is visible rather than hidden.
- * Reach for `overflow-hidden` only where a clip is wanted — it also makes the element a scroll
+ * Reach for `overflow-hidden` only where a clip is wanted - it also makes the element a scroll
  * container, which a focused descendant can silently scroll.
  */
 export const ClippingIsSeparate = {
   render: () => (
     <div className='p-4 flex flex-col gap-6'>
       <p className='max-w-2xl text-sm text-fg-muted'>
-        Both boxes are constrained to 260px. Only the second one clips — the constraint and the clip are independent
+        Both boxes are constrained to 260px. Only the second one clips - the constraint and the clip are independent
         decisions.
       </p>
       <div className='flex flex-wrap gap-6'>
@@ -235,7 +235,7 @@ export const ClippingIsSeparate = {
 };
 
 /**
- * `dx-cover` pins all four edges, which already determines the box — stacking a sizing
+ * `dx-cover` pins all four edges, which already determines the box - stacking a sizing
  * utility on top of it adds nothing.
  */
 export const Fullscreen = {

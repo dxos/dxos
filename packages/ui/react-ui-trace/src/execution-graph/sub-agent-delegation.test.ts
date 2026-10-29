@@ -10,8 +10,8 @@ import { renderTimelineAscii } from '../components/Timeline/index.ts';
 import { buildExecutionGraph, collectProcessActivityLines, deriveInFlightActivityLine } from './execution-graph.ts';
 import subAgentFixture from './testing/sub-agent-delegation.json';
 
-// Real trace captured from a live supervisor → sub-agent delegation via `dxosDumpTrace()`.
-// External JSON → typed at this boundary; `buildExecutionGraph` reads only `meta`/`events`.
+// Real trace captured from a live supervisor -> sub-agent delegation via `dxosDumpTrace()`.
+// External JSON -> typed at this boundary; `buildExecutionGraph` reads only `meta`/`events`.
 const messages = (subAgentFixture as unknown as Trace.Message[])
   .slice()
   .sort((a, b) => (a.events[0]?.timestamp ?? 0) - (b.events[0]?.timestamp ?? 0));
@@ -23,27 +23,27 @@ describe('sub-agent delegation fixture', () => {
     const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●        [atom] Agent processing request...
-      ├──●     [info] Get Agent Context
-      │  ●     [info] Get Agent Context
-      │  ●     [check-square-offset] Update tasks
-      │  ●     [info] Get Agent Context
-      │  ●     [share-network] Delegate task
-      │  ●     [info] Get Agent Context
-      │  ├──●  [brain] Run Routine
-      │  │  ●  [info] Get Agent Context
-      │  │  ●  [info] Get Agent Context
-      │  │  ●  [file-text] Create
-      │  │  ●  [info] Get Agent Context
-      │  │  ●  [plus] Add artifact - Error
-      │  │  ●  [info] Get Agent Context
-      │  │  ●  [info] Get Agent Context
-      │  │  ●  [user] Complete the following task and report the result concisely.
-      │  │  ●  [wrench] completeJob
-      ◆──┼──╯  [brain] Run Routine
-      │  ●     [user] create a sub-agent that creates a haiku in a new document
-      ◆──╯     [atom] Agent completed request
-      ●        [pencil] Update Chat Name
+      *        [atom] Agent processing request...
+      \u251C\u2500\u2500*     [info] Get Agent Context
+      \u2502  *     [info] Get Agent Context
+      \u2502  *     [check-square-offset] Update tasks
+      \u2502  *     [info] Get Agent Context
+      \u2502  *     [share-network] Delegate task
+      \u2502  *     [info] Get Agent Context
+      \u2502  \u251C\u2500\u2500*  [brain] Run Routine
+      \u2502  \u2502  *  [info] Get Agent Context
+      \u2502  \u2502  *  [info] Get Agent Context
+      \u2502  \u2502  *  [file-text] Create
+      \u2502  \u2502  *  [info] Get Agent Context
+      \u2502  \u2502  *  [plus] Add artifact - Error
+      \u2502  \u2502  *  [info] Get Agent Context
+      \u2502  \u2502  *  [info] Get Agent Context
+      \u2502  \u2502  *  [user] Complete the following task and report the result concisely.
+      \u2502  \u2502  *  [wrench] completeJob
+      \u25C6\u2500\u2500\u253C\u2500\u2500\u256F  [brain] Run Routine
+      \u2502  *     [user] create a sub-agent that creates a haiku in a new document
+      \u25C6\u2500\u2500\u256F     [atom] Agent completed request
+      *        [pencil] Update Chat Name
       "
     `);
   });

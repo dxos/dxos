@@ -21,7 +21,7 @@ import * as IndexState from './IndexState.ts';
 /**
  * What the index is doing, for the web UI's footer: the folded watcher state (`IndexState.ts`) and
  * the declaration count kept beside it. The count costs a query over the whole store, so it is taken
- * once per store generation — when a pass finishes — and `Info` only reads it.
+ * once per store generation - when a pass finishes - and `Info` only reads it.
  */
 
 const PREFIX = `PREFIX deus: <${Ontology.PREFIX}>`;

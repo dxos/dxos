@@ -21,7 +21,7 @@ export const FeedbackPanel = () => {
 
   const version = config.values.runtime?.app?.build?.version;
 
-  // Plugin id + name list for the "Area" picker — derived from currently-loaded plugins.
+  // Plugin id + name list for the "Area" picker - derived from currently-loaded plugins.
   const plugins = useMemo<FeedbackPluginOption[]>(
     () =>
       manager

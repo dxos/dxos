@@ -52,7 +52,7 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
         const spec = yield* partials.spec();
         yield* partials.features({ tasks, project, spec });
 
-        // No root collection: the root holds collections only, and this space seeds no documents —
+        // No root collection: the root holds collections only, and this space seeds no documents -
         // the project, its tasks, and the spec with its features and document surface through their own containers.
       }),
   });

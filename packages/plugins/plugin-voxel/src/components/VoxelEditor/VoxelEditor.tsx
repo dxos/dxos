@@ -19,7 +19,7 @@ import { computeVoxelBounds, toThree } from './voxel-bounds.ts';
 // Coordinate convention:
 //   Voxel data: x (right), y (forward), z (up/height).
 //   Three.js:   x (right), y (up),      z (forward).
-//   Mapping: voxel (x, y, z) → Three.js (x, z, y).
+//   Mapping: voxel (x, y, z) -> Three.js (x, z, y).
 //
 
 /** Convert voxel coordinates to Three.js position, scaled by block size. */

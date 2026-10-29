@@ -50,7 +50,7 @@ export default defineConfig({
       ],
       plugins: [
         // Convert literal `require("X")` calls (including those rolldown
-        // emits inside its `__commonJSMin`-wrapped transitive CJS deps —
+        // emits inside its `__commonJSMin`-wrapped transitive CJS deps -
         // react-jsx-runtime/cjs, use-sync-external-store, react-dom/cjs)
         // into ESM imports against the consumer's resolution of these deps.
         // Each subpath must be listed independently (rolldown/rolldown#8349);

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Single entry point for the research bench suite. Parses CLI flags (models, limit, tests, …) with a
+// Single entry point for the research bench suite. Parses CLI flags (models, limit, tests, ...) with a
 // fallback chain of CLI arg > shell env var > `.env` file (git-ignored) > the bench's own default, then
 // runs every bench sequentially via run-suite (seeds progress.json, writes stats to
 // fixtures/local/results, runs analyze-results).
@@ -28,7 +28,7 @@ const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const PROGRESS_FILE = resolve(PACKAGE_ROOT, 'fixtures/local/results/progress.json');
 const LOG_FILE = resolve(PACKAGE_ROOT, 'fixtures/local/results/bench.log');
 
-// Seed process.env from a local `.env` (git-ignored) — shell env already set wins over the file.
+// Seed process.env from a local `.env` (git-ignored) - shell env already set wins over the file.
 const loadDotEnv = () => {
   const path = resolve(PACKAGE_ROOT, '.env');
   if (!existsSync(path)) {
@@ -54,7 +54,7 @@ const FLAGS = [
     flag: 'limit',
     env: 'LIMIT',
     short: 'l',
-    help: 'message cap (results → results/partial/)',
+    help: 'message cap (results -> results/partial/)',
   },
   {
     flag: 'tests',
@@ -126,7 +126,7 @@ for (const { flag, env } of FLAGS) {
 }
 
 // Default: stream vitest output to this terminal. With `--stats`, tee that (noisy) output to a log
-// file instead and render the live progress table in the foreground — one terminal, live stats.
+// file instead and render the live progress table in the foreground - one terminal, live stats.
 if (!values.stats) {
   const result = spawnSync('node', ['scripts/run-suite.mjs'], {
     cwd: PACKAGE_ROOT,
@@ -161,6 +161,6 @@ child.on('exit', (code) => {
   clearInterval(timer);
   draw();
   logUpdate.done();
-  console.log(`\nvitest output → ${LOG_FILE}`);
+  console.log(`\nvitest output -> ${LOG_FILE}`);
   process.exit(code ?? 1);
 });

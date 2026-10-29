@@ -173,14 +173,14 @@ export default Capability.makeModule(
     // built from the `LayerStack` below), so we cannot materialise it before
     // the stack exists. Instead we publish the manager into this holder as
     // soon as the runtime is built, and the ambient layer reads it lazily via
-    // `Layer.effect` — slice init only runs once a process actually triggers
+    // `Layer.effect` - slice init only runs once a process actually triggers
     // service resolution, by which point the holder is populated.
     let processManagerHolder: ProcessManager.Manager | undefined;
 
     // Expose the foundational app-framework services through the LayerStack so
     // that operations declaring `services: [Capability.Service]` (and friends)
     // can resolve them via the ServiceResolver. Without this, only consumers
-    // sitting on the same ManagedRuntime layer graph can see them — process
+    // sitting on the same ManagedRuntime layer graph can see them - process
     // executions go through ServiceResolver.resolveAll and would fail.
     const ambientLayerSpec = LayerSpec.make(
       {
@@ -261,7 +261,7 @@ export default Capability.makeModule(
     admitLayerSpecs(layerSpecContributions.get());
 
     // Handler sets register eagerly at startup (keyed sets defer only handler BODIES), so the
-    // reactive view over contributions is complete at boot — no demand pull on a miss.
+    // reactive view over contributions is complete at boot - no demand pull on a miss.
     const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
     const mergedTraceSink = makeDynamicTraceSink(() => traceSinkContributions.get(), serviceResolver);

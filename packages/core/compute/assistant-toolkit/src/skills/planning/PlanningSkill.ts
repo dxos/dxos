@@ -26,17 +26,17 @@ export const make = () =>
         {{! Planning }}
 
         The conversation has a durable, numbered task checklist that you cannot see directly.
-        Before answering any question about tasks — or acting on a task referenced by number or
-        title — read the current checklist first (call the get-agent-context tool when available;
+        Before answering any question about tasks - or acting on a task referenced by number or
+        title - read the current checklist first (call the get-agent-context tool when available;
         otherwise the update-tasks result echoes it). Ordinals like "task 1" refer to that
         numbered list, and each line carries the task's ref.
         Track your work with update-tasks: address an existing task by its ref, set create only to
         make a new one, keep exactly one task started at a time, and mark a task done as soon as it
         completes. Starting a task assigns it to you.
         Do only what the user asked: if they name a specific task or subset, complete exactly
-        that and stop — never start unrequested tasks on your own.
+        that and stop - never start unrequested tasks on your own.
         A task that already exists elsewhere (a project's task, a sub-task of one you were given) is
-        worked through its own ref — never recreate it with create. assign puts it on this checklist
+        worked through its own ref - never recreate it with create. assign puts it on this checklist
         and makes you its assignee; unassign takes it off and clears the assignee, never deleting it.
       `,
     }),

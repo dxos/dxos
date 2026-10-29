@@ -23,7 +23,7 @@ import { type GptInput, gptNode } from './gpt.ts';
 
 const ENABLE_LOGGING = true;
 
-// `Operation.Service` stub — `gptNode` requires the tag in context but the tested paths do not
+// `Operation.Service` stub - `gptNode` requires the tag in context but the tested paths do not
 // invoke other operations, so any invocation dies loudly rather than silently no-oping.
 const operationServiceLayer = Layer.succeed(Operation.Service, {
   invoke: () => Effect.die('Operation.Service not available in test.'),

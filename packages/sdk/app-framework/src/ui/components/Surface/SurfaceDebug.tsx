@@ -41,8 +41,8 @@ export const DX_SURFACE_TAG = 'dx-surface';
 
 /**
  * Installs the `window.__DX__` DevTools helper. `__DX__.surfaces(component?)` returns the mounted
- * `<dx-surface>` elements (optionally filtered by `data-component`) — a console shortcut for the
- * otherwise-verbose `document.querySelectorAll('dx-surface[data-component="…"]')`.
+ * `<dx-surface>` elements (optionally filtered by `data-component`) - a console shortcut for the
+ * otherwise-verbose `document.querySelectorAll('dx-surface[data-component="..."]')`.
  */
 const ensureDebugApi = (): void => {
   if (typeof window === 'undefined') {
@@ -57,7 +57,7 @@ const ensureDebugApi = (): void => {
           component ? `${DX_SURFACE_TAG}[data-component="${component}"]` : DX_SURFACE_TAG,
         ),
       ),
-    // The registry's view, as the Stats companion samples it — compare with `surfaces()` when a
+    // The registry's view, as the Stats companion samples it - compare with `surfaces()` when a
     // mounted surface is missing from the list.
     mounted: () => getMountedSurfaces(),
   };
@@ -435,7 +435,7 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
     }
     const element = elementRef.current;
     const unregister = element ? state.manager.register(element, infoRef) : undefined;
-    // Names the rendered component (`data-component`) once mounted — read from the fiber because the
+    // Names the rendered component (`data-component`) once mounted - read from the fiber because the
     // surface wrapper is anonymous, so no static name is available at render time.
     const component = element ? renderedComponentName(element) : undefined;
     if (element && component) {

@@ -6,8 +6,8 @@
  * An on-screen record of what the driver did, painted into the page so every capture carries it.
  *
  * A recording of an agent-driven session otherwise shows effects with no causes: a palette appears, a
- * plank opens, an object turns up in a list. The overlay adds the cause — a cursor and ripple where a
- * click landed, the chord for a key press, and a feed entry for every gesture, `eval` and operation —
+ * plank opens, an object turns up in a list. The overlay adds the cause - a cursor and ripple where a
+ * click landed, the chord for a key press, and a feed entry for every gesture, `eval` and operation -
  * so the video is evidence of what was done, not only of what the app looked like.
  *
  * Everything lives in one fixed, `pointer-events: none` host under a shadow root: the app's styles
@@ -22,7 +22,7 @@ const HOST_ID = '__demo_overlay__';
 /**
  * Installed with `page.evaluate`, re-installed after every navigation, idempotent. Exposes
  * `window.__demoOverlay` with `event`, `resolve`, `click`, `moveCursor` and `countdown`. Self-contained because
- * `page.evaluate` serializes this function alone — nothing at module scope reaches the page.
+ * `page.evaluate` serializes this function alone - nothing at module scope reaches the page.
  */
 const install = ({ hostId, feedMs, position, feed: showFeed }) => {
   const mount = () => {
@@ -154,7 +154,7 @@ const install = ({ hostId, feedMs, position, feed: showFeed }) => {
         retire(entry);
         const status = document.createElement('span');
         status.className = 'status';
-        status.textContent = ok ? '✓' : '✗';
+        status.textContent = ok ? 'OK' : 'X';
         status.style.color = ok ? '#86efac' : '#fca5a5';
         entry.appendChild(status);
         if (!ok) {
@@ -177,7 +177,7 @@ const install = ({ hostId, feedMs, position, feed: showFeed }) => {
   /**
    * Operations invoked from inside an `eval` snippet are programmatic too, so the entry point every
    * debug-port caller uses is wrapped rather than only the driver's own `invoke` op. `composer` appears
-   * only once the app mounts — usually after the overlay did — hence the check on every install.
+   * only once the app mounts - usually after the overlay did - hence the check on every install.
    */
   const wrapInvoke = () => {
     const composer = globalThis.composer;
@@ -216,7 +216,7 @@ const install = ({ hostId, feedMs, position, feed: showFeed }) => {
 
 /**
  * @param {import('@playwright/test').Page} page
- * `feed: false` keeps the cursor and ripple but paints no feed entries — for a session a person records
+ * `feed: false` keeps the cursor and ripple but paints no feed entries - for a session a person records
  * themselves, where the pills would narrate the agent rather than the product.
  *
  * @param {{ enabled: boolean, feed?: boolean, feedMs?: number, position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' }} options

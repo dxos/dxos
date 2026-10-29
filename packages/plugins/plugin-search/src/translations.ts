@@ -14,10 +14,10 @@ export const translations = [
       [SearchNamespace.key]: {
         'plugin.name': 'Search',
         'search-action.label': 'Search spaces',
-        'search.placeholder': 'Search…',
+        'search.placeholder': 'Search...',
         'search-dialog.title': 'Search',
         'recently-closed.heading': 'Recently closed',
-        'pending-results.message': 'Searching…',
+        'pending-results.message': 'Searching...',
         'search.label': 'Search',
         'search-result-list.label': 'Search results',
         'search-result-list.empty.label': 'No results',

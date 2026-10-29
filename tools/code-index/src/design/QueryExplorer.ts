@@ -89,14 +89,14 @@ const SparqlTool = Tool.make('sparql', {
 
 class ExploreToolkit extends Toolkit.make(SparqlTool) {}
 
-/** The documented terms, minus the positional families (`passes0`…), which only add noise here. */
+/** The documented terms, minus the positional families (`passes0`...), which only add noise here. */
 const vocabulary = (): string =>
   Object.entries(Terms.TERMS)
     .filter(([name]) => !/\d$/.test(name))
     .map(([name, term]) =>
       term.kind === 'class'
         ? `- class deus:${name}: ${term.description}`
-        : `- deus:${name} (${term.subjectClass ?? '?'} → ${term.range ?? '?'}): ${term.description}`,
+        : `- deus:${name} (${term.subjectClass ?? '?'} -> ${term.range ?? '?'}): ${term.description}`,
     )
     .join('\n');
 
@@ -219,7 +219,7 @@ const render = (rows: readonly Store.Binding[]): string =>
         .map(([name, value]) => `${name}=${compact(value).slice(0, 120)}`)
         .join(' '),
     )
-    .join('\n') + (rows.length > SHOWN_ROWS ? `\n… ${rows.length - SHOWN_ROWS} more rows` : '');
+    .join('\n') + (rows.length > SHOWN_ROWS ? `\n... ${rows.length - SHOWN_ROWS} more rows` : '');
 
 const describe = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
 

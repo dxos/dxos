@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOp
       const eventTarget = event && (yield* Effect.promise(() => event.load()));
       // Space is derived from whichever anchor is supplied (channel for in-call meetings, event otherwise).
       // Both anchors must resolve to the same space, else the meeting would be written to one DB while
-      // linking an event in another — breaking event→meeting lookup.
+      // linking an event in another - breaking event->meeting lookup.
       const channelSpace = channel ? getSpace(channel) : undefined;
       const eventSpace = eventTarget ? getSpace(eventTarget) : undefined;
       invariant(channelSpace || eventSpace || targetDb, 'create meeting requires a channel, event or db');

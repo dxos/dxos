@@ -25,7 +25,7 @@ const RPC_TIMEOUT = 30_000;
 /**
  * Batch size from which its documents are integrated as a bulk delivery, whose downstream fan-out
  * (query re-evaluation, index hydration) is coalesced rather than run per slice. Smaller batches are
- * the steady state — a peer's edit, the echo of a local write — and stay immediate.
+ * the steady state - a peer's edit, the echo of a local write - and stay immediate.
  */
 const BULK_BATCH_DOCUMENTS = 32;
 
@@ -117,7 +117,7 @@ export class RepoProxy extends Resource {
   private readonly _deferredReleaseIds = new Set<DocumentId>();
 
   /**
-   * How a failed batch becomes visible to {@link flush} — `_sendUpdates` cannot throw. Each flush
+   * How a failed batch becomes visible to {@link flush} - `_sendUpdates` cannot throw. Each flush
    * attempt compares the counter before and after, so concurrent flushes cannot mask each other's
    * failure (a single cleared field would).
    */
@@ -189,7 +189,7 @@ export class RepoProxy extends Resource {
    *
    * This is the only way a proxied document leaves memory: handles are otherwise kept for the life
    * of the space, so a client's footprint tracked every document it had ever opened. A handle with
-   * changes the host has not taken yet is kept — releasing it would lose the write — and the next
+   * changes the host has not taken yet is kept - releasing it would lose the write - and the next
    * `find` for the same id simply loads it again.
    *
    * @returns Whether the handle was released.
@@ -231,7 +231,7 @@ export class RepoProxy extends Resource {
    * With `directory`, a space directory: the held handle as it is, else a passive one, from `passive` or, without
    * it, empty until the host's first send (see {@link DocHandleProxy.whenPassiveShown}). Nothing is loaded.
    *
-   * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
+   * @throws {RepoClosedError} If the proxy is closing or closed - the document can never arrive, so
    * a caller whose work is abandonable should treat this as the client going away.
    */
   find<T>(
@@ -320,7 +320,7 @@ export class RepoProxy extends Resource {
    *
    * Throws if a batch could not be sent. `_sendUpdates` re-queues a failed batch for the next pass,
    * but a short-lived writer (a server-side ECHO client in a worker invocation) is disposed as soon
-   * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
+   * as `flush()` resolves - so resolving over a re-queued batch loses the write silently.
    */
   async flush({ disk = false }: { disk?: boolean } = {}): Promise<void> {
     await this._sendPending();
@@ -536,7 +536,7 @@ export class RepoProxy extends Resource {
     this._replaceSubscription();
 
     // Hands the documents `_subscribe` re-queued to the fresh subscription, raising if they cannot
-    // be registered — the caller resumes replication on the strength of this call returning.
+    // be registered - the caller resumes replication on the strength of this call returning.
     await this.flush();
   }
 
@@ -607,7 +607,7 @@ export class RepoProxy extends Resource {
    * Replaces a subscription whose stream ended without this proxy closing it (a host restart, a
    * dropped transport): the host forgets the subscription with the stream, so every later call on
    * the id would fail with "Subscription not found". Not reached for a stream this proxy tore down
-   * itself — {@link subscribeStream}'s cleanup marks the subscription done before interrupting it.
+   * itself - {@link subscribeStream}'s cleanup marks the subscription done before interrupting it.
    */
   private _onSubscriptionDropped(error?: Error): void {
     if (this._ctx.disposed || this._isReconnecting) {
@@ -954,7 +954,7 @@ export class RepoProxy extends Resource {
     }
 
     // Disk-probe-negative signal from the worker. Mutually exclusive with
-    // `mutation` in practice — the worker sends a transition-only update
+    // `mutation` in practice - the worker sends a transition-only update
     // first (`requesting: true`, no bytes) and then a regular mutation
     // update once the network delivers.
     if (requesting) {
@@ -1036,7 +1036,7 @@ export class RepoProxy extends Resource {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
           // The handle may be gone if it was removed concurrently (e.g. test teardown
-          // racing with an in-flight scheduler tick). Skip — the corresponding
+          // racing with an in-flight scheduler tick). Skip - the corresponding
           // `_pendingRemoveIds` entry will tell the host to drop the subscription.
           if (!handle) {
             log('skipping update for removed handle', { documentId });
@@ -1064,14 +1064,14 @@ export class RepoProxy extends Resource {
         }
         // A pass a reconnect abandoned must not `_confirmSync`: a newer pass may have advanced the
         // handles' in-flight heads, and confirming those would suppress that pass's retry. Its ids
-        // are re-queued instead — the host applies the duplicate delivery idempotently.
+        // are re-queued instead - the host applies the duplicate delivery idempotently.
         if (generation !== this._generation) {
           updateIds.forEach((id) => this._pendingUpdateIds.add(id));
           this._sendUpdatesJob?.trigger();
           return;
         }
         for (const { documentId } of updates) {
-          // Handle may have been removed between RPC start and ack — skip silently.
+          // Handle may have been removed between RPC start and ack - skip silently.
           this._handles[documentId]?._confirmSync();
         }
       }
@@ -1085,7 +1085,7 @@ export class RepoProxy extends Resource {
       this._lastSendError = err as Error;
       this._sendFailureCount++;
       // Re-queued even for an abandoned task: nothing else re-sends a pending mutation. Adds are
-      // restored only for handles still held — a released document's add would re-subscribe the
+      // restored only for handles still held - a released document's add would re-subscribe the
       // host to a document nothing owns.
       addIds
         .filter((id) => this._handles[id] || this._passiveHandles.has(id))

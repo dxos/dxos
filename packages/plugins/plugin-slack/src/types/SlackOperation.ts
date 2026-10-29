@@ -22,7 +22,7 @@ const RemoteTarget = Schema.Struct({
 });
 
 /**
- * Discovery only — list Slack conversations (channels, DMs, group DMs)
+ * Discovery only - list Slack conversations (channels, DMs, group DMs)
  * reachable from a connection's token.
  *
  * Read-only: returns one descriptor per remote conversation, NEVER creates a
@@ -37,7 +37,7 @@ export const GetSlackChannels = Operation.make({
     icon: 'ph--slack-logo--regular',
   },
   // Database.Service is provided inside the handler from the connection's
-  // database and the resolved space's queues — same pattern as plugin-thread's `AppendChannelMessage`.
+  // database and the resolved space's queues - same pattern as plugin-thread's `AppendChannelMessage`.
   services: [Capability.Service],
   input: Schema.Struct({
     connection: Ref.Ref(Connection.Connection),

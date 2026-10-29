@@ -69,7 +69,7 @@ const SPACE_TAB = '[data-testid="spacePlugin.space"]';
 
 /** Turns the Sandbox plugin on in the registry, which a release leaves off; a no-op once it is on. */
 const enableSandbox = async ({ demo, page }) => {
-  const filter = page.locator('input[placeholder="Filter…"]').first();
+  const filter = page.locator('input[placeholder="Filter..."]').first();
   for (let attempt = 0; attempt < 3; attempt++) {
     await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
     if (
@@ -81,13 +81,13 @@ const enableSandbox = async ({ demo, page }) => {
       break;
     }
   }
-  await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Sandbox', hud: false });
+  await demo.fill({ selector: 'input[placeholder="Filter..."]', value: 'Sandbox', hud: false });
   const toggle = page.locator('input[id="org.dxos.plugin.sandbox-input"]');
   await toggle.waitFor({ state: 'visible', timeout: 10_000 });
   if (!(await toggle.isChecked())) {
     await toggle.click();
   }
-  await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
+  await demo.fill({ selector: 'input[placeholder="Filter..."]', value: '', hud: false });
 };
 
 /** Whether this take's sandbox exists: once the agent has made it, the take is under way. */

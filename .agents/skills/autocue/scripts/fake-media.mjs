@@ -8,8 +8,8 @@
  * Chromium's `--use-file-for-fake-video-capture` applies to the whole process, so every context in one browser
  * would show the same clip. This patches `navigator.mediaDevices` per context instead: `getUserMedia` answers with
  * tracks captured from a hidden `<video>` playing the file, and `enumerateDevices` lists a matching camera and
- * microphone (plugin-calls refuses to call `getUserMedia` for a kind it cannot enumerate). Everything downstream —
- * pushing to the SFU, the speaking monitor, transcription — runs its production path on those tracks.
+ * microphone (plugin-calls refuses to call `getUserMedia` for a kind it cannot enumerate). Everything downstream -
+ * pushing to the SFU, the speaking monitor, transcription - runs its production path on those tracks.
  *
  * The clip loops its first `leadIn` seconds until `start()` is called on the page (`peer.page.evaluate(() =>
  * window.__fakeMedia.start())`), so several contexts begin a scripted conversation on one cue. Give every

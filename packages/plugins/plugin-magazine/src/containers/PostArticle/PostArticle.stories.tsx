@@ -27,7 +27,7 @@ import { PostArticle } from './PostArticle.tsx';
 
 const SAMPLE_MARKDOWN = `# Local-first software
 
-> "You own your data, in spite of the cloud." — Ink & Switch
+> "You own your data, in spite of the cloud." - Ink & Switch
 
 Local-first apps put the user's data on their own device, syncing through a
 decentralized substrate rather than a central server. That shift unlocks several
@@ -37,7 +37,7 @@ properties that cloud apps struggle to deliver:
 
 - **No spinners.** Reads and writes hit local storage, so latency is sub-millisecond.
 - **Offline by default.** The network is an enhancement, not a requirement.
-- **Longevity.** Your data survives the vendor — no lock-in, no shutdown risk.
+- **Longevity.** Your data survives the vendor - no lock-in, no shutdown risk.
 
 ## A small example
 
@@ -63,7 +63,7 @@ const DefaultStory = () => {
 };
 
 // `PostArticle` calls `useOperationInvoker` (for the star/archive/mark-unread toolbar actions), so
-// the story must render under a plugin manager that provides the OperationInvoker capability — a
+// the story must render under a plugin manager that provides the OperationInvoker capability - a
 // bare `withClientProvider` throws "Missing PluginManagerContext".
 const seedSpace = ({ client }: { client: Client }) =>
   Effect.gen(function* () {
@@ -71,7 +71,7 @@ const seedSpace = ({ client }: { client: Client }) =>
     const space = (yield* Effect.promise(() => client.spaces.create())) as Space;
     yield* Effect.promise(() => space.waitUntilReady());
 
-    // Content/imageUrl no longer live on the Post object — they belong on
+    // Content/imageUrl no longer live on the Post object - they belong on
     // `Subscription.contentFeed` / `Subscription.postState`. PostContent falls
     // back to `description` when no fetched body is available, so the sample
     // markdown is stashed there for the story.

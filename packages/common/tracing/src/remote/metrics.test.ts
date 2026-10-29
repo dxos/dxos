@@ -8,7 +8,7 @@ import { type MetricData, type MetricObserver, RemoteMetrics } from './metrics.t
 
 type Recorded = { name: string; value?: number | string; data?: MetricData };
 
-/** Records what a processor was asked to do — the fan-out under test is observable from this side. */
+/** Records what a processor was asked to do - the fan-out under test is observable from this side. */
 class RecordingProcessor {
   readonly increments: Recorded[] = [];
   readonly observations: { name: string; callback: MetricObserver }[] = [];
@@ -129,7 +129,7 @@ describe('RemoteMetrics', () => {
     metrics.registerProcessor(closed);
     const cleanup = metrics.observe('dxos.test.gauge', () => 1);
 
-    // A collector shutdown followed by a fresh one — the dead processor must not be
+    // A collector shutdown followed by a fresh one - the dead processor must not be
     // re-attached to, and must not double-report alongside its replacement.
     metrics.unregisterProcessor(closed);
     const live = new RecordingProcessor();

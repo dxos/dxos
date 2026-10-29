@@ -33,21 +33,21 @@ export type Participant = (typeof PARTICIPANTS)[number];
 
 export const TEAM_NAME = 'DXOS Eng';
 
-export const TRANSCRIPT_NAME = 'CI triage — flaky indexer tests';
+export const TRANSCRIPT_NAME = 'CI triage - flaky indexer tests';
 
 /** An earlier conversation in which Rich, Dima and Josiah work through a flaky-CI problem with Kai. */
 export const TRANSCRIPT = trim`
-  # CI triage — flaky indexer tests
+  # CI triage - flaky indexer tests
 
   _#eng-ci, Monday 29 September 2026. Participants: Rich, Dima, Josiah, Kai (agent)._
 
-  **Rich:** Kai, CI has been red on and off all week — \`echo-pipeline:test\` fails about one run in five,
+  **Rich:** Kai, CI has been red on and off all week - \`echo-pipeline:test\` fails about one run in five,
   always in \`indexer.test.ts\`. Can you track this investigation for us? I want one place that knows
   where it stands.
 
   **Kai:** Will do. I'll keep the status and the decisions. Who owns the indexer?
 
-  **Dima:** That's me. I looked at the failing runs this morning. It's not the test — it's a race in the
+  **Dima:** That's me. I looked at the failing runs this morning. It's not the test - it's a race in the
   v12 index migration. The migration rewrites the \`index_meta\` row while the index worker is already
   starting up, and both of them write it. Whoever writes second wins, and half the time the worker's
   stale cursor survives, so the test sees documents missing from the index.
@@ -56,14 +56,14 @@ export const TRANSCRIPT = trim`
   index versions after a deploy. So it's not just CI.
 
   **Rich:** Then this is P0. It blocks the 0.12 release on Friday 10 October. Quarantining the test is
-  P1 — fine as a stopgap, but it doesn't count as the fix.
+  P1 - fine as a stopgap, but it doesn't count as the fix.
 
   **Dima:** Two options: retry the worker start until the versions agree, or make the migration take the
   index write lock and finish before the worker is allowed to start.
 
   **Josiah:** Please not the retry. It hides the race and we'll be back here in a month.
 
-  **Rich:** Agreed — decision: the migration takes the write lock and the worker waits for it. No retry
+  **Rich:** Agreed - decision: the migration takes the write lock and the worker waits for it. No retry
   loop. Dima, you own the fix; Josiah, you review it.
 
   **Dima:** OK. I'm aiming to have the PR up Wednesday. One thing, Kai: don't page me after 6pm. If it's
@@ -380,7 +380,7 @@ const lastToolName = (request: ScriptedLanguageModel.ScriptedRequest): string | 
 
 /**
  * A turn generator rather than a fixed script: three conversations and the transcript's extraction
- * interleave in an order the play function does not control, so each turn is chosen from the request —
+ * interleave in an order the play function does not control, so each turn is chosen from the request -
  * the extraction prompt, the latest user message, or the tool whose result just came back.
  */
 export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageModel.ScriptedTurnGenerator => {

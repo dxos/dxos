@@ -26,7 +26,7 @@ const BERLIN_FORECAST = {
 // The task text checked against the client the session dials with: `McpToolkit.make` is what
 // `AiSession` connects a skill's servers through, so a Worker written to the text is one the chat can call.
 describe('the weather Worker as the task text specifies it', () => {
-  test('is a server the session’s own MCP client lists and calls a tool on', async ({ expect }) => {
+  test("is a server the session's own MCP client lists and calls a tool on", async ({ expect }) => {
     await EffectEx.runPromise(
       withServer(({ url, initializations, fetched }) =>
         Effect.gen(function* () {
@@ -62,7 +62,7 @@ describe('the weather Worker as the task text specifies it', () => {
     expect(url.searchParams.get('current')).toBe('temperature_2m,wind_speed_10m');
   });
 
-  test('answers the browser client’s preflight and carries CORS headers on every response', async ({ expect }) => {
+  test("answers the browser client's preflight and carries CORS headers on every response", async ({ expect }) => {
     await EffectEx.runPromise(
       withServer(({ url }) =>
         Effect.promise(async () => {

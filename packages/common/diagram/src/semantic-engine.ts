@@ -8,7 +8,7 @@
 // (`semantic-place.ts`), routing a channel router (`semantic-route.ts`); the few best placements
 // are routed for real and the layout objective, with the appeal library, picks one. When nothing
 // was hinted, `compile` also runs the mermaid engine on the same graph and offers its placements,
-// and its own layout, as candidates — so an unhinted diagram is never worse than the engine's.
+// and its own layout, as candidates - so an unhinted diagram is never worse than the engine's.
 //
 
 import * as Appeal from './appeal.ts';
@@ -119,8 +119,8 @@ const relationsOf = (diagram: Semantic.Diagram) => ({
 const SIBLING_WEIGHT = 40;
 
 /**
- * Soft relations that line up the spokes of one trunk across the flow — the subtypes of one
- * abstraction, or the far ends of a `bus` — so the trunk can gather them from one side.
+ * Soft relations that line up the spokes of one trunk across the flow - the subtypes of one
+ * abstraction, or the far ends of a `bus` - so the trunk can gather them from one side.
  */
 const siblingRelations = (diagram: Semantic.Diagram): Place.PlaceRelation[] => {
   const kind = diagram.flow === 'down' || diagram.flow === 'up' ? 'same-row' : 'same-col';

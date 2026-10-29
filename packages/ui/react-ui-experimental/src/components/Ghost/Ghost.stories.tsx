@@ -176,7 +176,7 @@ const rectangleTrajectory = (framePx: number): Trajectory => ({
 });
 
 /**
- * Lemniscate (∞) orbit: x(t) = rx·sin(t), y(t) = ry·sin(2t)/2, t ∈ [0, 2π).
+ * Lemniscate (infinity) orbit: x(t) = rx·sin(t), y(t) = ry·sin(2t)/2, t in [0, 2pi).
  * Arc-length parameterised via a precomputed lookup table (recomputed when canvas size changes).
  */
 const infinityTrajectory = (rx = 0.35, ry = 0.25): Trajectory => {
@@ -243,22 +243,22 @@ const infinityTrajectory = (rx = 0.35, ry = 0.25): Trajectory => {
  * (packages/ui/brand/src/icons/DXOS.tsx, 256×256 viewBox).
  *
  * The two outer chevron boundaries intersect at two "waist" crossing points
- * at x≈0.638/0.362, y=0.500. Above the crossings the silhouette follows
+ * at x~0.638/0.362, y=0.500. Above the crossings the silhouette follows
  * Path 2 (upward chevron); below it follows Path 1 (downward chevron).
  * Vertices are listed clockwise in screen coordinates.
  */
 const dxosTrajectory = (scale = 1): Trajectory => {
   const vertices: [number, number][] = [
-    [0.5, 0.317], // top notch   – Path 2 apex
+    [0.5, 0.317], // top notch   - Path 2 apex
     [0.937, 0.044], // top-right outer
     [0.955, 0.064], // top-right corner
-    [0.638, 0.5], // right waist – P2/P1 crossing
+    [0.638, 0.5], // right waist - P2/P1 crossing
     [0.955, 0.936], // bottom-right corner
     [0.937, 0.956], // bottom-right outer
-    [0.5, 0.683], // bottom notch – Path 1 V-point
+    [0.5, 0.683], // bottom notch - Path 1 V-point
     [0.063, 0.956], // bottom-left outer
     [0.044, 0.936], // bottom-left corner
-    [0.362, 0.5], // left waist  – P1/P2 crossing
+    [0.362, 0.5], // left waist  - P1/P2 crossing
     [0.044, 0.064], // top-left corner
     [0.063, 0.044], // top-left outer
   ];

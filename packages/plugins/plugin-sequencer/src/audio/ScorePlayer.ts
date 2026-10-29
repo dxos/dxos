@@ -168,7 +168,7 @@ type TrackData = {
  * restarted after `part.stop()` or after `Transport.stop()` (which internally
  * stops all synced sources). To guarantee clean playback on every play/stop
  * cycle, Parts are created fresh in `play()` and disposed in `stop()`. Voices
- * (synths, gains) are heavier and are reused across play cycles — they are
+ * (synths, gains) are heavier and are reused across play cycles - they are
  * only rebuilt when `load()` is called with a new Score.
  */
 export class ScorePlayer {
@@ -230,7 +230,7 @@ export class ScorePlayer {
     }
 
     // Resolve the score-level loop range with defaults. The loop is allowed to
-    // extend past the longest sequence — extra time becomes silent tail that
+    // extend past the longest sequence - extra time becomes silent tail that
     // gives loops "breathing room" or a pickup bar. We only enforce that the
     // range is non-empty and starts at or after 0.
     const fullLength = Math.max(1, maxLength);
@@ -246,7 +246,7 @@ export class ScorePlayer {
     transport.loopEnd = beatsToSeconds(loopEndBeats, score.tempo);
   }
 
-  /** Currently configured loop range in beats — `null` before `load()` runs. */
+  /** Currently configured loop range in beats - `null` before `load()` runs. */
   get loopRange(): { start: number; end: number } | null {
     if (this.#loopEndBeats === 0) {
       return null;
@@ -275,14 +275,14 @@ export class ScorePlayer {
         const voice = findVoice(voices, value.pitch);
         voice.trigger(time, value.pitch, value.duration, value.velocity);
       }, events);
-      // Parts must NOT loop independently — the global Transport drives the
+      // Parts must NOT loop independently - the global Transport drives the
       // loop between Score.loopStart..loopEnd so every track stays phase-locked.
       part.loop = false;
       part.start(0);
       this.#activeParts.push(part);
     }
     // Start the transport AT loopStart so playback always begins inside the
-    // configured loop range — otherwise events at beats 0..loopStart would
+    // configured loop range - otherwise events at beats 0..loopStart would
     // fire once on initial play, then never again.
     transport.start('+0', transport.loopStart);
     this.#started = true;

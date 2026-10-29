@@ -51,8 +51,8 @@ export const geoInertiaDrag = (target, render, projection, options) => {
 
 /**
  * A versor is a compact way to describe a rotation in 3D space.
- * It consists of four components [𝑤,x,y,z], where:
- * 𝑤 is a scalar representing the angle of rotation.
+ * It consists of four components [\u{1D464},x,y,z], where:
+ * \u{1D464} is a scalar representing the angle of rotation.
  * x, y, z are the vector components, representing the axis of rotation.
  */
 const geoInertiaDragHelper = (opt) => {

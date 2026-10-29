@@ -123,7 +123,7 @@ export const POSTS: readonly PostSeed[] = [
     author: 'Tomás Reyes',
     published: [5, 12],
     photo: '1446776877081-d282a0f896e2',
-    summary: 'The station’s observation module was an afterthought. It became the most photographed room in orbit.',
+    summary: "The station's observation module was an afterthought. It became the most photographed room in orbit.",
     body: [
       'The cupola was built to give the crew a view of the robotic arm. Within a month it was where everyone went to call home.',
       'Its seven windows have shutters to protect them from micrometeorites, and the crew close them every night.',
@@ -184,13 +184,13 @@ export const POSTS: readonly PostSeed[] = [
   {
     key: 'orion',
     feed: 'orbit',
-    title: 'Orion’s nursery, imaged from a backyard',
+    title: "Orion's nursery, imaged from a backyard",
     author: 'Ines Okafor',
     published: [13, 11],
     photo: '1516339901601-2e1b62dc0c45',
     summary: 'Forty hours of exposures from a suburban garden reveal the stars forming inside the nebula.',
     body: [
-      'The Orion nebula is visible to the naked eye as a fuzzy star in the hunter’s sword. With a small telescope and a lot of patience, it opens into folds of glowing gas.',
+      "The Orion nebula is visible to the naked eye as a fuzzy star in the hunter's sword. With a small telescope and a lot of patience, it opens into folds of glowing gas.",
       'The four bright stars at its heart, the Trapezium, light the whole cloud.',
     ],
   },
@@ -408,7 +408,7 @@ export const POSTS: readonly PostSeed[] = [
     summary: 'Every timer that wakes the CPU costs minutes of battery. A profiler shows where they hide.',
     body: [
       'An idle app should be idle. Polling loops, animations that never stop and logging in the background all keep the processor awake.',
-      'Measure with the operating system’s energy profiler, not a stopwatch, and fix the biggest wake-up first.',
+      "Measure with the operating system's energy profiler, not a stopwatch, and fix the biggest wake-up first.",
     ],
   },
   {
@@ -433,7 +433,7 @@ export const POSTS: readonly PostSeed[] = [
     photo: '1526374965328-7f61d4dc18c5',
     summary: 'Two people edit the same document offline. Here is how their changes meet without anyone losing work.',
     body: [
-      'Each device records its edits as a list of small operations. When the devices reconnect they exchange the lists and apply each other’s operations.',
+      "Each device records its edits as a list of small operations. When the devices reconnect they exchange the lists and apply each other's operations.",
       'The data type is designed so that the order of exchange does not matter: both devices end in the same state.',
     ],
   },
@@ -488,7 +488,7 @@ export const MAGAZINE: MagazineSeed = {
     { key: 'autumn-colour', snippet: 'Where autumn colour starts, and how to follow it downhill.' },
     { key: 'sync-engines', snippet: 'Offline edits from two people, merged without losing work.' },
     { key: 'orion', snippet: 'A backyard telescope, forty hours of exposures, and a stellar nursery.' },
-    { key: 'waterfalls', snippet: 'Five waterfalls within a day’s walk, from easy to steep.' },
+    { key: 'waterfalls', snippet: "Five waterfalls within a day's walk, from easy to steep." },
     { key: 'paper-first', snippet: 'The case for a pencil before the first pixel.' },
   ],
 };

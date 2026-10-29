@@ -28,7 +28,7 @@ export const Picker = ({ options, value, onValueChange, placeholder }: PickerPro
     >
       <Combobox.Trigger placeholder={placeholder} />
       <Combobox.Content>
-        <Combobox.Input placeholder={placeholder ?? 'Search…'} />
+        <Combobox.Input placeholder={placeholder ?? 'Search...'} />
         <Combobox.List />
       </Combobox.Content>
     </Combobox.Root>

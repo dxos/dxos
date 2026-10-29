@@ -3,7 +3,7 @@
 //
 
 /**
- * One live readout: a name and how to read it. Reading must be cheap — the table reads every probe
+ * One live readout: a name and how to read it. Reading must be cheap - the table reads every probe
  * once per animation frame while it is shown.
  */
 export type DebugProbe = {

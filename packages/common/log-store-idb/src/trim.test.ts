@@ -47,8 +47,8 @@ describe('trimJsonlToSize', () => {
   test('counts utf-8 bytes for multibyte characters', ({ expect }) => {
     const lines = ['ñ', 'a'];
     // 'ñ' is 2 bytes, 'a' is 1 byte; separator '\n' is 1 byte.
-    // maxSize = 3 bytes fits only 'ñ' alone (2) or 'a' alone (1) — newest 'a' takes priority,
-    // then 'ñ' would need 1 (sep) + 2 (ñ) = 3 more bytes → total 4 > 3, so dropped.
+    // maxSize = 3 bytes fits only 'ñ' alone (2) or 'a' alone (1) - newest 'a' takes priority,
+    // then 'ñ' would need 1 (sep) + 2 (ñ) = 3 more bytes -> total 4 > 3, so dropped.
     expect(trimJsonlToSize(lines, 3)).toBe('a');
     // maxSize = 4 bytes fits both: 'ñ\na' = 2+1+1 = 4 bytes.
     expect(trimJsonlToSize(lines, 4)).toBe('ñ\na');

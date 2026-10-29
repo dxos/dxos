@@ -115,7 +115,7 @@ describe('repo roots', () => {
     expect(await EffectEx.runPromise(detectRepo(fs, '/wt'))).toBe('dxos/dxos');
   });
 
-  test('configured checkouts come before the host’s own and resolve keys', async ({ expect }) => {
+  test("configured checkouts come before the host's own and resolve keys", async ({ expect }) => {
     const fs = memoryFs({}, [{ repo: 'dxos/dxos', path: '/host' }]);
     const roots = await EffectEx.runPromise(resolveRoots(fs, ['dxos/edge=/src/edge']));
     expect(roots).toEqual([

@@ -32,7 +32,7 @@ const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 const SUMMARY_PROMPT = trim`
   Summarize the following email conversation with an investor in 2-3 sentences for a fundraising
   log: who is involved, what was discussed or asked, and any next step. Respond with plain prose
-  only — no headings, no lists.
+  only - no headings, no lists.
 `;
 
 const threadDigest = (messages: readonly Message.Message[]): string => {
@@ -51,7 +51,7 @@ const threadText = (messages: readonly Message.Message[]): string =>
     .join('\n\n---\n\n');
 
 /**
- * Investor-log pipeline — the CRM project example: filters the feed to investor-domain senders,
+ * Investor-log pipeline - the CRM project example: filters the feed to investor-domain senders,
  * extracts their contact graph (Person + Organization, idempotent through the identity index), and
  * regenerates the project's "Investor Conversations" document with one section per thread. The
  * per-thread summary is an LLM generation when `summarize` is set, a deterministic digest

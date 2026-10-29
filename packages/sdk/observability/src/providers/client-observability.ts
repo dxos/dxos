@@ -85,7 +85,7 @@ export type IdentitySource = {
 /**
  * Tags every span and log of a realm with the identity, read from the services host itself. For the
  * dedicated worker, whose tracer and tags are its own: the tab's {@link identityProvider} only tags
- * the tab. Tags only — the tab already identifies the user with the analytics backend.
+ * the tab. Tags only - the tab already identifies the user with the analytics backend.
  */
 export const identityManagerProvider = (identityManager: IdentitySource): Observability.DataProvider =>
   Effect.fn(function* (observability) {
@@ -361,7 +361,7 @@ export const documentsMetricsProvider = (client: Client): Observability.DataProv
  * Publishes how long a client takes to sync, and how long it has been stuck.
  *
  * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
- * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
+ * finishes syncing contributes nothing to it - `stalled.duration` is what makes that client visible.
  */
 export const syncMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {

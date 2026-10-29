@@ -7,17 +7,17 @@ import { log } from '@dxos/log';
 /**
  * Dev-only banner that surfaces the latest entry from an Atom/RSS feed
  * underneath the boot loader's status line. Purely for entertainment during
- * the (still non-trivial) cold-boot wait — *not* something that should ever
+ * the (still non-trivial) cold-boot wait - *not* something that should ever
  * ship to production. The caller is expected to gate on `import.meta.env.DEV`
  * (Vite statically replaces the constant so the bundle tree-shakes the call
  * site away in prod).
  *
  * The banner is appended as a child of `#boot-loader`, so the existing
  * `__bootLoader.dismiss()` path (which removes the whole element) tears it
- * down for free — no dismiss wiring on this side.
+ * down for free - no dismiss wiring on this side.
  *
  * Failures are intentionally silent: the dev proxy may be down, the feed may
- * be blocked, the parse may fail — none of which should disturb a developer
+ * be blocked, the parse may fail - none of which should disturb a developer
  * boot. We log at `info` level for visibility without polluting the console.
  */
 
@@ -34,7 +34,7 @@ const DEFAULT_FEED = DEFAULT_FEEDS[Math.floor(Math.random() * DEFAULT_FEEDS.leng
 /**
  * The Vite dev server middleware proxies arbitrary feed URLs through
  * `/api/rss?url=<feed-url>` to dodge CORS. Defined in
- * `packages/apps/composer-app/vite.config.ts` (the `rss-proxy` plugin) — only
+ * `packages/apps/composer-app/vite.config.ts` (the `rss-proxy` plugin) - only
  * available in `serve` mode, which lines up with the dev-only gating here.
  */
 const PROXY_PATH = '/api/rss';
@@ -59,7 +59,7 @@ export const showDevRssBanner = async ({ feedUrl = DEFAULT_FEED }: DevRssBannerO
     }
 
     // Atom: `<entry>`. RSS 2.0: `<item>`. Pick one at random so the banner
-    // varies across reloads — small thing, but a recurring identical headline
+    // varies across reloads - small thing, but a recurring identical headline
     // every cold boot reads as broken.
     const entries = Array.from(doc.querySelectorAll('entry, item'));
     if (entries.length === 0) {
@@ -73,11 +73,11 @@ export const showDevRssBanner = async ({ feedUrl = DEFAULT_FEED }: DevRssBannerO
       return;
     }
 
-    // Atom uses `<link href="…"/>`; RSS puts the URL in `<link>`'s text node.
+    // Atom uses `<link href="..."/>`; RSS puts the URL in `<link>`'s text node.
     const linkElement = entry.querySelector('link');
     const link = linkElement?.getAttribute('href') ?? linkElement?.textContent?.trim() ?? null;
 
-    // Atom: `<summary>`. RSS: `<description>`. Both may contain HTML — we
+    // Atom: `<summary>`. RSS: `<description>`. Both may contain HTML - we
     // strip tags before display so the banner stays a single line of text.
     const summaryRaw =
       entry.querySelector('summary')?.textContent?.trim() ??
@@ -85,7 +85,7 @@ export const showDevRssBanner = async ({ feedUrl = DEFAULT_FEED }: DevRssBannerO
       null;
     const summary = summaryRaw ? stripTags(summaryRaw).slice(0, 240) : null;
 
-    // Source domain — falls back to the feed URL's host if the entry's link
+    // Source domain - falls back to the feed URL's host if the entry's link
     // is missing or malformed (e.g. an `<entry>` without `<link>`).
     const source = extractHost(link) ?? extractHost(feedUrl);
 
@@ -108,7 +108,7 @@ const renderBanner = ({
 }) => {
   const loader = document.getElementById('boot-loader');
   if (!loader) {
-    // Loader was already dismissed (fast cold boot or HMR) — nothing to attach to.
+    // Loader was already dismissed (fast cold boot or HMR) - nothing to attach to.
     return;
   }
 

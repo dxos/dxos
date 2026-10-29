@@ -27,7 +27,7 @@ export type DebugPortStartOptions = {
   /**
    * Keep the session across reloads of this tab, until {@link SESSION_TTL} expires or the tab closes.
    *
-   * Off by default. A flow that navigates the page mid-debug — an OAuth redirect above all — otherwise
+   * Off by default. A flow that navigates the page mid-debug - an OAuth redirect above all - otherwise
    * takes the port down with it and the agent has to ask for a fresh id at exactly the moment the
    * interesting state appears. Scoped to `sessionStorage` (this tab, this run) rather than
    * `localStorage`, so an arbitrary-eval port can never outlive the tab it was authorized in.
@@ -147,7 +147,7 @@ class DebugPortControllerImpl implements DebugPortController {
     this.#update({ running: true, session, origin });
 
     // Every line goes through @dxos/log: it is the record of what an agent evaluated in this page,
-    // so it belongs in the buffer the log panel reads and the log bundle the user can download —
+    // so it belongs in the buffer the log panel reads and the log bundle the user can download -
     // not in a private array that dies with the session.
     const log = (line: string) => {
       logger.info(line, { session });
@@ -207,7 +207,7 @@ class DebugPortControllerImpl implements DebugPortController {
 }
 
 // `crypto.randomUUID` is secure-context only, and the port is worth having on a plain-HTTP LAN
-// origin — the id is a handshake nonce, not a secret, so a `getRandomValues` hex string does.
+// origin - the id is a handshake nonce, not a secret, so a `getRandomValues` hex string does.
 const randomSession = (): string => {
   if (typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();

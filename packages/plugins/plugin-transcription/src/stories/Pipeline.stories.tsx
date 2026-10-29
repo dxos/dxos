@@ -6,12 +6,12 @@
  * End-to-end transcription into a real plugin-markdown editor: the single editor-output integration
  * test, unifying the former MarkdownTranscription, Pipeline and MicPipeline stories.
  *
- * - `Live` — live microphone via the real `TranscriptionDriver` (toolbar `Mic` button), streaming
+ * - `Live` - live microphone via the real `TranscriptionDriver` (toolbar `Mic` button), streaming
  *   pending text into the document with inline confirm/cancel + entity linking (requires a mic).
- * - `Recording` / `RecordingIndicator` — seed the pending-text decoration (no mic) to show the
+ * - `Recording` / `RecordingIndicator` - seed the pending-text decoration (no mic) to show the
  *   recording preview / placeholder deterministically.
- * - `CorrectionOnly` / `WithExtraction` / `Full` — drive `PipelineRuntime` over a scripted transcript
- *   (correction → extraction → summarization), writing each stage into the doc; status + per-stage
+ * - `CorrectionOnly` / `WithExtraction` / `Full` - drive `PipelineRuntime` over a scripted transcript
+ *   (correction -> extraction -> summarization), writing each stage into the doc; status + per-stage
  *   telemetry + summary render in the side panel via the shared `PipelineStatus` component.
  * - Space is seeded with Person/Organization entities so extraction links recognized names.
  */
@@ -80,7 +80,7 @@ const SAMPLE_CONTENT = trim`
   # Test
 
   Place the cursor here, then click the microphone in the toolbar to start recording.
-  Live transcription appears inline as greyed text — confirm (✓) to insert it into the document, or cancel (✕) to discard.
+  Live transcription appears inline as greyed text - confirm (${'\u2713'}) to insert it into the document, or cancel (${'\u2715'}) to discard.
 
 `;
 
@@ -195,7 +195,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
       }
       // Anchor the pending block at the end of the document.
       const anchor = entry.view.state.doc.length;
-      const effects: StateEffect<unknown>[] = [setPendingAnchor.of({ anchor, placeholder: 'Recording…' })];
+      const effects: StateEffect<unknown>[] = [setPendingAnchor.of({ anchor, placeholder: 'Recording...' })];
       if (seed.final) {
         effects.push(appendPendingText.of(seed.final));
       }
@@ -355,8 +355,8 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Live microphone via the real driver: streams transcription into the doc (requires a mic). The
- * play pins the injection alone — the record control the transcription plugin contributes through
- * the app graph must reach the markdown editor's toolbar — and never presses it.
+ * play pins the injection alone - the record control the transcription plugin contributes through
+ * the app graph must reach the markdown editor's toolbar - and never presses it.
  */
 export const Live: Story = {
   play: async ({ canvasElement }) => {

@@ -24,9 +24,9 @@ interface CreateWnfsBlobBackendOptions {
 }
 
 /**
- * Blob backend that stores bytes in a space's WNFS private forest, addressed by `wnfs://…` URIs.
+ * Blob backend that stores bytes in a space's WNFS private forest, addressed by `wnfs://...` URIs.
  * The underlying WASM bindings (`directory.read`) don't expose a distinct not-found error type, so
- * `readBytes`/`getUrl` can't tell a missing path from a genuine transport/blockstore failure —
+ * `readBytes`/`getUrl` can't tell a missing path from a genuine transport/blockstore failure -
  * both are logged and reported as a miss (`undefined`) rather than risk rethrowing on the common
  * missing-file path.
  */
@@ -52,7 +52,7 @@ export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateW
       const space = client.spaces.get(spaceId);
       invariant(space, 'Space not found');
       // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
-      // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+      // `BlobPart` only covers `ArrayBuffer`-backed views - a gap between the DOM lib types and
       // the TS standard lib, not fixable by typing `data` differently.
       const file = new File([data as BlobPart], name ?? contentHash, { type: contentType });
       const info = await upload({ file, blockstore, instances, space });
@@ -82,7 +82,7 @@ export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateW
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
-    // Declared requires resolve before the body runs, so the blockstore is awaited below instead —
+    // Declared requires resolve before the body runs, so the blockstore is awaited below instead -
     // otherwise this opt-out could never be reached when EDGE is unconfigured.
     yield* Effect.promise(() => client.waitUntilInitialized());
     if (!client.config.values.runtime?.services?.edge?.url) {

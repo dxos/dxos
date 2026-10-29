@@ -22,7 +22,7 @@ import { type OrgMap } from './organizations.ts';
 import { type TaskSetsResult } from './tasks.ts';
 
 //
-// Projects — the four work-streams the space is organized around.
+// Projects - the four work-streams the space is organized around.
 //
 // Artifacts hold only types production Composer renders (documents, drawings); the mailbox is bound
 // as chat context instead, so each project reads the same with the inbox plugin on or off. A skill

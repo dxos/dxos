@@ -76,13 +76,13 @@ export type IdbLogStoreOptions = {
   evictionInterval?: number;
   /**
    * Hard cap on in-memory queued lines awaiting flush. When writes stall (e.g. IDB is
-   * unavailable or slow), the oldest queued lines are dropped past this point — the
+   * unavailable or slow), the oldest queued lines are dropped past this point - the
    * newest lines are the ones that matter in a crash. Default `10_000`.
    */
   maxQueueLines?: number;
   /**
    * Identifier embedded in every record's `i` field.
-   * Defaults to a scope-aware id of the form `<scope>:<name>:<suffix>` — see {@link inferEnvironmentName}.
+   * Defaults to a scope-aware id of the form `<scope>:<name>:<suffix>` - see {@link inferEnvironmentName}.
    */
   tabId?: string;
   /**
@@ -97,7 +97,7 @@ export type IdbLogStoreOptions = {
  *
  * Logs are batched in memory and each flush is written as a single chunk record of
  * pre-encoded JSONL. Multiple browsing contexts can write to the same database
- * concurrently — IDB serializes transactions, so no extra coordination is needed for
+ * concurrently - IDB serializes transactions, so no extra coordination is needed for
  * writes. Eviction is deduplicated across tabs via the Web Locks API (`ifAvailable`).
  *
  * Flushes are triggered by:
@@ -156,7 +156,7 @@ export class IdbLogStore {
   }
 
   /**
-   * Log processor — register via `log.addProcessor(store.processor)`.
+   * Log processor - register via `log.addProcessor(store.processor)`.
    */
   readonly processor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
     if (this.#closed) {
@@ -216,7 +216,7 @@ export class IdbLogStore {
         while (this.#queue.length > 0) {
           const batch = this.#queue;
           this.#queue = [];
-          // Never rejects — write errors drop the batch (logs must never throw).
+          // Never rejects - write errors drop the batch (logs must never throw).
           await this.#writeBatch(batch);
         }
       } finally {
@@ -232,7 +232,7 @@ export class IdbLogStore {
    * If `maxSize` is provided (in bytes), the newest lines are kept and older lines
    * are dropped from the front; lines are never split.
    *
-   * For full exports of very large stores, prefer {@link exportBlob} — building one
+   * For full exports of very large stores, prefer {@link exportBlob} - building one
    * giant string can exceed the engine's maximum string length.
    */
   async export(options: { maxSize?: number } = {}): Promise<string> {
@@ -321,7 +321,7 @@ export class IdbLogStore {
     try {
       db = await this.#open();
     } catch {
-      // If the database can't be opened, drop the batch silently — logs must never
+      // If the database can't be opened, drop the batch silently - logs must never
       // throw out of the processor path.
       return;
     }
@@ -419,7 +419,7 @@ export class IdbLogStore {
       });
     } catch {
       // The timer fires eviction un-awaited, so a failed sweep must not surface as an
-      // unhandled rejection — the next sweep retries.
+      // unhandled rejection - the next sweep retries.
     }
   }
 
@@ -563,7 +563,7 @@ type ChunkRetentionStats = {
 
 /**
  * Given all chunks in ascending (key) order, return the key of the newest chunk that
- * must be evicted — delete it and everything older — so retained totals stay within
+ * must be evicted - delete it and everything older - so retained totals stay within
  * `maxRecords` and `maxBytes`. The newest chunk is always retained, even if it alone
  * exceeds the budget. Returns `undefined` when everything fits.
  */

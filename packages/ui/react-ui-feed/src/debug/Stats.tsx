@@ -7,7 +7,7 @@ import React, { Fragment } from 'react';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-/** Readouts are mostly counts, but a range (`463–499`) is one reading and reads as one cell. */
+/** Readouts are mostly counts, but a range (`463-499`) is one reading and reads as one cell. */
 export type StatValue = number | string;
 
 export type Stat = {

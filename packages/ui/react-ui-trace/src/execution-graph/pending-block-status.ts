@@ -17,7 +17,7 @@ const formatOperationInputStatus = (data: { key: string; name?: string; input: u
   return `Calling ${name} (${bytes} bytes)...`;
 };
 
-/** Raw routine status updates (e.g. `Running 01KVB9WBRG…`) carry an opaque ULID, not a useful label. */
+/** Raw routine status updates (e.g. `Running 01KVB9WBRG...`) carry an opaque ULID, not a useful label. */
 const ROUTINE_ULID_STATUS = /^Running [0-9A-HJKMNP-TV-Z]{26}$/i;
 
 /**

@@ -24,7 +24,7 @@ export const githubLinkIcon = (url: string): typeof PULL_REQUEST_ICON | undefine
 export type GitHubLinksOptions = {
   /** Overrides the default chip's preview trigger. */
   trigger?: 'hover' | 'click';
-  /** The inline widget for `[label](https://github.com/…/pull/123)`; the anchor chip by default. */
+  /** The inline widget for `[label](https://github.com/.../pull/123)`; the anchor chip by default. */
   link?: WidgetDef<GitHubLinkProps>;
 };
 
@@ -37,7 +37,7 @@ export type GitHubLinksOptions = {
 /**
  * What a chip says for a link the reader wrote as a bare URL: `#123`, or `owner/repo` for a
  * repository. The URL is its own text in that form, and a chip repeating it is longer than the text
- * it replaced — the read-only renderer makes the same substitution.
+ * it replaced - the read-only renderer makes the same substitution.
  */
 const bareLabel = ({ number, owner, repo }: GitHubLink): string => (number ? `#${number}` : `${owner}/${repo}`);
 

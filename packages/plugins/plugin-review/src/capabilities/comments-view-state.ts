@@ -8,7 +8,7 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 
 /**
  * Per-subject comments view state (whether resolved threads are shown). Session-only (`memory`),
- * keyed by subject id — replaces the bespoke `CommentCapabilities.ViewState` view store.
+ * keyed by subject id - replaces the bespoke `CommentCapabilities.ViewState` view store.
  */
 export const commentsViewAspect = ViewState.define({
   key: 'comments-view',

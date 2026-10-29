@@ -15,10 +15,10 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
  * Runs the assistant's turns on the Claude Agent SDK host instead of DXOS's own `AiSession`.
  *
  * Startup, not the implicit Idle: `AgentServiceSpec` reads this registry once, when its layer
- * materializes, so a producer contributed later would never be seen — the same race the delegation
+ * materializes, so a producer contributed later would never be seen - the same race the delegation
  * strategy has to win.
  *
- * Needs the host mounted in the dev server — see `DX_AGENT_CWD` in `.storybook/main.ts`.
+ * Needs the host mounted in the dev server - see `DX_AGENT_CWD` in `.storybook/main.ts`.
  */
 const AgentClaudePluginBuilder = Plugin.define(
   Plugin.makeMeta({

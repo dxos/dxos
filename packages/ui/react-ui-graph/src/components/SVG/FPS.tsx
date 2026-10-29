@@ -21,13 +21,13 @@ export type FPSProps = Util.ThemedClassName<{
 const PADDING = 8;
 
 /**
- * Frame-rate readout — drops into an `<SVG.Root>` alongside `<SVG.Graph>` to display a
+ * Frame-rate readout - drops into an `<SVG.Root>` alongside `<SVG.Graph>` to display a
  * rolling 1-second average of the browser's repaint rate. Self-contained: runs its own
  * `requestAnimationFrame` loop, so the number reflects actual render rate independent of
  * whichever projector is driving the graph.
  *
  * Anchored to a corner of the SVG viewBox via the `<text>`'s `text-anchor` and `dy`
- * attributes — re-renders on `context.resized` so the position tracks container resizes.
+ * attributes - re-renders on `context.resized` so the position tracks container resizes.
  */
 export const FPS = ({ classNames, corner = 'top-right', margin = PADDING }: FPSProps) => {
   const context = useSvgContext();
@@ -40,7 +40,7 @@ export const FPS = ({ classNames, corner = 'top-right', margin = PADDING }: FPSP
     return context.resized.on((ctx) => setSize(ctx.size));
   }, [context]);
 
-  // Independent rAF loop — measures the browser's actual repaint rate, not any specific
+  // Independent rAF loop - measures the browser's actual repaint rate, not any specific
   // projector's tick rate. Rolling 1-second window so the number is responsive but stable.
   useEffect(() => {
     let frames = 0;
@@ -84,7 +84,7 @@ export const FPS = ({ classNames, corner = 'top-right', margin = PADDING }: FPSP
         dominantBaseline={dominantBaseline}
         className={mx('font-mono text-xs fill-neutral-500 tabular-nums', classNames)}
       >
-        {fps == null ? '— fps' : `${fps.toFixed(0)} fps`}
+        {fps == null ? '- fps' : `${fps.toFixed(0)} fps`}
       </text>
     </g>
   );

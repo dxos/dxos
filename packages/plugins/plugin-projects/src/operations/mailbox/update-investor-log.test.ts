@@ -21,7 +21,7 @@ describe('update-investor-log', () => {
           name: 'Lucia Cerchlan',
           subject: 'Quarterly update',
           threadId: 'thread-q',
-          body: 'Thanks for the update — numbers look strong.',
+          body: 'Thanks for the update - numbers look strong.',
         },
         { email: 'lucia@backed.vc', subject: 'Re: Quarterly update', threadId: 'thread-q' },
         { email: 'martina@blueyard.com', name: 'Martina Bortot', subject: 'Portfolio reporting', threadId: 'thread-p' },

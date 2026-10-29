@@ -39,7 +39,7 @@ const KEY_CHARS = 4;
 const ULID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 
 /**
- * Query text a narrow column can show: the `Query.select(…)` wrapper every query shares is dropped, object ids keep
+ * Query text a narrow column can show: the `Query.select(...)` wrapper every query shares is dropped, object ids keep
  * their last characters and space keys their first, and a `.from()` of one space loses its array and flag options, e.g.
  * `Filter.type(id: [1ZR3]).from({ space: "BPBG" })`.
  */
@@ -49,7 +49,7 @@ export const shortQueryText = (query: string): string =>
     .replace(/,\s*\w+:\s*(?:true|false)\b/g, '')
     .replace(/\.from\(\[\s*(\{[^{}]*\})\s*\]\)/g, '.from($1)');
 
-/** The argument of a leading `Query.select(…)` followed by the rest of the chain. */
+/** The argument of a leading `Query.select(...)` followed by the rest of the chain. */
 const unwrapSelect = (query: string): string => {
   const prefix = 'Query.select(';
   if (!query.startsWith(prefix)) {

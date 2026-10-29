@@ -21,7 +21,7 @@ import { AssistantNamespace } from '../../namespace.ts';
 export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
 /**
- * Article surface for an {@link Agent} — the identity/preset: its instructions (text, skills,
+ * Article surface for an {@link Agent} - the identity/preset: its instructions (text, skills,
  * objects, commands) plus a reset for its conversation history. Durable artifacts live on a
  * Project; automation (subscriptions/schedule) is edited in the properties panel.
  */

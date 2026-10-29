@@ -20,13 +20,13 @@ export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 
 /**
  * Durable crawl state: the frontier stack, per-target cursors, and run status. Resumability comes
- * entirely from here — the crawl loop holds no in-memory continuation, so a stop/eviction is safe.
+ * entirely from here - the crawl loop holds no in-memory continuation, so a stop/eviction is safe.
  * `layerSql` binds any `@effect/sql` client (browser wasm / node / DO SQLite); `layerEcho` keeps it in a
  * {@link CrawlState.CrawlState} object, so a crawl run by a trigger resumes wherever the space is open; `layerMemory`
  * serves tests and throwaway runs.
  */
 export interface Service {
-  /** Push targets onto the frontier (LIFO ⇒ depth-first). Ids already present are ignored. */
+  /** Push targets onto the frontier (LIFO => depth-first). Ids already present are ignored. */
   readonly pushTargets: (targets: readonly Type.Target[]) => Effect.Effect<void, StateError>;
   /** Peek the top frontier target whose status is `pending` or `active` (does not remove it). */
   readonly nextActionable: () => Effect.Effect<Type.Target | undefined, StateError>;
@@ -133,7 +133,7 @@ const makeMemory = (): Service => {
     setCursor: (targetId, cursor) =>
       Effect.gen(function* () {
         // The success write seam: value + lastRunAt advance together. `lastError` is intentionally
-        // preserved — the sink commits per message, and an isolated stage fault recorded on the
+        // preserved - the sink commits per message, and an isolated stage fault recorded on the
         // target must survive later commits as a diagnostic. Clock keeps the write deterministic
         // under TestClock.
         const lastRunAt = new Date(yield* Clock.currentTimeMillis).toISOString();

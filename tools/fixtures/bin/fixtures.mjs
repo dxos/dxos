@@ -10,20 +10,20 @@
 // pipelines against realistic data. Two independent controls keep them contained:
 //
 //  1. The bucket is private and reachable only through `wrangler`, so access is Cloudflare account
-//     membership — there is no HTTP endpoint to misconfigure, and no token to leak into a browser.
+//     membership - there is no HTTP endpoint to misconfigure, and no token to leak into a browser.
 //  2. Every object is encrypted with `age` BEFORE it leaves the machine, under the pushing user's
-//     OWN key, so bucket read access alone does not yield a readable inbox — and one developer's
+//     OWN key, so bucket read access alone does not yield a readable inbox - and one developer's
 //     archives stay unreadable to everyone else, including whoever administers the bucket.
 //
 // The recipient is derived from the identity (`age-keygen -y`) rather than configured separately, so
 // push and pull are symmetric by construction: you cannot encrypt an archive you cannot decrypt.
-// Sharing is deliberate and per-object — `push --recipient <age1...>` encrypts to someone else's
-// public key — never a standing default.
+// Sharing is deliberate and per-object - `push --recipient <age1...>` encrypts to someone else's
+// public key - never a standing default.
 //
 // A fixture is identified by NAME (e.g. `inbox`) and a UTC VERSION stamp, so every push is a new
 // object and history accumulates: `mailbox/<user>/<name>-<version>.json.age` remotely,
-// `testing/fixtures/<name>-<version>.json` locally. Nothing can enumerate that history — wrangler's
-// R2 surface is get/put/delete only — so each push also writes `mailbox/<user>/<name>.latest`, a few
+// `testing/fixtures/<name>-<version>.json` locally. Nothing can enumerate that history - wrangler's
+// R2 surface is get/put/delete only - so each push also writes `mailbox/<user>/<name>.latest`, a few
 // bytes naming the newest version. `pull <name>` follows the pointer; `pull <name> --at <version>`
 // pins one. Readers resolve the newest LOCAL version by name (see `tools/fixtures/src`).
 //
@@ -122,8 +122,8 @@ const push = (args) => {
   }
 
   // The capture tool writes `<name>-<version>.json`, so both the asset name and the moment it was
-  // captured come from the filename. Adopting the capture stamp — rather than minting an upload
-  // time — keeps one identity for the archive on disk and in R2, and makes the version mean "when
+  // captured come from the filename. Adopting the capture stamp - rather than minting an upload
+  // time - keeps one identity for the archive on disk and in R2, and makes the version mean "when
   // this mailbox looked like this" rather than "when it happened to be uploaded".
   const { name: parsedName, version: parsedVersion, extension } = parseArchiveName(basename(source));
   const name = validName(flags.name ?? parsedName);
@@ -140,7 +140,7 @@ const push = (args) => {
   // agents key, so any agent can read it too.
   const recipients = [flags.recipient ?? ownRecipient(), ...(scope === 'agents' ? [AGENTS_RECIPIENT] : [])];
   if (flags.recipient) {
-    console.warn(`Encrypting for ${flags.recipient} — you will NOT be able to decrypt this archive.\n`);
+    console.warn(`Encrypting for ${flags.recipient} - you will NOT be able to decrypt this archive.\n`);
   }
 
   const owner = userInfo().username;
@@ -155,7 +155,7 @@ const push = (args) => {
 
     // Each push is a new object, so history accumulates rather than overwriting. Nothing can
     // enumerate it (wrangler's R2 surface is get/put/delete), so the newest version is recorded in
-    // a companion pointer — a few bytes naming the version, holding no fixture content.
+    // a companion pointer - a few bytes naming the version, holding no fixture content.
     // A JSON fixture's pointer is the bare version, as before extensions; any other names its extension too.
     writeFileSync(pointer, extension === 'json' ? version : `${version}.${extension}`);
     wrangler(['r2', 'object', 'put', `${BUCKET}/${pointerKey({ scope, owner, name })}`, '--file', pointer, '--remote']);
@@ -164,7 +164,7 @@ const push = (args) => {
     rmSync(pointer, { force: true });
   }
 
-  console.log(`\nPushed ${contents} (${size(source)}) → ${key}`);
+  console.log(`\nPushed ${contents} (${size(source)}) -> ${key}`);
   console.log(`Pull elsewhere with:  moon run fixtures:pull -- ${name}${scope === 'agents' ? ' --scope agents' : ''}`);
 };
 
@@ -198,7 +198,7 @@ const pull = (args) => {
   }
 
   const contents = extension === 'json' ? `${readArchive(out)} messages` : extension;
-  console.log(`\nPulled ${contents} (${size(out)}) → ${out}`);
+  console.log(`\nPulled ${contents} (${size(out)}) -> ${out}`);
   console.log(`Tests resolve it by name: fixturePath('${name}') takes the newest local version.`);
 };
 
@@ -219,13 +219,13 @@ const readPointer = (location) => {
 };
 
 /**
- * What is available locally and how this machine is configured — the first thing to run when a
+ * What is available locally and how this machine is configured - the first thing to run when a
  * fixture-backed test skips unexpectedly, since it distinguishes "nothing pulled" from "pulled but
  * misconfigured". Local only: the remote has no listing API (wrangler's R2 surface is
  * get/put/delete), so browse the Cloudflare dashboard for the full history.
  */
 const info = () => {
-  console.log(`identity:   ${configuredIdentity() ?? '(unset — DX_FIXTURES_AGE_KEY)'}`);
+  console.log(`identity:   ${configuredIdentity() ?? '(unset - DX_FIXTURES_AGE_KEY)'}`);
   console.log(`directory:  ${FIXTURES_DIR}`);
   console.log(`bucket:     ${BUCKET}`);
   console.log(`user:       ${userInfo().username}`);
@@ -236,7 +236,7 @@ const info = () => {
     return;
   }
 
-  // Grouped by asset, newest version first — the one a reader resolves by default is listed first.
+  // Grouped by asset, newest version first - the one a reader resolves by default is listed first.
   const byName = new Map();
   for (const entry of entries.sort().reverse()) {
     const { name, version } = parseArchiveName(entry);
@@ -276,7 +276,7 @@ const remotePrefix = ({ scope, owner }) => (scope === 'agents' ? 'agents' : `mai
 const remoteKey = ({ scope, owner, name, version, extension }) =>
   `${remotePrefix({ scope, owner })}/${name}-${version}.${extension}.age`;
 
-/** Companion object naming the newest version — the stand-in for the listing wrangler cannot do. */
+/** Companion object naming the newest version - the stand-in for the listing wrangler cannot do. */
 const pointerKey = ({ scope, owner, name }) => `${remotePrefix({ scope, owner })}/${name}.latest`;
 
 /** Sortable, filename-safe UTC stamp: `20260804-181500`. */
@@ -388,7 +388,7 @@ const wrangler = (args) => {
     });
   } catch (error) {
     // wrangler's own diagnosis is already on stderr (`stdio: 'inherit'`), so this only adds the
-    // causes it cannot know about — asserting a cause here would misattribute e.g. a missing key.
+    // causes it cannot know about - asserting a cause here would misattribute e.g. a missing key.
     fail(
       `wrangler ${args.slice(0, 3).join(' ')} failed (see above). If it is an auth error, run ` +
         '`pnpm 1p-credentials` (or `wrangler login`) and set CLOUDFLARE_ACCOUNT_ID when your token ' +

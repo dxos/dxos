@@ -11,7 +11,7 @@
  *   pnpm run build-template -- --space crm --out ./northwind.dx.json
  *
  *
- * Needs Node 22+ (`node:sqlite`) — run it through moon or with proto's Node on PATH.
+ * Needs Node 22+ (`node:sqlite`) - run it through moon or with proto's Node on PATH.
  */
 
 import * as Effect from 'effect/Effect';
@@ -55,7 +55,7 @@ const { space, out } = parseArgs(process.argv.slice(2));
 
 await EffectEx.runPromise(
   Effect.gen(function* () {
-    yield* Effect.log(`building ${space}…`);
+    yield* Effect.log(`building ${space}...`);
     const { json, objectCount } =
       space === 'crm' ? yield* buildArchive(PipelineSpace.make()) : yield* buildArchive(TidepoolSpace.make());
 

@@ -46,7 +46,7 @@ type StoryProps = {
 };
 
 // The frame is built inside the story so it goes through the same `useFrame` the app uses, icons and
-// all — the point of this component is that it shows exactly what the device is sent.
+// all - the point of this component is that it shows exactly what the device is sent.
 const DefaultStory = ({ keys: keySpecs = keys, dials = stats }: StoryProps) => {
   const frame = useFrame({ device, keys: keySpecs, dials });
   return <VirtualStreamDeck device={device} frame={frame} />;

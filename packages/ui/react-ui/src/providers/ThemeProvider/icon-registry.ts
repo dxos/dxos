@@ -51,7 +51,7 @@ export type IconRegistry = {
   hasIcon(name: string): boolean;
   requestIcon(name: string): void;
   /**
-   * Subscribe to changes — fires whenever a new symbol becomes available (static sprite
+   * Subscribe to changes - fires whenever a new symbol becomes available (static sprite
    * finished ingesting, or a runtime fetch resolved). Returns an unsubscribe function.
    */
   subscribe(listener: () => void): () => void;
@@ -112,7 +112,7 @@ type RegistryState = {
   sources: IconSource[];
   loaded: Set<string>;
   inflight: Map<string, Promise<void>>;
-  // Permanent misses (no source for the set, 404, malformed source) — never re-fetched, so a
+  // Permanent misses (no source for the set, 404, malformed source) - never re-fetched, so a
   // component that re-renders with a bad icon name doesn't produce repeated network churn.
   failed: Set<string>;
 };
@@ -161,7 +161,7 @@ const loadStaticSprite = async (state: RegistryState): Promise<void> => {
 };
 
 const resolveDynamic = async (state: RegistryState, staticReady: Promise<void>, name: string): Promise<void> => {
-  // Wait until the static sprite has been ingested before deciding to fetch — the icon may already be present.
+  // Wait until the static sprite has been ingested before deciding to fetch - the icon may already be present.
   await staticReady;
   if (state.loaded.has(name)) {
     return;
@@ -190,7 +190,7 @@ const resolveDynamic = async (state: RegistryState, staticReady: Promise<void>, 
     }
     svgText = await response.text();
   } catch {
-    // Network errors are transient — leave the name eligible for a retry.
+    // Network errors are transient - leave the name eligible for a retry.
     return;
   }
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');

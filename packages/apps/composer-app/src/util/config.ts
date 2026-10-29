@@ -66,7 +66,7 @@ const platformProvider = (isTauri: boolean): Observability.DataProvider =>
  * PostHog runtime overrides applied at `posthog.init` time when telemetry is disabled.
  * `posthog.opt_out_capturing()` blocks event capture *after* init but does not prevent the
  * recorder / dead-clicks / autocapture extension scripts from being downloaded and hooking
- * every DOM event — those scripts only respect the boot-time config. Passing these flags up
+ * every DOM event - those scripts only respect the boot-time config. Passing these flags up
  * front means the heavy instrumentation never loads when the user has telemetry off.
  */
 const POSTHOG_DISABLED_CONFIG = {
@@ -79,7 +79,7 @@ const POSTHOG_DISABLED_CONFIG = {
 
 /**
  * Where feedback logs are uploaded. A native build has no `/api` route on its own origin, so it must
- * name a deployment that does — its own, since each binds a separate R2 bucket.
+ * name a deployment that does - its own, since each binds a separate R2 bucket.
  */
 const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefined =>
   isTauri
@@ -130,7 +130,7 @@ export const initializeObservability = async (
     Observability.addDataProvider(ObservabilityProvider.ObjectEvents.provider),
     Observability.addDataProvider(ObservabilityProvider.SpaceEvents.provider),
     // Registered here rather than in plugin-observability because this runs in the dedicated
-    // worker too, and the plugin's capability only runs in the tab — so the worker's own event
+    // worker too, and the plugin's capability only runs in the tab - so the worker's own event
     // loop would otherwise never be measured.
     Observability.addDataProvider(ObservabilityProvider.EventLoopLag.eventLoopLagProvider()),
     Observability.addDataProvider(platformProvider(isTauri)),

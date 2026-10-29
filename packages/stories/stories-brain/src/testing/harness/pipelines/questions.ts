@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 import { generateText, parseJsonArray } from '../llm.ts';
 import { type ModelVariant } from '../models.ts';
 
-/** How the sender's utterance addresses the recipient — mapped to a pipeline-rdf {@link Illocution}. */
+/** How the sender's utterance addresses the recipient - mapped to a pipeline-rdf {@link Illocution}. */
 export type SpeechActKind = 'question' | 'request' | 'notification';
 
 export type SpeechAct = {
@@ -28,7 +28,7 @@ export type QuestionResult = {
   readonly items: SpeechAct[];
 };
 
-// A question asks for information, a request asks for an action, a notification just informs —
+// A question asks for information, a request asks for an action, a notification just informs -
 // the three map onto illocutionary force × mood (see pipeline-rdf `Illocution`).
 const ILLOCUTION: Record<SpeechActKind, Pick<SpeechAct, 'force' | 'mood'>> = {
   question: { force: 'directive', mood: 'interrogative' },

@@ -101,7 +101,7 @@ export const personProfileContent = (
   const links = (person.urls ?? []).map((url) => `- ${url.value}`);
   return {
     title: name,
-    summary: role.length > 0 ? `${name} — ${role}.` : `${name}.`,
+    summary: role.length > 0 ? `${name} - ${role}.` : `${name}.`,
     sections: [
       { heading: 'Details', body: details.length > 0 ? details.join('\n') : undefined },
       { heading: 'Organization', body: organization ? organizationLine(organization) : undefined },

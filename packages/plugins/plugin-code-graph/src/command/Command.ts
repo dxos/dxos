@@ -39,7 +39,7 @@ const QUERY_ROWS = 1000;
 /** Boxes listed to the model; past this it sees counts, which is enough to pick a remove filter. */
 const LISTED_NODES = 120;
 
-/** The judge needs the gist, not every box; Clef's latency grows with input (2.5k tokens ≈ 1.4 s, 0.7k ≈ 0.5 s). */
+/** The judge needs the gist, not every box; Clef's latency grows with input (2.5k tokens ~ 1.4 s, 0.7k ~ 0.5 s). */
 const JUDGE_LISTED_NODES = 30;
 
 /** The judge's probability, at or above which the command counts as done. */
@@ -91,7 +91,7 @@ export type TraceEvent = {
   /** The model turn the step belongs to, from 1; 0 for the lookup before the first turn. */
   turn: number;
   ms: number;
-  /** A one-line summary, e.g. `3 rows → +3 boxes`. */
+  /** A one-line summary, e.g. `3 rows -> +3 boxes`. */
   label: string;
   /** The query, filter or the model's sentence. */
   detail?: string;
@@ -322,9 +322,9 @@ const actionEvent = (turn: number, ms: number, result: ActionResult): TraceEvent
   return action.type === 'add'
     ? {
         ...base,
-        label: `${rows} rows → +${addedNodes} boxes, +${addedEdges} arrows${result.trailer ? ` (+${result.trailer.count} not shown)` : ''}`,
+        label: `${rows} rows -> +${addedNodes} boxes, +${addedEdges} arrows${result.trailer ? ` (+${result.trailer.count} not shown)` : ''}`,
       }
-    : { ...base, label: `−${removedNodes} boxes` };
+    : { ...base, label: `-${removedNodes} boxes` };
 };
 
 /**
@@ -404,7 +404,7 @@ export const describeGraph = (graph: CodeGraph.CodeGraph, listed = LISTED_NODES)
     kinds.set(kind, (kinds.get(kind) ?? 0) + 1);
   }
   const lines = graph.nodes.slice(0, listed).map(({ id, kind }) => `- ${Iri.compact(id)} (${kind})`);
-  const more = graph.nodes.length > listed ? [`- … and ${graph.nodes.length - listed} more`] : [];
+  const more = graph.nodes.length > listed ? [`- ... and ${graph.nodes.length - listed} more`] : [];
   return [
     `The graph has ${graph.nodes.length} boxes (${[...kinds].map(([kind, count]) => `${count} ${kind}`).join(', ')}) and ${graph.edges.length} arrows:`,
     ...lines,
@@ -417,11 +417,11 @@ const describeResults = (results: readonly ActionResult[]): string =>
     .map(({ action, rows, addedNodes, addedEdges, removedNodes, trailer, error }) => {
       const what = action.type === 'add' ? `add ${action.sparql}` : `remove ${action.filter}`;
       if (error) {
-        return `${what}\n→ failed: ${error}`;
+        return `${what}\n-> failed: ${error}`;
       }
       return action.type === 'add'
-        ? `${what}\n→ ${rows} rows; added ${addedNodes} boxes and ${addedEdges} arrows.${trailer ? ` ${trailer.text}` : ''}`
-        : `${what}\n→ removed ${removedNodes} boxes.`;
+        ? `${what}\n-> ${rows} rows; added ${addedNodes} boxes and ${addedEdges} arrows.${trailer ? ` ${trailer.text}` : ''}`
+        : `${what}\n-> removed ${removedNodes} boxes.`;
     })
     .join('\n\n');
 
@@ -438,27 +438,27 @@ const SYSTEM = trim`
     labels, IRIs and packages (case-insensitive); \`|\` separates alternatives.
 
   To answer a question ("what depends on X?"), draw the answer. A question or a command that shows something ("show
-  me …") replaces what is shown: start with \`remove *\` when the graph has boxes unrelated to it. A command that adds
-  ("also …", "add …", "expand …") keeps them.
+  me ...") replaces what is shown: start with \`remove *\` when the graph has boxes unrelated to it. A command that adds
+  ("also ...", "add ...", "expand ...") keeps them.
 
   ## The index
 
   Prefixes: \`deus:\` = <${Iri.DEUS}> (added for you when missing).
   - Packages: <${Iri.PACKAGE}NAME>, e.g. <${Iri.PACKAGE}@dxos/echo>. Shorthand \`pkg:@dxos/echo\` in the graph listing.
   - Files: <${Iri.FILE}REPO_PATH>. A symbol is its file's IRI plus \`#name\`. Shorthand \`file:REPO_PATH\`.
-  - Package predicates: deus:name, deus:packagePath, deus:entry (package → the files its package.json exports),
-    deus:usesPackage (package → package, from imports), deus:declaresDep (from package.json).
-  - File predicates: deus:path, deus:publishedBy (file → package), deus:imports (file → file), deus:reexports
-    (file → file), deus:declares (file → symbol).
+  - Package predicates: deus:name, deus:packagePath, deus:entry (package -> the files its package.json exports),
+    deus:usesPackage (package -> package, from imports), deus:declaresDep (from package.json).
+  - File predicates: deus:path, deus:publishedBy (file -> package), deus:imports (file -> file), deus:reexports
+    (file -> file), deus:declares (file -> symbol).
   - Symbol predicates: deus:name, deus:canonicalName (as written by users, e.g. "Identity.Service", "Obj.update"),
-    deus:kind (class, interface, type, variable, function, …), deus:exported, deus:packagePublic (exported by the
-    package), deus:implDependsOn and deus:apiDependsOn (symbol → symbol it uses), deus:operationRequires (operation →
-    service), deus:providesService (layer → service).
+    deus:kind (class, interface, type, variable, function, ...), deus:exported, deus:packagePublic (exported by the
+    package), deus:implDependsOn and deus:apiDependsOn (symbol -> symbol it uses), deus:operationRequires (operation ->
+    service), deus:providesService (layer -> service).
   - Symbol IRIs containing \`~\` or a \`/\` after the \`#\` are local references inside a symbol; filter them out with
     \`FILTER(!CONTAINS(STRAFTER(STR(?x), "#"), "~") && !CONTAINS(STRAFTER(STR(?x), "#"), "/"))\`.
 
-  Direction matters. "What X depends on" (or uses, imports) draws arrows FROM X: \`BIND(<X> AS ?from) ?from … ?to\`.
-  "What depends on X" (or uses X, imports X) draws arrows TO X: \`BIND(<X> AS ?to) ?from … ?to\`. When the command
+  Direction matters. "What X depends on" (or uses, imports) draws arrows FROM X: \`BIND(<X> AS ?from) ?from ... ?to\`.
+  "What depends on X" (or uses X, imports X) draws arrows TO X: \`BIND(<X> AS ?to) ?from ... ?to\`. When the command
   names a kind ("which plugins", "which files", "which classes"), keep only that kind, e.g.
   \`FILTER(STRSTARTS(?name, "@dxos/plugin-"))\` for plugins.
 
@@ -466,12 +466,12 @@ const SYSTEM = trim`
   SELECTs), as in the files example below.
 
   When the message lists resources that match words in the command, they are exact IRIs from the index: use them
-  directly (\`VALUES ?to { <…> }\`), and pick the one the command means. Only fall back to matching names with
-  \`FILTER(CONTAINS(…))\` when none fits.
+  directly (\`VALUES ?to { <...> }\`), and pick the one the command means. Only fall back to matching names with
+  \`FILTER(CONTAINS(...))\` when none fits.
 
-  Match what the user names loosely (\`CONTAINS(LCASE(…), "…")\` on names and paths): "ECHO" is @dxos/echo
+  Match what the user names loosely (\`CONTAINS(LCASE(...), "...")\` on names and paths): "ECHO" is @dxos/echo
   (packages/core/echo/echo), "HALO" is identity and devices (packages/core/halo/*: @dxos/halo, credentials, keyring),
-  "MESH" is networking (packages/core/mesh/*). A service is usually a class symbol named Service or …Service.
+  "MESH" is networking (packages/core/mesh/*). A service is usually a class symbol named Service or ...Service.
 
   Examples:
   \`\`\`sparql

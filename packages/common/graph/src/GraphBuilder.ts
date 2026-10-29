@@ -35,7 +35,7 @@ const primaryParts = (key: string): string[] => key.split(PRIMARY);
 
 /**
  * `Atom.withLabel` captures and formats a stack trace on every call, and the builder labels an atom per
- * connector key and per extension, so one expansion costs hundreds of captures on the main thread —
+ * connector key and per extension, so one expansion costs hundreds of captures on the main thread -
  * hence opt-in, and only under the dev server. Mirrors `@dxos/app-graph`'s helper, which this package
  * cannot import back across the dependency edge.
  */
@@ -68,7 +68,7 @@ export type FrameBudget = {
 };
 
 /**
- * Produces the nodes to attach to `node`, reactively — once anything the atom depends on changes it is
+ * Produces the nodes to attach to `node`, reactively - once anything the atom depends on changes it is
  * re-read on the builder's next flush, and the resulting difference is applied to the graph. Nothing
  * subscribes to it, so an input cuts off a change only if something mounts it or it is non-lazy.
  */
@@ -78,7 +78,7 @@ export type Connector<Node extends NodeLike, Arg extends NodeArgLike> = (
 
 /**
  * A registered unit of expansion: a connector plus where its nodes attach (`relation`) and in what order
- * relative to other extensions (`position`). `meta` is opaque to the builder — it is carried through to
+ * relative to other extensions (`position`). `meta` is opaque to the builder - it is carried through to
  * {@link Props.decorateNode}, which is where a layer applies whatever its own metadata implies (the app
  * layer stamps URL segments from it).
  */
@@ -107,7 +107,7 @@ export type Extensions<Extension> = Extension | Extension[] | Extensions<Extensi
 export type Edge = { source: string; target: string; relation: string };
 
 /**
- * The graph operations the expansion engine needs. Implemented by whatever store the builder drives —
+ * The graph operations the expansion engine needs. Implemented by whatever store the builder drives -
  * the engine owns expansion and ordering, the store owns representation and reactivity.
  *
  * {@link Store.node} must cut off at the node's own value even with nothing subscribed to it (mount it, or
@@ -134,12 +134,12 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    * Deliberately the store's own mechanism rather than `Atom.batch`: an atom batch defers
    * invalidation to a rebuild pass that runs only when the outermost batch closes, and a flush
    * re-enters the registry as connectors are read, which leaves nodes gathered as stale and
-   * then discarded — their dependents keep a stale value and are never notified.
+   * then discarded - their dependents keep a stale value and are never notified.
    */
   batch?(fn: () => void): void;
   /**
    * Drops the nodes outright, reclaiming whatever the store holds for them. Unlike
-   * {@link Store.removeNodes} this is not a deletion the graph should remember — the caller is
+   * {@link Store.removeNodes} this is not a deletion the graph should remember - the caller is
    * unloading a subgraph it expects to rebuild from source.
    */
   release(ids: readonly string[]): void;
@@ -193,7 +193,7 @@ export type Props<
   /** How inline descendants are traversed; defaults to treating arguments as leaves. */
   inline?: Inline<Arg>;
   /**
-   * Applied to each connector-produced node — already qualified — before it enters the graph. The
+   * Applied to each connector-produced node - already qualified - before it enters the graph. The
    * producing extension is passed so the decorator can read its {@link Extension.meta}.
    */
   decorateNode?: (node: Arg, extension?: Extension<Node, Arg, Rel, Meta>) => Arg;
@@ -453,7 +453,7 @@ export class GraphBuilder<
     const { id, relation } = relationFromConnectorKey(key);
     const extensions = this.getExtensions();
     // Produced nodes (and their inline descendants) pass through the decorator, which is where a
-    // layer attaches whatever its extensions' metadata implies — URL segments, for instance.
+    // layer attaches whatever its extensions' metadata implies - URL segments, for instance.
     const nodes = entries.flatMap(
       (entry) =>
         contain({ key, extension: entry.extensionId }, () => [
@@ -669,7 +669,7 @@ export type ModelProps<Meta = unknown> = Pick<
 };
 
 /**
- * The builder over `@dxos/graph`'s own {@link GraphModel} — the default specialization, and the one to
+ * The builder over `@dxos/graph`'s own {@link GraphModel} - the default specialization, and the one to
  * reach for unless a layer needs its own node vocabulary (as `@dxos/app-graph` does).
  *
  * Relations are plain strings carried in the edge `type`, and sibling order in the edge `data.order`;
@@ -706,7 +706,7 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
   }
 
   /**
-   * The nodes a relation of `node` resolves to, in sibling order, expanding it on first read — the
+   * The nodes a relation of `node` resolves to, in sibling order, expanding it on first read - the
    * entry point that makes the graph grow.
    */
   children(id: string, relation = 'child'): Atom.Atom<ModelNode[]> {
@@ -769,7 +769,7 @@ export const flush = async (builder: Any): Promise<void> => {
  * diffing against the outputs that stayed. Dirty relations on the released nodes' ancestors are read, so
  * one whose next output would bring a released node back is torn down as well.
  *
- * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
+ * Releasing a node does NOT release its descendants - the caller chooses the set, since what counts
  * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.
  * {@link explore} and the store's own traversal are how that set is collected.
  */

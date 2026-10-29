@@ -12,7 +12,7 @@ import { buildGroups, inheritanceTreeRule, linearChainRule, packGroups, resolveR
 import { compile, scoreLayout, searchPlacement } from './uml-search.ts';
 import { parse } from './uml.ts';
 
-/** The reference shape: a chain A→B→C→D plus a hierarchy Z <|- X, Z <|- Y linked into it. */
+/** The reference shape: a chain A->B->C->D plus a hierarchy Z <|- X, Z <|- Y linked into it. */
 const SOURCE = trim`
   classDiagram
       class A
@@ -45,7 +45,7 @@ describe('uml-search', () => {
     expect(scoreLayout(model, straight)).toBe(1);
     expect(scoreLayout(model, jogged)).toBe(0);
 
-    // Two edges forced across each other score −2 relative to two straight columns.
+    // Two edges forced across each other score -2 relative to two straight columns.
     const crossing = parse(
       ['classDiagram', 'class A', 'class B', 'class C', 'class D', 'A ..> B', 'C ..> D'].join('\n'),
     );

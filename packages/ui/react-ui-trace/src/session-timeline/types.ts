@@ -59,7 +59,7 @@ export const Lane = Schema.Struct({
   start: Schema.optional(Schema.Number),
   end: Schema.optional(Schema.Number),
   /**
-   * Stretches inside `start`..`end` when the lane's task was put down — blocked on a question, say —
+   * Stretches inside `start`..`end` when the lane's task was put down - blocked on a question, say -
    * and later picked up again; the lane is drawn as separate runs around them.
    */
   gaps: Schema.optional(Schema.Array(Schema.Struct({ start: Schema.Number, end: Schema.Number }))),

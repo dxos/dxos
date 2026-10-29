@@ -47,7 +47,7 @@ export class DxAvatar extends LitElement {
   }
 
   @property({ type: String })
-  fallback: string = '🫥';
+  fallback: string = '\u{1FAE5}';
 
   @property({ type: String })
   imgSrc: string | undefined = undefined;

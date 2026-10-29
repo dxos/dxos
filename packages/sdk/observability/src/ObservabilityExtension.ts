@@ -35,7 +35,7 @@ export type ExtensionApiBase<K extends Kind = Kind> = {
 
 /**
  * Instrument-level metadata, declared once by the first caller for a given metric name.
- * Units must be UCUM as OTel requires — `s`, `By`, `{thing}`.
+ * Units must be UCUM as OTel requires - `s`, `By`, `{thing}`.
  */
 export type MetricMeta = { unit?: string; description?: string };
 
@@ -76,7 +76,7 @@ export type Events = {
 
 /**
  * One model call, already filtered by the capture policy and scrubbed (see `AiObservability`). Shaped
- * after the OTel GenAI conventions rather than any vendor's schema — an extension maps it onto
+ * after the OTel GenAI conventions rather than any vendor's schema - an extension maps it onto
  * whatever its backend calls these things.
  */
 export type Inference = {
@@ -85,12 +85,12 @@ export type Inference = {
   parentSpanId?: string;
   /** Provider span name, e.g. `LanguageModel.streamText`. */
   spanName: string;
-  /** `gen_ai.provider.name` — the serving product, not the wire dialect. */
+  /** `gen_ai.provider.name` - the serving product, not the wire dialect. */
   provider?: string;
   model?: string;
   /** Conversation the call belongs to, when the call site named one. */
   sessionId?: string;
-  /** Request parameters the provider reported (temperature, max_tokens, …). */
+  /** Request parameters the provider reported (temperature, max_tokens, ...). */
   parameters?: Record<string, unknown>;
   /** Excludes tokens served from the prompt cache; add {@link cacheReadTokens} for the total. */
   inputTokens?: number;
@@ -103,7 +103,7 @@ export type Inference = {
   streaming: boolean;
   /** Absent entirely when the capture policy denied it. */
   content?: GenerationContent;
-  /** Exception class name only — a provider's message can embed request or response fragments. */
+  /** Exception class name only - a provider's message can embed request or response fragments. */
   errorClass?: string;
 };
 

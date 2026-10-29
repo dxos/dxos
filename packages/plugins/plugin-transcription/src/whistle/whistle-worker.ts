@@ -63,13 +63,13 @@ const OUT_CAPACITY = 64 * 1024;
 /**
  * Default smallest batch of new audio worth a pass, as in Cactus's own live demo; anything queued while a
  * pass runs joins the next one. A word commits after two agreeing passes, so this sets the commit floor
- * (≈2×), and passes closer together see nearly the same audio and agree on half-heard words.
+ * (~2×), and passes closer together see nearly the same audio and agree on half-heard words.
  */
 const DEFAULT_MIN_PASS_MS = 1_000;
 
 /**
  * Default answer budget. The model writes a short derivation before its calls; a budget too small for it
- * skips the derivation (≈0.5 s sooner), but then only the first of several requested calls survives.
+ * skips the derivation (~0.5 s sooner), but then only the first of several requested calls survives.
  */
 const DEFAULT_MAX_TOKENS = 128;
 

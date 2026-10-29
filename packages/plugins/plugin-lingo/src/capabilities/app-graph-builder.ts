@@ -28,7 +28,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    /** An object is readable when its text is reachable — natively, or via a TextContent extractor. */
+    /** An object is readable when its text is reachable - natively, or via a TextContent extractor. */
     const isReadable = (object: Obj.Unknown): boolean =>
       Obj.instanceOf(Markdown.Document, object) ||
       Obj.instanceOf(Text.Text, object) ||

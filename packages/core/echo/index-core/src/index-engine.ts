@@ -60,7 +60,7 @@ export type IndexingResult = {
   /**
    * Every change the sources held when the pass read them is now indexed. Unlike `done`, it holds for
    * a pass that indexed something, so writes arriving faster than passes complete can still settle a
-   * caller waiting for the writes it made — `done` needs an empty batch, which such a stream never
+   * caller waiting for the writes it made - `done` needs an empty batch, which such a stream never
    * leaves.
    */
   drained: boolean;
@@ -162,7 +162,7 @@ const placeCursors = (objects: readonly IndexerObject[], cursors: readonly DataS
 /**
  * The convergence key an indexed object contributes to the merge trigger, if any.
  *
- * Queue (feed) entities are out of merge scope — they have no automerge document to merge — and
+ * Queue (feed) entities are out of merge scope - they have no automerge document to merge - and
  * relations are excluded: they are not merge subjects (endpoints would not be reconciled). The
  * empty string is not a key; grouping on it would merge unrelated entities.
  */
@@ -448,7 +448,7 @@ export class IndexEngine {
    * `objectSnapshot` is filled by the indexing pass, so a database that predates it holds rows
    * without one, and the store fills over several passes after upgrade. The compiled query path
    * reads that store directly instead of loading documents, so until it is complete a query there
-   * would silently return fewer objects than exist — not stale data, missing data. The query
+   * would silently return fewer objects than exist - not stale data, missing data. The query
    * service gates a compiled query's first execution on this for the rows the query can read, and
    * caches `true` once seen, since it never goes back to false. The in-memory path loads documents
    * itself and is not gated.
@@ -478,7 +478,7 @@ export class IndexEngine {
   }
 
   /**
-   * Indexes one batch into every secondary index — those sourced from the index itself rather than
+   * Indexes one batch into every secondary index - those sourced from the index itself rather than
    * from automerge or a feed (see {@link IndexedObjectSource}). `done` reports an empty batch, so a
    * caller wanting the whole backlog loops until it is set, exactly as with {@link update}.
    *
@@ -518,7 +518,7 @@ export class IndexEngine {
   }
 
   /**
-   * Live rows carrying any of the given convergence keys in one space — the detection point-lookup
+   * Live rows carrying any of the given convergence keys in one space - the detection point-lookup
    * for convergence-key merging.
    */
   queryByConvergenceKeys(
@@ -840,7 +840,7 @@ export class IndexEngine {
    * already sees the index behind the documents; the pass invalidates queries when it ends.
    *
    * A source feeding a primary index carries objects that may be new, so the batch is first written
-   * to `objectMeta` — which stamps each object's `version` and yields the `recordId` the index
+   * to `objectMeta` - which stamps each object's `version` and yields the `recordId` the index
    * keys on. A source reading the index back (`indexed`) skips that: the rows are already there,
    * and re-stamping them would bump the very counter the source reads.
    */
@@ -865,7 +865,7 @@ export class IndexEngine {
       // Reads run OUTSIDE the transaction: getChangedObjects may call RuntimeProvider.runPromise
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
       // TransactionConnection context. If those reads ran inside withTransaction, they would
-      // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
+      // try to acquire the same semaphore that the transaction already holds - causing a deadlock.
       const {
         objects,
         cursors: updatedCursors,

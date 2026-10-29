@@ -36,7 +36,7 @@ import { TasksCapabilities } from '#types';
 import { TaskSetArticle } from './TaskSetArticle.tsx';
 
 /**
- * Stands in for plugin-projects' `delegate-to-chat` contribution — plugin-tasks cannot depend on it
+ * Stands in for plugin-projects' `delegate-to-chat` contribution - plugin-tasks cannot depend on it
  * (the dependency runs the other way), and what the article gates the checkbox on is that SOME
  * plugin contributed an action, not which one.
  */
@@ -172,7 +172,7 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
-        // The plugin itself, so its OperationHandler module contributes the task verbs —
+        // The plugin itself, so its OperationHandler module contributes the task verbs -
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
         StoryTaskActionPlugin(),
@@ -212,7 +212,7 @@ export const Default: Story = {};
  */
 export const DescriptionLinks: Story = {
   play: async ({ canvasElement }) => {
-    // One chip, in the row itself — a React markdown renderer, which sets `eid` as a property. The
+    // One chip, in the row itself - a React markdown renderer, which sets `eid` as a property. The
     // foot pane is create-only now that the detail is its own surface, so a selected task no longer
     // renders a second copy of the description in CodeMirror.
     const url = 'https://github.com/dxos/dxos/pull/13007';
@@ -233,7 +233,7 @@ export const DescriptionLinks: Story = {
 };
 
 /**
- * A link the resolver matches but cannot answer — a private repository the space holds no token for —
+ * A link the resolver matches but cannot answer - a private repository the space holds no token for -
  * still opens its card on hover, titled with the link's short name and saying there is no preview,
  * rather than leaving a chip that does nothing.
  */
@@ -260,7 +260,7 @@ export const DescriptionLinkUnavailable: Story = {
 
 /**
  * Hiding a status from the toolbar's status selector drops its rows, and the menu stays open across
- * several toggles — a reader narrowing a ledger sets more than one.
+ * several toggles - a reader narrowing a ledger sets more than one.
  */
 export const StatusFilter: Story = {
   play: async ({ canvasElement }) => {
@@ -296,7 +296,7 @@ export const StatusFilter: Story = {
     await expect(canvas.findByText('Print run v1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // A hidden status takes the branch filed under it: the sub-task is part of the work its parent
-    // stands for, so hiding the parent's status hides it too — even though its own is still shown.
+    // stands for, so hiding the parent's status hides it too - even though its own is still shown.
     const context = seeded;
     if (!context) {
       throw new Error('The story did not seed a task set.');
@@ -309,7 +309,7 @@ export const StatusFilter: Story = {
     await userEvent.click(item('done')!);
     await waitFor(() => expect(canvas.queryByText('Source green coffee')).toBeNull(), { timeout: 10_000 });
     await waitFor(() => expect(canvas.queryByText('Cup the samples')).toBeNull(), { timeout: 10_000 });
-    // Its own status is still shown — a sibling in it stays.
+    // Its own status is still shown - a sibling in it stays.
     await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // Clear is live on a hidden status alone, not only on typed text: it resets both terms, so with
@@ -344,7 +344,7 @@ export const SharedFilterState: Story = {
       document.querySelector<HTMLElement>(`[data-testid="tasks.filter.status.${status}"]`);
     const stored = () => globalThis.localStorage.getItem(`dxos:view-state:tasks-task-set-view:${context.taskSet.id}`);
 
-    // Menu → text: hiding a status writes it into the query.
+    // Menu -> text: hiding a status writes it into the query.
     await clickElement(trigger());
     await waitFor(() => expect(item('done')).toBeTruthy(), { timeout: 10_000 });
     await clickElement(item('done'));
@@ -353,7 +353,7 @@ export const SharedFilterState: Story = {
     await expect(stored()).toContain('NOT status:done');
     await userEvent.keyboard('{Escape}');
 
-    // Text → menu: replacing the query with a single status re-checks the menu to match.
+    // Text -> menu: replacing the query with a single status re-checks the menu to match.
     await clickElement(editor());
     await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
     await waitFor(() => expect(stored()).toContain('"query":""'), { timeout: 10_000 });
@@ -463,7 +463,7 @@ export const SortAndGroup: Story = {
  * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
  *
  * The set lives in `react-ui-attention` view state under the task set's own id, so the article
- * neither owns it nor holds a copy — which is what lets an embedding toolbar read the same set.
+ * neither owns it nor holds a copy - which is what lets an embedding toolbar read the same set.
  */
 export const Checkboxes: Story = {
   play: async ({ canvasElement }) => {
@@ -499,7 +499,7 @@ export const Checkboxes: Story = {
 };
 
 /**
- * The set resolves into one flat list and stays live afterwards — each mutation below is the one
+ * The set resolves into one flat list and stays live afterwards - each mutation below is the one
  * that would go stale if the view were cached. Milestones are seeded but, ungrouped, not rendered.
  */
 export const Behavior: Story = {
@@ -508,7 +508,7 @@ export const Behavior: Story = {
 
     // Resolves and renders: every task in the array, filed or not, with no milestone chrome.
     await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // Unfiled tasks are not segregated into a backlog — they are rows like any other.
+    // Unfiled tasks are not segregated into a backlog - they are rows like any other.
     await expect(canvas.findByText('Schedule cuppings', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Roasting')).toBeNull(), { timeout: 10_000 });
     await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
@@ -519,7 +519,7 @@ export const Behavior: Story = {
     }
     const { space, taskSet, roasting } = context;
 
-    // Updates — membership: appending to the array parents the task to the set, joining it to the
+    // Updates - membership: appending to the array parents the task to the set, joining it to the
     // `childOf` query.
     const added = space.db.add(
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
@@ -529,7 +529,7 @@ export const Behavior: Story = {
     });
     await expect(canvas.findByText('Order sample bags', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // Updates — a member's own properties reach its row (the row holds that subscription).
+    // Updates - a member's own properties reach its row (the row holds that subscription).
     Obj.update(added, (added) => {
       added.title = 'Order sample bags (v2)';
       added.status = 'done';
@@ -544,8 +544,8 @@ export const Behavior: Story = {
     // branch wrapper the row is nested in (see react-ui-list/docs/TREE.md §10).
     await expect(canvas.getByText('Schedule cuppings').closest('[role="treeitem"]')).toHaveAttribute('aria-level', '2');
 
-    // Updates — removal: an array splice alone does not unlist a task (membership is the parent
-    // edge) — deleting it does.
+    // Updates - removal: an array splice alone does not unlist a task (membership is the parent
+    // edge) - deleting it does.
     TaskSet.deleteTask(space.db, taskSet, added);
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
   },
@@ -553,7 +553,7 @@ export const Behavior: Story = {
 
 /**
  * A row's menu adds a sub-task under it: the new task is filed into the set with the row as its
- * parent and no title yet — the reader names it in the detail it opens — and a collapsed parent is
+ * parent and no title yet - the reader names it in the detail it opens - and a collapsed parent is
  * expanded so the new row is in view.
  */
 export const AddSubTask: Story = {

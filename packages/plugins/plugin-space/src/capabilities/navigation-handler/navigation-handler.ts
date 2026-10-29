@@ -26,7 +26,7 @@ import { readJoinSpaceKey } from './join-space-key.ts';
 
 /**
  * NavigationHandler for space invitation URL params.
- * Handles ?spaceInvitationCode=X → join space via invitation.
+ * Handles ?spaceInvitationCode=X -> join space via invitation.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* (options: SpaceSchema.SpacePluginOptions = {}) {
@@ -39,7 +39,7 @@ export default Capability.makeModule(
     const client = yield* ClientCapabilities.Client;
 
     // `getSnapshot` reports `none` both for "no identity" and for "client not initialized", and
-    // navigation handlers now dispatch before `client.initialize()` resolves — so the snapshot must
+    // navigation handlers now dispatch before `client.initialize()` resolves - so the snapshot must
     // not be read until initialization lands or every deep-linked URL reads as a definite "no
     // identity". Without one the invitation param is ignored rather than forcing identity creation
     // here and bypassing the normal onboarding flow.

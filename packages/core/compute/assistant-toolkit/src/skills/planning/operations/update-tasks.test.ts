@@ -44,7 +44,7 @@ const TracingTestLayer = AssistantTestLayer({ ...layerOptions, tracing: 'feed' }
 describe('UpdateTasks', () => {
   test('renders as a tool schema', ({ expect }) => {
     // A definition whose input cannot render as JSON Schema is dropped rather than raised, which
-    // would silently leave the model with no tool at all — ref-typed inputs are the risky case.
+    // would silently leave the model with no tool at all - ref-typed inputs are the risky case.
     expect(Operation.serializable([UpdateTasks])).toHaveLength(1);
   });
 

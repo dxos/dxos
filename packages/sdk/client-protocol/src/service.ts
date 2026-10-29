@@ -72,7 +72,7 @@ import { type ClientServicesRpc } from './service-rpc.ts';
 
 /**
  * Promise/{@link Stream} shaped deprecated surfaces for the client services whose protobuf
- * `service {}` block has been deleted (their payloads now serve entirely over effect-rpc — see
+ * `service {}` block has been deleted (their payloads now serve entirely over effect-rpc - see
  * `@dxos/protocols/rpc`). Each interface is hand-derived to match the codec-protobuf-generated
  * shape it replaces exactly, so existing `client.services.services.<Name>` consumers are
  * unaffected. Message types that are still shared outside the RPC boundary (and so remain

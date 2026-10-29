@@ -36,7 +36,7 @@ describe('Chess MCP template', () => {
       expect(countOf('type.game:')).toBe(1);
       expect(countOf('type.chess.state')).toBe(1);
       // Falsifiable without hardcoding the archive's contents: every typename in the archive must be
-      // one the definition DECLARED. A pair of zero-counts would not be — `countOf` substring-matches,
+      // one the definition DECLARED. A pair of zero-counts would not be - `countOf` substring-matches,
       // so asserting a typename is absent passes just as well when the typename is misspelled.
       const declared = new Set(StockfishSpace.make().schemas.map((schema) => Type.getTypename(schema)));
       for (const type of Object.keys(counts)) {
@@ -103,7 +103,7 @@ describe('Chess MCP template', () => {
 
       // The reader owns only what an agent cannot do: two Composer settings, and the three steps that
       // need a browser. Nothing asks for an Anthropic key, and nothing asks for a Cloudflare login to
-      // DEPLOY — claiming the account afterwards is the one Cloudflare step that is theirs, and it is
+      // DEPLOY - claiming the account afterwards is the one Cloudflare step that is theirs, and it is
       // ordered after the last redeploy because a claimed account is one the agent cannot update.
       const mine = tasks.filter((task) => (task.assignee as { role?: string } | undefined)?.role === 'user');
       expect(mine.map((task) => task.title)).toEqual([

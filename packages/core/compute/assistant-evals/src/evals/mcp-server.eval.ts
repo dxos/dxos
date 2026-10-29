@@ -30,10 +30,10 @@ import * as Scorer from '../Scorer.ts';
 // The CLI's own end-to-end test (`packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts`) runs
 // the same agent against `dx mcp serve`. This is its eval counterpart, and it differs in one place:
 // the server runs inside the eval process against the harness's own client (see `src/mcp-host.ts`),
-// so there is no CLI binary to build, no profile to bootstrap, and one database — which is what
+// so there is no CLI binary to build, no profile to bootstrap, and one database - which is what
 // lets a scorer grade the write rather than the model's account of it.
 //
-// Only the server's tools are allowed, plus `Bash(curl:*)` — no file tools, and no other shell. The
+// Only the server's tools are allowed, plus `Bash(curl:*)` - no file tools, and no other shell. The
 // rule and its one exception have the same root: an agent that can shell out freely could satisfy a
 // prompt without ever reaching the surface, and the run would prove nothing about it. `curl` is
 // admitted because the upload stage measures a flow that is DEFINED by the bytes not passing
@@ -45,7 +45,7 @@ import * as Scorer from '../Scorer.ts';
 // (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` and `main` the
 // harness brings its own identity: it binds a `test+*@dxos.org` account through that EDGE's test
 // hatch, replicates the space it seeds, and mints the worker's grant itself (`McpAuth`), so the run
-// is graded from the database exactly as a local one is — every write the agent makes through the
+// is graded from the database exactly as a local one is - every write the agent makes through the
 // deployed worker comes back by replication. `prod`, whose hatch is closed, and any worker reached
 // with a hand-minted `DX_EVAL_MCP_TOKEN` serve a space this process cannot see, so those runs drop
 // the write stages and score what a client can see from outside: discovery, and per-tool latency.
@@ -112,7 +112,7 @@ const readProbes = (spaceId: string): McpLatency.Probe[] => [
  * Probes that need an object to address, and therefore a space this process seeded.
  *
  * A reference travels as the wire envelope the server documents, so these also time the decode path
- * a ref-taking operation goes through — which no ref-free probe covers.
+ * a ref-taking operation goes through - which no ref-free probe covers.
  */
 const refProbes = (spaceId: string, projectId: string): McpLatency.Probe[] => {
   const project = { '/': `echo://${spaceId}/${projectId}` };
@@ -154,8 +154,8 @@ const RENAME = 'Rename the sync telemetry dashboard';
 const RENAME_TO = 'Sync Health';
 
 /**
- * Said identically in both question stages, so the one that must NOT ask is graded on judgment —
- * whether the decision was already made — rather than on which prompt mentioned asking.
+ * Said identically in both question stages, so the one that must NOT ask is graded on judgment -
+ * whether the decision was already made - rather than on which prompt mentioned asking.
  */
 const ASK_POLICY =
   'If finishing it needs a decision only the user can make, put the question to the user on that task ' +
@@ -296,8 +296,8 @@ const find = (tasks: readonly TaskRow[], title: string): TaskRow | undefined =>
 /**
  * What each turn established, at the turn rather than at the end.
  *
- * A staged fact cannot be recovered from the final space — "the read-only turn changed nothing" is
- * only true between two writes — so the turns record them and the scorers below read them back. The
+ * A staged fact cannot be recovered from the final space - "the read-only turn changed nothing" is
+ * only true between two writes - so the turns record them and the scorers below read them back. The
  * dimensions that *are* end state ask the database their own question instead.
  */
 type Staged = {
@@ -306,7 +306,7 @@ type Staged = {
   readOnly: boolean;
   completed: boolean;
   started: boolean;
-  /** `undefined` when the stage did not run — see {@link UPLOAD_STAGE}. */
+  /** `undefined` when the stage did not run - see {@link UPLOAD_STAGE}. */
   uploaded?: boolean;
   /** `undefined` when the upload stage did not run. */
   attached?: boolean;
@@ -392,7 +392,7 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
   Scorer.make({
     name: 'no-question-when-decided',
     description:
-      'Given a decision the prompt had already made, the agent did the work and filed no question — ' +
+      'Given a decision the prompt had already made, the agent did the work and filed no question - ' +
       'asking is for what it cannot decide, not a reflex.',
     score: Effect.succeed(staged.answeredFromContext),
   }),
@@ -407,7 +407,7 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
     name: 'ledger-intact',
     // The ledger's own length, not a filter: the natural failure of an agent that cannot find a task
     // is to create a new one and report success, which every title-keyed check would pass.
-    description: 'Still exactly the four seeded tasks — the agent updated the ledger rather than adding to it.',
+    description: 'Still exactly the four seeded tasks - the agent updated the ledger rather than adding to it.',
     query: Query.select(Filter.type(Task.Task)),
     score: (tasks) => tasks.length === 4,
   }),
@@ -450,7 +450,7 @@ const localTask = () =>
       plugins: [ProjectsPlugin.make(), TasksPlugin.make(), ...(REMOTE ? [FilePlugin.make()] : [])],
       localUploads: true,
       types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet, File.File, Blob.Blob],
-      // The server's own tools, plus `curl` for the upload stage only — see the header comment for
+      // The server's own tools, plus `curl` for the upload stage only - see the header comment for
       // why the no-shell rule has this one exception and why it cannot launder the other stages.
       allowedTools: [
         tool('queryOperations'),
@@ -475,13 +475,13 @@ const localTask = () =>
         }),
     },
     async ({ spaceId, workdir, send, query, score, latency }) => {
-      // Stage 1 — the starting state, proven before a single token is spent. Without it, a later
+      // Stage 1 - the starting state, proven before a single token is spent. Without it, a later
       // "the task is done" score cannot distinguish the agent's work from a bad fixture.
       const seeded = await query(readTasks);
       const scaffolded =
         seeded.length === 2 && find(seeded, ROTATE)?.status === 'todo' && find(seeded, BACKFILL)?.status === 'todo';
 
-      // Stage 2 — a read-only turn. It must NOT change the database: an agent that writes while
+      // Stage 2 - a read-only turn. It must NOT change the database: an agent that writes while
       // answering a question is a defect the write stages below would happily absorb.
       const read = await send(
         `Using only the ${SERVER} MCP server, list the tasks of the project "${PROJECT_NAME}" in space ` +
@@ -498,7 +498,7 @@ const localTask = () =>
         find(afterRead, ROTATE)?.status === 'todo' &&
         find(afterRead, BACKFILL)?.status === 'todo';
 
-      // Stage 3 — one write, read back between turns, so a regression here cannot be excused as
+      // Stage 3 - one write, read back between turns, so a regression here cannot be excused as
       // "it happened later".
       const complete = await send(
         `In space ${spaceId}, mark the task titled "${ROTATE}" as done. Update the existing task; do not ` +
@@ -512,7 +512,7 @@ const localTask = () =>
         // The untouched task is the control: it proves the write was targeted, not a blanket update.
         find(afterComplete, BACKFILL)?.status === 'todo';
 
-      // Stage 4 — a second write on the same conversation. `started`, not "in progress", because
+      // Stage 4 - a second write on the same conversation. `started`, not "in progress", because
       // `Task.status` is a closed literal set and a value outside it would have the agent either
       // fail or invent one.
       const start = await send(
@@ -529,7 +529,7 @@ const localTask = () =>
         // Still done: a later turn must not roll back what an earlier one committed.
         find(afterStart, ROTATE)?.status === 'done';
 
-      // Stage 5 — the direct-upload path, which exists precisely because these bytes cannot travel
+      // Stage 5 - the direct-upload path, which exists precisely because these bytes cannot travel
       // as a tool argument. The fixture is planted on the agent's disk rather than described to it,
       // so the only way through is `createUpload` -> shell transfer -> `createFromUpload`.
       let uploaded: boolean | undefined;
@@ -551,8 +551,8 @@ const localTask = () =>
           !upload.isError &&
           upload.toolCalls.includes(tool('createUpload')) &&
           // The operation by name, not merely `invokeOperation`. Without this the stage is
-          // satisfiable through `createFromSource`'s base64 arm — which also stores to edge, so the
-          // external check below does not exclude it — and would pass by doing the one thing this
+          // satisfiable through `createFromSource`'s base64 arm - which also stores to edge, so the
+          // external check below does not exclude it - and would pass by doing the one thing this
           // path exists to avoid. The uploadId needs no separate check: the byte comparison already
           // fails if the operation adopted a different upload.
           invokedOperation(upload, CREATE_FROM_UPLOAD) &&
@@ -560,7 +560,7 @@ const localTask = () =>
           // and the service stored what it received, which no amount of model narration produces.
           stored?.size === UPLOAD_BYTES &&
           sameBytes(stored.bytes, fixture) &&
-          // External, not inline — an inline blob would mean the bytes came back through the model
+          // External, not inline - an inline blob would mean the bytes came back through the model
           // after all, which is the exact failure this whole path exists to prevent.
           stored.external === true;
         const file = await query(findObject(File.File, (candidate) => candidate.name === UPLOAD_NAME));
@@ -571,7 +571,7 @@ const localTask = () =>
         attached = file != null && onRotate.includes(file.id) && !onBackfill.includes(file.id);
       }
 
-      // Stage 6 — the counter-case: the decision is in the prompt, so any question is a reflex. Run
+      // Stage 6 - the counter-case: the decision is in the prompt, so any question is a reflex. Run
       // first so the stage after it can demand exactly one question in the ledger.
       const questionTasksSeeded = await query(seedQuestionTasks);
       const decided = await send(
@@ -589,7 +589,7 @@ const localTask = () =>
         renameTask?.status === 'started' &&
         (renameTask?.description ?? '').includes(RENAME_TO);
 
-      // Stage 7 — a decision nothing the agent can reach settles; no answer entry in the history is
+      // Stage 7 - a decision nothing the agent can reach settles; no answer entry in the history is
       // what proves it did not answer on the user's behalf.
       const ask = await send(
         `In space ${spaceId}, pick up the task "${RETENTION}" in project "${PROJECT_NAME}". It needs an ` +
@@ -612,7 +612,7 @@ const localTask = () =>
         retentionTask.status === 'blocked';
 
       // After the turns, so the probe's own connection is not competing with the agent's for the
-      // listener — and so a latency figure is never what a scenario's writes waited behind. The
+      // listener - and so a latency figure is never what a scenario's writes waited behind. The
       // ledger is at its fullest here too, which is the state worth timing a read against.
       const project = await query(findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME));
       const report = await latency([...readProbes(spaceId), ...(project ? refProbes(spaceId, project.id) : [])]);
@@ -633,7 +633,7 @@ const localTask = () =>
     },
   );
 
-evalite(`MCP server (${TARGET}) — Claude Code drives the projected surface`, {
+evalite(`MCP server (${TARGET}) - Claude Code drives the projected surface`, {
   data: [{ input: null }],
   task: GRADED ? localTask : remoteTask,
   scorers: Scorer.toEvalite(SCORERS),

@@ -6,7 +6,7 @@ import type { Frame, ReloadReplay } from './watch-replay.ts';
 
 /**
  * Id for the handshake replayed into a reloaded child. Namespaced so a client's own id cannot
- * collide with it, and the response is dropped rather than forwarded — the client already holds an
+ * collide with it, and the response is dropped rather than forwarded - the client already holds an
  * `initialize` result from before the reload.
  */
 const REPLAY_ID = '@dxos/cli:watch-initialize';

@@ -121,7 +121,7 @@ describe('FactStore', () => {
   );
 
   it.effect(
-    'preserves illocution through put → query',
+    'preserves illocution through put -> query',
     Effect.fnUntraced(function* () {
       const store = yield* FactStore;
       yield* store.putFacts([
@@ -138,7 +138,7 @@ describe('FactStore', () => {
   );
 
   it.effect(
-    'preserves illocution through put → query (in-memory store)',
+    'preserves illocution through put -> query (in-memory store)',
     Effect.fnUntraced(function* () {
       const store = yield* FactStore;
       yield* store.putFacts([mk({ id: 'f1', illocution: { force: 'directive', mood: 'imperative' } })]);
@@ -214,7 +214,7 @@ describe('FactStore', () => {
 
       const byObject = yield* store.query({ entity: 'paris' }); // both have object paris
       const bySource = yield* store.query({ source: 'dxn:q:m1' }); // only f1
-      const confident = yield* store.query({ minConfidence: 0.5 }); // only f1 (0.6 ≥ 0.5)
+      const confident = yield* store.query({ minConfidence: 0.5 }); // only f1 (0.6 >= 0.5)
 
       yield* Effect.sync(() => {
         if (byObject.length !== 2) {

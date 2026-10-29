@@ -109,7 +109,7 @@ export type ClaudeHarnessOptions = {
 export type ClaudeHarness = {
   readonly spaceId: SpaceId;
   /**
-   * The agent's working directory — a throwaway tree, and the only one its file tools may touch.
+   * The agent's working directory - a throwaway tree, and the only one its file tools may touch.
    *
    * Exposed so a scenario can plant a fixture the agent will act on from disk rather than from the
    * prompt, which is the only way to exercise a flow whose whole point is that the bytes never
@@ -118,7 +118,7 @@ export type ClaudeHarness = {
   readonly workdir: string;
   /** The surface this run is driving. */
   readonly target: McpTarget.Target;
-  /** Endpoint the agent dials — the in-process listener's, or the deployed worker's. */
+  /** Endpoint the agent dials - the in-process listener's, or the deployed worker's. */
   readonly url: string;
   /**
    * Times the surface from the outside, over its own client connection.
@@ -137,7 +137,7 @@ export type ClaudeHarness = {
    *
    * The separation is the whole point of the scenario: an agent reporting "I marked the task done"
    * is the model narrating its own tool call, and only a query run outside the agent proves the
-   * write reached the database — run between turns, it also proves it reached the database at the
+   * write reached the database - run between turns, it also proves it reached the database at the
    * stage the eval claims.
    */
   readonly query: <D>(
@@ -155,7 +155,7 @@ export type ClaudeHarness = {
  * The space a deployed run names.
  *
  * Never the harness's own `defaultSpace`: that space exists only in this process, and a deployed
- * worker rejects it as not in the session's context — a failure that reads as a broken surface
+ * worker rejects it as not in the session's context - a failure that reads as a broken surface
  * rather than as missing configuration.
  */
 const remoteSpaceId = (): SpaceId => {
@@ -318,8 +318,8 @@ const waitForEdge = async (space: Space): Promise<void> => {
  * `edgeAuth` admits a chained HALO identity on the WebSocket upgrade route only when an account is
  * bound to it, so a freshly minted eval identity is refused with
  * `identity_not_associated_with_account` and its space never replicates. This hatch is the
- * sanctioned way for an ephemeral test identity to get one — open on local, test, dev and preview,
- * closed on staging and production — and is what the edge repo's own e2e harness uses, so the run
+ * sanctioned way for an ephemeral test identity to get one - open on local, test, dev and preview,
+ * closed on staging and production - and is what the edge repo's own e2e harness uses, so the run
  * exercises the real auth path rather than stepping around it.
  *
  * A fresh address per run: the hatch rebinds an email to the newest identity, so a shared one would
@@ -448,7 +448,7 @@ const aiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiServ
  * This is the CLI end-to-end test's eval counterpart (`packages/devtools/cli/src/commands/mcp/
  * agent-e2e.test.ts`), and it differs from it in exactly one place: the server is not `dx mcp serve`
  * in a second process but {@link startMcpHost} in this one, so there is no CLI binary to build, no
- * profile to bootstrap, and one database — the space the agent writes to is the space
+ * profile to bootstrap, and one database - the space the agent writes to is the space
  * {@link ClaudeHarness.query} reads.
  *
  * The agent is a real `claude` subprocess rather than the in-process assistant, which is what makes
@@ -507,7 +507,7 @@ export const runClaudeEval = async <T>(
       mode === 'provisioned' && edgeUrl != null ? await replicateToEdge(client, edgeUrl, identity, spaceId) : undefined;
 
     // Against EDGE the agent's writes arrive by replication, so a query first waits for the space to
-    // catch up — otherwise it grades the space as it was before the turn.
+    // catch up - otherwise it grades the space as it was before the turn.
     const query = async <D>(
       effect: Effect.Effect<D, unknown, Database.Service | Capabilities.ProcessManagerRuntimeServices>,
     ): Promise<D> => {
@@ -558,7 +558,7 @@ export const runClaudeEval = async <T>(
               }).pipe(Scope.provide(scope)),
             );
 
-      // Seeding a token run's space from here would write to the harness's own database instead — a
+      // Seeding a token run's space from here would write to the harness's own database instead - a
       // different space than the agent is about to read, which is worse than no seed.
       if (options.seed && mode !== 'token') {
         await query(options.seed({ spaceId }));
@@ -574,7 +574,7 @@ export const runClaudeEval = async <T>(
       agent = ClaudeAgent.start({
         cwd: workdir,
         // Streamable HTTP, so the agent dials the listener this process owns rather than spawning a
-        // server of its own — the difference between measuring this surface and measuring a CLI.
+        // server of its own - the difference between measuring this surface and measuring a CLI.
         mcpServers: { [SERVER]: { type: 'http', url, ...(headers ? { headers } : {}) } },
         apiKey: API_KEY,
         model: options.model ?? DEFAULT_MODEL,

@@ -21,8 +21,8 @@ import type * as Models from './Models.ts';
 import * as Telemetry from './Telemetry.ts';
 
 /**
- * Reviews each finished turn in the background and reports the ones where the agent struggled —
- * a prompt that misled it, a sandbox function that broke, a model that could not form a call — so
+ * Reviews each finished turn in the background and reports the ones where the agent struggled -
+ * a prompt that misled it, a sandbox function that broke, a model that could not form a call - so
  * the cases worth fixing surface on a dashboard instead of in someone's memory of a bad session.
  * Cheap signals read off the log pick the turns worth judging; a model judges those; a turn judged
  * troubled has its whole trajectory uploaded and a PostHog event points at it.
@@ -61,7 +61,7 @@ export type Signals = {
   readonly retries: number;
   /** Tool calls whose code repeated an earlier call's exactly: a model going round in circles. */
   readonly repeatedCalls: number;
-  /** Panels published to the screen — the user sees nothing else. */
+  /** Panels published to the screen - the user sees nothing else. */
   readonly displayed: number;
 };
 
@@ -161,7 +161,7 @@ const JUDGE_SYSTEM = [
 ].join(' ');
 
 const clip = (text: string, limit: number): string =>
-  text.length > limit ? `${text.slice(0, limit)}… [${text.length - limit} more characters]` : text;
+  text.length > limit ? `${text.slice(0, limit)}... [${text.length - limit} more characters]` : text;
 
 /** The turn as the judge reads it: numbered steps, code in fences, outputs cut to their start. */
 export const transcript = (turn: Turn): string => {

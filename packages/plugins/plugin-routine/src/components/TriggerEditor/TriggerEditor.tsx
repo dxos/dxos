@@ -179,7 +179,7 @@ const triggerFormSpec = (values: TriggerFormInput): Trigger.Spec => {
 
 /**
  * Apply the trigger section's form values to the routine graph: edit the primary trigger's spec/`enabled`/
- * `remote` in place, or (defensively) create-and-wire an owned trigger on first edit — the draft normally
+ * `remote` in place, or (defensively) create-and-wire an owned trigger on first edit - the draft normally
  * carries one already (see `makeRoutine`); nothing extra is persisted until the enclosing graph is added.
  * Changes are ignored until a kind is picked, so the unselected picker never seeds a default trigger.
  */
@@ -300,7 +300,7 @@ const TRIGGER_PATH = ['trigger'];
 export type TriggerSectionProps = {
   /** Render the trigger for display only (no variant picker, clear, or field edits). */
   readonly?: boolean;
-  /** Clear the trigger's spec — the enclosing form re-seeds and the variant picker reappears. */
+  /** Clear the trigger's spec - the enclosing form re-seeds and the variant picker reappears. */
   onClear?: () => void;
 };
 

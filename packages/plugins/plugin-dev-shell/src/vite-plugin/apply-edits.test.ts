@@ -13,7 +13,7 @@ import { type Host, startHost } from './testing.ts';
 
 /**
  * Exercises the prebaked editor the way the tool does: over the wire, through the one route the host
- * exposes. There is no in-process path to test instead — the editor exists as a materialized script
+ * exposes. There is no in-process path to test instead - the editor exists as a materialized script
  * precisely because "run a script" is the only verb the harness has.
  */
 describe('apply edits', () => {
@@ -143,7 +143,7 @@ describe('apply edits', () => {
   });
 
   test('accepts a root reached through a symlink', async ({ expect }) => {
-    // A configured root can be a symlink — `/tmp` is one on macOS.
+    // A configured root can be a symlink - `/tmp` is one on macOS.
     const linked = path.join(os.tmpdir(), `dx-dev-shell-link-${process.pid}`);
     fs.symlinkSync(root, linked);
     const linkedHost = await startHost({ root: linked });
@@ -178,7 +178,7 @@ describe('apply edits', () => {
   test('preserves multi-byte text across stdin chunk boundaries', async ({ expect }) => {
     // Node reads stdin in 64KiB chunks, which do not land on 3-byte character boundaries; decoding
     // per chunk would write replacement characters into the file.
-    const wide = '→'.repeat(70_000);
+    const wide = '\u2192'.repeat(70_000);
     write('a.ts', 'const label = "x";\n');
 
     const result = await apply([{ path: 'a.ts', oldString: 'x', newString: wide }]);

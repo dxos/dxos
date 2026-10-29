@@ -93,7 +93,7 @@ export type NamedGraphOptions = {
   predicates?: Readonly<Record<string, string>>;
 };
 
-/** `works at` → `workAt`: the fallback local name when the ontology has no entry for a predicate. */
+/** `works at` -> `workAt`: the fallback local name when the ontology has no entry for a predicate. */
 const camelCase = (text: string): string =>
   text
     .split(/[^a-zA-Z0-9]+/)
@@ -131,7 +131,7 @@ type Graph = { prefix: string; iri: string; facts: RDF.Fact[] };
 /**
  * The facts in the fuller form `docs/BRAIN.md` ("Named graphs, IRIs and the ontology") describes, as TriG: real triples
  * inside named graphs, with the provenance stated once per graph, ontology predicates, and entities as real IRIs where
- * known — otherwise scoped to their graph. A mock-up for review, predating the store's own form: the store now scopes
+ * known - otherwise scoped to their graph. A mock-up for review, predating the store's own form: the store now scopes
  * unresolved entities to their graph and mints invented predicates in the brain's namespace ({@link formatRawFact}).
  */
 export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGraphOptions = {}): string => {
@@ -147,7 +147,7 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
     graph.facts.push(fact);
   }
 
-  // Predicate local name → the surface forms the extractor used for it, which become its synonyms.
+  // Predicate local name -> the surface forms the extractor used for it, which become its synonyms.
   const predicates = new Map<string, Set<string>>();
   const predicateName = (predicate: string): string => {
     const normalized = RDF.Predicate.normalize(predicate);
@@ -224,7 +224,7 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
   return [prefixes.join('\n'), ...blocks, ...ontology].join('\n\n');
 };
 
-/** The prefixed name an IRI reads as (`schema:worksFor`; a predicate the brain minted as `brain:…`). */
+/** The prefixed name an IRI reads as (`schema:worksFor`; a predicate the brain minted as `brain:...`). */
 export const curie = (iri: string, namespace: string): string => {
   const [prefix, base] =
     [['brain', namespace] as const, ...Object.entries(RDF.Graph.PREFIXES)]

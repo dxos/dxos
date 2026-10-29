@@ -10,7 +10,7 @@ import { type ObjectExtractor } from './ObjectExtractor.ts';
 
 /**
  * Registry of the available {@link ObjectExtractor}s. Upstream of, and independent from,
- * app-framework Capabilities — consuming plugins build this layer from whatever registration
+ * app-framework Capabilities - consuming plugins build this layer from whatever registration
  * mechanism they use (e.g. `Capability.getAll`) so this package stays framework-free.
  */
 export class ExtractorRegistry extends Context.Service<

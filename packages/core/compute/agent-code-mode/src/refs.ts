@@ -14,7 +14,7 @@ const takesRef = (ast: SchemaAST.AST): boolean =>
 
 /**
  * The input with every object that sits where its schema expects a reference replaced by a reference to
- * it. Code holds objects, and passing one for a `Ref<…>` field is the call agents get wrong first; the
+ * it. Code holds objects, and passing one for a `Ref<...>` field is the call agents get wrong first; the
  * object names its target exactly, so the reference is the one the caller meant.
  */
 export const toRefs = (ast: SchemaAST.AST, value: unknown, depth = 0): unknown => {

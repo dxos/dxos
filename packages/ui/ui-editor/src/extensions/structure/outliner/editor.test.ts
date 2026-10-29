@@ -132,6 +132,6 @@ describe('editor', () => {
 
   // Task-marker atomicity (backspace on `- [ ] ` removing the whole marker, or inserting a continuation
   // indent) is enforced by the markdown extension's keymap, which produces the specific change shapes the
-  // filter reacts to — not by raw `changes`. Covering it needs the full keymap dispatched through a view.
+  // filter reacts to - not by raw `changes`. Covering it needs the full keymap dispatched through a view.
   test.todo('task-marker atomicity (needs the markdown keymap, not a raw change)');
 });

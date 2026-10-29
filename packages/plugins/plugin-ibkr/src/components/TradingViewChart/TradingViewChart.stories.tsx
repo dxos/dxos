@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TradingViewChart } from './TradingViewChart.tsx';
 
-// Fictional symbol only — this is a public repo (never real holdings).
+// Fictional symbol only - this is a public repo (never real holdings).
 const meta = {
   title: 'plugins/plugin-ibkr/TradingViewChart',
   component: TradingViewChart,

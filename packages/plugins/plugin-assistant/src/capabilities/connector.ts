@@ -19,7 +19,7 @@ import { McpServerConnector } from './mcp-connector.ts';
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
 const AnthropicTokenForm = ConnectorSpec.TokenForm({
   title: 'API key',
-  description: 'Your Anthropic API key — find it at https://console.anthropic.com/settings/keys.',
+  description: 'Your Anthropic API key - find it at https://console.anthropic.com/settings/keys.',
 });
 
 /**
@@ -51,7 +51,7 @@ const validateAnthropicKey = (apiKey: string): Effect.Effect<void, ConnectorKeyI
 /** API-key form for the DeepSeek BYOK provider; key is best-effort validated against `/models`. */
 const DeepSeekTokenForm = ConnectorSpec.TokenForm({
   title: 'API key',
-  description: 'Your DeepSeek API key — find it at https://platform.deepseek.com/api_keys.',
+  description: 'Your DeepSeek API key - find it at https://platform.deepseek.com/api_keys.',
 });
 
 /** Best-effort validation, on the same terms as {@link validateAnthropicKey}. */

@@ -126,7 +126,7 @@ describe('RpcPeer', () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       // Fires once alice has processed bob's "open" message (and, per this port's design, failed
-      // to ack it back — her `send` is a no-op) — an observable point at which the handshake has
+      // to ack it back - her `send` is a no-op) - an observable point at which the handshake has
       // genuinely been attempted, rather than an arbitrary delay.
       const aliceReceivedMessage = new Trigger();
       const alice: RpcPeer = new RpcPeer({

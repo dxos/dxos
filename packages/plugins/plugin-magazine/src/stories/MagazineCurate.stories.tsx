@@ -40,10 +40,10 @@ import { Magazine, Subscription } from '#types';
 
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle.tsx';
 
-// Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
+// Curation runs the agent (CurateMagazine -> RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
 // MagazinePlugin the curation handlers; this story-local plugin adds the RunInstructions handler and a
-// live edge AiService (the 'edge-remote' testing preset — no client edge-config or credentials needed).
+// live edge AiService (the 'edge-remote' testing preset - no client edge-config or credentials needed).
 // Excluded from CI (the `Test` story is `!test`); intended for manual, signed-in, online use.
 const aiServiceSpec = LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
   AiServiceTestingPreset('edge-remote').pipe(Layer.orDie),
@@ -92,7 +92,7 @@ const installRegisterFetchMock = async () => {
 };
 
 // Bridge from the seed (runs in the plugin-manager/client-init context) to the `Curate` play test,
-// which reads ECHO state directly. A module-level variable does not survive Storybook's seed↔play
+// which reads ECHO state directly. A module-level variable does not survive Storybook's seed<->play
 // boundary, so a shared global is used (mirrors plugin-space/plugin-debug story seeds).
 declare global {
   // eslint-disable-next-line no-var
@@ -113,7 +113,7 @@ const DefaultStory = () => {
       <Panel.Body classNames='px-3 grid grid-cols-2 gap-3'>
         {/* Rendered directly: the `article` role is shared with plugin-space's catch-all RecordArticle
             (position:last), so a raw `Surface type={Article}` here is ambiguous and resolves to the
-            fallback — the deck disambiguates via the app-graph node, which a story has no equivalent of. */}
+            fallback - the deck disambiguates via the app-graph node, which a story has no equivalent of. */}
         <MagazineArticle role='article' subject={magazine} attendableId='story' />
         {/* The object-properties companion surface (plugin-space DefaultProperties); 'settings' is unambiguous. */}
         <Surface.Surface type={AppSurface.Article} data={{ subject: 'settings', companionTo: magazine }} />
@@ -131,11 +131,11 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.waitUntilReady());
 
     // Feed points at the real Register AI/ML URL; the mock fetcher serves the
-    // bundled fixture. Posts are NOT pre-seeded — clicking Curate drives the live
+    // bundled fixture. Posts are NOT pre-seeded - clicking Curate drives the live
     // flow (SyncFeed fetches + parses, then CurateMagazine runs the Routine via the
     // agent to select Posts into `magazine.posts`).
     const feed = space.db.add(
-      Subscription.makeSubscription({ name: 'The Register — AI + ML', url: REGISTER_FEED_URL, type: 'rss' }),
+      Subscription.makeSubscription({ name: 'The Register - AI + ML', url: REGISTER_FEED_URL, type: 'rss' }),
     );
 
     const magazine = Magazine.make({ name: 'AI', feeds: [Ref.make(feed)] });
@@ -183,16 +183,16 @@ export const Default: Story = {};
 /**
  * Live, agent-driven curation end-to-end against the The Register "AI + ML" feed (the feed fetch is
  * served from a bundled fixture, but the LLM call is real). It verifies:
- *   1. the curation Routine exists — created with the magazine (Magazine.make), so it is present
+ *   1. the curation Routine exists - created with the magazine (Magazine.make), so it is present
  *      before any curate; and
  *   2. clicking Curate pulls the feed (SyncFeed) and runs that Routine via RunInstructions against the
  *      live edge model, which selects matching Posts into `magazine.posts` (rendered as tiles).
  *
  * The seed stashes the space + magazine in module scope so the play can read ECHO state directly.
  *
- * Excluded from CI (`!test`) — needs network + a reachable edge model and is non-deterministic/slow;
+ * Excluded from CI (`!test`) - needs network + a reachable edge model and is non-deterministic/slow;
  * run it manually (signed in, online). Deterministic pieces are covered by `theregister-fixture.test.ts`
- * (fetch → parse), `curate-magazine.test.ts`, and `Magazine.test.ts`; the agent path by
+ * (fetch -> parse), `curate-magazine.test.ts`, and `Magazine.test.ts`; the agent path by
  * `curate-magazine.skill.test.ts`.
  */
 export const Curate: Story = {
@@ -200,7 +200,7 @@ export const Curate: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The seed sets the context at the end of its async init, which can land just after the magazine
-    // first renders — so wait for it rather than reading once.
+    // first renders - so wait for it rather than reading once.
     await waitFor(() => expect(globalThis.__magazineStoryContext, 'story seed did not run').toBeDefined(), {
       timeout: 15_000,
     });
@@ -214,7 +214,7 @@ export const Curate: Story = {
     await userEvent.click(await canvas.findByRole('button', { name: /^curate$/i }));
 
     // Feed pulled + Routine run: the agent (live edge model) selects synced candidates into the
-    // magazine — tiles replace the empty state.
+    // magazine - tiles replace the empty state.
     await waitFor(() => expect(magazine.posts.length).toBeGreaterThan(0), { timeout: 120_000 });
     await waitFor(() => expect(canvas.queryByText(/no articles yet/i)).toBeNull(), { timeout: 5_000 });
   },

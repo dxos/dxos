@@ -4,7 +4,7 @@
 
 import { Message } from '@dxos/types';
 
-// Leading reply/forward markers, stripped repeatedly ("Fw: Re:" → "").
+// Leading reply/forward markers, stripped repeatedly ("Fw: Re:" -> "").
 const PREFIX = /^\s*(re|fwd?|fw)\s*:\s*/i;
 
 // Canonical subject for threading: drop reply/forward prefixes, collapse internal whitespace,

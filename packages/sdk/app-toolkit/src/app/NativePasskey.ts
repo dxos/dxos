@@ -246,7 +246,7 @@ const decodeCoseKey = (data: Uint8Array): { publicKey: Uint8Array; algorithm: nu
 
 /**
  * Minimal CBOR map decoder. Only handles integer and negative integer keys,
- * byte string and negative integer values — sufficient for COSE_Key parsing.
+ * byte string and negative integer values - sufficient for COSE_Key parsing.
  */
 const decodeCborMap = (data: Uint8Array): Map<number, number | Uint8Array> => {
   const result = new Map<number, number | Uint8Array>();
@@ -312,7 +312,7 @@ const decodeCborValue = (data: Uint8Array, offset: number): { value: number | Ui
       return { value: data.slice(offset, offset + length), newOffset: offset + length };
     }
     case 3: {
-      // Text string — skip without decoding.
+      // Text string - skip without decoding.
       let length: number;
       if (additionalInfo < 24) {
         length = additionalInfo;

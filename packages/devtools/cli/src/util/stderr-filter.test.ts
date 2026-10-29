@@ -61,8 +61,8 @@ describe('decideStderrChunk', () => {
     expect(r.suppressing).toBe(false);
   });
 
-  test('matches a stable prefix — survives wording change past "more"', ({ expect }) => {
-    // Future-proofing: e.g. "more then" → "more than" typo fix should still
+  test('matches a stable prefix - survives wording change past "more"', ({ expect }) => {
+    // Future-proofing: e.g. "more then" -> "more than" typo fix should still
     // be filtered.
     const r = decideStderrChunk('Action `something` is taking more than 10,000ms to complete. Bug?\n', false);
     expect(r.drop).toBe(true);

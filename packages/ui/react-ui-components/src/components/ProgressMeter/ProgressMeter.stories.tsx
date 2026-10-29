@@ -50,7 +50,7 @@ type StoryArgs = Partial<ProgressMeterProps> & {
 
 /**
  * Drives a task through a scripted run, so the meter is watched from zero rather than joined halfway
- * — the only way to see the elapsed clock, the phase transitions and the cancel control do their job.
+ * - the only way to see the elapsed clock, the phase transitions and the cancel control do their job.
  */
 const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
   const [state, setState] = useState<Progress.TaskProgress>(() => idle(stages, indeterminate));

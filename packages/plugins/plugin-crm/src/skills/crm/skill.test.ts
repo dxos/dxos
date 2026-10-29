@@ -49,7 +49,7 @@ const TestLayer = AssistantTestLayer({
 describe('CRM Skill', () => {
   for (const fixture of EMAIL_FIXTURES) {
     it.effect.skip(
-      `researches a contact from an email — ${fixture.label}`,
+      `researches a contact from an email - ${fixture.label}`,
       Effect.fnUntraced(
         function* (_) {
           const agent = yield* AgentService.createSession({
@@ -72,7 +72,7 @@ describe('CRM Skill', () => {
   // `dx chat --skill org.dxos.skill.crm --prompt "research <email>"`,
   // i.e. the agent must find-or-create a Person from the email before
   // proceeding with the research flow described in the CRM skill
-  // instructions. Skipped by default — regenerate the memoized fixture with
+  // instructions. Skipped by default - regenerate the memoized fixture with
   // `DX_UPDATE_MODEL_FIXTURES=1`.
   it.effect.skip(
     'researches a contact from a bare email address (find-or-create Person)',

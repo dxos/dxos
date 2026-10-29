@@ -7,7 +7,7 @@ import { Note, Score, Sequence, Track } from '#types';
 import { type LeadSheetDocument } from './lead-sheet.ts';
 
 /**
- * Mutable view of a Score subject — usable inside `Obj.update` callbacks.
+ * Mutable view of a Score subject - usable inside `Obj.update` callbacks.
  * Exposes the fields a write-through (lead-sheet import, skill Write) needs.
  */
 export type MutableScore = {
@@ -29,7 +29,7 @@ export type MutableScore = {
 const DEFAULT_MIN_PITCH = 21;
 const DEFAULT_MAX_PITCH = 108;
 
-// Standard drum kit pitch→drum mapping. Mirrors the kit used by the audio
+// Standard drum kit pitch->drum mapping. Mirrors the kit used by the audio
 // engine so imported drum tracks make sound out of the box.
 export const DRUM_KIT_PATCHES: Track.Track['patches'] = [
   { kind: 'drum', pitch: 36, drum: 'kick' },
@@ -75,7 +75,7 @@ export const scoreToLeadSheet = (score: Score.Score): LeadSheetDocument => ({
 
 /**
  * Replace a Score's tracks/sequences with the contents of a LeadSheetDocument.
- * Tracks are matched by 1-based index — existing tracks at that index are reused
+ * Tracks are matched by 1-based index - existing tracks at that index are reused
  * (preserving color/instrument/id) and new tracks fill missing slots. Tracks not
  * referenced by the document are removed.
  */

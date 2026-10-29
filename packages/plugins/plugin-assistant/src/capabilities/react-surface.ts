@@ -173,7 +173,7 @@ export default Capability.makeModule(() =>
         // `data.data` is model-supplied JSON (untyped); narrow before use.
         props: ({ data }) => ({ url: nonBlank(data.data?.url), name: nonBlank(data.data?.name) }),
       }),
-      // `<surface role='card' data='{"id":"echo://…"}'>`: the object as its card.
+      // `<surface role='card' data='{"id":"echo://..."}'>`: the object as its card.
       Surface.create({
         id: 'objectCard',
         filter: Surface.makeFilter(

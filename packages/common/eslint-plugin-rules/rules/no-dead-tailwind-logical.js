@@ -6,18 +6,18 @@
  * Disallow the `tailwindcss-logical` dialect, dropped in the Tailwind v4 migration (#10611).
  *
  * These classes compile to nothing: no error, no warning, no rule in the stylesheet. The layout is
- * merely wrong, and when the dead class was load-bearing — a `min-bs-*` reserving height, a
- * `min-is-0` letting a grid child shrink — the failure surfaces far from its cause.
+ * merely wrong, and when the dead class was load-bearing - a `min-bs-*` reserving height, a
+ * `min-is-0` letting a grid child shrink - the failure surfaces far from its cause.
  *
  * @example
- * // ❌ Bad
+ * // X Bad
  * <div className='pis-2 min-bs-[2rem] is-full' />
  *
- * // ✅ Good
+ * // OK Good
  * <div className='ps-2 min-h-[2rem] w-full' />
  */
 
-/** Dead prefix → what Tailwind v4 actually ships. */
+/** Dead prefix -> what Tailwind v4 actually ships. */
 const REPLACEMENTS = {
   'pis': 'ps',
   'pie': 'pe',
@@ -48,7 +48,7 @@ const PREFIXES = Object.keys(REPLACEMENTS).sort((a, b) => b.length - a.length);
 
 /**
  * The dead prefix in a class, if any. Variants (`hover:`, `md:`, `[&_p]:`) are stripped first, and a
- * value is required — `bs-4`, `is-[20rem]`, `min-bs-full` — so identifiers that merely start with
+ * value is required - `bs-4`, `is-[20rem]`, `min-bs-full` - so identifiers that merely start with
  * these letters (`isolate`, `bg-inputSurface`) are left alone.
  */
 const deadPrefix = (className) => {

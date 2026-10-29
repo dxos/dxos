@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 
 /**
  * Packages whose barrel imports must be rewritten to per-namespace subpath imports. Only list a
- * package once its exports map carries an entry per namespace segment — the fix keeps names the
+ * package once its exports map carries an entry per namespace segment - the fix keeps names the
  * exports map cannot resolve (flat re-exports such as errors) on the barrel import.
  */
 // TODO(wittjosiah): Expand across all @dxos packages, enforcing a consistent namespaced API
@@ -36,7 +36,7 @@ export const isSubpathPackage = (packageName) =>
 
 /**
  * The legacy aggregate entrypoint. It re-exports exactly the namespaces that now have their own
- * subpath entries, so one import of it statically drags every sibling namespace of the plugin —
+ * subpath entries, so one import of it statically drags every sibling namespace of the plugin -
  * these are Effect/ECHO schemas, runtime values rather than erased types, so the barrel problem
  * comes back in full. Rewritten like a barrel, resolving against the parent package.
  */
@@ -115,7 +115,7 @@ export default {
     // lowercase keys are module entrypoints (`translations`, `testing`, `plugin`) whose namespace
     // object is NOT the named export of the same name. Matching those purely lexically rewrote
     // `import { translations }` to a namespace import of a different runtime value, and every
-    // plugin carries such a key — so the hazard was standing rather than hypothetical.
+    // plugin carries such a key - so the hazard was standing rather than hypothetical.
     const isNamespaceSegment = (segment) => /^[A-Z]/.test(segment);
 
     const resolveExportToSegment = (pkgName, exportName) =>
@@ -143,7 +143,7 @@ export default {
           return;
         }
         // The fix replaces the whole declaration and only re-emits `ImportSpecifier`s, so a default
-        // or namespace binding alongside them would be silently deleted — an autofix that
+        // or namespace binding alongside them would be silently deleted - an autofix that
         // introduces a compile error. Leave the mixed form to a human.
         if (node.specifiers.some((spec) => spec.type !== 'ImportSpecifier')) {
           return;

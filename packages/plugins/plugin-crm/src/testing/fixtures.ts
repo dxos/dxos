@@ -36,7 +36,7 @@ export const EMAIL_FIXTURES: readonly EmailFixture[] = [
     subject: 'Onboarding update',
     body: body([
       'Hi Sam,',
-      'Quick note — the contractor paperwork for the new engineer is still in process. Their provider is waiting on visa documents.',
+      'Quick note - the contractor paperwork for the new engineer is still in process. Their provider is waiting on visa documents.',
       '',
       'Thanks,',
       'Priya',
@@ -57,7 +57,7 @@ export const EMAIL_FIXTURES: readonly EmailFixture[] = [
       "and pretty out of the loop on what's happening in AI land,",
       "but it'd be great to catch up in person.",
       '',
-      'I recently moved across town — happy to host if you fancy a hang.',
+      'I recently moved across town - happy to host if you fancy a hang.',
       '',
       'Where are you these days?',
     ]),
@@ -70,7 +70,7 @@ export const EMAIL_FIXTURES: readonly EmailFixture[] = [
     body: body([
       'Francesco,',
       '',
-      "Jumping off a call about the dispute — can the three of us sync tomorrow?  Would 9:30am work?  I'll send a calendar invite but just let me know if you need to move it.",
+      "Jumping off a call about the dispute - can the three of us sync tomorrow?  Would 9:30am work?  I'll send a calendar invite but just let me know if you need to move it.",
       '',
       'Saskia',
       '',

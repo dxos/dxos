@@ -31,7 +31,7 @@ export type SceneSnap = {
 
 /**
  * What a gesture lands on: the grid levels actually drawn, which is what the user is aiming at. A level
- * fixed in scene units parts company with the lines as soon as the zoom moves — `Grid` keeps a level only
+ * fixed in scene units parts company with the lines as soon as the zoom moves - `Grid` keeps a level only
  * while its cells are legible on screen, so far enough in the drawn lines are finer than the snap and far
  * enough out (a nested scene, entered at a fraction of the parent's zoom) they are coarser and the snap
  * stops landing on anything visible. Reading the level back from the same rule keeps the two the same by

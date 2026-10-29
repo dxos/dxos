@@ -32,7 +32,7 @@ export type FeedBlockData = {
 };
 
 /**
- * Codec for ECHO objects in feed block payload: JSON object ↔ UTF-8 bytes.
+ * Codec for ECHO objects in feed block payload: JSON object <-> UTF-8 bytes.
  * Encodes with the block's own keys stripped; decodes with them stamped into `@meta`.
  */
 export class EchoFeedCodec {
@@ -40,7 +40,7 @@ export class EchoFeedCodec {
 
   /**
    * Feed blocks are always whole-object snapshots; the index collapses entries by id to the latest
-   * block. TODO(wittjosiah): Follow-up — a partial-object update block format with field-level
+   * block. TODO(wittjosiah): Follow-up - a partial-object update block format with field-level
    * last-write-wins merge at the index (see EntityMetaIndex.update).
    */
   static encode(value: Record<string, unknown>): Uint8Array {

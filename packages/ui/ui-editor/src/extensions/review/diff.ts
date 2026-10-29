@@ -26,8 +26,8 @@ export type DiffOptions = {
 
 /**
  * Orient the diff as a preview of accepting the original (the compared branch) into the editor's
- * document (the current branch): the compare branch's content — which the merge view renders as
- * deletions because it is absent from the editor — is what accepting ADDS, so show it as an addition;
+ * document (the current branch): the compare branch's content - which the merge view renders as
+ * deletions because it is absent from the editor - is what accepting ADDS, so show it as an addition;
  * the current branch's deviating content is what accepting REMOVES. This overrides the merge view's
  * default green-editor / red-original colouring, which reads inverted for branch review.
  */
@@ -118,8 +118,8 @@ export const lineDiff = (original: string, modified: string): readonly Change[] 
 
 /**
  * Inline (unified) diff view: renders the editor's document with insertions and deletions marked
- * relative to {@link DiffOptions.original}. The editor stays editable — edits to the document update
- * the diff against the (static) original live — so it can overlay a live editor to compare the
+ * relative to {@link DiffOptions.original}. The editor stays editable - edits to the document update
+ * the diff against the (static) original live - so it can overlay a live editor to compare the
  * current state against another version (e.g. another branch) without locking editing.
  */
 export const diffView = ({ original, orientation = 'accept', collapseUnchanged }: DiffOptions): Extension => [
@@ -146,7 +146,7 @@ export type DiffHunk = {
 };
 
 /**
- * Groups the word-level diff between `before` and `after` into contiguous {@link DiffHunk}s — each a
+ * Groups the word-level diff between `before` and `after` into contiguous {@link DiffHunk}s - each a
  * maximal run of insertions/deletions bounded by unchanged text. Used to render Google-Docs-style
  * suggestions (accept/reject per hunk) over the original document (see {@link suggestChanges}).
  */
@@ -155,7 +155,7 @@ export const diffHunks = (before: string, after: string): DiffHunk[] => {
   let position = 0;
   let pending: DiffHunk | undefined;
   // Word-level diffing treats `WorldHello` -> `WorldHelloWorld` as one changed word, yielding a
-  // replace that claims the unchanged `WorldHello` — struck through and re-inserted, that renders as
+  // replace that claims the unchanged `WorldHello` - struck through and re-inserted, that renders as
   // doubled text. When one side is contained in the other at an edge, trim it to the pure
   // insert/delete core; genuine replaces keep word granularity (whole-word strikes read better).
   const minimize = (hunk: DiffHunk): DiffHunk => {
@@ -215,7 +215,7 @@ export const diffHunks = (before: string, after: string): DiffHunk[] => {
  * never bridged, keeping edits in different blocks as separate groups.
  *
  * `hunks` must be ordered and non-overlapping as {@link diffHunks} returns them. Defaults
- * (`maxGap: 0`) make grouping a no-op — each hunk is its own group — so callers opt into wider
+ * (`maxGap: 0`) make grouping a no-op - each hunk is its own group - so callers opt into wider
  * coalescing explicitly.
  */
 export type GroupPolicy = { maxGap?: number; respectBlockBoundaries?: boolean };
@@ -229,7 +229,7 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
     const bridgeable =
       previous !== undefined && gap.length <= maxGap && !(respectBlockBoundaries && /\n[ \t]*\n/.test(gap));
     if (bridgeable) {
-      // Absorb the unchanged gap into both sides so the merged hunk still maps `removed` → `inserted`.
+      // Absorb the unchanged gap into both sides so the merged hunk still maps `removed` -> `inserted`.
       previous.to = hunk.to;
       previous.removed += gap + hunk.removed;
       previous.inserted += gap + hunk.inserted;
@@ -240,7 +240,7 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
   return groups;
 };
 
-/** Markdown delimiter pairs that must be suggested — and applied — atomically. */
+/** Markdown delimiter pairs that must be suggested - and applied - atomically. */
 const MARKUP_DELIMITERS = new Set(['**', '__', '*', '_', '~~', '`']);
 
 /**
@@ -283,7 +283,7 @@ export const pairMarkupHunks = (hunks: DiffHunk[], before: string): DiffHunk[] =
  * Re-anchors {@link DiffHunk}s computed against `base` into `doc` coordinates, so a foreign author's
  * proposal (diffed `base` vs proposal) can be decorated over a `doc` that has itself diverged from
  * `base` (the user's own branch edits). Each hunk offset is mapped through the character-level
- * `base`↔`doc` diff ({@link computeCharHunks}): a position in an unchanged region shifts by the net
+ * `base`<->`doc` diff ({@link computeCharHunks}): a position in an unchanged region shifts by the net
  * length of edits before it; a position inside a doc-edited region clamps to that region's edge (the
  * `from` to its start, the `to` to its end). Without this, a proposal diffed against `base` would
  * render at stale offsets over the diverged `doc`.
@@ -292,8 +292,8 @@ export const rebaseHunks = (base: string, doc: string, hunks: DiffHunk[]): DiffH
   rebaseHunksWith(computeCharHunks(base, doc), hunks);
 
 /**
- * {@link rebaseHunks} with a precomputed `base`↔`doc` character diff. Callers rebasing MANY hunk sets
- * against the same pair — e.g. every author's proposal over one branch (see {@link suggestions}) —
+ * {@link rebaseHunks} with a precomputed `base`<->`doc` character diff. Callers rebasing MANY hunk sets
+ * against the same pair - e.g. every author's proposal over one branch (see {@link suggestions}) -
  * compute {@link computeCharHunks} once and reuse it, rather than re-diffing the whole document per set.
  */
 export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[] => {
@@ -304,7 +304,7 @@ export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[
         break;
       }
       // Any edge sitting exactly at a doc edit's start belongs to the region BEFORE the edit, so map
-      // it to `fromB` — never across the edit. For an upper edge this keeps a foreign hunk from
+      // it to `fromB` - never across the edit. For an upper edge this keeps a foreign hunk from
       // absorbing the user's adjacent text; for a pure-insert anchor it keeps the proposal anchored
       // BEFORE text the user typed at that spot (typing at a trailing suggestion lands after it).
       if (pos === hunk.fromA) {
@@ -320,7 +320,7 @@ export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[
     return pos + delta;
   };
   return hunks.map((hunk) => {
-    // A zero-width hunk (pure insertion, from === to) must map both endpoints with the SAME side —
+    // A zero-width hunk (pure insertion, from === to) must map both endpoints with the SAME side -
     // otherwise, at a doc-edit boundary, the lower edge (side -1) and upper edge (side +1) can resolve
     // to different offsets and invert the range (from > to). Non-zero hunks keep the asymmetric mapping
     // so an exclusive upper edge never crosses into an adjacent doc edit.
@@ -351,7 +351,7 @@ export const computeHunks = (original: string, modified: string): Hunk[] =>
 /**
  * WORD-level changed hunks between `original` (A) and `modified` (B), each carrying both coordinate
  * ranges. Matches the word granularity of {@link diffHunks} (same `diffWordsWithSpace` alignment), so
- * {@link cherryPickHunk} / {@link revertHunk} resolve exactly the anchored word(s) — accepting one
+ * {@link cherryPickHunk} / {@link revertHunk} resolve exactly the anchored word(s) - accepting one
  * word does not pull in the rest of its line.
  */
 export const computeWordHunks = (original: string, modified: string): Hunk[] => {
@@ -484,7 +484,7 @@ const trimCommonAffixes = (original: string, modified: string, hunk: Hunk): Hunk
  * Slides a one-sided hunk (a pure deletion or insertion) to the word boundary that encloses it. Which
  * characters a one-sided edit removed is ambiguous whenever text repeats around it: deleting
  * `suggest change` from `suggest changes` leaves an `s` that is equally the head of the first word or
- * the tail of the last, and the minimal-edit answer strikes `uggest changes` — keeping a letter of the
+ * the tail of the last, and the minimal-edit answer strikes `uggest changes` - keeping a letter of the
  * word the reader deleted. Rotating the span while it still describes the same edit lets it settle
  * where a reader would draw it.
  */
@@ -523,7 +523,7 @@ const slideToWordBoundary = (original: string, modified: string, hunk: Hunk): Hu
 
 /**
  * Does a hunk cover the anchored range? Half-open, so a range touching a neighbouring hunk's
- * boundary is not on that hunk — except where either side is empty, which is the normal shape of a
+ * boundary is not on that hunk - except where either side is empty, which is the normal shape of a
  * pure insertion: the inserted text occupies no span on the other side, and the caller anchors it at
  * a single offset. Those collapse to a containment test, or accepting an insertion is impossible.
  */
@@ -537,7 +537,7 @@ const overlaps = (from: number, to: number, range: { start: number; end: number 
  * the hunk overlapping `range` (a character range in `current`) and return the splice that replaces
  * that hunk's current text with the compare version. Returns undefined if no hunk overlaps the range
  * (e.g. the change was already applied/reverted). `compare` is read live by the caller, so applying
- * the result always reflects the latest diff — not a snapshot.
+ * the result always reflects the latest diff - not a snapshot.
  */
 export const cherryPickHunk = (
   current: string,
@@ -545,7 +545,7 @@ export const cherryPickHunk = (
   range: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
   // Merge EVERY hunk the range overlaps into one splice: a range spanning a delimiter pair (two
-  // word-hunks wrapping unchanged text) must apply atomically — half an accepted pair is broken
+  // word-hunks wrapping unchanged text) must apply atomically - half an accepted pair is broken
   // syntax. A cursor-anchored range still resolves a single hunk, unchanged.
   const matched = computeWordHunks(compare, current).filter((h) => overlaps(h.fromB, h.toB, range));
   if (matched.length === 0) {
@@ -561,7 +561,7 @@ export const cherryPickHunk = (
 };
 
 /**
- * Resolve the splice that reverts a single change on `compare` (a branch) back to `base` (main) —
+ * Resolve the splice that reverts a single change on `compare` (a branch) back to `base` (main) -
  * the reject counterpart to {@link cherryPickHunk}. `baseRange` is a character range in `base`; the
  * hunk overlapping it is located and the returned splice (in `compare` coordinates) replaces the
  * branch's version with the base text. Returns undefined if no hunk overlaps the range.

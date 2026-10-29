@@ -49,7 +49,7 @@ export const getSelectionContext = ({
   return {
     selection: {
       anchors: resolved.map(({ anchor }) => anchor),
-      text: resolved.map(({ text }) => text).join('\n…\n'),
+      text: resolved.map(({ text }) => text).join('\n...\n'),
     },
   };
 };

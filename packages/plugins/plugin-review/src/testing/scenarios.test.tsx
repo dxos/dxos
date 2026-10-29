@@ -49,7 +49,7 @@ describe('review scenarios (headless)', () => {
 
   // Mirrors plugin-client's ReactContext: the plugin manager the binding hooks read capabilities
   // from, ClientProvider, plus the HALO services adapter so `useIdentity` resolves inside the hook.
-  // No plugins are registered — the review-render-policy capability stays unregistered, so the
+  // No plugins are registered - the review-render-policy capability stays unregistered, so the
   // scenarios run against the default policy.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (

@@ -18,10 +18,10 @@ export const translations = [
         'private-field.label': 'Private',
         'diverged-field.label': 'Diverged',
         'mirror-unresolved.label':
-          'These mirrored fields are not visible on the network — the upstream record they mirror could not be found.',
+          'These mirrored fields are not visible on the network - the upstream record they mirror could not be found.',
         'publish-actions.label': 'Publish actions',
         'no-connection.label': 'No atproto connection in this space.',
-        'status-checking.label': 'Checking publish status…',
+        'status-checking.label': 'Checking publish status...',
         'status-ready.label': 'Ready to publish',
         'status-ineligible.label': 'Not publishable',
         'status-unknown.label': 'Status unknown (offline)',

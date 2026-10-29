@@ -38,7 +38,7 @@ const pickTab = (ctx: StressCommandContext): StressTab => pick(ctx, ctx.fleet.ta
 
 /**
  * Everything the suite throws at the worker. Each command leaves the system in a state the recovery
- * assertions must be able to reach from — no command is allowed to be unrecoverable by design.
+ * assertions must be able to reach from - no command is allowed to be unrecoverable by design.
  */
 export const STRESS_COMMANDS: readonly StressCommand[] = [
   {
@@ -97,7 +97,7 @@ export const STRESS_COMMANDS: readonly StressCommand[] = [
   },
   {
     // The steal path proper: a wedged leader still holds the lock, and the joining tab is the only
-    // party that notices — it times out waiting for `provide-port`, judges the leader stale, and
+    // party that notices - it times out waiting for `provide-port`, judges the leader stale, and
     // steals. Blocking the leader alone provokes nothing while its worker keeps serving existing
     // tabs, which is why the two halves are one command.
     name: 'block-leader-main-thread-and-open-tab',
@@ -130,7 +130,7 @@ export const STRESS_COMMANDS: readonly StressCommand[] = [
     enabled: ({ fleet }) => fleet.tabs.length > 0,
     run: async (ctx) => {
       const tab = pickTab(ctx);
-      // A wedged worker never answers, and that is a legal state mid-storm — the recovery phase, not
+      // A wedged worker never answers, and that is a legal state mid-storm - the recovery phase, not
       // this command, decides whether the system came back.
       const value = await tab.increment().catch((err) => `failed (${err.message})`);
       ctx.log(`increment via ${tab.label} -> ${value}`);

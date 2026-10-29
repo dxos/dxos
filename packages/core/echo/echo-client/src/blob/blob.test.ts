@@ -126,8 +126,8 @@ describe('Blob', () => {
     const db = await peer.createDatabase();
     const testLayer = Database.layer(db);
 
-    // The bytes are already in the store before the client is involved: a third party — an agent's
-    // `curl` — put them there over a signed URL, which is the whole point of this path.
+    // The bytes are already in the store before the client is involved: a third party - an agent's
+    // `curl` - put them there over a signed URL, which is the whole point of this path.
     const bytes = new Uint8Array([4, 5, 6, 7]);
     const uri = fromDigestHex('abcdef');
     const store = new Map([[uri, bytes]]);

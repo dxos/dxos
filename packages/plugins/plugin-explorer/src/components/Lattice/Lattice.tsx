@@ -33,7 +33,7 @@ type LatticeCell = {
  * Renders objects as an SVG lattice that fits the container without scrolling.
  * Each object is a rounded rect, colored by typename via the shared hue-hash used by every
  * other variant. Cells are sorted by typename then label so objects of the same type cluster.
- * Hover dispatches the standard preview event — there is no rendered label.
+ * Hover dispatches the standard preview event - there is no rendered label.
  */
 export const Lattice = ({ nodes, padding = 16, onNodeHover }: LatticeProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -107,7 +107,7 @@ const renderLattice = (svgElement: SVGSVGElement, cells: LatticeCell[], options:
     return;
   }
 
-  // Columns ≈ √N so the grid stays as square as possible.
+  // Columns ~ sqrtN so the grid stays as square as possible.
   const count = cells.length;
   const columns = Math.max(1, Math.ceil(Math.sqrt(count)));
   const rows = Math.ceil(count / columns);

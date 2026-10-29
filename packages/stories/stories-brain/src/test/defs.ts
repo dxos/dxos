@@ -20,7 +20,7 @@ export const SKILL_MODES = process.env.SKILL_MODES?.trim();
 /** Grading model for the brain-vs-rag eval (name substring); a fixed strong judge applied to every arm. */
 export const JUDGE = process.env.JUDGE?.trim();
 
-/** Message cap for the model-ladder bench (kept small — every message is graded across every model). */
+/** Message cap for the model-ladder bench (kept small - every message is graded across every model). */
 export const LADDER_N = process.env.LADDER_N ? Math.max(1, Number(process.env.LADDER_N)) : 25;
 
 /** Which ladder tasks to run (comma-separated: labeling, summarize-messages, summarize-threads, drafts). */
@@ -45,7 +45,7 @@ export const SENDER_HYBRID_THRESHOLD = process.env.SENDER_HYBRID_THRESHOLD
   : 0.9;
 
 //
-// Qualitative artifacts (topics / profiles / sample drafts) — a wider corpus slice, single model.
+// Qualitative artifacts (topics / profiles / sample drafts) - a wider corpus slice, single model.
 //
 
 /** Messages drawn for the artifact pass (wider than the graded LADDER_N so topics/profiles aren't thin). */
@@ -71,7 +71,7 @@ export const ARTIFACT_THREAD_CAP = process.env.ARTIFACT_THREAD_CAP
 /** Owner/self entity slugs excluded from profile subject selection. */
 export const ARTIFACT_OWNER = (process.env.ARTIFACT_OWNER ?? 'rich-burdon,recipient').split(',').map((s) => s.trim());
 
-/** Mailbox owner email — steers `buildThreads` thread-state inference (awaiting-mine vs theirs). */
+/** Mailbox owner email - steers `buildThreads` thread-state inference (awaiting-mine vs theirs). */
 export const ARTIFACT_OWNER_EMAIL = process.env.ARTIFACT_OWNER_EMAIL?.trim() ?? 'rich@braneframe.com';
 
 /** Disable the LLM-judge scoring pass (`EVAL_SCORE=0`) to run the cheap response-only eval. */
@@ -82,7 +82,7 @@ export const DEFAULT_HTML_VS_TEXT_N = 10;
 
 /**
  * Overrides the reply-style instructions for the draft-responses benchmark (a proxy for the Mailbox
- * Instructions object). Unset → the pipeline's `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct/no hedging);
+ * Instructions object). Unset -> the pipeline's `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct/no hedging);
  * set to empty to draft with the base rules only.
  */
 export const DRAFT_INSTRUCTIONS = process.env.DRAFT_INSTRUCTIONS?.trim();

@@ -112,9 +112,9 @@ const resolvePackageJsonPathViaContext = async (
  * These are node-only entrypoints (vite plugins, native addons) that shouldn't be pre-bundled for the browser.
  *
  * TODO(wittjosiah): Replace these hand-maintained lists (plus {@link GLOBALLY_EXCLUDED_SUBPATHS}
- * and {@link BUILD_TOOL_SUBPATH}) with a structural check — e.g. honour an `agent`/`node`-only
+ * and {@link BUILD_TOOL_SUBPATH}) with a structural check - e.g. honour an `agent`/`node`-only
  * export condition in package.json, or probe each subpath's resolved file for `node:*` imports
- * at build time — so every new server-only entrypoint doesn't require a code change here.
+ * at build time - so every new server-only entrypoint doesn't require a code change here.
  */
 const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> = {
   '@dxos/app-framework': new Set(['vite-plugin']),
@@ -128,7 +128,7 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   // `node:async_hooks` (AsyncLocalStorage) and has no browser shim. Client
   // code imports `solid-js`, `solid-js/store`, and `solid-js/web` only.
   'solid-js': new Set(['web/storage']),
-  // `effect` publishes `./.index` for bundler internals — maps to `effect/.index`, which Vite
+  // `effect` publishes `./.index` for bundler internals - maps to `effect/.index`, which Vite
   // often cannot resolve for the import map and is not part of the plugin-facing surface.
   'effect': new Set(['.index']),
 };
@@ -144,7 +144,7 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
 const GLOBALLY_EXCLUDED_SUBPATHS = new Set(['playwright', 'testing']);
 
 /**
- * Regex for subpaths that are always node-only build tooling — vite, esbuild, and
+ * Regex for subpaths that are always node-only build tooling - vite, esbuild, and
  * rollup plugins. These use `node:*` imports and will blow up the browser bundle if
  * they end up in the import map.
  */
@@ -152,10 +152,10 @@ const BUILD_TOOL_SUBPATH = /^(vite-plugin|esbuild-plugin|rollup-plugin|plugin)$/
 
 /**
  * Asset subpaths (CSS, PCSS, images, etc.) that the host already loads via its own
- * bundle — for example `@dxos/react-ui-form` pulls in `@dxos/lit-ui/dx-tag-picker.pcss`
+ * bundle - for example `@dxos/react-ui-form` pulls in `@dxos/lit-ui/dx-tag-picker.pcss`
  * on startup, so the stylesheet is already attached to the DOM by the time a remote
  * plugin runs. Community plugins should still be able to _import_ those specifiers
- * (rolldown leaves the `import "…"` statements in the output when the package is
+ * (rolldown leaves the `import "..."` statements in the output when the package is
  * externalized), so the import map maps them to a no-op empty ES module. The
  * resulting browser fetch is a cheap no-op; the styles are never re-downloaded
  * and never re-injected.
@@ -165,7 +165,7 @@ const isAssetSubpath = (specifier: string) => ASSET_SUBPATH.test(specifier);
 
 /**
  * Walks `baseDir` and returns every file that matches the pattern `${baseDir}/<rest>${extension}`.
- * Used to expand wildcard exports like `./proto/*` → `./dist/src/proto/gen/*.js` into their
+ * Used to expand wildcard exports like `./proto/*` -> `./dist/src/proto/gen/*.js` into their
  * full set of bare specifiers.
  */
 const walkDirectoryForExtension = (baseDir: string, extension: string): string[] => {
@@ -229,7 +229,7 @@ const expandWildcardExport = (
   if (!target || !target.includes('*')) {
     return [];
   }
-  // Split on `*` — at most one supported (node's exports pattern semantics).
+  // Split on `*` - at most one supported (node's exports pattern semantics).
   const keyStarIndex = exportKey.indexOf('*');
   const targetStarIndex = target.indexOf('*');
   if (keyStarIndex === -1 || targetStarIndex === -1) {
@@ -273,7 +273,7 @@ export const getPackageEntrypoints = (packageName: string, packageJsonPath: stri
   const excluded = importMapExcludedSubpaths[packageName];
   const packageJsonDir = path.dirname(packageJsonPath);
   // A `null` target means "explicitly not exported" and takes precedence over any wildcard that
-  // would otherwise match it — `@effect/atom-react` maps `./*` to its dist but blocks `./index`,
+  // would otherwise match it - `@effect/atom-react` maps `./*` to its dist but blocks `./index`,
   // `./internal/*` and `./*/index`, so expanding the wildcard alone yields specifiers that fail
   // to resolve and abort the build.
   const blocked = exportKeys
@@ -303,7 +303,7 @@ export const getPackageEntrypoints = (packageName: string, packageJsonPath: stri
       return [];
     }
 
-    // Skip `.d.ts` subpath exports — these are meant to be imported as raw text (e.g. for
+    // Skip `.d.ts` subpath exports - these are meant to be imported as raw text (e.g. for
     // in-editor type hints), not as ES modules. Enumerating them here would have vite try to
     // bundle the declaration file's imports (protobufjs, effect, etc.), which breaks.
     if (key.endsWith('.d.ts')) {
@@ -374,12 +374,12 @@ const getCjsNamedExports = (filePath: string, seen = new Set<string>()): string[
  *
  * TODO: Restore dev-mode support. The previous dev path mapped each bare specifier to
  * its absolute `/@fs/` file path during `buildStart`, which forced `this.resolve()` for
- * hundreds of subpath entrypoints and raced with Vite's optimize-deps static scan —
+ * hundreds of subpath entrypoints and raced with Vite's optimize-deps static scan -
  * producing non-deterministic chunk content (~34 chunks drifting per warm-start) and
  * triggering Vite 8.0.10's `runOptimizer` / `commitProcessing` crashes (`fileHash` /
  * `browserHash` undefined on partial-discovery batches). Plugin is currently gated to
  * `apply: 'build'` to avoid both. A working dev-mode implementation would need to
- * resolve specifiers without participating in the optimize-deps phase — candidates:
+ * resolve specifiers without participating in the optimize-deps phase - candidates:
  *   - defer resolution to `transformIndexHtml` (after the optimizer settles)
  *   - read resolved paths from `environment.depsOptimizer.metadata` rather than calling
  *     `this.resolve()` ourselves
@@ -444,7 +444,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           if (isAssetSubpath(specifier)) {
             // Host already loaded the real asset; remote plugins need the specifier to
             // resolve to *something* that behaves as an ES module. A data URL is the
-            // cheapest option — no chunk to emit (rolldown tree-shakes an empty wrapper
+            // cheapest option - no chunk to emit (rolldown tree-shakes an empty wrapper
             // even with `preserveSignature: 'strict'`, so the referenced file wouldn't
             // exist at runtime), no extra network request, and the same path in dev and prod.
             imports[specifier] = 'data:text/javascript;charset=utf-8,export%20%7B%7D%3B';
@@ -452,12 +452,12 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           }
 
           // Resolve with a host-rooted importer (not a bare importer-less resolve). The host's
-          // `importSource` plugin — which routes `@dxos/*` to the `source` (TypeScript) export
-          // instead of the published `dist/` — bails out when `importer` is undefined, so an
+          // `importSource` plugin - which routes `@dxos/*` to the `source` (TypeScript) export
+          // instead of the published `dist/` - bails out when `importer` is undefined, so an
           // importer-less `this.resolve(specifier)` falls through to the `default`/dist export.
           // That made wrapper chunks evaluate `dist/` while the host app evaluated `src/`,
           // duplicating module-local identity (`Ref`
-          // brand symbols, React contexts) and breaking `instanceof` across the host↔plugin
+          // brand symbols, React contexts) and breaking `instanceof` across the host<->plugin
           // boundary. Passing a host-rooted importer makes `importSource` resolve these
           // wrappers to the exact same source module the host app uses.
           const resolved = await this.resolve(specifier, path.join(root, 'index.html'));
@@ -498,7 +498,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
       //
       // Each wrapper also emits a local `__keepalive` export. Without this, Rolldown
       // (Vite 8) tree-shakes wrappers whose `export *` re-exports happen to coincide
-      // with another already-emitted chunk's exports — typical for umbrella packages
+      // with another already-emitted chunk's exports - typical for umbrella packages
       // (e.g. `@dxos/compute` re-exports from `@dxos/operation`, so the operation
       // wrapper looks "redundant" to Rolldown and gets merged away). A local const
       // export has no upstream source for Rolldown to dedupe against, so the chunk
@@ -517,9 +517,9 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         // Re-export from the resolved absolute path, not the bare specifier. A bare re-export
         // would let Rolldown resolve `@dxos/echo` a second way (the host app reaches it via the
         // `source` export, this virtual module via the published `dist/`), evaluating the same
-        // source twice and duplicating module-local identity — `Ref` brand symbols, the reactive
-        // handler singletons, React contexts — which breaks `instanceof` and context
-        // lookups across the host↔remote-plugin boundary. The resolved id (see the importer
+        // source twice and duplicating module-local identity - `Ref` brand symbols, the reactive
+        // handler singletons, React contexts - which breaks `instanceof` and context
+        // lookups across the host<->remote-plugin boundary. The resolved id (see the importer
         // passed to `this.resolve` above) already points at the host's module.
         const filePath = trimQueryString(resolvedId);
         const isCjs = filePath.endsWith('.cjs') || (!filePath.endsWith('.mjs') && !resolvedIdIsEsmModule(filePath));

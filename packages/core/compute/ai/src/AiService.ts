@@ -94,7 +94,7 @@ export const make = ({
 }: Partial<Service>): Service => ({ metadata, languageModel, decisionModel, extractionModel });
 
 /**
- * Resolves a language model layer from a bare NSID name — validated at compile time like
+ * Resolves a language model layer from a bare NSID name - validated at compile time like
  * {@link DXN.make} and constructed to a model DXN internally. Call sites pass the literal id; a value
  * already held as a `DXN.DXN` is resolved via the service's {@link Service.languageModel} (or
  * `DXN.getName` for the helper).

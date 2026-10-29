@@ -40,7 +40,7 @@ export const pluginsFixture: Plugin[] = [
     },
     name: 'Sejm API (ELI and legislative process)',
     description:
-      "The Polish Sejm's open JSON API: ELI (every act published in Dziennik Ustaw and Monitor Polski since 1918, with status, dates, issuing body, keywords and the relations between acts — amendments, consolidated texts, repeals, legal basis) and the Sejm's legislative processes (bills with their stages and votes).",
+      "The Polish Sejm's open JSON API: ELI (every act published in Dziennik Ustaw and Monitor Polski since 1918, with status, dates, issuing body, keywords and the relations between acts - amendments, consolidated texts, repeals, legal basis) and the Sejm's legislative processes (bills with their stages and votes).",
   },
   {
     id: 'duckduckgo.com',
@@ -111,7 +111,7 @@ export const pluginsFixture: Plugin[] = [
     },
     name: 'SAOS (Polish court judgments)',
     description:
-      'SAOS, the System Analizy Orzeczeń Sądowych: an open REST API over ~550,000 Polish court decisions — common courts, the Supreme Court, the Constitutional Tribunal and the National Appeal Chamber (KIO) — with judges, keywords, full text and the legal acts each one cites (by Dziennik Ustaw entry).',
+      'SAOS, the System Analizy Orzecze\u0144 S\u0105dowych: an open REST API over ~550,000 Polish court decisions - common courts, the Supreme Court, the Constitutional Tribunal and the National Appeal Chamber (KIO) - with judges, keywords, full text and the legal acts each one cites (by Dziennik Ustaw entry).',
   },
   {
     id: 'www.zalando.pl',
@@ -191,7 +191,7 @@ export const pluginsFixture: Plugin[] = [
     },
     name: 'Cloudflare',
     description:
-      "Cloudflare's API: Browser Run (remote Chromium over CDP) as a browser engine, and Workers AI — Clairic and Clef for extractors, and DeepSeek and other chat models for the search agent.",
+      "Cloudflare's API: Browser Run (remote Chromium over CDP) as a browser engine, and Workers AI - Clairic and Clef for extractors, and DeepSeek and other chat models for the search agent.",
   },
 ];
 
@@ -210,7 +210,7 @@ export const predicatesFixture: Predicate[] = [
     extractors: ['saos.judgments'],
     label: 'court',
     description:
-      'Class: a court or tribunal (Sąd Rejonowy w Gdyni, Sąd Najwyższy, Trybunał Konstytucyjny, Krajowa Izba Odwoławcza).',
+      'Class: a court or tribunal (S\u0105d Rejonowy w Gdyni, S\u0105d Najwy\u017Cszy, Trybuna\u0142 Konstytucyjny, Krajowa Izba Odwo\u0142awcza).',
   },
   {
     iri: 'lh:CourtDecision',
@@ -218,7 +218,7 @@ export const predicatesFixture: Predicate[] = [
     extractors: ['saos.judgments'],
     label: 'court decision',
     description:
-      'Class: a decision a court or tribunal gave in one case — a judgment, order or resolution (Polish orzeczenie: wyrok, postanowienie, uchwała).',
+      'Class: a decision a court or tribunal gave in one case - a judgment, order or resolution (Polish orzeczenie: wyrok, postanowienie, uchwa\u0142a).',
   },
   {
     iri: 'lh:Dealer',
@@ -257,7 +257,7 @@ export const predicatesFixture: Predicate[] = [
     extractors: ['pinterest.search'],
     label: 'outfit',
     description:
-      'Class: one look — the garments a person wears together (or laid out as one outfit), as an image shows it.',
+      'Class: one look - the garments a person wears together (or laid out as one outfit), as an image shows it.',
   },
   {
     iri: 'lh:ParliamentaryPrint',
@@ -322,7 +322,7 @@ export const predicatesFixture: Predicate[] = [
     synonyms: [],
     extractors: ['sejm.acts'],
     label: 'based on',
-    description: 'This act was issued on the basis of the other act (its legal basis, upoważnienie ustawowe).',
+    description: 'This act was issued on the basis of the other act (its legal basis, upowa\u017Cnienie ustawowe).',
     range: 'eli:LegalResource',
   },
   {
@@ -354,7 +354,7 @@ export const predicatesFixture: Predicate[] = [
     synonyms: [],
     extractors: ['sejm.acts'],
     label: 'cites',
-    description: 'This act refers to the other act (ISAP: Odesłania).',
+    description: 'This act refers to the other act (ISAP: Odes\u0142ania).',
     range: 'eli:LegalResource',
   },
   {
@@ -402,7 +402,7 @@ export const predicatesFixture: Predicate[] = [
     synonyms: [],
     extractors: ['sejm.acts'],
     label: 'date document',
-    description: "The date the act bears (the date it was passed or signed: 'z dnia …').",
+    description: "The date the act bears (the date it was passed or signed: 'z dnia ...').",
     range: 'xsd:date',
   },
   {
@@ -410,7 +410,7 @@ export const predicatesFixture: Predicate[] = [
     synonyms: [],
     extractors: ['sejm.acts'],
     label: 'date no longer in force',
-    description: 'The date the act stopped being in force (uchylenie, wygaśnięcie).',
+    description: 'The date the act stopped being in force (uchylenie, wyga\u015Bni\u0119cie).',
     range: 'xsd:date',
   },
 ];
@@ -421,7 +421,7 @@ export const issuesFixture: Issue[] = [
     status: 'open',
     kind: 'extractor',
     title: 'otodom.listing drops balcony from lh:amenity when it is the only extra',
-    body: 'On this listing the page text shows "Informacje dodatkowe: winda garaż/miejsce parkingowe pom. użytkowe klimatyzacja oddzielna kuchnia balkon", but the extracted lh:amenity set is closed_area,dishwasher,entryphone,fridge,furniture,garage,internet,lift,monitoring,oven,phone,stove,tv,usable_room,washing_machine,cable_television,anti_burglary_door,air_conditioning — no "balcony" even though the listing clearly has one. Same for …/mieszkanie-w-kamienicy-na-powislu-ID4DGTH and …/2',
+    body: 'On this listing the page text shows "Informacje dodatkowe: winda gara\u017C/miejsce parkingowe pom. u\u017Cytkowe klimatyzacja oddzielna kuchnia balkon", but the extracted lh:amenity set is closed_area,dishwasher,entryphone,fridge,furniture,garage,internet,lift,monitoring,oven,phone,stove,tv,usable_room,washing_machine,cable_television,anti_burglary_door,air_conditioning - no "balcony" even though the listing clearly has one. Same for .../mieszkanie-w-kamienicy-na-powislu-ID4DGTH and .../2',
     opened: '2026-10-28T11:08:11.572Z',
     updated: '2026-10-28T11:08:11.572Z',
     seen: 1,
@@ -436,7 +436,7 @@ export const issuesFixture: Issue[] = [
     status: 'open',
     kind: 'provider',
     title: 'otodom engine ignores extras (BALCONY) and location list in multi-location search',
-    body: 'Called the otodom engine with params {"transaction":"wynajem","estate":"mieszkanie","locations":["mazowieckie/warszawa/warszawa/warszawa/srodmiescie","mazowieckie/warszawa/warszawa/warszawa/wola","mazowieckie/warszawa/warszawa/warszawa/mokotow"],"priceMax":6000,"extras":["BALCONY"],"limit":72}.\n\nExpected: only listings in Śródmieście/Wola/Mokotów that have a balcony.\nGot: 70 results including Ursynów (e.g. …/112m-3-sypialnie-2-balkony-metro-bez-prowizji-ID4CUBk, lh:district "',
+    body: 'Called the otodom engine with params {"transaction":"wynajem","estate":"mieszkanie","locations":["mazowieckie/warszawa/warszawa/warszawa/srodmiescie","mazowieckie/warszawa/warszawa/warszawa/wola","mazowieckie/warszawa/warszawa/warszawa/mokotow"],"priceMax":6000,"extras":["BALCONY"],"limit":72}.\n\nExpected: only listings in \u015Aródmie\u015Bcie/Wola/Mokotów that have a balcony.\nGot: 70 results including Ursynów (e.g. .../112m-3-sypialnie-2-balkony-metro-bez-prowizji-ID4CUBk, lh:district "',
     opened: '2026-10-28T11:08:11.566Z',
     updated: '2026-10-28T11:08:11.566Z',
     seen: 1,
@@ -463,7 +463,7 @@ export const issuesFixture: Issue[] = [
     id: 'iss-1fa4ca36',
     status: 'open',
     kind: 'extractor',
-    title: 'meepleradar.com Bangkok café directory renders an empty app shell — no places extracted',
+    title: 'meepleradar.com Bangkok café directory renders an empty app shell - no places extracted',
     body: 'Browsed https://meepleradar.com/explore?city=Bangkok,%20Thailand (a board game café finder). Plain fetch was blocked with 429, webunblocker got 200 but the text is only navigation/footer ("Board Game Cafe Found in Bangkok, Thailand") with no café list; 0 facts extracted. The place data is likely loaded client-side (map + JSON API). A plugin/extractor for meepleradar\'s place API would give library-size info per café.',
     opened: '2026-10-28T10:59:51.082Z',
     updated: '2026-10-28T10:59:51.082Z',
@@ -495,7 +495,7 @@ export const issuesFixture: Issue[] = [
     kind: 'harness',
     title:
       'agent continue --pages is the session total, not an allowance for the follow-up: a follow-up with --pages below what was spent can load nothing',
-    body: "person-dmytro-maretskyi: 45 pages spent in the first input, then 'agent continue \"…\" --pages 30' — every search/browse in the follow-up was refused (0 new pages) and the agent reported it as 'page budget exhausted'. person-mykola-weremchuk had 27 spent and got 3. Either make --pages (and --usd, --minutes?) on continue mean 'this much more', or refuse a limit below the spend with a hint naming the total to pass. Seen 2026-10-28.",
+    body: "person-dmytro-maretskyi: 45 pages spent in the first input, then 'agent continue \"...\" --pages 30' - every search/browse in the follow-up was refused (0 new pages) and the agent reported it as 'page budget exhausted'. person-mykola-weremchuk had 27 spent and got 3. Either make --pages (and --usd, --minutes?) on continue mean 'this much more', or refuse a limit below the spend with a hint naming the total to pass. Seen 2026-10-28.",
     opened: '2026-10-28T10:51:20.054Z',
     updated: '2026-10-28T10:51:20.054Z',
     seen: 1,
@@ -589,7 +589,7 @@ export const issuesFixture: Issue[] = [
       {
         t: '2026-10-28T09:18:03.136Z',
         by: 'claude-code',
-        text: 'Not a fetch bug: DU/2026/1245 and DU/2025/277 have textHTML=false in their records (texts are PDF only: D20261245.pdf …), and the API answers text.html for such acts with an empty 200. sejm.acts writes lh:fullTextUrl only when textHTML is t',
+        text: 'Not a fetch bug: DU/2026/1245 and DU/2025/277 have textHTML=false in their records (texts are PDF only: D20261245.pdf ...), and the API answers text.html for such acts with an empty 200. sejm.acts writes lh:fullTextUrl only when textHTML is t',
       },
       {
         t: '2026-10-28T09:18:04.237Z',

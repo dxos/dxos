@@ -29,7 +29,7 @@ const DEFAULT_SNIPPET_MAX_LENGTH = 160;
 
 /** Return the first `maxLength` characters of `text`, with a trailing ellipsis if truncated. */
 const headSnippet = (text: string, maxLength: number): string =>
-  text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+  text.length > maxLength ? `${text.slice(0, maxLength)}\u2026` : text;
 
 /**
  * Return a snippet window of `text` centred on the first match of `query`, with ellipses;
@@ -67,7 +67,7 @@ export const buildSnippet = (text: string, query: string, options?: { maxLength?
   windowStart = Math.min(windowStart, matchStart);
   windowEnd = Math.max(windowEnd, matchEnd);
 
-  const prefix = windowStart > 0 ? '…' : '';
-  const suffix = windowEnd < normalized.length ? '…' : '';
+  const prefix = windowStart > 0 ? '\u2026' : '';
+  const suffix = windowEnd < normalized.length ? '\u2026' : '';
   return `${prefix}${normalized.slice(windowStart, windowEnd)}${suffix}`;
 };

@@ -21,7 +21,7 @@ export type PdfPageText = {
  * Every occurrence of `query`, case-insensitively.
  *
  * Matches are found per text item rather than across the page's concatenated text. A match spanning
- * two items is therefore missed — pdf.js splits items on font and positioning changes, so that
+ * two items is therefore missed - pdf.js splits items on font and positioning changes, so that
  * happens mid-word in justified text. Accepted deliberately: locating a cross-item match means
  * mapping an offset back through the join, and the failure mode here is a missed hit rather than a
  * highlight drawn in the wrong place.
@@ -52,7 +52,7 @@ export const findMatches = (pages: PdfPageText[], query: string): PdfMatch[] => 
  * Highlighting in the DOM rather than as positioned overlays, because pdf.js gives each span an
  * `scaleX` transform that stretches it to the glyph widths the PDF specifies. Rectangles measured
  * with `Range.getClientRects()` do not map through that transform, so an overlay lands narrower
- * than the word and drifts left — visibly wrong on any proportional font. A `<mark>` inside the
+ * than the word and drifts left - visibly wrong on any proportional font. A `<mark>` inside the
  * span is laid out by the browser under the same transform, so it cannot disagree.
  */
 export const markSpan = (

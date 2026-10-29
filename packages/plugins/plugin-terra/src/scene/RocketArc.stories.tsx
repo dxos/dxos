@@ -72,8 +72,8 @@ const RocketArcScene = () => {
     const target = toUnit(TARGET);
     const sea = seaRadius(config);
     const middle = slerp(source, target, 0.5);
-    // The camera stands off the plane the arc lies in, so the flight is seen edge-on — the view that
-    // shows its altitude at all — and is then lifted `TILT` toward the zenith, which rolls the globe
+    // The camera stands off the plane the arc lies in, so the flight is seen edge-on - the view that
+    // shows its altitude at all - and is then lifted `TILT` toward the zenith, which rolls the globe
     // toward the viewer so the ground under the flight reads as ground rather than a horizon line.
     // Local up at the arc's midpoint is the screen's up, which keeps the planet along the bottom.
     const normal = normalize(cross(source, target));
@@ -90,7 +90,7 @@ const RocketArcScene = () => {
     const cycleMs = (flightSeconds + EXPLOSION_SECONDS) * 1000;
     const observer: Observer<Scene> = manager.scene.onBeforeRenderObservable.add(() => {
       // One flight per launch: the rocket climbs, comes down, and explodes, then waits back on the
-      // pad — the sim clock rewinds to zero, which is where its own departure point is.
+      // pad - the sim clock rewinds to zero, which is where its own departure point is.
       const elapsedMs = performance.now() - launchedAt.current;
       const nowMs = elapsedMs > cycleMs ? 0 : elapsedMs;
       engine.evaluateAt(nowMs);
@@ -134,7 +134,7 @@ const RocketArcScene = () => {
       </Panel.Header>
       <Panel.Body asChild>
         <div className='relative grow'>
-          {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
+          {/* `dx-fill` is load-bearing - see `ObjectGallery.stories.tsx`. */}
           <canvas ref={canvasRef} className='dx-fill dx-cover outline-none' style={{ touchAction: 'none' }} />
         </div>
       </Panel.Body>
@@ -157,12 +157,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * One rocket's ballistic arc seen edge-on, with the planet dropped to the bottom of the frame — the
+ * One rocket's ballistic arc seen edge-on, with the planet dropped to the bottom of the frame - the
  * view that shows what a flight actually does with its altitude, which the orbit camera never
  * really does.
  *
  * Test:
- * 1. The rocket lifts off, arcs over, and comes down — once per launch.
+ * 1. The rocket lifts off, arcs over, and comes down - once per launch.
  * 2. Its nose stays along the flight path the whole way: up through the climb, level at apex, down
  *    into the descent. It never points somewhere it is not going.
  * 3. The orange exhaust trails from the tail, below and behind it, and stops at apex.

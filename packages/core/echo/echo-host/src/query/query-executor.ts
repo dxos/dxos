@@ -287,7 +287,7 @@ const QueryItem = Object.freeze({
   },
 
   /**
-   * Reads a top-level property for the `aggregate` clause, resolving `id` to the entity id — every
+   * Reads a top-level property for the `aggregate` clause, resolving `id` to the entity id - every
    * object exposes `id` through the API, but documents don't store it in their data (see
    * `PROPERTY_ID` handling in the echo handler), so a group key falling back to `id` would otherwise
    * collapse every keyless member into the shared `null` group.
@@ -297,7 +297,7 @@ const QueryItem = Object.freeze({
 
   /**
    * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
-   * by result field name. No `group` entries yields `{}` — a single group over the whole input.
+   * by result field name. No `group` entries yields `{}` - a single group over the whole input.
    */
   getGroupKey: (item: QueryItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
     const key: GroupKeyValue = {};
@@ -640,7 +640,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         switch (step.selector._tag) {
           case 'TypeSelector': {
             if (step.selector.inverted) {
-              // Inverted type selectors come from Filter.not — mark as non-simple.
+              // Inverted type selectors come from Filter.not - mark as non-simple.
               scopes.isSimple = false;
             } else {
               if (!scopes.typenames) {
@@ -666,7 +666,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
             break;
           }
           default:
-            // WildcardSelector, TimestampSelector — no type/id constraint.
+            // WildcardSelector, TimestampSelector - no type/id constraint.
             break;
         }
         break;
@@ -686,7 +686,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
           scopes.isSimple = false;
         }
         // A nested in-query (subquery-membership) predicate's result depends on the subquery's
-        // own scope/typenames — which may differ entirely from this query's — so a hint scoped
+        // own scope/typenames - which may differ entirely from this query's - so a hint scoped
         // to this query's dimensions could miss a change that alters the subquery's result set.
         // `filterContainsInQuery` (not a bare `step.filter.type` check) is required: the residual
         // filter here is always `type: 'object'` with the in-query nested in `props`.
@@ -847,8 +847,8 @@ export class QueryExecutor extends Resource {
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
    * `JSON.stringify(subquery) + '\0' + property`. Two FilterSteps embedding the same subquery
    * (e.g. both branches of a `Query.all` union) share one resolution instead of re-running it;
-   * the `Promise` (rather than the resolved value) is cached so concurrent lookups — `UnionStep`
-   * branches execute via `Promise.all` — await the same in-flight resolution instead of racing.
+   * the `Promise` (rather than the resolved value) is cached so concurrent lookups - `UnionStep`
+   * branches execute via `Promise.all` - await the same in-flight resolution instead of racing.
    * Cleared at the top of every `execQuery()` since subquery results can change between runs.
    */
   #inQuerySetCache = new Map<string, Promise<{ values: ReadonlySet<unknown>; trace: ExecutionTrace }>>();
@@ -1205,7 +1205,7 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * Of the feeds the plan scopes to — by name, or as every feed of a space — those whose indexing is
+   * Of the feeds the plan scopes to - by name, or as every feed of a space - those whose indexing is
    * disabled, keyed by feed id, and the retention cutoff of the named ones with a `maxAge`, keyed
    * `<spaceId>/<feedId>`.
    */
@@ -1258,7 +1258,7 @@ export class QueryExecutor extends Resource {
   /**
    * Drops feed items whose block is past its feed's `maxAge`: the store hides them at once but deletes
    * them, and so their index rows, only at its next trim. A feed scope's read already excludes them;
-   * this catches the rows no read could bound — reached by a traversal, a space's all-feeds scope, or
+   * this catches the rows no read could bound - reached by a traversal, a space's all-feeds scope, or
    * an unqualified feed URI.
    */
   async #withoutExpired(workingSet: QueryItem[], now: number): Promise<QueryItem[]> {
@@ -1746,7 +1746,7 @@ export class QueryExecutor extends Resource {
       });
     }
 
-    // A nested `in-query` (subquery-membership) predicate is not a matcher-level concept — resolve
+    // A nested `in-query` (subquery-membership) predicate is not a matcher-level concept - resolve
     // each one to a concrete literal `in` before falling through to the normal in-memory matchers,
     // which only know how to test a value against a static set.
     const subqueryTraces: ExecutionTrace[] = [];
@@ -1833,7 +1833,7 @@ export class QueryExecutor extends Resource {
    * Resolves a single `in-query` node's projected value set, sharing one resolution across every
    * occurrence of the same subquery+property within this `execQuery` run (e.g. both branches of a
    * `Query.all` union embedding the same subquery). The `Promise` is cached (not just the value) so
-   * concurrent callers — `UnionStep` branches run under `Promise.all` — await the same in-flight
+   * concurrent callers - `UnionStep` branches run under `Promise.all` - await the same in-flight
    * resolution instead of each starting their own.
    */
   private _resolveInQuerySet(
@@ -2159,7 +2159,7 @@ export class QueryExecutor extends Resource {
           case 'to-children': {
             // Traverse from parent to children using the SQL index.
             // Covers both standard parent/child hierarchy (via the `parent` field) and
-            // feed -> queue items (via the `queueId` field — a feed's queue id matches the feed's object id).
+            // feed -> queue items (via the `queueId` field - a feed's queue id matches the feed's object id).
             // Group working set by spaceId.
             const bySpace = new Map<SpaceId, EntityId[]>();
             for (const item of workingSet) {
@@ -2925,7 +2925,7 @@ export class QueryExecutor extends Resource {
 
   /**
    * Filters out items whose strong dependencies (schema object, relation endpoints,
-   * parent) are not resolvable from local state — dangling references or docs that are
+   * parent) are not resolvable from local state - dangling references or docs that are
    * not on disk. Mirrors the client-side working-set filter so dep-broken objects are
    * excluded consistently on both sides of the query pipeline.
    */
@@ -2954,7 +2954,7 @@ export class QueryExecutor extends Resource {
     seen: Set<string>,
   ): Promise<boolean> {
     if (remainingDepth <= 0) {
-      // Depth cap reached — give the item the benefit of the doubt rather than excluding it.
+      // Depth cap reached - give the item the benefit of the doubt rather than excluding it.
       return true;
     }
 
@@ -2970,7 +2970,7 @@ export class QueryExecutor extends Resource {
           return cached;
         }
         if (seen.has(key)) {
-          // Reference cycle — treat as resolvable (mirrors the client's seen-set behavior).
+          // Reference cycle - treat as resolvable (mirrors the client's seen-set behavior).
           return true;
         }
         seen.add(key);
@@ -3142,7 +3142,7 @@ const BEFORE_FIRST_POSITION = -1;
  * what it asks for rather than the whole feed: a cursor range resumes by position, and a
  * `feedScan` (set by the planner only where it proved the cap sound) reads in natural order.
  *
- * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
+ * Every cursor range windows the scan, an empty one included - it bounds nothing but still asks for
  * a cursor read, which is over positioned blocks in position order. A reader that paged the
  * unpositioned blocks in first would stop at a page of items it cannot act on while positioned ones
  * waited behind them.
@@ -3190,7 +3190,7 @@ const parseCursor = (cursor: string, unsatisfiable: number): number => {
 
 /**
  * The queues a feed scope names, each carrying the space its URI qualifies it with so the index
- * seek cannot cross spaces — a queue id is unique only within its own. An unqualified URI
+ * seek cannot cross spaces - a queue id is unique only within its own. An unqualified URI
  * (`echo:///<id>`) names no space, and matches on its id alone.
  */
 const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {

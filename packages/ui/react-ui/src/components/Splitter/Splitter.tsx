@@ -107,7 +107,7 @@ const useNarrow = (root: RefObject<HTMLDivElement | null>, collapseBelow?: strin
 
 /**
  * The size array the machine takes, with the pane that is not anchored left as a hole for it to
- * fill from the remainder — the machine reads each index independently, so the pane it finds nothing
+ * fill from the remainder - the machine reads each index independently, so the pane it finds nothing
  * for is the one that flexes.
  */
 const anchoredSizes = (size: number, anchor: Position): PanelSize[] => {
@@ -217,7 +217,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
           : 'split';
 
     // Animate ONLY for a brief window right after a `mode` change (the collapse). The rest of the time the
-    // transition is off, so layout reflows from a container/window resize never animate (no jitter) — this
+    // transition is off, so layout reflows from a container/window resize never animate (no jitter) - this
     // avoids relying on observing/throttling resize events at all.
     const [animating, setAnimating] = useState(false);
     const previousMode = useRef(mode);
@@ -242,7 +242,7 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     const collapsed = mode !== 'split';
     // The machine sizes panes in percent of the container and re-derives the anchored pane's share
     // a frame after the container resizes, so a neighbour animating its width made the seam lag and
-    // snap. Tracked in rem here — the controlled prop, else the last drag — so the panes can carry
+    // snap. Tracked in rem here - the controlled prop, else the last drag - so the panes can carry
     // a fixed basis and let the flex layout absorb a container resize on the same frame.
     const [draggedSize, setDraggedSize] = useState(defaultSize);
     const anchoredSize = collapsed ? undefined : (sizeProp ?? draggedSize);
@@ -349,7 +349,7 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
     const { className, style, ...rest } = composableProps(props);
 
     // Only animate during the brief post-mode-change window (collapse), never while dragging or on a plain
-    // container/window resize — so the panels track layout reflows instantly without jitter.
+    // container/window resize - so the panels track layout reflows instantly without jitter.
     const animate = transition > 0 && animating;
     // While split with a known size, the anchored pane holds its rem and the other flexes, over the
     // machine's percent shares (see `anchoredSize` in the root). Longhands, because Ark merges style

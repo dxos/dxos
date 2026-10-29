@@ -42,7 +42,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     author: 'DXOS',
     description: trim`
       SpacePlugin is the core workspace container for DXOS Composer. It owns the full lifecycle of
-      collaborative spaces — creating, joining, opening, closing, and resetting them — and manages
+      collaborative spaces - creating, joining, opening, closing, and resetting them - and manages
       the membership and invitation system that controls who can access each space.
 
       The plugin maintains an ordered app-graph of every space and its collections, wires navigation
@@ -50,7 +50,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       that the UI can show which collaborators are viewing each object.
 
       Object and schema management sit at the heart of SpacePlugin: it registers the canonical DXOS
-      schema types (Person, Task, Project, Event, …), provides the create-object dialog that all
+      schema types (Person, Task, Project, Event, ...), provides the create-object dialog that all
       other plugins populate with their own types, and exposes operations for adding, removing,
       restoring, duplicating, and serialising objects. Import/export of space archives and schema
       migrations are also handled here.
@@ -161,7 +161,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    // Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
+    // Browser-only: it requires the app graph, layout and attention - app-shell capabilities no
     // headless host registers.
     Capability.lazyModule(
       'SpacesAvailable',
@@ -187,8 +187,8 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [SpaceCapabilities.SettingsAtom],
     }),
-    // Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
-    // the app-graph builder, `SpacesAvailable` — is itself browser-only.
+    // Holds view state (space names, viewers, merge preview); every consumer - the React surfaces,
+    // the app-graph builder, `SpacesAvailable` - is itself browser-only.
     Capability.lazyModule(
       'SpaceState',
       {

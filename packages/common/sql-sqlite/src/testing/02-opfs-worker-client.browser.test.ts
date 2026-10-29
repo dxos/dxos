@@ -86,7 +86,7 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
     );
   });
 
-  test('full export/import flow: write → async export → async import → read', async () => {
+  test('full export/import flow: write -> async export -> async import -> read', async () => {
     const marker = `import-flow-${crypto.randomUUID()}`;
 
     // 1. Write via SqliteClient (OPFS worker), then release the pool handles.
@@ -122,7 +122,7 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
     expect(reread.byteLength).toBe(exported.byteLength);
     expect(reread).toEqual(exported);
 
-    // 5. Read via a fresh SqliteClient — the imported state must be visible.
+    // 5. Read via a fresh SqliteClient - the imported state must be visible.
     await runWithOpfsSqliteClient(
       Effect.gen(function* () {
         const client = yield* SqlClient.SqlClient;

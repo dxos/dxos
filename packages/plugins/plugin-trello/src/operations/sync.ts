@@ -41,7 +41,7 @@ export type ReconcileResult = {
 /**
  * Mapped fields written to each Expando from its remote Trello card. Anything outside
  * this list (user-added properties like `priority`, `tags`, etc.) is preserved across
- * syncs — we only ever read/write these. `url` and `closed` are intentionally
+ * syncs - we only ever read/write these. `url` and `closed` are intentionally
  * omitted: `url` is a server-side artifact reconstructible from the card's foreign
  * id, and `closed` maps to ECHO object deletion (closed-on-Trello = removed-locally)
  * rather than a tracked field.
@@ -55,7 +55,7 @@ type BoardSnapshot = {
   /**
    * Canonical column order at last pull (Trello list `pos` order). Display
    * reads this instead of `Object.keys(arrangement.columns)` because ECHO /
-   * Automerge does not preserve insertion order across reload — keys come
+   * Automerge does not preserve insertion order across reload - keys come
    * back in canonical (alphabetical) order.
    *
    * Fields are required (not `?`) because the snapshot is always written in
@@ -78,14 +78,14 @@ type BoardSnapshot = {
  *    fields the remote hasn't changed are preserved; remote edits to fields the
  *    user hasn't touched flow through; on both-changed the policy is remote-wins.
  *  - After the merge, refresh `binding.spec.snapshots[card.id]` to the values
- *    currently on the remote — so the next sync's three-way merge starts from
+ *    currently on the remote - so the next sync's three-way merge starts from
  *    Trello's current state.
  *
  * For new remote cards (no local with matching foreign id): create an Expando,
  * stamp the foreign key, append to `kanban.spec.items`, and seed the snapshot.
  *
  * For local cards with a foreign key absent from the remote response: soft-close
- * (`closed = true`) and refresh the snapshot's `closed` field — so we don't try
+ * (`closed = true`) and refresh the snapshot's `closed` field - so we don't try
  * to push the tombstone back next pass.
  *
  * `onCardReconciled` runs once per remote card, after that card is handled.
@@ -139,7 +139,7 @@ export const reconcileBoardCards: (
 
       const existing = localByForeignId.get(card.id);
 
-      // `closed` on Trello → soft-deleted in ECHO. We never store a `closed`
+      // `closed` on Trello -> soft-deleted in ECHO. We never store a `closed`
       // field locally; the card disappears from the database (the ref stays
       // in `kanban.spec.items` to preserve arrangement on undelete or
       // re-sync).
@@ -202,7 +202,7 @@ export const reconcileBoardCards: (
       onCardReconciled?.();
     }
 
-    // Cards present locally that aren't in the remote response — treat the
+    // Cards present locally that aren't in the remote response - treat the
     // same as a closed remote: soft-delete the local object. The ref in
     // `kanban.spec.items` is preserved.
     const remoteIds = new Set(remoteCards.map((c) => c.id));
@@ -226,12 +226,12 @@ export const reconcileBoardCards: (
 
     // Build remote-derived arrangement: iterate `lists` sorted by `pos` (canonical
     // Trello list order, independent of the order cards happen to come back in),
-    // and emit a column entry per list — even empty ones — so all columns show up.
+    // and emit a column entry per list - even empty ones - so all columns show up.
     //
     // Iteration order matters. ECHO/Automerge does NOT preserve the insertion
     // order of `Object.keys(arrangement.columns)` across reload (canonical map
-    // order is alphabetical). The display layer reads `arrangement.order` —
-    // populated below — to get a stable canonical ordering instead.
+    // order is alphabetical). The display layer reads `arrangement.order` -
+    // populated below - to get a stable canonical ordering instead.
     const cardsByList = new Map<string, TrelloCard[]>();
     for (const card of remoteCards) {
       const ln = listName(card.idList);
@@ -255,7 +255,7 @@ export const reconcileBoardCards: (
 
     // Board-level three-way merge: name + arrangement.order + arrangement.columns.
     // Local-wins outputs are left in place but currently NOT pushed back to
-    // Trello — board rename and arrangement reorder push aren't implemented yet.
+    // Trello - board rename and arrangement reorder push aren't implemented yet.
     const boardSnapshot = Cursor.readSnapshot<BoardSnapshot>(binding, remoteBoard.id);
     const nameMerge = mergeField<string | undefined>(
       kanban.name,
@@ -291,7 +291,7 @@ export const reconcileBoardCards: (
       Obj.update(kanban, (kanban) => {
         const prev = kanban.arrangement.columns as Record<string, { ids: string[]; hidden?: boolean }>;
         const merged = columnsMerge.value as Record<string, { ids: string[]; hidden?: boolean }>;
-        // Remote columns are only Trello lists — never include UNCATEGORIZED. mergeDeep(remote-wins)
+        // Remote columns are only Trello lists - never include UNCATEGORIZED. mergeDeep(remote-wins)
         // would drop the initial `{ hidden: true }` bucket from findOrCreateKanbanForBoard.
         const uncategorizedIds =
           merged[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? prev[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? [];
@@ -332,9 +332,9 @@ export type PushResult = {
  * back to Trello, using the snapshot to detect what's actually been edited locally.
  *
  * What gets pushed:
- *  - Cards WITHOUT a Trello foreign key — locally created, never seen by Trello. POST.
+ *  - Cards WITHOUT a Trello foreign key - locally created, never seen by Trello. POST.
  *  - Cards WITH a foreign key whose local field values differ from
- *    `binding.spec.snapshots[foreignId]` — i.e. the user edited a field that wasn't
+ *    `binding.spec.snapshots[foreignId]` - i.e. the user edited a field that wasn't
  *    written by the most recent pull. PUT only the diverged fields.
  *
  * Tombstones (`Obj.isDeleted(target)`) are NEVER pushed: pull soft-deletes the
@@ -372,7 +372,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
       continue;
     }
 
-    // Soft-deleted locally → skip push. Pull tombstones the local copy when
+    // Soft-deleted locally -> skip push. Pull tombstones the local copy when
     // the remote is closed/missing; pushing a tombstone hits a 404. Once the
     // local object is `Obj.isDeleted`, we have nothing meaningful to send.
     if (Obj.isDeleted(target)) {
@@ -403,7 +403,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
         continue;
       }
       const result = yield* push.create({ listId, name, desc });
-      // Re-read foreign keys before writing — if a concurrent run wrote one already,
+      // Re-read foreign keys before writing - if a concurrent run wrote one already,
       // skip the local FK write so we don't end up with two FK entries on this object.
       const current = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
       if (!current) {
@@ -429,7 +429,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
     //
     // If the snapshot is missing a field (e.g. brand-new MAPPED_FIELDS entry,
     // or a corrupt snapshot), treat that as "no signal" and skip pushing the
-    // field — we can't tell whether local was edited.
+    // field - we can't tell whether local was edited.
     const snapshot = (Cursor.readSnapshot<CardSnapshot>(binding, foreignId) ?? {}) as CardSnapshot;
     const updatePayload: { name?: string; desc?: string; listId?: string } = {};
     let diverged = false;

@@ -58,7 +58,7 @@ export type FeatureDetailProps = {
 
 /**
  * One feature in full, in the order a reader new to it needs: what it is (name, the ideal it describes, its status),
- * what it must do (requirements), what it breaks down into (subfeatures), then how it relates to the rest — the
+ * what it must do (requirements), what it breaks down into (subfeatures), then how it relates to the rest - the
  * features it needs and that need it, the tasks working on it, the showcases proving it, and where it came from.
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {

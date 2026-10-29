@@ -61,8 +61,8 @@ export type BuilderExtensions = Builder.Extensions<BuilderExtension>;
 /**
  * How an extension's nodes map to (and from) the URL pair chain. The `kind` is the resolution tier:
  *
- * - `'item'`      — Addressed by an id under the workspace (`doc/<id>`). May itself have children.
- * - `'singleton'` — A single fixed node per workspace, addressed by the key alone (`settings`); its own
+ * - `'item'`      - Addressed by an id under the workspace (`doc/<id>`). May itself have children.
+ * - `'singleton'` - A single fixed node per workspace, addressed by the key alone (`settings`); its own
  *                   segment is the key, below `path`.
  *
  * The binding's shape (`workspace`, `path`, `minDepth`) decides which node ids it addresses, and
@@ -130,7 +130,7 @@ export type PathResolveParams = {
 
 /**
  * Forward resolution for a {@link UrlBinding} whose ids are data-dependent. Returns the candidate qualified
- * node id — `path-resolution.ts` then materializes its ancestors and verifies it — or `null` if the id
+ * node id - `path-resolution.ts` then materializes its ancestors and verifies it - or `null` if the id
  * can't be located. Must be self-contained (the declaring plugin closes over any services it needs), so
  * `@dxos/app-graph` stays free of service dependencies.
  */
@@ -192,7 +192,7 @@ export const urlCandidate = (
 };
 
 /**
- * A node's own URL pair segment — `/<key>[/<id>]`, with no workspace/anchor prefix — or `undefined` when
+ * A node's own URL pair segment - `/<key>[/<id>]`, with no workspace/anchor prefix - or `undefined` when
  * the binding does not address it. A full URL is composed by prefixing `/w/<workspace>`.
  */
 export const nodeUrlSegment = (
@@ -402,7 +402,7 @@ export const flattenExtensions = (extensions: BuilderExtensions, acc: BuilderExt
  */
 export type CreateExtensionRawOptions<Id extends string = string> = {
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    ? `Invalid id "${Id}": final segment must be camelCase - letters and digits, starting with a letter`
     : Id;
   relation?: Node.RelationInput;
   position?: Position.Position;
@@ -429,7 +429,7 @@ export const createExtensionRaw = <const Id extends string = string>(
   } = extension;
   if (!DXN.isValidPath(id)) {
     log.warn(
-      'dropping graph extension with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
+      'dropping graph extension with invalid id; the final segment must be camelCase - letters and digits, starting with a letter',
       {
         id,
       },
@@ -529,12 +529,12 @@ export const createExtensionRaw = <const Id extends string = string>(
 /**
  * Options for creating a graph builder extension with simplified API.
  * All callbacks must return Effects for dependency injection.
- * Effects may defect — defects are caught, logged, and the extension returns empty results.
+ * Effects may defect - defects are caught, logged, and the extension returns empty results.
  * Use Effect.orDie on any failable effects inside callbacks.
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never, Id extends string = string> = {
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    ? `Invalid id "${Id}": final segment must be camelCase - letters and digits, starting with a letter`
     : Id;
   match: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TMatched>;
   actions?: (
@@ -687,7 +687,7 @@ export type CreateTypeExtensionOptions<
   Id extends string = string,
 > = {
   id: [DXN.Path<Id>] extends [never]
-    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    ? `Invalid id "${Id}": final segment must be camelCase - letters and digits, starting with a letter`
     : Id;
   type: T;
   actions?: (

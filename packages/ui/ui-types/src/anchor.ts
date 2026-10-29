@@ -22,7 +22,7 @@ export type DxAnchorActivateProps = {
   /**
    * Set to `false` to close any open popover. When omitted (or `true`), the event opens a
    * popover anchored to `trigger`. `eid` / `label` / `trigger` may be placeholders when
-   * `state` is `false` — the close path ignores them.
+   * `state` is `false` - the close path ignores them.
    */
   state?: boolean;
   /** Navigate straight to the anchor's target (e.g. a modifier-click) instead of opening its preview. */

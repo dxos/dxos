@@ -28,7 +28,7 @@ describe('runLivePipeline', () => {
   });
 
   // Headless equivalent of the file-transcription story: Whisper-style fragments (cut mid-sentence
-  // across chunk windows) streamed through correction. Guards the deterministic correction output —
+  // across chunk windows) streamed through correction. Guards the deterministic correction output -
   // notably that a fragment ending in a comma does not become "Years,.".
   test('corrects a fragmented transcript without punctuation artifacts', async ({ expect }) => {
     const { commit, writes } = captureCommit();

@@ -22,7 +22,7 @@ import {
 } from '@dxos/ui-editor';
 
 //
-// Editor ViewState aspect — local (localStorage) backed, per document id.
+// Editor ViewState aspect - local (localStorage) backed, per document id.
 // Mirrors plugin-markdown's editor-view-state.ts but defined inline so
 // plugin-attention does not depend on plugin-markdown.
 //
@@ -54,7 +54,7 @@ const ITEMS: StoryItem[] = [
     content: [
       '# Alpha',
       '',
-      'This is the **Alpha** document. Scroll down and move the caret, then switch to another item and come back — your position is restored.',
+      'This is the **Alpha** document. Scroll down and move the caret, then switch to another item and come back - your position is restored.',
       '',
       Array.from({ length: 30 }, (_, i) => `Line ${i + 1} of Alpha content.`).join('\n'),
     ].join('\n'),
@@ -84,7 +84,7 @@ const ITEMS: StoryItem[] = [
 ];
 
 //
-// ItemEditor — mounts a CodeMirror editor for the selected item, wired to the
+// ItemEditor - mounts a CodeMirror editor for the selected item, wired to the
 // local-backed ViewState store so caret/scroll is remembered per document id.
 //
 
@@ -98,7 +98,7 @@ const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
       id: item.id,
       initialValue: item.content,
       extensions: [
-        createBasicExtensions({ placeholder: 'Start typing…', scrollPastEnd: true }),
+        createBasicExtensions({ placeholder: 'Start typing...', scrollPastEnd: true }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         createMarkdownExtensions(),
         documentId.of(item.id),
@@ -112,7 +112,7 @@ const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
 };
 
 //
-// SelectionStateStory — the canonical demo component.
+// SelectionStateStory - the canonical demo component.
 //
 
 const SelectionStateStory = () => {

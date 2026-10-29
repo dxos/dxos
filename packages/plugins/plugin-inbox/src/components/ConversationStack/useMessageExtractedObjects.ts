@@ -14,7 +14,7 @@ import { Mailbox } from '#types';
  *
  * Not memoized: the mailbox's extracted-id metadata mutates in place (its identity is unchanged), so
  * a memo keyed on `mailbox` would return a stale array and never surface newly extracted objects. The
- * caller re-renders via `Obj.subscribe(mailbox, …)`; recomputing here is cheap relative to that.
+ * caller re-renders via `Obj.subscribe(mailbox, ...)`; recomputing here is cheap relative to that.
  */
 export const useMessageExtractedObjects = (
   db: Database.Database | undefined,

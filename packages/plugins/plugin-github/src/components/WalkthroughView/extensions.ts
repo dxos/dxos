@@ -33,7 +33,7 @@ export type DiffDocumentOptions = {
 };
 
 /**
- * A read-only markdown document whose ```diff fences render as diff chunks — the one reading surface
+ * A read-only markdown document whose ```diff fences render as diff chunks - the one reading surface
  * both a walkthrough and a single changed file are shown in, so the two cannot drift apart.
  */
 export const diffDocumentExtensions = ({

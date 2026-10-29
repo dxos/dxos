@@ -1,5 +1,5 @@
 //
-// Terra spike — Babylon scene. NPR: flat shading, no shadows, matte materials.
+// Terra spike - Babylon scene. NPR: flat shading, no shadows, matte materials.
 //
 
 import '@babylonjs/core/Meshes/thinInstanceMesh';

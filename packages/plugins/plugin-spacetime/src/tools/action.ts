@@ -14,7 +14,7 @@ export interface ActionHandler {
 
 /**
  * Disposes a scene object's Babylon mesh and Manifold solid from the runtime maps.
- * Does NOT modify ECHO — callers must handle ECHO mutations separately.
+ * Does NOT modify ECHO - callers must handle ECHO mutations separately.
  */
 export const disposeSceneObject = (ctx: ToolContext, objectId: string): void => {
   const mesh = ctx.meshes.get(objectId);

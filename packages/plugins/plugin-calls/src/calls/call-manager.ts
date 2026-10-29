@@ -257,7 +257,7 @@ export class CallManager extends Resource {
 
   /**
    * Test seam: replaces the network with participants played from video files (see `CallSimulation`).
-   * While set, `join` stays local — no swarm, no SFU session — so a call renders with no EDGE reachable.
+   * While set, `join` stays local - no swarm, no SFU session - so a call renders with no EDGE reachable.
    * Pass `undefined` to remove them. `transcript` lines are emitted on `simulatedUtterance` as they play.
    * `renderAvatar` draws participants with an `avatar`; without it they show their file's picture.
    */

@@ -25,7 +25,7 @@ describe('DXN.isDXN', () => {
 });
 
 describe('DXN.Name', () => {
-  test('accepts valid NSIDs — no type errors', () => {
+  test('accepts valid NSIDs - no type errors', () => {
     // Three-segment minimum (first + middle + final), all camelCase.
     DXN.make('a.b.c');
     // Multi-segment, all camelCase.
@@ -36,16 +36,16 @@ describe('DXN.Name', () => {
     DXN.make('org.dxos.type.calendar', '1.0.0');
   });
 
-  test('rejects invalid NSIDs — compile-time type errors', () => {
+  test('rejects invalid NSIDs - compile-time type errors', () => {
     // Wrapped in a never-called arrow so the invalid calls are type-checked but
     // never executed at runtime. If Name unexpectedly starts accepting any
     // of these, the @ts-expect-error directive itself becomes a build error
     // ("Unused '@ts-expect-error' directive"), causing the CI check to fail.
     void (() => {
-      // No dots — single segment.
+      // No dots - single segment.
       // @ts-expect-error
       DXN.make('unknown');
-      // One dot — two segments, below the three-segment minimum.
+      // One dot - two segments, below the three-segment minimum.
       // @ts-expect-error
       DXN.make('a.b');
       // Hyphen in the FINAL segment.
@@ -78,7 +78,7 @@ describe('DXN.Path', () => {
     expectTypeOf<DXN.Path<'article.task-set'>>().toEqualTypeOf<never>();
     expectTypeOf<DXN.Path<'plugin-settings'>>().toEqualTypeOf<never>();
     expectTypeOf<DXN.Path<'plugin_settings'>>().toEqualTypeOf<never>();
-    // Must start with a letter — the id becomes a DXN path segment.
+    // Must start with a letter - the id becomes a DXN path segment.
     expectTypeOf<DXN.Path<'1article'>>().toEqualTypeOf<never>();
     expectTypeOf<DXN.Path<''>>().toEqualTypeOf<never>();
     // Any character the runtime regex excludes, not just the separators.
@@ -124,7 +124,7 @@ describe('DXN.make', () => {
   });
 
   test('throws on invalid NSID at runtime', ({ expect }) => {
-    // @ts-expect-error intentionally invalid NSIDs — verifying runtime throws
+    // @ts-expect-error intentionally invalid NSIDs - verifying runtime throws
     expect(() => DXN.make('not-a-valid-nsid')).toThrow();
     // @ts-expect-error
     expect(() => DXN.make('com.example.type.registry-entry')).toThrow();

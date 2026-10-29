@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 
-// Dotted, not slash-separated: the key is an NSID, and `DXN_SPEC_REGEXP` rejects slashes — the old
+// Dotted, not slash-separated: the key is an NSID, and `DXN_SPEC_REGEXP` rejects slashes - the old
 // form made `Skill.registryURI` fall back to a bare URI for this skill alone.
 export const SKILL_KEY = 'org.dxos.plugin.commerce.skill.provider';
 

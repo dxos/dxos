@@ -31,7 +31,7 @@ describe('Entity', () => {
   });
 
   // `isEntity` is a bare brand check (`[KindId] !== undefined`). All three entity
-  // kinds — objects, relations, and type entities — carry the brand, so all three
+  // kinds - objects, relations, and type entities - carry the brand, so all three
   // are recognised as entities. (Type entities brand with `EntityKind.Type`.)
   describe('isEntity / isSnapshot', () => {
     test('object instance is an entity', () => {
@@ -110,7 +110,7 @@ describe('Entity', () => {
       expect(Entity.isDeleted(TestSchema.Person)).toBe(false);
     });
 
-    test('getURI / getTypename return the type entity’s own identity', () => {
+    test("getURI / getTypename return the type entity's own identity", () => {
       expect(Entity.getURI(TestSchema.Person)).toBe('dxn:com.example.type.person:0.1.0');
       expect(Entity.getTypename(TestSchema.Person)).toBe('com.example.type.person');
     });
@@ -131,7 +131,7 @@ describe('Entity', () => {
   });
 
   // The convergence key has no dedicated accessors: it is assigned through meta inside an update
-  // callback so it batches with the caller's other writes. Validation is the engine's job —
+  // callback so it batches with the caller's other writes. Validation is the engine's job -
   // detection, the worker, and the client executor each ignore keyed relations and empty strings.
   describe('meta.convergenceKey', () => {
     const setConvergenceKey = (object: Entity.Unknown, convergenceKey: string | undefined) =>

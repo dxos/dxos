@@ -467,7 +467,7 @@ describe('SpaceStateMachine', () => {
       { sourceFeed: feed },
     );
 
-    // Attempt to add a second member — should be rejected.
+    // Attempt to add a second member - should be rejected.
     expect(
       await spaceState.process(
         await createCredential({

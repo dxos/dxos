@@ -20,7 +20,7 @@ const url = process.argv[2] ?? 'http://localhost:4173';
 const distDir = process.argv[3];
 if (!distDir || !existsSync(path.join(distDir, 'assets'))) {
   // Without the build's assets every chunk lookup misses and the census silently reports zeros.
-  console.error(`no build at ${distDir ?? '<missing>'} — pass the dist directory, e.g. out/composer`);
+  console.error(`no build at ${distDir ?? '<missing>'} - pass the dist directory, e.g. out/composer`);
   process.exit(1);
 }
 const settleIdx = process.argv.indexOf('--settle');
@@ -115,7 +115,7 @@ const attributeChunk = (chunkName) => {
           const parts = rest.split('/');
           pkg = parts[0].startsWith('@') ? `${parts[0]}/${parts[1]}` : parts[0];
         } else {
-          // Monorepo sources are relative from composer-app (../../../plugins/plugin-deck/src/…):
+          // Monorepo sources are relative from composer-app (../../../plugins/plugin-deck/src/...):
           // the leading ../ run lands at packages/; take the segment owning src|dist.
           const clean = src.replace(/^(\.\.\/)+/, '');
           const m = clean.match(
@@ -178,7 +178,7 @@ for (const mark of pageFacts.marks) {
   });
 }
 
-console.log(`# Boot census — ${url}`);
+console.log(`# Boot census - ${url}`);
 console.log(
   `chunks loaded: ${pageFacts.chunks.length}; bytes loaded: ${KB(totalLoaded)}KB; executed (approx): ${KB(totalExecuted)}KB (${((totalExecuted / Math.max(1, totalLoaded)) * 100).toFixed(0)}%)`,
 );

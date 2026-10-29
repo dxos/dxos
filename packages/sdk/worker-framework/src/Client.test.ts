@@ -435,7 +435,7 @@ describe('Connection multi-client', () => {
       leaderLockKey: keys.leaderLockKey,
       leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 200, retryBackoff: 10 },
       // Never resolving leaves the leader holding its lock with the session open, which is the
-      // state `workerIsLeader` exists to name — and the one an enumerated phase list dropped.
+      // state `workerIsLeader` exists to name - and the one an enumerated phase list dropped.
       onConnect: () => new Promise<{ close: () => Promise<void> }>(() => {}),
     });
     onTestFinished(async () => {
@@ -473,7 +473,7 @@ describe('Connection multi-client', () => {
     expect((await asyncTimeout(leader.connected, 10_000)).isOwner).toBe(true);
     expect(leaderWorkers).toBe(1);
 
-    // A steal by this tab is always wasted — it can never receive a port — but still aborts the
+    // A steal by this tab is always wasted - it can never receive a port - but still aborts the
     // incumbent's lock, terminating its worker and forcing a full re-boot.
     const wedged = makeConnection(hub, keys, timeouts, {
       maxLeaderFailures: 2,
@@ -499,7 +499,7 @@ describe('Connection multi-client', () => {
     expect(wedged.failures[0]).toBeInstanceOf(Error);
 
     // And election is not left stranded: someone still holds the lock, so a tab still owns a
-    // worker. A steal that only evicts — without the stealer re-entering election — can end with
+    // worker. A steal that only evicts - without the stealer re-entering election - can end with
     // the lock free and every tab waiting on a leader that no longer exists.
     const { held } = await navigator.locks.query();
     expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
@@ -753,7 +753,7 @@ describe('Worker displacement', () => {
     const hub = createHub();
     const keys = uniqueKeys();
 
-    // A worker outliving the tab that spawned it — tearing that worker down needs the old tab's main
+    // A worker outliving the tab that spawned it - tearing that worker down needs the old tab's main
     // thread, which is exactly what is unavailable when a leader is evicted for being wedged.
     const stranded = startBareWorker(keys.storageLockKey);
     await asyncTimeout(stranded.listening, 5_000);
@@ -783,7 +783,7 @@ describe('Worker displacement', () => {
     await asyncTimeout(connected, 5_000);
 
     // From here the worker services nothing, so it never runs `shutdown` and holds both the storage
-    // and the liveness lock — the cooperative path from #13269 has nothing left to work with.
+    // and the liveness lock - the cooperative path from #13269 has nothing left to work with.
     wedgeable.wedge();
 
     const entries: LogEntry[] = [];
@@ -799,7 +799,7 @@ describe('Worker displacement', () => {
     await asyncTimeout(wedgeable.terminated, 10_000);
     await asyncTimeout(successor.listening, 10_000);
 
-    // A forced kill is a fault, so it must reach error telemetry — the PostHog processor forwards
+    // A forced kill is a fault, so it must reach error telemetry - the PostHog processor forwards
     // an entry only when it carries an `Error`, which a bare `log.warn` never does.
     const reported = entries.filter((entry): entry is LogEntry & { error: WorkerTerminationError } => {
       return entry.error instanceof WorkerTerminationError;
@@ -861,7 +861,7 @@ describe('Worker displacement', () => {
     for (const bystander of bystanders) {
       expect(bystander.wasTerminated()).to.be.false;
     }
-    // One incident, so exactly one error reaches telemetry — a spurious kill would report its own.
+    // One incident, so exactly one error reaches telemetry - a spurious kill would report its own.
     const reported = entries.filter((entry) => entry.error instanceof WorkerTerminationError);
     expect(reported).toHaveLength(1);
   }, 40_000);
@@ -986,7 +986,7 @@ describe('Worker displacement', () => {
       storageLockKey: keys.storageLockKey,
       graceTimeout: 50,
     });
-    // The escalation could not free the lock, so the successor is still queued — the honest outcome
+    // The escalation could not free the lock, so the successor is still queued - the honest outcome
     // for a handle with no termination capability, rather than a report of a kill that never happened.
     expect(entries.filter((entry) => entry.error instanceof WorkerTerminationError)).toHaveLength(0);
   }, 30_000);
@@ -1108,8 +1108,8 @@ const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { dis
 };
 
 /**
- * A worker that can be wedged the way a busy CPU loop wedges one — nothing delivered into it again,
- * its displacement channel included — and whose handle carries the `terminate()` capability a real
+ * A worker that can be wedged the way a busy CPU loop wedges one - nothing delivered into it again,
+ * its displacement channel included - and whose handle carries the `terminate()` capability a real
  * `Worker` has, so the tab can stand it down without its cooperation.
  */
 const createWedgeableWorkerFactory = (storageLockKey: string, { terminable = true }: { terminable?: boolean } = {}) => {
@@ -1136,12 +1136,12 @@ const createWedgeableWorkerFactory = (storageLockKey: string, { terminable = tru
 };
 
 /**
- * A tab whose worker is ready and healthy but is not the one holding the storage lock — the
+ * A tab whose worker is ready and healthy but is not the one holding the storage lock - the
  * bystander an escalation reaches on any storage lock with three or more tabs.
  *
  * Its worker is a stub rather than {@link Worker.run}, because a real worker advertises `ready` only
  * from inside the storage lock grant, so this state cannot be staged with the real loop; the tab
- * side under test — the displacement channel listener and what it does with an escalation — is the
+ * side under test - the displacement channel listener and what it does with an escalation - is the
  * production one.
  */
 const startBystanderTab = (keys: { leaderLockKey: string; storageLockKey: string }) => {

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// @ts-ignore — @types/babel__core present transitively but not declared here.
+// @ts-ignore - @types/babel__core present transitively but not declared here.
 import * as babel from '@babel/core';
-// @ts-ignore — @babel/preset-typescript ships no .d.ts.
+// @ts-ignore - @babel/preset-typescript ships no .d.ts.
 import babelPresetTypeScript from '@babel/preset-typescript';
-// @ts-ignore — babel-preset-solid ships no .d.ts.
+// @ts-ignore - babel-preset-solid ships no .d.ts.
 import babelPresetSolid from 'babel-preset-solid';
 import { type Plugin as EsbuildPlugin, build, stop as stopEsbuild } from 'esbuild';
 import { basename, dirname } from 'node:path';
@@ -45,7 +45,7 @@ export type BootLoaderOptions = {
   markSvg?: string;
 
   /**
-   * A CSS filter applied to the mark — `hue-rotate(82deg)` turns the released blue mark purple —
+   * A CSS filter applied to the mark - `hue-rotate(82deg)` turns the released blue mark purple -
    * so a channel recolours the one piece of artwork instead of shipping a generated copy.
    */
   markFilter?: string;
@@ -155,22 +155,22 @@ const getLoaderBundle = (): Promise<string> =>
  * The full-screen backdrop paints on the very first frame from an inline
  * `<style>` (before any JS bundle is fetched), so the user sees the loading
  * surface immediately on cold load instead of a blank document. A compiled,
- * self-contained Solid IIFE — inlined ahead of the app bundle — then renders
+ * self-contained Solid IIFE - inlined ahead of the app bundle - then renders
  * the determinate progress ring + status log into that backdrop and exposes the
  * host-facing driver on `window.__bootLoader`.
  *
  * The host app drives the loader (the React relay forwards `useApp`'s startup
  * progress):
  * - `window.__bootLoader.status(payload)` updates the status line per phase.
- * - `window.__bootLoader.progress(fraction)` grows the determinate ring (0–1).
+ * - `window.__bootLoader.progress(fraction)` grows the determinate ring (0-1).
  * - `window.__bootLoader.ready()` plays the dismissal outro, then self-removes.
  * - `window.__bootLoader.dismiss()` removes the loader immediately (fast path).
  *
  * Inject order (all at the start of `<body>`, except the stylesheet):
- * - `<style>` → `<head>` (parses before any bundled stylesheet).
- * - `<div id="boot-loader">` → the static backdrop the CSS styles instantly.
- * - inline `<script>` config (`window.__BOOT_LOADER_CONFIG__`) → before the bundle.
- * - inline `<script>` loader bundle → renders the Solid app into the backdrop.
+ * - `<style>` -> `<head>` (parses before any bundled stylesheet).
+ * - `<div id="boot-loader">` -> the static backdrop the CSS styles instantly.
+ * - inline `<script>` config (`window.__BOOT_LOADER_CONFIG__`) -> before the bundle.
+ * - inline `<script>` loader bundle -> renders the Solid app into the backdrop.
  *
  * Keeping the loader a sibling of `#root` (rather than a child) means
  * `createRoot(document.getElementById('root')).render(...)` does not fight the
@@ -204,7 +204,7 @@ export const bootLoaderPlugin = ({
       const bundle = await getLoaderBundle();
       // Authoritative backdrop id: injected here, passed to the bundle via
       // config (so `entry.tsx` reads it), and mirrored by the CSS selector in
-      // `boot-loader.css`. The inner DOM ↔ CSS contract is guarded by the story.
+      // `boot-loader.css`. The inner DOM <-> CSS contract is guarded by the story.
       const rootId = 'boot-loader';
       return [
         {

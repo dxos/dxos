@@ -4,7 +4,7 @@
 
 //
 // SPIKE. A trivial attention aspect: the last container the user focused into stays attended
-// (sticky — focus leaving does not clear it), and the attended container shows a primary ring.
+// (sticky - focus leaving does not clear it), and the attended container shows a primary ring.
 // A deliberately minimal stand-in for `@dxos/react-ui-attention`.
 //
 

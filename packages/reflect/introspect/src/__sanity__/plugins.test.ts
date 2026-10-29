@@ -32,12 +32,12 @@ describe.skipIf(!REAL)('plugins (real monorepo)', () => {
     expect(Array.isArray(code!.tags)).toBe(true);
     expect(Array.isArray(code!.dependsOn)).toBe(true);
     // plugin-code's package.json declares workspace deps on plugin-graph,
-    // plugin-space, plugin-client, plugin-testing — at least the first two
+    // plugin-space, plugin-client, plugin-testing - at least the first two
     // are themselves plugins, so dependsOn should pick them up.
     expect(code!.dependsOn).toEqual(expect.arrayContaining(['org.dxos.plugin.graph', 'org.dxos.plugin.space']));
 
     // plugin-assistant resolves its metadata from `dx.config.ts` (`Plugin.getMetaFromConfig`) and
-    // declares no tags — verify config-based discovery yields the plugin with tags defaulting to empty.
+    // declares no tags - verify config-based discovery yields the plugin with tags defaulting to empty.
     const assistant = plugins.find((plugin) => plugin.id === 'org.dxos.plugin.assistant');
     expect(assistant).toBeDefined();
     expect(assistant!.tags).toEqual([]);
@@ -50,7 +50,7 @@ describe.skipIf(!REAL)('plugins (real monorepo)', () => {
     const ids = surfaces.map((surface) => surface.id);
     expect(ids).toEqual(expect.arrayContaining(['pluginSpec', 'specArticle', 'codeArticle', 'codeSettings']));
     // NOTE(role extraction gap): surfaces now declare their role through the `filter`
-    // (`AppSurface.object(AppSurface.Article, …)`) rather than a `role:` property, so the indexer's
+    // (`AppSurface.object(AppSurface.Article, ...)`) rather than a `role:` property, so the indexer's
     // `readRoleProperty` no longer resolves a role here (`role` comes back empty). Tracked separately
     // from plugin discovery; assert presence rather than the (currently unparsed) role.
     expect(surfaces.find((surface) => surface.id === 'codeArticle')).toBeDefined();
@@ -68,7 +68,7 @@ describe.skipIf(!REAL)('plugins (real monorepo)', () => {
     // Without an id, returns aggregate across all plugins.
     expect(intro.listSurfaces().length).toBeGreaterThan(surfaces.length);
 
-    // Chess uses `trim` tagged-template literal for its description — the
+    // Chess uses `trim` tagged-template literal for its description - the
     // indexer should resolve it (no longer returning undefined).
     const chess = plugins.find((plugin) => plugin.id === 'org.dxos.plugin.chess');
     expect(chess).toBeDefined();

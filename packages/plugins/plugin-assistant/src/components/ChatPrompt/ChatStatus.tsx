@@ -43,7 +43,7 @@ export type ChatStatusViewProps = ChatStreamStatusProps & {
  * Live status pill rendered at the bottom of the chat thread.
  *
  * The block-widget host re-mounts this component each time wire's drip queue toggles
- * (`wireDrainingEffect`) — so all visible state is derived from chat-context values that
+ * (`wireDrainingEffect`) - so all visible state is derived from chat-context values that
  * survive the unmount: the latest `stats` block on the chat context's `messages` for token counts,
  * and `requestTiming` (start/end wall-clock timestamps) for the elapsed value.
  *
@@ -54,7 +54,7 @@ export type ChatStatusViewProps = ChatStreamStatusProps & {
  */
 export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // Read `messages` from the chat context (combines `useQuery(queue)` + the chat model's
-  // pending atom) rather than `chatModel.messages` directly — the latter only contains
+  // pending atom) rather than `chatModel.messages` directly - the latter only contains
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
   // (including the per-turn `stats` block we read for token counts) are submitted to the
   // feed via `_submitMessage` and only show up through `useQuery`.
@@ -92,8 +92,8 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
 };
 
 /**
- * The pill itself, given resolved values. Split from {@link ChatStatus} so each slot — elapsed,
- * tokens, the next alarm — can be mounted and asserted in a story without a live chat model.
+ * The pill itself, given resolved values. Split from {@link ChatStatus} so each slot - elapsed,
+ * tokens, the next alarm - can be mounted and asserted in a story without a live chat model.
  */
 export const ChatStatusView = ({
   classNames,
@@ -135,13 +135,13 @@ export const ChatStatusView = ({
           {lastOutputTokens != null && (
             <>
               {requestTiming && <NaturalChatStatus.Separator />}
-              <NaturalChatStatus.Text>↓ {Unit.Thousand(lastOutputTokens).toString()}</NaturalChatStatus.Text>
+              <NaturalChatStatus.Text>&#x2193; {Unit.Thousand(lastOutputTokens).toString()}</NaturalChatStatus.Text>
             </>
           )}
           {sessionTotalTokens > 0 && (
             <>
               {(requestTiming || lastOutputTokens != null) && <NaturalChatStatus.Separator />}
-              <NaturalChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</NaturalChatStatus.Text>
+              <NaturalChatStatus.Text>&#x03A3; {Unit.Thousand(sessionTotalTokens).toString()}</NaturalChatStatus.Text>
             </>
           )}
           {alarm && (

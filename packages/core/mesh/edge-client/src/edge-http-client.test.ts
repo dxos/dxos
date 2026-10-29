@@ -230,7 +230,7 @@ describe('EdgeHttpClient auth refresh', () => {
     await client.putBlob(Context.default(), 'two', new Uint8Array([2]), { contentType: 'application/octet-stream' });
     expect(authCalls(fetchMock)).toBe(1);
 
-    // Past the refresh point (TTL minus margin) a fresh challenge is fetched — no 401 involved.
+    // Past the refresh point (TTL minus margin) a fresh challenge is fetched - no 401 involved.
     vi.advanceTimersByTime(300_000);
     await client.putBlob(Context.default(), 'three', new Uint8Array([3]), { contentType: 'application/octet-stream' });
     expect(authCalls(fetchMock)).toBe(2);
@@ -324,7 +324,7 @@ describe('EdgeHttpClient auth refresh', () => {
 
   test('a settling prefetch does not clear a newer single-flight guard', async ({ expect }) => {
     // Both of the first two `/auth` round trips are parked, so the FIRST can settle while the
-    // SECOND is still in flight — the only ordering in which a stale `finally` can clear a live
+    // SECOND is still in flight - the only ordering in which a stale `finally` can clear a live
     // guard. Releasing them in the other order (as a naive test does) never reproduces it.
     const releases: Array<() => void> = [];
     const started: Array<Promise<void>> = [];
@@ -642,7 +642,7 @@ describe('EdgeHttpClient api key', () => {
     expect(uploadCall?.[1]?.headers).toMatchObject({ Authorization: 'Bearer dx-api01-token' });
   });
 
-  test('a rejected api key is terminal — no retry on the auth 401', async ({ expect }) => {
+  test('a rejected api key is terminal - no retry on the auth 401', async ({ expect }) => {
     const fetchMock = vi.fn(
       async (_input: any, _init?: RequestInit) =>
         new Response(null, {

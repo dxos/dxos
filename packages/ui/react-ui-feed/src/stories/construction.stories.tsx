@@ -111,7 +111,7 @@ const ConstructionProfile = ({ runs = 20 }: { runs?: number }) => {
     <div className='p-4 flex flex-col gap-4'>
       {/* Offscreen but laid out: a `display:none` parent has no layout, and the layout is the cost. */}
       <div ref={parentRef} className='absolute -top-[10000px] w-[46rem]' aria-hidden />
-      <pre className='text-xs whitespace-pre'>{rows.length ? format(rows) : 'measuring…'}</pre>
+      <pre className='text-xs whitespace-pre'>{rows.length ? format(rows) : 'measuring...'}</pre>
     </div>
   );
 };
@@ -145,7 +145,7 @@ type Story = StoryObj<typeof ConstructionProfile>;
  * How long one item takes to build, by extension set.
  *
  * The first fill mounts a viewport of rows in one go, so the `×22 rows` column is the wall-clock
- * cost of that fill — the number to compare against the >1s `baseline/Uniform` takes to appear.
+ * cost of that fill - the number to compare against the >1s `baseline/Uniform` takes to appear.
  * Read it from the story, or from the `[item construction]` line the storybook test run prints.
  */
 export const Default: Story = {};

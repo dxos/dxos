@@ -9,7 +9,7 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 import { PERF_PORT } from './perf/server.ts';
 
 /**
- * Dev-server harness config — runs against `vite serve`, not `vite preview`.
+ * Dev-server harness config - runs against `vite serve`, not `vite preview`.
  *
  * The webServer command is `pnpm vite --port <port>` (`serve` is vite's default
  * subcommand) on `INITIAL_URL`'s port (4173, or `DX_PERF_PORT`), so the harness

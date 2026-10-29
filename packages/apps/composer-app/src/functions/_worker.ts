@@ -34,7 +34,7 @@ const FEEDBACK_UPLOAD_PREFIXES = new Map([
 ]);
 
 /**
- * Handle /api/feedback-logs — upload NDJSON debug logs (or, with `?kind=trajectory`, agent trajectories) to R2.
+ * Handle /api/feedback-logs - upload NDJSON debug logs (or, with `?kind=trajectory`, agent trajectories) to R2.
  *
  * Current clients send gzipped NDJSON (`Content-Type: application/gzip`), stored as `.ndjson.gz`; plain
  * NDJSON is still accepted because native builds already in the field upload it uncompressed.
@@ -93,7 +93,7 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
 
   try {
     // Hand R2 the request body itself: `arrayBuffer()` would hold the whole dump in the isolate,
-    // near its memory limit, and a Worker torn down that way resets the connection — the client
+    // near its memory limit, and a Worker torn down that way resets the connection - the client
     // then sees a rejected `fetch` with no status rather than an error response.
     await env.FEEDBACK_LOGS.put(key, request.body, {
       httpMetadata: { contentType: gzipped ? 'application/gzip' : 'application/x-ndjson' },
@@ -113,17 +113,17 @@ const RSS_MAX_BODY_SIZE = 8 * 1024 * 1024; // 8MB.
 const RSS_FETCH_TIMEOUT_MS = 15_000;
 
 /**
- * Handle /api/rss?url=<feed-url> — server-side fetch to bypass CORS for RSS/Atom feeds.
+ * Handle /api/rss?url=<feed-url> - server-side fetch to bypass CORS for RSS/Atom feeds.
  *
  * A proxy is required for the general case: the browser's same-origin policy blocks
  * cross-origin `fetch()` of any response that doesn't send `Access-Control-Allow-Origin`,
  * and RSS/Atom feeds are overwhelmingly served by CMSes (WordPress, Substack, news sites,
  * etc.) that don't set CORS headers, so a direct browser fetch fails before the body is
- * even read. Alternatives considered: (1) try direct, fall back to proxy — saves a hop
+ * even read. Alternatives considered: (1) try direct, fall back to proxy - saves a hop
  * for CORS-friendly feeds but every "no-CORS" feed pays a wasted round-trip and a console
- * error before the fallback runs; (2) `mode: 'no-cors'` — the response becomes opaque, the
+ * error before the fallback runs; (2) `mode: 'no-cors'` - the response becomes opaque, the
  * body is unreadable; (3) move the fetcher out of the browser entirely (scheduled
- * worker/edge function) — cleanest long-term but a much bigger change. We always proxy
+ * worker/edge function) - cleanest long-term but a much bigger change. We always proxy
  * for simplicity; the cost is a hop and some Worker CPU.
  */
 const handleRssProxy = async (request: Request): Promise<Response> => {
@@ -176,7 +176,7 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     const contentType = upstream.headers.get('content-type') ?? 'application/xml';
     const headers: Record<string, string> = { 'content-type': contentType };
 
-    // For HEAD or empty bodies, return immediately with the upstream status — no body to cap.
+    // For HEAD or empty bodies, return immediately with the upstream status - no body to cap.
     if (request.method === 'HEAD' || !upstream.body) {
       return new Response(null, { status: upstream.status, headers });
     }
@@ -219,12 +219,12 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
  * `create-passkey.ts`), so production credentials are permanently scoped to the `composer.space`
  * relying party. WebAuthn otherwise only lets a page assert an RP ID that is a registrable-domain
  * suffix of its own origin, which would confine every ceremony to `*.composer.space`. Listing an
- * origin here is what lets the MCP passkey ceremony — served from the `hub-service` worker on
- * `auth.dxos.network` — reach those existing credentials without re-registration.
+ * origin here is what lets the MCP passkey ceremony - served from the `hub-service` worker on
+ * `auth.dxos.network` - reach those existing credentials without re-registration.
  *
  * `composer.space` itself is deliberately absent: same-origin assertions are always permitted.
  *
- * Clients are only required to support 5 unique eTLD+1 labels, so entries are not free — but every
+ * Clients are only required to support 5 unique eTLD+1 labels, so entries are not free - but every
  * `*.composer.space` origin shares one label, and `dxos` covers `auth.dxos.network`.
  *
  * https://w3c.github.io/webauthn/#sctn-related-origins
@@ -233,7 +233,7 @@ const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.network'];
 
 /**
  * The native app's bundle id. Qualified by `APPLE_TEAM_ID` (wrangler.jsonc) into the `<team id>.<bundle
- * id>` form that `src-tauri/Entitlements.plist` also carries — its `associated-domains` list is the other
+ * id>` form that `src-tauri/Entitlements.plist` also carries - its `associated-domains` list is the other
  * half of this handshake: a domain is only claimed when the app names it *and* the domain serves the app
  * back here.
  */
@@ -252,8 +252,8 @@ const CHANNEL_BUNDLE_IDS = ['org.dxos.composer.dev', 'org.dxos.composer.preview'
  * `application/json` and the paths carry no extension for the asset server to infer that from. They
  * are covered by `run_worker_first` for the same reason the SPA fallback must not reach them.
  *
- * Asset routing and these routes alike ignore the hostname, so every domain mapped to this Worker —
- * composer.space and composer.dxos.org — is verified by the same documents. That is what replaced the
+ * Asset routing and these routes alike ignore the hostname, so every domain mapped to this Worker -
+ * composer.space and composer.dxos.org - is verified by the same documents. That is what replaced the
  * standalone `composer-dxos-org` Worker.
  */
 const WELL_KNOWN_DOCUMENTS: Record<string, (env: Env) => object | undefined> = {
@@ -301,12 +301,12 @@ const handleWellKnown = (request: Request, document: object | undefined): Respon
  * Serve an asset a previous build shipped, from the retention bucket.
  *
  * A deploy replaces the asset manifest wholesale, so the moment a new version goes live every chunk
- * the previous build owned stops resolving — and a tab open across that deploy still imports them.
+ * the previous build owned stops resolving - and a tab open across that deploy still imports them.
  * Every deploy mirrors its `assets/` into this bucket, keyed by path, so those requests keep working
  * for the environment's retention window.
  *
  * Returns `undefined` when there is nothing to serve, leaving the caller to 404: the bucket may be
- * unbound, and a hit is by definition the uncommon path — the live manifest answers everything the
+ * unbound, and a hit is by definition the uncommon path - the live manifest answers everything the
  * current build references.
  */
 const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise<Response | undefined> => {

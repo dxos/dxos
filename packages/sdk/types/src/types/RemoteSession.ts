@@ -12,7 +12,7 @@ import { type ForeignKey } from '@dxos/echo/Key';
 /**
  * Where a session is in its life. `running` and `finished` are the two the harness can report on
  * its own; `failed` records a session that ended without completing its work, and `unknown` is the
- * honest state for a session whose host went away — a cloud container reclaimed mid-run fires no
+ * honest state for a session whose host went away - a cloud container reclaimed mid-run fires no
  * close event, so a reader must be able to tell "still working" from "we stopped hearing".
  */
 export const State = Schema.Literals(['running', 'finished', 'failed', 'unknown']);
@@ -25,16 +25,16 @@ export const StateOptions: { id: State; title: string; color: string; icon: stri
   { id: 'unknown', title: 'Unknown', color: 'gray', icon: 'ph--question--regular' },
 ];
 
-/** The foreign system a session's identifier belongs to — the coding-agent harness itself. */
+/** The foreign system a session's identifier belongs to - the coding-agent harness itself. */
 export const SOURCE = 'claude.ai/code';
 
 /**
- * A coding-agent session — a Claude Code run — reflected into the graph so the work an agent is
+ * A coding-agent session - a Claude Code run - reflected into the graph so the work an agent is
  * doing is visible next to the work it was asked to do.
  *
  * The harness's session identifier is a **foreign key**, not a property: the session is a record
  * that lives in another system, and `Obj.getMeta().keys` is where ECHO already keeps that
- * correspondence — the same place sync provenance lives for every other imported object. It also
+ * correspondence - the same place sync provenance lives for every other imported object. It also
  * means a hook can address this object by the one identifier every hook event carries, through
  * `Filter.foreignKeys`, without a property whose uniqueness nothing enforces.
  *
@@ -44,14 +44,14 @@ export const SOURCE = 'claude.ai/code';
  */
 export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.dxos.type.remoteSession', '0.1.0'))(
   Schema.Struct({
-    /** Human-readable name for the run — normally the task it was started for. */
+    /** Human-readable name for the run - normally the task it was started for. */
     title: Schema.optional(Schema.String.annotate({ title: 'Title' })),
 
     state: State.annotate({ title: 'State' }),
 
     /**
      * What the session last said it was doing, in prose. Written from the harness `Stop` event,
-     * whose payload carries the turn's final assistant message — the cheapest honest summary
+     * whose payload carries the turn's final assistant message - the cheapest honest summary
      * available without reading the transcript.
      */
     lastMessage: Schema.optional(Schema.String.annotate({ title: 'Last message' })),
@@ -71,7 +71,7 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
     /** When the session reached a terminal state; unset while it is still running. */
     finished: Schema.optional(Format.DateTime.annotate({ title: 'Finished' })),
 
-    /** Where the session is working — repository, branch and worktree, when it has them. */
+    /** Where the session is working - repository, branch and worktree, when it has them. */
     repo: Schema.optional(Schema.String.annotate({ title: 'Repository' })),
     branch: Schema.optional(Schema.String.annotate({ title: 'Branch' })),
     worktree: Schema.optional(Schema.String.annotate({ title: 'Worktree' })),
@@ -80,7 +80,7 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
     Annotation.LabelAnnotation.set(['title']),
     // The harness's own mark rather than a generic robot: every session this type holds is reported
     // by Claude Code (`SOURCE`). An icon annotation is type-level, so a second harness would have to
-    // make this per-object — `harnessIcon` already keys off the foreign key for the places that can.
+    // make this per-object - `harnessIcon` already keys off the foreign key for the places that can.
     Annotation.IconAnnotation.set({ icon: 'px--anthropic--regular', hue: 'yellow' }),
     Annotation.UserType.set(),
   ),
@@ -91,7 +91,7 @@ export const key = (sessionId: string): ForeignKey => ({ source: SOURCE, id: ses
 
 /**
  * Factory for {@link RemoteSession}, taking the harness session id and filing it as the object's
- * foreign key — the id is not a property, so it cannot be set any other way.
+ * foreign key - the id is not a property, so it cannot be set any other way.
  */
 export const make = ({
   sessionId,
@@ -113,12 +113,12 @@ export const harnessName = (session: RemoteSession): string | undefined => {
   return source === undefined ? undefined : (HARNESS_NAMES[source] ?? source);
 };
 
-/** The foreign system this session belongs to — the harness that reported it. */
+/** The foreign system this session belongs to - the harness that reported it. */
 const getSource = (session: RemoteSession): string | undefined => Obj.getMeta(session).keys.at(0)?.source;
 
 /**
  * The harness's own brand glyph, where one exists. Falls back to undefined rather than a generic
- * icon so the caller picks its own default — a pill and a card want different ones.
+ * icon so the caller picks its own default - a pill and a card want different ones.
  */
 export const harnessIcon = (session: RemoteSession): string | undefined => {
   const source = getSource(session);

@@ -10,7 +10,7 @@ import * as Node from './AppGraphNode.ts';
 
 /**
  * `Atom.withLabel` captures and formats a stack trace on every call, and the graph labels an atom per node,
- * per connection key, and per extension, so one expansion costs hundreds of captures on the main thread —
+ * per connection key, and per extension, so one expansion costs hundreds of captures on the main thread -
  * hence opt-in, and only under the dev server.
  */
 const ATOM_LABELS = Boolean(import.meta.env?.DEV) && import.meta.env?.VITE_ATOM_LABELS === 'true';

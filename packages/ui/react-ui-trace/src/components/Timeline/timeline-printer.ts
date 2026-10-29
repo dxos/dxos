@@ -4,10 +4,10 @@
 
 import { type Commit } from './Timeline.tsx';
 
-const NODE = '●';
-const MERGE_NODE = '◆';
-const RAIL = '│';
-const HORIZ = '─';
+const NODE = '*';
+const MERGE_NODE = '\u25C6';
+const RAIL = '\u2502';
+const HORIZ = '\u2500';
 const COL_WIDTH = 3;
 
 /**
@@ -77,9 +77,9 @@ const renderRow = (
   if (connectLane >= 0) {
     const connectPos = connectLane * COL_WIDTH;
     if (fork) {
-      chars[connectPos] = connectLane < commitLane ? '├' : '┤';
+      chars[connectPos] = connectLane < commitLane ? '\u251C' : '\u2524';
     } else {
-      chars[connectPos] = connectLane > commitLane ? '╯' : '╰';
+      chars[connectPos] = connectLane > commitLane ? '\u256F' : '\u2570';
     }
 
     const minCol = Math.min(commitLane, connectLane);
@@ -88,7 +88,7 @@ const renderRow = (
       if (pos % COL_WIDTH === 0) {
         const col = pos / COL_WIDTH;
         if (activeRow[col]) {
-          chars[pos] = '┼';
+          chars[pos] = '\u253C';
         } else {
           chars[pos] = HORIZ;
         }

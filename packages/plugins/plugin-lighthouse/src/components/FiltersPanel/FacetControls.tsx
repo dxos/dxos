@@ -134,7 +134,7 @@ const RangeControl = ({
           data-testid={`lighthouse.filter.${facet.id}.min`}
         />
         <span aria-hidden='true' className='text-fg-subtle'>
-          –
+          -
         </span>
         <Input.Root
           type='number'

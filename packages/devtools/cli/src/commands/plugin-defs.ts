@@ -36,7 +36,7 @@ export type PluginConfig = {
  * Plugins `dx` pins on: always enabled, never disableable.
  *
  * Supplied explicitly rather than inherited from each plugin's `system` tag, because that tag is
- * declared once in a plugin's `dx.config.ts` for every host — so the tag alone made `observability`,
+ * declared once in a plugin's `dx.config.ts` for every host - so the tag alone made `observability`,
  * `connector` and `routine` non-disableable in the CLI purely because they are non-disableable in
  * Composer. Only these four are load-bearing for `dx` itself: the client every command reaches for,
  * the registry that contributes `dx plugin` (disabling it would strand the user with no way back),

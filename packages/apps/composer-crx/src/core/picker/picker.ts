@@ -41,7 +41,7 @@ const configureIcons = () => {
   }
 };
 
-// Inline style blocks — grouped as readonly constants so the build code below
+// Inline style blocks - grouped as readonly constants so the build code below
 // reads declaratively.
 const S_HOST: Partial<CSSStyleDeclaration> = {
   all: 'initial',
@@ -129,11 +129,11 @@ const describeElement = (el: Element, width: number, height: number): string => 
 
 /**
  * Start picker mode in the current tab. Builds the overlay via `Domino`
- * inside a Shadow DOM — keeps the host page's CSS cascade out of our UI and
+ * inside a Shadow DOM - keeps the host page's CSS cascade out of our UI and
  * re-targets any event we dispatch to our own host element so hit-testing
  * never picks our own chrome.
  *
- * Idempotent — a second call while one is active returns the in-flight
+ * Idempotent - a second call while one is active returns the in-flight
  * promise and ignores the new action list.
  */
 let active: Promise<PickerResult> | null = null;
@@ -157,7 +157,7 @@ export const startPicker = (actions: readonly PickerAction[]): Promise<PickerRes
 
     document.body.appendChild(host);
 
-    // State — mutable because the overlay redraws imperatively on every
+    // State - mutable because the overlay redraws imperatively on every
     // mousemove / key event. Scoping to the closure keeps it contained.
     let current: Element | null = null;
     let frozen: Element | null = null;
@@ -261,7 +261,7 @@ export const startPicker = (actions: readonly PickerAction[]): Promise<PickerRes
         return;
       }
       // Prefer the arrow-widened selection when it's still present, else hit
-      // test under the cursor. Without this, widening with ↑ and clicking
+      // test under the cursor. Without this, widening with ^ and clicking
       // would freeze the deepest element instead of the widened ancestor.
       const widened = current && document.contains(current) && !isOwned(current) ? current : undefined;
       const target = widened ?? document.elementFromPoint(ev.clientX, ev.clientY);

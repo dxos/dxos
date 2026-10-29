@@ -66,7 +66,7 @@ export const STORY_AGENTS = [
 ];
 
 /**
- * Seed suggestions authored by agents — deterministic, no LLM. For each agent, opens its per-author
+ * Seed suggestions authored by agents - deterministic, no LLM. For each agent, opens its per-author
  * `kind:'suggestion'` branch (via {@link Branch.suggestion}) and edits the content to that agent's
  * proposed revision, so the companion overlays them against the base as agent-authored suggestion
  * cards (multiple authors, each colour-coded by its own hue).

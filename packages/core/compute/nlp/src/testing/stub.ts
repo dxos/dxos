@@ -59,7 +59,7 @@ const LEXICON: Record<string, Upos> = {
 const WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?|[0-9]+|[.!?,;:]/g;
 
 /**
- * Fake tags one token by lexicon → number → suffix heuristic → capitalization. `initial` = sentence start.
+ * Fake tags one token by lexicon -> number -> suffix heuristic -> capitalization. `initial` = sentence start.
  */
 const tagWord = (raw: string, initial: boolean): Upos => {
   if (/^[.!?,;:]$/.test(raw)) {

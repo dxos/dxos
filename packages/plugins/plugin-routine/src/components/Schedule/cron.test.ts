@@ -125,7 +125,7 @@ describe('fromCron', () => {
     expect(fromCron('0 9 *')).toEqual({ frequency: 'custom', cronExpression: '0 9 *' });
   });
 
-  test('round-trip: toCron → fromCron', ({ expect }) => {
+  test('round-trip: toCron -> fromCron', ({ expect }) => {
     const specs = [
       { frequency: 'minutely' as const, interval: 15 },
       { frequency: 'hourly' as const, interval: 4, minute: 30 },

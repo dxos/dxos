@@ -82,14 +82,14 @@ const toStatus = (test: JsonTest): TestStatus => {
  * A test's identity across runs: where it lives and what it is called, per browser.
  *
  * Hashed rather than used raw so the property stays a fixed width in PostHog's person-less event
- * table, and stable under a rename of nothing but the file's directory — the path is relative to
+ * table, and stable under a rename of nothing but the file's directory - the path is relative to
  * the package, which is what `file` already holds.
  */
 export const testId = (parts: readonly string[]): string =>
   createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 16);
 
 const truncate = (text: string): string =>
-  text.length <= MAX_ERROR_LENGTH ? text : `${text.slice(0, MAX_ERROR_LENGTH - 1)}…`;
+  text.length <= MAX_ERROR_LENGTH ? text : `${text.slice(0, MAX_ERROR_LENGTH - 1)}...`;
 
 /** Playwright wraps failure messages in ANSI colour even when the reporter output is a file. */
 // eslint-disable-next-line no-control-regex
@@ -117,7 +117,7 @@ export type ReportOptions = {
    *
    * The RUN's time, not the commit's, which is what `ci-event.mjs` would otherwise default to: two
    * nightlies days apart routinely sit on one commit, and dating by commit would collapse them onto
-   * a single point — exactly the two nights a trend exists to tell apart.
+   * a single point - exactly the two nights a trend exists to tell apart.
    */
   startedAt?: string;
 };
@@ -125,7 +125,7 @@ export type ReportOptions = {
 /**
  * One event per test per browser.
  *
- * A SKIPPED test is published like any other. It is tempting to drop them — they measured nothing —
+ * A SKIPPED test is published like any other. It is tempting to drop them - they measured nothing -
  * but a suite that silently skips is the failure mode this chart is meant to catch: without the
  * row, a spec that disabled itself looks identical to one that was deleted, and the stack just gets
  * shorter with nothing to point at.
@@ -135,12 +135,12 @@ export const toEvents = (report: JsonReport, options: ReportOptions): TestEvent[
   const events: TestEvent[] = [];
 
   for (const [spec, trail] of walk(report.suites ?? [], [])) {
-    const suite = trail.join(' › ');
+    const suite = trail.join(' > ');
     // The `@QA-n` tags bind this test to the `.mdl` flows it automates, so a chart can report on a
-    // JOURNEY rather than on a file — and a flow whose rows all went red is the thing a reader of
+    // JOURNEY rather than on a file - and a flow whose rows all went red is the thing a reader of
     // the failing-tests table actually wants named.
     const qa = (spec.tags ?? []).filter((tag) => /^@?(?:[a-z-]+:)?QA-\d+$/.test(tag)).join(',');
-    const title = [...trail, spec.title].join(' › ');
+    const title = [...trail, spec.title].join(' > ');
     for (const test of spec.tests ?? []) {
       const status = toStatus(test);
       const browser = test.projectName || 'unknown';
@@ -153,7 +153,7 @@ export const toEvents = (report: JsonReport, options: ReportOptions): TestEvent[
         timestamp,
         // The run's timestamp is in the key as defence in depth. `ci-event.mjs` seeds its uuid
         // from (commit, dedup) and PostHog's dedup tuple includes the timestamp, so two nightlies
-        // on one commit would stay distinct without it — but that rests entirely on this event
+        // on one commit would stay distinct without it - but that rests entirely on this event
         // being dated by the RUN, and if that ever changed the two nights would silently collapse
         // into one point. Re-publishing a run is still idempotent: the timestamp is the report's
         // own `stats.startTime`, not the moment of publishing.

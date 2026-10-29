@@ -11,7 +11,7 @@
 //   X.pipe(Schema.pick('a'))       ->  X.mapFields(Struct.pick(['a']))
 //   Schema.extend(A, B)            ->  A.pipe(Schema.fieldsAssign(B.fields))
 //
-// `extend` is only rewritten when both sides are structs at the call site — the union-distributing
+// `extend` is only rewritten when both sides are structs at the call site - the union-distributing
 // form needs `mapMembers` and is left for a human.
 //
 //   node tools/codemods/effect-4-struct-ops.mjs [--dry] [path...]

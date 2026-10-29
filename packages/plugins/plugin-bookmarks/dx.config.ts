@@ -22,7 +22,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Save web pages you want to come back to. Add a bookmark from any page with one click in the
-      Composer browser extension — the page's title, image, and description are captured
+      Composer browser extension - the page's title, image, and description are captured
       automatically, and each bookmark keeps a link back to the original page.
 
       Bookmarks live in your space alongside everything else, ready to organize into collections,

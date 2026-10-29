@@ -25,7 +25,7 @@ export default FeedOperation.CurateMagazine.pipe(
 
       // Three phases, and only two of them can be counted: the feeds are countable, the agent call
       // over every candidate is one opaque request. Reporting the phase is what the uncountable one
-      // can still say — `phases`/`phase` locate the run in its plan, `current`/`total` describe the
+      // can still say - `phases`/`phase` locate the run in its plan, `current`/`total` describe the
       // phase in flight, and clearing `total` is what drops the bar rather than leaving it pinned.
       const traceWriter = yield* Trace.TraceService;
       const progressKey = FeedOperation.createCurateProgressKey(magazine);
@@ -158,8 +158,8 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
 /**
  * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
  * The magazine's persisted Instructions (created with the magazine) carries the editorial brief and
- * references the Magazine skill, which RunInstructions resolves at run time. No instructions → no selection.
- * Tolerates agent/parse failures (logs → no selection).
+ * references the Magazine skill, which RunInstructions resolves at run time. No instructions -> no selection.
+ * Tolerates agent/parse failures (logs -> no selection).
  */
 // TODO(jdw): Select and extract with System One models (`AiService.decisionModel`) instead of a full agent run,
 //   which takes minutes on a few dozen candidates because the agent opens articles one by one.
@@ -237,8 +237,8 @@ export type CuratedEntry = { ref: Ref.Ref<Subscription.Post>; post: Subscription
  * Takes resolved entries rather than bare refs. Curated Posts live in a feed queue, so `ref.target`
  * is undefined in a freshly-spawned process; the previous ref-only signature treated every such post
  * as unresolved, passed it through unbounded, and let the list grow without limit across runs.
- * An entry whose `post` could not be loaded is still carried through — a transient load failure must
- * not delete a starred post — but is deduplicated by ref uri.
+ * An entry whose `post` could not be loaded is still carried through - a transient load failure must
+ * not delete a starred post - but is deduplicated by ref uri.
  */
 export const applyKeep = (
   entries: readonly CuratedEntry[],

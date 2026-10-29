@@ -30,7 +30,7 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> & {
 
 /**
  * Confirms, then deletes the local identity in place and hands over to the flow that brings the next
- * one in — the client stays open throughout, so nothing reloads.
+ * one in - the client stays open throughout, so nothing reloads.
  */
 export const ResetDialog = ({ mode, invitationCode, onBeforeReset }: ResetDialogProps) => {
   const { t } = UiHooks.useTranslation(ClientNamespace.key);

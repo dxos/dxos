@@ -78,7 +78,7 @@ const parseElements = (xml: string, tag: string): Record<string, string>[] => {
 /**
  * Open Positions come at two levels of detail: one aggregate row per instrument and, when the query
  * emits lots, one row per tax lot. IBKR includes the `levelOfDetail` attribute only when that column
- * is selected — many queries omit it — so the reliable discriminator is `openDateTime`: empty on the
+ * is selected - many queries omit it - so the reliable discriminator is `openDateTime`: empty on the
  * aggregate (which spans every lot) and populated on each individual lot. `levelOfDetail` still wins
  * when present, so reports that do carry it keep working.
  */
@@ -110,7 +110,7 @@ export const parseTrades = (xml: string): Ibkr.Trade[] =>
     currency: row.currency,
   }));
 
-/** `BASE_SUMMARY` is IBKR's base-currency rollup row — drop it. */
+/** `BASE_SUMMARY` is IBKR's base-currency rollup row - drop it. */
 export const parseCash = (xml: string): Ibkr.Cash[] =>
   parseElements(xml, 'CashReportCurrency')
     .filter((row) => row.currency && row.currency !== 'BASE_SUMMARY')
@@ -148,7 +148,7 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 const rateLimitError = (code: string, message: string | undefined): Error =>
   new Error(
-    `IBKR rate limit (code ${code}): ${message ?? ''} Wait a few minutes before trying again — repeated attempts extend the lockout.`.trim(),
+    `IBKR rate limit (code ${code}): ${message ?? ''} Wait a few minutes before trying again - repeated attempts extend the lockout.`.trim(),
   );
 
 /** Enough of a non-Flex body (proxy error page, interstitial HTML) to identify it without flooding the log. */
@@ -159,12 +159,12 @@ const bodySnippet = (body: string): string => {
   if (collapsed === '') {
     return '<empty body>';
   }
-  return collapsed.length > BODY_SNIPPET_LENGTH ? `${collapsed.slice(0, BODY_SNIPPET_LENGTH)}…` : collapsed;
+  return collapsed.length > BODY_SNIPPET_LENGTH ? `${collapsed.slice(0, BODY_SNIPPET_LENGTH)}\u2026` : collapsed;
 };
 
 /**
  * Reads a Flex response body, failing loudly on a non-2xx. The request goes through the CORS proxy,
- * which can answer with its own error page — parsing that as Flex XML yields `ErrorCode: undefined`
+ * which can answer with its own error page - parsing that as Flex XML yields `ErrorCode: undefined`
  * and hides the real cause, so the status and a body snippet are surfaced instead.
  */
 const readFlexBody = async (response: Response, step: string): Promise<string> => {
@@ -181,7 +181,7 @@ const readFlexBody = async (response: Response, step: string): Promise<string> =
  * Flex XML at all keep polling; RATE_LIMIT_CODES stop immediately; any other code fails fast).
  *
  * Polling stays under IBKR's per-token cap (1 request/sec, 10/min): one SendRequest, a brief wait
- * to space the first poll, then a poll every `delayMs`. The default 8 polls spaced 7s span ~50s —
+ * to space the first poll, then a poll every `delayMs`. The default 8 polls spaced 7s span ~50s -
  * long enough for generation, slow enough to stay under the 10/min limit that otherwise locks the
  * token.
  */

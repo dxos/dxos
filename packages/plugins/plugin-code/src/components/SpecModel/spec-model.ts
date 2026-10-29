@@ -187,9 +187,9 @@ export const splitTopLevel = (text: string): string[] => {
   return parts;
 };
 
-/** `name(a: A, b?: B) → Out`; arrows may be written `→` or `->`. */
+/** `name(a: A, b?: B) -> Out`; arrows may be written `->` or `->`. */
 const parseSignature = (line: string): Pick<EndpointModel, 'name' | 'inputs' | 'output'> | undefined => {
-  const match = line.match(/^([\w.]+)\s*\((.*?)\)\s*(?:(?:→|->)\s*(.+?))?\s*(?:#.*)?$/);
+  const match = line.match(/^([\w.]+)\s*\((.*?)\)\s*(?:(?:\u2192|->)\s*(.+?))?\s*(?:#.*)?$/);
   if (!match) {
     return undefined;
   }
@@ -345,7 +345,7 @@ const SQL_REFERENCE = /\bREFERENCES\s+([\w.]+)\s*\(/i;
 
 /**
  * The persisted part of a spec's `type` and `table` blocks. A type is a stored root when it declares an ECHO
- * `typename`, holds a `Ref<…>`, or its description says it is persisted; the types the roots embed are stored inside
+ * `typename`, holds a `Ref<...>`, or its description says it is persisted; the types the roots embed are stored inside
  * them. A table is always a stored root, its columns are its fields, and a `REFERENCES` column references a table.
  */
 export const buildDataModel = (text: string): DataModel => {

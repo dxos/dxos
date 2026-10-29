@@ -121,7 +121,7 @@ describe('objectLinks', () => {
     view.destroy();
   });
 
-  // The first-document-render path: no rebuild effect, no edit — decorations must appear from
+  // The first-document-render path: no rebuild effect, no edit - decorations must appear from
   // `create()` plus the parse-completion listener alone.
   test('block and inline widgets build on first mount without a rebuild effect', async ({ expect }) => {
     const view = createView('# Title\n\nsee [x](eid:123)\n\n![label](eid:456)\n');
@@ -150,7 +150,7 @@ describe('objectLinks', () => {
     view.destroy();
   });
 
-  // The Component (StubWidget) branch the app uses — asserts the portal host mounts too.
+  // The Component (StubWidget) branch the app uses - asserts the portal host mounts too.
   test('component-backed block widget builds and mounts on first render', async ({ expect }) => {
     let widgets: WidgetState[] = [];
     const view = createView(
@@ -163,7 +163,7 @@ describe('objectLinks', () => {
     expect(decorations(view).some((decoration) => decoration.block)).toBe(true);
     expect(widgets.map((widget) => widget.id)).toContain('cm-url-echo:///456-0');
     // DOM attachment is not asserted: happy-dom lays out no viewport, so CM defers drawing the
-    // block host here; the storybook `MarkdownEditor — WithEmbed` story covers the drawn path.
+    // block host here; the storybook `MarkdownEditor - WithEmbed` story covers the drawn path.
     expect(widgets[0]?.root).toBeInstanceOf(HTMLElement);
     view.destroy();
   });

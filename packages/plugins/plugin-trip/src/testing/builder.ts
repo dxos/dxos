@@ -14,7 +14,7 @@ export type TripBuilderResult = {
   bookings: Booking.Booking[];
 };
 
-/** Common airports / stations used across stories — Place shape. */
+/** Common airports / stations used across stories - Place shape. */
 export const PLACES: Record<string, PlaceType> = {
   JFK: { name: 'John F. Kennedy Intl', code: 'JFK', city: 'New York', country: 'US', geo: [-73.7781, 40.6413] },
   SFO: { name: 'San Francisco Intl', code: 'SFO', city: 'San Francisco', country: 'US', geo: [-122.379, 37.6213] },
@@ -68,7 +68,7 @@ type ActivityOptions = {
 /**
  * Test helper for assembling a Trip with a sequence of segments and matching
  * bookings. Methods chain. Each method has an opt-less overload that keeps the
- * Phase 1 default (SFO → LHR / London Grand Hotel / Tower of London Tour) so
+ * Phase 1 default (SFO -> LHR / London Grand Hotel / Tower of London Tour) so
  * existing stories aren't broken; passing an options object lets newer stories
  * model arbitrary itineraries.
  */

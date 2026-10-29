@@ -61,7 +61,7 @@ describe('accessTokenResolverFromService', () => {
   });
 
   test('does not serve one space a token cached for another', async ({ expect }) => {
-    // The EDGE-backed layer is application-scoped, so a cache hit skips EDGE's membership check —
+    // The EDGE-backed layer is application-scoped, so a cache hit skips EDGE's membership check -
     // the key must include the space or the second read would return the first space's token.
     const other = SpaceId.random();
     const calls: { spaceId: string; accessTokenId: string }[] = [];

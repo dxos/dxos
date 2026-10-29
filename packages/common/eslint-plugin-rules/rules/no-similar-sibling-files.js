@@ -36,12 +36,12 @@ export const normalizeStem = (value) => {
  * Such pairs are ambiguous to import and collide on case-insensitive filesystems.
  *
  * @example
- * // ❌ Bad (same directory)
+ * // X Bad (same directory)
  * Space.ts + Spaces.ts
  * IconRegistry.ts + icon-registry.ts
  * SpaceCapability.ts + SpaceCapabilities.ts
  *
- * // ✅ Good
+ * // OK Good
  * Space.ts + Space.test.ts + Space.stories.tsx
  */
 export default {

@@ -24,7 +24,7 @@ export type PosOptions = {
  * Renders per-word UPOS marks from analysis state held in a span-oriented state field, with
  * independently switchable presentations: a colored underline per tag ({@link posTheme}) and a
  * hover popover naming the part of speech ({@link posPopover}). State can be set externally via
- * `setAnalysis`/`clearAnalysis`, or — when `options.parse` is supplied — self-driven on idle
+ * `setAnalysis`/`clearAnalysis`, or - when `options.parse` is supplied - self-driven on idle
  * (reactive mode).
  */
 export const pos = ({ parse, debounceMs = 500, underline = true, popover = false }: PosOptions = {}): Extension => {
@@ -132,7 +132,7 @@ export const posDecorations = EditorView.decorations.compute([posAnalysisField],
   return builder.finish();
 });
 
-// UPOS → ui-theme hue. Content classes (NOUN/VERB/ADJ/ADV/PROPN/NUM) get distinct hues; function
+// UPOS -> ui-theme hue. Content classes (NOUN/VERB/ADJ/ADV/PROPN/NUM) get distinct hues; function
 // words share a muted neutral; PUNCT/SYM/X are unstyled.
 const POS_HUE: Partial<Record<Upos, string>> = {
   NOUN: 'blue',

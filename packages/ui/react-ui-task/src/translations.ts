@@ -46,7 +46,7 @@ export const translations = [
         'task-description.placeholder': 'Task description',
         'task-history.label': 'Activity',
         'question-answer.label': 'Your answer',
-        'question-answer.placeholder': 'Type an answer…',
+        'question-answer.placeholder': 'Type an answer...',
         'question-submit.label': 'Answer',
         'remove-file.label': 'Remove {{name}}',
       },

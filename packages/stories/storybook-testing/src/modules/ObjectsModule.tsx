@@ -18,7 +18,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 const ALL_TYPES = '__all__';
 
 /**
- * Generic space inspector: a filterable {@link Listbox} of every object in the active space — a
+ * Generic space inspector: a filterable {@link Listbox} of every object in the active space - a
  * type selector (distinct typenames present) plus a text filter matching label/typename/id. A
  * lighter sibling of {@link DatabaseModule} for stories that just need to see what landed in the
  * space.
@@ -82,7 +82,7 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
           <Field.Root>
             <Input.Root
               classNames='grow'
-              placeholder='Filter objects…'
+              placeholder='Filter objects...'
               value={text}
               onChange={(event) => setText(event.target.value)}
             />

@@ -19,7 +19,7 @@ export type SyntheticWidgetProps = WidgetProps;
  */
 export const SyntheticWidget = ({ view, children }: SyntheticWidgetProps) => {
   // `getXmlInnerText`: a model fences blocks in tags of its own, and `getXmlTextChild` would stop
-  // at the first one — the reader saw a heading and an opening fence, then nothing.
+  // at the first one - the reader saw a heading and an opening fence, then nothing.
   const text = getXmlInnerText(children ?? [])?.trim();
 
   // CodeMirror measures the block as the portal mounts, before the panel has settled.

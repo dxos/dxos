@@ -538,7 +538,7 @@ describe('EdgeFeedReplicator', () => {
     test('a push finishing after newer blocks arrive does not send them back', async () => {
       const { replica, append, store, feedKey, blockAt, holds } = await setupFeeds(5);
       await store(range(5));
-      // Blocks 5–7 then extend the replica with no hole, so they could be pushed back.
+      // Blocks 5-7 then extend the replica with no hole, so they could be pushed back.
       for (const _ of range(3)) {
         await append();
       }

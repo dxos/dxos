@@ -52,7 +52,7 @@ const timeout = (base: number) => ({ timeout: LanguageModelFixture.isUpdateEnabl
  * The end-request hook is the planning skill's continuation mechanism: it fires after the turn the
  * model considers finished, so a test that asserts on a single turn cannot see it. Both cases here
  * seed the same three-item checklist and differ only in the user's prompt, which is what the hook's
- * ephemeral stop/continue check reads — that is the branch under test.
+ * ephemeral stop/continue check reads - that is the branch under test.
  */
 describe('Planning skill', { tags: ['model-fixture'] }, () => {
   it.effect(
@@ -93,7 +93,7 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
 
         // A deterministic reminder would trap this agent in an unbreakable re-prompt loop: the user
         // scoped the request, so open items are not a reason to continue. Asserting the silence needs
-        // no settle window — the hook decides inside the turn handler, so completion is past it, and
+        // no settle window - the hook decides inside the turn handler, so completion is past it, and
         // the sibling case above is the control that proves completion does not precede the hook.
 
         const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
@@ -110,13 +110,13 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
 });
 
 /**
- * A session whose chat holds a seeded checklist — the chat the process runs on, which both the hook
+ * A session whose chat holds a seeded checklist - the chat the process runs on, which both the hook
  * and update-tasks reach through `Harness.getChat`. Seeding the items rather than having the model
  * author them keeps the two cases differing only in the prompt.
  */
 const setupChatWithChecklist = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
-  // The checklist goes on the session's own chat — the one the harness resolves for the
+  // The checklist goes on the session's own chat - the one the harness resolves for the
   // conversation. A second chat on the same feed would be invisible to the planning tools.
   const chat = yield* Database.resolve(Obj.getURI(agent.chat), Chat.Chat);
   const { db } = yield* Database.Service;

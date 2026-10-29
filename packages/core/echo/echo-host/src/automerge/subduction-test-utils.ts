@@ -43,7 +43,7 @@ export const FIND_STATES: readonly QueryStateName[] = ['ready', 'loading'];
  * Window for an assertion that waits on subduction doing its work.
  *
  * Every such wait is event-driven or polled, so this is a ceiling on how long a stuck sync takes to
- * report, never time the suite spends when healthy — a passing wait returns as soon as its condition
+ * report, never time the suite spends when healthy - a passing wait returns as soon as its condition
  * holds. It was 5 s, which is only ~2x the slowest test in the suite (2.5 s including teardown), and
  * CI blew through it three times in one day on a loaded shard: the failures landed at 5.17-5.22 s,
  * i.e. exactly this budget rather than the thing under test. 15 s restores real headroom while still
@@ -52,8 +52,8 @@ export const FIND_STATES: readonly QueryStateName[] = ['ready', 'loading'];
 export const SYNC_WINDOW_MS = 15_000;
 
 /**
- * Window for the handful of negative tests whose subject is that NOTHING happens — no transport at
- * all, or no handshake to observe — so there is no event to wait on and the window IS the
+ * Window for the handful of negative tests whose subject is that NOTHING happens - no transport at
+ * all, or no handshake to observe - so there is no event to wait on and the window IS the
  * assertion. Every other negative assertion waits for the refusal itself; see {@link createDenyGate}.
  */
 export const NO_TRAFFIC_WINDOW_MS = 500;
@@ -134,7 +134,7 @@ export const SUBDUCTION_MESSAGE_TYPE = 'subduction-connection';
 /**
  * A policy denial that latches when it fires.
  *
- * Lets a negative assertion rest on the refusal having happened — the peer asked and was told no —
+ * Lets a negative assertion rest on the refusal having happened - the peer asked and was told no -
  * instead of on a guessed delay that is either too short on a loaded box or wasted time on an idle
  * one. It also fails loudly if the denial never fires, where a sleep would have passed vacuously.
  */
@@ -330,11 +330,11 @@ export const createStarTopology = (options?: ConnectedRepoOptions) =>
   });
 
 /**
- * Arm a per-pair handshake barrier, before any candidate goes out — a fast handshake would
+ * Arm a per-pair handshake barrier, before any candidate goes out - a fast handshake would
  * otherwise bind before the listener attached.
  *
  * Only the side that verifies the peer emits `subduction-peer-bound`, so a pair is bound once
- * EITHER of its repos reports — but every pair must report, or a later fetch can reach a still
+ * EITHER of its repos reports - but every pair must report, or a later fetch can reach a still
  * unbound pair, settle success-empty, and never be re-asked.
  */
 const armBindings = (repoPairs: [Repo, Repo][]): Promise<unknown>[] =>
@@ -385,7 +385,7 @@ export const reconnectAdapters = async (
   options?: { repoPairs?: [Repo, Repo][] },
 ) => {
   // Same handshake barrier as `connectAdapters`: the candidate only starts the new handshake, and a
-  // fetch — or a `shareConfigChanged()` kick — issued before it binds sees no peers and settles.
+  // fetch - or a `shareConfigChanged()` kick - issued before it binds sees no peers and settles.
   const bound = options?.repoPairs && armBindings(options.repoPairs);
   for (const pair of pairs) {
     pair[0].peerDisconnected(pair[1].peerId!);
@@ -444,7 +444,7 @@ export const createSqliteAdapter = async (filename = ':memory:') => {
   return adapter;
 };
 
-// ── Policy helpers ────────────────────────────────────────────────────────
+// -- Policy helpers --------------------------------------------------------
 //
 // `SubductionPolicy` is just an object of four async hooks. The helpers below
 // wrap that minimal shape with closure-captured behaviour so individual tests

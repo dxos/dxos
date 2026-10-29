@@ -143,7 +143,7 @@ export type CreateEntryOverride<S extends Schema.Codec<any, any> = Schema.Codec<
   inputSchema?: S;
   /**
    * Runs instead of the default onCreate(schema, values) path; values are typed from inputSchema.
-   * Resolves to `undefined` where the create only starts the work and no object exists yet — the
+   * Resolves to `undefined` where the create only starts the work and no object exists yet - the
    * ref slot is then left unset rather than pointed at nothing.
    */
   createObject?: (values: Schema.Schema.Type<S>, db: Database.Database) => Promise<Obj.Unknown | undefined>;
@@ -211,7 +211,7 @@ export type RefFieldDataProps = {
 /**
  * Form-wide field options carried by the form context and threaded down to every field. The
  * canonical source for the config that `FormContextValue`, `FormFieldProps`, and `FormFieldSetProps`
- * all share — so none of them has to reach "up" into another's props to express it.
+ * all share - so none of them has to reach "up" into another's props to express it.
  */
 export type FormFieldOptions = {
   db?: Database.Database;
@@ -244,6 +244,6 @@ export type RefThreadedProps = Pick<
 /**
  * Form-wide configuration threaded unchanged down the entire field recursion. This is the single
  * canonical source for the bag that `FormContextValue`, `FormFieldProps`, and `FormFieldSetProps`
- * all carry — so none of them re-Picks fragments of the others.
+ * all carry - so none of them re-Picks fragments of the others.
  */
 export type FieldContext = FormFieldOptions & CreateOptions & RefThreadedProps;

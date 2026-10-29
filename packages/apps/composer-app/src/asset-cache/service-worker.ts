@@ -30,7 +30,7 @@ const sendMessage = <T>(
       }
       // `navigator.serviceWorker.ready` never settles when no service worker is
       // registered (e.g. vite dev server). Fail fast so the user gets a clear
-      // error instead of "Installing…" hanging indefinitely.
+      // error instead of "Installing..." hanging indefinitely.
       const existing = await navigator.serviceWorker.getRegistration();
       if (!existing) {
         throw new Error(
@@ -70,7 +70,7 @@ const sendMessage = <T>(
  * Service-worker-backed `PluginAssetCache.Cache`. The actual fetching and storage
  * happens inside the SW (see ../sw.ts). On the host side this just exchanges
  * messages over a `MessageChannel` and lets the SW's fetch handler serve cached
- * responses transparently — so `resolve()` returns the original URL unchanged.
+ * responses transparently - so `resolve()` returns the original URL unchanged.
  */
 export const createServiceWorkerAssetCache = (): PluginAssetCache.Cache => ({
   cache: (pluginId, urls) =>

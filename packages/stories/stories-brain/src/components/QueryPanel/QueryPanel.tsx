@@ -39,7 +39,7 @@ export type QueryPanelProps = Util.ThemedClassName<{
 /**
  * Query column: a plain-language question field and a Markdown SPARQL field. Generate translates the
  * question into SPARQL (LLM) and writes it into the SPARQL field; Run parses that SPARQL into a
- * structured query and executes it over the store (no Comunica in the browser). Pure/presentational —
+ * structured query and executes it over the store (no Comunica in the browser). Pure/presentational -
  * the parent owns both strings and the handlers.
  */
 export const QueryPanel = ({

@@ -39,12 +39,12 @@ export const correctText = (text: string): string => {
     return capitalized;
   }
   // Replace a trailing non-terminal mark (comma/semicolon/colon) with the period rather than
-  // appending — a Whisper fragment like "Years," would otherwise become "Years,.".
+  // appending - a Whisper fragment like "Years," would otherwise become "Years,.".
   return `${capitalized.replace(/[,;:]+$/, '')}.`;
 };
 
 /**
- * Stage ①: clean up the most recent transcript block (punctuation, capitalization).
+ * Stage (1): clean up the most recent transcript block (punctuation, capitalization).
  * Windowed for cross-batch context; emits a correction for the newest block.
  */
 export const makeCorrectionStage = ({ correct }: CorrectionOptions = {}): Stage<CorrectionInput> => ({
@@ -61,7 +61,7 @@ export const makeCorrectionStage = ({ correct }: CorrectionOptions = {}): Stage<
         )
       : Effect.sync(() => {
           // Deterministic fallback: correct every not-yet-corrected block in the window. Robust under
-          // latest-wins — if earlier invocations were interrupted, the surviving run still covers their
+          // latest-wins - if earlier invocations were interrupted, the surviving run still covers their
           // blocks; already-corrected blocks are skipped once the write is applied back (idempotent).
           const updates = window
             .map((block, index) => ({ block, index }))

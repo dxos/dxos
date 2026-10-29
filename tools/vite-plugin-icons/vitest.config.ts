@@ -11,7 +11,7 @@ import { TEST_TAGS } from '../../vitest.tags.ts';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Standalone Vitest project (does not use repo `vitest.base.config` — that pulls DXOS Vite plugins
+ * Standalone Vitest project (does not use repo `vitest.base.config` - that pulls DXOS Vite plugins
  * that are not resolvable as config dependencies from this package).
  */
 export default defineConfig({

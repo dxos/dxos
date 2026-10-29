@@ -52,7 +52,7 @@ test.describe('create sizing', () => {
     });
     expect(drawn).toBeDefined();
     const box = await scene.box(scene.node(drawn!));
-    // Both ends snap to the grid, so each axis can land a cell either side of what the pointer swept —
+    // Both ends snap to the grid, so each axis can land a cell either side of what the pointer swept -
     // but it tracks the pointer rather than falling back to the type's default, whose 2:1 shape a
     // 240x160 sweep would not produce. The cell is read against the live zoom: the story fits itself to
     // the viewport, so a hard-coded percentage is a local accident.
@@ -82,7 +82,7 @@ test.describe('create sizing', () => {
 
     const before = await scene.box(scene.node(id!));
     // Nudge by a few pixels: with snapping live the node must land on a line, so it either stays put or
-    // jumps a whole visible cell — never drifts by the few pixels the pointer moved.
+    // jumps a whole visible cell - never drifts by the few pixels the pointer moved.
     const from = { x: before.x + before.width / 2, y: before.y + before.height / 2 };
     await scene.drag(from, { x: from.x + 5, y: from.y });
     const after = await scene.box(scene.node(id!));

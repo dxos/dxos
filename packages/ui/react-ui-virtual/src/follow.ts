@@ -25,7 +25,7 @@ const DEFAULT_DECELERATION = 6;
 /**
  * Gentler than the ramp up, and deliberately so.
  *
- * Braking distance is `v²/2d`, so matching the two rates sheds full speed in three rows — a travel
+ * Braking distance is `v²/2d`, so matching the two rates sheds full speed in three rows - a travel
  * of any length then cruises to within a few rows of the target and stops, which reads as an abrupt
  * halt however correct the curve is. At a third of the acceleration the landing occupies nine rows
  * and a second and a half, which is long enough to see.
@@ -56,12 +56,12 @@ export type VelocityStep = {
  *
  * Ramps up to `maxSpeed` and back down so the travel starts and ends gently rather than jumping.
  * The cap is whichever is lower: the ceiling, or the speed from which the remaining distance can
- * still be shed at `acceleration` (`v = sqrt(2·a·d)`) — that second term is what turns the arrival
+ * still be shed at `acceleration` (`v = sqrt(2·a·d)`) - that second term is what turns the arrival
  * into a deceleration instead of a stop, and what keeps a growing target at cruise speed.
  *
  * Acceleration is rate-limited so a start is gradual; **deceleration is not**, because the braking
  * curve is already a smooth ramp to zero and easing onto it instead leaves the speed above the
- * curve for the whole approach — the follow then runs out of distance while still moving and the
+ * curve for the whole approach - the follow then runs out of distance while still moving and the
  * arrival reads as a stop rather than a landing.
  */
 export const stepVelocity = ({
@@ -87,14 +87,14 @@ export const stepVelocity = ({
  * Keeps an element scrolled to its bottom while its content grows.
  *
  * Native `scrollTo({ behavior: 'smooth' })` restarts its easing on every call, so a target that
- * moves every chunk never leaves the start of the curve — the motion reads as a stutter. This
+ * moves every chunk never leaves the start of the curve - the motion reads as a stutter. This
  * carries velocity across frames instead: it accelerates as a stream begins, cruises while content
  * keeps arriving, and decelerates onto the tail when it stops.
  *
  * `@dxos/ui-editor`'s `createCrawler` follows a streaming CodeMirror document the same way, with a
  * critically-damped spring. The two are deliberately separate: that one is bound to `view.scrollDOM`
  * and driven by editor effects, where a feed owns its own scroll container. The models differ in
- * feel — a spring's speed falls off with distance, where this holds a ceiling and brakes onto the
+ * feel - a spring's speed falls off with distance, where this holds a ceiling and brakes onto the
  * target, which keeps a fast stream at a constant rate rather than an ever-widening lag.
  */
 export class ScrollFollower {
@@ -158,7 +158,7 @@ export class ScrollFollower {
   }
 
   /**
-   * Coasts to a halt, shedding speed at `deceleration` — what a stream ending or a stop control
+   * Coasts to a halt, shedding speed at `deceleration` - what a stream ending or a stop control
    * means. Cutting the animation instead would halt mid-glide, which is the one motion the reader
    * cannot have caused and so reads as a fault.
    */
@@ -172,7 +172,7 @@ export class ScrollFollower {
   }
 
   /**
-   * Halts immediately, discarding the velocity — the reader has taken over, or the list is going
+   * Halts immediately, discarding the velocity - the reader has taken over, or the list is going
    * away. Coasting here would fight a hand already on the scrollbar.
    */
   cancel(): void {

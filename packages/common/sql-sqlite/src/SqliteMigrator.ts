@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Migrator from 'effect/sql/Migrator';
 
 // Named re-exports (not `export *`, which would retain `fromFileSystem`, whose dynamic
-// template-literal `import()` workerd rejects bundle-wide — ERR_MODULE_DYNAMIC_SPEC); nothing is
+// template-literal `import()` workerd rejects bundle-wide - ERR_MODULE_DYNAMIC_SPEC); nothing is
 // lost, as this is the wasm/OPFS client, with no filesystem to read.
 export { MigrationError, fromBabelGlob, fromGlob, fromRecord, make } from 'effect/sql/Migrator';
 export type { Migration, MigratorOptions, ResolvedMigration } from 'effect/sql/Migrator';

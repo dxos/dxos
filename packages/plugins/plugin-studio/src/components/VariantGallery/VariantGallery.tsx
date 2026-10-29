@@ -57,7 +57,7 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
 };
 
 /**
- * A masonry gallery of an artifact's {@link Variant}s (rendered as thumbnails). Presentation-only —
+ * A masonry gallery of an artifact's {@link Variant}s (rendered as thumbnails). Presentation-only -
  * each tile resolves its own source via {@link useVariantSource}; selection state is owned by the
  * container (see `useListSelection`).
  */

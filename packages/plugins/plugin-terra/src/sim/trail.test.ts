@@ -22,7 +22,7 @@ const SPEC: TrailSpec = {
   color: [1, 1, 1],
 };
 
-/** A rocket's motion is a pure function of `(definition, context)` — no route/nav-grid setup needed to exercise `trailPuffs`. */
+/** A rocket's motion is a pure function of `(definition, context)` - no route/nav-grid setup needed to exercise `trailPuffs`. */
 const makeRocket = (speed: number): TerraObject.TerraObject =>
   TerraObject.make({
     kind: 'rocket',
@@ -42,7 +42,7 @@ describe('trailPuffs', () => {
   test('puff count is capped at spec.capacity', () => {
     // A very fast object would otherwise pack far more than `capacity` emission ticks into `lifetimeMs`.
     // At speed 10 the quarter-turn flight lasts ~157ms, so sampling at 70ms keeps the rocket below
-    // its burn — a rocket exhausts for the first third of its arc, and a later sample emits nothing.
+    // its burn - a rocket exhausts for the first third of its arc, and a later sample emits nothing.
     const rocket = makeRocket(10);
     const state = initialState(rocket, config);
     const puffs = trailPuffs(state, rocket, config, 70, SPEC);
@@ -55,7 +55,7 @@ describe('trailPuffs', () => {
     const spec: TrailSpec = { ...SPEC, capacity: 100 };
     const rocket = makeRocket(0.02); // 0.01 rad spacing at 0.02 rad/s => a 500ms emission interval.
     const state = initialState(rocket, config);
-    // spawnedAt is 0, so the tick born at t=0 is exactly 3000ms old at nowMs=3000 — right at the cutoff.
+    // spawnedAt is 0, so the tick born at t=0 is exactly 3000ms old at nowMs=3000 - right at the cutoff.
     const puffs = trailPuffs(state, rocket, config, 3_000, spec);
     // Ticks born at 500..2500ms old qualify (5 of them); the one born at 0 (exactly `lifetimeMs` old) does not.
     expect(puffs.length).toBe(5);
@@ -95,7 +95,7 @@ describe('trailPuffs', () => {
   test('a climbing rocket leaves its exhaust below its arc, not beside it', () => {
     const rocket = makeRocket(0.05);
     const state = initialState(rocket, config);
-    // Early in the boost phase the nose is near vertical, so the tail — and the plume — points
+    // Early in the boost phase the nose is near vertical, so the tail - and the plume - points
     // almost straight down. Offsetting along the ground track alone would leave every puff at the
     // rocket's own altitude, beside the arc rather than under it.
     const [nearest] = trailPuffs(state, rocket, config, 900, SPEC);

@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // in-process callers pass the live collection.
       const targetInput = input.target;
       const target = Ref.isRef(targetInput) ? yield* Effect.promise(() => targetInput.load()) : targetInput;
-      // The database is the runtime's, resolved from the invocation's space id — never an input,
+      // The database is the runtime's, resolved from the invocation's space id - never an input,
       // so there is no second database to reconcile against and no service to override.
       const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');

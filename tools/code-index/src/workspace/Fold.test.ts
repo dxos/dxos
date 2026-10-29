@@ -81,7 +81,7 @@ describe('Fold', () => {
     expect(state.running).toBe(false);
     expect(state.items.slice(1)).toEqual([
       { kind: 'assistant', id: 'm1', text: 'Half an ans', streaming: false },
-      { kind: 'notice', id: 'seq:3', text: '⚠ Interrupted before the turn finished.' },
+      { kind: 'notice', id: 'seq:3', text: 'Warning: Interrupted before the turn finished.' },
     ]);
   });
 

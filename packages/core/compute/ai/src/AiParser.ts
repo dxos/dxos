@@ -344,7 +344,7 @@ export const parseResponse =
             case 'tool-params-end': {
               // A provider that batches its terminators (the OpenAI dialect, where the wire format
               // has none per call) sends the end for a call already flushed when the next one
-              // opened. That block is complete, so the late terminator is redundant — closing the
+              // opened. That block is complete, so the late terminator is redundant - closing the
               // block that happens to be open instead would emit it under the wrong call's end.
               if (block?._tag !== 'toolCall' || block.toolCallId !== part.id) {
                 log.warn('tool call terminator does not match the open block', {
@@ -373,8 +373,8 @@ export const parseResponse =
                   toolCallId: part.id,
                   name: part.name,
                   // `JSON.stringify(undefined)` is `undefined`, not a string. A tool that answers
-                  // with nothing — which is what a handler whose result failed its own schema
-                  // produces — then persists a block with no `result`, and every later request over
+                  // with nothing - which is what a handler whose result failed its own schema
+                  // produces - then persists a block with no `result`, and every later request over
                   // that conversation dies decoding it (`Missing key at [n]["result"]`). One bad
                   // block must not brick the whole thread.
                   result: part.result === undefined ? 'null' : JSON.stringify(part.result),
@@ -615,7 +615,7 @@ const makeContentBlock = (
         }
       }
 
-      // Unknown tag — preserve the original literal text so it survives downstream as part
+      // Unknown tag - preserve the original literal text so it survives downstream as part
       // of the assistant's response (e.g. the model writes `<name>Claude</name>` because the
       // user asked for an XML-wrapped answer; the tag is not in `ModelTags`, so it must be
       // kept as plain text rather than silently dropped).
@@ -630,7 +630,7 @@ const makeContentBlock = (
 /**
  * Reconstruct the original literal text of a `StreamBlock`. Used as a fallback when a tag
  * is not in `ModelTags` so the assistant's response text is preserved verbatim. Only emits
- * a closing tag when the source had one — synthesizing a `</tag>` for an unclosed `<tag>`
+ * a closing tag when the source had one - synthesizing a `</tag>` for an unclosed `<tag>`
  * (e.g. mid-stream or when the model never closes it) corrupts the response text.
  */
 const serializeStreamBlock = (block: StreamBlock): string => {

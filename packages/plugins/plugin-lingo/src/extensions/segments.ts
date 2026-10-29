@@ -17,7 +17,7 @@ import { type RenderCallback } from '@dxos/ui-editor/types';
 
 /**
  * Which text this editor holds. A segment carries a range on each side, so the same segment id
- * addresses the corresponding text in either pane — this is what lets a selection made in the
+ * addresses the corresponding text in either pane - this is what lets a selection made in the
  * source highlight its counterpart in the translation.
  */
 export type SegmentSide = 'source' | 'target';
@@ -70,7 +70,7 @@ export const setHovered = StateEffect.define<string | undefined>();
 
 /**
  * Set (or clear) the committed segment. Dispatched by a click here, and by the container when the
- * *other* pane's selection changed — which is how the two panes stay in step.
+ * *other* pane's selection changed - which is how the two panes stay in step.
  */
 export const setSelected = StateEffect.define<string | undefined>();
 
@@ -115,8 +115,8 @@ export const segmentsState = (state: EditorState): SegmentsState => state.field(
  * have gone stale.
  *
  * Staleness is not merely cosmetic: an edit shifts the text under every range, so a stale segment
- * names a slice of the CURRENT document rather than the term that was analyzed. Every consumer —
- * hover, selection, and the tooltip's add action — resolves through here, so refusing to answer is
+ * names a slice of the CURRENT document rather than the term that was analyzed. Every consumer -
+ * hover, selection, and the tooltip's add action - resolves through here, so refusing to answer is
  * what stops an edit from filing the wrong word.
  */
 export const segmentAtPosition = (state: EditorState, position: number, side: SegmentSide): Segment | undefined => {
@@ -194,8 +194,8 @@ const decorations = (side: SegmentSide) =>
 /**
  * Solid highlight behind the active segments.
  *
- * Drawn as a layer of rectangles rather than a background on the inline mark so that — like a text
- * selection — it fills wrapped lines to the line edge instead of stopping at the last glyph. Matches
+ * Drawn as a layer of rectangles rather than a background on the inline mark so that - like a text
+ * selection - it fills wrapped lines to the line edge instead of stopping at the last glyph. Matches
  * how review comments are highlighted.
  */
 const highlightLayer = (side: SegmentSide) =>
@@ -225,7 +225,7 @@ const highlightLayer = (side: SegmentSide) =>
 
         const selectionRange = EditorSelection.range(range.start, range.end);
         const markers = RectangleMarker.forRange(view, className, selectionRange);
-        // A single rectangle means the segment fits on one visual line — round its corners. Rounding
+        // A single rectangle means the segment fits on one visual line - round its corners. Rounding
         // every rectangle of a wrapped segment would notch the interior edges.
         return markers.length === 1
           ? RectangleMarker.forRange(view, `${className} cm-segment-highlight-single`, selectionRange)
@@ -314,7 +314,7 @@ const popover = (side: SegmentSide, render: NonNullable<SegmentsOptions['render'
  *
  * As the pointer or caret moves, the most specific analyzed range under it is outlined; clicking
  * commits it. That committed segment is a second kind of selection alongside CodeMirror's text
- * selection — it addresses a linguistic unit rather than a character range, which is what lets the
+ * selection - it addresses a linguistic unit rather than a character range, which is what lets the
  * toolbar act on "this clause" and what the other pane mirrors.
  */
 export const segments = (options: SegmentsOptions = {}): Extension => {
@@ -365,7 +365,7 @@ const segmentTheme = EditorView.theme({
   '.cm-segmentHighlightLayer': {
     pointerEvents: 'none',
   },
-  // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour — visual
+  // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour - visual
   // padding without changing layout, so vertically adjacent line rectangles paint into each other's
   // gap and a wrapped segment stays seamless. `padding-inline` with a compensating negative
   // `margin-inline` gives horizontal breathing room while keeping the fill aligned to the text.

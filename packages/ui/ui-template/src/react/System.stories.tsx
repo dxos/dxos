@@ -38,16 +38,16 @@ import { useSystem } from './useSystem.ts';
 
 //
 // SPIKE. The system stories: one DefaultStory, per-story layout. Everything below a story's
-// `source` runs through the same loop — parse → seed slots (template lets + module slots) →
-// materialize module views from (published state × live ECHO query inputs) → render →
-// operations → new state. Nothing is ambient: every name a template binds is a `let`, a root
+// `source` runs through the same loop - parse -> seed slots (template lets + module slots) ->
+// materialize module views from (published state × live ECHO query inputs) -> render ->
+// operations -> new state. Nothing is ambient: every name a template binds is a `let`, a root
 // `var`, or a `use` alias into a module's typed export table.
 //
 
 type Db = Database.Database;
 
 /**
- * Story database: `EchoTestBuilder` rather than the full client harness — no HALO, no space
+ * Story database: `EchoTestBuilder` rather than the full client harness - no HALO, no space
  * pipeline, milliseconds to open. One per page load; stories share it, which also demonstrates
  * that the system tolerates pre-existing data.
  */
@@ -94,12 +94,12 @@ const TASKS_MODULE = 'org.dxos.module.tasks';
 const PICKER_MODULE = 'org.dxos.module.picker';
 const FILTER_MODULE = 'org.dxos.module.filter';
 
-/** The status subset the form edits — the stored type also carries terminal states. */
+/** The status subset the form edits - the stored type also carries terminal states. */
 const TaskStatus = Schema.Literals(['todo', 'started', 'done']);
 
 /**
  * The FORM schema: the editable projection, not the stored type. `Type.getSchema(Task)`
- * carries the ECHO `id` as a required field, which a draft cannot satisfy — a live reminder that
+ * carries the ECHO `id` as a required field, which a draft cannot satisfy - a live reminder that
  * forms want a View (ONTOLOGY R-5), and the registry should hold both.
  */
 const TaskForm = Schema.Struct({
@@ -120,12 +120,12 @@ const toFormValues = (task: Task.Task): TaskFormValues => ({
 const inputTasks = (inputs: Readonly<Record<string, unknown>>): readonly Task.Task[] =>
   Array.isArray(inputs.tasks) ? inputs.tasks : [];
 
-/** A multi-selection as ids — the `selections` slot value or a `select-many` payload's `ids`. */
+/** A multi-selection as ids - the `selections` slot value or a `select-many` payload's `ids`. */
 const asIds = (value: unknown): string[] => (Array.isArray(value) ? value.map(String) : []);
 
 /**
  * The tasks module: what `deriveContext` used to smuggle in ambiently is now the module's
- * typed export table — the module that owns the inputs (selections, draft, the query) exports the
+ * typed export table - the module that owns the inputs (selections, draft, the query) exports the
  * derivations (`selected`), and its operations are the only writers of its slots.
  */
 const TasksModule: ModuleDef<Db> = {
@@ -137,7 +137,7 @@ const TasksModule: ModuleDef<Db> = {
   },
   state: {
     items: { derive: ({ inputs }) => inputTasks(inputs) },
-    // Derived from selections × draft × items — typed, owned here, never ambient.
+    // Derived from selections × draft × items - typed, owned here, never ambient.
     selected: {
       derive: ({ slots, inputs }) => {
         if (slots.draft === true) {
@@ -155,7 +155,7 @@ const TasksModule: ModuleDef<Db> = {
         return ids.length === 1 ? ids[0] : undefined;
       },
     },
-    // The ONE selection slot's snapshot and its structural derivations — `show` branches on
+    // The ONE selection slot's snapshot and its structural derivations - `show` branches on
     // these, so "exactly one" lives here, never as a template expression.
     selections: fromSlot('selections'),
     selectedOne: {
@@ -186,7 +186,7 @@ const TasksModule: ModuleDef<Db> = {
   operations: {
     select: {
       key: 'org.dxos.operation.tasks.select',
-      description: 'Select a row in the master list — the constrained single writer of the selections slot.',
+      description: 'Select a row in the master list - the constrained single writer of the selections slot.',
       // No payload (Esc-deselect) clears the slot; a string selects exactly that id.
       handler: ({ scope, payload }) =>
         scope.set({ selections: typeof payload === 'string' ? [payload] : [], draft: false }),
@@ -214,7 +214,7 @@ const TasksModule: ModuleDef<Db> = {
           scope.set({ draft: false });
           return;
         }
-        // Exactly one selected id is the form's subject — single and multi templates alike.
+        // Exactly one selected id is the form's subject - single and multi templates alike.
         const ids = asIds(scope.get('selections'));
         const id = ids.length === 1 ? ids[0] : undefined;
         const object = id ? db?.getObjectById<Task.Task>(id) : undefined;
@@ -251,8 +251,8 @@ const TasksModule: ModuleDef<Db> = {
   },
   capabilities: {
     // The zag machine as a live capability: one shared instance, mounted with the system. Its
-    // only write path is onChange → select-many → the selections slot, so every transition is a
-    // logged operation and the published snapshot is the state binders read — the machine stays
+    // only write path is onChange -> select-many -> the selections slot, so every transition is a
+    // logged operation and the published snapshot is the state binders read - the machine stays
     // an implementation detail behind the slot.
     multiSelect: {
       machine: 'org.dxos.machine.multi-select',
@@ -270,7 +270,7 @@ const TasksModule: ModuleDef<Db> = {
           }
         };
         start();
-        // Senders only: connect's snapshot reads go stale by design — binders read the slot.
+        // Senders only: connect's snapshot reads go stale by design - binders read the slot.
         return {
           api: connect(machine.service),
           start,
@@ -366,7 +366,7 @@ const registry: Registry<Db, Schema.Codec<unknown, unknown>> = {
     },
   },
 
-  // The flat table holds only template-local operations — an anonymous template's writers.
+  // The flat table holds only template-local operations - an anonymous template's writers.
   // Everything module-owned lives in the module's own operations column below.
   operations: {
     'org.dxos.operation.view.set': {
@@ -409,7 +409,7 @@ const FORM = trim`
             on-save="org.dxos.operation.tasks.save"
             on-cancel="org.dxos.operation.tasks.cancel" />
       <fallback>
-        <display label="Nothing selected — Add starts a draft." />
+        <display label="Nothing selected - Add starts a draft." />
       </fallback>
     </show>
   </container>
@@ -475,7 +475,7 @@ const MASTER_DETAIL_MULTI = trim`
           <display variant="title" data-text="tasks.selectionLabel" />
         </match>
         <match value="none">
-          <display label="Nothing selected — click a row; shift-click toggles." />
+          <display label="Nothing selected - click a row; shift-click toggles." />
         </match>
       </switch>
     </layout>
@@ -487,7 +487,7 @@ const COMBOBOX = trim`
     <var name="title" type="org.dxos.type.Text" />
     <use module="org.dxos.module.picker" as="picker" />
     <display variant="title" data-text="title" />
-    <combobox placeholder="Select task…"
+    <combobox placeholder="Select task..."
               data-items="picker.filtered" item-id="id" item-label="title"
               data-value="picker.pickerLabel" data-filter="picker.filter"
               on-input="org.dxos.operation.picker.input"
@@ -501,7 +501,7 @@ const COMBOBOX = trim`
 const FILTER_LIST = trim`
   <container>
     <use module="org.dxos.module.filter" as="filter" />
-    <control label="Filter" placeholder="Type to filter…" data-value="filter.text"
+    <control label="Filter" placeholder="Type to filter..." data-value="filter.text"
              on-input="org.dxos.operation.filter.input" />
     <collection data-items="filter.filtered" item-id="id" item-label="title" />
   </container>
@@ -560,7 +560,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
     [tasks],
   );
 
-  // Which layout renders is itself a function of published state — layout selection is the
+  // Which layout renders is itself a function of published state - layout selection is the
   // meta-level of "entirely state-driven".
   const firstKey = Object.keys(sources)[0];
   const parsedAll = useMemo(() => {
@@ -592,7 +592,7 @@ const DefaultStory = ({ sources: initialSources, pick }: StoryArgs) => {
   const active = parsedAll[activeKey] ?? parsedAll[firstKey];
 
   // The host side of the contract: values against the `var` signature, module views against the
-  // `use` imports — both mount-checked, both visible when they fail (never garbage).
+  // `use` imports - both mount-checked, both visible when they fail (never garbage).
   const vars: Record<string, unknown> = { title: 'Tasks' };
   const modules = viewModules(registry, ui, inputs, capabilities);
   const mountErrors = active?.node

@@ -38,13 +38,13 @@ const runCrawl = (config: Type.Config, options?: Crawler.StreamOptions) =>
     return yield* Crawler.summarize();
   });
 
-/** A source whose fetch fails with a typed error — exercises per-target failure isolation. */
+/** A source whose fetch fails with a typed error - exercises per-target failure isolation. */
 const FAILING_SOURCE = Layer.succeed(Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.fail(new CrawlError({ message: 'Missing Access' })),
 });
 
-/** A source whose fetch DIES (defect) — exercises defect isolation (dfx can surface a 403 this way). */
+/** A source whose fetch DIES (defect) - exercises defect isolation (dfx can surface a 403 this way). */
 const DYING_SOURCE = Layer.succeed(Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.die(new Error('Missing Access')),

@@ -13,7 +13,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync
  * {@link Cursor} (the cursor's `spec.source` access token authenticates sync for that target).
- * Returns the connection of the target's live binding, or `undefined` when the target is unbound —
+ * Returns the connection of the target's live binding, or `undefined` when the target is unbound -
  * including when its cursor outlived the connection it was authenticated by (see
  * {@link Binding.find}), which is the same state the Connect action keys on.
  */
@@ -32,7 +32,7 @@ export const useTargetConnection = <T extends Obj.Any>(
 /**
  * The {@link ConnectorSpec.ConnectorEntry} backing `connection`, resolved from the registered `Connector` capability
  * list. `connectors` is resolved by the container (this hook lives under `components/`, which must not
- * call capability hooks) and threaded down via `useSyncTrigger` — see the properties-panel wiring.
+ * call capability hooks) and threaded down via `useSyncTrigger` - see the properties-panel wiring.
  */
 export const useConnectorEntry = (
   connection: Connection.Connection | undefined,

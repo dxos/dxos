@@ -11,7 +11,7 @@ import { Type } from '@dxos/echo';
 import { Subscription } from '#types';
 
 /**
- * Makes a Post's prose reachable to any plugin that reads text without knowing this type exists —
+ * Makes a Post's prose reachable to any plugin that reads text without knowing this type exists -
  * the reading companion, extraction pipelines. The fetched body wins over the feed's own `content`,
  * which is a summary for most publishers and absent for some, and the title leads so a reader that
  * renders the result as markdown gets a heading rather than an unlabelled wall of text.

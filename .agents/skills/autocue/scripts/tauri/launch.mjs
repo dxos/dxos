@@ -316,7 +316,7 @@ const launchLinux = async ({ app, width, height, scale, theme, port, headed, pro
     // `prefers-color-scheme` in WebKitGTK follows the GTK theme's variant.
     GTK_THEME: theme === 'dark' ? 'Adwaita:dark' : 'Adwaita',
     // Xvfb has no GPU: Mesa's software rasterizer serves WebKit's GL. `WEBKIT_DISABLE_DMABUF_RENDERER` must NOT be
-    // set — its fallback segfaults the app in AcceleratedBackingStore::update the first time a page composites,
+    // set - its fallback segfaults the app in AcceleratedBackingStore::update the first time a page composites,
     // and WebKitGTK 2.52 no longer honours `WEBKIT_DISABLE_COMPOSITING_MODE`.
     ...(virtual ? { LIBGL_ALWAYS_SOFTWARE: '1' } : {}),
     ...(proxy

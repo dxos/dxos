@@ -67,7 +67,7 @@ const watchOption = Options.Boolean('watch').pipe(
 );
 
 /**
- * Directories of the profile's dev-installed plugins — the only on-disk code a running server can
+ * Directories of the profile's dev-installed plugins - the only on-disk code a running server can
  * see change. A `copy` install is a snapshot the CLI owns and only `add` rewrites, and a
  * compiled-in plugin cannot change at all, so neither is worth a watch.
  */
@@ -108,7 +108,7 @@ export const serve = Command.make(
 
     const uploads = new LocalUpload.Stage();
     const server = yield* makeLocalServer({
-      // FilePlugin is not activated here (it is mostly UI), so its skill is served directly — without
+      // FilePlugin is not activated here (it is mostly UI), so its skill is served directly - without
       // it no skill owns `file.createFromUpload` and the operation is invisible to the caller.
       skills: [FileSkill],
       overrides: [StagedUpload.createFromUploadHandler(uploads), StagedUpload.resolveDownloadHandler(uploads)],
@@ -117,7 +117,7 @@ export const serve = Command.make(
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
     // Optional: the observability plugin is disableable, and a profile that turned it off still
-    // serves — it just reports nothing.
+    // serves - it just reports nothing.
     const observability = Option.getOrUndefined(yield* Capability.getOption(ObservabilityCapabilities.Observability));
     const capture = observability && (yield* observability.isAvailable('mcp')) ? observability.mcp : undefined;
     const stdio = capture

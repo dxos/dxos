@@ -55,8 +55,8 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 /**
  * Mosaic tile for a Segment. Follows the Card primitives:
  *   Card.Root
- *     Card.Header  → kind icon + title + delete (Card.ActionIconButton action='delete')
- *     Card.Body  → optional Route and Date rows
+ *     Card.Header  -> kind icon + title + delete (Card.ActionIconButton action='delete')
+ *     Card.Body  -> optional Route and Date rows
  *
  * Selection / current state is wired through `Mosaic.Tile asChild` + `Focus.Item`
  * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`

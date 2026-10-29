@@ -345,8 +345,8 @@ export const fitLabel = (
   }
 
   let chars = text.length;
-  while (chars > 0 && measure(`${prefix} ${text.slice(0, chars)}…`) * min > width) {
+  while (chars > 0 && measure(`${prefix} ${text.slice(0, chars)}\u2026`) * min > width) {
     chars--;
   }
-  return { text: chars > 0 ? `${text.slice(0, chars).trimEnd()}…` : '', fontSize: min };
+  return { text: chars > 0 ? `${text.slice(0, chars).trimEnd()}\u2026` : '', fontSize: min };
 };

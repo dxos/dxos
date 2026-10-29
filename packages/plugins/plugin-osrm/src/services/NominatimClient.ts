@@ -41,7 +41,7 @@ export const geocode = async (
     throw new Routing.GeocodeError(query);
   }
 
-  // External, untyped JSON — asserted to the documented Nominatim shape at this boundary.
+  // External, untyped JSON - asserted to the documented Nominatim shape at this boundary.
   const results = (await response.json()) as NominatimResult[];
   return parsePlace(results, query);
 };

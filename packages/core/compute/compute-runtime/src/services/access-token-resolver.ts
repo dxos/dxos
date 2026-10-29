@@ -24,7 +24,7 @@ type CacheEntry = { accessToken: string; expiresAtMillis: number };
  *
  * Server-side counterpart to {@link accessTokenResolverFromEdge}: a function context has no identity
  * to sign a presentation with, so resolution goes through a service binding instead of HTTP. The
- * binding is already bound to the invocation's space, so `spaceId` is not forwarded — a function
+ * binding is already bound to the invocation's space, so `spaceId` is not forwarded - a function
  * cannot reach another space's credentials by asking for them.
  */
 export const accessTokenResolverFromService = (service: EdgeFunctionEnv.AccessTokenService) =>

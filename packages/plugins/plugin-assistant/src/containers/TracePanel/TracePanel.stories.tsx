@@ -116,7 +116,7 @@ const DefaultStory = () => {
   );
 
   // `useSpaces` is empty until the client has created the default space, and the panel is addressed
-  // by that space — reading its id before it exists is what threw the story away on first paint.
+  // by that space - reading its id before it exists is what threw the story away on first paint.
   if (!space) {
     return <></>;
   }
@@ -157,7 +157,7 @@ const SnapshotStory = () => {
 };
 
 // Raw Trace.Message[] captured from a live sub-agent delegation via `dxosDumpTrace()` (see
-// TracePanel). External JSON → typed at this boundary; `buildExecutionGraph` only reads
+// TracePanel). External JSON -> typed at this boundary; `buildExecutionGraph` only reads
 // `meta`/`events`, so the plain data shape is sufficient.
 const subAgentMessages = subAgentDelegationFixture as unknown as Trace.Message[];
 
@@ -171,7 +171,7 @@ const FixtureStory = () => {
 };
 
 /**
- * Step/playback over a fixed list of trace messages — renders the execution-graph Timeline at each
+ * Step/playback over a fixed list of trace messages - renders the execution-graph Timeline at each
  * step so layout (e.g. concurrent sub-agent lanes) can be inspected as events "stream" in.
  */
 const TimelinePlayback = ({
@@ -242,7 +242,7 @@ const TimelinePlayback = ({
   }, [total]);
   const handleTogglePlay = useCallback(() => setPlaying((previous) => !previous), []);
 
-  // Keyboard shortcuts: ←/h step back, →/l step forward, space play/pause, r reset, e/End show all.
+  // Keyboard shortcuts: <-/h step back, ->/l step forward, space play/pause, r reset, e/End show all.
   useEffect(() => {
     return addEventListener(window, 'keydown', (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -283,14 +283,14 @@ const TimelinePlayback = ({
       toolbar={
         <Toolbar.Root>
           <Button.Root icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
-          <Button.Root icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
+          <Button.Root icon='ph--caret-left--regular' iconOnly label='Step back (<- / H)' onClick={handlePrev} />
           <Button.Root
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
             iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <Button.Root icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <Button.Root icon='ph--caret-right--regular' iconOnly label='Step forward (-> / L)' onClick={handleNext} />
           <Button.Root icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
           <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}

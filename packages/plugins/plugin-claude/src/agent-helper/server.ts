@@ -48,7 +48,7 @@ export type AgentServer = {
 
 /**
  * Serves the agents on the loopback interface. `GET /agents` reports which can run; a WebSocket on
- * `/acp?agent=…&cwd=…` starts one agent process in that directory and relays its ACP traffic, one
+ * `/acp?agent=...&cwd=...` starts one agent process in that directory and relays its ACP traffic, one
  * JSON-RPC message per frame each way. The agent dies with its socket.
  *
  * This is how the Tauri webview, which cannot spawn processes, runs a coding agent: it holds the ACP

@@ -26,7 +26,7 @@ type ContextValue = {
 const [TogglePanelContext, useTogglePanelContext] = createContext<ContextValue>('TogglePanel');
 
 //
-// Root — headless; owns disclosure state. Wrap children in a `TogglePanel.Content`.
+// Root - headless; owns disclosure state. Wrap children in a `TogglePanel.Content`.
 //
 
 const ROOT_NAME = 'TogglePanel.Root';
@@ -39,7 +39,7 @@ type RootProps = Util.ThemedClassName<
       onChangeOpen?: (open: boolean) => void;
       /**
        * Mount the body on first open, and keep it mounted after. For a panel rendered many times over
-       * whose body is costly to build — a list of them pays for every body the reader never opens.
+       * whose body is costly to build - a list of them pays for every body the reader never opens.
        */
       lazyMount?: boolean;
     } & Partial<ContextValue>
@@ -73,7 +73,7 @@ const Root = ({
 Root.displayName = ROOT_NAME;
 
 //
-// Content — the bordered shell that frames the header and body.
+// Content - the bordered shell that frames the header and body.
 //
 
 const CONTENT_NAME = 'TogglePanel.Content';
@@ -147,7 +147,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
 Header.displayName = HEADER_NAME;
 
 //
-// Body — collapsible region driven by the disclosure state.
+// Body - collapsible region driven by the disclosure state.
 //
 
 const BODY_NAME = 'TogglePanel.Body';

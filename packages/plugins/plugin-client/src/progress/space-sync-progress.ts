@@ -25,7 +25,7 @@ export type MonitorUpdate = {
  * the whole space instead put a monitor that opened at 5,020 of 5,021 at the end of its bar with an
  * ETA of zero, since the ETA divides the run's elapsed time by everything synced before it began.
  *
- * The label leads with the phase, matching the mail sync meter — a name-only label never said that
+ * The label leads with the phase, matching the mail sync meter - a name-only label never said that
  * the meter was tracking sync.
  */
 export const toSpaceUpdate = (
@@ -52,7 +52,7 @@ export const toSpaceUpdate = (
     notes.push(`${unsyncedDocuments} objects`);
   }
   if (unsyncedBlocks > 0) {
-    notes.push(`↓${blocksToPull} ↑${blocksToPush}`);
+    notes.push(`\u2193${blocksToPull} \u2191${blocksToPush}`);
   }
 
   return {

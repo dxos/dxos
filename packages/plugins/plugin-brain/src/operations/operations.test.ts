@@ -104,7 +104,7 @@ describe('SummarizeSubject', () => {
     );
     expect(result.factCount).toBe(2);
     expect(result.summary).toContain('[f-1]');
-    // Fact→source bridge: distinct source message DXNs for the matched facts.
+    // Fact->source bridge: distinct source message DXNs for the matched facts.
     expect(result.sources.length).toBeGreaterThan(0);
     expect(new Set(result.sources).size).toBe(result.sources.length);
   });

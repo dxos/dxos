@@ -56,16 +56,16 @@ export const StageWrite = Object.freeze({
 
 /** Context supplied to a stage's `run` by the runtime. */
 export type StageContext = {
-  /** Resolves entity references for extraction. Backend-agnostic (full-text, vector, …). */
+  /** Resolves entity references for extraction. Backend-agnostic (full-text, vector, ...). */
   readonly lookup?: EntityLookup;
-  /** The model resolved for this stage by the runtime (config → stage → preset default). */
+  /** The model resolved for this stage by the runtime (config -> stage -> preset default). */
   readonly model: DXN.DXN;
 };
 
 /**
  * A pipeline stage: a discrete, repeatedly-invoked transform over a window of the transcript stream.
  *
- * The runtime — not the stage — owns the continuous stream; it builds `input` from a window snapshot
+ * The runtime - not the stage - owns the continuous stream; it builds `input` from a window snapshot
  * (`select`) and invokes `run` once per trigger, enforcing `concurrency` and injecting `model`.
  *
  * LLM-backed stages delegate `run` to an `Operation` (typed I/O, memoized-LLM tests, standalone
@@ -74,7 +74,7 @@ export type StageContext = {
 export interface Stage<In = unknown, E = unknown> {
   readonly id: string;
   readonly trigger: StageTrigger;
-  /** Sliding context size in blocks. Absent → the runtime passes the full current window. */
+  /** Sliding context size in blocks. Absent -> the runtime passes the full current window. */
   readonly window?: { blocks: number };
   readonly concurrency: StageConcurrency;
   /** Default model for the stage; overridden by per-stage config in the runtime. */

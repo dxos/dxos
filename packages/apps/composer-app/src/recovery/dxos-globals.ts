@@ -9,7 +9,7 @@ import { type RecoveryDiagnosticsResult } from './diagnostics.ts';
 import { type ResetResult } from './reset-storage.ts';
 import { type SqlStorageDiagnosticsResult } from './sql-storage-diagnostics.ts';
 
-/** Static devtools globals only — no Client until {@link bootRecoveryClient}. */
+/** Static devtools globals only - no Client until {@link bootRecoveryClient}. */
 export const installDxosGlobals = (): DevtoolsHook => {
   mountDevtoolsHooks({});
   return getDxos();
@@ -29,7 +29,7 @@ export type RecoveryHelpers = {
   /** @deprecated Use {@link startClient}. */
   boot: () => Promise<unknown>;
   diagnostics: () => Promise<RecoveryDiagnosticsResult>;
-  /** OPFS pool + SQLite only — no client boot (safe when feed open hangs). */
+  /** OPFS pool + SQLite only - no client boot (safe when feed open hangs). */
   sqlDiagnostics: () => Promise<SqlStorageDiagnosticsResult>;
   /** Raw OPFS SQLite export (`DXOS.sqlite`). */
   exportProfile: () => Promise<{ byteLength: number; saved: boolean }>;

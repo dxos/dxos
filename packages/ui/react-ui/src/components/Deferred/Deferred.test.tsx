@@ -102,7 +102,7 @@ describe('Deferred', () => {
     expect(screen.queryByTestId(FALLBACK)).toBeNull();
   });
 
-  // `minDuration` counts from the render, not from when `pending` flipped — a fallback still held
+  // `minDuration` counts from the render, not from when `pending` flipped - a fallback still held
   // back by `delay` has not been on screen at all, so it owes no minimum.
   test('`minDuration` does not delay content when the fallback never showed', async () => {
     const { rerender } = render(
@@ -138,7 +138,7 @@ const fallback = () => <div data-testid={FALLBACK} />;
 
 /**
  * Advances fake timers inside `act`, so the state update the timer schedules is flushed before the
- * next assertion — a bare `advanceTimersByTimeAsync` fires the callback but leaves React unrendered.
+ * next assertion - a bare `advanceTimersByTimeAsync` fires the callback but leaves React unrendered.
  */
 const advance = async (ms: number) => {
   await act(async () => {

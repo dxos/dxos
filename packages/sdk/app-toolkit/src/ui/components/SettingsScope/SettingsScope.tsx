@@ -14,7 +14,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { useSettingsScope } from '../../hooks/index.ts';
 
 type SettingsScopeProps = {
-  /** Settings prefix the control scopes — a plugin key, or one of the app-level namespaces. */
+  /** Settings prefix the control scopes - a plugin key, or one of the app-level namespaces. */
   prefix: string;
 };
 

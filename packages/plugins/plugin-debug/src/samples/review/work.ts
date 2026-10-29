@@ -138,7 +138,7 @@ const TASK_SEEDS: ReadonlyArray<TaskSeed> = [
     title: 'Add Archify architecture diagrams',
     status: 'review',
     priority: 'medium',
-    description: 'Render a package’s module graph as a diagram an agent can generate and a person can read.',
+    description: "Render a package's module graph as a diagram an agent can generate and a person can read.",
     pullRequest: 'archify',
     videos: ['archify'],
     reviewers: ['mira', 'kai'],

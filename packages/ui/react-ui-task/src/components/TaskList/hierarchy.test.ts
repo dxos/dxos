@@ -138,8 +138,8 @@ describe('keyboard moves applied', () => {
 });
 
 /**
- * Applies a placement the way `MoveTask` does — out of the old parent's `subtasks`, into the new
- * one's before the anchor, re-parented, and repositioned in the root order — so a test reads the tree
+ * Applies a placement the way `MoveTask` does - out of the old parent's `subtasks`, into the new
+ * one's before the anchor, re-parented, and repositioned in the root order - so a test reads the tree
  * the move produces rather than its two terms.
  */
 const move = (tasks: readonly Task.Task[], task: Task.Task, placement: TaskPlacement | undefined): Task.Task[] => {
@@ -179,7 +179,7 @@ const outline = (tasks: readonly Task.Task[]): string => {
 
 /**
  * `a` and `b` are roots; `a1`/`a2` are children of `a`, `a1x` a child of `a1`. The flat list is
- * deliberately NOT a pre-order traversal — `b` sits between `a`'s children — so the walk has to
+ * deliberately NOT a pre-order traversal - `b` sits between `a`'s children - so the walk has to
  * take placement from the parent edges and sibling order from `subtasks`.
  */
 const fixture = () => {

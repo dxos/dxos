@@ -11,7 +11,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import { FactsCompanion } from '#containers';
 import { BrainSurface } from '#types';
 
-/** React surfaces contributed by plugin-brain — the per-space facts panel. */
+/** React surfaces contributed by plugin-brain - the per-space facts panel. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [

@@ -29,7 +29,7 @@ import { QUICK_ENTRY_DIALOG } from '../constants.ts';
 /**
  * The section role, typed for an embedded outline: same NSID (role identity is structural), plus the
  * optional `taskSet` an embedder passes so promoted items are filed into ITS ledger rather than the
- * outline's own — a project's inline outline promotes into the project's task set.
+ * outline's own - a project's inline outline promotes into the project's task set.
  */
 const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
   Role.make('org.dxos.role.section');
@@ -38,7 +38,7 @@ const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { sh
   Role.make('org.dxos.role.section');
 
 /**
- * An object shown beside the one it relates to — a task under the email it was extracted from. Typed
+ * An object shown beside the one it relates to - a task under the email it was extracted from. Typed
  * here for a task; hosts make the same NSID (role identity is structural).
  */
 const TaskRelated: Role.Role<{ subject: Task.Task }> = Role.make('org.dxos.role.related');

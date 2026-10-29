@@ -24,7 +24,7 @@ interface ParsedArgs {
   /**
    * Independent condition sets, one per `--conditions` occurrence. A plugin resolves
    * `#capabilities` to a different barrel per runtime, so asserting the property under only one
-   * runtime leaves the others unchecked — repeating the flag traces each in the same run.
+   * runtime leaves the others unchecked - repeating the flag traces each in the same run.
    */
   conditionSets: string[][];
   packagesOnly: boolean;
@@ -40,7 +40,7 @@ const stringList = (value: unknown): string[] =>
 /**
  * Folds repeated `--to` values into one brace pattern.
  *
- * Repeating the flag used to stringify the array — `"@dxos/react-ui,react"` matches no package, so
+ * Repeating the flag used to stringify the array - `"@dxos/react-ui,react"` matches no package, so
  * the check found nothing and passed while enforcing nothing. Braces are what the glob layer
  * already understands, so a single value stays byte-identical to before and only the multi-value
  * case changes.
@@ -205,7 +205,7 @@ const main = async () => {
   const args = await parseArgs();
 
   // Every entry is traced under every condition set even after one fails, so a single run reports
-  // every offending combination rather than only the first — the guard is usually asserting a
+  // every offending combination rather than only the first - the guard is usually asserting a
   // property of all of them.
   const entries: (string | undefined)[] = args.exportSubpaths.length > 0 ? args.exportSubpaths : [undefined];
   let failed = false;

@@ -32,7 +32,7 @@ type StoryArgs = {
 
 /**
  * The card is a surface: its chrome (border, heading, menu) comes from the `Card.Root` the caller
- * renders, so the story supplies one — a card rendering its own root drew a second border.
+ * renders, so the story supplies one - a card rendering its own root drew a second border.
  */
 const DefaultStory = ({ content, name }: StoryArgs) => {
   const [space] = useSpaces();

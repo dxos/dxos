@@ -56,7 +56,7 @@ export type GameVariantSurfaceProps = {
   game: Obj.Snapshot<Game.Game> | Game.Game;
   /**
    * The resolved variant state object, live rather than a snapshot so variants can write to it.
-   * Reads must subscribe via `useObject(variant, prop)` — the host re-renders only when the ref
+   * Reads must subscribe via `useObject(variant, prop)` - the host re-renders only when the ref
    * resolves, not on every mutation.
    */
   variant: Obj.Unknown;

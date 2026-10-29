@@ -95,7 +95,7 @@ export const _FormNoValues: StoryObj<typeof DefaultStory<Person.Person>> = {
 /**
  * Table-like variant: the subject has values only in form-hidden fields
  * (`view`, `sizes` annotated `FormInputAnnotation.set(false)`). `FormCard`
- * must consult the schema's form-input annotations — not just `Object.keys` —
+ * must consult the schema's form-input annotations - not just `Object.keys` -
  * to recognize this case and fall through to the empty state.
  */
 export const _FormTableEmpty: StoryObj<typeof DefaultStory<any>> = {

@@ -127,7 +127,7 @@ export const executeChange = (
     const exitContext = enterChangeContext(contextKey);
     try {
       // The callback is handed the mutable view, not `proxy`: writability travels with the reference, so
-      // the object named outside stays read-only even while this runs. The context is still entered —
+      // the object named outside stays read-only even while this runs. The context is still entered -
       // it is what batches notifications and what the array and text gates read.
       batchEvents(() => callback(getMutableProxy(proxy)));
     } finally {
@@ -149,7 +149,7 @@ export const executeChange = (
 };
 
 /**
- * The read-only gate, and the whole of it — every variant is gated here and nowhere else. A symbol is
+ * The read-only gate, and the whole of it - every variant is gated here and nowhere else. A symbol is
  * never user data (the system stamps `[ParentId]` and friends outside any change context), and a target
  * whose `[ChangeKeyId]` is undefined is still under construction and not yet gated. Everything else may
  * only be mutated inside the `Obj.update` that opened a context for *this* object.
@@ -159,7 +159,7 @@ export const executeChange = (
  * context, and the handler module must not depend on this one.
  *
  * `name` is the property for a trap and the method name for a mutation a proxy cannot intercept (an
- * array method, a text CRDT op), which call this directly — the same predicate either way.
+ * array method, a text CRDT op), which call this directly - the same predicate either way.
  */
 export const assertMutable = <T extends string | symbol>(
   target: object,

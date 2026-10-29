@@ -36,7 +36,7 @@ describe('snapshotEquals', () => {
 describe('snapshotForComparison', () => {
   test('a ref survives the snapshot with its uri intact', ({ expect }) => {
     // `RefImpl.uri` is a prototype getter over a `#private` field, so a shallow spread would drop it
-    // and hand the consumer an empty object — which is what froze the chat's model selector.
+    // and hand the consumer an empty object - which is what froze the chat's model selector.
     const ref = makeRef('dxn:model:com.anthropic:claude');
     expect(snapshotForComparison(ref).uri).toBe(ref.uri);
   });

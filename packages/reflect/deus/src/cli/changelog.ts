@@ -39,7 +39,7 @@ export type ChangelogCheckOptions = {
 export const checkChangelog = Effect.fnUntraced(function* ({ base: baseRef, cwd, event }: ChangelogCheckOptions) {
   // The rule is diff-based: on `main` every spec's history is already merged, so only a branch run means anything.
   if (event && event !== 'pull_request') {
-    yield* Console.log(`Skipping on \`${event}\` — the changelog check is diff-based.`);
+    yield* Console.log(`Skipping on \`${event}\` - the changelog check is diff-based.`);
     return;
   }
 
@@ -53,7 +53,7 @@ export const checkChangelog = Effect.fnUntraced(function* ({ base: baseRef, cwd,
     yield* Console.log(`Missing-decision rule waived by ${WAIVER}: ${waivers.join('; ')}`);
   }
 
-  // Path in the working tree → path at the base (undefined for a new file).
+  // Path in the working tree -> path at the base (undefined for a new file).
   const changed = new Map<string, string | undefined>();
   // Unquoted paths, so a non-ASCII file name reads back as the file it names.
   const quotePath = ['-c', 'core.quotePath=false'];
@@ -90,7 +90,7 @@ export const checkChangelog = Effect.fnUntraced(function* ({ base: baseRef, cwd,
 
   if (failures > 0) {
     yield* Console.log(
-      `\n${failures} changelog error(s). Every spec change adds a decision — see .agents/skills/mdl/SKILL.md.`,
+      `\n${failures} changelog error(s). Every spec change adds a decision - see .agents/skills/mdl/SKILL.md.`,
     );
     return yield* Effect.fail(new ChangelogCheckError({ context: { failures } }));
   }

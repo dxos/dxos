@@ -52,7 +52,7 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
 };
 
 /**
- * `dx registry publish` — config-driven build + publish.
+ * `dx registry publish` - config-driven build + publish.
  *
  * Reads the build/publish orchestration from `dx.config.ts`, runs the declared build command,
  * reads the emitted `manifest.json`, hosts the bundle (default: upload the build
@@ -191,7 +191,7 @@ export const publish = Command.make(
           client,
         });
 
-        // Resolve hosting → moduleUrl.
+        // Resolve hosting -> moduleUrl.
         const assetBaseUrl = Option.getOrUndefined(options.assetBaseUrl) ?? config.publish?.assetBaseUrl;
         let moduleUrl: string;
         if (assetBaseUrl) {
@@ -200,7 +200,7 @@ export const publish = Command.make(
         } else {
           // Upload to the edge registry via the authenticated edge client (hub-identity VP).
           // When --edge-url is provided we bypass the profile's edge config and post directly
-          // with auth: false — relies on WORKER_ENV=dev skipAuth on the server (local dev only).
+          // with auth: false - relies on WORKER_ENV=dev skipAuth on the server (local dev only).
           const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
           const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
           if (explicitEdgeUrl) {
@@ -314,7 +314,7 @@ const uploadBundle = ({
 
 /**
  * Upload using a standalone EdgeHttpClient (no DXOS profile required).
- * Auth is skipped — the server must have WORKER_ENV=dev to accept unauthenticated uploads.
+ * Auth is skipped - the server must have WORKER_ENV=dev to accept unauthenticated uploads.
  */
 const uploadBundleDirect = ({
   http,
@@ -338,7 +338,7 @@ const uploadBundleDirect = ({
           ? error
           : new PublishError({ message: 'Bundle upload failed.', cause: error }),
     }).pipe(
-      // Hosted versions are immutable, so a re-run of an already-uploaded version answers 409 —
+      // Hosted versions are immutable, so a re-run of an already-uploaded version answers 409 -
       // the existing bundle is the publish's outcome, keeping registry publishes re-runnable.
       Effect.catchIf(
         (error) => error instanceof EdgeCallFailedError && error.data?.type === 'conflict',

@@ -33,7 +33,7 @@ import { useEnter } from './useEnter.ts';
 import { useRangeTween } from './useRangeTween.ts';
 
 /**
- * The chart's vocabulary is groups, lanes, segments and markers — deliberately not the vocabulary of
+ * The chart's vocabulary is groups, lanes, segments and markers - deliberately not the vocabulary of
  * whatever is being charted. A host maps its own nouns onto these (a process onto a group, a task
  * onto a lane, a status change onto a marker) and the chart stays ignorant of what they mean.
  */
@@ -73,14 +73,14 @@ export type GanttLane = {
   status: GanttLaneStatus;
   /** The band this lane sits in. */
   groupId?: string;
-  /** Indents under another lane of the same group — nesting, nothing more. */
+  /** Indents under another lane of the same group - nesting, nothing more. */
   parentId?: string;
   /** Every stretch this lane was worked. A lane with none exists but has no extent, so no bar. */
   segments?: readonly GanttSegment[];
   /** The node this lane opened out of, on another lane. */
   openedFrom?: { laneId: string; markerId: string };
   /**
-   * The node this lane's result came back into, on another lane — the mirror of `openedFrom`, and a
+   * The node this lane's result came back into, on another lane - the mirror of `openedFrom`, and a
    * separate fact: a lane can open out of another and end without ever reporting back.
    */
   closedInto?: { laneId: string; markerId: string };
@@ -100,12 +100,12 @@ export type GanttMarker = {
   label: string;
   level?: 'info' | 'warn' | 'error';
   /**
-   * A wait begun at this node and since ended — a question put to the reader and answered. Drawn as a
+   * A wait begun at this node and since ended - a question put to the reader and answered. Drawn as a
    * dashed line along the lane to the node that ended it; a wait still open draws nothing, so the lane
    * ends at the question until the answer lands.
    */
   wait?: { until: string };
-  /** Awaiting a response — an unanswered question. The node pings until the response arrives. */
+  /** Awaiting a response - an unanswered question. The node pings until the response arrives. */
   pending?: boolean;
 };
 
@@ -113,7 +113,7 @@ const PAD_X = 16;
 const ROW_HEIGHT = 24;
 const HEADER_HEIGHT = 20;
 
-/** Pixels per event on the `unit` axis — wide enough that two adjacent nodes read as two. */
+/** Pixels per event on the `unit` axis - wide enough that two adjacent nodes read as two. */
 const UNIT_STEP = 32;
 /** How long a newly arrived element takes to travel from where it came from to where it belongs. */
 const ENTER_TRANSITION = 'duration-500 ease-out';
@@ -147,7 +147,7 @@ const BEND_RADIUS = BAR_HEIGHT / 2;
 
 /**
  * Bar, node, thread and label colours per status: nodes and the thread through them are the bar's
- * hue in a lighter shade, and `edge` — the live end of a lane still running — is the stronger shade
+ * hue in a lighter shade, and `edge` - the live end of a lane still running - is the stronger shade
  * the legend's own status dot uses, so the two read as the same statement about the lane.
  */
 /**
@@ -231,8 +231,8 @@ export type GanttData = {
   /** Pixels per event on the `unit` axis. */
   unitStep?: number;
   /**
-   * Slide a newly arrived event out of the one before it — out of the node that opened its lane, for
-   * a lane's first — and grow its bar to meet it, on the `unit` axis. Only events that arrive while the
+   * Slide a newly arrived event out of the one before it - out of the node that opened its lane, for
+   * a lane's first - and grow its bar to meet it, on the `unit` axis. Only events that arrive while the
    * chart is on screen animate, so a chart that is merely mounted is still.
    */
   animate?: boolean;
@@ -580,7 +580,7 @@ type Stretch = {
  *
  * The drawing is one keyboard stop: clicking a node focuses it, the arrows walk the nodes (left and
  * right along a lane, up and down to the nearest node of the next lane), Space opens the current
- * node's card and Enter selects it — the same keys a legend row answers to.
+ * node's card and Enter selects it - the same keys a legend row answers to.
  */
 const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, forwardedRef) => {
   const {
@@ -691,7 +691,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
   );
   const isEntering = useEnter(markers.map((marker) => marker.id));
 
-  // On the time axis the right edge is "now" — the newest event, where open lanes end. While the range
+  // On the time axis the right edge is "now" - the newest event, where open lanes end. While the range
   // eases toward new bounds, anything newer than the drawn range is held at that edge rather than drawn
   // past it: the new event and the open ends stay pinned while everything older compresses leftward.
   const edge = axis === 'time' ? scale.at(shownRange.end) : undefined;
@@ -700,7 +700,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
   const openSource = (lane: GanttLane): GanttMarker | undefined =>
     lane.openedFrom && markerById.get(lane.openedFrom.markerId);
 
-  // Where each node is drawn: its own place, or — for the one frame in which it arrives — the place it
+  // Where each node is drawn: its own place, or - for the one frame in which it arrives - the place it
   // came from, which is what the transitions below then travel out of. A lane's first node comes from
   // the node the lane opened out of, so a lane reads as branching from whatever caused it.
   const markerX = new Map<string, number>();
@@ -728,7 +728,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
   /**
    * A lane's drawn stretches, one per segment. An open segment reaches its last node, taking the
    * node's drawn position rather than its instant so the bar grows with an arriving event instead of
-   * jumping ahead of it — and on to the chart's newest event when that is later.
+   * jumping ahead of it - and on to the chart's newest event when that is later.
    */
   const stretchesOf = (lane: GanttLane): Stretch[] => {
     const list = laneMarkers.get(lane.id) ?? [];
@@ -880,7 +880,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
     }
   };
 
-  // The unit axis grows to the right, so the newest event has to be followed — but only while the
+  // The unit axis grows to the right, so the newest event has to be followed - but only while the
   // reader is at its edge; having scrolled back, they are reading, not watching. A layout effect, so
   // the first paint already shows the newest events rather than jumping to them from the start.
   useLayoutEffect(() => {
@@ -893,7 +893,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
     drawnRef.current = scale.width;
 
     // Opened on the present: what is happening now is what the chart is looked at for. A drawing that
-    // fitted until now counts as opening too — its events arrived after mount, and there was no place
+    // fitted until now counts as opening too - its events arrived after mount, and there was no place
     // in it for the reader to keep.
     const grown = previous !== undefined && scale.width > previous;
     if (previous === undefined || (grown && previous <= width)) {
@@ -987,7 +987,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
         />
       )}
 
-      {/* A group's rectangle encloses its band — the lanes it holds, and only those: a nested
+      {/* A group's rectangle encloses its band - the lanes it holds, and only those: a nested
               group is a band of its own, drawn further down. */}
       {bands.flatMap(({ group, first, last }) => {
         const stretches = rows.slice(first, last + 1).flatMap((row) => stretchesOf(row.lane));
@@ -1062,7 +1062,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
         const sourceX = x(source.timestamp);
         const y = rowY(index);
         const targetX = stretches[0].from;
-        // Down, a quarter bend, then right to where the lane begins — but only while there is
+        // Down, a quarter bend, then right to where the lane begins - but only while there is
         // somewhere forward to go. A lane that begins at or before the node that opened it has no
         // run to make, and bending anyway would hook the connector sideways into the middle of its
         // own bar; the drop lands on the row instead. The bar stays where the data puts it either
@@ -1078,7 +1078,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
             fill='none'
             // Drawn on by its dash rather than by its shape: `d` is beyond what a transition can
             // reach, while `stroke-dashoffset` is a property every renderer animates. `pathLength`
-            // normalises the path to 1 so one dash covers it whatever its actual length — which is
+            // normalises the path to 1 so one dash covers it whatever its actual length - which is
             // also why these are inert, and the connector solid, when it is not opening.
             pathLength={1}
             strokeDasharray={1}
@@ -1227,7 +1227,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
                   className={mx(
                     'cursor-pointer hover:stroke-[3px] hover:stroke-fg',
                     // A question or an error is ringed in red; an error pulses while its lane stays
-                    // failed (an unanswered question pings instead — the ring drawn behind it).
+                    // failed (an unanswered question pings instead - the ring drawn behind it).
                     isAlert(marker) ? 'stroke-red-500 stroke-2' : 'stroke-base-surface',
                     marker.level === 'error' && row.lane.status === 'failed' && 'animate-pulse',
                     // `cx` as a transition: where a browser exposes SVG geometry as CSS the node

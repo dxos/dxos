@@ -65,7 +65,7 @@ const PENDING_STATUSES = new Set<Task.Status>(['todo', 'backlog']);
 /**
  * The edit history's status moves, each timed by the trace event recording the same move when there is
  * one. History times are whole seconds, rounded down, so on their own they start a lane up to a second
- * before the node that marks its start; everything derived from them — spans, nodes — reads these.
+ * before the node that marks its start; everything derived from them - spans, nodes - reads these.
  */
 const refineStatusChanges = (
   changes: ReadonlyMap<string, readonly TaskStatusChange[]>,
@@ -165,7 +165,7 @@ interface TaskSegment {
 
 /**
  * Cuts a session's events into segments of task work, from the status events its task tools write.
- * Only tasks in `taskIds` — the session's own checklist — take part: an agent is free to move a task
+ * Only tasks in `taskIds` - the session's own checklist - take part: an agent is free to move a task
  * belonging to nothing on this chart, and such an event must not open or close anything here.
  *
  * An agent may hold several tasks in progress at once, and may put one down and pick it up again as
@@ -173,9 +173,9 @@ interface TaskSegment {
  * other open segment alone, and any other status closes that task's open segment. A task can also
  * finish without a start: delegation marks every task it hands over `started` before the agent's
  * first turn, so the run's only event for that task is the one closing it. Such a task gets the
- * stretch since the last boundary, which is where its work happened — but only on the transition out
+ * stretch since the last boundary, which is where its work happened - but only on the transition out
  * of `started` and only while no other task holds the stretch: a task merely dismissed
- * (`todo` → `blocked`) claims nothing, a second close (`review` → `done`) mints nothing, and a close
+ * (`todo` -> `blocked`) claims nothing, a second close (`review` -> `done`) mints nothing, and a close
  * arriving while other work is open leaves that work alone rather than overlapping it.
  */
 const buildTaskSegments = (
@@ -223,7 +223,7 @@ const buildTaskSegments = (
 /**
  * The segment an event belongs to. A status event goes to its own task's segment. Any other event
  * goes to the one segment in progress when it happened; where segments merely meet, the one ending
- * there yields to the one beginning — the newcomer's start is the first thing the agent did on it.
+ * there yields to the one beginning - the newcomer's start is the first thing the agent did on it.
  * With several tasks genuinely in progress at once the event belongs to none of them in particular,
  * so it stays with the session rather than being credited to whichever started last.
  */
@@ -271,8 +271,8 @@ const historySpan = (
 
 /**
  * The stretches a task was put down between two runs of work: from a move out of `started` that did
- * not finish it (a question blocking it, say) to the next move back. One still open is no gap — the
- * lane simply ends there — and nothing before the first start is one either.
+ * not finish it (a question blocking it, say) to the next move back. One still open is no gap - the
+ * lane simply ends there - and nothing before the first start is one either.
  */
 const workGaps = (changes: readonly TaskStatusChange[]): { start: number; end: number }[] => {
   const gaps: { start: number; end: number }[] = [];
@@ -431,7 +431,7 @@ export const buildSessionTimeline = ({
       laneByPid.set(pid, laneId);
     }
 
-    // The spawn event is the only durable pid ↔ task pairing; a sub-agent's own trace carries
+    // The spawn event is the only durable pid <-> task pairing; a sub-agent's own trace carries
     // neither the task nor the conversation.
     const taskByPid = new Map<string, string>();
     for (const event of sessionEvents) {
@@ -685,7 +685,7 @@ export const buildSessionTimeline = ({
   // Markers and token totals, attributed to the lane owning the event's pid or its parent pid.
   const tokens = new Map<string, { usage: TokenUsage; toolCalls: number }>();
   // The marker's own lane travels with its id: `markerLaneId` routes an event to whichever task
-  // segment was open at the time, so a delegation node does not always land on the session's lane —
+  // segment was open at the time, so a delegation node does not always land on the session's lane -
   // and a connector drawn to a row that does not hold the node points at nothing.
   const spawnMarkerByPid = new Map<string, DelegationSource>();
   const returnMarkerByPid = new Map<string, DelegationSource>();
@@ -760,7 +760,7 @@ export const buildSessionTimeline = ({
     }
     // The return connector has no such fallback: only the completion event says the child reported
     // back, and guessing from the supervisor's next node would invent a causal edge that may not
-    // exist — a child can end without ever answering.
+    // exist - a child can end without ever answering.
     const returned = lane.pid === undefined ? undefined : returnMarkerByPid.get(lane.pid);
     if (returned) {
       lane.returnedTo = returned;
@@ -770,7 +770,7 @@ export const buildSessionTimeline = ({
   // A session working exactly one task is that task: the two lanes would carry the same label,
   // so the task lane folds into the session's (which keeps its run span and totals, and takes the
   // task's id and status so it still reads as the work). Only a lone in-session task, with nothing
-  // depending on it, no sub-tasks and no spawned child, folds — a checklist of several stays a tree.
+  // depending on it, no sub-tasks and no spawned child, folds - a checklist of several stays a tree.
   for (const session of lanes.filter((lane) => lane.kind === 'session' && lane.parentId === undefined)) {
     const children = lanes.filter((lane) => lane.parentId === session.id);
     const [task] = children;

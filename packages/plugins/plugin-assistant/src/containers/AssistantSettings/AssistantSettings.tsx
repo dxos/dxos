@@ -40,7 +40,7 @@ export const AssistantSettings = ({ settings, onSettingsChange, scope }: Assista
   const localModels = useAtomValue(ollamaManager?.state ?? Ollama.emptyState);
   const installed = useMemo(() => new Set(localModels.models.map((model) => model.name)), [localModels]);
 
-  // Reconcile a stored provider with the runtime (`ollama` → `built-in` on desktop) so the
+  // Reconcile a stored provider with the runtime (`ollama` -> `built-in` on desktop) so the
   // dropdown shows a concrete, available selection rather than blank.
   const values = useMemo(
     () => ({ ...settings, modelProvider: resolveProvider(settings.modelProvider, !!ollamaManager) }),
@@ -50,7 +50,7 @@ export const AssistantSettings = ({ settings, onSettingsChange, scope }: Assista
   // Form `fieldMap` is keyed by dotted JSON path, so nested struct leaves are addressed directly.
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      // `defaultLabel: null` drops the sentinel "Default" option — a provider is always concrete.
+      // `defaultLabel: null` drops the sentinel "Default" option - a provider is always concrete.
       'modelProvider': createSelectField({
         defaultLabel: null,
         options: [

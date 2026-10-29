@@ -16,7 +16,7 @@ import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
- * Discovery only — list Linear teams reachable from the connection's token.
+ * Discovery only - list Linear teams reachable from the connection's token.
  * Returns one descriptor per team across the user's workspace. Read-only:
  * NEVER materializes local objects. Materialization happens through
  * `materializeTarget` when a binding is created.
@@ -52,7 +52,7 @@ export const MaterializeLinearTarget = Operation.make({
 
 /**
  * Per-target options. `maxDaysBack` caps how far back issues are pulled by
- * `Issue.updatedAt`. Default — when unset — is "sync everything in the team."
+ * `Issue.updatedAt`. Default - when unset - is "sync everything in the team."
  */
 export const SyncOptions = Schema.Struct({
   maxDaysBack: Schema.Number.annotate({
@@ -79,7 +79,7 @@ export const SyncLinearTeams = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.linear.syncTeams'),
     name: 'Sync Linear Teams',
-    description: 'Reconcile every bound Linear team — projects and issues.',
+    description: 'Reconcile every bound Linear team - projects and issues.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: ConnectorSpec.SyncInput,

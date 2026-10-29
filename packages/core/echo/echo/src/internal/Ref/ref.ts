@@ -217,7 +217,7 @@ export interface Ref<T> extends Pipeable.Pipeable {
 
   /**
    * @returns The target when it is already materialized: the pinned target, or a side-effect-free
-   * working-set lookup. Never throws and never triggers loading — the synchronous counterpart of
+   * working-set lookup. Never throws and never triggers loading - the synchronous counterpart of
    * {@link tryLoad}. A just-added object can resolve here before it has settled into its own
    * document; callers that need a settled document must load instead.
    *
@@ -232,8 +232,8 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * @throws If the object is not available locally.
    *
    * @idiom org.dxos.echo.refLoad
-   *   applies: Resolving a ref inside an async function or Effect handler — guarantees the object is available before proceeding
-   *   instead-of: `ref.target` — not guaranteed to be defined in async contexts; use `await ref.load()` (or `yield* Database.load(ref)` in Effect) to ensure the target is present
+   *   applies: Resolving a ref inside an async function or Effect handler - guarantees the object is available before proceeding
+   *   instead-of: `ref.target` - not guaranteed to be defined in async contexts; use `await ref.load()` (or `yield* Database.load(ref)` in Effect) to ensure the target is present
    *   uses: {@link load}
    *   related: org.dxos.echo-react.useObjectReactive
    *
@@ -476,7 +476,7 @@ export const createEchoReferenceSchema = (
  * - `disk`: probe the working set, then local storage; never the network.
  * - `network`: probe the working set, disk, then fetch from peers.
  *
- * `unavailable` is always relative to the requested ceiling (disk-unavailable ≠ network-unavailable).
+ * `unavailable` is always relative to the requested ceiling (disk-unavailable != network-unavailable).
  */
 export type RefSource = 'working-set' | 'disk' | 'network';
 
@@ -506,7 +506,7 @@ export interface RefResolverRequest {
   getResult(): AnyProperties | undefined;
 
   /**
-   * Settles when `state ∈ {ready, unavailable}`.
+   * Settles when `state in {ready, unavailable}`.
    */
   wait(): Promise<AnyProperties | undefined>;
 
@@ -547,7 +547,7 @@ export interface RefResolver {
   /**
    * Resolve the source `Type.AnyEntity` entity for a type URI. Used by
    * deserialization paths (`Obj.fromJSON`) to set the back-reference accessed
-   * via `Obj.getType` / `Entity.getType`. Optional — resolvers that only
+   * via `Obj.getType` / `Entity.getType`. Optional - resolvers that only
    * carry raw schemas may leave this unimplemented; the deserializer falls
    * back to leaving the type entity unset.
    * @deprecated Use {@link resolve}. Removed in Task 11.

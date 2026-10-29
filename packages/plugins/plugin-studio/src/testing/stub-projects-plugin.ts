@@ -7,7 +7,7 @@ import { DXN } from '@dxos/echo';
 
 /**
  * Stands in for plugin-projects in stories: the studio plugin declares it in `dependsOn`, so the
- * manager refuses to enable the studio without a plugin of that id — and the real one drags in
+ * manager refuses to enable the studio without a plugin of that id - and the real one drags in
  * Tasks and the assistant, none of which an article story exercises. No modules: nothing here
  * contributes, the id alone satisfies the dependency walk.
  */

@@ -46,8 +46,8 @@ import { parquetSource } from './parquet.ts';
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) lives under ROOT_DIR with
 // layout `${ROOT_DIR}/data/train-*.parquet`. ROOT_DIR defaults to the local checkout produced by
 // `moon run pipeline-email:setup` (packages/core/compute/pipeline-email/data/enron-emails); override
-// it via the ROOT_DIR env var. The suite is skipped unless that dataset is actually present — it also
-// needs a running Ollama (localhost:11434) and the native better-sqlite3 addon — so CI and
+// it via the ROOT_DIR env var. The suite is skipped unless that dataset is actually present - it also
+// needs a running Ollama (localhost:11434) and the native better-sqlite3 addon - so CI and
 // un-provisioned checkouts skip it.
 const DEFAULT_ROOT_DIR = fileURLToPath(new URL('../../data/enron-emails', import.meta.url));
 const ROOT_DIR = process.env.ROOT_DIR ?? DEFAULT_ROOT_DIR;
@@ -93,7 +93,7 @@ type Summary = Schema.Schema.Type<typeof SummarySchema>;
 
 // Model output is untyped JSON, often wrapped in prose/reasoning by local models; extract the first
 // object and coerce leniently (field names and types vary between models) rather than strict schema
-// validation, which gpt-oss/Ollama frequently fails (`generateObject` → MalformedOutput).
+// validation, which gpt-oss/Ollama frequently fails (`generateObject` -> MalformedOutput).
 const parseSummary = (raw: string): Summary => {
   const match = raw.match(/\{[\s\S]*\}/);
   if (!match) {
@@ -135,7 +135,7 @@ type Stats = {
 // Shared context threaded through every stage via Effect's Requirements channel. The service
 // closure and db are built once up-front and provided at the edge (`Effect.provide` below), so the
 // individual stage Effects carry `R = Ctx` but the fully-composed program is reduced back to
-// `R = never` before `EffectEx.runPromise` — the same "provide at the edge" idiom used elsewhere in
+// `R = never` before `EffectEx.runPromise` - the same "provide at the edge" idiom used elsewhere in
 // this repo (e.g. `Database.layer`). The heavy bits (Ollama runtime, better-sqlite3-backed db) live
 // here in the test harness, which is why the whole suite is env-gated.
 class Ctx extends Context.Service<
@@ -151,7 +151,7 @@ class Ctx extends Context.Service<
 // keyword metadata on `Message.properties` (ContentBlock.Text has no metadata field). Produces a new
 // Message rather than mutating in place. The model call degrades gracefully to an empty summary when
 // Ollama is unreachable or a row fails (`tryPromise` captures the rejection so `orElse` can recover),
-// so the suite stays green whenever the dataset is checked out — real summaries when Ollama is up, an
+// so the suite stays green whenever the dataset is checked out - real summaries when Ollama is up, an
 // empty-summary no-op otherwise.
 const summarizeStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> = Stage.map('summarize', (message) =>
   Effect.gen(function* () {
@@ -192,7 +192,7 @@ const extractStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> = 
     }),
 );
 
-// Stage 3: pure-JS running tallies (no analysis libs — a Cloudflare-safe option would be a small
+// Stage 3: pure-JS running tallies (no analysis libs - a Cloudflare-safe option would be a small
 // pure-JS stats package, but none is added here). Mutates the context-carried accumulator and passes
 // the Message through so it reaches the sink for collection.
 const statsStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> = Stage.map('stats', (message) =>
@@ -281,7 +281,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
       const stats: Stats = { from: new Map(), to: new Map(), total: 0, spam: 0 };
       // `generateText` + lenient parse rather than `generateObject`: local reasoning models (gpt-oss
-      // via Ollama) return valid JSON that fails strict schema conformance (→ MalformedOutput). The
+      // via Ollama) return valid JSON that fails strict schema conformance (-> MalformedOutput). The
       // cause is logged and degraded to an empty summary on failure, which also keeps the inner fiber
       // from raising a FiberFailure.
       const summarize = (text: string): Promise<Summary> =>
@@ -302,7 +302,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
       // pipeline-rdf resolves the Ollama model (its default is Anthropic); a failed extraction
       // degrades to no facts in `extractFactsStage`, so the run stays green. The counter proves the
-      // stage actually invoked indexing (facts themselves are advisory — see the assertions below).
+      // stage actually invoked indexing (facts themselves are advisory - see the assertions below).
       let indexedMessageCount = 0;
       const indexFacts: FactIndexer = (message) => {
         indexedMessageCount += 1;
@@ -318,7 +318,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       };
 
       // Per-stage timing: each LLM-bearing stage is instrumented so the run reports where the
-      // per-message latency goes (`extract-facts.ms` dominates — it makes up to two model calls per
+      // per-message latency goes (`extract-facts.ms` dominates - it makes up to two model calls per
       // message, see extractChunk). One Metrics instance for the run, read back after it completes.
       const metrics = makeMetrics();
       const { sink, items } = captureSink<Message.Message>();
@@ -366,7 +366,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
       // Facts are advisory: gpt-oss's structured `generateObject` output is only intermittently
       // schema-conforming (the summarize stage sidesteps this with lenient `generateText`), so the
-      // fact count is best-effort here — the deterministic proof of extraction lives in
+      // fact count is best-effort here - the deterministic proof of extraction lives in
       // extract-stage.test.ts (mockAiService). Assert only that the substrate is queryable.
       // The extract-facts stage ran for every captured message (proves the wiring executed, even
       // though the facts it produced are advisory and may be empty under a flaky model).
@@ -381,7 +381,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
       // Reconcile advisory fact entities against the canonical ECHO Person/Organization objects the
       // pipeline created (slice-1 §9.1). Facts are sparse/flaky under gpt-oss, so the resolved count
-      // is best-effort here — the reconciliation logic itself is proven deterministically in
+      // is best-effort here - the reconciliation logic itself is proven deterministically in
       // fact-index.test.ts.
       const orgsForIndex = await db.query(Filter.type(Organization.Organization)).run();
       const entityIndex = buildEntityIndex([...persons, ...orgsForIndex]);
@@ -405,7 +405,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
       // Corpus layer (phase 3). Clustering is deterministic, so assert it strictly: every thread
       // lands in exactly one topic. LLM enrichment (topic summaries, digest narrative) is advisory
-      // and degradable — proven deterministically in topics/digest unit tests.
+      // and degradable - proven deterministically in topics/digest unit tests.
       const narrate: Summarizer = (prompt) =>
         runtime.runPromise(
           Effect.scoped(LanguageModel.generateText({ prompt })).pipe(

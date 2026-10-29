@@ -26,7 +26,7 @@ export type ClusterSignals = {
   /**
    * Every non-owner sender is an automated / no-reply / role address (no human counterparty). Such
    * topics (deletion notices, security alerts, receipts) can be time-sensitive but aren't the
-   * relationship topics a CRM centers on — they're down-weighted so person/team topics surface.
+   * relationship topics a CRM centers on - they're down-weighted so person/team topics surface.
    */
   readonly automated: boolean;
 };
@@ -42,7 +42,7 @@ export const isAutomatedAddress = (email: string): boolean => {
 };
 
 export type ActivityOptions = {
-  /** Wall-clock now (ms) — injected (no `Date.now()` in pure code). */
+  /** Wall-clock now (ms) - injected (no `Date.now()` in pure code). */
   readonly nowMs: number;
   /** Recency half-life (ms); a cluster last active one half-life ago scores 0.5 on recency. */
   readonly halfLifeMs?: number;
@@ -108,7 +108,7 @@ export type SplitOptions = {
 };
 
 /**
- * Splits scored candidates into `active` (confidence ≥ threshold, capped at `top`, highest first) and
+ * Splits scored candidates into `active` (confidence >= threshold, capped at `top`, highest first) and
  * `suggested` (everything else). Stable: ties keep input order. Pure.
  */
 export const classifyTopics = (
@@ -175,14 +175,14 @@ export const assembleActiveTopic = (candidate: ScoredCandidate, parts: Populated
   keywords: candidate.draft.keywords,
   status: parts.status,
   facts: parts.facts,
-  tasks: makeTasksOutline(`${candidate.draft.name} — tasks`, parts.tasks),
+  tasks: makeTasksOutline(`${candidate.draft.name} - tasks`, parts.tasks),
   drafts: parts.drafts,
   confidence: candidate.confidence,
   rationale: candidate.rationale,
   kind: 'active',
 });
 
-/** A suggested (not-populated) topic — label/summary/counts + confidence only. */
+/** A suggested (not-populated) topic - label/summary/counts + confidence only. */
 export type SuggestedTopic = {
   readonly name: string;
   readonly summary: string;
@@ -239,9 +239,9 @@ export type ActiveTopicsInput = {
   readonly messages: readonly Message.Message[];
   /** Wall-clock now (ms), injected. */
   readonly nowMs: number;
-  /** Mailbox owner email(s) — steers `buildThreads` awaiting-mine inference (accepts aliases). */
+  /** Mailbox owner email(s) - steers `buildThreads` awaiting-mine inference (accepts aliases). */
   readonly ownerEmail?: string | readonly string[];
-  /** Known-person emails (lowercased) — the person-linked activity signal. */
+  /** Known-person emails (lowercased) - the person-linked activity signal. */
   readonly personEmails?: ReadonlySet<string>;
   readonly activity?: Omit<ActivityOptions, 'nowMs'>;
   /** Minimum activity score to be scored by the LLM (prefilter). */
@@ -285,8 +285,8 @@ export const computeClusterSignals = (
 };
 
 /**
- * Runs the Active Topics experiment: cluster → deterministic activity score + prefilter → LLM
- * confidence → split active/suggested → populate active topics (status / facts / tasks / drafts). The
+ * Runs the Active Topics experiment: cluster -> deterministic activity score + prefilter -> LLM
+ * confidence -> split active/suggested -> populate active topics (status / facts / tasks / drafts). The
  * LLM steps are INJECTED (`deps`) so this is unit-testable with stubs; the driver wires the real
  * model-backed deps.
  */
@@ -318,7 +318,7 @@ export const runActiveTopics = async (
     messages: draft.threadIds.flatMap((id) => messagesByThread.get(id) ?? []),
   });
 
-  // Deterministic activity score + prefilter → candidates (highest activity first, capped).
+  // Deterministic activity score + prefilter -> candidates (highest activity first, capped).
   const floor = input.prefilterFloor ?? 0.15;
   const scoredByActivity = clusterThreads(threads)
     .map((draft) => ({

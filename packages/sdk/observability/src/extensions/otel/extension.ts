@@ -124,9 +124,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     // /edge/packages/services/edge/src/log-middleware.ts).
     //
     // Stamped in TWO places:
-    //   1. Resource attribute — so logs and metrics emitted from this extension
+    //   1. Resource attribute - so logs and metrics emitted from this extension
     //      also carry it, and for zero per-span cost.
-    //   2. Span attribute via `tags` — because edge puts `ctx.tag` in the span-
+    //   2. Span attribute via `tags` - because edge puts `ctx.tag` in the span-
     //      attribute context (not resource), and SigNoz indexes the two contexts
     //      separately. Stamping it on span attributes here keeps a single
     //      `ctx.tag = <value>` filter matching spans from both tiers in SigNoz

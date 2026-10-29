@@ -146,6 +146,6 @@ describe('GraphNodeMatcher', () => {
 });
 
 // Real reactive context for matchers that take `get`. The matchers under test
-// inspect only the node, so the context is never read — it satisfies the arity.
+// inspect only the node, so the context is never read - it satisfies the arity.
 const captureContext = (): Atom.AtomContext => Registry.make().get(Atom.make((context): Atom.AtomContext => context));
 const get = captureContext();

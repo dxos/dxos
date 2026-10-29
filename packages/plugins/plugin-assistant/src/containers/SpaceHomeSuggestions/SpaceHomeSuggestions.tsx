@@ -53,8 +53,8 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
         {suggestions.map((prompt, index) => (
           // A real button, not a `role='button'` div: WKWebView only reliably synthesizes a tap into
           // a click for natively interactive elements, and the iOS walkthrough could not launch a
-          // chat from these cards at all. It also rules the nested `IconButton` out — interactive
-          // content inside a button is invalid — so the sparkle is a plain icon.
+          // chat from these cards at all. It also rules the nested `IconButton` out - interactive
+          // content inside a button is invalid - so the sparkle is a plain icon.
           <button
             key={`${index}:${prompt}`}
             type='button'

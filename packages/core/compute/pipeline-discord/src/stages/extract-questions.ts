@@ -69,7 +69,7 @@ const upsertAsker = (
 
 /**
  * Per-message stage: extract the questions a user asked and record each
- * (user × channel × message × question) row — idempotent, so it can run on the live crawl or on a
+ * (user × channel × message × question) row - idempotent, so it can run on the live crawl or on a
  * replay pass over the stored working set. With a database, the asker also becomes an ECHO
  * `Person` linked from the agent registry.
  */

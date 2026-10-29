@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/** A property that takes one of a closed set of values — a task's `status`, a message's `folder`. */
+/** A property that takes one of a closed set of values - a task's `status`, a message's `folder`. */
 export type EnumProperty<T extends string> = {
   /** The property name as a term writes it (`status` in `status:done`). */
   property: string;
@@ -23,8 +23,8 @@ const NOT_KEYWORDS = new Set(['NOT', '!']);
  * Splits the terms on one enumerated property out of a query, so a picker for that property and the
  * query text can be two views over one string.
  *
- * Only top-level terms a picker could have written are read — `prop:x`, `NOT prop:x` (or `!prop:x`)
- * and `(prop:a OR prop:b)` — and they are intersected, as the query's implicit AND intersects them.
+ * Only top-level terms a picker could have written are read - `prop:x`, `NOT prop:x` (or `!prop:x`)
+ * and `(prop:a OR prop:b)` - and they are intersected, as the query's implicit AND intersects them.
  * A query with a top-level `OR` is left whole: its terms are not all required, so no value set
  * describes it. A value outside the set (`status:sta` while it is being typed) stays in the text,
  * where it matches as the substring it is.
@@ -105,8 +105,8 @@ export const parseEnumTerms = <T extends string>(text: string, { property, value
  * The query with its terms on the property replaced by the one term that says `selected`, placed
  * first.
  *
- * Written in whichever of the two forms is shorter — the values kept (`prop:a`, `(prop:a OR prop:b)`)
- * or the values hidden (`NOT prop:x NOT prop:y`) — so hiding two of nine reads as that, not as a list
+ * Written in whichever of the two forms is shorter - the values kept (`prop:a`, `(prop:a OR prop:b)`)
+ * or the values hidden (`NOT prop:x NOT prop:y`) - so hiding two of nine reads as that, not as a list
  * of the seven left. Every value selected writes no term. A query with a top-level `OR` comes back
  * unchanged: no term on the property describes it, so a written term could not be read back, and
  * each write would stack another term in front of the last.

@@ -55,7 +55,7 @@ const TestLayer = TestDatabaseLayer({
 });
 
 describe('agentBot', () => {
-  it.effect('names the bot of the agent’s Discord channel', () =>
+  it.effect("names the bot of the agent's Discord channel", () =>
     Effect.gen(function* () {
       const agent = yield* addAgent();
       const token = yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'discord.com', token: 'x' }));
@@ -96,7 +96,7 @@ describe('resolveUser', () => {
     { userId: '333333333333333333', username: 'dima' },
   ];
 
-  it.effect('takes a user id as is, else a contact’s Discord identity, else a member', () =>
+  it.effect("takes a user id as is, else a contact's Discord identity, else a member", () =>
     Effect.gen(function* () {
       yield* Database.add(
         Obj.make(Person.Person, {
@@ -147,7 +147,7 @@ describe('makeEdgeDiscordBot', () => {
         kind: 'react',
         channelId: 'c1',
         messageId: 'm0',
-        emoji: '👍',
+        emoji: '\u{1F44D}',
       });
       expect(posted).toEqual({ channelId: 'c1', messageId: 'm1' });
       expect(actions.requests).toEqual([
@@ -157,7 +157,7 @@ describe('makeEdgeDiscordBot', () => {
           body: {
             spaceId: 'space-1',
             channel: 'echo://space-1/channel-1',
-            action: { kind: 'react', channelId: 'c1', messageId: 'm0', emoji: '👍' },
+            action: { kind: 'react', channelId: 'c1', messageId: 'm0', emoji: '\u{1F44D}' },
           },
         },
       ]);

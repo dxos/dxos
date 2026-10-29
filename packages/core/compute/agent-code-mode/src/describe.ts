@@ -93,7 +93,7 @@ export const formatValue = (value: unknown): string => {
 };
 
 /**
- * {@link formatValue}, plus — for an ECHO object stored in a database — what the model cannot see by
+ * {@link formatValue}, plus - for an ECHO object stored in a database - what the model cannot see by
  * reading its fields: the relations, children and referrers around it, each with the code that fetches
  * them, and the skills its type declares that the conversation has not bound. Never fails: a hint that
  * cannot be computed is left out rather than costing the model its output.
@@ -261,10 +261,10 @@ const isEntity = (value: unknown): value is Entity => Obj.isObject(value) || Rel
  * One ECHO object as the model reads it:
  *
  * ```
- * com.example.type.task 01J… "Write the docs"
+ * com.example.type.task 01J... "Write the docs"
  *   title: "Write the docs"
- *   owner: → com.example.type.person 01J… "Ada"
- *   parent: → com.example.type.project 01J… "Composer"
+ *   owner: -> com.example.type.person 01J... "Ada"
+ *   parent: -> com.example.type.project 01J... "Composer"
  * ```
  *
  * Fields follow the schema's order and titles; a field the schema hides from forms is named but not
@@ -313,7 +313,7 @@ export const renderCard = (object: Entity): string => {
 
   const parent = Obj.isObject(object) ? safe(() => Obj.getParent(object)) : undefined;
   if (parent !== undefined) {
-    lines.push(`  parent: → ${summary(parent)}`);
+    lines.push(`  parent: -> ${summary(parent)}`);
   }
   return lines.join('\n');
 };
@@ -325,7 +325,7 @@ const renderCards = (objects: readonly Entity[]): string => {
   return [
     `${objects.length} ${objects.length === 1 ? 'object' : 'objects'}:`,
     ...cards,
-    ...(rest.length > 0 ? [`… ${rest.length} more: ${rest.map(summary).join('; ')}`] : []),
+    ...(rest.length > 0 ? [`... ${rest.length} more: ${rest.map(summary).join('; ')}`] : []),
   ].join('\n');
 };
 
@@ -339,13 +339,13 @@ const idAndLabel = (object: Entity): string => {
 
 const renderEndpoint = (load: () => unknown, uri: () => unknown): string => {
   const endpoint = safe(load);
-  return isEntity(endpoint) ? `→ ${summary(endpoint)}` : `→ ${String(safe(uri) ?? 'unresolved')}`;
+  return isEntity(endpoint) ? `-> ${summary(endpoint)}` : `-> ${String(safe(uri) ?? 'unresolved')}`;
 };
 
 /** A reference as one line: its target's summary when already loaded, its URI otherwise. */
 const renderRef = (ref: Ref.Unknown): string => {
   const target = safe(() => ref.peek());
-  return isEntity(target) ? `→ ${summary(target)}` : `→ ${String(ref.uri)} (not loaded)`;
+  return isEntity(target) ? `-> ${summary(target)}` : `-> ${String(ref.uri)} (not loaded)`;
 };
 
 /** A field value on one line of a card. */
@@ -354,14 +354,14 @@ const inline = (value: unknown, depth: number): string => {
     return renderRef(value);
   }
   if (Array.isArray(value) && value.some((item) => Ref.isRef(item))) {
-    const more = value.length > MAX_ITEMS ? `, … ${value.length - MAX_ITEMS} more` : '';
+    const more = value.length > MAX_ITEMS ? `, ... ${value.length - MAX_ITEMS} more` : '';
     const shown = value.slice(0, MAX_ITEMS);
     const targets = shown.map((item) => (Ref.isRef(item) ? safe(() => item.peek()) : undefined));
     const typenames = new Set(targets.map((target) => (isEntity(target) ? EchoEntity.getTypename(target) : undefined)));
     const [typename] = typenames;
     // Stated once when every shown target shares it: a list of refs is usually all one type.
     if (typenames.size === 1 && typename !== undefined) {
-      return `→ ${typename} ×${value.length} [${targets.map((target) => (isEntity(target) ? idAndLabel(target) : '?')).join(', ')}${more}]`;
+      return `-> ${typename} ×${value.length} [${targets.map((target) => (isEntity(target) ? idAndLabel(target) : '?')).join(', ')}${more}]`;
     }
     return `[${shown.map((item) => (Ref.isRef(item) ? renderRef(item) : inline(item, depth + 1))).join(', ')}${more}]`;
   }
@@ -430,11 +430,11 @@ const toPrintable = (value: unknown, depth: number): unknown => {
     return errorFields(value, depth);
   }
   if (depth > MAX_DEPTH) {
-    return Array.isArray(value) ? `[… ${value.length} items]` : '{…}';
+    return Array.isArray(value) ? `[... ${value.length} items]` : '{...}';
   }
   if (Array.isArray(value)) {
     const shown = value.slice(0, MAX_ITEMS).map((item) => toPrintable(item, depth + 1));
-    return value.length > MAX_ITEMS ? [...shown, `… ${value.length - MAX_ITEMS} more items`] : shown;
+    return value.length > MAX_ITEMS ? [...shown, `... ${value.length - MAX_ITEMS} more items`] : shown;
   }
   if (value instanceof Date) {
     return value.toISOString();
@@ -458,8 +458,8 @@ const entityFields = (object: Entity, depth: number): Record<string, unknown> =>
 };
 
 /**
- * An error as its tag, message and own fields. `JSON.stringify` prints an `Error` as `{}` — its
- * message and name are not enumerable — and a tagged error carries its detail in fields.
+ * An error as its tag, message and own fields. `JSON.stringify` prints an `Error` as `{}` - its
+ * message and name are not enumerable - and a tagged error carries its detail in fields.
  */
 const errorFields = (error: Error, depth: number): Record<string, unknown> => {
   const own = Object.fromEntries(
@@ -476,7 +476,7 @@ const errorFields = (error: Error, depth: number): Record<string, unknown> => {
 
 /** A string cut to {@link MAX_STRING} characters, with how many were dropped. */
 const trimmed = (text: string): string =>
-  text.length > MAX_STRING ? `${text.slice(0, MAX_STRING)}…[+${text.length - MAX_STRING} chars]` : text;
+  text.length > MAX_STRING ? `${text.slice(0, MAX_STRING)}...[+${text.length - MAX_STRING} chars]` : text;
 
 /** The last segment of a typename or DXN, e.g. `implements` for `dxn:com.example.relation.implements:0.1.0`. */
 const shortName = (type: string): string => {

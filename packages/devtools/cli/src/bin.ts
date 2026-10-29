@@ -57,7 +57,7 @@ import { installStderrFilter, registerSharedScope } from './util/index.ts';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
-// ClientPlugin and similar — they're noise to a user running e.g.
+// ClientPlugin and similar - they're noise to a user running e.g.
 // `dx space list`. Set DX_KEEP_WARNINGS=1 to opt out.
 if (!process.env.DX_KEEP_WARNINGS) {
   installStderrFilter();
@@ -120,7 +120,7 @@ const CLI_CONFIG = {
  * Reads a root flag straight off `process.argv`.
  *
  * `--profile` and `--config` have to be known *before* the command tree is built, because they
- * select which plugins and config the tree is assembled from — and v4's CLI exposes no way to parse
+ * select which plugins and config the tree is assembled from - and v4's CLI exposes no way to parse
  * a command's flags without also running it. Only the long form and its single-letter alias are
  * recognized, which is what `dx --help` documents.
  */
@@ -142,7 +142,7 @@ const readRootFlag = (name: string, alias: string): string | undefined => {
  * True for `dx mcp serve --watch`, which is dispatched before anything else is built.
  *
  * The supervisor only proxies stdio to a child that does the real work, so booting the plugin
- * layer and command tree for it would pay the CLI's whole startup twice in sequence — measured at
+ * layer and command tree for it would pay the CLI's whole startup twice in sequence - measured at
  * 6.5s to 11s warm, and far worse cold, which pushes the first connection past an MCP client's
  * startup timeout and reads as a hang.
  */
@@ -150,8 +150,8 @@ const isWatchSupervisor = (argv: readonly string[]): boolean => {
   if (argv.includes('--help') || argv.includes('-h')) {
     return false;
   }
-  // Bare `--watch` only: `--watch=false` means watch OFF, and any `--watch=…` form is left to the
-  // real parser — a miss costs a slow start via `serve.ts`'s own branch, never wrong behavior.
+  // Bare `--watch` only: `--watch=false` means watch OFF, and any `--watch=...` form is left to the
+  // real parser - a miss costs a slow start via `serve.ts`'s own branch, never wrong behavior.
   return isMcpServe(argv) && argv.includes('--watch');
 };
 
@@ -221,8 +221,8 @@ const program = Effect.gen(function* () {
     core: getCore(),
   });
 
-  // Built once in the program scope, so each `Effect.provide(layer)` — both the top-level command
-  // and every REPL dispatch — reuses the already-constructed services (ClientPlugin, Config, etc.)
+  // Built once in the program scope, so each `Effect.provide(layer)` - both the top-level command
+  // and every REPL dispatch - reuses the already-constructed services (ClientPlugin, Config, etc.)
   // instead of rebuilding them per invocation.
   // `dx deus` reads the root `--json` through its own reference, since the shared flag consumes the subcommand's.
   const deusJsonLayer = Layer.effect(
@@ -246,7 +246,7 @@ const program = Effect.gen(function* () {
   // command tree and plugin layer instead of spawning a child `dx` process
   // per command. See src/dispatcher.ts.
   // NOTE: The final `as` matches the same Effect type-system workaround
-  // applied at the outer `program` scope — `Command.run`'s inferred
+  // applied at the outer `program` scope - `Command.run`'s inferred
   // `Requirements` channel becomes overly restrictive even when the layer
   // provides everything.
   setDispatcher(
@@ -255,7 +255,7 @@ const program = Effect.gen(function* () {
   );
 
   const startedAt = Date.now();
-  // `runWith` takes the ARGUMENTS, not the raw argv — passing `process.argv` makes the interpreter
+  // `runWith` takes the ARGUMENTS, not the raw argv - passing `process.argv` makes the interpreter
   // path the first token, which parses as an unknown subcommand.
   return yield* Command.runWith(
     command,

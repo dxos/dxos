@@ -25,8 +25,8 @@ export type LookupContext = {
 
 /**
  * Resolves a surface noun to its candidate matches, ranked best-first, backed by an index. The
- * pipeline depends only on this function — not on ECHO/the database directly — so the backend
- * (full-text, vector, a remote service, …) is an injected concern. Returning candidates (rather than
+ * pipeline depends only on this function - not on ECHO/the database directly - so the backend
+ * (full-text, vector, a remote service, ...) is an injected concern. Returning candidates (rather than
  * a single match) lets a context-aware resolver disambiguate using the surrounding conversation.
  * Empty when nothing matches.
  */

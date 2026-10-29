@@ -26,11 +26,11 @@ export const DEFAULT_INSTRUCTIONS = trim`
   You curate articles for a Magazine.
   The Topic is given below under "## Topic". If none is given, infer it from the Magazine's feeds.
 
-  Select only candidates that clearly match the Topic — quality over quantity.
+  Select only candidates that clearly match the Topic - quality over quantity.
 
   Never select duplicate articles. Two candidates are duplicates if they share a link or guid, or if
   their titles and content describe the same story (e.g., the same article syndicated by different
-  feeds). Keep only one of each — prefer the most complete or authoritative source — and skip the rest.
+  feeds). Keep only one of each - prefer the most complete or authoritative source - and skip the rest.
 
   For each candidate you select, also produce:
   - A concise 1-2 sentence snippet (plain text, no markdown) capturing why the article is relevant to the Topic. If you read the full article, use it to write a richer snippet.
@@ -62,7 +62,7 @@ export const CurationOutput = Schema.Struct({
       /**
        * Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic.
        * Nullable, not merely optional: this schema is serialized to JSON Schema and rebuilt as
-       * `completeJob`'s parameters, so a decode-time transformation would not survive the round trip —
+       * `completeJob`'s parameters, so a decode-time transformation would not survive the round trip -
        * and models emit `null` for a field they mean to omit, which `Schema.optional` alone rejects
        * and which fails the whole curation run. {@link resolveSelected} normalizes null to absent.
        */

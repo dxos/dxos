@@ -79,7 +79,7 @@ const PASSIVE_BY = /\b(?:is|are|was|were|be|been|being)\s+(?:\w+\s+)?\w+(?:ed|en
 const BE_ING = /\b(?:is|are|was|were|be|been|am)\s+\w+ing\b/i;
 
 const SENT_SPLIT = /(?<=[.!?])\s+/;
-const WORDISH = /[A-Za-z0-9'&/’-]+/g;
+const WORDISH = /[A-Za-z0-9'&/\u2019-]+/g;
 const FENCE = /^\s{0,3}(`{3,}|~{3,})/;
 const BULLET = /^\s*(?:[-*+]|\d+\.)\s/;
 
@@ -87,7 +87,7 @@ const LIMITS: Record<Mode, number> = { procedural: 20, descriptive: 25, mixed: 2
 
 const isUpper = (word: string): boolean => /[A-Za-z]/.test(word) && word === word.toUpperCase();
 
-const hasWord = (text: string): boolean => /[A-Za-z0-9'&/’-]/.test(text);
+const hasWord = (text: string): boolean => /[A-Za-z0-9'&/\u2019-]/.test(text);
 
 /** Parses `WORD (pos) [forms]` entries into the set of approved lowercase word forms. */
 export const parseWordList = (entries: readonly string[]): Set<string> => {
@@ -162,7 +162,7 @@ const stripMarkdown = (text: string): string => {
   result = result.replace(/https?:\/\/\S+/g, ' URL ');
   result = result.replace(/^>.*$/gm, ' ');
   // Rule 8.6: quoted text counts as one word and is not controlled.
-  result = result.replace(/"[^"\n]*"|“[^”\n]*”/g, ' QUOTED ');
+  result = result.replace(/"[^"\n]*"|\u201C[^\u201D\n]*\u201D/g, ' QUOTED ');
   return result;
 };
 

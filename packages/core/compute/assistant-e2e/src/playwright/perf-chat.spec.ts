@@ -60,7 +60,7 @@ const COUNTERS = parseCounters(process.env.DX_PERF_COUNTERS);
 const storyUrl = (storyId: string) => `http://localhost:${PERF_PORT}/iframe.html?id=${storyId}&viewMode=story`;
 
 /** The closing line the scripted model emits only after its twentieth tool result. */
-const DONE = /Done — ran 20 calculations/;
+const DONE = /Done \u2014 ran 20 calculations/;
 
 /** Idle after ready before the first measured stage, so boot's trailing work (and a dev server's module stream) lands outside it. */
 const SETTLE_MS = 10_000;
@@ -76,7 +76,7 @@ const BUDGET_MS = 120_000;
  */
 const BOOT_WRITE_BYTES_CEILING = 64 * 1024;
 
-/** Seeding the busy space measured 23–25 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
+/** Seeding the busy space measured 23-25 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
 const SEED_BUDGET_MS = 180_000;
 
 /** The prompt the flow submits; the probe below looks for its row by this text. */
@@ -86,8 +86,8 @@ const PROMPT = 'Run the calculations.';
 const QUEUED_PROBE = '__dxosQueuedProbe';
 
 /**
- * Arms the submit → queued-row probe: from the Enter keydown's timestamp to the start of the first
- * animation frame in which the thread holds the prompt as a row with its delivery ticks — the frame
+ * Arms the submit -> queued-row probe: from the Enter keydown's timestamp to the start of the first
+ * animation frame in which the thread holds the prompt as a row with its delivery ticks - the frame
  * that paints it. In-page, because a round trip per poll from the runner is coarser than the frame
  * being measured.
  */

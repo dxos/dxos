@@ -24,7 +24,7 @@ export type LoopMarkersProps = {
   onScrollX?: (deltaPx: number) => void;
   /** Left header width (the frozen pitch-label column). */
   headerLeft: number;
-  /** Height of the top ruler, in pixels — used to size the drag handles. */
+  /** Height of the top ruler, in pixels - used to size the drag handles. */
   headerTop: number;
   /** Total height of the grid pane (for the shaded "outside loop" overlay). */
   paneHeight: number;
@@ -63,8 +63,8 @@ export const LoopMarkers = ({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [draggingWhich, setDraggingWhich] = useState<'start' | 'end' | null>(null);
 
-  // Mirror the latest loop values into refs so the window listener — set up once
-  // per drag — always reads current values without re-binding.
+  // Mirror the latest loop values into refs so the window listener - set up once
+  // per drag - always reads current values without re-binding.
   const loopStartRef = useRef(loopStart);
   const loopEndRef = useRef(loopEnd);
   loopStartRef.current = loopStart;
@@ -108,7 +108,7 @@ export const LoopMarkers = ({
 
     const applyAtClientX = (clientX: number) => {
       const rect = root.getBoundingClientRect();
-      // Translate to a pane-local pixel position, then to beats — this is more
+      // Translate to a pane-local pixel position, then to beats - this is more
       // robust than tracking pointerdown deltas because it survives auto-scroll
       // mutating scrollX mid-drag.
       const localX = clientX - rect.left;
@@ -158,7 +158,7 @@ export const LoopMarkers = ({
 
   // Positions inside the clip container are pane-x minus headerLeft, since the
   // clip container starts at left: headerLeft. This keeps every marker visual
-  // confined to the cell area — nothing can bleed left of the frozen pitch-
+  // confined to the cell area - nothing can bleed left of the frozen pitch-
   // label column or into the TrackList pane to its left.
   const cellAreaStartX = beatsToX(loopStart) - headerLeft;
   const cellAreaEndX = beatsToX(loopEnd) - headerLeft;
@@ -176,7 +176,7 @@ export const LoopMarkers = ({
         className='absolute pointer-events-none overflow-hidden'
         style={{ top: 0, left: headerLeft, right: 0, bottom: 0 }}
       >
-        {/* Shaded overlay outside the loop range — only over the cell area, not the headers. */}
+        {/* Shaded overlay outside the loop range - only over the cell area, not the headers. */}
         {cellAreaStartX > 0 && (
           <div
             className='absolute bg-black/30 dark:bg-black/40'

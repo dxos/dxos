@@ -28,7 +28,7 @@ const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions];
 
 type SubmittedPayload = { templateId?: string; draft?: unknown };
 
-// Exposes the submitted create payload to the play functions — module scope is shared between the
+// Exposes the submitted create payload to the play functions - module scope is shared between the
 // story render and its play, so no window global (and no cast) is needed.
 let submittedPayload: SubmittedPayload | undefined;
 
@@ -89,7 +89,7 @@ export const Default: Story = {
 };
 
 /**
- * Two-step create flow: pick the Blank template, edit the routine in the full form, and Save —
+ * Two-step create flow: pick the Blank template, edit the routine in the full form, and Save -
  * submitting `{ templateId, draft }` with the (unpersisted) scaffolded routine graph.
  */
 export const CreateFromTemplate: Story = {

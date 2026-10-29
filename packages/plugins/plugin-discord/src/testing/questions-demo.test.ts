@@ -63,7 +63,7 @@ describe('questions demo', () => {
       console.log(`\ntopics: ${topics.length}\n`);
       for (const topic of topics) {
         console.log(
-          `  ${topic.targetId}${topic.threadId ? ' (thread)' : ''}  [${topic.startMessageId} … ${topic.endMessageId}]` +
+          `  ${topic.targetId}${topic.threadId ? ' (thread)' : ''}  [${topic.startMessageId} ... ${topic.endMessageId}]` +
             `  ${topic.messageIds.length} msg\n    participants: ${topic.participantLabels.join(', ')}`,
         );
       }

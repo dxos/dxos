@@ -32,12 +32,12 @@ export type OutputPanelProps = Util.ThemedClassName<{
   objects: EchoObjectItem[];
   /** Common per-pipeline metrics (Stats tab). */
   stats?: StatItem[];
-  /** Pipeline-specific views appended as extra tabs (messages, threads, transcript, …). */
+  /** Pipeline-specific views appended as extra tabs (messages, threads, transcript, ...). */
   details?: OutputDetail[];
 }>;
 
 /**
- * Output column: a toolbar of button tabs selecting the view — the {@link FactPanel} (facts +
+ * Output column: a toolbar of button tabs selecting the view - the {@link FactPanel} (facts +
  * entities + predicates), the {@link OntologyPanel} (every predicate the brain knows, its metadata, and the ontology
  * and facts as Turtle/TriG), the {@link EchoObjectsList} of materialized ECHO objects, the facts as TriG (read-only),
  * a Stats tab of per-pipeline metrics, and any pipeline-specific detail views (messages / threads / transcript).

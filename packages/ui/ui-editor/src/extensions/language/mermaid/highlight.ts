@@ -12,7 +12,7 @@ export type MermaidHighlightOptions = {};
  * `codemirror-lang-mermaid` emits its own tags rather than the standard `@lezer/highlight` ones, so
  * no default highlight style matches them and the source renders unstyled without this.
  *
- * Only the distinctions worth drawing are styled — header, connectors, labels, comments — and the
+ * Only the distinctions worth drawing are styled - header, connectors, labels, comments - and the
  * rest inherits, as in `markdownHighlightStyle`. Classes are semantic theme tokens so the palette
  * follows light/dark rather than pinning syntax hues.
  */
@@ -24,7 +24,7 @@ export const mermaidHighlightStyle = (_options: MermaidHighlightOptions = {}) =>
       class: 'text-primary-500',
     },
     // Connectors recede; the nodes they join are the content. `link` is the arrow itself (`-->`),
-    // so it must not be underlined — that reads as a hyperlink.
+    // so it must not be underlined - that reads as a hyperlink.
     { tag: [flowchartTags.link, flowchartTags.nodeEdge], class: 'text-fg-subtle' },
     // Labels, on nodes and on edges. Node ids are left inheriting, as the backbone of the source.
     {

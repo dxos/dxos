@@ -24,12 +24,12 @@ import path from 'node:path';
  *   single files to keep a dependency out of its bundle.
  *
  * @example
- * // ❌ Bad
+ * // X Bad
  * import { ToolsPanel } from '../panels/ToolsPanel/ToolsPanel.tsx';
  * import { toolForKey } from '../panels/ToolsPanel/index.ts';
  * import { Canvas } from '../index.ts';
  *
- * // ✅ Good
+ * // OK Good
  * import { ToolsPanel, toolForKey } from '../panels/index.ts';
  * import { type PanelProps } from '../types.ts';
  */

@@ -10,7 +10,7 @@ import { useAttention } from '../components/index.ts';
 
 /**
  * Compute the id to select after pressing 'j' (delta = 1) or 'k' (delta = -1).
- * Clamps at the list ends — pressing 'j' on the last item keeps the last item
+ * Clamps at the list ends - pressing 'j' on the last item keeps the last item
  * selected (vim-style), and 'k' on the first item keeps the first.
  *
  * When no current selection exists, returns the first id (for delta = 1) or the
@@ -54,7 +54,7 @@ export type UseArticleKeyboardNavigationOptions<T> = {
 /**
  * Wire 'j' (next) and 'k' (previous) for an article that navigates a list of items (e.g. messages,
  * events). This moves the *selection*, never focus, and it is gated on the article having
- * attention — so it is a hotkey rather than a focus group, and the gate is `enabled` rather than a
+ * attention - so it is a hotkey rather than a focus group, and the gate is `enabled` rather than a
  * scope, since attention is already React state here.
  *
  * Pass the items directly; ids are derived via `getId` (defaults to `item.id`).

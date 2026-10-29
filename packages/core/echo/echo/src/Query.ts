@@ -51,7 +51,7 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
  * {@link Query.aggregate} produces, and {@link Change.Change}. Present only at the type level (never
  * at runtime), it lets hooks like `useQuery`/`usePagination` return the record as-is instead of
  * wrapping it in `Entity.Entity`. The brand is a required property so `T extends RecordResult`
- * discriminates — an optional one would be satisfied by any type. Consumers never read it.
+ * discriminates - an optional one would be satisfied by any type. Consumers never read it.
  */
 export interface RecordResult {
   readonly '~@dxos/echo/Query.RecordResult': true;
@@ -78,7 +78,7 @@ export interface Query<T> {
 
   /**
    * Project the query's results to a single scalar property, for use as a membership set in
-   * `Filter.in(query.project('col'))` — an uncorrelated `col IN (SELECT property FROM ...)`
+   * `Filter.in(query.project('col'))` - an uncorrelated `col IN (SELECT property FROM ...)`
    * semi-join. The subquery is resolved once at execution time. A projection is a terminal
    * value, not a `Query`, so it cannot be chained further.
    * @param property - Property path to project.
@@ -177,7 +177,7 @@ export interface Query<T> {
    *
    * `Order.property` orders by the current result shape's fields, so it works both before and after
    * an {@link aggregate}: before, by member (row) properties; after, by the flat record's fields
-   * (any group or aggregate field — e.g. `Order.property('lastMessageAt')` reorders the groups by
+   * (any group or aggregate field - e.g. `Order.property('lastMessageAt')` reorders the groups by
    * that aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
@@ -195,7 +195,7 @@ export interface Query<T> {
    *
    * Groups are ordered by the first occurrence of their key in the incoming stream, so a preceding
    * `orderBy` controls group order in the absence of a following one. {@link Aggregate.items}'s own
-   * `order` option is a separate, explicit per-group member ordering — pass it there rather than
+   * `order` option is a separate, explicit per-group member ordering - pass it there rather than
    * relying on a preceding `orderBy`, whose only well-defined job once `aggregate` follows is
    * establishing initial group order. For example, message threads ordered by their most recent
    * message, each retaining up to 20 members newest-first:
@@ -210,7 +210,7 @@ export interface Query<T> {
    *   .orderBy(Order.property('lastMessageAt', 'desc'));
    * ```
    *
-   * Must be the last data-selecting clause in the chain — only `from`/`options`/`orderBy`/`limit`/
+   * Must be the last data-selecting clause in the chain - only `from`/`options`/`orderBy`/`limit`/
    * `skip` may follow.
    * @param aggregates - Record of aggregate declarations keyed by result field name.
    * @returns Query whose flat result records carry the named aggregates as fields.
@@ -688,7 +688,7 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  */
 export const type: {
   <T extends Type$.AnyEntity>(type: T, predicates?: Filter.Props<Type$.InstanceType<T>>): Query<Type$.InstanceType<T>>;
-  // Brand-narrowed schema overload — only well-known unknown schemas pass.
+  // Brand-narrowed schema overload - only well-known unknown schemas pass.
   <S extends internal.UnknownTypeSchema<any, any>>(
     schema: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,

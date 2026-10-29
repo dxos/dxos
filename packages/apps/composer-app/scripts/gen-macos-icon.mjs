@@ -5,8 +5,8 @@
 
 // Regenerate the macOS app icon from the shared full-bleed artwork.
 //
-// macOS renders an app icon exactly as given — unlike iOS, it applies no mask, and `tauri icon` adds no
-// margin either — so the rounded tile and the margin around it have to be drawn into the artwork or the
+// macOS renders an app icon exactly as given - unlike iOS, it applies no mask, and `tauri icon` adds no
+// margin either - so the rounded tile and the margin around it have to be drawn into the artwork or the
 // dock shows a hard square that also sits taller than its neighbours.
 //
 // This runs as its own pass rather than inside `gen-icon-variants.mjs` because the shape must NOT reach

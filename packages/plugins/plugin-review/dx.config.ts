@@ -41,7 +41,7 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
       Each thread carries an optional AI agent configuration that controls how the built-in
       assistant participates in the conversation. Threads can be set to off, mention-only (the
       agent responds only when @-mentioned by name), or auto mode (the agent replies to every new
-      user message). The agent identity — display name, DID, and avatar — is resolved at runtime
+      user message). The agent identity - display name, DID, and avatar - is resolved at runtime
       from a pluggable Effect capability so host applications can substitute their own assistant
       persona.
 

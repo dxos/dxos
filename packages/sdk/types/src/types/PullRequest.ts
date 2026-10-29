@@ -50,7 +50,7 @@ export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos
       Annotation.GeneratorAnnotation.set('lorem.sentence'),
     ),
 
-    /** Canonical web URL — stored rather than derived, since only the host knows its URL shape. */
+    /** Canonical web URL - stored rather than derived, since only the host knows its URL shape. */
     url: Format.URL.pipe(Schema.annotate({ title: 'URL' }), Schema.optional),
 
     state: State.pipe(Schema.annotate({ title: 'State' })),
@@ -73,7 +73,7 @@ export class PullRequest extends Type.makeObject<PullRequest>(DXN.make('org.dxos
     /** When it was opened on the host; absent on a pull request stored before the host reported it. */
     createdAt: Schema.optional(Format.DateTime.annotate({ title: 'Created' })),
 
-    /** When the host last saw activity on it — a push, a review, a comment. */
+    /** When the host last saw activity on it - a push, a review, a comment. */
     updatedAt: Schema.optional(Format.DateTime.annotate({ title: 'Updated' })),
 
     /** The repository it belongs to; absent on a preview, set by sync and by import. `repo` stays the name string. */
@@ -105,5 +105,5 @@ export const make = (props: Obj.MakeProps<typeof PullRequest>): PullRequest => O
 /** Returns true when value is a PullRequest object. */
 export const instanceOf = (value: unknown): value is PullRequest => Obj.instanceOf(PullRequest, value);
 
-/** `owner/repo#123` — the same reference form as an issue, since the numbers share one sequence. */
+/** `owner/repo#123` - the same reference form as an issue, since the numbers share one sequence. */
 export const reference = Issue.reference;

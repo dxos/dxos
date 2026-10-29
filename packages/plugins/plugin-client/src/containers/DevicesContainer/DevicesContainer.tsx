@@ -68,7 +68,7 @@ type DeviceInvitationProps = {
 };
 
 const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUrl'>) => {
-  // `client.config` only — the network status above keeps this container on the client regardless
+  // `client.config` only - the network status above keeps this container on the client regardless
   // (Missing API 9). The gate matters: an invitation code in a production console is a live secret.
   const client = useClient();
   const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);

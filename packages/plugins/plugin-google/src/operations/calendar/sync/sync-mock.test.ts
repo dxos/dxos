@@ -25,7 +25,7 @@ import { generateCalendarDataset, generateRecurringSeries } from '../../../testi
 import { type SyncCalendarProps, syncCalendar } from './sync.ts';
 
 /**
- * Google Calendar sync against a mocked API — the offline peer of the Gmail sync suite, driven
+ * Google Calendar sync against a mocked API - the offline peer of the Gmail sync suite, driven
  * through the connection-level fan-out the handler wraps. The live-API smoke tests in `sync.test.ts`
  * still need `ACCESS_TOKEN`; these do not, so calendar sync is covered in CI.
  */

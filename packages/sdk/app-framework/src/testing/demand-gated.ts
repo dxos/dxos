@@ -19,7 +19,7 @@ import { ActivationEvent, type PluginManager } from '../core/index.ts';
  * headless harness mounts no surfaces, and a story mounts exactly one in isolation, so both would
  * otherwise sit at whatever the startup pass activated and assert against modules that never load.
  *
- * The idle wave is included as an ordering barrier, not because the manager omits it — the
+ * The idle wave is included as an ordering barrier, not because the manager omits it - the
  * scheduler fires it from a forked daemon, so a caller that asserts as soon as `start()` returns
  * could otherwise race it. Firing here is idempotent against the wave guard either way.
  *
@@ -37,7 +37,7 @@ export const activateDemandGatedModules = (
   Effect.forEach(
     [
       ActivationEvents.Idle,
-      // Demanded by a host building a command tree — a CLI binary or a terminal panel — and
+      // Demanded by a host building a command tree - a CLI binary or a terminal panel - and
       // nothing here is either.
       ActivationEvents.CommandsRequested,
       ...new Set([...manager.getCore(), ...manager.getEnabled()].map(ActivationEvent.pluginStart)),

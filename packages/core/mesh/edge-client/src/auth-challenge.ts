@@ -22,7 +22,7 @@ import { type EdgeIdentity } from './edge-identity.ts';
  *
  * Two ways in, because a client must work against servers on either side of the change that made
  * `/auth` answer 200:
- * - {@link fetchAuthChallenge} asks `/auth` up front. Preferred — acquiring a challenge is a
+ * - {@link fetchAuthChallenge} asks `/auth` up front. Preferred - acquiring a challenge is a
  *   successful operation.
  * - {@link handleAuthChallenge} reads the challenge off a 401 that already happened. The lazy
  *   fallback, and the only option on servers whose `/auth` can just reject.
@@ -34,18 +34,18 @@ const VP_SCHEME = 'VerifiablePresentation';
  * Pull the challenge out of a `WWW-Authenticate` value.
  *
  * `WWW-Authenticate` carries a comma-separated *list* of challenges (RFC 9110 §11.6.1), so the
- * VP challenge is not necessarily first — edge emits `Bearer realm="dxos", VerifiablePresentation …`
+ * VP challenge is not necessarily first - edge emits `Bearer realm="dxos", VerifiablePresentation ...`
  * whenever both auth methods are allowed. Values may be quoted or a bare token; base64's `/` and
  * `=` are not `tchar`, so a real nonce is always quoted, while the historical `challenge=TODO`
  * placeholder is not.
  *
  * An empty challenge (`challenge=""`) is reported as absent rather than as the empty string. Edge
  * emits exactly that when its server keypair is unconfigured, and there is nothing a caller can
- * sign — treating it as present would route the request through the auth path only to fail on the
+ * sign - treating it as present would route the request through the auth path only to fail on the
  * missing challenge, masking the original response.
  *
  * Only the VP challenge's own parameters are read. Two things would otherwise be mistaken for it:
- * a `Bearer realm="VerifiablePresentation challenge=…"`, which declares Bearer alone, and a
+ * a `Bearer realm="VerifiablePresentation challenge=..."`, which declares Bearer alone, and a
  * `challenge` belonging to a later scheme when the VP challenge carries none. Signing either would
  * retry an unrelated 401, running a non-idempotent request twice.
  */
@@ -128,9 +128,9 @@ const splitOutsideQuotes = (header: string): string[] => {
  * Read the challenge from an `/auth` response.
  *
  * Two shapes are accepted so a client works against servers on either side of the change:
- * - `200` with `{ success: true, data: { challenge } }` — the current shape. Acquiring a challenge
+ * - `200` with `{ success: true, data: { challenge } }` - the current shape. Acquiring a challenge
  *   is a successful operation, so it is reported as one.
- * - `401` with `WWW-Authenticate` — every protected resource, plus older servers whose `/auth`
+ * - `401` with `WWW-Authenticate` - every protected resource, plus older servers whose `/auth`
  *   could only issue a challenge by failing.
  */
 export const readAuthChallenge = async (response: Response): Promise<string | undefined> =>
@@ -140,7 +140,7 @@ export type AuthChallengeInfo = {
   /** Base64 challenge nonce. */
   challenge: string;
   /**
-   * Server-advertised challenge validity. Absent on servers predating the TTL contract — there the
+   * Server-advertised challenge validity. Absent on servers predating the TTL contract - there the
    * only refresh signal is the eventual 401.
    */
   expiresInMs?: number;
@@ -172,8 +172,8 @@ const challengeInfoOf = (response: Response, body: unknown): AuthChallengeInfo |
 /**
  * Fetch a challenge nonce from the edge `/auth` endpoint.
  *
- * This is the deliberate, up-front way to obtain a challenge. The alternative — firing a request
- * you expect to be rejected and reading the challenge off the 401 — logs an error in every browser
+ * This is the deliberate, up-front way to obtain a challenge. The alternative - firing a request
+ * you expect to be rejected and reading the challenge off the 401 - logs an error in every browser
  * console and records a routine auth failure server-side on each client boot.
  *
  * Returns undefined if the endpoint is unreachable or answers in neither known shape; callers fall

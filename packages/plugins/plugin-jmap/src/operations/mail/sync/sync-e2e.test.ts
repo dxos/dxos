@@ -19,7 +19,7 @@ import { mapEmail } from '../mapper.ts';
  * Live JMAP test against a real server (Fastmail by default). Gated on `JMAP_TOKEN`, mirroring the
  * Gmail `GOOGLE_ACCESS_TOKEN` gate. To run:
  *
- *   export JMAP_TOKEN="<fastmail api token>"   # Settings → Privacy & Security → Integrations
+ *   export JMAP_TOKEN="<fastmail api token>"   # Settings -> Privacy & Security -> Integrations
  *   export JMAP_HOST="api.fastmail.com"        # optional; defaults to api.fastmail.com
  *   pnpm vitest sync-e2e.test.ts
  */

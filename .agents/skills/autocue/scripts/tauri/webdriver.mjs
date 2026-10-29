@@ -9,7 +9,7 @@
 
 export class WebDriverError extends Error {
   constructor(command, { error, message }) {
-    super(`${command}: ${error}${message ? ` — ${message.split('\n')[0]}` : ''}`);
+    super(`${command}: ${error}${message ? ` - ${message.split('\n')[0]}` : ''}`);
     this.code = error;
   }
 }

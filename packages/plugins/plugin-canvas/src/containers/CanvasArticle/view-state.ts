@@ -27,7 +27,7 @@ const CanvasViewStateSchema = Schema.Struct({
   guides: Schema.optional(Schema.Boolean),
   /** The camera keeps the scene framed as the view resizes or opens another scene, until the viewer pans or zooms. */
   fit: Schema.optional(Schema.Boolean),
-  /** Whether each group of the properties panel (`style`, `center`, …) is open, by path; unset, it is open. */
+  /** Whether each group of the properties panel (`style`, `center`, ...) is open, by path; unset, it is open. */
   groups: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
 });
 

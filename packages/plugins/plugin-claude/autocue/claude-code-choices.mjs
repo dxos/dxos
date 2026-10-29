@@ -56,7 +56,7 @@ export const steps = [
       }
       if (!(await page.evaluate(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude')))) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-        await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Claude' });
+        await demo.fill({ selector: 'input[placeholder="Filter..."]', value: 'Claude' });
         await demo.click({ selector: 'label.dx-switch:has(input[aria-label="Claude"])', label: 'Enable Claude' });
         await page.waitForFunction(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude'));
         await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', label: 'Space' });

@@ -3,8 +3,8 @@
 //
 
 /**
- * Devtools' Agent › HALO page reads an agent's HALO from EDGE, which no client replicates. Alice, who created Kai,
- * opens DevTools › Agent › HALO and picks Kai: its identity, HALO space, admins and spaces, then every credential in its
+ * Devtools' Agent > HALO page reads an agent's HALO from EDGE, which no client replicates. Alice, who created Kai,
+ * opens DevTools > Agent > HALO and picks Kai: its identity, HALO space, admins and spaces, then every credential in its
  * HALO, one `IdentityAdmin` among them for her. She invites Bob into Kai's space, which makes her client ask EDGE to add
  * him as an admin; when she picks Kai again, the page shows two admins and a second `IdentityAdmin`, for Bob.
  *
@@ -48,7 +48,7 @@ const waitFor = async (predicate, { timeout = TIMEOUT, what }) => {
   }
 };
 
-/** The workspace segment of the URL (`/w/<workspace>/…`). */
+/** The workspace segment of the URL (`/w/<workspace>/...`). */
 const workspaceOf = (page) => {
   const [anchor, workspace] = new URL(page.url()).pathname.split('/').filter(Boolean);
   return anchor === 'w' ? decodeURIComponent(workspace) : undefined;
@@ -172,7 +172,7 @@ const listsAgentAsMember = (page) =>
   );
 
 /**
- * Opens DevTools › Agent › HALO from the status bar's debug panel; `remount` passes through Console first, so the page
+ * Opens DevTools > Agent > HALO from the status bar's debug panel; `remount` passes through Console first, so the page
  * reads EDGE afresh.
  */
 const openAgentHalo = async (peer, { remount = false } = {}) => {
@@ -211,7 +211,7 @@ const openAgentHalo = async (peer, { remount = false } = {}) => {
       await peer.click(item);
     }
   }
-  // DevTools › HALO is a closed branch above Agent, so the last HALO row is the agent's page.
+  // DevTools > HALO is a closed branch above Agent, so the last HALO row is the agent's page.
   await peer.click(
     tree
       .locator('[role="treeitem"]')
@@ -322,7 +322,7 @@ export const steps = [
     },
   },
   {
-    name: 'Alice opens DevTools › Agent › HALO and picks Kai',
+    name: 'Alice opens DevTools > Agent > HALO and picks Kai',
     subtitle: "Its identity, HALO space, admins and spaces, read from EDGE: no client replicates an agent's HALO",
     run: async ({ peers: { alice } }) => {
       const { page } = alice;

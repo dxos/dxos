@@ -16,7 +16,7 @@ import { ClientService } from '@dxos/client';
 import { ALL_NSIDS, AUTH_OPTION_DESCRIPTIONS, type ListRecordsEntry, listRecords, resolveSession } from './util.ts';
 
 /**
- * `dx registry records` — lists all `org.dxos.experimental.*` records on the
+ * `dx registry records` - lists all `org.dxos.experimental.*` records on the
  * authenticated user's repo. Useful for double-checking what's been published
  * and what the registry indexer is about to ingest.
  */

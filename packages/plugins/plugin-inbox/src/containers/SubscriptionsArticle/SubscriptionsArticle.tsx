@@ -92,7 +92,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   // Senders removed by a successful unsubscribe this session. The operation adds a skip-sender filter,
   // but `mailbox.messageFilters` is a stable proxy ref whose contents mutate in place, so a `useMemo`
-  // keyed on it never recomputes — track successful removals explicitly to drop them from the list.
+  // keyed on it never recomputes - track successful removals explicitly to drop them from the list.
   const [removed, setRemoved] = useState<ReadonlySet<string>>(new Set());
 
   const subscriptions = useMemo(

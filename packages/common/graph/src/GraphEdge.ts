@@ -30,7 +30,7 @@ export type Any = Specialize<Base, { data?: any }>;
 export type Of<Data = any> = Specialize<Base, { data: Data }>;
 
 // A control character, so a generated id stays unambiguous whatever the node ids and relation
-// contain — '_' is legal in all of them.
+// contain - '_' is legal in all of them.
 const SEPARATOR = '\u0001';
 
 const isValidKey = (key: string): boolean => key.length > 0 && !key.includes(SEPARATOR);

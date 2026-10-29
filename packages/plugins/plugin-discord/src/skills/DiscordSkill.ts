@@ -39,15 +39,15 @@ export const make = (): Skill.Skill =>
           \`thread\` (started on your first post there), or its \`channel\` when it names no thread (a thread you are
           already in, a DM). To post in the channel itself instead, pass \`channel\`, with \`replyTo\` set to the
           \`message\` you answer. Any other channel you are in works too.
-        - ${tool(DiscordAgentOperation.React)}: react to a message (\`channel\` and \`message\`), e.g. 👍 to
+        - ${tool(DiscordAgentOperation.React)}: react to a message (\`channel\` and \`message\`), e.g. ${'\u{1F44D}'} to
           acknowledge it when a reply would add nothing.
         - ${tool(DiscordAgentOperation.DirectMessage)}: message a person directly; \`to\` is their user id (the number
           after \`from\`), their @username, or their name.
-        - To send a picture, video or document, pass \`files\`: references to File objects (\`echo://…\` URIs you were
+        - To send a picture, video or document, pass \`files\`: references to File objects (\`echo://...\` URIs you were
           given), up to 10 MB each, with a short \`text\` saying what it is.
 
         Pick what the request needs, and it may be somewhere other than where it came from: "tell Rich the agent is
-        ready" is a direct message to Rich, perhaps with a 👍 on the request. Do one thing per intent, never post the
+        ready" is a direct message to Rich, perhaps with a ${'\u{1F44D}'} on the request. Do one thing per intent, never post the
         same text twice, and when you were not addressed, do nothing.
       `,
     }),

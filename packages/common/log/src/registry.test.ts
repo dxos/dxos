@@ -29,7 +29,7 @@ describe('LogFileRegistry', () => {
       count++;
     });
     registry.register('a.ts');
-    registry.register('a.ts'); // duplicate — no notification
+    registry.register('a.ts'); // duplicate - no notification
     expect(count).toBe(1);
     unsubscribe();
     registry.register('b.ts');

@@ -16,7 +16,7 @@ export const mapTranslations: Record<string, string> = {
   'map-lasso.title': 'Drag around the part of town you want; it closes itself',
   'map-circle.label': 'Near a point',
   'map-circle.title': 'Press on a point (a metro station, work) and drag out the distance',
-  'map-lasso.hint': 'Drag around the area — it closes when you let go · Esc cancels',
+  'map-lasso.hint': 'Drag around the area - it closes when you let go · Esc cancels',
   'map-circle.hint': 'Press on a point and drag out the distance (a click is 600 m) · Esc cancels',
   'map-cancel.label': 'Cancel',
   'map-areas.label': 'Your areas',

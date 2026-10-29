@@ -9,7 +9,7 @@ import * as Term from './Term.ts';
 
 /**
  * The cross-file pass (`design/TYPES.md`, "Binding"). Per-file inference names what another file
- * declares — `typeof X`, `returnOf(callee)(args)` — and this pass binds those names to the declaring
+ * declares - `typeof X`, `returnOf(callee)(args)` - and this pass binds those names to the declaring
  * symbol's own term, following re-exports, namespace barrels and bare specifiers that resolve inside
  * the repository. What cannot be bound stays deferred; nothing is guessed.
  */
@@ -17,9 +17,9 @@ import * as Term from './Term.ts';
 /** What the pass needs to know about one symbol, read from its file's graph. */
 export type SymbolFacts = {
   readonly term: Term.Type | undefined;
-  /** `export { x as y } from …` — the declaration the alias stands for. */
+  /** `export { x as y } from ...` - the declaration the alias stands for. */
   readonly aliasOf: readonly string[];
-  /** `export * as N from …` — the file a namespace symbol publishes whole. */
+  /** `export * as N from ...` - the file a namespace symbol publishes whole. */
   readonly namespaceOf: readonly string[];
   /** Every `deus:kind`, since a class or function merged with a `namespace` declares one IRI twice. */
   readonly kinds?: readonly string[];
@@ -30,7 +30,7 @@ export type Env = {
   readonly symbol: (iri: string) => SymbolFacts | undefined;
   /** The file IRI a bare specifier's module IRI resolves to, inside the repository. */
   readonly moduleFile: (moduleIri: string) => string | undefined;
-  /** Files a file re-exports wholesale (`export * from …`). */
+  /** Files a file re-exports wholesale (`export * from ...`). */
   readonly reexports: (fileIri: string) => readonly string[];
 };
 
@@ -321,7 +321,7 @@ export const uniqueModuleFiles = (pairs: Iterable<readonly [string, string]>): M
   return unique;
 };
 
-/** An environment over analyzed documents — the harness's view, and the reasoner's after reading the store. */
+/** An environment over analyzed documents - the harness's view, and the reasoner's after reading the store. */
 export const envFromDocuments = (documents: readonly Ontology.FileDocument[]): Env => {
   const symbols = new Map<string, SymbolFacts>();
   const modules: (readonly [string, string])[] = [];

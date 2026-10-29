@@ -9,7 +9,7 @@
 export type ReconnectReason =
   /** The browser reports no network. The clearest "lost the internet" signal available. */
   | 'offline'
-  /** Closed with 1006 — no close frame arrived, so the connection died rather than being closed. */
+  /** Closed with 1006 - no close frame arrived, so the connection died rather than being closed. */
   | 'abnormal'
   /** Server closed deliberately and cleanly. */
   | 'normal'
@@ -21,7 +21,7 @@ export type ReconnectReason =
   | 'policy'
   /** Application close code, which EDGE uses for auth rejection. */
   | 'app'
-  /** Socket-level error rather than a close frame — TLS, DNS, refused connect. */
+  /** Socket-level error rather than a close frame - TLS, DNS, refused connect. */
   | 'socket_error'
   /** Keepalive watchdog fired: pings were flowing and the loop was live, but the peer went silent. */
   | 'inactivity_timeout'

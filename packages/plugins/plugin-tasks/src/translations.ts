@@ -56,7 +56,7 @@ export const translations = [
         'task-attachments.label': 'Attachments',
         'task-attachment.remove.label': 'Remove attachment',
         'task-attachments.drop-area.label': 'Drop or paste files to attach',
-        'task-attachment.uploading.label': 'Uploading {{name}}…',
+        'task-attachment.uploading.label': 'Uploading {{name}}...',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
         'move-task-error.title': 'Could not move task',

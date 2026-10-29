@@ -18,7 +18,7 @@ import * as SampleSpace from '../sample/SampleSpace.ts';
  * Ephemeral in-process client, torn down when the enclosing scope closes.
  *
  * An explicit empty `Config` (no `dataRoot`/`sqlitePath`, no signaling, no edge url) makes
- * `createLocalClientServices` resolve to in-memory SQLite and an in-process swarm — nothing is
+ * `createLocalClientServices` resolve to in-memory SQLite and an in-process swarm - nothing is
  * written to disk and no network connection is ever attempted.
  */
 export const ephemeralClient = Effect.gen(function* () {
@@ -76,7 +76,7 @@ export const buildArchive = <Partials extends SampleSpace.PartialMap, A, R>(
 /**
  * Object count per typename, for asserting a rebuilt snapshot still carries what it used to.
  *
- * Counts the archive's feed messages alongside its database objects — an archive keeps them in
+ * Counts the archive's feed messages alongside its database objects - an archive keeps them in
  * separate sections, and a partial that authors a mailbox or a calendar puts most of its content in
  * the feeds one.
  */

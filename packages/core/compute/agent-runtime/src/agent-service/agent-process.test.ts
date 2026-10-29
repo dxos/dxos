@@ -64,7 +64,7 @@ describe('computeAlarmDelay', () => {
   });
 });
 
-// The completion decision (`maybeComplete` → `ctx.succeed()`) is exercised at two levels: the
+// The completion decision (`maybeComplete` -> `ctx.succeed()`) is exercised at two levels: the
 // `isAgentWorkPending` suite below covers the predicate the process consults (queue / feed queue /
 // alarms / delegations / pending tool results), and `AgentService.test.ts` covers the process
 // reaching a terminal state and respawning for a follow-up turn end-to-end.

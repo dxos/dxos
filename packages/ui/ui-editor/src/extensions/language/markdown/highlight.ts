@@ -105,7 +105,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
         class: 'font-mono',
       },
 
-      // Headings — use CSS properties only (no class:) so CodeMirror generates scoped CSS via
+      // Headings - use CSS properties only (no class:) so CodeMirror generates scoped CSS via
       // StyleModule that overrides vscodeDarkStyle's t.heading rule. When class: is present,
       // HighlightStyle silently ignores all other CSS properties (they're mutually exclusive).
       // Font sizes use Tailwind v4 CSS variables so nothing is hardcoded.

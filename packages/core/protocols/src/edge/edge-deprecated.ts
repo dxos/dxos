@@ -14,7 +14,7 @@ import {
 } from './edge.ts';
 
 //
-// DX-1033 — legacy (pre-identityDid) wire shapes.
+// DX-1033 - legacy (pre-identityDid) wire shapes.
 //
 // These carry identity as a hex `identityKey`/`ownerPublicKey`. They are retained so the Edge
 // continues to accept requests from, and the devtools CLI can still read responses produced by,

@@ -175,7 +175,7 @@ const TranscriptTabs = ({
 
   // Tabs first, then a growing gap, then the regenerate action: rendered through the same graph
   // (rather than as `ActionToolbar`'s `children`) so DOM/focus order matches the visual left-to-right
-  // order — `ActionToolbar` always renders its graph items before its children slot. `disabled`/`spin`
+  // order - `ActionToolbar` always renders its graph items before its children slot. `disabled`/`spin`
   // on `regenerate` are read off the action's own properties (the same model `ActionToolbarItem`
   // renders elsewhere) rather than wired by hand, so this toolbar composes the same way the outer one does.
   const regenerateActions = useMenuBuilder(

@@ -23,7 +23,7 @@ import {
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
 
-/** What a renderer receives for one node. Bindings arrive resolved — a renderer never walks state. */
+/** What a renderer receives for one node. Bindings arrive resolved - a renderer never walks state. */
 export type RenderProps<Output> = {
   readonly node: Node;
   /**
@@ -57,7 +57,7 @@ export type Renderer<Output> = {
   readonly [K in Tag]: (props: RenderProps<Output>) => Output;
 };
 
-/** Invoked for every `on-*` binding. The template never holds a callback — only an operation key. */
+/** Invoked for every `on-*` binding. The template never holds a callback - only an operation key. */
 export type Dispatch = (
   operation: string,
   context: {
@@ -68,7 +68,7 @@ export type Dispatch = (
 ) => void;
 
 /**
- * What a renderer factory needs from the registry, independent of the output framework —
+ * What a renderer factory needs from the registry, independent of the output framework -
  * `schema=` resolution is a property of the grammar, not of React.
  */
 export type CreateRendererOptions<Schema = unknown> = {
@@ -80,7 +80,7 @@ export type RenderOptions<Output = unknown> = {
   readonly dispatch?: Dispatch;
   /**
    * Renders a node whose bindings failed to resolve at render time. Without one the
-   * {@link BindingResolutionError} propagates — headless callers assert on it; a UI renderer
+   * {@link BindingResolutionError} propagates - headless callers assert on it; a UI renderer
    * supplies an inline error element (R-8: visible, never silent).
    */
   readonly onError?: (error: Error, path: string) => Output;
@@ -124,7 +124,7 @@ const readCapability = (scope: Scope, from: string, path: readonly string[]): un
 /**
  * An element declaring `id` opens a lexical scope: its direct `let` children are the slots.
  * Rung 1/2 slots read published state at `ui.<enclosing ids>.<id>.<name>` and stay writable;
- * a rung-3 `from=` slot mirrors the module capability it binds — readable in the subtree but
+ * a rung-3 `from=` slot mirrors the module capability it binds - readable in the subtree but
  * never writable here (only the owning module's operations write it).
  */
 const openFrame = (node: Node, scope: Scope): ScopeFrame => {
@@ -149,7 +149,7 @@ const openFrame = (node: Node, scope: Scope): ScopeFrame => {
 
 /**
  * Open the root's declaration ring. `vars` narrows to the `var` signature: every declared input
- * resolves (to the supplied value or `undefined`), and an undeclared key never resolves — the
+ * resolves (to the supplied value or `undefined`), and an undeclared key never resolves - the
  * signature, not the host, closes the namespace. `use` aliases map onto the host-supplied module
  * views by module key; a declared alias whose module is absent stays present (as `undefined`) so
  * resolving through it errors visibly instead of falling silent.
@@ -172,7 +172,7 @@ const openRoot = (root: Node, scope: Scope): Scope => {
  * `collection` introduces an item scope (children render once per resolved item); an element with
  * `id` opens a lexical scope frame over its subtree. `show`/`switch` are structural, expression-
  * free conditionality: which children exist is a function of one resolved binding. There is no
- * expression language — only paths to walk.
+ * expression language - only paths to walk.
  */
 export const render = <Output>(
   node: Node,
@@ -224,7 +224,7 @@ const renderNode = <Output>(
 
   // Structural conditionality: `show` renders its children while `when` is present, otherwise the
   // children of its `fallback`; `switch` renders the children of the `match` whose value equals
-  // the resolved `on`. Unmatched branches are not hidden — they are never rendered.
+  // the resolved `on`. Unmatched branches are not hidden - they are never rendered.
   const children = (): readonly Output[] => {
     switch (node.tag) {
       case 'collection':

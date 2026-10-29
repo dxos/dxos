@@ -29,7 +29,7 @@ const ECHO_TOOL = {
 };
 
 describe('McpToolkit tools', () => {
-  test('a tool with parameters survives a model turn and carries the server’s schema', async ({ expect }) => {
+  test("a tool with parameters survives a model turn and carries the server's schema", async ({ expect }) => {
     await EffectEx.runPromise(
       withServer((url) =>
         Effect.gen(function* () {
@@ -55,7 +55,7 @@ describe('McpToolkit tools', () => {
     );
   });
 
-  test('a named server’s tools are offered under its prefix, and still run', async ({ expect }) => {
+  test("a named server's tools are offered under its prefix, and still run", async ({ expect }) => {
     await EffectEx.runPromise(
       withServer((url) =>
         Effect.gen(function* () {
@@ -72,7 +72,7 @@ describe('McpToolkit tools', () => {
     );
   });
 
-  test('a prefixed name stays within the providers’ limit and unique', ({ expect }) => {
+  test("a prefixed name stays within the providers' limit and unique", ({ expect }) => {
     const label = McpToolkit.label('My Work Account at Some Company');
     expect(label.length).toBeLessThanOrEqual(16);
 

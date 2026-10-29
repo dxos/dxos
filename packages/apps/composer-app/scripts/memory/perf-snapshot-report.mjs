@@ -5,8 +5,8 @@
 /**
  * Composition report for the memory snapshots a perf flow run took (`DX_PERF_SNAPSHOTS`).
  *
- * Reads each checkpoint under `<artifacts>/snapshots/` — the allocator breakdown per process and a
- * heap snapshot per realm — and prints what the renderers' footprint is made of. Heap snapshots are
+ * Reads each checkpoint under `<artifacts>/snapshots/` - the allocator breakdown per process and a
+ * heap snapshot per realm - and prints what the renderers' footprint is made of. Heap snapshots are
  * attributed with `heap-attribution.mjs` in a child process each, and the result is cached beside
  * them as `report.json`, so a second run only reprints.
  *

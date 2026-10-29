@@ -242,7 +242,7 @@ export class FunctionContext extends Resource {
       const db = this.db;
       // Bounded: opening waits for the space's root document from the data service, and a root
       // that never arrives otherwise holds the invocation until the Workers runtime kills it as
-      // hung — ~30s with no error naming the space, inherited by every caller up the chain.
+      // hung - ~30s with no error naming the space, inherited by every caller up the chain.
       await EffectEx.runPromise(
         Effect.tryPromise({
           try: () => db.open(),
@@ -276,7 +276,7 @@ export class FunctionContext extends Resource {
 
     // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
     // directly and never passes through that path, so its declared schemas went unregistered and
-    // every TYPED query it made matched nothing — an agent appended a prompt to its conversation and
+    // every TYPED query it made matched nothing - an agent appended a prompt to its conversation and
     // read the queue back empty, which reads as a lost write rather than a missing schema.
     if (this.opts.types?.length && this.db) {
       this.db.graph.registry.add(this.opts.types);
@@ -284,11 +284,11 @@ export class FunctionContext extends Resource {
 
     // Register the S3 backend so a handler running here can write to a bucket the space is
     // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
-    // there silently rather than in the configured bucket. Nothing Cloudflare-specific is needed —
-    // it is an outbound fetch to the customer's own endpoint — so this works on edge unchanged.
+    // there silently rather than in the configured bucket. Nothing Cloudflare-specific is needed -
+    // it is an outbound fetch to the customer's own endpoint - so this works on edge unchanged.
     //
     // Imported dynamically: `plugin-client` pulls this package into the app's eager boot graph, and
-    // a static import would put the SigV4 signer there with it — for code that only ever runs
+    // a static import would put the SigV4 signer there with it - for code that only ever runs
     // inside a function invocation.
     if (this.client && this.db) {
       const db = this.db;
@@ -351,7 +351,7 @@ export class FunctionContext extends Resource {
     // The cross-space handle, alongside the space-scoped `Database.Service`: an operation invoked
     // by a harness hook is handed a fixed payload with no space id, so it has to find its own space
     // (`RemoteSessionOperation`). Omitting it failed every such operation at the first service
-    // access with `Service not found: @dxos/echo/Hypergraph/Service` — half of all deployed
+    // access with `Service not found: @dxos/echo/Hypergraph/Service` - half of all deployed
     // `operation.invoke` calls, after ~1.8s of work.
     const hypergraphLayer = this.client ? Hypergraph.layer(this.client.graph) : Hypergraph.notAvailable;
 
@@ -390,7 +390,7 @@ const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.L
 
 /** Proxies Anthropic requests through the EDGE-provided `FunctionsAiService`, BYOK-wrapped. */
 const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) => {
-  // `apiUrl` is a sentinel — the request gets re-routed by the AI gateway in EDGE.
+  // `apiUrl` is a sentinel - the request gets re-routed by the AI gateway in EDGE.
   const httpClient = Header.byokLayer('anthropic.com').pipe(
     Layer.provide(FunctionsAiHttpClient.layer(functionsAiService)),
   );
@@ -440,7 +440,7 @@ export const makeOperationServiceLayer = (
     schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
         // Dropped rather than asserted: `schedule` is typed `Effect<void, never>`, so failing an
-        // unroutable followup would take its caller down with it — a handler that imported a
+        // unroutable followup would take its caller down with it - a handler that imported a
         // definition directly (no `deployedId`, e.g. `observability.sendEvent` scheduled by
         // `space.addObject`) must not fail the operation that emitted it.
         if (!op.meta.deployedId) {
@@ -449,9 +449,9 @@ export const makeOperationServiceLayer = (
           });
           return;
         }
-        // Fire and forget — schedule is intentionally non-awaiting.
+        // Fire and forget - schedule is intentionally non-awaiting.
         void functionsService.invoke(op.meta.deployedId, input).catch(() => {
-          // Swallow errors — schedule is observability-only.
+          // Swallow errors - schedule is observability-only.
         });
       })) as Operation.OperationService['schedule'],
     invokePromise: ((op: Operation.Definition.Any, input: unknown, options?: Operation.InvokeOptions) =>
@@ -532,7 +532,7 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       // A null or undefined `value` already returned above, so neither branch can be the one that
       // matches here and both are safe to discard: without dropping `null`, a
       // `Schema.optional(Schema.NullOr(Ref))` field keeps two branches, is left undecoded, and the
-      // handler rejects the caller's wire envelope — which is why updating a ref field failed
+      // handler rejects the caller's wire envelope - which is why updating a ref field failed
       // while creating one with the same envelope succeeded.
       const candidates = encoded.types.filter(
         (type) => !SchemaAST.isUndefinedKeyword(type) && !SchemaAST.isNullKeyword(type),

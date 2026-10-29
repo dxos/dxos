@@ -66,7 +66,7 @@ export const defaultVocabulary = (): Vocabulary.Vocabulary =>
 
 /**
  * Compiles goal rules: parses, expands predicate shorthand for canonical vocabulary predicates
- * (`helps_with(S, O)` → `fact(_, S, helps_with, O)`, `helps_with(F, S, O)` exposes the id),
+ * (`helps_with(S, O)` -> `fact(_, S, helps_with, O)`, `helps_with(F, S, O)` exposes the id),
  * checks goal heads, then runs the engine's static checks against the fact relations.
  */
 export const compile = (

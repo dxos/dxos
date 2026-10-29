@@ -3,7 +3,7 @@
 //
 
 // Renders a react-ui-form for one MCP tool's input schema. The schema is an
-// Effect `Schema.Struct(...)` from `@dxos/introspect-mcp/tools` — same one the
+// Effect `Schema.Struct(...)` from `@dxos/introspect-mcp/tools` - same one the
 // server converts to zod for the MCP SDK at registration time. Authoring once
 // in Effect and reusing here is the whole point of the converter.
 
@@ -26,7 +26,7 @@ export type ToolFormProps = Util.ThemedClassName<{
    */
   tool: ToolEntry;
   /**
-   * Initial values. Defaults to `{}` — most tool inputs are entirely optional
+   * Initial values. Defaults to `{}` - most tool inputs are entirely optional
    * (`limit`, `compact`, `pluginId` filters), so an empty submission is valid.
    */
   defaultValues?: Record<string, unknown>;
@@ -36,13 +36,13 @@ export type ToolFormProps = Util.ThemedClassName<{
    */
   onSubmit?: (args: Record<string, unknown>) => void;
   /**
-   * Optional cancel handler — wires to Form's keyboard cancel.
+   * Optional cancel handler - wires to Form's keyboard cancel.
    */
   onCancel?: () => void;
   /**
    * Option lists for picker-annotated fields (see `PickerAnnotationId` in
    * `@dxos/introspect-tools`). When omitted or empty, picker fields fall
-   * back to a plain text input — typing a value still works.
+   * back to a plain text input - typing a value still works.
    */
   pickerOptions?: Partial<Record<PickerKind, ReadonlyArray<string>>>;
 }>;
@@ -89,11 +89,11 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
         )}
       </header>
       <Form.Root
-        // `defaultValues` makes the form uncontrolled — it owns its own internal state via useFormHandler.
+        // `defaultValues` makes the form uncontrolled - it owns its own internal state via useFormHandler.
         // Passing `values` instead would require an `onValuesChanged` callback to write changes back;
         // users would otherwise see edits get reverted on every render.
         //
-        // The `key` forces a remount when the parent swaps tool — without
+        // The `key` forces a remount when the parent swaps tool - without
         // it React reconciles in place and the previous tool's values stick,
         // re-validating against the new (incompatible) schema.
         key={tool.title}

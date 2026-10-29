@@ -4,7 +4,7 @@
 //   node analyze.mjs .moon-bench                  many runs, compared by arm
 //
 // In directory mode, `report-<arm><n>.json` groups by arm: report-A1/A2 and report-B1/B2 compare
-// arm A against arm B. Reports median, p90, range and coefficient of variation — never a mean,
+// arm A against arm B. Reports median, p90, range and coefficient of variation - never a mean,
 // because both hosted and self-hosted caches produce multi-x tail runs.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -89,7 +89,7 @@ if (statSync(target).isFile()) {
     `hash-generation ${secs(run.hash)}s   task-execution ${secs(run.executed)}s over ${run.execCount} tasks   upload ${secs(run.upload)}s   setup ${secs(run.setup)}s`,
   );
   if (!run.hits && !run.localHits) {
-    console.log('\nNo cache hits at all. Either this is a cold run, or the cache is unreachable —');
+    console.log('\nNo cache hits at all. Either this is a cold run, or the cache is unreachable -');
     console.log('moon warns once and continues green, so check the log before assuming the former.');
   }
   if (run.slowest.length) {
@@ -144,6 +144,6 @@ if (arms.size > 1) {
   console.log(`\n${fastest} is ${ratio.toFixed(1)}x faster than ${slowest} on wall clock.`);
   const hitCounts = new Set(runs.map((run) => run.hits));
   if (hitCounts.size > 1) {
-    console.log('WARNING: hit counts differ across runs — the arms are not comparable until they match.');
+    console.log('WARNING: hit counts differ across runs - the arms are not comparable until they match.');
   }
 }

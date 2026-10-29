@@ -26,11 +26,11 @@ interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
 describe('json-schema', () => {
   /**
-   * 1. The Effect AST is structural — not canonical.
-   *    Effect’s Schema is primarily a combinator algebra.
+   * 1. The Effect AST is structural - not canonical.
+   *    Effect's Schema is primarily a combinator algebra.
    *    Each combinator wraps an AST node, but there is no normalization pass.
-   * 2. Multiple semantically‐equivalent schemas → different ASTs.
-   * 3. JSON Schema equivalence ≠ AST equivalence.
+   * 2. Multiple semantically-equivalent schemas -> different ASTs.
+   * 3. JSON Schema equivalence != AST equivalence.
    */
   test('AST equivalence', ({ expect }) => {
     {

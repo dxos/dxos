@@ -131,7 +131,7 @@ const _normalizeInValue = (value: unknown): unknown =>
 
 /**
  * Memoizes a `Set` per `values` array so `Filter.in` membership is O(1) rather than
- * `Array.includes`'s O(n) — this matters most for large sets projected from a subquery
+ * `Array.includes`'s O(n) - this matters most for large sets projected from a subquery
  * (`Filter.in(query.project(...))`, resolved to a literal `in` by the query executor), but
  * also speeds up ordinary literal-list `Filter.in`. Keyed by array identity: the planner and
  * executor never mutate a filter's `values` array in place, so the cache stays valid for the
@@ -233,7 +233,7 @@ export type FilterRecordMeta = {
   keys?: readonly { source?: string; id?: string }[];
   key?: string;
   version?: string;
-  /** Encoded references or bare URI strings — {@link matchesTag} normalizes both. */
+  /** Encoded references or bare URI strings - {@link matchesTag} normalizes both. */
   tags?: readonly unknown[];
   annotations?: Readonly<Record<string, unknown>>;
 };
@@ -241,8 +241,8 @@ export type FilterRecordMeta = {
 /**
  * Reads the fields a filter needs out of one representation of an entity.
  *
- * The representations an executor matches against — a live proxy, a raw Automerge document, the
- * `ObjectJSON` form — walk the filter AST identically and differ only in where each field lives, so
+ * The representations an executor matches against - a live proxy, a raw Automerge document, the
+ * `ObjectJSON` form - walk the filter AST identically and differ only in where each field lives, so
  * one walker over an accessor replaces a copy of the walk per representation.
  */
 export interface FilterRecordAccessor<T> {
@@ -264,7 +264,7 @@ export interface FilterRecordAccessor<T> {
 /**
  * Builds a filter matcher over one record representation.
  * The leaf predicates ({@link filterMatchValue}, {@link compareTypenameStrings}, {@link matchesTag},
- * {@link matchMetaKey}) are shared regardless — this shares the tree walk around them.
+ * {@link matchMetaKey}) are shared regardless - this shares the tree walk around them.
  */
 export const makeFilterMatcher = <T>(
   accessor: FilterRecordAccessor<T>,

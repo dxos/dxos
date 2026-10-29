@@ -5,8 +5,8 @@
 // Settings capability module.
 // `createKvsStore` creates a persistent key-value store backed by local storage.
 // The settings atom is contributed twice:
-// 1. To `SampleCapabilities.Settings` — for internal use within the plugin.
-// 2. To `AppCapabilities.Settings` — to register with the global settings panel
+// 1. To `SampleCapabilities.Settings` - for internal use within the plugin.
+// 2. To `AppCapabilities.Settings` - to register with the global settings panel
 //    so users can configure the plugin from the Settings page.
 
 import * as Effect from 'effect/Effect';

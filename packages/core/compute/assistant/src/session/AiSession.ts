@@ -140,7 +140,7 @@ export class Session extends Resource {
   }
 
   /**
-   * Every message in the feed, in append order — what `Feed.history` needs, since it walks lineage
+   * Every message in the feed, in append order - what `Feed.history` needs, since it walks lineage
    * positionally rather than by `created`, a wall clock peers do not agree on.
    */
   async #messagesInAppendOrder(): Promise<Message.Message[]> {
@@ -175,7 +175,7 @@ export class Session extends Resource {
    * Appends one of this turn's messages to the feed, consuming a pending rewind if there is one.
    *
    * The rewind decision is made in the UI, but the continuation is appended by the agent's process,
-   * which resolves the feed and never sees the chat — so the feed carries the intent and this is where
+   * which resolves the feed and never sees the chat - so the feed carries the intent and this is where
    * it becomes lineage. `rewindFrom` names the earliest discarded message, so the new parent is whatever
    * precedes it; nothing preceding means the continuation starts a fresh line. Only the first message of
    * a turn finds it set, since the append clears it, so the rest of the turn chains implicitly. Clearing
@@ -287,7 +287,7 @@ export class Session extends Resource {
       markWork('session.request-begun');
 
       // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
-      // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
+      // fiber (Tier A only), so they cannot reach the live host (Tier B) - that is the end hook's job.
       yield* SkillHooks.runHooks({
         skills,
         phase: 'begin-request',
@@ -350,7 +350,7 @@ export class Session extends Resource {
         Layer.mergeAll(
           // Tier A only: the agent's own turn fiber has no `ProcessManager.Service` in scope, so
           // Tier B (setAlarm/enqueueMessage) is reachable only by child operations through the
-          // process-affinity HarnessService LayerSpec — not from here.
+          // process-affinity HarnessService LayerSpec - not from here.
           Layer.succeed(
             Harness.HarnessService,
             Harness.fromBinder({ feed: this._feed, runtime: this._runtime, binder: this.context }),
@@ -416,7 +416,7 @@ export const connectMcpServers = (
           }),
         ),
         // Catch unexpected defects too (e.g. malformed tool schemas) so a single broken
-        // server can never abort the whole turn — surface them through the same channel.
+        // server can never abort the whole turn - surface them through the same channel.
         Effect.catchDefect((defect) =>
           Effect.gen(function* () {
             const message = defect instanceof Error ? defect.message : String(defect);

@@ -7,7 +7,7 @@ import { type S3Uri, regionFromHost, toHttpsUrl } from './s3-uri.ts';
 import { type SigningCredentials, presignUrl, signRequest, toArrayBufferView } from './sigv4.ts';
 
 /**
- * The key pair for one bucket. `undefined` wherever a caller has no credential for the endpoint —
+ * The key pair for one bucket. `undefined` wherever a caller has no credential for the endpoint -
  * every read path then falls through to an unsigned request, which succeeds on a public bucket and
  * 403s on a private one. That is the intended behavior: rendering a shared object must not require
  * the viewer to hold the writer's keys.
@@ -29,7 +29,7 @@ export class S3RequestError extends Error {
     readonly statusText: string,
     readonly body: string,
   ) {
-    super(`S3 request failed: ${status} ${statusText}${body ? ` — ${body}` : ''}`);
+    super(`S3 request failed: ${status} ${statusText}${body ? ` - ${body}` : ''}`);
     this.name = 'S3RequestError';
   }
 }
@@ -45,7 +45,7 @@ const currentOrigin = (): string =>
  * "Failed to fetch".
  *
  * The message names the origin and the methods only. The required headers are in the README and in
- * `details` — a status line has to be readable at a glance, and nobody writes a CORS policy from
+ * `details` - a status line has to be readable at a glance, and nobody writes a CORS policy from
  * memory of a sentence anyway.
  */
 export class S3NetworkError extends Error {
@@ -66,7 +66,7 @@ export class S3NetworkError extends Error {
 
 /**
  * The request exceeded its deadline. Distinct from {@link S3NetworkError} because the remedies have
- * nothing in common — a timeout says the endpoint is slow or unreachable, not that a bucket policy
+ * nothing in common - a timeout says the endpoint is slow or unreachable, not that a bucket policy
  * is wrong, and conflating them sends the user to edit configuration that is already correct.
  */
 export class S3TimeoutError extends Error {
@@ -85,7 +85,7 @@ const errorCode = (body: string): string | undefined => /<Code>([^<]+)<\/Code>/.
 /**
  * Checks that the credential can address the bucket, and explains it when it cannot.
  *
- * Distinct from `headObject`, which deliberately reports 403 and 404 alike as "not there" — correct
+ * Distinct from `headObject`, which deliberately reports 403 and 404 alike as "not there" - correct
  * when reading a blob, useless for a connection test, where telling a rejected key from an absent
  * object is the entire point. Probes a key that should not exist: 404 proves the signature was
  * accepted, and every other outcome names what to fix.
@@ -152,7 +152,7 @@ type TimedRequest = {
  * A timed request whose deadline covers the body as well as the headers.
  *
  * The signal stays attached to the response body after `fetch` resolves, so the timeout has to be
- * cancelled once the body is fully read — otherwise a large object that takes longer than
+ * cancelled once the body is fully read - otherwise a large object that takes longer than
  * {@link S3_TIMEOUT_MS} to transfer is aborted mid-read, after the caller already has a `Response`
  * in hand. Callers signal completion by calling the returned `done`.
  */
@@ -213,7 +213,7 @@ export const putObject = async ({
     method: 'PUT',
     url,
     // `content-length` is deliberately absent: it is a forbidden header name, so the browser sets it
-    // itself and strips ours — signing it would guarantee a mismatch the server reports as a bad
+    // itself and strips ours - signing it would guarantee a mismatch the server reports as a bad
     // signature rather than a missing header.
     headers: contentType ? { 'content-type': contentType } : {},
     payloadHash: contentHash,
@@ -259,7 +259,7 @@ const readRequest = async (
  * Whether a failed read should be reported as "not there" rather than raised.
  *
  * A signed read is authoritative, so only 404 and 403 are misses and anything else is a fault worth
- * surfacing. An unsigned read is speculative — it is a guess that the bucket is public — so any
+ * surfacing. An unsigned read is speculative - it is a guess that the bucket is public - so any
  * client error just means "not publicly readable". The distinction is load-bearing: R2 answers an
  * unauthenticated request to a private bucket with `400 InvalidArgument`, not the 403 that AWS
  * returns, so a 404/403-only rule turns the public-bucket fallback into a thrown error.
@@ -270,7 +270,7 @@ const isMiss = (status: number, signed: boolean): boolean =>
 /**
  * Reads an object's bytes.
  *
- * Resolves `undefined` when the object is absent, or is not readable with the credentials in hand —
+ * Resolves `undefined` when the object is absent, or is not readable with the credentials in hand -
  * see {@link isMiss} for which statuses count. Rejects on a transport failure or an unexpected
  * status, since neither is evidence the object is missing.
  */
@@ -314,7 +314,7 @@ export const headObject = async (options: ReadOptions): Promise<boolean> => {
 /**
  * A URL an `<img>`/`<video>` can load directly. Presigned when a credential is available; the plain
  * public URL otherwise, which is correct for a public bucket and simply fails to load for a private
- * one — the same outcome as returning nothing, without suppressing the browser's own diagnostics.
+ * one - the same outcome as returning nothing, without suppressing the browser's own diagnostics.
  */
 export const getObjectUrl = async ({ uri, credentials, now = () => new Date() }: ReadOptions): Promise<string> => {
   const url = toHttpsUrl(uri);

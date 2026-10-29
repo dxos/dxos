@@ -51,7 +51,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
 
           // Dedup against existing posts already in the backing queue. The
           // `cursor` field on the subscription was previously used as a single-guid
-          // filter, but RSS feeds re-serve the same items across polls — filtering
+          // filter, but RSS feeds re-serve the same items across polls - filtering
           // out only the cursor's own guid let every other previously-synced post
           // re-pass the filter and re-append on each sync. Key-based dedup against
           // the queue is the source of truth and tolerant of out-of-order or
@@ -62,12 +62,12 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
           // Standard.site uses the record AT-URI), a future fetcher or malformed item
           // could omit it. Falling back to `link` keeps such items dedup-able. Items
           // with neither field cannot be deduplicated and will sync as new every
-          // time — that's an upstream data quality issue with no clean recovery.
+          // time - that's an upstream data quality issue with no clean recovery.
           //
           // Pull the backing queue before reading existing posts: this handler runs in a
           // freshly-spawned process whose local queue replica may not have the blocks yet. Without
           // this, the query returns an empty set, `seenKeys` is empty, and every fetched item
-          // re-appends — duplicating the whole feed on a cold sync.
+          // re-appends - duplicating the whole feed on a cold sync.
           yield* Feed.sync(echoFeed, { shouldPush: false });
           const existing = yield* Feed.query(echoFeed, Filter.type(Subscription.Post)).run;
           const seenKeys = new Set<string>();
@@ -97,10 +97,10 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
           // here via `Feed.remove()`. Doing so wipes the underlying queue's
           // `_objectCache` for the deleted posts, but those same Post objects
           // persist in `space.db` (they were added there when first curated
-          // into a Magazine via `createRef` → `database.add`). On the next
+          // into a Magazine via `createRef` -> `database.add`). On the next
           // sync/curate, `Feed.query(...).run` returns fresh proxies for the
           // kept items, and any magazine refs to *deleted* posts now
-          // reference proxies whose `_internals.database` link is unset —
+          // reference proxies whose `_internals.database` link is unset -
           // `createRef` then tries to re-add them, hitting the
           // `!_objects.has(core.id)` invariant in `EntityManager.addCore`.
           // Until feed/db lifecycle is reworked we leave the feed unbounded;

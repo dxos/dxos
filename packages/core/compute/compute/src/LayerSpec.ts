@@ -27,8 +27,8 @@ export interface LayerSpec {
 
   /**
    * Build this spec when its slice initializes rather than when one of its tags is first
-   * requested. A spec whose point is a side effect — registering an rpc service, subscribing to
-   * lifecycle events — provides no tag to ask for, so nothing would ever pull it in.
+   * requested. A spec whose point is a side effect - registering an rpc service, subscribing to
+   * lifecycle events - provides no tag to ask for, so nothing would ever pull it in.
    */
   readonly eager: boolean;
 

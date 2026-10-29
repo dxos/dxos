@@ -43,7 +43,7 @@ describe.skipIf(process.env.CI)('DaemonManager', () => {
         errFile,
       });
 
-      // Poll for log content directly — the file is pre-created empty by Phoenix.start(),
+      // Poll for log content directly - the file is pre-created empty by Phoenix.start(),
       // so polling for existence would resolve immediately before the child writes its output.
       await expect
         .poll(() => readFileSync(params.logFile, { encoding: 'utf-8' }), { timeout: 5000 })

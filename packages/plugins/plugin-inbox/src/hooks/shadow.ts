@@ -5,7 +5,7 @@
 import { Obj } from '@dxos/echo';
 
 /**
- * A "shadow" object holds mutable annotations (notes, transcript, …) for an object that cannot itself
+ * A "shadow" object holds mutable annotations (notes, transcript, ...) for an object that cannot itself
  * be mutated in place (e.g. an immutable feed event). It is a db object linked to the annotated object
  * by a `Meta.keys` entry of `{ source: SHADOW_KEY_SOURCE, id: <annotated object URI> }`.
  *

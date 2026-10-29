@@ -54,7 +54,7 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
  *
  * A list rather than the row of icon buttons the task list uses. A row has one line and many tasks,
  * so a glyph alone is the only thing that fits and the reader learns the ramp; a detail pane has one
- * task and the room to say what the glyph means — and an unset field can then invite the value
+ * task and the room to say what the glyph means - and an unset field can then invite the value
  * ("Set estimate") instead of showing a dot that reads as a value of its own.
  */
 export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
@@ -138,7 +138,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
                 icon: UNSET_ICON,
                 checked: !assignee,
               }),
-              // An assignee the people list cannot show — an agent, or an actor with no contact — is
+              // An assignee the people list cannot show - an agent, or an actor with no contact - is
               // listed as itself, so the picker says who holds the task before it is switched away.
               ...(assignee &&
               !assignee.contact &&
@@ -153,7 +153,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
                     }),
                   ]
                 : []),
-              // The space's members first — the people who can actually pick the task up — then its
+              // The space's members first - the people who can actually pick the task up - then its
               // contacts. Both are what the field accepts, as the status and priority pickers offer.
               ...members.map((member) =>
                 createMenuAction(
@@ -234,7 +234,7 @@ type TaskPropertyProps = {
   /** No value yet: the label invites one, so it reads as a prompt rather than as the value. */
   unset?: boolean;
   testId: string;
-  /** Absent renders the row as text — the readonly case, and the row is then not a button. */
+  /** Absent renders the row as text - the readonly case, and the row is then not a button. */
   actions?: () => MenuAction[];
 };
 
@@ -272,7 +272,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
         variant='ghost'
         size='sm'
         // `items-center`, overriding the shared grid's `items-start`: a property is one line, and the
-        // button's box is taller than it — top-aligned, its glyph and label sat against the top of
+        // button's box is taller than it - top-aligned, its glyph and label sat against the top of
         // the hover surface rather than in it. The wrapping rows (history, a question) keep
         // `items-start`, where a glyph must stay on the first line.
         classNames={mx(TASK_GRID, 'items-center w-fit min-w-0 justify-start px-0')}

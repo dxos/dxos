@@ -65,7 +65,7 @@ export class Sink {
 
   /**
    * Ingest one pre-serialized JSONL log line (the same string the IDB store appends).
-   * Never throws — a malformed line is dropped.
+   * Never throws - a malformed line is dropped.
    */
   append(line: string): void {
     let record: JsonlLogRecord | null;

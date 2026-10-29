@@ -9,7 +9,7 @@ import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import { downloadBlob } from '@dxos/util';
 
 /**
- * Story-side `.dxprofile` round trip over the persistent client's OPFS SQLite database — the same
+ * Story-side `.dxprofile` round trip over the persistent client's OPFS SQLite database - the same
  * archive Composer's recovery page reads and writes, so a profile moves between the story and the
  * app. Only the SQLite entry is carried: that is where a persistent browser client keeps everything.
  */

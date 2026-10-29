@@ -139,7 +139,7 @@ export const createNestedDeepTree = () => {
     .build();
 };
 
-/** The root view: A → B, two linked shapes and no view node, so a select-all can be grouped into an Object. */
+/** The root view: A -> B, two linked shapes and no view node, so a select-all can be grouped into an Object. */
 export const createLinkedPairTree = () => {
   const size = { width: 256, height: 128 };
   const at = (x: number, y = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
@@ -152,7 +152,7 @@ export const createLinkedPairTree = () => {
     .build();
 };
 
-/** The root view: A, B centred and view C, linked A → B → C; C holds D → E. */
+/** The root view: A, B centred and view C, linked A -> B -> C; C holds D -> E. */
 export const createNestedSimpleTree = () => {
   const size = { width: 256, height: 128 };
   const at = (x: number, y = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });

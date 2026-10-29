@@ -116,7 +116,7 @@ describe('mdl parser', () => {
     });
 
     test('field with no value', ({ expect }) => {
-      // e.g. "fields:" with no inline value — sub-fields follow on next lines.
+      // e.g. "fields:" with no inline value - sub-fields follow on next lines.
       expect(nodeNames('fields:')).toEqual(['KeyValue', 'FieldName']);
     });
   });

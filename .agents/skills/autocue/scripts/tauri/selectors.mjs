@@ -12,8 +12,8 @@
  *
  * - `a >> b` chaining, where each part searches inside the previous part's matches;
  * - `nth=N` (negative counts from the end), `text=foo` (case-insensitive substring), `text="foo"`
- *   (exact), `css=…`, `role=name[name="…"]` (case-insensitive substring of the accessible name);
- * - CSS with `:visible`, `:has-text("…")`, `:text("…")`, `:text-is("…")`, and `:has(…)` whose argument may
+ *   (exact), `css=...`, `role=name[name="..."]` (case-insensitive substring of the accessible name);
+ * - CSS with `:visible`, `:has-text("...")`, `:text("...")`, `:text-is("...")`, and `:has(...)` whose argument may
  *   itself use any of these; everything else in a compound goes to the browser's own `matches`.
  *
  * Open shadow roots are not pierced, unlike Playwright: Composer's own surfaces are light DOM.
@@ -345,7 +345,7 @@ export const installSelectors = (version) => {
   };
 
   /**
-   * Playwright's `role=` skips what assistive technology cannot see — here the native `<select>` a styled combobox
+   * Playwright's `role=` skips what assistive technology cannot see - here the native `<select>` a styled combobox
    * keeps hidden behind itself, whose options would otherwise match before the visible ones.
    */
   const isHiddenForAria = (element) => {

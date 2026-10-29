@@ -41,7 +41,7 @@ export const Input = Schema.Struct({
   kind: InputKind,
   default: Schema.optional(Schema.Any),
   /**
-   * Operation key invoked when `kind === 'operation'`. The referenced operation must accept void input —
+   * Operation key invoked when `kind === 'operation'`. The referenced operation must accept void input -
    * template inputs have no mechanism for passing arguments.
    */
   operation: Schema.optional(Schema.String),
@@ -105,7 +105,7 @@ export const processTemplate = (
               return yield* Effect.fail(new FunctionNotFoundError(input.operation));
             }
 
-            // NOTE: Operations referenced by template inputs must accept void input — see `Input.operation`.
+            // NOTE: Operations referenced by template inputs must accept void input - see `Input.operation`.
             const fn = Operation.deserialize(results[0]);
             const result = yield* Operation.invoke(fn, undefined).pipe(Effect.orDie);
             return [input.name, result] as const;

@@ -57,7 +57,7 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
   const [formKey, setFormKey] = useState(0);
 
   // Override the `area` field with a richer plugin picker. The closure captures
-  // the runtime plugin list so the schema itself stays static — much cleaner
+  // the runtime plugin list so the schema itself stays static - much cleaner
   // than the previous `Format.OptionsAnnotation.set(...)` runtime-schema-extension
   // hack, which only supported plain string options without rich labels.
   //

@@ -236,8 +236,8 @@ export type TaskAttachmentsProps = {
 
 /**
  * The files attached to a task (`Task.attachments`) as compact cards, the same grid as the task's
- * artifacts, each with the file's own `CardContent` surface as its body — so an image previews as an
- * image — followed by a placeholder per file still uploading. With nothing attached the section is a
+ * artifacts, each with the file's own `CardContent` surface as its body - so an image previews as an
+ * image - followed by a placeholder per file still uploading. With nothing attached the section is a
  * drop area; with cards, the grid itself is the target. Either is marked while files are dragged
  * over the pane, which takes the drop itself. Renders nothing only when there is nothing attached
  * and nothing could be.

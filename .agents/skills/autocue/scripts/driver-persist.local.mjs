@@ -9,7 +9,7 @@
  * whose next gesture depends on what the last one rendered cannot be expressed, and a `do:` step with
  * no operation behind it cannot be performed at all. This keeps one browser and one recording context
  * alive behind a loopback HTTP server, so the agent issues `click`/`fill`/`drag` as separate turns and
- * reads the result — or a screenshot — before choosing the next one.
+ * reads the result - or a screenshot - before choosing the next one.
  *
  *   node driver.mjs --port 7333 --url http://localhost:4173 --out /tmp/demo
  *   curl -sS localhost:7333/cmd -d '{"op":"click","selector":"[data-testid=x]"}'
@@ -41,7 +41,7 @@ mkdirSync(options.out, { recursive: true });
 
 /**
  * Binding to loopback is not access control: any page the browser has open can POST here cross-origin
- * in `no-cors` mode, and while the response is opaque to it the command still runs — `eval` and `goto`
+ * in `no-cors` mode, and while the response is opaque to it the command still runs - `eval` and `goto`
  * included. A token in a non-safelisted header cannot be set by such a request (it would force a
  * preflight, which this server never approves), so requiring one closes that path.
  */
@@ -51,7 +51,7 @@ const token = randomUUID();
 // The cloud sandbox needs a pinned executable, the egress proxy passed as an arg, and a TLS 1.2 cap;
 // gated so a real desktop run is never silently downgraded (see the `cloud-sandbox` skill).
 const sandbox = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
-// A PERSISTENT profile (`--profile`), so IndexedDB — where the space lives — survives between runs:
+// A PERSISTENT profile (`--profile`), so IndexedDB - where the space lives - survives between runs:
 // the fragile setup happens off-camera once, and the recording is only the flow worth watching.
 const viewport = { width: options.width, height: options.height };
 const profile = process.env.DEMO_PROFILE ?? '/tmp/demo-profile';
@@ -161,7 +161,7 @@ const handlers = {
   },
   /**
    * A slow, stepped mouse drag rather than `dragTo`. The chess board's drop targets come from
-   * pragmatic-drag-and-drop, which only arms its drop zones after it sees movement — a single
+   * pragmatic-drag-and-drop, which only arms its drop zones after it sees movement - a single
    * synthetic jump lands on `canDrop` having never fired.
    */
   drag: async (command) => {
@@ -226,7 +226,7 @@ const MAX_BODY = 64 * 1024;
 
 const server = createServer((request, response) => {
   // Headers are complete before the first `data` event, so the token is checked before a single byte of
-  // body is buffered — an unauthorized caller cannot make this process accumulate anything.
+  // body is buffered - an unauthorized caller cannot make this process accumulate anything.
   if (request.headers[TOKEN_HEADER] !== token) {
     response.writeHead(403, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ ok: false, error: `missing or bad ${TOKEN_HEADER}` }));
@@ -286,7 +286,7 @@ const server = createServer((request, response) => {
   });
 });
 
-// Loopback only, and token-gated — this server drives a real browser and takes arbitrary `eval`.
+// Loopback only, and token-gated - this server drives a real browser and takes arbitrary `eval`.
 server.listen(options.port, '127.0.0.1', () => {
   // Also written to the output directory so a caller can read it without scraping stdout.
   writeFileSync(path.join(options.out, 'token'), token);

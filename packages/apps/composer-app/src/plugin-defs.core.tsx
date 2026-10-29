@@ -68,7 +68,7 @@ export type PluginConfig = State & {
 
 /**
  * Infrastructure plugins shared by every plugin set (`plugin-defs.tsx`,
- * `plugin-defs.production.tsx` and `plugin-defs.mobile.tsx`) — options here are the single source of
+ * `plugin-defs.production.tsx` and `plugin-defs.mobile.tsx`) - options here are the single source of
  * truth.
  *
  * **Every `system`-tagged plugin belongs in this list, and every plugin in this list is
@@ -76,7 +76,7 @@ export type PluginConfig = State & {
  * directions.
  *
  * That agreement is maintained BY HAND, and has to be for now: deriving the list by filtering one
- * catalog of every plugin on the tag would put every plugin in the module graph — the import is what
+ * catalog of every plugin on the tag would put every plugin in the module graph - the import is what
  * bundles it, so a build-time list is the only thing that keeps the non-shipped ones out (see
  * `DX_PLUGIN_SET` in vite.config.ts). Adding a `system` plugin therefore means adding it here too.
  */
@@ -96,7 +96,7 @@ export const getCorePlugins = ({
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
   // Mobile is two plugins, not one: headless Deck (state/ops, no root/surfaces) plus Mobile (root +
-  // surfaces) rendering over it — one state machine, plugin-mobile is only ever the renderer.
+  // surfaces) rendering over it - one state machine, plugin-mobile is only ever the renderer.
   const layoutPlugins: Plugin.Plugin[] = isPopover
     ? [SpotlightPlugin.make()]
     : isMobile
@@ -118,7 +118,7 @@ export const getCorePlugins = ({
       // the storage-wiping variants are only wanted in local testing.
       identityTestActions: !config.values.runtime?.app?.env?.DX_HUB_URL,
       // The forked init is outside the render tree, so a failure or a stalled handshake reaches
-      // the user only if the entry point raises it — React never sees one.
+      // the user only if the entry point raises it - React never sees one.
       onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
     }),
     // Core because it owns the connector machinery itself, not any one integration: it fires

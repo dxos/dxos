@@ -12,8 +12,8 @@ import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { Timeframe } from '@dxos/timeframe';
 
 /**
- * A credential signature covers `canonicalStringify` of the credential's *substituted* shape —
- * `PublicKey` instances, `Date`s, an inlined assertion keyed by `@type` — so that shape is part of
+ * A credential signature covers `canonicalStringify` of the credential's *substituted* shape -
+ * `PublicKey` instances, `Date`s, an inlined assertion keyed by `@type` - so that shape is part of
  * the signature format and cannot change without invalidating every issued credential. This module
  * reproduces it by walking the buf descriptor, which keeps the substitutions read off the schema
  * rather than restated per message; `testing/golden-credential.ts` is the guard.
@@ -145,7 +145,7 @@ const convertField = (field: DescField, fieldValue: unknown): unknown => {
     return mapField(field, fieldValue, substitution);
   }
   // buf returns `bytes` as a view over the buffer it decoded, and the signing shape keeps that
-  // view type — flattening a Buffer here would change what `canonicalStringify` emits.
+  // view type - flattening a Buffer here would change what `canonicalStringify` emits.
   if (isBytesField(field)) {
     return fieldValue;
   }
@@ -176,7 +176,7 @@ const convert = (schema: DescMessage, value: unknown): unknown => {
     return anyToSigningShape(value);
   }
   // `record` stays untouched (unlike `result`, aliased to `rest`) so `convertOneofs` can still read
-  // a field it is about to delete from `result` — reading and deleting the same object raced.
+  // a field it is about to delete from `result` - reading and deleting the same object raced.
   const record = asRecord(value);
   const { $typeName: _typeName, $unknown: _unknown, ...rest } = record;
   const result: Record<string, unknown> = rest;

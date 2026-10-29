@@ -253,7 +253,7 @@ describe('dynamic trace sink', () => {
     sink.write(message);
     expect([early.length, late.length]).toEqual([1, 0]);
 
-    // plugin-progress's sink lands here — after the runtime was built. A snapshot would drop it, and
+    // plugin-progress's sink lands here - after the runtime was built. A snapshot would drop it, and
     // every operation's progress would silently never reach the UI.
     factories.push(() => ({ write: () => late.push('late') }));
     sink.write(message);

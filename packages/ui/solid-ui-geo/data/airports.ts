@@ -45075,7 +45075,7 @@ export default {
       },
       "properties": {
         "iata": "TEQ",
-        "name": "Tekirdağ Çorlu Airport",
+        "name": "Tekirda\u011F Çorlu Airport",
         "city": "Çorlu",
         "country": "Turkey"
       }

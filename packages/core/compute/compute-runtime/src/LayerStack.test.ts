@@ -737,7 +737,7 @@ describe('LayerStack', () => {
     it.effect(
       'process slice initialises even when an unrelated process-affinity spec has unsatisfied requirements',
       Effect.fn(function* ({ expect }) {
-        // Self-sufficient spec — provides ServiceA without requiring anything
+        // Self-sufficient spec - provides ServiceA without requiring anything
         // from a lower-affinity slice. This stands in for an op like
         // `update-complementary` that needs nothing space-scoped.
         const selfSufficient = LayerSpec.make(
@@ -752,7 +752,7 @@ describe('LayerStack', () => {
         // Spec that requires a space-affinity service (ServiceC). When the
         // resolver is invoked for a process context with no `space`, the
         // space slice can't materialise ServiceC. Previously this would fail
-        // the entire process slice init — including the unrelated
+        // the entire process slice init - including the unrelated
         // `selfSufficient` spec. Now the LayerStack must drop just this spec
         // so the slice still serves other tags.
         const spaceDependent = LayerSpec.make(
@@ -783,7 +783,7 @@ describe('LayerStack', () => {
         const stack = new LayerStack.LayerStack({ layers: [selfSufficient, spaceDependent, spaceService] });
         const resolver = stack.getServiceResolver();
 
-        // No space context — `spaceDependent`'s requirement cannot be met.
+        // No space context - `spaceDependent`'s requirement cannot be met.
         // `selfSufficient` must still resolve successfully.
         const resolvedA = yield* resolveWithScope(resolver.resolve(ServiceA, { process: 'p1' as any }));
         expect(resolvedA).toEqual({ value: 'self-sufficient' });
@@ -805,7 +805,7 @@ describe('LayerStack', () => {
         expect(failureText).toContain('space=<missing>');
 
         // With a space context the same `spaceDependent` spec can resolve.
-        // Different process id → separate process slice that gets to use the
+        // Different process id -> separate process slice that gets to use the
         // satisfied space slice this time around.
         const space = SpaceId.random();
         const resolvedB = yield* resolveWithScope(resolver.resolve(ServiceB, { space, process: 'p2' as any }));
@@ -874,7 +874,7 @@ describe('LayerStack', () => {
         const space = SpaceId.random();
         const process = 'sync-triggers' as any;
 
-        // Op only declares `Database.Service` — resolved from the space slice.
+        // Op only declares `Database.Service` - resolved from the space slice.
         const resolvedSpace = yield* resolveWithScope(resolver.resolve(ServiceC, { space, process }));
         expect(resolvedSpace).toEqual({ value: `space:${space}` });
         expect(conversationSpecConstructions).toBe(0);
@@ -1033,7 +1033,7 @@ describe('LayerStack', () => {
 
   describe('layer sorting and validation', () => {
     it('throws on a dependency cycle within a single affinity', ({ expect }) => {
-      // ServiceA requires ServiceB and vice versa — cycle at sort time.
+      // ServiceA requires ServiceB and vice versa - cycle at sort time.
       const layerA = LayerSpec.make(
         {
           affinity: 'application',
@@ -1160,7 +1160,7 @@ describe('LayerStack', () => {
         const stack = new LayerStack.LayerStack({ layers: [layer] });
         const resolver = stack.getServiceResolver();
 
-        // No `space` in the context — the resolver should not find the service.
+        // No `space` in the context - the resolver should not find the service.
         const exit = yield* resolveWithScope(resolver.resolve(ServiceA, {})).pipe(Effect.exit);
         expect(Exit.isFailure(exit)).toBe(true);
       }),

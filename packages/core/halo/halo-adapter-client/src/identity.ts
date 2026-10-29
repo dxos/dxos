@@ -176,7 +176,7 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
 
   getSnapshot: () => {
     // Pre-initialization there is no trustworthy reading; none here means "unknown", and
-    // identity-gated flows must use the stream (silent until initialization) or suspend —
+    // identity-gated flows must use the stream (silent until initialization) or suspend -
     // acting on a pre-init none would misread an existing identity as absent.
     if (!client.initialized) {
       return Option.none();

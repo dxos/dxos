@@ -9,8 +9,8 @@ import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type NetworkGraphNode } from './NetworkArticle.tsx';
 
 // A green build only proves the annotation compiles. These pin that the annotated type is the buf
-// message — `$typeName` is the discriminator a structurally similar protobuf.js value cannot carry
-// — and that the substituted field moved with it.
+// message - `$typeName` is the discriminator a structurally similar protobuf.js value cannot carry
+// - and that the substituted field moved with it.
 
 declare const node: NetworkGraphNode;
 declare const peer: NonNullable<NetworkGraphNode['peer']>;

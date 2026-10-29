@@ -54,8 +54,8 @@ export type L1PanelProps = {
 };
 
 /**
- * Space or settings panel. Without an `item` — a link to a workspace this identity never had or which no
- * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
+ * Space or settings panel. Without an `item` - a link to a workspace this identity never had or which no
+ * longer exists, or persisted deck state pointing at one after a profile switch - the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
 const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
@@ -237,7 +237,7 @@ type L1MenuActions = {
 /**
  * Header menu actions for an L1 workspace tab. Renders nothing for an empty
  * `menuActions`, a single inline icon button for one action, and a
- * `…`-menu trigger for multiple.
+ * `...`-menu trigger for multiple.
  */
 const MenuActions = ({
   item,

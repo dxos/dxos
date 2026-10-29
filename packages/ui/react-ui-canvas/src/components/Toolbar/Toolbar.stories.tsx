@@ -20,7 +20,7 @@ const DefaultStory = () => {
   const actions: ToolbarActions = {
     path: ['scene:root', 'scene:root/L'],
     nameOf: (id) => id.split(':')[1] ?? id,
-    onPath: (index) => log(`path → ${index}`),
+    onPath: (index) => log(`path -> ${index}`),
     fit: () => log('fit'),
     zoomReset: () => setZoom(1),
     zoomIn: () => setZoom((value) => value * 1.25),

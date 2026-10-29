@@ -46,7 +46,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
   const externalSpec = Cursor.isExternal(subject) ? subject.spec : undefined;
 
   // The Connection whose access token authenticates this cursor. Cursor no longer relates to
-  // Connection directly (that coupling was removed), so it's found by matching access tokens —
+  // Connection directly (that coupling was removed), so it's found by matching access tokens -
   // fuzzy if a token is ever shared across connections.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connection = useMemo(

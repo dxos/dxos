@@ -213,7 +213,7 @@ export const attendElement = (attention: AttentionManager, element: Element): st
 };
 
 /**
- * The outermost attendable ancestor of `element` — the root of any nested attendables (e.g. a section
+ * The outermost attendable ancestor of `element` - the root of any nested attendables (e.g. a section
  * within a stack). Structural (real DOM ancestry), so it is independent of what currently has attention.
  * Resolve it from an in-DOM element: a portaled subtree (a menu, a popover) is not under its own
  * attendable, so walk from the trigger or anchor instead.

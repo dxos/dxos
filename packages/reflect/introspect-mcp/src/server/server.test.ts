@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// In-memory server tests — verify the MCP wiring (tool registration, input
+// In-memory server tests - verify the MCP wiring (tool registration, input
 // validation, response shaping, readiness gate) using the introspect fixture
 // monorepo. Plugin/schema list tools are exercised at the call-site level
 // only (returning [] against the fixture, since pkg-a / pkg-b aren't

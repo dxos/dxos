@@ -16,7 +16,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Mobile shell for DXOS Composer: a renderer over the Deck plugin's layout state, never a second
-      state owner. The active deck is projected as a UIKit-style navigation stack — one full-screen
+      state owner. The active deck is projected as a UIKit-style navigation stack - one full-screen
       panel at a time, an app bar for the panel's own actions, a navbar for its companions, and a
       companion drawer that shares the screen with the keyboard.
 

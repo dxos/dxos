@@ -20,7 +20,7 @@ import { type ProxyWorkerRequest, type ProxyWorkerResponse } from './testing/rtc
  * End-to-end check of the RTC handover: the page owns both `RTCPeerConnection`s through
  * {@link RtcService} and serves it over a `MessagePort`; a worker drives the connection with
  * `RtcTransportProxy` and receives each `RTCDataChannel` as a transfer. Data therefore never crosses
- * the rpc boundary — if the transfer did not work, nothing would ever connect.
+ * the rpc boundary - if the transfer did not work, nothing would ever connect.
  */
 describe('RTCDataChannel handover to a worker', () => {
   const setup = async () => {

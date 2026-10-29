@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article.video',
-        // The Section arm must exclude data that has `part` set — those are the internal sub-surfaces
+        // The Section arm must exclude data that has `part` set - those are the internal sub-surfaces
         // dispatched by VideoArticle itself (player/transcript/summary). Without this guard,
         // `article.video` matches its own child slot and VideoArticle renders itself recursively.
         filter: AppSurface.oneOf(

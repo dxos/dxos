@@ -28,7 +28,7 @@ import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor 
 export type EdgeJoinLatencySpec = {
   platform: Platform;
   edge: EdgeTarget;
-  /** Objects the seeder writes before any joiner is admitted — the size of the space under test. */
+  /** Objects the seeder writes before any joiner is admitted - the size of the space under test. */
   objects: number;
   /** Peers that accept an invitation, each an identity of its own, each timed independently. */
   joiners: number;
@@ -37,7 +37,7 @@ export type EdgeJoinLatencySpec = {
    *
    * Required, not cosmetic: `shareSpace` opens a DELEGATED invitation, which EDGE redeems on behalf
    * of a member, and with no agent `EdgeInvitationHandler` answers `No agents in the space.` and
-   * the seeder admits each joiner itself — a different system than this plan measures. Exposed
+   * the seeder admits each joiner itself - a different system than this plan measures. Exposed
    * rather than hardcoded so the no-agent path stays testable; with it on, a client that cannot get
    * an agent fails the run.
    */
@@ -58,7 +58,7 @@ export type JoinMeasurement = {
   /**
    * The invitation proper: `spaces.join` to `Invitation_State.SUCCESS`, i.e. the guest's
    * credentials replicated into the space's control feed. It does not include bringing the peer up
-   * or opening the invitation, and it stops before the space itself is available — that is
+   * or opening the invitation, and it stops before the space itself is available - that is
    * replication, and it scales with the space rather than with the exchange.
    */
   admittedMs: number;
@@ -75,7 +75,7 @@ export type JoinMeasurement = {
   error?: string;
   /**
    * When this joiner finished, not when the run did. Joiners are measured one after another, so
-   * these differ by seconds — which is what keeps their events apart in a store that deduplicates
+   * these differ by seconds - which is what keeps their events apart in a store that deduplicates
    * on (uuid, timestamp), the uuid being shared by everything from one commit.
    */
   at: string;
@@ -86,7 +86,7 @@ export type EdgeJoinLatencyResult = {
   edge: string;
   objects: number;
   joiners: number;
-  /** Seeder's upload time — how long the space took to reach EDGE before anyone joined. */
+  /** Seeder's upload time - how long the space took to reach EDGE before anyone joined. */
   seedMs: number;
   measurements: JoinMeasurement[];
   /** Medians rather than means: one stuck joiner should not move the headline number. */
@@ -104,7 +104,7 @@ export type EdgeJoinLatencyResult = {
   stddevSyncedMs: number | undefined;
   /**
    * Whether each successive joiner took longer than the last. Flat is the expected shape; a rising
-   * one means joiners are contending — measured against a degraded local stack, never against dev.
+   * one means joiners are contending - measured against a degraded local stack, never against dev.
    */
   monotonicGrowth: boolean;
   /**
@@ -227,7 +227,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // `_cleanup` reads by index to name what it could not delete.
       spawned.push(replicant);
       // The self-serve cleanup routes 403 an identity with no Hub account; one fixed alias per slot
-      // rebinds rather than accumulating rows. It is also what `createAgent` needs — EDGE hosts an
+      // rebinds rather than accumulating rows. It is also what `createAgent` needs - EDGE hosts an
       // agent only for an identity bound to an account.
       // Fatal for the same reason `createAgent` is, and counted as the same failure: EDGE hosts an
       // agent only for an identity bound to an account, so a binding that fails has already decided
@@ -249,7 +249,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // Fatal, not best-effort: without an agent `EdgeInvitationHandler` answers `No agents in the
       // space.` and the seeder admits every joiner directly, which is a different system than the
       // one this plan exists to measure. A green run of the wrong measurement is worse than a red
-      // one — the numbers land in a nightly trend that nobody re-reads the caveat for.
+      // one - the numbers land in a nightly trend that nobody re-reads the caveat for.
       if (spec.agents) {
         try {
           await replicant.brain.createAgent();
@@ -298,8 +298,8 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       for (let joiner = 0; joiner < spec.joiners; joiner++) {
         let admittedMs = 0;
         try {
-          // Spawning and sharing are inside the try because they fail too — a local stack under
-          // load 500s on `/db/spaces/:id/join` — and one joiner's failure must cost only its own
+          // Spawning and sharing are inside the try because they fail too - a local stack under
+          // load 500s on `/db/spaces/:id/join` - and one joiner's failure must cost only its own
           // row, not every measurement taken so far. Neither is timed: bringing a peer up and
           // opening an invitation are the harness's cost, not the system's.
           const peer = await spawn(`joiner-${joiner}`);
@@ -329,7 +329,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             at: new Date().toISOString(),
           });
         } catch (err) {
-          // The fallback is for a joiner that failed to sync — one bad row, the rest still measured.
+          // The fallback is for a joiner that failed to sync - one bad row, the rest still measured.
           // A missing agent is not that: it is the precondition for every remaining joiner too.
           if (AgentProvisioningError.is(err)) {
             throw err;
@@ -364,7 +364,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       return result;
     } finally {
       // Nested so no artifact can cost the cleanup: these run against a shared deployment, and a
-      // write that threw here — a full disk, a missing `outDir` — would strand this run's identities
+      // write that threw here - a full disk, a missing `outDir` - would strand this run's identities
       // and its space on it. Losing the numbers is recoverable; leaking the state is not.
       try {
         // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
@@ -435,11 +435,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
   }
 
   /**
-   * Every identity deletes itself; the seeder also deletes the space it owns. Nothing throws — a
+   * Every identity deletes itself; the seeder also deletes the space it owns. Nothing throws - a
    * cleanup failure must not mask the measurement.
    *
    * Self-serve only: the identity signs a verifiable presentation for exactly the data it created.
-   * No admin-key fallback, deliberately — a shared secret that can delete anything is not something
+   * No admin-key fallback, deliberately - a shared secret that can delete anything is not something
    * a test should carry, and it would mask the case this cleanup exists to prove.
    */
   private async _cleanup(
@@ -489,7 +489,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
  * question nobody asked yet does not need a new field shipped and backfilled before it can be.
  *
  * The run event is not redundant with them: `seedMs` and `agents` describe the run, not any joiner,
- * and a run whose joiners all failed emits no joiner events at all — without it that night would be
+ * and a run whose joiners all failed emits no joiner events at all - without it that night would be
  * invisible rather than red.
  *
  * Undefined fields are dropped by `JSON.stringify`, so a joiner that produced no number sends no
@@ -537,9 +537,9 @@ const renderEvents = (result: EdgeJoinLatencyResult, at: string) => [
  * table appears locally, and so nothing has to re-derive the verdict from the JSON.
  */
 const renderSummary = (result: EdgeJoinLatencyResult): string => {
-  const ms = (value: number | undefined) => (value === undefined ? '—' : `${(value / 1000).toFixed(1)}s`);
+  const ms = (value: number | undefined) => (value === undefined ? '-' : `${(value / 1000).toFixed(1)}s`);
   const share = (part: number | undefined, whole: number | undefined) =>
-    part === undefined || whole === undefined || whole === 0 ? '—' : `${Math.round((part / whole) * 100)}%`;
+    part === undefined || whole === undefined || whole === 0 ? '-' : `${Math.round((part / whole) * 100)}%`;
   // Derived rather than stored: the two halves of replication always sum to it, so a second field
   // would only be a way for them to disagree.
   const objectsMs = (measurement: JoinMeasurement) =>
@@ -550,37 +550,37 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     .map((measurement) =>
       [
         `| ${measurement.joiner}`,
-        measurement.ok ? '✅' : '❌',
+        measurement.ok ? 'OK' : 'X',
         ms(measurement.admittedMs),
         ms(measurement.spaceReadyMs),
         ms(objectsMs(measurement)),
         ms(measurement.syncedMs),
-        measurement.msPerObject === undefined ? '—' : `${measurement.msPerObject.toFixed(0)}ms`,
+        measurement.msPerObject === undefined ? '-' : `${measurement.msPerObject.toFixed(0)}ms`,
         `${measurement.error ?? ''} |`,
       ].join(' | '),
     )
     .join('\n');
   return [
-    `## ${result.ok ? '✅' : '❌'} Join latency — ${result.objects} objects, ${result.joiners} joiners`,
+    `## ${result.ok ? 'OK' : 'X'} Join latency - ${result.objects} objects, ${result.joiners} joiners`,
     '',
     `Against \`${result.edge}\`. Seeded and flushed to EDGE in ${ms(result.seedMs)}.${
       {
         provisioned: '',
-        disabled: ' ⚠️ Agents off — the seeder admitted every joiner itself, which is slower.',
-        failed: ' ❌ An EDGE agent could not be provisioned; the run stopped and these numbers are partial.',
+        disabled: ' Warning: Agents off - the seeder admitted every joiner itself, which is slower.',
+        failed: ' X An EDGE agent could not be provisioned; the run stopped and these numbers are partial.',
       }[result.agents]
     }`,
     '',
     '| | Median | Share of total |',
     '| --- | --- | --- |',
-    `| Invitation — credentials replicated | ${ms(result.medianAdmittedMs)} | ${share(result.medianAdmittedMs, result.medianSyncedMs)} |`,
+    `| Invitation - credentials replicated | ${ms(result.medianAdmittedMs)} | ${share(result.medianAdmittedMs, result.medianSyncedMs)} |`,
     `| Replication | ${ms(result.medianReplicationMs)} | ${share(result.medianReplicationMs, result.medianSyncedMs)} |`,
-    `| — of which, space available | ${ms(result.medianSpaceReadyMs)} | |`,
+    `| - of which, space available | ${ms(result.medianSpaceReadyMs)} | |`,
     `| **Accept to fully synced** | **${ms(result.medianSyncedMs)}** | |`,
     '',
     `Slowest joiner ${ms(result.maxSyncedMs)}, mean ${ms(result.meanSyncedMs)} ± ${ms(result.stddevSyncedMs)}.${
       result.monotonicGrowth
-        ? ' ⚠️ Every joiner took longer than the one before it — joiners are contending, or the stack is degrading.'
+        ? ' Warning: Every joiner took longer than the one before it - joiners are contending, or the stack is degrading.'
         : ''
     }`,
     '',

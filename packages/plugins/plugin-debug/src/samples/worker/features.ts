@@ -15,7 +15,7 @@ import { type TasksResult } from './tasks.ts';
 
 //
 // The feature map: a spec that names the project and holds the spec document, with one feature per spec block the
-// finished document will have, all `planned` — the template is a plan to run. Each feature needs the one before it.
+// finished document will have, all `planned` - the template is a plan to run. Each feature needs the one before it.
 // Only the diagram task is seeded against one; the agent links the implementation tasks it files, so the map fills in
 // as the plan does.
 //

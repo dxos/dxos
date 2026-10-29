@@ -27,7 +27,7 @@ describe('toCard', () => {
   test('a listing: decoded title, rent with fees, facts as rows, images and the kind', ({ expect }) => {
     const card = toCard(listing);
     expect(card.title).toBe('Sunny 2 rooms & balcony');
-    expect(card.price).toBe('3,800 zł / mo');
+    expect(card.price).toBe('3,800 z\u0142 / mo');
     expect(card.priceNote).toBe('rent 3,200 + fees 600');
     expect(card.site).toBe('otodom.pl');
     expect(card.url).toBe(listing.id);
@@ -53,7 +53,7 @@ describe('toCard', () => {
       types: ['schema:Restaurant'],
       props: { 'schema:name': ['Nam'], 'lh:ratingValue': [4.56] },
     };
-    expect(toCard(place).price).toBe('4.6 ★');
+    expect(toCard(place).price).toBe('4.6 \u2605');
     expect(toCard(place).url).toBeUndefined();
   });
 
@@ -105,7 +105,7 @@ describe('card location', () => {
       lat: 52.2005,
       lng: 21.0081,
       precisionM: 250,
-      address: 'ul. Odyńca, Stary Mokotów, Mokotów, Warszawa',
+      address: 'ul. Ody\u0144ca, Stary Mokotów, Mokotów, Warszawa',
     });
     expect(card.rows.find((row) => row.location)?.text).toBe('Mokotów');
     expect(toCard(unplaced).unlocated).toBe(true);

@@ -86,8 +86,8 @@ const settle = async (frames = 20) => {
 };
 
 /**
- * The viewport band stays inside the mounted band — a viewport showing rows that are not mounted
- * would mean the reader is looking at nothing — and a click moves the list to that fraction.
+ * The viewport band stays inside the mounted band - a viewport showing rows that are not mounted
+ * would mean the reader is looking at nothing - and a click moves the list to that fraction.
  */
 export const Tracks: Story = {
   play: async ({ canvasElement }) => {

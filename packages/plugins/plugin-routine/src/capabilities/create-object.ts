@@ -21,7 +21,7 @@ export default Capability.makeModule(
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Routine.Routine),
       customPanel: CreateRoutinePanel,
-      // The custom panel scaffolds and edits the routine before Save, so it submits a ready draft — that
+      // The custom panel scaffolds and edits the routine before Save, so it submits a ready draft - that
       // only needs filing. Without one (no custom panel, e.g. the sidebar) the template does the work.
       createObject: (
         { name, templateId, draft }: { name?: string; templateId: string; draft?: Routine.Routine },

@@ -35,7 +35,7 @@ export const get = <T>(
 
 /**
  * Set the value of an annotation on an entity instance.
- * Must be called with a mutable entity — i.e. inside an `Obj.update` callback.
+ * Must be called with a mutable entity - i.e. inside an `Obj.update` callback.
  *
  * The value is assigned directly to the reactive meta dictionary; the proxy encodes nested Refs and
  * links their unsaved targets on write (matching ordinary property assignment), so no manual
@@ -44,7 +44,7 @@ export const get = <T>(
 export const set = <T>(target: Mutable<Entity.Unknown>, annotation: Annotation.Annotation<T>, value: T): void => {
   if (isEntity(target)) {
     // The dictionary slot is untyped, so the proxy can't validate against the annotation schema;
-    // validate here (without encoding — the proxy encodes nested refs and links targets on assignment).
+    // validate here (without encoding - the proxy encodes nested refs and links targets on assignment).
     Schema.decodeSync(Schema.toType(annotation.schema))(value);
     getMetaChecked(target).annotations[annotation.key] = value;
   } else {
@@ -67,7 +67,7 @@ export const update = <T>(
       // `get` returns the value read-only; inside this change transaction the live value is mutable.
       const value = current.value as Mutable<T>;
       mutator(value);
-      // Validate against the annotation's own schema — the dictionary slot is untyped, so the proxy
+      // Validate against the annotation's own schema - the dictionary slot is untyped, so the proxy
       // can't. Schema validation checks ref structure only (not targets), so it is cycle-safe.
       Schema.decodeUnknownSync(Schema.toType(annotation.schema))(value);
     }

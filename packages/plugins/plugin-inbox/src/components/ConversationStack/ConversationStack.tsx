@@ -98,7 +98,7 @@ type ConversationMessageActions = {
   onOpenAttachment?: (message: Mailbox.MessageLike, index: number) => void;
   /**
    * Fired after a message is archived (never on restore). The tag toggle itself is tile-local so
-   * archiving works in every consumer; this is the container's hook for the layout consequence —
+   * archiving works in every consumer; this is the container's hook for the layout consequence -
    * a dedicated message view has nothing left to show once its message leaves the inbox.
    */
   onArchived?: (message: MessageType.Message) => void;
@@ -196,7 +196,7 @@ export type ConversationStackRootProps = PropsWithChildren<
 
 /**
  * Provides the shared conversation state to {@link ConversationStackToolbar} and {@link ConversationStackContent}
- * (and every message tile). Renders no DOM of its own, so it wraps the article's `Panel` — the toolbar
+ * (and every message tile). Renders no DOM of its own, so it wraps the article's `Panel` - the toolbar
  * and content slot into `Panel.Toolbar` / `Panel.Content`.
  */
 const ConversationStackRoot = ({
@@ -290,7 +290,7 @@ const ConversationStackContent = Util.composable<HTMLDivElement, ConversationSta
     const getId = useCallback((item: ConversationTileData) => item.id, []);
 
     // Smooth-scroll a newly-appended draft fully into view (its composer autofocuses once visible). A
-    // reply draft renders directly after the message it answers, so it may be mid-thread — scroll to
+    // reply draft renders directly after the message it answers, so it may be mid-thread - scroll to
     // it by id, aligning its bottom (`block: 'end'`) so the whole composer shows rather than just its
     // top. The composer mounts asynchronously and grows the tile, so re-pin its bottom via a
     // ResizeObserver for a short settle window; each smooth scroll retargets the previous one, so the
@@ -306,7 +306,7 @@ const ConversationStackContent = Util.composable<HTMLDivElement, ConversationSta
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
       // Focus the reply's body editor (`.dx-expand` distinguishes it from the recipient editors,
-      // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
+      // which are CodeMirror too). The composer mounts asynchronously - watch the tile until the
       // editor appears, bounded by the same settle window as the scroll re-pinning below;
       // `preventScroll` keeps the focus from cutting the smooth scroll short.
       const focusBody = () => {
@@ -342,7 +342,7 @@ const ConversationStackContent = Util.composable<HTMLDivElement, ConversationSta
         >
           <ScrollArea.Viewport classNames='px-2' ref={viewportRef}>
             {/* Outside the stack, ahead of the first message: the summary describes the conversation, not a message,
-                so it must not be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
+                so it must not be reorderable/selectable as a tile - but it shares the tile chrome and the document width. */}
             {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
             <Mosaic.Stack
               Tile={ConversationMessageTile}
@@ -371,7 +371,7 @@ const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
 /**
  * Mosaic tile chrome; dispatches to the draft composer or the read-message body. A `grid` card, so the
- * tile is a rail Container: every row in it — the summary, the recipients, the tags — subgrids onto the
+ * tile is a rail Container: every row in it - the summary, the recipients, the tags - subgrids onto the
  * same rails, its leading avatar or icon in the start rail and its text at the content edge.
  */
 const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<ConversationTileData>) => {
@@ -412,7 +412,7 @@ const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').
  * summarization pipeline writes `text/markdown` blocks.
  *
  * The header carries the summary's provenance (model + when it was derived), which is what tells a
- * reader whether it predates the newest replies — a summary is advisory, so it must be datable.
+ * reader whether it predates the newest replies - a summary is advisory, so it must be datable.
  */
 const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
   const { t } = Hooks.useTranslation(InboxNamespace.key);
@@ -498,7 +498,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   const senderActions = useMemo(() => (target ? (getSenderActions?.(target) ?? []) : []), [getSenderActions, target]);
   const db = mailbox && Obj.getDatabase(mailbox);
 
-  // Archiving is the `inbox` tag coming off (Gmail's model — INBOX is a label), so one toggle serves
+  // Archiving is the `inbox` tag coming off (Gmail's model - INBOX is a label), so one toggle serves
   // both directions and membership picks the menu label.
   const [inInbox, toggleInbox] = useSystemTag(target, mailbox, 'inbox');
   const handleArchive = useCallback(() => {
@@ -533,7 +533,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
 
   const { from, date, snippet, subject } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
-  // Derived by the summarization pipeline; absent for most messages, which is the normal case —
+  // Derived by the summarization pipeline; absent for most messages, which is the normal case -
   // collapsed tiles fall back to the provider's snippet rather than showing an empty affordance.
   const summary = summaries?.get(target.id);
 
@@ -552,7 +552,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     >
       <Card.Section>
         {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is affordable
-            here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
+            here - unlike the virtualized mailbox list, which resolves the whole page at once. */}
         <Card.Row
           align='start'
           classNames='pt-1'
@@ -610,7 +610,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
         </Card.Row>
 
         {/* `unmountOnExit` keeps a folded message's body out of the tree entirely, as the previous
-          conditional did — a thread holds many messages and each body is a rendered document. */}
+          conditional did - a thread holds many messages and each body is a rendered document. */}
         <Collapsible.Content asChild>
           <Card.Section>
             <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
@@ -692,7 +692,7 @@ type MessageDetailsProps = {
   onContactCreate?: MessageHeaderProps['onContactCreate'];
 };
 
-/** Sender, extracted-object relations, attachments and tags — the header detail rows below the subject. */
+/** Sender, extracted-object relations, attachments and tags - the header detail rows below the subject. */
 const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsProps) => {
   const db = Obj.getDatabase(message);
 
@@ -712,7 +712,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   const tagObjects = useQuery(db, Filter.type(Tag.Tag));
   const messageTags = useMessageTags(mailbox, message, tagObjects);
 
-  // Extracted objects — trips, people, etc. Tasks are listed under the body instead (`MessageTasks`).
+  // Extracted objects - trips, people, etc. Tasks are listed under the body instead (`MessageTasks`).
   const objects = useMessageExtractedObjects(db, mailbox, message).filter(
     (object) => !Obj.instanceOf(Task.Task, object),
   );
@@ -733,7 +733,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   return (
     <Card.Section data-testid='message-header'>
       {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
-      {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
+      {/* Recipients, reduced to bare addresses - the display name in the raw header duplicates the
           tile's own heading, so `"NAME" <addr>` would just repeat it. One recipient reads as a person, so it
           gets an avatar like every other person row; several are a group, which an avatar would misrepresent. */}
       {recipients.length > 0 && (
@@ -747,7 +747,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
         </Card.Row>
       )}
 
-      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {/* Per-relation rows - one per ECHO object the message produced (Trip, Person, ...). */}
       {objects.map((object) => (
         <Row.Ref key={Obj.getURI(object).toString()} object={object} />
       ))}
@@ -755,7 +755,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
       {/* Attachments row. */}
       <Row.Attachments attachments={message.attachments} onAttachmentClick={onOpenAttachment && handleOpenAttachment} />
 
-      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      {/* Tags row - Gmail-synced provider labels and user-applied tags. */}
       <Row.Tags tags={messageTags} />
     </Card.Section>
   );
@@ -814,7 +814,7 @@ type MessageBodyProps = {
   options: Atom.Writable<MessageOptions>;
 };
 
-/** The message body — raw email HTML (default) or the markdown/plain rendering. */
+/** The message body - raw email HTML (default) or the markdown/plain rendering. */
 const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
   const { viewMode, loadRemoteImages = false } = useAtomValue(options);
 
@@ -835,7 +835,7 @@ const MessageBody = ({ message, mailbox, options }: MessageBodyProps) => {
   const resolveSrc = useCidResolver(message.attachments, db);
 
   // The HTML view needs an html block; without one (e.g. a markdown-only body) fall through to the
-  // markdown renderer. The dialect is built inline — `Html` keys rebuilds on `dialect.key`, so it
+  // markdown renderer. The dialect is built inline - `Html` keys rebuilds on `dialect.key`, so it
   // needs no memoization.
   if (viewMode === 'html' && html) {
     return <Html html={html} loadRemoteImages={loadRemoteImages} dialect={emailDialect({ resolveSrc })} />;
@@ -871,7 +871,7 @@ MessageMenu.displayName = MESSAGE_MENU_NAME;
 /**
  * Builds the per-message action handlers bound to `message`. Reply/forward/reply-all are pure ECHO
  * (`db.add` a draft), so they stay here; the invoker-backed actions (AI reply, delete, open-in-main)
- * are container-provided callbacks — the component only binds them to its own message.
+ * are container-provided callbacks - the component only binds them to its own message.
  */
 const useMessageHandlers = (
   message: MessageType.Message | undefined,
@@ -884,7 +884,7 @@ const useMessageHandlers = (
   const openDraft = useCallback(
     (mode: 'reply' | 'reply-all' | 'forward') => {
       // Add the draft directly; it shares the thread's `threadId`, so the `mailboxMessage` connector
-      // query picks it up reactively and renders it inline — no navigation, no operation needed.
+      // query picks it up reactively and renders it inline - no navigation, no operation needed.
       if (db && message) {
         const draft = db.add(DraftMessage.make(createDraftMessage({ mode, message, mailbox })));
         // Tag as 'draft' like every other draft-creation path; `useSendEmail` removes it at send time.
@@ -925,7 +925,7 @@ type DraftTileProps = {
 
 /**
  * A draft in the conversation stack: the inline composer while unsent, locking to the read-only tile
- * once the provider's sent tag is applied (on send) — reactively, via the tag-index membership — until
+ * once the provider's sent tag is applied (on send) - reactively, via the tag-index membership - until
  * the sync reconciliation stage swaps in the canonical feed message.
  *
  * Re-resolves its own live, persisting object by id: the object in the connector's ordered/windowed

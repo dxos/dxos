@@ -24,7 +24,7 @@ export const createSettingsEvent = (specifier: string) =>
 /**
  * The assistant plugin's start event, derived from its well-known key. Skills (and other
  * assistant-consumed contributions from arbitrary plugins) ride the CONSUMER's start event, and
- * naming it by key convention here avoids a package dependency on the assistant plugin — which
+ * naming it by key convention here avoids a package dependency on the assistant plugin - which
  * would be cyclic for plugins the assistant itself integrates with (markdown, routine).
  *
  * Must equal `AssistantEvents.Start` in plugin-assistant, which derives the same event from its

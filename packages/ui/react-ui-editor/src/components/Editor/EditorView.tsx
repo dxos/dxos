@@ -30,7 +30,7 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
   ({ classNames, id, extensions, selectionEnd, focusable = true, value, onChange, ...props }, forwardedRef) => {
     // Hold the latest onChange in a ref so callers may pass an inline callback
     // without forcing the underlying editor to be destroyed and recreated on
-    // every render — which would blur the focused input on each keystroke.
+    // every render - which would blur the focused input on each keystroke.
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
 
@@ -67,7 +67,7 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
     }, [id, view]);
 
     // `undefined` means uncontrolled: the doc was seeded once from `value` at creation and the caller
-    // isn't driving it, so leave it be (coalescing undefined→'' here would wipe that seed on mount). A
+    // isn't driving it, so leave it be (coalescing undefined->'' here would wipe that seed on mount). A
     // controlled caller clears the doc by passing '' explicitly.
     useEffect(() => {
       if (!view || value === undefined) {

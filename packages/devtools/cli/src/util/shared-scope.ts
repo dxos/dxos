@@ -16,7 +16,7 @@ const PACKAGE_ROOT_DEPTH = 8;
  * Reads a package's non-wildcard subpath exports, so `@dxos/app-framework/Plugin` can be
  * registered alongside `@dxos/app-framework`.
  *
- * Subpaths are the common case — a plugin imports `@dxos/app-framework/Plugin`, never the barrel —
+ * Subpaths are the common case - a plugin imports `@dxos/app-framework/Plugin`, never the barrel -
  * and the registry matches exact specifiers, so a bare-specifier-only scope would leave every
  * import that matters resolving to the plugin's own copy. The package root is found by walking up
  * from the resolved entry rather than resolving `<pkg>/package.json`, which most packages do not
@@ -37,7 +37,7 @@ const readSubpaths = (pkg: string, entry: string): string[] => {
         );
       }
     } catch {
-      // Not this package's manifest, or unreadable — keep walking.
+      // Not this package's manifest, or unreadable - keep walking.
     }
     dir = path.dirname(dir);
   }
@@ -70,13 +70,13 @@ const collectSharedModules = (): Array<[specifier: string, url: string]> => {
 /**
  * Points a third-party plugin's imports of shared packages at the host's own modules.
  *
- * Without this a plugin importing `@dxos/echo` resolves to *its own copy* — and a plugin installed
+ * Without this a plugin importing `@dxos/echo` resolves to *its own copy* - and a plugin installed
  * under `plugins/<id>/` has no `node_modules` above it at all, so bun auto-installs a *published*
  * `@dxos/*` from its cache. Either way host and plugin end up with separate instances of every
  * stateful module: ECHO's schema registry, the capability system, effect service identity.
  *
  * Registration is `build.module`, not `onResolve`. Measured on bun 1.3.11: the runtime ESM loader
- * never consults `onResolve` — it is a bundler hook — while `build.module` is honored and takes
+ * never consults `onResolve` - it is a bundler hook - while `build.module` is honored and takes
  * precedence over auto-install. Each factory imports a **pre-resolved file URL** rather than its
  * own specifier, because `build.module` intercepts every import of that specifier including the
  * factory's own, and a self-import recurses into the registry and hangs the CLI before it runs any
@@ -84,7 +84,7 @@ const collectSharedModules = (): Array<[specifier: string, url: string]> => {
  *
  * Gated on there being an installed plugin: enumeration costs a resolve and a manifest read per
  * shared package (~7 ms), and an invocation with nothing to share should not pay it. Nothing is
- * imported here — the factories are lazy, so a registered package is only evaluated if a plugin
+ * imported here - the factories are lazy, so a registered package is only evaluated if a plugin
  * actually asks for it.
  *
  * `DEFAULT_PACKAGES` is the same list the Vite plugin externalizes from browser plugin bundles:

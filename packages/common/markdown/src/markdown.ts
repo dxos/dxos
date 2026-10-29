@@ -5,7 +5,7 @@
 import { parseHTML } from 'linkedom';
 import TurndownService from 'turndown';
 
-/** Narrow a turndown DOM node to Element — rules filtered by tag name always receive one. */
+/** Narrow a turndown DOM node to Element - rules filtered by tag name always receive one. */
 const isElement = (node: Node): node is Element => node.nodeType === 1;
 
 /** Read an attribute from a turndown node, returning '' when absent (or the node is not an element). */
@@ -13,8 +13,8 @@ const getAttr = (node: Node, name: string): string => (isElement(node) ? (node.g
 
 /**
  * Escape parentheses that would prematurely close the `(url)` of a manually built Markdown link.
- * Turndown already escapes markdown-special characters in text-node content, so only the href —
- * which it copies verbatim from the attribute — needs escaping here.
+ * Turndown already escapes markdown-special characters in text-node content, so only the href -
+ * which it copies verbatim from the attribute - needs escaping here.
  */
 const escapeLinkHref = (href: string): string => href.replace(/[()]/g, '\\$&');
 
@@ -35,8 +35,8 @@ const turndown = new TurndownService({
     replacement: (content, node) => {
       const href = getAttr(node, 'href').trim();
       const text = content.trim();
-      // An anchor wrapping block-level content (multi-line) cannot be a valid inline link — turndown
-      // would emit stranded `](url)[` fragments — and an anchor with no href or no text has nothing
+      // An anchor wrapping block-level content (multi-line) cannot be a valid inline link - turndown
+      // would emit stranded `](url)[` fragments - and an anchor with no href or no text has nothing
       // to link. In those cases unwrap to the inner content rather than forming a link.
       if (!href || !text || /\n/.test(text)) {
         return content;
@@ -50,7 +50,7 @@ const turndown = new TurndownService({
   .addRule('dropTrackingBeacons', {
     filter: 'img',
     replacement: (content, node) => {
-      // 1x1 (or 0x0) images are open-tracking beacons, not content — drop them.
+      // 1x1 (or 0x0) images are open-tracking beacons, not content - drop them.
       const width = getAttr(node, 'width');
       const height = getAttr(node, 'height');
       if ((width === '0' || width === '1') && (height === '0' || height === '1')) {
@@ -97,7 +97,7 @@ export const htmlToMarkdown = (html: string): string =>
  * Strip residual HTML/XML tags that survive turndown conversion (e.g., MS Office namespaced
  * tags like <o:p>, <v:shape>, conditional comments, stray <span style=...>).
  *
- * Namespaced tags and MS conditional comments are stripped unconditionally — they have no
+ * Namespaced tags and MS conditional comments are stripped unconditionally - they have no
  * meaning in genuine plaintext bodies. The generic inline-tag pass (<span>, <font>, <u>,
  * <div>) is opt-in via `fromHtml` so we don't eat literal angle-bracketed text in plaintext
  * messages.
@@ -109,7 +109,7 @@ const stripResidualTags = (str: string, { fromHtml = false }: { fromHtml?: boole
     // 2. Namespaced tags (<o:p>, <v:shape>, <w:WordDocument/>, <m:mathPr>, etc.).
     .replace(/<\/?[a-zA-Z][\w-]*:[^>]*>/g, '');
 
-  // 3. Stray known-bad inline tags that survive turndown in edge cases — HTML pipeline only.
+  // 3. Stray known-bad inline tags that survive turndown in edge cases - HTML pipeline only.
   return fromHtml ? cleaned.replace(/<\/?(span|font|u|div)\b[^>]*>/gi, '') : cleaned;
 };
 

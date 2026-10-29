@@ -4,24 +4,24 @@
 
 //
 // The manager composes collaborating units behind one public API. Each unit receives the
-// shared substrate — `ManagerState` (`manager-state.ts`): the reactive atoms, the activation
-// status channel, the fiber tracker, and the lifecycle flags — plus the collaborators it
+// shared substrate - `ManagerState` (`manager-state.ts`): the reactive atoms, the activation
+// status channel, the fiber tracker, and the lifecycle flags - plus the collaborators it
 // drives and its own host configuration. Nothing receives a manager reference or a callback
 // into another unit:
 //
-// 1. The plugin catalog (`plugin-catalog.ts`) — add/remove/enable/disable, lazy plugin
+// 1. The plugin catalog (`plugin-catalog.ts`) - add/remove/enable/disable, lazy plugin
 //    resolution, dev-plugin shadowing, and the declared-dependency closure
 //    (`getDependencies`/`getDependents`). Collaborators: the scheduler (event replay and
 //    plugin deactivation) and the registry catalog.
 //
-// 2. The activation scheduler (`activation-scheduler.ts`) — the lifecycle engine
+// 2. The activation scheduler (`activation-scheduler.ts`) - the lifecycle engine
 //    (start / activate / deactivate / reset) and the decision of when each module's
 //    `activate` runs. Dependency-mode modules activate in rounds (ordering logic and
 //    vocabulary in `activation-graph.ts`), repeated until one activates nothing new;
 //    event-mode modules park until their `activatesOn` fires, with inactive dependency
 //    providers pulled on demand first. Collaborator: the loader.
 //
-// 3. The module loader (`module-loader.ts`) — the per-module load pipeline. Loads are
+// 3. The module loader (`module-loader.ts`) - the per-module load pipeline. Loads are
 //    memoized (id -> Deferred): every activation path converges on `loader.load`, concurrent
 //    paths await the same deferred, and contribution is idempotent per module. Because
 //    rounds run concurrently (the startup pass and an event fired mid-startup), the loader
@@ -106,7 +106,7 @@ export type ManagerOptions = {
    * Ids of plugins the host pins on: always enabled, never disableable.
    *
    * Defaults to every plugin declaring `system` in `meta.profile.tags`. Hosts pass
-   * this when the tag is the wrong authority — a plugin's `dx.config.ts` declares
+   * this when the tag is the wrong authority - a plugin's `dx.config.ts` declares
    * one `system` tag for every host, so without an override the CLI inherits
    * Composer's judgment about what a user may turn off. Ids not present in
    * `plugins` are ignored.
@@ -163,7 +163,7 @@ export interface PluginManager {
   readonly registry: Registry.AtomRegistry;
   /**
    * Cached registry catalog state plus pass-throughs for `listVersions` /
-   * `getPlugin`. Always present — the host supplies a `pluginRegistryProvider`
+   * `getPlugin`. Always present - the host supplies a `pluginRegistryProvider`
    * via {@link ManagerOptions} for real backends, or it falls back to a no-op
    * implementation that yields an empty catalog.
    */
@@ -222,7 +222,7 @@ export interface PluginManager {
    * missing entries that exist in the plugin registry catalog are installed via
    * {@link add}, then enabled in dependency-first order. Set `resolveDependencies`
    * to `false` to enable only the named plugin and skip the closure walk
-   * entirely — useful when substituting an alternative plugin that satisfies
+   * entirely - useful when substituting an alternative plugin that satisfies
    * the dependent's capability needs in its own way.
    */
   enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error>;
@@ -240,7 +240,7 @@ export interface PluginManager {
    * By default, cascades to currently-enabled dependents (transitively, leaves
    * first) so disabling a depended-upon plugin never leaves its dependents
    * stranded. Pass `cascade: false` to disable only the named plugin and leave
-   * its dependents enabled-but-broken — VS Code-style disable parity for
+   * its dependents enabled-but-broken - VS Code-style disable parity for
    * callers that want the escape hatch (e.g. when swapping in an alternative
    * implementation that satisfies the dependents' needs in its own way).
    *
@@ -266,7 +266,7 @@ export interface PluginManager {
    *
    * Walks `meta.dependsOn` over registered plugins. With `transitive: true`
    * (default), returns the full reverse closure. With `enabledOnly: true`,
-   * filters to currently-enabled dependents — used by UI flows to preview what
+   * filters to currently-enabled dependents - used by UI flows to preview what
    * a cascading disable would touch.
    */
   getDependents(id: string, opts?: { transitive?: boolean; enabledOnly?: boolean }): readonly string[];
@@ -274,7 +274,7 @@ export interface PluginManager {
    * Runs startup: the capability-dependency resolution pass for dependency-mode modules,
    * concurrently with the event-mode activation pass for any module explicitly targeting the
    * Startup event. The event-level Startup `activated` message publishes only after both
-   * passes complete. Idempotent — subsequent calls activate whatever registered since.
+   * passes complete. Idempotent - subsequent calls activate whatever registered since.
    * `activate(Startup)` delegates here.
    */
   start(): Effect.Effect<boolean, Error>;
@@ -380,7 +380,7 @@ class ManagerImpl implements PluginManager {
     // empty module set. Failures are wrapped in `PluginInitializationError` so awaiters
     // get a tagged error rather than the wide `Error` produced by the underlying chain.
     //
-    // Dedupe before mapping to `enable` — `core` and `enabled` may overlap (an
+    // Dedupe before mapping to `enable` - `core` and `enabled` may overlap (an
     // app-supplied plugin can be in both); same-id work is coalesced at the leaf
     // (lazy resolution) and module registration dedupes by id, but the dedupe
     // avoids redundant walks. `new Set([...])` preserves first-seen order which
@@ -406,7 +406,7 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Cross-unit failure policy, wired at the composition root: the loader publishes a module
-   * error message for every failed activation; the catalog owns disabling. Idempotent —
+   * error message for every failed activation; the catalog owns disabling. Idempotent -
    * a supervisor that is already running is kept.
    */
   private _superviseFailures(): void {
@@ -584,7 +584,7 @@ class ManagerImpl implements PluginManager {
   }
 
   //
-  // Lifecycle — delegated to the scheduler; `shutdown` is composition-wide and stays here.
+  // Lifecycle - delegated to the scheduler; `shutdown` is composition-wide and stays here.
   //
 
   start(): Effect.Effect<boolean, Error> {

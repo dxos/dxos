@@ -72,8 +72,8 @@ export const toOrganization = (snapshot: PageAction.Snapshot) => {
  * Best-effort mapping from an incoming page snapshot to a Markdown document.
  *
  * Builds a small prelude (title + source link + date) followed by the
- * picked subtree's rendered text. We deliberately don't attempt HTML →
- * Markdown conversion here — the picker's `innerText` already preserves
+ * picked subtree's rendered text. We deliberately don't attempt HTML ->
+ * Markdown conversion here - the picker's `innerText` already preserves
  * paragraph structure, and a full converter belongs in the pipeline
  * (where a future agent stage can take over) rather than baked into the
  * receiver.

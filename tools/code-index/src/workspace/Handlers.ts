@@ -24,7 +24,7 @@ import * as Titles from './Titles.ts';
 /**
  * The server side of the protocol. A `Dispatch` of a `UserMessage` is the one call that does work:
  * it forks a turn and returns immediately, because the turn's output reaches the client down the
- * `Watch` stream it is already holding. Every other event is appended and nothing else — the UI's
+ * `Watch` stream it is already holding. Every other event is appended and nothing else - the UI's
  * macro commands are facts about the project, not requests for behaviour. A project's first prompt
  * also names it, on a side call that never holds up the turn.
  */
@@ -50,7 +50,7 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
       /**
        * One turn at a time per project. The log serializes individual appends, not turns, so two
        * overlapping turns would each fold a different prefix of the transcript and interleave their
-       * replies — and nothing downstream could tell which answer belonged to which question. A
+       * replies - and nothing downstream could tell which answer belonged to which question. A
        * second prompt therefore queues behind the first rather than racing it.
        */
       const turns = new Map<string, Semaphore.Semaphore>();
@@ -175,7 +175,7 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
           event._tag === 'UserMessage'
             ? // The turn appends the user's message itself, and runs apart from the request: a request
               // that waited would hold the connection open for a minute of tool calls. Detached but not
-              // unordered — it takes the project's turn gate first, so a prompt sent while another
+              // unordered - it takes the project's turn gate first, so a prompt sent while another
               // turn is running waits for it rather than interleaving with it. Naming is checked
               // before the turn is forked, while the log still shows whether this is the first prompt.
               Effect.gen(function* () {

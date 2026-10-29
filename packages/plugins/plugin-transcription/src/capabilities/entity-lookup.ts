@@ -14,7 +14,7 @@ import { TranscriptionCapabilities } from '#types';
 /**
  * Contributes an {@link EntityLookup} backed by the default space's full-text index. Resolved lazily
  * per call so it reflects the current space. Consumers (e.g. the live-transcription driver) depend on
- * this function rather than the database — swap the backend (vector, space-aware, remote) here.
+ * this function rather than the database - swap the backend (vector, space-aware, remote) here.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

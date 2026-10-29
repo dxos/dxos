@@ -16,7 +16,7 @@ import * as Graph from './AppGraph.ts';
 import * as GraphBuilder from './AppGraphBuilder.ts';
 
 //
-// Timings for the operations the app graph does on the render path. Skipped by default — these
+// Timings for the operations the app graph does on the render path. Skipped by default - these
 // measure rather than assert, so they must never gate a merge; run them with:
 //
 //   moon run app-graph:test -- src/bench.test.ts --testNamePattern . --no-file-parallelism
@@ -325,7 +325,7 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
 
   test('remove: a materialized subtree, every level expanded', async () => {
     // The flat case above expands one relation, so it does not price what removal costs per node
-    // that holds an expansion subscription of its own — which is every node a rendered tree reaches.
+    // that holds an expansion subscription of its own - which is every node a rendered tree reaches.
     await measure(
       `remove ${PARENTS}x${CHILDREN} tree`,
       `${PARENTS * CHILDREN} nodes, ${PARENTS + 1} expanded`,

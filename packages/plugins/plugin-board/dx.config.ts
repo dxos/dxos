@@ -16,7 +16,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     name: 'Board',
     author: 'DXOS',
     description: trim`
-    Board is an infinite spatial canvas that lets you place any ECHO object — documents, tasks, notes, or rich media — anywhere on a two-dimensional grid.
+    Board is an infinite spatial canvas that lets you place any ECHO object - documents, tasks, notes, or rich media - anywhere on a two-dimensional grid.
     Items are arranged by dragging, resized freely, and removed from the canvas without deleting the underlying data, so the same object can appear on multiple boards simultaneously.
 
     Each board is itself an ECHO object, making it fully collaborative and conflict-free: all participants see live updates as peers add, move, or remove items in real time.

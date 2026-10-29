@@ -86,7 +86,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
         data-testid='dx-canvas-grid'
         ref={svgRef}
         opacity={opacity}
-        // `dx-cover` (absolute inset-0) does not stretch a replaced <svg> element — without an explicit
+        // `dx-cover` (absolute inset-0) does not stretch a replaced <svg> element - without an explicit
         // size it falls back to the intrinsic 300x150, clipping the 100%-sized grid rects. Force full size.
         className={mx(
           'dx-cover w-full h-full pointer-events-none touch-none select-none',

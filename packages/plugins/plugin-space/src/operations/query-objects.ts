@@ -73,8 +73,8 @@ export default handler;
  * documents for this case.
  *
  * Resolving the typename to a registered `Type` entity first and filtering on THAT pinned the
- * filter to one registration — a versioned `dxn:` for a static declaration, an `echo:` id for a
- * copy persisted in the space — so objects of the same typename written under any other
+ * filter to one registration - a versioned `dxn:` for a static declaration, an `echo:` id for a
+ * copy persisted in the space - so objects of the same typename written under any other
  * registration did not match, and which registration was picked depended on the order the registry
  * query happened to return. That is the under-return: a space holding both forms answered the same
  * call with all of its objects, some of them, or none, run to run.

@@ -23,9 +23,9 @@ export type PostContentProps = {
 
 /**
  * Shared presentational layout for an article-style post.
- * Render order: title → hero image → Markdown body (subscription contentFeed
- * entry for this Post id, falling back to `post.description`) → meta line
- * (author · …extra · published).
+ * Render order: title -> hero image -> Markdown body (subscription contentFeed
+ * entry for this Post id, falling back to `post.description`) -> meta line
+ * (author · ...extra · published).
  */
 export const PostContent = Util.composable<HTMLDivElement, PostContentProps>(
   ({ post, metadata = [], ...props }, forwardedRef) => {
@@ -35,7 +35,7 @@ export const PostContent = Util.composable<HTMLDivElement, PostContentProps>(
     const imageUrl = getImageUrl(post, postContent);
     const fetchedText = postContent?.text;
 
-    // Drop duplicate images from the article body — and remove any image
+    // Drop duplicate images from the article body - and remove any image
     // that matches the hero `imageUrl` so it doesn't appear stacked immediately
     // below the hero. Falls through to `post.description` when content
     // hasn't been fetched yet.
@@ -47,7 +47,7 @@ export const PostContent = Util.composable<HTMLDivElement, PostContentProps>(
       return dedupeImagesInMarkdown(source, [imageUrl]);
     }, [fetchedText, post.description, imageUrl]);
 
-    // Suppress the hero when the article body already carries imagery — RSS feeds often
+    // Suppress the hero when the article body already carries imagery - RSS feeds often
     // duplicate the lead image inside `<content>` under a different URL than `imageUrl`,
     // and rendering both stacks the same picture twice (see e.g. Guardian galleries).
     const showHero = useMemo(

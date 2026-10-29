@@ -7,7 +7,7 @@ import type * as Operation from '@dxos/compute/Operation';
 /**
  * Pluggable contract for augmenting the CRM skill with additional
  * research sources (e.g. a LinkedIn browser-extension integration shipped
- * by composer-crx). v1 defines the contract only — no implementations ship
+ * by composer-crx). v1 defines the contract only - no implementations ship
  * with plugin-crm. The CRM skill iterates over registered sources when
  * building its tool list so that the agent has access to their tools
  * whenever the source is available.

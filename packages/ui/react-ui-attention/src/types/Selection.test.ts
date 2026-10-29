@@ -28,7 +28,7 @@ describe('selection helpers', () => {
   test('resolveSelection returns the requested-mode default on mismatch or undefined', ({ expect }) => {
     expect(Selection.resolve(undefined, 'single')).toBeUndefined();
     expect(Selection.resolve(undefined, 'multi')).toEqual([]);
-    // Stored value is the default multi but a single reader asks — yields the single default.
+    // Stored value is the default multi but a single reader asks - yields the single default.
     expect(Selection.resolve({ mode: 'multi', ids: [] }, 'single')).toBeUndefined();
     expect(Selection.resolve({ mode: 'range' }, 'range')).toBeUndefined();
   });

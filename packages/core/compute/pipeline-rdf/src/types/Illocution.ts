@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 /**
  * Illocutionary force (Searle's speech-act taxonomy, minus `declarative` which does not occur in
  * mail): what the author is *doing* with an utterance, orthogonal to whether its propositional content
- * is true. `assertive` informs (the default — a notification/statement); `directive` seeks an action
+ * is true. `assertive` informs (the default - a notification/statement); `directive` seeks an action
  * or an answer from the addressee (requests and questions); `commissive` commits the author to a
  * future action (offers/promises); `expressive` conveys a psychological state (thanks/apology).
  */
@@ -15,9 +15,9 @@ export const IllocutionaryForce = Schema.Literals(['assertive', 'directive', 'co
 export type IllocutionaryForce = Schema.Schema.Type<typeof IllocutionaryForce>;
 
 /**
- * The speech act performed by the source utterance. Absent ⇒ `assertive`, so a plain fact is an
+ * The speech act performed by the source utterance. Absent => `assertive`, so a plain fact is an
  * assertion (a notification/statement) and every pre-existing fact remains valid. `mood` disambiguates
- * directive sub-types without a separate axis — an `interrogative` directive is a question (the
+ * directive sub-types without a separate axis - an `interrogative` directive is a question (the
  * propositional content carries the sought-after unknown, marked `Uu` in factuality); an `imperative`
  * directive is a request (the requested action is not yet true, also `Uu`). `addressee` is who is
  * asked to act or answer (defaults to the message recipient when omitted).

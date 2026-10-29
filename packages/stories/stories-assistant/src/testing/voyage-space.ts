@@ -36,7 +36,7 @@ const PROJECT_COMMANDS = [
 ];
 
 /**
- * The story's own space template: the smallest space a project chat needs — one project whose
+ * The story's own space template: the smallest space a project chat needs - one project whose
  * instructions have an unmistakable effect on a reply, plus the mailbox that stands in for the
  * external data the richer space templates carry.
  */

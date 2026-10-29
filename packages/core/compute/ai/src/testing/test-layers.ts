@@ -41,7 +41,7 @@ export const TestRouter = AiModelResolver.buildAiService.pipe(
 export const DirectAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      // `DX_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`, which breaks Claude Code) — see the
+      // `DX_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`, which breaks Claude Code) - see the
       // `regenerate-model-fixture` skill.
       apiKey: Config.Redacted('DX_ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
       // A provider 5xx or a 429 twenty minutes into a long scenario is the provider's, not the
@@ -149,7 +149,7 @@ export const AiServiceTestingPreset = (preset: AiServicePreset): AiServiceLayer 
  *
  * Defaults to the `direct` preset, which talks to the Anthropic API directly using the
  * `DX_ANTHROPIC_API_KEY` env var. Fixture regeneration (`DX_UPDATE_MODEL_FIXTURES=1`) therefore
- * requires `DX_ANTHROPIC_API_KEY` to be set — see the `regenerate-model-fixture` skill.
+ * requires `DX_ANTHROPIC_API_KEY` to be set - see the `regenerate-model-fixture` skill.
  */
 export const TestAiService = ({
   disableMemoization = false,

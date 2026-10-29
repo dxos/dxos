@@ -10,7 +10,11 @@ import { type Vocabulary, Word } from '#types';
 
 /** Lookup key for a term: matches `normalizeToken` in the reader extension. */
 export const normalizeTerm = (term: string): string =>
-  term.trim().toLocaleLowerCase().normalize('NFC').replace(/’/g, "'");
+  term
+    .trim()
+    .toLocaleLowerCase()
+    .normalize('NFC')
+    .replace(/\u2019/g, "'");
 
 /** Every word filed under a deck. */
 export const queryWords = (deck: Vocabulary.Vocabulary) =>

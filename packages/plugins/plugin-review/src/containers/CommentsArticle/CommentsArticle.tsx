@@ -101,7 +101,7 @@ const threadComponents = { Object: ObjectTile };
 
 /**
  * Subject is the host object being commented on (e.g. a Markdown.Document),
- * not a Thread — the threads anchored to that host are discovered via the
+ * not a Thread - the threads anchored to that host are discovered via the
  * `AnchoredTo` query inside the component.
  */
 export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
@@ -153,7 +153,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     () => getMessageMetadata(subjectId, identity ?? undefined),
     [subjectId, identity],
   );
-  // Author display names for suggestion tiles, keyed by DID; absent ⇒ the tile falls back to the DID.
+  // Author display names for suggestion tiles, keyed by DID; absent => the tile falls back to the DID.
   const authorLabels = useMemo(
     () =>
       Object.fromEntries(members.flatMap((member) => (member.displayName ? [[member.did, member.displayName]] : []))),
@@ -226,8 +226,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // subscribe to threads so the resolved filter (below) re-applies when a thread's status changes.
   useQuery(db, Filter.type(Thread.Thread));
   // Committed anchors come first, then drafts; on submit a draft's thread is persisted with a new
-  // relation, so both briefly reference the same thread. Dedupe by source thread id (first — the
-  // committed relation — wins) so that overlap renders once rather than flashing a duplicate.
+  // relation, so both briefly reference the same thread. Dedupe by source thread id (first - the
+  // committed relation - wins) so that overlap renders once rather than flashing a duplicate.
   const seenThreads = new Set<string>();
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
@@ -249,7 +249,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         }
         seenThreads.add(threadId);
       } catch {
-        // Drop anchors whose source isn't resolved yet — otherwise they reach the render path and the
+        // Drop anchors whose source isn't resolved yet - otherwise they reach the render path and the
         // comment/item handlers, which call `Relation.getSource` again and would throw. They reappear
         // once the source resolves and the query re-emits.
         return false;
@@ -290,7 +290,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   // A deliberate click additionally reveals and highlights the thread in the anchored content. Not
   // gated on `state.current`: the editor tracks its own current comment (by cursor proximity), so it
-  // can already differ from the app's — gating here would leave the previous comment highlighted.
+  // can already differ from the app's - gating here would leave the previous comment highlighted.
   const handleActivate = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       handleAttend(anchor);
@@ -384,8 +384,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleAcceptChange = useCallback(
     async (anchor: AnchoredTo.AnchoredTo) => {
-      // The branch to cherry-pick from: the comment's own branch tag, or — for a comment left on the
-      // base (untagged/main) while reviewing — the branch currently under review.
+      // The branch to cherry-pick from: the comment's own branch tag, or - for a comment left on the
+      // base (untagged/main) while reviewing - the branch currently under review.
       const branch = anchor.branch ?? reviewBranch;
       if (!anchor.anchor || !branch) {
         return;
@@ -426,7 +426,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     },
     [markdownDoc, mainText, invokePromise, subject],
   );
-  // The current suggestion, by group key — shared with the editor so clicking a change in the document
+  // The current suggestion, by group key - shared with the editor so clicking a change in the document
   // accents its card, and clicking a card reveals the change.
   const { suggestion: selectedSuggestion, hiddenAuthors } = useViewState(ReviewCapabilities.viewAspect, subject.id);
   const { set: setReviewView, update: updateReviewView } = useViewStateActions(
@@ -507,8 +507,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           return (
             <CommentThreadItem
               // Keyed by the stable object id, NOT the URI: a draft thread's URI changes when its
-              // first message persists it (`echo:///<id>` → `echo://<spaceId>/<id>`), and keying by
-              // URI remounted the whole thread subtree at exactly that moment — a reply being typed
+              // first message persists it (`echo:///<id>` -> `echo://<spaceId>/<id>`), and keying by
+              // URI remounted the whole thread subtree at exactly that moment - a reply being typed
               // in the composer was destroyed and Enter fired on the fresh empty instance.
               key={thread.id}
               space={space}

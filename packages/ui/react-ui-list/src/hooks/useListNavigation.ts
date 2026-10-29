@@ -12,11 +12,11 @@ export type UseListNavigationOptions = {
   /**
    * Determines the bundled ARIA role + keyboard wiring.
    *
-   * - `list` — `role='list'` items are `role='listitem'`. Arrow keys move focus among
+   * - `list` - `role='list'` items are `role='listitem'`. Arrow keys move focus among
    *   interactive descendants of the row (handles, buttons). No selection semantics.
-   * - `listbox` — `role='listbox'` items are `role='option'`. Arrow keys move focus
+   * - `listbox` - `role='listbox'` items are `role='option'`. Arrow keys move focus
    *   between options; `memorizeCurrent` keeps the last-focused option when re-entering.
-   * - `grid` — `role='grid'` items are `role='row'`. Two-axis arrow navigation.
+   * - `grid` - `role='grid'` items are `role='row'`. Two-axis arrow navigation.
    */
   mode: ListNavigationMode;
   /**
@@ -38,7 +38,7 @@ export type UseListNavigationReturn = {
   /**
    * Spread onto the container element to apply role + ARIA + arrow-key navigation.
    * Also wires a focus-on-entry handler that redirects to the selected or first
-   * focusable item — the group handles traversal, not initial focus.
+   * focusable item - the group handles traversal, not initial focus.
    *
    * Carries the group's `ref`, so a consumer that attaches its own must merge the two.
    */
@@ -96,8 +96,8 @@ const findListboxEntryTarget = (container: HTMLElement): HTMLElement | null => {
  *
  * The canonical roving-tabindex keyboard aspect. Currently consumed by `Listbox` and
  * `OrderedList`; `Tree` (Ark TreeView machine), `Picker`/`Combobox` (input-driven virtual focus), and
- * `Mosaic.Stack` still ship bespoke navigation — see `react-ui-list/AUDIT.md` for the
- * convergence analysis. Non-list focus zones — e.g. Composer's multi-pane chrome — use
+ * `Mosaic.Stack` still ship bespoke navigation - see `react-ui-list/AUDIT.md` for the
+ * convergence analysis. Non-list focus zones - e.g. Composer's multi-pane chrome - use
  * `useFocusGroup` directly (`Focus.Group`).
  */
 export const useListNavigation = ({

@@ -4,7 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-/** Well-known local segment name (private — use the helpers below). */
+/** Well-known local segment name (private - use the helpers below). */
 const PUBLICATIONS_SEGMENT = 'publications';
 
 /** Canonical segment ID for the Publications section node. */

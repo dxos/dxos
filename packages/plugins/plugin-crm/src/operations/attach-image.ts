@@ -124,7 +124,7 @@ export const attachImageToSubject = ({
     });
     const responseType = downloaded.contentType?.toLowerCase();
     // Strict: if the server supplied a content-type we require it to be
-    // in the allowlist. No fallthrough to the URL extension — that was
+    // in the allowlist. No fallthrough to the URL extension - that was
     // exploitable by a .png URL that actually serves HTML.
     let contentType: string | undefined;
     if (responseType) {

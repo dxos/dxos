@@ -11,7 +11,7 @@ const MODULE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs'];
 
 // A module declares itself a namespace with the same directive `import-as-namespace` enforces. It
 // is what separates a namespace the barrel owes its consumers from a subpath that is deliberately
-// a standalone entrypoint — `@dxos/worker-framework/Client` is heavy on purpose, and hoisting it
+// a standalone entrypoint - `@dxos/worker-framework/Client` is heavy on purpose, and hoisting it
 // onto the barrel would put it in the graph of everyone who imports the package.
 const NAMESPACE_DIRECTIVE = /^\s*\/\/\s*@import-as-namespace\s*$/m;
 
@@ -89,7 +89,7 @@ const stripComments = (code) => {
 /**
  * Resolves a specifier to a file on disk, including the directory-with-index form so a nested
  * barrel resolves the same way the bundler resolves it. A `#` self-reference is resolved through
- * the declaring package's `imports` map — barrels reach their own modules that way, so treating it
+ * the declaring package's `imports` map - barrels reach their own modules that way, so treating it
  * as unresolvable would both hide the namespaces behind it and read as a foreign package.
  */
 const resolveModule = (source, fromFile, pkg) => {
@@ -103,7 +103,7 @@ const resolveModule = (source, fromFile, pkg) => {
     return null;
   }
   const base = path.resolve(path.dirname(fromFile), source);
-  // The specifier may already carry its extension (`./types/index.ts`) — resolve it directly
+  // The specifier may already carry its extension (`./types/index.ts`) - resolve it directly
   // rather than appending another one on top, which would never exist on disk.
   if (MODULE_EXTENSIONS.some((ext) => base.endsWith(ext))) {
     return fs.existsSync(base) ? base : null;
@@ -213,7 +213,7 @@ const analyzeBarrel = (entryFile, readFile, pkg, directiveCache) => {
         continue;
       }
       // Two star paths providing the same name resolve to distinct bindings, so ES drops the name
-      // from the barrel silently — no compile error anywhere, the namespace simply disappears.
+      // from the barrel silently - no compile error anywhere, the namespace simply disappears.
       if (new Set(entries.map((entry) => entry.target)).size > 1) {
         ambiguous.set(name, entries);
         continue;
@@ -251,7 +251,7 @@ export const findPackage = (fromFile, cache) => {
 /**
  * The in-repo TypeScript an exports entry resolves to. Usually the `source` condition, but a
  * `dist-runtime` package has none (the toolbox strips it, since consumers must use the built
- * output), so recover it from `types` the way the toolbox does — without this the rule silently
+ * output), so recover it from `types` the way the toolbox does - without this the rule silently
  * skips every such package, and its barrel could drift from the subpaths consumers are rewritten to.
  */
 export const sourceOf = (entry, pkgDir) => {
@@ -286,7 +286,7 @@ export const sourceOf = (entry, pkgDir) => {
  * Bare `export *` is followed into nested barrels, so `export * from './types'` with the
  * namespaces one level down satisfies the same contract as declaring them all at the root.
  *
- * Applies to any package that already declares at least one PascalCase subpath — a package with
+ * Applies to any package that already declares at least one PascalCase subpath - a package with
  * none has not migrated yet, and flagging its namespaces would report the migration itself.
  */
 export default {
@@ -498,7 +498,7 @@ export default {
             continue;
           }
           // An extensioned directory barrel (`./services/index.ts`) addresses the same target the
-          // bare `./services` did before `rewriteRelativeImportExtensions` — strip the trailing
+          // bare `./services` did before `rewriteRelativeImportExtensions` - strip the trailing
           // index file so depth is counted the same way under either specifier form.
           const withoutIndex = source.replace(/\/index\.\w+$/, '');
           const segments = withoutIndex.replace(/^\.\//, '').split('/');

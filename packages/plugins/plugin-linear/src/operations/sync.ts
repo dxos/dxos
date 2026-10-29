@@ -42,9 +42,9 @@ import { LinearApi } from '../services/index.ts';
 //
 // Conflict policy is remote-wins (mirrors Trello). People are NOT synced and
 // `Task.assignee` is left untouched. Comments are NOT synced (see plugin-github
-// for the chunking-required reason — same constraint applies here).
+// for the chunking-required reason - same constraint applies here).
 //
-// New local objects (no Linear foreign key) are NOT pushed in this pass —
+// New local objects (no Linear foreign key) are NOT pushed in this pass -
 // creating a Linear issue requires a target team and creating a project
 // requires a target team plus a state, and we don't currently surface either
 // at the call site. Update-only push covers the round-trip flow where the
@@ -57,7 +57,7 @@ import { LinearApi } from '../services/index.ts';
 //
 
 //
-// Cross-source duplicates — design intent.
+// Cross-source duplicates - design intent.
 //
 // This plugin creates a fresh local object the first time it sees a remote
 // id, even when an equivalent object already exists in the workspace. That's
@@ -104,7 +104,7 @@ const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 
 /**
  * Generic foreign-key lookup. Type is forwarded to `Filter.foreignKeys`
- * untyped — the caller supplies the result type via the explicit `T` parameter.
+ * untyped - the caller supplies the result type via the explicit `T` parameter.
  */
 const findByForeignId = <T>(type: Type.AnyEntity, id: string) =>
   Effect.gen(function* () {
@@ -122,7 +122,7 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
 
 /**
  * Move a task into `container`. Membership and order are the `TaskSet.tasks` array; the ECHO parent
- * edge is set alongside only so deletion cascades, so both are written together. Idempotent —
+ * edge is set alongside only so deletion cascades, so both are written together. Idempotent -
  * sync runs repeatedly and must never append a second ref for a task already in the set.
  */
 const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
@@ -219,7 +219,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
 
 /**
  * Pull a Linear project milestone into ECHO. Milestones are mirrored remote-wins without a
- * snapshot merge — they are pull-only (nothing here pushes milestone edits back), so there is no
+ * snapshot merge - they are pull-only (nothing here pushes milestone edits back), so there is no
  * local side for a three-way merge to protect.
  */
 export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
@@ -294,14 +294,14 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       snapshotField(snapshot, 'description'),
     );
     // Task.status is optional on the schema (may be `undefined` locally), but
-    // every snapshot writes a concrete status — so widen to the full Task union
+    // every snapshot writes a concrete status - so widen to the full Task union
     // for the local side while the snapshot side stays narrow.
     const statusResult = mergeField<Task.Task['status']>(
       existing.status,
       remoteFields.status,
       snapshotField(snapshot, 'status'),
     );
-    // Linear's reverse mapper drops `0` (no priority) → undefined, and an unset local priority is the
+    // Linear's reverse mapper drops `0` (no priority) -> undefined, and an unset local priority is the
     // absent property, so both sides speak `Task.Priority | undefined`.
     const priorityResult = mergeField<Task.Priority | undefined>(
       existing.priority,
@@ -371,7 +371,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
 });
 
 //
-// Push (snapshot diff → Linear mutations)
+// Push (snapshot diff -> Linear mutations)
 //
 
 /** Result of one push pass over a single team's local-mirror objects. */
@@ -386,7 +386,7 @@ export type LinearPushResult = {
  * `binding.spec.snapshots[<id>]` and PATCH only the diverged fields back to
  * Linear via `LinearApi.updateProject` / `updateIssue`.
  *
- * Tombstones (`Obj.isDeleted`) are skipped — Linear's `archived` lifecycle is
+ * Tombstones (`Obj.isDeleted`) are skipped - Linear's `archived` lifecycle is
  * one-way (we treat archived-on-Linear as "still present for sync", not as
  * "should be deleted locally"), so the inverse direction is also a no-op.
  *
@@ -395,11 +395,11 @@ export type LinearPushResult = {
  *
  * `stateIdByTeamMember` resolves a Task `status` to a Linear workflow-state
  * id for the issue's team. Status changes are only pushed when we have a
- * mapping (otherwise the push silently skips status — better than failing
+ * mapping (otherwise the push silently skips status - better than failing
  * the whole pass over an unrecognised workflow).
  *
  * The push callbacks' error type is generic. The reconciler doesn't inspect
- * or recover from those errors — it propagates so the outer `Effect.result`
+ * or recover from those errors - it propagates so the outer `Effect.result`
  * at the call site can record the binding's `lastError`. Generic-`E` keeps
  * this module decoupled from the GraphQL error hierarchy of `LinearApi`.
  */
@@ -412,7 +412,7 @@ export const pushTeamUpdates: <E, R>(
     updateProject: (id: string, input: LinearApi.ProjectUpdateInput) => Effect.Effect<void, E, R>;
     /** Wraps `LinearApi.updateIssue`. */
     updateIssue: (id: string, input: LinearApi.IssueUpdateInput) => Effect.Effect<void, E, R>;
-    /** Resolve a desired Task status → Linear workflow-state id. Returns undefined when no mapping is known. */
+    /** Resolve a desired Task status -> Linear workflow-state id. Returns undefined when no mapping is known. */
     resolveStateId: (issue: LinearApi.Issue, status: NonNullable<Task.Task['status']>) => string | undefined;
   },
 ) => Effect.Effect<LinearPushResult, E, Database.Service | R> = Effect.fn('pushTeamUpdates')(
@@ -422,7 +422,7 @@ export const pushTeamUpdates: <E, R>(
 
     // Iterate all locally-known objects with a Linear foreign key. We re-query
     // by-foreign-key for each remote id rather than walking every Project/Task
-    // in the database — both yield the same set, and the by-fid query keeps
+    // in the database - both yield the same set, and the by-fid query keeps
     // memory bounded for spaces with thousands of unrelated tasks.
     for (const [id] of remoteProjectsById) {
       const local = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, id);
@@ -497,7 +497,7 @@ export const pushTeamUpdates: <E, R>(
       if (snapshot.priority !== localPriority) {
         // Unlike title/description/status, `undefined` is a meaningful value
         // for priority on both sides ("no priority"). We compare by value
-        // only — gating on `snapshot.priority !== undefined` would silently
+        // only - gating on `snapshot.priority !== undefined` would silently
         // drop pushes when the user assigns priority to a previously-empty
         // issue.
         //
@@ -577,7 +577,7 @@ export const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCurs
                   );
                 }
 
-                // Pull: projects → DXOS Projects, issues → DXOS Tasks. Each
+                // Pull: projects -> DXOS Projects, issues -> DXOS Tasks. Each
                 // upsert refreshes `binding.spec.snapshots[<id>]` to remote-current so
                 // the push pass below sees only fields the user has edited
                 // locally since the last pull.
@@ -622,8 +622,8 @@ export const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCurs
                 }
 
                 // Push: snapshot-diff every locally-mirrored object back to
-                // Linear. Workflow states are fetched lazily — only when at least
-                // one local Task status diverged — so read-only syncs don't pay
+                // Linear. Workflow states are fetched lazily - only when at least
+                // one local Task status diverged - so read-only syncs don't pay
                 // the round-trip.
                 let workflowStates: ReadonlyArray<LinearApi.WorkflowState> | undefined;
                 const resolveStateId = (issue: LinearApi.Issue, status: NonNullable<Task.Task['status']>) => {
@@ -652,7 +652,7 @@ export const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCurs
                   resolveStateId,
                 });
 
-                // TODO(wittjosiah): Comments sync disabled — re-enable once
+                // TODO(wittjosiah): Comments sync disabled - re-enable once
                 // chunked/yielded to avoid automerge_wasm crash when upserting
                 // many comments in one tick.
 

@@ -30,8 +30,8 @@ type MediaQueryDemoProps = {
 
 /**
  * Test:
- * 1. Resize the window across the tracked breakpoint — "matches" must flip live.
- * 2. Switch the `query` control to another breakpoint — "matches" must immediately reflect the
+ * 1. Resize the window across the tracked breakpoint - "matches" must flip live.
+ * 2. Switch the `query` control to another breakpoint - "matches" must immediately reflect the
  *    new query at the current width.
  */
 const MediaQueryDemo = ({ query }: MediaQueryDemoProps) => {

@@ -109,7 +109,7 @@ const Component = ({
   }, [markersRef]);
 
   useEffect(() => {
-    // Prime the projector with the initial graph — `model.subscribe` only fires on changes by default,
+    // Prime the projector with the initial graph - `model.subscribe` only fires on changes by default,
     // so without this the simulation starts empty and the renderer never sees any nodes.
     // The subscribe callback receives `(model, graph)` from GraphModel; use the model reference
     // we already have to fetch the current snapshot.
@@ -201,7 +201,7 @@ export const Default: Story = {
 export const Bullets: Story = {
   args: {
     graph: () => convertTreeToGraph(createTree({ depth: 4 })),
-    children: <span>⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.</span>,
+    children: <span>&#x2318;-DRAG to edge or create node; &#x2318;-CLICK to delete edge.</span>,
     link: true,
     grid: false,
     projectorOptions: {

@@ -19,7 +19,7 @@ import { type ModelPolicy, resolveModel } from '../model-policy.ts';
 export type TagResult = {
   readonly tags: string[];
   readonly spam: boolean;
-  /** No-action automated mail (receipts, logins, confirmations) — distinct from spam and from action-required mail. */
+  /** No-action automated mail (receipts, logins, confirmations) - distinct from spam and from action-required mail. */
   readonly bulk: boolean;
 };
 
@@ -27,19 +27,19 @@ const TAG_PROMPT = trim`
   Classify the following email. Assign between 1 and 5 short, lowercase, single-word topic tags
   (e.g. "invoice", "newsletter", "security", "personal"). Decide whether the email is spam or a
   cold marketing blast; if so include the tag "spam".
-  Decide whether the email is "bulk" — automated, no-action mail such as receipts, login or
+  Decide whether the email is "bulk" - automated, no-action mail such as receipts, login or
   security notices, order/shipping confirmations, or newsletters. If so include the tag "bulk".
   Do NOT tag invoices, payment requests, or anything that needs a reply as "bulk".
   Respond with ONLY a JSON object of the form {"tags": string[], "spam": boolean}.
 `;
 
-// No-action transactional/automated mail — receipts, login/security notices, order & shipping
+// No-action transactional/automated mail - receipts, login/security notices, order & shipping
 // confirmations, newsletters. These get a `bulk` tag (nothing for the user to do), distinct from
 // spam (unsolicited) and from invoices / payment requests (which DO require action).
 const BULK_SUBJECT_RE =
   /\b(receipts?|your (order|purchase|receipt)|order (confirmation|placed|shipped|#)|(has )?shipped|out for delivery|tracking (number|info)|sign[-\s]?in|log[-\s]?in|new login|verify( your)?|verification code|confirm your (email|address)|password reset|welcome to|newsletter|digest|weekly (update|digest)|unsubscribe|subscription (confirmed|renewed))\b/i;
 
-// Action-required financial mail — must NOT be classified bulk even when it looks automated.
+// Action-required financial mail - must NOT be classified bulk even when it looks automated.
 const ACTION_SUBJECT_RE =
   /\b(invoices?|payment (due|request|reminder|required)|amount due|balance due|past due|overdue|outstanding balance|please pay|remittance|bill(ing)? (due|statement)|pay now)\b/i;
 
@@ -47,12 +47,12 @@ const ACTION_SUBJECT_RE =
 const BULK_LOCALPART_RE =
   /^(no-?reply|do-?not-?reply|receipts?|notifications?|notify|alerts?|updates?|news(letter)?|digest|mailer|postmaster)([._+-]|$)/i;
 
-// A body-level unsubscribe affordance — the strongest deterministic bulk give-away (a person doesn't
+// A body-level unsubscribe affordance - the strongest deterministic bulk give-away (a person doesn't
 // put an unsubscribe link on a real message). Matched when the `List-Unsubscribe` header is absent.
 const UNSUBSCRIBE_BODY_RE = /\bunsubscribe\b/i;
 
 /**
- * Deterministic bulk / no-action signal. Returns `'bulk'` for mailing-list / automated mail —
+ * Deterministic bulk / no-action signal. Returns `'bulk'` for mailing-list / automated mail -
  * **any unsubscribe affordance** (a `List-Unsubscribe` header or an unsubscribe link in the body) is
  * the top-priority give-away (RFC 2369), followed by receipts / logins / order confirmations /
  * newsletters and no-reply role senders. Returns `'action'` when the mail requires a response
@@ -66,7 +66,7 @@ export const classifyBulk = (input: {
   /** Message body text, scanned for an unsubscribe link when the header is absent (e.g. fixtures). */
   readonly bodyText?: string;
 }): 'bulk' | 'action' | 'unknown' => {
-  // An unsubscribe affordance deterministically marks bulk — it outranks even action-looking subjects,
+  // An unsubscribe affordance deterministically marks bulk - it outranks even action-looking subjects,
   // since transactional invoices/payment requests don't carry one.
   if ((input.listUnsubscribe ?? '').length > 0 || UNSUBSCRIBE_BODY_RE.test(input.bodyText ?? '')) {
     return 'bulk';

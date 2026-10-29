@@ -17,7 +17,7 @@ import { findChannelForDiscordChannel } from './sync.ts';
 
 /**
  * Find-or-create the empty local root for a Discord channel: a feed-backed
- * `Channel` keyed by the Discord channel id. Idempotent — re-running on the
+ * `Channel` keyed by the Discord channel id. Idempotent - re-running on the
  * same `(space, channel)` returns the same Channel.
  *
  * Materialization is eager (binding creation), so the Channel exists before
@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.MaterializeDiscordT
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
         invariant(remoteTarget, 'Discord is a multi-target connector; remoteTarget is required.');
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
-        //   have it provided by the OperationInvoker — composer's invoker is wired
+        //   have it provided by the OperationInvoker - composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
         const db = connection.target ? Obj.getDatabase(connection.target) : undefined;

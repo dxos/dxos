@@ -38,7 +38,7 @@ export const translations = [
           'Where Claude Code on this computer works; each delegated task gets its own git worktree of it. Cloud sessions check out the repositories above instead.',
         'project-folder.empty.label': 'Not set',
         'project-folder.path.placeholder': '/Users/me/code/project',
-        'project-folder.choose.label': 'Choose folder…',
+        'project-folder.choose.label': 'Choose folder...',
         'project-folder.clear.label': 'Clear',
       },
     },

@@ -12,7 +12,7 @@ export type ProcessIdGenerator = () => Process.ID;
 export const UUIDProcessIdGenerator: ProcessIdGenerator = () => Process.ID.make(crypto.randomUUID());
 
 /**
- * Generates sequential string process ids (`0`, `1`, …); useful in tests.
+ * Generates sequential string process ids (`0`, `1`, ...); useful in tests.
  */
 export const SequentialProcessIdGenerator: ProcessIdGenerator = (() => {
   let nextId = 0;

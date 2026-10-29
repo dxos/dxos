@@ -40,7 +40,7 @@ const rootCallee = (node) => {
   return current;
 };
 
-/** `Schema.Struct` / `Schema.Record` / … for an expression whose root is a `Schema.X` call. */
+/** `Schema.Struct` / `Schema.Record` / ... for an expression whose root is a `Schema.X` call. */
 const schemaConstructor = (node) => {
   let current = node;
   while (ts.isCallExpression(current)) {

@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { ToolId } from '@dxos/ai';
 import { Annotation, Database, DXN, Filter, Format, Obj, Ref, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-// Text is referenced in the inferred type of Skill (via Template.Template → Ref.Ref(Text.Text));
+// Text is referenced in the inferred type of Skill (via Template.Template -> Ref.Ref(Text.Text));
 // the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Text } from '@dxos/schema';
@@ -30,7 +30,7 @@ import * as Trigger from './Trigger.ts';
  * and say what it is. Credentials and MCP servers do not belong here: a server is a connection, which
  * the space owns and each conversation can turn off.
  *
- * The registry `key` and `version` are stored in the object meta — access them via
+ * The registry `key` and `version` are stored in the object meta - access them via
  * `Obj.getMeta(skill).key` and `Obj.getMeta(skill).version`.
  */
 export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill', '0.2.0'))(
@@ -164,14 +164,14 @@ export const make: {
  * through the server's `loadSkill` tool.
  *
  * Opt-in: a skill written for an in-app chat runtime may assume tools an MCP client does not have,
- * and only the author can judge whether the workflow still holds on the MCP surface. Absent ⇒ the
+ * and only the author can judge whether the workflow still holds on the MCP surface. Absent => the
  * skill stays internal to hosts that resolve skills directly.
  *
- * Rides in the object's meta rather than on `Definition`, so it survives into a persisted skill —
+ * Rides in the object's meta rather than on `Definition`, so it survives into a persisted skill -
  * `Definition` is a build-time factory type and cannot describe a skill stored in a space.
  */
 /**
- * Skill keys a session scoped to an instance of the annotated type should carry — read by the AI
+ * Skill keys a session scoped to an instance of the annotated type should carry - read by the AI
  * companion, the blank routine template, and project chat creation. Held as plain dotted keys so the
  * annotated type does not depend on the plugin that owns each skill.
  */
@@ -226,7 +226,7 @@ export type Definition = {
   make: () => Skill;
   /**
    * Operation definitions behind the skill's `tools` list, for hosts that serve the skill without
-   * a registry to resolve ToolIds against (see mcp-server `McpServer.fromSkills`). Absent ⇒ the skill is
+   * a registry to resolve ToolIds against (see mcp-server `McpServer.fromSkills`). Absent => the skill is
    * only served through a registry-backed host.
    */
   operations?: readonly Operation.Definition.Any[];

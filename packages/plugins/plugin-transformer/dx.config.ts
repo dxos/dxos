@@ -16,7 +16,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Browser-based machine learning plugin that runs Hugging Face Transformers.js models
-      entirely in-browser via WebAssembly and WebGPU — no server-side inference required.
+      entirely in-browser via WebAssembly and WebGPU - no server-side inference required.
 
       Provides automatic speech recognition through a Whisper pipeline hook (usePipeline)
       and a microphone capture hook (useAudioStream) that buffers 16 kHz mono audio into

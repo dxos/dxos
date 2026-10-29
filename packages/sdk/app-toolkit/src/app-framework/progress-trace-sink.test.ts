@@ -356,7 +356,7 @@ describe('makeTraceSink', () => {
 
 // `plugin-magazine`'s curate run, which is what surfaced this: phase 0 counts the feeds, phase 1 is a
 // single opaque agent call over every candidate and so reports no total. Observed in the statusbar as
-// "Syncing feeds  0 / 1" with the stepper already on step 2 — phase 1 drawing phase 0's count.
+// "Syncing feeds  0 / 1" with the stepper already on step 2 - phase 1 drawing phase 0's count.
 describe('phase counts', () => {
   test('entering a phase clears the count the previous one reported', () => {
     const registry = Registry.make();
@@ -409,7 +409,7 @@ describe('phase counts', () => {
 });
 
 // Measured against a live mailbox on 2026-08-23: an edge sync emitted its opening status and nothing
-// further — no total, no increments, and no terminal — leaving the meter sweeping indefinitely over a
+// further - no total, no increments, and no terminal - leaving the meter sweeping indefinitely over a
 // run that was no longer reporting. Every terminal a producer can emit travels the same lossy path
 // its progress does (a killed process runs no finalizer, a defect escapes the error channel, a swarm
 // broadcast is fire-and-forget), so the sink cannot rely on being told a run ended.
@@ -439,7 +439,7 @@ describe('stall bound', () => {
     vi.advanceTimersByTime(1);
     const task = registry.get(progress.monitorAtom(key));
     expect(task?.status).toBe('error');
-    // Not "failed": the run may have finished or still be going — what is known is that it went quiet.
+    // Not "failed": the run may have finished or still be going - what is known is that it went quiet.
     expect(task?.error).toBe(STATUS_STALLED);
   });
 
@@ -464,7 +464,7 @@ describe('stall bound', () => {
   });
 
   // An edge continuation reports under a fresh pid against the same run, so it re-points the entry
-  // rather than re-registering — the path that would most easily lose the timer.
+  // rather than re-registering - the path that would most easily lose the timer.
   test('a continuation under a new pid keeps the run bounded', () => {
     withFakeTimers();
     const registry = Registry.make();
@@ -531,7 +531,7 @@ describe('stall bound', () => {
   });
 
   // The dismiss control on a failed meter routes back through the sink, which has to still know the
-  // key — a stall that forgot the monitor would leave a meter nothing can clear.
+  // key - a stall that forgot the monitor would leave a meter nothing can clear.
   test('a stalled monitor can still be dismissed', () => {
     withFakeTimers();
     const registry = Registry.make();
@@ -562,7 +562,7 @@ describe('stall bound', () => {
 
 describe('cancel tombstone (pid scope, default)', () => {
   // After a cancel, the dying run's tail keeps broadcasting for a moment (edge abort is not
-  // instantaneous) — those events must not resurrect the meter. A genuinely new run (new pid) must
+  // instantaneous) - those events must not resurrect the meter. A genuinely new run (new pid) must
   // still register, so a failed cancel stays visible.
   test('events from the cancelled pid do not resurrect the monitor; a new run does', () => {
     const registry = Registry.make();
@@ -578,7 +578,7 @@ describe('cancel tombstone (pid scope, default)', () => {
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 2, total: 5 } }, { pid: 'run-1' }));
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
-    // Fresh run — new pid — registers normally.
+    // Fresh run - new pid - registers normally.
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 0, total: 5 } }, { pid: 'run-2' }));
     const task = registry.get(progress.monitorAtom(key));
     expect(task?.current).toBe(0);
@@ -590,7 +590,7 @@ describe('cancel tombstone (run scope)', () => {
   // An edge run is a chain of bounded invocations, each with a fresh pid. A pid tombstone would only
   // mask the link in-flight at cancel; the next link (new pid) would resurrect the meter. `run` scope
   // suppresses the key until the run's terminal status, so the whole chain's tail stays hidden and a
-  // later run re-shows — matching the local, single-pid cancel behaviour.
+  // later run re-shows - matching the local, single-pid cancel behaviour.
   test('suppresses the whole cancelled chain (any pid) until a terminal status; a later run re-shows', () => {
     const registry = Registry.make();
     const progress = makeRegistry(registry);
@@ -601,15 +601,15 @@ describe('cancel tombstone (run scope)', () => {
     progress.cancel(key);
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
-    // Tail of the in-flight link — same pid — stays suppressed.
+    // Tail of the in-flight link - same pid - stays suppressed.
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 2, total: 5 } }, { pid: 'link-1' }));
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
-    // Next chain link — a fresh pid — must NOT resurrect (this is what a pid tombstone would miss).
+    // Next chain link - a fresh pid - must NOT resurrect (this is what a pid tombstone would miss).
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 3, total: 5 } }, { pid: 'link-2' }));
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
-    // The run ends (edge abort emits a terminal Cancelled) — releases the tombstone, still hidden.
+    // The run ends (edge abort emits a terminal Cancelled) - releases the tombstone, still hidden.
     sink.write(statusMessage({ message: STATUS_CANCELLED, progress: { key } }, { pid: 'link-2' }));
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 
@@ -654,7 +654,7 @@ describe('cancel tombstone (run scope)', () => {
     sink.write(statusMessage({ message: 'Inbox', progress: { key, current: 1, total: 5 } }, { pid: 'link-1' }));
     progress.cancel(key);
 
-    // The run drains and completes naturally before the abort lands — suppressed, but released.
+    // The run drains and completes naturally before the abort lands - suppressed, but released.
     sink.write(statusMessage({ message: STATUS_COMPLETE, progress: { key } }, { pid: 'link-2' }));
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
 

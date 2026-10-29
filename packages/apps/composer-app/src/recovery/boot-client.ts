@@ -55,7 +55,7 @@ export const bootRecoveryClient = async (): Promise<Client> => {
         },
         services: {
           signaling: [],
-          // Recovery is offline/local — no edge fetch (recovery.html CSP blocks external connect-src).
+          // Recovery is offline/local - no edge fetch (recovery.html CSP blocks external connect-src).
           edge: {
             url: '',
           },

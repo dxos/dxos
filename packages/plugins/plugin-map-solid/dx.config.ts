@@ -21,7 +21,7 @@ const config: Plugin.PluginConfig = Plugin.config({
 
       The component derives geographic markers reactively from the Map's linked View: as rows are added or
       updated in the underlying ECHO dataset, pins appear or move on the map without a full remount.
-      Two rendering modes are available — a standard 2-D tile map and an interactive 3-D globe —
+      Two rendering modes are available - a standard 2-D tile map and an interactive 3-D globe -
       toggled locally per surface instance.
 
       The custom element uses noShadowDOM so host Tailwind utility classes apply inside the component,

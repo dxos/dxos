@@ -18,7 +18,7 @@ export type TaskRowProps = {
 };
 
 /**
- * One task as a list row — status, title, assignee and the contributed actions menu — for a task shown
+ * One task as a list row - status, title, assignee and the contributed actions menu - for a task shown
  * beside the object it relates to (e.g. under the email it was extracted from).
  */
 export const TaskRow = ({ subject: task }: TaskRowProps) => {

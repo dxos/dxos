@@ -45,7 +45,7 @@ const BALCONY = 'is:lh:amenity=balcony';
 const f = (id, part) => `${PANEL} [data-testid="lighthouse.filter.${id}.${part}"]`;
 
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 const shot = async (page, name) => {
   if (SCREENS) {
@@ -53,7 +53,7 @@ const shot = async (page, name) => {
   }
 };
 
-/** "42 of 123" → 42. */
+/** "42 of 123" -> 42. */
 const kept = async (page, selector = COUNT) =>
   Number(((await page.locator(selector).first().textContent()) ?? '').trim().split(' of ')[0]);
 
@@ -69,7 +69,7 @@ const settle = (page) => page.waitForTimeout(800);
 export const steps = [
   ...research.filter((step) => step.setup),
   {
-    name: 'setup: clear the session’s filters and sort',
+    name: "setup: clear the session's filters and sort",
     setup: true,
     run: async () => {
       const token = (await readFile(TOKEN_FILE, 'utf8')).trim();
@@ -86,7 +86,7 @@ export const steps = [
   {
     name: 'Open the Warsaw apartments session',
     run: async ({ demo, page }) => {
-      await demo.title({ value: 'Your filters, the agent’s ranking', subtitle: 'Filters and sort on the results' });
+      await demo.title({ value: "Your filters, the agent's ranking", subtitle: 'Filters and sort on the results' });
       await caption(demo, 1, 'Open the Warsaw apartment search started in lighthouse');
       await demo.click({ selector: '[data-testid="treeItem.heading"]:text-is("Home")', label: 'Home' });
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"]', label: 'Create' });
@@ -108,7 +108,7 @@ export const steps = [
   {
     name: 'Press Filters on the toolbar',
     run: async ({ demo, page }) => {
-      await caption(demo, 2, 'Filters come from the results’ own properties');
+      await caption(demo, 2, "Filters come from the results' own properties");
       await demo.click({ selector: `${PLANK} [aria-label="Filters"]`, label: 'Filters' });
       await page.locator(f(TOTAL, 'max')).waitFor({ timeout: 10_000 });
       await settle(page);
@@ -120,7 +120,7 @@ export const steps = [
     name: 'Total monthly cost at most 6000, rooms at least 2',
     run: async ({ demo, page }) => {
       const before = await kept(page);
-      await caption(demo, 3, 'Rent + czynsz ≤ 6000, two rooms or more');
+      await caption(demo, 3, 'Rent + czynsz <= 6000, two rooms or more');
       await demo.fill({ selector: f(TOTAL, 'max'), value: '6000', label: 'at most 6000' });
       await page.locator(f(TOTAL, 'max')).press('Enter');
       await settle(page);

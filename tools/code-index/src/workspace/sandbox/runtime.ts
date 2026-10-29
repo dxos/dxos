@@ -10,8 +10,8 @@
 // end the run with a result of the snippet's choosing. The parent therefore opens a fourth pipe
 // (fd 3) for the protocol and hands stdout to the snippet.
 //
-// The descriptor alone does not authenticate anything — a snippet can `import('node:fs')` and write
-// to fd 3 itself — so every frame carries the token below and the parent drops frames without it.
+// The descriptor alone does not authenticate anything - a snippet can `import('node:fs')` and write
+// to fd 3 itself - so every frame carries the token below and the parent drops frames without it.
 //
 
 import { writeSync } from 'node:fs';
@@ -116,10 +116,10 @@ const dispatch = (line: string): void => {
 
 /**
  * The snippet, evaluated as an async function so top-level `await` works. `AsyncFunction` rather
- * than `eval` keeps the host's own locals — the protocol state above — out of the snippet's scope
+ * than `eval` keeps the host's own locals - the protocol state above - out of the snippet's scope
  * chain.
  *
- * A snippet that is one whole expression is compiled as `return (…)` so its value is the result;
+ * A snippet that is one whole expression is compiled as `return (...)` so its value is the result;
  * anything with statements in it is a function body, where `return` and `print` are the two ways
  * to report something. Which form applies is decided by whether the expression form parses, so a
  * snippet never has to declare its own shape.

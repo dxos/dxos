@@ -27,7 +27,7 @@ export interface TraceImportsOptions {
   readonly from?: string;
   /** Package export subpath (e.g. `./plugin`) resolved via `package.json` exports. */
   readonly exportSubpath?: string;
-  /** Target spec — package, path, or glob. See `--to` in the CLI. */
+  /** Target spec - package, path, or glob. See `--to` in the CLI. */
   readonly to: string;
   /** Limit the number of distinct chains we render (default: 10). */
   readonly maxChains?: number;
@@ -151,10 +151,10 @@ const renderTree = (chainsOfLabels: readonly (readonly string[])[]): string => {
   const lines: string[] = [];
   const visit = (node: TreeNode, prefix: string, isLast: boolean, label: string | null): void => {
     if (label !== null) {
-      const branch = prefix + (isLast ? '└─ ' : '├─ ');
+      const branch = prefix + (isLast ? '+- ' : '+- ');
       lines.push(branch + label);
     }
-    const childPrefix = label === null ? '' : prefix + (isLast ? '   ' : '│  ');
+    const childPrefix = label === null ? '' : prefix + (isLast ? '   ' : '|  ');
     const entries = [...node.children.entries()];
     entries.forEach(([childLabel, childNode], index) => {
       visit(childNode, childPrefix, index === entries.length - 1, childLabel);
@@ -305,7 +305,7 @@ export const traceImports = (options: TraceImportsOptions): TraceImportsResult =
   if (unresolvedSubpaths.length > 0) {
     throw new Error(
       [
-        `unresolved subpath imports under conditions [${conditions.join(',')}] — the crawl stopped there, so this trace proves nothing:`,
+        `unresolved subpath imports under conditions [${conditions.join(',')}] - the crawl stopped there, so this trace proves nothing:`,
         ...unresolvedSubpaths.map((entry) => `  ${entry}`),
         'A `#` import always has a target in its own package.json; a failure means the condition resolves to a file that was never built.',
       ].join('\n'),

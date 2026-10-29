@@ -144,7 +144,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
           // (missing 'conversation' in spawn environment) that callers cannot recover from.
           return yield* Effect.die(
             new ServiceResolver.ServiceNotAvailableError(HarnessService.key, {
-              message: `Service not available: ${HarnessService.key} — process spawn is missing 'conversation' in environment (set via Operation.withInvocationOptions or ProcessManager.spawn environment)`,
+              message: `Service not available: ${HarnessService.key} - process spawn is missing 'conversation' in environment (set via Operation.withInvocationOptions or ProcessManager.spawn environment)`,
             }),
           );
         }
@@ -180,7 +180,7 @@ export const make = ({
     );
     const boundBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     // Cached rather than resolved up front: a harness is built for every operation the agent
-    // invokes, and most never ask for the chat — resolving one here would put a lookup on the tool
+    // invokes, and most never ask for the chat - resolving one here would put a lookup on the tool
     // path. The agent process is spawned against the chat, so the host is discovered by the chat's
     // URI; a feed with no chat (e.g. a bare `AiSession`) keeps the feed as its own host target.
     const chat = yield* Effect.cached(Chat.loadForFeed(feed).pipe(Effect.provide(runtime)));
@@ -247,8 +247,8 @@ const chatOrFail = (chat: Effect.Effect<Chat.Chat | undefined, never>): Effect.E
   Effect.flatMap(chat, (chat) => (chat ? Effect.succeed(chat) : Effect.fail(new NotSupportedError())));
 
 /**
- * Resolves the live host owning `conversation` per call (so a process replacement — e.g. a model
- * switch — is never captured stale) and exposes its `HarnessControl` RPC client.
+ * Resolves the live host owning `conversation` per call (so a process replacement - e.g. a model
+ * switch - is never captured stale) and exposes its `HarnessControl` RPC client.
  */
 const lookupOwningHost = (
   processManager: Context.Service.Shape<typeof ProcessManager.Service>,
@@ -271,6 +271,6 @@ const lookupOwningHost = (
     // spawn site (agent-process declares it as its `rpcs`); narrow the variance-erased
     // `RpcClient<any>` to that contract so the dispatch below is typed. No typed path exists here:
     // the host handle carries `RpcClient<any>` (design spec §4.4) and the concrete definition lives
-    // in `@dxos/functions-runtime`, which depends on this package — importing it would cycle.
+    // in `@dxos/functions-runtime`, which depends on this package - importing it would cycle.
     return host.rpc as unknown as RpcClient.RpcClient<HarnessControlRpcs>;
   });

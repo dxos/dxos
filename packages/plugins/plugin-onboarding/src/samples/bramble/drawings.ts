@@ -28,14 +28,14 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 
 //
-// Sketches — tldraw v3 store format
+// Sketches - tldraw v3 store format
 //
 // Records are created via the @tldraw/tlschema + @tldraw/store API so the
 // canvas content is always in the exact format the installed tldraw version
 // expects. @tldraw/tlschema and @tldraw/store have no DOM dependencies and
 // work fine in Node.js.
 //
-// ⚠️  tldraw v3 IndexKey rules (fractional indexing):
+// Warning:  tldraw v3 IndexKey rules (fractional indexing):
 //   - Every shape and page needs an `index` field that is a valid IndexKey.
 //   - Valid format: one or more lowercase letters followed by digits/alphanumeric
 //     (e.g. 'a1', 'a2', 'a9', 'a10', 'a1J', 'b0V').
@@ -43,7 +43,7 @@ import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 //     patterns that don't survive fractional-index round-trips like 'b1', 'b2'.
 //     These look reasonable but throw at `store.put()` time:
 //       ValidationError: At shape(type = geo).index: Expected an index key, got "b2"
-//   - Safe rule: use 'a1', 'a2', … 'a9', 'a10', 'a11', … for sequential shapes
+//   - Safe rule: use 'a1', 'a2', ... 'a9', 'a10', 'a11', ... for sequential shapes
 //     on a single page.  Never use 'b1', 'b2', etc. as a "next row".
 //   - The error is silently swallowed by plugin-tldraw's useAsyncEffect, so a
 //     bad index key results in an empty canvas with no console error in the UI.
@@ -83,8 +83,8 @@ const makeTLCanvas = (pageId: string, pageName: string, shapes: TLRecord[]): Rec
  *
  * @param id   - Shape ID suffix (prefixed with `shape:`).
  * @param page - Parent page ID (e.g. `'page:bramble-floor'`).
- * @param idx  - Fractional-index key. Use 'a1', 'a2', … 'a9', 'a10', 'a11', …
- *   for sequential shapes. Do NOT use 'b1', 'b2', etc. — those fail tldraw v3
+ * @param idx  - Fractional-index key. Use 'a1', 'a2', ... 'a9', 'a10', 'a11', ...
+ *   for sequential shapes. Do NOT use 'b1', 'b2', etc. - those fail tldraw v3
  *   IndexKey validation and silently produce an empty canvas in the UI.
  */
 const tlGeo = (
@@ -147,7 +147,7 @@ const makeFloorPlanContent = (): Record<string, unknown> => {
   ) => tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
 
   return makeTLCanvas(PAGE, 'Roastery Floor Plan', [
-    // Outer boundary (no label — the sketch name serves as the title)
+    // Outer boundary (no label - the sketch name serves as the title)
     g('fp-outer', 'a1', 0, 0, 800, 580, '', 'black', 'none'),
     // Loading dock (top strip)
     g('fp-dock', 'a2', 20, 20, 760, 80, 'Loading Dock', 'grey', 'semi'),
@@ -164,7 +164,7 @@ const makeFloorPlanContent = (): Record<string, unknown> => {
   ]);
 };
 
-// Spring Blend Flavor Wheel — 4-column rectangle grid.
+// Spring Blend Flavor Wheel - 4-column rectangle grid.
 // Each column is one flavor family (Fruit / Chocolate / Floral / Spice);
 // rows beneath each header list the specific tasting notes.
 //
@@ -173,7 +173,7 @@ const makeFloorPlanContent = (): Record<string, unknown> => {
 //   Row 1 (y=80,  h=80): 4 category headers, colored fill
 //   Row 2 (y=180, h=60): first tasting note per category
 //   Row 3 (y=260, h=60): second tasting note per category
-//   Column width: 180 px, gap 10 px  →  total canvas: 750 × 320 px
+//   Column width: 180 px, gap 10 px  ->  total canvas: 750 × 320 px
 const makeFlavorWheelContent = (): Record<string, unknown> => {
   const PAGE = 'page:flavor-wheel';
   const COL_W = 180;
@@ -194,7 +194,7 @@ const makeFlavorWheelContent = (): Record<string, unknown> => {
 
   return makeTLCanvas(PAGE, 'Spring Blend Flavor Wheel', [
     // Row 0: title
-    g('fw-title', 'a1', 0, 0, x(3) + COL_W, 60, 'Spring Blend — Flavor Profile', 'black', 'semi'),
+    g('fw-title', 'a1', 0, 0, x(3) + COL_W, 60, 'Spring Blend - Flavor Profile', 'black', 'semi'),
     // Row 1: category headers
     g('fw-cat-fruit', 'a2', x(0), 80, COL_W, 80, 'Fruit', 'red', 'semi'),
     g('fw-cat-choc', 'a3', x(1), 80, COL_W, 80, 'Chocolate', 'orange', 'semi'),

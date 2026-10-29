@@ -77,8 +77,8 @@ export const ViewModeExtension = MarkdownNamespace.make<ViewModeExtension>()('vi
  * the same thing everywhere else in the app: listed by `composer.operations()`, invocable from a
  * skill, the debug port or a QA flow, and typed at its boundary. A closure would be none of those.
  *
- * The operation is invoked with {@link MarkdownOperation.EditorCommandInput} — the attendable id of
- * the surface and the offset the trigger was consumed at — and reaches the live view through
+ * The operation is invoked with {@link MarkdownOperation.EditorCommandInput} - the attendable id of
+ * the surface and the offset the trigger was consumed at - and reaches the live view through
  * {@link EditorViews}, as `scrollToAnchor` does.
  */
 export type MenuExtension = {
@@ -105,8 +105,8 @@ export type ReviewMode = 'editing' | 'suggesting' | 'viewing';
 export type MarkdownExtensionProvider = (props: {
   document?: Markdown.Document;
   /**
-   * The object whose text the editor edits when it is not a markdown document — an outline, a task
-   * set — so a contribution that resolves against the object's project (a `#123` reference) can.
+   * The object whose text the editor edits when it is not a markdown document - an outline, a task
+   * set - so a contribution that resolves against the object's project (a `#123` reference) can.
    */
   subject?: Obj.Unknown;
   viewMode?: EditorViewMode;
@@ -162,16 +162,16 @@ export type EditorBinding = {
   viewMode?: EditorViewMode;
   /** True while a binding resolves; the editor must not mount (edits could land on the wrong document). */
   loading: boolean;
-  /** True when no explicit version/branch is selected — gates the review-mode entries in the view-mode dropdown. */
+  /** True when no explicit version/branch is selected - gates the review-mode entries in the view-mode dropdown. */
   ambient: boolean;
   /**
    * One entry point for the view-mode dropdown: a built-in editor mode or a contributed review mode.
-   * The binding owns what a selection means — both the review posture and the editor view mode are
+   * The binding owns what a selection means - both the review posture and the editor view mode are
    * decided together, so the two can never be stored in contradiction (a stale readonly view mode
    * surviving into Suggesting was exactly that bug).
    */
   selectViewMode: (selection: ViewModeSelection) => void;
-  /** The contributed entry currently active (checked in the dropdown); undefined ⇒ a built-in is active. */
+  /** The contributed entry currently active (checked in the dropdown); undefined => a built-in is active. */
   activeReviewMode?: ReviewMode;
   /** Extra props forwarded to every {@link MarkdownExtensionProvider} call. */
   extensionProps?: Pick<

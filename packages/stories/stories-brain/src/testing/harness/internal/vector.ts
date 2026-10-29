@@ -58,7 +58,7 @@ export const buildVectorStore = async (messages: readonly Message.Message[]): Pr
       const result = index.search(queryVector, Math.min(limit, entries.length), 0);
       const keys = [...result.keys];
       const distances = [...result.distances];
-      // USearch cosine returns a distance in [0, 2]; similarity ≈ 1 − distance.
+      // USearch cosine returns a distance in [0, 2]; similarity ~ 1 - distance.
       return keys.map((key, rank) => ({
         text: entries[Number(key)].text.slice(0, 600),
         source: entries[Number(key)].source,
@@ -68,7 +68,7 @@ export const buildVectorStore = async (messages: readonly Message.Message[]): Pr
   };
 };
 
-/** A `VectorStore` layer built from the message corpus — injected via `extraServices`. */
+/** A `VectorStore` layer built from the message corpus - injected via `extraServices`. */
 export const vectorStoreLayer = (messages: readonly Message.Message[]): Layer.Layer<VectorStore> =>
   Layer.effect(
     VectorStore,

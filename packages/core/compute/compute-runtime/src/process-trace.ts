@@ -15,7 +15,7 @@ import { detachData } from './trace-buffer.ts';
 export interface ProcessTraceServiceOptions {
   /** Id of the process whose events we're tagging. */
   readonly pid: Process.ID;
-  /** Parent process id (if any) — copied onto {@link Trace.Message.meta}. */
+  /** Parent process id (if any) - copied onto {@link Trace.Message.meta}. */
   readonly parentPid?: Process.ID;
   /** Human-readable process name for trace visualization. */
   readonly processName?: string;
@@ -51,7 +51,7 @@ export const createProcessTraceService = (
   write: (event, data) => {
     try {
       // TODO(dmaretskyi): Batching.
-      // Detach `data` from any ECHO proxy state — nested reactive
+      // Detach `data` from any ECHO proxy state - nested reactive
       // objects would otherwise cause `Obj.make` to fail when it
       // recurses through the Schema.Unknown event payload and tries
       // to re-attach schema metadata to non-configurable proxies.

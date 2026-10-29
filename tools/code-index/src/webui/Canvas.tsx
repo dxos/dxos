@@ -108,7 +108,7 @@ const DiagramPanel = (props: { content: string }) => {
     return Result.isSuccess(current) ? layoutInWorker(current.success)() : undefined;
   });
 
-  // The source stays visible on failure — otherwise the user sees an empty panel and the agent
+  // The source stays visible on failure - otherwise the user sees an empty panel and the agent
   // believes it answered.
   const failure = () => {
     const current = read();
@@ -128,7 +128,7 @@ const DiagramPanel = (props: { content: string }) => {
         </div>
       }
     >
-      <Show when={layout()?.objects} fallback={<p class='text-description p-2 text-sm'>Laying out…</p>}>
+      <Show when={layout()?.objects} fallback={<p class='text-description p-2 text-sm'>Laying out...</p>}>
         {(objects) => (
           <div class='p-2'>
             <ReactIsland

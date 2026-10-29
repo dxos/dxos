@@ -8,8 +8,8 @@ import { planRoute } from './route.ts';
 
 /**
  * Cells of `domain`, grouped into connected components via BFS over nav-grid neighbors, largest
- * first. Reachability guarantees — both for placing a new object and for picking its next
- * destination on arrival — only hold within a single connected component: arbitrary passable cells
+ * first. Reachability guarantees - both for placing a new object and for picking its next
+ * destination on arrival - only hold within a single connected component: arbitrary passable cells
  * can sit on a disconnected landmass (or, rarely, a disconnected sea).
  */
 const largestComponent = (grid: NavGrid, domain: Domain): NavCell[] => {
@@ -76,14 +76,14 @@ export type PickReachableTargetOptions = {
   grid: NavGrid;
   domain: Domain;
   from: Vec3;
-  /** A `[0, 1)` generator — a seeded PRNG for deterministic callers, `Math.random` otherwise. */
+  /** A `[0, 1)` generator - a seeded PRNG for deterministic callers, `Math.random` otherwise. */
   random: () => number;
 };
 
 /**
  * A reachable destination for `domain`, starting from a `random()`-chosen candidate and walking
  * forward through the rest of `domainCandidates` deterministically until one has a non-empty route
- * from `from` — grid quantization at component boundaries can occasionally make the first pick
+ * from `from` - grid quantization at component boundaries can occasionally make the first pick
  * unreachable even though it belongs to the domain's largest connected component.
  */
 export const pickReachableTarget = ({ grid, domain, from, random }: PickReachableTargetOptions): Vec3 => {
@@ -96,7 +96,7 @@ export const pickReachableTarget = ({ grid, domain, from, random }: PickReachabl
     }
   }
   // Every candidate failed line-of-sight/A* from `from`: fall back to the `random()` pick anyway
-  // rather than throwing — `routeFrom` will produce a single-point route and the object simply
+  // rather than throwing - `routeFrom` will produce a single-point route and the object simply
   // tries again next leg.
   return candidates[start].unit;
 };

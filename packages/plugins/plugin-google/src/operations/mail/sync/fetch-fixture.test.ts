@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
 import { googleSyncLiveServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
 
-/** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
+/** {@link seedMailboxBinding} with this provider's identity - the shared fixture defaults to neither. */
 const seedGmailBinding = (
   builder: EchoTestBuilder,
   options: Omit<Parameters<typeof seedMailboxBinding>[1], 'source' | 'connectorId'> = {},
@@ -29,7 +29,7 @@ const FIXTURE_OUT = process.env.FIXTURE_OUT;
 /**
  * The fixture-fetch tool (see scripts/google-auth.mjs + scripts/fetch-fixture.mjs): syncs a real
  * Gmail account in-process against the live API and writes the exported feed to FIXTURE_OUT. Skipped
- * unless GOOGLE_ACCESS_TOKEN + FIXTURE_OUT are set — it is a manual tool, never a CI unit test.
+ * unless GOOGLE_ACCESS_TOKEN + FIXTURE_OUT are set - it is a manual tool, never a CI unit test.
  */
 describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live Gmail', () => {
   test(
@@ -37,7 +37,7 @@ describe.skipIf(!ACCESS_TOKEN || !FIXTURE_OUT)('fetch mailbox fixture from live 
     async () => {
       const builder = await new EchoTestBuilder().open();
       try {
-        // The sync op takes a day-count horizon, but an absolute date reads better for a manual pull —
+        // The sync op takes a day-count horizon, but an absolute date reads better for a manual pull -
         // accept `FETCH_AFTER=yyyy-mm-dd` and translate to days-back (at least one). Fail loudly on an
         // unparseable date rather than letting `NaN` flow through.
         const fetchAfter = process.env.FETCH_AFTER;

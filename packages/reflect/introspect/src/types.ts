@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// All result types are plain serializable data — no classes, no functions, no Promises.
+// All result types are plain serializable data - no classes, no functions, no Promises.
 //
 // The runtime Effect Schemas live in `@dxos/introspect-tools` (browser-safe);
 // this module re-derives the TypeScript types so internal indexer/query code

@@ -94,7 +94,7 @@ export const isSynced = (settings: Snapshot, namespace: string): boolean => !set
 export const isPinned = (settings: Snapshot, namespace: string, key: string): boolean =>
   getPinnedKeys(settings, namespace).includes(key);
 
-/** Whether one key's edits reach the user's other devices — the per-key counterpart of {@link isSynced}. */
+/** Whether one key's edits reach the user's other devices - the per-key counterpart of {@link isSynced}. */
 export const isKeySynced = (settings: Snapshot, namespace: string, key: string): boolean =>
   isSynced(settings, namespace) && !isPinned(settings, namespace, key);
 
@@ -169,7 +169,7 @@ export const takeLocal = (draft: Draft, namespace: string, local: Values, { free
 };
 
 /**
- * Hand a namespace back to the account — the one direction that can discard a value, and only for
+ * Hand a namespace back to the account - the one direction that can discard a value, and only for
  * the keys {@link conflictingKeys} reports, where `adopt` picks the side that survives.
  */
 export const rejoinAccount = (
@@ -188,7 +188,7 @@ export const rejoinAccount = (
   delete draft.local[namespace];
 };
 
-/** Keep one key on this device — the per-key counterpart of {@link takeLocal}. */
+/** Keep one key on this device - the per-key counterpart of {@link takeLocal}. */
 export const pinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = pinOf(draft, namespace);
   if (!pin.keys.includes(key)) {
@@ -196,7 +196,7 @@ export const pinKey = (draft: Draft, namespace: string, key: string): void => {
   }
 };
 
-/** Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}. */
+/** Hand one key back to the account - the per-key counterpart of {@link rejoinAccount}. */
 export const unpinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = draft.local[namespace];
   if (!pin) {

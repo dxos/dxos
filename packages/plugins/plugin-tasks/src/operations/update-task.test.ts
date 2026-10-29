@@ -55,7 +55,7 @@ describe('update-task', () => {
         remoteSession: { sessionId: 'session_abc', title: 'Draft the thing', branch: 'claude/draft' },
       });
 
-      // The space did not hold this session, so claiming the work created it — an agent can assign
+      // The space did not hold this session, so claiming the work created it - an agent can assign
       // itself on its first call rather than registering separately first.
       const sessions = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
       expect(sessions).toHaveLength(1);

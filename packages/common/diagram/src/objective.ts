@@ -3,8 +3,8 @@
 //
 
 //
-// The layout objective: how heuristics are expressed. A heuristic is either a CONSTRAINT (hard —
-// a layout that violates it is not acceptable) or a COST TERM (soft — weighted, minimized). Both
+// The layout objective: how heuristics are expressed. A heuristic is either a CONSTRAINT (hard -
+// a layout that violates it is not acceptable) or a COST TERM (soft - weighted, minimized). Both
 // are evaluated over the emitted scene through `Diagnostics`, so the objective that picks a layout
 // and the report that grades one are the same measurements. Engines and rules are candidate
 // generators; the objective is the judge. See `docs/DESIGN.md`.
@@ -83,7 +83,7 @@ export const select = <T extends { layout: Layout }>(
 };
 
 //
-// Built-in constraints and cost terms. Weights are in "one crossing ≈ three bends" units; the
+// Built-in constraints and cost terms. Weights are in "one crossing ~ three bends" units; the
 // corpus snapshots are where a weight change shows its consequences.
 //
 
@@ -149,7 +149,7 @@ export const unevenFrameGaps: CostTerm = {
 
 /**
  * Total connector length in grid units: a long edge is hard to follow even when it is straight.
- * Weighted so ~100 grid units of extra connector cost one crossing — at 0.1 the objective traded
+ * Weighted so ~100 grid units of extra connector cost one crossing - at 0.1 the objective traded
  * crossings for shorter edges on the compute and edge corpus diagrams.
  */
 export const connectorLength: CostTerm = {

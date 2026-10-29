@@ -89,12 +89,12 @@ describe('pendingText extension', () => {
 
   test('a placeholder-only session is held without committable text', ({ expect }) => {
     const view = createView('hello ');
-    view.dispatch({ effects: setPendingAnchor.of({ anchor: 6, placeholder: 'Recording…' }) });
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 6, placeholder: 'Recording...' }) });
     expect(view.state.field(pendingTextState)).toEqual({
       anchor: 6,
       final: '',
       interim: '',
-      placeholder: 'Recording…',
+      placeholder: 'Recording...',
     });
     // Nothing finalized yet, so commit is a no-op.
     expect(commitPending(view)).toBe(false);
@@ -122,7 +122,7 @@ describe('pendingText extension', () => {
 
   test('flags the editor busy while a session is active and clears it on commit', async ({ expect }) => {
     const view = createView('hello ');
-    view.dispatch({ effects: setPendingAnchor.of({ anchor: 6, placeholder: 'Recording…' }) });
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 6, placeholder: 'Recording...' }) });
     await flush();
     expect(isBusy(view.state)).toBe(true);
 
@@ -152,7 +152,7 @@ describe('pendingText extension', () => {
   });
 
   // The editor's own placeholder shows whenever the document is empty, and pending text is a
-  // decoration rather than document content — so without this the two are drawn over each other,
+  // decoration rather than document content - so without this the two are drawn over each other,
   // the hint sitting behind the words being dictated.
   test('the preview marks the content so the empty-document placeholder can stand aside', ({ expect }) => {
     const view = createView('');

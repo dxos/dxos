@@ -12,7 +12,7 @@ import { DataFactory, type NamedNode } from 'n3';
 import { escapeFragment, escapePath } from './internal/iri.ts';
 
 /**
- * The DEUS code vocabulary — the executable mirror of `design/ONTOLOGY.md`, which is the source of
+ * The DEUS code vocabulary - the executable mirror of `design/ONTOLOGY.md`, which is the source of
  * truth. IRIs, the JSON-LD context the indexer emits, the document schema, and the LDkit schemas
  * that read it back.
  */
@@ -49,7 +49,7 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
 export const VERSION = 6;
 
 /**
- * Name and kind of the synthetic symbol carrying a file's top-level references (`describe(…)`,
+ * Name and kind of the synthetic symbol carrying a file's top-level references (`describe(...)`,
  * `registerX()`); not an identifier, so no declaration can share its IRI.
  */
 export const TOP_LEVEL = 'top-level';
@@ -64,7 +64,7 @@ export const symbolIri = (path: string, name: string): NamedNode =>
 export const packageIri = (name: string): NamedNode => DataFactory.namedNode(`${PACKAGE_BASE}${escapePath(name)}`);
 
 /**
- * IRI of a named export of a module *as imported* — `module:effect/Layer#effect`. Follows the
+ * IRI of a named export of a module *as imported* - `module:effect/Layer#effect`. Follows the
  * specifier written in source, so rules keyed on it survive the implementation file moving.
  */
 /** IRI of a module as imported by a bare specifier; `memberIri` addresses its exports. */
@@ -75,7 +75,7 @@ export const memberIri = (specifier: string, path: string): NamedNode =>
   DataFactory.namedNode(`${MODULE_BASE}${escapePath(specifier)}#${escapeFragment(path)}`);
 
 /**
- * `<blockType>:<key>`, split on the first `:` — so a `:` is escaped in the block type and nowhere
+ * `<blockType>:<key>`, split on the first `:` - so a `:` is escaped in the block type and nowhere
  * else (a `.mdl` documenting the grammar has a block whose type is `<type>`).
  */
 export const specBlockIri = (path: string, blockType: string, key: string): NamedNode =>
@@ -83,7 +83,7 @@ export const specBlockIri = (path: string, blockType: string, key: string): Name
     `${FILE_BASE}${escapePath(path)}#${escapeFragment(blockType).replaceAll(':', '%3A')}:${escapeFragment(key)}`,
   );
 
-/** One field or list item of a spec block, by its dot-joined path: `…#op:create/input.doc`. */
+/** One field or list item of a spec block, by its dot-joined path: `...#op:create/input.doc`. */
 export const specFieldIri = (block: string, path: string): NamedNode =>
   DataFactory.namedNode(`${block}/${escapeFragment(path)}`);
 
@@ -95,7 +95,7 @@ export const extensionUseIri = (path: string, term: string): NamedNode =>
 export const extensionIri = (uri: string): NamedNode => DataFactory.namedNode(`${EXTENSION_BASE}${escapePath(uri)}`);
 
 /**
- * A call inside a declaration, or at file level: `…#default/call/Surface.create/0` — see ONTOLOGY
+ * A call inside a declaration, or at file level: `...#default/call/Surface.create/0` - see ONTOLOGY
  * "CallSite". Symbol names never hold `/`, so it collides with no symbol IRI.
  */
 export const callSiteIri = (enclosing: string, callee: string, ordinal: number): NamedNode =>
@@ -115,7 +115,7 @@ export const graphIri = (path: string, mtime: number): NamedNode =>
 
 /**
  * The graph holding one reasoner's conclusions. Kept apart from the file graphs so a run can drop
- * the whole of it and recompute — a derived fact must never outlive its premises.
+ * the whole of it and recompute - a derived fact must never outlive its premises.
  */
 export const derivedGraphIri = (reasoner: string): NamedNode =>
   DataFactory.namedNode(`${DERIVED_GRAPH_PREFIX}${escapePath(reasoner)}`);
@@ -203,8 +203,8 @@ export const implDependsOn = iri('implDependsOn');
 export const aliasOf = iri('aliasOf');
 /**
  * The module a namespace symbol publishes: `export * as Ontology from './Ontology.ts'`. The name is
- * a fact of the barrel and the identifiers are facts of the other file, so `canonicalName` — what
- * joins them — can only be concluded by a rule.
+ * a fact of the barrel and the identifiers are facts of the other file, so `canonicalName` - what
+ * joins them - can only be concluded by a rule.
  */
 export const namespaceOf = iri('namespaceOf');
 /** A file the declaration imports dynamically (`() => import('./y')`): what a lazy shim defers. */
@@ -225,9 +225,9 @@ export const constructedByPath = iri('constructedByPath');
 export const snippet = iri('snippet');
 export const doc = iri('doc');
 export const deprecated = iri('deprecated');
-/** The type of the value a symbol declares — `design/TYPES.md`. */
+/** The type of the value a symbol declares - `design/TYPES.md`. */
 export const hasType = iri('hasType');
-/** The symbol's type term as JSON, literal freshness included — what the cross-file pass binds. */
+/** The symbol's type term as JSON, literal freshness included - what the cross-file pass binds. */
 export const typeTerm = iri('typeTerm');
 
 // Type term properties (`design/TYPES.md`).
@@ -239,7 +239,7 @@ export const typeMember = iri('typeMember');
 export const typeProperty = iri('typeProperty');
 export const returnType = iri('returnType');
 export const literalValue = iri('literalValue');
-/** Why inference gave up at an `unresolved` term — the bucket an analyzer improvement moves. */
+/** Why inference gave up at an `unresolved` term - the bucket an analyzer improvement moves. */
 export const unresolvedReason = iri('unresolvedReason');
 /** A `returnOf` term's callee, and the called function of a `deus:Argument`. */
 export const callee = iri('callee');
@@ -304,7 +304,7 @@ export const packagePublic = iri('packagePublic');
 export const violatesLayering = iri('violatesLayering');
 export const providesService = iri('providesService');
 export const requiresService = iri('requiresService');
-/** A layer's `RIn`, read off its inferred type — exact, where `requiresService` is a heuristic. */
+/** A layer's `RIn`, read off its inferred type - exact, where `requiresService` is a heuristic. */
 export const layerRequires = iri('layerRequires');
 /** A reference IRI (`file:<barrel>#X`, `module:<specifier>#X`) and the declaration it denotes (the `resolve-refs` pass). */
 export const resolvesTo = iri('resolvesTo');
@@ -325,7 +325,7 @@ export const bundlesHandler = iri('bundlesHandler');
 export const exposesOperation = iri('exposesOperation');
 /** An `OperationHandlerSet` and each operation it serves: its handlers', its merged sets', its lazy entries'. */
 export const handlesOperation = iri('handlesOperation');
-/** A symbol whose implementation names an operation — directly, through barrels, or as a namespace member. */
+/** A symbol whose implementation names an operation - directly, through barrels, or as a namespace member. */
 export const referencesOperation = iri('referencesOperation');
 /** A reference IRI (re-export, star-barrel name) and the `Operation` declaration it stands for. */
 export const denotes = iri('denotes');
@@ -339,7 +339,7 @@ export const operationKey = iri('operationKey');
 export const operationInput = iri('operationInput');
 export const operationOutput = iri('operationOutput');
 export const operationRequires = iri('operationRequires');
-/** A declaration and each `Capability` it fills (`contribute(X, …)`, `provides: [X]`, its maker's). */
+/** A declaration and each `Capability` it fills (`contribute(X, ...)`, `provides: [X]`, its maker's). */
 export const contributesCapability = iri('contributesCapability');
 /** A helper whose modules contribute a `Capability` (`Capability.moduleMaker(name, X)` and its wrappers). */
 export const buildsModuleFor = iri('buildsModuleFor');
@@ -398,7 +398,7 @@ export const unspecified = iri('unspecified');
 /**
  * The name an external importer writes, stated only when it is not the declared name:
  * `<Namespace>.<identifier>` when the declaring module is published whole under one name. Otherwise
- * it is `deus:name` — `COALESCE(?canonical, ?name)` in a query.
+ * it is `deus:name` - `COALESCE(?canonical, ?name)` in a query.
  */
 export const canonicalName = iri('canonicalName');
 
@@ -536,7 +536,7 @@ export const CONTEXT = {
   pathPattern: 'deus:pathPattern',
 } as const;
 
-/** One reference passed into a call — see `deus:passes`. */
+/** One reference passed into a call - see `deus:passes`. */
 export const ArgumentNode = Schema.Struct({
   '@id': Schema.String,
   '@type': Schema.Literal('Argument'),
@@ -549,7 +549,7 @@ export const ArgumentNode = Schema.Struct({
 
 export type ArgumentNode = typeof ArgumentNode.Type;
 
-/** One string literal passed into a call — see `deus:passesLiteral`. */
+/** One string literal passed into a call - see `deus:passesLiteral`. */
 export const LiteralArgumentNode = Schema.Struct({
   '@id': Schema.String,
   '@type': Schema.Literal('Argument'),
@@ -561,7 +561,7 @@ export const LiteralArgumentNode = Schema.Struct({
 
 export type LiteralArgumentNode = typeof LiteralArgumentNode.Type;
 
-/** One call to a resolvable callee that carries literals or configuration — see `deus:CallSite`. */
+/** One call to a resolvable callee that carries literals or configuration - see `deus:CallSite`. */
 export const CallSiteNode = Schema.Struct({
   '@id': Schema.String,
   '@type': Schema.Literal('CallSite'),
@@ -825,7 +825,7 @@ export const SymbolSchema = {
 /**
  * Prefixes used when serializing the graph to Turtle/N3. Vocabulary namespaces only: abbreviating
  * `file:` or `graph:` emits prefixed names whose local part is a path, and a path beginning with
- * `.` (`.agents/...`) or holding an `@` is not a legal PNAME — the writer emits it anyway and no
+ * `.` (`.agents/...`) or holding an `@` is not a legal PNAME - the writer emits it anyway and no
  * parser reads it back.
  */
 export const prefixes: Record<string, string> = {

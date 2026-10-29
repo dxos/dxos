@@ -51,7 +51,7 @@ export const formatSystemPrompt = ({
     );
 
     // Instructions steer the session, so their text (and sentinel commands) belongs in the system
-    // prompt itself — a context-object stub would force the model to tool-load them and follow nothing.
+    // prompt itself - a context-object stub would force the model to tool-load them and follow nothing.
     const instructionDefs = yield* Function.pipe(
       instructions,
       Effect.forEach((instructions) =>

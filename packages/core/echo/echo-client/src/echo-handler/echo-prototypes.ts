@@ -7,33 +7,33 @@
 //
 // What the consumer holds is a Proxy; everything below is its target's prototype chain:
 //
-//   proxy ──Proxy(target, REACTIVE_PROXY_HANDLER → EchoReactiveHandler)
-//     │         the handler's set/has/... traps run here; there is no `get` trap, so reads land
-//     │         on the target, which the refresh keeps filled
-//     ▼
-//   target            holds the record's CURRENT user data as own properties — primitives decoded,
-//     │ [[Prototype]] nested records and arrays as their sub-proxies, refs as `Ref`s. The handler's
-//     │               refresh keeps it mirroring the Automerge document; reads never decode.
-//     ▼
+//   proxy --Proxy(target, REACTIVE_PROXY_HANDLER -> EchoReactiveHandler)
+//     |         the handler's set/has/... traps run here; there is no `get` trap, so reads land
+//     |         on the target, which the refresh keeps filled
+//     v
+//   target            holds the record's CURRENT user data as own properties - primitives decoded,
+//     | [[Prototype]] nested records and arrays as their sub-proxies, refs as `Ref`s. The handler's
+//     |               refresh keeps it mirroring the Automerge document; reads never decode.
+//     v
 //   instanceState     per-object, created by `createInstanceState`. Hidden (non-enumerable) data
-//     │ [[Prototype]] properties: [symbolInternals]=ObjectCore, [symbolNamespace], [symbolPath],
-//     │               [EventId]. Swapping the handler that backs an object = re-pointing the
-//     │               target at a fresh instanceState (`adoptInstanceState`) — identity preserved.
-//     ▼
+//     | [[Prototype]] properties: [symbolInternals]=ObjectCore, [symbolNamespace], [symbolPath],
+//     |               [EventId]. Swapping the handler that backs an object = re-pointing the
+//     |               target at a fresh instanceState (`adoptInstanceState`) - identity preserved.
+//     v
 //   EchoRoot.prototype | EchoRecord.prototype   shared behaviour (one per class, not per object).
-//     │ [[Prototype]] Carries the ECHO system surface as accessors/methods: `id`, [SchemaId],
-//     │               [TypeId], [MetaId], [ParentId], [ChangeId], toJSON, ... A root object's
-//     │               prototype is EchoRoot (the larger surface, incl. EchoRecord's via `extends`);
-//     │               nested/meta records get the EchoRecord base. This replaces the old
-//     │               `isRootDataObject(target)` branching in the traps.
-//     ▼
-//   Object.prototype ──▶ null     ordinary class-prototype termination. The `has` trap uses
+//     | [[Prototype]] Carries the ECHO system surface as accessors/methods: `id`, [SchemaId],
+//     |               [TypeId], [MetaId], [ParentId], [ChangeId], toJSON, ... A root object's
+//     |               prototype is EchoRoot (the larger surface, incl. EchoRecord's via `extends`);
+//     |               nested/meta records get the EchoRecord base. This replaces the old
+//     |               `isRootDataObject(target)` branching in the traps.
+//     v
+//   Object.prototype --> null     ordinary class-prototype termination. The `has` trap uses
 //                     `Reflect.has(target, prop)` to split "system property" (present on the chain
-//                     → the accessor answers) from user data (an own property of the target), and the
+//                     -> the accessor answers) from user data (an own property of the target), and the
 //                     refresh skips any key the prototype chain already answers so it cannot shadow
 //                     one. Object.prototype members (`toString`, `hasOwnProperty`, ...) are
 //                     therefore treated as system and resolve to their normal implementations,
-//                     which is exactly how a plain object behaves — and a `getPrototypeOf` trap
+//                     which is exactly how a plain object behaves - and a `getPrototypeOf` trap
 //                     reports `Object.prototype` so consumers do observe a plain object. (Practical
 //                     consequence: a user-data field literally named `toString` would be shadowed,
 //                     same as on a plain `{}`.)
@@ -45,8 +45,8 @@
 //     `this` === the raw target.
 //   Both resolve `this[symbolInternals]` (and the other hidden props) the same way, through the
 //   shared instanceState on the prototype chain, so accessors that only read `[symbolInternals]`
-//   are agnostic. Accessors that need the underlying object *identity* — e.g. `[ChangeId]`
-//   (which keys the change context by the raw target) or `set [ParentId]` — normalize with
+//   are agnostic. Accessors that need the underlying object *identity* - e.g. `[ChangeId]`
+//   (which keys the change context by the raw target) or `set [ParentId]` - normalize with
 //   `rawTarget(this)` and keep `this` as the receiver for any re-entrant reads.
 //
 
@@ -131,7 +131,7 @@ const META_NAMESPACE = 'meta';
 // accessors/methods. `this` is the proxy target (or the proxy receiver, when
 // reached through a trap); both resolve `[symbolInternals]` to the backing
 // `ObjectCore` via the prototype chain. Methods read state off `this` and
-// delegate the larger read paths to the free functions below — which are shared
+// delegate the larger read paths to the free functions below - which are shared
 // with the handler's data-path traps, so the implementation has a single home.
 
 //
@@ -179,7 +179,7 @@ export const getSchema = (target: ProxyTarget): Schema.Codec<any, any> | undefin
     return Type.getSchema(fromRegistry);
   }
 
-  // Echo identifier (echo://spaceId/objectId or echo:/<objectId>) — load the
+  // Echo identifier (echo://spaceId/objectId or echo:/<objectId>) - load the
   // PersistentSchema on demand (handles preloadSchemaOnOpen=false or schema added after open).
   const echoUri = EID.tryParse(typeURI);
   if (echoUri != null) {
@@ -254,7 +254,7 @@ export const getTypename = (target: ProxyTarget): URI.URI | undefined => {
 /**
  * Resolve a strong-dependency endpoint (relation source/target, parent) from the working set. The
  * endpoint is a strong dep preloaded to `ready` before its holder surfaces, so the synchronous
- * working-set probe succeeds — including for feed-queue and cross-space endpoints.
+ * working-set probe succeeds - including for feed-queue and cross-space endpoints.
  */
 const resolveStrongDepFromWorkingSet = (database: EchoDatabase, uri: URI.URI): any => {
   const request = database.graph.createRefResolver({ context: { space: database.spaceId } }).resolve(uri, {
@@ -426,9 +426,9 @@ export const handleStoredSchema = (target: ProxyTarget, object: any): any => {
 
 /**
  * A resolver bound to the core rather than to whatever the core happened to hold when the ref was
- * built. Both of the things a ref resolves through arrive *after* the values are materialized —
+ * built. Both of the things a ref resolves through arrive *after* the values are materialized -
  * `db.add` sets the database and clears the link cache, and `clone` fills the link cache only once
- * every clone exists — so a ref that captured either at mint time is wrong for the rest of its life.
+ * every clone exists - so a ref that captured either at mint time is wrong for the rest of its life.
  * Deciding per call instead is what lets a target be filled before its core has a database.
  */
 class CoreRefResolver implements RefResolver {
@@ -451,11 +451,11 @@ class CoreRefResolver implements RefResolver {
   /**
    * The local object a ref names, for a core with no database. Not every ref addresses an object:
    * `Ref.fromURI` also names a registry entry by type DXN (an unpersisted routine draft binds its
-   * runnable that way), and such a ref has no local target — resolving it needs a database.
+   * runnable that way), and such a ref has no local target - resolving it needs a database.
    */
   /**
    * Whether this core could ever resolve `uri`: with a database anything can be resolved, and without
-   * one only an entity the link cache is keyed by — which it may not hold yet, since `clone` fills the
+   * one only an entity the link cache is keyed by - which it may not hold yet, since `clone` fills the
    * cache after building every clone.
    */
   canResolve(uri: URI.URI): boolean {
@@ -618,7 +618,7 @@ const isRootDataObject = (target: ProxyTarget): boolean =>
  * The fields below are `declare`d (type-only, not materialized): they describe the hidden
  * properties that live on each object's `instanceState` (one prototype hop down), so that `this`
  * inside the accessors is typed with `[symbolInternals]` etc. At runtime `this` is the PROXY when
- * an accessor is reached through the get trap (`Reflect.get(target, prop, receiver)` → `this` ===
+ * an accessor is reached through the get trap (`Reflect.get(target, prop, receiver)` -> `this` ===
  * receiver), or the raw target when read directly; either way `this[symbolInternals]` resolves to
  * the same `ObjectCore` via the chain. See the layering diagram at the top of this file.
  */
@@ -678,7 +678,7 @@ export class EchoMetaRoot extends EchoRecord {
 
 /**
  * Behaviour prototype for root ECHO data objects. The extra members here are the
- * reason a root object structurally differs from a nested record — replacing the
+ * reason a root object structurally differs from a nested record - replacing the
  * former `isRootDataObject(target)` branching in the `get`/`has` traps.
  */
 export class EchoRoot extends EchoRecord {
@@ -866,7 +866,7 @@ const SYSTEM_KEYS: ReadonlyArray<string | symbol> = [
     key !== 'constructor' &&
     key !== RelationSourceId &&
     key !== RelationTargetId &&
-    // A root object carries `id` as a real own property — that is the representation, not a leftover
+    // A root object carries `id` as a real own property - that is the representation, not a leftover
     // shadowing the accessor, and stripping it would leave the key set short of what a read returns.
     key !== PROPERTY_ID,
 );

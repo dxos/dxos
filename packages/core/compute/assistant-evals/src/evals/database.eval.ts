@@ -44,7 +44,7 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite('Database — create and query', {
+evalite('Database - create and query', {
   data: [{ input: { name: ORGANIZATION_NAME } }],
   trialCount: 3,
   task,

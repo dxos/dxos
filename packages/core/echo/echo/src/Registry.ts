@@ -30,10 +30,10 @@ export type TypeId = typeof TypeId;
  * etc., sourced from 3rd-party plugins, local code, or local space objects.
  *
  * Types (schema-definition entities produced by `Type.makeObject` / `Type.makeRelation`) are
- * stored the same way as any other entity — via `add()`. Use `list().filter(Type.isType)` to
+ * stored the same way as any other entity - via `add()`. Use `list().filter(Type.isType)` to
  * retrieve them.
  *
- * Scope: a Registry is independent of any ECHO space or Hypergraph — it is a process-local,
+ * Scope: a Registry is independent of any ECHO space or Hypergraph - it is a process-local,
  * in-memory cache. Wire one per space (e.g. as a Layer scoped to the space's Effect runtime)
  * or share a single instance across spaces depending on the use case.
  *
@@ -57,7 +57,7 @@ export interface Registry {
 
   /**
    * All locally-stored entities.
-   * Does not include upstream entities — use {@link list} for that.
+   * Does not include upstream entities - use {@link list} for that.
    *
    * @performance O(n); allocates a new array on every read.
    */
@@ -97,7 +97,7 @@ export interface Registry {
   get(id: string): Entity.Unknown | undefined;
 
   /**
-   * Get an entity by one of its addressing URIs — a type entity by its typename DXN (or, when
+   * Get an entity by one of its addressing URIs - a type entity by its typename DXN (or, when
    * persisted, its identifier EID), a keyed entity by its `dxn:<key>[:<version>]`. Accepts legacy
    * DXN forms (normalized internally). Searches the local registry first, then falls back to the
    * upstream registry. Narrow the result with `Type.isType` when a type entity is required.
@@ -118,7 +118,7 @@ export interface Registry {
    * Run an ECHO query against the registry's entities (implements {@link Database.Queryable}).
    *
    * Matching happens in-memory over {@link list}. Scope (`from`) clauses are unwrapped and
-   * ignored — a direct registry query always targets the registry's own entities. The primary
+   * ignored - a direct registry query always targets the registry's own entities. The primary
    * way to query registry contents is still through the database (`db.query(...).from(Scope.registry())`),
    * which fans the database and registry together; this method is for querying a registry directly.
    *

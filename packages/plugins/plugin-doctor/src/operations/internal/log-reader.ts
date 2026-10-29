@@ -50,7 +50,7 @@ const openReadOnly = (factory: IDBFactory, dbName: string, storeName: string): P
  * Walks the log store with a cursor, invoking `onRow` for each row. Resolves with the
  * total number of rows visited (including those for which `onRow` returned `false`).
  *
- * The function never throws — read failures resolve with the rows collected so far. The
+ * The function never throws - read failures resolve with the rows collected so far. The
  * @dxos/log integration is best-effort; we never want introspection to crash the app.
  */
 export const readLogRows = async (options: ReadOptions): Promise<{ total: number; opened: boolean }> => {

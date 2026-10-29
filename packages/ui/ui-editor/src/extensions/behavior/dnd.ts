@@ -11,7 +11,7 @@ export type DropOptions = {
 
 /**
  * Editor extension that accepts external file drops (drawing a drop cursor and invoking
- * `options.onDrop`) while leaving internal drags — e.g. an embed's resize handle — untouched.
+ * `options.onDrop`) while leaving internal drags - e.g. an embed's resize handle - untouched.
  */
 export const dropFile = (options: DropOptions = {}): Extension => {
   return [
@@ -42,7 +42,7 @@ export const dropFile = (options: DropOptions = {}): Extension => {
  * Whether a drag carries external files. Internal element drags (e.g. an embed's resize handle using
  * native HTML5 DnD) carry custom data-transfer types, not `Files`, so this gates the file-drop UI to
  * real file drags and leaves other drags untouched (otherwise the drop cursor and drop handler would
- * fire for — and interfere with — an in-document resize drag).
+ * fire for - and interfere with - an in-document resize drag).
  */
 const isFileDrag = (event: DragEvent): boolean =>
   !!event.dataTransfer && Array.from(event.dataTransfer.types).includes('Files');
@@ -158,6 +158,6 @@ const styles = EditorView.theme({
     padding: '0 4px',
   },
   '.cm-dropCursor:after': {
-    content: '"←"',
+    content: '"\u2190"',
   },
 });

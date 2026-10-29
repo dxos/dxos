@@ -121,7 +121,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       const ctx = Context.default();
 
       // The subscription encapsulates routing (DX-1125): point-to-point messages addressed to `peer`,
-      // plus — when `tags` are set — swarm broadcasts whose tags intersect. The returned callback owns
+      // plus - when `tags` are set - swarm broadcasts whose tags intersect. The returned callback owns
       // teardown, refcounted so it releases only this stream's tag registration.
       let unsubscribe: UnsubscribeCallback | undefined;
       void this.signalManager

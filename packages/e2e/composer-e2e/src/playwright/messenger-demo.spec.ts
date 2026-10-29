@@ -97,7 +97,7 @@ const typeText = async (page: Page, text: string): Promise<void> => {
 const waitForDemoTrigger = async (): Promise<void> => {
   mkdirSync(path.dirname(DEMO_TRIGGER), { recursive: true });
   rmSync(DEMO_TRIGGER, { force: true });
-  log.info('READY — waiting for demo trigger', { trigger: path.relative(process.cwd(), DEMO_TRIGGER) });
+  log.info('READY - waiting for demo trigger', { trigger: path.relative(process.cwd(), DEMO_TRIGGER) });
   while (!existsSync(DEMO_TRIGGER)) {
     await delay(500);
   }

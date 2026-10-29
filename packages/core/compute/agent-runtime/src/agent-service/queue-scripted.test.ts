@@ -32,8 +32,8 @@ const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 EntityId.dangerouslyDisableRandomness();
 
 /**
- * The agent's input queue and its alarms are feed state, so these exercise the whole loop —
- * enqueue, one-at-a-time dequeue, ack, cancel — through the real `AgentProcess` against a scripted
+ * The agent's input queue and its alarms are feed state, so these exercise the whole loop -
+ * enqueue, one-at-a-time dequeue, ack, cancel - through the real `AgentProcess` against a scripted
  * model (no fixtures, no recorded conversations).
  */
 
@@ -91,7 +91,7 @@ const gatedLayer = () =>
     ]),
   });
 
-/** Prompts the reader wrote, in feed order — an ack-carrying turn message is one of these. */
+/** Prompts the reader wrote, in feed order - an ack-carrying turn message is one of these. */
 const promptTexts = (messages: readonly Message.Message[]) =>
   messages.filter((message) => message.sender.role === 'user').map((message) => Message.extractText(message));
 
@@ -268,7 +268,7 @@ describe('AgentProcess input queue (scripted)', () => {
         yield* Deferred.await(gateStarted);
         yield* session.submitPrompt('queued while busy');
 
-        // Still queued — the running turn has not consumed it.
+        // Still queued - the running turn has not consumed it.
         const during = yield* readFeed(session.feed);
         expect(during.pendingMessages.map((message) => Message.extractText(message))).toContain('queued while busy');
 

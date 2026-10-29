@@ -196,8 +196,8 @@ export const QueryRequest = Schema.Struct({
    * Token identifying the store the client believes it is talking to, as last reported in
    * {@link QueryResponse.serverToken}.
    *
-   * When it does not match the serving store's own token — the server was swapped or its storage
-   * wiped — every `position` the client remembers names a slot in a store that no longer exists, so
+   * When it does not match the serving store's own token - the server was swapped or its storage
+   * wiped - every `position` the client remembers names a slot in a store that no longer exists, so
    * the server ignores `position` and serves the namespace from the start. That keeps recovery to
    * the same single round-trip as an ordinary pull. Omitted by clients that predate the token, for
    * which the server keeps honouring `position` verbatim.
@@ -284,7 +284,7 @@ export const SubscribeRequest = Schema.Struct({
 
   /**
    * Namespace the subscription covers. When set with an empty `feedIds`, the subscription is
-   * namespace-wide — the client does not learn feed ids until it pulls, so it cannot enumerate
+   * namespace-wide - the client does not learn feed ids until it pulls, so it cannot enumerate
    * them at subscribe time.
    */
   feedNamespace: Schema.optional(Schema.String),
@@ -379,7 +379,7 @@ export const FeedAdvanced = Schema.Struct({
   feedNamespace: Schema.String,
 
   /**
-   * Highest position the server holds for the namespace, when known. Advisory only — the recipient
+   * Highest position the server holds for the namespace, when known. Advisory only - the recipient
    * compares it against its own cursor to skip a redundant pull, and pulls regardless if absent.
    */
   position: Schema.optional(Schema.Number),

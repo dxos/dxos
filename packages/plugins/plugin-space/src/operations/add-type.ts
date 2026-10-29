@@ -101,7 +101,7 @@ const describedType = async (
 };
 
 /**
- * Resolves a relation end's `$ref` — the form `queryTypes` reports — against the space's types; an
+ * Resolves a relation end's `$ref` - the form `queryTypes` reports - against the space's types; an
  * end left unnamed, or naming the any-object type, admits every object.
  */
 const resolveEndType = (types: Type.AnyEntity[], uri: string | undefined): Type.AnyObj | typeof Obj.Unknown => {

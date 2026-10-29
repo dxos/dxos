@@ -9,7 +9,7 @@ import { easeHeading } from '../../scene/heading.ts';
 import { type SimObject } from '../../sim/index.ts';
 
 /**
- * Per-object headings eased toward the simulated bearing at each object kind's own turn rate — the
+ * Per-object headings eased toward the simulated bearing at each object kind's own turn rate - the
  * same treatment `ObjectLayer` gives the 3D meshes, so a course change (a new destination, a
  * waypoint) is steered into rather than snapped to. Rendering-only: nothing here feeds back into
  * `sim/`, so it cannot affect where an object is, only which way it is drawn facing.

@@ -12,9 +12,9 @@ import { SearchOperation } from '#types';
 
 import { cleanHtml, fetchPage, isCrxRenderAvailable, summarizeStructure } from '../util/index.ts';
 
-// Bound the cleaned page handed to the LLM (≈ token budget). Rendered SPA pages can be multiple MB
+// Bound the cleaned page handed to the LLM (~ token budget). Rendered SPA pages can be multiple MB
 // raw; `cleanHtml` strips scripts/styles/noise so the model sees the repeating listing structure.
-// Generous cap: client-rendered listing pages put 50–100 KB of nav/filters/header before the first
+// Generous cap: client-rendered listing pages put 50-100 KB of nav/filters/header before the first
 // result card, so a small cap truncates the listings out of the LLM's view and it hallucinates the
 // itemLocator. The model needs to actually see a few cards to author a real selector.
 const MAX_BODY_LENGTH = 200_000;
@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = S
 
       // Scrape targets render in a real browser: server HTML for an SPA like AutoTrader is an empty
       // shell, so the LLM needs the rendered DOM. This handler may run inside the agent spawn (no
-      // DOM), so route scrape fetches through RenderPage — hosted on the main thread where the
+      // DOM), so route scrape fetches through RenderPage - hosted on the main thread where the
       // extension lives. API providers (plain HTML/JSON) fetch directly via the edge proxy.
       const body =
         provider.kind === 'scrape'
@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = S
 
       const cleaned = cleanHtml(body, { maxLength: MAX_BODY_LENGTH });
       // Distil the repeating structure from the FULL rendered DOM (not the truncated slice) so the
-      // summary reflects ALL results — a strong, lossless signal for the itemLocator even though the
+      // summary reflects ALL results - a strong, lossless signal for the itemLocator even though the
       // HTML slice below is truncated. Prepended so the model reads the hints first.
       const structure = summarizeStructure(body);
       const output = structure.length > 0 ? `${structure}\n\n## Page source (cleaned, truncated)\n${cleaned}` : cleaned;

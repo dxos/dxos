@@ -14,7 +14,7 @@ if (process.env.DX_PWA !== 'false') {
 
 /**
  * Whether the app under test syncs a newly connected account on its own. Mirrors `MAIL_AUTO_SYNC` in
- * plugin-inbox's connector capability — a stale value here fails these tests rather than quietly
+ * plugin-inbox's connector capability - a stale value here fails these tests rather than quietly
  * exercising the other path, since the two configurations differ in whether "Sync now" is pressed.
  */
 const AUTO_SYNC = true;
@@ -23,9 +23,9 @@ const AUTO_SYNC = true;
  * Skipped: every test here reaches a populated mailbox by running a real sync, and mail sync now runs
  * on EDGE (`MAIL_REMOTE_SYNC` in plugin-inbox's connector capability). An EDGE-run sync issues no
  * request from the browser, so `installInboxMock`'s `page.route` fixture is never reached and the
- * mailbox stays empty — the failure is the harness, not the app.
+ * mailbox stays empty - the failure is the harness, not the app.
  *
- * TODO(wittjosiah): Restore by seeding the mailbox instead of syncing it — create the Mailbox and its
+ * TODO(wittjosiah): Restore by seeding the mailbox instead of syncing it - create the Mailbox and its
  *   messages directly (as `seedMailboxBinding` does in plugin-inbox's testing package), then assert on
  *   the UI. Sync mechanics are already covered by plugin-inbox's sync tests against these same
  *   fixtures, so the suite loses nothing by not driving a sync, and it stops depending on where sync

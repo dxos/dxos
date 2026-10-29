@@ -108,7 +108,7 @@ const segmentDistance = (p: XY, a: XY, b: XY): number => {
   return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
 };
 
-/** Douglas–Peucker in screen pixels: a lasso of hundreds of pointer samples becomes a few dozen corners. */
+/** Douglas-Peucker in screen pixels: a lasso of hundreds of pointer samples becomes a few dozen corners. */
 export const simplify = <P extends XY>(points: ReadonlyArray<P>, tolerance: number): P[] => {
   const first = points[0];
   const last = points[points.length - 1];

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { buildEnrichPrompt, parseEnrichResponse } from '../testing/harness/index.ts';
 
-// Deterministic coverage for the single-pass enrichment prompt + parser — no fixture / model required
+// Deterministic coverage for the single-pass enrichment prompt + parser - no fixture / model required
 // (the model-graded quality/latency comparison lives in the bench).
 
 describe('buildEnrichPrompt', () => {
@@ -42,7 +42,7 @@ describe('parseEnrichResponse', () => {
     const result = parseEnrichResponse(raw, 'summary');
     expect(result.tags).toEqual(['personal']);
     expect(result.summary).toBe('- Confirms lunch');
-    expect(result.facts).toEqual([]); // Missing → empty.
+    expect(result.facts).toEqual([]); // Missing -> empty.
   });
 
   test('infers spam from a spam tag and dedups it', ({ expect }) => {

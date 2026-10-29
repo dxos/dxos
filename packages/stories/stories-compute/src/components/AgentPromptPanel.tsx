@@ -76,7 +76,7 @@ export const AgentPromptPanel = ({ edge = false, ready = true, error, onCreate }
         </div>
       </Panel.Body>
       <Panel.Footer classNames='p-2 text-sm max-h-40 overflow-y-auto'>
-        {!ready && <p className='text-fg-muted'>Initializing…</p>}
+        {!ready && <p className='text-fg-muted'>Initializing...</p>}
         {error && (
           <p className='text-error-text' data-testid='process-error'>
             {error}

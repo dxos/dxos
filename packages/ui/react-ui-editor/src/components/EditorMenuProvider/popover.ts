@@ -33,7 +33,7 @@ export type PopoverOptions = {
   activateOnTyping?: boolean;
 
   /**
-   * Delimiters after which an EMPTY token still opens the menu — `type:` offering every typename,
+   * Delimiters after which an EMPTY token still opens the menu - `type:` offering every typename,
    * say. Opt-in per consumer because the empty-token guard is load-bearing elsewhere: `RefEditor`
    * uses `activateOnTyping` with no trigger, where an empty query would match every object.
    */
@@ -120,7 +120,7 @@ const popoverTriggerListener = (options: PopoverOptions) =>
  */
 const popoverAutoActivate = (options: PopoverOptions) =>
   EditorView.updateListener.of(({ view, docChanged, transactions }) => {
-    // Only user input opens the popover — programmatic syncs (e.g. a controlled `value` update on
+    // Only user input opens the popover - programmatic syncs (e.g. a controlled `value` update on
     // mount) must not pop the menu.
     if (!docChanged || !transactions.some((tr) => tr.isUserEvent('input')) || view.state.field(popoverStateField)) {
       return;

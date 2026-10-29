@@ -15,7 +15,7 @@ type EchoViewRefLike = { load?: () => Promise<View.View>; target?: View.View };
 
 /**
  * Property path segments from the Echo object root to a Ref<View> field (e.g. `['view']` or `['spec', 'view']`).
- * A schema may annotate this path while individual instances omit or unset that ref — those objects are treated as non-view holders at runtime until a ref appears.
+ * A schema may annotate this path while individual instances omit or unset that ref - those objects are treated as non-view holders at runtime until a ref appears.
  */
 export type EchoViewRefPath = readonly string[];
 

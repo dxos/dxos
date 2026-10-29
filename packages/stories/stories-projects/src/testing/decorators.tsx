@@ -49,13 +49,13 @@ export const storyParameters = {
 /**
  * Which AI service the story runs against. Absent means none: templates still scaffold and the
  * article renders, but nothing that needs a model can run.
- * - `mock` — canned text, so a play test can drive a model-dependent path deterministically in CI.
- * - `ollama` — a local model (`OLLAMA_ORIGINS="*" ollama serve`), for watching real extraction.
+ * - `mock` - canned text, so a play test can drive a model-dependent path deterministically in CI.
+ * - `ollama` - a local model (`OLLAMA_ORIGINS="*" ollama serve`), for watching real extraction.
  */
 export type StoryAiService = 'mock' | 'ollama';
 
 export type DecoratorsProps = {
-  /** Name of the seeded mailbox — the subject every project template in this package scaffolds from. */
+  /** Name of the seeded mailbox - the subject every project template in this package scaffolds from. */
   mailboxName: string;
   /**
    * Messages seeded into the mailbox feed. Feed triggers and the inbox tools have nothing to act on
@@ -82,7 +82,7 @@ export type DecoratorsProps = {
 export const createDecorators = ({ mailboxName, messages, ai, plugins = [], types = [] }: DecoratorsProps) =>
   createStoryDecorators({
     // Skill-definition modules ride the assistant's start event, and nothing here opens assistant UI
-    // or materializes a toolkit — without firing it the article's skill rows resolve to blank labels.
+    // or materializes a toolkit - without firing it the article's skill rows resolve to blank labels.
     setupEvents: [AppActivationEvents.AssistantStart],
     types: [
       Mailbox.Mailbox,

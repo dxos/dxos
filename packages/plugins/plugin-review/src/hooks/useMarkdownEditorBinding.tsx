@@ -67,7 +67,7 @@ export const useMarkdownEditorBinding: MarkdownCapabilities.UseEditorBinding = (
   const extensionProps = useMemo(
     () => ({
       reviewBranch: editor.reviewBranch,
-      // Only when the editor is bound to the branch doc directly (Branch view) — in the
+      // Only when the editor is bound to the branch doc directly (Branch view) - in the
       // diff/suggest overlay the editor stays on main, so anchors resolve against main.
       branchText: editor.suggestActive ? undefined : editor.branchText,
       suggestionBranch: editor.suggestionBranch,
@@ -106,7 +106,7 @@ export const useMarkdownEditorBinding: MarkdownCapabilities.UseEditorBinding = (
   );
 
   // One dropdown gesture writes BOTH halves of the (review mode, view mode) pair through the pure
-  // event function, so a contradictory pair — a stale readonly view mode surviving into Suggesting —
+  // event function, so a contradictory pair - a stale readonly view mode surviving into Suggesting -
   // cannot be stored (see review-lifecycle.ts).
   const selectViewMode = useCallback(
     (selection: MarkdownCapabilities.ViewModeSelection) => {
@@ -154,7 +154,7 @@ const CompareOverlay = ({ overlay }: { overlay?: Extension }) => {
 
 /**
  * Reconfigures the ambient multi-author suggestion overlay (the shared `@dxos/ui-editor` factory) on
- * the live editor as the resolved sources or review mode change — no remount (see
+ * the live editor as the resolved sources or review mode change - no remount (see
  * {@link suggestionsOverlay}). Must render inside `Editor.Root`.
  */
 const SuggestionsOverlay = ({

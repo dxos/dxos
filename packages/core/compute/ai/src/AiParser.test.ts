@@ -306,7 +306,7 @@ describe('parser', () => {
     );
 
     // Regression: an *unclosed* unrecognized tag must NOT have a synthetic `</tag>`
-    // appended. Reconstructing one corrupts the response text — the chat doc would render
+    // appended. Reconstructing one corrupts the response text - the chat doc would render
     // a phantom close tag mid-message and confuse downstream parsers.
     it.effect(
       'unclosed unknown xml-style tag is preserved without a synthetic close',
@@ -322,7 +322,7 @@ describe('parser', () => {
       }),
     );
 
-    // Regression: the model writes a sentence that contains an unrecognized tag — the
+    // Regression: the model writes a sentence that contains an unrecognized tag - the
     // surrounding text plus the tag must all be preserved (the tag splits the stream into
     // separate text blocks at the state-machine boundaries, but no content is dropped).
     it.effect(
@@ -340,7 +340,7 @@ describe('parser', () => {
       }),
     );
 
-    // Repro: third <reasoning> block in a chat doc — multi-line content with newlines,
+    // Repro: third <reasoning> block in a chat doc - multi-line content with newlines,
     // list items, single + double quotes, mixed with `<status>` and `<toolCall/>` tags around it.
     // `<reasoning>` parses like `<cot>` now (models write it unprompted); the content must still
     // arrive verbatim, one block per tag.
@@ -351,13 +351,13 @@ describe('parser', () => {
         const r2 = 'The magazine has 10 posts already curated.';
         const r3 = [
           'The magazine has 10 posts, but several are duplicates. Unique articles:',
-          '1. "FBI affidavit quotes White House press dinner shooting suspect expressing rage at \'a pedophile, rapist and traitor\' – US politics live" - About Cole Allen.',
+          '1. "FBI affidavit quotes White House press dinner shooting suspect expressing rage at \'a pedophile, rapist and traitor\' - US politics live" - About Cole Allen.',
           '2. "Australia news live: UK inquiry says \'cracks already beginning to show\' on Aukus" - Live blog.',
           '5. "\'Shortcomings and failures\' could sink Aukus nuclear submarines plan" - UK inquiry warns.',
         ].join('\n');
         const input = [
           `<reasoning>${r1}</reasoning>`,
-          '<status>Loading…</status>',
+          '<status>Loading...</status>',
           `<reasoning>${r2}</reasoning>`,
           '<status>OK</status>',
           `<reasoning>${r3}</reasoning>`,

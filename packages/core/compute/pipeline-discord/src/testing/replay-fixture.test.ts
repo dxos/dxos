@@ -8,7 +8,7 @@
 //
 // The fixture is `./fixtures/discord-crawl.db` (override with DISCORD_CRAWL_DB). Regenerate it
 // by pointing the plugin-discord crawl demo at the fixture path:
-//   DISCORD_TOKEN=… DISCORD_CRAWL_DB=$(pwd)/src/testing/fixtures/discord-crawl.db \
+//   DISCORD_TOKEN=... DISCORD_CRAWL_DB=$(pwd)/src/testing/fixtures/discord-crawl.db \
 //     moon run plugin-discord:crawl-demo    (from packages/core/compute/pipeline-discord)
 //
 // The test copies the database to a temp file before opening it, so the fixture is never mutated.
@@ -78,7 +78,7 @@ describe('replay over the crawled SQLite fixture', () => {
       console.log(`questions: ${result.questions.length}\n`);
       // This is a non-CI manual diagnostic over a fixture that may hold real chat content; truncate
       // the question body so the console output stays a summary, not a verbatim message dump.
-      const clip = (text: string) => (text.length > 80 ? `${text.slice(0, 77)}…` : text);
+      const clip = (text: string) => (text.length > 80 ? `${text.slice(0, 77)}\u2026` : text);
       for (const question of result.questions) {
         console.log(
           `  (${question.authorLabel ?? question.authorId} × ${question.targetId} × ${question.messageId})\n    ${clip(question.question)}`,

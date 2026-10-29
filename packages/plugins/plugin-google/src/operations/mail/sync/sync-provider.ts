@@ -26,7 +26,7 @@ import { findOrCreateGmailTag } from '../tags.ts';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch.ts';
 import { GMAIL_SYSTEM_TAGS, GMAIL_UNPUSHABLE_LABELS } from './system-tags.ts';
 
-/** The resolved delta for one run — either a fresh capture (no delta) or a fetched `history.list` page. */
+/** The resolved delta for one run - either a fresh capture (no delta) or a fetched `history.list` page. */
 type DeltaPlan = {
   readonly token: string | undefined;
   readonly createdIds: readonly string[] | undefined;
@@ -35,7 +35,7 @@ type DeltaPlan = {
 };
 
 /**
- * Gmail's {@link MailSyncProvider}: the message source, the label→tag map, and the fused decode+map.
+ * Gmail's {@link MailSyncProvider}: the message source, the label->tag map, and the fused decode+map.
  * Captures {@link GoogleMailApi} + {@link Resolver} so the harness never names them. Mirror of the JMAP
  * provider (`jmapMailSyncProvider`).
  */
@@ -67,7 +67,7 @@ export const googleMailSyncProvider = (options: {
 
             // Mail from someone the space already knows is worth surfacing, so it lands under the
             // `important` folder on arrival. Resolved once per sync rather than per message, and
-            // reusing Gmail's own `important` tag rather than inventing a parallel one — so a message
+            // reusing Gmail's own `important` tag rather than inventing a parallel one - so a message
             // Gmail already flagged and one flagged here are the same thing to every reader.
             const db = Obj.getDatabase(mailbox);
             const knownSenderTagUri = db
@@ -179,7 +179,7 @@ export const googleMailSyncProvider = (options: {
               buildSource: ({ windows, filter, onEnumerated, onEstimate, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
-                // is set, the delta's account-wide created ids would bypass it — so fall back to the
+                // is set, the delta's account-wide created ids would bypass it - so fall back to the
                 // filtered forward window scan for additions (the delta still drives reconcile).
                 const forwardIds = filter ? undefined : createdIds;
                 if (forwardIds) {
@@ -211,8 +211,8 @@ export const googleMailSyncProvider = (options: {
               nextToken: () => capturedToken,
               reconcileForeignIds: reconcileItems.map((item) => item.foreignId),
               hasMoreDelta: () => hasMoreDelta,
-              // The label map inverted: tag uri → Gmail label id. Its keys are the eligible set for
-              // tag reconciliation, so a user tag (which has no label) is never pushed — and neither
+              // The label map inverted: tag uri -> Gmail label id. Its keys are the eligible set for
+              // tag reconciliation, so a user tag (which has no label) is never pushed - and neither
               // is a label Gmail derives rather than accepts (see `GMAIL_UNPUSHABLE_LABELS`), which
               // would otherwise 400 on every send.
               tagBindings: new Map(
@@ -229,7 +229,7 @@ export const googleMailSyncProvider = (options: {
 
 /**
  * HTTP statuses no retry can resolve: the message is gone, the label no longer exists, or the token
- * lacks `gmail.modify`. Ops that hit these are reported `settled` — refusing to advance past them
+ * lacks `gmail.modify`. Ops that hit these are reported `settled` - refusing to advance past them
  * would block the reconciliation base forever, re-deriving the same doomed op on every run.
  */
 const isPermanent = (error: unknown): boolean =>
@@ -243,9 +243,9 @@ const isPermanent = (error: unknown): boolean =>
  * Applies local tag changes at Gmail, grouped so messages sharing the same label movement go in one
  * `batchModify` (up to 1000 ids per call, and the API reports nothing per message).
  *
- * A batch is all-or-nothing, so its ops share an outcome: applied or permanently rejected → `settled`;
- * anything retryable (429, 5xx, transport) → `pending`, which holds the base back and re-derives the
- * same diff next run. Never fails the run — the harness decides what the outcome means.
+ * A batch is all-or-nothing, so its ops share an outcome: applied or permanently rejected -> `settled`;
+ * anything retryable (429, 5xx, transport) -> `pending`, which holds the base back and re-derives the
+ * same diff next run. Never fails the run - the harness decides what the outcome means.
  */
 const pushGmailTags = (
   api: GoogleMailApiService,
@@ -287,8 +287,8 @@ const pushGmailTags = (
 
 /**
  * Folds a `history.list` response's per-message `labelsAdded`/`labelsRemoved` into one merged retag
- * {@link ReconcileItem} per message (mapping Gmail label ids → Tag uris via `labelMap`). Merging per
- * message id is required because the commit indexes retags by foreign id — separate add/remove items for
+ * {@link ReconcileItem} per message (mapping Gmail label ids -> Tag uris via `labelMap`). Merging per
+ * message id is required because the commit indexes retags by foreign id - separate add/remove items for
  * the same message would otherwise clobber each other. Labels absent from `labelMap` (e.g. never synced)
  * are dropped.
  */
@@ -338,12 +338,12 @@ const collectLabelChanges = (
 
 /**
  * Syncs the Gmail label dictionary to `Tag` objects. Returns a `gmailLabelId -> Tag uri` map used to
- * index messages by tag. A known system label (`STARRED`, `INBOX`, `CATEGORY_*`, …) maps onto the
+ * index messages by tag. A known system label (`STARRED`, `INBOX`, `CATEGORY_*`, ...) maps onto the
  * shared canonical {@link SystemTags.SystemTag}; a custom user label gets a Gmail-scoped provider tag;
- * an unmapped system label (read-state, drafts, trash/spam) is intentionally dropped — see
+ * an unmapped system label (read-state, drafts, trash/spam) is intentionally dropped - see
  * {@link GMAIL_SYSTEM_TAGS}.
  */
-// TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
+// TODO(wittjosiah): Migrate this label->Tag sync onto a pipeline too (source: labels; sink:
 //   find-or-create Tag), rather than the imperative loop below.
 const syncLabels = Effect.fn('google-sync.labels')(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const api = yield* GoogleMailApi;
@@ -357,7 +357,7 @@ const syncLabels = Effect.fn('google-sync.labels')(function* (mailbox: Mailbox.M
         const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, canonical));
         labelMap.set(labelItem.id, Mailbox.tagUri(tag));
       } else if (labelItem.type === 'system') {
-        // Intentionally dropped system label (read-state, drafts, trash/spam) — no tag, no map entry.
+        // Intentionally dropped system label (read-state, drafts, trash/spam) - no tag, no map entry.
         continue;
       } else {
         const tag = yield* Effect.promise(() => findOrCreateGmailTag(db, { id: labelItem.id, name: labelItem.name }));

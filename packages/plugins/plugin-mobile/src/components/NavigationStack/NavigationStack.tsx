@@ -92,7 +92,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
 
   const canPop = index > 0;
 
-  /** Writes a pose to a layer without animating — the frame-by-frame path for a tracked gesture. */
+  /** Writes a pose to a layer without animating - the frame-by-frame path for a tracked gesture. */
   const applyPose = useCallback((layer: number, pose: Pose) => {
     const panel = panelRefs.current[layer];
     const dim = dimRefs.current[layer];
@@ -119,7 +119,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   }, []);
 
   /**
-   * Animates a layer to `pose`, starting from the pose its elements are holding as inline style —
+   * Animates a layer to `pose`, starting from the pose its elements are holding as inline style -
    * `flushAnimations` has just left the interrupted value there, so a cut-short animation continues
    * from where it is rather than snapping back to a nominal origin.
    *
@@ -167,7 +167,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   );
 
   // Layers that have been given a pose at least once. An animation starts from the pose on the
-  // element's inline style, and a panel mounted by this render has none — it would animate its resting
+  // element's inline style, and a panel mounted by this render has none - it would animate its resting
   // place to itself and the push would not move. Newly mounted layers are therefore planted at the
   // pose they *would* have held before this navigation (offset measured against the previous index, so
   // an incoming panel starts off-screen right) and animated home from there.
@@ -219,7 +219,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
         return;
       }
       // A settle may still be playing, and its fill:'both' animations would override the inline
-      // styles the tracked gesture writes — the panel would follow the animation, not the finger.
+      // styles the tracked gesture writes - the panel would follow the animation, not the finger.
       flushAnimations(index);
       flushAnimations(index - 1);
       gestureRef.current = {
@@ -313,7 +313,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
 
   // Only the gesture's start is scoped to the stack; the rest is bound to `window` because a
   // terminal event that misses the stack root would strand the panels at the pose the last move
-  // wrote — a permanent sliver of the parked panel with no way back. WebKit releases an implicit
+  // wrote - a permanent sliver of the parked panel with no way back. WebKit releases an implicit
   // pointer capture when the platform takes the touch over and then delivers `pointerup` to the
   // original hit-test target, which is routinely outside this subtree.
   useEffect(() => {
@@ -332,7 +332,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
       ref={rootRef}
       // Clipped, not hidden: `overflow: hidden` is a scroll container, and the incoming panel parked
       // off-screen right makes it scrollable. Any `scrollIntoView` from content inside a freshly
-      // pushed panel then scrolls the whole stack sideways — Chromium clamps it back as the panel
+      // pushed panel then scrolls the whole stack sideways - Chromium clamps it back as the panel
       // slides home, WebKit does not recompute the overflow and leaves the stack parked off-screen.
       className={mx('relative overflow-clip touch-pan-y', classNames)}
       onPointerDown={handlePointerDown}
@@ -354,7 +354,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
             data-object-id={id}
             aria-hidden={offset !== 0 || undefined}
             // Panels off the top keep their DOM (and scroll offsets) but must not take focus or
-            // hit-test — including the covered panel at -1, or keyboard focus reaches invisible
+            // hit-test - including the covered panel at -1, or keyboard focus reaches invisible
             // controls. It becomes the top panel (and interactive) the commit after a pop completes.
             inert={offset !== 0 || undefined}
             // Opaque per layer: the outgoing panel only travels a third of the width, so the rest of it

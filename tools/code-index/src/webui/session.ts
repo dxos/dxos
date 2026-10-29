@@ -11,13 +11,13 @@ import * as Pending from './pending.ts';
 
 /**
  * A project, as the browser sees it: one signal holding the fold of its log. Nothing here decides
- * what the state *is* — `Fold.apply` is the server's own reducer, imported rather than
+ * what the state *is* - `Fold.apply` is the server's own reducer, imported rather than
  * reimplemented, which is what keeps a live session and a reload in agreement.
  */
 
 export type Session = {
   readonly state: () => Fold.State;
-  /** True while a turn is in flight — the model is thinking or its code is running. */
+  /** True while a turn is in flight - the model is thinking or its code is running. */
   readonly busy: () => boolean;
   readonly send: (text: string) => void;
   readonly clearCanvas: () => void;

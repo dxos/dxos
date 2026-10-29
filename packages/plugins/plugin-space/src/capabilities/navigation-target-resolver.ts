@@ -53,8 +53,8 @@ export default Capability.makeModule(
         const label = Entity.getLabel(object) ?? '';
 
         // Where the tree actually shows the object: its place in the collection tree, or the sidebar
-        // section its type declares (Chat, Project, …). Both precede the database path, which every
-        // object has but no visible node bears — hence `Position.last`.
+        // section its type declares (Chat, Project, ...). Both precede the database path, which every
+        // object has but no visible node bears - hence `Position.last`.
         const collectionPath = yield* resolveCollectionObjectPath({ objectId: object.id });
         const sectionPath = resolveTypeSectionPath(capabilities, {
           spaceId: db.spaceId,

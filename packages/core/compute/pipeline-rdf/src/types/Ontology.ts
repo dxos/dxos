@@ -57,7 +57,7 @@ export const key = (surface: string): string =>
 
 const camel = (name: string): string => name.replace(/_([a-z0-9])/g, (_, char: string) => char.toUpperCase());
 
-/** The IRI a predicate shorthand mints to in a namespace, e.g. `works_on` → `dx:worksOn`. */
+/** The IRI a predicate shorthand mints to in a namespace, e.g. `works_on` -> `dx:worksOn`. */
 export const iriFor = (name: string, namespace: string = Vocab.DX): string => `${namespace}${camel(name)}`;
 
 /** An entry for a predicate shorthand; the IRI defaults to the `dx:` vocabulary. */
@@ -523,7 +523,7 @@ export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
   }),
 
   // dx: what an agent records and does, which no shared vocabulary names.
-  entry('claim', { description: 'A remembered statement about the subject, in the agent’s words.' }),
+  entry('claim', { description: "A remembered statement about the subject, in the agent's words." }),
   entry('has_note', { label: 'has note', description: 'Notes about the subject, in markdown.' }),
   entry('helps_with', { synonyms: ['will help with', 'helping with'], description: 'Work the subject helps with.' }),
   entry('works_on', {

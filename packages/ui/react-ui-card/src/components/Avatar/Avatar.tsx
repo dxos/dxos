@@ -18,8 +18,8 @@ export type AvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClick'> & 
 };
 
 /**
- * Sender/participant avatar with one shared name→hue derivation ({@link nameToHue}) so a given
- * person renders the same color across the mailbox list, the opened thread, and preview cards —
+ * Sender/participant avatar with one shared name->hue derivation ({@link nameToHue}) so a given
+ * person renders the same color across the mailbox list, the opened thread, and preview cards -
  * previously each site hand-rolled `DxAvatar` off a different input.
  */
 export const Avatar = ({ actor, name, variant = 'circle', size = 6, onClick }: AvatarProps) => {

@@ -36,7 +36,7 @@ export default defineConfig({
   test: {
     node: true,
     // The space-template stories boot the plugin stack, a client, an identity and a space, then write
-    // a whole themed world into it — past the 15s storybook default, which caps the story's own
+    // a whole themed world into it - past the 15s storybook default, which caps the story's own
     // `waitFor` budgets and fails the test before they can resolve.
     storybook: { timeout: 120_000 },
   },

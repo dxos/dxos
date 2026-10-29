@@ -22,7 +22,7 @@ import { type JmapDataset, JmapMailApi } from '#services';
 import { jmapMailSyncProvider } from '../operations/mail/sync/sync-provider.ts';
 
 /**
- * Test entry point for the JMAP sync — the account-level fan-out over `runMailSync` with this
+ * Test entry point for the JMAP sync - the account-level fan-out over `runMailSync` with this
  * provider's layer, leaving the API for the test to supply (mock or Live). Production inlines the
  * same wiring in the sync handler.
  */

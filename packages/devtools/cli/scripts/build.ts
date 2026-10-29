@@ -11,7 +11,7 @@ import { chmod, copyFile, mkdir, rm, writeFile } from 'fs/promises';
 import { dirname, extname, join } from 'path';
 
 /**
- * Bun plugin that handles Vite-style `?raw` suffix imports — `import code from 'pkg?raw'`
+ * Bun plugin that handles Vite-style `?raw` suffix imports - `import code from 'pkg?raw'`
  * resolves the spec to a file path and inlines the file's contents as the default export.
  * Required because some workspace packages inline assets (shaders, fixtures) as strings this way;
  * Vite-built consumers handle this natively, but Bun's resolver doesn't.
@@ -40,7 +40,7 @@ const URL_IMPORT_MIME_TYPES: Record<string, string> = {
 };
 
 /**
- * Bun plugin that handles Vite-style `?url` suffix imports — `import url from 'pkg/asset.wasm?url'`
+ * Bun plugin that handles Vite-style `?url` suffix imports - `import url from 'pkg/asset.wasm?url'`
  * inlines the asset as a `data:` URL. Required because `@dxos/plugin-script` imports
  * `esbuild-wasm/esbuild.wasm?url` and hands it to `initialize({ wasmURL })`; a compiled binary has
  * no sibling assets to point a URL at, and marking the import external only defers the failure to
@@ -75,7 +75,7 @@ const NODE_STD_BUILTINS = ['assert', 'buffer', 'crypto', 'events', 'fs', 'fs/pro
 
 /**
  * Bun plugin that swaps `@dxos/node-std/<mod>` for the node builtin it re-exports. The shims exist
- * to give browser and workerd builds a replacement, which a bun target has no need for — and they
+ * to give browser and workerd builds a replacement, which a bun target has no need for - and they
  * cannot be bundled: Bun miscompiles `export * from 'node:<mod>'` into `__reExport(exports, node_<mod>)`
  * against a namespace binding it never emits, so the binary dies with `node_<mod> is not defined`.
  * A `require` stub is used rather than resolving to `node:<mod>` directly, which Bun's resolver
@@ -98,7 +98,7 @@ const nodeStdPlugin: BunPlugin = {
 /**
  * Bun plugin that swaps `@automerge/automerge-subduction`'s `node` entry for its `web` entry.
  * The node entry `readFileSync`s the WASM module from a directory next to itself, which does not
- * exist inside Bun's embedded filesystem — the client fails to start with `ENOENT ... /$bunfs/
+ * exist inside Bun's embedded filesystem - the client fails to start with `ENOENT ... /$bunfs/
  * wasm_bindgen/automerge_subduction_wasm_bg.wasm`. The web entry inlines the same module as base64.
  */
 const subductionWasmPlugin: BunPlugin = {
@@ -115,7 +115,7 @@ const subductionWasmPlugin: BunPlugin = {
 /**
  * Bun plugin that swaps `@automerge/automerge`'s `node` entry for its base64 entry. The node entry
  * reads its WASM with `readFileSync(`${__dirname}/automerge_wasm_bg.wasm`)`, and Bun resolves that
- * `__dirname` at bundle time — baking the build machine's `node_modules` path into the binary, which
+ * `__dirname` at bundle time - baking the build machine's `node_modules` path into the binary, which
  * then dies with `ENOENT ... automerge_wasm_bg.wasm` on every other machine. The base64 entry inlines
  * the same module, so the binary carries it.
  */
@@ -130,10 +130,10 @@ const automergeWasmPlugin: BunPlugin = {
   },
 };
 
-// Platform configurations. Every target needs its `@opentui/core-<platform>-<arch>` installed here —
+// Platform configurations. Every target needs its `@opentui/core-<platform>-<arch>` installed here -
 // `@opentui/core` reaches its native library through a dynamic import interpolating
 // `process.platform`/`process.arch`, which bun folds into a constant per target and resolves at
-// bundle time — hence the devDependencies on all five, which pnpm otherwise installs for the host
+// bundle time - hence the devDependencies on all five, which pnpm otherwise installs for the host
 // platform alone.
 const platforms = [
   { target: 'bun-darwin-arm64', platform: 'darwin', arch: 'arm64', ext: '' },
@@ -143,8 +143,8 @@ const platforms = [
   { target: 'bun-windows-x64', platform: 'win32', arch: 'x64', ext: '.exe' },
 ] as const;
 
-// The compiler version is part of the artifact — 1.3.4 leaked `--smol` into `process.argv` so the binary
-// rejected its own arguments — and CI resolved a bare `bun` from its image rather than the pin, because
+// The compiler version is part of the artifact - 1.3.4 leaked `--smol` into `process.argv` so the binary
+// rejected its own arguments - and CI resolved a bare `bun` from its image rather than the pin, because
 // `setup-toolchain` runs with `auto-install: false` and no bun shim existed. Fail here rather than ship a
 // binary built by an unpinned compiler.
 const pinnedBun = (await Bun.file('../../../.prototools').text()).match(/^bun\s*=\s*"([^"]+)"/m)?.[1];
@@ -211,7 +211,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
   }
 
   // The launcher execs this binary by path rather than through npm's `bin` field, so npm never
-  // applies the executable bit on install — it has to survive from here into the tarball.
+  // applies the executable bit on install - it has to survive from here into the tarball.
   await chmod(outfile, 0o755);
 
   // Copy LICENSE file.
@@ -241,7 +241,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
 
   await writeFile(join(outDir, 'package.json'), JSON.stringify(platformPackage, null, 2));
 
-  console.log(`[Build] ✓ ${packageName}`);
+  console.log(`[Build] OK ${packageName}`);
 });
 
 await Promise.all(buildPromises);
@@ -334,7 +334,7 @@ const mainPackage = {
 
 await writeFile(join(mainDir, 'package.json'), JSON.stringify(mainPackage, null, 2));
 
-console.log('[Build] ✓ Main package generated');
+console.log('[Build] OK Main package generated');
 console.log('[Build] Build completed successfully!');
 console.log(`[Build] Generated packages in dist/:`);
 console.log(`  - cli (main package)`);

@@ -39,7 +39,7 @@ const NO_RING = 'focus-visible:ring-0';
 export const keyAt = (keys: readonly number[], t: number, fps: number): number | undefined =>
   keys.find((key) => Math.abs(key - t) < 0.5 / fps);
 
-/** Where ⌘ with an arrow goes from `t`: the next (or previous) key, else the end (or start) when there is none that way. */
+/** Where Cmd with an arrow goes from `t`: the next (or previous) key, else the end (or start) when there is none that way. */
 export const jumpTarget = (keys: readonly number[], t: number, fps: number, duration: number, back: boolean): number =>
   (back ? [...keys].reverse().find((key) => key < t - 0.5 / fps) : keys.find((key) => key > t + 0.5 / fps)) ??
   (back ? 0 : duration);
@@ -54,9 +54,9 @@ export const formatTime = (t: number, fps: number): string => {
 /**
  * The collapsed timeline (ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
  * keys on it, the time, the key toggle and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the
- * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
+ * playhead to it. On the track, the arrows step a frame (with Shift, a second), Cmd or Ctrl with an arrow jumps to the
  * previous or next key (the start or end when there is none that way), and Delete removes the key under the playhead. On the play button, Left and Right jump to the
- * keys (or ends) with ⌘ or Ctrl and scrub otherwise, Enter keys the playhead, Delete removes the key there and Space plays and pauses.
+ * keys (or ends) with Cmd or Ctrl and scrub otherwise, Enter keys the playhead, Delete removes the key there and Space plays and pauses.
  */
 export const TimelinePanel = ({
   classNames,
@@ -137,7 +137,7 @@ export const TimelinePanel = ({
         icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
         label={playing ? 'Pause' : 'Play'}
         data-testid='timeline-play'
-        // Focused, the button drives the playhead and keys: Left and Right scrub a frame (Shift, a second), with ⌘ or
+        // Focused, the button drives the playhead and keys: Left and Right scrub a frame (Shift, a second), with Cmd or
         // Ctrl they jump to the next key, or the end when there is none; Enter keys the playhead (unless it is on a key)
         // and Delete removes the key there. Space, the button's own key, plays and pauses.
         onKeyDown={(event) => {
@@ -261,13 +261,13 @@ export const TimelinePanel = ({
             </Menu.Trigger>
             <Menu.Content>
               <Menu.Item
-                item={{ value: 'add-key', label: 'Add key', shortcut: '↵' }}
+                item={{ value: 'add-key', label: 'Add key', shortcut: '\u21B5' }}
                 disabled={current !== undefined || !onAddKey}
                 data-testid='timeline-add-key'
                 onSelect={() => onAddKey?.()}
               />
               <Menu.Item
-                item={{ value: 'remove-key', label: 'Delete key', shortcut: '⌫' }}
+                item={{ value: 'remove-key', label: 'Delete key', shortcut: '\u232B' }}
                 disabled={current === undefined || !onRemoveKey}
                 data-testid='timeline-remove-key'
                 onSelect={() => onRemoveKey?.()}

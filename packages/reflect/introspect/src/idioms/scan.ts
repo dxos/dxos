@@ -26,7 +26,7 @@ const DEFAULT_IGNORE = ['**/node_modules/**', '**/dist/**', '**/__fixtures__/**'
  * Locate every `@idiom <slug>` JSDoc tag under `rootPath` and return a flat list.
  *
  * POC implementation: regex over source files. Does not resolve `{@link}` refs
- * against a symbol graph — that comes when this moves onto the ts-morph indexer.
+ * against a symbol graph - that comes when this moves onto the ts-morph indexer.
  */
 export const scanIdioms = async (options: ScanIdiomsOptions): Promise<Idiom[]> => {
   const { rootPath, patterns = DEFAULT_PATTERNS, ignore = DEFAULT_IGNORE } = options;
@@ -47,7 +47,7 @@ export const scanIdioms = async (options: ScanIdiomsOptions): Promise<Idiom[]> =
 };
 
 const JSDOC_BLOCK_RE = /\/\*\*([\s\S]*?)\*\//g;
-// Slug must be an NSID — validated via @dxos/util.isWellFormedId.
+// Slug must be an NSID - validated via @dxos/util.isWellFormedId.
 const IDIOM_TAG_RE = /@idiom\s+([a-zA-Z][a-zA-Z0-9.-]+)\s*\n([\s\S]*)/;
 
 const parseFile = (content: string, absPath: string, rootPath: string): Idiom[] => {

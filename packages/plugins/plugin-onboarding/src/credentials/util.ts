@@ -31,7 +31,7 @@ export const joinWaitlist = async ({
 /**
  * POST `/account/login` on hub-service. Existing-account email recovery only;
  * never creates new accounts (other than the test-email carve-out). The link
- * is delivered out-of-band and the response is `{}` — a recovery token is
+ * is delivered out-of-band and the response is `{}` - a recovery token is
  * never returned inline. The response shape is identical for unknown emails
  * (enumeration-safe).
  *

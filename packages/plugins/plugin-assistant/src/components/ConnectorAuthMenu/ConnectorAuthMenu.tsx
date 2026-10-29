@@ -26,7 +26,7 @@ export type ConnectorAuthMenuProps = {
   /** Stable ids of the {@link ConnectorSpec.Connector} entries this menu offers: existing connections from any of
    * them are offered for reuse, and each (with an auth flow) gets a "Connect X" entry. */
   connectorIds: readonly string[];
-  /** Omitted when there is no active database yet (e.g. no space selected) — nothing is offered. */
+  /** Omitted when there is no active database yet (e.g. no space selected) - nothing is offered. */
   db: Database.Database | undefined;
   /** Existing local object to wire up as the new connection's first sync target. */
   existingTarget?: Ref.Ref<Obj.Unknown>;

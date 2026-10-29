@@ -14,7 +14,7 @@ import { useViewStateActions } from '@dxos/react-ui-attention';
 import { type RecorderCapabilities } from '#types';
 
 /**
- * Starts a recording — of the whole presentation, or of `slide` alone — and presents the deck from where it begins.
+ * Starts a recording - of the whole presentation, or of `slide` alone - and presents the deck from where it begins.
  * Call the result from a click: the recorder opens the media inputs inside it.
  */
 export const useStartRecording = (

@@ -35,7 +35,7 @@ export const formatEscalationReport = ({ size, mutations, dbPath, binPath }) => 
   lines.push(`- **source database:** \`${dbPath}\``);
   lines.push(`- **binary artifact:** \`${binPath}\``);
   lines.push(
-    `- **chunks:** ${size.chunkCount} (${size.snapshotCount} snapshot, ${size.incrementalCount} incremental) — merged in StorageSubsystem order`,
+    `- **chunks:** ${size.chunkCount} (${size.snapshotCount} snapshot, ${size.incrementalCount} incremental) - merged in StorageSubsystem order`,
   );
   lines.push(`- **objectMeta rows:** ${size.objectMetaRows}`);
   nl();
@@ -81,7 +81,7 @@ export const formatEscalationReport = ({ size, mutations, dbPath, binPath }) => 
   for (const summary of mutations.reified.objectSummaries) {
     if (summary.hasTagsIndex) {
       lines.push(
-        `- **${summary.objectId}**${summary.name ? ` (${summary.name})` : ''}: TagIndex \`tags\` — ${summary.tagKeyCount} tag keys, ${summary.tagIdCount} tagged object ids (largest array: ${summary.largestTagArray})`,
+        `- **${summary.objectId}**${summary.name ? ` (${summary.name})` : ''}: TagIndex \`tags\` - ${summary.tagKeyCount} tag keys, ${summary.tagIdCount} tagged object ids (largest array: ${summary.largestTagArray})`,
       );
     } else {
       lines.push(`- **${summary.objectId}**: data keys [${summary.dataKeys.join(', ')}]`);
@@ -90,7 +90,7 @@ export const formatEscalationReport = ({ size, mutations, dbPath, binPath }) => 
   nl();
 
   lines.push('## Chunk growth');
-  lines.push(`| Type | Bytes | Δ ops | Δ changes | Load |`);
+  lines.push(`| Type | Bytes | Delta ops | Delta changes | Load |`);
   lines.push(`|------|-------|-------|-----------|------|`);
   for (const row of mutations.chunkGrowth) {
     lines.push(

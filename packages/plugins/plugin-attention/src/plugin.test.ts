@@ -21,8 +21,8 @@ describe('AttentionPlugin', () => {
     });
 
     // All modules are dependency-mode and activate during the startup dependency pass. `#plugin`
-    // resolves the node barrel here, which stubs `ReactContext` — a context provider contributes
-    // nothing without a React tree — so the rest is what this environment is expected to carry.
+    // resolves the node barrel here, which stubs `ReactContext` - a context provider contributes
+    // nothing without a React tree - so the rest is what this environment is expected to carry.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('attention'), moduleId('Keyboard'), moduleId('OperationHandler')]),
     );

@@ -4,7 +4,7 @@
 
 import { format as formatDate } from 'date-fns';
 
-/** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone. */
+/** ISO 8601 -> `YYYY-MM-DDTHH:mm` in the user's local timezone. */
 export const isoToLocalDateTime = (value: string | undefined): string => {
   if (!value) {
     return '';
@@ -16,7 +16,7 @@ export const isoToLocalDateTime = (value: string | undefined): string => {
   return formatDate(date, "yyyy-MM-dd'T'HH:mm");
 };
 
-/** `YYYY-MM-DDTHH:mm` (local) → ISO 8601 with timezone. */
+/** `YYYY-MM-DDTHH:mm` (local) -> ISO 8601 with timezone. */
 export const localDateTimeToIso = (value: string): string | undefined => {
   if (!value) {
     return undefined;

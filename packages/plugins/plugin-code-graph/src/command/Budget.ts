@@ -102,7 +102,7 @@ const render = (trailer: Omit<Trailer, 'text'>): Trailer => {
     .join(', ');
   const moreGroups = trailer.byGroup.length > GROUPS ? `, +${trailer.byGroup.length - GROUPS} more` : '';
   const where = groups ? ` in ${groups}${moreGroups}` : '';
-  const moreExamples = trailer.count > trailer.examples.length ? ', …' : '';
+  const moreExamples = trailer.count > trailer.examples.length ? ', \u2026' : '';
   return {
     ...trailer,
     text: `+${trailer.count} not shown: ${kinds}${where}, e.g. ${trailer.examples.join(', ')}${moreExamples}`,

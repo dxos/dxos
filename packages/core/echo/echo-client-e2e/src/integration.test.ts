@@ -250,7 +250,7 @@ describe('Integration tests', () => {
     await using peer = await builder.createPeer();
     await using db = await peer.createDatabase(spaceKey);
 
-    // Register a type in the in-process registry — the "registry object".
+    // Register a type in the in-process registry - the "registry object".
     db.graph.registry.add([TestSchema.Person]);
     const typeDXN = DXN.make(Type.getTypename(TestSchema.Person), Type.getVersion(TestSchema.Person));
 
@@ -259,7 +259,7 @@ describe('Integration tests', () => {
     await db.flush();
 
     // A DXN ref into the in-process registry resolves synchronously (resolveSync),
-    // since the registry is in-memory — no async load is required.
+    // since the registry is in-memory - no async load is required.
     const target = object.type.target;
     expect(Type.isType(target)).to.be.true;
     expect(Type.getTypename(target)).to.eq(Type.getTypename(TestSchema.Person));
@@ -274,7 +274,7 @@ describe('Integration tests', () => {
     await using peer = await builder.createPeer();
     await using db = await peer.createDatabase(spaceKey);
 
-    // Register a keyed (non-type) entity in the in-process registry — e.g. an operation descriptor.
+    // Register a keyed (non-type) entity in the in-process registry - e.g. an operation descriptor.
     const registryObject = Obj.make(TestSchema.Expando, {
       [Obj.Meta]: { key: 'com.example.function.translate', version: '0.1.0' },
       label: 'Translate',
@@ -458,7 +458,7 @@ describe('Integration tests', () => {
         .poll(async () => {
           const state = await db2.getAutomergeSyncState();
           const peer = state.peers?.[0];
-          // No peer synced yet — the poll retries until one appears.
+          // No peer synced yet - the poll retries until one appears.
           return peer ? peer.differentDocuments + peer.missingOnRemote + peer.missingOnLocal : -1;
         })
         .toEqual(0);

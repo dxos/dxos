@@ -21,10 +21,10 @@ const IbkrTokenForm = Schema.Struct({
     title: 'Flex query ID',
     description:
       'The id of the Activity Flex Query. Use a short period (Last Business Day or Last Month).\n' +
-      '• Open Positions — keep only: Symbol, Position, Mark Price, Position Value, Cost Basis Price, Cost Basis Money, Unrealized P/L, Currency.\n' +
-      '• Trades — Execution model only; keep only: Symbol, Buy/Sell, Quantity, TradePrice, Trade Date, IB Commission, Currency.\n' +
-      '• Cash Report — keep only: Currency, Ending Cash.\n' +
-      '• For tax: optionally set Open Positions to Lot level (adds Open Date, Cost Basis Money) and add a Trades → Closed Lots section (Open/Trade Date, Cost, Proceeds, Realized P/L). These are heavier and span the tax year — best as a separate annual query, not the daily one.\n' +
+      '* Open Positions - keep only: Symbol, Position, Mark Price, Position Value, Cost Basis Price, Cost Basis Money, Unrealized P/L, Currency.\n' +
+      '* Trades - Execution model only; keep only: Symbol, Buy/Sell, Quantity, TradePrice, Trade Date, IB Commission, Currency.\n' +
+      '* Cash Report - keep only: Currency, Ending Cash.\n' +
+      '* For tax: optionally set Open Positions to Lot level (adds Open Date, Cost Basis Money) and add a Trades -> Closed Lots section (Open/Trade Date, Cost, Proceeds, Realized P/L). These are heavier and span the tax year - best as a separate annual query, not the daily one.\n' +
       'Heavy columns (Realized P/L, MTM P/L, Wash Sales, full-history cost basis) and long periods force full-history computation and cause error 1001.',
   }),
 });

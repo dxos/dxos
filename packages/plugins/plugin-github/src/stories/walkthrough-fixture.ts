@@ -5,7 +5,7 @@
 /**
  * A pull-request walkthrough: one markdown document whose prose, headings and ```diff fences read as
  * a single narrative. Written out rather than generated so the story exercises the cases that matter
- * visually — a pure insertion, a replacement, a removal, several hunks in one file, and a fence with
+ * visually - a pure insertion, a replacement, a removal, several hunks in one file, and a fence with
  * no metadata at all.
  */
 export const WALKTHROUGH = `# MCP latency probe

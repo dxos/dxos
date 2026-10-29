@@ -73,8 +73,8 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
     filter?: string;
     /**
      * Canonical system tag (Inbox/Sent/Draft) this view resolves by id, not by parsing `filter` as tag
-     * text — stays correct regardless of label/provider. `filter` seeds the editable box; once edited
-     * away from that seed, normal text/tag parsing takes over (Drafts hides the box — see `hideFilterEditor`).
+     * text - stays correct regardless of label/provider. `filter` seeds the editable box; once edited
+     * away from that seed, normal text/tag parsing takes over (Drafts hides the box - see `hideFilterEditor`).
      */
     systemTag?: SystemTags.SystemTagId;
   }
@@ -97,7 +97,7 @@ export const MailboxArticle = ({
 
   // Mail sync (`#sync`), the analyze cascade (`#analyze`), Triage inbox (`#triage`) and a message's extraction (`#extract`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
-  // first — it is the one that changes what the list contains rather than what is known about it.
+  // first - it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = ToolkitHooks.useProgressMonitor(createSyncProgressKey(mailbox));
   const scanProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
   const triageProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createTriageProgressKey(mailbox));
@@ -145,7 +145,7 @@ export const MailboxArticle = ({
   // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
-  // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
+  // possible here - ordering threads by a `max(created)` aggregate needs the full set to rank them.
 
   // Read reactively so a text search scoped to a tag's members (see `buildSearchSelection`)
   // re-runs when that tag's membership changes.
@@ -167,13 +167,13 @@ export const MailboxArticle = ({
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
 
   // A thread qualifies if any of its messages match `selection`, and `buildThreadSemiJoin` then
-  // selects every message sharing that thread's `threadId` — across the feed and this space
-  // (drafts) — so `count`/`items` reflect the whole thread rather than only its filter-matching
+  // selects every message sharing that thread's `threadId` - across the feed and this space
+  // (drafts) - so `count`/`items` reflect the whole thread rather than only its filter-matching
   // members. Inbox/Sent/Drafts ids may resolve on either side, so that view's own matches scope is
   // the same feed+space scope as the outer query; free text stays feed-only for matching (too
-  // complex to scope across the whole space — see `hideFilterEditor`), even though the outer,
+  // complex to scope across the whole space - see `hideFilterEditor`), even though the outer,
   // thread-pulling scope still spans both. The space side can surface another mailbox's draft that
-  // happens to share a `threadId` (thread ids are effectively globally unique, so this is rare) —
+  // happens to share a `threadId` (thread ids are effectively globally unique, so this is rare) -
   // `reconcileDrafts` below re-scopes drafts to this mailbox and drops ones already superseded by
   // their synced copy. Either view degrades to space-only while `feed` is still resolving; free
   // text has nothing to match yet without a feed.
@@ -211,7 +211,7 @@ export const MailboxArticle = ({
 
   // The aggregate query already orders threads (by latest message) and their members (newest-first),
   // and its group key falls back to the message id, so a threadless message arrives as its own
-  // one-member group — entries map straight to stack items. A thread's preview is capped at
+  // one-member group - entries map straight to stack items. A thread's preview is capped at
   // `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<InboxStackItem[]>(() => {
     const result: InboxStackItem[] = [];
@@ -238,12 +238,12 @@ export const MailboxArticle = ({
     [rankedItems],
   );
 
-  // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
+  // Drives an in-flow spinner in the list, never a full-panel fallback - a page fetch or a
   // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
   //
   // Deliberately NOT widened to cover the feed's own resolution: a system-tag view degrades to a
   // space-only scope while `mailbox.feed` loads, which answers immediately with nothing (measured on
-  // a live profile: 0 messages space-only vs 432 feed-scoped) — but spinning through that window
+  // a live profile: 0 messages space-only vs 432 feed-scoped) - but spinning through that window
   // just trades a flash of the empty panel for a flash of the spinner. The `Deferred` below holds
   // the panel back instead, which costs no visible state at all.
   const loading = !source || pagination.isLoading;
@@ -487,7 +487,7 @@ const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGro
 /**
  * Synced messages (no `properties.mailbox`) always pass; drafts pass only when they belong to this
  * mailbox and aren't yet superseded by their sent copy (matched on the provider id set at send
- * time). Mirrors the reconciliation in `app-graph-builder.ts`'s `mailboxMessage` connector — the
+ * time). Mirrors the reconciliation in `app-graph-builder.ts`'s `mailboxMessage` connector - the
  * whole-thread semi-join's space scope can pull in another mailbox's draft sharing a `threadId`, or
  * a draft whose sent copy has already synced into the feed.
  */
@@ -568,7 +568,7 @@ const useSystemTagUri = (
 const EMPTY_IDS_ATOM = Atom.make((): readonly EntityId[] => []);
 
 /**
- * Reactive ids carrying `tagUri` in `tagIndex`. Feed/space messages have no `meta.tags` of their own —
+ * Reactive ids carrying `tagUri` in `tagIndex`. Feed/space messages have no `meta.tags` of their own -
  * membership lives in the mailbox's `TagIndex` sibling object instead, so a bare `Filter.tag` can't see it.
  */
 const useTaggedIds = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | undefined): readonly EntityId[] => {
@@ -610,7 +610,7 @@ const useMailboxActions = (
   }, [invoker, mailbox, nodeId]);
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
-  // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
+  // action hooks - components (and the hooks they call) must not resolve capabilities themselves.
   const extractors = Hooks.useCapabilities(InboxCapabilities.ObjectExtractor);
   const injectedActions = Hooks.useCapabilities(InboxCapabilities.MailboxAction);
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
@@ -642,7 +642,7 @@ const useMailboxActions = (
         );
 
       // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
-      // Always present (even for an empty mailbox — filtering an empty list is harmless) except in the
+      // Always present (even for an empty mailbox - filtering an empty list is harmless) except in the
       // Drafts view (see `hideFilterEditor`'s docstring).
       if (!hideFilterEditor) {
         builder.action(
@@ -656,7 +656,7 @@ const useMailboxActions = (
         );
       }
 
-      // Mailbox-wide jobs (sync, analyze, extract) share the trailing ⋮ menu so the toolbar row stays
+      // Mailbox-wide jobs (sync, analyze, extract) share the trailing : menu so the toolbar row stays
       // with the per-view controls; other contributed toolbar actions (Connect) keep their place in the row.
       return builder
         .separator('gap')

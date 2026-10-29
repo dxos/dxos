@@ -35,7 +35,7 @@ type Entry = Schema.Schema.Type<typeof Entry>;
 export class Lens extends Type.makeObject<Lens>(DXN.make('org.dxos.type.lens', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    /** Lens id — stable across serialization, and the key its overlay values are stored under. */
+    /** Lens id - stable across serialization, and the key its overlay values are stored under. */
     lens: Schema.String,
     /** `typename@version` of the source type. */
     source: Schema.String,
@@ -50,7 +50,7 @@ export class Lens extends Type.makeObject<Lens>(DXN.make('org.dxos.type.lens', '
  *
  * Only declarative entries survive: a rename, a read-only projection, or a conversion naming a
  * registered codec. An inline `get`/`put` pair cannot be persisted, and silently dropping it would
- * store a lens that quietly loses a property — so this throws and names the offender.
+ * store a lens that quietly loses a property - so this throws and names the offender.
  */
 export const toObject = (lens: AnyLens, options: { name?: string } = {}): Lens => {
   // A coded lens has no per-property plan, so `?? []` would silently persist it as an EMPTY

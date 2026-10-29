@@ -61,8 +61,8 @@ const model: RatingModel = {
 describe('model panel', () => {
   test("a formula carries the session's bounds, over the results in scope only", ({ expect }) => {
     expect(boundsOf(model, price, items)).toEqual({ lo: 10, hi: 30 });
-    expect(termExpression(price, boundsOf(model, price, items))).toBe('s = (30 − price) / 20');
-    expect(termExpression(cost, undefined)).toBe('s = max(0, 1 − dist(rent + fee, [50, 150]) / 50)');
+    expect(termExpression(price, boundsOf(model, price, items))).toBe('s = (30 - price) / 20');
+    expect(termExpression(cost, undefined)).toBe('s = max(0, 1 - dist(rent + fee, [50, 150]) / 50)');
     expect(termExpression(dice, undefined)).toBe('s = name ~ /dice/i');
     expect(termExpression(price, { lo: 5, hi: 5 })).toBe('s = 1  (every result has 5)');
   });
@@ -70,15 +70,17 @@ describe('model panel', () => {
   test('a real model reads with its target and its CURIEs', ({ expect }) => {
     const [rating] = sessionModel.terms;
     expect(rating && termExpression(rating, undefined)).toBe(
-      's = max(0, 1 − |schema:ratingValue − 4.9| / 0.15);  missing → 0.4',
+      's = max(0, 1 - |schema:ratingValue - 4.9| / 0.15);  missing -> 0.4',
     );
-    expect(expressionParts('s = schema:ratingValue − 4.9')).toEqual(['s = ', 'schema:', 'ratingValue − 4.9']);
+    expect(expressionParts('s = schema:ratingValue - 4.9')).toEqual(['s = ', 'schema:', 'ratingValue - 4.9']);
   });
 
   test('the score formula names penalties and requirements while they are on', ({ expect }) => {
-    expect(scoreExpression(model, {})).toBe('score = (Σ wᵢ·sᵢ + Σ|negative wᵢ|) / Σ|wᵢ| × 0.3^(missed requirements)');
+    expect(scoreExpression(model, {})).toBe(
+      'score = (\u03A3 w\u1D62·s\u1D62 + \u03A3|negative w\u1D62|) / \u03A3|w\u1D62| × 0.3^(missed requirements)',
+    );
     expect(scoreExpression(model, { terms: { dice: { off: true } }, require: { Cheap: { off: true } } })).toBe(
-      'score = (Σ wᵢ·sᵢ) / Σ|wᵢ|',
+      'score = (\u03A3 w\u1D62·s\u1D62) / \u03A3|w\u1D62|',
     );
     expect(requirementExpression(cheap)).toBe('price < 50');
     expect(requirementExpression({ label: 'Where', value: { prop: 'city' }, op: '=', target: 'Ari' })).toBe(
@@ -128,11 +130,11 @@ describe('area notation', () => {
 
   test('reads an area term and requirement like the web UI', ({ expect }) => {
     const term = { id: 'lh-areas', label: 'In', weight: 1, value: { within: [near] }, shape: 'flag' as const };
-    expect(termExpression(term, undefined)).toBe('s = inside(area "Near Wierzbno") ? 1 : max(0, 1 − dist / 400 m)');
+    expect(termExpression(term, undefined)).toBe('s = inside(area "Near Wierzbno") ? 1 : max(0, 1 - dist / 400 m)');
     expect(valueExpression({ within: [near, square] })).toBe(
-      'max((inside(area "Near Wierzbno") ? 1 : max(0, 1 − dist / 400 m)), (inside(area "Mokotów")))',
+      'max((inside(area "Near Wierzbno") ? 1 : max(0, 1 - dist / 400 m)), (inside(area "Mokotów")))',
     );
-    expect(describeValue({ within: [near, square] })).toBe('location in “Near Wierzbno” or “Mokotów”');
+    expect(describeValue({ within: [near, square] })).toBe('location in "Near Wierzbno" or "Mokotów"');
     expect(requirementExpression({ label: 'Inside', value: { within: [near] }, op: '>', target: 0 })).toBe(
       'inside(area "Near Wierzbno") or dist < 400 m',
     );

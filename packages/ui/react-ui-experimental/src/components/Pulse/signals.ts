@@ -24,7 +24,7 @@ export const scaled =
   (i, j, time) =>
     signal(i, j, time) * scale;
 
-/** Randomly pings dots every `interval` milliseconds; each decays back to zero (half-life ≈ 0.46s). */
+/** Randomly pings dots every `interval` milliseconds; each decays back to zero (half-life ~ 0.46s). */
 export const useRandomPing = (dim: number, interval: number): PulseSignal => {
   const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
   const lastTimeRef = useRef(0);

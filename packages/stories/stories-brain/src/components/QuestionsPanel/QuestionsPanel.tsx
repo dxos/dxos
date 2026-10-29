@@ -26,7 +26,7 @@ export type QuestionsPanelProps = Util.ThemedClassName<{
 
 /**
  * Standing questions column: add a question, watch it flip to answered as the crawl accumulates
- * facts. Pure/presentational — the parent owns the question store and the add handler.
+ * facts. Pure/presentational - the parent owns the question store and the add handler.
  */
 export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: QuestionsPanelProps) => {
   const [text, setText] = useState('');
@@ -45,7 +45,7 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
         <Toolbar.Root>
           <Field.Root>
             <Input.Root
-              placeholder='Ask a standing question…'
+              placeholder='Ask a standing question...'
               value={text}
               disabled={disabled}
               onChange={(event) => setText(event.target.value)}

@@ -15,12 +15,12 @@ import { EID, type EntityId } from '@dxos/keys';
  * to the ids of the objects carrying that tag.
  *
  * Mutable database objects track their tags in `Obj.getMeta(obj).tags` (an array of tag ids).
- * Immutable feed/queue objects cannot carry their own meta, so this index — referenced from the
- * feed's host object as a child (see {@link Obj.setParent}) — augments that same process for them.
+ * Immutable feed/queue objects cannot carry their own meta, so this index - referenced from the
+ * feed's host object as a child (see {@link Obj.setParent}) - augments that same process for them.
  * Tags are sparse, so keying by tag id (rather than object id) keeps the index small and makes
  * "filter the feed by tag" a single lookup.
  *
- * The tag id is an existing {@link Tag} object's id/URI; labels are never duplicated here — they
+ * The tag id is an existing {@link Tag} object's id/URI; labels are never duplicated here - they
  * live on the {@link Tag} object and stay editable in one place.
  */
 export class TagIndex extends Type.makeObject<TagIndex>(DXN.make('org.dxos.type.tagIndex', '0.1.0'))(
@@ -49,7 +49,7 @@ export interface Accessor {
   /**
    * Applies many (tagId, objectId) pairs in a single `Obj.update` (one Automerge change + one
    * reactive notification for the whole batch, vs one per {@link setTag}). Use for a sync page's
-   * worth of tag applications — the per-call change/notification storm otherwise dominates commit and
+   * worth of tag applications - the per-call change/notification storm otherwise dominates commit and
    * freezes the UI. Idempotent per pair, same as {@link setTag}.
    */
   setBatch(entries: readonly { tagId: string; objectId: EntityId }[]): void;
@@ -124,7 +124,7 @@ const objectTagsFamily = Atom.family((key: TagKey) =>
 /**
  * TagIndex reactive atoms, memoized via `Atom.family`.
  *
- * - One argument: per-object tag-uri family — `(objectId) => Atom<string[]>`.
+ * - One argument: per-object tag-uri family - `(objectId) => Atom<string[]>`.
  * - Three arguments: membership boolean for one object+tag pair.
  */
 export function atom(tagIndex: TagIndex): (objectId: EntityId) => Atom.Atom<string[]>;
@@ -141,7 +141,7 @@ export function atom(
 }
 
 /**
- * Reactive atom for the ids of every object carrying `tagId` — the inverse of {@link atom}'s
+ * Reactive atom for the ids of every object carrying `tagId` - the inverse of {@link atom}'s
  * per-object family. Re-renders only when that tag's own id set changes (not on unrelated tags).
  */
 export const taggedIdsAtom = (tagIndex: TagIndex, tagId: string): Atom.Atom<readonly EntityId[]> =>
@@ -152,7 +152,7 @@ export const taggedIdsAtom = (tagIndex: TagIndex, tagId: string): Atom.Atom<read
  * object's URI; older data (and live writes) store it space-absolute (`echo://<space>/<eid>`), which
  * does not survive a space import because the space id changes. Comparing by the entity id (via the
  * relative EID) makes membership space-agnostic, so an absolute query matches a relatively-stored key
- * and vice versa — with no migration of existing absolute keys. Non-EID ids are returned unchanged.
+ * and vice versa - with no migration of existing absolute keys. Non-EID ids are returned unchanged.
  */
 const canonicalTagId = (tagId: string): string => {
   const eid = EID.tryParse(tagId);
@@ -176,7 +176,7 @@ export const bind = (tagIndex: TagIndex): Accessor => {
     });
   };
 
-  // Existence check via `Object.keys` — ECHO's reactive record proxy auto-vivifies missing keys on
+  // Existence check via `Object.keys` - ECHO's reactive record proxy auto-vivifies missing keys on
   // direct access, so `index[tagId]` is not reliably `undefined` for absent tags.
   const has = (index: TagIndex['index'], tagId: string): boolean => Object.keys(index).includes(tagId);
 
@@ -185,7 +185,7 @@ export const bind = (tagIndex: TagIndex): Accessor => {
     objects: (tagId) => {
       const index = read();
       // Match by canonical (space-relative) id so absolute and relative keys for the same tag both
-      // resolve; union across any mixed-form keys (defensive — a space rarely holds both).
+      // resolve; union across any mixed-form keys (defensive - a space rarely holds both).
       const target = canonicalTagId(tagId);
       const matches = Object.keys(index).filter((key) => canonicalTagId(key) === target);
       if (matches.length <= 1) {
@@ -207,12 +207,12 @@ export const bind = (tagIndex: TagIndex): Accessor => {
     },
     setTag: (tagId, objectId) =>
       write((index) => {
-        // Use `has` (not `index[tagId]`) for absence — the proxy auto-vivifies missing keys.
+        // Use `has` (not `index[tagId]`) for absence - the proxy auto-vivifies missing keys.
         if (!has(index, tagId)) {
           index[tagId] = [objectId];
         } else if (!index[tagId].includes(objectId)) {
-          // push() mutates in place → O(1) Automerge op (list insert).
-          // spread-replace would emit O(n) ops per call → quadratic history (DX-984).
+          // push() mutates in place -> O(1) Automerge op (list insert).
+          // spread-replace would emit O(n) ops per call -> quadratic history (DX-984).
           index[tagId].push(objectId);
         }
       }),
@@ -221,7 +221,7 @@ export const bind = (tagIndex: TagIndex): Accessor => {
         return;
       }
       write((index) => {
-        // One `Object.keys` snapshot for the whole batch, extended in place as tags are created —
+        // One `Object.keys` snapshot for the whole batch, extended in place as tags are created -
         // and, crucially, one `Obj.update` (one change + one notification) for all pairs.
         const known = new Set(Object.keys(index));
         for (const { tagId, objectId } of entries) {
@@ -243,8 +243,8 @@ export const bind = (tagIndex: TagIndex): Accessor => {
         if (at === -1) {
           return;
         }
-        // splice() removes in place → O(1) Automerge op (list delete).
-        // filter-replace would emit O(n) ops per call → quadratic history (DX-984).
+        // splice() removes in place -> O(1) Automerge op (list delete).
+        // filter-replace would emit O(n) ops per call -> quadratic history (DX-984).
         index[tagId].splice(at, 1);
         if (index[tagId].length === 0) {
           delete index[tagId];

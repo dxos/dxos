@@ -118,8 +118,8 @@ export type Curve = Schema.Schema.Type<typeof Curve>;
 
 /**
  * Circular arc sugar; reads back as a curve. Angles are degrees, measured clockwise from
- * the positive x-axis in screen coordinates (y grows downward): 0–180 is the lower half
- * (a smile), 180–360 the upper half (a frown).
+ * the positive x-axis in screen coordinates (y grows downward): 0-180 is the lower half
+ * (a smile), 180-360 the upper half (a frown).
  */
 export const Arc = Schema.Struct({
   kind: Schema.Literal('arc'),
@@ -200,9 +200,9 @@ export const markersOf = (arrow: Pick<Arrow, 'relation' | 'head' | 'tail' | 'str
 };
 
 /**
- * Connector. Endpoints are element refs — `"<elementId>"` within the same object or
+ * Connector. Endpoints are element refs - `"<elementId>"` within the same object or
  * `"<objectId>/<elementId>"` across objects, either with an optional `#<port>` naming an
- * attachment point on the element — or explicit local points. Bound endpoints track their
+ * attachment point on the element - or explicit local points. Bound endpoints track their
  * target when it moves; without a port the renderer picks the attachment point.
  */
 export const Arrow = Schema.Struct({
@@ -221,7 +221,7 @@ export const Arrow = Schema.Struct({
   }),
   relation: Schema.optional(Relation).annotate({
     description:
-      'What the connector means; sets its markers: inheritance and implementation (hollow triangle at the target), composition and aggregation (filled or hollow diamond at the source, the whole), one-to-many (bar at the source, crow’s foot at the target), many-to-many, dependency (dashed, open arrow), association.',
+      "What the connector means; sets its markers: inheritance and implementation (hollow triangle at the target), composition and aggregation (filled or hollow diamond at the source, the whole), one-to-many (bar at the source, crow's foot at the target), many-to-many, dependency (dashed, open arrow), association.",
   }),
   ...styleFields,
 });

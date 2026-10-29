@@ -14,7 +14,7 @@ export const ATPROTO_POLL_INTERVAL = 30_000;
 /** `AccessToken.source` and `Obj.Meta.keys[i].source` for Bluesky. */
 export const BLUESKY_SOURCE = 'bsky.app';
 
-/** Public read-only XRPC base — works for any public actor / public feed. */
+/** Public read-only XRPC base - works for any public actor / public feed. */
 export const BSKY_PUBLIC_API = 'https://public.api.bsky.app/xrpc';
 
 /**
@@ -48,7 +48,7 @@ export const MAX_PAGES_HARD_CAP = 20;
 /**
  * Default `maxPages` per target type when `target.options.maxPages` is unset.
  * Self-targets (posts / likes / bookmarks) are chronological so cursor-stopping
- * is reliable — let them walk a few pages on cold start. Custom feed
+ * is reliable - let them walk a few pages on cold start. Custom feed
  * generators are algorithmic and could page indefinitely; default to one
  * page per sync and let users opt into more.
  */

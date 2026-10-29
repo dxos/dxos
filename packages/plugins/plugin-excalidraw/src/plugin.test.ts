@@ -25,7 +25,7 @@ describe('ExcalidrawPlugin', () => {
 
     expect(harness.manager.getActive()).not.toContain(moduleId('drawing-variant'));
 
-    // Role-gated: no `article` surface has mounted, so the surface module must stay inactive —
+    // Role-gated: no `article` surface has mounted, so the surface module must stay inactive -
     // this is the demand gate the plugin depends on, so assert it rather than assume it.
     expect(harness.manager.getActive()).not.toContain(moduleId('ReactSurface'));
 

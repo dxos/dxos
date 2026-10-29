@@ -31,7 +31,7 @@ export type UseSyncTargetsResult = {
  * Shared "open the sync-targets dialog for this connection" trigger. Used by
  * the "Change sync targets" button in the {@link ConnectionArticle} surface.
  *
- * The dialog itself is rendered by the layout system as a Surface — see
+ * The dialog itself is rendered by the layout system as a Surface - see
  * `react-surface.tsx` and `SYNC_TARGETS_DIALOG`.
  */
 export const useSyncTargets = (connection: Connection.Connection | undefined): UseSyncTargetsResult => {

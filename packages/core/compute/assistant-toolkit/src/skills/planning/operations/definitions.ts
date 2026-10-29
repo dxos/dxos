@@ -70,7 +70,7 @@ export const AskQuestion = Operation.make({
       the round trip does.
       Every question is about one task on the checklist, named by its exact title: the task is put in
       'blocked' and the question filed on it, so the person answering can see what it holds up.
-      Offer the likely answers in "options" when you have them — the reader may still type their own,
+      Offer the likely answers in "options" when you have them - the reader may still type their own,
       so never phrase the question as if the list were exhaustive.
       Ask only what you genuinely cannot decide: a question costs the user a round trip, and a
       blocked task stays blocked until they take it.
@@ -84,7 +84,7 @@ export const AskQuestion = Operation.make({
     }),
     question: Schema.String.annotate({ description: 'The question, as put to the user.' }),
     context: Schema.optional(
-      Schema.String.annotate({ description: 'Why you are asking — what you are blocked on, in a sentence or two.' }),
+      Schema.String.annotate({ description: 'Why you are asking - what you are blocked on, in a sentence or two.' }),
     ),
     options: Schema.optional(
       Schema.Array(

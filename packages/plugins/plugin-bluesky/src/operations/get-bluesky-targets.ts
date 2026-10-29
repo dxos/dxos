@@ -38,7 +38,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       }
 
       // Saved feeds are best-effort. Credentials construction (PDS resolve,
-      // missing handle, edge config) and `getPreferences` can all fail —
+      // missing handle, edge config) and `getPreferences` can all fail -
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
@@ -52,7 +52,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       );
 
       const feedTargets = savedFeeds
-        // Skip the home timeline pseudo-entry — that's covered by `MY_POSTS`
+        // Skip the home timeline pseudo-entry - that's covered by `MY_POSTS`
         // for the user's own posts; the global timeline is enormous and
         // not interesting to sync into a local feed.
         .filter((entry) => entry.type === 'feed' || entry.type === 'list')

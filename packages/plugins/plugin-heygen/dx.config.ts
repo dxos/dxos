@@ -21,10 +21,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       HeyGen contributes a video-generation provider to Composer. It registers a Connector for
       heygen.com (an API-key credential form) so the user can connect their account, and implements the
-      plugin-studio GenerationService capability (kind 'video') by calling the HeyGen HTTP API — an
+      plugin-studio GenerationService capability (kind 'video') by calling the HeyGen HTTP API - an
       asynchronous job that is submitted then polled to completion. Avatar/voice ids are the
       kind-specific request config. The credential is resolved at generation time via CredentialsService.
-      This plugin is headless — it contributes services only and has no UI surfaces.
+      This plugin is headless - it contributes services only and has no UI surfaces.
     `,
     icon: { key: 'ph--circles-three--regular', hue: 'blue' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-heygen',

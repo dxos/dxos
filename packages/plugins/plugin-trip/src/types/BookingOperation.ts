@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 import * as BookingSearch from './BookingSearch.ts';
 
 /**
- * Searches for bookings (flights, …) across the enabled `BookingService`s. The handler resolves
+ * Searches for bookings (flights, ...) across the enabled `BookingService`s. The handler resolves
  * all contributed services, filters by the query kind and optional provider id, and returns the
  * matching service's offers. Exposed to the assistant via the booking skill.
  */

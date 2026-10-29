@@ -22,7 +22,7 @@ const make = () =>
       source: trim`
         You help plan a travel itinerary and find bookings for it.
 
-        Planning: the trip's bound object may already contain "activity" segments — fixed
+        Planning: the trip's bound object may already contain "activity" segments - fixed
         appointments at specific addresses, ordered by time. Fill in the connections between them.
         For each gap between two consecutive activities in different places, add a "road" segment
         (subKind transfer/car) from the first place to the second using the ${Operation.toolName(TripOperation.AddSegment)} tool. When

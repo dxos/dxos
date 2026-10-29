@@ -61,7 +61,7 @@ export const pushFacts: (
 });
 
 /**
- * Delivers what the agent's subscriptions have queued — after a push, or after a clock tick: each
+ * Delivers what the agent's subscriptions have queued - after a push, or after a clock tick: each
  * subscription with events sends one update, composed by the model from the facts behind its wakes
  * (and the conversation `transcript`, when a turn caused them) under the relay rules. A one-time
  * subscription also marks its goal achieved and is removed; an ongoing one acknowledges its events and

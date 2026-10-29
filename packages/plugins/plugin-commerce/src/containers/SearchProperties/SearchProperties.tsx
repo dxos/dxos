@@ -25,7 +25,7 @@ export type SearchPropertiesProps = {
 /**
  * Properties companion for a {@link Search}: a criteria form (the union of the selected providers'
  * search schemas) + a Run control. Surfaced in the object's Properties panel, below the generic
- * object form — which already edits `search.providers` via its ref-array picker, so no provider
+ * object form - which already edits `search.providers` via its ref-array picker, so no provider
  * selector is duplicated here. The masonry results live in the article.
  */
 export const SearchProperties = ({ search }: SearchPropertiesProps) => {
@@ -33,12 +33,12 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const database = Obj.getDatabase(search);
 
-  // Reactive query of every Provider in the space — used to resolve the Provider objects (and their
+  // Reactive query of every Provider in the space - used to resolve the Provider objects (and their
   // `searchSchema`) for the refs currently linked into `search.providers` by the generic form.
   const allProviders = useQuery(database, Filter.type(Provider.Provider));
 
-  // Match by object id (the DXN tail). DXN URIs separate the id with `/` — `echo:/<id>` for a
-  // local ref vs `echo://<space>/<id>` for a space-qualified one — so split on `/`, not `:`.
+  // Match by object id (the DXN tail). DXN URIs separate the id with `/` - `echo:/<id>` for a
+  // local ref vs `echo://<space>/<id>` for a space-qualified one - so split on `/`, not `:`.
   const refId = (ref: { uri: string }) => ref.uri.split('/').pop() ?? '';
   const selectedIds = useMemo(() => new Set(search.providers.map(refId)), [search.providers]);
 

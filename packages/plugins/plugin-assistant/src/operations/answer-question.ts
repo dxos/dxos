@@ -42,7 +42,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.AnswerQuestion> =
       });
       yield* Database.flush();
 
-      // A question asked outside a conversation (or whose chat has since gone) is still answered —
+      // A question asked outside a conversation (or whose chat has since gone) is still answered -
       // the record is the point; there is simply nobody to wake.
       const conversation = thread.question.conversation;
       const chat = conversation && (yield* Database.load(conversation).pipe(Effect.orElseSucceed(() => undefined)));
@@ -52,7 +52,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.AnswerQuestion> =
 
       // The answer is already durable, so a host that cannot reach the agent must not take it back:
       // re-asking the reader because the wake failed is the worse outcome. Interruption still
-      // propagates — converting it to `resumed: false` would defeat cancellation of this operation.
+      // propagates - converting it to `resumed: false` would defeat cancellation of this operation.
       const resumed = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
         chat,
         disposition: 'synthetic',

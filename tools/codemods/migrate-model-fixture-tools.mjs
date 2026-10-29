@@ -4,7 +4,7 @@
 
 // Rewrites the `parameters.tools[].inputSchema` of recorded model fixtures from Effect 3's JSON
 // Schema emission to Effect 4's. The request a test replays is keyed on its parameters, so a changed
-// emission is a key miss rather than a decode failure — every model-fixture suite goes red.
+// emission is a key miss rather than a decode failure - every model-fixture suite goes red.
 //
 // The replacements are not hand-written: they are captured from a failing replay. `LanguageModelFixture`
 // compares the prompted conversation against the closest stored one, and with `DX_DUMP_FIXTURE_TOOLS`
@@ -54,7 +54,7 @@ const canonical = (value) => {
   return JSON.stringify(value);
 };
 
-// `<tool name>\n<canonical stored schema>` → the v4 schema observed replacing it.
+// `<tool name>\n<canonical stored schema>` -> the v4 schema observed replacing it.
 const replacements = new Map();
 for (const file of jsonFiles(dumpDir)) {
   const { stored = [], prompted = [] } = JSON.parse(readFileSync(file, 'utf8'));
@@ -101,7 +101,7 @@ console.log(
   `captured ${replacements.size} replacements; rewrote ${rewritten} tool schemas across ${changedFiles} fixtures (${scanned} scanned)`,
 );
 if (unmatched.size > 0) {
-  // Either already migrated or never observed — the next replay says which.
+  // Either already migrated or never observed - the next replay says which.
   // eslint-disable-next-line no-console
   console.log(`left untouched: ${[...unmatched].sort().join(', ')}`);
 }

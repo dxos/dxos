@@ -30,7 +30,7 @@ export default Capability.makeModule(
 
     const monitor = RemoteTraceMonitor.createSwarmRemoteTraceMonitor({
       subscribe: (tags) =>
-        // Empty tag set matches nothing (avoids a firehose) — skip the subscription entirely.
+        // Empty tag set matches nothing (avoids a firehose) - skip the subscription entirely.
         tags.length === 0
           ? Stream.empty
           : Stream.unwrap(
@@ -48,7 +48,7 @@ export default Capability.makeModule(
                     '',
                 };
                 return client.services.rpc['NetworkService.subscribeMessages']({ peer, tags }).pipe(
-                  // Carry the envelope tags with the payload — the wire payload drops ref meta
+                  // Carry the envelope tags with the payload - the wire payload drops ref meta
                   // (`trigger`), and decode restores it from the tags for cancel addressing.
                   // v4's `filterMap` signals the drop through a `Result`, not an `Option`.
                   // The subscription also receives this peer's point-to-point messages (Messenger's

@@ -57,11 +57,11 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
       // A space-scoped filter yields a coarse `space:<id>` swarm subscription, so every remote
       // trace message for this space is delivered and re-filtered client-side.
       monitor.subscribeToTraceMessages({ space: space.id }).pipe(
-        // Stamp receipt time as each message arrives, before batching — `groupedWithin` can hold a
+        // Stamp receipt time as each message arrives, before batching - `groupedWithin` can hold a
         // batch for up to 250ms, so a post-batch `Date.now()` would misdate every event in it.
         Stream.map((message) => ({ message, receivedAt: Date.now() })),
         // Batch bursts (bulk sync broadcasts ~15 msg/s) so render cost is per-window rather than
-        // per-message — an unbatched backlog otherwise drains at render speed for minutes.
+        // per-message - an unbatched backlog otherwise drains at render speed for minutes.
         Stream.groupedWithin(64, '250 millis'),
         Stream.runForEach((batch) =>
           Effect.sync(() => {
@@ -126,7 +126,7 @@ const EventList = ({ events }: { events: readonly ReceivedEvent[] }) => {
   }, [events]);
 
   if (events.length === 0) {
-    return <div className='p-2 text-fg-muted'>Waiting for swarm trace events…</div>;
+    return <div className='p-2 text-fg-muted'>Waiting for swarm trace events...</div>;
   }
 
   return (

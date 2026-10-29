@@ -17,7 +17,7 @@ export type MoveTaskPanelProps = {
   onSelect: (project: Project.Project) => void;
 };
 
-/** A searchable list of destination projects for a task's "Move to…" action. */
+/** A searchable list of destination projects for a task's "Move to..." action. */
 export const MoveTaskPanel = ({ projects, onSelect }: MoveTaskPanelProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const sorted = useMemo(

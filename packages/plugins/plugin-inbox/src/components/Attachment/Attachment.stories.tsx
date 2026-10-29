@@ -44,7 +44,7 @@ export const Text: Story = {
 
 /**
  * The refusal path: unknown bytes get a download link, never a render. Also what SVG and HTML fall
- * back to — both are active content, so neither earns an inline view.
+ * back to - both are active content, so neither earns an inline view.
  */
 export const Unsupported: Story = {
   args: { url: TEXT_URL, kind: 'unsupported', type: 'application/zip', name: 'archive.zip' },
@@ -54,7 +54,7 @@ export const Pending: Story = {
   args: { kind: 'pdf', pending: true },
 };
 
-/** Resolution failed — distinct from pending, and the user should be told rather than shown a blank. */
+/** Resolution failed - distinct from pending, and the user should be told rather than shown a blank. */
 export const Unavailable: Story = {
   args: { kind: 'pdf', pending: false },
 };

@@ -20,12 +20,12 @@ import { selfActor } from './update-tasks.ts';
  *
  * The task is matched by title: the question has to name the task in words the reader recognizes,
  * and the title is the only part of a task the person answering ever sees. Two tasks sharing one
- * title are refused rather than guessed between — blocking the wrong one would leave the right one
+ * title are refused rather than guessed between - blocking the wrong one would leave the right one
  * looking live while nothing advances it.
  *
  * The question lands in the task's own history, so it cannot be separated from the work it blocks.
- * The task is set `blocked` alongside it — otherwise the checklist reads as work in progress that
- * nothing is advancing — and the entry carries the conversation ref, without which the answer has
+ * The task is set `blocked` alongside it - otherwise the checklist reads as work in progress that
+ * nothing is advancing - and the entry carries the conversation ref, without which the answer has
  * no session to resume.
  */
 export default AskQuestion.pipe(
@@ -38,7 +38,7 @@ export default AskQuestion.pipe(
       if (matches.length > 1) {
         return trim`
           "${title.trim()}" is the title of ${matches.length} tasks on this conversation's checklist, so
-          nothing was filed — blocking the wrong one would leave the right one looking live. Give the
+          nothing was filed - blocking the wrong one would leave the right one looking live. Give the
           tasks distinct titles with update-tasks, then ask again.
 
           <checklist>
@@ -107,7 +107,7 @@ export default AskQuestion.pipe(
       yield* Database.flush();
 
       return trim`
-        Question filed on "${task.title}", which is now blocked. Stop here and end your turn — you are
+        Question filed on "${task.title}", which is now blocked. Stop here and end your turn - you are
         sent a message when it is answered, and you read the answer back off the task's history.
         Show the reader the question by emitting this line verbatim, on its own:
 

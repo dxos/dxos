@@ -7,9 +7,9 @@ import { ALL_VARIANTS, type ModelVariant } from './models.ts';
 
 // Declarative model routing (REPORT §5): one place that maps each per-message / per-corpus pipeline
 // stage to the model it should run on, instead of hard-coding a `ModelVariant` at every call site.
-// This is the PRODUCT / single-run path — one model per stage — and is orthogonal to the ladder bench
+// This is the PRODUCT / single-run path - one model per stage - and is orthogonal to the ladder bench
 // (which deliberately runs every variant per task to compare them). Defaults are seeded from the §4
-// ladder findings; each layer overrides the previous (default → per-run policy → MODEL_POLICY env).
+// ladder findings; each layer overrides the previous (default -> per-run policy -> MODEL_POLICY env).
 
 /** The LLM-bearing pipeline stages. Deterministic stages (dedup, threading, stats) never appear here. */
 export type StageId =
@@ -21,7 +21,7 @@ export type StageId =
   | 'draft'
   | 'summarize-topic';
 
-/** A partial policy: stage → a `ModelVariant` name (substring), resolved to model DXN + provider + preset. */
+/** A partial policy: stage -> a `ModelVariant` name (substring), resolved to model DXN + provider + preset. */
 export type ModelPolicy = Partial<Record<StageId, string>>;
 
 /**
@@ -35,7 +35,7 @@ export const DEFAULT_MODEL_POLICY: Record<StageId, string> = {
   'tag': 'claude-haiku', // Open weak on labeling-agreement (§4).
   'summarize-message': 'claude-haiku', // gpt-oss-20b close, at a coverage discount.
   'summarize-thread': 'claude-haiku', // Cross-message synthesis is where open weights break (§4).
-  'extract-facts': 'claude-haiku', // needs-eval → conservative.
+  'extract-facts': 'claude-haiku', // needs-eval -> conservative.
   'draft': 'gemma-4-12b', // Clears the bar (§4); gpt-oss-20b for speed.
   'summarize-topic': 'gpt-oss-20b', // Cheap prose over a deterministic skeleton.
 };
@@ -54,7 +54,7 @@ export const parseModelPolicyEnv = (raw = MODEL_POLICY): ModelPolicy => {
   return policy;
 };
 
-/** The effective variant name for a stage: default ← per-run policy ← env (later wins). */
+/** The effective variant name for a stage: default <- per-run policy <- env (later wins). */
 export const resolveModelName = (stage: StageId, policy?: ModelPolicy): string => {
   const merged = { ...DEFAULT_MODEL_POLICY, ...policy, ...parseModelPolicyEnv() };
   return merged[stage];
@@ -62,7 +62,7 @@ export const resolveModelName = (stage: StageId, policy?: ModelPolicy): string =
 
 /**
  * Resolves the `ModelVariant` a stage should run on. The policy value is matched as a name substring
- * against `ALL_VARIANTS` (as `MODELS` does), so `haiku` → `claude-haiku`. Throws on an unknown name so
+ * against `ALL_VARIANTS` (as `MODELS` does), so `haiku` -> `claude-haiku`. Throws on an unknown name so
  * a typo'd override fails loudly rather than silently routing to the wrong (or no) model.
  */
 export const resolveModel = (stage: StageId, policy?: ModelPolicy): ModelVariant => {

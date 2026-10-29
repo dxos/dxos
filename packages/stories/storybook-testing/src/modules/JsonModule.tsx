@@ -9,7 +9,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 
 /**
  * Generic JSON inspector module: renders the cell's bound `subject` as highlighted JSON. Bind data
- * from a layout via a surface cell — `{ type: ModuleRole.Json, data: { subject } }` — so a story can
+ * from a layout via a surface cell - `{ type: ModuleRole.Json, data: { subject } }` - so a story can
  * inspect any live value beside its other modules.
  */
 export const JsonModule = ({ data }: { data?: { subject?: unknown } }) => (

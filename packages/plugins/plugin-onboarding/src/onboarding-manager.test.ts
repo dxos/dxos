@@ -23,7 +23,7 @@ class WrappedIdentityError extends Error {
   }
 }
 
-// No hubUrl is passed, so auth is skipped — the local/dev Composer configuration.
+// No hubUrl is passed, so auth is skipped - the local/dev Composer configuration.
 describe('OnboardingManager', () => {
   test('device invitation opens the join flow without auto-creating an identity', async ({ expect }) => {
     const { manager, getCalls } = await createManager({ deviceInvitationCode: 'test-code' });
@@ -37,7 +37,7 @@ describe('OnboardingManager', () => {
 
   test('a pending device invitation opens the join dialog without the welcome screen', async ({ expect }) => {
     // Both dialogs would race through the operation layer, and a welcome update landing second
-    // hides the join dialog — the device-join flow then stalls with no invitation input.
+    // hides the join dialog - the device-join flow then stalls with no invitation input.
     const { manager, calls } = await createManager({
       hubUrl: 'https://hub.example.com',
       deviceInvitationCode: 'test-code',
@@ -59,7 +59,7 @@ describe('OnboardingManager', () => {
     const { manager, calls } = await createManager({ identity: true, deviceInvitationCode: 'test-code' });
     await manager.initialize();
 
-    // The reset confirmation must be the only operation — no recovery/agent provisioning
+    // The reset confirmation must be the only operation - no recovery/agent provisioning
     // for an identity the user may be about to abandon.
     expect(calls).toEqual([
       expect.objectContaining({

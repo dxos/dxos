@@ -11,7 +11,7 @@ import { normalizeCell } from './ModuleContainer.tsx';
 describe('normalizeCell', () => {
   const Token = Role.make<Record<string, any>>('org.dxos.test.token');
 
-  test('role token → surface cell', () => {
+  test('role token -> surface cell', () => {
     expect(normalizeCell(Token, 'space-1')).toMatchObject({ kind: 'surface', type: Token });
   });
 

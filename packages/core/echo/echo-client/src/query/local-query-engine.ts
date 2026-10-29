@@ -280,7 +280,7 @@ export class LocalQueryEngine implements QueryContext {
     }
 
     // By id: the working set first, then the index for what it lacks, and only what neither holds is loaded
-    // through its document — an index row is placed without loading one.
+    // through its document - an index row is placed without loading one.
     const deadline = performance.now() + timeout;
     const missing = (entries: readonly SourceEntry[], wanted: readonly EntityId[]): EntityId[] => {
       const found = new Set(entries.map((entry) => entry.id));

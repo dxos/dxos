@@ -12,7 +12,7 @@ import { DebugNodes } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Neither host of the panel — the deck's drawer nor the floating window — owns this subtree.
+    // Neither host of the panel - the deck's drawer nor the floating window - owns this subtree.
     // TODO(wittjosiah): Release it when no host is showing it.
     const retention: AppCapabilities.AppGraphRetention = {
       retained: Atom.make([{ id: DebugNodes.DEBUG_ROOT_ID }]),

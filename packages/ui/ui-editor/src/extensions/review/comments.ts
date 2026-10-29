@@ -229,7 +229,7 @@ export const comments = (options: CommentsOptions): Extension => {
 
       // An explicit `setSelection` is authoritative: selecting a thread in the comments companion sets
       // `current` and moves the caret in one transaction, and the caret does not always land inside the
-      // tracked range — proximity would then clear the very selection that transaction just made. Report
+      // tracked range - proximity would then clear the very selection that transaction just made. Report
       // the applied selection so the app still learns which thread is current, but leave it as set.
       if (transactions.some((tr) => tr.effects.some((effect) => effect.is(setSelection)))) {
         notify(applied);
@@ -407,7 +407,7 @@ const commentsHighlightLayer = layer({
         comment.comment.id === current ? 'cm-comment-highlight cm-comment-highlight-current' : 'cm-comment-highlight';
       const range = EditorSelection.range(from, to);
       const markers = RectangleMarker.forRange(view, className, range);
-      // A single rectangle means the comment fits on one visual line — round its corners.
+      // A single rectangle means the comment fits on one visual line - round its corners.
       return markers.length === 1
         ? RectangleMarker.forRange(view, `${className} cm-comment-highlight-single`, range)
         : markers;
@@ -610,7 +610,7 @@ export const createComment: Command = (view) => {
   }
 
   // Exclude trailing newlines so the anchor stays within content and never reaches the document end.
-  // Anchoring at the very end previously required inserting a newline to stabilise the end cursor — a
+  // Anchoring at the very end previously required inserting a newline to stabilise the end cursor - a
   // visible, unwanted mutation; the end cursor instead associates with the preceding character.
   while (to > from && view.state.doc.sliceString(to - 1, to) === '\n') {
     to--;
@@ -696,7 +696,7 @@ export const scrollCommentIntoView = (
  * NOTE: Matches search.
  */
 // The visible highlight is drawn by `commentsHighlightLayer` (below) as a layer of rectangle markers,
-// so — like a text selection — it fills wrapped lines to the line edge instead of stopping at the last
+// so - like a text selection - it fills wrapped lines to the line edge instead of stopping at the last
 // glyph. The inline `cm-comment` mark is now transparent and exists only to carry `data-comment-id`
 // (click routing) and the pointer affordance. No `border-radius`: the per-line rectangles abut, so
 // rounding each would pinch the interior edges into notches on a multi-line comment.
@@ -714,7 +714,7 @@ const styles = EditorView.theme({
   '.cm-commentsHighlightLayer': {
     pointerEvents: 'none',
   },
-  // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour — visual
+  // `box-shadow` with a 1px spread extends the block 1px on every side in the same colour - visual
   // padding without changing layout. Vertically adjacent line rectangles paint into each other's gap
   // with the same colour, so a multi-line comment stays seamless.
   // 2px horizontal breathing room around the text: `padding-inline` widens the background box and the

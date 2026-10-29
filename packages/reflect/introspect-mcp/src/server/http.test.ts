@@ -22,7 +22,7 @@ const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__f
 
 // Pick a high port that's unlikely to collide with a running dev tool.
 const PORT = 39476;
-// Force IPv4 — `localhost` resolves to ::1 first on Linux containers, which
+// Force IPv4 - `localhost` resolves to ::1 first on Linux containers, which
 // breaks fetch() if the server bound to 127.0.0.1 (or vice versa).
 const HOST = '127.0.0.1';
 

@@ -231,7 +231,7 @@ test.describe('Table', () => {
     // Click on the combobox to open options
     await page.getByRole('combobox').click();
     await page.pause();
-    await page.getByPlaceholder('Search…').focus();
+    await page.getByPlaceholder('Search...').focus();
 
     // Type the first few letters of an org name.
     const orgName =
@@ -284,7 +284,7 @@ test.describe('Table', () => {
 
     // Click on the combobox to open options
     await page.getByRole('combobox').click();
-    await page.getByPlaceholder('Search…').focus();
+    await page.getByPlaceholder('Search...').focus();
 
     // Type the first few letters of an org name.
     const orgName = 'Sally';
@@ -303,7 +303,7 @@ test.describe('Table', () => {
     // Assert that the cell element has the org name
     await expect(targetCell).toHaveText(orgName);
 
-    // Make a change to a non-ref cell to check that populated refs don’t cause problems with snapshots or schemas.
+    // Make a change to a non-ref cell to check that populated refs don't cause problems with snapshots or schemas.
     await dxGrid.evaluate(async (dxGridElement: DxGrid) => {
       dxGridElement.scrollToColumn(6);
     });

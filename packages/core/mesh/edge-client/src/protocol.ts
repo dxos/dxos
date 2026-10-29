@@ -95,7 +95,7 @@ export class Protocol {
  * Convert websocket data to Uint8Array.
  */
 export const toUint8Array = async (data: any): Promise<Uint8Array> => {
-  // Node, where the websocket yields a `Buffer` — itself a `Uint8Array`, so one check covers both
+  // Node, where the websocket yields a `Buffer` - itself a `Uint8Array`, so one check covers both
   // runtimes and neither pulls in the browser `buffer` polyfill.
   if (data instanceof Uint8Array) {
     return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);

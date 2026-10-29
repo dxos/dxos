@@ -95,7 +95,7 @@ describe('DiffBlockWidget', () => {
     expect(dom.querySelector('.cm-diff-stat-added')?.textContent).to.eq('+1');
     expect(dom.querySelector('.cm-diff-stat-removed')?.textContent).to.eq('-1');
     expect(dom.querySelector('.cm-diff-lang')?.textContent).to.eq('TypeScript');
-    expect(dom.querySelector('.cm-diff-range')?.textContent).to.eq('Lines 10–12');
+    expect(dom.querySelector('.cm-diff-range')?.textContent).to.eq('Lines 10-12');
   });
 
   test('splits a pure insertion into a coloured line and a filler', () => {
@@ -178,7 +178,7 @@ describe('walkthroughOutline', () => {
     );
 
     expect(outline).to.have.length(1);
-    // Two additions across two chunks, one removal — the section's own total, not a file's.
+    // Two additions across two chunks, one removal - the section's own total, not a file's.
     expect(outline[0].added).to.eq(2);
     expect(outline[0].removed).to.eq(1);
     expect(outline[0].files.map((file) => file.name)).to.deep.eq(['a.ts', 'b.ts']);
@@ -376,9 +376,9 @@ describe('walkthroughSidebar', () => {
     expect(labels.length).to.be.greaterThan(0);
     expect(labels.every((label) => label && label.length > 0)).to.eq(true);
     expect(labels[0]).to.eq('Walkthrough');
-    expect(labels[1]).to.eq('Harness wiring — harness.ts — +1 -1');
+    expect(labels[1]).to.eq('Harness wiring - harness.ts - +1 -1');
     // The file's own row, named without its section.
-    expect(labels[2]).to.eq('harness.ts — +1 -1');
+    expect(labels[2]).to.eq('harness.ts - +1 -1');
   });
 
   test('leaves a count the row does not show out of the name', () => {
@@ -404,7 +404,7 @@ describe('walkthroughSidebar', () => {
     view.destroy();
 
     // The one file row below carries the counts, so the section's name does not repeat them.
-    expect(label).to.eq('Additions only — a.ts');
+    expect(label).to.eq('Additions only - a.ts');
   });
 
   test('leaves the counts to the file row when a section has exactly one file', () => {

@@ -21,7 +21,7 @@ import { type EdgeDrift, type Extents, type Layout, Placement } from './placemen
 import { useFollow } from './useFollow.ts';
 
 /**
- * What the window needs from a model, structurally — `ListModel`/`FeedModel` satisfy it, and the
+ * What the window needs from a model, structurally - `ListModel`/`FeedModel` satisfy it, and the
  * virtualizer stays importable without the model layer. The contract is SPEC F-7.1: a change says
  * what it was (`prepended`), so the anchor is told rather than left to infer it from identities.
  */
@@ -39,11 +39,11 @@ export type WindowModel = {
  * Three elements: a **sizer** that holds no rows and exists only to give the thumb something to
  * measure, a **window** holding the mounted rows in normal flow, and the scroller around them. The
  * window is absolutely positioned and moved by a transform, so a correction changes one number and
- * never touches `scrollTop` — which is what stops corrections and the reader sharing a channel (§7).
+ * never touches `scrollTop` - which is what stops corrections and the reader sharing a channel (§7).
  *
  * Rows are unpositioned. A row that changes extent reflows the ones after it, in the browser, in the
  * same frame; the alternative was re-placing every row below it ourselves on every frame of the
- * change — measured at 177 re-placements for one disclosure opening (§6).
+ * change - measured at 177 re-placements for one disclosure opening (§6).
  *
  * Knows nothing about messages, markdown or CodeMirror. What it renders is whatever `children`
  * returns, which is what lets `placement/*` drive it with content that cannot lie about its size.
@@ -57,7 +57,7 @@ export type WindowAxis = 'block' | 'inline';
  * and the host decides what to draw about it.
  */
 export type WindowState = {
-  /** The row at the top of the viewport — what "where am I" means to a reader. */
+  /** The row at the top of the viewport - what "where am I" means to a reader. */
   index: number;
   visible: { first: number; last: number };
   /** The mounted range, which includes the overscan the reader cannot see. */
@@ -66,7 +66,7 @@ export type WindowState = {
   /**
    * The same thing in pixels, which is what a map of the list has to draw.
    *
-   * `window` is the mounted parent's span in content space — where the rows that exist actually are —
+   * `window` is the mounted parent's span in content space - where the rows that exist actually are -
    * and `total` is what the thumb is scaled against. A map drawn from indices instead would be a map
    * of the model rather than of the layout, and it is the layout that goes wrong.
    */
@@ -75,7 +75,7 @@ export type WindowState = {
 
 export type WindowController = {
   /**
-   * `behavior: 'smooth'` glides, and only over content that is mounted — a glide across rows that do
+   * `behavior: 'smooth'` glides, and only over content that is mounted - a glide across rows that do
    * not exist is a journey over a blank screen, so a far target is taken instantly (§7).
    */
   scrollToIndex: (index: number, align?: 'start' | 'end', behavior?: ScrollBehavior) => void;
@@ -93,12 +93,12 @@ export type WindowProps = Util.ThemedClassName<{
    * Keep the last row against the end of the viewport as content arrives.
    *
    * Consumed by the trivial `Window` binding, which composes `useFollow`; `useWindow` itself knows
-   * nothing about following — the intent, the withdrawal and the glide are the aspect's (SPEC §Aspects).
+   * nothing about following - the intent, the withdrawal and the glide are the aspect's (SPEC §Aspects).
    */
   sticky?: boolean;
   /** What an edge revealed about the estimates, if it revealed anything. */
   onEdge?: (drift: EdgeDrift) => void;
-  /** A row whose declared extent was not the extent it rendered at. `exact` means do not correct — not do not check (§8). */
+  /** A row whose declared extent was not the extent it rendered at. `exact` means do not correct - not do not check (§8). */
   onMismatch?: (mismatch: { index: number; id: string; declared: number; actual: number }) => void;
   onChange?: (state: WindowState) => void;
   controllerRef?: Ref<WindowController>;
@@ -123,8 +123,8 @@ const windowExtentOf = (placement: Placement, first: number, last: number): numb
  * Everything the shape needs, with no opinion about who owns the scroll element.
  *
  * Split out because the DOM below is only the *simplest* binding of it. A host that already has a
- * scroll container — `MessageList` scrolls inside `ScrollArea`, which owns the overlay thumbs and
- * the padding tokens — cannot nest a second one, and would otherwise have to reimplement the
+ * scroll container - `MessageList` scrolls inside `ScrollArea`, which owns the overlay thumbs and
+ * the padding tokens - cannot nest a second one, and would otherwise have to reimplement the
  * placement to keep its own chrome. It hands its element over instead.
  */
 export type UseWindowOptions = Omit<WindowProps, 'classNames' | 'children'> & {
@@ -182,7 +182,7 @@ export const useWindow = ({
   );
 
   // A mismatch is news the first time and noise afterwards. Without this the report is emitted on
-  // every commit, and a host that renders the report re-renders on it — which is an infinite loop,
+  // every commit, and a host that renders the report re-renders on it - which is an infinite loop,
   // found by `placement/Drift` on its first run.
   const reported = useRef(new Set<string>());
 
@@ -191,11 +191,11 @@ export const useWindow = ({
   placement.setGetId(getId);
 
   // Which end the model grew at, told by the model (SPEC F-7.1). The engine used to reconstruct
-  // this by scanning for the previous first id — the model's own knowledge, recovered from its
+  // this by scanning for the previous first id - the model's own knowledge, recovered from its
   // absence; the scan survives only in `ListModel.replace`, the adapter for hosts that hand over a
   // whole new array and genuinely do not know what changed. The model publishes synchronously, so
   // a prepend reaches the anchor in the same tick it happens; the render-time guard below covers
-  // the one gap — a *new* model instance arriving mid-render, before the effect re-subscribes.
+  // the one gap - a *new* model instance arriving mid-render, before the effect re-subscribes.
   useEffect(() => {
     const unsubscribe = model.subscribe((change) => {
       placement.setCount(model.count, { prepended: change.prepended ?? 0 });
@@ -222,7 +222,7 @@ export const useWindow = ({
         const { first, last } = placement.layout();
         // A glide only over rows that are already there. Beyond them the offset is a sum of
         // estimates, so the travel would cross content that does not exist and land somewhere the
-        // measurement then corrects — a step the reader watched go to the wrong place.
+        // measurement then corrects - a step the reader watched go to the wrong place.
         if (behavior === 'smooth' && scroller && index >= first && index <= last) {
           const target = placement.offsetOf(index, align);
           // Reported, not applied: the element animates and its scroll events drive the placement,
@@ -312,7 +312,7 @@ export const useWindow = ({
     };
   }, [placement, axis, invalidate]);
 
-  // Measured after every commit, so a row that grows later — a font, a portaled widget, an image —
+  // Measured after every commit, so a row that grows later - a font, a portaled widget, an image -
   // is not a special case but the same case arriving again (§8).
   useLayoutEffect(() => {
     const parent = windowRef.current;
@@ -351,7 +351,7 @@ export const useWindow = ({
     // The start edge's drift is repaid, not merely reported: row 0 at a negative position is a top
     // of the document no scroll can reach. Content and offset move by the same delta in the same
     // commit, so the mounted rows hold their place on screen while the coordinate system comes
-    // true. Only while row 0 is mounted — everywhere else the incoherence is invisible, and the
+    // true. Only while row 0 is mounted - everywhere else the incoherence is invisible, and the
     // write is not: a scrollTop write cancels any native smooth travel in flight, which read as the
     // toolbar's step dying two stops short. §7 holds mid-list; the top is the one place it cannot.
     const shift = placement.layout().first === 0 ? placement.rebaseStart() : 0;
@@ -448,12 +448,12 @@ export const Window = ({ classNames, children, controllerRef, ...options }: Wind
   const main = axis === 'block' ? 'height' : 'width';
   const { getId } = options.model;
 
-  // When the model last actually changed — what the follow may chase (see useFollow.changedAt).
+  // When the model last actually changed - what the follow may chase (see useFollow.changedAt).
   const changedAtRef = useRef(performance.now());
   useEffect(() => options.model.subscribe(() => (changedAtRef.current = performance.now())), [options.model]);
 
   // The binding composes the aspect; the hook knows nothing about following. Graduates with the
-  // virtualizer — nothing in it is about messages.
+  // virtualizer - nothing in it is about messages.
   const follow = useFollow({
     scrollerRef,
     placement,

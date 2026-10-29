@@ -23,19 +23,19 @@ const listing = (id: string, name: string, price: number, place: Record<string, 
 });
 
 /** Pinned to the building, inside "Around Mokotów". */
-export const pulawska = listing('pulawska-2-pokoje', '2 pokoje, Puławska, blisko metra', 3900, {
+export const pulawska = listing('pulawska-2-pokoje', '2 pokoje, Pu\u0142awska, blisko metra', 3900, {
   'lh:district': ['Mokotów'],
-  'lh:statedStreet': ['ul. Puławska 101'],
+  'lh:statedStreet': ['ul. Pu\u0142awska 101'],
   'schema:latitude': [52.1906],
   'schema:longitude': [21.0129],
   'lh:locationPrecisionM': [15],
 });
 
 /** Placed to the street only: a precision ring on the map. */
-export const odynca = listing('odynca-balkon', 'Mieszkanie z balkonem, Odyńca', 4200, {
+export const odynca = listing('odynca-balkon', 'Mieszkanie z balkonem, Ody\u0144ca', 4200, {
   'lh:district': ['Mokotów'],
   'lh:neighbourhood': ['Stary Mokotów'],
-  'lh:statedStreet': ['ul. Odyńca'],
+  'lh:statedStreet': ['ul. Ody\u0144ca'],
   'schema:latitude': [52.2005],
   'schema:longitude': [21.0081],
   'lh:locationPrecisionM': [250],
@@ -44,7 +44,7 @@ export const odynca = listing('odynca-balkon', 'Mieszkanie z balkonem, Odyńca',
 /** Far outside the areas (Bemowo). */
 export const bemowo = listing('bemowo-nowe', 'Nowe 2 pokoje, Bemowo', 3500, {
   'lh:district': ['Bemowo'],
-  'lh:statedStreet': ['ul. Powstańców Śląskich'],
+  'lh:statedStreet': ['ul. Powsta\u0144ców \u015Al\u0105skich'],
   'schema:latitude': [52.2408],
   'schema:longitude': [20.9115],
   'lh:locationPrecisionM': [40],

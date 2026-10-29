@@ -27,7 +27,7 @@ export const Properties = Schema.Struct({
   displayName: Schema.optional(
     Schema.String.annotate({
       title: 'Display name',
-      description: 'The sender name on the agent’s replies.',
+      description: "The sender name on the agent's replies.",
     }),
   ),
   allowedSenders: Schema.Array(Schema.String).annotate({

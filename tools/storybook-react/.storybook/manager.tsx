@@ -28,7 +28,7 @@ addons.setConfig({
     renderLabel: (item) =>
       item.type === 'story' && item.tags?.includes('play-fn') ? (
         <span>
-          <span style={{ color: PLAY_GLYPH_COLOR, marginInlineEnd: 6 }}>⏺</span>
+          <span style={{ color: PLAY_GLYPH_COLOR, marginInlineEnd: 6 }}>&#x23FA;</span>
           {item.name}
         </span>
       ) : (

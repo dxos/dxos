@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Lightweight client for EDGE-hosted HTTP services — intentionally free of the
+// Lightweight client for EDGE-hosted HTTP services - intentionally free of the
 // heavy transitive dependencies (`@dxos/context`, `@dxos/protocols`) that
 // `BaseHttpClient` pulls in, so it bundles cleanly into browser / workerd. The
 // only runtime dependencies are `effect` and `@dxos/log`.
@@ -49,7 +49,7 @@ export class EdgeServiceClient {
   readonly #authHeaders: (() => Effect.Effect<Record<string, string>>) | undefined;
 
   constructor(options: EdgeServiceClientOptions) {
-    // Slash-terminated: `new URL('thumbnail', '…/image')` would otherwise drop the `/image` prefix.
+    // Slash-terminated: `new URL('thumbnail', '.../image')` would otherwise drop the `/image` prefix.
     this.#baseUrl = options.baseUrl.endsWith('/') ? options.baseUrl : `${options.baseUrl}/`;
     this.#clientTag = options.clientTag;
     this.#timeout = Duration.fromInputUnsafe(options.timeout ?? DEFAULT_TIMEOUT);

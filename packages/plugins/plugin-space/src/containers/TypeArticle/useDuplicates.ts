@@ -21,7 +21,7 @@ export type UseDuplicatesProps = {
 };
 
 export type UseDuplicatesResult = {
-  /** `undefined` when no plugin registered an identity rule for this type — the tab is then hidden. */
+  /** `undefined` when no plugin registered an identity rule for this type - the tab is then hidden. */
   spec: IdentitySpec<any> | undefined;
   /** Members of the group under review, or `[]` when the review is finished. */
   current: Obj.Unknown[];

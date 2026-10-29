@@ -10,7 +10,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Message, Thread } from '@dxos/types';
 
 /**
- * `Thread` 0.2.0 → 0.3.0: messages move from a list of refs into a feed the thread owns. Each message is copied under
+ * `Thread` 0.2.0 -> 0.3.0: messages move from a list of refs into a feed the thread owns. Each message is copied under
  * its own id, so anything that refers to a message by id still finds it.
  */
 export const threadMessagesToFeed = Migration.define({

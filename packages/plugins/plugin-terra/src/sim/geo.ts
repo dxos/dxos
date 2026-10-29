@@ -52,7 +52,7 @@ export const bearingTo = (from: Vec3, to: Vec3): number => bearingOfTangent(from
 
 /**
  * The exact tangent direction of the great-circle geodesic from `from` to `to`, at `fraction` of
- * the way along it (`slerp(from, to, fraction)`'s point) — the derivative of that same
+ * the way along it (`slerp(from, to, fraction)`'s point) - the derivative of that same
  * parametrization, not an approximation. Degenerate (zero) when `from` and `to` coincide. Feeding
  * this to `bearingOfTangent` gives the true course *at the traveled-to point*, which is not the
  * same as `bearingTo(from, to)` except at `fraction === 0`: a great circle's course drifts

@@ -18,7 +18,7 @@ import { Booking, Segment, Trip } from '#types';
 
 import { TripMessageExtractor } from './trip-extractor.ts';
 
-// Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
+// Empty resolver - the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});
 
 // Provenance relation the dispatcher attaches from each top-level extracted object to the source.
@@ -105,13 +105,13 @@ describe('trip extraction over a message feed', () => {
     await builder.close();
   });
 
-  test('processing a feed yields one Trip with multiple Segments and Message→Trip relations', async ({ expect }) => {
+  test('processing a feed yields one Trip with multiple Segments and Message->Trip relations', async ({ expect }) => {
     await using peer = await builder.createPeer({
       types: [Feed.Feed, Booking.Booking, Segment.Segment, Trip.Trip, Message.Message, ExtractedFrom.ExtractedFrom],
     });
     const db = await peer.createDatabase();
 
-    // The source is an actual ECHO feed of immutable Message items — not objects in
+    // The source is an actual ECHO feed of immutable Message items - not objects in
     // the database. Each message is paired with the structured payload a cheap LLM would extract:
     // two flight legs under one PNR, a gate change for the first leg, and an unrelated message.
     const feed = db.add(Feed.make({}));
@@ -123,7 +123,7 @@ describe('trip extraction over a message feed', () => {
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Gate change', body: 'Gate update' }),
-      // Unrelated message — no travel sender/subject, so `match()` rejects it.
+      // Unrelated message - no travel sender/subject, so `match()` rejects it.
       makeMessage({ from: 'news@example.com', subject: 'Weekly digest', body: 'Nothing to see here.' }),
     ];
     await db.appendToFeed(feed, messages);

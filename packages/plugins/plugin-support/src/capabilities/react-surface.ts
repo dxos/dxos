@@ -60,7 +60,7 @@ export default Capability.makeModule(() =>
       // Generic plank companion: shows the description from the plugin that
       // owns the open article's typename. Matches any article via
       // `companion(Article)` with no schema filter; the resolver inside the
-      // panel maps `companionTo` → owning plugin → `meta.description`.
+      // panel maps `companionTo` -> owning plugin -> `meta.description`.
       Surface.create({
         id: 'helpCompanion',
         filter: AppSurface.allOf(

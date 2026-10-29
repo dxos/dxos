@@ -5,21 +5,21 @@
 // Screenshot capture + upload used by FeedbackPanel's "Create GitHub Issue" path.
 //
 // Two side-effects in one module on purpose:
-//   1. `captureScreenshot(target)` — DOM → PNG `Blob` via `html-to-image`.
+//   1. `captureScreenshot(target)` - DOM -> PNG `Blob` via `html-to-image`.
 //      Walks the tree first and obscures sensitive content (inputs, textareas,
 //      contenteditable) so we never upload secrets, passwords, or PII to the
 //      public image-service CDN.
-//   2. `uploadScreenshot(blob, serviceUrl)` — multipart POST to Composer's
+//   2. `uploadScreenshot(blob, serviceUrl)` - multipart POST to Composer's
 //      shared image service (same protocol used by `plugin-crm` and
 //      `composer-crx`). Returns a permanent public URL we can drop into the
 //      GitHub issue body as `![](url)`.
 //
-// The `html-to-image` import is dynamic on purpose — pays the ~30 KB only when
+// The `html-to-image` import is dynamic on purpose - pays the ~30 KB only when
 // the user actually clicks "Create GitHub Issue", not on every panel mount.
 
 import { log } from '@dxos/log';
 
-/** Hard ceiling on the captured PNG — matches the CRM caller's cap. */
+/** Hard ceiling on the captured PNG - matches the CRM caller's cap. */
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 /**
@@ -36,9 +36,9 @@ const obscureInputs = (root: HTMLElement): (() => void) => {
 
   const placeholderFor = (text: string): HTMLElement => {
     const span = document.createElement('span');
-    // `••••` of approximately the same length as the original, capped so we
+    // `****` of approximately the same length as the original, capped so we
     // don't blow up the layout when a user has a long body field.
-    const dots = '•'.repeat(Math.min(Math.max(text.length, 4), 32));
+    const dots = '*'.repeat(Math.min(Math.max(text.length, 4), 32));
     span.textContent = dots;
     span.style.color = 'var(--dx-base-fg, currentColor)';
     span.style.fontFamily = 'inherit';
@@ -89,12 +89,12 @@ const dataUrlToBlob = (dataUrl: string): Blob => {
  * Capture the given DOM subtree as a JPEG `Blob`, with input/textarea contents
  * obscured. JPEG (over PNG) keeps the upload payload small enough not to OOM
  * the image-service Worker (128 MB budget). Returns `undefined` (and logs) if
- * the underlying library fails — the caller should treat capture as
+ * the underlying library fails - the caller should treat capture as
  * best-effort and still file the issue.
  */
 export const captureScreenshot = async (target: HTMLElement = document.body): Promise<Blob | undefined> => {
   // The dynamic import + obscure step both happen inside the try block so a
-  // module-load failure (rare but possible) doesn't escape — callers treat
+  // module-load failure (rare but possible) doesn't escape - callers treat
   // capture as best-effort and we'd rather drop the screenshot than throw.
   let restore: (() => void) | undefined;
   try {
@@ -139,7 +139,7 @@ export const captureScreenshot = async (target: HTMLElement = document.body): Pr
  * URL on success, or `undefined` when the service is unconfigured or on transport / service error
  * so the caller can proceed without an image rather than block the report.
  *
- * Service contract: POST multipart/form-data `file=<blob>` → `{ url }`
+ * Service contract: POST multipart/form-data `file=<blob>` -> `{ url }`
  */
 export const uploadScreenshot = async (blob: Blob, serviceUrl: string | undefined): Promise<string | undefined> => {
   if (!serviceUrl) {

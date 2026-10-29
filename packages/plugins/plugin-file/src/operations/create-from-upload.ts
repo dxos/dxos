@@ -13,7 +13,7 @@ import { FileOperation } from '#types';
 
 import { NoBackendError, resolveActiveStorage } from './create.ts';
 
-/** Raised when the named upload cannot be adopted — never uploaded, already consumed, or expired. */
+/** Raised when the named upload cannot be adopted - never uploaded, already consumed, or expired. */
 export class UploadNotFoundError extends BaseError.extend('UploadNotFoundError') {
   constructor(public readonly uploadId: string) {
     super({ message: `No completed upload ${uploadId}. Upload the bytes to the signed URL before creating the file.` });

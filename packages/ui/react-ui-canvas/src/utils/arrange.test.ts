@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type ArrangeEdge, type Slot, arrange } from './arrange.ts';
 
-// Two rows whose id order crosses every edge: a→z, b→y, c→x.
+// Two rows whose id order crosses every edge: a->z, b->y, c->x.
 const ranks = new Map([
   ['a', 0],
   ['b', 0],

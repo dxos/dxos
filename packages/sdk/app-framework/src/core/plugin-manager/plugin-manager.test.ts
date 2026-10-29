@@ -78,7 +78,7 @@ const atomCounter = (registry: Registry.AtomRegistry, atom: Atom.Atom<any>) => {
  * Advances the test clock in slices, yielding to other fibers between them.
  *
  * v4 does not run a forked fiber before its parent's next step, and a forked activation takes
- * several steps to reach its sleep — a single `adjust` would pass a sleep nobody is waiting on yet.
+ * several steps to reach its sleep - a single `adjust` would pass a sleep nobody is waiting on yet.
  */
 const advance = (duration: Duration.Duration, slices = 8): Effect.Effect<void> =>
   Effect.forEach(
@@ -351,7 +351,7 @@ describe('PluginManager', () => {
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
       // Idle too: this host has no `requestIdleCallback` (jsdom does not implement it), so the
-      // manager runs the idle wave inline rather than forking it — a forked wave would leave
+      // manager runs the idle wave inline rather than forking it - a forked wave would leave
       // `start()` returning before the modules gated on it were active.
       assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id, ActivationEvents.Idle.id]);
     }),
@@ -397,7 +397,7 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
-      // A single module's failure is isolated to its plugin — it does not fail the caller's
+      // A single module's failure is isolated to its plugin - it does not fail the caller's
       // `activate(event)` (which reports whether any modules were found to process, not
       // whether they all succeeded), matching the startup-continues-on-failure contract.
       const result = yield* manager.activate(FailEvent);
@@ -437,7 +437,7 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
-      // A single module's defect is isolated to its plugin — recorded via `getFailed`, not
+      // A single module's defect is isolated to its plugin - recorded via `getFailed`, not
       // thrown from `activate(event)`.
       yield* manager.activate(DefectEvent);
       const failed = manager.getFailed();
@@ -487,7 +487,7 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
-      // A single module's defect is isolated to its plugin — recorded via `getFailed`, not
+      // A single module's defect is isolated to its plugin - recorded via `getFailed`, not
       // thrown from `activate(event)`.
       yield* manager.activate(DefectEvent);
       const failed = manager.getFailed();
@@ -1225,7 +1225,7 @@ describe('PluginManager', () => {
         Plugin.make,
       );
       // `Second` requires `String` (provided by `First`), giving a deterministic hard-edge
-      // activation order — necessary since two independent same-wave event-mode modules
+      // activation order - necessary since two independent same-wave event-mode modules
       // otherwise activate concurrently with no ordering guarantee.
       const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
@@ -1563,7 +1563,7 @@ describe('PluginManager', () => {
         // Regression: multi requires never gate, so a consumer registered in the first streaming
         // batch would activate against whatever had contributed so far. In dev (one request per
         // plugin definition) that window is wide enough for the process manager to snapshot
-        // `Capabilities.LayerSpec` without the client's specs — identity creation then failed with
+        // `Capabilities.LayerSpec` without the client's specs - identity creation then failed with
         // `ServiceNotAvailable`.
         let releaseLoader!: () => void;
         const gate = new Promise<void>((resolve) => {
@@ -1667,7 +1667,7 @@ describe('PluginManager', () => {
 
         const manager = PluginManager.make({ pluginLoader });
         yield* manager.add(lazyMeta.profile.key);
-        // Loader has not been invoked yet — only meta is exposed.
+        // Loader has not been invoked yet - only meta is exposed.
         assert.strictEqual(loaderCalls, 0);
         assert.deepStrictEqual(manager.getModules(), []);
 
@@ -1699,7 +1699,7 @@ describe('PluginManager', () => {
         const manager = PluginManager.make({ pluginLoader });
         yield* manager.add(lazyMeta.profile.key);
 
-        // Activate an event that has no listeners — the lazy plugin must not load.
+        // Activate an event that has no listeners - the lazy plugin must not load.
         yield* manager.activate(ActivationEvents.Startup);
         assert.strictEqual(loaderCalls, 0);
       }),
@@ -1811,7 +1811,7 @@ describe('PluginManager', () => {
         })();
         const LazyTest = Plugin.lazy(coreLazyMeta, () => Promise.resolve({ default: Real }));
         const lazyStub = LazyTest();
-        // `manager.enable(id)` is implicitly called twice — once from the
+        // `manager.enable(id)` is implicitly called twice - once from the
         // constructor's core/enabled chain, once from our explicit call. With
         // coalescing, the underlying factory should still run exactly once.
         plugins = [lazyStub];
@@ -1908,7 +1908,7 @@ describe('PluginManager', () => {
         // TestClock too, so the timeout fires deterministically.
         yield* advance(Duration.seconds(3));
         const exit = yield* Fiber.await(fiber);
-        // The timeout is isolated to the owning plugin — recorded via `getFailed`, not thrown
+        // The timeout is isolated to the owning plugin - recorded via `getFailed`, not thrown
         // from `activate(event)`.
         assert.isTrue(Exit.isSuccess(exit));
 
@@ -1989,7 +1989,7 @@ describe('PluginManager', () => {
         yield* manager.add(FailingPlugin.meta.profile.key);
         yield* manager.enable(FailingPlugin.meta.profile.key);
 
-        // The failure is isolated to the owning plugin — recorded via `getFailed`, not thrown
+        // The failure is isolated to the owning plugin - recorded via `getFailed`, not thrown
         // from `activate(event)`.
         const exit = yield* Effect.exit(manager.activate(FailingEvent));
         assert.isTrue(Exit.isSuccess(exit));
@@ -2141,7 +2141,7 @@ describe('PluginManager', () => {
       }),
     );
 
-    it.effect('enable detects A↔B cycle and records a cycle failure', () =>
+    it.effect('enable detects A<->B cycle and records a cycle failure', () =>
       Effect.gen(function* () {
         const a = makePlugin('a', ['b']);
         const b = makePlugin('b', ['a']);
@@ -2158,7 +2158,7 @@ describe('PluginManager', () => {
 
     it.effect('enable with resolveDependencies: false skips closure walk and missing-dep check', () =>
       Effect.gen(function* () {
-        // Dependent declares a dep that is intentionally unregistered — the
+        // Dependent declares a dep that is intentionally unregistered - the
         // caller has accepted responsibility for satisfying it some other way.
         const dependent = makePlugin('dependent', ['org.dxos.alt-impl']);
         const manager = PluginManager.make({ plugins: [dependent], pluginLoader });
@@ -2328,7 +2328,7 @@ describe('PluginManager', () => {
 
     /**
      * Brings a manager up the way a host does. These fixtures declare no `activatesOn`, which now
-     * normalizes to the idle wave, and `start()` FORKS that wave rather than awaiting it — so
+     * normalizes to the idle wave, and `start()` FORKS that wave rather than awaiting it - so
      * asserting on `getActive()` straight after `start()` races the daemon. Firing `Idle` here is
      * the barrier; it is idempotent against the wave guard whichever order the two land in.
      * Returns whether either wave activated anything, which is what `start()` alone used to report.
@@ -2650,7 +2650,7 @@ describe('PluginManager', () => {
         // Regression: an event fired while the startup dependency round is still activating pulls
         // its providers into a *separate* scoped round. A multi provider mid-load in the startup
         // round is dropped from that round's candidates (memoized load), taking its soft edge with
-        // it — so a snapshot consumer (e.g. the process manager reading `Capabilities.LayerSpec`)
+        // it - so a snapshot consumer (e.g. the process manager reading `Capabilities.LayerSpec`)
         // could take its one-shot `.get()` before the provider contributed.
         const EventX = ActivationEvent.make('org.dxos.test.snapshotRace');
         const providerStarted = yield* Deferred.make<void>();
@@ -2698,7 +2698,7 @@ describe('PluginManager', () => {
         // startup round.
         const eventFiber = yield* Effect.forkChild(manager.activate(EventX));
         // Let the event fiber run to its snapshot (broken) or its provider wait (fixed) before
-        // the provider is released — otherwise the race can accidentally resolve correctly.
+        // the provider is released - otherwise the race can accidentally resolve correctly.
         yield* Effect.yieldNow.pipe(Effect.repeat({ times: 50 }));
         yield* Deferred.succeed(providerGate, undefined);
         yield* Fiber.join(eventFiber);
@@ -3121,7 +3121,7 @@ describe('PluginManager', () => {
         yield* Deferred.await(started);
 
         // Wave B matches the same module mid-load. The round filters it (`isLoading`), so
-        // without the post-pass await B would resolve here — before the handlers exist —
+        // without the post-pass await B would resolve here - before the handlers exist -
         // breaking the demand-pull contract (a lookup retry then misses and hard-fails).
         const fiberB = yield* Effect.forkChild(manager.activate(OtherEvent));
         for (let i = 0; i < 10; i++) {
@@ -3217,7 +3217,7 @@ describe('PluginManager', () => {
         // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
         // startup fiber, then fire Idle to settle it before asserting.
         yield* manager.activate(ActivationEvents.Idle);
-        // The scoped pull leaves slowC to the startup pass — nothing is orphaned.
+        // The scoped pull leaves slowC to the startup pass - nothing is orphaned.
         assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 3 }]);
       }),
     );

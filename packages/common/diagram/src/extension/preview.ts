@@ -120,7 +120,7 @@ class DiagramWidget extends WidgetType {
       show(ready);
     } else {
       container.style.minHeight = `${this.estimatedHeight}px`;
-      container.textContent = 'Rendering diagram…';
+      container.textContent = 'Rendering diagram...';
       void renderDiagram(this.source).then((result) => {
         container.style.minHeight = '';
         show(result);

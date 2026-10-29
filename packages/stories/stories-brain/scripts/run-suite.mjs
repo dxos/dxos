@@ -4,7 +4,7 @@
 
 // Orchestrates the research suite: seeds the full task manifest into progress.json (so pending tests
 // show up front), runs each test file in dependency order, and marks coarse status (running/done/
-// error) per test — while the per-message benches stream fine current/total into the same file via
+// error) per test - while the per-message benches stream fine current/total into the same file via
 // the pipeline Progress reporter. Merge-on-write keeps one shared snapshot.
 //
 // Usage (from packages/stories/stories-brain):
@@ -87,7 +87,7 @@ for (const item of suite) {
   }
 }
 
-console.log(`\nsuite complete: ${suite.length - failed}/${suite.length} ok — progress: ${PROGRESS}`);
+console.log(`\nsuite complete: ${suite.length - failed}/${suite.length} ok - progress: ${PROGRESS}`);
 
 // Sanity-analyze the results (flags empty/failed/partial outputs).
 console.log('\n===== analyze-results =====');

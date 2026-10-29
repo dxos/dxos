@@ -44,7 +44,7 @@ export default Capability.makeModule(
       ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),
     ]);
 
-    // Plugin-contributed translations, registered reactively as plugins are enabled and disabled —
+    // Plugin-contributed translations, registered reactively as plugins are enabled and disabled -
     // the live contributions view means late (legacy-window) contributions still land.
     const register = () => addResources(registry.get(translationsAtom).flat());
     register();

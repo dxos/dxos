@@ -139,7 +139,7 @@ export const Atomic: Story = {
     await waitFor(() => expect(doc()).toEqual('#test'));
 
     // No click and no `{End}`: `selectionEnd` is what puts the caret at the end of the document on
-    // the first render, and the caret at the tag's own edge is still in the tag — so this single
+    // the first render, and the caret at the tag's own edge is still in the tag - so this single
     // Backspace both proves that and takes the whole chip.
     // `keyboard`, not `type`: the latter clicks the element first, which would move the caret.
     await userEvent.keyboard('{Backspace}');

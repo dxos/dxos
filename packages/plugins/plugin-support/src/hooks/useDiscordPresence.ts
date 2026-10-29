@@ -31,7 +31,7 @@ export const useDiscordPresence = (presenceUrl: string | undefined): DiscordPres
         const data = (await response.json()) as DiscordPresence;
         setPresence({ teamOnline: data.teamOnline, communityOnline: data.communityOnline });
       } catch {
-        // Non-essential indicator — fail silently.
+        // Non-essential indicator - fail silently.
       }
     };
 

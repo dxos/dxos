@@ -52,7 +52,7 @@ const readStatus = (error: unknown): number | undefined => {
 
 /**
  * Names the failure the user can act on. A rejected credential and a repository the connection
- * cannot see both read as "not found" from the API, but only the first is fixed by reconnecting —
+ * cannot see both read as "not found" from the API, but only the first is fixed by reconnecting -
  * and a space with no connection at all is fixed by making one.
  */
 const importFailureKey = (error: unknown): string => {
@@ -106,7 +106,7 @@ export const ImportPullRequestDialog = () => {
       if (error || !pullRequest) {
         const status = GitHubApi.responseStatus(error) ?? readStatus(error);
         // A minified build serialises the invoker's error as a bare, headerless stack, so the name and
-        // the HTTP status it carries are logged explicitly — without them a feedback bundle names the
+        // the HTTP status it carries are logged explicitly - without them a feedback bundle names the
         // failure without saying what it was.
         log.warn('pull request import failed', { reference, errorName: error?.name, status, err: error });
         await invokePromise(LayoutOperation.AddToast, {
@@ -115,7 +115,7 @@ export const ImportPullRequestDialog = () => {
           title: [importFailureKey(error), { ns: GitHubNamespace.key }],
           // The status is what separates a reference the user should re-check from a connection they
           // should repair, and it is otherwise visible only in the logs.
-          description: status ? `${reference} — HTTP ${status}` : reference,
+          description: status ? `${reference} - HTTP ${status}` : reference,
         });
         return;
       }

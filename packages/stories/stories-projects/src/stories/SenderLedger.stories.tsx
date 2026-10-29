@@ -46,9 +46,9 @@ type Story = StoryObj<typeof meta>;
  * that maintains a table of senders (email, name, message count, last seen) as mail arrives.
  *
  * Test:
- * 1. Click "Set up project" — the project article opens, named "Inbox Research — Work".
+ * 1. Click "Set up project" - the project article opens, named "Inbox Research - Work".
  * 2. Instructions shows the seeded brief; Skills lists Inbox and Table.
- * 3. Context lists the Work mailbox — the project's inputs, distinct from the empty Artifacts
+ * 3. Context lists the Work mailbox - the project's inputs, distinct from the empty Artifacts
  *    gallery below (its outputs).
  * 4. Routines shows the "Sender Ledger" card summarizing its feed trigger; it stays disabled until
  *    enabled, so opening the story runs no model.
@@ -70,7 +70,7 @@ export const Test: Story = {
     const button = await waitFor(() => canvas.getByTestId('projects.story.setup'), { timeout: 30_000 });
     await userEvent.click(button);
 
-    await waitFor(async () => expect(canvas.getByDisplayValue(/Inbox Research — Work/)).toBeInTheDocument(), {
+    await waitFor(async () => expect(canvas.getByDisplayValue(/Inbox Research \u2014 Work/)).toBeInTheDocument(), {
       timeout: 30_000,
     });
 

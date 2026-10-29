@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 export const CLOUD_BASE_URL = 'https://developer.lametric.com';
 
 /**
- * The stock "My Data (DIY)" app, which is what local push goes through — LaMetric does not allow a
+ * The stock "My Data (DIY)" app, which is what local push goes through - LaMetric does not allow a
  * custom indicator app to be pushed to locally. The package is fixed; only the widget instance
  * varies, and its UUID exists solely in the device's own app list.
  */
@@ -33,7 +33,7 @@ export const GoalData = Schema.Struct({
 export type GoalData = Schema.Schema.Type<typeof GoalData>;
 
 /**
- * Position in the cycle. Without it the device shows only the first frame — verified on hardware,
+ * Position in the cycle. Without it the device shows only the first frame - verified on hardware,
  * where three unindexed frames rendered as one.
  */
 const index = Schema.optional(Schema.Number);

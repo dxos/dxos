@@ -39,7 +39,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
  * The one document type the stress test manipulates.
  *
  * `docId` is the orchestrator's logical id, so digests key on something the model can name without
- * knowing ECHO's object ids. `counters` is a per-writer register map — each client only ever writes
+ * knowing ECHO's object ids. `counters` is a per-writer register map - each client only ever writes
  * its own key, which is what lets the model predict an exact value under concurrent merges.
  */
 export class EdgeStressDocument extends Type.makeObject<EdgeStressDocument>(
@@ -64,7 +64,7 @@ export type DocumentDigest = {
   tokens: string[];
   counters: number[];
   /**
-   * The raw text, for diagnostics only — never compared. The model cannot predict merge order, so
+   * The raw text, for diagnostics only - never compared. The model cannot predict merge order, so
    * equality is decided on `tokens`; but when that fails, the tokens are already the regex's view
    * of the text and the text itself is what says what actually happened.
    */
@@ -125,14 +125,14 @@ export class ClientReplicant {
   }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
     this.#config = { edgeUrl, agents, partitions };
-    // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe — it cannot
+    // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe - it cannot
     // stand in front of an `https:` endpoint, where the client would offer a TLS handshake to a
     // plain socket and send `Host: localhost`. A run without partitions needs no proxy, so dial
     // EDGE directly and keep the deployed environments reachable.
     const proxiedUrl = partitions ? await this.#startProxy(edgeUrl) : edgeUrl;
 
     // Storage lives under the replicant's own out dir so a destroy/init cycle recovers from disk
-    // rather than starting empty — that is what makes `Restart` a crash-recovery test.
+    // rather than starting empty - that is what makes `Restart` a crash-recovery test.
     const fullConfig = new Config({
       version: 1,
       runtime: {
@@ -142,14 +142,14 @@ export class ClientReplicant {
             persistent: true,
             dataRoot: `${this.#env.params.outDir}/storage`,
             // Without FILE the backend silently stays in-memory, so a restarted client comes back
-            // empty and `Restart` tests nothing (observed in every local run — RESULTS.md §5).
+            // empty and `Restart` tests nothing (observed in every local run - RESULTS.md §5).
             sqliteMode: Runtime_Client_Storage_SqliteMode.FILE,
           },
           // Edge-only data replication (D7): signaling carries invitations, no client-to-client data
-          // path. The flag is what actually enforces it — `edgeFeatures` alone leaves the mesh
+          // path. The flag is what actually enforces it - `edgeFeatures` alone leaves the mesh
           // replicator attached, so peers still swapped documents directly over WebRTC and a run
           // measured a mixture of both paths (the EDGE-nightly join-latency outlier caught a joiner
-          // syncing against another client's `host-…` peer while its EDGE connection was stalled).
+          // syncing against another client's `host-...` peer while its EDGE connection was stalled).
           disableP2pReplication: true,
           edgeFeatures: { subductionReplicator: true, feedReplicator: true, signaling: true, agents },
         },
@@ -238,7 +238,7 @@ export class ClientReplicant {
    * Bind this identity to a Hub account through the dev-only test-email hatch.
    *
    * `POST /account/invitation-code/redeem` with a `test+*@dxos.org` email creates or *rebinds* the
-   * account with no invitation code and no verification round trip — live on dev-like
+   * account with no invitation code and no verification round trip - live on dev-like
    * environments only, which is exactly where the self-serve cleanup routes demand an account
    * (`accountLookupViaHubService` 403s an unbound identity; measured, RESULTS.md §4b). Rebinding
    * means a fixed alias per identity slot reuses one account row forever, so runs leave no rows.
@@ -264,7 +264,7 @@ export class ClientReplicant {
    * `bindTestAccount` writes the account through hub-service, and EDGE's agent service reads it
    * back through a different worker; against a deployed environment that read can still miss and
    * answer `Identity is not associated with an account.` Retrying is waiting for a write already
-   * known to have succeeded — the bind returned an `accountId` — not papering over a failure, so
+   * known to have succeeded - the bind returned an `accountId` - not papering over a failure, so
    * only that one condition is retried and everything else propagates on the first attempt.
    */
   @trace.span()
@@ -346,7 +346,7 @@ export class ClientReplicant {
   /**
    * Accept an invitation, reporting the two phases separately.
    *
-   * `admittedMs` ends at `Invitation_State.SUCCESS` — the guest's credentials are replicated into
+   * `admittedMs` ends at `Invitation_State.SUCCESS` - the guest's credentials are replicated into
    * the space's control feed, which is what the invitation is. Everything after it (the space
    * appearing locally, its root document loading) is replication, and scales with the space rather
    * than with the exchange; folding the two together hides which one a latency change came from.
@@ -371,11 +371,11 @@ export class ClientReplicant {
     // `SpaceList.get`, whose `spaceIdOrKey instanceof PublicKey` check compares against the class
     // from whichever copy of the SDK *it* was loaded from. The helper ships in a bundle while
     // `SpaceList` resolves to source, so the two `PublicKey`s are different classes, the check
-    // fails, and the key falls through to the space-id branch as `Invalid space id.` — which is
+    // fails, and the key falls through to the space-id branch as `Invalid space id.` - which is
     // what it reports rather than anything about the join. Matching on the key's own `equals`
     // avoids identity comparison entirely, and mirrors `#getSpace`'s no-argument lookup.
     // `invitation.spaceKey` is the buf-generated message (`{ data: Uint8Array }`), not a domain
-    // `PublicKey` — which is the whole reason the old `waitForSpace` path reported `Invalid space
+    // `PublicKey` - which is the whole reason the old `waitForSpace` path reported `Invalid space
     // id.`: `SpaceList.get` type-tests for `PublicKey` and this value never was one.
     const spaceKey = PublicKey.from(invitation.spaceKey.data);
     const space = await waitForCondition({
@@ -391,7 +391,7 @@ export class ClientReplicant {
     return { spaceId: space.id, admittedMs, spaceReadyMs };
   }
 
-  /** Whether this device currently holds the space — no waiting, so callers can poll. */
+  /** Whether this device currently holds the space - no waiting, so callers can poll. */
   async hasSpace({ spaceId }: { spaceId: string }): Promise<boolean> {
     return this.#getClient()
       .spaces.get()
@@ -493,7 +493,7 @@ export class ClientReplicant {
    * the identity signs, and the replicant is the only party holding those credentials. That is
    * what lets a run against a shared environment clean up after itself with no shared secret.
    *
-   * Spaces first — deleting an identity that still owns spaces would orphan them. Nothing here
+   * Spaces first - deleting an identity that still owns spaces would orphan them. Nothing here
    * throws: a cleanup failure must never mask the run's own result.
    */
   @trace.span()
@@ -540,7 +540,7 @@ export class ClientReplicant {
   //
 
   /**
-   * Sync state against the EDGE peer specifically — a space also has client peers, and only edge
+   * Sync state against the EDGE peer specifically - a space also has client peers, and only edge
    * quiescence means "everything I have reached the hub".
    */
   async getSyncState({ spaceId }: { spaceId: string }): Promise<SyncSummary> {
@@ -589,7 +589,7 @@ export class ClientReplicant {
 
   /**
    * Listen on loopback and pipe each connection to the real EDGE endpoint, so `goOffline` can drop
-   * every socket and refuse new ones — indistinguishable from the network going away.
+   * every socket and refuse new ones - indistinguishable from the network going away.
    */
   async #startProxy(edgeUrl: string): Promise<string> {
     const target = new URL(edgeUrl);
@@ -667,7 +667,7 @@ export class ClientReplicant {
   /**
    * Wait for the document to arrive, rather than requiring it to be here already.
    *
-   * A peer cannot edit an object another peer created until replication delivers it — issuing the
+   * A peer cannot edit an object another peer created until replication delivers it - issuing the
    * edit the moment the model knows about the document made an ordinary propagation delay look
    * like a missing object. A timeout here is the real finding: replication never delivered.
    */

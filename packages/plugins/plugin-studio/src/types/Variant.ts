@@ -11,9 +11,9 @@ import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as Generation from './Generation.ts';
 
 /**
- * One produced output of an {@link MediaArtifact} — an interchangeable alternative of the primary
+ * One produced output of an {@link MediaArtifact} - an interchangeable alternative of the primary
  * output. Media-agnostic: `contentType` (mime) selects the `VariantRenderer` surface; `content`
- * holds the asset object (a `File` of bytes, a `Text`, …) once materialized, while `url` holds an
+ * holds the asset object (a `File` of bytes, a `Text`, ...) once materialized, while `url` holds an
  * ephemeral provider URL until then. Generated variants carry `generation` provenance; uploaded or
  * external ones do not.
  */
@@ -21,9 +21,9 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
   Schema.Struct({
     /** Human label for the variant (defaults from the prompt). */
     name: Schema.optional(Schema.String),
-    /** Mime type — selects the VariantRenderer surface (e.g. image/png, video/mp4). */
+    /** Mime type - selects the VariantRenderer surface (e.g. image/png, video/mp4). */
     contentType: Schema.optional(Schema.String),
-    /** The asset object (File bytes, Text, …). Generic so any medium can be attached. */
+    /** The asset object (File bytes, Text, ...). Generic so any medium can be attached. */
     content: Schema.optional(Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false))),
     /** Ephemeral provider URL until materialized into `content`. */
     url: Schema.optional(
@@ -34,7 +34,7 @@ export class Variant extends Type.makeObject<Variant>(DXN.make('org.dxos.type.va
     ),
     /** The request config that produced this variant (validated against the provider's requestSchema). */
     config: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-    /** Generation provenance (absent ⇒ uploaded/external). */
+    /** Generation provenance (absent => uploaded/external). */
     generation: Schema.optional(Generation.Generation),
     /**
      * In-flight generation job id for an asynchronous provider (set at enqueue, cleared once the

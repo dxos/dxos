@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.MergeDuplicates> = Sp
         `Every member of a merge must be a ${typename}.`,
       );
 
-      // The merge deletes the losers, so being asked to merge is not enough — the members must
+      // The merge deletes the losers, so being asked to merge is not enough - the members must
       // actually share identity. Re-deriving the group over just these objects (not the whole space)
       // rejects a set that is unrelated or only partly connected, and yields the real shared keys.
       const [group, ...rest] = findDuplicates(spec, objects);

@@ -63,10 +63,10 @@ const PIPELINES: Record<
 };
 
 /**
- * Creates a tracking project from one message — the "project from a sender" flow: the sender's
+ * Creates a tracking project from one message - the "project from a sender" flow: the sender's
  * corporate domain defines the tracked group (them and their colleagues; a free-mail sender is
  * tracked by exact address), the project scaffold owns instructions + task set, a feed-triggered
- * routine binds `UpdateProjectTasks` (kind: runnable — no model between trigger and pipeline), and
+ * routine binds `UpdateProjectTasks` (kind: runnable - no model between trigger and pipeline), and
  * an initial backfill fills the task set from the existing feed.
  */
 const handler = ProjectMailboxOperation.CreateTrackingProject.pipe(
@@ -81,7 +81,7 @@ const handler = ProjectMailboxOperation.CreateTrackingProject.pipe(
         return yield* Effect.die(new Error('Message has no sender email.'));
       }
       // The domain the project follows, or undefined to track the individual. A free-mail domain
-      // identifies no organization, so it can never widen the scope to a "team" — it degrades to the
+      // identifies no organization, so it can never widen the scope to a "team" - it degrades to the
       // sender rather than following every gmail.com address.
       const domain = extractDomain(email);
       const group =
@@ -92,13 +92,13 @@ const handler = ProjectMailboxOperation.CreateTrackingProject.pipe(
       const { runnable, input, suffix, routineLabel } = PIPELINES[pipeline]({ mailbox, senders });
       const project = db.add(
         scaffoldProject({
-          name: name ?? `${label} — ${suffix}`,
+          name: name ?? `${label} - ${suffix}`,
           text: INSTRUCTIONS(label, senders),
           objects: [Ref.make(mailbox)],
         }),
       );
 
-      // The routine: fires per new feed message and runs the chosen pipeline as a runnable — no
+      // The routine: fires per new feed message and runs the chosen pipeline as a runnable - no
       // model sits between the trigger and the operation. Disabled until the user enables it (the
       // convention every template-scaffolded routine follows).
       const routine = Wire.makeRoutine({

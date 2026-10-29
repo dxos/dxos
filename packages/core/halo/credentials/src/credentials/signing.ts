@@ -20,8 +20,8 @@ import { toSigningShapeFromBinary } from './signing-shape.ts';
 /**
  * The credential shape the signature is computed over.
  *
- * A signature covers `canonicalStringify` of the credential's *substituted* shape — `PublicKey`
- * instances, `Date`s, an inlined assertion — not its wire bytes, so that shape is part of the
+ * A signature covers `canonicalStringify` of the credential's *substituted* shape - `PublicKey`
+ * instances, `Date`s, an inlined assertion - not its wire bytes, so that shape is part of the
  * signature format and cannot change without invalidating every issued credential. Only the fields
  * the payload logic below touches are named; the rest pass through the stringifier untyped.
  */
@@ -36,7 +36,7 @@ type SigningShape = {
  * Resolves a buf credential into the shape the signature covers.
  *
  * Goes via wire bytes so the substitutions are read off the descriptor rather than restated here,
- * which is what makes it byte-identical to what the protobuf.js codec produced — the golden vector
+ * which is what makes it byte-identical to what the protobuf.js codec produced - the golden vector
  * in `testing/golden-credential.ts` is the guard.
  */
 export const toSigningShape = (credential: Credential): SigningShape =>
@@ -69,7 +69,7 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
 
   // Normalize proto3-default values in the assertion to avoid serialization asymmetry.
   // Proto3 omits fields equal to their default on the wire (empty arrays, 0, "", false),
-  // and our codec doesn't restore defaults on decode — so after a round-trip the field
+  // and our codec doesn't restore defaults on decode - so after a round-trip the field
   // is absent. The signing payload must pre-strip these defaults (plus `null`/`undefined`,
   // which the canonical stringify replacer also drops) so signer and verifier produce the
   // same canonical bytes regardless of whether the field was explicitly set to its default.

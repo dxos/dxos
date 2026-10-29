@@ -26,7 +26,7 @@ export const StreamDeckDashboardSurface = () => {
   );
 };
 
-/** Renders nothing unless a device is actually connected — see {@link StreamDeckStatus}. */
+/** Renders nothing unless a device is actually connected - see {@link StreamDeckStatus}. */
 export const StreamDeckStatusSurface = () => {
   const status = Hooks.useOptionalAtomCapability(StreamDeckCapabilities.BridgeStatus);
   return status?.state === 'connected' ? <StreamDeckStatus model={status.device?.model} /> : null;

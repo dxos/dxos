@@ -29,7 +29,7 @@ const TASK_TITLE = 'Ship the tasks section';
 // Carries both reference forms the markdown surfaces linkify: a bare URL and a `#nnn` issue.
 const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
 const LINK_TASK_DESCRIPTION =
-  'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
+  'Spec at https://github.com/dxos/dxos/pull/12752 - the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
 const TASK_QUESTION = 'Should the tasks section ship enabled by default?';
 const TASK_ANSWER = 'On for internal spaces only';
@@ -131,7 +131,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Master-detail: the ledger on the left, the selected task's article on the right — what the deck
+ * Master-detail: the ledger on the left, the selected task's article on the right - what the deck
  * shows as two planks once a row is clicked.
  */
 export const Default: Story = {

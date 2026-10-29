@@ -33,7 +33,7 @@ export const useCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>) => 
  * reader that renders before its provider activates parks at its nearest Suspense boundary. An
  * invariant here cannot tell "not yet" from "never": most providers are idle-gated or wait on a
  * runtime event, so the reader legitimately renders first, and hard-failing on that blanks the
- * subtree. Declaring the dependency as the module's `requires` is NOT the alternative — that
+ * subtree. Declaring the dependency as the module's `requires` is NOT the alternative - that
  * demotes the reader's module into the provider's (later) wave.
  *
  * @returns The capability.
@@ -75,7 +75,7 @@ export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Ato
 
 /**
  * Tolerant variant of {@link useAtomCapability}: returns `undefined` while the atom capability is
- * not registered, rather than throwing. Use it wherever a reader can render before its provider —
+ * not registered, rather than throwing. Use it wherever a reader can render before its provider -
  * a provider gated on a genuine runtime event (a status indicator whose state arrives with the
  * client) cannot be pulled onto the startup pass with `requires`.
  */

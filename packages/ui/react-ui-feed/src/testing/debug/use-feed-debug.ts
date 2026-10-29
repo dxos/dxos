@@ -33,8 +33,8 @@ export type FeedDebug = {
 /**
  * Everything the harness measures itself with, in one place.
  *
- * Kept apart from the story deliberately: instrumentation accumulates — a meter, a sweep, a toggle,
- * a label, the refs and teardown each needs — and threaded through a component it slowly becomes
+ * Kept apart from the story deliberately: instrumentation accumulates - a meter, a sweep, a toggle,
+ * a label, the refs and teardown each needs - and threaded through a component it slowly becomes
  * the component. As an aspect the story stays about the feed, and what is being measured can be
  * read, changed or dropped in one file.
  */

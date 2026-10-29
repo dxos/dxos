@@ -45,7 +45,7 @@ export const debugPortSidecarPlugin = (session: string, rootDir: string): Plugin
             2,
           ),
         );
-        server.config.logger.info(`  ➜  Debug port session: ${session}`);
+        server.config.logger.info(`  \u279C  Debug port session: ${session}`);
       };
 
       // On `listening`: the port is unknown until the server binds.

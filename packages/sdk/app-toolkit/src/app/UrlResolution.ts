@@ -16,7 +16,7 @@ import * as UrlPath from './UrlPath.ts';
  * Resolve a browser pathname under the pair-chain URL grammar (`UrlPath`) to a graph node id, for
  * in-app internal-link click-through (e.g. plugin-markdown's internal markdown links) where only a
  * pathname is on hand rather than an already-parsed pair chain. Only the first plank (id-bearing)
- * pair is resolved — a link always targets a single node, so anything past it (a linked pair, or
+ * pair is resolved - a link always targets a single node, so anything past it (a linked pair, or
  * a second plank copied from a shared deck link) is ignored. Returns `Option.none()` for a pathname
  * that doesn't parse under the grammar, or whose target pair doesn't resolve to an existing node.
  */
@@ -42,9 +42,9 @@ export const resolveInternalLink = (
   });
 
 /**
- * Build a single-object shareable link pathname (`/w/<workspace>/<key>/<id>`) for a graph node — the
+ * Build a single-object shareable link pathname (`/w/<workspace>/<key>/<id>`) for a graph node - the
  * outbound counterpart to {@link resolveInternalLink}. Returns `Option.none()` for a node with no
- * key-declaring producer (unmapped — see `PathResolution.representNode`).
+ * key-declaring producer (unmapped - see `PathResolution.representNode`).
  */
 export const getShareableLinkPath = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> =>
   Option.map(PathResolution.representNode(builder, nodeId), (pair) =>

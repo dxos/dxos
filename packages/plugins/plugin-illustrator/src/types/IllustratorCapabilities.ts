@@ -39,7 +39,7 @@ export type DrawingVariant = {
   icon?: string;
   /**
    * Canvas type, when the renderer extends the base `Drawing.Canvas` with its own fields.
-   * Omit to use the base type — the common case, since `schema` already discriminates.
+   * Omit to use the base type - the common case, since `schema` already discriminates.
    */
   canvasType?: Type.AnyObj;
   /** Build an empty canvas. Defaults to a base `Drawing.Canvas` stamped with `id` as its schema. */
@@ -76,7 +76,7 @@ export type ConvertedCanvas = { canvas: Drawing.Canvas; upserted: readonly strin
 export type DrawingVariantSurfaceProps = {
   /** The base Drawing object (may be a snapshot from useObject/Surface). */
   drawing: Obj.Snapshot<Drawing.Drawing> | Drawing.Drawing;
-  /** The resolved LIVE canvas object — variant store adapters need `Doc.createAccessor`. */
+  /** The resolved LIVE canvas object - variant store adapters need `Doc.createAccessor`. */
   canvas: Drawing.Canvas;
   /** Surface role passed through from the host. */
   role?: string;
@@ -88,7 +88,7 @@ export type DrawingVariantSurfaceProps = {
   extrinsic?: boolean;
   /** Selected world-object ids, owned by the host so every renderer shares one selection model. */
   selection?: readonly string[];
-  /** The user changed the selection. Ids are scene object ids — never renderer shape ids. */
+  /** The user changed the selection. Ids are scene object ids - never renderer shape ids. */
   onSelectionChange?: (objectIds: readonly string[]) => void;
   /** The user activated an object (double-click / enter): open what it depicts. */
   onActivate?: (objectId: string) => void;
@@ -102,13 +102,13 @@ export const variantSlug = (variant: Pick<DrawingVariant, 'label'>): string =>
 export const editTargets = (variants: readonly DrawingVariant[], schema: string | undefined): DrawingVariant[] =>
   variants.filter(({ id }) => id !== schema && id !== SVG_SCHEMA);
 
-/** The "Copy as …" label of the action converting a copy of a drawing to `variant`, keyed per variant so known ones translate. */
+/** The "Copy as ..." label of the action converting a copy of a drawing to `variant`, keyed per variant so known ones translate. */
 export const copyLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label => [
   `copy-as-${variantSlug(variant)}.label`,
   { ns: IllustratorNamespace.key, defaultValue: `Copy as ${variant.label}` },
 ];
 
-/** The "Edit in …" label of the action converting a drawing to `variant`, keyed per variant so known ones translate. */
+/** The "Edit in ..." label of the action converting a drawing to `variant`, keyed per variant so known ones translate. */
 export const editLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label => [
   `edit-in-${variantSlug(variant)}.label`,
   { ns: IllustratorNamespace.key, defaultValue: `Edit in ${variant.label}` },

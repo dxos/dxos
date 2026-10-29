@@ -135,7 +135,7 @@ export const steps = [
     name: 'Open the Composer drawing',
     narration: 'The Composer overview: twelve boxes, five of them frames onto the diagrams beneath.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Composer’s overview: boxes open the diagrams beneath them');
+      await caption(demo, "Composer's overview: boxes open the diagrams beneath them");
       await demo.click({ selector: node('Overview', 0), label: 'Overview drawing' });
       await page.locator(SCENE).first().waitFor({ state: 'visible', timeout: 20_000 });
       await page.waitForTimeout(BEAT * 2);

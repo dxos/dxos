@@ -18,8 +18,8 @@ const SQLITE_IO_GLOBAL = '__dxosSqliteIo';
 /**
  * Reads the counters in EVERY realm and sums them.
  *
- * Per realm because SQLite runs in the dedicated worker, not the page and not the shared worker —
- * `LocalSqliteOpfsLayer` is constructed in `worker-runtime.ts` — but summing rather than splitting
+ * Per realm because SQLite runs in the dedicated worker, not the page and not the shared worker -
+ * `LocalSqliteOpfsLayer` is constructed in `worker-runtime.ts` - but summing rather than splitting
  * because which worker holds the database is an implementation detail the trend should survive.
  */
 const EXPRESSION = `(() => {
@@ -76,7 +76,7 @@ export const readDisk = async (targets: Attached[]): Promise<DiskMetrics> => {
 };
 
 /**
- * Difference of two running totals — the I/O a single stage accounted for.
+ * Difference of two running totals - the I/O a single stage accounted for.
  *
  * `realms` is taken from the later reading rather than subtracted: it is a count of instrumented
  * realms at a point in time, not a quantity that accumulates, and a worker that started mid-stage

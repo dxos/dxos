@@ -21,7 +21,7 @@ describe('layout', () => {
 
   test('fills the width using interior gaps only, with a top perimeter gap', ({ expect }) => {
     const { rects, columnWidth } = layout({ heights: [10, 10], columnCount: 2, containerWidth: 100, gapPx: 10 });
-    expect(columnWidth).toBe(45); // (100 - 1 * 10) / 2 — columns fill, no outer gap.
+    expect(columnWidth).toBe(45); // (100 - 1 * 10) / 2 - columns fill, no outer gap.
     expect(rects[0]).toMatchObject({ x: 0, y: 10, column: 0 }); // flush left; top perimeter gap.
     expect(rects[1]).toMatchObject({ x: 55, y: 10, column: 1 }); // 0 + 1 * (45 + 10).
   });

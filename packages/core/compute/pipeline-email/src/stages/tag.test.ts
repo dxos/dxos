@@ -54,13 +54,13 @@ describe('classifyBulk', () => {
   });
 
   test('invoices and payment requests are action-required, never bulk', ({ expect }) => {
-    expect(classifyBulk({ subject: 'Invoice #4021 — payment due' })).toBe('action');
+    expect(classifyBulk({ subject: 'Invoice #4021 - payment due' })).toBe('action');
     expect(classifyBulk({ subject: 'Payment reminder', senderEmail: 'billing@acme.com' })).toBe('action');
     expect(classifyBulk({ subject: 'Your invoice receipt' })).toBe('action');
   });
 
   test('a person with no automated signal is unknown (left to the model / person gate)', ({ expect }) => {
-    expect(classifyBulk({ subject: 'Barbera Corporate — Dmytro', senderEmail: 'dmytro@barbera.com' })).toBe('unknown');
+    expect(classifyBulk({ subject: 'Barbera Corporate - Dmytro', senderEmail: 'dmytro@barbera.com' })).toBe('unknown');
   });
 
   test('a no-reply / notifications local part is bulk when the subject is silent', ({ expect }) => {
@@ -75,9 +75,9 @@ describe('classifyBulk', () => {
     expect(classifyBulk({ subject: 'Interview with Eric Ries', bodyText: 'Great read.\n\nUnsubscribe here.' })).toBe(
       'bulk',
     );
-    // Outranks an action-looking subject — transactional invoices don't carry an unsubscribe link.
+    // Outranks an action-looking subject - transactional invoices don't carry an unsubscribe link.
     expect(classifyBulk({ subject: 'Invoice #12 payment due', bodyText: 'Click to unsubscribe.' })).toBe('bulk');
-    // No unsubscribe → the normal person path.
+    // No unsubscribe -> the normal person path.
     expect(classifyBulk({ subject: 'Interview with Eric Ries', bodyText: 'Looking forward to it.' })).toBe('unknown');
   });
 });

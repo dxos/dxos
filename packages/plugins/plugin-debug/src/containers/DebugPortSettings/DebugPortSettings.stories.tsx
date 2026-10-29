@@ -44,7 +44,7 @@ const createFakeController = (initial: Partial<DebugPortStatus> = {}): DebugPort
 
   // The panel reads its rows from the process-wide log buffer, so the fake emits through the same
   // logger the real controller uses rather than carrying a log of its own. The metadata spoofs the
-  // controller's file because the panel filters on it — logging from here would be filtered out.
+  // controller's file because the panel filters on it - logging from here would be filtered out.
   const emit = (line: string, session?: string) => log.info(line, { session }, CONTROLLER_META);
 
   return {
@@ -57,8 +57,8 @@ const createFakeController = (initial: Partial<DebugPortStatus> = {}): DebugPort
       const session = crypto.randomUUID();
       update({ running: true, session, origin: DEBUG_PORT_ORIGIN });
       emit(`Session: ${session}`, session);
-      emit(`Connecting to ${DEBUG_PORT_ORIGIN}…`, session);
-      emit('Waiting for debug server…', session);
+      emit(`Connecting to ${DEBUG_PORT_ORIGIN}...`, session);
+      emit('Waiting for debug server...', session);
       return session;
     },
     // Nothing is persisted in a story, so there is never a session to carry across a reload.
@@ -135,7 +135,7 @@ export const Running: Story = {
     },
     lines: [
       'Session: 951c7576-b636-47ff-acc6-a1c4fdf65fb6',
-      `Connecting to ${DEBUG_PORT_ORIGIN}…`,
+      `Connecting to ${DEBUG_PORT_ORIGIN}...`,
       'Command #1:',
       'return dxos.client.spaces.get().length',
       'Command #1 ok',

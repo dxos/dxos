@@ -24,8 +24,8 @@ const N = LIMIT ?? DEFAULT_HTML_VS_TEXT_N;
 
 /**
  * Benchmarks fact extraction over the SAME messages using their native `text/html` vs `text/plain`
- * MIME parts, under one fixed model — the actual ingestion choice. HTML inflates the extractor input
- * (more characters → more chunks → more LLM calls), so this quantifies input size, facts, and
+ * MIME parts, under one fixed model - the actual ingestion choice. HTML inflates the extractor input
+ * (more characters -> more chunks -> more LLM calls), so this quantifies input size, facts, and
  * latency for each part. Restricted to messages that carry BOTH parts (aligned by index).
  */
 describe.skipIf(!fixtureExists())('benchmark text/html vs text/plain email input', () => {

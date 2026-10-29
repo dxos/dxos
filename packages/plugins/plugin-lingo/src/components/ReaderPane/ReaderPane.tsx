@@ -32,7 +32,7 @@ export type ReaderPaneProps = Util.ThemedClassName<
     /** Drop images; a reading companion wants the prose, not the figures. */
     images?: boolean;
     analysis?: Segmentation;
-    /** Externally-driven selection — how the other pane's selection is mirrored here. */
+    /** Externally-driven selection - how the other pane's selection is mirrored here. */
     selected?: string;
   }
 >;
@@ -40,8 +40,8 @@ export type ReaderPaneProps = Util.ThemedClassName<
 /**
  * One read-only pane of the reader companion: the source text with its analysis revealed.
  *
- * Read-only by construction — the companion never writes to the document it is reading, so the
- * source object stays owned by whichever plugin (markdown, inbox, …) actually renders it.
+ * Read-only by construction - the companion never writes to the document it is reading, so the
+ * source object stays owned by whichever plugin (markdown, inbox, ...) actually renders it.
  */
 export const ReaderPane = ({
   content,
@@ -59,7 +59,7 @@ export const ReaderPane = ({
 
   // Callbacks are read through a ref so they stay out of the extension identity. An extension array
   // that changes rebuilds the editor, and a caller passing an inline handler would then tear the
-  // editor down on every selection — losing the decorations the selection just produced.
+  // editor down on every selection - losing the decorations the selection just produced.
   const handlers = useRef({ render, onSelect, onActivate });
   handlers.current = { render, onSelect, onActivate };
   const handleRender = useCallback<NonNullable<SegmentsOptions['render']>>(

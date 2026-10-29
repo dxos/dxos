@@ -47,7 +47,7 @@ export const parseGitHubRemote = (url: string): string | undefined =>
 /** Whether the key points at a spec document rather than at code. */
 export const isSpecKey = (key: SourceKey): boolean => key.path.endsWith('.mdl');
 
-/** The review written beside a spec: `SPEC.mdl` → `SPEC.review.mdl`. */
+/** The review written beside a spec: `SPEC.mdl` -> `SPEC.review.mdl`. */
 export const reviewKeyOf = (key: SourceKey): SourceKey => ({
   owner: key.owner,
   repo: key.repo,

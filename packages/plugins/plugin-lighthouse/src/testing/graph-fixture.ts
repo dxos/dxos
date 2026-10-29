@@ -52,7 +52,7 @@ export const graphFixture: SubjectGraph = {
     {
       id: 'https://www.linkedin.com/in/richburdon#role-alumniOf-university-of-sheffield-7',
       types: ['schema:OrganizationRole'],
-      label: 'The University of Sheffield (1987–1991)',
+      label: 'The University of Sheffield (1987-1991)',
       props: {
         'schema:startDate': ['1987'],
         'schema:endDate': ['1991'],
@@ -89,7 +89,7 @@ export const graphFixture: SubjectGraph = {
     {
       id: 'https://www.crunchbase.com/person/rich-burdon#role-worksFor-braneframe-d6440fb9',
       types: ['schema:EmployeeRole'],
-      label: 'CEO (2021-04-01–)',
+      label: 'CEO (2021-04-01-)',
       props: {
         'schema:roleName': ['CEO'],
         'schema:startDate': ['2021-04-01'],
@@ -112,7 +112,7 @@ export const graphFixture: SubjectGraph = {
     {
       id: 'https://www.crunchbase.com/person/rich-burdon#role-worksFor-google-1b2e3408',
       types: ['schema:EmployeeRole'],
-      label: 'Software Engineer (2005-11–2015-11)',
+      label: 'Software Engineer (2005-11-2015-11)',
       props: {
         'schema:roleName': ['Software Engineer'],
         'schema:startDate': ['2005-11'],
@@ -135,7 +135,7 @@ export const graphFixture: SubjectGraph = {
     {
       id: 'https://www.crunchbase.com/person/rich-burdon#role-worksFor-goldman-sachs-05e08dec',
       types: ['schema:EmployeeRole'],
-      label: 'Team Member (1993–1996)',
+      label: 'Team Member (1993-1996)',
       props: {
         'schema:roleName': ['Team Member'],
         'schema:startDate': ['1993'],
@@ -159,7 +159,7 @@ export const graphFixture: SubjectGraph = {
     {
       id: 'https://www.crunchbase.com/person/rich-burdon#role-worksFor-wireline-85525662',
       types: ['schema:EmployeeRole'],
-      label: 'Co-founder and CEO (?–2021-03)',
+      label: 'Co-founder and CEO (?-2021-03)',
       props: {
         'schema:roleName': ['Co-founder and CEO'],
         'schema:endDate': ['2021-03'],
@@ -181,7 +181,7 @@ export const graphFixture: SubjectGraph = {
     {
       id: 'https://www.crunchbase.com/person/rich-burdon#role-worksFor-d-e-shaw-co-2ccd6588',
       types: ['schema:EmployeeRole'],
-      label: 'Team Member (1996–1998)',
+      label: 'Team Member (1996-1998)',
       props: {
         'schema:roleName': ['Team Member'],
         'schema:startDate': ['1996'],
@@ -204,7 +204,7 @@ export const graphFixture: SubjectGraph = {
     {
       id: 'https://www.crunchbase.com/person/rich-burdon#role-worksFor-the-brain-ef99cd67',
       types: ['schema:EmployeeRole'],
-      label: 'VP, Engineering (1998–2000)',
+      label: 'VP, Engineering (1998-2000)',
       props: {
         'schema:roleName': ['VP, Engineering'],
         'schema:startDate': ['1998'],

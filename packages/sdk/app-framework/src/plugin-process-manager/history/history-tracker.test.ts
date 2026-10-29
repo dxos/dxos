@@ -166,12 +166,12 @@ describe('HistoryTracker', () => {
       const tracker = HistoryTracker.make(invoker, undoRegistry);
       const collector = yield* createEventCollector(invoker);
 
-      // Fork compute with 2 → 4.
+      // Fork compute with 2 -> 4.
       const fiber1 = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       yield* TestClock.adjust('20 millis');
       yield* Fiber.join(fiber1);
 
-      // Fork compute with 3 → 6.
+      // Fork compute with 3 -> 6.
       const fiber2 = yield* Effect.forkChild(invoker.invoke(Compute, { value: 3 }));
       yield* TestClock.adjust('30 millis');
       yield* Fiber.join(fiber2);

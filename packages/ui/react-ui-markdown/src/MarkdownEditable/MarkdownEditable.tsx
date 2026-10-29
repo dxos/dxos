@@ -24,8 +24,8 @@ import { MarkdownView, type MarkdownViewProps } from '../MarkdownView/index.ts';
 /**
  * Rendered markdown that becomes a markdown editor in place.
  *
- * The behaviour is `react-ui`'s `useEditable` — the same commit/revert rules the plain `Editable`
- * follows — with the two surfaces markdown needs: `MarkdownView` at rest and a CodeMirror editor
+ * The behaviour is `react-ui`'s `useEditable` - the same commit/revert rules the plain `Editable`
+ * follows - with the two surfaces markdown needs: `MarkdownView` at rest and a CodeMirror editor
  * while editing. It lives here rather than in `react-ui` because both surfaces depend on packages
  * that depend on `react-ui`.
  *
@@ -51,7 +51,7 @@ export type MarkdownEditableProps = Util.ThemedClassName<
      */
     autoFocus?: boolean;
     /**
-     * Editor extensions beyond the field's own — what a host's plugins contribute, such as link
+     * Editor extensions beyond the field's own - what a host's plugins contribute, such as link
      * chips. Appended after the markdown set, so they see a parsed document.
      */
     extensions?: Extension[];
@@ -59,7 +59,7 @@ export type MarkdownEditableProps = Util.ThemedClassName<
 >;
 
 /**
- * Drives a field held open in a pane, where the reader never blurs it — a Save or Cancel button
+ * Drives a field held open in a pane, where the reader never blurs it - a Save or Cancel button
  * elsewhere on the form has to say what happens to the pending text.
  */
 export type MarkdownEditableController = {
@@ -93,13 +93,13 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
     });
 
     // Held in a ref, and the extensions built once: `commit` closes over the draft, so it is a new
-    // function on every keystroke — and a new extensions array tears the editor down and builds it
+    // function on every keystroke - and a new extensions array tears the editor down and builds it
     // again, losing focus and the character just typed.
     const handlers = useRef({ setDraft, commit, revert });
     handlers.current = { setDraft, commit, revert };
 
     // The editor owns its document (see `initialValue` below), so reverting the draft alone would
-    // leave the reader's text on screen — the editor is rebuilt around the restored text instead.
+    // leave the reader's text on screen - the editor is rebuilt around the restored text instead.
     const [epoch, setEpoch] = useState(0);
 
     // Tearing that editor down fires a blur, and blur commits: without this a revert would write
@@ -120,7 +120,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
     const commitOnBlur = options.blurBehavior !== 'revert';
     const extensions = useMemo(
       () => [
-        // The markdown bundle is only half an editor — without the basic set the content is
+        // The markdown bundle is only half an editor - without the basic set the content is
         // `white-space: pre`, so a description runs off the side instead of wrapping, and there is no
         // undo. Line numbers and the active-line highlight belong to a document, not a field.
         createBasicExtensions({ lineWrapping: true, highlightActiveLine: false, placeholder, tabbable: true }),
@@ -151,7 +151,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
 
     if (editing) {
       // Wrapped rather than styled directly: `TextEditor` forwards its rest props to the editor's
-      // config, not to the DOM, and the preview is a box of the same kind — so the two match.
+      // config, not to the DOM, and the preview is a box of the same kind - so the two match.
       return (
         // CodeMirror insets its own content, which would sit the text further in than the preview it
         // replaced; the field owns its inset, so the editor's is removed. Lines keep theirs, since
@@ -163,7 +163,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
             key={epoch}
             // The text itself is the tab stop (`tabbable` above). `TextEditor` otherwise puts a
             // tabindex on its wrapper, so Tab lands on a box that shows nothing and needs Enter to
-            // get into — right for a document pane, wrong for a field next to a title.
+            // get into - right for a document pane, wrong for a field next to a title.
             focusable={false}
             initialValue={draft}
             extensions={extensions}

@@ -41,7 +41,7 @@ describe('logSqliteQuery', () => {
   });
 });
 
-/** Captures entries the way the feedback log store does — through the JSONL serializer, which drops TRACE. */
+/** Captures entries the way the feedback log store does - through the JSONL serializer, which drops TRACE. */
 const capture = (fn: () => void): { entries: LogEntry[]; jsonl: string[] } => {
   const entries: LogEntry[] = [];
   const processor: LogProcessor = (_config, entry) => {

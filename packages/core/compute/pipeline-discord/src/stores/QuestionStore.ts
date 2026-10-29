@@ -25,7 +25,7 @@ export type Question = {
   readonly answer?: string;
   /** Fact/message ids supporting the answer (citations). */
   readonly supportingIds: readonly string[];
-  /** Count of failed answer attempts — bounds redundant retries across many target boundaries. */
+  /** Count of failed answer attempts - bounds redundant retries across many target boundaries. */
   readonly attempts: number;
   readonly createdAt: string;
   readonly updatedAt: string;

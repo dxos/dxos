@@ -11,8 +11,8 @@
 // The script walks up to find the monorepo root, creates an introspector
 // with `prewarm: true, cache: true`, awaits `ready`, and writes two files:
 //
-//   - core.json    — symbol cache (~14 MB), reused across runs
-//   - plugins.json — plugin metadata sidecar (~200 KB), regenerated every run
+//   - core.json    - symbol cache (~14 MB), reused across runs
+//   - plugins.json - plugin metadata sidecar (~200 KB), regenerated every run
 //
 // Both land under `<root>/node_modules/.cache/dxos-introspect/`. The MCP
 // edge worker reads each from R2 independently (different update cadences,
@@ -114,7 +114,7 @@ if (verbose) {
   }
 }
 
-// Write the plugin metadata sidecar. Atomic rename — same convention as
+// Write the plugin metadata sidecar. Atomic rename - same convention as
 // saveCache. Worker reads `{plugins, surfaces, capabilities, operations,
 // schemas, idioms}` directly off R2; keep the keys identical.
 const pluginsPath = pluginsFilePath(root);
@@ -132,9 +132,9 @@ const sidecar = {
 writeFileSync(pluginsTmp, JSON.stringify(sidecar));
 renameSync(pluginsTmp, pluginsPath);
 log(
-  `wrote plugins sidecar: ${sidecar.plugins.length} plugins, ${sidecar.surfaces.length} surfaces, ${sidecar.capabilities.length} capabilities, ${sidecar.operations.length} operations, ${sidecar.schemas.length} schemas, ${sidecar.idioms.length} idioms → ${pluginsPath}`,
+  `wrote plugins sidecar: ${sidecar.plugins.length} plugins, ${sidecar.surfaces.length} surfaces, ${sidecar.capabilities.length} capabilities, ${sidecar.operations.length} operations, ${sidecar.schemas.length} schemas, ${sidecar.idioms.length} idioms -> ${pluginsPath}`,
 );
 
 const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-log(`done in ${elapsed}s — ${packages.length} packages indexed.`);
+log(`done in ${elapsed}s - ${packages.length} packages indexed.`);
 intro.dispose();

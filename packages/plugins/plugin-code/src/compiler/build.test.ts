@@ -64,7 +64,7 @@ describe.concurrent('compileEntry', { tags: ['manual'] }, () => {
     if (result.ok) {
       expect(result.entry.path).toBe('src/hello.ts');
       // Either F-12a's TS emit (single-quoted) or F-12b's esbuild emit
-      // (double-quoted) is acceptable — both contain the literal `hello`.
+      // (double-quoted) is acceptable - both contain the literal `hello`.
       expect(result.entry.source).toMatch(/['"]hello['"]/);
     }
   });
@@ -151,7 +151,7 @@ describe('compile + execute round-trip', { tags: ['manual'] }, () => {
       { path: 'src/leak.ts', content: 'export const VALUE = 1; const _x: number = "no";\n' },
     ];
     const a = await compileEntry(buildA);
-    // We expect this to fail (string assigned to number) — drives the test.
+    // We expect this to fail (string assigned to number) - drives the test.
     expect(a.ok).toBe(false);
 
     // Second build: only hello.ts. If src/leak.ts lingered in the language-

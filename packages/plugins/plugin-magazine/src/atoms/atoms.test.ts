@@ -64,7 +64,7 @@ describe('postReadAtom', () => {
 
     Subscription.setReadAt(subscription, postB.id, new Date().toISOString());
     await db.flush();
-    expect(fireCount).toBe(1); // postA's readAt unchanged — should not re-fire.
+    expect(fireCount).toBe(1); // postA's readAt unchanged - should not re-fire.
   });
 
   test('does not fire when an unrelated subscription field changes', async ({ expect }) => {
@@ -85,7 +85,7 @@ describe('postReadAtom', () => {
       subscription.name = 'Updated';
     });
     await db.flush();
-    expect(fireCount).toBe(1); // name change — should not re-fire.
+    expect(fireCount).toBe(1); // name change - should not re-fire.
   });
 });
 
@@ -117,7 +117,7 @@ describe('postTagsAtom', () => {
 
     await Subscription.setTag(subscription, post.id, db, 'starred', true);
     await db.flush();
-    // At least one further fire carries the mutation; the exact count is not part of the contract —
+    // At least one further fire carries the mutation; the exact count is not part of the contract -
     // the update scheduler coalesces, so an intermediate re-run (Tag.Tag created, still
     // starred=false) may or may not surface as its own notification.
     expect(fireCount).toBeGreaterThan(1);
@@ -132,7 +132,7 @@ describe('postTagsAtom', () => {
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     const postB = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     // Pre-warm the Tag.Tag so tagUrisAtom is already populated when the atom subscribes.
-    // Without this, the first setTag creates Tag.Tag → tagUrisAtom fires → one extra body re-run.
+    // Without this, the first setTag creates Tag.Tag -> tagUrisAtom fires -> one extra body re-run.
     await Subscription.setTag(subscription, postA.id, db, 'starred', true);
     await Subscription.setTag(subscription, postA.id, db, 'starred', false);
     await db.flush();
@@ -145,7 +145,7 @@ describe('postTagsAtom', () => {
 
     await Subscription.setTag(subscription, postB.id, db, 'starred', true);
     await db.flush();
-    expect(fireCount).toBe(1); // postA's tags unchanged — should not re-fire.
+    expect(fireCount).toBe(1); // postA's tags unchanged - should not re-fire.
   });
 });
 
@@ -216,7 +216,7 @@ describe('postCurationAtom', () => {
 
     Magazine.patchPostState(magazine, postB.id, { snippet: 'Sibling snippet.' });
     await db.flush();
-    expect(fireCount).toBe(1); // postA's curation unchanged — should not re-fire.
+    expect(fireCount).toBe(1); // postA's curation unchanged - should not re-fire.
   });
 
   test('does not fire when an unrelated magazine field changes', async ({ expect }) => {
@@ -246,7 +246,7 @@ describe('postCurationAtom', () => {
       magazine.name = 'Updated Magazine';
     });
     await db.flush();
-    expect(fireCount).toBe(1); // name change — should not re-fire.
+    expect(fireCount).toBe(1); // name change - should not re-fire.
   });
 });
 

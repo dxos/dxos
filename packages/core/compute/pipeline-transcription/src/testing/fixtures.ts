@@ -4,7 +4,7 @@
 
 import { type ScriptedBlock } from './scripted-source.ts';
 
-/** A short multi-utterance meeting transcript (raw, lower-cased — as Whisper tends to emit). */
+/** A short multi-utterance meeting transcript (raw, lower-cased - as Whisper tends to emit). */
 export const SAMPLE_MEETING: readonly ScriptedBlock[] = Object.freeze([
   { text: 'so i think we should ship munich on friday' },
   { text: 'lets confirm the plan with anna first' },

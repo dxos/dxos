@@ -10,7 +10,7 @@ import { type DuplexStream } from '@dxos/teleport';
  * Adapts a web-stream byte pipe to the Node `Duplex` that hypercore's `feed.replicate()` requires.
  *
  * This is the only place in MESH that still needs a Node stream: `@dxos/vendor-hypercore` dictates
- * the interface and is not ours to reshape. Keeping the bridge here — rather than in the muxer —
+ * the interface and is not ours to reshape. Keeping the bridge here - rather than in the muxer -
  * is what lets every other package in the stack compile without the `readable-stream` polyfill.
  *
  * Hand-written because `Duplex.fromWeb` takes `node:stream/web`'s `ReadableStream`, a different

@@ -96,14 +96,14 @@ export default Capability.makeModule(
 /**
  * sessionStorage key holding the sentinel history entry's key. The entry is identified by its
  * (reload-stable) Navigation API key rather than by entry state, because the deck overwrites
- * history state via replaceState during URL sync — which would erase a state marker. sessionStorage
+ * history state via replaceState during URL sync - which would erase a state marker. sessionStorage
  * survives reloads within the tab and the deck never touches it.
  */
 const SENTINEL_STORAGE_KEY = 'dxos.composer.deck.leaveTrap.sentinelKey';
 
 /**
  * Insert a "sentinel" history entry beneath the app's working entries, so a Back-press that would
- * leave Composer instead lands on the sentinel — where `onCurrentEntryChange` confirms the exit. A
+ * leave Composer instead lands on the sentinel - where `onCurrentEntryChange` confirms the exit. A
  * cross-document back is uncancelable and `beforeunload` cannot distinguish reload from leave, so
  * this same-document floor is required; reload fires no traversal and is never trapped. Requires the
  * Navigation API (Chromium); no-op otherwise. Idempotent across reloads via the sessionStorage-held
@@ -116,7 +116,7 @@ const installLeaveTrap = (): string | undefined => {
   const saved = sessionStorage.getItem(SENTINEL_STORAGE_KEY);
   if (saved && window.navigation.entries().some((entry) => entry.key === saved)) {
     // The sentinel survived (reload, or the user returned to Composer after leaving). If we are
-    // sitting ON it — e.g. the user left via the sentinel then came back Forward onto it — push a
+    // sitting ON it - e.g. the user left via the sentinel then came back Forward onto it - push a
     // working entry above so the user is above the floor again and the trap re-arms.
     if (window.navigation.currentEntry?.key === saved) {
       history.pushState(null, '', window.location.pathname + window.location.search);

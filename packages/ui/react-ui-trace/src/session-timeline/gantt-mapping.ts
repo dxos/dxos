@@ -21,7 +21,7 @@ import { type Lane, type SessionTimeline, type TokenUsage } from './types.ts';
  * The one place the domain's nouns meet the chart's.
  *
  * The chart knows only groups, lanes, segments and markers; this file knows that a **process** is a
- * group — the band around the lanes of the tasks it works, with no row of its own — a **task** is a
+ * group - the band around the lanes of the tasks it works, with no row of its own - a **task** is a
  * lane inside it, a **subtask** nests under its parent task, and a **delegation** opens a lane out of
  * the node that spawned it. Keeping the translation here is what lets either vocabulary change without
  * dragging the other with it.
@@ -74,9 +74,9 @@ const isHistoryEntry = Schema.is(Task.HistoryEntry);
  *
  * Every process becomes a band holding the lanes of the tasks it works; the process itself draws no
  * row, so its own nodes (requests, tool calls no task claims) are dropped. A process standing for one
- * task — a delegated sub-agent, or a session the builder folded its lone task into — is that task's
+ * task - a delegated sub-agent, or a session the builder folded its lone task into - is that task's
  * lane, so it keeps its span, its nodes and the node it opened out of. A process spawned by another
- * nests its band under its parent's — so causality is drawn by `openedFrom` while membership is
+ * nests its band under its parent's - so causality is drawn by `openedFrom` while membership is
  * `groupId` and nesting is `parentId`, three facts the timeline's single `parentId` used to carry.
  */
 export const sessionTimelineToGantt = (timeline: SessionTimeline): Pick<GanttData, 'groups' | 'lanes' | 'markers'> => {

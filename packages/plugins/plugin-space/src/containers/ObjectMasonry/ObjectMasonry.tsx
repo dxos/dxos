@@ -14,7 +14,7 @@ export type ObjectMasonryProps = {
   items: TileData[];
 };
 
-/** A grid of object cards — the shared body of every view that shows a set of objects as tiles. */
+/** A grid of object cards - the shared body of every view that shows a set of objects as tiles. */
 export const ObjectMasonry = ({ cacheKey, items }: ObjectMasonryProps) => {
   // The masonry item is the tile's focusable unit. A plain click or Enter opens the object when it can be opened; a
   // modified one (or a tile that cannot open) selects it, so the review workflow still selects without navigating.

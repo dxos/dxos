@@ -7,8 +7,8 @@ import { Entity } from '@dxos/echo';
 /**
  * Replaces live ECHO entities in an operation's output with wire snapshots.
  *
- * An operation returning a live object is the right call in-process — the caller gets a reactive,
- * mutable handle — but a proxy carries none of its properties through JSON, so an MCP client would
+ * An operation returning a live object is the right call in-process - the caller gets a reactive,
+ * mutable handle - but a proxy carries none of its properties through JSON, so an MCP client would
  * see an empty value where the schema promised an object. Snapshotting keeps the operation
  * dual-use rather than making authors pick an audience.
  */
@@ -34,7 +34,7 @@ export const entities = (value: unknown, seen = new WeakMap<object, unknown>()):
     }
     return copy;
   }
-  // Plain carriers only: a class instance the operation deliberately returns (Date, Uint8Array, …)
+  // Plain carriers only: a class instance the operation deliberately returns (Date, Uint8Array, ...)
   // is left alone rather than shallow-copied into a bare object.
   const prototype = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== null) {

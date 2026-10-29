@@ -11,7 +11,7 @@ export type MatchFilterOptions<T extends Entity.Unknown> = {
    * a host narrows it to what a reader sees (a task's title and description, say).
    */
   text?: (object: T) => readonly (string | undefined)[];
-  /** The object's tag ids — the uri space `#tag` terms carry. Defaults to `Entity.getMeta(object).tags`. */
+  /** The object's tag ids - the uri space `#tag` terms carry. Defaults to `Entity.getMeta(object).tags`. */
   tags?: (object: T) => readonly string[];
 };
 
@@ -79,7 +79,7 @@ const matchesPredicate = (predicate: QueryAST.Filter, value: unknown): boolean =
           return compareOrdered(value, predicate.value, predicate.operator);
       }
     case 'object':
-      // A nested literal (`{ address: { city: … } }`) narrows the value's own fields.
+      // A nested literal (`{ address: { city: ... } }`) narrows the value's own fields.
       return (
         isRecord(value) &&
         Object.entries(predicate.props).every(([key, sub]) => matchesPredicate(sub, getPath(value, key)))

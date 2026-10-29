@@ -13,8 +13,8 @@ import type { SpaceId, URI } from '@dxos/keys';
 import * as Doc from '../automerge/Doc.ts';
 
 //
-// TargetKey — proxy-target cache key (shared with echo-handler to avoid
-// circular dep: object-core ← echo-proxy-target ← core-db).
+// TargetKey - proxy-target cache key (shared with echo-handler to avoid
+// circular dep: object-core <- echo-proxy-target <- core-db).
 //
 
 type TargetKeyType = {
@@ -50,7 +50,7 @@ export type DecodedAutomergePrimaryValue =
   | ImmutableString;
 
 //
-// Shared entity-manager / database types — placed here so they can be
+// Shared entity-manager / database types - placed here so they can be
 // referenced from both core-db (object-core) and proxy-db (database) without
 // introducing circular imports.
 //
@@ -94,8 +94,8 @@ export type LoadObjectOptions = {
 
   /**
    * Resolve as soon as the worker-side disk probe settles instead of
-   * waiting for the network. If the document for the requested object —
-   * or any of its strong dependencies — is not on local storage, the call
+   * waiting for the network. If the document for the requested object -
+   * or any of its strong dependencies - is not on local storage, the call
    * returns `undefined` (or, with `returnWithUnsatisfiedDeps: true`, the
    * partial core) instead of stalling. Recursive strong-dep loads inherit
    * this preference. Used by query-driven loads where waiting on network
@@ -121,13 +121,13 @@ export type AtomicReplaceObjectProps = {
   data: any;
 
   /**
-   * Update object type — either a typename DXN or a stored-schema EID
+   * Update object type - either a typename DXN or a stored-schema EID
    * (see `getSchemaURI`).
    */
   type?: URI.URI;
 
   /**
-   * Optional partial meta patch — merged into the existing object meta.
+   * Optional partial meta patch - merged into the existing object meta.
    * Fields explicitly set to `undefined` overwrite the previous value with `undefined`.
    */
   meta?: Partial<EntityMeta>;

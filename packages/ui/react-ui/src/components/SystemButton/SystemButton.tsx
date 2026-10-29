@@ -176,7 +176,7 @@ export type SystemDisclosureProps = SystemButtonProps & {
 };
 
 /**
- * Shows and hides a region — the WAI-ARIA disclosure pattern, so it reports `aria-expanded` rather than the
+ * Shows and hides a region - the WAI-ARIA disclosure pattern, so it reports `aria-expanded` rather than the
  * `aria-pressed` of a toggle. Give it `aria-controls` at the call site, where the region's id is known. Its caret
  * turns a quarter while expanded (`theme/system-button.css`).
  */
@@ -457,7 +457,7 @@ const Mic = composable<HTMLButtonElement, SystemMicProps>(
     },
     forwardedRef,
   ) => {
-    // A press spans down→up; the guard fires start/end once though a release arrives as both `pointerup` and
+    // A press spans down->up; the guard fires start/end once though a release arrives as both `pointerup` and
     // `lostpointercapture`.
     const pressedRef = useRef(false);
     const beginPress = useCallback(() => {

@@ -33,7 +33,7 @@ export type ExtractOptions = {
   /**
    * Attempt strict `generateObject` before the lenient `generateText` + salvage path. Strong hosted
    * models honor the schema, but local providers (Ollama) reliably fail structured output there, so
-   * the strict call is pure wasted latency — pass `false` for those to make each chunk a single
+   * the strict call is pure wasted latency - pass `false` for those to make each chunk a single
    * generation. Defaults to `true`.
    */
   readonly strict?: boolean;

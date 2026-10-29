@@ -20,8 +20,8 @@ export type GraphClusterProjectorOptions = GraphRadialProjectorOptions & {
   /** Radius for the synthetic root node. Default 5. */
   rootRadius?: number;
   /**
-   * Group key for each node — synthetic intermediate nodes are created per unique key,
-   * giving a root → group → leaf hierarchy. Return `undefined` to attach the node
+   * Group key for each node - synthetic intermediate nodes are created per unique key,
+   * giving a root -> group -> leaf hierarchy. Return `undefined` to attach the node
    * directly to the root.
    */
   groupOf?: (node: GraphLayoutNode) => string | undefined;
@@ -44,7 +44,7 @@ export const CLUSTER_NODE_TYPE_GROUP = 'group';
 export const CLUSTER_NODE_TYPE_ROOT = 'root';
 
 /**
- * Standard d3 radial link generator — `curveBumpRadial`. Same shape as the original
+ * Standard d3 radial link generator - `curveBumpRadial`. Same shape as the original
  * `RadialTree` component (and the d3 radial-cluster observable notebook).
  *
  * IMPORTANT: relies on the `dx-edge path` CSS setting `fill: none`. Without that, the SVG
@@ -57,8 +57,8 @@ const linkPath = linkRadial<any, any>()
   .radius((d: any) => d.y);
 
 /**
- * Cartesian → d3-radial polar. d3 measures angle clockwise from "up" (the -y direction).
- * Inverse of `[cos(a - π/2) * r, sin(a - π/2) * r]`.
+ * Cartesian -> d3-radial polar. d3 measures angle clockwise from "up" (the -y direction).
+ * Inverse of `[cos(a - pi/2) * r, sin(a - pi/2) * r]`.
  */
 const cartesianToPolar = (x: number, y: number): { angle: number; radius: number } => ({
   angle: Math.atan2(x, -y),
@@ -66,7 +66,7 @@ const cartesianToPolar = (x: number, y: number): { angle: number; radius: number
 });
 
 /**
- * Radial cluster (d3.cluster) layout. Materializes a root → group → leaf
+ * Radial cluster (d3.cluster) layout. Materializes a root -> group -> leaf
  * hierarchy from the `groupOf` callback, runs d3.cluster, and:
  *
  * - Places leaves around the outer ring; synthetic group nodes sit on an
@@ -76,7 +76,7 @@ const cartesianToPolar = (x: number, y: number): { angle: number; radius: number
  * - Each hierarchy edge carries a `path` string (d3's `linkRadial` curve)
  *   computed from CURRENT cartesian endpoint positions every frame via
  *   `onTickFrame`. The curve therefore tracks moving endpoints during a
- *   cross-variant tween (e.g. force → cluster) instead of snapping to the
+ *   cross-variant tween (e.g. force -> cluster) instead of snapping to the
  *   final polar shape.
  */
 export class GraphClusterProjector<
@@ -90,7 +90,7 @@ export class GraphClusterProjector<
   readonly #collapsed = new Set<string>();
 
   // Snapshot of the full data-node set as of the last mergeData. doClusterLayout always
-  // reads from this rather than `layout.graph.nodes` — the layout view is filtered (it
+  // reads from this rather than `layout.graph.nodes` - the layout view is filtered (it
   // drops hidden leaves so the renderer doesn't see them), so re-reading from there
   // would permanently lose the hidden leaves and they couldn't reappear on expand.
   #dataNodes: GraphLayoutNode<NodeData>[] = [];
@@ -129,7 +129,7 @@ export class GraphClusterProjector<
   protected override onUpdate(graph?: GraphModel.AnyData) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
-    // Snapshot the full data-node set right after mergeData — before doClusterLayout
+    // Snapshot the full data-node set right after mergeData - before doClusterLayout
     // overwrites `layout.graph.nodes` with the filtered (collapse-aware) view.
     this.#dataNodes = [...this.layout.graph.nodes];
     this.doClusterLayout();
@@ -139,7 +139,7 @@ export class GraphClusterProjector<
 
   /**
    * Recompute each hierarchy edge's `path` from current cartesian source/target positions,
-   * so the curves track moving endpoints during a cross-variant tween (e.g. force → cluster)
+   * so the curves track moving endpoints during a cross-variant tween (e.g. force -> cluster)
    * instead of being pinned to the final polar layout.
    */
   protected override onTickFrame(_t: number): void {
@@ -163,7 +163,7 @@ export class GraphClusterProjector<
     // view is a FILTERED projection (hidden leaves are dropped so the renderer's d3 join
     // fades them out); reading from it would shrink monotonically across collapses and
     // hidden leaves could never reappear on expand. The snapshot also avoids the
-    // "synthetic root re-pushed as its own child → d3.hierarchy infinite recursion" hang
+    // "synthetic root re-pushed as its own child -> d3.hierarchy infinite recursion" hang
     // we'd otherwise hit, because synthetic stubs were never in this set to begin with.
     const dataNodes = this.#dataNodes;
     if (!dataNodes.length) {
@@ -173,13 +173,13 @@ export class GraphClusterProjector<
     const groupOf = this.options.groupOf;
     const rootId = this.options.rootId ?? ROOT_ID;
 
-    // Synthesize the hierarchy: root → groups → leaves. `groupKey` is carried on synthetic
+    // Synthesize the hierarchy: root -> groups -> leaves. `groupKey` is carried on synthetic
     // group HierNodes so the rendered stub can pick up the original groupOf return value
     // (the typename, in plugin-explorer's case) as its display label.
     type HierNode = { id: string; parent?: string; node?: GraphLayoutNode<NodeData>; groupKey?: string };
     const items: HierNode[] = [{ id: rootId }];
     const groupIds = new Map<string, string>();
-    // Collapsed root → render only the root circle (no groups, no leaves).
+    // Collapsed root -> render only the root circle (no groups, no leaves).
     const rootCollapsed = this.#collapsed.has(rootId);
     if (!rootCollapsed) {
       for (const node of dataNodes) {
@@ -194,7 +194,7 @@ export class GraphClusterProjector<
           }
           parent = groupId;
         }
-        // Collapsed group → drop its leaves. The group itself still renders so the user
+        // Collapsed group -> drop its leaves. The group itself still renders so the user
         // can click it again to expand.
         if (this.#collapsed.has(parent)) {
           continue;
@@ -220,7 +220,7 @@ export class GraphClusterProjector<
 
     d3Cluster<HierNode>()
       .size([2 * Math.PI, ringRadius])
-      // Tighter sibling spacing at deeper levels — matches the previous standalone
+      // Tighter sibling spacing at deeper levels - matches the previous standalone
       // RadialTree component. Without the `/depth` divisor, large groups span a
       // wide angular arc; the linkRadial(curveBumpPolar) curve to a leaf at the
       // edge of that arc then has its control points placed far apart in
@@ -251,13 +251,13 @@ export class GraphClusterProjector<
       const y = Math.sin(angle - Math.PI / 2) * radius;
 
       if (d.data.node) {
-        // Real leaf — tween its position and mark visible.
+        // Real leaf - tween its position and mark visible.
         updateNode(d.data.node, [x, y], leafR);
         (d.data.node as any).type = CLUSTER_NODE_TYPE_LEAF;
         (d.data.node as any).hidden = false;
       } else {
         // Synthetic root or group. On the very first cluster mount the stub is brand-new
-        // so seed it at origin — root stays put while groups grow outward. On subsequent
+        // so seed it at origin - root stays put while groups grow outward. On subsequent
         // mounts (toggleCollapsed) we reuse the previous-render stub so its current x/y
         // becomes the tween start; otherwise the DOM element would jump to origin before
         // animating to the new target position.
@@ -277,7 +277,7 @@ export class GraphClusterProjector<
 
     // Collapse animation: hidden leaves stay in the layout but their target position is
     // the parent group's target (or root for ungrouped leaves). animate() then tweens them
-    // toward the parent — visually "absorbed in", while their opacity transitions to 0 via
+    // toward the parent - visually "absorbed in", while their opacity transitions to 0 via
     // the renderer's hidden-flag transition. On re-expand they tween back out to their ring.
     const visibleLeafIds = new Set<string>();
     for (const item of items) {
@@ -289,7 +289,7 @@ export class GraphClusterProjector<
       if (visibleLeafIds.has(node.id)) {
         continue;
       }
-      // Hidden leaf — find its parent group's target. groupOf may have changed since the
+      // Hidden leaf - find its parent group's target. groupOf may have changed since the
       // last layout pass (rare in practice but cheap to handle), so re-compute the key.
       const key = groupOf?.(node);
       const parentId = key !== undefined && groupIds.has(key) ? (groupIds.get(key) as string) : rootId;
@@ -313,7 +313,7 @@ export class GraphClusterProjector<
 
     // Build hierarchy edges referencing source/target nodes. The `path` is filled by
     // onTickFrame (and again per tween frame) from current cartesian positions, so we
-    // don't precompute it here — leaving it undefined would briefly produce a straight
+    // don't precompute it here - leaving it undefined would briefly produce a straight
     // line on first paint, but the tween's first tick (t=0) writes the correct path
     // before the renderer's positions-emit reaches the DOM.
     const hierarchyEdges: GraphLayoutEdge<NodeData>[] = [];

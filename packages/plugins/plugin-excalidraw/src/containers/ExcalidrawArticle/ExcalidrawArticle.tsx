@@ -151,7 +151,7 @@ export const ExcalidrawArticle = ({
     }
   };
 
-  // Selection, host → editor; the adapter's update path re-applies it once elements have loaded.
+  // Selection, host -> editor; the adapter's update path re-applies it once elements have loaded.
   useEffect(() => {
     const api = excalidrawAPIRef.current;
     if (api) {
@@ -189,7 +189,7 @@ export const ExcalidrawArticle = ({
         key={attendableId}
         excalidrawAPI={(api) => {
           excalidrawAPIRef.current = api;
-          // The adapter may have finished loading before the API bound — replay the
+          // The adapter may have finished loading before the API bound - replay the
           // latest snapshot so the scene is never blank just because the two hooks
           // resolved in a different order.
           const buffered = latestElementsRef.current;

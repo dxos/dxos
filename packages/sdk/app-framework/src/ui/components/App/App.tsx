@@ -40,12 +40,12 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
   const placeholderDismissed = stage >= LoadingState.Done;
   // The shell mounts a tick EARLIER than the dismissal, at the same stage that starts the loader's
   // outro: the loader is still on screen (z-index 10) and fading, so the real UI paints beneath it
-  // instead of after it — gating both on `Done` leaves a blank frame between the two.
+  // instead of after it - gating both on `Done` leaves a blank frame between the two.
   const shellMounted = stage >= LoadingState.FadeOut;
 
   // Activation lines are opt-in (`verboseStatus`): they name framework internals, so the default
   // boot log is the host's own phases only. When enabled, one line per plugin (and per framework
-  // activation event) rather than per module — a plugin contributes a dozen-odd modules, which
+  // activation event) rather than per module - a plugin contributes a dozen-odd modules, which
   // scrolled hundreds of lines past the user. The framework leaves both choices to the host.
   const announcedRef = useRef(new Set<string>());
 
@@ -65,7 +65,7 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
       bootLoader?.progress(0.5 + fraction * 0.5);
     }
     if (progress?.pluginSlug) {
-      // Optional call — see the note on `plugins?.(...)` in `useApp`.
+      // Optional call - see the note on `plugins?.(...)` in `useApp`.
       bootLoader?.activated?.(progress.pluginSlug);
     }
 
@@ -171,7 +171,7 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
         {reactRoots.map(({ id, root: Component }) => (
           // One boundary per root: roots read capabilities whose providers activate in a later
           // wave, and `useCapability` suspends on that. A shared boundary would let one late root
-          // withhold every other root's already-renderable content — the blank shell this fixes.
+          // withhold every other root's already-renderable content - the blank shell this fixes.
           <Suspense key={id} fallback={null}>
             <Component />
           </Suspense>

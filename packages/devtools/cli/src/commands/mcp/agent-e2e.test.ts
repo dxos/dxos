@@ -13,13 +13,13 @@ import { McpSession, bootstrapProfile, dxBin, runDx } from '../../testing/index.
 
 /**
  * End-to-end: a real Claude Code subprocess, talking to a real `dx mcp serve`, against a real
- * ECHO database — where every claim about what happened is read back out of the database by a
+ * ECHO database - where every claim about what happened is read back out of the database by a
  * separate `dx` process rather than taken from what the agent said it did.
  *
  * That separation is the whole point. An agent reporting "I marked the task done" is the model
  * narrating its own tool call; only a `dx database query` in another process proves the write
  * reached the database, and only running it BETWEEN turns proves it reached the database at the
- * stage the test claims — a suite that asserts once at the end cannot tell a first-turn write
+ * stage the test claims - a suite that asserts once at the end cannot tell a first-turn write
  * from a third-turn one.
  *
  * Tagged `manual`: it spends real tokens against the Anthropic API and needs a `claude` binary on
@@ -29,7 +29,7 @@ import { McpSession, bootstrapProfile, dxBin, runDx } from '../../testing/index.
 /**
  * The credential the suite runs on. Deliberately not `ANTHROPIC_API_KEY`: that variable, or an
  * interactive login, is whatever the developer happens to have, and the test would then charge an
- * account nobody chose — `claude-agent.ts` maps this one into the child. Empty rather than
+ * account nobody chose - `claude-agent.ts` maps this one into the child. Empty rather than
  * undefined so `skipIf` below is the single place absence is handled.
  */
 const API_KEY = process.env.DX_ANTHROPIC_API_KEY ?? '';
@@ -51,14 +51,14 @@ const ALLOWED_TOOLS = [tool('queryOperations'), tool('invokeOperation'), tool('l
 
 /**
  * The agent's own ceiling for one turn. Must stay strictly below `TEST_TIMEOUT`, or vitest kills
- * the test first and the driver's "last events" diagnostic — the only record of what the agent
- * was doing — never prints.
+ * the test first and the driver's "last events" diagnostic - the only record of what the agent
+ * was doing - never prints.
  */
 const TURN_TIMEOUT = 240_000;
 
 /**
  * Per-test budget: one agent turn plus the `dx database query` that follows it. The package
- * defaults to 15s for its `runDx` subprocess tests, which a turn alone routinely exceeds — an
+ * defaults to 15s for its `runDx` subprocess tests, which a turn alone routinely exceeds - an
  * early run had one stage pass at 14.7s, a flake waiting to happen rather than a pass.
  */
 const TEST_TIMEOUT = TURN_TIMEOUT + 120_000;
@@ -97,7 +97,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
   let spaceId: string;
   let agent: ClaudeAgent;
 
-  /** Every task in the space, read by a `dx` process of its own — never through the agent. */
+  /** Every task in the space, read by a `dx` process of its own - never through the agent. */
   const readTasks = (): TaskRow[] => {
     const { stdout, stderr, status } = runDx(
       ['--json', 'database', 'query', '--space-id', spaceId, '--typename', TASK_TYPE],
@@ -109,7 +109,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     return JSON.parse(stdout);
   };
 
-  /** Sessions in the space, read by a `dx` process of its own — never through the agent. */
+  /** Sessions in the space, read by a `dx` process of its own - never through the agent. */
   const readSessions = (): SessionRow[] => {
     const { stdout, stderr, status } = runDx(
       ['--json', 'database', 'query', '--space-id', spaceId, '--typename', SESSION_TYPE],
@@ -122,7 +122,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
   };
 
   /**
-   * `dx database query` answers with bare object ids, while a ref envelope carries a URI —
+   * `dx database query` answers with bare object ids, while a ref envelope carries a URI -
    * passing an id straight through fails resolution as `Unsupported URI kind`.
    */
   const uri = (id: string): string => `echo://${spaceId}/${id}`;
@@ -203,7 +203,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     }
   });
 
-  // Stage 1 — the starting state, proven from outside before a single token is spent. Without it,
+  // Stage 1 - the starting state, proven from outside before a single token is spent. Without it,
   // a later "the task is done" assertion cannot distinguish the agent's work from a bad fixture.
   test(
     'stage 1: the scaffold is visible to a separate dx process before the agent runs',
@@ -216,7 +216,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     TEST_TIMEOUT,
   );
 
-  // Stage 2 — a read-only turn. It must NOT change the database: an agent that writes while
+  // Stage 2 - a read-only turn. It must NOT change the database: an agent that writes while
   // answering a question is a defect the write-turn assertions below would happily absorb.
   test(
     'stage 2: the agent reads the scaffolded tasks through the server, changing nothing',
@@ -240,7 +240,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     TEST_TIMEOUT,
   );
 
-  // Stage 3 — one write, and the database read back between turns. The `toHaveLength(2)` is doing
+  // Stage 3 - one write, and the database read back between turns. The `toHaveLength(2)` is doing
   // work: the natural failure of an agent that cannot find a task is to create a new one and
   // report success, which a title-only assertion would pass.
   test(
@@ -263,7 +263,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     TEST_TIMEOUT,
   );
 
-  // Stage 4 — a second write on the same conversation, asserted on its own so the suite is staged
+  // Stage 4 - a second write on the same conversation, asserted on its own so the suite is staged
   // rather than cumulative: stage 3 already proved the database at its own point in time, so a
   // regression here cannot be excused as "it happened later". The prompt says `started`, not "in
   // progress", because `Task.status` is a closed literal set and a value outside it would have
@@ -290,7 +290,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     TEST_TIMEOUT,
   );
 
-  // Stage 5 — the hook path, which is the one `RecordSession` actually exists for. A hook sends a
+  // Stage 5 - the hook path, which is the one `RecordSession` actually exists for. A hook sends a
   // fixed payload with no space, so the operation has to place the session itself; the agent is
   // asked to do exactly what the returned instructions say, and the database is read back to prove
   // the session landed rather than the agent merely claiming it did.
@@ -334,8 +334,8 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     TEST_TIMEOUT,
   );
 
-  // Stage 6 — the heartbeat a placed session sends thereafter: no space, found by foreign key, and
-  // answering with the work it owns. The reminder is the point — a report that forgets the task is
+  // Stage 6 - the heartbeat a placed session sends thereafter: no space, found by foreign key, and
+  // answering with the work it owns. The reminder is the point - a report that forgets the task is
   // a report the agent learns nothing from.
   test(
     'stage 6: a later report needs no space, and reminds the session of its open tasks',

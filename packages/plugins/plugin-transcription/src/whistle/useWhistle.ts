@@ -80,7 +80,7 @@ export type UseWhistleResult = {
 /**
  * Streams a track through the Whistle on-device speech model in a worker, the way Cactus's own live
  * demo does: one continuous stream per activation, re-decoded every `minPassMs` of new audio, with the
- * browser's noise suppression as the only filtering. The model loads on first activation (≈17 MB,
+ * browser's noise suppression as the only filtering. The model loads on first activation (~17 MB,
  * cached by the browser afterwards); audio never leaves the tab.
  */
 export const useWhistle = ({

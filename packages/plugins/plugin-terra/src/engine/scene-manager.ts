@@ -123,7 +123,7 @@ export class SceneManager {
     const fromAlpha = camera.alpha;
     const fromBeta = camera.beta;
     const fromTarget = camera.target.clone();
-    // The ArcRotateCamera places itself at (cos α sin β, cos β, sin α sin β); solve that for the point's direction.
+    // The ArcRotateCamera places itself at (cos alpha sin beta, cos beta, sin alpha sin beta); solve that for the point's direction.
     const toBeta = Math.acos(Math.min(1, Math.max(-1, unit[1])));
     const rawAlpha = Math.atan2(unit[2], unit[0]);
     // The shortest way round, so a turn never spins the long way past the far side.

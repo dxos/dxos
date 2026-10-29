@@ -110,7 +110,7 @@ const VirtualStackPaginationStory = () => {
   const pagination = useMemo(() => ({ getNext, getPrevious, atHead }), [getNext, getPrevious, atHead]);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  const range = items.length > 0 ? `${items[0].index}–${items[items.length - 1].index}` : '–';
+  const range = items.length > 0 ? `${items[0].index}-${items[items.length - 1].index}` : '-';
 
   return (
     <Dnd.Root>
@@ -348,7 +348,7 @@ const FeedPaginationStory = () => {
             <div className='grow text-end truncate whitespace-nowrap'>
               {items.length} loaded of {total}
               {!atHead && ' · detached'}
-              {isLoading && ' · loading…'}
+              {isLoading && ' · loading...'}
               {!hasMore && ' · end'}
             </div>
           </Toolbar.Root>
@@ -405,7 +405,7 @@ export const Default: Story = {
  * the toolbar to append more items (they appear live at the head), and to sort by
  * natural/number/word in either direction.
  */
-// Hoisted so `config` and `services` below share the same call — calling `persistentClientServices`
+// Hoisted so `config` and `services` below share the same call - calling `persistentClientServices`
 // twice would spawn two independent dedicated workers/coordinators for the one story.
 const FEED_BACKED_CLIENT_SERVICES = persistentClientServices();
 
@@ -415,7 +415,7 @@ export const FeedBacked: Story = {
     withClientProvider({
       // Persist identity/storage across reloads, mirroring stories-assistant. DEDICATED_WORKER mode
       // (not a bare createOpfsWorker) elects a single leader across tabs via navigator.locks so a
-      // second tab proxies through the first instead of racing it for the same OPFS file handle —
+      // second tab proxies through the first instead of racing it for the same OPFS file handle -
       // see the failure-mode comment on OpfsWorker.run in @dxos/sql-sqlite. `onInitialized` reuses
       // the persisted space/feed rather than creating fresh ones each load (hence no
       // `createIdentity`/`createSpace` flags).

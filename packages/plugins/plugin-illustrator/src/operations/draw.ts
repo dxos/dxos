@@ -26,8 +26,8 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Draw> = DrawingOper
       // Semantic statements (`node`, `edge`, `group`) are laid out here; scene statements pass through.
       const { commands, problems } = yield* Dsl.compile(source);
       // Nothing is applied while an error stands. A partial apply would still replace the objects
-      // the bad statements name — an element dropped for an invalid attribute would silently lose
-      // that attribute on the canvas — while the result told the agent the statement was skipped.
+      // the bad statements name - an element dropped for an invalid attribute would silently lose
+      // that attribute on the canvas - while the result told the agent the statement was skipped.
       const failed = problems.some(({ severity }) => severity === 'error');
       const { upserted, removed } = failed ? { upserted: [], removed: 0 } : variant.builder.apply(canvas, commands);
       if (!failed) {

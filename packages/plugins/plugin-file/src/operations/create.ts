@@ -69,7 +69,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
           catch: FileReadError.wrap(),
         }),
       );
-      // The size cap only applies to `inline` storage — `Blob.fromBytes` enforces it internally;
+      // The size cap only applies to `inline` storage - `Blob.fromBytes` enforces it internally;
       // other backends scale beyond it.
       const object = yield* File.fromBytes(bytes, {
         name: file.name,

@@ -91,7 +91,7 @@ export type ArrowHead = 'arrow' | 'triangle' | 'crowsfoot' | 'none';
 
 export type ArrowTail = 'none' | 'circle' | 'arrow';
 
-/** Scene tails → tldraw arrowheads at the start of the arrow. */
+/** Scene tails -> tldraw arrowheads at the start of the arrow. */
 export const ARROWHEAD_START: Record<ArrowTail, 'dot' | 'arrow' | 'none'> = {
   none: 'none',
   circle: 'dot',
@@ -99,7 +99,7 @@ export const ARROWHEAD_START: Record<ArrowTail, 'dot' | 'arrow' | 'none'> = {
 };
 
 /**
- * Scene heads → tldraw arrowheads. tldraw has no crow's foot; `inverted` (a triangle fanning out
+ * Scene heads -> tldraw arrowheads. tldraw has no crow's foot; `inverted` (a triangle fanning out
  * toward the node) is the closest of its primitives and keeps has-many distinct from a reference.
  */
 export const ARROWHEAD_END: Record<ArrowHead, 'arrow' | 'triangle' | 'inverted' | 'none'> = {

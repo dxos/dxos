@@ -132,7 +132,7 @@ export const ReportSections = Util.composable<HTMLDivElement, ReportSectionsProp
               proceeds: lot.proceeds,
               costBasis: lot.costBasis,
               pnl: lot.realizedPnl,
-              term: term ? t(`term.${term}.label`) : '—',
+              term: term ? t(`term.${term}.label`) : '-',
               currency: lot.currency,
             };
           }),
@@ -200,7 +200,7 @@ export const ReportSections = Util.composable<HTMLDivElement, ReportSectionsProp
 /** Converts IBKR's "YYYYMMDD" or "YYYYMMDD;HH:MM:SS" trade date to "YYYY-MM-DD". */
 const formatDate = (raw: string | undefined): string => {
   if (!raw) {
-    return '—';
+    return '-';
   }
   const date = raw.split(';')[0];
   return date.length === 8 ? `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}` : date;
@@ -208,7 +208,7 @@ const formatDate = (raw: string | undefined): string => {
 
 /**
  * Long-term when a lot is held more than one year (sold strictly after the one-year anniversary of
- * acquisition). Indicative only — derived from the YYYYMMDD date prefixes, not IBKR's own holding-period
+ * acquisition). Indicative only - derived from the YYYYMMDD date prefixes, not IBKR's own holding-period
  * field. Returns undefined when either date is missing.
  */
 const holdingTerm = (acquired: string | undefined, sold: string | undefined): 'long' | 'short' | undefined => {

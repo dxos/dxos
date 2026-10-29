@@ -13,7 +13,7 @@ import '@dxos/react-ui-graph/styles/graph.css';
 import { type VisualizationVariantId } from './variants.ts';
 import { Visualization } from './Visualization.tsx';
 
-// Synthetic neighbourhood: inbound sources → focus (left), focus → near → far (right, outgoing).
+// Synthetic neighbourhood: inbound sources -> focus (left), focus -> near -> far (right, outgoing).
 const NODES: SpaceGraphNode[] = [
   { id: 'focus', type: 'object', data: { label: 'Focus' } },
   ...Array.from({ length: 3 }, (_, index): SpaceGraphNode => ({
@@ -42,7 +42,7 @@ const EDGES: SpaceGraphEdge[] = [
     target: 'focus',
     data: { force: true },
   })),
-  // Outgoing: focus → near → far (right side, explored).
+  // Outgoing: focus -> near -> far (right side, explored).
   ...Array.from({ length: 5 }, (_, index): SpaceGraphEdge => ({
     id: `e-focus-near-${index}`,
     type: 'ref',

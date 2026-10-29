@@ -29,7 +29,7 @@ const SUMMARY_PROMPT = trim`
   Summarize this email conversation in one or two plain sentences for someone triaging their inbox:
   where the exchange stands now, and any action or deadline it leaves open. Cover the whole thread
   rather than only its latest message, and prefer the most recent state when messages disagree. No
-  preamble, no greeting, no bullet points — just the summary.
+  preamble, no greeting, no bullet points - just the summary.
 `;
 
 /** Per-message body cap in a thread transcript, so a long exchange still fits one prompt. */
@@ -152,7 +152,7 @@ const summarize = Effect.fnUntraced(function* (
   );
 
   // Already-summarized threads are skipped by their newest message's id rather than by feed
-  // position, so a cursor reset never re-bills work whose result is already in the feed — and a
+  // position, so a cursor reset never re-bills work whose result is already in the feed - and a
   // thread that has since GROWN is summarized again, because its newest message is a new subject.
   const annotations = mailbox.annotations?.target;
   const existing = annotations ? yield* Feed.query(annotations, Filter.type(Message.Message)).run : [];
@@ -195,7 +195,7 @@ const summarize = Effect.fnUntraced(function* (
       Effect.map((response) => response.text.trim()),
       Effect.provide(modelLayer),
       // A summary is advisory: one failed generation skips its thread rather than failing the
-      // run and stranding the summaries already appended. An UNAVAILABLE model is different — it
+      // run and stranding the summaries already appended. An UNAVAILABLE model is different - it
       // fails identically for every thread, so swallowing it would report a successful run that
       // summarized nothing. Let it through for the caller (the cascade) to report as a skip.
       Effect.catchCause((cause) =>
@@ -235,13 +235,13 @@ const summarize = Effect.fnUntraced(function* (
 });
 
 /**
- * Summarizes conversations involving known contacts into the mailbox's annotation feed — one
+ * Summarizes conversations involving known contacts into the mailbox's annotation feed - one
  * immutable summary Message per THREAD (see `Mailbox.makeSummary`), filed under the thread's newest
  * message and merged back on read by `mergeAnnotations`.
  *
  * The thread, not the message, is the unit: summarizing each message alone re-answers the same
  * question once per reply and can never say where an exchange stands. Filing under the newest message
- * is what makes that safe — a later reply leaves the stored summary describing a message that is no
+ * is what makes that safe - a later reply leaves the stored summary describing a message that is no
  * longer the newest, so the next run re-summarizes the thread rather than reporting it done.
  *
  * The contact gate is what keeps the tier affordable: one LLM call per thread, only for exchanges

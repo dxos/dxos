@@ -46,12 +46,12 @@ export type LayoutOptions = {
  * Columns are separated by a single gap. They stretch to fill `containerWidth`
  * unless `maxColumnWidthPx` caps them narrower, in which case the leftover width
  * is split evenly so the grid stays centred (the outer margin grows beyond the
- * gap) — or, with `centered` off, left entirely at the end so the columns align to
+ * gap) - or, with `centered` off, left entirely at the end so the columns align to
  * the start. The base left/right perimeter is owned by the scroll container (via
  * its `--gutter`); the layout adds any centring offset plus, with `perimeter`, the top/bottom one.
  */
 /**
- * Width every column gets, before any tile is placed. Independent of the tiles themselves — which is
+ * Width every column gets, before any tile is placed. Independent of the tiles themselves - which is
  * what lets a caller key cached tile heights by the width they were measured at.
  */
 export const getColumnWidth = ({

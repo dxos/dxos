@@ -13,7 +13,7 @@ import { Html, type HtmlSrcResolver } from './Html.tsx';
 import { Compare, SampleFrame, SANDBOX_SAMPLES, findShadowHost } from './testing.tsx';
 
 //
-// The sandbox on its own — no dialect. Everything here is behaviour `Html` guarantees to any caller:
+// The sandbox on its own - no dialect. Everything here is behaviour `Html` guarantees to any caller:
 // style isolation, sanitization, remote-image blocking, `src` resolution, and honouring the document's
 // own color-scheme declaration. Email-specific policy is exercised in `transform-email.stories.tsx`.
 //
@@ -23,7 +23,7 @@ type SampleId = keyof typeof SANDBOX_SAMPLES;
 type StoryArgs = {
   sample: SampleId;
   loadRemoteImages?: boolean;
-  /** Renders light and dark side by side — the only way to see a body that reads in one and not the other. */
+  /** Renders light and dark side by side - the only way to see a body that reads in one and not the other. */
   compare?: boolean;
 };
 
@@ -49,7 +49,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The content's `* { … !important }` rules must not escape the shadow root and restyle this page. */
+/** The content's `* { ... !important }` rules must not escape the shadow root and restyle this page. */
 export const Isolation: Story = { args: { sample: 'hostile' } };
 
 /** Not markup, so it renders verbatim in a `<pre>` rather than being parsed. */
@@ -61,14 +61,14 @@ export const RemoteImagesLoaded: Story = { args: { sample: 'remoteImage', loadRe
 
 /**
  * The document ships its own dark rules. Sanitization strips `<style>`, so those rules never reach the
- * shadow root and both panes currently render unstyled — the story exists to make that gap visible
+ * shadow root and both panes currently render unstyled - the story exists to make that gap visible
  * (DESIGN.md §2, Gap A). Once the authored CSS survives, the panes must differ and must follow the app
  * mode rather than the OS setting.
  */
 export const AuthoredDarkRules: Story = { args: { sample: 'authoredDark', compare: true } };
 
 /**
- * Nothing here can be shown, so nothing is drawn — no broken-image placeholder, and no stray alt text
+ * Nothing here can be shown, so nothing is drawn - no broken-image placeholder, and no stray alt text
  * left underlined inside its link. The protocol-relative image counts as a remote fetch, so it is
  * blocked like any other.
  */
@@ -92,7 +92,7 @@ export const UnloadableImages: Story = {
 //
 
 // The sandbox does not know what `cid:` means: it hands any non-http src to the dialect's resolver and
-// swaps the result in once it settles. Async on purpose — a real resolver is a database read.
+// swaps the result in once it settles. Async on purpose - a real resolver is a database read.
 const INLINE_CONTENT_ID = 'inline-signature-1';
 
 const INLINE_IMAGE = trim`
@@ -102,7 +102,7 @@ const INLINE_IMAGE = trim`
   </div>
 `;
 
-// A minimal 1x1 transparent PNG — content doesn't matter, only that `src` resolves off of `cid:`.
+// A minimal 1x1 transparent PNG - content doesn't matter, only that `src` resolves off of `cid:`.
 const INLINE_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 

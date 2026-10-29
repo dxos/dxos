@@ -6,7 +6,7 @@
 //
 // v3 took a fields record and built the struct internally; v4 takes a schema, so an arbitrary
 // parameter schema (a union, a branded struct) can be passed. Only the fields-record form needs
-// wrapping — a `parameters:` that is already a schema expression is left alone.
+// wrapping - a `parameters:` that is already a schema expression is left alone.
 //
 //   node tools/codemods/effect-4-tool-parameters.mjs [--dry] [path...]
 //

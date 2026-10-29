@@ -35,7 +35,7 @@ type StoryArgs = {
   count?: number;
   axis?: WindowAxis;
   exact?: boolean;
-  /** Extent the row actually renders at — the story controls it, so the story knows the truth. */
+  /** Extent the row actually renders at - the story controls it, so the story knows the truth. */
   extent?: (index: number) => number;
   /** Outline every row and label its extent, so what is being measured is visible. */
   debug?: boolean;
@@ -44,7 +44,7 @@ type StoryArgs = {
    *
    * Buttons rather than a global the play function calls: a story is rendered more than once, so a
    * `window.__grow` captured in an effect goes stale and the press lands on a previous mount's
-   * state — which presented as `Prepend` and `Grow` passing or failing depending on what else ran.
+   * state - which presented as `Prepend` and `Grow` passing or failing depending on what else ran.
    * A button is the same thing the reader has, and there is only ever one of it.
    */
   /** Render the append button; 'few' appends 5 rows per press instead of 20 (the sticky story). */
@@ -56,7 +56,7 @@ type StoryArgs = {
   /**
    * Reserve a viewport's worth of space after the last row, so it can be read at the top.
    *
-   * Computed **here**, from what the window publishes, and handed back as a number — which is the
+   * Computed **here**, from what the window publishes, and handed back as a number - which is the
    * claim §7 makes: with the window placed rather than the rows, this is not a mode the list has.
    */
   scrollPastEnd?: boolean;
@@ -64,7 +64,7 @@ type StoryArgs = {
    * Extent the host *claims*, when that differs from what renders.
    *
    * Two callbacks, not one, because a story that reports the same number it renders cannot express a
-   * host being wrong — which is the only thing `Drift` is about.
+   * host being wrong - which is the only thing `Drift` is about.
    */
   declared?: (index: number) => number;
 };
@@ -84,7 +84,7 @@ const DefaultStory = ({
 }: StoryArgs) => {
   // The model the window binds to: the buttons drive it directly, so a prepend is *told* and the
   // stories exercise the told path rather than the replace-adapter's inference (SPEC F-7.1).
-  // Items carry their extent — keyed by identity, so a prepend moves rows without resizing them.
+  // Items carry their extent - keyed by identity, so a prepend moves rows without resizing them.
   const model = useMemo(
     () =>
       new ListModel<Row>({
@@ -107,13 +107,13 @@ const DefaultStory = ({
   const onEdge = useCallback((drift: EdgeDrift) => setEdges((all) => [...all.slice(-4), drift]), []);
   const onMismatch = useCallback(
     (mismatch: { index: number; declared: number; actual: number }) =>
-      setMismatches((all) => [...all.slice(-4), `${mismatch.index}: ${mismatch.declared}→${mismatch.actual}`]),
+      setMismatches((all) => [...all.slice(-4), `${mismatch.index}: ${mismatch.declared}->${mismatch.actual}`]),
     [],
   );
 
   // Everything here is *outside* the window, reading what it publishes: chrome is the host's, and a
   // toolbar that reached inside would be the engine growing an opinion about navigation (§2).
-  // Smooth, because a step is a move the reader should be able to follow with their eyes — and it
+  // Smooth, because a step is a move the reader should be able to follow with their eyes - and it
   // can be here: corrections move the window rather than the scroll (§7), so nothing cancels the
   // animation halfway. The old engine had to make this instant for exactly that reason.
   const step = (delta: number) => controller.current?.scrollToIndex((state?.index ?? 0) + delta, 'start', 'smooth');
@@ -121,7 +121,7 @@ const DefaultStory = ({
   // Measured from the container this owns, not from what the window publishes.
   //
   // Deriving it from `state.geometry.viewport` looks equivalent and is not: the reserve changes the
-  // sizer, the sizer changes the layout, the layout is what publishes the viewport — and the whole
+  // sizer, the sizer changes the layout, the layout is what publishes the viewport - and the whole
   // thing oscillates. React said `Maximum update depth exceeded`, which is the same "two things
   // compensating for one change" this design exists to remove, wearing a new hat. A reserve is an
   // input to the layout; anything read back out of the layout cannot be one.
@@ -213,7 +213,7 @@ const DefaultStory = ({
             iconOnly
             label='Grow'
             data-testid='window.grow'
-            // A change in place: same identity, new extent — the model says which row, and the
+            // A change in place: same identity, new extent - the model says which row, and the
             // measurement pass finds the new size (§8).
             onClick={() => {
               const item = model.at(GROWN);
@@ -260,10 +260,10 @@ const DefaultStory = ({
       <div className='px-2 py-1 flex gap-4 text-xs text-fg-muted tabular-nums' data-testid='placement.report'>
         <span data-testid='window.index'>{state?.index ?? 0}</span>
         <span data-testid='window.range'>
-          {state ? `${state.visible.first}–${state.visible.last}` : '—'} of {state?.count ?? 0}
+          {state ? `${state.visible.first}-${state.visible.last}` : '-'} of {state?.count ?? 0}
         </span>
         <span className='grow' />
-        <span>{`edges ${edges.map(({ edge, delta }) => `${edge}${delta}`).join(' ') || '—'} · mismatch ${mismatches.join(' ') || '—'}`}</span>
+        <span>{`edges ${edges.map(({ edge, delta }) => `${edge}${delta}`).join(' ') || '-'} · mismatch ${mismatches.join(' ') || '-'}`}</span>
       </div>
     </div>
   );
@@ -344,7 +344,7 @@ export const Default: Story = {
  * The window is placed where the arithmetic says, and the edges agree with the model.
  *
  * `offset === 0` at the start and `offset + window === sizer` at the end are where estimate meets
- * ground truth — with `exact` extents they must hold to the pixel, which is what makes this the
+ * ground truth - with `exact` extents they must hold to the pixel, which is what makes this the
  * control the other stories are read against.
  */
 export const Static: Story = {
@@ -386,7 +386,7 @@ export const Append: Story = {
 /**
  * The hard case: rows inserted *before* the reader.
  *
- * Everything at or after the anchor has to stay exactly where it is, in the frame the insert lands —
+ * Everything at or after the anchor has to stay exactly where it is, in the frame the insert lands -
  * which is the whole reason placement is anchor-relative rather than summed from index 0.
  */
 export const Prepend: Story = {
@@ -413,7 +413,7 @@ export const Prepend: Story = {
 };
 
 /**
- * A row changing extent moves the rows after it and none before it — and costs us nothing.
+ * A row changing extent moves the rows after it and none before it - and costs us nothing.
  *
  * This is §6 in one assertion: the browser reflows the siblings. With rows placed by transform it
  * was 177 re-placements written by us for one disclosure.
@@ -426,7 +426,7 @@ export const Grow: Story = {
     // Grown at the top of the list rather than after a scroll: which rows are mounted depends on the
     // extent function, and a story that scrolls to a fixed offset and then names a fixed row is
     // asserting against wherever that row happened to be the day it was written. It named row 30 at
-    // an offset that mounts rows 6–29, and read "the grow did nothing".
+    // an offset that mounts rows 6-29, and read "the grow did nothing".
     if (!before.rows.has(GROWN)) {
       throw new Error(`row ${GROWN} should be mounted at the top; mounted ${[...before.rows.keys()].join(',')}`);
     }
@@ -537,7 +537,7 @@ export const Chrome: Story = {
       moved: next !== start,
       atEnd,
       backToTop,
-      range: /^\d+–\d+ of 200$/.test(read('window.range')),
+      range: /^\d+\u2013\d+ of 200$/.test(read('window.range')),
     }).toEqual({
       filled: true,
       moved: true,
@@ -555,7 +555,7 @@ export const Chrome: Story = {
  * On the old design the reserve was a flag that special-cased the tail wherever it was consulted,
  * and it could never be stabilised. Here the host computes a number, the list adds it to the sizer,
  * and the end includes it; nothing else in the engine knows it happened (§7). This story's reserve
- * is a viewport's worth less one row, so at rest the last row sits at the top — the extreme case.
+ * is a viewport's worth less one row, so at rest the last row sits at the top - the extreme case.
  */
 export const PastEnd: Story = {
   args: { count: 200, scrollPastEnd: true },
@@ -578,7 +578,7 @@ export const PastEnd: Story = {
 /**
  * A feed pinned to its tail stays there as content arrives.
  *
- * The one thing the old engine spent the most machinery on — a follow, a sticky flag, a re-base and
+ * The one thing the old engine spent the most machinery on - a follow, a sticky flag, a re-base and
  * a scroll listener that had to tell the reader apart from itself. Here it is a standing intent: at
  * the end, appending keeps you at the end; away from it, appending does not move you.
  */
@@ -601,7 +601,7 @@ export const Sticky: Story = {
 
     const arrived = atTail(200);
     append();
-    // The follow *travels* now (glide, ~2 rows/s) — arrival is by deceleration, not teleport, so
+    // The follow *travels* now (glide, ~2 rows/s) - arrival is by deceleration, not teleport, so
     // the reading is "lands and stays", polled to landing rather than sampled mid-flight.
     let followed = false;
     for (let frame = 0; frame < 300 && !followed; frame++) {
@@ -610,7 +610,7 @@ export const Sticky: Story = {
     }
 
     // And away from the tail it must not drag the reader: a feed that follows whatever the reader is
-    // doing is a feed that cannot be read while it is busy. The wheel first — a scroll with no
+    // doing is a feed that cannot be read while it is busy. The wheel first - a scroll with no
     // gesture behind it is the machinery's, and the follow would undo it.
     scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -100 }));
     scroller.scrollTop = 0;

@@ -40,7 +40,7 @@ export function transform(
  * Self-contained log-meta transform for callers that don't already have a Rolldown
  * `meta.ast` / `meta.magicString` (e.g. an esbuild-driven caller). Parses the
  * source with the Oxc parser, runs the same edit pass as the Rolldown plugin, and
- * returns the transformed code (or `null` when nothing changed — the caller can
+ * returns the transformed code (or `null` when nothing changed - the caller can
  * then short-circuit and reuse the original buffer).
  */
 export const transformLogMeta = (

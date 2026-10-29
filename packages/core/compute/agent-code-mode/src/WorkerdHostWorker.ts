@@ -6,7 +6,7 @@
  * The outbound target a sandboxed isolate's `fetch` reaches.
  *
  * A loaded isolate can only be handed structured-cloneable values, so a host callback cannot be
- * passed into its `env` — the runtime rejects an RPC reference there. What it does accept is a
+ * passed into its `env` - the runtime rejects an RPC reference there. What it does accept is a
  * `Fetcher` as `globalOutbound`, which is why the channel is HTTP-shaped at all.
  *
  * This module is the worker under test, so it shares an isolate with whoever is driving the

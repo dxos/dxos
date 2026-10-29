@@ -17,7 +17,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
     ZenPlugin is an ambient sound and meditation plugin for DXOS Composer. Users create and edit Dream
-    objects — named, duration-bound soundscapes composed of layered audio sequences that play through
+    objects - named, duration-bound soundscapes composed of layered audio sequences that play through
     the Web Audio API. Each sequence is either a looped sample (fireplace, ocean, rain, stream, thunder,
     or gong) or a procedurally generated binaural beat with independent volume and mute controls.
 

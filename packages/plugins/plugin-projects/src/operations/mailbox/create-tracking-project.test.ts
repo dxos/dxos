@@ -35,7 +35,7 @@ describe('create-tracking-project', () => {
 
       const projects = yield* Database.query(Filter.type(Project.Project)).run;
       const project = projects.find((candidate) => candidate.id === result.projectId);
-      expect(project?.name).toBe('Kirkconsult — Requests');
+      expect(project?.name).toBe('Kirkconsult - Requests');
 
       invariant(project);
       const routines = yield* Database.query(Filter.type(Routine.Routine)).run;
@@ -70,7 +70,7 @@ describe('create-tracking-project', () => {
         message,
         scope: 'sender',
         pipeline: 'summaries',
-        name: 'Nicole — Threads',
+        name: 'Nicole - Threads',
       });
       expect(result.senders).toEqual(['ngudmand@kirkconsult.com']);
       expect(result.pipeline).toBe('summaries');
@@ -79,7 +79,7 @@ describe('create-tracking-project', () => {
 
       const projects = yield* Database.query(Filter.type(Project.Project)).run;
       const project = projects.find((candidate) => candidate.id === result.projectId);
-      expect(project?.name).toBe('Nicole — Threads');
+      expect(project?.name).toBe('Nicole - Threads');
       invariant(project);
       const [routine] = yield* Database.query(Filter.type(Routine.Routine)).run;
       expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri.toString()).toContain(

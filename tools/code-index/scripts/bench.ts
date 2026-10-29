@@ -11,7 +11,7 @@
  *   bun scripts/bench.ts [--root <repo>] [--touch <repo-relative file>] [--json]
  *
  * The touched file's content is unchanged and its mtime is restored afterwards; the pass reindexes it
- * because the mtime is the incremental key. Run on an otherwise idle machine — `parse` is CPU-bound.
+ * because the mtime is the incremental key. Run on an otherwise idle machine - `parse` is CPU-bound.
  */
 
 import { execFile } from 'node:child_process';

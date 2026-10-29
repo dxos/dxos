@@ -20,8 +20,8 @@ import { DraftMessage, Message, Person } from '@dxos/types';
 // TODO(burdon): Factor out.
 
 /**
- * Reusable, generic email-processing pipeline stages: {@link Change} → {@link Change}, composing in any
- * order, each simply recording what it found (`message.attachments`, `contact`, …) rather than writing
+ * Reusable, generic email-processing pipeline stages: {@link Change} -> {@link Change}, composing in any
+ * order, each simply recording what it found (`message.attachments`, `contact`, ...) rather than writing
  * directly. {@link toCommitUnit} is the terminal stage that turns those into a generic
  * `Cursor.CommitUnit`, and must run last. Provider-specific decode/map stages construct the initial
  * `Change` (an `Insert`, tagged from the start) and stay in each sync op.
@@ -71,7 +71,7 @@ export type Insert = {
 
 /**
  * A label change on an already-committed message, resolved to its feed message's `entityId`.
- * {@link toCommitUnit} turns it into an objectless commit unit that applies the tag adds/removes — no
+ * {@link toCommitUnit} turns it into an objectless commit unit that applies the tag adds/removes - no
  * feed append, so the body stages ({@link processAttachments}, {@link extractContacts},
  * {@link reconcileDrafts}) pass it through untouched.
  */
@@ -84,7 +84,7 @@ export type Retag = {
 };
 
 /**
- * A remote deletion of an already-committed message. Wired but STUBBED — {@link toCommitUnit} emits an
+ * A remote deletion of an already-committed message. Wired but STUBBED - {@link toCommitUnit} emits an
  * objectless unit with no effect (see the TODO there) pending safe in-sync feed object deletion.
  */
 export type Delete = {
@@ -96,7 +96,7 @@ export type Delete = {
 /**
  * The discriminated item flowing through the shared email tail. `insert` is a new message; `retag`/
  * `delete` act on existing feed messages by `entityId`. All converge on the single {@link toCommitUnit}
- * → `Cursor.commit`.
+ * -> `Cursor.commit`.
  */
 export type Change = Insert | Retag | Delete;
 
@@ -106,23 +106,23 @@ export type Attachment = {
   readonly mimeType?: string;
   readonly size: number;
   readonly bytes: Uint8Array;
-  /** The attachment's `Content-ID`, if any — matches a `cid:` reference in the message's HTML body. */
+  /** The attachment's `Content-ID`, if any - matches a `cid:` reference in the message's HTML body. */
   readonly contentId?: string;
 };
 
 /**
  * Builds a Person (+ Organization link by domain) from the message sender and records it on the
- * item as {@link Insert.contact} — the stage writes nothing itself; {@link toCommitUnit} defers
+ * item as {@link Insert.contact} - the stage writes nothing itself; {@link toCommitUnit} defers
  * the actual `db.add` to commit.
  *
  * Dedup is the space's shared identity index (see `getIdentityIndex`), refreshed once at the start
- * of the run: it covers contacts committed before the run, contacts built earlier in it, and — since
- * the index is shared per database — contacts a concurrently-syncing mailbox is building right now.
+ * of the run: it covers contacts committed before the run, contacts built earlier in it, and - since
+ * the index is shared per database - contacts a concurrently-syncing mailbox is building right now.
  *
  * Not every sender earns a record: {@link senderSignals} feeds the allow-list in
  * `shouldExtractContact`, so bulk and automated mail no longer fills the space with contacts nobody
  * will look at. NOTE: no provider records an outbound signal yet, so in practice the allow-list is
- * "the domain matches a known Organization" — stricter than the policy intends. Extracting the
+ * "the domain matches a known Organization" - stricter than the policy intends. Extracting the
  * recipients of sent mail is what closes that gap.
  */
 export const extractContacts = (): Stage.Stage<Change, Change, never, Database.Service> => {
@@ -152,7 +152,7 @@ export const extractContacts = (): Stage.Stage<Change, Change, never, Database.S
 
 /**
  * Turns each of the item's `attachments` into a Blob object (via the database's configured storage
- * backend — edge in Composer) and adds a {@link Message.Attachment} pointing at it to the message.
+ * backend - edge in Composer) and adds a {@link Message.Attachment} pointing at it to the message.
  * {@link toCommitUnit} finds these blobs again via each attachment's ref (inlined, since the
  * blob isn't attached to a database yet) to defer their feed append to commit. A no-op when the item
  * has no attachments.
@@ -191,7 +191,7 @@ export const processAttachments = (): Stage.Stage<Change, Change, never, Databas
         return mapped;
       }
 
-      // The message is not yet appended to the feed, so mutating it here is safe — mirrors how the
+      // The message is not yet appended to the feed, so mutating it here is safe - mirrors how the
       // mappers assemble `blocks` before the message is ever persisted.
       Obj.update(mapped.message, (message) => {
         message.attachments = [...(message.attachments ?? []), ...attachments];
@@ -203,12 +203,12 @@ export const processAttachments = (): Stage.Stage<Change, Change, never, Databas
 
 /**
  * Queries the parent container's already-sent drafts once per sync run and pools them by the provider
- * message id captured at send time (`properties.sentMessageId`) — the key {@link reconcileDrafts}
+ * message id captured at send time (`properties.sentMessageId`) - the key {@link reconcileDrafts}
  * matches each incoming message's `foreignId` against. Doing this once (rather than per item) keeps
  * reconciliation off the database as messages stream through. Unsent drafts (no `sentMessageId`) are
  * never pooled and thus never eligible for removal.
  *
- * `parent` is the local root object drafts are scoped to (e.g. a Mailbox) — only its URI is read, so
+ * `parent` is the local root object drafts are scoped to (e.g. a Mailbox) - only its URI is read, so
  * any object works.
  */
 export const queryDraftPool = Effect.fn('queryDraftPool')(function* (parent: Obj.Unknown) {
@@ -233,9 +233,9 @@ export const queryDraftPool = Effect.fn('queryDraftPool')(function* (parent: Obj
 });
 
 /**
- * Records the local drafts each incoming message supersedes — matched by the provider message id the
+ * Records the local drafts each incoming message supersedes - matched by the provider message id the
  * draft captured at send time (`properties.sentMessageId`), which equals the synced message's
- * `foreignId` — from a pool built once per run and keyed by that id. Writes nothing itself;
+ * `foreignId` - from a pool built once per run and keyed by that id. Writes nothing itself;
  * {@link toCommitUnit} defers the `db.remove` to commit, so the canonical message is appended
  * to the feed before its now-redundant drafts are deleted. A stage factory: pass the run's draft
  * pool once.
@@ -262,7 +262,7 @@ export const reconcileDrafts = (
  * consumes. For an `insert`: `message.attachments` (populated by {@link processAttachments}) becomes a
  * feed-append commit effect for the referenced blobs, `mapped.contact` (from {@link extractContacts})
  * becomes a `db.add` commit effect, and `mapped.supersededDrafts` (from {@link reconcileDrafts})
- * becomes a `db.remove` commit effect. Every other email stage is Change → Change and composes in
+ * becomes a `db.remove` commit effect. Every other email stage is Change -> Change and composes in
  * any order; this is the one stage that must run last.
  *
  * Tagging is email-specific (`Cursor.CommitUnit` carries no tag data), so it's applied here rather
@@ -337,9 +337,9 @@ export const toCommitUnit = (
         } satisfies Cursor.CommitUnit;
       }
 
-      // Remote deletion: wired but STUBBED — the branch resolves an objectless unit that does nothing.
+      // Remote deletion: wired but STUBBED - the branch resolves an objectless unit that does nothing.
       // TODO(wittjosiah): Remove the message from the feed once in-sync feed object deletion is safe
-      //   (cursor/dedup-set interaction across the non-transactional queue↔space-db seam).
+      //   (cursor/dedup-set interaction across the non-transactional queue<->space-db seam).
       if (change._tag === 'delete') {
         return { foreignId: change.foreignId, key: 0 } satisfies Cursor.CommitUnit;
       }

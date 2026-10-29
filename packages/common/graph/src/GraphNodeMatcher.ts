@@ -103,7 +103,7 @@ export const whenNodeType =
  *
  * @example
  * ```ts
- * // Match settings nodes that are not the root — `whenNot` is transparent, so the result carries the node.
+ * // Match settings nodes that are not the root - `whenNot` is transparent, so the result carries the node.
  * const whenSettings = GraphNodeMatcher.whenAll(
  *   GraphNodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
  *   GraphNodeMatcher.whenNot(GraphNodeMatcher.whenRoot),
@@ -189,7 +189,7 @@ export const whenAny: {
  * Negates a matcher - matches when the given matcher does NOT match.
  * Useful for exclusion patterns like "any object EXCEPT type X".
  *
- * Returns `NodeMatcher<unknown>` because negation is a filter — it doesn't provide
+ * Returns `NodeMatcher<unknown>` because negation is a filter - it doesn't provide
  * typed data. This makes it transparent in {@link whenAll} intersections
  * (since `T & unknown = T`).
  *

@@ -11,7 +11,7 @@ import { diffView } from '@dxos/ui-editor';
 import { EditorStory } from './testing/index.ts';
 
 // Two versions of a markdown document. The editor shows `modified` with insertions and deletions
-// marked relative to `original` — exactly what the branch compare view renders (current branch vs
+// marked relative to `original` - exactly what the branch compare view renders (current branch vs
 // another branch).
 const original = ['# Release notes', '', '- Fixed a crash on startup.', '- Improved sync performance.', ''].join('\n');
 
@@ -39,7 +39,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Inline (unified) diff of two markdown versions — what the branch compare view renders. The editor
+ * Inline (unified) diff of two markdown versions - what the branch compare view renders. The editor
  * stays editable: typing updates the diff against `original` live (you edit the current branch while
  * viewing the diff to another branch).
  */

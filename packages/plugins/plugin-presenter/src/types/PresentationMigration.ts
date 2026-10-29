@@ -25,7 +25,7 @@ export class LegacyPresentation extends Type.makeObject<LegacyPresentation>(
 const pending = new Map<string, Slide[]>();
 
 /**
- * `org.dxos.type.presentation` 0.1.0 → 0.2.0: each section becomes a `Slide` showing it. An owned `Text` moves under
+ * `org.dxos.type.presentation` 0.1.0 -> 0.2.0: each section becomes a `Slide` showing it. An owned `Text` moves under
  * its slide, and its frontmatter `hide: true` becomes the slide's `hidden`.
  */
 export const presentationMigration = Migration.define({

@@ -28,7 +28,7 @@ export { ALL_NSIDS, NSID };
  *
  * - **Default-space:** when logged in (`dx account login`), the publisher's atproto
  *   session lives in their default space as the "Atmosphere" `AccessToken`. Record writes are
- *   signed by Edge's DPoP proxy (`/atproto/proxy`) — no app password required.
+ *   signed by Edge's DPoP proxy (`/atproto/proxy`) - no app password required.
  * - **App password (fallback):** explicit `--handle` / `--app-password` (or `$ATPROTO_HANDLE` /
  *   `$ATPROTO_APP_PASSWORD`) authenticate directly against the PDS with a session token.
  */
@@ -160,7 +160,7 @@ const resolveRepo = (handleOrDid: string) =>
   });
 
 // ---------------------------------------------------------------------------
-// Session — an authenticated writer to a publisher's PDS repo.
+// Session - an authenticated writer to a publisher's PDS repo.
 // ---------------------------------------------------------------------------
 
 /** Direct PDS auth via an app-password session token. */
@@ -188,12 +188,12 @@ type DpopProxySession = {
 export type Session = AppPasswordSession | DpopProxySession;
 
 /**
- * App-password session — call `com.atproto.server.createSession` against the caller's resolved
+ * App-password session - call `com.atproto.server.createSession` against the caller's resolved
  * PDS, then return the access JWT, DID, and PDS endpoint needed for subsequent writes.
  */
 export const createSession = (handle: string, appPassword: string) =>
   Effect.gen(function* () {
-    // Issue the session against the resolved PDS — bsky.social's monolithic host won't accept
+    // Issue the session against the resolved PDS - bsky.social's monolithic host won't accept
     // logins for users that have been migrated to a shard.
     const { did, pdsBaseUrl } = yield* resolveRepo(handle);
     const response = yield* xrpcPost(
@@ -222,9 +222,9 @@ export type ResolveSessionOptions = {
 /**
  * Resolve an authenticated {@link Session} for the registry commands, in precedence order:
  *
- * 1. Explicit `--handle` + `--app-password` (or `$ATPROTO_HANDLE` / `$ATPROTO_APP_PASSWORD`) →
+ * 1. Explicit `--handle` + `--app-password` (or `$ATPROTO_HANDLE` / `$ATPROTO_APP_PASSWORD`) ->
  *    app-password session (works without a DXOS identity).
- * 2. The logged-in identity's default-space "Atmosphere" `AccessToken` → DPoP-proxy session.
+ * 2. The logged-in identity's default-space "Atmosphere" `AccessToken` -> DPoP-proxy session.
  * 3. A context-specific error guiding the user to log in / connect an integration / pass creds.
  */
 export const resolveSession = (options: ResolveSessionOptions) =>
@@ -291,7 +291,7 @@ const resolveDefaultSpaceSession = (client: Client) =>
   });
 
 // ---------------------------------------------------------------------------
-// Record operations — auth-mode agnostic; branch on the session.
+// Record operations - auth-mode agnostic; branch on the session.
 // ---------------------------------------------------------------------------
 
 /**

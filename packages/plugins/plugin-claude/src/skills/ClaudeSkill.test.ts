@@ -11,7 +11,7 @@ import * as ClaudeSkill from './ClaudeSkill.ts';
 
 describe('ClaudeSkill', () => {
   // The resolver drops an operation it cannot project (`operation cannot be projected to a tool`)
-  // and the request runs with the rest — so an unprojectable input schema costs the model a tool
+  // and the request runs with the rest - so an unprojectable input schema costs the model a tool
   // silently, with the skill still describing it.
   test('every operation projects to tool parameters', ({ expect }) => {
     const unprojectable = ClaudeSkill.operations

@@ -23,7 +23,7 @@ export class SharedWorker implements WorkerProtocol.WorkerCoordinator {
   constructor(options: SharedWorkerOptions) {
     this.#worker = options.createWorker();
     // Unlike a dedicated worker's, a SharedWorker's `error` event only reports the script failing to
-    // load or start — after that nothing will ever arrive on the port.
+    // load or start - after that nothing will ever arrive on the port.
     this.#worker.onerror = (event: ErrorEvent) => {
       const error = workerErrorFromEvent(event, 'coordinator');
       log.error('coordinator worker error', { error });

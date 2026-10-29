@@ -26,7 +26,7 @@ export type UseMessageToolbarActionsProps = {
   onAiReply?: () => void;
   /** Whether the message currently carries the `inbox` tag; picks the archive action's direction. */
   inInbox?: boolean;
-  /** Toggles the message's `inbox` tag — archiving when it is in the inbox, restoring when it is not. */
+  /** Toggles the message's `inbox` tag - archiving when it is in the inbox, restoring when it is not. */
   onArchive?: () => void;
   /** Creates a tracking Project from this message. */
   onCreateProject?: () => void;
@@ -36,8 +36,8 @@ export type UseMessageToolbarActionsProps = {
 
 /**
  * Body view controls (view-mode switch, load-images) apply to the whole conversation, so they live on
- * the thread toolbar (see {@link useThreadViewActions}), not here — this builds only the per-message
- * actions (reply/forward/…) that target the individual message.
+ * the thread toolbar (see {@link useThreadViewActions}), not here - this builds only the per-message
+ * actions (reply/forward/...) that target the individual message.
  */
 export const useMessageActions = ({
   graph,
@@ -115,7 +115,7 @@ export const useMessageActions = ({
 
             // Message-disposition section (Gmail's grouping): archive and delete both take the message
             // out of the reading flow, so they share a section rather than sitting at opposite ends.
-            // Archive is one toggle of the `inbox` tag — label and icon follow current membership.
+            // Archive is one toggle of the `inbox` tag - label and icon follow current membership.
             if (onArchive || onDelete) {
               if (onReply || onForward || onAiReply) {
                 builder.separator('line');
@@ -168,7 +168,7 @@ export const useMessageActions = ({
               );
             }
 
-            // Extraction actions (trips, people, …) contributed for this message.
+            // Extraction actions (trips, people, ...) contributed for this message.
             if (extractActions.length > 0) {
               for (const item of extractActions) {
                 builder.action(

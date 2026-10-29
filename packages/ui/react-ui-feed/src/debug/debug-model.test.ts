@@ -29,7 +29,7 @@ describe('DebugModel', () => {
     model.read();
     unregister();
 
-    // Two registrations changes, zero value events — sixty reads a second are the table's cost.
+    // Two registrations changes, zero value events - sixty reads a second are the table's cost.
     expect(events).to.eq(2);
     expect(model.probes()).to.deep.eq([]);
   });

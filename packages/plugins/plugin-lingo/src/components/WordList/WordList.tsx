@@ -20,7 +20,7 @@ export type WordListProps = Util.ThemedClassName<{
 
 /**
  * Deck contents: term, translation and drill progress, one row per word.
- * Presentation only — the deck order comes from the caller, which owns the query.
+ * Presentation only - the deck order comes from the caller, which owns the query.
  */
 export const WordList = ({ words, selected, onSelect, classNames }: WordListProps) => {
   if (words.length === 0) {

@@ -20,7 +20,7 @@ export type RoutineCardProps = AppSurface.ObjectCardProps<Routine.Routine>;
 
 /**
  * Compact preview of a {@link Routine.Routine}: when it runs. Rendered into the
- * `AppSurface.CardContent` slot — Card.Root is supplied by the surface host (the project article's
+ * `AppSurface.CardContent` slot - Card.Root is supplied by the surface host (the project article's
  * gallery, popovers, related-objects), so this emits Card.Body only. Without it a routine falls back
  * to the generic form preview, which renders its `spec`/`triggers` internals rather than a summary.
  */

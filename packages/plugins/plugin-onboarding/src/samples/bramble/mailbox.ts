@@ -19,7 +19,7 @@ const makeMailbox = (
 ): { mailbox: Mailbox.Mailbox; messages: Message.Message[]; messageTags: Map<string, SystemTags.SystemTagId[]> } => {
   const mailbox = Mailbox.make({ name: 'Inbox' });
 
-  // Build emails as a chronological list — oldest first. Numbers are days-ago. `to` names the
+  // Build emails as a chronological list - oldest first. Numbers are days-ago. `to` names the
   // recipient(s); replies reuse the root's subject with a "Re:" prefix so subject-based threading
   // (see below) collapses them into one conversation.
   type Email = {
@@ -30,7 +30,7 @@ const makeMailbox = (
     to: string;
     senderOverride?: Actor.Actor;
     // Canonical system tags beyond the two every message gets by rule (`inbox`, plus `sent` for mail
-    // the MAIN_CHARACTER authored) — these back the mailbox's Starred / Important folders and the
+    // the MAIN_CHARACTER authored) - these back the mailbox's Starred / Important folders and the
     // category chips the classification pipeline would otherwise assign.
     tags?: SystemTags.SystemTagId[];
     // Archived: the `inbox` tag comes OFF (archiving is that tag's removal, never a new tag), so the
@@ -51,7 +51,7 @@ const makeMailbox = (
     }
     return actor(seed.fullName, seed.email);
   };
-  // Render an RFC-style recipient header ("Kai Chen <kai@bramblecoffee.com>, …") from person keys.
+  // Render an RFC-style recipient header ("Kai Chen <kai@bramblecoffee.com>, ...") from person keys.
   const toAddr = (...keys: PersonKey[]): string =>
     keys.map((key) => `${peopleSeedByKey[key].fullName} <${peopleSeedByKey[key].email}>`).join(', ');
 
@@ -63,24 +63,24 @@ const makeMailbox = (
       from: 'carmen',
       daysAgo: 41,
       to: toAddr('kai'),
-      subject: 'Hola Kai — Q2 harvest update from Esperanza',
+      subject: 'Hola Kai - Q2 harvest update from Esperanza',
       tags: ['important'],
-      body: 'Hola Kai, the cherries are coming in heavier than last year. Brix is good. I think we will have your full lot ready for shipment in 5–6 weeks. Will send photos next week. Saludos, Carmen',
+      body: 'Hola Kai, the cherries are coming in heavier than last year. Brix is good. I think we will have your full lot ready for shipment in 5-6 weeks. Will send photos next week. Saludos, Carmen',
     },
     {
       from: 'kai',
       daysAgo: 40,
       to: toAddr('carmen'),
-      subject: 'Re: Hola Kai — Q2 harvest update from Esperanza',
-      body: 'Carmen — that is great news. I will plan around a mid-June arrival and loop Diego in on the logistics. Let me know if you need anything from us before then. — Kai',
+      subject: 'Re: Hola Kai - Q2 harvest update from Esperanza',
+      body: 'Carmen - that is great news. I will plan around a mid-June arrival and loop Diego in on the logistics. Let me know if you need anything from us before then. - Kai',
     },
     {
       from: 'abel',
       daysAgo: 38,
       to: toAddr('kai'),
-      subject: 'Sidamo: lots 42–44 cupping scores',
+      subject: 'Sidamo: lots 42-44 cupping scores',
       tags: ['starred'],
-      body: 'Kai, attached are the cupping scores for lots 42–44 this season. Lot 42 is the standout — fruit-forward, jasmine, clean ferment. Pricing for the full container coming separately. — Abel',
+      body: 'Kai, attached are the cupping scores for lots 42-44 this season. Lot 42 is the standout - fruit-forward, jasmine, clean ferment. Pricing for the full container coming separately. - Abel',
     },
     {
       from: 'jordan',
@@ -88,13 +88,13 @@ const makeMailbox = (
       to: toAddr('kai'),
       subject: 'Reorder: 30 lb Linden + 10 lb Field Notes',
       tags: ['important'],
-      body: 'Hi Kai, ready for another round. Same as last time: 30 lb Linden whole bean, 10 lb Field Notes. Friday delivery if possible. — Jordan',
+      body: 'Hi Kai, ready for another round. Same as last time: 30 lb Linden whole bean, 10 lb Field Notes. Friday delivery if possible. - Jordan',
     },
     {
       from: 'noise',
       daysAgo: 35,
       to: toAddr('kai'),
-      subject: 'Your Stripe payout — $4,218.91',
+      subject: 'Your Stripe payout - $4,218.91',
       senderOverride: actor('Stripe', 'no-reply@stripe.com'),
       tags: ['updates'],
       body: 'Your weekly payout has been initiated. View details in the Stripe dashboard.',
@@ -103,35 +103,35 @@ const makeMailbox = (
       from: 'priya',
       daysAgo: 33,
       to: toAddr('kai'),
-      subject: 'Espresso blend pilot — interested',
-      body: "Hi Kai — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that's ready for something new. What are next steps? — Priya",
+      subject: 'Espresso blend pilot - interested',
+      body: "Hi Kai - Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that's ready for something new. What are next steps? - Priya",
     },
     {
       from: 'kai',
       daysAgo: 32,
       to: toAddr('priya'),
-      subject: 'Re: Espresso blend pilot — interested',
-      body: 'Priya — yes! I will send a 2 lb sample with v1 of the blend next week. Would love your feedback. — Kai',
+      subject: 'Re: Espresso blend pilot - interested',
+      body: 'Priya - yes! I will send a 2 lb sample with v1 of the blend next week. Would love your feedback. - Kai',
     },
     {
       from: 'carmen',
       daysAgo: 30,
       to: toAddr('kai'),
       subject: 'Fotos del beneficio',
-      body: 'Photos from the wet mill this week. The new patio is making a real difference for drying. Te mando un abrazo. — Carmen',
+      body: 'Photos from the wet mill this week. The new patio is making a real difference for drying. Te mando un abrazo. - Carmen',
     },
     {
       from: 'diego',
       daysAgo: 28,
       to: toAddr('kai'),
-      subject: 'Trip planning — Colombia → Ethiopia',
-      body: 'Kai — I am locking dates for the Q2 trip. Tentatively: 9 days in Huila, then 5 in Ethiopia. Will share the full itinerary by end of week. — Diego',
+      subject: 'Trip planning - Colombia -> Ethiopia',
+      body: 'Kai - I am locking dates for the Q2 trip. Tentatively: 9 days in Huila, then 5 in Ethiopia. Will share the full itinerary by end of week. - Diego',
     },
     {
       from: 'noise',
       daysAgo: 27,
       to: toAddr('kai'),
-      subject: 'Coffee Expo NYC — registration open',
+      subject: 'Coffee Expo NYC - registration open',
       senderOverride: actor('SCA Events', 'events@sca.coffee'),
       tags: ['promotions'],
       listUnsubscribe: '<https://sca.coffee/email/unsubscribe?list=events>, <mailto:unsubscribe@sca.coffee>',
@@ -141,43 +141,43 @@ const makeMailbox = (
       from: 'kai',
       daysAgo: 26,
       to: toAddr('diego', 'sam', 'riley'),
-      subject: 'Roast curve memo — Spring Blend v1',
-      body: 'Team — current draft is in the roast log. First crack at 9:18, drop at 11:30. We are tasting flat for the espresso shot — will pull up the development a touch on v2. — Kai',
+      subject: 'Roast curve memo - Spring Blend v1',
+      body: 'Team - current draft is in the roast log. First crack at 9:18, drop at 11:30. We are tasting flat for the espresso shot - will pull up the development a touch on v2. - Kai',
     },
     {
       from: 'jordan',
       daysAgo: 24,
       to: toAddr('kai'),
       subject: 'Question about the Sidamo single-origin',
-      body: 'Hi Kai — any chance of getting a few pounds of the new Sidamo when it lands? Customers loved the last lot. — Jordan',
+      body: 'Hi Kai - any chance of getting a few pounds of the new Sidamo when it lands? Customers loved the last lot. - Jordan',
     },
     {
       from: 'kai',
       daysAgo: 23,
       to: toAddr('jordan'),
       subject: 'Re: Question about the Sidamo single-origin',
-      body: 'Jordan — putting you down for 8 lb of lot 42 when it arrives. Should be ~3 weeks out. — Kai',
+      body: 'Jordan - putting you down for 8 lb of lot 42 when it arrives. Should be ~3 weeks out. - Kai',
     },
     {
       from: 'mateo',
       daysAgo: 21,
       to: toAddr('kai'),
       subject: 'Hello from Olive & Vine in Austin',
-      body: 'Hi Kai — Olive & Vine is a small wine bar / coffee bar opening soon in East Austin. A friend at North Star recommended you. Could we talk wholesale? — Mateo',
+      body: 'Hi Kai - Olive & Vine is a small wine bar / coffee bar opening soon in East Austin. A friend at North Star recommended you. Could we talk wholesale? - Mateo',
     },
     {
       from: 'kai',
       daysAgo: 20,
       to: toAddr('mateo'),
       subject: 'Re: Hello from Olive & Vine in Austin',
-      body: 'Mateo — we would love to. Sending a sampler with Linden, Field Notes, and a current single-origin tomorrow. Let me know what resonates. — Kai',
+      body: 'Mateo - we would love to. Sending a sampler with Linden, Field Notes, and a current single-origin tomorrow. Let me know what resonates. - Kai',
     },
     {
       from: 'priya',
       daysAgo: 17,
       to: toAddr('kai'),
-      subject: 'Cupping invite — Tuesday',
-      body: 'Kai — we are doing a cupping at the bakery next Tuesday at 4. Could send the Spring Blend v1 ahead, or would you want to bring it in person? — Priya',
+      subject: 'Cupping invite - Tuesday',
+      body: 'Kai - we are doing a cupping at the bakery next Tuesday at 4. Could send the Spring Blend v1 ahead, or would you want to bring it in person? - Priya',
     },
     {
       from: 'noise',
@@ -189,13 +189,13 @@ const makeMailbox = (
       body: 'Your shipment is in transit. Expected delivery: tomorrow by 8pm.',
     },
 
-    // Bulk mail — each carries a `List-Unsubscribe` header, so the Subscriptions view groups them by
+    // Bulk mail - each carries a `List-Unsubscribe` header, so the Subscriptions view groups them by
     // sender (noisiest first) and the reply generator skips them.
     {
       from: 'noise',
       daysAgo: 22,
       to: toAddr('kai'),
-      subject: 'Daily Coffee News — this week in specialty',
+      subject: 'Daily Coffee News - this week in specialty',
       senderOverride: actor('Daily Coffee News', 'newsletter@dailycoffeenews.com'),
       tags: ['updates'],
       listUnsubscribe: '<https://dailycoffeenews.com/email-preferences>',
@@ -205,7 +205,7 @@ const makeMailbox = (
       from: 'noise',
       daysAgo: 13,
       to: toAddr('kai'),
-      subject: 'Spring sale — 20% off packaging supplies',
+      subject: 'Spring sale - 20% off packaging supplies',
       senderOverride: actor('Stack & Co. Packaging', 'offers@stackandco.com'),
       tags: ['promotions'],
       listUnsubscribe: '<https://stackandco.com/unsubscribe?id=bramble>',
@@ -215,7 +215,7 @@ const makeMailbox = (
       from: 'noise',
       daysAgo: 8,
       to: toAddr('kai'),
-      subject: 'Daily Coffee News — origin report: Huila',
+      subject: 'Daily Coffee News - origin report: Huila',
       senderOverride: actor('Daily Coffee News', 'newsletter@dailycoffeenews.com'),
       tags: ['updates'],
       listUnsubscribe: '<https://dailycoffeenews.com/email-preferences>',
@@ -225,38 +225,38 @@ const makeMailbox = (
       from: 'riley',
       daysAgo: 12,
       to: toAddr('kai'),
-      subject: 'Packaging vendor switch — heads up',
-      body: 'Kai — we are moving label printing from Stack & Co. to Letterform Press starting next month. Better minimums and same lead times. — Riley',
+      subject: 'Packaging vendor switch - heads up',
+      body: 'Kai - we are moving label printing from Stack & Co. to Letterform Press starting next month. Better minimums and same lead times. - Riley',
     },
     {
       from: 'abel',
       daysAgo: 9,
       to: toAddr('kai'),
-      subject: 'Pricing — Sidamo container',
+      subject: 'Pricing - Sidamo container',
       tags: ['starred', 'important'],
-      body: 'Kai — pricing attached for the full container. Up ~6% from last year, in line with what we discussed. Confirm and I will start the export paperwork. — Abel',
+      body: 'Kai - pricing attached for the full container. Up ~6% from last year, in line with what we discussed. Confirm and I will start the export paperwork. - Abel',
     },
     {
       from: 'kai',
       daysAgo: 7,
       to: toAddr('diego', 'sam', 'riley'),
-      subject: 'Spring blend v2 — cupping notes',
-      body: 'v2 cupping notes are in the document. Big improvement on body, the espresso shot is much more balanced. Heading toward v3 with a small ratio change. — Kai',
+      subject: 'Spring blend v2 - cupping notes',
+      body: 'v2 cupping notes are in the document. Big improvement on body, the espresso shot is much more balanced. Heading toward v3 with a small ratio change. - Kai',
     },
     {
       from: 'jordan',
       daysAgo: 4,
       to: toAddr('kai'),
-      subject: 'Visiting Oakland — coffee?',
-      body: 'Kai — I am in town next Wednesday. Want to grab a cupping at the roastery? — Jordan',
+      subject: 'Visiting Oakland - coffee?',
+      body: 'Kai - I am in town next Wednesday. Want to grab a cupping at the roastery? - Jordan',
     },
     {
       from: 'priya',
       daysAgo: 2,
       to: toAddr('kai'),
-      subject: 'Spring blend v1 — feedback',
+      subject: 'Spring blend v1 - feedback',
       tags: ['starred', 'important'],
-      body: 'Kai — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya',
+      body: 'Kai - the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. - Priya',
     },
 
     // Replies that extend existing threads (subjects match a root above, with a "Re:" prefix).
@@ -265,90 +265,90 @@ const makeMailbox = (
       daysAgo: 34,
       to: toAddr('jordan'),
       subject: 'Re: Reorder: 30 lb Linden + 10 lb Field Notes',
-      body: 'On it, Jordan — Friday delivery confirmed. I am tossing in a small bag of the new Sidamo lot 42 for you to try. — Kai',
+      body: 'On it, Jordan - Friday delivery confirmed. I am tossing in a small bag of the new Sidamo lot 42 for you to try. - Kai',
     },
     {
       from: 'priya',
       daysAgo: 31,
       to: toAddr('kai'),
-      subject: 'Re: Espresso blend pilot — interested',
-      body: 'Perfect — the espresso bar is all yours to experiment on. We will pull shots the day it lands. — Priya',
+      subject: 'Re: Espresso blend pilot - interested',
+      body: 'Perfect - the espresso bar is all yours to experiment on. We will pull shots the day it lands. - Priya',
     },
     {
       from: 'kai',
       daysAgo: 8,
       to: toAddr('abel'),
-      subject: 'Re: Pricing — Sidamo container',
-      body: 'Confirmed, Abel — go ahead with the export paperwork. Diego will be in Sidamo next month and is looking forward to meeting you. — Kai',
+      subject: 'Re: Pricing - Sidamo container',
+      body: 'Confirmed, Abel - go ahead with the export paperwork. Diego will be in Sidamo next month and is looking forward to meeting you. - Kai',
     },
     {
       from: 'kai',
       daysAgo: 1,
       to: toAddr('priya'),
-      subject: 'Re: Spring blend v1 — feedback',
-      body: 'Wonderful to hear, Priya. I will pencil in a standing 20 lb/wk for launch and send v3 the moment it is signed off. — Kai',
+      subject: 'Re: Spring blend v1 - feedback',
+      body: 'Wonderful to hear, Priya. I will pencil in a standing 20 lb/wk for launch and send v3 the moment it is signed off. - Kai',
     },
 
-    // Label proofs — a three-message thread with Riley on the Letterform Press redesign. Settled, so
+    // Label proofs - a three-message thread with Riley on the Letterform Press redesign. Settled, so
     // the whole thread is archived: it stays in All mail (and in Sent, for Kai's reply) but has left
     // the Inbox folder, which is what makes the two folders differ in the exemplar.
     {
       from: 'riley',
       daysAgo: 19,
       to: toAddr('kai'),
-      subject: 'Label proofs — Spring Blend',
+      subject: 'Label proofs - Spring Blend',
       archived: true,
-      body: 'First proofs back from Letterform Press. I am partial to option B with the bramble sketch. Any objections before I approve? — Riley',
+      body: 'First proofs back from Letterform Press. I am partial to option B with the bramble sketch. Any objections before I approve? - Riley',
     },
     {
       from: 'kai',
       daysAgo: 18,
       to: toAddr('riley'),
-      subject: 'Re: Label proofs — Spring Blend',
+      subject: 'Re: Label proofs - Spring Blend',
       archived: true,
-      body: 'Option B for me too. Could we warm the background up a shade? Otherwise ship it. — Kai',
+      body: 'Option B for me too. Could we warm the background up a shade? Otherwise ship it. - Kai',
     },
     {
       from: 'riley',
       daysAgo: 16,
       to: toAddr('kai'),
-      subject: 'Re: Label proofs — Spring Blend',
+      subject: 'Re: Label proofs - Spring Blend',
       archived: true,
-      body: 'Done — warming it up and sending final approval to the printer today. — Riley',
+      body: 'Done - warming it up and sending final approval to the printer today. - Riley',
     },
 
-    // Green coffee arrival — a two-message logistics thread, also archived once the delivery landed.
+    // Green coffee arrival - a two-message logistics thread, also archived once the delivery landed.
     {
       from: 'riley',
       daysAgo: 11,
       to: toAddr('kai'),
-      subject: 'Esperanza container — customs cleared',
+      subject: 'Esperanza container - customs cleared',
       archived: true,
-      body: 'The Esperanza container cleared customs in Oakland this morning. Delivery to the warehouse is set for Thursday. — Riley',
+      body: 'The Esperanza container cleared customs in Oakland this morning. Delivery to the warehouse is set for Thursday. - Riley',
     },
     {
       from: 'kai',
       daysAgo: 10,
       to: toAddr('riley'),
-      subject: 'Re: Esperanza container — customs cleared',
+      subject: 'Re: Esperanza container - customs cleared',
       archived: true,
-      body: 'Perfect. I will have Diego check moisture on arrival Thursday. — Kai',
+      body: 'Perfect. I will have Diego check moisture on arrival Thursday. - Kai',
     },
 
-    // Q2 planning — a two-message internal thread, with Kai kicking it off.
+    // Q2 planning - a two-message internal thread, with Kai kicking it off.
     {
       from: 'kai',
       daysAgo: 6,
       to: toAddr('diego', 'sam', 'riley'),
-      subject: 'Q2 planning — agenda',
-      body: 'Pulling together the Q2 planning agenda: Spring Blend launch date, sourcing-trip logistics, and the part-time roaster hire. Send me anything to add. — Kai',
+      subject: 'Q2 planning - agenda',
+      body: 'Pulling together the Q2 planning agenda: Spring Blend launch date, sourcing-trip logistics, and the part-time roaster hire. Send me anything to add. - Kai',
     },
     {
       from: 'riley',
       daysAgo: 5,
       to: toAddr('kai'),
-      subject: 'Re: Q2 planning — agenda',
-      body: 'Adding packaging lead times and the new freight quote to the list. — Riley',
+      subject: 'Re: Q2 planning - agenda',
+      body: 'Adding packaging lead times and the new freight quote to the list. - Riley',
     },
   ];
 
@@ -379,8 +379,8 @@ const makeMailbox = (
       },
     });
     lastMessageIdByThread.set(threadId, message.id);
-    // Two tags come by rule — `inbox` unless the thread is archived, and `sent` for mail the
-    // MAIN_CHARACTER authored — with anything the email declares layered on top.
+    // Two tags come by rule - `inbox` unless the thread is archived, and `sent` for mail the
+    // MAIN_CHARACTER authored - with anything the email declares layered on top.
     messageTags.set(message.id, [
       ...(email.archived ? [] : (['inbox'] as const)),
       ...(email.from === MAIN_CHARACTER ? (['sent'] as const) : []),
@@ -392,25 +392,25 @@ const makeMailbox = (
   return { mailbox, messages, messageTags };
 };
 
-// Conversation summaries, keyed by thread subject (any message's subject in the thread — it is
+// Conversation summaries, keyed by thread subject (any message's subject in the thread - it is
 // normalized to the thread key). `SummarizeMailbox` derives these with a model at runtime; the
 // exemplar writes them by hand so a fresh import shows the affordance without a model call.
 const THREAD_SUMMARIES: Record<string, string> = {
-  'Espresso blend pilot — interested':
+  'Espresso blend pilot \u2014 interested':
     'Hatch wants in on the Spring Blend pilot for their espresso bar. Kai committed to a 2 lb sample of v1; Priya confirmed the bar is available to experiment on.',
-  'Label proofs — Spring Blend':
+  'Label proofs \u2014 Spring Blend':
     'Riley picked option B (bramble sketch) from the Letterform Press proofs. Kai asked for a warmer background; Riley warmed it and sent final approval to the printer. **Closed.**',
-  'Pricing — Sidamo container':
+  'Pricing \u2014 Sidamo container':
     'Abel quoted the full Sidamo container at ~6% over last year, in line with earlier discussion. Kai confirmed and told him to start the export paperwork.',
-  'Q2 planning — agenda':
+  'Q2 planning \u2014 agenda':
     'Kai opened the Q2 agenda: Spring Blend launch date, sourcing-trip logistics, and the part-time roaster hire. Riley added packaging lead times and the new freight quote.',
-  'Spring blend v1 — feedback':
+  'Spring blend v1 \u2014 feedback':
     'Hatch cupped v1 and liked the chocolate and red fruit; their wholesale customers asked specifically about the espresso roast. Priya would commit to a standing **20 lb/week** at launch, which Kai penciled in.',
 };
 
 /**
  * Files each {@link THREAD_SUMMARIES} entry under the newest message of its thread, in the mailbox's
- * `annotations` feed — the second, derived-only feed alongside the message log. Summaries are
+ * `annotations` feed - the second, derived-only feed alongside the message log. Summaries are
  * immutable annotation Messages whose `parentMessage` names their subject, so the conversation view
  * resolves them without the message feed carrying anything derived.
  */

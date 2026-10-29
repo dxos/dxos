@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       // The chat is left for the caller to add (`SpaceOperation.AddObject`); the feed is added here only
       // because the default bindings below are written immediately, and `Feed.query` asserts a stored feed.
       // TODO(wittjosiah): Defer binding until the caller has added the chat, so the feed can stay in
-      //  memory too — nothing needs to write to a feed before its chat is in the database.
+      //  memory too - nothing needs to write to a feed before its chat is in the database.
       const feed = feedProp ?? db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
 

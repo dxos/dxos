@@ -40,7 +40,7 @@ export class Meeting extends Type.makeObject<Meeting>(DXN.make('org.dxos.type.me
 
     /**
      * The calendar event this meeting is for, if any. A `Ref` (not a relation) so it can point at a
-     * feed/queue event synced from the calendar — relation endpoints require live db objects.
+     * feed/queue event synced from the calendar - relation endpoints require live db objects.
      */
     event: Ref.Ref(Event.Event).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(

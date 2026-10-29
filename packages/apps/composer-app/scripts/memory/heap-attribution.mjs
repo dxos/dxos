@@ -7,7 +7,7 @@
  *
  * Answers the two questions memory-infra cannot: what the V8 heap is made of by
  * constructor, and who retains the ArrayBuffer backing stores that land in
- * `partition_alloc/allocated_objects/<unspecified>` — a block memory-infra
+ * `partition_alloc/allocated_objects/<unspecified>` - a block memory-infra
  * reports as one anonymous number.
  *
  * Run as its own process because a snapshot of a loaded tab parses to several GB.

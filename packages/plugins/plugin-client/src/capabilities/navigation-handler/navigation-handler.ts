@@ -65,7 +65,7 @@ export default Capability.makeModule(
 
         // The param is consumed only once the operation has succeeded. Navigation handlers now
         // dispatch before `client.initialize()` resolves, so a pre-init attempt fails against an
-        // unopened identity service — stripping first would destroy a one-time credential that the
+        // unopened identity service - stripping first would destroy a one-time credential that the
         // onboarding manager (which re-reads `location.search` on `ClientEvents.Initialized`) is
         // still able to redeem.
         if (token && tokenType === 'login') {
@@ -82,8 +82,8 @@ export default Capability.makeModule(
         Effect.catch((error) =>
           Effect.gen(function* () {
             log.warn('navigation handler failed', { error });
-            // A pre-init failure is expected and recoverable — the credential is still in the URL
-            // for whoever redeems it after initialization — so it must not surface as an error.
+            // A pre-init failure is expected and recoverable - the credential is still in the URL
+            // for whoever redeems it after initialization - so it must not surface as an error.
             if (!client.initialized) {
               return;
             }

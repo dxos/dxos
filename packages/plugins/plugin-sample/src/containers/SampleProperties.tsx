@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// Object properties surface — per-object settings panel.
+// Object properties surface - per-object settings panel.
 // This appears in the object properties companion pane (the gear icon)
 // and receives the specific ECHO object as `subject`.
 //

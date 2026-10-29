@@ -98,7 +98,7 @@ const decorators = (options: SeedOptions) => [
   withPluginManager({
     capabilities: [
       Capability.contribute(AppCapabilities.Translations, translations),
-      // Mock repo — no network; publish/unpublish mutate the in-memory store.
+      // Mock repo - no network; publish/unpublish mutate the in-memory store.
       Capability.contribute(AtprotoCapabilities.RepoLayer, () => AtprotoRepo.layerMock()),
     ],
     plugins: [

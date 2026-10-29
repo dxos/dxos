@@ -162,7 +162,7 @@ export const steps = [
       const urgent = `${SECTION}[data-section="priority-urgent"]`;
       await page.locator(urgent).first().waitFor({ timeout: 30_000 });
       await demo.click({
-        selector: `${PLANK} [data-testid="inbox.mailbox"] :text("Renewal — need your written OK today") >> nth=0`,
+        selector: `${PLANK} [data-testid="inbox.mailbox"] :text("Renewal - need your written OK today") >> nth=0`,
         label: 'Renewal',
       });
       await page.locator(TASK).first().waitFor({ timeout: 30_000 });

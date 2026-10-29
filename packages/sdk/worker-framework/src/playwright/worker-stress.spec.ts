@@ -32,7 +32,7 @@ const SEED = positiveIntEnv('DX_STRESS_SEED', 1);
 const ITERATIONS = positiveIntEnv('DX_STRESS_ITERATIONS', 30);
 const INITIAL_TABS = positiveIntEnv('DX_STRESS_TABS', 2);
 
-// Two tabs is the smallest fleet where leadership is observable — with one tab there is no peer to
+// Two tabs is the smallest fleet where leadership is observable - with one tab there is no peer to
 // steal a stale leader's lock, so the failover commands would be no-ops.
 const MIN_TABS = 2;
 
@@ -40,7 +40,7 @@ const MIN_TABS = 2;
 // phase adds its own budget on top, so the walk is sized in minutes rather than seconds.
 const RANDOM_WALK_TIMEOUT_MS = ITERATIONS * 20_000 + 180_000;
 // The scripted test runs a full recovery phase after EVERY command, so its budget scales with the
-// command count — a fixed total would abort on the timeout and blame the test rather than the
+// command count - a fixed total would abort on the timeout and blame the test rather than the
 // command, which is the whole point of running them one at a time.
 const SCRIPTED_TIMEOUT_MS = STRESS_COMMANDS.length * 60_000 + 180_000;
 
@@ -51,7 +51,7 @@ const log = (message: string) => {
 
 /**
  * Manually-run stress suite: real Chromium, real tabs, a real dedicated worker, and a real
- * SharedWorker coordinator. Not part of `check` — see `src/playwright/README.md`.
+ * SharedWorker coordinator. Not part of `check` - see `src/playwright/README.md`.
  *
  * Both tests are structured the same way: throw disruptive commands at the worker, then assert the
  * system converged back to one live worker shared by every surviving tab.
@@ -99,7 +99,7 @@ test.describe('worker-framework stress', () => {
     try {
       const random = seededRandom(SEED);
       // One command per iteration against a known-good fleet, so a failure names the command that
-      // caused it — the random walk finds interactions, this finds culprits.
+      // caused it - the random walk finds interactions, this finds culprits.
       for (const command of STRESS_COMMANDS) {
         // Topped up to two tabs first: several commands are gated on having a peer (there is no
         // leader to starve with one tab), and a previous command may have left fewer.

@@ -9,7 +9,7 @@ import { InvalidRecoveryTokenError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 /**
- * Whether a failed recovery was EDGE refusing the token itself — walks the wrapper chain because
+ * Whether a failed recovery was EDGE refusing the token itself - walks the wrapper chain because
  * the error arrives wrapped, with the cause under `context` rather than `cause`.
  */
 export const isInvalidRecoveryToken = (error: unknown): boolean => {

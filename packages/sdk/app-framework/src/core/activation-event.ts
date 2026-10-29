@@ -75,7 +75,7 @@ export const getEvents = (events: Events) => ('type' in events ? events.events :
  * Defined in core (rather than the `common` well-known events, which re-export it) because
  * the plugin manager's `start()` delegates `activate(Startup)` and publishes the
  * startup-complete message on this key.
- * @deprecated As an `activatesOn` target — declare `provides`/`requires` instead; the
+ * @deprecated As an `activatesOn` target - declare `provides`/`requires` instead; the
  *   dependency pass replaces startup-event wiring. External callers keep using
  *   `PluginManager.activate(Startup)` (it delegates to `start()`).
  */
@@ -86,7 +86,7 @@ export const Startup = make('org.dxos.app-framework.event.startup');
  * well-known events for the authoring-facing documentation.
  *
  * Defined here rather than only in `common` because omitting `activatesOn` normalizes to this
- * event, and `Plugin.normalizeActivation` lives in core — which cannot import `common` without
+ * event, and `Plugin.normalizeActivation` lives in core - which cannot import `common` without
  * closing the `common -> core` cycle.
  */
 export const Idle = make('org.dxos.app-framework.event.idle');

@@ -18,7 +18,7 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Channel } from '@dxos/types';
 
-/** Faster than the properties panel's 5 s, so a gateway's connecting → ready step is caught. */
+/** Faster than the properties panel's 5 s, so a gateway's connecting -> ready step is caught. */
 const POLL_MS = 2_000;
 
 /** How many transitions the timeline keeps. */

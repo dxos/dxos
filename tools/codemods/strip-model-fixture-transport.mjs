@@ -6,7 +6,7 @@
 // (method, url, request headers) on `response-metadata` parts and `response` (status, response
 // headers) on `finish` parts. They carry account and trace identifiers (`anthropic-organization-id`,
 // `anthropic-workspace-id`, `cf-ray`, `request-id`, `traceparent`/`b3`) plus per-request rate-limit
-// state, none of which replay reads — `LanguageModelFixture` now drops them at the serialization
+// state, none of which replay reads - `LanguageModelFixture` now drops them at the serialization
 // boundary, and this rewrites the records taken before it did.
 //
 // Fixtures are keyed on `parameters` + `prompt`, so removing response fields cannot change a hash:
@@ -52,7 +52,7 @@ for (const file of jsonFiles(root)) {
     strippedParts++;
   }
   if (changed) {
-    // Compact JSON, matching `encodeConversation` — the store is `linguist-generated` and never
+    // Compact JSON, matching `encodeConversation` - the store is `linguist-generated` and never
     // pretty-printed, so re-serializing must not reflow it into a diff.
     writeFileSync(file, JSON.stringify(conversation));
     changedFiles++;

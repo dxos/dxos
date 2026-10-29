@@ -27,7 +27,7 @@ export type DisableDependentsAlertProps = {
  * Confirmation prompt shown when a user toggles off a plugin that has
  * currently-enabled dependents. Rendered inside the layout's dialog surface
  * (via `LayoutOperation.UpdateDialog` with `type: 'alert'`), which provides
- * the `AlertDialog.Root` / `Overlay` wrappers — this component renders only
+ * the `AlertDialog.Root` / `Overlay` wrappers - this component renders only
  * the content. `onConfirm` runs the cascade disable and closes the dialog;
  * cancel is handled by the layout's open-change wiring.
  */

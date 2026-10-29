@@ -63,8 +63,8 @@ const BuildStatus = ({ build, run }: BuildStatusProps) => {
   const runLabel = run ? (run.ok ? null : t('run.failed.label')) : null;
   return (
     <Layout.Flex gap='sm' align='center' classNames='px-2 py-1 border-b border-separator'>
-      <span className={mx(build.ok ? 'text-success-text' : 'text-error-text')}>● {buildLabel}</span>
-      {runLabel && <span className='text-error-text'>● {runLabel}</span>}
+      <span className={mx(build.ok ? 'text-success-text' : 'text-error-text')}>* {buildLabel}</span>
+      {runLabel && <span className='text-error-text'>* {runLabel}</span>}
     </Layout.Flex>
   );
 };
@@ -79,7 +79,7 @@ const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
     <Layout.Flex column classNames='dx-expand overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
       {diagnostics.length === 0 ? (
-        <div className='p-2 text-fg-muted'>—</div>
+        <div className='p-2 text-fg-muted'>-</div>
       ) : (
         <ol className='flex flex-col'>
           {diagnostics.map((diagnostic, index) => (
@@ -95,7 +95,7 @@ const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
                   {diagnostic.path}
                   {diagnostic.line !== undefined && `:${diagnostic.line}`}
                   {diagnostic.column !== undefined && `:${diagnostic.column}`}
-                  {' — '}
+                  {' - '}
                 </span>
               )}
               <span>{diagnostic.message}</span>

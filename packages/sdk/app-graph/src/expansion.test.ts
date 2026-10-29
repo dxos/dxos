@@ -47,7 +47,7 @@ const setup = () => {
   return { registry, builder, graph, tree, children };
 };
 
-// Written while chasing a composer `collections` e2e failure. None of these reproduce it — they are
+// Written while chasing a composer `collections` e2e failure. None of these reproduce it - they are
 // kept because the behaviours they pin (cascading removal through a materialized subtree, actions
 // arriving with child expansion, position-ordered siblings across a re-order) had no coverage.
 describe('expansion and removal through a materialized subtree', () => {
@@ -68,7 +68,7 @@ describe('expansion and removal through a materialized subtree', () => {
     await GraphBuilder.flush(builder);
 
     // The action relation is expanded alongside child, so the item menu is populated without an
-    // explicit expand — this is what the collections e2e drives when it opens an item's menu.
+    // explicit expand - this is what the collections e2e drives when it opens an item's menu.
     const actions = registry.get(graph.actions(GraphNode.RootId));
     expect(actions.map(({ id }) => id)).to.deep.equal(['root/rename']);
 

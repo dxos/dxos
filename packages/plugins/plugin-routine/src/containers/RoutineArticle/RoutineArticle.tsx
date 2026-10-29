@@ -27,7 +27,7 @@ export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>
  *
  * TODO(wittjosiah): Disable editing while the routine is running (you shouldn't mutate running code). This was
  * previously wired as "read-only when enabled" via a routine-level toggle, but that is not how we want to
- * achieve it — reintroduce a run-state-based lock instead.
+ * achieve it - reintroduce a run-state-based lock instead.
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -49,7 +49,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 
     // Thread the routine's first trigger as trace attribution so the run appears in history.
     // Manual runs bypass the trigger dispatcher (which normally stamps meta.trigger), so we
-    // do it here — history filters on trigger entity id, and without this the run is invisible.
+    // do it here - history filters on trigger entity id, and without this the run is invisible.
     const triggerRef = routine.triggers[0];
     registry.set(runningAtom, true);
     void invokePromise(

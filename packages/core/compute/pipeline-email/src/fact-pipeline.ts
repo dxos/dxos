@@ -39,7 +39,7 @@ export type EmailFactPipelineResult = {
 
 export const EmailFactPipeline = {
   /**
-   * Facts-only assembly of the email stages over a batch of messages: stats → extract-facts. Omits
+   * Facts-only assembly of the email stages over a batch of messages: stats -> extract-facts. Omits
    * summarize, extract-contacts, and {@link buildThreads} from {@link EmailPipeline}, so it needs no
    * `AiService` and never writes to `db`. The cursored `AnalyzeMailbox` operation (in plugin-inbox)
    * covers the same fact-extraction concern incrementally, via a sibling facts-returning stage
@@ -65,14 +65,14 @@ export const EmailFactPipeline = {
 };
 
 /**
- * Runs the cursored fact pipeline over a feed: dedup → extract facts → commit each page to the
+ * Runs the cursored fact pipeline over a feed: dedup -> extract facts -> commit each page to the
  * {@link FactStore} while advancing `cursor`. Extraction is injected (`extract`) so the pipeline is
- * unit-testable with a deterministic stub — no `AiService` required. Feed-generic (the mailbox
+ * unit-testable with a deterministic stub - no `AiService` required. Feed-generic (the mailbox
  * `AnalyzeMailbox` operation is a thin wrapper that resolves a Mailbox to its feed and its persisted
  * `Cursor`).
  *
  * Dedup is by `cursor`'s high-water key (a coarse `key < cursorKey` skip) plus the set of message
- * sources already in the store (the precise idempotency backstop) — the store doesn't share `cursor`'s
+ * sources already in the store (the precise idempotency backstop) - the store doesn't share `cursor`'s
  * persistence lifetime (it's still in-memory per space), so the source-dedup backstop still matters
  * even though the cursor itself is now durable.
  */
@@ -84,7 +84,7 @@ export const runFactPipeline = (options: {
   readonly concurrency?: number;
   readonly extract: FactExtractor;
   /**
-   * Called once at run start (`processed: 0`) and after each committed page — the live-progress seam
+   * Called once at run start (`processed: 0`) and after each committed page - the live-progress seam
    * (e.g. a UI meter). `total` is the exact pending count: both dedup predicates (cursor prefilter,
    * indexed-source set) are evaluated up-front over the already-materialized message list.
    */
@@ -94,7 +94,7 @@ export const runFactPipeline = (options: {
     const { feed, cursor, extract, pageSize, concurrency = 1, onProgress } = options;
     const store = yield* FactStore;
 
-    // Sources (== `messageSource`) already indexed — the precise skip; the cursor is only a coarse
+    // Sources (== `messageSource`) already indexed - the precise skip; the cursor is only a coarse
     // prefilter (the newest message keys equal to the advanced cursor, so `< cursorKey` alone would
     // re-extract it).
     const priorFacts = yield* store.query({}).pipe(Effect.orElseSucceed(() => []));
@@ -110,7 +110,7 @@ export const runFactPipeline = (options: {
     // Ascending key order is load-bearing: the sink advances `cursorKey` per committed page and the
     // dedup stage reads it live, so on an unordered feed (e.g. an archive imported newest-first) the
     // first-committed newest message would advance the cursor past every older one. A malformed
-    // `created` (NaN key) is dropped up front — it cannot be ordered against the cursor, and its NaN
+    // `created` (NaN key) is dropped up front - it cannot be ordered against the cursor, and its NaN
     // would poison the page's `Math.max` cursor advance.
     const messages = (yield* Feed.query(feed, Filter.type(Message.Message)).run)
       .filter((message) => Number.isFinite(Date.parse(message.created)))

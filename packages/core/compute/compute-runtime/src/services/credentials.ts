@@ -76,7 +76,7 @@ type TokenProjection = { accessTokenId: string; service: string; storedToken: st
 
 /**
  * Credentials backed by the `AccessToken` objects in the current space, resolving server-custodied
- * values through {@link Credential.AccessTokenResolver}. `caching` memoizes the object lookup — never
+ * values through {@link Credential.AccessTokenResolver}. `caching` memoizes the object lookup - never
  * the resolved token, which expires on the server's schedule.
  */
 export const credentialsLayerFromDatabase = ({ caching = false }: { caching?: boolean } = {}) =>

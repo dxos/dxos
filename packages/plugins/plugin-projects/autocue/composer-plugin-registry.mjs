@@ -15,7 +15,7 @@ const {
 /**
  * The Composer Plugin demo in a browser, ending in the private plugin registry: the assistant builds World Clock
  * from scratch in a Sandbox on EDGE, the sandbox it creates already holds an API token for the reader's account
- * (`DX_API_TOKEN`), and `dx registry publish --private` uploads the build. The plugin then appears in Plugins →
+ * (`DX_API_TOKEN`), and `dx registry publish --private` uploads the build. The plugin then appears in Plugins ->
  * Registry on its own, with nothing loaded by URL; the reader installs it there and opens its Clocks page. Last, the
  * registry opens the plugin's specification: the `PLUGIN.mdl` the template seeded, carried by the published bundle.
  *
@@ -29,7 +29,7 @@ const {
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
  * Remote plugins install only from a bundle (vite dev has no import map). EDGE must run registry-service with its
- * `PLUGIN_REGISTRY_DB`. The first setup step binds the app's identity to a `test+…@dxos.org` account, which EDGE dev
+ * `PLUGIN_REGISTRY_DB`. The first setup step binds the app's identity to a `test+...@dxos.org` account, which EDGE dev
  * and preview admit with no invitation, so a fresh profile needs no sign-in.
  */
 
@@ -142,7 +142,7 @@ const REGISTRY_TAB = '[data-testid="pluginRegistry.registry"]';
 const OPEN_SIDEBAR = 'button:visible:has-text("Open sidebar")';
 
 /**
- * Opens Plugins → Registry, clicking only what is not already showing: Plugins toggles its sidebar shut, and a
+ * Opens Plugins -> Registry, clicking only what is not already showing: Plugins toggles its sidebar shut, and a
  * collapsed sidebar's items still read as visible, so the sidebar is checked by its "Open sidebar" button.
  */
 const openRegistry = async ({ demo, page }) => {
@@ -281,7 +281,7 @@ export const steps = [
     done: async (context) => installed(context, await projectKey(context)),
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'World Clock appears in Plugins → Registry; install it',
+        value: 'World Clock appears in Plugins -> Registry; install it',
         subtitle: 'plugin-projects QA-2',
       });
       for (const label of ['Close companion', 'Close context sidebar']) {

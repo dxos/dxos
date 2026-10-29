@@ -95,7 +95,7 @@ const TREE_NODE_RADIUS = 6;
 const TREE_ROOT_RADIUS = TREE_NODE_RADIUS * 2;
 
 /**
- * Catmull-Rom curve generator (α=0.5, "centripetal") for swarm boid trails.
+ * Catmull-Rom curve generator (alpha=0.5, "centripetal") for swarm boid trails.
  * Passes through every point and avoids the looping/overshoot artifacts a plain
  * cardinal spline produces when consecutive history samples land close together.
  */
@@ -122,10 +122,10 @@ const applyNodeSwarm = (group: SVGGElement, node: GraphLayoutNode<SpaceGraphNode
 
   const hx = swarm.x ?? 0;
   const hy = swarm.y ?? 0;
-  // Build local-space points head → most-recent → … → oldest (history is push-at-end so
+  // Build local-space points head -> most-recent -> ... -> oldest (history is push-at-end so
   // we walk it backwards), then run them through a Catmull-Rom curve generator so the
   // trail reads as a smooth arc rather than a polyline. The gradient axis below is still
-  // head → oldest, so the fade stays aligned with travel direction.
+  // head -> oldest, so the fade stays aligned with travel direction.
   const points: Array<[number, number]> = [[0, 0]];
   for (let i = history.length - 1; i >= 0; i--) {
     points.push([history[i].x - hx, history[i].y - hy]);
@@ -138,8 +138,8 @@ const applyNodeSwarm = (group: SVGGElement, node: GraphLayoutNode<SpaceGraphNode
 
 /**
  * Classify an edge incident to the focus into a relation group. Each relation/property gets two
- * possible nodes: one for the outgoing direction (focus is the edge source, arrow `→`) and one
- * for the incoming direction (focus is the edge target, arrow `←`), so both sides of a relation
+ * possible nodes: one for the outgoing direction (focus is the edge source, arrow `->`) and one
+ * for the incoming direction (focus is the edge target, arrow `<-`), so both sides of a relation
  * fan out separately. Relations group by relation typename; references group by their top-level
  * property name. Edges not incident to the focus are ignored.
  */
@@ -150,7 +150,7 @@ const plexusRelationOf = (edge: GraphLayoutEdge<SpaceGraphNode>, focusId: string
     return undefined;
   }
   const direction = outgoing ? 'out' : 'in';
-  const arrow = outgoing ? '→' : '←';
+  const arrow = outgoing ? '\u2192' : '\u2190';
 
   if (edge.type === 'relation') {
     const relation = (edge.data as any)?.object as Obj.Unknown | undefined;
@@ -169,7 +169,7 @@ const plexusRelationOf = (edge: GraphLayoutEdge<SpaceGraphNode>, focusId: string
 };
 
 /**
- * Group leaves by typename so same-type leaves cluster together — used by both the
+ * Group leaves by typename so same-type leaves cluster together - used by both the
  * cluster (visible structural nodes) and bundle (invisible routing anchors) projectors.
  */
 const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefined => {
@@ -177,7 +177,7 @@ const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefi
   return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
 };
 
-/** Drop the package prefix from a typename for display: `org.dxos.type.Person` → `Person`. */
+/** Drop the package prefix from a typename for display: `org.dxos.type.Person` -> `Person`. */
 export const shortTypename = (typename: string): string => {
   const last = typename.split('.').pop() ?? typename;
   return last.charAt(0).toUpperCase() + last.slice(1);
@@ -189,7 +189,7 @@ const labelForLeaf = (node: GraphLayoutNode<SpaceGraphNode>, obj: Obj.Unknown | 
 
 /**
  * Append a label beside a tidy-tree node. Outgoing nodes (right side) read rightward, inbound nodes
- * (left side) read leftward, and the centred root reads above — so every label points away from the tree.
+ * (left side) read leftward, and the centred root reads above - so every label points away from the tree.
  */
 const appendTreeLabel = (
   group: Parameters<RenderNode<SpaceGraphNode>>[0],
@@ -213,7 +213,7 @@ const appendTreeLabel = (
 
 /**
  * All variant definitions keyed by id. Each entry fully describes one variant's layout, rendering,
- * and interaction behavior — `Visualization` looks an entry up by id via `getVariant`.
+ * and interaction behavior - `Visualization` looks an entry up by id via `getVariant`.
  */
 const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
   force: {
@@ -222,7 +222,7 @@ const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
     label: 'Force-directed',
     drag: true,
     emitsHover: true,
-    // Force has no `duration` — its own simulation drives motion via ticks.
+    // Force has no `duration` - its own simulation drives motion via ticks.
     createProjector: (ctx, { prev }) => new GraphForceProjector<SpaceGraphNode>(ctx, undefined, undefined, prev),
     renderNode: (group, node) => {
       const r = node.r ?? 6;
@@ -246,7 +246,7 @@ const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
           groupOf: typenameGroupOf,
           rootLabel: 'Database',
           groupLabel: shortTypename,
-          // All three node kinds share the same radius — leaves, groups, and root read
+          // All three node kinds share the same radius - leaves, groups, and root read
           // as members of the same circle rather than ranked by size.
           rootRadius: 4,
           groupRadius: 4,
@@ -309,7 +309,7 @@ const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
     icon: 'ph--share-network--regular',
     label: 'Plexus',
     focusable: true,
-    // No focus → dispatch to the bundle projector (the unfocused overview). Once a node is
+    // No focus -> dispatch to the bundle projector (the unfocused overview). Once a node is
     // focused, switch to the focus-centric plexus layout; both receive `prev` so the swap
     // (and every re-focus) animates from the previous node positions.
     createProjector: (ctx, { focusId, prev }) => {
@@ -423,7 +423,7 @@ const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
     createProjector: (ctx, { prev }) => new GraphSwarmProjector<SpaceGraphNode>(ctx, { edges: false }, undefined, prev),
     // Match the force variant's shape so identity-by-id transitions read continuously.
     // The tail is a SINGLE `<path>` traced through head + history points; its stroke
-    // uses a per-boid `<linearGradient>` that fades head → tail. Done this way (rather
+    // uses a per-boid `<linearGradient>` that fades head -> tail. Done this way (rather
     // than as N overlapping `<line>` segments) so coincident segment endpoints don't
     // compound their alpha and read as a striped trail.
     renderNode: (group, node) => {
@@ -439,7 +439,7 @@ const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
         .attr('id', gradId)
         // userSpaceOnUse so x1/y1/x2/y2 are interpreted in the dx-node's local coord space
         // (head at 0,0). The applyNode hook overwrites them per tick to align with the
-        // path's head → tail axis.
+        // path's head -> tail axis.
         .attr('gradientUnits', 'userSpaceOnUse')
         .attr('x1', 0)
         .attr('y1', 0)
@@ -466,7 +466,7 @@ const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
     label: 'Neighborhood',
     emitsHover: true,
     // Tidy tree: the active node (passed as `focusId`) is the root, drawn on the left and vertically
-    // centred; the pre-traversed n-hop neighbourhood fans out to the right. No focus → plain ring.
+    // centred; the pre-traversed n-hop neighbourhood fans out to the right. No focus -> plain ring.
     createProjector: (ctx, { focusId, prev }) =>
       new GraphTreeProjector<SpaceGraphNode>(
         ctx,

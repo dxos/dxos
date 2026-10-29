@@ -52,7 +52,7 @@ describe('DataServiceImpl', () => {
     await reported.wait({ timeout: 1000 });
 
     // Without this the subscriber is told nothing at all and its handle waits for bytes no one is
-    // fetching — the 15s space-open hang (DX-1297).
+    // fetching - the 15s space-open hang (DX-1297).
     expect(batches.at(-1)).toEqual({ updates: [{ documentId, unavailable: true }] });
   });
 

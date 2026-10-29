@@ -360,7 +360,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       spaceKey,
     });
     const space = response.space ?? failedInvariant();
-    // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
+    // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race -
     // same wait `createSpace` and `import` do before resolving their proxy.
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));

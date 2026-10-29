@@ -48,7 +48,7 @@ export const list = Command.make(
     yield* Console.log(`Invitation codes (${result.codes.length}):\n`);
     for (const row of result.codes) {
       const status = statusOf(row);
-      const issuer = row.issuedByIdentityDid ? row.issuedByIdentityDid.slice(0, 20) + '…' : 'bootstrap';
+      const issuer = row.issuedByIdentityDid ? row.issuedByIdentityDid.slice(0, 20) + '\u2026' : 'bootstrap';
       const created = new Date(row.createdAt).toLocaleString();
       yield* Console.log(
         `  ${row.code}  ${status.padEnd(10)} ${usesOf(row).padEnd(8)} issued-by=${issuer.padEnd(13)} ${created}  ${row.note ?? ''}`,

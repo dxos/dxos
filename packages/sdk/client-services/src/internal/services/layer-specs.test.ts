@@ -43,7 +43,7 @@ describe('clientServiceSpecs', () => {
   test('the rpc registrations run without anything asking for them', async () => {
     const { resolve, scope } = await makeHarness();
 
-    // Resolving any service initializes the slice, which builds every eager spec — including the
+    // Resolving any service initializes the slice, which builds every eager spec - including the
     // registrations, which provide no tag for this test to ask for.
     await resolve(RpcRouter.RpcRouter);
     const router = await resolve(RpcRouter.RpcRouter);
@@ -71,7 +71,7 @@ describe('clientServiceSpecs', () => {
 });
 
 /**
- * The stack's ambient services: everything the embedder supplies rather than the graph building —
+ * The stack's ambient services: everything the embedder supplies rather than the graph building -
  * config, the hook controller, the SQL runtime and the platform inputs. No edge clients, so every
  * edge-dependent spec is pruned.
  */

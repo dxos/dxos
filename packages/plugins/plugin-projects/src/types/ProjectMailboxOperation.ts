@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
 /**
  * Mailbox pipelines that contribute to a project (see `operations/mailbox/`): each scans the
  * mailbox feed and creates/updates an artifact owned by the project. Designed as routine
- * runnables — a project's routine binds one of these (kind: runnable) on a feed or timer trigger.
+ * runnables - a project's routine binds one of these (kind: runnable) on a feed or timer trigger.
  *
  * Their own module because they are the only project verbs that reach into another plugin
  * (`@dxos/plugin-inbox`) and the model (`@dxos/ai`); the project skill drives none of them, so
@@ -60,7 +60,7 @@ export const UpdateProjectTasks = Operation.make({
 }).pipe(Operation.idempotent, Operation.mutation('write'));
 
 /**
- * Scans a mailbox feed for itinerary mail and maintains the project's travel-log artifact — a
+ * Scans a mailbox feed for itinerary mail and maintains the project's travel-log artifact - a
  * derived document rewritten from the feed, not a field a generic update could patch.
  */
 export const UpdateTravelLog = Operation.make({
@@ -123,16 +123,16 @@ export const UpdateInvestorLog = Operation.make({
 /**
  * Who the project follows, derived from the seed message:
  *
- * - `domain` — the sender's organization (them and their colleagues); falls back to the individual
+ * - `domain` - the sender's organization (them and their colleagues); falls back to the individual
  *   for a free-mail sender, whose domain identifies no organization.
- * - `sender` — that person only.
+ * - `sender` - that person only.
  */
 export const TrackingScope = Schema.Literals(['domain', 'sender']);
 export type TrackingScope = Schema.Schema.Type<typeof TrackingScope>;
 
 /**
  * The pipeline the project's routine runs over the tracked mail. Each names an operation to bind as
- * the routine's runnable — this is what "a project is a policy over pipelines" means concretely: the
+ * the routine's runnable - this is what "a project is a policy over pipelines" means concretely: the
  * capability is mailbox-global, the project fixes its scope, its artifacts and its schedule.
  */
 export const TrackingPipeline = Schema.Literals(['tasks', 'summaries', 'contacts']);

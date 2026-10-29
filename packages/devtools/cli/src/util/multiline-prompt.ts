@@ -20,7 +20,7 @@ export type MultilinePromptOptions = {
  * process, shared across every `multilinePrompt` call. `readline.question`'s
  * promise API drops line events that arrive between questions, which breaks
  * piped multi-line input. Subscribing once and buffering arrivals fixes that,
- * but the buffer MUST outlive any single prompt — a per-call reader would
+ * but the buffer MUST outlive any single prompt - a per-call reader would
  * lose queued lines when it closes at the end of each prompt.
  *
  * The reader stays alive until the owner explicitly calls `closeLineReader()`
@@ -69,7 +69,7 @@ const getLineReader = (): LineReader => {
       if (closed) {
         return Promise.resolve(null);
       }
-      // Write the prompt manually — we are not using rl.question.
+      // Write the prompt manually - we are not using rl.question.
       process.stdout.write(prompt);
       return new Promise((resolvePromise) => waiters.push(resolvePromise));
     },
@@ -112,7 +112,7 @@ export const multilinePrompt = (
       });
 
       if (line === null) {
-        // stdin closed — treat as clean exit.
+        // stdin closed - treat as clean exit.
         return { type: 'exit' } as const;
       }
 

@@ -51,7 +51,7 @@ export const OutlineArticle = ({
   const [selected, setSelected] = useState<URI.URI>();
   const ref = useMemo(() => (selected && db ? db.makeRef<Obj.Unknown>(selected) : undefined), [selected, db]);
   // The document is editable markdown and every object link renders as a chip, so the target is
-  // whatever the user linked — only render the task form once it really is a task.
+  // whatever the user linked - only render the task form once it really is a task.
   const target = useResolveRef(ref);
   const task = target && Obj.instanceOf(Task.Task, target) ? target : undefined;
 

@@ -98,15 +98,15 @@ type LoadedBody<T> = {
 /**
  * Lifecycle of {@link DocHandleProxy}.
  *
- * - `'passive'`  — the client holds the document's stored changes unloaded, subscribed for the host's
+ * - `'passive'`  - the client holds the document's stored changes unloaded, subscribed for the host's
  *                  changes with its object's JSON; {@link DocHandleProxy.doc} loads them synchronously,
  *                  and the handle is usable at once and `'ready'` once the host confirms it is current.
- * - `'pending'`  — handle just created; the worker has not yet reported the
+ * - `'pending'`  - handle just created; the worker has not yet reported the
  *                  outcome of the local-storage probe.
- * - `'requesting'` — worker confirmed the doc is **not** on disk and is
+ * - `'requesting'` - worker confirmed the doc is **not** on disk and is
  *                    currently fetching it over the network.
- * - `'ready'`    — doc bytes are loaded and the handle is usable.
- * - `'unavailable'` — the host reported it cannot produce the doc at all;
+ * - `'ready'`    - doc bytes are loaded and the handle is usable.
+ * - `'unavailable'` - the host reported it cannot produce the doc at all;
  *                     {@link DocHandleProxy.whenReady} rejects rather than
  *                     waiting on bytes nothing is fetching.
  */
@@ -125,11 +125,11 @@ export type DiskSettlement = boolean;
  * Syncs with a Automerge Repo in shared worker.
  * Inspired by Automerge's `DocHandle`.
  *
- * Lifecycle: `'pending' → 'requesting'? → 'ready'`. The handle starts in
+ * Lifecycle: `'pending' -> 'requesting'? -> 'ready'`. The handle starts in
  * `'pending'`. The worker probes its local storage and either delivers the
  * doc bytes (handle becomes `'ready'`), or notifies the client that the doc
  * is not on disk and a network fetch has been started (handle becomes
- * `'requesting'`). It can later transition `'requesting' → 'ready'` if the
+ * `'requesting'`). It can later transition `'requesting' -> 'ready'` if the
  * network ever delivers the bytes. Disk-only callers wait on
  * {@link whenSettledOnDisk} to learn the outcome of the disk probe without
  * blocking on the network. A host that has no bytes and nothing to fetch
@@ -296,7 +296,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
-   * Resolves once the worker-side disk probe has settled — i.e. the handle
+   * Resolves once the worker-side disk probe has settled - i.e. the handle
    * has transitioned out of `'pending'`. Returns `true` if the doc was on
    * disk (handle is now `'ready'`), `false` if it was not (handle is now
    * `'requesting'` while the worker continues to fetch over the network).
@@ -553,7 +553,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
   /**
    * Mark the handle as `'unavailable'`: the host cannot produce this document and is not fetching
-   * it, so every waiter is failed rather than left parked — a load that cannot complete must say so
+   * it, so every waiter is failed rather than left parked - a load that cannot complete must say so
    * at the call site instead of expiring against some caller's timeout. No-op once the handle is
    * `'ready'`; a later delivery of the bytes takes it back to `'ready'` via {@link _wakeReady}.
    * @param documentId The id the host reported on, which a handle created locally does not yet have.
@@ -603,7 +603,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
-   * Whether every local change has been acknowledged by the host — the condition for dropping this
+   * Whether every local change has been acknowledged by the host - the condition for dropping this
    * handle from memory. `_getPendingChanges` clears the repo's pending-id set before the mutation is
    * actually sent, so that set alone cannot answer this: a handle dropped in the window between
    * would take an unsent write with it.
@@ -678,7 +678,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
     // The host echoes a client's own mutation back over its subscription as a separate change; it
     // merges cleanly and moves the heads but alters nothing, so emitting for it would report a
-    // change that did not happen — a listener waiting for the *next* remote edit would be woken by
+    // change that did not happen - a listener waiting for the *next* remote edit would be woken by
     // its own. Patches, not heads, are the test: a merge can advance the heads without touching any
     // value.
     const patches = A.diff(body.doc, headsBefore, A.getHeads(body.doc));

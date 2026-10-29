@@ -23,7 +23,7 @@ import { type Enc, Kind, encodeTerm, toTerm } from './store.ts';
 import { XSD } from './terms.ts';
 
 /**
- * SPARQL (sparqljs AST) → one SQLite statement.
+ * SPARQL (sparqljs AST) -> one SQLite statement.
  *
  * Every variable is a SQL expression of one static type: `id` (a term id; decoded by a final join on
  * `terms`), or a computed `num` / `str` / `bool`. SQL NULL is SPARQL "unbound" in bindings and "error"
@@ -400,7 +400,7 @@ export class Compiler {
           }
           this.group(pattern.patterns, child, inner);
           if (inner.kind === 'var') {
-            // A body that binds no graph (empty, nested GRAPH <c>, VALUES …) ranges over every named graph.
+            // A body that binds no graph (empty, nested GRAPH <c>, VALUES ...) ranges over every named graph.
             this.#bindGraphNames(child, inner.name);
           } else if (child.froms.length === 0) {
             child.where.push(`EXISTS (SELECT 1 FROM quads WHERE g = ${inner.sql})`);
@@ -1476,10 +1476,10 @@ export class Compiler {
     }
     let recursive: string;
     if (edge) {
-      // Column of `quads` matching the walk direction: forward walks s→o, inverse o→s.
+      // Column of `quads` matching the walk direction: forward walks s->o, inverse o->s.
       const [qFrom, qTo] = (from === 's') === edge.forward ? ['s', 'o'] : ['o', 's'];
       const graphCond = this.#graphFilter(graph).replace(' WHERE ', ' AND e.');
-      // CROSS JOIN pins the CTE queue as the outer loop; otherwise SQLite may scan `quads` per step (Q7: 2 s → 3 ms).
+      // CROSS JOIN pins the CTE queue as the outer loop; otherwise SQLite may scan `quads` per step (Q7: 2 s -> 3 ms).
       recursive = `SELECT ${cte}.st, e.${qTo} FROM ${cte} CROSS JOIN quads e ON e.${qFrom} = ${cte}.n AND e.p = ${this.resolver.constId(edge.iri)}${graphCond}`;
     } else {
       recursive = `SELECT ${cte}.st, e.${to} FROM ${cte} CROSS JOIN (${step}) e ON e.${from} = ${cte}.n`;

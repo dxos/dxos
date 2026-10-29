@@ -39,7 +39,7 @@ export namespace ToolResolverService {
     Effect.gen(function* () {
       const tools = yield* Effect.forEach(ids, (id) =>
         ToolResolverService.resolve(id).pipe(
-          // A resolver may throw rather than fail — an operation whose persisted schema cannot be
+          // A resolver may throw rather than fail - an operation whose persisted schema cannot be
           // projected to tool parameters is the common case. A defect would abort the whole request
           // over one bad tool, so it is demoted to the not-found failure the filter below drops.
           Effect.catchDefect((defect) => {

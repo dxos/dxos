@@ -44,7 +44,7 @@ import { trim } from '@dxos/util';
 import { AssistantE2eError } from './errors.ts';
 
 export const DEFAULT_TEST_TIMEOUT = 360_000;
-// Memoized replays still initialize the test harness and process conversations — allow enough
+// Memoized replays still initialize the test harness and process conversations - allow enough
 // headroom for slow CI nodes without enabling full LLM generation.
 const MEMOIZED_TEST_TIMEOUT = 60_000;
 
@@ -136,7 +136,7 @@ const makeLanguageModelFixtureMiddleware = (
   AiService.tag.pipe(
     Effect.provide(
       // `dynamicValuePatterns` defaults to LanguageModelFixture.DEFAULT_DYNAMIC_VALUE_PATTERNS
-      // (space keys, entity IDs, UUIDs, timestamps) — the ids that differ across runs are
+      // (space keys, entity IDs, UUIDs, timestamps) - the ids that differ across runs are
       // canonicalized for matching and substituted back into memoized responses on a cache hit.
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',

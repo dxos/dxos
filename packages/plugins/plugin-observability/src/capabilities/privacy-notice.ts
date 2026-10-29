@@ -16,8 +16,8 @@ import { ObservabilityNamespace } from '../namespace.ts';
 
 /**
  * Shows the privacy notice toast once when an identity is first created.
- * Activates on `ClientEvents.IdentityCreated` — which only fires for genuinely
- * new identities, not for recovered or joined ones — so no HALO device-count
+ * Activates on `ClientEvents.IdentityCreated` - which only fires for genuinely
+ * new identities, not for recovered or joined ones - so no HALO device-count
  * checks or session-storage flags are needed.
  */
 export default Capability.makeModule(

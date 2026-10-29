@@ -4,7 +4,7 @@
 
 /**
  * Background chatter we don't want bleeding into normal CLI output. The
- * pattern matches a stable prefix only — a future rewording past the
+ * pattern matches a stable prefix only - a future rewording past the
  * captured text won't silently break suppression.
  *
  * Sources:
@@ -20,7 +20,7 @@ const TIMEOUT_WARNING_PREFIX_RE =
 
 /**
  * Pure state machine that decides whether a stderr chunk should be dropped.
- * Exposed for testing — the in-process `installStderrFilter()` wraps this.
+ * Exposed for testing - the in-process `installStderrFilter()` wraps this.
  *
  * State semantics:
  *  - `suppressing=false`: drop the chunk iff it starts with a timeout
@@ -38,7 +38,7 @@ export const decideStderrChunk = (text: string, suppressing: boolean): { drop: b
     if (/^\s/.test(text) || text.trim() === '') {
       return { drop: true, suppressing: true };
     }
-    // First non-indented line — end suppression and let it through.
+    // First non-indented line - end suppression and let it through.
     suppressing = false;
   }
   if (TIMEOUT_WARNING_PREFIX_RE.test(text)) {
@@ -82,7 +82,7 @@ const SWALLOWED_WARNING_NAMES = new Set(['TimeoutNegativeWarning']);
  * Wrap BOTH `console.warn`/`console.error` (where `warnAfterTimeout` from
  * @dxos/debug actually writes) AND `process.stderr.write` (defence in depth
  * for callers that bypass console). In Bun, `console.warn` writes to fd 2
- * directly — overriding `process.stderr.write` alone is NOT enough. Verified
+ * directly - overriding `process.stderr.write` alone is NOT enough. Verified
  * empirically: a `process.stderr.write` wrapper sees zero `console.warn`
  * traffic in bun. See stderr-filter.console.test.ts for the regression
  * guard.
@@ -113,7 +113,7 @@ export const installStderrFilter = (): (() => void) => {
   };
   process.on('warning', warningListener);
 
-  // The same suppression state machine drives every channel — they all dump
+  // The same suppression state machine drives every channel - they all dump
   // to fd 2, so a warning fired through one and stack frames fired through
   // another should still be coherent.
   let suppressing = false;

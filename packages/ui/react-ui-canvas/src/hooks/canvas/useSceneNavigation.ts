@@ -45,7 +45,7 @@ export type SceneNavigation = {
 
 /**
  * The current scene's frame and auto-drill: a portal filling the viewport becomes the root, and a root shrunk well
- * below its size on arrival yields to its parent — the controller's drill in and out, driven by how much of the
+ * below its size on arrival yields to its parent - the controller's drill in and out, driven by how much of the
  * viewport a portal covers rather than by a gesture.
  */
 export const useSceneNavigation = ({

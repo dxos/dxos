@@ -65,13 +65,13 @@ export const handler = Effect.fn(function* ({
   } else {
     // The user typed a locator but every other verb takes an id, so the id is the useful output.
     yield* Console.log(
-      `Installed "${record.meta?.name ?? record.id}" as ${record.id}${enabled ? ' (enabled).' : ' (disabled — run `dx plugin enable` to turn it on).'}`,
+      `Installed "${record.meta?.name ?? record.id}" as ${record.id}${enabled ? ' (enabled).' : ' (disabled - run `dx plugin enable` to turn it on).'}`,
     );
   }
 });
 
 /**
- * Where the user consents to running third-party code — asked on the raw locator, before anything
+ * Where the user consents to running third-party code - asked on the raw locator, before anything
  * from it (even a `--dev` checkout's `dx.config.ts`) is evaluated, and refused rather than assumed
  * when there is no TTY to ask.
  */

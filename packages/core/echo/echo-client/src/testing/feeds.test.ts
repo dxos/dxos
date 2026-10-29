@@ -118,7 +118,7 @@ describe('feeds', () => {
 
   // Holds for the writer only: its query returns the relation it appended without decoding it again,
   // since the feed handle already reflects that block. A reader that has to decode it still hangs,
-  // because the strong-dep resolver cannot yet bridge feed→database (see strong-deps-resolution.test.ts).
+  // because the strong-dep resolver cannot yet bridge feed->database (see strong-deps-resolution.test.ts).
   test('relation between feed object and a database object', async () => {
     await using peer = await builder.createPeer({
       types: [Feed.Feed, TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
@@ -329,7 +329,7 @@ describe('feeds', () => {
       // Newest two (appended last), returned newest-first (natural desc).
       expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(['d', 'c']);
 
-      // No limit ⇒ the whole feed (unchanged behavior).
+      // No limit => the whole feed (unchanged behavior).
       const all = await db.query(Query.select(Filter.type(TestSchema.Person)).from(scope)).run();
       expect(all).toHaveLength(4);
     });
@@ -372,8 +372,8 @@ describe('feeds', () => {
       wideSub();
     });
 
-    // Content-ordered (non-`natural`) feed paging — the mailbox's path (order by a message field, not
-    // insertion order). Runs on the client feed path (`FeedQueryContext` → `applyOrderSkipLimit`:
+    // Content-ordered (non-`natural`) feed paging - the mailbox's path (order by a message field, not
+    // insertion order). Runs on the client feed path (`FeedQueryContext` -> `applyOrderSkipLimit`:
     // full-fetch, sort by the property, slice), so it guards that a slid window (`skip > 0`) returns
     // the full page, not `limit - skip`.
     test('content-ordered `.orderBy(property).skip().limit()` returns correct windows (skip+limit)', async ({
@@ -389,7 +389,7 @@ describe('feeds', () => {
       const total = 40;
       const names = Array.from({ length: total }, (_, index) => `p${String(index).padStart(2, '0')}`);
       // Append in an order distinct from name order (odds then evens) so a correct result must sort by
-      // the `name` property, not rely on insertion order — mimics an out-of-order/backfill sync.
+      // the `name` property, not rely on insertion order - mimics an out-of-order/backfill sync.
       const shuffled = [...names.filter((_, index) => index % 2 === 1), ...names.filter((_, index) => index % 2 === 0)];
       await db.appendToFeed(
         feed,
@@ -448,7 +448,7 @@ describe('feeds', () => {
 
       await calledOnce;
       expect(query.results).toHaveLength(1);
-      // The deferred event carried real results — an empty snapshot was never observed.
+      // The deferred event carried real results - an empty snapshot was never observed.
       expect(observed).not.toContain(0);
       sub();
     });

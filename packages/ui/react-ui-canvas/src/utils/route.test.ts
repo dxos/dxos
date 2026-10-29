@@ -35,7 +35,7 @@ describe('route', () => {
       { x: 300, y: 0 },
     ]);
     // Two ports on the same side leave the same way, so the route doubles back through the middle
-    // segment rather than cutting across either node — the elbow the ports imply.
+    // segment rather than cutting across either node - the elbow the ports imply.
     expect(smartPoints({ point: { x: 0, y: 0 }, side: 'e' }, { point: { x: 0, y: 200 }, side: 'e' })).toEqual([
       { x: 0, y: 0 },
       { x: 32, y: 0 },

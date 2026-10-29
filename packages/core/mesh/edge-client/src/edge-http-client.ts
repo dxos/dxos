@@ -242,7 +242,7 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).
  *
- * Hub-service API (accounts, invitations) lives in {@link HubHttpClient} — the two
+ * Hub-service API (accounts, invitations) lives in {@link HubHttpClient} - the two
  * services run at different URLs and are never both available from the same base URL.
  */
 /** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
@@ -386,7 +386,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Names the space's root document, which edge cannot derive, and returns the root in force —
+   * Names the space's root document, which edge cannot derive, and returns the root in force -
    * not necessarily the one offered, since the record is write-once.
    */
   public async recordSpaceRoot(
@@ -590,7 +590,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   /**
-   * Builds the URL for the blob stored under `key`. `key` is URL-encoded for defense in depth —
+   * Builds the URL for the blob stored under `key`. `key` is URL-encoded for defense in depth -
    * callers pass a lowercase hex SHA-256 digest (extracted from an `ni:` URI by the edge backend).
    */
   public getBlobUrl(key: string): URL {
@@ -616,7 +616,7 @@ export class EdgeHttpClient extends BaseHttpClient {
       auth: args?.auth ?? true,
       method: 'POST',
       // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
-      // `BodyInit` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+      // `BodyInit` only covers `ArrayBuffer`-backed views - a gap between the DOM lib types and
       // the TS standard lib, not fixable by typing `data` differently.
       body: data as BodyInit,
       headers,
@@ -627,7 +627,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    * Admits a completed direct upload into the content-addressed store, returning the key it landed
    * under along with what the service actually received.
    *
-   * The bytes were PUT straight to a signed URL by a third party — typically an agent's `curl` —
+   * The bytes were PUT straight to a signed URL by a third party - typically an agent's `curl` -
    * so they never pass through this client; this call only tells the service to promote them. The
    * size and content type come from the service for the same reason.
    */
@@ -805,7 +805,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Cancels the current run of a cron trigger on the EDGE dispatcher — its in-flight execution and
+   * Cancels the current run of a cron trigger on the EDGE dispatcher - its in-flight execution and
    * `runAgain` continuation chain. The trigger stays enabled, so its schedule keeps firing.
    */
   public async cancelTriggerRun(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
@@ -988,7 +988,7 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   /**
    * Uploads a built plugin bundle to the registry's R2-backed hosting. Authenticated
-   * with the caller's hub identity (verifiable presentation) — `setIdentity` must
+   * with the caller's hub identity (verifiable presentation) - `setIdentity` must
    * have been called. Returns the canonical `moduleUrl` (the hosted `manifest.json`).
    */
   public async uploadPluginBundle(
@@ -1131,8 +1131,8 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   //
-  // Process control (see `ProcessProtocol`). The EDGE host runs `Process` instances — agents
-  // first — that outlive the client; these are the routes that drive one.
+  // Process control (see `ProcessProtocol`). The EDGE host runs `Process` instances - agents
+  // first - that outlive the client; these are the routes that drive one.
   //
 
   /**

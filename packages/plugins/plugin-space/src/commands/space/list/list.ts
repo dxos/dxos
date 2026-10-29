@@ -33,7 +33,7 @@ export const list = Command.make(
   {
     wait: Options.Int('wait').pipe(
       Options.withDescription(
-        'Wait up to this many seconds for each space to reach SPACE_READY before reading. Default 0 — print whatever state is available immediately so a stuck space cannot hang the command.',
+        'Wait up to this many seconds for each space to reach SPACE_READY before reading. Default 0 - print whatever state is available immediately so a stuck space cannot hang the command.',
       ),
       Options.optional,
     ),

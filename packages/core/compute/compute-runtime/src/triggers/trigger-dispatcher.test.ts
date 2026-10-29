@@ -89,7 +89,7 @@ const RetryOp = Operation.make({
 
 /**
  * Receives a raw subscription event, resolves `event.subject`, and echoes the mutation type plus the
- * resolved object's id — used to assert `subject` dereferences to the mutated object.
+ * resolved object's id - used to assert `subject` dereferences to the mutated object.
  */
 const SubjectProbeOp = Operation.make({
   meta: { key: DXN.make('com.example.operation.triggerDispatcher.subjectProbe'), name: 'Subject Probe' },
@@ -215,7 +215,7 @@ const TestLayer = (
         startingTime: options.startingTime ?? new Date('2025-09-05T15:01:00.000Z'),
         failureCooldown: options.failureCooldown,
         // A sub-minute schedule is refused against the 1-minute default, so a test wanting one says
-        // so here — the same knob production would have to turn to allow it.
+        // so here - the same knob production would have to turn to allow it.
         livePollInterval: options.livePollInterval,
       }),
     ),
@@ -770,7 +770,7 @@ describe('TriggerDispatcher', () => {
             const registry = yield* Registry.AtomRegistry;
             const fired = yield* Effect.callback<void>((resume) => {
               // `{ immediate: true }` can invoke this callback synchronously, before `subscribe`
-              // returns — reading `unsubscribe` there would hit the temporal dead zone, and a
+              // returns - reading `unsubscribe` there would hit the temporal dead zone, and a
               // synchronous `resume` skips Effect's returned-finalizer path entirely (it only runs
               // on interruption), so an immediate match unsubscribes directly instead of relying on it.
               let unsubscribe: (() => void) | undefined;

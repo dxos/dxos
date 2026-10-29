@@ -9,10 +9,10 @@ import picomatch from 'picomatch';
 /**
  * Decides whether a metafile node (a file or external specifier) is a "terminal"
  * for the trace. The matcher abstracts over three flavours of `--to`:
- *  1. Absolute / relative file path — match the resolved file path.
- *  2. Bare package name (no glob meta-chars) — match `node_modules/<pkg>` paths,
+ *  1. Absolute / relative file path - match the resolved file path.
+ *  2. Bare package name (no glob meta-chars) - match `node_modules/<pkg>` paths,
  *     the workspace package name of the file, and exact external specifiers.
- *  3. Glob pattern (contains `*`, `?`, `[`, `{`, `!`) — match against package
+ *  3. Glob pattern (contains `*`, `?`, `[`, `{`, `!`) - match against package
  *     names, paths, file basenames, and external specifiers.
  */
 export interface Matcher {
@@ -128,7 +128,7 @@ export const createWorkspacePackageResolver = (_absWorkingDir: string): Workspac
           return json.name;
         }
       } catch {
-        // No package.json here — keep walking up.
+        // No package.json here - keep walking up.
       }
       const parent = path.dirname(dir);
       if (parent === dir) {
@@ -208,7 +208,7 @@ export const createMatcher = (toSpec: string, absWorkingDir: string): Matcher =>
     };
   }
 
-  // Bare package name — match node_modules paths, workspace package names, and external specifiers.
+  // Bare package name - match node_modules paths, workspace package names, and external specifiers.
   return {
     description: `package: ${toSpec}`,
     matches: ({ resolvedAbsolute, packageName, externalSpecifier }) => {

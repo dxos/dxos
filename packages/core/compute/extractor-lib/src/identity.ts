@@ -7,7 +7,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { extractDomain } from './domain.ts';
 
-/** Canonical form of an email address — the one normalization every path must share. */
+/** Canonical form of an email address - the one normalization every path must share. */
 export const normalizeEmail = (email: string | undefined): string | undefined => {
   const normalized = email?.trim().toLowerCase();
   return normalized ? normalized : undefined;
@@ -20,13 +20,13 @@ export const normalizePhone = (phone: string | undefined): string | undefined =>
     return undefined;
   }
   // A `+` anywhere but the front is punctuation, not a country-code marker; keeping it would make
-  // `+1415…` and `1415…+` two identities.
+  // `+1415...` and `1415...+` two identities.
   const digits = trimmed.replace(/\D/g, '');
   return digits ? `${trimmed.startsWith('+') ? '+' : ''}${digits}` : undefined;
 };
 
 /**
- * Identity for a Person: its email addresses. Names are deliberately excluded — role inboxes share
+ * Identity for a Person: its email addresses. Names are deliberately excluded - role inboxes share
  * a display name (`DXOS` vs `DXOS via TestFlight`) while being different senders, and a false merge
  * is far more expensive than a missed one. Foreign keys are added generically by the engine, which
  * is what links a mail-sourced Person to the same human synced from Google Contacts.
@@ -117,7 +117,7 @@ const addressKey = (value: unknown): string => {
 };
 
 /**
- * Canonical domain for a website, a bare domain, or an email's domain part — the one normalization
+ * Canonical domain for a website, a bare domain, or an email's domain part - the one normalization
  * both sides of the Organization lookup must share.
  *
  * `www.` is dropped because it is a host alias, not a different organization: keying a website as
@@ -136,7 +136,7 @@ export const normalizeDomain = (value: string | undefined): string | undefined =
   }
 };
 
-/** Copies each listed scalar from `source` only where `target` has none — target stays authoritative. */
+/** Copies each listed scalar from `source` only where `target` has none - target stays authoritative. */
 const fillScalars = <T>(target: { [K in keyof T]?: unknown }, source: T, fields: readonly (keyof T)[]): void => {
   for (const field of fields) {
     const incoming = source[field];

@@ -21,14 +21,14 @@ export default meta;
 type Story = StoryObj;
 
 // ---------------------------------------------------------------------------
-// PathProbe — renders a fixed set of example bezier paths the cluster layout
+// PathProbe - renders a fixed set of example bezier paths the cluster layout
 // might emit, side-by-side across five columns:
 //   1. Baked path strings (cubic / quadratic) as the cluster projector once
 //      emitted them.
-//   2. linkRadial output from polar coordinates — should match column 1.
-//   3. radialQuadratic — Q with control at (target.angle, source.radius).
-//   4. radialElbow — sharp 2-segment elbow through the same knee.
-//   5. radialSmoothElbow — cubic with both controls at the knee.
+//   2. linkRadial output from polar coordinates - should match column 1.
+//   3. radialQuadratic - Q with control at (target.angle, source.radius).
+//   4. radialElbow - sharp 2-segment elbow through the same knee.
+//   5. radialSmoothElbow - cubic with both controls at the knee.
 //
 // Kept around so future curve experiments can compare candidate generators
 // at a glance without touching the production cluster projector.
@@ -55,9 +55,9 @@ const PROBE_PATHS = [
     target: [-327.754, 151.323] as [number, number],
   },
   // Live path the user reports as not rendering correctly in the full cluster.
-  // Source polar ≈ (1.14, 190.5); target polar ≈ (1.82, 380.9). Clockwise direction.
+  // Source polar ~ (1.14, 190.5); target polar ~ (1.82, 380.9). Clockwise direction.
   {
-    label: 'live broken (clockwise, source.x=1.14 → target.x=1.82)',
+    label: 'live broken (clockwise, source.x=1.14 -> target.x=1.82)',
     color: 'magenta',
     d: 'M172.95585588832455,-79.85312713937451Q184.55815606041466,47.20738323164743 369.1163121208293,94.41476646329485',
     target: [369.1163121208293, 94.41476646329485] as [number, number],
@@ -67,7 +67,7 @@ const PROBE_PATHS = [
 const SOURCE_XY: [number, number] = [-174.87, -44.729];
 
 // Reverse-engineered polar coords from the user's reported path strings.
-// Source group: polar (4.96 rad, 181) → cartesian (-174.87, -44.729).
+// Source group: polar (4.96 rad, 181) -> cartesian (-174.87, -44.729).
 // We use linkRadial here directly to verify the strings d3 produces match what we expect.
 const SOURCE_POLAR = { x: 4.96, y: 181 } as { x: number; y: number };
 const PROBE_POLAR_TARGETS = [
@@ -107,12 +107,12 @@ const radialElbow = (source: { x: number; y: number }, target: { x: number; y: n
  * Smoothed radial elbow: cubic bezier whose control points sit at the elbow knee. Curve
  * emerges from source TOWARD the target angle (around the source ring), then bends OUT to
  * target's radius. Eliminates the wide-ear from linkRadial AND the missing-stub from the
- * pure quadratic — both halves of the curve are visible and follow the radial layout.
+ * pure quadratic - both halves of the curve are visible and follow the radial layout.
  */
 const radialSmoothElbow = (source: { x: number; y: number }, target: { x: number; y: number }) => {
   const [sx, sy] = polarToCartesian(source.x, source.y);
   const [tx, ty] = polarToCartesian(target.x, target.y);
-  const [kx, ky] = polarToCartesian(target.x, source.y); // "knee" — at source radius, target angle
+  const [kx, ky] = polarToCartesian(target.x, source.y); // "knee" - at source radius, target angle
   // Both control points near the knee so the curve hugs the elbow.
   return `M${sx},${sy}C${kx},${ky} ${kx},${ky} ${tx},${ty}`;
 };
@@ -233,7 +233,7 @@ const PathProbe = () => {
           <circle cx={0} cy={0} r={3} fill='#444' />
           <circle cx={SOURCE_XY[0]} cy={SOURCE_XY[1]} r={5} fill='#888' />
           <text x={-440} y={-330} fill='#666' fontSize={11}>
-            radialQuadratic — control at (target.angle, source.radius)
+            radialQuadratic - control at (target.angle, source.radius)
           </text>
           {PROBE_POLAR_TARGETS.map((p, i) => {
             const d = radialQuadratic(SOURCE_POLAR, p.polar);
@@ -252,14 +252,14 @@ const PathProbe = () => {
           })}
         </g>
 
-        {/* Alternative B: sharp elbow — two line segments. */}
+        {/* Alternative B: sharp elbow - two line segments. */}
         <g transform='translate(2250, 0)'>
           <line x1={-450} y1={0} x2={450} y2={0} stroke='#222' />
           <line x1={0} y1={-350} x2={0} y2={350} stroke='#222' />
           <circle cx={0} cy={0} r={3} fill='#444' />
           <circle cx={SOURCE_XY[0]} cy={SOURCE_XY[1]} r={5} fill='#888' />
           <text x={-440} y={-330} fill='#666' fontSize={11}>
-            radialElbow — sharp 2-segment elbow
+            radialElbow - sharp 2-segment elbow
           </text>
           {PROBE_POLAR_TARGETS.map((p, i) => {
             const d = radialElbow(SOURCE_POLAR, p.polar);
@@ -276,14 +276,14 @@ const PathProbe = () => {
           })}
         </g>
 
-        {/* Alternative C: smoothed elbow — cubic with both controls at the knee. */}
+        {/* Alternative C: smoothed elbow - cubic with both controls at the knee. */}
         <g transform='translate(3000, 0)'>
           <line x1={-450} y1={0} x2={450} y2={0} stroke='#222' />
           <line x1={0} y1={-350} x2={0} y2={350} stroke='#222' />
           <circle cx={0} cy={0} r={3} fill='#444' />
           <circle cx={SOURCE_XY[0]} cy={SOURCE_XY[1]} r={5} fill='#888' />
           <text x={-440} y={-330} fill='#666' fontSize={11}>
-            radialSmoothElbow — cubic with both controls at the knee
+            radialSmoothElbow - cubic with both controls at the knee
           </text>
           {PROBE_POLAR_TARGETS.map((p, i) => {
             const d = radialSmoothElbow(SOURCE_POLAR, p.polar);
@@ -310,7 +310,7 @@ export const PathProbeStory: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// PathInspector — paste any `d` string, click Diagnose. The path is rendered
+// PathInspector - paste any `d` string, click Diagnose. The path is rendered
 // in an SVG and the same diagnostics (bbox, pathLength, computed CSS) we'd
 // otherwise pull from the console are printed alongside. Loops to avoid the
 // console-snippet ping-pong when debugging "this path doesn't render."

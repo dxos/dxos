@@ -43,7 +43,7 @@ const BANNER = [
   'Composer recovery mode',
   'Origin: https://labs.composer.space',
   '',
-  'You are in safe mode — no client, plugins, sync, or indexing until you choose an action.',
+  'You are in safe mode - no client, plugins, sync, or indexing until you choose an action.',
   '',
   'Debug port server: http://127.0.0.1:9321',
 ];
@@ -63,7 +63,7 @@ export const Default: Story = {
 };
 
 export const Busy: Story = {
-  args: { lines: [...BANNER, '', 'Exporting profile archive (.dxprofile with SQLite entry)…'], busy: true },
+  args: { lines: [...BANNER, '', 'Exporting profile archive (.dxprofile with SQLite entry)...'], busy: true },
 };
 
 export const DebugPortRunning: Story = {
@@ -72,8 +72,8 @@ export const DebugPortRunning: Story = {
       ...BANNER,
       '',
       'Session: 951c7576-b636-47ff-acc6-a1c4fdf65fb6',
-      'Connecting to http://127.0.0.1:9321…',
-      'Waiting for debug server…',
+      'Connecting to http://127.0.0.1:9321...',
+      'Waiting for debug server...',
     ],
     busy: true,
     debugPortActive: true,

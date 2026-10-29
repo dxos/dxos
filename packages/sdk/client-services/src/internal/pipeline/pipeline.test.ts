@@ -160,7 +160,7 @@ describe('pipeline/Pipeline', () => {
     }
 
     // Launch start() but do not await: its iterator is assigned early while `open()` (which marks
-    // it running) is still awaiting feed-queue opens — the window the consumer races.
+    // it running) is still awaiting feed-queue opens - the window the consumer races.
     const started = pipeline.start();
     // `consume` requires the iterator to exist; the race under test is with it *running*. Poll on
     // microtasks so the consumer slips in between the iterator's assignment and its `open()`.

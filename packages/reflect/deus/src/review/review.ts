@@ -49,7 +49,7 @@ const listItems = (lines: readonly string[]): string[] =>
 /** `- <sentence>. github:<key>`, the key last; a step with no key is dropped. */
 const parseStep = (item: string): WalkthroughStep[] => {
   const match = item.match(/^(.*?)\s*(github:\S+)\s*$/);
-  return match ? [{ text: match[1].replace(/[\s.:—-]+$/, '').trim(), key: match[2] }] : [];
+  return match ? [{ text: match[1].replace(/[\s.:\u2014-]+$/, '').trim(), key: match[2] }] : [];
 };
 
 /**

@@ -663,7 +663,7 @@ describe('DatabaseImpl', () => {
       // Inline objects live in the space root doc, so re-opening re-creates them from the directory.
       const { id } = addObjectToDoc(db.getSpaceRootDocHandle(), { id: EntityId.random() });
       await db.flush();
-      // Held across the reopen so the core is not collected — the registry holds cores weakly.
+      // Held across the reopen so the core is not collected - the registry holds cores weakly.
       const core = await db.loadObjectCoreById(id);
       expect(core?.id).to.eq(id);
 
@@ -713,8 +713,8 @@ describe('DatabaseImpl', () => {
       // The object lives in its own linked document, so loading it reaches `RepoProxy.find`.
       const db = await createClientDbInSpaceWithObject(object);
 
-      // The proxy's lifetime is not the manager's: async work the manager started while open — query
-      // hydration, a graph rebuild on a timer — reaches the proxy after it has gone.
+      // The proxy's lifetime is not the manager's: async work the manager started while open - query
+      // hydration, a graph rebuild on a timer - reaches the proxy after it has gone.
       await db._repo.close();
 
       expect(() => db.getObjectCoreById(object.id)).to.not.throw();

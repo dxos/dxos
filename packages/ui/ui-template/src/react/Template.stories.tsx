@@ -21,7 +21,7 @@ import { type SequencedLogEntry } from './useSystem.ts';
 //
 // SPIKE story. Four columns, left to right: the type the template is parameterized by, an instance
 // of it, the template, and the render. Editing the middle two re-renders the fourth, so the whole
-// loop — schema, state, layout, output — is visible at once.
+// loop - schema, state, layout, output - is visible at once.
 //
 
 /**

@@ -24,7 +24,7 @@ class Annotated extends Type.makeObject<Annotated>(DXN.make('org.dxos.type.test.
 describe('Skill', () => {
   describe('mcpPrompt', () => {
     // The flag rides in the object's meta rather than as a schema field, so a skill stored in a
-    // space carries it too — `Definition` is a build-time factory type and could not.
+    // space carries it too - `Definition` is a build-time factory type and could not.
     test('opting in is readable off the constructed skill', ({ expect }) => {
       const skill = Skill.make({ key: 'org.dxos.skill.example', name: 'Example', mcpPrompt: true });
       expect(Skill.isMcpPrompt(skill)).toBe(true);

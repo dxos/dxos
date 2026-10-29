@@ -491,7 +491,7 @@ type CardMenuProps = {
   children: ReactNode;
 };
 
-/** A ghost icon-only ⋮ trigger opening a Menu; neither the trigger nor a choice activates a clickable card. */
+/** A ghost icon-only : trigger opening a Menu; neither the trigger nor a choice activates a clickable card. */
 const CardMenu = ({ label, size, children }: CardMenuProps) => (
   <Menu.Root>
     <Menu.Trigger asChild>

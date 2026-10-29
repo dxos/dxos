@@ -131,7 +131,7 @@ const runOnTokenCreated = (
  * Tell the user a sign-in was discarded.
  *
  * The provider's reply arrives on a channel the user cannot see, so a rejected one leaves the flow
- * looking merely unfinished — they completed the popup and the app shows the same Connect button as
+ * looking merely unfinished - they completed the popup and the app shows the same Connect button as
  * before. The log records the reason; this is the part they can act on.
  */
 const reportOAuthRejected = (invoker: Operation.OperationService, descriptionKey: string): Effect.Effect<void, never> =>
@@ -188,12 +188,12 @@ const openCreateSyncRoutineDialog = (
     const result = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
       target: db,
       typename: Type.getTypename(Routine.Routine),
-      // `subject` may be the connection or a bound target — the template resolves either to the account.
+      // `subject` may be the connection or a bound target - the template resolves either to the account.
       defaults: { templateId: SyncTemplate.ID, subject },
       navigable: false,
     });
-    // The trigger is read off the saved routine — a `findTrigger` lookup here would race the
-    // reverse-ref index — and the user's save is the ask, so `sync.auto` does not gate it.
+    // The trigger is read off the saved routine - a `findTrigger` lookup here would race the
+    // reverse-ref index - and the user's save is the ask, so `sync.auto` does not gate it.
     const created = result?.target;
     if (created) {
       Effect.runFork(
@@ -335,7 +335,7 @@ export default Capability.makeModule(
     const handleOAuthPostMessage = (event: MessageEvent): Effect.Effect<void, never> =>
       Effect.gen(function* () {
         // The window receives unrelated `postMessage` traffic (HMR, embeds), so these rejections are
-        // reported only for payloads shaped like an OAuth reply — enough to tell "the relay answered
+        // reported only for payloads shaped like an OAuth reply - enough to tell "the relay answered
         // and we discarded it" from "the relay never answered", which silence cannot.
         if (!edgeOrigin) {
           if (isOAuthShapedMessage(event.data)) {
@@ -370,7 +370,7 @@ export default Capability.makeModule(
           // The in-memory map is per page load, so a reload mid-flow empties it. The persisted
           // snapshot is the recovery path (`finalizeRedirectFlow`); leave it in place for that and
           // say so, because returning silently here is indistinguishable from a completed flow.
-          log.warn('oauth message has no pending entry — leaving snapshot for redirect recovery', {
+          log.warn('oauth message has no pending entry - leaving snapshot for redirect recovery', {
             accessTokenId: decoded.accessTokenId,
             hasSnapshot: !!readPendingSnapshot(decoded.accessTokenId),
           });
@@ -484,7 +484,7 @@ export default Capability.makeModule(
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
 
         // ConnectorSpec.Connector has a pre-flight form (atproto handle, IMAP creds, custom
-        // token, …) — show it and let the form's submit re-enter via
+        // token, ...) - show it and let the form's submit re-enter via
         // `submitCredentialForm`. OAuth connectors re-enter here with
         // `loginHint`; non-OAuth connectors complete directly in the form.
         if (connector.credentialForm && loginHint === undefined) {
@@ -500,8 +500,8 @@ export default Capability.makeModule(
           return { kind: 'dialog-opened' } as const;
         }
 
-        // Pre-flight forms (atproto handle, …) supply a `loginHint` that
-        // is meaningful as the account label too — store it so the
+        // Pre-flight forms (atproto handle, ...) supply a `loginHint` that
+        // is meaningful as the account label too - store it so the
         // resulting Connection shows e.g. `user.bsky.social` rather than
         // just `bsky.app`.
         return yield* startOAuth({
@@ -739,7 +739,7 @@ export default Capability.makeModule(
         }
 
         // OAuth pre-flight: re-enter createConnection with the captured loginHint.
-        // Guard against an empty hint — otherwise createConnection would re-open
+        // Guard against an empty hint - otherwise createConnection would re-open
         // the credential-form dialog and we'd loop.
         const loginHint = result.loginHint?.trim();
         if (!loginHint) {
@@ -771,7 +771,7 @@ export default Capability.makeModule(
         });
         // Initial setup of a multi-target connector: the connection had no bindings until this
         // submit, so this is the routine-offer / first-sync moment. A later change of targets is
-        // left to the user — new bindings are covered by the account routine's fan-out.
+        // left to the user - new bindings are covered by the account routine's fan-out.
         if (existing === 0 && added > 0) {
           const trigger = connector.sync?.trigger ? yield* Binding.findTrigger(connection) : undefined;
           if (connector.sync?.trigger && !trigger) {

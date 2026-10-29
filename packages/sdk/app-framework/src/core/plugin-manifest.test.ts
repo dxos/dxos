@@ -60,7 +60,7 @@ describe('PluginManifest', () => {
     });
 
     test('devEntry waives the canonical-entry-in-assets requirement', ({ expect }) => {
-      // No `index.mjs` in assets — would throw without devEntry.
+      // No `index.mjs` in assets - would throw without devEntry.
       expect(() =>
         PluginManifest.parse('http://localhost:3967/manifest.json', {
           key: 'a',

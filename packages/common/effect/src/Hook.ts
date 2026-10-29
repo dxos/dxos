@@ -101,8 +101,8 @@ export const on = <E extends Any>(hook: E, fn: HandlerFn<E>): Effect.Effect<void
   subscribe(handler(hook, fn));
 
 /**
- * Dispatches to every subscriber and completes once all of them have — including the hooks those
- * handlers emit in turn — so an emit doubles as a barrier for the work the hook triggers. A
+ * Dispatches to every subscriber and completes once all of them have - including the hooks those
+ * handlers emit in turn - so an emit doubles as a barrier for the work the hook triggers. A
  * handler that fails fails the emitter as a defect, so this is not a fire-and-forget notification.
  */
 export const emit = <E extends Any>(hook: E, payload: Payload<E>): Effect.Effect<void, never, Controller> =>

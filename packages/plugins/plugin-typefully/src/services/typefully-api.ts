@@ -21,7 +21,7 @@ import * as Publisher from '@dxos/plugin-blogger/Publisher';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
 
-// Typefully API v2 (v1 key access was disabled Dec 2025 — see the v1→v2 migration guide:
+// Typefully API v2 (v1 key access was disabled Dec 2025 - see the v1->v2 migration guide:
 // https://support.typefully.com/en/articles/13133296-typefully-api-v1-v2-migration-guide). Drafts are
 // scoped under a `social_set_id`; auth is `Authorization: Bearer <token>` (v1 keys are rejected by v2).
 const TYPEFULLY_API_URL = 'https://api.typefully.com/v2';
@@ -171,7 +171,7 @@ const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema
     );
     return yield* client.execute(withAuth(request, creds)).pipe(
       // Read the body as text first so a shape mismatch surfaces the actual payload (Typefully's
-      // response shape is under-documented) instead of an opaque "Expected ReadonlyArray<…>".
+      // response shape is under-documented) instead of an opaque "Expected ReadonlyArray<...>".
       Effect.flatMap((response) =>
         Effect.flatMap(response.text, (text) =>
           Effect.try({
@@ -219,7 +219,7 @@ const executeVoid = (request: HttpClientRequest.HttpClientRequest): TypefullyEff
 /**
  * Resolve the social set id every draft is scoped under. Prefer a team-owned set (sync publishes to
  * the team, not the user's personal drafts); fall back to the first set only when the account has no
- * team. NOTE: with multiple teams this picks the first — a Connection/Publication-level selector is a
+ * team. NOTE: with multiple teams this picks the first - a Connection/Publication-level selector is a
  * follow-up.
  */
 const resolveSocialSetIdEffect = (): TypefullyEffect<string> =>
@@ -234,7 +234,7 @@ const resolveSocialSetIdEffect = (): TypefullyEffect<string> =>
     }),
   );
 
-/** Create a draft — POST `/social-sets/{id}/drafts`. */
+/** Create a draft - POST `/social-sets/{id}/drafts`. */
 const createDraftEffect = (input: Publisher.PublisherDraftInput): TypefullyEffect<Publisher.PublisherDraft> =>
   resolveSocialSetIdEffect().pipe(
     Effect.flatMap((socialSetId) =>
@@ -248,7 +248,7 @@ const createDraftEffect = (input: Publisher.PublisherDraftInput): TypefullyEffec
     Effect.map(toPublisherDraft),
   );
 
-/** Update a draft — PATCH `/social-sets/{id}/drafts/{draftId}`. */
+/** Update a draft - PATCH `/social-sets/{id}/drafts/{draftId}`. */
 const updateDraftEffect = (
   id: string,
   input: Publisher.PublisherDraftInput,
@@ -265,7 +265,7 @@ const updateDraftEffect = (
     Effect.map(toPublisherDraft),
   );
 
-/** Get a draft — GET `/social-sets/{id}/drafts/{draftId}`. */
+/** Get a draft - GET `/social-sets/{id}/drafts/{draftId}`. */
 const getDraftEffect = (id: string): TypefullyEffect<Publisher.PublisherDraft> =>
   resolveSocialSetIdEffect().pipe(
     Effect.flatMap((socialSetId) =>
@@ -277,7 +277,7 @@ const getDraftEffect = (id: string): TypefullyEffect<Publisher.PublisherDraft> =
     Effect.map(toPublisherDraft),
   );
 
-/** Delete a draft — DELETE `/social-sets/{id}/drafts/{draftId}`. */
+/** Delete a draft - DELETE `/social-sets/{id}/drafts/{draftId}`. */
 const deleteDraftEffect = (id: string): TypefullyEffect<void> =>
   resolveSocialSetIdEffect().pipe(
     Effect.flatMap((socialSetId) =>
@@ -285,7 +285,7 @@ const deleteDraftEffect = (id: string): TypefullyEffect<void> =>
     ),
   );
 
-/** List drafts — GET `/social-sets/{id}/drafts` (returns the `{ results }` envelope). */
+/** List drafts - GET `/social-sets/{id}/drafts` (returns the `{ results }` envelope). */
 const listDraftsEffect = (): TypefullyEffect<Publisher.PublisherDraft[]> =>
   resolveSocialSetIdEffect().pipe(
     Effect.flatMap((socialSetId) =>
@@ -299,7 +299,7 @@ const listDraftsEffect = (): TypefullyEffect<Publisher.PublisherDraft[]> =>
 //
 
 // Typefully's API does not permit browser CORS (its preflight rejects the `X-API-KEY` header), so
-// route requests through the DXOS edge CORS proxy — mirrors plugin-ideogram's `proxyFetchLegacy` use.
+// route requests through the DXOS edge CORS proxy - mirrors plugin-ideogram's `proxyFetchLegacy` use.
 // Effect's `FetchHttpClient` calls `fetch(url, init)` with a string url, so a thin adapter suffices.
 const proxyFetch: typeof globalThis.fetch = (input, init) => {
   const href = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;

@@ -34,10 +34,10 @@ const MessageModuleContainer = ({ space, attendableId }: { space: Space; attenda
       : Query.select(Filter.nothing()),
   );
   // Read the selection under the mailbox object's context (matching MailboxModule), not this cell's
-  // positional attendableId — sibling ModuleContainer cells have independent attention targets.
+  // positional attendableId - sibling ModuleContainer cells have independent attention targets.
   const selectedId = useSelection(mailbox ? GraphPath.getObjectPathFromObject(mailbox) : attendableId, 'single');
   const selected = messages.find((candidate) => candidate.id === selectedId);
-  // The clicked message alone is the subject — `MessageArticle` looks its conversation up by `threadId`
+  // The clicked message alone is the subject - `MessageArticle` looks its conversation up by `threadId`
   // against the mailbox passed as `companionTo`. The article's surface filter matches a single non-draft
   // Message, so handing it a thread array resolves no surface at all.
   return selected ? (

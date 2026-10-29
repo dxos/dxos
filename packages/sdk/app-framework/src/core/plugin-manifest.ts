@@ -16,7 +16,7 @@ import { PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
 /**
  * Default port the Vite plugin (`composerPlugin`) binds the dev server to.
  *
- * Shared single source of truth — `composerPlugin` reads it as the default
+ * Shared single source of truth - `composerPlugin` reads it as the default
  * port, and the host's "Load Dev Plugin" affordance pre-fills the manifest URL
  * with `http://localhost:${DEV_SERVER_PORT}/manifest.json`. Lives in
  * app-framework rather than `@dxos/protocols` because the constant is a
@@ -45,7 +45,7 @@ export class PluginManifestError extends BaseError.extend('PluginManifestError',
  * of `devEntry` as the dev-mode signal: it imports the entry directly from the
  * dev server, skips eager asset caching, and skips static stylesheet injection
  * (Vite handles CSS via runtime `<style>` injection during HMR). `assets` is not
- * required to enumerate every file in dev mode — chunks and styles flow through
+ * required to enumerate every file in dev mode - chunks and styles flow through
  * the dev server on demand.
  */
 export const Manifest = Schema.Struct({
@@ -54,7 +54,7 @@ export const Manifest = Schema.Struct({
   ...PluginManifestSchema.mapFields((fields) => Struct.omit(fields, ['assets'])).fields,
   /**
    * Relative asset paths. Relaxed vs the build `PluginManifestSchema` (which requires >= 1) because
-   * dev-server manifests list no assets — chunks/styles flow through the dev server on demand.
+   * dev-server manifests list no assets - chunks/styles flow through the dev server on demand.
    */
   assets: Schema.Array(Schema.String),
   /** Present only for dev-server manifests; points at the unbundled source entry. */
@@ -67,7 +67,7 @@ export type Manifest = Schema.Schema.Type<typeof Manifest>;
  * Resolved manifest with all asset paths converted to absolute URLs.
  *
  * `dev` reflects whether the source manifest declared a `devEntry`. Loaders branch
- * on this to skip offline caching and stylesheet injection — both are no-ops (or
+ * on this to skip offline caching and stylesheet injection - both are no-ops (or
  * actively wrong) when the plugin is being served by a Vite dev server.
  */
 export type ResolvedManifest = Pick<Manifest, 'key' | 'name' | 'version' | 'dependencies'> & {

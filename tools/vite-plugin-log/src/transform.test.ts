@@ -72,7 +72,7 @@ describe('transform', () => {
     expect(result).toContain('globalThis.DX_LOG_FILES&&globalThis.DX_LOG_FILES.register(__dxlog_file);');
   });
 
-  test('registerFiles defaults off — no registration line', ({ expect }) => {
+  test('registerFiles defaults off - no registration line', ({ expect }) => {
     const code = sourceCode`
     import { log } from '@dxos/log';
     log("hello");

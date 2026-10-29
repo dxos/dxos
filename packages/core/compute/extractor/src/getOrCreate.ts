@@ -27,7 +27,7 @@ export interface GetOrCreateOptions<T> {
  * match exists, the candidate's fields are merged into it (returning `{ object, created: false }`);
  * otherwise the candidate is returned as-is (`created: true`).
  *
- * NEVER calls `db.add` — the returned object is uncommitted. The dispatcher persists.
+ * NEVER calls `db.add` - the returned object is uncommitted. The dispatcher persists.
  */
 export const getOrCreate = <S extends Type.AnyObj>(
   type: S,

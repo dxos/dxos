@@ -20,7 +20,7 @@ const make = () =>
       Self-introspection: read this Composer browser tab's own runtime logs from
       the local IndexedDB log store. Enable to triage bugs, explain unexpected
       behavior, find noisy code paths, or verify that an action took effect.
-      Read-only and bounded — never modifies the log store.
+      Read-only and bounded - never modifies the log store.
     `,
     agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations }),
@@ -38,14 +38,14 @@ const make = () =>
         - The user reports a bug, an error toast, or unexpected behavior. Look at logs first.
         - The user asks "why is X slow / loud / failing". Aggregate by message or file to find
           the source.
-        - You want to verify your own actions had effect — check for the relevant log line
+        - You want to verify your own actions had effect - check for the relevant log line
           afterward.
 
         How to use it:
         - Always pass the smallest filter you can. Prefer "filters" (LOG_FILTER syntax) over
           "grep".
         - For triage, start with groupBy: "level" or groupBy: "message" + aggregate: "count".
-        - Use since/until to focus on the recent past — start with the last 5 minutes.
+        - Use since/until to focus on the recent past - start with the last 5 minutes.
         - For ECHO query traces, queries are tagged with c.debugLabel; group by
           context.debugLabel.
         - Hard limits: max 1000 entries, max 1000 buckets, max 25 samples per bucket.
@@ -53,7 +53,7 @@ const make = () =>
 
         Do NOT:
         - Dump all logs without aggregation; you will exhaust your context window.
-        - Treat the absence of a log as proof — the user's logFilter config may suppress
+        - Treat the absence of a log as proof - the user's logFilter config may suppress
           trace-level rows.
       `,
     }),

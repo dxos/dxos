@@ -514,7 +514,7 @@ const formatSqliteMode = (value: number | string | undefined): string | undefine
 const InfoItem = ({ label, value }: { label: string; value?: string }) => (
   <>
     <dt className='text-neutral-400'>{label}</dt>
-    <dd className='truncate'>{value ?? '—'}</dd>
+    <dd className='truncate'>{value ?? '-'}</dd>
   </>
 );
 
@@ -596,12 +596,12 @@ const isMostlyPrintable = (data: Uint8Array): boolean => {
 };
 
 const truncateText = (value: string, maxLength: number): string =>
-  value.length > maxLength ? `${value.slice(0, maxLength)}…` : value;
+  value.length > maxLength ? `${value.slice(0, maxLength)}\u2026` : value;
 
 const formatHexPreview = (data: Uint8Array): string => {
   const hex = arrayToString(data);
   const previewLength = HEX_PREVIEW_BYTES * 2;
-  return hex.length > previewLength ? `${hex.slice(0, previewLength)}…` : hex;
+  return hex.length > previewLength ? `${hex.slice(0, previewLength)}\u2026` : hex;
 };
 
 const formatHexDump = (data: Uint8Array): string => {

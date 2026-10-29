@@ -20,7 +20,7 @@ const make = () =>
     instructions: Template.make({
       source: trim`
         You are an expert at working with spreadsheets.
-        The context object represents a Sheet — a collaborative spreadsheet backed by ECHO.
+        The context object represents a Sheet - a collaborative spreadsheet backed by ECHO.
 
         ## Reading data
 

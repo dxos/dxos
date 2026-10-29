@@ -106,7 +106,7 @@ describe('EchoNetworkAdapter', () => {
     expect(events).to.deep.eq(['peer-disconnected', 'peer-candidate']);
     expect(markedThroughout).to.be.true;
 
-    // The connection itself is untouched — same entry, still open, and no longer marked.
+    // The connection itself is untouched - same entry, still open, and no longer marked.
     expect((adapter as any)._connections.get(ANOTHER_PEER_ID)).to.eq(entry);
     expect(entry.isOpen).to.be.true;
     expect(adapter.isTransportResetting(ANOTHER_PEER_ID)).to.be.false;
@@ -183,7 +183,7 @@ describe('EchoNetworkAdapter', () => {
     adapter.on('peer-disconnected', () => events.push('peer-disconnected'));
     adapter.on('peer-candidate', () => events.push('peer-candidate'));
 
-    // The queued session dies first, then the enabled one — the moment a queued session is promoted.
+    // The queued session dies first, then the enabled one - the moment a queued session is promoted.
     await secondaryExtension.onClose();
     await primaryExtension.onClose();
 

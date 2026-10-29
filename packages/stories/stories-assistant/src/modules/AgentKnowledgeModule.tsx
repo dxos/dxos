@@ -11,7 +11,7 @@ import { Filter } from '@dxos/echo';
 import * as AgentKnowledge from '@dxos/plugin-agent/AgentKnowledge';
 import { useQuery } from '@dxos/react-client/echo';
 
-/** What the space's first agent knows — its conversations and knowledge graph — beside the chats. */
+/** What the space's first agent knows - its conversations and knowledge graph - beside the chats. */
 export const AgentKnowledgeModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const space = Hooks.useActiveSpace();
   const [agent] = useQuery(space?.db, Filter.type(Agent.Agent));

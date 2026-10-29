@@ -38,7 +38,7 @@ import { projectContext, renderDelegationBrief } from './task-brief.ts';
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
  * ability to write a document, the project verbs that file what it wrote, and a shell for a task
- * that builds or runs something. The project's own skill arrives with the subject binding — a
+ * that builds or runs something. The project's own skill arrives with the subject binding - a
  * `Project` carries it as an annotation. A key with no plugin behind it binds nothing: the binder
  * drops a ref it cannot resolve.
  */
@@ -84,7 +84,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // action runs from knows the tasks and nothing else.
         //
         // One chat can only be filed under one project, and its opening prompt tells the agent to
-        // file what it makes into THAT project — so a list spanning two is rejected rather than
+        // file what it makes into THAT project - so a list spanning two is rejected rather than
         // silently filed under whichever came first. The UI cannot produce one (a checked set comes
         // from a single list), but the operation is a skill verb an agent calls with any refs.
         // A task with no project rides along: nothing about it contradicts the chosen one.
@@ -104,7 +104,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         });
 
         // The tasks join the chat's checklist in the order they were given, which is the order the
-        // list showed them — the reader's reading order is the agent's working order.
+        // list showed them - the reader's reading order is the agent's working order.
         Obj.update(chat, (chat) => {
           chat.tasks.push(...tasks.map((task) => Ref.make(task)));
         });
@@ -161,7 +161,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* Database.flush();
 
         // Several tasks leave the chat unnamed, and its opening prompt never passes through the chat
-        // UI that names a chat after its first message — so it is named from what it was handed.
+        // UI that names a chat after its first message - so it is named from what it was handed.
         if (!chat.name) {
           yield* Operation.schedule(
             AssistantOperation.UpdateChatName,
@@ -174,7 +174,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // lands on the session holding the tasks rather than on a fresh, empty one. Best-effort like the
         // opening turn below: the delegation is durable either way.
         // The same for each source object, so the companion beside the email a task came from shows the
-        // session too — and, when opening the companion, for whatever the reader is looking at, since
+        // session too - and, when opening the companion, for whatever the reader is looking at, since
         // that is the plank it opens beside.
         const attended = openCompanion ? yield* attendedObjects : [];
         for (const companionTo of [...(project ? [project] : []), ...sources, ...attended]) {
@@ -195,12 +195,12 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
           }
         }
 
-        // The reader stays where they delegated from — the project's ledger, whose pipeline chart
-        // shows the session as it starts — so the operation does not navigate (it only selects the
+        // The reader stays where they delegated from - the project's ledger, whose pipeline chart
+        // shows the session as it starts - so the operation does not navigate (it only selects the
         // companion's chat); the chart's session lane is the way into the chat as a plank.
         //
-        // Best-effort and deliberately not fatal: the delegation itself is already durable — the
-        // chat exists, carries the task, and is filed under the project — so a host with no agent
+        // Best-effort and deliberately not fatal: the delegation itself is already durable - the
+        // chat exists, carries the task, and is filed under the project - so a host with no agent
         // runtime (a test harness, a headless client) still delegates, and the reader can send the
         // first turn themselves.
         //
@@ -232,7 +232,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
 
 /**
  * Composer's opening prompt: the tasks by address, so the agent starts from them rather than finding
- * them, and fenced to exactly these — a project's other tasks sit one hop away and are not this
+ * them, and fenced to exactly these - a project's other tasks sit one hop away and are not this
  * session's to work. Its first line is all the collapsed brief shows in the chat.
  */
 const OPENING_PROMPT = 'You have been assigned the tasks below.';
@@ -338,7 +338,7 @@ const bindDelegationContext = Effect.fnUntraced(function* (
 
 /**
  * The objects behind the attended graph nodes and their ancestors (a message open beside its mailbox
- * attends `…/mailbox/message`, and the companion opens on the mailbox plank).
+ * attends `.../mailbox/message`, and the companion opens on the mailbox plank).
  */
 const attendedObjects = Effect.gen(function* () {
   const attention = yield* Capability.getOption(AttentionCapabilities.Attention);

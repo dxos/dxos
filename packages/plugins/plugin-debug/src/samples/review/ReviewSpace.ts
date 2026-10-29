@@ -28,7 +28,7 @@ export type Options = {
 export const make = ({ loadAsset = fetchAsset }: Options = {}) => {
   const partials = { media: makeMedia(loadAsset), work: Work };
   return SampleSpace.make({
-    space: { name: 'Composer — Review queue', icon: 'medal-military', hue: 'green' },
+    space: { name: 'Composer - Review queue', icon: 'medal-military', hue: 'green' },
     reference: REFERENCE,
     partials,
     build: (partials) =>

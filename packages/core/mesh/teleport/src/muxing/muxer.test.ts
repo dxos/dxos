@@ -294,8 +294,8 @@ describe('Muxer', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 500 });
 
-    // A destroyed muxer ends both channel readables — cleanly when there is no error, with a
-    // rejection when there is — so either settlement counts as the stream having been closed.
+    // A destroyed muxer ends both channel readables - cleanly when there is no error, with a
+    // rejection when there is - so either settlement counts as the stream having been closed.
     void stream1.readable.getReader().closed.then(inc, inc);
     void stream2.readable.getReader().closed.then(inc, inc);
 

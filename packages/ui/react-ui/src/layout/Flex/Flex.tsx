@@ -24,10 +24,10 @@ export type FlexProps = {
 };
 
 /**
- * One-axis layout box: the primitive that replaces hand-written `flex …` wrapper divs.
+ * One-axis layout box: the primitive that replaces hand-written `flex ...` wrapper divs.
  *
  * `gap` is restricted to the named steps of the theme spacing ramp (see {@link Gap}), which is the
- * point of the prop — an off-ramp `gap-2`/`gap-3` literal in a container is the drift it prevents.
+ * point of the prop - an off-ramp `gap-2`/`gap-3` literal in a container is the drift it prevents.
  * Anything the props don't cover (padding, sizing, overflow, colour) goes through `classNames`; the
  * component deliberately grows no padding or colour props, since components own their own spacing.
  *
@@ -38,8 +38,8 @@ export type FlexProps = {
  *
  * @example
  * ```tsx
- * <Flex column gap='sm'>…</Flex>
- * <Flex gap='sm' justify='end'>…</Flex>
+ * <Flex column gap='sm'>...</Flex>
+ * <Flex gap='sm' justify='end'>...</Flex>
  * <Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Flex>
  * ```
  */

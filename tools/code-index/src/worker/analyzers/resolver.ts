@@ -10,7 +10,7 @@ import type { Resolve } from './common.ts';
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts'];
 
-/** `./dist/types/src/x/index.d.ts` → `src/x/index`: the declaration emitted for a source module. */
+/** `./dist/types/src/x/index.d.ts` -> `src/x/index`: the declaration emitted for a source module. */
 const DECLARATION = /^\.\/dist\/types\/(.+)\.d\.[cm]?ts$/;
 
 type ImportsMap = Readonly<Record<string, unknown>>;
@@ -48,7 +48,7 @@ const importsEntry = (imports: ImportsMap, specifier: string): { target: unknown
 };
 
 /**
- * Resolves a `#subpath` import whose `source` condition is itself conditional — the shape `dx-plugin`
+ * Resolves a `#subpath` import whose `source` condition is itself conditional - the shape `dx-plugin`
  * writes for `#capabilities`, pointing each runtime at a generated, gitignored `gen/<env>.ts` slice.
  * The generator reads the barrel its `types` target was emitted from, so that source module is what
  * the import stands for, whether or not the slices exist in this checkout.

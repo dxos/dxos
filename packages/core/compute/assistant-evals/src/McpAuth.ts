@@ -18,7 +18,7 @@ export type MintOptions = {
 
 const DEFAULT_LABEL = 'dxos assistant-evals';
 
-/** Loopback, where a cleartext hop never leaves the machine — a local stack and this module's tests. */
+/** Loopback, where a cleartext hop never leaves the machine - a local stack and this module's tests. */
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', '[::1]', 'localhost']);
 
 const expectStatus = async (response: Response, status: number, step: string): Promise<void> => {
@@ -47,8 +47,8 @@ const mintOrigin = (edgeUrl: string): string => {
  * Mints an identity-bound API token for the deployed MCP worker, with no browser involved.
  *
  * It is the credential a CI job or an agent holds in place of a HALO key (`hub-service/README.md`
- * § API tokens in dxos/edge): minted once with a verifiable presentation — the same proof this
- * identity gives db-service and EDGE on every connection — and presented to `/mcp` as a bearer
+ * § API tokens in dxos/edge): minted once with a verifiable presentation - the same proof this
+ * identity gives db-service and EDGE on every connection - and presented to `/mcp` as a bearer
  * thereafter, where hub resolves it back to the identity. The worker serves the spaces the
  * identity's agent holds, so nothing here names a space: replication is what grants access.
  */

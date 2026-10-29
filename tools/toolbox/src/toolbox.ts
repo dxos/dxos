@@ -27,7 +27,7 @@ const raise = (err: Error) => {
 /**
  * Export subpaths that ship a bundler plugin; consumed from dist in every runtime (see `pkg-lint`'s
  * `build-tool-source-export` rule). A package whose bundler plugin sits at the overloaded `./plugin`
- * subpath — where `@dxos/plugin-*` packages put browser code — opts out via `withCustomExports`
+ * subpath - where `@dxos/plugin-*` packages put browser code - opts out via `withCustomExports`
  * instead, since moon tags (which `pkg-lint` uses to tell the two apart) aren't visible here.
  */
 const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
@@ -226,13 +226,13 @@ export class Toolbox {
   /**
    * Generates `.changeset/config.json` with the two fixed lockstep VERSION groups derived from the
    * workspace graph:
-   * - Group A — published core/SDK, plus every other versioned private `@dxos` package (internal
+   * - Group A - published core/SDK, plus every other versioned private `@dxos` package (internal
    *   tooling/tests, e.g. `@dxos/toolbox`, the `vite-plugin-*`s, the `*-e2e` suites). The private members
    *   version in lockstep with core but never publish (`privatePackages.tag: false`), so their versions
    *   stay in sync rather than drifting. Version-less private packages have nothing to sync and are left out.
-   * - Group B — every `@dxos/plugin-*` and `@dxos/cli`.
+   * - Group B - every `@dxos/plugin-*` and `@dxos/cli`.
    *
-   * Apps are NOT in Changesets at all — they're in `ignore` (Composer app/crx/dxos-org, docs, todomvc,
+   * Apps are NOT in Changesets at all - they're in `ignore` (Composer app/crx/dxos-org, docs, todomvc,
    * tasks, testbench-app, and the storybook *apps*). They deploy via their own workflows and never publish;
    * Composer is versioned by its release workflow, the rest are unversioned. Keeping them out of Changesets
    * means one authoring flow (only packages get changesets) and no version-skipping (app cadence never
@@ -247,7 +247,7 @@ export class Toolbox {
     // Apps are unversioned/deploy-only: excluded from the publish groups AND from Changesets entirely (see
     // `ignore` below). They deploy via their own workflows and never publish to npm; Composer's version is
     // bumped by its release workflow, not Changesets. (`tasks` is intentionally unscoped. The published
-    // storybook *libraries* — @dxos/storybook-addon-logger/-utils — are NOT apps and stay in Group A.)
+    // storybook *libraries* - @dxos/storybook-addon-logger/-utils - are NOT apps and stay in Group A.)
     const apps = [
       '@dxos/composer-app',
       '@dxos/composer-crx',
@@ -265,16 +265,16 @@ export class Toolbox {
     for (const project of this.graph.projects) {
       const { name } = project;
       if (apps.includes(name)) {
-        continue; // Unversioned app — see `ignore`.
+        continue; // Unversioned app - see `ignore`.
       }
       if (name.startsWith('@dxos/plugin-') || name === '@dxos/cli') {
         groupB.push(name);
       } else if (!project.private) {
         groupA.push(name); // Published core/SDK.
       } else if (project.version) {
-        // Private but versioned — ride Group A so its version stays in lockstep with core; `privatePackages`
+        // Private but versioned - ride Group A so its version stays in lockstep with core; `privatePackages`
         // (below) versions it without publishing. Version-less private packages have nothing to keep in
-        // sync, so they stay out of both groups. (Non-@dxos packages never reach here — the graph is
+        // sync, so they stay out of both groups. (Non-@dxos packages never reach here - the graph is
         // filtered to @dxos/@braneframe, so fixtures/templates are already excluded.)
         groupA.push(name);
       }
@@ -284,7 +284,7 @@ export class Toolbox {
 
     const config = {
       $schema: 'https://unpkg.com/@changesets/config@4.0.0/schema.json',
-      // git-based, not GitHub API-based — see .github/RELEASE-SPEC.md for why.
+      // git-based, not GitHub API-based - see .github/RELEASE-SPEC.md for why.
       changelog: '@changesets/changelog-git',
       commit: false,
       // Pinned rather than left on `auto` so a generated CHANGELOG matches what CI's `oxfmt --check` expects.
@@ -297,11 +297,11 @@ export class Toolbox {
       // consumer resolving the group is not pinned to one exact version.
       bumpVersionsWithWorkspaceProtocolOnly: true,
       // Two lockstep version groups: [A] published core/SDK + all other versioned private @dxos packages
-      // (internal tooling/tests — versioned in sync with core but not published), [B] plugins + cli. Apps
+      // (internal tooling/tests - versioned in sync with core but not published), [B] plugins + cli. Apps
       // are unversioned (see `ignore`).
       fixed: [groupA, groupB],
       linked: [],
-      // Apps are deploy-only — versioned by their own workflows (Composer) or not at all (docs/examples/
+      // Apps are deploy-only - versioned by their own workflows (Composer) or not at all (docs/examples/
       // storybook). Changesets neither versions nor ripple-bumps them.
       ignore: apps,
       // Version private members of the fixed groups (the internal @dxos packages in Group A, plus any

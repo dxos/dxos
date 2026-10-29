@@ -27,7 +27,7 @@ import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, bl
  * Weight and slant must be carried by the theme's OWN classes, on the element.
  *
  * The theme sets `font-synthesis: none` and pins `font-variation-settings: 'wght' 400` at `:root`, so
- * a bare `font-weight: 700` computes correctly and renders as regular text — nothing drives the
+ * a bare `font-weight: 700` computes correctly and renders as regular text - nothing drives the
  * variable font's axis. Only the literal `.font-bold` / `.italic` classes set those axes, which a
  * descendant variant like `[&_strong]:font-bold` never applies.
  */
@@ -71,7 +71,7 @@ const schema = new PmSchema({
   },
 });
 
-/** Marked runs become text nodes carrying ProseMirror marks — this is what renders as rich text. */
+/** Marked runs become text nodes carrying ProseMirror marks - this is what renders as rich text. */
 const toInline = (runs: readonly Inline[]) =>
   runs
     .filter((run) => run.text.length > 0)
@@ -85,7 +85,7 @@ const toInline = (runs: readonly Inline[]) =>
 const EMPTY_BLOCK: Block = { type: 'paragraph', content: [], range: [0, 0] };
 
 /**
- * Layout only — everything font-related is a class on the node itself (see {@link HEADING_CLASSES}).
+ * Layout only - everything font-related is a class on the node itself (see {@link HEADING_CLASSES}).
  * The preflight resets list markers, so the bullets still need styling here.
  */
 const CONTENT_CLASSES = [
@@ -137,7 +137,7 @@ const inlineOf = (node: PmNode): Inline[] => {
 };
 
 /**
- * Read the editor's document back as a flat block list — lists are ungrouped again, since the lens
+ * Read the editor's document back as a flat block list - lists are ungrouped again, since the lens
  * addresses one markdown line per block. Ranges are the lens's concern, not the editor's.
  */
 const fromDoc = (doc: PmNode): Block[] => {
@@ -194,7 +194,7 @@ export const RichTextEditor = ({ text }: { text: Text.Text }) => {
   /**
    * Replace the document with what the lens projects, as a transaction rather than a fresh state: it
    * preserves plugin state, and the `REMOTE` marker stops `dispatchTransaction` writing it straight back
-   * through the lens — which would echo every incoming change into an outgoing one.
+   * through the lens - which would echo every incoming change into an outgoing one.
    */
   const reconcile = useCallback(() => {
     const editor = viewRef.current;
@@ -245,7 +245,7 @@ export const RichTextEditor = ({ text }: { text: Text.Text }) => {
     // Mount-only: the editor owns its own state from here, and remounting would drop the selection.
   }, [text, reconcile]);
 
-  // Reconcile a change that came from elsewhere — the markdown editor, or another peer. Skipped while
+  // Reconcile a change that came from elsewhere - the markdown editor, or another peer. Skipped while
   // this editor has focus so a remote change never fights the local caret; blur catches up.
   const signature = signatureOf(blocks);
   useEffect(() => {

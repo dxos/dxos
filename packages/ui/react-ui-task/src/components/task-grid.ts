@@ -5,7 +5,7 @@
 /**
  * The geometry a task's sections share: a fixed glyph column, then the content.
  *
- * Shared as a class list rather than as one grid, because the sections do not nest — properties,
+ * Shared as a class list rather than as one grid, because the sections do not nest - properties,
  * questions and history each own their own element and could not subgrid onto a common parent
  * without becoming one component. A fixed first column is what makes them line up anyway: 24px is
  * 24px in every section, where an `auto` or `min-content` column would size to each section's own
@@ -17,7 +17,7 @@ export const TASK_GRID = 'grid grid-cols-[1.5rem_1fr] gap-x-1 items-start';
 export const TASK_GRID_CONTENT = 'col-start-2';
 
 /**
- * The glyph cell: one line box tall, so what it centres is the centre of its row's FIRST line — a
+ * The glyph cell: one line box tall, so what it centres is the centre of its row's FIRST line - a
  * cell as tall as the row would float the glyph down a wrapped paragraph.
  */
 export const TASK_GRID_ICON = 'col-start-1 grid place-items-center h-[1lh]';

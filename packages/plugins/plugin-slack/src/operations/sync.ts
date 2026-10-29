@@ -64,8 +64,8 @@ const friendlyChannelName = (conversation: SlackConversation): string => {
  *   (`U0B0X8EKP1Q`) while `username` is human-readable (`composer`).
  * - `sender.email` if the user-info lookup returned one.
  * - `blocks` is currently a single `Text` block from the Slack `text` field.
- *   Slack's rich-text `blocks` array is intentionally NOT mapped yet — it
- *   would require a Slack-block → ContentBlock translator that's a separate
+ *   Slack's rich-text `blocks` array is intentionally NOT mapped yet - it
+ *   would require a Slack-block -> ContentBlock translator that's a separate
  *   piece of work.
  */
 const mapSlackMessage = (
@@ -161,7 +161,7 @@ export const findOrCreateChannelForTarget: (input: {
  * for messages that have only `bot_id` (those are resolved separately via
  * {@link resolveBots}) since `users.info` does not accept bot ids.
  *
- * Failed lookups (deleted users, missing scopes) silently fall through —
+ * Failed lookups (deleted users, missing scopes) silently fall through -
  * `mapSlackMessage` substitutes a layered name fallback when the resolved
  * record is missing, so a missing scope degrades gracefully rather than
  * blocking the sync.
@@ -200,7 +200,7 @@ const resolveUsers = (
  * Resolves Slack bot ids referenced in `messages` to {@link SlackApi.SlackBot}
  * records via `bots.info`, with the same per-sync cache + silent-failure
  * behavior as {@link resolveUsers}. Bot-posted messages (incoming-webhook
- * posts, legacy bot users) carry only `bot_id` (`B…`); their friendly name
+ * posts, legacy bot users) carry only `bot_id` (`B...`); their friendly name
  * is not reachable through `users.info`.
  */
 const resolveBots = (
@@ -241,7 +241,7 @@ const resolveBots = (
  *  1. Resolve the binding's credential (`spec.source`) and local Channel (`spec.target`).
  *  2. Ask Slack for messages since the binding's `value` (or all history on first sync).
  *  3. Resolve referenced user / bot ids in one batch (cached per sync).
- *  4. Map each Slack message → `@dxos/types` Message and append the batch to
+ *  4. Map each Slack message -> `@dxos/types` Message and append the batch to
  *     the channel's feed.
  *  5. Write the newest `ts` seen back onto the binding's `value` so the next
  *     sync is incremental, plus `lastTick` / `lastError`.

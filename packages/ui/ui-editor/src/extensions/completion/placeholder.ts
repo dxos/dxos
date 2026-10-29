@@ -35,7 +35,7 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
 
         // React to actual user activity only. The empty `view.update([])`
         // dispatched from the timeout below carries no doc/selection/focus
-        // change, so it falls through here as a no-op — that's how the
+        // change, so it falls through here as a no-op - that's how the
         // freshly-set widget survives long enough for the decoration
         // provider to read it. Without this gate, the unconditional reset
         // would clobber the decoration in the same tick and the placeholder

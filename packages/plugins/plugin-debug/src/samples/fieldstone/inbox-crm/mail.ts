@@ -1665,9 +1665,9 @@ Engineering Manager, Alien Labs`,
         starred: true,
         body: `Hi Astrid,
 
-We'd be glad to host you, and we have midweek dates free in that window. The Dune Room seats twelve with a screen and has a breakout space next door. Ten rooms for three nights, full board, comes to €9,800, including coffee breaks and dinner on the last night in the old salt store. Fibre runs throughout the lodge, and teams regularly spend whole days on calls here.
+We'd be glad to host you, and we have midweek dates free in that window. The Dune Room seats twelve with a screen and has a breakout space next door. Ten rooms for three nights, full board, comes to \u20AC9,800, including coffee breaks and dinner on the last night in the old salt store. Fibre runs throughout the lodge, and teams regularly spend whole days on calls here.
 
-We can arrange a minibus from Lisbon airport for €180 each way. The drive is about an hour.
+We can arrange a minibus from Lisbon airport for \u20AC180 each way. The drive is about an hour.
 
 We'd need a 30% deposit to hold the dates, with the balance due two weeks before arrival.
 
@@ -1979,7 +1979,7 @@ Omar`,
         time: [16, 0],
         body: `Hi Astrid,
 
-Submitted my KubeCon expenses: flights, three hotel nights and the booth materials. €1,940 total, receipts are in the expense tool.
+Submitted my KubeCon expenses: flights, three hotel nights and the booth materials. \u20AC1,940 total, receipts are in the expense tool.
 
 We scanned 212 badges at the booth. I've sent the list to Lucía, and about 30 asked for a trial.
 
@@ -2006,7 +2006,7 @@ Astrid`,
         time: [15, 20],
         body: `Hi Astrid,
 
-What does the home office stipend cover? I'm looking at a monitor and a desk chair, about €650 together. Do I buy first and claim it back, or does it need approval up front?
+What does the home office stipend cover? I'm looking at a monitor and a desk chair, about \u20AC650 together. Do I buy first and claim it back, or does it need approval up front?
 
 Hana`,
       },
@@ -2015,7 +2015,7 @@ Hana`,
         to: ['hana'],
         day: 9,
         time: [9, 0],
-        body: `Both. It's €800 in your first year for anything that makes your desk work better, and €300 a year after that. Buy first, then submit the receipts in the expense tool and I'll approve them.
+        body: `Both. It's \u20AC800 in your first year for anything that makes your desk work better, and \u20AC300 a year after that. Buy first, then submit the receipts in the expense tool and I'll approve them.
 
 Astrid`,
       },
@@ -2208,7 +2208,7 @@ Astrid`,
         to: ['astrid'],
         day: 41,
         time: [13, 15],
-        body: `My charger died. Replacement was €79, receipt is in the expense tool.
+        body: `My charger died. Replacement was \u20AC79, receipt is in the expense tool.
 
 Felix`,
       },
@@ -2255,7 +2255,7 @@ June`,
         to: ['astrid'],
         day: 9,
         time: [8, 45],
-        body: `Paid the 30% deposit to Saltmarsh Lodge, €2,940. Expense report is in for your approval. The balance of €6,860 is due two weeks before we arrive.
+        body: `Paid the 30% deposit to Saltmarsh Lodge, \u20AC2,940. Expense report is in for your approval. The balance of \u20AC6,860 is due two weeks before we arrive.
 
 Lucía`,
       },
@@ -2307,7 +2307,7 @@ const loginOf = (person: Person.Person): string =>
   (person.fullName ?? '')
     .split(' ')[0]
     .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036F]/g, '')
     .toLowerCase();
 
 const GITHUB_FOOTER = `Reply to this email directly, view it on GitHub, or unsubscribe.
@@ -2817,7 +2817,7 @@ const SUMMARIES: Partial<Record<ThreadKey, string>> = {
   stripeBilling:
     'June is moving Cairn to per-seat plus metered storage on Stripe. Existing subscriptions switch without proration. A working session fixed prepay credits on the metered line; the migration runs over two weeks.',
   offsite:
-    'Saltmarsh Lodge hosts the Q4 offsite: ten people, three nights, full board, €9,800. Deposit paid. Two tables of five in the Dune Room, and the terrace for the second afternoon. Final headcount sent.',
+    'Saltmarsh Lodge hosts the Q4 offsite: ten people, three nights, full board, \u20AC9,800. Deposit paid. Two tables of five in the Dune Room, and the terrace for the second afternoon. Final headcount sent.',
 };
 
 //

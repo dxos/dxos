@@ -25,7 +25,7 @@ export type PluginPromptProps = {
 
 /**
  * Agent-facing plugin prompt: rendered when the assistant needs a capability that an installed but
- * disabled plugin provides. Enabling changes the user's workspace, so the agent may only ask —
+ * disabled plugin provides. Enabling changes the user's workspace, so the agent may only ask -
  * the button here is the only path that turns the plugin on.
  */
 export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
@@ -50,7 +50,7 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
     setFailed(false);
     try {
       // `invokePromise` turns a handler failure into `{ error }` rather than rejecting, and the
-      // operation itself reports a plugin it could not enable in `rejected` — neither reaches a
+      // operation itself reports a plugin it could not enable in `rejected` - neither reaches a
       // `catch`, so both are read here.
       const { data, error } = await invokePromise(Operations.RegistryOperation.EnablePlugins, { ids: [pluginId] });
       if (error || data?.rejected.some(({ id }) => id === pluginId)) {

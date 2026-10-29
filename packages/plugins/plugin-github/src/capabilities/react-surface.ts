@@ -56,7 +56,7 @@ export default Capability.makeModule(() =>
         props: ({ data: { subject, menu } }) => ({ subject, menu }),
       }),
       // The pull request is the article's subject, and the walkthrough it may have is something the
-      // article renders — so a pull request with no narration yet still opens, and offers to write one.
+      // article renders - so a pull request with no narration yet still opens, and offers to write one.
       Surface.create({
         id: 'pullRequestArticle',
         filter: AppSurface.object(AppSurface.Article, PullRequest.PullRequest),

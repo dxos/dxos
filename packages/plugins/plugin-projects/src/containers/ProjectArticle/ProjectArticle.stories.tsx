@@ -53,7 +53,7 @@ const TASK_TITLE = 'Ship the tasks section';
 // Carries both reference forms the markdown surfaces linkify: a bare URL and a `#nnn` issue.
 const LINK_TASK_TITLE = 'Follow up on #12752 before the release';
 const LINK_TASK_DESCRIPTION =
-  'Spec at https://github.com/dxos/dxos/pull/12752 — the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
+  'Spec at https://github.com/dxos/dxos/pull/12752 - the preview build is at https://pr-12752-composer-dev.dxos.workers.dev, and it supersedes #12431.';
 const ARTIFACT_TITLE = 'Design Notes';
 const TASK_ARTIFACT_TITLE = 'Cupping Sheet';
 const TASK_QUESTION = 'Should the tasks section ship enabled by default?';
@@ -62,7 +62,7 @@ const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 const OTHER_PROJECT_NAME = 'Project 2';
-const MOVE_ACTION_LABEL = 'Move to…';
+const MOVE_ACTION_LABEL = 'Move to...';
 
 /**
  * The seeded graph, kept so a play function can mutate the source objects and assert the article
@@ -110,7 +110,7 @@ const createProject = (space: Space, storyGeneration: number) => {
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
   // An exchange in the log, written by the verbs that write it in the app rather than by hand: the
-  // pair is what the detail pane renders as two lines — the question an agent asked, and the answer
+  // pair is what the detail pane renders as two lines - the question an agent asked, and the answer
   // it was resumed on. `answer` refuses an id that is not in this task's log, so seeding through
   // them is also the check that the two entries are joined.
   const question = Task.ask(task, {
@@ -168,7 +168,7 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  // A second project, so a task row's `Move to…` has somewhere to go.
+  // A second project, so a task row's `Move to...` has somewhere to go.
   const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
 
   seeded = { generation: storyGeneration, space, project, taskSet, task, destination };
@@ -177,7 +177,7 @@ const createProject = (space: Space, storyGeneration: number) => {
 /** Waits for the seeded graph a play function asserts against; the writes happen at client init. */
 const seedContent = async () => {
   // `play` runs once the story has mounted but not necessarily once the client has finished
-  // initializing — the project is created by the plugin's `onClientInitialized`.
+  // initializing - the project is created by the plugin's `onClientInitialized`.
   await waitFor(() => expect(seeded?.generation).toBe(generation), { timeout: 10_000 });
   const context = seeded;
   if (!context) {
@@ -187,7 +187,7 @@ const seedContent = async () => {
   return context;
 };
 
-/** Adds a task to the set the way the verbs do — array membership plus the lifecycle parent edge. */
+/** Adds a task to the set the way the verbs do - array membership plus the lifecycle parent edge. */
 const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, milestone?: Milestone.Milestone) => {
   const task = space.db.add(
     Task.make({ [Obj.Parent]: taskSet, title, status: 'todo', milestone: milestone && Ref.make(milestone) }),
@@ -202,7 +202,7 @@ const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, mileston
  * Waits for content that only appears once the story's own client has resolved the project's refs.
  * Each poll yields a frame and a resize the measured surfaces can act on, since testing-library's
  * polling alone produces neither. NOTE: this story still fails roughly one run in four because the
- * previous story's client is torn down asynchronously and can strip this story's resolver — the
+ * previous story's client is torn down asynchronously and can strip this story's resolver - the
  * article renders with every ref-gated section missing. Tracked in TASKS.md; `retry` covers it in
  * CI meanwhile.
  */
@@ -287,7 +287,7 @@ const meta = {
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
         SpacePlugin.make({}),
-        // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
+        // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires - the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
         // Contributes the `#123` decoration (`project.repo` is what it resolves against), the link
@@ -400,7 +400,7 @@ export const Sections: Story = {
     await expect(tablist.getBoundingClientRect().width).toBeGreaterThan(0);
 
     // Tasks: behind its own toolbar tab, so switch to it. The task title is the load-bearing
-    // assertion — an invalid surface id is dropped silently, leaving an empty panel.
+    // assertion - an invalid surface id is dropped silently, leaving an empty panel.
     await showTab(canvas, 'tasks');
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
@@ -428,7 +428,7 @@ export const TaskAction: Story = {
     await showTab(canvas, 'tasks');
     const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
 
-    // Scoped to this task's own row — every row carries a menu, so the seeded task has to be found
+    // Scoped to this task's own row - every row carries a menu, so the seeded task has to be found
     // through its title rather than by picking the first trigger on the page.
     const row = title.closest('[data-testid="taskList.item"]');
     await expect(row).toBeTruthy();
@@ -446,7 +446,7 @@ export const TaskAction: Story = {
     await expect(menu).not.toMatch(/\.label\b/);
 
     // The label the contribution carries (`capabilities/task-action.ts`); a rename there has to be
-    // made here too, which is the point — the assertion is that the row shows what was contributed.
+    // made here too, which is the point - the assertion is that the row shows what was contributed.
     const item = await screen.findByText(TASK_ACTION_LABEL, undefined, { timeout: 10_000 });
     await userEvent.click(item);
 
@@ -521,7 +521,7 @@ export const CopyPrompt: Story = {
 };
 
 /**
- * The row's `Move to…` action: it opens the project picker (a dialog the storybook layout hosts),
+ * The row's `Move to...` action: it opens the project picker (a dialog the storybook layout hosts),
  * and picking another project transfers the task into that project's task set.
  */
 export const MoveTaskToProject: Story = {
@@ -561,7 +561,7 @@ export const MoveTaskToProject: Story = {
  * Following a promoted item's link opens the task where the outline sits, and comes back from it.
  *
  * The host used to take the click and switch its own tab, through an `onSelectTask` callback passed
- * as Surface data; that channel is gone, so the outline's own behaviour stands — the section shows
+ * as Surface data; that channel is gone, so the outline's own behaviour stands - the section shows
  * the task's form, and Back returns to the outline. Re-routing this to the Tasks tab is the host's
  * to do through an operation (see TASKS.md Phase 15).
  */
@@ -600,7 +600,7 @@ export const DelegateCheckedTasks: Story = {
     await waitFor(() => expect(button).toBeEnabled(), { timeout: 10_000 });
     await userEvent.click(button);
 
-    // One chat holding both, in the order the list shows them — not the order they were ticked.
+    // One chat holding both, in the order the list shows them - not the order they were ticked.
     await waitFor(
       async () => {
         const chats = await space.db.query(Filter.type(Chat.Chat)).run();
@@ -658,7 +658,7 @@ export const TaskLink: Story = {
 
 /**
  * Every section stays live after its first paint. Each step below mutates the seeded objects the
- * way the operation verbs do and asserts the DOM follows — the failure this guards against is a
+ * way the operation verbs do and asserts the DOM follows - the failure this guards against is a
  * section that resolves once and then goes inert, which is how the previous parent-edge model
  * behaved (`Query.children()` never re-emitted on a member's property change).
  */
@@ -714,7 +714,7 @@ export const Updates: Story = {
     });
     await findPainted(canvas, ADDED_ARTIFACT);
 
-    // 6. And removing the ref must drop the card — the delete path splices this array rather than
+    // 6. And removing the ref must drop the card - the delete path splices this array rather than
     //    going through a collection.
     Obj.update(project, (project) => {
       project.artifacts = project.artifacts.filter((ref) => ref.target?.id !== artifact.id);

@@ -25,7 +25,7 @@ export const FileArticle = ({ role, subject: file, attendableId }: FileArticlePr
 
   return (
     // No `dx-document`: that constrains content to the reading column, which is right for prose and
-    // wrong for a preview — a PDF or image should use the full plank width.
+    // wrong for a preview - a PDF or image should use the full plank width.
     <Panel.Root role={role}>
       <Preview.Root
         type={rendered.type}

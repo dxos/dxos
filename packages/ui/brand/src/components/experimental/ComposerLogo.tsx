@@ -30,7 +30,7 @@ export const ComposerLogo = ({ classNames, size = 512 }: Util.ThemedClassName<{ 
 };
 
 /**
- * Shape: left semicircle ring (6 → 9 → 12 o'clock) with a
+ * Shape: left semicircle ring (6 -> 9 -> 12 o'clock) with a
  * horizontal-then-diagonal stepped edge at each open end, matching the
  * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
  */
@@ -45,7 +45,7 @@ const makeBrandLayerPath = (cx: number, cy: number, r1: number, r2: number, r3: 
     `M ${cx + topOuter} ${cy - r1}`,
     // Move left to 12-oclock.
     `L ${cx} ${cy - r1}`,
-    // Outer arc CW: 12 → 9 → 6 o'clock (through the west side).
+    // Outer arc CW: 12 -> 9 -> 6 o'clock (through the west side).
     `A ${r1} ${r1} 0 0 0 ${cx - r1} ${cy}`,
     `A ${r1} ${r1} 0 0 0 ${cx} ${cy + r1}`,
     // Bottom outer: extend right.
@@ -54,7 +54,7 @@ const makeBrandLayerPath = (cx: number, cy: number, r1: number, r2: number, r3: 
     `L ${cx + botInner} ${cy + r2}`,
     // Move left to inner 6-oclock.
     `L ${cx} ${cy + r2}`,
-    // Inner arc CCW: 6 → 9 → 12 o'clock (back through the west side).
+    // Inner arc CCW: 6 -> 9 -> 12 o'clock (back through the west side).
     `A ${r2} ${r2} 0 0 1 ${cx - r2} ${cy}`,
     `A ${r2} ${r2} 0 0 1 ${cx} ${cy - r2}`,
     // Top inner: extend right.

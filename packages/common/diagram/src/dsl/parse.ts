@@ -43,7 +43,7 @@ export type ParseResult = {
   commands: Scene.Command[];
   problems: Problem[];
   /**
-   * Source range of each `objectId` and `objectId/elementId` — the two spellings
+   * Source range of each `objectId` and `objectId/elementId` - the two spellings
    * `Diagnostics.Diagnostic.refs` uses, so a layout report can be shown against the line that
    * produced it rather than at the top of the document.
    */
@@ -119,7 +119,7 @@ export const read = (text: string): Reading => {
 
   /**
    * A coordinate the rest of the system can use. The grammar accepts exponent notation because the
-   * printer emits it, which also admits `1e309` — `parseFloat` turns that into `Infinity`, and an
+   * printer emits it, which also admits `1e309` - `parseFloat` turns that into `Infinity`, and an
    * infinite coordinate poisons layout, renders as nothing, and cannot be printed back at all
    * (`formatNumber` refuses it). Rejecting it here keeps `parse` and `print` accepting the same
    * documents.
@@ -134,7 +134,7 @@ export const read = (text: string): Reading => {
   };
 
   // Error recovery can leave a `Point` or `Range` holding one number instead of two, so every
-  // reader returns undefined rather than indexing past the end — `parse` reports problems, and a
+  // reader returns undefined rather than indexing past the end - `parse` reports problems, and a
   // reader that threw would take the whole document down with the line being typed.
   const readPoint = (node: SyntaxNode): Scene.Point | undefined => {
     const [first, second] = childrenOf(node).filter((child) => child.name === 'Number');
@@ -1138,7 +1138,7 @@ export const read = (text: string): Reading => {
       const range = ranges.get(command.object.id);
       problems.push({
         severity: 'warning',
-        message: `object "${command.object.id}" replaces the laid-out ${command.object.id === 'edges' ? 'connectors' : `"${command.object.id}"`}; use \`elements ${command.object.id} { … }\` to add to it instead.`,
+        message: `object "${command.object.id}" replaces the laid-out ${command.object.id === 'edges' ? 'connectors' : `"${command.object.id}"`}; use \`elements ${command.object.id} { ... }\` to add to it instead.`,
         from: range?.from ?? 0,
         to: range?.to ?? 0,
       });
@@ -1183,7 +1183,7 @@ export const toScene = (commands: readonly Scene.Command[]): Scene.Scene => {
           objects.push(command.object);
         } else {
           // `WorldObject.origin` is documented as "omit on upsert to keep the current position",
-          // which is also what the canvas builder does — diverging here would give the bench and
+          // which is also what the canvas builder does - diverging here would give the bench and
           // the linter a different scene than the drawing actually holds.
           const { origin } = objects[at];
           objects[at] =

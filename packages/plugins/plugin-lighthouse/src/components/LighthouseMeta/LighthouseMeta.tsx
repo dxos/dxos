@@ -194,7 +194,11 @@ const Vocabulary = ({ predicates, filter }: { predicates: Predicate[]; filter: s
                       predicate.iri
                     )}
                   </span>
-                  {predicate.range && <span className='text-xs text-fg-subtle'>→ {predicate.range}</span>}
+                  {predicate.range && (
+                    <span className='text-xs text-fg-subtle'>
+                      {'->'} {predicate.range}
+                    </span>
+                  )}
                 </Layout.Flex>
                 <Layout.Flex column classNames='min-w-0'>
                   <span className='whitespace-normal'>{predicate.description ?? predicate.label}</span>
@@ -268,7 +272,7 @@ const IssueItem = ({
                     <li key={index}>
                       <span className='text-xs text-fg-subtle'>
                         {ago(entry.t)} · {entry.by ?? t('issue-someone.label')}
-                        {entry.status ? ` → ${t(`issue-status.${entry.status}`)}` : ''}
+                        {entry.status ? ` -> ${t(`issue-status.${entry.status}`)}` : ''}
                       </span>{' '}
                       {entry.text}
                     </li>
@@ -500,7 +504,7 @@ const StorageTab = ({
         />
         <Stat
           label={t('storage-quads.label')}
-          value={store.quads !== undefined ? formatCount(store.quads) : '—'}
+          value={store.quads !== undefined ? formatCount(store.quads) : '-'}
           sub={store.graphs ? t('storage-graphs.label', { count: store.graphs.all }) : undefined}
         />
         <Stat
@@ -562,7 +566,7 @@ const StorageTab = ({
       <Layout.Grid gap='md' align='start' classNames='grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]'>
         <Section
           title={t('storage-snapshots.label')}
-          sub={`${ago(snapshots.oldest)} → ${ago(snapshots.newest)}`}
+          sub={`${ago(snapshots.oldest)} -> ${ago(snapshots.newest)}`}
           actions={
             prune &&
             onPrune && (

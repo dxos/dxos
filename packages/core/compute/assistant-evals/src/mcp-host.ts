@@ -36,7 +36,7 @@ export type StartMcpHostOptions = {
   /** Skill definitions to serve; each must carry the `operations` behind its tool ids. */
   readonly skills: readonly Skill.Definition[];
   /**
-   * Spaces a tool call may address. Omitted is unrestricted — which is what an eval wants, since the
+   * Spaces a tool call may address. Omitted is unrestricted - which is what an eval wants, since the
    * server is started before the harness has a space to name.
    */
   readonly spaceIds?: readonly SpaceId[];
@@ -52,14 +52,14 @@ export type StartMcpHostOptions = {
    * The registry the surface reads, resolved per call.
    *
    * The harness's own client registry, exactly as `dx mcp serve`'s local host uses the CLI client's
-   * — and never a second registry built here: constructing one rewrites the shared schema ASTs the
+   * - and never a second registry built here: constructing one rewrites the shared schema ASTs the
    * harness is already holding, and its next operation invocation then dies inside `Schema` with
    * "cannot read properties of undefined (reading 'encoding')".
    */
   readonly registry: () => Registry.Registry;
   /**
    * Serves `createUpload` over this stage, as `dx mcp serve` does. Omitted, the surface has no
-   * upload tool at all — which is what the deployed worker's own tool, not this one, is for.
+   * upload tool at all - which is what the deployed worker's own tool, not this one, is for.
    */
   readonly uploads?: LocalUpload.Stage;
   /** Secret the skill tokens derive from; omitted, a random one for this host's lifetime. */
@@ -69,21 +69,21 @@ export type StartMcpHostOptions = {
 };
 
 /**
- * Serves the projected MCP surface — `queryOperations` / `invokeOperation` / `loadSkill` — over
+ * Serves the projected MCP surface - `queryOperations` / `invokeOperation` / `loadSkill` - over
  * Streamable HTTP inside this process, dispatching into the caller's own operation invoker.
  *
  * In-process rather than `dx mcp serve` as a subprocess: an eval's space lives in the harness's own
  * client, which a second process cannot reach, and a CLI spawn would also make the eval depend on a
  * built binary and a bootstrapped profile. Every tool answers through `@dxos/mcp-server`'s own
  * dispatch functions against the harness's own registry, so what the eval measures is the deployed
- * surface's behavior — governance by skill, space resolution, input validation, ref qualification —
+ * surface's behavior - governance by skill, space resolution, input validation, ref qualification -
  * rather than a reimplementation.
  *
  * The transport is the MCP SDK's rather than effect's `McpServer.layerHttp`: registering the surface
  * through effect's MCP layer rewrites shared schema ASTs in place, after which the Composer
  * harness's next operation invocation dies inside `Schema` with "cannot read properties of undefined
- * (reading 'encoding')". Building the server before the harness does not avoid it — the damaged
- * schemas are ones both sides share — so the eval harness owns its transport instead.
+ * (reading 'encoding')". Building the server before the harness does not avoid it - the damaged
+ * schemas are ones both sides share - so the eval harness owns its transport instead.
  */
 export const startMcpHost = ({
   skills,
@@ -129,7 +129,7 @@ export const startMcpHost = ({
 
 /**
  * Registers the served skills and the operations behind them in the host's registry, the way
- * `dx mcp serve`'s local host does — and only what is missing, so nothing a plugin already
+ * `dx mcp serve`'s local host does - and only what is missing, so nothing a plugin already
  * contributed is re-registered under a second definition.
  */
 export const registerSkills = (registry: Registry.Registry, skills: readonly Skill.Definition[]): void => {
@@ -284,7 +284,7 @@ const dispatch = async (
       case McpServer.LoadSkill.name:
         return yield* McpServer.loadSkill(registry, gate, args.skill as string | undefined);
       case McpServer.InvokeOperation.name: {
-        // Built per call, because the invoker it closes over is the harness's — which exists only
+        // Built per call, because the invoker it closes over is the harness's - which exists only
         // once the eval's harness has booted.
         const host = yield* McpServer.host({ skills, spaceIds });
         return yield* McpServer.invoke(registry, host, args as Parameters<typeof McpServer.invoke>[2], gate);

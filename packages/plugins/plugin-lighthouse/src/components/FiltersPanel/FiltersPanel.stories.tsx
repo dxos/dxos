@@ -81,7 +81,7 @@ export const Empty: Story = {
   },
 };
 
-/** WEB QA-9's view: total ≤ 6000, 2+ rooms, a balcony, largest flat first; the chips under the panel. */
+/** WEB QA-9's view: total <= 6000, 2+ rooms, a balcony, largest flat first; the chips under the panel. */
 export const Active: Story = {
   args: { initial: filterView },
   play: async ({ canvasElement }) => {

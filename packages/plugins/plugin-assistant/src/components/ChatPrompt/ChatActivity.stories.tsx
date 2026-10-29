@@ -164,7 +164,7 @@ const STEPS: Step[] = [
   { activity: { phase: 'calling-tool', detail: 'search' }, hold: 1400, reply: 'The retry is now visible' },
   { activity: { phase: 'calling-tool', detail: 'read_file' }, hold: 1400, reply: 'The retry is now visible' },
   { activity: { phase: 'generating' }, hold: 900, reply: 'The retry is now visible instead of a dead pause.' },
-  // Only the settled turn clears it — unless an alarm is pending, which the wake line reports.
+  // Only the settled turn clears it - unless an alarm is pending, which the wake line reports.
   { hold: 2000, reply: 'The retry is now visible instead of a dead pause.' },
 ];
 
@@ -173,7 +173,7 @@ const STEPS: Step[] = [
  * provider request re-issued twice, the generation, the tool calls that dominate an agentic turn,
  * and the line finally vanishing when the turn settles.
  *
- * A story rather than a set of args because the sequence is the behaviour under test — the phases
+ * A story rather than a set of args because the sequence is the behaviour under test - the phases
  * are only meaningful in order, and the clear-on-settle is the half a static render cannot show.
  */
 export const Sequence: StoryObj<typeof meta> = {

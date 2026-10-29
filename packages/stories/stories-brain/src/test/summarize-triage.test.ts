@@ -8,7 +8,7 @@ import { Message } from '@dxos/types';
 
 import { summaryKindFor } from '../testing/harness/index.ts';
 
-// Deterministic coverage for the summarize-vs-label routing — no fixture / model required (the graded
+// Deterministic coverage for the summarize-vs-label routing - no fixture / model required (the graded
 // summary quality lives in model-ladder.bench.test.ts).
 
 describe('summaryKindFor', () => {

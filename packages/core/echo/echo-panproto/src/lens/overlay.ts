@@ -10,7 +10,7 @@ import { Annotation, type Entity, Obj } from '@dxos/echo';
 //
 // Target properties with no counterpart in the source live in the base object's annotation
 // dictionary, keyed by lens id then property. They are reactive and replicate like any other field,
-// but are NOT queryable or indexed — a field that needs querying belongs in the base type.
+// but are NOT queryable or indexed - a field that needs querying belongs in the base type.
 //
 
 /** Overlay values for every lens applied to an object: `lensId -> { property -> value }`. */
@@ -30,7 +30,7 @@ export const getOverlay = (obj: Obj.Unknown | Obj.Snapshot, lens: string, proper
   getOverlays(obj, lens)[property];
 
 /**
- * Write one overlay value. Must be called on a mutable entity — i.e. inside `Obj.update` — so a batch
+ * Write one overlay value. Must be called on a mutable entity - i.e. inside `Obj.update` - so a batch
  * of overlay and property writes lands as a single change.
  */
 export const setOverlay = (obj: Entity.Mutable<Obj.Unknown>, lens: string, property: string, value: unknown): void => {

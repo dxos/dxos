@@ -88,7 +88,7 @@ export const viewportCenterAnchor = ({
  * Scroll offset that places the unscaled content point `anchor` at the viewport centre. The result
  * may fall outside the scroll range (e.g. negative once the scaled board fits the viewport and an
  * off-centre anchor can no longer be scrolled to the middle); the browser clamps it and the `pad`
- * margin then centres the fitting board — the intended fallback.
+ * margin then centres the fitting board - the intended fallback.
  */
 export const anchoredScroll = ({
   anchor,

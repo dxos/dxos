@@ -13,7 +13,7 @@ import { type ReviewScenario, type ScenarioStep } from './scenarios.ts';
 
 /**
  * Open the editor view-mode dropdown and pick an entry by label. The review mode is folded into this
- * single dropdown: Source/Markdown ⇒ editing, Read-only ⇒ viewing, Suggesting ⇒ suggesting.
+ * single dropdown: Source/Markdown => editing, Read-only => viewing, Suggesting => suggesting.
  */
 export const selectViewMode = async (canvasElement: HTMLElement, label: string): Promise<void> => {
   const body = within(canvasElement.ownerDocument.body);
@@ -62,7 +62,7 @@ const modeLabel = (step: Extract<ScenarioStep, { kind: 'select-mode' }>): string
 
 /**
  * Storybook executor for {@link ReviewScenario}s: drives the SAME scenario objects the headless
- * executor runs, but through the full plugin stack — the real toolbar dropdown, the mounted
+ * executor runs, but through the full plugin stack - the real toolbar dropdown, the mounted
  * CodeMirror view, and the live decorations. Setup (content + foreign suggestions) is seeded by the
  * story's decorator from the scenario, so the two tiers start from identical state.
  */
@@ -101,7 +101,7 @@ export const runScenarioStorybook = async (
     switch (step.kind) {
       case 'select-mode': {
         await selectViewMode(canvasElement, modeLabel(step));
-        // Settle on the posture's editability — for Suggesting this also waits out the branch swap.
+        // Settle on the posture's editability - for Suggesting this also waits out the branch swap.
         const editable = step.mode !== 'viewing';
         await waitFor(() => expect(findView(canvasElement).state.readOnly, label).toBe(!editable), {
           timeout: 15_000,

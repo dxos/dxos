@@ -297,7 +297,7 @@ export const steps = [
     name: 'Enable Maps and Canvas in the plugin registry',
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-      const filter = 'input[placeholder="Filter…"]';
+      const filter = 'input[placeholder="Filter..."]';
       await page.locator(filter).first().waitFor({ state: 'visible', timeout: 10_000 });
       for (const { id, name } of PLUGINS) {
         await demo.fill({ selector: filter, value: '', hud: false });

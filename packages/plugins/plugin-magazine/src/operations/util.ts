@@ -22,7 +22,7 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
     // post was offered again and re-appended on each run.
     //
     // `EID.getEntityId` rather than `Ref.hasEntityId`: the latter additionally requires a *local*
-    // (`echo:///<id>`) uri, and these refs are space-qualified — it returns false for every one of them.
+    // (`echo:///<id>`) uri, and these refs are space-qualified - it returns false for every one of them.
     const curatedIds = new Set(
       magazine.posts.flatMap((ref) => {
         const uri = EID.tryParse(ref.uri);

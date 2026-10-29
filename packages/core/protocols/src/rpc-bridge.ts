@@ -20,7 +20,7 @@ import * as Stream from 'effect/Stream';
  * A plain object keyed by rpc tag, whose handlers call `handlers` as their receiver.
  *
  * `RpcGroup.toLayer` reads own-enumerable properties and stores the functions it finds, then
- * effect-rpc calls them unbound — so a class-instance implementation both hides its methods (they
+ * effect-rpc calls them unbound - so a class-instance implementation both hides its methods (they
  * live on the prototype) and loses `this` when one is found. Either way the failure surfaces at
  * dispatch, where nothing carries it back to the caller, so the request hangs.
  *

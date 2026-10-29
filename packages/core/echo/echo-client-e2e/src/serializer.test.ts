@@ -240,7 +240,7 @@ describe('Serializer', () => {
         data = await new Serializer().export(db);
       }
 
-      // Snapshot must NOT carry `kind` as a data field — it's the entity-kind
+      // Snapshot must NOT carry `kind` as a data field - it's the entity-kind
       // brand (lives on [KindId] / SYSTEM namespace), not a data field on
       // TypeSchema. Earlier the export side was leaking it.
       // `typename` / `version` are not data fields either; they live in
@@ -252,7 +252,7 @@ describe('Serializer', () => {
       expect(typeRow).not.toHaveProperty('typename');
       expect(typeRow).not.toHaveProperty('version');
 
-      // Survive a JSON round-trip — mirrors what `client.spaces.import` does.
+      // Survive a JSON round-trip - mirrors what `client.spaces.import` does.
       data = JSON.parse(JSON.stringify(data));
 
       {
@@ -269,7 +269,7 @@ describe('Serializer', () => {
         expect(Type.isType(roundTrip!)).to.be.true;
         expect(Type.getTypename(roundTrip!)).to.eq(typename);
 
-        // Every returned schema must have a valid typename — the `getSortKey` path that
+        // Every returned schema must have a valid typename - the `getSortKey` path that
         // Composer's markdown editor hits via `useLinkQuery` must not throw `Invalid typename`.
         // Persisted types live in the db (not the shared registry), so query the space.
         for (const schema of entities) {

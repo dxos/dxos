@@ -154,7 +154,7 @@ export class IndexQuerySource implements RemoteQuerySource {
    * Raw records from the host's last reactive response. Retained so we can re-hydrate when the
    * objects they reference finish loading locally (see {@link _onObjectsUpdated}). Each record's
    * `documentJson` is dropped once it has been hydrated into a feed handle, since later passes
-   * re-resolve the same live object by id from the handle's identity map — retaining it would keep
+   * re-resolve the same live object by id from the handle's identity map - retaining it would keep
    * a full copy of every result's document (hundreds of KB per mail message) for the subscription's
    * lifetime.
    */
@@ -251,7 +251,7 @@ export class IndexQuerySource implements RemoteQuerySource {
   async run(_ctx: Context, query: QueryAST.Query, opts?: RemoteRunOptions): Promise<SourceEntry[]> {
     // The index serves spaces and feeds; a query whose explicit scopes target neither
     // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
-    // made the whole query fail on edge — the query host rejects space-less queries, and
+    // made the whole query fail on edge - the query host rejects space-less queries, and
     // the fail-fast merge in `LocalQueryEngine.run` discarded the registry's results.
     if (!queryTargetsSpacesOrFeeds(query)) {
       return [];
@@ -347,7 +347,7 @@ export class IndexQuerySource implements RemoteQuerySource {
                 return;
               }
               // The host has answered, so the index-query budget is spent; hydration below is
-              // bounded per record and must not be charged to it — doing so reported a stalled
+              // bounded per record and must not be charged to it - doing so reported a stalled
               // document as an "index query" timeout, naming the wrong subsystem.
               clearTimeout(timeout);
               unsubscribeProgress?.();
@@ -497,7 +497,7 @@ export class IndexQuerySource implements RemoteQuerySource {
     void this._hydrateLoop();
   }
 
-  /** Hydrate the latest remembered records, set `_results`, and emit — repeating while triggers arrive. */
+  /** Hydrate the latest remembered records, set `_results`, and emit - repeating while triggers arrive. */
   private async _hydrateLoop(): Promise<void> {
     this._hydrating = true;
     // The query the pass that throws was hydrating, which a replacement installed meanwhile is not.
@@ -552,7 +552,7 @@ export class IndexQuerySource implements RemoteQuerySource {
 
   /**
    * Hydrate raw host records into query entries, dropping objects that fail to load or validate, and
-   * reporting separately the ids whose hydration outran {@link RECORD_HYDRATION_TIMEOUT} — a stall is
+   * reporting separately the ids whose hydration outran {@link RECORD_HYDRATION_TIMEOUT} - a stall is
    * not a miss, and each caller answers it differently.
    */
   private async _mapRecords(
@@ -605,7 +605,7 @@ export class IndexQuerySource implements RemoteQuerySource {
     const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
 
-    // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
+    // Only rewrite the set we just hydrated - a newer host response may have replaced it meanwhile.
     if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
       this._lastRemoteResults = records.map((record) => {
         if (record.documentJson === undefined || !hydratedIntoFeedHandle.has(record.id)) {
@@ -783,7 +783,7 @@ export class IndexQuerySource implements RemoteQuerySource {
       // Route through the feed handle so index-hydrated results share identity (and live `Obj.update`
       // semantics) with the same object read via polling or `db.appendToFeed`. When no handle is
       // available (feed service not connected, or the Feed object isn't loaded) we still return a
-      // *live* object — feed objects must uniformly follow the live type-spec/API; only core-tracked
+      // *live* object - feed objects must uniformly follow the live type-spec/API; only core-tracked
       // identity and background persistence are unavailable in that degraded state.
       let feedHandle: FeedHandle | undefined;
       if (database instanceof DatabaseImpl) {
@@ -791,7 +791,7 @@ export class IndexQuerySource implements RemoteQuerySource {
           feedHandle = database._getFeedHandleIfAvailable(queueEchoUri, parent.namespace);
           feedHandle?.setParentEntity(parent);
         } else {
-          // Parent Feed not loaded — reuse an already-created handle (correct namespace) if present,
+          // Parent Feed not loaded - reuse an already-created handle (correct namespace) if present,
           // but don't mint one at a guessed namespace.
           feedHandle = database._tryGetFeedHandle(queueEchoUri);
         }
@@ -885,7 +885,7 @@ export class IndexQuerySource implements RemoteQuerySource {
    *
    * The load does not settle while the object's document is unavailable (see
    * `query-api-stall.test.ts`), so the caller time-boxes it in {@link _hydrateRecord} rather than
-   * here — a budget on this one step could only drop the object silently.
+   * here - a budget on this one step could only drop the object silently.
    */
   private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
     const spaceId = SpaceId.make(result.spaceId);
@@ -908,7 +908,7 @@ const STALLED = Symbol('stalled');
 
 /** Names the stalled objects in the error a one-shot caller sees, rather than just the elapsed time. */
 const _describeStall = (stalled: readonly string[], total: number): string =>
-  `index query result hydration (${stalled.length} of ${total} objects did not load: ${stalled.slice(0, 5).join(', ')}${stalled.length > 5 ? ', …' : ''})`;
+  `index query result hydration (${stalled.length} of ${total} objects did not load: ${stalled.slice(0, 5).join(', ')}${stalled.length > 5 ? ', \u2026' : ''})`;
 
 /**
  * Used for logging.

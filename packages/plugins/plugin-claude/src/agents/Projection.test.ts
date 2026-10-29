@@ -60,7 +60,7 @@ describe('TurnProjection', () => {
       projection.apply({
         sessionUpdate: 'tool_call',
         toolCallId: 't1',
-        title: 'Preparing file…',
+        title: 'Preparing file...',
         name: 'Write',
         status: 'pending',
         rawInput: { path: 'note.txt' },

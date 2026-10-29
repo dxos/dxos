@@ -34,7 +34,7 @@ const POLL_INTERVAL = Duration.seconds(15);
 /**
  * Backoff for a force-run that reaches EDGE before the client's state has caught up there
  * (~31s total across 5 retries): a trigger created client-side is force-run immediately by the UI,
- * so the first attempt can lose the race — against replication of the trigger itself (rejected as
+ * so the first attempt can lose the race - against replication of the trigger itself (rejected as
  * not found) or against the identity being associated with an account. Every failure is retried rather
  * than a specific code, since EDGE spells these races several ways, except a 409 refusal (EDGE has the
  * trigger and will not run it). A 409 "Trigger disabled" is still retried: a trigger only reaches here

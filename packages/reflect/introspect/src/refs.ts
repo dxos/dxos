@@ -6,13 +6,13 @@
 //
 // Symbol refs are `<package>#<name>`, e.g. `@dxos/echo-schema#Expando`.
 // Package names may include a scope (`@dxos/foo`) so the package portion may itself
-// contain an `@` — split on the last `#`.
+// contain an `@` - split on the last `#`.
 //
 // Plugin-related refs use a colon-prefixed scheme so they don't collide with symbol refs:
-//   plugin:<id>                              — `plugin:org.dxos.plugin.markdown`
-//   surface:<plugin-id-or-pkg>:<surface-id>  — `surface:org.dxos.plugin.markdown:surface.document`
-//   capability:<key>@<plugin-id-or-pkg>      — `capability:Capabilities.ReactSurface@org.dxos.plugin.markdown`
-//   operation:<key>                          — `operation:org.dxos.operation.markdown.create`
+//   plugin:<id>                              - `plugin:org.dxos.plugin.markdown`
+//   surface:<plugin-id-or-pkg>:<surface-id>  - `surface:org.dxos.plugin.markdown:surface.document`
+//   capability:<key>@<plugin-id-or-pkg>      - `capability:Capabilities.ReactSurface@org.dxos.plugin.markdown`
+//   operation:<key>                          - `operation:org.dxos.operation.markdown.create`
 
 export type SymbolRefParts = {
   kind: 'symbol';
@@ -85,7 +85,7 @@ export const parseRef = (ref: string): RefParts => {
     const rest = ref.slice('capability:'.length);
     // Capability keys are JS identifiers (no `@`), but owners may be scoped
     // package names like `@dxos/plugin-foo`. Split on the FIRST `@` so scoped
-    // owners round-trip correctly — `lastIndexOf` would land on the `@` inside
+    // owners round-trip correctly - `lastIndexOf` would land on the `@` inside
     // `@dxos` and misattribute the package scope to the key.
     const idx = rest.indexOf('@');
     if (idx > 0) {

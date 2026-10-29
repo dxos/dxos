@@ -120,7 +120,7 @@ type OutlineRootProps = PropsWithChildren<
     /** Converts an item's text into an object; the item is replaced by a link to the returned target. */
     onConvertToTask?: (text: string) => Promise<OutlineLink | undefined>;
     /**
-     * Called as the caret moves with whether the item under it can be promoted — false once it is a
+     * Called as the caret moves with whether the item under it can be promoted - false once it is a
      * link, since converting again would orphan the object the link points at. Drives the toolbar's
      * disabled state; the editor's own menu hides the entry itself.
      */
@@ -131,7 +131,7 @@ type OutlineRootProps = PropsWithChildren<
     resolveLinkLabel?: (url: string) => string | undefined;
     /**
      * Editor extensions the host contributes. The outline owns its own core (outliner, markdown,
-     * links); a host adds what only it knows about — e.g. plugin-github decorating `#123`.
+     * links); a host adds what only it knows about - e.g. plugin-github decorating `#123`.
      */
     extensions?: Extension[];
   } & Pick<UseTextEditorProps, 'autoFocus'>

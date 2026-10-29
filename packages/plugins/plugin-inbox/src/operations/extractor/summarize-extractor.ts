@@ -26,7 +26,7 @@ import { InboxOperation } from '#types';
  * (>{@link MIN_BODY_LENGTH} characters across all text blocks) and produces a
  * `Markdown.Document` whose content is an AI-generated 2-3 sentence summary. The dispatcher
  * (`ExtractMessage`) persists the document and attaches a provenance relation back to the
- * source message — no tags are emitted.
+ * source message - no tags are emitted.
  *
  * The AI-service requirement (`AiService.AiService`) is part of the `ObjectExtractor.extract`
  * signature and is provided by the dispatcher's operation (which declares `AiService` in its
@@ -55,14 +55,14 @@ const matchMessage = (source: Obj.Any): MatchResult => {
     return { matched: false };
   }
   // Low confidence so domain-specific extractors (e.g. travel) outrank summarize when both
-  // match — summarize is a fallback "describe what this email is about" extractor.
+  // match - summarize is a fallback "describe what this email is about" extractor.
   return { matched: true, confidence: 0.2, reason: 'long-text-body' };
 };
 
 /**
  * Core summarization logic. Returns an `ExtractResult` containing a `Markdown.Document` with
  * the AI-generated summary. Provides the LanguageModel layer internally so the residual `R` is
- * just `AiService.AiService` — exported (rather than inlined) so unit tests can invoke it
+ * just `AiService.AiService` - exported (rather than inlined) so unit tests can invoke it
  * directly with a mocked `AiService` layer.
  */
 export const summarizeMessage = ({
@@ -92,7 +92,7 @@ export const summarizeMessage = ({
   );
 
 /**
- * Operation handler — wraps the inline `summarizeMessage` so the extractor is also a
+ * Operation handler - wraps the inline `summarizeMessage` so the extractor is also a
  * first-class registered operation. Does NOT write to the database; the dispatcher persists.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractSummaryFromMessage> =

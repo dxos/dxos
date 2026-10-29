@@ -249,7 +249,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     // In draggable mode virtual indices alternate: even=placeholder, odd=tile.
     // Wrap estimateSize so placeholders get 0 (their actual negligible height) and
     // tile slots receive the caller's estimate at the correct tile index.
-    // This keeps getTotalSize() stable as items are measured → no scrollbar drift.
+    // This keeps getTotalSize() stable as items are measured -> no scrollbar drift.
     const wrappedEstimateSize = draggable
       ? (index: number) => (index % 2 === 0 ? 0 : estimateSize(Math.floor(index / 2)))
       : estimateSize;

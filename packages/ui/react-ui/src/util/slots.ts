@@ -37,7 +37,7 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
   ...props,
 
   // No `role` default. On a div it is a no-op, so the only elements it ever reached were the
-  // semantic ones — `Card.Header` renders a <header>, `Main.Content` a <main> — where it stripped
+  // semantic ones - `Card.Header` renders a <header>, `Main.Content` a <main> - where it stripped
   // the landmark. A part that genuinely wants its element ignored passes the role itself
   // (`role=''` included, so the undefined check rather than truthiness).
   ...((role ?? defaults.role) !== undefined ? { role: role ?? defaults.role } : null),
@@ -55,7 +55,7 @@ const COMPOSABLE = Symbol.for('dxos.composable');
 /**
  * Factory for slottable components.
  * The implementation receives full `HTMLAttributes<E>` so it can destructure `role`, `style`, etc.
- * Consumers see only `SlottableProps<P>` — a narrow type exposing `classNames`, `className`,
+ * Consumers see only `SlottableProps<P>` - a narrow type exposing `classNames`, `className`,
  * `children`, `asChild`, and the custom props `P`.
  *
  * @example
@@ -86,14 +86,14 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
           });
         }
       } catch {
-        // Children.only throws if not exactly one child — `asChild` renders nothing in that case.
+        // Children.only throws if not exactly one child - `asChild` renders nothing in that case.
       }
     }
 
     const result = render(props, forwardedRef);
     if (warn) {
       // The marker cannot go on the rendered element: under `asChild` the class is merged into the
-      // very child that is dropping props — the bug being flagged
+      // very child that is dropping props - the bug being flagged
       // swallows its own diagnostic. So it goes on a wrapper, which `dx-slot-warning` renders as
       // `display: contents` so it adds no layout box; the outline is drawn on its children instead.
       return createElement('div', { role: 'none', className: 'dx-slot-warning' }, result);
@@ -110,7 +110,7 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
 /**
  * Factory for composable (leaf) components.
  * The implementation receives full `HTMLAttributes<E>` so it can destructure `role`, `style`, etc.
- * Consumers see only `ComposableProps<P>` — a narrow type exposing `classNames`, `className`,
+ * Consumers see only `ComposableProps<P>` - a narrow type exposing `classNames`, `className`,
  * `children`, and the custom props `P`.
  *
  * For generic components, use `any` for the type parameter inside `composable` and

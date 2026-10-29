@@ -21,7 +21,7 @@ import { scaffoldProject } from './scaffold.ts';
 /**
  * Skill keys composed into the project's instructions (chat sessions) and the starter routine.
  * Plain dotted keys (not skill imports) so plugin-inbox does not depend on the plugins that own
- * them — the `SkillsAnnotation` idiom.
+ * them - the `SkillsAnnotation` idiom.
  */
 const PROJECT_SKILL_KEYS = ['org.dxos.skill.inbox', 'org.dxos.skill.table'] as const;
 const ROUTINE_SKILL_KEYS = ['org.dxos.skill.table', 'org.dxos.skill.project'] as const;
@@ -49,7 +49,7 @@ const ROUTINE_INSTRUCTIONS = trim`
 /**
  * "Inbox research" project template: the mailbox as standing context, inbox + table skills for its
  * chats, and a starter sender-ledger routine (feed-triggered, disabled until the user enables it)
- * owned by the project. Only applies to a Mailbox subject — the routine's trigger needs
+ * owned by the project. Only applies to a Mailbox subject - the routine's trigger needs
  * `mailbox.feed`.
  */
 export const inboxResearch: ProjectCapabilities.Template = {
@@ -65,7 +65,7 @@ export const inboxResearch: ProjectCapabilities.Template = {
       const feed = yield* Database.load(mailbox.feed);
 
       const project = scaffoldProject({
-        name: name ?? `Inbox Research — ${mailbox.name ?? 'Mailbox'}`,
+        name: name ?? `Inbox Research - ${mailbox.name ?? 'Mailbox'}`,
         text: PROJECT_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
         objects: [Ref.make(mailbox)],

@@ -27,7 +27,7 @@ const { text, toolCall } = ScriptedLanguageModel;
 
 EntityId.dangerouslyDisableRandomness();
 
-// The full Project–Chat–assistant loop, headless, asserted on the PROJECT (`artifacts` gains the
+// The full Project-Chat-assistant loop, headless, asserted on the PROJECT (`artifacts` gains the
 // filed object): a scripted model pins the operation wiring; a memoized live model proves a real
 // model drives the same loop from the prompt alone.
 

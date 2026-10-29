@@ -4,7 +4,7 @@
 
 //
 // Architecture rules for a diagram's content: the software-engineering review rules the team applies
-// to code (`.agents/projects/architecture-rules`), restated for what a diagram shows — components,
+// to code (`.agents/projects/architecture-rules`), restated for what a diagram shows - components,
 // the groups they belong to and who depends on whom. A decision model judges every rule in one call,
 // so grading a diagram costs one request however many rules there are.
 //
@@ -72,7 +72,7 @@ export type Rule = {
 
 const HOW_TO_READ =
   'The input is an architecture diagram: nodes are components, groups are layers or packages, and an edge ' +
-  '`from → to` means `from` depends on, calls or owns `to`. An `inheritance` or `implements` edge points from ' +
+  '`from -> to` means `from` depends on, calls or owns `to`. An `inheritance` or `implements` edge points from ' +
   'the implementation to its abstraction, which by convention sits above it, so it is never a back-dependency. ' +
   'When `layout` is present it shows the page as drawn.';
 
@@ -140,7 +140,7 @@ export const RULES: readonly Rule[] = [
     'When an edge crosses from one group into another, does it land on the entry point or service that group ' +
       'exposes, rather than reaching past it into an internal component?',
     {
-      true: 'Cross-group edges land on each group’s entry point.',
+      true: "Cross-group edges land on each group's entry point.",
       false: 'Some edge from outside a group reaches an internal component directly.',
     },
   ),
@@ -148,8 +148,8 @@ export const RULES: readonly Rule[] = [
     'same-granularity',
     'sameGranularity',
     'Every box is a component at one level of abstraction.',
-    'Is every node a component at the same level of abstraction — services, modules or processes of comparable ' +
-      'weight — rather than a mix of components with their fields, caches, limits or data types drawn as boxes?',
+    'Is every node a component at the same level of abstraction - services, modules or processes of comparable ' +
+      'weight - rather than a mix of components with their fields, caches, limits or data types drawn as boxes?',
     {
       true: 'All nodes are peers of comparable importance.',
       false:

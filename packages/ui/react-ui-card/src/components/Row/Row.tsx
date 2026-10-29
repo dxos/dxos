@@ -26,12 +26,12 @@ import { Avatar, type AvatarProps, avatarName } from '../Avatar/index.ts';
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the
  * person/date/tags/ref/star rows used across the inbox tiles (`EventStack`/`InboxStack`), the preview
- * cards (`EventCard`/`MessageCard`), and the article headers — so a row of each kind is defined exactly
+ * cards (`EventCard`/`MessageCard`), and the article headers - so a row of each kind is defined exactly
  * once and every surface composes from it.
  */
 
 //
-// Card activation — internal helpers, not exported on Row.
+// Card activation - internal helpers, not exported on Row.
 //
 
 /**
@@ -98,7 +98,7 @@ export const useCardHover = (open: () => void, enabled: boolean) => {
 };
 
 //
-// AnchorIconButton — internal helper, not exported on Row.
+// AnchorIconButton - internal helper, not exported on Row.
 //
 
 type AnchorIconButtonProps = {
@@ -109,7 +109,7 @@ type AnchorIconButtonProps = {
   fallbackLabel?: string;
   title?: string;
   value?: URI.URI;
-  /** Also open the card on hover (never the `onClick` fallback — hovering must not create anything). */
+  /** Also open the card on hover (never the `onClick` fallback - hovering must not create anything). */
   hover?: boolean;
   onClick?: () => void;
 };
@@ -233,7 +233,7 @@ type RowPersonProps = {
   /**
    * Resolving the actor's contact costs a query hook, so passing `db` is what opts a row into the
    * interactive avatar (hover card / create contact). Omit it in virtualized list tiles, which get the
-   * hook-free static avatar instead — or give them {@link RowPersonProps.getContact}.
+   * hook-free static avatar instead - or give them {@link RowPersonProps.getContact}.
    */
   db?: Database.Database;
   /**
@@ -252,7 +252,7 @@ type RowPersonProps = {
 };
 
 /**
- * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
+ * Static avatar variant - no contact resolution. Suitable for virtualized list tiles.
  */
 const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
   <Card.Row leading={<Avatar actor={actor} size={size} onClick={onClick} />}>
@@ -262,7 +262,7 @@ const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' 
 
 /**
  * Interactive variant: the gutter always shows the actor's AVATAR, and resolving their contact decides
- * what hovering it does — a Person opens that contact's card, no Person swaps the avatar for a
+ * what hovering it does - a Person opens that contact's card, no Person swaps the avatar for a
  * create-contact button (a click, never the hover, since hovering must not write to the space).
  *
  * Uniform across every surface that shows people, so a sender, a recipient and an attendee all read
@@ -281,7 +281,7 @@ export type ContactAvatarProps = Pick<
  * has no Person for the address the avatar gives way to a create-contact button (a click, never the
  * hover, since hovering must not write to the space).
  *
- * Exported because the same treatment belongs to every surface showing a person — `Row.Person`'s
+ * Exported because the same treatment belongs to every surface showing a person - `Row.Person`'s
  * gutter, but also list tiles that lay their rows out themselves.
  */
 export const ContactAvatar = ({
@@ -330,7 +330,7 @@ export const ContactAvatar = ({
       {/* Faded (not unmounted) while the create button covers it, so the gutter never resizes. */}
       {/* `grid`, not the default block: `dx-avatar` is `display: contents` and the frame inside it is
           `inline-flex`, so in a block box it sits on the text baseline and the line box adds descender
-          space beneath it — making this wrapper taller than the avatar and pinning the face to its top.
+          space beneath it - making this wrapper taller than the avatar and pinning the face to its top.
           Every caller that centres this against a line of text then reads as misaligned. */}
       <div className={mx('grid', canCreate && 'group-hover/contact:opacity-0 group-focus-within/contact:opacity-0')}>
         <Avatar actor={actor} size={size} onClick={onClick} />
@@ -413,7 +413,7 @@ RowPerson.displayName = 'Row.Person';
 type TagItem = { id: string; label?: string; hue?: string };
 
 type RowTagsProps = {
-  /** Optional — callers may pass an undefined/empty list (e.g. a message with no tags). */
+  /** Optional - callers may pass an undefined/empty list (e.g. a message with no tags). */
   tags?: TagItem[];
   /** When provided, each chip is clickable and stops event propagation. */
   onTagClick?: (label: string) => void;
@@ -489,11 +489,11 @@ RowStar.displayName = 'Row.Star';
 //
 
 type RowAttachmentsProps = {
-  /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
+  /** Optional - callers may pass an undefined/empty list (e.g. a message with no attachments). */
   attachments?: readonly Message.Attachment[];
   /**
    * Opens an attachment, by its index in `attachments`. The index rather than the attachment itself
-   * because an attachment has no identity of its own — it is an entry on the message.
+   * because an attachment has no identity of its own - it is an entry on the message.
    */
   onAttachmentClick?: (index: number) => void;
 };

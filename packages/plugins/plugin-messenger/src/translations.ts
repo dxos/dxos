@@ -36,7 +36,7 @@ export const translations = [
         'empty-filtered.message': 'No matching notifications.',
         'account-required.message': 'Notifications need an account on this deployment.',
         'no-default-space.message': 'Notifications appear once your default space is ready.',
-        'space-invitation-toast.title': 'You’ve been added to a space',
+        'space-invitation-toast.title': "You've been added to a space",
         'space-invitation-toast.description': 'A contact invited you to join a space.',
         'join-space-invitation.label': 'Join',
         'dismiss-space-invitation.label': 'Dismiss',

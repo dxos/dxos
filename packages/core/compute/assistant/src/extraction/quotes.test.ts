@@ -75,7 +75,7 @@ describe('findReferences', () => {
 
     expect(byQuote.get('Amco')).toEqual(amco.id);
     // Full-text matches a single token within a multi-word field, so first-name mentions link to
-    // the full-name object — this is also what makes the overlap case in `insertReferences` real.
+    // the full-name object - this is also what makes the overlap case in `insertReferences` real.
     expect(byQuote.get('Sarah')).toEqual(sarah.id);
     expect(byQuote.has('Nonexistent')).toBe(false);
   });

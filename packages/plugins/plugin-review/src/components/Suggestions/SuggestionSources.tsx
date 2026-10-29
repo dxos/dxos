@@ -29,7 +29,7 @@ export type SuggestionSourcesProps = {
   onResolved?: (resolved: ResolvedSuggestionBranch[]) => void;
   /**
    * Render-prop called synchronously in this component's own render with the `resolved` set derived
-   * from the CURRENT `document` — unlike `onResolved`, a `document` swap can never paint a stale
+   * from the CURRENT `document` - unlike `onResolved`, a `document` swap can never paint a stale
    * frame from the previous document. Prefer this for consumers that render (e.g. the review
    * companion); both may be provided at once.
    */
@@ -40,7 +40,7 @@ export type SuggestionSourcesProps = {
  * Headless enumerator for a document's active `kind:'suggestion'` branches: binds each to its live
  * content (via {@link BranchContent}) and reports the resolved set both synchronously (render-prop
  * `children`) and post-commit (`onResolved`). Renders only invisible probes plus whatever `children`
- * returns — shared by the review companion ({@link Suggestions}) and the editor's ambient overlay so
+ * returns - shared by the review companion ({@link Suggestions}) and the editor's ambient overlay so
  * both read the same resolved sources.
  */
 export const SuggestionSources = ({ document, authorHues, onResolved, children }: SuggestionSourcesProps) => {
@@ -96,7 +96,7 @@ SuggestionSources.displayName = 'SuggestionSources';
 
 /**
  * Binds a single suggestion branch and reports its content up, re-emitting reactively as the branch
- * is edited. Renders nothing — one instance per active suggestion branch keeps the resolved set live
+ * is edited. Renders nothing - one instance per active suggestion branch keeps the resolved set live
  * without a fixed number of hooks.
  */
 const BranchContent = ({
@@ -131,10 +131,10 @@ const BranchContent = ({
     };
   }, [document, branch.id]);
 
-  // Subscribe to the bound branch text so edits re-emit (the crux — a one-time read would go stale).
+  // Subscribe to the bound branch text so edits re-emit (the crux - a one-time read would go stale).
   const [content] = useObject(binding?.object, 'content');
   // The parent text as it stood when this branch forked. The overlay diffs the proposal against it, so
-  // the diff stays this author's changes — text the reader typed after the fork is not their deletion.
+  // the diff stays this author's changes - text the reader typed after the fork is not their deletion.
   // Materialising a historical snapshot is expensive, so it is keyed to the immutable fork anchor
   // rather than recomputed per render (which pegged the CPU as the reader typed).
   const parent = 'content' in document ? (document as { content?: { target?: Text.Text } }).content?.target : undefined;

@@ -110,7 +110,7 @@ export const Selection: Story = {
     }
     await userEvent.click(triage);
     await waitFor(() => expect(selected()).toEqual(['triage']));
-    // Planned → Prototype: the next column's card is selected, and the rest fade.
+    // Planned -> Prototype: the next column's card is selected, and the rest fade.
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(selected()).toEqual(['sync']));
     await userEvent.keyboard('{Escape}');

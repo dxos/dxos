@@ -20,14 +20,14 @@ import { type FeedScenario, MessageWindow, createScenario } from '../testing/ind
  * `placement/*` proves the shape against boxes that cannot lie about their size, and `baseline/*`
  * proves the current engine against real editors. This is where they meet: the same fixtures, the
  * same renderers and the same chrome as a feed, placed by `Window`. The invariants are deliberately
- * the ones `baseline/*` already asserts — a replacement is ready when it satisfies the tests the
+ * the ones `baseline/*` already asserts - a replacement is ready when it satisfies the tests the
  * thing it replaces satisfies, not when it satisfies tests written for it.
  *
  * Not wired into `MessageList.Root`: Root owns the follow, the sticky tail, the anchors and the
  * cursor as well as the virtualizer, so swapping the placement inside it is a reimplementation. This
  * is what that reimplementation will be checked against.
  */
-/** The fixed reserve the past-end story keeps below the tail — part of the resting view. */
+/** The fixed reserve the past-end story keeps below the tail - part of the resting view. */
 const RESERVE = 96;
 
 const DefaultStory = ({
@@ -139,11 +139,11 @@ const holdsStill = (scenario: FeedScenario, count: number): Story => ({
 
     // And the end has to be reachable, which is what says the extents are real.
     //
-    // "Nothing moved" alone is satisfied by a list that never measures anything — verified by
+    // "Nothing moved" alone is satisfied by a list that never measures anything - verified by
     // disabling measurement, at which point the story still passed. Scrolling to the end exercises
     // the sizer, and the sizer is only right if the measured extents reached it.
     // Driven to the end rather than sent there once. The extents are estimates, so measuring the
-    // rows the scroll reveals grows the document under it — one assignment lands short of an end
+    // rows the scroll reveals grows the document under it - one assignment lands short of an end
     // that was not yet as far away as it turned out to be. A reader dragging a scrollbar does the
     // same thing repeatedly; what has to be true is that the end is reachable, and that it settles.
     let previous = -1;
@@ -188,7 +188,7 @@ export const Assistant: Story = holdsStill('assistant', 200);
  * looked like from outside.
  *
  * It failed for a while, and what it caught was not the tail arithmetic either time. First a stale
- * `getId` — `Window` held the closure it was constructed with, so an appended row's measurement was
+ * `getId` - `Window` held the closure it was constructed with, so an appended row's measurement was
  * filed under one id and read back under another and the row was re-measured every commit, which
  * React ends by exceeding the update limit. Then a follow re-derived from proximity, which its own
  * corrections disengage. Both presented as "the tail is in the wrong place".
@@ -205,8 +205,8 @@ export const Tail: Story = {
 
     await new Promise((resolve) => setTimeout(resolve, FOLLOW_WINDOW + 200));
     (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
-    // Arrival is by correction rounds — the jump lands on estimates and the follow finishes the
-    // journey against the rendered edge — so it is polled, not sampled.
+    // Arrival is by correction rounds - the jump lands on estimates and the follow finishes the
+    // journey against the rendered edge - so it is polled, not sampled.
     let arrived = false;
     for (let frame = 0; frame < 300 && !arrived; frame++) {
       await nextFrame();
@@ -214,7 +214,7 @@ export const Tail: Story = {
     }
 
     // An answer arrives while the reader is at the tail. The follow glides (~2 rows/s), so the
-    // reading polls to landing — arrival by deceleration is the contract, not instant arrival.
+    // reading polls to landing - arrival by deceleration is the contract, not instant arrival.
     (canvasElement.querySelector('[data-testid="bridge.append"]') as HTMLElement).click();
     let followed = false;
     for (let frame = 0; frame < 300 && !followed; frame++) {
@@ -227,7 +227,7 @@ export const Tail: Story = {
 };
 
 /**
- * The tail, with a fixed reserve past it — part of the resting view.
+ * The tail, with a fixed reserve past it - part of the resting view.
  *
  * The old engine could not reserve at all: its reserve was a DOM spacer, so the element and the
  * virtualizer disagreed about where the document ends. Here the reserve is a term in the sizer, in
@@ -273,8 +273,8 @@ export const VariedPastEnd: Story = {
  * Scrolling moves the content by exactly what was scrolled, and by nothing else.
  *
  * Reported from a real session as the feed "jumping as soon as it starts to scroll". Measurement
- * *is* allowed to move things — a row that turns out taller pushes the rows after it, and that is
- * the list working — so the reading is the row the reader is looking at: whatever is under the top
+ * *is* allowed to move things - a row that turns out taller pushes the rows after it, and that is
+ * the list working - so the reading is the row the reader is looking at: whatever is under the top
  * of the viewport when a step begins must be exactly one step higher when it ends.
  *
  * That is what a re-base breaks and what an anchor cannot: re-basing the document rewrites every
@@ -297,7 +297,7 @@ export const Scrolling: Story = {
     // Upward, from the tail, which is the only direction that can tell the two designs apart. Going
     // down, every row above the reader has already been measured, so a prefix sum from index 0 and
     // an anchor-relative position agree exactly. Going up, the rows arriving above are estimates
-    // being replaced — and under a prefix sum each replacement pushes everything below it, including
+    // being replaced - and under a prefix sum each replacement pushes everything below it, including
     // what the reader is reading.
     (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
     await settle(40);
@@ -315,7 +315,7 @@ export const Scrolling: Story = {
 
       // Against the reader's own write, not the net scrollTop delta: repaying the start edge moves
       // content and scroll together, so the offset absorbs the machine's shift while the row under
-      // the eye moves by exactly what the reader asked — which is the invariant.
+      // the eye moves by exactly what the reader asked - which is the invariant.
       const moved = before.offset - (row.getBoundingClientRect().top - top());
       if (Math.abs(moved - -240) > 2) {
         jumps.push({ from, index: before.index, moved: Math.round(moved) });
@@ -330,7 +330,7 @@ export const Scrolling: Story = {
  * The top of the conversation exists.
  *
  * A feed opened at its tail derives every position above the reader from estimates; rows measuring
- * taller than assumed push row 0 negative, where no scroll can reach it — the reader arrives at the
+ * taller than assumed push row 0 negative, where no scroll can reach it - the reader arrives at the
  * top and the first messages are simply not there (seen live: the flagship opened with its first
  * prompt missing). The start edge is repaid by shifting content and scroll together, so this drives
  * to the top and asks the one absolute fact of content space: row 0 starts at zero.

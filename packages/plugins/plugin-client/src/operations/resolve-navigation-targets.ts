@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
 
         // Resolvers read a space database to derive a navigation path, so this handler lives with the
         // client: it is the only place that can turn a URI's space id into a database to provide. When
-        // the query names a space that is not available, resolve nothing — falling back to the active
+        // the query names a space that is not available, resolve nothing - falling back to the active
         // space would resolve the id against the wrong database (a ref can reach across spaces). The
         // active space serves only space-less queries (`dxn:` URIs, local EIDs, no query).
         const eid = query?.uri ? EID.tryParse(query.uri) : undefined;
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigatio
           : undefined;
 
         // Resolvers require `Database.Service`, and an unbound service is a defect rather than a failure
-        // (so the `catchAll` below would not contain it) — with no space to derive a database from there
+        // (so the `catchAll` below would not contain it) - with no space to derive a database from there
         // is nothing to resolve against, so skip them entirely.
         if (!space) {
           return { targets: [] };

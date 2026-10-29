@@ -11,7 +11,7 @@ import { type ObjectCore } from './object-core.ts';
  * the caller is holding rather than surfacing beside it. That guarantee is only meaningful while
  * something still holds the core: with no holder there is no identity to preserve, and the next read
  * can mint a fresh instance from the document. Holding cores strongly instead made a space's
- * client-side footprint track everything it had ever loaded rather than what is open — a one-shot
+ * client-side footprint track everything it had ever loaded rather than what is open - a one-shot
  * query over a large space stayed resident for the life of the database.
  *
  * A `WeakRef` per id is enough, and is preferable to keying on the root proxy: the proxy is only one
@@ -44,8 +44,8 @@ export class ObjectCoreRegistry {
   /**
    * Recently touched cores, held strongly, each against the time it was last touched.
    *
-   * Loading an object and surfacing it span several turns — the query pipeline stores ids and reads
-   * the core back once its document has arrived — and in between nothing else refers to the core, so
+   * Loading an object and surfacing it span several turns - the query pipeline stores ids and reads
+   * the core back once its document has arrived - and in between nothing else refers to the core, so
    * a collection landing mid-flight would silently drop the object from the result. A touch only
    * writes the timestamp; the sweep below decides when the window has closed, so a caller who kept
    * the object holds it from then on.
@@ -53,12 +53,12 @@ export class ObjectCoreRegistry {
   readonly #pinned = new Map<ObjectCore, number>();
 
   // One sweep timer for the whole registry, armed only while something is pinned. Re-arming a timer
-  // per touch instead made timer install/clear the dominant cost of a bulk load — a single trace of
+  // per touch instead made timer install/clear the dominant cost of a bulk load - a single trace of
   // one space opening showed 17k of its 18k timer installs coming from here, against 664 firings.
   #sweepTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
   // Prunes the index as cores are collected. Lookup prunes too, so this only bounds ids that are
-  // never looked up again — the common case for an object read once and moved past.
+  // never looked up again - the common case for an object read once and moved past.
   readonly #finalizer = new FinalizationRegistry<string>((id) => {
     if (this.#cores.get(id)?.deref() !== undefined) {
       return;
@@ -122,7 +122,7 @@ export class ObjectCoreRegistry {
   /**
    * Unpins cores untouched for {@link PIN_TTL}, re-arming while any pin remains.
    *
-   * A pin therefore lasts between one and two intervals — never less than the window a touch asked
+   * A pin therefore lasts between one and two intervals - never less than the window a touch asked
    * for, which is what the load-in-progress guarantee needs.
    */
   #sweep(): void {
@@ -137,7 +137,7 @@ export class ObjectCoreRegistry {
     }
   }
 
-  /** Drops the entry without notifying `onRelease` — the caller is already evicting this id. */
+  /** Drops the entry without notifying `onRelease` - the caller is already evicting this id. */
   delete(id: string): boolean {
     const core = this.#cores.get(id)?.deref();
     if (core !== undefined) {
@@ -163,7 +163,7 @@ export class ObjectCoreRegistry {
     return [...this.values()].map((core) => core.id);
   }
 
-  /** Cores still reachable — the space's resident working set, after pruning collected entries. */
+  /** Cores still reachable - the space's resident working set, after pruning collected entries. */
   get size(): number {
     let count = 0;
     for (const _core of this.values()) {

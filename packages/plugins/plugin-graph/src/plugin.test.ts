@@ -15,7 +15,7 @@ const moduleId = (name: string) => `${GraphNamespace.key}.module.${name}`;
 
 describe('GraphPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // Use createTestApp directly — createComposerTestApp already includes GraphPlugin.
+    // Use createTestApp directly - createComposerTestApp already includes GraphPlugin.
     await using harness = await createTestApp({
       plugins: [GraphPlugin.make(), ProcessManagerPlugin.make()],
     });

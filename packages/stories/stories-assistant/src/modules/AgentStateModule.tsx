@@ -11,7 +11,7 @@ import { Filter } from '@dxos/echo';
 import * as AgentState from '@dxos/plugin-agent/AgentState';
 import { useQuery } from '@dxos/react-client/echo';
 
-/** The state of the space's first agent — its mode, what it tracks and its knowledge graph — beside the chat. */
+/** The state of the space's first agent - its mode, what it tracks and its knowledge graph - beside the chat. */
 export const AgentStateModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const space = Hooks.useActiveSpace();
   const [agent] = useQuery(space?.db, Filter.type(Agent.Agent));

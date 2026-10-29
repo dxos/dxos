@@ -16,7 +16,7 @@ const EMPTY_CANDIDATES: ReadonlyArray<Definition> = [];
 
 /**
  * Groups definitions by role with each bucket pre-sorted by {@link Position}, so
- * dispatch avoids a full scan and re-sort on every render. Pure helper — callers
+ * dispatch avoids a full scan and re-sort on every render. Pure helper - callers
  * are responsible for filtering out invalid definitions before calling this.
  */
 export const indexByRole = (definitions: Definition[]): Map<string, Definition[]> => {
@@ -66,7 +66,7 @@ export class SurfaceManager {
   }).pipe(Atom.keepAlive);
 
   // Per-role candidate atoms. The atom carries the equality, so a contribution to a different role
-  // recomputes this bucket to an equal value and is dropped — that role's subscribers never
+  // recomputes this bucket to an equal value and is dropped - that role's subscribers never
   // re-render. (v4 removed `Data.array`, which used to supply that equality structurally.)
   readonly #candidates = Atom.family<string, Atom.Atom<ReadonlyArray<Definition>>>((role) =>
     Atom.make((get) => {
@@ -76,7 +76,7 @@ export class SurfaceManager {
   );
 
   // Per-role activation-in-flight atoms; see `pendingAtom`. `modules` carries only enabled,
-  // non-failed plugins' modules (a plugin that fails — including by exceeding the module timeout —
+  // non-failed plugins' modules (a plugin that fails - including by exceeding the module timeout -
   // is excluded and auto-disabled), so a role cannot stay pending forever.
   readonly #pending = Atom.family<string, Atom.Atom<boolean>>((role) =>
     Atom.make((get) => {
@@ -110,7 +110,7 @@ export class SurfaceManager {
   }
 
   /**
-   * Derived atom: true while a module gated on this role's demand event has yet to activate — i.e.
+   * Derived atom: true while a module gated on this role's demand event has yet to activate - i.e.
    * a surface specific to the rendered data may still be coming. Boolean-valued, so subscribers
    * re-render only when it flips, not on every activation.
    */
@@ -120,8 +120,8 @@ export class SurfaceManager {
 
   /**
    * Claims the first surface demand for a role, returning `true` only to that first caller so
-   * it can fire the activation event. Subsequent calls — re-renders, repeated availability
-   * checks — return `false`.
+   * it can fire the activation event. Subsequent calls - re-renders, repeated availability
+   * checks - return `false`.
    */
   requestRole(role: string): boolean {
     if (role === '' || this.#requestedRoles.has(role)) {
@@ -134,7 +134,7 @@ export class SurfaceManager {
   /**
    * Returns a claimed role to the pool. The claim is taken before the dispatch is known to have
    * happened, so a dispatch that fails or is interrupted (shutdown, a failed activation) must give
-   * it back — nothing else re-requests the role, and `useIsSurfaceAvailable`'s own retry is
+   * it back - nothing else re-requests the role, and `useIsSurfaceAvailable`'s own retry is
    * claimed away too, leaving every surface in that role permanently empty.
    */
   releaseRole(role: string): void {
@@ -150,7 +150,7 @@ export class SurfaceManager {
       if (!this.#warnedInvalidIds.has(definition.id)) {
         this.#warnedInvalidIds.add(definition.id);
         log.warn(
-          'dropping surface with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
+          'dropping surface with invalid id; the final segment must be camelCase - letters and digits, starting with a letter',
           {
             id: definition.id,
           },

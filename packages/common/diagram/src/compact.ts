@@ -6,8 +6,8 @@
 // Post-placement compaction on the lattice. ELK spaces compound nodes by their padded extents and
 // quantization rounds every gap up, so a placement often carries empty lanes and packages parked
 // far from the package they talk to. A local search slides whole packages and single boxes by whole
-// lattice pitches toward their partners — never reversing an edge's direction on either axis, never
-// stacking two boxes and never bringing frames closer than their clearance — while the drawing's
+// lattice pitches toward their partners - never reversing an edge's direction on either axis, never
+// stacking two boxes and never bringing frames closer than their clearance - while the drawing's
 // connector length and extent fall.
 //
 
@@ -59,8 +59,8 @@ const apart = (a: Rect, b: Rect, gap: number) =>
 
 /**
  * Compacts a lattice placement. Units are every package (moved rigidly) and every box (moved
- * within or outside its package); a move is kept only when it lowers the cost — connector length
- * plus bends plus the drawing's width and height, all in lattice units — and introduces no
+ * within or outside its package); a move is kept only when it lowers the cost - connector length
+ * plus bends plus the drawing's width and height, all in lattice units - and introduces no
  * violation of the placement's invariants.
  */
 export const compact = (graph: Graph, positions: ReadonlyMap<string, Scene.Point>, geometry: Geometry): Points => {

@@ -96,7 +96,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * The document record each target was last filled from, with the document it came from. Automerge
    * shares untouched subtrees structurally, so a record the change did not reach is the identical object
-   * and needs no work at all, and within a changed record an untouched key holds the identical value —
+   * and needs no work at all, and within a changed record an untouched key holds the identical value -
    * which is what lets a materialized `Ref`, array or nested proxy keep its identity across a refresh
    * instead of being minted again. Held weakly, and only ever compared by identity: a stale entry costs
    * a refresh that was already the unconditional behaviour.
@@ -202,7 +202,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const stored = this._storedRecord(target);
     const elements = Array.isArray(stored) ? stored : [];
     // Staged before anything is applied, so an element that throws leaves the array as it was rather
-    // than half of two states — reads are forwarded straight at it and would not recover.
+    // than half of two states - reads are forwarded straight at it and would not recover.
     const materialized = elements.map((element, index) => this._materializeValue(target, String(index), element));
     for (const [index, value] of materialized.entries()) {
       if (target[index] !== value) {
@@ -215,8 +215,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Makes a record target's own properties mirror its record in the document: one own data property per
    * document key, holding what a read returns (primitives decoded, records and arrays as their proxies,
-   * refs resolved), and nothing else. Keys the prototype chain answers — the system accessors and
-   * `Object.prototype` — are left to it, as the decode path did.
+   * refs resolved), and nothing else. Keys the prototype chain answers - the system accessors and
+   * `Object.prototype` - are left to it, as the decode path did.
    */
   private _refreshRecord(target: ProxyTarget): void {
     const core = target[symbolInternals];
@@ -238,7 +238,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const record = this._storedRecord(target);
     const present = typeof record === 'object' && record !== null && !Array.isArray(record);
     // Materialized in full before anything is applied, so a value that throws leaves the target as it
-    // was rather than half of two records — reads are forwarded straight at it and would not recover.
+    // was rather than half of two records - reads are forwarded straight at it and would not recover.
     const materialized: [string, unknown][] = [];
     if (present) {
       const prototype = Object.getPrototypeOf(target);
@@ -266,7 +266,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * `id` is part of a root object's key set but is not in its record — it belongs to the core. Carried as
+   * `id` is part of a root object's key set but is not in its record - it belongs to the core. Carried as
    * a real own property so the target's own shape is the whole answer and no `ownKeys` trap is needed to
    * synthesize it. Non-writable, like the accessor it shadows, which had no setter.
    */
@@ -283,7 +283,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   /**
    * The record this target was last filled from, or undefined when there is none to compare against.
-   * Discarded when the core has since been bound to a different document — `switchBranch` and
+   * Discarded when the core has since been bound to a different document - `switchBranch` and
    * `_rebindMemberToBranch` re-point a live core, and values from the old document's tree are not
    * comparable with the new one's.
    */
@@ -331,9 +331,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Mirrors one written key onto the target, for a refresh narrowed by a
    * {@link ObjectCore.changeTargetKey} scope, so a single-property write costs one key rather than the
-   * object's width. Returns false when the key is not the whole of the change — a container on either
+   * object's width. Returns false when the key is not the whole of the change - a container on either
    * side of the write owns a target, and everything already materialized under it, that no longer
-   * matches the document — and the caller falls back to refreshing the record.
+   * matches the document - and the caller falls back to refreshing the record.
    */
   private _writeThrough(target: ProxyTarget, key: string): boolean {
     if (!this._canMaterialize(target[symbolInternals])) {
@@ -510,7 +510,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   /**
    * Encodes the value for storage: `Ref`s become encoded references, and so do entities when
-   * `entities` is set — the value is (or is an element of) an array holding entities by identity.
+   * `entities` is set - the value is (or is an element of) an array holding entities by identity.
    */
   private _handleLinksAssignment(target: ProxyTarget, value: any, entities = false): any {
     return deepMapValues(value, (value, recurse) => {
@@ -518,7 +518,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return EncodedReference.fromURI(this.createRef(target, canonicalOf(value)));
       }
       if (isEchoObjectField(value) || isDetachedObjectField(value)) {
-        // The value is a value-object field of another object — database-backed or detached. We don't
+        // The value is a value-object field of another object - database-backed or detached. We don't
         // want to create a reference to it or have shared mutability, we need to copy by value.
         // Arrays are copied as arrays: spreading one into an object literal would turn it into a
         // record of numeric keys.
@@ -771,7 +771,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * runs at construction time, before the relation has a database, so it can only emit space-less refs.
    * With the database known, each endpoint is bound here: a same-space endpoint stays relative, a
    * cross-space endpoint becomes absolute, and an unpersisted endpoint is added to this database (then
-   * relative) — keeping the relation's strong-dependency endpoints resolvable from the persisted ref alone.
+   * relative) - keeping the relation's strong-dependency endpoints resolvable from the persisted ref alone.
    */
   rebindRelationEndpoints(target: ProxyTarget): void {
     const core = target[symbolInternals];
@@ -868,7 +868,7 @@ const isEchoObjectField = (value: any) => {
 };
 
 /**
- * @returns True if `value` is a nested record of a detached (never-added) object — an in-memory
+ * @returns True if `value` is a nested record of a detached (never-added) object - an in-memory
  * reactive proxy rather than an {@link EchoReactiveHandler} one. `isEntity` is the handler-agnostic
  * root test: only root objects and relations carry an entity kind, so a nested record fails it.
  */
@@ -956,7 +956,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     // The previous (typed) handler keeps this object's metadata on its instance-state prototype.
     // Re-pointing the prototype below would detach it, but the migration that follows
     // (`initCore`, `setRelationSourceAndTarget`, `rebindRelationEndpoints`) reads parent/relation
-    // endpoints off the target — so flatten that metadata onto the target as own properties first.
+    // endpoints off the target - so flatten that metadata onto the target as own properties first.
     // Shadowing copies are removed by `stripShadowingProperties` once migrated into the document.
     const previousState = Object.getPrototypeOf(target);
     if (previousState != null) {
@@ -1039,7 +1039,7 @@ export const destroyObject = <T extends Obj.Unknown>(proxy: T) => {
 
 /**
  * Route the core's document updates to the target: drop the lazily-rebuilt schema-slot cache, then
- * notify — deferred to the change context's exit when one is open, so a batch of writes emits once,
+ * notify - deferred to the change context's exit when one is open, so a batch of writes emits once,
  * and immediately otherwise (a sync from a peer).
  */
 const subscribeCoreUpdates = (core: ObjectCore, target: ProxyTarget): void => {
@@ -1099,8 +1099,8 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   assertObjectModel(obj);
 
   // Identity, not structure, is this proxy's equality. Effect compares and hashes an unmarked object
-  // by walking its properties, so two proxies over the same entity — a branch binding and the live
-  // object, or two bindings of one branch — collapse into a single `Atom.family` entry keyed on
+  // by walking its properties, so two proxies over the same entity - a branch binding and the live
+  // object, or two bindings of one branch - collapse into a single `Atom.family` entry keyed on
   // whichever came first. The survivor's `subscribe` targets a proxy the caller may already have
   // disposed, so the other binding's updates are never delivered.
   Equal.byReferenceUnsafe(obj);

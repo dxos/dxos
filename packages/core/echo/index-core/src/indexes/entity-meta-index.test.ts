@@ -26,7 +26,7 @@ const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.make('com.example.type.personaextra',
 
 describe('EntityMetaIndex', () => {
   // 0008 adds the normalized id columns without filling them, and the primary pass only rewrites a
-  // row when its object next changes — so the backfill is what keeps the compiled query path, which
+  // row when its object next changes - so the backfill is what keeps the compiled query path, which
   // joins through these columns, from silently missing pre-upgrade objects.
   it.effect('backfills the normalized id columns for rows written before they existed', () =>
     Effect.gen(function* () {
@@ -628,7 +628,7 @@ describe('EntityMetaIndex', () => {
     Effect.gen(function* () {
       // A build before `convergenceKey` tracked its progress under the retired names (`fts5`,
       // `reverseRef`); rows it indexed hold NULL keys and re-indexing is per-object, so those
-      // cursors must not survive the upgrade — the bumped names re-present every document.
+      // cursors must not survive the upgrade - the bumped names re-present every document.
       // Simulate the old vintage: its own init created the table before the retirement
       // migration existed, so the rows are in place when the migrations first run here.
       const sql = yield* SqlClient.SqlClient;
@@ -684,7 +684,7 @@ describe('EntityMetaIndex', () => {
       yield* store.record([
         { spaceId, convergenceKey: 'example.com/thing/a' },
         { spaceId, convergenceKey: 'example.com/thing/b' },
-        { spaceId, convergenceKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
+        { spaceId, convergenceKey: 'example.com/thing/a' }, // Re-recorded - deduplicated on read.
       ]);
 
       const { maxId, intents } = yield* store.take();
@@ -721,7 +721,7 @@ describe('EntityMetaIndex', () => {
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
         } satisfies IndexerObject,
       }));
-      // A local block that has not been positioned yet — it has no place in the cursor ordering.
+      // A local block that has not been positioned yet - it has no place in the cursor ordering.
       const unpositioned: IndexerObject = {
         spaceId,
         queueId,
@@ -778,7 +778,7 @@ describe('EntityMetaIndex', () => {
       const spaceId = SpaceId.random();
       const queueId = EntityId.random();
       // The id format check is case-insensitive, and BINARY puts every upper-case id before every
-      // lower-case one — the boundary a locale collation would order the other way.
+      // lower-case one - the boundary a locale collation would order the other way.
       const upper = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
       const lower = '01arz3ndektsv4rrffq69g5fab';
       const makeItem = (objectId: string): IndexerObject => ({
@@ -808,7 +808,7 @@ describe('EntityMetaIndex', () => {
       const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* index.migrate();
 
-      // The same queue id in two spaces — the case a bare `queueId` match cannot tell apart.
+      // The same queue id in two spaces - the case a bare `queueId` match cannot tell apart.
       const queueId = EntityId.random();
       const [mine, theirs] = [SpaceId.random(), SpaceId.random()];
       const makeItem = (spaceId: SpaceId, objectId: string): IndexerObject => ({

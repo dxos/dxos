@@ -22,7 +22,7 @@ const MODEL = 'com.openai.model.gpt-oss-20b.default';
 const ResolverLayer = OllamaResolver.make().pipe(Layer.provide(FetchHttpClient.layer));
 
 // The catalog's shared model ids are served by several providers, so the provider must accompany the
-// request — `(provider, id)` is the resolver key.
+// request - `(provider, id)` is the resolver key.
 const ModelLayer = AiService.languageModel(MODEL, { provider: Provider.ollama.id }).pipe(
   Layer.provide(AiModelResolver.buildAiService),
   Layer.provide(ResolverLayer),

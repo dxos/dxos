@@ -34,7 +34,7 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 /** Prompts are reused this long even after the set changes, so an active session regenerates at most hourly. */
 const MIN_REFRESH_MS = 60 * 60 * 1000;
 
-// Onboarding documents added by the system at identity creation — exclude them so a
+// Onboarding documents added by the system at identity creation - exclude them so a
 // brand-new default space (containing only the welcome doc) still uses fallback prompts.
 const ONBOARDING_DOCUMENT_LABELS = new Set(['Welcome to Composer']);
 

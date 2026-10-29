@@ -29,7 +29,7 @@ import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
 import { runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /**
- * Bidirectional tag sync against the mock provider — the local → provider half that
+ * Bidirectional tag sync against the mock provider - the local -> provider half that
  * `plugin-inbox/docs/TAG-SYNC.md` designs. The mock holds mutable per-message label state, so a push
  * is observable by reading the labels back through the same API the sync writes through.
  */
@@ -84,7 +84,7 @@ describe('gmail tag push', () => {
 
   /**
    * Copies the heads out of the cursor. `spec.tagHeads` is a live ECHO array, so holding the reference
-   * across a run compares the value against itself — a snapshot is what makes "did the base advance?"
+   * across a run compares the value against itself - a snapshot is what makes "did the base advance?"
    * answerable.
    */
   const tagHeadsOf = (binding: Cursor.Cursor) =>
@@ -112,7 +112,7 @@ describe('gmail tag push', () => {
 
   test('a capped backfill records a base each run, so it re-pushes nothing it pulled', async ({ expect }) => {
     // Regression: heads were saved only by uncapped runs, so every backfill run reconciled with no base
-    // and re-pushed — after loading in full — every message synced so far, until EDGE ran out of memory.
+    // and re-pushed - after loading in full - every message synced so far, until EDGE ran out of memory.
     const dataset = {
       ...generateGmailDataset({ count: 30, seed: 44, start: subDays(now, 6), end: subDays(now, 2) }),
       historyId: '1000',
@@ -264,7 +264,7 @@ describe('gmail tag push', () => {
     await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
 
     expect(pushes).toEqual([]);
-    // The tag is still there locally — it is simply not the provider's business.
+    // The tag is still there locally - it is simply not the provider's business.
     expect(TagIndex.bind(tagIndex).tags(message.id)).toContain(Obj.getURI(followUp).toString());
   });
 
@@ -422,7 +422,7 @@ describe('gmail tag push', () => {
     await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
     expect(pushes).toHaveLength(1);
 
-    // Run 3 reads that step as an incoming delta — the echo. Nothing further may be pushed, and the
+    // Run 3 reads that step as an incoming delta - the echo. Nothing further may be pushed, and the
     // tag must survive rather than being reconciled away.
     await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
     expect(pushes).toHaveLength(1);
@@ -431,7 +431,7 @@ describe('gmail tag push', () => {
 
   /**
    * The push phase runs OUTSIDE the pipeline's `tapError`, so a defect escaping it would end the run
-   * with no terminal status — leaving the progress key live and the mailbox's Sync button disabled
+   * with no terminal status - leaving the progress key live and the mailbox's Sync button disabled
    * until the user navigates away. The pull has already committed by then, so losing the push is a
    * degradation; losing the completion signal is a visible break. Regression for exactly that.
    */
@@ -442,7 +442,7 @@ describe('gmail tag push', () => {
     };
     const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
 
-    // A provider whose push DEFECTS (dies) rather than failing in the typed error channel — the shape
+    // A provider whose push DEFECTS (dies) rather than failing in the typed error channel - the shape
     // an unexpected bug takes, and the one a `catch` on the error channel alone would not contain.
     const exploding = Layer.effect(
       GoogleMailApi,
@@ -491,7 +491,7 @@ describe('gmail tag push', () => {
   });
 });
 
-describe('gmail tag push — the reconciliation base', () => {
+describe('gmail tag push - the reconciliation base', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -581,7 +581,7 @@ describe('gmail tag push — the reconciliation base', () => {
 
     await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
 
-    // Archive locally — a removal, which the additive path must refuse to push.
+    // Archive locally - a removal, which the additive path must refuse to push.
     const feed = mailbox.feed.target!;
     const items = await db
       .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(feed)!)))
@@ -592,7 +592,7 @@ describe('gmail tag push — the reconciliation base', () => {
     Tagging.unset(message, Obj.getURI(inbox).toString(), { index: tagIndex });
     await db.flush({ indexes: true });
 
-    // A head the replica cannot resolve — the shape of a compacted or evicted history.
+    // A head the replica cannot resolve - the shape of a compacted or evicted history.
     Obj.update(binding, (binding) => {
       if (binding.spec.kind === 'external') {
         binding.spec.tagHeads = ['0000000000000000000000000000000000000000000000000000000000000000'];
@@ -611,7 +611,7 @@ describe('gmail tag push — the reconciliation base', () => {
   });
 });
 
-describe('gmail tag push — unpushable labels', () => {
+describe('gmail tag push - unpushable labels', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -627,7 +627,7 @@ describe('gmail tag push — unpushable labels', () => {
   /**
    * `SENT` maps inbound but Gmail refuses it in a `modify` write (`400 Invalid label: SENT`, verified
    * live). The send flow applies the canonical `sent` tag locally on every send, so without the
-   * exclusion every sent message would produce a permanent 400 — an error per message for a change
+   * exclusion every sent message would produce a permanent 400 - an error per message for a change
    * that could never have been applied.
    */
   test('the canonical `sent` tag is never pushed', async ({ expect }) => {
@@ -676,7 +676,7 @@ describe('gmail tag push — unpushable labels', () => {
   });
 });
 
-describe('gmail tag push — an existing binding gaining tag sync', () => {
+describe('gmail tag push - an existing binding gaining tag sync', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -690,9 +690,9 @@ describe('gmail tag push — an existing binding gaining tag sync', () => {
   const now = new Date('2026-07-16T12:00:00.000Z');
 
   /**
-   * A mailbox that has been syncing for weeks and only now gains tag sync has no `tagHeads` — the same
+   * A mailbox that has been syncing for weeks and only now gains tag sync has no `tagHeads` - the same
    * signal a brand-new binding gives. Treating it as a first sync would absorb every tag the user had
-   * already applied into the base, after which `local ⊖ base` is empty forever and they could never
+   * already applied into the base, after which `local (-) base` is empty forever and they could never
    * reach the provider. Diagnosed against a real mailbox whose four existing stars had become
    * permanently unpushable exactly this way.
    */
@@ -718,7 +718,7 @@ describe('gmail tag push — an existing binding gaining tag sync', () => {
     ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
     const services = Layer.mergeAll(layer, ambientSyncServices(db));
 
-    // Backfill first, which leaves the binding with a watermark — it has synced before. Then clear the
+    // Backfill first, which leaves the binding with a watermark - it has synced before. Then clear the
     // tag heads, which is exactly the state a mailbox is in the moment tag sync ships: syncing for
     // weeks, but never a tag-aware pass.
     await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));

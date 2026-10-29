@@ -16,11 +16,11 @@ export const BACKEND_KIND = 'org.dxos.channel.backend.slack';
 export const Properties = Schema.Struct({
   accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
     title: 'Bot token',
-    description: 'The Slack bot token (xoxb-…) that reads and posts; a Slack connection stores one.',
+    description: 'The Slack bot token (xoxb-...) that reads and posts; a Slack connection stores one.',
   }),
   conversationId: Schema.String.annotate({
     title: 'Conversation ID',
-    description: 'The Slack conversation (C…, G… or D…) the channel mirrors and posts to.',
+    description: 'The Slack conversation (C..., G... or D...) the channel mirrors and posts to.',
   }),
   teamId: Schema.optional(
     Schema.String.annotate({

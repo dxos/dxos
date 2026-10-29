@@ -30,7 +30,7 @@ export type FactUnit = {
 // advance. Extraction degrades to no facts on failure (advisory layer) but logs first, matching
 // `extractFactsStage`'s degradation, so the loss stays observable.
 // `concurrency` bounds in-flight extractions; >1 runs the (independent, network-bound) per-message
-// LLM calls in parallel. Facts are order-independent — the sink commits by max cursor key — so the
+// LLM calls in parallel. Facts are order-independent - the sink commits by max cursor key - so the
 // reordering `mapEffect` may introduce is harmless here.
 export const extractFactsUnitStage = (
   extract: FactExtractor,

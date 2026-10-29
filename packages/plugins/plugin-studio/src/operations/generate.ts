@@ -74,7 +74,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       const registry = (yield* Capability.getAll(AppCapabilities.ProgressRegistry))[0];
       const controller = new AbortController();
       const monitor = registry?.register(`${StudioNamespace.key}/${artifactObj.id}`, {
-        label: `Generating ${artifactObj.kind}…`,
+        label: `Generating ${artifactObj.kind}...`,
         onCancel: () => controller.abort(),
       });
       const options: GenerationService.GenerateOptions = {
@@ -149,7 +149,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
           }
           const pendingVariant = pending;
           const pendingJobId = jobId;
-          // Clear the jobId on failure/abort — otherwise the article's resume effect would re-invoke
+          // Clear the jobId on failure/abort - otherwise the article's resume effect would re-invoke
           // this op in a loop (or silently restart a poll the user just cancelled).
           const awaited = yield* Effect.tryPromise({
             try: () => awaitResult(pendingJobId, options),

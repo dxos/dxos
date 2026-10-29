@@ -3,7 +3,7 @@
 //
 
 // Content-aware recoloring of email HTML so it reads against the app theme instead of its authored
-// (usually light) palette — light backgrounds are dropped so the app surface shows through, and text
+// (usually light) palette - light backgrounds are dropped so the app surface shows through, and text
 // colors are remapped toward the theme ink while intentional colored backgrounds (buttons, banners)
 // and sender-chosen colors are preserved. Adapted from macro-inc/macro (`core/email`). Operates on
 // live DOM (needs `getComputedStyle`), so the subtree must be attached to the document first.
@@ -11,7 +11,7 @@
 // DOM traversal APIs (`TreeWalker`, `Node.parentElement`) are untyped at the Text/Element boundary;
 // the casts below narrow those results and are the standard idiom for walking a known node kind.
 //
-// TODO(wittjosiah): The color primitives here (sRGB↔OKLCH conversion, CSS color parsing, contrast) are
+// TODO(wittjosiah): The color primitives here (sRGB<->OKLCH conversion, CSS color parsing, contrast) are
 //   general-purpose and have no equivalent in our low-level UI packages today. Factor them out into a
 //   shared lower-level color utility (e.g. under react-ui-theme) so other surfaces can reuse them,
 //   leaving only the email-specific recoloring policy in this module.
@@ -64,7 +64,7 @@ export const processEmailColors = (root: Element, theme: ThemeColorParams): void
     if (textNode.insideAnchor) {
       continue;
     }
-    // Sender explicitly set a background behind this text — trust their color choices, change nothing.
+    // Sender explicitly set a background behind this text - trust their color choices, change nothing.
     if ((textNode.bg?.a ?? 0) > 0) {
       continue;
     }
@@ -100,7 +100,7 @@ export const processEmailColors = (root: Element, theme: ThemeColorParams): void
 
 /**
  * Resolves a computed CSS color string to OKLCH. Handles the two forms `getComputedStyle` returns for
- * these values — `oklch(...)` (theme tokens are authored in OKLCH) and `rgb(a)(...)`. Returns `null`
+ * these values - `oklch(...)` (theme tokens are authored in OKLCH) and `rgb(a)(...)`. Returns `null`
  * for transparent/unresolvable.
  */
 export const cssColorToOklch = (color: string): OKLCH | null => {
@@ -247,7 +247,7 @@ const normalizeRGBA = (rgba: RGBA): RGBA => {
   };
 };
 
-/** sRGB (0–1 channels) → OKLCH. */
+/** sRGB (0-1 channels) -> OKLCH. */
 const rgbaToOklch = (rgba: RGBA): OKLCH => {
   const { r, g, b, a } = rgba;
   const linear = (component: number) =>

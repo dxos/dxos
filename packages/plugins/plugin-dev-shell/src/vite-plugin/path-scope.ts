@@ -12,7 +12,7 @@ import { DevShellError } from '#shell';
  *
  * This scopes where a script *starts*, not what it can reach: the tool runs bash, so nothing stops a
  * script from walking upwards on its own. What the check does buy is that a caller cannot silently
- * retarget the host at another tree — an attempt is an error rather than a directory substitution,
+ * retarget the host at another tree - an attempt is an error rather than a directory substitution,
  * which would otherwise look like a successful run against the wrong files.
  */
 export const resolveWithin = (root: string, requested?: string): string => {

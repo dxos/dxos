@@ -31,7 +31,7 @@ export const TypeInputOptionsAnnotation = Annotation.make({
 });
 
 /**
- * Discovers all types — persisted in the space (database) and code-shipped in the registry (runtime).
+ * Discovers all types - persisted in the space (database) and code-shipped in the registry (runtime).
  * Persisted schemas are never added to the shared graph registry, so the space scope is required to
  * surface user-defined types.
  */
@@ -157,7 +157,7 @@ export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: 
 
     const typename = Type.getTypename(type);
     // Only database (user-defined) types carry a user-set `name`; surface it as the label. Static
-    // (runtime) types have no data label — leave it undefined so the consumer resolves the proper,
+    // (runtime) types have no data label - leave it undefined so the consumer resolves the proper,
     // localized label from translations keyed by typename (`t('typename.label', { ns: typename })`).
     result.push({ typeUri, typename, label: isDatabase ? Type.getLabel(type) : undefined });
   }

@@ -20,8 +20,8 @@ const config: Plugin.PluginConfig = Plugin.config({
       activation it creates a dedicated Agent instance backed by the Sidekick
       skill, sets up a Chat channel for ongoing conversation (with optional
       voice input via plugin-transcription), provisions a daily Journal, and
-      generates a frank written profile of the user — goals, character, and
-      current priorities — that it refines over time through dialogue.
+      generates a frank written profile of the user - goals, character, and
+      current priorities - that it refines over time through dialogue.
 
       For every Person in the space, Sidekick automatically creates and maintains
       a linked markdown Profile document. As new information arrives through

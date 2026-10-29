@@ -105,7 +105,7 @@ const xmlBlockParsers = (registry?: XmlWidgetRegistry): BlockParser[] => {
           }
         }
 
-        // Unclosed tag (e.g., still streaming) — emit what we have.
+        // Unclosed tag (e.g., still streaming) - emit what we have.
         cx.addElement(cx.elt('HTMLBlock', start, end));
         return true;
       },

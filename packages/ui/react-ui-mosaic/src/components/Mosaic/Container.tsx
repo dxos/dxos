@@ -206,7 +206,7 @@ const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
               return (data && eventHandler.canDrop?.({ source: data })) || false;
             },
 
-            // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+            // Reorder is a move, not a copy - otherwise the browser shows the green "+" copy cursor.
             getDropEffect: () => 'move',
 
             /**

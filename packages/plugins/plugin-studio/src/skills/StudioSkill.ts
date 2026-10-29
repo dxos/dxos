@@ -39,21 +39,21 @@ export const make = (): Skill.Skill =>
         Method:
         1. Turn the brief into a narrative of N beats (three when unspecified): an establishing shot
            that sets the scene, one or more beats that develop it, and a resolution. Give each beat a
-           short title (plain words, never a number or ordinal — the storyboard numbers its frames
+           short title (plain words, never a number or ordinal - the storyboard numbers its frames
            by position), a one-sentence director's note, and a concrete visual prompt (subject,
-           setting, camera, motion for video, mood). Prompts must stand alone — the generator sees
+           setting, camera, motion for video, mood). Prompts must stand alone - the generator sees
            nothing but the prompt.
         2. Call list-providers to learn which provider serves the kind you need and which config keys
            it expects beyond the prompt (a model path, an avatar). Make every frame a video when a
            video provider is registered (a storyboard plays back to back); use image only when none
            is, or the brief asks for stills.
         3. Call create-storyboard with the project from your context (so it is filed there), the
-           frames in order — each with title, kind, prompt, notes, the provider id and the
-           provider's extra config (use its defaultRequest when present) — and generate: true to
+           frames in order - each with title, kind, prompt, notes, the provider id and the
+           provider's extra config (use its defaultRequest when present) - and generate: true to
            produce every frame in the same call. To work incrementally instead, create the storyboard
            without frames, then append-frame per beat and generate each returned artifact.
         4. A generation may take minutes; report each frame's outcome. If a generation fails
-           (credentials, credits, moderation), keep the frame — its prompt is the work — and say
+           (credentials, credits, moderation), keep the frame - its prompt is the work - and say
            what failed and what would fix it.
         5. Finish with a short summary: the storyboard's name and each frame's title and prompt.
       `,

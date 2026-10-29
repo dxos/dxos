@@ -83,7 +83,7 @@ export const make = (): Skill.Skill =>
         4. Check what ${tool(RelayOperation.SendMessage)} returned. Only when it was delivered, tell the person in one
            sentence that you have asked them and will follow up here. When it was not, call
            ${tool(RelayOperation.UpdateRelay)} with status "failed" and the reason, and tell the person the handoff
-           did not go through (with the reason if it helps them) — never say the team has it.
+           did not go through (with the reason if it helps them) - never say the team has it.
         5. Never promise a fix or a date. When the member answers, report it in the thread and call
            ${tool(RelayOperation.UpdateRelay)} with the outcome.
 

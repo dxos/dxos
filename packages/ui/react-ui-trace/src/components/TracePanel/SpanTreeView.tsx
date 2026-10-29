@@ -18,7 +18,7 @@ export type SpanTreeViewProps = Util.ThemedClassName<{
  * The trace's span tree as read-only JSON.
  *
  * CodeMirror puts only the lines in view into the DOM and parses the rest in time-sliced chunks, so
- * showing a tree stops costing what the tree is worth — a highlighter renders every one of its lines
+ * showing a tree stops costing what the tree is worth - a highlighter renders every one of its lines
  * in one synchronous pass. `TextEditor` rather than `Editor.View`: this pane has no toolbar, so the
  * compound component's context would only be wiring nothing reads.
  */

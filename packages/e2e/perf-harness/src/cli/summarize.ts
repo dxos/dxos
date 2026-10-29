@@ -126,14 +126,14 @@ const loadRun = (root: string, runDir: string): LoadedRun => {
 };
 
 const ms = (value: number) => formatValue(value, 'ms');
-const signedMs = (value: number) => `${value < 0 ? '−' : '+'}${ms(Math.abs(value))}`;
+const signedMs = (value: number) => `${value < 0 ? '-' : '+'}${ms(Math.abs(value))}`;
 
 const renderRow = (handle: string, row: DigestRow): string =>
   [
     handle.padEnd(4),
     (row.base === undefined
       ? ms(row.candidate)
-      : `${signedMs(row.candidate - row.base)} (${ms(row.base)} → ${ms(row.candidate)})`
+      : `${signedMs(row.candidate - row.base)} (${ms(row.base)} -> ${ms(row.candidate)})`
     ).padEnd(row.base === undefined ? 9 : 30),
     row.stage.padEnd(16),
     row.realm.padEnd(32),
@@ -195,7 +195,7 @@ export const summarize = ({ run, stage, realm, top, heap }: SummarizeOptions): n
   const rounds = loaded.candidate.dirs.length;
   process.stdout.write(
     [
-      `${path.relative(root, runDir)}: self time per ${comparing ? `round, candidate − base, over ${rounds} rounds` : `iteration over ${rounds} run`}${stage ? `, stage ${stage}` : ''}${realm ? `, realm ${realm}` : ''}`,
+      `${path.relative(root, runDir)}: self time per ${comparing ? `round, candidate - base, over ${rounds} rounds` : `iteration over ${rounds} run`}${stage ? `, stage ${stage}` : ''}${realm ? `, realm ${realm}` : ''}`,
       ...rows.map((row, index) => renderRow(`h${index + 1}`, row)),
       rows.length > 0 ? 'drill into a row: pnpm perf expand <handle>' : 'no profiles matched',
     ].join('\n') + '\n',
@@ -254,7 +254,7 @@ export const expand = ({ handle, run }: { handle: string; run?: string }): numbe
       `${handle} ${cost.label}${cost.package ? ` (${cost.package})` : ''} in ${stage}, ${realm}`,
       ...(cost.source ? [`source ${cost.source}`] : []),
       loaded.base
-        ? `self ${ms(baseCost?.selfMs ?? 0)} → ${ms(now?.selfMs ?? 0)}, total ${ms(baseCost?.totalMs ?? 0)} → ${ms(now?.totalMs ?? 0)} per round`
+        ? `self ${ms(baseCost?.selfMs ?? 0)} -> ${ms(now?.selfMs ?? 0)}, total ${ms(baseCost?.totalMs ?? 0)} -> ${ms(now?.totalMs ?? 0)} per round`
         : `self ${ms(cost.selfMs)}, total ${ms(cost.totalMs)} per iteration`,
       ...neighbours(
         'called from',

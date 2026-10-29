@@ -21,7 +21,7 @@ const config = defineConfig({
 
 /**
  * Hosts the Claude Agent SDK in whichever dev server is serving the stories, so `Agent.stories`
- * reaches it same-origin — no CORS, and no separate process for a test run to supervise. Turns are
+ * reaches it same-origin - no CORS, and no separate process for a test run to supervise. Turns are
  * scoped to the fixtures directory rather than the repo, bounding what the agent can read.
  */
 const agentClaudePlugin = () => ({
@@ -35,7 +35,7 @@ const agentClaudePlugin = () => ({
 });
 
 // Each vitest project (node, storybook, browser) runs its own vite server, and the storybook
-// project's browser server — not the root one — is what serves the story to chromium.
+// project's browser server - not the root one - is what serves the story to chromium.
 const attach = (target: { plugins?: unknown[] }) => {
   target.plugins = [...(target.plugins ?? []), agentClaudePlugin()];
 };

@@ -48,7 +48,7 @@ describe('plugin list', () => {
           expect(typeof row.core).toBe('boolean');
         }
 
-        // The axes are genuinely independent — the demos ship with the binary and stay off — which
+        // The axes are genuinely independent - the demos ship with the binary and stay off - which
         // the collapsed single-status output could not express.
         const sample = rows.find((row) => row.id === SAMPLE);
         expect(sample?.installed).toBe(true);
@@ -83,7 +83,7 @@ describe('plugin enable / disable', () => {
 
         const contents = fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8');
         expect(contents).not.toContain(MARKDOWN);
-        // Core is host policy, not a user choice — persisting it would outlive a host that stops
+        // Core is host policy, not a user choice - persisting it would outlive a host that stops
         // pinning the plugin.
         for (const id of getCore()) {
           expect(contents).not.toContain(id);

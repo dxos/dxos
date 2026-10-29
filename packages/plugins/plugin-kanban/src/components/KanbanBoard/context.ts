@@ -16,7 +16,7 @@ const KANBAN_BOARD_NAME = 'KanbanBoard.Context';
 /**
  * Card tile props. Defined here (rather than in `KanbanCard.tsx`) so the
  * context type can reference it without forming a cycle through that
- * module's runtime exports — webkit treats the resulting TDZ as a hard
+ * module's runtime exports - webkit treats the resulting TDZ as a hard
  * error while other engines are lenient.
  */
 export type KanbanCardProps = Pick<MosaicTileProps<Obj.Unknown>, 'location' | 'data' | 'debug' | 'draggable'>;

@@ -93,8 +93,8 @@ type UseReportConnectionOptions = {
 
 /**
  * Reports a completed connect flow back into the conversation as a user turn naming the new
- * credential's URI, so the agent — which cannot observe a click, and whose flows finish out of band
- * in an OAuth popup or a credential dialog — resumes with the credential it asked for.
+ * credential's URI, so the agent - which cannot observe a click, and whose flows finish out of band
+ * in an OAuth popup or a credential dialog - resumes with the credential it asked for.
  *
  * Armed by the user picking an entry rather than by mount: the connection query starts empty and
  * fills in asynchronously, so a mount-time baseline could not tell a pre-existing connection from

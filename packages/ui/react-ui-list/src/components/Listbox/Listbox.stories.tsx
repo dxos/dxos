@@ -92,7 +92,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
             <Toolbar.Root>
               <Input.Root
                 aria-label='Filter'
-                placeholder='Filter…'
+                placeholder='Filter...'
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />

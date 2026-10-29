@@ -24,7 +24,7 @@ const program = Effect.gen(function* () {
   // Only the profile's data root is carried over, so `dx` later opens the same storage; every
   // service is left out on purpose. Identity creation joins the identity's own swarm
   // unconditionally, and against a configured EDGE endpoint that is a 10s timeout and a thrown
-  // error on any machine without reachable signaling — an offline fixture must not need the
+  // error on any machine without reachable signaling - an offline fixture must not need the
   // network to be up.
   const dataRoot = loaded.values.runtime?.client?.storage?.dataRoot;
   const config = new Config({ version: 1, runtime: { client: { storage: { dataRoot } } } });

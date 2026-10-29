@@ -22,7 +22,7 @@ export type Identifier = {
 /**
  * A canonical agent (sender/author). First-order identity: keyed by a stable token and carrying a
  * SET of identifiers across namespaces, so a later corpus (e.g. email) can be merged onto the same
- * agent. `ref` links to a canonical ECHO object (Person) when resolved — deferred to the browser path.
+ * agent. `ref` links to a canonical ECHO object (Person) when resolved - deferred to the browser path.
  */
 export type Profile = {
   /** Canonical token (provisional: the first identifier as `namespace:value`; an ECHO DXN later). */

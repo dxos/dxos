@@ -20,8 +20,8 @@ export type CardIconSlotProps = PropsWithChildren<{
  * Exists because {@link AppSurface.CardIcon} cannot use a bare `Surface` the way `CardContent` does.
  * A card with no contributed body renders no body, which is fine; a card with no contributed icon
  * still needs one, and `Surface`'s `fallback` is the error boundary rather than the not-contributed
- * case. So the check and the default travel together here instead of being spelled out — differently
- * — at each of the four hosts.
+ * case. So the check and the default travel together here instead of being spelled out - differently
+ * - at each of the four hosts.
  *
  * The default stays with the host as `children` rather than being fixed here, because the hosts
  * genuinely disagree: a record plank shows a plain glyph, a tile shows the object's picture through

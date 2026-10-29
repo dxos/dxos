@@ -11,7 +11,7 @@ import { type PatchFile, parsePatch } from './patch.ts';
  *
  * One-shot generation over a trimmed diff fails in a specific way on a large change: the model
  * writes the first two sections in full, then runs out of room and leaves the rest to the appended
- * `## Also changed` section — so the bigger the pull request, the less of it the walkthrough
+ * `## Also changed` section - so the bigger the pull request, the less of it the walkthrough
  * actually covers. Here a planner sees only the file list and decides the chapters, then each
  * chapter is narrated against its own files, and the chapters are concatenated.
  */
@@ -58,7 +58,7 @@ export const PLANNER_SYSTEM_PROMPT = [
   '  genuinely does several things.',
   '',
   'Answer with JSON and nothing else:',
-  '{"title": "…", "overview": "…", "chapters": [{"title": "…", "summary": "…", "files": ["…"]}]}',
+  '{"title": "...", "overview": "...", "chapters": [{"title": "...", "summary": "...", "files": ["..."]}]}',
   '',
   '`title` is the H1 for the document: what the change does, in one line. `overview` is two or',
   'three sentences on what it does and why, for the reader who has not seen the diff. Each',
@@ -87,10 +87,10 @@ export const buildPlannerPrompt = (
  * Reads the planner's answer.
  *
  * Tolerant of a fenced block or surrounding prose, because a refusal to parse costs the whole run
- * and the recovery — falling back to one-shot — is worse than reading a fence.
+ * and the recovery - falling back to one-shot - is worse than reading a fence.
  */
 export const parsePlan = (response: string, paths: readonly string[]): Plan | undefined => {
-  // A closer is its own line of at least as many backticks: a `​``text` sequence inside a JSON
+  // A closer is its own line of at least as many backticks: a ```text` sequence inside a JSON
   // string would otherwise end the block early and leave `JSON.parse` a truncated payload.
   const fenced = response.match(/^[ \t]*(`{3,})[^\n]*\n([\s\S]*?)^[ \t]*\1`*[ \t]*$/m);
   const text = (fenced?.[2] ?? response).trim();
@@ -117,7 +117,7 @@ export const parsePlan = (response: string, paths: readonly string[]): Plan | un
   const chapters: Chapter[] = [];
   for (const chapter of decoded.chapters) {
     // A path the patch does not contain, or one a previous chapter already took, would make a
-    // chapter prompt carrying no diff — an invented file is the planner's likeliest mistake.
+    // chapter prompt carrying no diff - an invented file is the planner's likeliest mistake.
     const files = chapter.files.filter((path) => known.has(path) && !claimed.has(path));
     for (const path of files) {
       claimed.add(path);

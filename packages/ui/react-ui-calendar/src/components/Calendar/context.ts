@@ -28,7 +28,7 @@ export type Range = {
 export type CalendarController = {
   /** Bring a date into view without changing the selection. */
   scrollTo: (date: Date) => void;
-  /** Set the grid's selected day (and scroll it into view) — e.g. when the active event changes. */
+  /** Set the grid's selected day (and scroll it into view) - e.g. when the active event changes. */
   select: (date: Date) => void;
 };
 

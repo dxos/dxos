@@ -151,7 +151,7 @@ const makeArchitectureDiagram = () => {
     ellipse('stripe', 3, 0, 'Stripe', { color: 'green' }),
     rect('cli', 0, 1, 'Cairn CLI\n(CI runners, laptops)', { color: 'black' }),
     rect('edge', 1, 1, 'Edge gateway\nCloudflare Workers', { color: 'orange' }),
-    rect('index', 2, 1, 'Index service\nkey → digest', { color: 'blue' }),
+    rect('index', 2, 1, 'Index service\nkey -> digest', { color: 'blue' }),
     ellipse('postgres', 3, 1, 'Postgres\nvia Hyperdrive', { color: 'blue' }),
     ellipse('r2', 1, 2, 'R2\nhot blobs', { color: 'orange' }),
     ellipse('s3', 2, 2, 'S3\norigin, cold blobs', { color: 'yellow' }),
@@ -168,7 +168,7 @@ const makeArchitectureDiagram = () => {
 };
 
 const REQUEST_STEPS = [
-  ['cli', 'Cairn CLI\nhash inputs → action key', 'black'],
+  ['cli', 'Cairn CLI\nhash inputs -> action key', 'black'],
   ['edge', 'Edge worker\nverify token', 'orange'],
   ['index', 'Index\nlook up key', 'blue'],
   ['r2', 'R2\nserve blob', 'orange'],

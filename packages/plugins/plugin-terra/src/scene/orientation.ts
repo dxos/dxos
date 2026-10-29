@@ -11,8 +11,8 @@ const DEG = Math.PI / 180;
 
 /**
  * Instance scale relative to each object's own surface/orbit radius, so scale stays planet-relative
- * at any zoom. Shared by every consumer of an object's frame — the rendered mesh, its gizmo rods,
- * and the chase camera's standoff — so all three agree on how big an object is.
+ * at any zoom. Shared by every consumer of an object's frame - the rendered mesh, its gizmo rods,
+ * and the chase camera's standoff - so all three agree on how big an object is.
  */
 export const SCALE_FACTOR = 0.04;
 
@@ -38,8 +38,8 @@ const pitchForward = (tangentForward: Vector3, up: Vector3, pitch: number): Vect
 
 /**
  * The object's own orthonormal frame at `state`, using `heading` (the frame-eased render heading,
- * not necessarily `state.bearing` itself — see `heading.ts`). `up` is the surface normal and
- * `forward` the heading tangent rotated toward it by `state.pitch` — the nose angle the object's
+ * not necessarily `state.bearing` itself - see `heading.ts`). `up` is the surface normal and
+ * `forward` the heading tangent rotated toward it by `state.pitch` - the nose angle the object's
  * behavior gives it, which is how a rocket flies nose-up off the pad and a plane noses up over
  * terrain.
  */

@@ -38,8 +38,8 @@ import {
 /**
  * How many commands to draw per executable one.
  *
- * A uniformly drawn command is usually unreachable where it lands — `JoinSpace` before any space
- * exists, `EditText` before any document does — so a pool of this size is what lets the filtered
+ * A uniformly drawn command is usually unreachable where it lands - `JoinSpace` before any space
+ * exists, `EditText` before any document does - so a pool of this size is what lets the filtered
  * sequence still reach `maxCommands`.
  */
 const COMMAND_POOL_FACTOR = 8;
@@ -151,7 +151,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       try {
         for (const command of plan) {
           // Simulation and execution start from the same model and apply the same transitions, so
-          // a disagreement here is a defect in `advance`, not an unlucky draw — fail loudly rather
+          // a disagreement here is a defect in `advance`, not an unlucky draw - fail loudly rather
           // than silently skipping, which is what made earlier runs look longer than they were.
           invariant(canRun(command, model), `command unreachable at execution time: ${describe(command)}`);
           try {
@@ -161,7 +161,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
               throw err;
             }
             // The trace records a command when it *starts*, so a bare error reads as the command
-            // after the failing one — an off-by-one that has already produced a wrong diagnosis.
+            // after the failing one - an off-by-one that has already produced a wrong diagnosis.
             // Recording the failure in the trace itself keeps later analysis of the artifact honest.
             trace({ event: 'failed', seq: real.counters.commands, command: describe(command) });
             // The cause goes into the message too: the log processor renders neither `cause` chains
@@ -352,7 +352,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       identityDids.push(identityDid);
       deviceDids.push({ client: owner, identityDid });
       // Wherever the hatch is open, because the self-serve cleanup routes 403 an identity with no
-      // Hub account. One fixed alias per identity slot — the hatch rebinds, so every run reuses the
+      // Hub account. One fixed alias per identity slot - the hatch rebinds, so every run reuses the
       // same rows. On preview the hatch is closed and cleanup falls back to the admin key.
       if (isDevLikeTarget(spec.edge)) {
         await replicants[owner].brain.bindTestAccount({
@@ -360,7 +360,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
           email: `test+bladerunner-${identity}@dxos.org`,
         });
       }
-      // One agent per identity — the agent belongs to the identity, so a second device of the same
+      // One agent per identity - the agent belongs to the identity, so a second device of the same
       // identity adds nothing. Fatal, not best-effort: without agents a DELEGATED invitation is
       // admitted by a member device instead of EDGE, so the fleet the commands run against is not
       // the one the spec asked for, and a run that quietly measures the fallback is worse than a
@@ -371,7 +371,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       for (const device of rest) {
         const { invitationCode } = await replicants[owner].brain.inviteDevice();
         const joined = await replicants[device].brain.joinAsDevice({ invitationCode });
-        // The model treats these clients as one identity — `knownBy`, `onlineMemberDevices` and
+        // The model treats these clients as one identity - `knownBy`, `onlineMemberDevices` and
         // every membership precondition depend on it. A device that silently landed on an identity
         // of its own would make the fleet a different shape than the plan was simulated against,
         // and the run would fail much later as an unexplained replication gap.
@@ -445,7 +445,7 @@ const renderSummary = (result: {
   elapsedMs: number;
 }): string =>
   [
-    `## ${result.ok ? '✅' : '❌'} Soak — ${result.executed} commands in ${(result.elapsedMs / 60_000).toFixed(1)} min`,
+    `## ${result.ok ? 'OK' : 'X'} Soak - ${result.executed} commands in ${(result.elapsedMs / 60_000).toFixed(1)} min`,
     '',
     `Against \`${result.edgeUrl}\`. Replay this exact run with \`--seed ${result.seed ?? '<unset>'}\`, or`,
     'from its own trace with `--spec \'{"plan":"<artifact>/command-trace.jsonl"}\'`.',

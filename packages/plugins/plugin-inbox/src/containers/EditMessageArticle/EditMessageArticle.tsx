@@ -25,13 +25,13 @@ export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Mess
 export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageArticleProps) => {
   const db = Obj.getDatabase(subject);
   const spaceId = db?.spaceId;
-  // Resolve the runtime here (container) and pass it into the composer hooks — the hooks live under
+  // Resolve the runtime here (container) and pass it into the composer hooks - the hooks live under
   // `components`/`hooks` and must not call capability hooks themselves.
   const runtime = Hooks.useProcessManagerRuntime();
   const extensions = useEmailComposerExtensions(runtime, subject);
   const sendOperations = Hooks.useCapabilities(InboxCapabilities.MailSendOperation);
   // No contributed generator means nothing to invoke, so the affordance is omitted rather than shown
-  // and failing — the same reason the send action is gated on a provider.
+  // and failing - the same reason the send action is gated on a provider.
   const replyGenerator = Hooks.useCapabilities(InboxCapabilities.ReplyGenerator)[0];
   const onSend = useSendEmail(runtime, subject, sendOperations);
 

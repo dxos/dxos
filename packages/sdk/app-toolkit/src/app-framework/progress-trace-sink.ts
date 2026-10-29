@@ -7,23 +7,23 @@ import { EID } from '@dxos/keys';
 
 import type * as AppCapabilities from './AppCapabilities.ts';
 
-/** Terminal status message — reducer calls `done()` then `remove()` on the keyed monitor. */
+/** Terminal status message - reducer calls `done()` then `remove()` on the keyed monitor. */
 export const STATUS_COMPLETE = 'progress.complete';
 
-/** Terminal status message — reducer calls `fail()` and leaves the monitor visible. */
+/** Terminal status message - reducer calls `fail()` and leaves the monitor visible. */
 export const STATUS_FAILED = 'Sync failed';
 
-/** Terminal status message — reducer calls `note()` then `remove()`. */
+/** Terminal status message - reducer calls `note()` then `remove()`. */
 export const STATUS_CANCELLED = 'Cancelled';
 
 /**
  * Reason shown when a run stops reporting. Deliberately not "failed": the run may well have finished
- * or still be going — what is known is that its progress stopped arriving, and saying more than that
+ * or still be going - what is known is that its progress stopped arriving, and saying more than that
  * would be inventing an outcome.
  */
 export const STATUS_STALLED = 'Stopped reporting';
 
-/** A terminal status message ends a run — the reducer removes or fails the keyed monitor. */
+/** A terminal status message ends a run - the reducer removes or fails the keyed monitor. */
 const isTerminalMessage = (message: string | undefined): boolean =>
   message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_CANCELLED;
 
@@ -32,7 +32,7 @@ type ProgressMonitor = ReturnType<AppCapabilities.ProgressRegistry['register']>;
 
 /**
  * Identifies the process/trigger that emits a monitor's progress, carried from the trace message's
- * {@link Trace.Meta} so a cancel can be routed to the right runtime — a local process (`pid`) or an
+ * {@link Trace.Meta} so a cancel can be routed to the right runtime - a local process (`pid`) or an
  * edge trigger (`trigger` + `space`, when `runtimeName` is an edge runtime).
  */
 export type CancelTarget = {
@@ -43,7 +43,7 @@ export type CancelTarget = {
 };
 
 /**
- * The trigger's object id from a {@link CancelTarget}, parsed from the trigger ref's `echo:` URI — the
+ * The trigger's object id from a {@link CancelTarget}, parsed from the trigger ref's `echo:` URI - the
  * key an edge trigger cancel is addressed by. Undefined when there is no trigger or it is not an echo
  * reference (e.g. a type ref).
  */
@@ -83,7 +83,7 @@ type MonitorEntry = {
 type Tombstone = { scope: 'pid'; pid: string } | { scope: 'run'; at: number };
 
 /**
- * Backstop for a `run`-scoped tombstone whose releasing terminal never arrives — the emitting
+ * Backstop for a `run`-scoped tombstone whose releasing terminal never arrives - the emitting
  * runtime's terminal broadcast is fire-and-forget, so a dropped publish must cost a late meter
  * rather than a permanently suppressed one. Well under a sync trigger's schedule.
  */
@@ -98,7 +98,7 @@ const FINISHED_REORDER_WINDOW_MS = 10_000;
 /**
  * How long a monitor may go without a status update before the sink stops believing in it.
  *
- * Every terminal the producer can emit travels the same lossy path its progress does — a killed
+ * Every terminal the producer can emit travels the same lossy path its progress does - a killed
  * process runs no finalizer, an Effect defect escapes the error channel that would report one, and a
  * swarm broadcast is fire-and-forget. Without a bound here any of those pins a meter open forever,
  * which is a worse failure than a late one: an indefinite sweep claims work is happening. Chosen well
@@ -112,7 +112,7 @@ export type TraceSinkOptions = {
   cancelProcess?: (target: CancelTarget) => void;
   /**
    * How a cancel tombstone bounds "the cancelled run" so its dying tail cannot resurrect the meter
-   * while a genuinely later run still can. `pid` (default) suits a local process — one pid per run,
+   * while a genuinely later run still can. `pid` (default) suits a local process - one pid per run,
    * released by a different pid; `run` suits an edge trigger, whose run is a chain of bounded
    * invocations each with a fresh pid, so the key is suppressed until the run's terminal status.
    */
@@ -120,7 +120,7 @@ export type TraceSinkOptions = {
   /**
    * Milliseconds a monitor may go without a status update before it is failed as stalled; see
    * {@link DEFAULT_STALL_TIMEOUT_MS}. Non-positive or non-finite disables the bound, which leaves a
-   * lost terminal pinning its meter open — only appropriate where the producer is in-process and its
+   * lost terminal pinning its meter open - only appropriate where the producer is in-process and its
    * terminal cannot be lost.
    */
   stallTimeout?: number;
@@ -137,7 +137,7 @@ export type RegistrySource = AppCapabilities.ProgressRegistry | (() => AppCapabi
 /**
  * Builds a {@link Trace.Sink} that projects ephemeral `status.update` events into a
  * {@link AppCapabilities.ProgressRegistry}. Intended as a parallel sink alongside feed
- * persistence — operations emit trace status; this adapter drives UI monitors.
+ * persistence - operations emit trace status; this adapter drives UI monitors.
  *
  * When {@link RegistrySource} is a getter that returns `undefined`, status
  * updates are dropped until the registry becomes available.
@@ -149,7 +149,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
   const monitors = new Map<string, MonitorEntry>();
   // Keys the user cancelled, tombstoned so the dying run's tail (which keeps broadcasting until the
   // process/edge abort lands) cannot resurrect the removed monitor. Release is scoped so a genuinely
-  // later run still shows — see {@link TraceSinkOptions.cancelScope}.
+  // later run still shows - see {@link TraceSinkOptions.cancelScope}.
   const cancelled = new Map<string, Tombstone>();
   // The pid that last reported a terminal, per key: broadcasts can arrive out of order, so an update the
   // run sent before its terminal can land after it and must not reopen a meter nothing will close.
@@ -158,7 +158,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
   const stallTimeout = options.stallTimeout ?? DEFAULT_STALL_TIMEOUT_MS;
   const stallBounded = Number.isFinite(stallTimeout) && stallTimeout > 0;
 
-  /** Stop the silence clock without forgetting the monitor — a run that reported its own end. */
+  /** Stop the silence clock without forgetting the monitor - a run that reported its own end. */
   const disarmStall = (key: string) => {
     const entry = monitors.get(key);
     if (entry?.stall) {
@@ -174,7 +174,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
 
   /**
    * (Re)start the silence clock for a live monitor. Armed from the reducer rather than from
-   * `monitorFor`, so it measures the gap between UPDATES — arming only at registration would fail a
+   * `monitorFor`, so it measures the gap between UPDATES - arming only at registration would fail a
    * long but healthy run.
    */
   const armStall = (key: string) => {
@@ -190,7 +190,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
     }
     entry.stall = setTimeout(() => {
       // The entry stays in the map: the meter shows the failure with its dismiss control, and that
-      // control routes through `makeOnCancel` → `cancelMonitor`, both of which need the entry to
+      // control routes through `makeOnCancel` -> `cancelMonitor`, both of which need the entry to
       // still be here. `ended` is what stops it from being mistaken for a live run.
       entry.stall = undefined;
       entry.ended = true;
@@ -230,11 +230,11 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
   ) => {
     const existing = monitors.get(key);
     if (existing && !existing.ended) {
-      // Same run, new process — an EDGE continuation reports under a fresh pid. Re-registering here
+      // Same run, new process - an EDGE continuation reports under a fresh pid. Re-registering here
       // would call `register`, which drops the prior entry so a genuine re-run starts clean, and the
       // total this run already reported would go with it: the meter falls back to a sweep mid-run,
       // having counted moments earlier. Keep the handle and re-point the target instead. The stall
-      // timer carries over untouched — a continuation is the same run, so its clock keeps running.
+      // timer carries over untouched - a continuation is the same run, so its clock keeps running.
       if (target.pid !== undefined && existing.target.pid !== undefined && target.pid !== existing.target.pid) {
         existing.handover = { ...existing.shown };
       }
@@ -248,7 +248,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       dropMonitor(key);
     }
 
-    // Cancellable when a handler is wired and there is something to address — a local process (pid) or
+    // Cancellable when a handler is wired and there is something to address - a local process (pid) or
     // an edge trigger (trigger); the handler routes local vs edge by runtime.
     const onCancel = options.cancelProcess && (target.pid || target.trigger) ? makeOnCancel(key) : undefined;
     const handle = registry.register(key, { label, onCancel });
@@ -318,7 +318,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
     if (tombstone) {
       if (tombstone.scope === 'run') {
         // Suppress the whole cancelled run (any pid in its chain) until its terminal status, which
-        // is itself suppressed — the monitor was already removed on cancel. Past the TTL the
+        // is itself suppressed - the monitor was already removed on cancel. Past the TTL the
         // suppression lifts regardless, so a lost terminal cannot hide every later run.
         if (isTerminalMessage(data.message)) {
           cancelled.delete(key);
@@ -384,12 +384,12 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
     // the very total/current this update carries.
     if (data.progress.phases !== undefined || data.progress.phase !== undefined) {
       handle.plan({ phases: data.progress.phases, phase: data.progress.phase });
-      // A count belongs to the phase that reported it, so entering a new phase clears it — otherwise
+      // A count belongs to the phase that reported it, so entering a new phase clears it - otherwise
       // an uncountable phase inherits its predecessor's numbers and draws a determinate bar over work
       // it cannot measure. The producer says so by sending no total, but `total` is an optional field:
       // an explicit `undefined` and an absent one are the same bytes on the wire, so the phase change
       // is the only signal that survives. `plan` deliberately does not reset (it must not discard the
-      // numbers THIS update carries), which is why the reset is here — before they are applied.
+      // numbers THIS update carries), which is why the reset is here - before they are applied.
       if (entry && data.progress.phase !== undefined && data.progress.phase !== entry.phase) {
         entry.phase = data.progress.phase;
         // The chain offset is a count too, and it belongs to the phase that is ending.

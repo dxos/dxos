@@ -24,7 +24,7 @@ import { bufMessage, serviceError } from './service-rpc.ts';
  * Opens a connection, and hands the caller the channel it establishes.
  *
  * `channelPort` is the caller's end of a dedicated {@link MessageChannel}, transferred with the
- * request; the service posts the `RTCDataChannel` to it — transferred, not copied — the moment it
+ * request; the service posts the `RTCDataChannel` to it - transferred, not copied - the moment it
  * exists. The channel cannot ride the response stream instead: a browser only lets an
  * `RTCDataChannel` be transferred in the same task it was created in, and a stream chunk is encoded
  * and sent a task later.
@@ -42,7 +42,7 @@ export type OpenRequest = typeof OpenRequest.Type;
  * The tab owns the `RTCPeerConnection` (a worker has no access to the page's network stack) and
  * exposes this over the system {@link MessagePort}; the worker consumes it and, once the channel
  * lands on its `channelPort`, reads and writes that channel directly. Only signalling crosses the
- * rpc boundary — never connection data.
+ * rpc boundary - never connection data.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('open', {

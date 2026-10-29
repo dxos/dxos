@@ -31,7 +31,7 @@ export type PullRequestCardMenuProps = AppSurface.CardMenuData<PullRequest.PullR
  * Either way what opens is the pull request: the walkthrough is what its article renders, so a
  * generation that is still running does not leave the reader with nothing to open. A preview card
  * holds a pull request minted in memory from its URL, so the stored copy with the same
- * owner/repo/number is what the menu acts on — in the pull request's own space when it has one,
+ * owner/repo/number is what the menu acts on - in the pull request's own space when it has one,
  * otherwise the space the user is working in.
  */
 export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps) => {

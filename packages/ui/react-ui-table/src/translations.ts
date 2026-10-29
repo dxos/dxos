@@ -26,7 +26,7 @@ export const translations = [
         'bulk-delete-row.label': 'Delete selected rows',
         'column-deleted.label': 'Column deleted',
         'new-column-button.label': 'Create column',
-        'create-new-object.label': 'Create new object “{{text}}”',
+        'create-new-object.label': 'Create new object "{{text}}"',
         'save-view.label': 'Save changes to view',
         'export-rows.menu': 'Export',
         'export-rows-csv.menu': 'CSV',

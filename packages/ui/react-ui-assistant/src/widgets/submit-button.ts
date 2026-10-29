@@ -6,7 +6,7 @@ import { Domino } from '@dxos/ui';
 
 /**
  * A button that submits its text as the reader's next prompt, through the thread's delegated
- * `submit` action — shared by the suggestion and select widgets so the two read as one control.
+ * `submit` action - shared by the suggestion and select widgets so the two read as one control.
  */
 export const submitButton = (value: string, icon?: string) => {
   const button = Domino.of('button')

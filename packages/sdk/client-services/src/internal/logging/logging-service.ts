@@ -181,7 +181,7 @@ const matchFilter = (
  */
 const shouldLog = (entry: NaturalLogEntry, request: QueryLogsRequest): boolean => {
   // buf represents an unset `repeated` as `[]` and an unset enum as its zero value, never
-  // `undefined`, so absence is read off those rather than off `undefined` — the previous
+  // `undefined`, so absence is read off those rather than off `undefined` - the previous
   // `filters === undefined` branch is unreachable here and an empty filter list would otherwise
   // flip "log everything" into "log nothing".
   const options =

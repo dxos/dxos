@@ -35,7 +35,7 @@ export const inlineEdit = ({
 }: InlineEditOptions = {}): Extension => {
   return [
     // `submit` trims what it hands over, which would drop the leading indentation a markdown code
-    // block depends on — and blur commits the document as written, so the two would disagree. Enter
+    // block depends on - and blur commits the document as written, so the two would disagree. Enter
     // is handled here instead, reading the document itself.
     submitOnEnter
       ? Prec.highest(

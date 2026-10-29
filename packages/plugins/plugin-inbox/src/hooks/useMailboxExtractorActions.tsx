@@ -25,7 +25,7 @@ export type MailboxExtractorMenuItem = {
  * invokes {@link InboxOperation.ExtractMailbox} over the mailbox feed with default concurrency.
  *
  * `extractors` and `invoker` are resolved by the container (this hook lives under `components/`, which
- * must not call capability hooks) — see the `MailboxArticle` wiring.
+ * must not call capability hooks) - see the `MailboxArticle` wiring.
  */
 export const useMailboxExtractorActions = (
   mailbox: Mailbox.Mailbox,
@@ -55,7 +55,7 @@ export const useMailboxExtractorActions = (
           .then((result) => {
             if (result.error) {
               if (isAiServiceUnavailable(result.error)) {
-                log.warn('extract mailbox skipped: AI service not ready — try again once the assistant has loaded', {
+                log.warn('extract mailbox skipped: AI service not ready - try again once the assistant has loaded', {
                   extractorId: extractor.id,
                 });
               } else {

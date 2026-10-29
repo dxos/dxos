@@ -22,7 +22,7 @@ export const styles = {
       // Placeholders open instantly (`duration-0`). The source slot is reserved on drag start by
       // activating its placeholder (see Stack.tsx), so the stack no longer collapses/flickers when the
       // dragged item is removed. NOTE: if the open animation below is ever enabled, exempt the source
-      // placeholder — animating its reserved gap from 0 would reintroduce the start-of-drag flicker.
+      // placeholder - animating its reserved gap from 0 would reintroduce the start-of-drag flicker.
       // 'group-data-[mosaic-placeholder-state=active]:duration-200',
       'group-data-[mosaic-placeholder-orientation=vertical]:h-0',
       'group-data-[mosaic-placeholder-orientation=vertical]:group-data-[mosaic-placeholder-state=active]:h-[var(--mosaic-placeholder-height)]',

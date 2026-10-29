@@ -20,7 +20,7 @@ import { GoogleCredentials } from './google-credentials.ts';
 /**
  * The requirements the underlying {@link GoogleMail} request functions carry (auth token + HTTP
  * client). {@link GoogleMailApi.Live} bakes these in so the service methods themselves require
- * nothing — which is what lets a test satisfy {@link GoogleMailApi} with a zero-dependency mock (no
+ * nothing - which is what lets a test satisfy {@link GoogleMailApi} with a zero-dependency mock (no
  * HTTP, no credentials).
  */
 type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.CredentialsService;
@@ -85,7 +85,7 @@ export interface GoogleMailApiService {
 }
 
 /**
- * An in-memory Gmail dataset a {@link GoogleMailApi.mock} serves — the labels and the full messages
+ * An in-memory Gmail dataset a {@link GoogleMailApi.mock} serves - the labels and the full messages
  * the sync would fetch. Build one with `generateGmailDataset` from this plugin's `./testing`.
  */
 export interface GmailDataset {
@@ -95,11 +95,11 @@ export interface GmailDataset {
   /** Attachment bytes keyed by `attachmentId`, served by `getAttachment` for messages that carry one. */
   readonly attachments?: Readonly<Record<string, GoogleMail.MessagePartBody>>;
   /**
-   * Current mailbox `historyId` — `getProfile` returns it and it's the newest `history.list` position.
+   * Current mailbox `historyId` - `getProfile` returns it and it's the newest `history.list` position.
    * Set to exercise incremental sync; absent means "no delta support" (token capture returns none).
    */
   readonly historyId?: string;
-  /** Ordered `history.list` steps chaining `startHistoryId` → `historyId`, each carrying the delta. */
+  /** Ordered `history.list` steps chaining `startHistoryId` -> `historyId`, each carrying the delta. */
   readonly historyLog?: readonly GmailHistoryStep[];
 }
 
@@ -159,7 +159,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
   );
 
   /**
-   * Zero-dependency mock backed by an in-memory {@link GmailDataset} — for unit/benchmark tests that
+   * Zero-dependency mock backed by an in-memory {@link GmailDataset} - for unit/benchmark tests that
    * drive the real sync pipeline with no live account. `listMessages` honours the query's date window
    * (`after:`/`before:`) plus `pageSize`/`pageToken` (an integer offset), so the sync's date-walk and
    * pagination exercise realistically.
@@ -218,7 +218,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
           Effect.sync(() => {
             const { after, before } = parseDateWindow(query);
             // Real Gmail returns matches newest-first (undocumented but consistently-observed
-            // behavior) — sort descending rather than relying on `dataset.messages`'s own (ascending,
+            // behavior) - sort descending rather than relying on `dataset.messages`'s own (ascending,
             // fixture-construction) order, so the mock exercises `fetchMessagesForDateRange`'s
             // direction-conditional within-chunk ordering realistically.
             const matching = dataset.messages
@@ -242,7 +242,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
             ? Effect.succeed(withLabels(message))
             : Effect.die(new Error(`mock GoogleMailApi: message not in dataset: ${messageId}`));
         },
-        // The mailbox's CURRENT id, which advances as pushes are recorded — a fresh capture after a
+        // The mailbox's CURRENT id, which advances as pushes are recorded - a fresh capture after a
         // push must not hand back a position that predates it.
         getProfile: () => Effect.succeed({ historyId: nextHistoryId }),
         // Chains the history-log steps from `startHistoryId` into one record per step (Gmail returns a
@@ -311,7 +311,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
         batchModifyMessages: (_userId, messageIds, labels) =>
           Effect.sync(() => {
             // Real `batchModify` returns 204 and reports nothing per message, including for ids it did
-            // not recognise — so the mock silently ignores unknown ids too rather than being stricter
+            // not recognise - so the mock silently ignores unknown ids too rather than being stricter
             // than the API it stands in for.
             applyLabels(
               messageIds.filter((id) => byId.has(id)),

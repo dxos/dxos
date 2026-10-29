@@ -46,7 +46,7 @@ const messages: MessageWithRangeId[] = [
   // Two sentences without separators.
   'it challenges our classical intuitions about how the universe works and forces us to reconsider our assumptions about space, time, and information',
   'at its core, quantum entanglement refers to a peculiar connection between two or more particles in such a way that the state of one particle instantly...',
-  'determines the state of the other, no matter how far apart they may be — even if they are light-years away',
+  'determines the state of the other, no matter how far apart they may be - even if they are light-years away',
 
   // 2 sentences are merged.
   'this seemingly instantaneous correlation between distant particles has baffled physicists since the early 20th century to understand entanglement, we',

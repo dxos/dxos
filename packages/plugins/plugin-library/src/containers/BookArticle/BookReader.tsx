@@ -63,7 +63,7 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Reading position: restore the exact CFI on open (fraction as a fallback), and persist it as the
-  // reader relocates. `lastCfiRef` starts at the saved CFI so the restore's own relocate is a no-op —
+  // reader relocates. `lastCfiRef` starts at the saved CFI so the restore's own relocate is a no-op -
   // guarding on the CFI (not the percent) also stops the saved position drifting forward each reopen.
   const initialCfi = live.progress?.cfi;
   const initialFraction = (live.progress?.percent ?? 0) / 100;
@@ -110,7 +110,7 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       }
       const bytes = yield* Blob.read(blob);
       // DOM `BlobPart` vs the TS-stdlib `Uint8Array` differ only at the lib-typing boundary; the value
-      // is a valid blob part. `globalThis.Blob` — the namespace import shadows the DOM `Blob` global.
+      // is a valid blob part. `globalThis.Blob` - the namespace import shadows the DOM `Blob` global.
       return { url: URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type })), type, revoke: true };
     }).pipe(
       Effect.provide(Database.layer(db)),
@@ -168,7 +168,7 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
     [db, book],
   );
 
-  // Upload in progress, then blob resolution in progress — a single spinner across both avoids the
+  // Upload in progress, then blob resolution in progress - a single spinner across both avoids the
   // flash of the "unavailable" prompt between attaching the blob and resolving its URL.
   if (busy) {
     return <Spinner />;

@@ -76,13 +76,13 @@ export const SYSTEM_PROMPT = trim`
   statement.
 
   Each statement is one fact as an extractor would record it: who said it (speaker), the words as said
-  (quote), and a subject–predicate–object triple. Name people by the ids given with the goal, exactly as
-  given (e.g. "did:halo:…"); name other things with lowercase hyphenated words ("indexer-migration").
+  (quote), and a subject-predicate-object triple. Name people by the ids given with the goal, exactly as
+  given (e.g. "did:halo:..."); name other things with lowercase hyphenated words ("indexer-migration").
   force is assertive (states), directive (asks), commissive (promises or agrees) or expressive; polarity
   is "+" (affirmed) or "-" (denied, refused).
 
   Reply with JSON only:
-  {"steps":[{"after":"10m","says":[{"speaker":"…","quote":"…","subject":"…","predicate":"…","object":"…","force":"assertive","polarity":"+"}],"wake":true,"achieved":false,"note":"why"}]}
+  {"steps":[{"after":"10m","says":[{"speaker":"...","quote":"...","subject":"...","predicate":"...","object":"...","force":"assertive","polarity":"+"}],"wake":true,"achieved":false,"note":"why"}]}
   "after" is a duration since the goal was set (10m, 2h, 3d) and must increase from step to step.
   Leave "achieved" out when either answer would be acceptable.
 `;

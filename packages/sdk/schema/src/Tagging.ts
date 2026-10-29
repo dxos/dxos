@@ -67,7 +67,7 @@ export const set = (object: Obj.Any | Obj.Snapshot<Obj.Any>, tagId: string, { in
 
 /**
  * Applies many (object, tagId) pairs at once. On the index path this is a single `Obj.update` (one
- * Automerge change + one reactive notification for the whole batch, vs one per {@link set}) — use it
+ * Automerge change + one reactive notification for the whole batch, vs one per {@link set}) - use it
  * for bulk tagging (e.g. a sync page) to avoid a per-tag change/notification storm. Falls back to
  * per-pair {@link set} on the mutable path (no index), where each object's meta changes separately.
  */

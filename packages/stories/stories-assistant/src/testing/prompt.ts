@@ -30,7 +30,7 @@ export const submitPrompt = async (canvasElement: HTMLElement, text: string): Pr
   const needle = text.slice(0, 30);
   // The prompt editor itself holds the text until it clears; any OTHER editor line containing the
   // needle (the thread renders sent messages in their own read-only CodeMirror) counts as
-  // submitted. Match on `.cm-line` textContent — not leaf elements — because markdown decorations
+  // submitted. Match on `.cm-line` textContent - not leaf elements - because markdown decorations
   // (e.g. a linkified URL) split the line into child spans, and a leaf-only check then never fires.
   const promptRoot = editor.closest('.cm-editor');
   const submitted = () =>
@@ -53,7 +53,7 @@ export const submitPrompt = async (canvasElement: HTMLElement, text: string): Pr
   for (let attempt = 0; attempt < 20; attempt++) {
     // A prior attempt may have submitted with the thread rendering past that attempt's window; a
     // blind re-type would then double-enter the prompt (and its Enter is dropped while the agent
-    // streams, stranding the duplicate in the composer) — so re-check before touching the editor.
+    // streams, stranding the duplicate in the composer) - so re-check before touching the editor.
     if (submitted()) {
       await clearEditor();
       return;

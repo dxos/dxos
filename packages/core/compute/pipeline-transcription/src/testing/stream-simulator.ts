@@ -5,7 +5,7 @@
 // Turns a parsed conversation into a chronologically-ordered sequence of Whisper-shaped
 // transcript batches, one per (speaker, utterance) pair. Each batch carries a virtual
 // timestamp (ms since the conversation start) and the speaker label so consumers can fan
-// out per-stream — analogous to two microphones being transcribed in parallel.
+// out per-stream - analogous to two microphones being transcribed in parallel.
 //
 // The simulator does NOT do any wall-clock waiting. Tests drive virtual time via
 // `vi.useFakeTimers()` or step through the batches directly; production code wouldn't use
@@ -19,7 +19,7 @@ export type StreamSimulatorOptions = {
   /**
    * Average speaking rate, words per second. Used to assign a virtual duration to each
    * utterance so consecutive utterances land at realistic offsets.
-   * @default 2.5 (≈150 wpm — typical conversational pace)
+   * @default 2.5 (~150 wpm - typical conversational pace)
    */
   wordsPerSecond?: number;
 
@@ -33,7 +33,7 @@ export type StreamSimulatorOptions = {
   /**
    * Whisper batches typically arrive in chunks of N seconds rather than per-utterance.
    * When set, utterances shorter than `batchSeconds` are merged into the same batch as
-   * the following utterance from the same speaker. `0` disables merging — every utterance
+   * the following utterance from the same speaker. `0` disables merging - every utterance
    * is its own batch.
    * @default 0
    */
@@ -41,7 +41,7 @@ export type StreamSimulatorOptions = {
 };
 
 export type SimulatedBatch = {
-  /** Speaker label from the fixture (`A`, `B`, …). Maps to a virtual `identityDid`. */
+  /** Speaker label from the fixture (`A`, `B`, ...). Maps to a virtual `identityDid`. */
   speaker: string;
   /** ms offset from the conversation start when this batch is delivered. */
   offsetMs: number;
@@ -51,7 +51,7 @@ export type SimulatedBatch = {
 
 /**
  * Build the chronological batch schedule for a parsed conversation. The result is a
- * pure data structure — consumers iterate and drive virtual time themselves.
+ * pure data structure - consumers iterate and drive virtual time themselves.
  */
 export const simulateStream = (
   conversation: ParsedConversation,
@@ -61,7 +61,7 @@ export const simulateStream = (
   const gapSeconds = options.gapSeconds ?? 0.5;
   const batchSeconds = options.batchSeconds ?? 0;
 
-  // Guard against divide-by-zero / NaN / negative inputs — `wordsPerSecond` divides into a
+  // Guard against divide-by-zero / NaN / negative inputs - `wordsPerSecond` divides into a
   // duration below, and the other knobs feed into offsets that must be finite.
   if (!Number.isFinite(wordsPerSecond) || wordsPerSecond <= 0) {
     throw new Error(`simulateStream: wordsPerSecond must be a finite number > 0 (got ${wordsPerSecond}).`);

@@ -36,7 +36,7 @@ export const getApiKey: Effect.Effect<string, MissingCredentialError, Credential
 /**
  * Resolves the referenced `AccessToken` objects into vault credentials. The secret is read at bind
  * time and handed straight to the control plane, so it never passes through a message, a transcript
- * or an operation result — the reference is what the model sees and passes around.
+ * or an operation result - the reference is what the model sees and passes around.
  *
  * A name repeated in one request keeps its last entry, since names are unique within a vault.
  */

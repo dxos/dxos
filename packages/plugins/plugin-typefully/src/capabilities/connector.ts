@@ -15,7 +15,7 @@ import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
 const TypefullyTokenForm = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API key',
-    description: 'The Typefully API key (v2) from account settings (Settings → API).',
+    description: 'The Typefully API key (v2) from account settings (Settings -> API).',
   }),
 });
 type TypefullyTokenFormValues = Schema.Schema.Type<typeof TypefullyTokenForm>;

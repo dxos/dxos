@@ -120,7 +120,7 @@ CallDebugPanel.displayName = 'CallDebugPanel';
 type StatusRow = { label: string; value: string };
 
 const trackStatus = (label: string, ok: unknown, enabled = true): string | undefined =>
-  enabled ? `${label} ${ok ? '✓' : '✗'}` : undefined;
+  enabled ? `${label} ${ok ? '\u2713' : '\u2717'}` : undefined;
 
 const getCallStatusRows = (state?: GlobalState): StatusRow[] => {
   if (!state || !state.call?.users) {

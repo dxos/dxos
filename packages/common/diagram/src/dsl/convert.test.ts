@@ -29,7 +29,7 @@ describe('convert', () => {
     });
   }
 
-  test('the emitted form is post-layout — every object carries an origin', async ({ expect }) => {
+  test('the emitted form is post-layout - every object carries an origin', async ({ expect }) => {
     const { commands } = parse(await EffectEx.runPromise(convert(BASIC.trim())));
     const upserts = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
     expect(upserts.length).toBeGreaterThan(0);

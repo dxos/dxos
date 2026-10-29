@@ -18,9 +18,9 @@ import { type PersonKey, type PersonMap } from './people.ts';
 import { daysAgo, daysFromNow } from './util.ts';
 
 //
-// RoastLog — exemplar-specific schema defined entirely in this build script.
+// RoastLog - exemplar-specific schema defined entirely in this build script.
 //
-// This is intentionally NOT a registered plugin type — it demonstrates that
+// This is intentionally NOT a registered plugin type - it demonstrates that
 // users can define custom ECHO schemas for their own domain objects. The typename
 // uses a Bramble-specific namespace to show schemas don't need to live in @dxos.
 //
@@ -66,7 +66,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
 );
 
 //
-// Roast Log — custom exemplar schema entries + Table / Kanban views
+// Roast Log - custom exemplar schema entries + Table / Kanban views
 //
 
 const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Person>): Obj.Any[] => {
@@ -76,7 +76,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
   return [
     // --- approved: past batches that cleared QC ---
     Obj.make(type, {
-      title: 'Finca Esperanza Lot A — Batch 1',
+      title: 'Finca Esperanza Lot A - Batch 1',
       date: daysAgo(28),
       origin: 'Colombia / Finca Esperanza / Lot A',
       machine: 'Loring S15',
@@ -93,7 +93,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
         'Clean reference curve for the Spring Blend. Berry up front, long chocolate finish. Approved for production.',
     }),
     Obj.make(type, {
-      title: 'Finca Esperanza Lot A — Batch 2',
+      title: 'Finca Esperanza Lot A - Batch 2',
       date: daysAgo(21),
       origin: 'Colombia / Finca Esperanza / Lot A',
       machine: 'Loring S15',
@@ -107,10 +107,10 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       roastLevel: 'city',
       status: 'approved',
       notes:
-        'Confirmed the curve. Added 5 s to development — slightly more body, stone fruit more pronounced. Approved.',
+        'Confirmed the curve. Added 5 s to development - slightly more body, stone fruit more pronounced. Approved.',
     }),
     Obj.make(type, {
-      title: 'Sidamo Coop Natural — Lot #42',
+      title: 'Sidamo Coop Natural - Lot #42',
       date: daysAgo(14),
       origin: 'Ethiopia / Sidamo Cooperative / Natural Lot #42',
       machine: 'Loring S15',
@@ -124,11 +124,11 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       roastLevel: 'light',
       status: 'approved',
       notes:
-        'Blueberry and lemon zest on the nose. Very clean natural process — excellent for the single-origin filter menu.',
+        'Blueberry and lemon zest on the nose. Very clean natural process - excellent for the single-origin filter menu.',
     }),
     // --- cupped: awaiting final approval ---
     Obj.make(type, {
-      title: 'Spring Blend v2 — Full-size trial',
+      title: 'Spring Blend v2 - Full-size trial',
       date: daysAgo(5),
       origin: 'Colombia / Finca Esperanza Lot A + Guatemala / Antigua Lot 7 (70/30)',
       machine: 'Loring S15',
@@ -142,11 +142,11 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       roastLevel: 'city',
       status: 'cupped',
       notes:
-        'First full-size blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
+        'First full-size blend run. Cupped this morning - jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
     }),
     // --- roasted: cooling / resting, not yet cupped ---
     Obj.make(type, {
-      title: 'Finca Esperanza Lot A — Dev Batch',
+      title: 'Finca Esperanza Lot A - Dev Batch',
       date: daysAgo(2),
       origin: 'Colombia / Finca Esperanza / Lot A',
       machine: 'Loring S15',
@@ -158,10 +158,10 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       dropTemp: 211,
       roastLevel: 'city+',
       status: 'roasted',
-      notes: 'Longer development trial for espresso use. Resting — cup on day 4.',
+      notes: 'Longer development trial for espresso use. Resting - cup on day 4.',
     }),
     Obj.make(type, {
-      title: 'Peru Cajamarca — Sample Lot',
+      title: 'Peru Cajamarca - Sample Lot',
       date: daysAgo(1),
       origin: 'Peru / Cajamarca / Lot 3 sample',
       machine: 'Loring S15',
@@ -177,7 +177,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
     }),
     // --- planned: upcoming ---
     Obj.make(type, {
-      title: 'Spring Blend v3 — Full-size trial',
+      title: 'Spring Blend v3 - Full-size trial',
       date: daysFromNow(3),
       origin: 'Colombia / Finca Esperanza Lot A + Guatemala / Antigua Lot 7 (70/30)',
       machine: 'Loring S15',
@@ -187,7 +187,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       notes: 'Increase charge rate 2 % vs the v2 trial to address drum unevenness. Schedule cupping on day 5.',
     }),
     Obj.make(type, {
-      title: 'Colombia Huila — Pre-production',
+      title: 'Colombia Huila - Pre-production',
       date: daysFromNow(7),
       origin: 'Colombia / Huila Region / New lot (TBC)',
       machine: 'Loring S15',

@@ -16,7 +16,7 @@ import { type Space } from '@dxos/react-client/echo';
 const atomEmpty = Atom.make(() => [] as const);
 
 /**
- * Atom of raw trace messages for a space — the input to `buildExecutionGraph`.
+ * Atom of raw trace messages for a space - the input to `buildExecutionGraph`.
  */
 export const getTraceMessagesAtom = (space: Space): Atom.Atom<readonly Trace.Message[]> =>
   pipe(
@@ -25,7 +25,7 @@ export const getTraceMessagesAtom = (space: Space): Atom.Atom<readonly Trace.Mes
       (feeds) =>
         // Query across ALL trace feeds: writers race on feed creation (the edge's indexer-backed
         // lookup can miss a not-yet-indexed feed and create a duplicate), so a space may hold
-        // several trace feeds — reading only one would silently drop the others' events.
+        // several trace feeds - reading only one would silently drop the others' events.
         space.db.query(
           feeds.length > 0
             ? Query.type(Trace.Message).from([...feeds])

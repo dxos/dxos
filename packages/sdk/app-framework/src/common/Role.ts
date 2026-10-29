@@ -12,7 +12,7 @@ import type { DXN } from '@dxos/keys';
  * `AppSurface.object(SomeToken, ...)` share a single type-level contract.
  *
  * Mint via {@link make}. The `role` field holds the bare NSID (e.g.
- * `org.dxos.role.article`) — the dispatch key, `data-role` attribute value,
+ * `org.dxos.role.article`) - the dispatch key, `data-role` attribute value,
  * and what `.role` comparisons inside matched components see.
  */
 export type Role<TData> = {

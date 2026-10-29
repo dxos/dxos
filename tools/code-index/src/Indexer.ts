@@ -266,7 +266,7 @@ export const run = (
 
     // Reasoning closes the pass: each reasoner's graph is recomputed from the facts this pass left
     // behind, so a conclusion can never outlive the import or file that entailed it. It is skipped
-    // only when the store records that these rules already ran over exactly these facts — not when
+    // only when the store records that these rules already ran over exactly these facts - not when
     // this pass changed nothing, which would strand a pass run with `--no-reason` or interrupted
     // before reasoning, reporting stale conclusions until some file changed.
     const current = reasoners.length > 0 ? yield* store.reasoned(Reasoner.signature(reasoners)) : undefined;

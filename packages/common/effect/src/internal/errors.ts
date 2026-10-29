@@ -153,7 +153,7 @@ export const runAndForwardErrors = async <A, E>(
   return unwrapExit(exit);
 };
 
-/** Alias for {@link runAndForwardErrors} — preferred name when accessed via `EffectEx.runPromise`. */
+/** Alias for {@link runAndForwardErrors} - preferred name when accessed via `EffectEx.runPromise`. */
 export const runPromise = runAndForwardErrors;
 
 /**

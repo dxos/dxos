@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
         }),
       );
 
-      // Tag as 'draft' so the Drafts view picks it up — same mechanism every draft-creation path uses.
+      // Tag as 'draft' so the Drafts view picks it up - same mechanism every draft-creation path uses.
       yield* SystemTags.toggleTag(mailbox, message, 'draft');
 
       return {

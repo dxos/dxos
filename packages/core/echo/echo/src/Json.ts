@@ -41,7 +41,7 @@ const toJson = (obj: Obj.Any): unknown => (typeof (obj as any).toJSON === 'funct
  *
  * The hop count is tracked per-object via a `WeakMap`: a ref-resolved target's children inherit
  * `parentHops + 1`; a regular intermediate object's children inherit `parentHops`. This makes the
- * budget count *ref hops*, not tree depth — a ref deep in a tree still resolves once when
+ * budget count *ref hops*, not tree depth - a ref deep in a tree still resolves once when
  * `depth >= 1`.
  *
  * Note: ECHO objects' `toJSON` runs before the replacer is invoked, so by the time we see a

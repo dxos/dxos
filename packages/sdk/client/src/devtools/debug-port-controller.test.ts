@@ -11,7 +11,7 @@ const STORAGE_KEY = 'dxos:debug-port-session';
 /**
  * A reload takes the port down with it, which strands an agent mid-investigation exactly when a
  * navigation-heavy flow (an OAuth redirect) makes the interesting state appear. `resume` carries an
- * already-authorized session across that reload — and must never manufacture one.
+ * already-authorized session across that reload - and must never manufacture one.
  */
 describe('debug port session persistence', () => {
   const controller = getDebugPortController();

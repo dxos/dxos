@@ -52,7 +52,7 @@ describe('Weather MCP template', () => {
   });
 
   test(
-    'four ordered steps, all the agent’s, each depending on the one before',
+    "four ordered steps, all the agent's, each depending on the one before",
     { timeout: 120_000 },
     async ({ expect }) => {
       const tasks = await archived<ArchivedTask>('type.task:');

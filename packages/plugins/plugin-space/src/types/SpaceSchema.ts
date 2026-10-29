@@ -144,7 +144,7 @@ export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
 export type CreateObjectResult = {
   id: string;
   /**
-   * Absent where the create only starts the work and the object appears out of band — a connector
+   * Absent where the create only starts the work and the object appears out of band - a connector
    * handing off to an OAuth popup or a credential dialog is the case in tree. Callers must not
    * navigate to it without checking.
    */

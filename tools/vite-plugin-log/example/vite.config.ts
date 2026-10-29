@@ -18,7 +18,7 @@ import { DxosLogPlugin } from '../src/plugin.ts';
  *   does install `ast` and `magicString` as non-enumerable lazy getters on its
  *   own meta object, but Vite's `wrapEnvironmentTransform` -> `injectSsrFlag`
  *   uses `{ ...options, ssr }` object spread, which only copies enumerable own
- *   properties — so the getters are stripped before the hook runs.
+ *   properties - so the getters are stripped before the hook runs.
  *
  * The pure-Rolldown scenario is demonstrated by `probe-rolldown.mjs` in this
  * directory, which bypasses Vite entirely.

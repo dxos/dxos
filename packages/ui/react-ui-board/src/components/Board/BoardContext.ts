@@ -49,7 +49,7 @@ export type BoardContextValue = {
   /** Scroll viewport size in px (0 until measured); used to centre a board smaller than the viewport. */
   viewportSize: { width: number; height: number };
   containerId: string;
-  /** During an active drag, the layout the board would settle into — tiles animate to these
+  /** During an active drag, the layout the board would settle into - tiles animate to these
    * positions and spring back to `layout` when the drag ends without a drop. Undefined when idle. */
   previewLayout?: Layout;
   /** True while a tile is being resized (a pointer drag, not a Dnd drag); gates the resize auto-scroll. */

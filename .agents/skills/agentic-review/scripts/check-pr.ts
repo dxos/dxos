@@ -6,7 +6,7 @@
 // CI gate (advisory) for PR mode: checks that this branch carries a finalized agentic review,
 // that every issue it raised is resolved or ignored, and that the code has drifted no more than
 // 20% (LOC since the review / LOC of the PR, merges and generated files excluded). It reads only
-// committed files — the review itself is run by an author or agent, never by CI.
+// committed files - the review itself is run by an author or agent, never by CI.
 //
 // Usage:
 //   node check-pr.ts [--base=<ref>] [--main=origin/main] [--limit=0.2]

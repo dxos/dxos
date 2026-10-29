@@ -23,7 +23,7 @@ import {
 
 import { Editor, type EditorViewProps } from '../components/index.ts';
 
-// The parent (main) content and a branch proposal that rewrites three words — three independent,
+// The parent (main) content and a branch proposal that rewrites three words - three independent,
 // reviewable changes (like a branch's edits against a style guide).
 const ORIGINAL = 'The quick brown fox jumps over the lazy dog.';
 const PROPOSAL = 'The fast brown fox leaps over the sleepy dog.';
@@ -77,7 +77,7 @@ const Render = (args: EditorViewProps) => {
 };
 
 // Two reviewers proposing over the same base: Alice and Bob both rewrite "quick" (an overlap), and
-// each has one further, non-overlapping change — a multi-author suggestion overlay.
+// each has one further, non-overlapping change - a multi-author suggestion overlay.
 const ALICE = 'The fast brown fox jumps over the sleepy dog.';
 const BOB = 'The swift brown fox leaps over the lazy dog.';
 
@@ -126,7 +126,7 @@ export const Default: Story = {};
 
 /**
  * Accept applies a change to the document (merging it into the parent); Reject hides a change without
- * altering the document. Deterministic — no AI, so it runs in CI.
+ * altering the document. Deterministic - no AI, so it runs in CI.
  */
 export const AcceptReject: Story = {
   play: async ({ canvasElement }) => {
@@ -137,7 +137,7 @@ export const AcceptReject: Story = {
     const acceptButton = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip .cm-suggest-accept');
     const rejectButton = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip .cm-suggest-reject');
 
-    // Three suggestions (quick→fast, jumps→leaps, lazy→sleepy) over the original document.
+    // Three suggestions (quick->fast, jumps->leaps, lazy->sleepy) over the original document.
     await waitFor(() => expect(documentText(canvasElement)).toContain('quick'), { timeout: 15_000 });
     await waitFor(() => expect(inserts()).toHaveLength(3));
 
@@ -163,7 +163,7 @@ export const AcceptReject: Story = {
 /**
  * Two authors reviewing the same base, overlapping on one word. Each change is independently
  * attributable and accepting one re-diffs the rest (the overlapping author's change persists).
- * Deterministic — no AI, so it runs in CI.
+ * Deterministic - no AI, so it runs in CI.
  */
 export const MultipleAuthors: Story = {
   render: MultiAuthorRender,
@@ -184,8 +184,8 @@ export const MultipleAuthors: Story = {
     await waitFor(() => expect(insertColours().some((colour) => colour.includes('lime'))).toBe(true));
     await waitFor(() => expect(insertColours().some((colour) => colour.includes('violet'))).toBe(true));
 
-    // Hover the overlapping "quick" change; offset-then-author order surfaces Alice's "quick"→"fast"
-    // first. Accepting it makes the base take "fast"; Bob's "quick"→"swift" re-diffs and remains.
+    // Hover the overlapping "quick" change; offset-then-author order surfaces Alice's "quick"->"fast"
+    // first. Accepting it makes the base take "fast"; Bob's "quick"->"swift" re-diffs and remains.
     const quick = deletes().find((node) => node.textContent?.includes('quick'));
     void expect(quick).toBeDefined();
     hoverChange(quick!);

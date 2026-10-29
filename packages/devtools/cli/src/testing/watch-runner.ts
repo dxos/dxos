@@ -8,7 +8,7 @@ import { type WatchSupervisorOptions, runWatchSupervisor } from '../commands/mcp
 
 /**
  * Runs the MCP watch supervisor against a stub server so `watch.test.ts` can exercise both reload
- * strategies without a client boot per reload — or, for the binary strategy, a compiled binary.
+ * strategies without a client boot per reload - or, for the binary strategy, a compiled binary.
  * Options arrive as one JSON argument.
  */
 const options: WatchSupervisorOptions = JSON.parse(process.argv[2] ?? '{}');

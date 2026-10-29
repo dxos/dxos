@@ -14,8 +14,8 @@ import { parsePullRequestReference } from '../github-link.ts';
 /**
  * Import the pull request the extension's page is showing.
  *
- * The snapshot is read for its URL alone — the page's DOM says nothing GitHub's API does not say
- * better — and the import itself is delegated, so the anonymous fallback and the existing-object
+ * The snapshot is read for its URL alone - the page's DOM says nothing GitHub's API does not say
+ * better - and the import itself is delegated, so the anonymous fallback and the existing-object
  * check stay in one place.
  */
 const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequestFromSnapshot> =

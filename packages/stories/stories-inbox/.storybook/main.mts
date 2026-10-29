@@ -12,7 +12,7 @@ import { createConfig } from '../../../../tools/storybook-react/.storybook/main.
 export const stories = ['../src/**/*.stories.tsx'];
 
 /**
- * Serves `@dxos/fixtures` corpora to browser stories as `/fixtures/<name>.json` — resolution is
+ * Serves `@dxos/fixtures` corpora to browser stories as `/fixtures/<name>.json` - resolution is
  * node-only (git-ignored `testing/fixtures/`, `DX_FIXTURES_DIR` override), so the dev server reads
  * the file and the story fetches it. 404s when the fixture has not been pulled; stories gate on the
  * response and fall back to demo data, so CI (which never has a corpus) stays green.
@@ -34,7 +34,7 @@ const fixturesPlugin = (): PluginOption => ({
 
 const config = createConfig({ stories });
 
-// Compose rather than pass through `createConfig` — the shared factory defines its own `viteFinal`
+// Compose rather than pass through `createConfig` - the shared factory defines its own `viteFinal`
 // after spreading the base config, so a viteFinal passed in would be silently discarded.
 const viteFinal: NonNullable<(typeof config)['viteFinal']> = async (viteConfig, options) => {
   const base = (await config.viteFinal?.(viteConfig, options)) ?? viteConfig;

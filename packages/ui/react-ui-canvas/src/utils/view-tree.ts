@@ -154,7 +154,7 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
       element: link.id,
       container: scene.id,
       path,
-      label: textOf(link) ?? `${endLabel(scenes, scene, link.source)} → ${endLabel(scenes, scene, link.target)}`,
+      label: textOf(link) ?? `${endLabel(scenes, scene, link.source)} -> ${endLabel(scenes, scene, link.target)}`,
       type: link.type,
       ...inObject,
       children: [],

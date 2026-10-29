@@ -16,11 +16,11 @@ export const LOG_META_MARKER = '~LogMeta';
  */
 export interface CallMetadata {
   /**
-   * Marker tag — when present, equal to {@link LOG_META_MARKER} ({@link `'~LogMeta'`}).
+   * Marker tag - when present, equal to {@link LOG_META_MARKER} ({@link `'~LogMeta'`}).
    * Injected by the log transform plugin on every emitted meta object so that {@link isLogMeta}
    * can distinguish a meta argument from a regular user-supplied value at runtime.
    * Optional because hand-written `CallMetadata` literals (decorators, RPC mappers, tests)
-   * don't need the marker — they are recognized by position in the call signature.
+   * don't need the marker - they are recognized by position in the call signature.
    */
   '~LogMeta'?: typeof LOG_META_MARKER;
 

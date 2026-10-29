@@ -382,7 +382,7 @@ describe('mcp usages', () => {
         package: '@test/app',
         counts: { impl: 1, test: 2, story: 1 },
         files: [
-          // From a top-level `describe(…)`, carried by the file's top-level symbol.
+          // From a top-level `describe(...)`, carried by the file's top-level symbol.
           { path: 'packages/app/src/suite.test.ts', role: 'test', symbols: [Ontology.TOP_LEVEL], via: 'barrel' },
           // Through the alias `old`.
           { path: 'packages/app/src/use.stories.tsx', role: 'story', symbols: ['Story'], via: 'barrel' },

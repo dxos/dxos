@@ -32,7 +32,7 @@ describe('FeedModel', () => {
         message('assistant', 'calling a tool'),
         Message.make({
           sender: { role: 'user' },
-          blocks: [{ _tag: 'text', text: '<result pid=1>…</result>', disposition: 'synthetic' }],
+          blocks: [{ _tag: 'text', text: '<result pid=1>...</result>', disposition: 'synthetic' }],
         }),
         message('assistant', 'answer'),
       ],

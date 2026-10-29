@@ -58,7 +58,7 @@ export const EvalToolkitDefinition = Toolkit.make(EvalTool);
 export type EvalToolkitOptions = {
   readonly dialect: Dialect;
   readonly sandbox: Sandbox.Sandbox;
-  /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
+  /** Services the sandbox's code runs against - the database, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
@@ -75,7 +75,7 @@ export type EvaluateOptions = EvalToolkitOptions & {
 
 /**
  * Runs one program exactly as the `eval` tool does, so any other caller (e.g. `dx eval`) answers
- * with the same text the model would have seen: what the code printed, or — failing — what it printed
+ * with the same text the model would have seen: what the code printed, or - failing - what it printed
  * before the throw with the error as the last line.
  */
 export const evaluate = Effect.fnUntraced(function* ({
@@ -139,7 +139,7 @@ export type CallLabel = Pick<ContentBlock.ToolCall, 'displayName' | 'displayIcon
  * rather than as the one tool every code-mode call goes through. Only the presentational
  * `displayName`/`displayIcon`: the `operation*` fields stay unset, since the call is still an eval.
  *
- * An operation is found by any name a dialect binds it under — the tool name, its camelCase form, or
+ * An operation is found by any name a dialect binds it under - the tool name, its camelCase form, or
  * its key.
  */
 export const labelEvalCall =
@@ -228,7 +228,7 @@ const makePrinter = (maxOutput: number) => {
 /** Tells the model its output was cut, and how to get what it needs within the cap next time. */
 const truncationWarning = (maxOutput: number): string =>
   `[output truncated: an eval result is capped at ${maxOutput} characters and the rest was dropped. ` +
-  'Print less — counts, the specific fields you need, or a slice — and run again if you need more.]';
+  'Print less - counts, the specific fields you need, or a slice - and run again if you need more.]';
 
 /**
  * A pointer past an error whose own message does not say what went wrong. `yield*` on something that
@@ -259,7 +259,7 @@ const emptyOutputHint = (code: string): string | undefined =>
  * A failure's message cut to what the model can act on.
  *
  * A schema validation error carries its cause chain, and the innermost cause serializes the whole
- * schema — several kilobytes that spend the output budget and the context window while the first
+ * schema - several kilobytes that spend the output budget and the context window while the first
  * line has already named the field that failed.
  */
 export const conciseError = (message: string): string => {
@@ -267,9 +267,9 @@ export const conciseError = (message: string): string => {
     .split('\n')
     .map((line) =>
       line.length > MAX_ERROR_LINE_LENGTH
-        ? `${line.slice(0, MAX_ERROR_LINE_LENGTH)}… [${line.length - MAX_ERROR_LINE_LENGTH} characters omitted]`
+        ? `${line.slice(0, MAX_ERROR_LINE_LENGTH)}... [${line.length - MAX_ERROR_LINE_LENGTH} characters omitted]`
         : line,
     )
     .join('\n');
-  return text.length > MAX_ERROR_LENGTH ? `${text.slice(0, MAX_ERROR_LENGTH)}… [error truncated]` : text;
+  return text.length > MAX_ERROR_LENGTH ? `${text.slice(0, MAX_ERROR_LENGTH)}... [error truncated]` : text;
 };

@@ -47,7 +47,7 @@ export type RefreshRegistryOptions = {
 
 /**
  * Refresh the descriptor cache from a Composer tab. No-op (keeps the stale
- * cache) when no tab is available or the request fails — the popup must keep
+ * cache) when no tab is available or the request fails - the popup must keep
  * working from the last known registry. On a `timeout` ack the request is
  * retried (up to `retryAttempts` total) to handle the race where the
  * background receives the ready signal before Composer's listeners have
@@ -91,7 +91,7 @@ export const refreshRegistry = async (
     } catch (err) {
       // A tab with no attached content script is a normal state (not every tab
       // hosts one, and injection may still be in flight), so this is expected
-      // rather than an error — keep the stale cache and move on.
+      // rather than an error - keep the stale cache and move on.
       log.info('page-actions registry refresh unavailable', {
         error: err instanceof Error ? err.message : String(err),
       });
@@ -102,7 +102,7 @@ export const refreshRegistry = async (
 
 /**
  * The cached page-actions registry. The stored value is re-validated on every read via
- * {@link decodeRegistry} — storage content survives extension upgrades and is treated as untrusted.
+ * {@link decodeRegistry} - storage content survives extension upgrades and is treated as untrusted.
  */
 const RegistryState = defineState<PageActionsRegistry>(
   'local',

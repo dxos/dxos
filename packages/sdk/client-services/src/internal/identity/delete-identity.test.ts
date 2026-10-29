@@ -153,7 +153,7 @@ describe('IdentityService.deleteIdentity', () => {
     await deleteIdentity();
 
     // A disposed context runs new `onDispose` callbacks immediately, which would tear the next
-    // identity's credential subscription down as it is registered — leaving it without a HALO anchor.
+    // identity's credential subscription down as it is registered - leaving it without a HALO anchor.
     const next = await createIdentity();
     expect(next.spaceKey).to.exist;
   });

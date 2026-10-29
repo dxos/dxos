@@ -34,7 +34,7 @@ export const make = ({ name, content }: { name?: string; content?: string } = {}
 };
 
 //
-// Checklist markdown — the canonical text grammar of an outline (`- [ ]` / `- [x]` lines).
+// Checklist markdown - the canonical text grammar of an outline (`- [ ]` / `- [x]` lines).
 //
 
 export type ChecklistItem = {

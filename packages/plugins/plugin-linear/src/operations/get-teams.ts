@@ -14,7 +14,7 @@ import { LinearOperation } from '#types';
 import { LinearApi } from '../services/index.ts';
 
 /**
- * Discovery only — list Linear teams reachable from the connection's token.
+ * Discovery only - list Linear teams reachable from the connection's token.
  * Read-only: NO local objects are created here. Materialization happens
  * through `materializeTarget` when a binding is created.
  *
@@ -24,7 +24,7 @@ import { LinearApi } from '../services/index.ts';
 const handler: Operation.WithHandler<typeof LinearOperation.GetLinearTeams> = LinearOperation.GetLinearTeams.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ connection }) {
-      // TODO(wittjosiah): Mirror the Trello pattern — derive the db from the input ref's
+      // TODO(wittjosiah): Mirror the Trello pattern - derive the db from the input ref's
       //   target until the OperationInvoker has a `databaseResolver` and the operation
       //   can declare `services: [Database.Service]` directly.
       const connectionObj = connection.target;

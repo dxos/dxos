@@ -44,8 +44,8 @@ export type EmailPipelineResult = {
 
 export const EmailPipeline = {
   /**
-   * Default assembly of the email stages over a batch of messages: summarize → extract-contacts →
-   * stats → extract-facts stream through with back pressure, then {@link buildThreads} groups the
+   * Default assembly of the email stages over a batch of messages: summarize -> extract-contacts ->
+   * stats -> extract-facts stream through with back pressure, then {@link buildThreads} groups the
    * collected messages into canonical threads. Contacts and threads are persisted to `db`; the fact
    * substrate is populated via `indexFacts`. Requires an `AiService` (summarize); the shared
    * {@link EmailPipelineCtx} is constructed and provided internally.

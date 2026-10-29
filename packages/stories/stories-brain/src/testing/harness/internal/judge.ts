@@ -15,9 +15,9 @@ import { slugify } from './fact-store.ts';
 
 // Blind LLM-judge scorer for the brain-vs-rag ablation. The generator models produce the summaries;
 // a single (ideally stronger, remote) judge model grades every arm the same way, so the only variable
-// is which retrieval skill fed the generator. Grading is deliberately corpus-grounded — coverage of a
+// is which retrieval skill fed the generator. Grading is deliberately corpus-grounded - coverage of a
 // gold salient-point set (does the arm surface the right things) and faithfulness (does it avoid
-// unsupported claims) — plus a blind pairwise vote vs. the database baseline. Facts "help" iff an arm
+// unsupported claims) - plus a blind pairwise vote vs. the database baseline. Facts "help" iff an arm
 // beats the baseline on coverage without losing faithfulness.
 
 /** Char budget for the subject corpus handed to the judge (keeps the judge prompt inside context). */
@@ -26,7 +26,7 @@ const CORPUS_CHAR_BUDGET = 16_000;
 /** Gold-set size the judge is asked to produce. */
 const GOLD_POINTS = 12;
 
-/** A judge bound to one model — every grading call routes through the same backend. */
+/** A judge bound to one model - every grading call routes through the same backend. */
 export type Judge = {
   readonly name: string;
   readonly ask: (prompt: string) => Promise<string>;

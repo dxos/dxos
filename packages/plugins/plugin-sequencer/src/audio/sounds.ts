@@ -37,7 +37,7 @@ const connectGain = (gain: Tone.Gain, destination?: Tone.ToneAudioNode): Tone.Ga
 };
 
 export type DrumVoice = {
-  /** `time` is a Tone scheduling time — pass the value Tone hands the Sequence callback. */
+  /** `time` is a Tone scheduling time - pass the value Tone hands the Sequence callback. */
   trigger: (time?: number | string, velocity?: number) => void;
   dispose: () => void;
 };

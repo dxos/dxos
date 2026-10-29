@@ -118,7 +118,7 @@ const MockVideoPlugin = Plugin.define(
 /** The plugin stack: Higgsfield as the live video provider, or an offline mock for the scripted story. */
 const makeStoryOptions = (provider: 'higgsfield' | 'mock') => ({
   // Not the assistant skill: its template is the static system prompt, whose text is not in the
-  // space — binding it here leaves the clone with a dangling source and every request fails.
+  // space - binding it here leaves the clone with a dangling source and every request fails.
   skills: [StudioSkill.key, ProjectSkill.key],
   lazyPlugins: async () => {
     const [
@@ -171,7 +171,7 @@ const sharedArgs = {
  *
  * Test:
  * 1. Wait for the chat prompt to activate (the context chip shows "Studio").
- * 2. Send "Do the task on this project's checklist." — the assistant lists providers, creates a
+ * 2. Send "Do the task on this project's checklist." - the assistant lists providers, creates a
  *    storyboard, appends three video frames and generates each.
  * 3. The project's Artifacts show the storyboard; opening it shows three frames with their prompts.
  */
@@ -193,7 +193,7 @@ export const TestStoryboard: Story = {
     await submitPrompt(canvasElement, "Do the task on this project's checklist.");
     await waitForStoryboard(async (_storyboard, frames) => frames.length >= 3, { timeout: 300_000 });
     // Each frame is a Soul still animated by DoP (minutes each, run in order); wait for the clips
-    // and print their URLs — the evidence a reader of the run wants.
+    // and print their URLs - the evidence a reader of the run wants.
     const storyboard = await waitForStoryboard(
       async (_storyboard, frames) => {
         const artifacts = await Promise.all(frames.map((frame) => frame.artifact?.load()));
@@ -229,8 +229,8 @@ const FRAMES = [
 
 /**
  * Deterministic counterpart to {@link TestStoryboard}: a scripted model walks the studio skill's
- * loop against a mock video provider — list providers, then one create-storyboard with the three
- * frames and generate: true — so the flow is asserted in CI. The project ref is not scripted (the
+ * loop against a mock video provider - list providers, then one create-storyboard with the three
+ * frames and generate: true - so the flow is asserted in CI. The project ref is not scripted (the
  * model would read it from its context), so the storyboard is asserted by name.
  */
 export const TestStoryboardScripted: Story = {

@@ -6,8 +6,8 @@ import { type ComponentType, createElement } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 
 /**
- * A React root inside a Solid tree. The chat thread is `@dxos/react-ui-assistant` — the repository's
- * own component, with codemirror in its composer — and porting it to Solid would fork it; mounting
+ * A React root inside a Solid tree. The chat thread is `@dxos/react-ui-assistant` - the repository's
+ * own component, with codemirror in its composer - and porting it to Solid would fork it; mounting
  * it as an island keeps one implementation and one place to fix.
  *
  * Solid's reactivity does not cross the boundary. `render` is called with fresh props whenever the

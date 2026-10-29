@@ -15,7 +15,7 @@ import { type LoadOp, type LoadOpTable } from './load-op.ts';
  * `state` is derived: `unavailable` if the root or any closure member body is unavailable at the
  * requested ceiling; `ready` when the root and the whole closure are body-ready; otherwise
  * `requesting` / `pending`. The walker waits on member BODIES (not their closure-readiness), so
- * mutually-citing entities (`A.source→B, B.parent→A`) cannot deadlock.
+ * mutually-citing entities (`A.source->B, B.parent->A`) cannot deadlock.
  */
 export class RequestImpl implements RefResolverRequest {
   readonly stateChanged = new Event<void>();

@@ -37,7 +37,7 @@ console.log(
     (pauses.length > 0 ? ` (longest ${Math.max(...pauses.map(({ start, end }) => end - start)).toFixed(2)} s)` : ''),
 );
 
-console.log('\nTimeline (speech/silence, merged: speech ≥ 0.1 s, silence ≥ 0.3 s):');
+console.log('\nTimeline (speech/silence, merged: speech >= 0.1 s, silence >= 0.3 s):');
 console.log('  start    end      length  kind     mean dB  max dB');
 for (const { kind, start, end, meanDb, maxDb } of segments) {
   console.log(
@@ -47,7 +47,7 @@ for (const { kind, start, end, meanDb, maxDb } of segments) {
 }
 
 // One character per 100 ms, so a minute of audio is 600 characters: enough to see rhythm without a picture.
-const BARS = ' ▁▂▃▄▅▆▇█';
+const BARS = ' \u2581\u2582\u2583\u2584\u2585\u2586\u2587#';
 const perCell = 5;
 let line = '';
 for (let index = 0; index < frames.length; index += perCell) {

@@ -15,8 +15,8 @@ import type * as Store from './Store.ts';
 import { type SymbolFacts, declarations, isDeclaration } from './worker/types/Bind.ts';
 
 /**
- * The cross-file reference pass: links every reference an importer wrote — `file:<barrel>#X` through
- * `export *`, a named re-export or a namespace, `module:<specifier>#X.y` under a bare specifier — to
+ * The cross-file reference pass: links every reference an importer wrote - `file:<barrel>#X` through
+ * `export *`, a named re-export or a namespace, `module:<specifier>#X.y` under a bare specifier - to
  * the declaration it denotes, as `deus:resolvesTo` in its pass graph. The parser's dependency edges
  * stay as written; `?user deus:implDependsOn|deus:apiDependsOn ?r . ?r deus:resolvesTo? <D>` finds
  * every user of `D`.

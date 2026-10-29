@@ -34,7 +34,7 @@ describe('TerraForm', () => {
 
     // Regression test for the `Input` must be used within `Input` runtime error: the custom
     // slider field renderer originally rendered `Form.Label` directly instead of going through
-    // `Form.Field`'s field-mode render-prop, so it never got `Form.Field`'s `Field.Root` wrapper —
+    // `Form.Field`'s field-mode render-prop, so it never got `Form.Field`'s `Field.Root` wrapper -
     // every slider field was swallowed by `FormFieldErrorBoundary` and replaced with a red
     // "ERROR" row instead of throwing (a render-time context failure invisible to build/lint/test).
     expect(screen.queryByText('ERROR')).toBeNull();

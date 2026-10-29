@@ -50,7 +50,7 @@ const PRIVACY_NOTICE_TOAST = 'org.dxos.plugin.observability.notice';
 // reaches packages that fail to load under playwright's loader.
 const REGISTRY_WORKSPACE = 'dxos:registry';
 
-// `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
+// `UrlPath.WORKSPACE_KEY` - the pair-chain anchor segment, restated for the same reason.
 const WORKSPACE_KEY = 'w';
 
 // localStorage prefix of the navtree's `navtree-open` view-state aspect, restated for the same reason;
@@ -149,7 +149,7 @@ export class AppManager {
     await expect(this.page.getByTestId('deck.plank').first()).toHaveAttribute('data-attendable-id', home, {
       timeout: 30_000,
     });
-    // The workspace's sections are what boot persists, so one of those is the write to wait on —
+    // The workspace's sections are what boot persists, so one of those is the write to wait on -
     // `content`, since that is the section the specs then act in.
     const contentOpenKey = `${NAVTREE_OPEN_STORAGE_PREFIX}root+root/${this.workspaceId}+root/${this.workspaceId}/content`;
     await expect
@@ -235,7 +235,7 @@ export class AppManager {
   }
 
   /**
-   * Waits for a new identity, created in place, to land on its own default space's Home — a different
+   * Waits for a new identity, created in place, to land on its own default space's Home - a different
    * workspace from `previousWorkspace`, the one the deleted identity was on.
    */
   async waitForNewIdentityWorkspace(previousWorkspace: string | undefined): Promise<void> {
@@ -304,7 +304,7 @@ export class AppManager {
 
   /**
    * Binds this identity to a fresh hub account, which a deployed origin requires before EDGE serves it
-   * the inbox. `test+…@dxos.org` addresses skip the access-code gate on non-production hubs; the request
+   * the inbox. `test+...@dxos.org` addresses skip the access-code gate on non-production hubs; the request
    * is sent from Node so the hub's CORS policy for the app origin does not apply.
    */
   async bindHubAccount(label: string): Promise<void> {
@@ -576,9 +576,9 @@ export class AppManager {
       // squashed cause) is what attributes it.
       throw new Error(
         error
-          ? `create-space failed: ${error.trim()} — console: ${this.recentConsoleErrors()}`
+          ? `create-space failed: ${error.trim()} - console: ${this.recentConsoleErrors()}`
           : // No error rendered and the submit was clicked while enabled, so the operation is still pending.
-            'create-space never completed: dialog still open with no error — SpaceOperation.Create did not resolve',
+            'create-space never completed: dialog still open with no error - SpaceOperation.Create did not resolve',
         { cause: err },
       );
     }
@@ -592,7 +592,7 @@ export class AppManager {
   async waitForSpaceReady(timeout = 10_000): Promise<void> {
     await this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout });
     await this.page.waitForFunction(
-      // Pair-chain URLs are `/<anchor>/<workspace>/…`, so the workspace follows the anchor segment.
+      // Pair-chain URLs are `/<anchor>/<workspace>/...`, so the workspace follows the anchor segment.
       (anchorKey) => {
         const [anchor, workspaceId] = window.location.pathname.split('/').filter(Boolean);
         if (anchor !== anchorKey || !workspaceId) {
@@ -659,7 +659,7 @@ export class AppManager {
       return;
     }
     // Hovering the row is what expands it in the graph, and a row with no children yet has a
-    // disabled chevron — which Playwright would wait on forever, since it only moves the mouse
+    // disabled chevron - which Playwright would wait on forever, since it only moves the mouse
     // once the target is actionable.
     await row.hover();
     await expect(toggle).toBeEnabled({ timeout });
@@ -923,7 +923,7 @@ export class AppManager {
     await expect(item).toHaveAttribute('aria-selected', 'true');
   }
 
-  /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */
+  /** The registry's dev-plugin URL field - an ordinary synced plugin setting. */
   getDevPluginUrlInput(): Locator {
     return this.page.getByTestId('registrySettings.devPluginUrl');
   }

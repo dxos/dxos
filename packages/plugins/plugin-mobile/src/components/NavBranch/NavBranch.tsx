@@ -37,8 +37,8 @@ const NO_EMPTY_GROUPS: ReadonlySet<string> = new Set();
 /**
  * Ids of the given nodes that are section groups with nothing under them.
  *
- * A group node (Communications, Content, Assistant, System, …) is a label over the children other
- * plugins hang off it, not a destination of its own — desktop's navtree drops an empty one outright
+ * A group node (Communications, Content, Assistant, System, ...) is a label over the children other
+ * plugins hang off it, not a destination of its own - desktop's navtree drops an empty one outright
  * (`TreeItem`), and mobile has to do the same or the row opens a permanently blank panel. Whether a
  * group is empty is a property of the running plugin set (no inbox plugin leaves Communications with
  * no contributor at all) and of the space's contents (the Assistant sections appear with the first

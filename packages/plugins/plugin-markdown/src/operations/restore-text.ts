@@ -24,7 +24,7 @@ const splice = (text: Text.Text, from: number, del: number, insert: string) => {
 
 /**
  * Apply a text splice to a document's content, or to one of its branches when `branch` is set. The
- * inverse operation for accept/reject undo — restores the text they overwrote.
+ * inverse operation for accept/reject undo - restores the text they overwrote.
  */
 const handler: Operation.WithHandler<typeof CollaborationOperation.RestoreText> =
   CollaborationOperation.RestoreText.pipe(

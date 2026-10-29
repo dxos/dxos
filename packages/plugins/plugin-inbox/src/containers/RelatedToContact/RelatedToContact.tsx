@@ -49,7 +49,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
     db,
     calendarFeed ? Query.select(Filter.type(Event.Event)).from(calendarFeed) : Query.select(Filter.nothing()),
   ) as Event.Event[];
-  // Summaries live on a SECOND feed (`mailbox.annotations`), so they need their own query — the
+  // Summaries live on a SECOND feed (`mailbox.annotations`), so they need their own query - the
   // message feed carries none. Absent pipeline output the rows fall back to the provider snippet.
   const annotationFeed = mailbox?.annotations?.target;
   const annotations = useQuery(

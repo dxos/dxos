@@ -18,7 +18,7 @@ import { Segment } from '#types';
 import { TripNamespace } from '../../namespace.ts';
 import { type SegmentCardActionHandler } from './SegmentCard.tsx';
 
-/** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone (the value shape `<input type='datetime-local'>` expects). */
+/** ISO 8601 -> `YYYY-MM-DDTHH:mm` in the user's local timezone (the value shape `<input type='datetime-local'>` expects). */
 const isoToLocalDateTime = (iso: string | undefined): string => {
   if (!iso) {
     return '';
@@ -30,7 +30,7 @@ const isoToLocalDateTime = (iso: string | undefined): string => {
   return formatDate(date, "yyyy-MM-dd'T'HH:mm");
 };
 
-/** `YYYY-MM-DDTHH:mm` (local) → ISO 8601 with timezone. */
+/** `YYYY-MM-DDTHH:mm` (local) -> ISO 8601 with timezone. */
 const localDateTimeToIso = (value: string): string | undefined => {
   if (!value) {
     return undefined;

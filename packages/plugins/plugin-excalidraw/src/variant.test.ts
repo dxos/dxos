@@ -48,12 +48,12 @@ const capabilityService = () => {
 };
 
 /**
- * Same round-trip as the tldraw variant test, run through the excalidraw builder — proves the
+ * Same round-trip as the tldraw variant test, run through the excalidraw builder - proves the
  * illustrator operations are renderer-agnostic.
  */
 describe('excalidraw drawing variant', () => {
   it.effect(
-    'create → edit → read round-trip preserves untouched objects',
+    'create -> edit -> read round-trip preserves untouched objects',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { object: drawing } = yield* Operation.invoke(DrawingOperation.Create, { name: 'Portrait' });
@@ -89,7 +89,7 @@ describe('excalidraw drawing variant', () => {
         expect(readFace?.origin).toEqual({ x: 100, y: 100 });
         expect(readFace?.elements.map((element) => element.id)).toEqual(['head', 'left-eye', 'right-eye', 'smile']);
 
-        // Add a hat above the face and turn the smile into a frown — by id, without resending the face.
+        // Add a hat above the face and turn the smile into a frown - by id, without resending the face.
         const edit = yield* Operation.invoke(DrawingOperation.Edit, {
           drawing: ref,
           commands: [

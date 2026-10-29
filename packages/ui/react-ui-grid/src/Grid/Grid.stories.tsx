@@ -121,7 +121,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Single focusable cell — for verifying focus-ring alignment with grid lines.
+ * Single focusable cell - for verifying focus-ring alignment with grid lines.
  */
 export const SingleCell: Story = {
   args: {
@@ -178,8 +178,8 @@ export const Basic: Story = {
           `,
         },
         '2,1': {
-          // accessoryHtml: `<dx-grid-multiselect-cell ${value ? `values='${JSON.stringify([{ label: value }])}'` : ''} placeholder="Select…"></dx-grid-multiselect-cell>`,
-          accessoryHtml: '<dx-grid-multiselect-cell placeholder="Select…"></dx-grid-multiselect-cell>',
+          // accessoryHtml: `<dx-grid-multiselect-cell ${value ? `values='${JSON.stringify([{ label: value }])}'` : ''} placeholder="Select..."></dx-grid-multiselect-cell>`,
+          accessoryHtml: '<dx-grid-multiselect-cell placeholder="Select..."></dx-grid-multiselect-cell>',
         },
       },
     },

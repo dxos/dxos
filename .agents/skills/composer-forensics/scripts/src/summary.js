@@ -37,7 +37,7 @@ export const printProbeSummary = (dbPath) => {
   if (integrity === 'ok') {
     console.log('integrity_check: ok');
   } else {
-    console.log('integrity_check: WARN (hot copy or corruption — close Chrome and re-extract for clean check)');
+    console.log('integrity_check: WARN (hot copy or corruption - close Chrome and re-extract for clean check)');
     if (integrity) {
       console.log(String(integrity).split('\n').slice(0, 5).join('\n'));
     }

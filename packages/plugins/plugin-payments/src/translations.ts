@@ -20,7 +20,7 @@ export const translations = [
         'no-payments-url.message': 'Set the payments service URL in settings first.',
         'no-identity.message': 'Sign in before purchasing.',
         'no-wallet.message': 'No injected EVM wallet (window.ethereum) detected.',
-        'pending.label': 'Working…',
+        'pending.label': 'Working...',
         'result.label': 'Result',
         'error.label': 'Error',
       },

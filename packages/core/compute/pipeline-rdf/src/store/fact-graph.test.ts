@@ -24,7 +24,7 @@ const edgeKeys = (graph: { edges: { source: string; target: string }[] }) =>
   graph.edges.map((edge) => `${edge.source}->${edge.target}`).sort();
 
 describe('buildFactGraph', () => {
-  test('connects socrates → man → mortal at depth 2', ({ expect }) => {
+  test('connects socrates -> man -> mortal at depth 2', ({ expect }) => {
     const graph = buildFactGraph('socrates', factSourceFromFacts(SYLLOGISM), { depth: 2 });
     expect(graph.nodes.map((node) => node.id).sort()).toEqual(['man', 'mortal', 'socrates']);
     expect(edgeKeys(graph)).toEqual(['man->mortal', 'socrates->man']);
@@ -37,7 +37,7 @@ describe('buildFactGraph', () => {
     expect(graph.nodes.map((node) => node.id).sort()).toEqual(['man', 'socrates']);
   });
 
-  test('traverses backward as well (object → subject)', ({ expect }) => {
+  test('traverses backward as well (object -> subject)', ({ expect }) => {
     const graph = buildFactGraph('mortal', factSourceFromFacts(SYLLOGISM), { depth: 2 });
     expect(edgeKeys(graph)).toEqual(['man->mortal', 'socrates->man']);
   });

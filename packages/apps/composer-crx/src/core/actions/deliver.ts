@@ -56,7 +56,7 @@ const decodeHints = (value: unknown): SnapshotHints | undefined => {
 
 /**
  * Validate an inbound runtime-message payload for the deliver handler.
- * The message crosses a trust boundary (content script → background worker),
+ * The message crosses a trust boundary (content script -> background worker),
  * so every required field is checked before `deliverPickedSnapshot` is called.
  * Returns the typed payload on success, `undefined` on any validation failure.
  *
@@ -109,7 +109,7 @@ export const decodeDeliverPayload = (value: unknown): { actionId: string; snapsh
  * captures), so no separate tab lookup is needed.
  *
  * The function backs a runtime-message response and must always resolve with a
- * well-formed ack — a rejection would bypass the caller's notification fallback
+ * well-formed ack - a rejection would bypass the caller's notification fallback
  * and leave the user without feedback.
  */
 export const deliverPickedSnapshot = async (

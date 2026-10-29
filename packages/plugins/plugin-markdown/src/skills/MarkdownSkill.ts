@@ -59,7 +59,7 @@ export const make = (): Skill.Skill =>
         When the user refers to "the selection" or "the selected text", call the ${Operation.toolName(MarkdownOperation.GetSelection)} tool
         once (no arguments) to retrieve exactly what they have selected before acting on it; it
         already reports the current selection across open documents, so do not call it per document.
-        An empty result means nothing is selected — ask what text they mean rather than guessing.
+        An empty result means nothing is selected - ask what text they mean rather than guessing.
       `,
     }),
     agentCanEnable: true,

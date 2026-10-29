@@ -33,7 +33,7 @@ type StoryArgs = {
  * The boot loader, mounted from the same component the inlined bundle uses, so the two cannot drift.
  *
  * The backdrop `#boot-loader` is static markup injected into `index.html` by `bootLoaderPlugin`, not
- * rendered by this component — the decorator below stands in for it.
+ * rendered by this component - the decorator below stands in for it.
  */
 const meta: Meta<StoryArgs> = {
   title: 'sdk/app-framework/BootLoader',
@@ -71,7 +71,7 @@ const PLUGINS = [
 /** Normal startup: the ring creeps, statuses append, plugin icons light, then the host reports ready. */
 export const Default: Story = {
   render: (args) => {
-    const store = createLoaderStore('Starting…');
+    const store = createLoaderStore('Starting...');
     void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
@@ -117,12 +117,12 @@ export const NoMark: Story = {
  */
 export const PluginActivation: Story = {
   render: (args) => {
-    const store = createLoaderStore('Activating plugins…');
+    const store = createLoaderStore('Activating plugins...');
     void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       store.setPlugins(PLUGINS);
       store.setProgress(0.5);
-      // Staggered 10ms → 100ms across the set: the app fires activations in bursts, and the
+      // Staggered 10ms -> 100ms across the set: the app fires activations in bursts, and the
       // entrance has to survive both ends of that range.
       let at = 600;
       const timers = PLUGINS.map((plugin, index) => {
@@ -139,19 +139,19 @@ export const PluginActivation: Story = {
 /**
  * Startup outran its budget in dev.
  *
- * The point of the story: the ring keeps creeping and statuses keep arriving BEHIND the offer —
+ * The point of the story: the ring keeps creeping and statuses keep arriving BEHIND the offer -
  * startup has not been cancelled, and the user chooses whether to end it. Clicking logs the abort so
  * the wiring is visible without a host attached.
  */
 export const Stalled: Story = {
   render: (args) => {
-    const store = createLoaderStore('Starting…');
+    const store = createLoaderStore('Starting...');
     void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.setProgress(0.35), 500),
         // The host's deadline firing. Short here; 30s in the app.
-        setTimeout(() => store.stalled(() => console.log('abort pressed — host would fail startup here')), 1_500),
+        setTimeout(() => store.stalled(() => console.log('abort pressed - host would fail startup here')), 1_500),
         // Startup carrying on regardless, which is the behaviour being demonstrated.
         setTimeout(() => store.pushStatus({ humanized: 'Opening storage (still working)' }), 2_500),
         setTimeout(() => store.pushStatus({ humanized: 'Activating Client: echo' }), 3_500),
@@ -164,15 +164,15 @@ export const Stalled: Story = {
   },
 };
 
-/** The offer is withdrawn if startup completes after all — `ready()` clears it. */
+/** The offer is withdrawn if startup completes after all - `ready()` clears it. */
 export const StalledThenReady: Story = {
   render: (args) => {
-    const store = createLoaderStore('Starting…');
+    const store = createLoaderStore('Starting...');
     void store.loadSprite(DEFAULT_SPRITE_PATH);
     onMount(() => {
       const timers = [
         setTimeout(() => store.stalled(() => console.log('abort pressed')), 1_000),
-        setTimeout(() => store.pushStatus({ humanized: 'Recovered — finishing startup' }), 2_500),
+        setTimeout(() => store.pushStatus({ humanized: 'Recovered - finishing startup' }), 2_500),
         setTimeout(() => store.ready(), 3_500),
       ];
       onCleanup(() => timers.forEach(clearTimeout));

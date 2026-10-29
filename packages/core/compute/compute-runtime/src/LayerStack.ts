@@ -130,7 +130,7 @@ export class LayerStack {
 
   /**
    * Initialise the slice for `context` without asking for a tag, which builds its eager specs.
-   * A stack whose point is its side effects — rpc registrations, lifecycle subscriptions — has
+   * A stack whose point is its side effects - rpc registrations, lifecycle subscriptions - has
    * nothing to resolve, so this is how an embedder starts it.
    */
   init(
@@ -392,14 +392,14 @@ export class LayerStack {
     const providers = this.#layers.filter((l) => l.provides.some((p) => p.key === tagKey));
     if (providers.length === 0) {
       hints.push(
-        'no LayerSpec contributes this service, and the embedder did not supply it ambiently — is the providing plugin activated on SetupProcessManager?',
+        'no LayerSpec contributes this service, and the embedder did not supply it ambiently - is the providing plugin activated on SetupProcessManager?',
       );
     } else if (hints.length === 0) {
       const affinities = [...new Set(providers.map((l) => l.affinity))].join(', ');
       hints.push(`registered at affinity=[${affinities}] but not resolved in current context`);
     }
 
-    const hint = hints.length > 0 ? ` — ${hints.join('; ')}` : '';
+    const hint = hints.length > 0 ? ` - ${hints.join('; ')}` : '';
     return `Service not available: ${tagKey} (affinity=${topAffinity}) [${contextSummary}]${hint}`;
   }
 }
@@ -662,7 +662,7 @@ class Slice {
     // Iterate in topological order so a spec only sees what came before it.
     //
     // The previous behaviour failed the entire slice when ANY spec's
-    // requirements were missing — which blew up unrelated tags. Example: a
+    // requirements were missing - which blew up unrelated tags. Example: a
     // `process`-affinity AiContext spec that requires `Database.Service`
     // would break every spawn without a `space` context (e.g. UI ops like
     // `update-complementary`), because the slice is shared across every

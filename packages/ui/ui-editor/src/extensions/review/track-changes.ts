@@ -31,7 +31,7 @@ export const setBase = StateEffect.define<string>();
 /**
  * Google-Docs-style "Suggesting mode" via bind-to-branch: the editor is bound to the branch document
  * and edits accrue natively to it, while the diff against {@link TrackChangesOptions.main} is decorated
- * over the live buffer — insertions as author-coloured underlined marks, deletions as phantom
+ * over the live buffer - insertions as author-coloured underlined marks, deletions as phantom
  * strikethrough widgets rendering the removed base text (which is absent from the document). A
  * replacement renders both, `~~old~~new`. Single author; foreign authors compose via the separate
  * `suggestions()` overlay.
@@ -44,7 +44,7 @@ export const trackChanges = ({ main, colour }: TrackChangesOptions): Extension =
     attributes: { style: `color:${colour};text-decoration-color:${colour}` },
   });
 
-  // One-entry memo of the last (base, doc) → decorations. Rebuilding is a whole-document char diff, so
+  // One-entry memo of the last (base, doc) -> decorations. Rebuilding is a whole-document char diff, so
   // reuse it when the same state recurs (undo/redo to a prior revision, or a doc-changing transaction
   // that lands back on a cached buffer). The key is length-prefixed so no base/doc pair is ambiguous.
   let cache: { base: string; doc: string; state: TrackState } | undefined;
@@ -61,7 +61,7 @@ export const trackChanges = ({ main, colour }: TrackChangesOptions): Extension =
     const changedLines = new Set<number>();
     const markLines = (from: number, to: number) => {
       // Trim a trailing newline so an inserted/removed paragraph break does not tag the following
-      // (empty) line — otherwise a new-paragraph suggestion draws a bar two lines deep.
+      // (empty) line - otherwise a new-paragraph suggestion draws a bar two lines deep.
       let end = to;
       while (end > from && state.doc.sliceString(end - 1, end) === '\n') {
         end--;
@@ -143,7 +143,7 @@ type TrackState = {
 };
 
 /**
- * Phantom render of text present in `main` but deleted on the branch — struck through and
+ * Phantom render of text present in `main` but deleted on the branch - struck through and
  * non-editable, since the text has no extent in the document.
  */
 class PhantomDeleteWidget extends WidgetType {
@@ -177,7 +177,7 @@ class PhantomDeleteWidget extends WidgetType {
 }
 
 /**
- * A phantom has zero document extent, so the caret can only sit beside it — a plain Backspace beside a
+ * A phantom has zero document extent, so the caret can only sit beside it - a plain Backspace beside a
  * phantom therefore deletes the real branch character hidden behind the strikethrough rather than the
  * phantom. Swallow it so tracked deletions read as protected units. Arrow keys need no override: the
  * zero-width phantom is stepped over in a single motion already.

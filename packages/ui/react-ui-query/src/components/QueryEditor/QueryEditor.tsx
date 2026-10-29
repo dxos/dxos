@@ -31,7 +31,7 @@ export type QueryEditorProps = Util.ThemedClassName<
      * The parsed query, rebuilt on every edit. `filter` is undefined while the text does not parse,
      * which is what a caller gates a "save this view" affordance on.
      *
-     * Supplying this is what opts the editor into building a filter at all — the DSL is otherwise
+     * Supplying this is what opts the editor into building a filter at all - the DSL is otherwise
      * parsed only for decoration, and a caller that wants the raw text pays nothing for a parse it
      * will not read.
      */
@@ -75,7 +75,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     );
 
     // Keyed on the tag map's CONTENTS, not its identity: callers rebuild the map each render, and
-    // `useTextEditor` destroys and recreates the view whenever `extensions` changes — so depending on
+    // `useTextEditor` destroys and recreates the view whenever `extensions` changes - so depending on
     // the object blurred the editor on every keystroke.
     const tagsKey = useMemo(
       () =>
@@ -95,7 +95,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
           lineWrapping: false,
           placeholder: t('query-editor.placeholder'),
           // A single-line query gains nothing from bracket matching, and CodeMirror's default paints
-          // `.cm-matchingBracket` with a background while focused — a coloured wash over the braces of
+          // `.cm-matchingBracket` with a background while focused - a coloured wash over the braces of
           // an object literal the moment the caret reaches it.
           bracketMatching: false,
         }),
@@ -122,7 +122,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         ref={forwardedRef}
         extensions={extensions}
         numItems={numItems}
-        // `#` opens the tag list. `:` cannot be a trigger — `popoverKeymap` only fires one at a line
+        // `#` opens the tag list. `:` cannot be a trigger - `popoverKeymap` only fires one at a line
         // start or after a space, and a typename's colon follows `type`; `activateOnTyping` covers it
         // instead, since `:` is a completion delimiter so the word under the caret is the typename.
         // The explicit key stays, for re-opening a dismissed menu.

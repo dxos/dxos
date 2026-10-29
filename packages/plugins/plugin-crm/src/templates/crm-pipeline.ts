@@ -35,9 +35,9 @@ const PROJECT_INSTRUCTIONS = trim`
 /**
  * "CRM pipeline" project template: the deterministic counterpart of the agentic Sender Research
  * template. The routine binds `ProcessMailbox` directly (kind: runnable) on a feed trigger, so the
- * trigger loop is deterministic — no model between trigger and operation. The operation's durable
+ * trigger loop is deterministic - no model between trigger and operation. The operation's durable
  * feed cursor plus the identity index make per-item firing idempotent: each firing catches up on
- * everything new and extra firings process nothing. Only applies to a Mailbox subject — the feed
+ * everything new and extra firings process nothing. Only applies to a Mailbox subject - the feed
  * trigger needs `mailbox.feed`.
  */
 export const crmPipeline: ProjectCapabilities.Template = {
@@ -56,7 +56,7 @@ export const crmPipeline: ProjectCapabilities.Template = {
       const feed = yield* Database.load(mailbox.feed);
 
       const project = Templates.scaffoldProject({
-        name: name ?? `CRM Pipeline — ${mailbox.name ?? 'Mailbox'}`,
+        name: name ?? `CRM Pipeline - ${mailbox.name ?? 'Mailbox'}`,
         text: PROJECT_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
         objects: [Ref.make(mailbox)],

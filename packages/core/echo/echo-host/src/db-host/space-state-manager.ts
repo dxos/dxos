@@ -140,10 +140,10 @@ export class SpaceStateManager extends Resource {
     return this._spaceRootRefs.get(spaceId);
   }
 
-  /** The root is immutable, so this is written once per space — at creation, or when a legacy space gains one. */
+  /** The root is immutable, so this is written once per space - at creation, or when a legacy space gains one. */
   async setSpaceRootRefs(spaceId: SpaceId, refs: SpaceRootRefs): Promise<void> {
     // The refs are stored as columns on the space's row, so without one the UPDATE below matches
-    // nothing and the refs would survive only in memory — lost on the next open.
+    // nothing and the refs would survive only in memory - lost on the next open.
     invariant(this._rootBySpace.has(spaceId), 'Space has no directory assigned.');
     await this._saveSpaceRootRefs(spaceId, refs);
     // Normalized so a caller sees the same shape here as after a reload, where SQL yields every column.
@@ -234,7 +234,7 @@ export class SpaceStateManager extends Resource {
     this._rootBySpace.set(spaceId, root.documentId);
 
     // The replaced root is released here rather than at `removeSpace`, which only ever sees the
-    // current one — its lease would otherwise keep the retired directory resident for the session.
+    // current one - its lease would otherwise keep the retired directory resident for the session.
     // A root shared with another space stays, since that space still reads through it.
     if (prevRootId && prevRootId !== root.documentId && !this._isRootReferenced(prevRootId)) {
       this._roots.get(prevRootId)?.[Symbol.dispose]();
@@ -259,7 +259,7 @@ export class SpaceStateManager extends Resource {
       ctx,
       async () => {
         // The space root and its credentials document hang off the space, not off the directory's
-        // links, so they replicate only if named here — without them a peer (edge included) can
+        // links, so they replicate only if named here - without them a peer (edge included) can
         // never read the credentials the space was anchored on.
         const anchorIds = Object.values(this._spaceRootRefs.get(spaceId) ?? {})
           .filter((url): url is AutomergeUrl => typeof url === 'string')

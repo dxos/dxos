@@ -23,7 +23,7 @@ import { type HandleQueryState, isLoaded } from './handle-state.ts';
 export type DocumentPair<T> = { query: DocumentProgress<T>; handle: DocHandle<T> };
 
 /**
- * How a lease reaches its document: `open` faults it in if it is not loaded, `peek` never does —
+ * How a lease reaches its document: `open` faults it in if it is not loaded, `peek` never does -
  * teardown has to be able to detach a listener without resurrecting an evicted document.
  */
 export type DocumentResolver<T> = {
@@ -31,7 +31,7 @@ export type DocumentResolver<T> = {
   peek: () => DocumentPair<T> | undefined;
 };
 
-/** What a subscriber learns about a leased document — never the handle. */
+/** What a subscriber learns about a leased document - never the handle. */
 export type DocumentLeaseState = {
   state: HandleQueryState;
 };
@@ -49,8 +49,8 @@ export type DocumentLeaseEvents<T> = {
  *
  * The repo caches a document forever once anything faults it in, so residency has to be decided by
  * the host rather than by the repo: a lease records that decision. The underlying `DocHandle` is
- * never handed out — a holder that captured one would keep reading (and writing) a document the host
- * has since evicted, and no reference count could see it — so every operation goes through the lease
+ * never handed out - a holder that captured one would keep reading (and writing) a document the host
+ * has since evicted, and no reference count could see it - so every operation goes through the lease
  * and stops working the moment it is disposed.
  *
  * Disposal is idempotent and, being `Symbol.dispose`, is usually written as `using lease = ...`.
@@ -66,7 +66,7 @@ export class DocumentLease<T = any> implements Disposable {
    */
   readonly #resolve: DocumentResolver<T>;
 
-  /** The handle each listener was registered on, so it is detached from that one — see {@link off}. */
+  /** The handle each listener was registered on, so it is detached from that one - see {@link off}. */
   readonly #listeners = new Map<(payload: any) => void, DocHandle<T>>();
 
   /**
@@ -93,12 +93,12 @@ export class DocumentLease<T = any> implements Disposable {
     return `automerge:${this._documentId}` as AutomergeUrl;
   }
 
-  /** Readiness of the document — the `DocHandle`'s own predicates lie, see `getHandleState`. */
+  /** Readiness of the document - the `DocHandle`'s own predicates lie, see `getHandleState`. */
   get state(): HandleQueryState {
     return this.#query.peek().state;
   }
 
-  /** Ready with the stored copy merged in — see {@link isLoaded}; what {@link waitUntilReady} waits for. */
+  /** Ready with the stored copy merged in - see {@link isLoaded}; what {@link waitUntilReady} waits for. */
   get loaded(): boolean {
     return isLoaded(this.#query.peek());
   }
@@ -108,14 +108,14 @@ export class DocumentLease<T = any> implements Disposable {
   }
 
   /**
-   * The document, or the empty initial document while it is still loading — check {@link state}
+   * The document, or the empty initial document while it is still loading - check {@link state}
    * (or await {@link waitUntilReady}) when the difference matters.
    */
   doc(): A.Doc<T> {
     return this.#handle.doc();
   }
 
-  /** Heads of the document as loaded now — an empty document while it is still loading. */
+  /** Heads of the document as loaded now - an empty document while it is still loading. */
   heads(): UrlHeads {
     return this.#handle.heads();
   }
@@ -133,8 +133,8 @@ export class DocumentLease<T = any> implements Disposable {
   /**
    * Resolves once the document is loaded, rejects if the query fails.
    *
-   * `'unavailable'` is transient rather than terminal — the query routinely reports it while no peer
-   * serves the document yet — so this waits through it, unlike `DocumentQuery.whenReady`.
+   * `'unavailable'` is transient rather than terminal - the query routinely reports it while no peer
+   * serves the document yet - so this waits through it, unlike `DocumentQuery.whenReady`.
    */
   async waitUntilReady(): Promise<void> {
     await new Promise<void>((resolve, reject) => {
@@ -222,7 +222,7 @@ export class DocumentLease<T = any> implements Disposable {
 
 export type DocumentLeaseRegistryParams = {
   /**
-   * Opens (or returns the cached) query and its attached handle for a document — the one place the
+   * Opens (or returns the cached) query and its attached handle for a document - the one place the
    * repo is consulted.
    */
   open: (documentId: DocumentId) => DocumentPair<any>;
@@ -245,7 +245,7 @@ export type DocumentLeaseRegistryParams = {
   evictionDelay?: number;
 
   /**
-   * How many released documents stay resident regardless of age — the most recently released ones.
+   * How many released documents stay resident regardless of age - the most recently released ones.
    * A floor keeps the hot working set loaded on a host whose whole workload is shorter than the
    * delay, and bounds nothing else: leased documents are never counted against it.
    */
@@ -277,7 +277,7 @@ export class DocumentLeaseRegistry {
    */
   readonly #resolved = new Map<DocumentId, DocumentPair<any>>();
 
-  /** Released documents by release time, in release order — the eviction queue. */
+  /** Released documents by release time, in release order - the eviction queue. */
   readonly #idle = new Map<DocumentId, number>();
 
   /** Idle documents whose eviction was deferred: each retries once the delay passes, whatever the ceiling. */
@@ -300,7 +300,7 @@ export class DocumentLeaseRegistry {
     this.#maxIdleDocuments = params.maxIdleDocuments ?? DEFAULT_MAX_IDLE_DOCUMENTS;
   }
 
-  /** Documents currently leased — the host's document residency. */
+  /** Documents currently leased - the host's document residency. */
   get size(): number {
     return this.#counts.size;
   }
@@ -314,7 +314,7 @@ export class DocumentLeaseRegistry {
     return this.#idle.size;
   }
 
-  /** Whether a lease is outstanding — an idle-but-resident document reads `false`, see {@link idleCount}. */
+  /** Whether a lease is outstanding - an idle-but-resident document reads `false`, see {@link idleCount}. */
   isLeased(documentId: DocumentId): boolean {
     return this.#counts.has(documentId);
   }
@@ -324,7 +324,7 @@ export class DocumentLeaseRegistry {
     this.#idle.delete(documentId);
     this.#deferred.delete(documentId);
     this.#counts.set(documentId, (this.#counts.get(documentId) ?? 0) + 1);
-    // Faulted in now so the document starts loading, and re-resolved on each access — see the
+    // Faulted in now so the document starts loading, and re-resolved on each access - see the
     // lease's constructor for why the pair cannot be captured here.
     this.#open(documentId);
     return new DocumentLease<T>(
@@ -338,7 +338,7 @@ export class DocumentLeaseRegistry {
   }
 
   /**
-   * Drops all bookkeeping for a document without evicting it — for a caller that removed the
+   * Drops all bookkeeping for a document without evicting it - for a caller that removed the
    * document itself, where a later eviction would re-create the query it just deleted.
    */
   forget(documentId: DocumentId): void {
@@ -362,7 +362,7 @@ export class DocumentLeaseRegistry {
   }
 
   /**
-   * Closes, then waits for an eviction that is already draining — it holds the repo's storage and
+   * Closes, then waits for an eviction that is already draining - it holds the repo's storage and
    * would otherwise flush into an adapter the caller is about to shut down.
    */
   async closeAndSettle(): Promise<void> {
@@ -379,7 +379,7 @@ export class DocumentLeaseRegistry {
   }
 
   /**
-   * Evicts every released document now, ignoring the delay and the floor — for a caller that needs
+   * Evicts every released document now, ignoring the delay and the floor - for a caller that needs
    * residency settled before it measures it.
    */
   async drain(): Promise<void> {
@@ -527,7 +527,7 @@ export class DocumentLeaseRegistry {
           continue;
         }
         if (!evicted) {
-          // Still resident, so it goes back in the queue rather than being forgotten — re-stamped,
+          // Still resident, so it goes back in the queue rather than being forgotten - re-stamped,
           // which spaces the retry out by the idle delay instead of retrying in a tight loop.
           this.#idle.set(documentId, Date.now());
           this.#deferred.add(documentId);

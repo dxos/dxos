@@ -36,13 +36,13 @@ export const EDGE_URLS = Object.freeze({
  * The path each service answers on beneath the EDGE entrypoint.
  *
  * EDGE is the front door for every service, and each owns exactly one prefix on it, so a client needs
- * one base URL per environment rather than a hostname per service — a hostname per service has to be
+ * one base URL per environment rather than a hostname per service - a hostname per service has to be
  * redeployed every time one of them moves, a prefix table does not. See
  * `edge/docs/design/system/http-route-migration.md`.
  *
  * The entries that are not simply `/<name>`:
  *
- * - `transcription` is the ASR endpoint (`POST /transcribe`), which calls-service serves — the same
+ * - `transcription` is the ASR endpoint (`POST /transcribe`), which calls-service serves - the same
  *   worker `calls` reaches, which is why it has always been configured to the same host.
  * - `video-transcription` is the separate transcription-service (`GET /video`), whose prefix is the
  *   worker's own name.
@@ -63,13 +63,13 @@ const EDGE_SERVICE_PATHS: Record<EdgeServiceName, string> = Object.freeze({
 const joinEdgePath = (baseUrl: string, path: string): string => `${baseUrl.replace(/\/+$/, '')}${path}`;
 
 /**
- * Resolve an EDGE service endpoint, `undefined` when nothing is configured — absence still means the
+ * Resolve an EDGE service endpoint, `undefined` when nothing is configured - absence still means the
  * feature is unavailable, so an unconfigured client reaches no network at all.
  *
  * Two sources, in order:
  *
  * 1. An explicit `runtime.services.edgeServices` entry. The last match wins, since proto cannot enforce
- *    uniqueness on a repeated field. This is the override — a local worker, a one-off host.
+ *    uniqueness on a repeated field. This is the override - a local worker, a one-off host.
  * 2. `runtime.services.edge.url` plus the service's path. This is the normal case: configuring the EDGE
  *    entrypoint configures every service behind it, and no service endpoint can drift to a different
  *    environment than the client's own.

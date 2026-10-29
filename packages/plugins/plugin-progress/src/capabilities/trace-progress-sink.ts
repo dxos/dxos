@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 /**
  * Contributes a {@link Capabilities.TraceSink} that projects `status.update` trace events into the
  * {@link AppCapabilities.ProgressRegistry}. Runs in parallel with the feed trace sink contributed by
- * `plugin-routine` — both are merged by the process-manager runtime.
+ * `plugin-routine` - both are merged by the process-manager runtime.
  *
  * The meter's cancel routes by the emitting runtime ({@link Trace.isEdgeRuntime}): an edge-run trigger
  * is cancelled through the remote ({@link RemoteProcessManager}) control keyed by its trigger id; a

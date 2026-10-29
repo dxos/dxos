@@ -55,7 +55,7 @@ const NOTES = [
 ];
 
 // 12x12 board with a tile in each corner, one in the centre, and the rest spread between them with a
-// free gutter — exercises the edges (auto-scroll, overscroll, centering a far cell) and leaves room to drop.
+// free gutter - exercises the edges (auto-scroll, overscroll, centering a far cell) and leaves room to drop.
 const TILE_COLUMNS = [0, 3, 7, 10];
 
 const tilePositions: GridPosition[] = [
@@ -107,7 +107,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const controller = useRef<BoardController>(null);
 
-  // Center the newly-selected cell (a story-level choice — the component itself doesn't move on select).
+  // Center the newly-selected cell (a story-level choice - the component itself doesn't move on select).
   const handleSelectedChange = useCallback<NonNullable<BoardRootProps['onSelectedChange']>>((next) => {
     setSelected(next);
     const id = next.values().next().value;
@@ -290,7 +290,7 @@ export const RejectIfNoFit: Story = {
 };
 
 /**
- * Overscroll: the board is padded by half the viewport, so any cell — including the corners — can be
+ * Overscroll: the board is padded by half the viewport, so any cell - including the corners - can be
  * scrolled to the centre (select a card and it centres; drag to an edge and keep going).
  */
 export const Overscroll: Story = {
@@ -303,7 +303,7 @@ export const Overscroll: Story = {
   },
 };
 
-/** `margin: 1` — one cell of perimeter breathing room around the grid so tiles aren't flush to the
+/** `margin: 1` - one cell of perimeter breathing room around the grid so tiles aren't flush to the
  * board edges (the margin scales with the board when zooming). */
 export const Margin: Story = {
   args: {

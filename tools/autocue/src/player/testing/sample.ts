@@ -6,7 +6,7 @@ import { type Manifest } from '../types.ts';
 
 const SPEC_LINES = [
   'test QA-1: Start a game and play the opening',
-  '  desc: The core chess round-trip — create a game, play the first few moves, read the position back.',
+  '  desc: The core chess round-trip - create a game, play the first few moves, read the position back.',
   '  actors: human',
   '  given:',
   '    - an identity exists',

@@ -154,7 +154,7 @@ describe('EDGE Operation.Service', () => {
   });
 
   // No `deployedId`: the shape of any definition a handler imported directly rather than
-  // deserializing from the registry — e.g. `space.addObject` scheduling `observability.sendEvent`.
+  // deserializing from the registry - e.g. `space.addObject` scheduling `observability.sendEvent`.
   const Local = Operation.make({
     meta: { key: DXN.make('com.example.operation.local'), name: 'Local' },
     input: Schema.Struct({ value: Schema.String }),
@@ -177,7 +177,7 @@ describe('EDGE Operation.Service', () => {
   });
 
   // Regression: this used to assert, and the resulting defect propagated out of the *calling*
-  // operation — `projects.create` 500'd at EDGE because the `space.addObject` inside it scheduled
+  // operation - `projects.create` 500'd at EDGE because the `space.addObject` inside it scheduled
   // an observability event no worker registers a handler for.
   test('drops an unroutable scheduled operation instead of failing its caller', async ({ expect }) => {
     const calls: { deploymentId: string; input: unknown }[] = [];
@@ -326,7 +326,7 @@ describe('ref decoding through the input schema', () => {
     await expect(invokeWithEnvelope(Optional, { milestone: envelope() })).resolves.toEqual({ decoded: true });
   });
 
-  // Same envelope, same target, same handler — the only difference is that the field may also be
+  // Same envelope, same target, same handler - the only difference is that the field may also be
   // null. Fails today: the envelope reaches the type-side check unconverted and is rejected as
   // `Expected <Declaration>`, so a nullable ref field cannot be SET over the wire at all.
   test('decodes an encoded reference for an optional NULLABLE ref field', async ({ expect }) => {
@@ -385,7 +385,7 @@ const scheduleWith = async (
 
 /**
  * A live peer with its host services bridged in-process, the way `createFunctionContext` bridges
- * the EDGE bindings — so the runtime builds its own client and graph exactly as the worker does.
+ * the EDGE bindings - so the runtime builds its own client and graph exactly as the worker does.
  */
 const openPeer = async () => {
   const builder = new EchoTestBuilder();

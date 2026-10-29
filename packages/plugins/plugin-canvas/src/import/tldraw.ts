@@ -96,7 +96,7 @@ export type TldrawImport = {
   views: ViewMap;
   /** Shapes left out, by tldraw shape type (and `page` for shapes on any page after the first). */
   skipped: Record<string, number>;
-  /** Shapes carried over with a loss, by reason (`rotation`, `geo:<kind>`, `group`, …). */
+  /** Shapes carried over with a loss, by reason (`rotation`, `geo:<kind>`, `group`, ...). */
   approximated: Record<string, number>;
 };
 
@@ -197,7 +197,7 @@ export const tldrawToViews = (
 ): TldrawImport => {
   const records = Object.values(content);
   const shapes = records.filter(isShapeRecord);
-  /** `<arrow id> <terminal>` → the shape that end is bound to; the first binding wins, as a lookup per end. */
+  /** `<arrow id> <terminal>` -> the shape that end is bound to; the first binding wins, as a lookup per end. */
   const boundTo = new Map<string, string>();
   for (const binding of records.filter(isArrowBinding)) {
     const key = `${binding.fromId} ${binding.props.terminal}`;
@@ -227,7 +227,7 @@ export const tldrawToViews = (
   };
 
   const drafts: Draft[] = [];
-  /** Shape id → the View and node it became. */
+  /** Shape id -> the View and node it became. */
   const placed = new Map<string, { view: ViewId; node: string }>();
   /** Groups, innermost first, so an inner group's Instance is a member of the outer one. */
   const groups: Array<{ view: ViewId; id: string; members: string[] }> = [];
@@ -651,7 +651,7 @@ const toHsl = (value: string): { hue: number; saturation: number } | undefined =
   return { hue: sector * 60, saturation };
 };
 
-/** tldraw fill → the canvas tone: none is an outline, solid the strongest fill, semi the lightest. */
+/** tldraw fill -> the canvas tone: none is an outline, solid the strongest fill, semi the lightest. */
 const TONES: Readonly<Record<string, NodeTone>> = { none: 0, solid: 1, fill: 1, pattern: 2, semi: 3 };
 
 const shapeStyle = (props: Props, fontSizes: Record<string, number>, scale = 1): NodeStyle => {

@@ -100,7 +100,7 @@ export class HeyGenProvider implements GenerationProvider {
   async listAvatars(options: ProviderCallOptions): Promise<GenerationOption[]> {
     // Runtime-validate the untyped JSON body (no cast). `data` is a flat array on v3 (`{ data: [...] }`);
     // tolerate the v2 nesting (`data.avatars`) and both field conventions (v3 `id`/`name`, v2
-    // `avatar_id`/`avatar_name`). `talking_photos` are omitted — they need a different
+    // `avatar_id`/`avatar_name`). `talking_photos` are omitted - they need a different
     // `character.type` when posting than the `avatar` we send.
     const body = await this.#getList('listAvatars', AVATARS_URL, options);
     const container = isRecord(body) ? body.data : undefined;
@@ -157,8 +157,8 @@ export class HeyGenProvider implements GenerationProvider {
       LIST_TIMEOUT_MS,
     );
     try {
-      // The timeout must remain armed through body consumption — `fetch` can resolve on headers while
-      // `readErrorBody`/`json` still stall — so parsing happens here, not after the timer is cleared.
+      // The timeout must remain armed through body consumption - `fetch` can resolve on headers while
+      // `readErrorBody`/`json` still stall - so parsing happens here, not after the timer is cleared.
       const response = await this.#fetch(url, {
         method: 'GET',
         headers: { 'X-Api-Key': options.apiKey },
@@ -280,18 +280,18 @@ const sortByName = (options: GenerationOption[]): GenerationOption[] =>
 /** Runtime guard for narrowing an untyped JSON value to an indexable object. */
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-/** First value that is a string, else undefined — used to coalesce version-specific field names. */
+/** First value that is a string, else undefined - used to coalesce version-specific field names. */
 const firstString = (...values: unknown[]): string | undefined =>
   values.find((value): value is string => typeof value === 'string');
 
 /**
- * Non-secret fingerprint of the API key for diagnostics. Never logs the raw key — only its shape, so
+ * Non-secret fingerprint of the API key for diagnostics. Never logs the raw key - only its shape, so
  * a global 401 can be triaged (empty/truncated key, stray whitespace or quotes from a paste, vs. a
  * structurally-valid key that HeyGen simply rejects).
  */
 const describeKey = (key: string): Record<string, unknown> => ({
   length: key.length,
-  // Only structural flags — never any raw key characters (would leak the credential into logs).
+  // Only structural flags - never any raw key characters (would leak the credential into logs).
   trimmedDiffers: key !== key.trim(),
   hasWhitespace: /\s/.test(key),
   hasQuotes: /^["']|["']$/.test(key),

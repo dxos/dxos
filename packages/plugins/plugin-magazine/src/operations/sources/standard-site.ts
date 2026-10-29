@@ -14,7 +14,7 @@ import { type FeedFetcher, FeedFetchError, type FetchOptions } from './feed-fetc
 import { getJson } from './http.ts';
 
 // Standard.site (`site.standard.*`) is the AT Protocol lexicon for long-form articles. Reading is
-// fully decentralized and auth-free: resolve handle → DID → PDS, then list the actor's public
+// fully decentralized and auth-free: resolve handle -> DID -> PDS, then list the actor's public
 // `site.standard.document` records. The same records this repo publishes via
 // `docs/scripts/sync-to-atproto.ts`. Standard.site lexicons aren't in `@atproto/api`, so the
 // response shapes are modelled locally and fetched with the platform `HttpClient` (mirroring the AT
@@ -41,7 +41,7 @@ const endpoints = {
 
 /** A publication a handle publishes under, keyed by its Standard.site `site` reference. */
 export type Publication = {
-  /** The document `site` reference (`at://…` URI or `https://…` URL); the stable selection key. */
+  /** The document `site` reference (`at://...` URI or `https://...` URL); the stable selection key. */
   site: string;
   /** Canonical site URL (e.g. `https://dxos.org`), trailing slash stripped. */
   url?: string;
@@ -51,7 +51,7 @@ export type Publication = {
 
 /**
  * Extracts an atproto handle or DID from a URL or raw identifier.
- * Supports: bare handles (`dxos.org`), `@handle`, `did:plc:…`/`did:web:…`, or a
+ * Supports: bare handles (`dxos.org`), `@handle`, `did:plc:...`/`did:web:...`, or a
  * `https://bsky.app/profile/{actor}` URL.
  */
 export const parseStandardSiteActor = (url: string): string => {
@@ -101,7 +101,7 @@ export const searchStandardSiteHandles = (
       );
 
 /**
- * Fetches a Standard.site feed. `url` is the publication's `site` reference — either an `at://` URI
+ * Fetches a Standard.site feed. `url` is the publication's `site` reference - either an `at://` URI
  * (DID extracted directly) or an `https://` URL (DID resolved via `/.well-known/atproto-did`). In both
  * cases, all documents in the author's repo filtered to that publication are fetched.
  */
@@ -218,8 +218,8 @@ const PublicationRecord = Schema.Struct({
 
 /**
  * Resolves a publication `site` reference to its author's DID:
- * - `at://did:…/…` → DID extracted directly from the URI.
- * - `https://…` → DID fetched from `/.well-known/atproto-did` on that domain.
+ * - `at://did:.../...` -> DID extracted directly from the URI.
+ * - `https://...` -> DID fetched from `/.well-known/atproto-did` on that domain.
  */
 const resolveDidFromSite = (
   site: string,
@@ -326,8 +326,8 @@ const fetchProfile = (
 
 /**
  * Resolves a publication `site` reference to its {@link Publication} metadata:
- * - `https://` → canonical URL directly (no record fetch needed).
- * - `at://` → `getRecord` the publication record for `url`/`name`.
+ * - `https://` -> canonical URL directly (no record fetch needed).
+ * - `at://` -> `getRecord` the publication record for `url`/`name`.
  */
 const resolvePublication = (
   site: string,

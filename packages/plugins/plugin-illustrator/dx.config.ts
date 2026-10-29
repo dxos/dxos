@@ -25,7 +25,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     description: trim`
       Headless diagramming host plugin that provides shared infrastructure for local-first
       drawing and diagramming inside DXOS Composer. The plugin owns the base \`Sketch\` ECHO
-      type — a named handle referencing a renderer-specific canvas object — together with the
+      type - a named handle referencing a renderer-specific canvas object - together with the
       renderer-neutral scene DSL, the diagram dialect registry, and the agent-facing sketch
       skill and operations (create, read, edit).
 

@@ -39,7 +39,7 @@ export type Template = {
    */
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
-   * Build the project as a fully-wired in-memory graph — the project plus its owned instructions
+   * Build the project as a fully-wired in-memory graph - the project plus its owned instructions
    * and artifacts collection (and any starter routines), all parented. The create flow persists it
    * with a single `Database.add` cascade; scaffold must NOT call `Database.add` itself.
    * `Database.Service` may still be used for read-only lookups (e.g. loading a subject's feed ref).

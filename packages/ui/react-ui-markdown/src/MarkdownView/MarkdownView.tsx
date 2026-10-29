@@ -16,7 +16,7 @@ export type MarkdownViewProps = Util.ThemedClassName<
     content?: string;
     components?: ReactMarkdownOptions['components'];
     /**
-     * Render every block — headings, quotes, lists, code, tables — at the container's font size and
+     * Render every block - headings, quotes, lists, code, tables - at the container's font size and
      * line height with no vertical padding or margin, so each line is the same height. For a
      * clamped preview (`line-clamp-*`), which otherwise cuts partway into a line.
      */

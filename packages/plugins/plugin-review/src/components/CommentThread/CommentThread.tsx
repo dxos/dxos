@@ -28,7 +28,7 @@ import { useThreadMessages } from '#hooks';
 import { ReviewNamespace } from '../../namespace.ts';
 
 // TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
-// relation changes. The try/catch should not be necessary — Relation.getSource should
+// relation changes. The try/catch should not be necessary - Relation.getSource should
 // return undefined rather than throw when the source is transiently unavailable.
 const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.SourceOf<T> | undefined => {
   try {
@@ -241,7 +241,7 @@ export const CommentThread = ({
 
         {/*
           Comment threads have few messages and live inside the companion's outer
-          scroll area, so render tiles inline (not the virtual stack) — this keeps
+          scroll area, so render tiles inline (not the virtual stack) - this keeps
           them at full width so their controls align with the header's controls.
         */}
         {/*
@@ -254,7 +254,7 @@ export const CommentThread = ({
 
         {/*
           Autofocus only newly-created (draft) threads. Once the first message is
-          posted the thread transitions from 'staged' → 'active' and stops stealing
+          posted the thread transitions from 'staged' -> 'active' and stops stealing
           focus, so multiple active threads no longer fight for focus.
         */}
         <Thread.Textbox

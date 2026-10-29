@@ -48,16 +48,16 @@ type PassResult = {
 
 /**
  * Runs the mailbox pipelines as a cascade, each tier's output gating the next: deterministic
- * extraction (contacts + subscriptions) → cheap LLM classification → optional per-message analysis.
+ * extraction (contacts + subscriptions) -> cheap LLM classification -> optional per-message analysis.
  *
  * Sequencing is the whole point. Classification consults the Person objects the contact pass
- * creates — a known sender is tagged personal, never spam, and never sent to the model — so running
+ * creates - a known sender is tagged personal, never spam, and never sent to the model - so running
  * the tiers out of order (or classifying a mailbox whose contacts were never extracted) silently
  * pays full price for a weaker verdict. Ordering the spawns here also makes the cursor watermark
  * hold by construction: no tier can advance past one that has not yet seen the same messages.
  *
  * Each spawned operation keeps its own cursor, batch cap, idempotency and services, so this handler
- * adds no pipeline logic — it decides what runs, in what order, and what to do when a pass fails.
+ * adds no pipeline logic - it decides what runs, in what order, and what to do when a pass fails.
  * A failure invalidates only that processor's DESCENDANTS in the topology; independent branches run.
  */
 const handler = InboxOperation.AnalyzeMailbox.pipe(
@@ -81,7 +81,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       // undefined total on a current-only tick would blank the denominator mid-cascade.
       let current = 0;
       let total: number | undefined;
-      // Phase first — see the matching note in `mail-sync.ts`. The running processor is not appended:
+      // Phase first - see the matching note in `mail-sync.ts`. The running processor is not appended:
       // the meter's own `current/total` already says how far through the cascade the run is.
       const analyzeLabel = `Analyzing ${mailbox.name ?? 'mailbox'}`;
       const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
@@ -111,14 +111,14 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       const { ordered, excluded } = Topology.sort(contributed.filter((processor) => selected.has(processor.tier)));
 
       // The plan is built up front so the cascade is inspectable as data (and the progress total is
-      // known before the first spawn). `Operation.invoke` returns a lazy Effect — nothing runs here.
+      // known before the first spawn). `Operation.invoke` returns a lazy Effect - nothing runs here.
       const options: InboxCapabilities.MailboxProcessorOptions = { me, batchLimit, model, provider, strict };
       const passes: Pass[] = [
         // A processor the topology could not place is reported, never dropped: silence here would look
         // exactly like a pass that ran and found nothing.
         ...excluded.map(({ node, reason }) => ({ tier: node.tier, processor: node.id, skip: reason, run: NEVER })),
-        // `flatMap`, because a processor may cover several subjects — one Project's view of a shared
-        // feed, say — and each is a separately-cursored run. They keep the contributing processor's
+        // `flatMap`, because a processor may cover several subjects - one Project's view of a shared
+        // feed, say - and each is a separately-cursored run. They keep the contributing processor's
         // id so the `after` edges and the failure blocking below still speak in processor terms; only
         // the reported subject differs.
         ...ordered.flatMap((processor): Pass[] => {
@@ -126,7 +126,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
           if ('skip' in invocations) {
             return [{ tier: processor.tier, processor: processor.id, skip: invocations.skip, run: NEVER }];
           }
-          // An empty list is a processor that found nothing to run — reported, not silently absent.
+          // An empty list is a processor that found nothing to run - reported, not silently absent.
           if (invocations.length === 0) {
             return [{ tier: processor.tier, processor: processor.id, skip: 'no subjects', run: NEVER }];
           }
@@ -180,7 +180,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         if (Exit.isSuccess(exit)) {
           results.push({ ...passId(pass), status: 'completed', output: exit.value });
         } else if (Cause.hasInterruptsOnly(exit.cause)) {
-          // Cancellation is not a pass failure — stop without marking the pipeline broken. Everything
+          // Cancellation is not a pass failure - stop without marking the pipeline broken. Everything
           // planned behind it is reported too: a half-run cascade whose tail is simply ABSENT reads as
           // a cascade that was never planned that way, which is the same illegibility the excluded and
           // pre-run-cancelled paths already avoid.
@@ -192,10 +192,10 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         } else {
           const unmet = unmetPrecondition(exit.cause);
           if (unmet !== undefined) {
-            // Something the tier declared is not in this deployment — the assistant is not up, or no
+            // Something the tier declared is not in this deployment - the assistant is not up, or no
             // plugin contributed a service it needs. A precondition rather than a fault: report the
             // tier as skipped and keep going. Every later tier missing the same thing skips itself the
-            // same way, and the tiers that already ran stay valid — treating it as a failure instead
+            // same way, and the tiers that already ran stay valid - treating it as a failure instead
             // aborts the cascade and leaves the meter red for a mailbox nothing is wrong with.
             log.info('analyze: pass skipped', { processor: pass.processor, error: unmet });
             results.push({ ...passId(pass), status: 'skipped', error: unmet });
@@ -208,7 +208,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
           results.push({ ...passId(pass), status: 'failed', error });
           if (!continueOnError) {
             // Only what actually consumed this output is invalidated. Blocking by run POSITION instead
-            // would strand processors that never depended on it — `subscriptions` declares no edge to
+            // would strand processors that never depended on it - `subscriptions` declares no edge to
             // `classify`, so a classification failure has no bearing on it.
             for (const id of Topology.descendants(ordered, pass.processor)) {
               blocked.set(id, `upstream '${pass.processor}' failed`);
@@ -219,7 +219,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       }
 
       // Counted by their own status rather than by exclusion: `skipped` used to mean "not completed
-      // and not failed", which swept up cancellations — so an interrupted run reported its entire
+      // and not failed", which swept up cancellations - so an interrupted run reported its entire
       // unrun tail as skipped, a pass having decided not to run rather than never reaching the line.
       const countOf = (status: PassResult['status']) => results.filter((result) => result.status === status).length;
       const completed = countOf('completed');

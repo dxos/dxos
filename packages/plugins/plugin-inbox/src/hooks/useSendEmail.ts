@@ -27,7 +27,7 @@ import { markSent, resolveMailRoute } from '../util/index.ts';
  * built-in toast mechanism); post-send bookkeeping failures are logged, not toasted.
  *
  * `sendOperations` is resolved by the container (this hook is called from `components/`, which must not
- * call capability hooks) — one entry per installed mail provider, keyed by its connector id.
+ * call capability hooks) - one entry per installed mail provider, keyed by its connector id.
  */
 export const useSendEmail = (
   runtime: Capabilities.ProcessManagerRuntime | undefined,

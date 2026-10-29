@@ -53,8 +53,8 @@ export const blockDrag = ({ clampX }: Pick<BlockOptions, 'clampX'> = {}): Extens
   createBlockDrag({ getBlocks: findBlocks, moveBlocks, clampX });
 
 /**
- * Top-level markdown blocks (headings, paragraphs, lists, blockquotes, fenced code, …) from the
- * syntax tree, so a list or code fence moves and boxes as a single unit. Memoized per state — the
+ * Top-level markdown blocks (headings, paragraphs, lists, blockquotes, fenced code, ...) from the
+ * syntax tree, so a list or code fence moves and boxes as a single unit. Memoized per state - the
  * highlight layer, the gutter, and the drag plugin all query it on the same state.
  */
 const blockCache = new WeakMap<EditorState, Block[]>();
@@ -112,7 +112,7 @@ const deleteRanges = (state: EditorState, blocks: Block[], indices: number[]): {
  * document when `dropIndex === blocks.length`), preserving their relative order and blank-line
  * separation, as a single undo step. Places the caret at the end of the moved content and clears the
  * block selection. Returns `null` for a no-op (empty/invalid sources, or a drop inside the moved region).
- * Pure — exported for tests.
+ * Pure - exported for tests.
  */
 export const moveBlocksSpec = (
   state: EditorState,
@@ -167,8 +167,8 @@ const moveBlocks = (view: EditorView, sourceIndices: number[], dropIndex: number
 
 /**
  * Transaction that removes the blocks at `indices` and, when `text` is non-null, inserts it as block(s)
- * at the first removed slot — a single edit. `null` is a pure delete (cut); non-null is a replace
- * (paste). Returns `null` for a no-op. Pure — exported for tests.
+ * at the first removed slot - a single edit. `null` is a pure delete (cut); non-null is a replace
+ * (paste). Returns `null` for a no-op. Pure - exported for tests.
  */
 export const replaceBlocksSpec = (
   state: EditorState,

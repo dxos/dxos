@@ -25,7 +25,7 @@ export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog/in
 export const MembersContainer: ComponentType<any> = lazy(() => import('./MembersContainer/index.ts'));
 export const MergePreview: ComponentType<any> = lazy(() => import('./MergePreview/index.ts'));
 export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCardStack/index.ts'));
-// Lazy like its siblings — the masonry and card stack are a chunk no consumer should pay for until
+// Lazy like its siblings - the masonry and card stack are a chunk no consumer should pay for until
 // it renders one.
 export const ObjectMasonryArticle: ComponentType<ObjectMasonryArticleProps> = lazy(() =>
   import('./ObjectMasonry/index.ts').then(({ ObjectMasonryArticle }) => ({ default: ObjectMasonryArticle })),

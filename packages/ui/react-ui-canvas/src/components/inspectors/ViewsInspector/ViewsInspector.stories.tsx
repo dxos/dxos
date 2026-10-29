@@ -92,7 +92,7 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-/** One View in the root: A, B and View C, which holds D → E. */
+/** One View in the root: A, B and View C, which holds D -> E. */
 export const Default: Story = {};
 
 /** Views nested several levels deep. */

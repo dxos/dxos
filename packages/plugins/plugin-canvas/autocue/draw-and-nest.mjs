@@ -161,7 +161,7 @@ export const steps = [
         page.evaluate((id) => composer.plugins().some((plugin) => plugin.id === id && plugin.active), PLUGIN.id);
       if (!(await active())) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
-        const filter = 'input[placeholder="Filter…"]';
+        const filter = 'input[placeholder="Filter..."]';
         await page.locator(filter).first().waitFor({ state: 'visible', timeout: 10_000 });
         await demo.fill({ selector: filter, value: PLUGIN.name, hud: false });
         const input = `input[role="switch"][aria-label="${PLUGIN.name}"]`;

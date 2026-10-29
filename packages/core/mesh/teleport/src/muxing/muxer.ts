@@ -555,7 +555,7 @@ export class Muxer {
 
     const now = Date.now();
     const interval = this._lastStats ? (now - this._lastStats.timestamp) / 1_000 : 0;
-    // `ConnectionInfo.StreamStats` rates are `uint32`, which rejects both fractions and negatives —
+    // `ConnectionInfo.StreamStats` rates are `uint32`, which rejects both fractions and negatives -
     // and an unencodable field kills the whole `NetworkService.queryStatus` stream, not just the
     // stat. A counter reset on reconnect is what makes the delta negative.
     const rate = (delta: number) => (interval ? Math.max(0, Math.round(delta / interval)) : undefined);

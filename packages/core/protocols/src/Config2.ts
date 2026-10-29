@@ -21,13 +21,13 @@ export const Icon = Schema.Struct({
 export type Icon = Schema.Schema.Type<typeof Icon>;
 
 export const Plugin = Schema.Struct({
-  /** Reverse-domain NSID — the plugin's globally-unique key (e.g. `org.dxos.plugin.excalidraw`). */
+  /** Reverse-domain NSID - the plugin's globally-unique key (e.g. `org.dxos.plugin.excalidraw`). */
   key: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   name: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   description: Schema.optional(Schema.String),
   /**
    * Author or organization name. Only used for bundled plugins. For plugins published to the
-   * registry this field is ignored — the verified publisher (handle ?? did) is used instead.
+   * registry this field is ignored - the verified publisher (handle ?? did) is used instead.
    */
   author: Schema.optional(Schema.String),
   homePage: Schema.optional(Schema.String),
@@ -43,7 +43,7 @@ export type Plugin = Schema.Schema.Type<typeof Plugin>;
 
 /**
  * Publish orchestration for `dx registry publish`: build command, output directory, and optional
- * hosting override. All three are consumed together — they are a single workflow, not separate concerns.
+ * hosting override. All three are consumed together - they are a single workflow, not separate concerns.
  */
 export const Publish = Schema.Struct({
   buildCommand: Schema.optional(Schema.String),

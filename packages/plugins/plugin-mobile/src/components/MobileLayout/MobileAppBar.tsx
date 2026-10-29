@@ -21,7 +21,7 @@ const APP_BAR_NAME = 'MobileLayout.AppBar';
 
 /**
  * 44px, the iOS HIG minimum touch target. The density knobs cap a control at 40px (`--dx-control-lg`)
- * and the app bar's own row is 40px, so its controls have to be sized past both to be hittable —
+ * and the app bar's own row is 40px, so its controls have to be sized past both to be hittable -
  * the simulator walkthrough missed the back chevron every time at the density-md 32px.
  */
 const TOUCH_TARGET = 'size-11';

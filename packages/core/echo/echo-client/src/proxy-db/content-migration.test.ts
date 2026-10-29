@@ -36,7 +36,7 @@ const Board = Type.makeObject(DXN.make('com.example.type.board', '0.1.0'))(
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-/** 1 → 2: a card's `text` is renamed `label`. */
+/** 1 -> 2: a card's `text` is renamed `label`. */
 const renameText = Migration.defineContent({
   type: Board,
   from: 'example.com/board/1',
@@ -56,7 +56,7 @@ const renameText = Migration.defineContent({
   }),
 });
 
-/** 2 → 3: the title is trimmed and the `draft` card is dropped. */
+/** 2 -> 3: the title is trimmed and the `draft` card is dropped. */
 const trimTitle = Migration.defineContent({
   type: Board,
   from: 'example.com/board/2',

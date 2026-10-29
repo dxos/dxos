@@ -11,7 +11,7 @@ export type Term =
 /** A triple in the default graph, or a quad when `g` is set. */
 export type Quad = { s: Term; p: Term; o: Term; g?: Term };
 
-/** One SPARQL solution: variable name → bound term (absent or undefined when unbound). */
+/** One SPARQL solution: variable name -> bound term (absent or undefined when unbound). */
 export type Row = Record<string, Term | undefined>;
 
 export const XSD = 'http://www.w3.org/2001/XMLSchema#';

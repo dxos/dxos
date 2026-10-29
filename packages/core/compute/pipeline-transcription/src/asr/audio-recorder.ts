@@ -24,14 +24,14 @@ export type WavConfig = {
  * Records MediaStreamTrack to Uint8Array 16-bit PCM data.
  * The data is passed to the onChunk callback with the timestamp of the chunk.
  * All chunks are aligned and sequential.
- * Time ─────────────────────────────────────────────────►
+ * Time ------------------------------------------------->
  *
  * Recording:
- * t1    ┌──────┐
- * t2    ┌──────┬──────┐
- * t3    ┌──────┬──────┬──────┐
- * t4    ┌──────┬──────┬──────┬──────┐
- *       └──────┴──────┴──────┴──────┘
+ * t1    +------+
+ * t2    +------+------+
+ * t3    +------+------+------+
+ * t4    +------+------+------+------+
+ *       +------+------+------+------+
  *         1st     2nd     3rd     4th
  *        chunk   chunk   chunk   chunk
  *

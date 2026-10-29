@@ -59,7 +59,7 @@ describe('createMessageGenerator', () => {
 
     const feed = Obj.make(Feed.Feed, { name: 'recording' });
 
-    // The streaming step is the third entry (index 2) — earlier indices are the initial
+    // The streaming step is the third entry (index 2) - earlier indices are the initial
     // user prompt and an assistant message with an Organization link (which requires
     // a real database; the recording layer stub is sufficient for this streaming test).
     await EffectEx.runAndForwardErrors(

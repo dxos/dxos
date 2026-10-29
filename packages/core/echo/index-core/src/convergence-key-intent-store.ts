@@ -20,7 +20,7 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-inten
  * services a group of one as a no-op before vacating the key's rows.
  *
  * Not an index: the table holds merge-workflow state, not derived data. It lives in the index
- * database anyway because the coupling is transactional — an intent must commit no later than the
+ * database anyway because the coupling is transactional - an intent must commit no later than the
  * index-cursor advance it guards (see `IndexEngine.#update`); if the cursor advanced and the
  * intent write lived in a different store, a crash between the two would lose the detection
  * forever, since that keyed write is never re-presented to the indexing loop.
@@ -67,7 +67,7 @@ export class ConvergenceKeyIntentStore {
 
   /**
    * All pending convergence-key intents, deduplicated per space, with the high-water id to pass back
-   * to {@link clear} — intents recorded after this read have larger ids and survive the clear,
+   * to {@link clear} - intents recorded after this read have larger ids and survive the clear,
    * so a concurrent indexing pass cannot have its trigger erased.
    */
   take = Effect.fn('ConvergenceKeyIntentStore.take')(

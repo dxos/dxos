@@ -59,7 +59,7 @@ export interface Unknown extends OfKind<Kind> {}
 /**
  * Effect Schema for any ECHO entity (object or relation).
  *
- * Kind-agnostic counterpart to `Obj.Unknown` / `Relation.Unknown` — validates
+ * Kind-agnostic counterpart to `Obj.Unknown` / `Relation.Unknown` - validates
  * the structural shape (id + properties) without constraining `[KindId]`. Used
  * in operation input schemas that accept any entity flavour (e.g.
  * `Schema.Array(Entity.Unknown)`).
@@ -110,7 +110,7 @@ export const isEntity: (value: unknown) => value is Unknown = internal.isEntity;
 /**
  * Test if a value is an instance of a given object or relation type.
  *
- * Kind-agnostic counterpart to `Obj.instanceOf` / `Relation.instanceOf` —
+ * Kind-agnostic counterpart to `Obj.instanceOf` / `Relation.instanceOf` -
  * use this when the caller's input type is `Type.AnyObj | Type.AnyRelation`.
  *
  * @example
@@ -184,13 +184,13 @@ const isTypeEntity = (entity: unknown): boolean => internal.getEntityKindBrand(e
 
 /**
  * Any value the read accessors operate on: a reactive entity or a snapshot.
- * Type entities (`Type.AnyEntity`) are also accepted — they're first-class
+ * Type entities (`Type.AnyEntity`) are also accepted - they're first-class
  * entities, and `Unknown`'s kind-agnostic brand already subsumes them.
  */
 export type AnyInput = Unknown | Snapshot;
 
 /**
- * Get the canonical URI of an entity (object, relation, or type). Returns `URI.URI` —
+ * Get the canonical URI of an entity (object, relation, or type). Returns `URI.URI` -
  * an `EID` for object/relation instances and persisted types, or a typename
  * `DXN` for static type entities; narrow with `EID.parse(uri)` or
  * `DXN.tryMake(uri)` at the point of use.

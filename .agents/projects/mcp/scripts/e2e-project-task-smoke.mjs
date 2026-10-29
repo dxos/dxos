@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 //
 // E2E smoke (project + task verbs): drives the plugin-projects and plugin-tasks operations over MCP
-// and asserts the results — MILESTONE-5.md §8 phase-4 acceptance
-// (`projectCreate → taskCreate → taskUpdate → taskComplete` + list).
+// and asserts the results - MILESTONE-5.md §8 phase-4 acceptance
+// (`projectCreate -> taskCreate -> taskUpdate -> taskComplete` + list).
 //
 // Prereqs (TESTING.md): edge stack up with an @dxos pin that registers plugin-tasks
 // (operation-service TasksPlugin + TaskSet/Task types), Composer served at --app.
@@ -11,8 +11,8 @@
 //   node e2e-task-smoke.mjs --identity <hex> --space <spaceId> [--halo-space <id>]
 //     [--url http://localhost:8791] [--app http://localhost:5173] [--browser-assert]
 //
-// Steps: projectCreate (scaffolds instructions + artifacts + a task set) → taskCreate ×2 (one
-//        sub-task) → taskUpdate → taskAssign → taskComplete → taskList → projectList (assert
+// Steps: projectCreate (scaffolds instructions + artifacts + a task set) -> taskCreate ×2 (one
+//        sub-task) -> taskUpdate -> taskAssign -> taskComplete -> taskList -> projectList (assert
 //        states). With --browser-assert, additionally assert the project renders in Composer.
 // Exit 0 on success; 1 with a FAIL line on any step.
 //
@@ -198,4 +198,6 @@ if (args['browser-assert']) {
   }
 }
 
-console.log('OK: project + task verb e2e passed (projectCreate → taskCreate ×2 → update → assign → complete → list).');
+console.log(
+  'OK: project + task verb e2e passed (projectCreate -> taskCreate ×2 -> update -> assign -> complete -> list).',
+);

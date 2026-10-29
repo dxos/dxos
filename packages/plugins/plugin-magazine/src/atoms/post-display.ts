@@ -36,7 +36,7 @@ export const postDisplayAtom = Atom.family((key: readonly [Subscription.Post, Ma
     const snapshot = get(Obj.atom(post));
     const ref = post.source;
     const subscription = ref ? get(ref.atom) : undefined;
-    // `name`/`url` via property atoms — fire only on name/url change (e.g. after first sync).
+    // `name`/`url` via property atoms - fire only on name/url change (e.g. after first sync).
     const feedName = subscription
       ? get(Obj.atomProperty(subscription, 'name')) || get(Obj.atomProperty(subscription, 'url'))
       : undefined;

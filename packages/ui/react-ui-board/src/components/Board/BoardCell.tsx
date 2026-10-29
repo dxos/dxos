@@ -80,7 +80,7 @@ export const BoardCell = ({
   const selectable = !!selectionMode;
   const isSelected = selectable && selected.has(item.id);
   // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
-  // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
+  // beneath them (incl. cells under an occupied tile) receive the drag - required for push-on-drop.
   const { dragging } = useDndRootContext(BOARD_CELL_NAME);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -144,7 +144,7 @@ export const BoardCell = ({
   }, [dragState]);
 
   // Hide the resize corner during a move (`dragging`) or an in-progress resize (`resizeGhost`) by
-  // toggling visibility only. The handle must stay MOUNTED — the resize draggable binds to it once and
+  // toggling visibility only. The handle must stay MOUNTED - the resize draggable binds to it once and
   // isn't re-created when a move ends, so unmounting it (e.g. `!dragging` in JSX) would leave a
   // re-appeared handle with no drag binding.
   useEffect(() => {
@@ -156,7 +156,7 @@ export const BoardCell = ({
 
   // Resize: a plain pointer drag (not a Dnd tile) on a corner handle. The size is derived from the
   // LIVE positions of the tile and the pointer (both viewport coords via getBoundingClientRect), so
-  // auto-scroll is accounted for automatically — a `scroll` listener recomputes while scrolling even
+  // auto-scroll is accounted for automatically - a `scroll` listener recomputes while scrolling even
   // without pointer movement. The outline magnetizes to whole cells; the final snap happens on drop.
   useEffect(() => {
     const handle = resizeHandleRef.current;
@@ -178,7 +178,7 @@ export const BoardCell = ({
         height: Math.max(cellSize.height, pointer.y - tile.top),
       };
     };
-    // Raw px → constrained whole-cell size. Width is capped to the space remaining to the right edge
+    // Raw px -> constrained whole-cell size. Width is capped to the space remaining to the right edge
     // so growing a tile at the edge caps its width rather than shifting it left (which the resolver's
     // clamp would otherwise do).
     const cellsFor = (raw: { width: number; height: number }) => {
@@ -192,7 +192,7 @@ export const BoardCell = ({
       return { w: Math.min(size.w, Math.max(1, columns - layout.x)), h: size.h };
     };
     // Update the free (magnetic) outline AND report the snapped size so the engine runs live and the
-    // other tiles move out of the way during the resize — the same behaviour as a move.
+    // other tiles move out of the way during the resize - the same behaviour as a move.
     const update = () => {
       const raw = rawSize();
       if (raw) {
@@ -241,7 +241,7 @@ export const BoardCell = ({
   // Non-dragged tiles render at their previewed position during a drag (animating out of the way),
   // and spring back to `layout` when the drag ends. The dragged tile itself stays put (its preview
   // clone follows the cursor), so it uses its committed layout.
-  // Every tile — including the one being dragged — renders at its previewed position so it glides
+  // Every tile - including the one being dragged - renders at its previewed position so it glides
   // to where it will land (cell-to-cell) during the drag and is already there on drop, rather than
   // snapping back from its original cell. The cursor-following clone is the "picked up" copy.
   const effectiveLayout = previewLayout ? (previewLayout.items[item.id] ?? layout) : layout;
@@ -269,7 +269,7 @@ export const BoardCell = ({
           // Transparent to pointer events during ANY drag so a tile can be dropped onto an occupied
           // cell (pushing the occupant) or back onto its own footprint.
           !!dragging && 'pointer-events-none',
-          // Selection is shown as the accent (blue) ring — same as the drag/resize ghost outline.
+          // Selection is shown as the accent (blue) ring - same as the drag/resize ghost outline.
           selectable && 'cursor-pointer',
           isSelected && 'ring-2 ring-accent-bg',
           classNames,
@@ -297,8 +297,8 @@ export const BoardCell = ({
             </Layout.Block>
           )}
         </Card.Header>
-        {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
-            poster image — fills the full tile width, not just the first gutter track. */}
+        {/* Body spans all of the card's column tracks (it has gutter columns) so content - e.g. a
+            poster image - fills the full tile width, not just the first gutter track. */}
         {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}
       </Card.Root>
 
@@ -371,7 +371,7 @@ const span = (position: GridPosition): { x: number; y: number; w: number; h: num
 
 /**
  * Pull a raw px extent to the nearest whole-cell extent only when it comes within `snapPx` of it,
- * otherwise leave it free — a light "magnetic to the grid" pull near cell boundaries.
+ * otherwise leave it free - a light "magnetic to the grid" pull near cell boundaries.
  */
 const magnetize = (raw: number, cell: number, gap: number, snapPx = 16): number => {
   const pitch = cell + gap;

@@ -6,8 +6,8 @@
 
 /**
  * Prompt-to-code text matching, shared by the deterministic explorer (seeding) and the baseline
- * scorer. Identifiers are split the way people write about them — `AgentService` matches "agent
- * service" and `agent-runtime` matches "agent runtime" — so a prompt in prose can find code.
+ * scorer. Identifiers are split the way people write about them - `AgentService` matches "agent
+ * service" and `agent-runtime` matches "agent runtime" - so a prompt in prose can find code.
  */
 
 const STOPWORDS = new Set(

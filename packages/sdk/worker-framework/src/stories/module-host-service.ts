@@ -45,7 +45,7 @@ export class ModuleHostRpcs extends RpcGroup.make(
   }),
 ) {}
 
-/** Reverse (worker→client) surface; empty, served only to complete the framework's handshake. */
+/** Reverse (worker->client) surface; empty, served only to complete the framework's handshake. */
 export class ModuleHostClientRpcs extends RpcGroup.make() {}
 
 /** Init config the tab hands the worker (via `Client.Options.config`). */

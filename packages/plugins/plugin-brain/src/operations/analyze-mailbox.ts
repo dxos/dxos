@@ -39,7 +39,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
       const aiService = yield* AiService.AiService;
 
       // Live progress via trace `status.update` events (`#analyze` key), projected into the runtime
-      // ProgressRegistry — same seam as mail sync and the process pipeline. The pipeline's first
+      // ProgressRegistry - same seam as mail sync and the process pipeline. The pipeline's first
       // `onProgress` delivers the exact pending count, so the meter is determinate.
       const traceWriter = yield* Trace.TraceService;
       const progressKey = InboxOperation.createFactsProgressKey(mailbox);

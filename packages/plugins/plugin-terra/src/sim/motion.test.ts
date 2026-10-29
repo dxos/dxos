@@ -12,7 +12,7 @@ import { type ObjectState, evaluate, initialState } from './motion.ts';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'motion-1' } }));
 
-describe('evaluate — determinism (the key property)', () => {
+describe('evaluate - determinism (the key property)', () => {
   const boat = TerraObject.make({
     kind: 'boat',
     speed: 0.02,
@@ -74,7 +74,7 @@ describe('routed motion (boat)', () => {
   });
 });
 
-describe('ObjectState — leg/arrived (feature 1 support)', () => {
+describe('ObjectState - leg/arrived (feature 1 support)', () => {
   const boat = TerraObject.make({
     kind: 'boat',
     speed: 0.02,
@@ -91,7 +91,7 @@ describe('ObjectState — leg/arrived (feature 1 support)', () => {
     expect(arrived.arrived).toBe(true);
   });
 
-  test('leg is carried forward unchanged by evaluate — sim/engine.ts alone advances it', () => {
+  test('leg is carried forward unchanged by evaluate - sim/engine.ts alone advances it', () => {
     const state: ObjectState = { ...initialState(boat, config), leg: 3 };
     const result = evaluate(state, boat, { config, elapsed: 5 });
     expect(result.leg).toBe(3);
@@ -213,7 +213,7 @@ describe('rocket motion', () => {
     expect(arrived.unit[2]).toBeCloseTo(target[2], 9);
   });
 
-  test('starts at ground level — its launch-point terrain surface, not an elevated apex', () => {
+  test('starts at ground level - its launch-point terrain surface, not an elevated apex', () => {
     const state = initialState(rocket, config);
     const atLaunch = evaluate(state, rocket, { config, elapsed: 0 });
     const { elevation } = makeSampler(config);

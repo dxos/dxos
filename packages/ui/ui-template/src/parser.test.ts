@@ -100,7 +100,7 @@ describe('parse', () => {
   });
 
   test('structural validation runs over the whole tree', ({ expect }) => {
-    // `let` backing is exactly one of initial/machine/from — none is an error, both are an error.
+    // `let` backing is exactly one of initial/machine/from - none is an error, both are an error.
     expect(() => parse('<container id="x"><let name="a" /></container>')).toThrow(
       /'let' requires exactly one of initial, machine, or from/,
     );
@@ -278,7 +278,7 @@ describe('resolve', () => {
     );
   });
 
-  test('a path off a resolved slot yields undefined — legitimate absence, not an error', ({ expect }) => {
+  test('a path off a resolved slot yields undefined - legitimate absence, not an error', ({ expect }) => {
     expect(resolve({ from: 'state', path: ['nested', 'missing'] }, { frames: [frame] })).toBeUndefined();
   });
 

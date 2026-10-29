@@ -18,7 +18,7 @@ const isInterruptedError = (err: unknown): boolean =>
 
 const shortId = (id: string): string => id.split('-').slice(-2).join('-');
 
-const formatMs = (value: number | undefined): string => (value === undefined ? '—' : `${Math.round(value)} ms`);
+const formatMs = (value: number | undefined): string => (value === undefined ? '-' : `${Math.round(value)} ms`);
 
 type ConnectionStatus = {
   ready: boolean;
@@ -177,7 +177,7 @@ const SessionMeta = ({
   reconnectCount: number;
 }) => {
   if (!session) {
-    return <div className='text-xs text-fg-subtle'>Connecting…</div>;
+    return <div className='text-xs text-fg-subtle'>Connecting...</div>;
   }
 
   return (
@@ -212,15 +212,15 @@ const LatencyPanel = ({ ping, ready }: { ping: PingMeasurement | undefined; read
     <dl className='grid grid-cols-3 gap-2 text-sm'>
       <div>
         <dt className='text-fg-subtle'>RTT</dt>
-        <dd className='font-mono tabular-nums text-lg font-semibold'>{ready ? formatMs(ping?.rttMs) : '…'}</dd>
+        <dd className='font-mono tabular-nums text-lg font-semibold'>{ready ? formatMs(ping?.rttMs) : '\u2026'}</dd>
       </div>
       <div>
         <dt className='text-fg-subtle'>Queue</dt>
-        <dd className='font-mono tabular-nums'>{ready ? formatMs(ping?.queueWaitMs) : '…'}</dd>
+        <dd className='font-mono tabular-nums'>{ready ? formatMs(ping?.queueWaitMs) : '\u2026'}</dd>
       </div>
       <div>
         <dt className='text-fg-subtle'>Service</dt>
-        <dd className='font-mono tabular-nums'>{ready ? formatMs(ping?.serviceMs) : '…'}</dd>
+        <dd className='font-mono tabular-nums'>{ready ? formatMs(ping?.serviceMs) : '\u2026'}</dd>
       </div>
     </dl>
   </div>
@@ -294,7 +294,7 @@ const BlockWorkerPanel = ({
             }
           }}
         >
-          {blocking ? 'Blocking…' : 'Block'}
+          {blocking ? 'Blocking...' : 'Block'}
         </button>
       </div>
     </div>
@@ -311,7 +311,7 @@ const CounterPanel = ({ label, connection }: CounterPanelProps) => {
       <SessionMeta session={session} reconnectCount={reconnectCount} />
       <LatencyPanel ping={ping} ready={ready} />
       <TimingStatsPanel stats={timingStats} />
-      <div className='text-3xl font-semibold tabular-nums'>{ready ? count : '…'}</div>
+      <div className='text-3xl font-semibold tabular-nums'>{ready ? count : '\u2026'}</div>
       <button
         type='button'
         className='rounded-md bg-accent-bg px-3 py-2 text-sm font-medium text-accent-fg disabled:opacity-50'

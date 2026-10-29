@@ -31,7 +31,7 @@ export const DISCORD_API_BASE = 'https://discord.com/api/v10';
  */
 const BOT_PERMISSIONS = String((1 << 10) | (1 << 11) | (1 << 16));
 
-/** OAuth scopes used by the invite URL — Discord requires `bot` + `applications.commands`. */
+/** OAuth scopes used by the invite URL - Discord requires `bot` + `applications.commands`. */
 const BOT_SCOPES = ['bot', 'applications.commands'];
 
 /** Default lookback window for the first sync of a channel when the user hasn't set `maxDays`. */
@@ -41,7 +41,7 @@ export const DEFAULT_DAYS = 30;
  * Builds the Discord OAuth invite URL for adding the bot to a guild.
  *
  * Kept exported because Discord (unlike Slack/Trello) requires a manual
- * "invite the bot to a server" step before any API call returns useful data —
+ * "invite the bot to a server" step before any API call returns useful data -
  * the credential form's description links to this so the user can complete
  * that step in the same flow.
  */

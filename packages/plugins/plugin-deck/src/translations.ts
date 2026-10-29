@@ -22,7 +22,7 @@ export const translations = [
         'plugin-error.message': 'Content failed to render.',
         'content-fallback.message': 'Unsupported',
         'content-fallback.description':
-          'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
+          "No plugin had a response for the address you navigated to. Double-check the URL, and ensure you've enabled a plugin that supports the object.",
         'toggle-fullscreen.label': 'Toggle fullscreen',
         'undo-available.label': 'Click to undo previous action.',
         'undo-action.label': 'Undo',
@@ -32,7 +32,7 @@ export const translations = [
         'error-fallback.copy.label': 'Copy',
         'plank-heading-fallback.label': 'Untitled',
         'breadcrumbs.label': 'Navigation history',
-        'pending.heading': 'Loading…',
+        'pending.heading': 'Loading...',
         'insert-plank.label': 'Open',
         'resize.label': 'Drag to resize',
         'pin-start.label': 'Pin to the left sidebar',

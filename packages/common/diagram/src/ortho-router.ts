@@ -14,7 +14,7 @@ import type { Rect, RoutedRelation, Router } from './uml-grid.ts';
 
 /** Clearance kept between a route and any node border, in steps. */
 const CLEARANCE = 1;
-/** One bend costs as much as this many steps — turns dominate, distance breaks ties. */
+/** One bend costs as much as this many steps - turns dominate, distance breaks ties. */
 const TURN_COST = 1000;
 /** Traversing a cell another edge already used costs this many extra steps. */
 const USED_COST = 24;
@@ -33,7 +33,7 @@ const TURN_SPAN = TURN_RADIUS * 2 + 1;
 
 /**
  * Fewest turns from a cell heading `dir` to a target `(dx, dy)` away, entered heading `endDir` or
- * paying the search's one-turn penalty for entering off-axis — on an empty grid, so an admissible
+ * paying the search's one-turn penalty for entering off-axis - on an empty grid, so an admissible
  * and consistent lower bound for the search, indexed `[endDir][dir][dx][dy]`. It is exact where the
  * old estimate ignored the arrival heading, which sent every search sweeping the cells behind its
  * target. Computed once, by one backward search per arrival heading over the moves the search makes.
@@ -393,7 +393,7 @@ export const makeAvoidingRouter = (
     const flowEnd: Terminal = alongY
       ? { point: { x: ports?.end ?? to.x + to.w / 2, y: down ? to.y : to.y + to.h }, dir: down ? 1 : 3 }
       : { point: { x: right ? to.x : to.x + to.w, y: ports?.end ?? to.y + to.h / 2 }, dir: right ? 0 : 2 };
-    // Cross-axis faces enable single-bend Ls when the displacement is diagonal — a fixed
+    // Cross-axis faces enable single-bend Ls when the displacement is diagonal - a fixed
     // flow-face pair forces a Z between laterally offset nodes.
     const crossStart: Terminal = alongY
       ? { point: { x: right ? from.x + from.w : from.x, y: from.y + from.h / 2 }, dir: right ? 0 : 2 }
@@ -413,7 +413,7 @@ export const makeAvoidingRouter = (
 
     // Stubs step from the border past the clearance zone; A* runs between the stub ends.
     // Rounded to whole cells: ports may sit on exact fractional coordinates (collision fallback),
-    // and a fractional goal cell would never match — the visible sub-cell offset lives in the
+    // and a fractional goal cell would never match - the visible sub-cell offset lives in the
     // first/last segment.
     const stub = (point: Point, dir: number, out: boolean): Point => {
       const sign = out ? 1 : -1;
@@ -460,7 +460,7 @@ export const makeAvoidingRouter = (
     }
     simplified.push(points[points.length - 1]);
 
-    // A single-jog Z centers its middle run equidistant from the two node borders — the A* path
+    // A single-jog Z centers its middle run equidistant from the two node borders - the A* path
     // is turn-minimal but expansion order lets it hug one node. Keep the shift only if the
     // adjusted segments avoid every obstacle AND every cell earlier edges already run through,
     // so parallel channels stay separated.

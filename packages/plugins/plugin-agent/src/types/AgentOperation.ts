@@ -64,7 +64,7 @@ export const CreateEmailChannel = Operation.make({
 });
 
 /**
- * Maps a conversation — a channel, or a thread inside one (a Discord thread or DM) — to the agent's
+ * Maps a conversation - a channel, or a thread inside one (a Discord thread or DM) - to the agent's
  * chat for it, creating the chat on first contact. Idempotent on `(agent, channel, thread)`: the chat
  * carries `AgentChannels.chatKey` as an `Obj.Meta` foreign key.
  */
@@ -300,7 +300,7 @@ export const InviteAgent = Operation.make({
 });
 
 /**
- * Reads a source — a markdown document, text, chat transcript or web page — and pushes the RDF facts it
+ * Reads a source - a markdown document, text, chat transcript or web page - and pushes the RDF facts it
  * states to the agent's brain, delivering any watch they wake. A direct model call: no chat is created.
  * A chat is read incrementally: only the messages after the last read.
  */

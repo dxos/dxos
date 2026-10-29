@@ -8,7 +8,7 @@ import * as LaMetric from '#protocol';
 
 /**
  * Short forms for the statistic labels. Nine characters fit before the device starts scrolling, and
- * a dashboard is read at a glance — `42 obj` is legible standing still where `42 objects` is not.
+ * a dashboard is read at a glance - `42 obj` is legible standing still where `42 objects` is not.
  */
 const SHORT_LABELS: Record<string, string> = {
   Objects: 'obj',
@@ -31,7 +31,7 @@ const toFrame = (metric: Dashboard.MetricSpec, index: number): LaMetric.Frame =>
 /**
  * Projects the space's metrics onto the device's frame cycle.
  *
- * Pure, so the whole visual surface is testable without hardware — and so the on-screen replica and
+ * Pure, so the whole visual surface is testable without hardware - and so the on-screen replica and
  * the device are driven from one function and cannot drift.
  */
 export const toFrames = (metrics: readonly (Dashboard.MetricSpec | null)[]): LaMetric.Frame[] =>

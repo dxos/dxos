@@ -99,8 +99,8 @@ export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
 /**
  * Starts a clipboard write whose text is still being computed.
  *
- * A `ClipboardItem` holding a promise is what lets the write begin inside the user gesture — the
- * condition WebKit enforces — and complete once the text exists; `writeText` after the await is the
+ * A `ClipboardItem` holding a promise is what lets the write begin inside the user gesture - the
+ * condition WebKit enforces - and complete once the text exists; `writeText` after the await is the
  * fallback for a browser without `ClipboardItem`.
  */
 const writeClipboard = (text: Promise<string>): void => {

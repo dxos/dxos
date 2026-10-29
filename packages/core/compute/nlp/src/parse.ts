@@ -13,7 +13,7 @@ import { type Document, Upos } from './Document.ts';
 
 const PARSE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
-/** LLM output schema: sentences → tokens, no offsets (alignment computes those). */
+/** LLM output schema: sentences -> tokens, no offsets (alignment computes those). */
 const TaggedSentences = Schema.Struct({
   sentences: Schema.Array(
     Schema.Struct({

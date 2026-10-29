@@ -20,7 +20,7 @@ import * as Trip from './Trip.ts';
  * Trip-message extractor as a first-class operation. The handler at
  * `operations/extractor/trip-extractor.ts` parses flight-confirmation emails into Booking
  * + flight Segment proposals and returns them via `ExtractResult` WITHOUT touching the
- * database — the dispatcher (`InboxOperation.ExtractMessage`) is the single point where
+ * database - the dispatcher (`InboxOperation.ExtractMessage`) is the single point where
  * `db.add` happens. Keeping persistence in the dispatcher lets a future preview/edit/cancel
  * UI interpose between extraction and commit.
  */

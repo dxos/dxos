@@ -23,7 +23,7 @@ import { Book } from '#types';
 
 import { LibraryNamespace } from '../../namespace.ts';
 
-// The user's per-book reading state — the editable subset of the Book schema. The catalog metadata is
+// The user's per-book reading state - the editable subset of the Book schema. The catalog metadata is
 // read-only (sourced from BookHive), so it is presented above but excluded from the form.
 const ACTIVITY_FIELDS = [
   'status',
@@ -37,7 +37,7 @@ const ACTIVITY_FIELDS = [
   'shelfLocation',
 ] as const;
 
-// The user's personal rating is 1–10; halve it for a 0–5 star display.
+// The user's personal rating is 1-10; halve it for a 0-5 star display.
 const STARS_PER_STAR = 2;
 
 const STATUS_LABELS: Record<Book.Status, string> = {
@@ -49,8 +49,8 @@ const STATUS_LABELS: Record<Book.Status, string> = {
 
 /**
  * Read-only catalog view of a book (modeled on the BookHive book page, minus social features) over an
- * editable "Your Activity" form. Catalog metadata — cover, title, authors, rating, publication details,
- * genres, description — is sourced from BookHive and never editable here.
+ * editable "Your Activity" form. Catalog metadata - cover, title, authors, rating, publication details,
+ * genres, description - is sourced from BookHive and never editable here.
  */
 export const BookInfo = ({ book }: { book: Book.Book }) => {
   const { t } = Hooks.useTranslation(LibraryNamespace.key);
@@ -117,8 +117,8 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
     [],
   );
 
-  // The activity form is uncontrolled — seeded once from the object, then each change written straight
-  // back to it — mirroring ObjectProperties. A controlled `values` form re-seeds on every reactive
+  // The activity form is uncontrolled - seeded once from the object, then each change written straight
+  // back to it - mirroring ObjectProperties. A controlled `values` form re-seeds on every reactive
   // update and fights live typing.
   const activityValues = useMemo(() => ({ ...book }), [book]);
   const handleChange = useCallback(
@@ -145,7 +145,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
         <Layout.Flex column gap='lg' classNames='mx-auto max-w-document-max-width p-4'>
-          {/* Header — cover + catalog identity. */}
+          {/* Header - cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
             {cover ? (
               <img src={cover} alt='' className='w-24 aspect-[2/3] shrink-0 self-start rounded object-cover' />
@@ -159,7 +159,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               {authors.length > 0 && (
                 <p className='text-fg-muted'>{t('by-author.label', { authors: authors.join(', ') })}</p>
               )}
-              {/* The user's own rating (1–10) as five stars in half-star increments. */}
+              {/* The user's own rating (1-10) as five stars in half-star increments. */}
               {stars != null && <StarRating value={stars / STARS_PER_STAR} />}
               <Layout.Flex gap='xs' align='center' wrap>
                 {live.status && <Tag.Tag hue='info'>{STATUS_LABELS[live.status]}</Tag.Tag>}
@@ -195,7 +195,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
             </Layout.Flex>
           </section>
 
-          {/* Description — stored as markdown (converted from BookHive's HTML on ingest). */}
+          {/* Description - stored as markdown (converted from BookHive's HTML on ingest). */}
           {description && (
             <section className='flex flex-col gap-2 rounded-lg border border-separator p-4'>
               <h2 className='text-base font-semibold'>{t('description.label')}</h2>
@@ -210,7 +210,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
             </section>
           )}
 
-          {/* Your Activity — the editable per-book reading state (review renders a markdown editor). */}
+          {/* Your Activity - the editable per-book reading state (review renders a markdown editor). */}
           <section className='flex flex-col gap-2 rounded-lg border border-separator p-4'>
             <h2 className='text-base font-semibold'>{t('your-activity.label')}</h2>
             <Form.Root
@@ -231,7 +231,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
 };
 
 /**
- * Renders a 0–5 rating as five stars in half-star increments: filled/half stars are accented, empty
+ * Renders a 0-5 rating as five stars in half-star increments: filled/half stars are accented, empty
  * stars are a muted outline. The color must sit on each `Icon` (it does not inherit from the parent).
  */
 const StarRating = ({ value }: { value: number }) => (

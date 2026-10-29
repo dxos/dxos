@@ -26,7 +26,7 @@ export type EvaluateParams = {
   readonly code: string;
   /**
    * The dialect whose bindings the code is written against. Passed rather than its bindings,
-   * because an out-of-process sandbox builds them on the far side — against its own database —
+   * because an out-of-process sandbox builds them on the far side - against its own database -
    * and only the dialect's identity can cross.
    */
   readonly dialect: Dialect;
@@ -49,7 +49,7 @@ export type EvaluateParams = {
  * NOTE: `bindings` are live JavaScript values, which an in-process implementation passes through
  * directly. An out-of-process implementation cannot: it has to marshal them, so it can carry
  * functions (as RPC stubs) and plain data, but not live ECHO objects or module namespaces. That is
- * the line between the two dialects — see `Dialect`.
+ * the line between the two dialects - see `Dialect`.
  */
 export interface Sandbox {
   readonly evaluate: (params: EvaluateParams) => Effect.Effect<unknown, EvaluationError>;
@@ -65,14 +65,14 @@ const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
  * Evaluates in this process, in this thread, via `new AsyncFunction`.
  *
  * NOT A SECURITY BOUNDARY, despite the interface's name. `bindings` shadow the names they cover,
- * but the function is compiled in this realm and reaches every global the host has — `process`,
- * `process.env`, `fetch`, timers — so code mode is only as contained as the model driving it.
+ * but the function is compiled in this realm and reaches every global the host has - `process`,
+ * `process.env`, `fetch`, timers - so code mode is only as contained as the model driving it.
  * Containing genuinely untrusted code needs an implementation with a real boundary, which is what
  * this interface exists to accept; nothing done here can substitute for one.
  *
  * The timeout ABANDONS the evaluation rather than stopping it: nothing in this process can cancel
- * a running function, so the code keeps going — holding its bindings, and still able to write to
- * the database — with only its result discarded. A synchronous loop is worse still, since it blocks
+ * a running function, so the code keeps going - holding its bindings, and still able to write to
+ * the database - with only its result discarded. A synchronous loop is worse still, since it blocks
  * the thread and the timeout cannot even be observed until it exits.
  */
 export const inProcess: Sandbox = {
@@ -102,8 +102,8 @@ export const inProcess: Sandbox = {
 /**
  * What the model is told the failure was.
  *
- * A typed error carries its detail in its fields rather than in `message` — an Effect
- * `Schema.TaggedError` has an empty `message` unless one is declared — so reading `message` alone
+ * A typed error carries its detail in its fields rather than in `message` - an Effect
+ * `Schema.TaggedError` has an empty `message` unless one is declared - so reading `message` alone
  * reports `Error:` and nothing else, which the model cannot act on.
  */
 const describeFailure = (error: unknown): string => {

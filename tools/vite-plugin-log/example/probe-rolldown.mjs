@@ -4,7 +4,7 @@
 //
 // Pure Rolldown probe (no Vite). Demonstrates that Rolldown's `transform` hook
 // natively exposes `meta.ast` and `meta.magicString` as non-enumerable lazy
-// getters — i.e. they do not appear in `Object.keys(meta)`, but are reachable
+// getters - i.e. they do not appear in `Object.keys(meta)`, but are reachable
 // via `meta.ast` / `meta.magicString` and via `Object.getOwnPropertyNames(meta)`.
 //
 // Run:

@@ -41,6 +41,6 @@ describe('formatCause', () => {
   test('cuts a message that carries a whole error page', ({ expect }) => {
     const formatted = McpToolkit.formatCause(new Error(`HTTP 403: ${'<html>'.repeat(100)}`));
     expect(formatted.length).toBeLessThanOrEqual(201);
-    expect(formatted.endsWith('…')).toBe(true);
+    expect(formatted.endsWith('\u2026')).toBe(true);
   });
 });

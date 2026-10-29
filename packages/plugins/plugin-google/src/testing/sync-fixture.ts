@@ -23,7 +23,7 @@ import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';
 import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider.ts';
 
 /**
- * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API for
+ * Test entry point for the Gmail sync - `runMailSync` with the Gmail provider layer, leaving the API for
  * the test to supply (mock, counting, fault, or Live). Production inlines this in the handler.
  */
 export const runGoogleSync = (

@@ -46,13 +46,13 @@ import MCP_PROBE from './chess-mcp/mcp-probe.mjs?raw';
 // assistant in a sandbox with no coding agent between them.
 //
 // The space is the debug plugin's stockfish sample. The session gets what `DelegateTaskToChat`
-// gives one — the three agent-owned stages on its checklist, the sandbox skill alongside planning,
-// markdown and project — plus the space's own Development skill, which the project's instructions
+// gives one - the three agent-owned stages on its checklist, the sandbox skill alongside planning,
+// markdown and project - plus the space's own Development skill, which the project's instructions
 // bind for a companion chat. Stages four and five need the reader (a plugin to enable, a repository
 // to own) and stay behind.
 //
 // What is scored is the server, not the transcript: the eval speaks MCP to the Worker URL the
-// session filed — initialize, `tools/list`, and a best-move call on the seeded position — and holds
+// session filed - initialize, `tools/list`, and a best-move call on the seeded position - and holds
 // the answer to the rules of chess. The handshake runs from the session's own sandbox, because a
 // temporary deployment challenges clients it takes for bots and the eval process is one.
 //
@@ -139,7 +139,7 @@ const namesLegalMove = (answer: string | undefined): boolean => {
 
 /**
  * A score somewhere in the evaluation's text: centipawns, pawns, or a mate count. The token has to
- * look like a score — a bare digit is not one, or a reply that only echoed a UCI move would pass.
+ * look like a score - a bare digit is not one, or a reply that only echoed a UCI move would pass.
  */
 const namesAScore = (answer: string | undefined): boolean =>
   !!answer &&
@@ -150,7 +150,7 @@ const namesAScore = (answer: string | undefined): boolean =>
 
 //
 // What the session left, read once and shared: each query below is one effect value, and a run
-// answers a given query once however many scorers name it — so the expensive ones, the handshake
+// answers a given query once however many scorers name it - so the expensive ones, the handshake
 // with the deployed Worker above all, are not paid for again by each scorer that reads them.
 //
 
@@ -468,7 +468,7 @@ const selected = process.env.DX_EVAL_MODELS?.trim()
   : undefined;
 const VARIANTS = selected ? MODELS.filter(({ name }) => selected.includes(name)) : MODELS;
 
-evalite.each(VARIANTS)('Chess MCP — a delegated session designs, deploys and serves a chess engine over MCP', {
+evalite.each(VARIANTS)('Chess MCP - a delegated session designs, deploys and serves a chess engine over MCP', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

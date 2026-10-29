@@ -5,7 +5,7 @@
 import { decodeBoolean, decodeString, defineState } from './state.ts';
 
 //
-// Config — `browser.storage.sync` (user-set, synced across the user's browsers).
+// Config - `browser.storage.sync` (user-set, synced across the user's browsers).
 //
 
 /** Whether developer mode is enabled (verbose logging, debug preview, local service endpoints). */
@@ -18,7 +18,7 @@ export const SpaceMode = defineState('sync', 'space-mode', false, decodeBoolean)
 export const SpaceId = defineState<string | undefined>('sync', 'space-id', undefined, decodeString);
 
 //
-// Session — `browser.storage.local` (per-install).
+// Session - `browser.storage.local` (per-install).
 //
 
 /** Thumbnail data URL handed from the context-menu action to the side panel on (re)open. */

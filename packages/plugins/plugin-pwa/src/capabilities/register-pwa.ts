@@ -45,7 +45,7 @@ export default Capability.makeModule(
         resolveRegistration(swRegistration);
       },
       onNeedRefresh: () => {
-        // The worker is installed and waiting, so the download is already done — this is `ready`, not
+        // The worker is installed and waiting, so the download is already done - this is `ready`, not
         // `available`. See AppUpdate.Manager on why the web has no `install` step.
         setStatus({ kind: 'ready' });
         void invokePromise(LayoutOperation.AddToast, {
@@ -104,10 +104,10 @@ export default Capability.makeModule(
     // The browser only re-fetches the worker script on navigation, but Composer sessions stay open
     // for days, so without polling a deployed update is never noticed and the refresh toast only
     // ever appears on reload. `Effect.repeat` runs the first check straight away, before
-    // `onRegisteredSW` has fired — the optional call makes that opening tick a no-op.
+    // `onRegisteredSW` has fired - the optional call makes that opening tick a no-op.
     //
-    // `update()` rejects in its own right — `InvalidStateError` while a worker is already
-    // installing, a `TypeError` when the script fetch fails offline — so the rejection is recovered
+    // `update()` rejects in its own right - `InvalidStateError` while a worker is already
+    // installing, a `TypeError` when the script fetch fails offline - so the rejection is recovered
     // rather than left to `Effect.promise`, whose defect would kill the daemon fiber and silently
     // end polling for the rest of the session.
     const checkForUpdate = Effect.tryPromise(async () => {

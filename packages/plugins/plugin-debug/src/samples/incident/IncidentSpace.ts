@@ -26,9 +26,9 @@ const partials = {
  * them into a filed retro with owned action items and a customer notice.
  *
  * Engineering in setting, not in kind. The technical cause is a certificate that expired, and the log
- * states it outright; nothing here needs code read or written. The work is in the notes — a page sent
+ * states it outright; nothing here needs code read or written. The work is in the notes - a page sent
  * to someone who left the team, a renewal reminder on a departed colleague's calendar, a support lead
- * guessing who to call — and in holding them against the log, which contradicts two of them. That is
+ * guessing who to call - and in holding them against the log, which contradicts two of them. That is
  * the evaluation: does the retro recommend what the evidence supports, or what the loudest note says.
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>

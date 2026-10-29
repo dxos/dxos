@@ -107,7 +107,7 @@ const isRefreshTrigger = (trigger: Trigger.Trigger): boolean =>
   trigger.runnable?.uri === GitHubOperation.RefreshPullRequests.meta.key.toString();
 
 /**
- * Give the space its one pull-request refresh trigger, unless it has one already — including one the
+ * Give the space its one pull-request refresh trigger, unless it has one already - including one the
  * user disabled, which stays disabled.
  *
  * Peers that race to create it each add their own, so every caller converges on the same keeper (the

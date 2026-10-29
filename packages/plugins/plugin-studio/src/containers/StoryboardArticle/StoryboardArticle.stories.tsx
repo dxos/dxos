@@ -100,7 +100,7 @@ const meta = {
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
               const storyboard = space.db.add(Storyboard.make({ name: 'Test storyboard' }));
-              // Seed frames: two with a generated cover, one still to be generated — every one with
+              // Seed frames: two with a generated cover, one still to be generated - every one with
               // its prompt, which is what the compose form opens on.
               FRAMES.forEach((props) => {
                 const artifact = makeMockArtifact({ db: space.db, ...props });
@@ -133,11 +133,11 @@ type Story = StoryObj<typeof meta>;
  * Test:
  * 1. Three previews stack on the left (two with a cover, one "Frame 3" placeholder); the first frame's
  *    cover plays in the middle and its request form shows in the companion on the right.
- * 2. Click another preview — the player and the companion switch to that frame; the row shows selected.
- * 3. Drag a preview above another — the order (and the numbering) persists after the drop.
- * 4. Toolbar → Append frame → name + Type → Save: a fourth preview appears and is selected, the
+ * 2. Click another preview - the player and the companion switch to that frame; the row shows selected.
+ * 3. Drag a preview above another - the order (and the numbering) persists after the drop.
+ * 4. Toolbar -> Append frame -> name + Type -> Save: a fourth preview appears and is selected, the
  *    companion's form empty.
- * 5. Toolbar → Delete frame — the selected frame leaves the stack and the selection falls back.
+ * 5. Toolbar -> Delete frame - the selected frame leaves the stack and the selection falls back.
  */
 export const Default: Story = {};
 

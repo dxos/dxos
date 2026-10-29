@@ -208,7 +208,7 @@ const EditorBlocks = () => {
       {widgets.map(({ id, root, Component, props }) => (
         <div key={id} data-testid='editor.blocks.portal'>
           {/* Per-portal boundary: a block that suspends (capability wait, lazy surface module) must
-              not hold the surrounding editor tree un-committed — that made embeds invisible until
+              not hold the surrounding editor tree un-committed - that made embeds invisible until
               a view-mode toggle rebuilt everything. */}
           {createPortal(
             <Suspense fallback={null}>
@@ -242,14 +242,14 @@ type EditorDiagnosticsProps = Util.ThemedClassName<{}>;
 
 /**
  * Developer panel showing live editor state read from the CodeMirror `EditorState` (document size,
- * selection, viewport, configured-extension count). A debugging aid — gate it behind a dev/debug
+ * selection, viewport, configured-extension count). A debugging aid - gate it behind a dev/debug
  * setting; unrelated to `@codemirror/lint` diagnostics. Place inside `Editor.Root`, below the content.
  */
 const EditorDiagnostics = ({ classNames }: EditorDiagnosticsProps) => {
   const { controller, extensions } = useEditorContext(EDITOR_DIAGNOSTICS_NAME);
   const view = controller?.view ?? null;
   // `EditorState` is immutable (a new object per transaction), so a reference change signals an update.
-  // Poll on animation frames while mounted — self-contained (no injected updateListener) and re-renders
+  // Poll on animation frames while mounted - self-contained (no injected updateListener) and re-renders
   // only when the state actually changes; catches programmatic transactions too.
   const [, setRevision] = useState(0);
   const lastState = useRef<EditorState | null>(null);
@@ -299,10 +299,10 @@ const EditorDiagnostics = ({ classNames }: EditorDiagnosticsProps) => {
       {item('lines', doc.lines)}
       {item(
         'cursor',
-        main.empty ? `${head.number}:${main.head - head.from + 1}` : `${main.from}–${main.to} (${main.to - main.from})`,
+        main.empty ? `${head.number}:${main.head - head.from + 1}` : `${main.from}-${main.to} (${main.to - main.from})`,
       )}
       {selection.ranges.length > 1 && item('ranges', selection.ranges.length)}
-      {item('viewport', `${view.viewport.from}–${view.viewport.to}`)}
+      {item('viewport', `${view.viewport.from}-${view.viewport.to}`)}
       {item('mode', state.readOnly ? 'read-only' : 'editable')}
       {item('extensions', extensionCount)}
     </div>

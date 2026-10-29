@@ -34,7 +34,7 @@ const MessageItem = (props: { message: Message }) => {
     <Switch>
       <Match when={props.message.role === 'user'}>
         <text marginLeft={1} marginRight={1}>
-          <span style={{ fg: theme.role('user') }}>⟫</span> {props.message.content}
+          <span style={{ fg: theme.role('user') }}>&#x27EB;</span> {props.message.content}
         </text>
       </Match>
       <Match when={props.message.role === 'assistant'}>

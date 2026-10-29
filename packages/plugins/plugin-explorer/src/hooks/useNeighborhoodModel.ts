@@ -17,7 +17,7 @@ export const DEFAULT_NEIGHBORHOOD_DEPTH = 2;
  * relations from the active node. The full space graph is materialised (reactively) and then
  * narrowed to the nodes within `depth` hops, keeping only edges whose endpoints both survive.
  *
- * NOTE: Derives the subgraph from the whole-space model — the same cost the main explorer pays.
+ * NOTE: Derives the subgraph from the whole-space model - the same cost the main explorer pays.
  * A direct ECHO traversal that loads only the reachable objects is a future optimisation.
  */
 export const useNeighborhoodModel = (

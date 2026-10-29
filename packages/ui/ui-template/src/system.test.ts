@@ -96,7 +96,7 @@ describe('seedUi', () => {
     expect(seedUi(registry, node)).toEqual({});
   });
 
-  test('a rung-3 from= let is not seeded — the owning module seeds the instance', ({ expect }) => {
+  test('a rung-3 from= let is not seeded - the owning module seeds the instance', ({ expect }) => {
     const node = parse(
       '<container id="s">' +
         '<use module="org.dxos.module.tasks" as="tasks" />' +
@@ -414,9 +414,9 @@ describe('mutual modules', () => {
   test('reads work both ways across the boundary', ({ expect }) => {
     const seeded = seedModules(mutual);
     const read = createModuleReader(mutual, () => seeded, inputs);
-    // tasks derives from filter's state…
+    // tasks derives from filter's state...
     expect(read(TASKS, 'visible')).toEqual(['Write docs', 'Fix build', 'Ship release']);
-    // …and filter derives from tasks' state.
+    // ...and filter derives from tasks' state.
     expect(read(FILTER, 'hasSelection')).toBe(false);
 
     const filtered = { ...seeded, [FILTER]: { text: 'fix' }, [TASKS]: { selections: ['task-1'] } };
@@ -436,7 +436,7 @@ describe('mutual modules', () => {
       [],
       inputs,
     );
-    // The selection landed in tasks' slice, the clear in filter's — each by its owner.
+    // The selection landed in tasks' slice, the clear in filter's - each by its owner.
     expect(ui).toEqual({ [FILTER]: { text: '' }, [TASKS]: { selections: ['task-1'] } });
     // Both writes are in the one log, attributed to their operations.
     expect(entries).toEqual([
@@ -507,7 +507,7 @@ describe('vars', () => {
     expect(render(node, { vars: { title: 'MOSAIC' } }, renderer)).toBe('container(display(MOSAIC))');
   });
 
-  test('an undeclared host value never resolves — the signature closes the namespace', async ({ expect }) => {
+  test('an undeclared host value never resolves - the signature closes the namespace', async ({ expect }) => {
     const { BindingResolutionError } = await import('./model.ts');
     const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
@@ -606,7 +606,7 @@ describe('lexical resolution', () => {
     const { BindingResolutionError } = await import('./model.ts');
     const { render } = await import('./render.ts');
     const renderer = makeStringRenderer();
-    // Constructed directly — the parser would have rejected the undeclared binding already.
+    // Constructed directly - the parser would have rejected the undeclared binding already.
     const node: import('./model.ts').Node = { tag: 'display', data: { text: { from: 'state', path: ['title'] } } };
 
     expect(() => render(node, {}, renderer)).toThrow(BindingResolutionError);
@@ -629,7 +629,7 @@ describe('capability sync (zag)', () => {
 
   /**
    * The headless host loop: mount the module's capability instances against a dispatch that
-   * folds each operation's result back into `ui` and appends its entries to the log — the same
+   * folds each operation's result back into `ui` and appends its entries to the log - the same
    * wiring `useSystem` does, minus React.
    */
   const createHost = () => {

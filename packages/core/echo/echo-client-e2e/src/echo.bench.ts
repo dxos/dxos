@@ -36,7 +36,7 @@ type Variant = {
  * Registers the shared insert/select/update/delete benches against whatever `makeVariant` builds.
  * Neither `beforeAll` nor `beforeEach` is guaranteed to resolve before a bench's first (warmup)
  * call with vitest's experimental `bench()` API (verified directly), so setup is a memoized lazy
- * singleton every bench awaits first — the one-time cost lands in that discarded warmup call, which
+ * singleton every bench awaits first - the one-time cost lands in that discarded warmup call, which
  * the reported min/max below (no outlier) confirm.
  */
 const defineOperationBenches = (
@@ -77,7 +77,7 @@ const defineOperationBenches = (
     BENCH_OPTIONS,
   );
 
-  // hz below is batches/sec (one invocation inserts BATCH_SIZE objects), not items/sec — divide
+  // hz below is batches/sec (one invocation inserts BATCH_SIZE objects), not items/sec - divide
   // the reported mean by BATCH_SIZE to compare against `insert`'s per-item latency.
   bench(
     `insert (batched x${BATCH_SIZE}, single flush)`,

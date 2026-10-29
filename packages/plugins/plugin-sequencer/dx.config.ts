@@ -20,7 +20,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       SequencerPlugin is a collaborative music step-grid editor embedded in DXOS
       Composer. A Score is a first-class ECHO object that owns a roster of tracks
       and a collection of Sequence objects. Each Sequence holds an array of Notes
-      with MIDI pitch (0–127), start time and duration in beats, velocity, and an
+      with MIDI pitch (0-127), start time and duration in beats, velocity, and an
       opaque data bag for per-note metadata added by patches or extensions. Scores
       also carry tempo (BPM), time signature, and display name so they integrate
       naturally with the workspace navtree.

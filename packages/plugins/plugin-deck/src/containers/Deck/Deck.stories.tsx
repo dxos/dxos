@@ -68,7 +68,7 @@ const STORY_ITEMS: StoryItem[] = [
   { id: 'story-item-7', title: 'Backlog', icon: 'ph--tray--regular' },
 ];
 
-// Seeded, so every plank's content is the same on each run — a plank that regenerated its text would
+// Seeded, so every plank's content is the same on each run - a plank that regenerated its text would
 // change height and make the deck's scroll and fold geometry irreproducible between runs.
 random.seed(1234);
 
@@ -123,7 +123,7 @@ const TestArticle = ({ title, content }: { title: string; content: string }) => 
 };
 
 //
-// Launcher fixture — reproduces the app shape the plain stories miss: a plank whose *content* opens
+// Launcher fixture - reproduces the app shape the plain stories miss: a plank whose *content* opens
 // another plank (the mailbox's message list). Every collision between an in-deck click and the
 // navigation it triggers lives on this path, and none of the editor-only stories exercise it.
 //
@@ -496,7 +496,7 @@ type StoryArgs = {
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
   /**
-   * Seed no `companionPlanks` entry at all — the "reader has never opened or closed one" state. Takes
+   * Seed no `companionPlanks` entry at all - the "reader has never opened or closed one" state. Takes
    * precedence over `companionPlanks`.
    */
   uninitializedCompanions?: boolean;
@@ -668,7 +668,7 @@ export const OnePlankWithCompanion: Story = {
 };
 
 // Each plank remembers whether its own companion is open, and every open companion renders beside its
-// own plank — here planks 1 and 3 start open, planks 2 and 4 closed.
+// own plank - here planks 1 and 3 start open, planks 2 and 4 closed.
 //
 // Test:
 // 1. Confirm companions sit inside the first and third planks' containers, immediately to their right.
@@ -684,7 +684,7 @@ export const ManyPlanksWithCompanion: Story = {
   },
 };
 
-/** Attends a plank by focusing it — attention is focus-driven, and a click would have to land on a plank that may be folded. */
+/** Attends a plank by focusing it - attention is focus-driven, and a click would have to land on a plank that may be folded. */
 const attendPlank = async (canvasElement: HTMLElement, position: number) => {
   const id = `${STORY_WORKSPACE_ID}/story-item-${position}`;
   const plank = canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"]`);
@@ -745,7 +745,7 @@ export const CompanionPerPlank: Story = {
     // Both open companions render, each beside its own plank, before anything is attended.
     await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']));
 
-    // Attending the companion-less plank must not change what is laid out — under the old model this
+    // Attending the companion-less plank must not change what is laid out - under the old model this
     // re-anchored the companion and emptied the deck of companions entirely. The settle delay is the
     // regression net: the old behavior re-rendered within a commit, so still-visible after it means
     // attention no longer drives layout.
@@ -814,12 +814,12 @@ export const CompanionsClosedUntilOpened: Story = {
  * The mailbox-shaped path: a launcher plank whose rows level-open a message plank beside it.
  *
  * Test:
- * 1. Click a row in the Inbox plank — exactly one smooth scroll brings the message plank forward; the
+ * 1. Click a row in the Inbox plank - exactly one smooth scroll brings the message plank forward; the
  *    deck must not lurch toward the launcher first or bounce back after.
- * 2. Click a different row — the message plank is reused in place (no third plank), no scroll at all if
+ * 2. Click a different row - the message plank is reused in place (no third plank), no scroll at all if
  *    it is already front.
- * 3. Open the message plank's companion from its toolbar — neither plank moves.
- * 4. Repeat 1–3 quickly — no jitter; the deck never travels twice for one click.
+ * 3. Open the message plank's companion from its toolbar - neither plank moves.
+ * 4. Repeat 1-3 quickly - no jitter; the deck never travels twice for one click.
  */
 export const LauncherManual: Story = {
   args: { launcher: true },

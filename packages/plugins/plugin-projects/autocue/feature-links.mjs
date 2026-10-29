@@ -27,7 +27,7 @@ const WITHOUT_KEY = story('plugins-plugin-projects-containers-featurearticle--wi
 
 // At the top: the article's relations, which the take is about, fill the bottom of the frame.
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 /** Opens a story and waits for `selector`, so a take never starts on a spinner. */
 const open = async (page, url, selector) => {

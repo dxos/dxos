@@ -47,7 +47,7 @@ const LOOPBACK_SERVER = /http:\/\/127\.0\.0\.1:\d+\//;
 // The eval's headline hand-off, offline: the model is scripted and the Worker is the task text on a
 // loopback port; everything between them (plugin stack, turn loop, connection, MCP client) is real.
 describe('weather MCP hand-off', () => {
-  test('a server added mid-run is connected on the session’s next turn', { timeout: 120_000 }, async ({ expect }) => {
+  test("a server added mid-run is connected on the session's next turn", { timeout: 120_000 }, async ({ expect }) => {
     // Filled in once the space is seeded and the server is up; the script reads them when it emits.
     const target: { server?: string } = {};
 

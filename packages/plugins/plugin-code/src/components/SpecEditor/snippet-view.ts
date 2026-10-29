@@ -31,7 +31,7 @@ export const mountSnippet = (parent: HTMLElement, snippet: Snippet, path: string
   new EditorView({
     parent,
     state: EditorState.create({
-      doc: [...snippet.lines, ...(snippet.truncated ? ['…'] : [])].join('\n'),
+      doc: [...snippet.lines, ...(snippet.truncated ? ['\u2026'] : [])].join('\n'),
       extensions: [
         EditorState.readOnly.of(true),
         EditorView.editable.of(false),

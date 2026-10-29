@@ -22,7 +22,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperat
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The task does not belong to the task set.' }));
       }
 
-      // Resolved before either write, so a rejected parent leaves the position untouched too — a
+      // Resolved before either write, so a rejected parent leaves the position untouched too - a
       // drop is one gesture and must not half-apply.
       const newParent = parentTask ? yield* TaskSet.resolveParentTask(taskSet, task, parentTask) : undefined;
 

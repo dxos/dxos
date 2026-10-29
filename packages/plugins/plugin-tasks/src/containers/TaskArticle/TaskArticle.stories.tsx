@@ -37,7 +37,7 @@ const PLAIN_TASK = 'Design label';
 let seeded: { space: Space; worked: Task.Task } | undefined;
 
 /**
- * History as the verbs write it — one entry per thing that happened to the work, oldest first. No
+ * History as the verbs write it - one entry per thing that happened to the work, oldest first. No
  * `id`: the field is optional and an `EntityId` when present, so a literal label fails validation.
  */
 const history = (...descriptions: string[]): Task.HistoryEntry[] =>
@@ -49,7 +49,7 @@ const history = (...descriptions: string[]): Task.HistoryEntry[] =>
   }));
 
 /**
- * Two tasks in one set: one worked — description, assignee, history and three artifacts — and one
+ * Two tasks in one set: one worked - description, assignee, history and three artifacts - and one
  * bare, so the pane can be seen with everything it renders and with only its editor.
  */
 const seedTasks = (space: Space) => {
@@ -75,11 +75,11 @@ const seedTasks = (space: Space) => {
     }),
   );
 
-  // Artifacts are refs to objects filed in the space, not children of the task — the way
+  // Artifacts are refs to objects filed in the space, not children of the task - the way
   // `Task.addArtifact` links them, and what the pane's artifact cards resolve.
   for (const [name, content] of [
     ['Cupping Sheet', 'Sweetness 7, acidity 8, body 6. Second crack at 9:40.'],
-    ['Roast Log — Batch 14', 'Charge 198°C, turnaround 1:35, development 2:10.'],
+    ['Roast Log - Batch 14', 'Charge 198°C, turnaround 1:35, development 2:10.'],
     ['Supplier Notes', 'Two Ethiopian lots and one Colombian, sampled before committing to a full bag.'],
   ] as const) {
     Task.addArtifact(worked, space.db.add(Text.make({ name, content })));
@@ -204,7 +204,7 @@ export const Default: Story = {
       timeout: 10_000,
     });
 
-    // The properties read as a list, each row naming the value its glyph stands for — including the
+    // The properties read as a list, each row naming the value its glyph stands for - including the
     // assignee, which is a person in the space rather than a literal on the task.
     const properties = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.properties"]');
     await waitFor(() => expect(properties).toBeTruthy(), { timeout: 10_000 });
@@ -268,7 +268,7 @@ export const QuestionAnswered: Story = {
 
 /**
  * A task with no title opens with its title field focused, so a sub-task added from a row's menu is
- * named where it is read — a titled task leaves focus where it was.
+ * named where it is read - a titled task leaves focus where it was.
  */
 export const UntitledTaskFocus: Story = {
   decorators: [withPlugins({ files: false })],

@@ -64,7 +64,7 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
           </CardSlot.IconSlot>
         </Layout.Block>
         {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
-            question is a sentence the reader has to read in full — so the body carries it. */}
+            question is a sentence the reader has to read in full - so the body carries it. */}
         <Card.Title>{object.title}</Card.Title>
         {/* The task's actions, as a task card anywhere else offers them. */}
         <Layout.Block rail='end'>

@@ -11,7 +11,7 @@ import { type Stage, StageWrite } from '../types/stage.ts';
 export type DiarizationInput = { window: ContentBlock.Transcript[] };
 
 /**
- * Stage ◆ (interface only / deferred): label the speaker of the newest block.
+ * Stage * (interface only / deferred): label the speaker of the newest block.
  * Conforms to the `Stage` contract and is inert until a diarization backend is wired.
  */
 export const makeDiarizationStage = (): Stage<DiarizationInput> => ({

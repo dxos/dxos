@@ -20,7 +20,7 @@ type CaseProps<T> = {
   children?: ReactNode;
 };
 
-/** A function-typed `when` is a predicate — so `on` values must not themselves be functions. */
+/** A function-typed `when` is a predicate - so `on` values must not themselves be functions. */
 const isPredicate = <T,>(when: T | ((value: T) => boolean)): when is (value: T) => boolean =>
   typeof when === 'function';
 

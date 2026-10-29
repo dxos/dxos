@@ -60,7 +60,7 @@ export default Capability.makeModule(
       // and the content can be resolved from the eager glob above. The path
       // `${getPluginPath(id)}/spec` is the contract used by plugin-registry
       // to dispatch `LayoutOperation.Open` and to gate the "View
-      // specification" button — when this extension isn't registered (i.e.
+      // specification" button - when this extension isn't registered (i.e.
       // plugin-code isn't enabled) or the spec content can't be resolved,
       // the node is absent and the button stays hidden.
       AppGraphBuilder.createExtension({

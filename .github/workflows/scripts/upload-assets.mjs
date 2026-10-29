@@ -52,7 +52,7 @@ const contentType = (name) => CONTENT_TYPES[name.split('.').pop()?.toLowerCase()
 
 /**
  * Upload the flat files of `<outDir>/assets` to `bucket`, keyed as the Worker looks them up
- * (`/assets/foo-hash.js` → `assets/foo-hash.js`). Only the flat level is vite's content-hashed output;
+ * (`/assets/foo-hash.js` -> `assets/foo-hash.js`). Only the flat level is vite's content-hashed output;
  * subdirectories hold stable-named copies that must not be served as immutable, so they stay out.
  *
  * Unconditional: every file, every deploy, even one already present. R2 lifecycle rules expire by object
@@ -93,7 +93,7 @@ const uploadAssets = async ({ client, bucket, outDir }) => {
 
 /**
  * Retain one app's built assets for <environment>. No-op for an app that declares no `ASSET_ARCHIVE`
- * binding there — assets-only apps have no Worker to serve a fallback, so retention is unreachable.
+ * binding there - assets-only apps have no Worker to serve a fallback, so retention is unreachable.
  */
 export const retainAssets = async (root, app, environment) => {
   const bucket = assetArchiveBucket(root, app, environment);
@@ -122,7 +122,7 @@ export const retainAssets = async (root, app, environment) => {
   console.log('::endgroup::');
 };
 
-// CLI: `upload-assets.mjs <environment> [app|all]` — retains without deploying, for a backfill or a probe.
+// CLI: `upload-assets.mjs <environment> [app|all]` - retains without deploying, for a backfill or a probe.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const [environment, only = 'all'] = process.argv.slice(2);
   if (!environment) {

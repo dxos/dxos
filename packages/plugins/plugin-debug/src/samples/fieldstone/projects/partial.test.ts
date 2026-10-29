@@ -82,7 +82,7 @@ describe('Alien Labs projects', () => {
     const agentTasks = tasks.filter((task) => agentDids.has(task.assignee?.identityDid));
     expect(agentTasks).toHaveLength(35);
 
-    // 40 chats, with a run in every week from −60d to the reference date.
+    // 40 chats, with a run in every week from -60d to the reference date.
     const chats = typed(archive.objects, 'assistant.chat');
     expect(chats).toHaveLength(40);
     const feeds = new Map(archive.feeds.map((feed) => [feed.feedObjectId, feed.messages]));
@@ -143,7 +143,7 @@ describe('Alien Labs projects', () => {
       begins.every((event) => ['Builder', 'Reviewer', 'Triage', 'Scribe'].includes(event.meta.processName ?? '')),
     ).toBe(true);
 
-    // Every chat and trace timestamp falls between −60d and the reference date.
+    // Every chat and trace timestamp falls between -60d and the reference date.
     const times = [
       ...events.map((event) => event.timestamp),
       ...chats.flatMap((chat) => (feeds.get(idOf(chat.feed)!) ?? []).map((message) => Date.parse(message.created!))),

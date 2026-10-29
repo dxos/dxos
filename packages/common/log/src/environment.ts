@@ -78,21 +78,21 @@ export type InferEnvironmentNameOptions = {
 /**
  * Infer a writer/environment identifier from the current execution context.
  *
- * Safe to invoke in any JS runtime — never throws. Falls back to `unknown::<suffix>`
+ * Safe to invoke in any JS runtime - never throws. Falls back to `unknown::<suffix>`
  * when the runtime can't be classified.
  *
  * Format is always three colon-separated segments: `<scope>:<name>:<suffix>`.
- * - `scope` — `tab | dedicated-worker | shared-worker | service-worker | cf-worker | node | unknown`.
- * - `name` — `location.origin` for tabs, `self.name` for browser workers, `process.pid`
+ * - `scope` - `tab | dedicated-worker | shared-worker | service-worker | cf-worker | node | unknown`.
+ * - `name` - `location.origin` for tabs, `self.name` for browser workers, `process.pid`
  *   for node, empty for cf-workers / service workers / anonymous workers.
  *   Note that `name` may itself contain `:` (e.g. `http://localhost:5173`); when parsing,
  *   take the first segment as scope and the last as suffix, and treat everything in
  *   between as the name.
- * - `suffix` — 6-char random; stable per-tab via `sessionStorage`, fresh per worker / process instance.
+ * - `suffix` - 6-char random; stable per-tab via `sessionStorage`, fresh per worker / process instance.
  *
  * The default-scope result (no `options.scope` override) is cached at module level: every
- * caller in the same JS realm — e.g. `@dxos/log-store-idb` and `vite-plugin-log`'s runtime both
- * running inside one dedicated worker — gets back the identical id, so records from the two
+ * caller in the same JS realm - e.g. `@dxos/log-store-idb` and `vite-plugin-log`'s runtime both
+ * running inside one dedicated worker - gets back the identical id, so records from the two
  * sinks can be correlated by `i`. Passing an explicit `scope` (tests simulating other realms)
  * bypasses the cache and always computes fresh.
  */
@@ -106,7 +106,7 @@ export const inferEnvironmentName = (options: InferEnvironmentNameOptions = {}):
 };
 
 const computeEnvironmentName = (scope: any): string => {
-  // Cloudflare Workers — checked first because in service-worker syntax mode CF
+  // Cloudflare Workers - checked first because in service-worker syntax mode CF
   // workers also report as `ServiceWorkerGlobalScope`.
   if (scope.navigator?.userAgent === CF_WORKER_USER_AGENT) {
     return `cf-worker::${randomSuffix()}`;
@@ -129,7 +129,7 @@ const computeEnvironmentName = (scope: any): string => {
     return `tab:${origin}:${getOrCreateTabSuffix(scope.sessionStorage)}`;
   }
 
-  // Node.js — `process.versions.node` is the canonical signal.
+  // Node.js - `process.versions.node` is the canonical signal.
   // Avoid touching the real `process` global directly so tests passing `scope: {}`
   // can opt out of node detection.
   const proc = scope.process;

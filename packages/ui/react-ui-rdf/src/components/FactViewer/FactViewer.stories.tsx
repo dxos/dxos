@@ -5,7 +5,7 @@
 /**
  * Read-only viewer for extracted semantic facts, rendered against static fixtures (no engine/AI).
  *
- * - `Default` passes `DEMO_FACTS` (includes an Alice→Paris/Rome conflict and a coherent Q3-meeting pair).
+ * - `Default` passes `DEMO_FACTS` (includes an Alice->Paris/Rome conflict and a coherent Q3-meeting pair).
  * - `Empty` passes `[]` to show the empty state.
  * - Renders `FactViewer`, which groups facts by subject, flags predicate-level conflicts, and filters.
  * - Minimal decorators (`withTheme` + `withLayout`); purely presentational.
@@ -26,7 +26,7 @@ const extractor = {
 };
 
 /**
- * Static demo facts that exercise the viewer: an entity→entity conflict (f1 vs f2,
+ * Static demo facts that exercise the viewer: an entity->entity conflict (f1 vs f2,
  * same subject + predicate, different objects/sources) plus a coherent pair (f3/f4).
  */
 const DEMO_FACTS: RDF.Fact[] = [

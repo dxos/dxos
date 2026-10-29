@@ -19,7 +19,7 @@ export type MergePreviewProps = {
 
 /**
  * Companion view of a staged merge: an editable form over the *detached* merged object. Edits
- * mutate the detached preview, so they flow into the overrides when the merge commits — Confirm
+ * mutate the detached preview, so they flow into the overrides when the merge commits - Confirm
  * and Cancel live in the TypeArticle toolbar that staged the preview.
  */
 export const MergePreview = forwardRef<HTMLDivElement, MergePreviewProps>(({ type, preview }, forwardedRef) => (

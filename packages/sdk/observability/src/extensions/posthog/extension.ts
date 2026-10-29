@@ -50,7 +50,7 @@ export type ExtensionsOptions = {
   posthog?: Partial<PostHogConfig>;
   /**
    * Shared persistent log store for debug log dumps.
-   * The owning app is expected to register `logStore.processor` with `log` itself —
+   * The owning app is expected to register `logStore.processor` with `log` itself -
    * this extension only consumes the buffered logs (via `export()`).
    */
   logStore?: IdbLogStore;
@@ -78,7 +78,7 @@ export type ExtensionsOptions = {
 export type NodeOptions = {
   /** Pins the project instead of reading `DX_POSTHOG_API_KEY`. */
   apiKey?: string;
-  /** Ingestion host — a region, or a proxy on your own domain. */
+  /** Ingestion host - a region, or a proxy on your own domain. */
   host?: string;
   /** Attribution for events captured before `identify`, since there is no ambient person. */
   distinctId?: string;
@@ -191,7 +191,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           unregisterPosthogProcessors?.();
           const removePosthogLog = log.addProcessor(logProcessor);
           // PostHog joins a log record to its session replay on a log attribute literally named
-          // `sessionId` — not the OTel `session.id` resource attribute — and rotates that id.
+          // `sessionId` - not the OTel `session.id` resource attribute - and rotates that id.
           const tagSession = () => context.setTags({ sessionId: posthog.get_session_id() }, 'logs');
           const removeSessionListener = posthog.onSessionId(tagSession);
           tagSession();

@@ -54,7 +54,7 @@ const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
 const EMPTY_ORDINALS: ReadonlyMap<string, number> = new Map<string, number>();
 
 //
-// Root — headless context provider. Renders no DOM.
+// Root - headless context provider. Renders no DOM.
 //
 
 type TaskListRootProps = PropsWithChildren<{
@@ -69,23 +69,23 @@ type TaskListRootProps = PropsWithChildren<{
    */
   groupByStatus?: boolean;
   /**
-   * Partition the rows under collapsible group headers, each with its count — the host decides the
-   * partition (by status, priority, assignee, milestone…) and the order, of groups and within each.
+   * Partition the rows under collapsible group headers, each with its count - the host decides the
+   * partition (by status, priority, assignee, milestone...) and the order, of groups and within each.
    * Supersedes `groupByStatus`. With `hierarchical`, sub-tasks still nest under a parent in the same
    * group. A group's collapsed state lives in `collapsed` beside the branches', under the group's
    * node id (`taskGroupNodeId`).
    */
   groups?: readonly TaskGroup[];
   /**
-   * Render the set as the tree it stores (`Task.subtasks`), not as status groups — the two are
+   * Render the set as the tree it stores (`Task.subtasks`), not as status groups - the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
   hierarchical?: boolean;
   /**
    * Ids of the branches whose sub-tasks are hidden (controlled). Collapsed rather than expanded
    * ids, because a branch is open by default: tracking the expanded set would render a task's new
-   * first sub-task hidden, the moment adding it made its parent a branch. Per viewer and per list —
-   * a collapsed branch is not a property of the work — so this is state, not stored on the object.
+   * first sub-task hidden, the moment adding it made its parent a branch. Per viewer and per list -
+   * a collapsed branch is not a property of the work - so this is state, not stored on the object.
    */
   collapsed?: ReadonlySet<string>;
 
@@ -98,7 +98,7 @@ type TaskListRootProps = PropsWithChildren<{
    */
   selected?: string;
   /**
-   * Makes the list selectable without a controlled `selected` or an `onTaskSelect` — for a host
+   * Makes the list selectable without a controlled `selected` or an `onTaskSelect` - for a host
    * whose selection consumers (e.g. `Edit`) live inside the list's own context.
    */
   selectable?: boolean;
@@ -130,16 +130,16 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
-  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  /** Renderers for a row's description beyond its own - a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
 
   //
-  // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
+  // Callbacks. Wiring one is what enables the affordance that calls it - the list never writes.
   //
 
   /**
-   * Trailing menu for a row. One item renders as a plain icon button, several as a `…` menu, none as
-   * nothing — so delete is an ordinary contributed action rather than a special case of its own.
+   * Trailing menu for a row. One item renders as a plain icon button, several as a `...` menu, none as
+   * nothing - so delete is an ordinary contributed action rather than a special case of its own.
    */
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /**
@@ -152,13 +152,13 @@ type TaskListRootProps = PropsWithChildren<{
    */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   /**
-   * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
+   * Row click, and `Escape` - which passes `undefined`, since a reader needs a way back out of a
    * selection. Wiring it (or `selected`) makes the list selectable, so the row shows as selected.
    */
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   /**
-   * Enables the gutter checkbox, called with the row toggled. The host owns the set — this list is
-   * embedded in surfaces whose toolbars read the same selection — so nothing is tracked here.
+   * Enables the gutter checkbox, called with the row toggled. The host owns the set - this list is
+   * embedded in surfaces whose toolbars read the same selection - so nothing is tracked here.
    */
   onTaskCheck?: (task: Task.Task) => void;
   /**
@@ -218,7 +218,7 @@ const TaskListRoot = ({
   const selected = selectedProp ?? selectedState;
   const selectable = selectableProp ?? (!!onTaskSelect || selectedProp !== undefined);
 
-  // Passing `undefined` clears the selection — what `Escape` on a row and the edit pane's buttons do.
+  // Passing `undefined` clears the selection - what `Escape` on a row and the edit pane's buttons do.
   const handleSelect = useCallback(
     (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => {
       setSelectedState(task?.id);
@@ -311,7 +311,7 @@ const TaskListRoot = ({
 TaskListRoot.displayName = 'TaskList.Root';
 
 //
-// Viewport — bounds the rows, which scroll inside it (the tree's content is its own scroll area).
+// Viewport - bounds the rows, which scroll inside it (the tree's content is its own scroll area).
 // `Create` sits outside it, so the add row stays pinned while the rows scroll.
 //
 
@@ -342,7 +342,7 @@ const TaskListViewport = Util.composable<HTMLDivElement, TaskListViewportProps>(
 TaskListViewport.displayName = 'TaskList.Viewport';
 
 //
-// Content — the rows, grouped by status when the root says so.
+// Content - the rows, grouped by status when the root says so.
 //
 
 /** Ordinals stop at 99: the gutter is sized for two digits. */
@@ -354,8 +354,8 @@ const MAX_ORDINAL = 99;
  * its field starts where their titles do.
  *
  * Every cell is placed by its track's name ({@link TRACK}), so a track exists only when its option is on and an absent
- * cell leaves its track empty. The first track is the tree's disclosure — at no width in a flat list — and goes unnamed:
- * the row wraps its columns in `[content-start] …`, and two bracketed names with no track between them invalidate the
+ * cell leaves its track empty. The first track is the tree's disclosure - at no width in a flat list - and goes unnamed:
+ * the row wraps its columns in `[content-start] ...`, and two bracketed names with no track between them invalidate the
  * template. The disclosure is the one cell not placed by name; it flows into that first track.
  */
 const buildGridTemplate = ({
@@ -395,7 +395,7 @@ const buildGridTemplate = ({
 };
 
 /**
- * No props: the part renders no element of its own — it is the tree, which takes neither a class
+ * No props: the part renders no element of its own - it is the tree, which takes neither a class
  * list nor a ref, so anything accepted here would be dropped silently.
  */
 type TaskListContentProps = {};
@@ -600,14 +600,14 @@ const TaskListItem = ({
 };
 
 //
-// Item actions — the trailing cell of a row.
+// Item actions - the trailing cell of a row.
 //
 
 const isMenuAction = (item: MenuItem): item is MenuAction => 'data' in item && typeof item.data === 'function';
 
 /**
- * A row's contributed actions. One is a plain button — a `…` menu hiding a single item costs a click
- * to discover nothing — and several collapse into the overflow menu, matching the nav tree's rows.
+ * A row's contributed actions. One is a plain button - a `...` menu hiding a single item costs a click
+ * to discover nothing - and several collapse into the overflow menu, matching the nav tree's rows.
  */
 const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { t } = Hooks.useTranslation(translationKey);
@@ -678,7 +678,7 @@ const TaskListItemArtifacts = ({ task, filter }: { task: Task.Task; filter?: (ob
     [refs],
   );
   const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
-  // Without a database — a story, a preview — the refs were made from objects already in hand,
+  // Without a database - a story, a preview - the refs were made from objects already in hand,
   // so their targets resolve synchronously and the row still shows what the task produced.
   const resolved = db ? queried : (refs ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
   const artifacts = filter ? resolved.filter(filter) : resolved;
@@ -744,8 +744,8 @@ TaskListItemTags.displayName = 'TaskList.ItemTags';
  * takes no tab stop of its own, since inside a listbox option it would split the row into several
  * arrow-key stops.
  *
- * A {@link PullRequest.PullRequest} renders as its `#number` pill — the form a PR link takes in
- * markdown — so a row reads the same as the text that references it.
+ * A {@link PullRequest.PullRequest} renders as its `#number` pill - the form a PR link takes in
+ * markdown - so a row reads the same as the text that references it.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   const label = useLabel(artifact, { fallback: 'typename' }) ?? '';
@@ -798,13 +798,13 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
 };
 
 //
-// Assignee — actor-aware chip, named and marked by `useAssigneeDisplay` so it agrees with the
+// Assignee - actor-aware chip, named and marked by `useAssigneeDisplay` so it agrees with the
 // properties row.
 //
 
 type TaskListAssigneeProps = {
   assignee: Actor.Actor;
-  /** Shows the glyph alone, naming the assignee on hover — for a row where the name crowds the title. */
+  /** Shows the glyph alone, naming the assignee on hover - for a row where the name crowds the title. */
   iconOnly?: boolean;
 };
 

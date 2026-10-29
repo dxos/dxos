@@ -60,7 +60,7 @@ describe('walkRoute', () => {
   });
 
   // Regression: on an inclined (non-equatorial, non-meridian) great-circle segment, the true course
-  // drifts continuously along its length, so mid-segment bearing must track the traveled-to point —
+  // drifts continuously along its length, so mid-segment bearing must track the traveled-to point -
   // not the segment's start point, which only agrees with the true course at fraction 0.
   test('mid-segment bearing matches the true course at the traveled-to point, not the segment start', () => {
     const start = toUnit({ lat: 10, lng: 10 });
@@ -73,7 +73,7 @@ describe('walkRoute', () => {
     const trueCourseAtMidpoint = bearingTo(midway.unit, justAhead.unit);
 
     expect(midway.bearing).toBeCloseTo(trueCourseAtMidpoint, 1);
-    // The segment's initial bearing is a meaningfully different angle on an inclined segment —
+    // The segment's initial bearing is a meaningfully different angle on an inclined segment -
     // guards against silently reverting to `bearingTo(start, end)`.
     let driftFromStart = Math.abs(midway.bearing - bearingTo(start, end));
     driftFromStart = driftFromStart > 180 ? 360 - driftFromStart : driftFromStart;

@@ -10,7 +10,7 @@
  * a line number: the native profile said "ArrayBuffers under an IndexedDB callback", and
  * this said which worker, which store, and how many times a second.
  *
- * The shims are installed before any of the app's own script runs, in every realm —
+ * The shims are installed before any of the app's own script runs, in every realm -
  * including dedicated workers, which no CDP target list reports and which is where
  * Composer does most of this work.
  *
@@ -272,7 +272,7 @@ try {
       continue;
     }
     console.log(
-      `\n=== ${label} — TextEncoder ${MB(bytes)} MB over ${calls} calls, ` +
+      `\n=== ${label} - TextEncoder ${MB(bytes)} MB over ${calls} calls, ` +
         `${queries} bulk IDB reads, ${cursors} cursors ===`,
     );
     for (const [key, entry] of query.slice(0, 4)) {

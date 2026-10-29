@@ -34,7 +34,7 @@ export const inspect = Command.make(
       if (result.ownedFunctions.length > 0) {
         yield* Console.log(`  Functions:`);
         for (const fn of result.ownedFunctions) {
-          yield* Console.log(`    ${fn.name} (${fn.id}) — ${fn.versionCount} version(s)`);
+          yield* Console.log(`    ${fn.name} (${fn.id}) - ${fn.versionCount} version(s)`);
         }
       }
 

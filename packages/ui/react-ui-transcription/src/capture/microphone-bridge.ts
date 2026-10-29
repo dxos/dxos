@@ -43,14 +43,14 @@ let capturing = false;
  * Routes `getUserMedia` audio through native capture.
  *
  * WebKit substitutes a synthetic device in the iOS Simulator: `getUserMedia` resolves, the track
- * reports live and unmuted, and it carries no sound — so transcription runs end to end against
+ * reports live and unmuted, and it carries no sound - so transcription runs end to end against
  * silence and the failure looks like a broken service. Native code does reach the host microphone,
  * so it captures there and pushes PCM into the page, which is replayed through an
  * {@link AudioWorkletNode} into a {@link MediaStreamAudioDestinationNode} and handed back as an
  * ordinary stream.
  *
- * Shimming at the `getUserMedia` boundary is deliberate: everything downstream — the recorder, the
- * transcriber, any other consumer of a microphone stream — then runs exactly the production path,
+ * Shimming at the `getUserMedia` boundary is deliberate: everything downstream - the recorder, the
+ * transcriber, any other consumer of a microphone stream - then runs exactly the production path,
  * rather than the simulator becoming a special case inside each of them.
  *
  * A development aid, and inert unless {@link installMicrophoneBridge} is called: on a real device
@@ -68,7 +68,7 @@ export const installMicrophoneBridge = async (): Promise<boolean> => {
   try {
     await invoke('start_microphone_bridge');
   } catch (err) {
-    // Absent off iOS, and expected there — the caller carries on with WebKit's own capture.
+    // Absent off iOS, and expected there - the caller carries on with WebKit's own capture.
     log('microphone bridge unavailable', { err });
     return false;
   }

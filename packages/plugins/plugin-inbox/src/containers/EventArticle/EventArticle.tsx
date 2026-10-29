@@ -43,7 +43,7 @@ export const EventArticle = ({
   const live = useQuery(db, Query.select(Filter.id(subject.id)))[0];
   const event = live ?? subject;
   // A draft event (locally created, not yet synced) is editable and savable. The body editor binds an
-  // automerge accessor, which requires the live (reactive) object — gate editing on `live` so the first
+  // automerge accessor, which requires the live (reactive) object - gate editing on `live` so the first
   // render (before the by-id query resolves) shows the read-only body from the snapshot instead of
   // handing the editor a non-live subject.
   const draft = DraftEvent.instanceOf(event) && !!live;

@@ -754,7 +754,7 @@ const LinkText = ({ path, text, backdrop, textClass, fontSize }: LinkTextProps) 
     while (count > 0 && element.getSubStringLength(0, count) + ellipsis > room) {
       count--;
     }
-    setShown(`${text.slice(0, count).trimEnd()}…`);
+    setShown(`${text.slice(0, count).trimEnd()}\u2026`);
   }, [at, text, fontSize]);
   // The backdrop fits the text as set, so it is measured once the text is placed.
   useLayoutEffect(() => {

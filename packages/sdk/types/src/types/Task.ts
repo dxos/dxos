@@ -110,8 +110,8 @@ const HistoryEntryBase = {
 };
 
 /**
- * One pre-baked answer an asker offers. `title` is the key — it is what a reader clicks and what
- * lands in {@link AnswerEntry.answer} — so an option carries no id of its own: a question with two
+ * One pre-baked answer an asker offers. `title` is the key - it is what a reader clicks and what
+ * lands in {@link AnswerEntry.answer} - so an option carries no id of its own: a question with two
  * options reading the same is a badly written question, not a shape to model around.
  */
 export const AnswerOption = Schema.Struct({
@@ -151,7 +151,7 @@ export type ChangeEntry = CreatedEntry | UpdatedEntry;
  * A question an agent put to a person about this task. It is open until an {@link AnswerEntry}
  * names its `id`; there is no flag on the question to fall out of step with that.
  *
- * `options` are a convenience, never a constraint — a surface rendering this MUST also accept
+ * `options` are a convenience, never a constraint - a surface rendering this MUST also accept
  * free-form text, since the point of asking is that the asker did not know.
  */
 export const QuestionEntry = Schema.Struct({
@@ -159,7 +159,7 @@ export const QuestionEntry = Schema.Struct({
   event: Schema.Literal('question').annotate({ title: 'Event' }),
   /** The question itself, as put to the reader. */
   text: Schema.String.annotate({ title: 'Question' }),
-  /** Why it is being asked — what the agent is blocked on, in one or two sentences. */
+  /** Why it is being asked - what the agent is blocked on, in one or two sentences. */
   context: Schema.optional(Schema.String.annotate({ title: 'Context' })),
   /** Suggested answers. May be empty; free-form is always allowed. */
   options: Schema.optional(Schema.Array(AnswerOption).annotate({ title: 'Options' })),
@@ -313,7 +313,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     ),
 
     /**
-     * What the task produced — the documents, sketches and records made while working it. Refs
+     * What the task produced - the documents, sketches and records made while working it. Refs
      * rather than an ECHO parent edge: an artifact belongs to the project (or wherever it was
      * filed) and merely records which task made it, so completing a task must not cascade to it.
      */
@@ -362,7 +362,7 @@ export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, 
 //
 
 /**
- * Fields an edit may set — the editable surface of a task, shared by the mutation helpers here, the
+ * Fields an edit may set - the editable surface of a task, shared by the mutation helpers here, the
  * `UpdateTask` operation, and the list UI, so the three cannot disagree about what an edit is.
  *
  * `null` clears an optional field, distinct from `undefined`, which means the edit does not mention
@@ -379,7 +379,7 @@ export type Edit = {
 };
 
 /**
- * A new task: `title` required, every other field optional. Nothing is nullable — a create has
+ * A new task: `title` required, every other field optional. Nothing is nullable - a create has
  * nothing to clear, and a field it does not mention is simply unset.
  */
 export type Draft = MakeRequired<{ [K in keyof Edit]: Exclude<Edit[K], null> }, 'title'>;
@@ -389,7 +389,7 @@ export type EditOptions = {
   actor?: Actor.Actor;
   /** When, ISO-8601. Defaults to now; supplied by a caller replaying or backdating a change. */
   date?: string;
-  /** Replaces the generated note — for a caller that knows why, not just what. */
+  /** Replaces the generated note - for a caller that knows why, not just what. */
   description?: string;
   /**
    * The caller is signing off as a reviewer, so `done` means `done` (see {@link approve}). Set by a
@@ -433,8 +433,8 @@ export const appendHistory = (task: Task, entry: HistoryEntry): void => {
 };
 
 /**
- * A copy of `entry` the task can own. ECHO refuses to store a record another object already owns — an
- * actor that is also the task's assignee, say — and the stored array is mutable where the schema
+ * A copy of `entry` the task can own. ECHO refuses to store a record another object already owns - an
+ * actor that is also the task's assignee, say - and the stored array is mutable where the schema
  * type is read-only, so the nested records are copied rather than shared.
  */
 const mutableEntry = (entry: HistoryEntry) => {
@@ -451,12 +451,12 @@ const mutableEntry = (entry: HistoryEntry) => {
  * does not close without them.
  *
  * The rule lives on the write rather than in a verb of its own because every caller that finishes a
- * task — the planning tool, `UpdateTask`, the list's own checkbox — simply asks for `done`, and none
+ * task - the planning tool, `UpdateTask`, the list's own checkbox - simply asks for `done`, and none
  * of them know a task has reviewers. Sited anywhere else it has to be re-remembered at each new call
  * site, which is exactly how the first one was missed.
  *
- * Only {@link approve} is exempt. An earlier version exempted `review → done` instead, reasoning that
- * only a reviewer could make that move — but an agent asking for `done` twice makes it too: the first
+ * Only {@link approve} is exempt. An earlier version exempted `review -> done` instead, reasoning that
+ * only a reviewer could make that move - but an agent asking for `done` twice makes it too: the first
  * call lands the task in `review` and the second reads as the sign-off. Who is asking is not
  * recoverable from the status, so the caller has to say.
  */
@@ -464,13 +464,13 @@ const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
   status === 'done' && !approve && (task.reviewers?.length ?? 0) > 0 ? 'review' : status;
 
 /**
- * Applies `changes` and records ONE entry describing them — an edit is what the person did, not
+ * Applies `changes` and records ONE entry describing them - an edit is what the person did, not
  * one note per field they touched.
  *
  * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
  * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
  *
- * **Only a change to the WORK is logged** — its status, its priority, its size, who has it. A title
+ * **Only a change to the WORK is logged** - its status, its priority, its size, who has it. A title
  * or description is the task's text, and the text is edited by typing: every blur commits, so
  * logging those filled the history with "Description updated." and buried the entries a reader
  * opens it for. They are still written, they are simply not narrated. A caller with something to
@@ -520,7 +520,7 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     return undefined;
   }
 
-  // A silent edit — a title or a description — still writes its field; it just carries no entry.
+  // A silent edit - a title or a description - still writes its field; it just carries no entry.
   const narrate = notes.length > 0 || options.description !== undefined;
   const entry: UpdatedEntry | undefined = narrate
     ? {
@@ -584,7 +584,7 @@ export const setStatus = (task: Task, status: Status, options?: EditOptions): Ch
   update(task, { status }, options);
 
 /**
- * Closes a task on a reviewer's say-so — the one write that may reach `done` past named reviewers.
+ * Closes a task on a reviewer's say-so - the one write that may reach `done` past named reviewers.
  * Reserved for a surface that acts for a person; never wire an agent tool to it.
  */
 export const approve = (task: Task, options?: EditOptions): ChangeEntry | undefined =>
@@ -592,7 +592,7 @@ export const approve = (task: Task, options?: EditOptions): ChangeEntry | undefi
 
 /**
  * Records an object the task produced. Refs, not children: the artifact belongs to wherever it was
- * filed, and finishing the task must not cascade to it. Adding the same object twice is a no-op —
+ * filed, and finishing the task must not cascade to it. Adding the same object twice is a no-op -
  * compared by entity id, since the same object may be addressed local or space-qualified.
  */
 export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
@@ -683,7 +683,7 @@ export const isAnswerEntry = (entry: HistoryEntry): entry is AnswerEntry => entr
 
 /**
  * Every question in a log, oldest first, each with its answer. Takes the log rather than the task so
- * a React snapshot — the shape a row actually renders from — answers the same way. Only the first
+ * a React snapshot - the shape a row actually renders from - answers the same way. Only the first
  * answer to a question counts: the asker was resumed on it, so a later one describes a decision it
  * never saw.
  */
@@ -728,8 +728,8 @@ export const ask = (task: Task, { text, context, options, conversation, actor, d
 };
 
 /**
- * Records an answer to one of the task's questions. Refused — returning `undefined` and writing
- * nothing — when the text is blank, the question is not in this task's log, or it is already
+ * Records an answer to one of the task's questions. Refused - returning `undefined` and writing
+ * nothing - when the text is blank, the question is not in this task's log, or it is already
  * answered: a blank answer would resume an agent with nothing to go on, and a second one would
  * resume it against a decision it never saw.
  */
@@ -764,8 +764,8 @@ export const setAssignee = (task: Task, assignee: Actor.Actor | null, options?: 
 //
 // Derived views over a task list. Nothing here is stored: milestone grouping and progress are
 // computed from the hierarchy and `milestone`, so they cannot disagree with the refs. They take a
-// plain task array rather than a container, so every holder of an ordered list — a `TaskSet`, a
-// `Chat` — shares them, and compare by ref URI so an unloaded ref still compares.
+// plain task array rather than a container, so every holder of an ordered list - a `TaskSet`, a
+// `Chat` - shares them, and compare by ref URI so an unloaded ref still compares.
 //
 
 /**
@@ -800,7 +800,7 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
 
 /**
  * The task `task` is a sub-task of: its ECHO parent, when that is a task. The parent edge is the one
- * record of the hierarchy — the parent's `subtasks` list only orders it.
+ * record of the hierarchy - the parent's `subtasks` list only orders it.
  */
 export const getParentTask = (task: Task): Task | undefined => {
   const parent = Obj.getParent(task);
@@ -811,7 +811,7 @@ export const getParentTask = (task: Task): Task | undefined => {
 export const parentTaskId = (task: Task): string | undefined => getParentTask(task)?.id;
 
 /**
- * Order query-loaded tasks by `refs` — the holder's array is canonical order; a query returns none.
+ * Order query-loaded tasks by `refs` - the holder's array is canonical order; a query returns none.
  * A task the array does not list yet (a concurrent add observed mid-write) sorts to the end.
  */
 export const orderTasks = (tasks: ReadonlyArray<Task>, refs: ReadonlyArray<Ref.Ref<Task>>): Task[] => {
@@ -827,7 +827,7 @@ export const orderTasks = (tasks: ReadonlyArray<Task>, refs: ReadonlyArray<Ref.R
   );
 };
 
-/** Tasks with no parent present in `tasks` — a parent outside the list reads as a root, not a ghost. */
+/** Tasks with no parent present in `tasks` - a parent outside the list reads as a root, not a ghost. */
 export const rootTasks = (tasks: readonly Task[]): Task[] => {
   const present = new Set(tasks.map((task) => task.id));
   return tasks.filter((task) => {
@@ -917,14 +917,14 @@ export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Ta
  * Whether an agent is working this task right now: assigned to one, and started.
  *
  * `started` is stamped when the session takes the task, not when it produces anything, so the pair
- * is what says "underway" — an agent-assigned task still in `todo` is queued, and a started task
+ * is what says "underway" - an agent-assigned task still in `todo` is queued, and a started task
  * assigned to a person is someone else's, not a running process.
  */
 export const isAgentWorking = (task: Task | Obj.Snapshot<Task>): boolean =>
   task.assignee?.role === 'assistant' && task.status === 'started';
 
 /**
- * Whether every `dependsOn` of `task` is `done`, resolved within `tasks` — a dangling dependency
+ * Whether every `dependsOn` of `task` is `done`, resolved within `tasks` - a dangling dependency
  * ref reads as satisfied, not as a permanent block.
  */
 export const isTaskReady = (tasks: readonly Task[], task: Task): boolean => {
@@ -945,7 +945,7 @@ export const effectiveMilestoneId = (tasks: readonly Task[], task: Task): string
   effectiveMilestoneIds(tasks).get(task.id);
 
 /**
- * Every task's effective milestone in one pass, keyed by task id — the per-task walk is otherwise
+ * Every task's effective milestone in one pass, keyed by task id - the per-task walk is otherwise
  * quadratic when grouping a whole set. Exported so a caller filtering the whole set builds it once.
  * Tasks with no milestone anywhere up their chain map to `undefined`, memoized like any other result
  * so a long backlog chain is still walked once.
@@ -997,7 +997,7 @@ export const tasksForMilestone = (tasks: readonly Task[], milestone: Milestone.M
   return tasks.filter((task) => milestoneIds.get(task.id) === target);
 };
 
-/** Tasks under no milestone — the backlog. */
+/** Tasks under no milestone - the backlog. */
 export const backlogTasks = (tasks: readonly Task[]): Task[] => {
   const milestoneIds = effectiveMilestoneIds(tasks);
   return tasks.filter((task) => milestoneIds.get(task.id) === undefined);
@@ -1012,7 +1012,7 @@ export type Progress = {
 };
 
 /**
- * A milestone's progress, derived from its tasks — a milestone stores no status of its own, so
+ * A milestone's progress, derived from its tasks - a milestone stores no status of its own, so
  * "met" is simply `ratio === 1`. Cancelled tasks leave the denominator (they are not work owed).
  */
 export const milestoneProgress = (tasks: readonly Task[], milestone: Milestone.Milestone): Progress => {
@@ -1022,7 +1022,7 @@ export const milestoneProgress = (tasks: readonly Task[], milestone: Milestone.M
 };
 
 /**
- * Every task transitively under `task` within `tasks`, including `task` itself — the synchronous
+ * Every task transitively under `task` within `tasks`, including `task` itself - the synchronous
  * counterpart of {@link collectSubtree} for a caller that already holds the list and cannot run an
  * Effect. Sees only what the list contains. Cycle-safe.
  */
@@ -1085,7 +1085,7 @@ const loadOrUndefined = <T extends Obj.Unknown>(ref: Ref.Ref<T>): Effect.Effect<
 };
 
 /**
- * The top of `task`'s tree, walking parent edges up — the unit of work a claim covers. Synchronous
+ * The top of `task`'s tree, walking parent edges up - the unit of work a claim covers. Synchronous
  * with no load to time out: a parent edge is a strong dependency, materialized before its child is,
  * so an unresolved hop means no parent task. A parent that is not a task (the
  * set, or nothing) ends the walk. Cycle-safe.
@@ -1101,7 +1101,7 @@ export const collectRoot = (task: Task): Effect.Effect<Task> =>
     return current;
   });
 
-/** The whole tree `task` belongs to — its root first, then every descendant. */
+/** The whole tree `task` belongs to - its root first, then every descendant. */
 export const collectTree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
   Effect.flatMap(collectRoot(task), collectSubtree);
 

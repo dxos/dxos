@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 import { mergeCandidates } from './merge-core.ts';
 
 /**
- * The document surface a merge needs — structurally satisfied by the host's `DocumentLease`
+ * The document surface a merge needs - structurally satisfied by the host's `DocumentLease`
  * (whose disposal the merge honors) and by a bare `DocHandle` in tests.
  */
 export type MergeDocumentRef = {
@@ -60,7 +60,7 @@ export type ConvergenceKeyMergerDeps = {
   queryByConvergenceKeys: (spaceId: SpaceId, convergenceKeys: readonly string[]) => Promise<readonly EntityMeta[]>;
 
   /**
-   * Referrers of one entity (`IndexEngine.queryReferrers`) — the point lookup behind reference
+   * Referrers of one entity (`IndexEngine.queryReferrers`) - the point lookup behind reference
    * rewriting. Index rows are derived state; every hit is re-verified against the document before
    * anything is written.
    */
@@ -71,12 +71,12 @@ export type ConvergenceKeyMergeResult = {
   /** Duplicate groups that required writes (a merge or a late-edit fold). */
   mergedGroups: number;
 
-  /** Keys serviced to completion, per space — safe to clear from the durable intent log. */
+  /** Keys serviced to completion, per space - safe to clear from the durable intent log. */
   serviced: Map<SpaceId, Set<string>>;
 };
 
 /**
- * Merges convergence-key duplicates surfaced by the indexing intent log — the worker-side trigger.
+ * Merges convergence-key duplicates surfaced by the indexing intent log - the worker-side trigger.
  *
  * The merge operates on the raw document structures via the storage-independent core in
  * `@dxos/echo/internal`; the writes replicate to clients like any other change, and the
@@ -96,17 +96,17 @@ export class ConvergenceKeyMerger {
    * Runs after the index engine processes changed documents, which is the earliest a duplicate
    * can exist on this device: duplicates are born from replication, and a replicated write is
    * exactly what lands here. Detection is a point lookup on only the pending keys, so the cost
-   * is proportional to writes that carry one — nil for everything else — and no client, query,
+   * is proportional to writes that carry one - nil for everything else - and no client, query,
    * or full scan is involved.
    *
-   * Already-redirected entities that re-index — a straggler peer's late edits replicating onto a
-   * tombstone, or a loser resurrected by `db.add` — are serviced too: their post-merge edits are
+   * Already-redirected entities that re-index - a straggler peer's late edits replicating onto a
+   * tombstone, or a loser resurrected by `db.add` - are serviced too: their post-merge edits are
    * folded into the winner and the tombstone is re-asserted, which is what makes `mergedInto`
    * sticky and the convergence argument hold without any client-side pass.
    *
    * Failure containment: a key whose group throws is reported un-serviced (it stays in the intent
    * log and the next pass retries it) without blocking the rest of the batch. A group member whose
-   * document cannot be loaded is merged around — the merge over the loadable subset is safe, and
+   * document cannot be loaded is merged around - the merge over the loadable subset is safe, and
    * the missing document's eventual arrival is itself an indexed write that re-presents the key.
    */
   async mergeDuplicates(
@@ -145,7 +145,7 @@ export class ConvergenceKeyMerger {
       for (const convergenceKey of keys) {
         const group = groups.get(convergenceKey);
         if (group === undefined || group.length < 2) {
-          // A lone row, or rows that no longer carry the key — nothing to merge.
+          // A lone row, or rows that no longer carry the key - nothing to merge.
           servicedKeys.add(convergenceKey);
           continue;
         }
@@ -170,7 +170,7 @@ export class ConvergenceKeyMerger {
    * Merge one convergence-key group: the live candidates fold into the minimum-id winner, and
    * already-redirected members get their late edits folded and their tombstones re-asserted.
    *
-   * Public as the unit under test — `mergeDuplicates` adds detection and failure containment
+   * Public as the unit under test - `mergeDuplicates` adds detection and failure containment
    * around it.
    */
   async mergeGroup(
@@ -179,7 +179,7 @@ export class ConvergenceKeyMerger {
     convergenceKey: string,
     group: readonly { objectId: EntityId; documentId: string }[],
   ): Promise<boolean> {
-    // Load phase: awaited doc loads, during which replicated changes are free to land — nothing
+    // Load phase: awaited doc loads, during which replicated changes are free to land - nothing
     // has been read yet. The index row is derived state and can trail the truth, so everything is
     // re-verified against the documents below.
     const handles = new Map<EntityId, MergeDocumentRef>();
@@ -197,9 +197,9 @@ export class ConvergenceKeyMerger {
       }
 
       // Classification reads current state, and `#mergeCandidates` computes the merge from these
-      // same reads synchronously — replicated changes apply through the event loop, so nothing can
+      // same reads synchronously - replicated changes apply through the event loop, so nothing can
       // land between a read and the write derived from it. `#foldRedirected` re-reads on its own:
-      // by the time it runs, awaits inside `#mergeCandidates` may have let changes land — including
+      // by the time it runs, awaits inside `#mergeCandidates` may have let changes land - including
       // the redirects the merge itself just wrote, which a fold must follow to their live end.
       const candidates: GroupMember[] = [];
       const redirectedIds: EntityId[] = [];
@@ -235,7 +235,7 @@ export class ConvergenceKeyMerger {
    *
    * The member reads, the merge computation, the losers' watermark heads, and the winner write all
    * belong to one synchronous block, so the tombstones' `mergedAtHeads` cover exactly the state
-   * the merge folded — an edit landing later is above the watermark and reachable by a later fold.
+   * the merge folded - an edit landing later is above the watermark and reachable by a later fold.
    * The only await is the durability flush between the winner write and the loser tombstones; the
    * loser callbacks re-verify eligibility after it.
    */
@@ -292,7 +292,7 @@ export class ConvergenceKeyMerger {
         return;
       }
       // `x ??= y` evaluates to the plain right-hand value, not the proxy the document wraps it in,
-      // so every container is re-read through the entity after assignment — mutations on the alias
+      // so every container is re-read through the entity after assignment - mutations on the alias
       // of the right-hand value would go nowhere.
       if (entity.data === undefined) {
         entity.data = {};
@@ -342,7 +342,7 @@ export class ConvergenceKeyMerger {
     // watermark nothing re-reads.
     await this.#deps.flushDoc(ctx, winner.handle.documentId);
 
-    // The flush is an await — re-read the winner before tombstoning against it. A deletion that
+    // The flush is an await - re-read the winner before tombstoning against it. A deletion that
     // replicated in during it is respected: tombstoning the losers under a deleted winner would
     // make every copy invisible. The losers stay live and a later pass re-merges them.
     if (winner.handle.doc()?.objects?.[winner.objectId]?.system?.deleted) {
@@ -383,7 +383,7 @@ export class ConvergenceKeyMerger {
     }
 
     // The durability rule's dual: returning marks the key serviced and lets the orchestrator clear
-    // its durable intent, so the tombstones must be on disk first — an intent must never die before
+    // its durable intent, so the tombstones must be on disk first - an intent must never die before
     // the tombstone it claims exists.
     const flushedDocs = new Set([winner.handle.documentId]);
     for (const loserId of result.losers) {
@@ -411,7 +411,7 @@ export class ConvergenceKeyMerger {
    * the surviving entity, and re-assert the tombstone.
    *
    * This is what makes the redirect durable. A peer offline during the merge keeps editing its
-   * copy; those edits replicate onto the tombstone, re-index it, and land here — re-running the
+   * copy; those edits replicate onto the tombstone, re-index it, and land here - re-running the
    * field-wise merge could not rescue them (it prefers the smallest-id candidate, the winner).
    * And `db.add` un-deletes, so a restored loser would otherwise be a live duplicate that
    * detection ignores forever; re-tombstoning makes `mergedInto` sticky, with the restore's edits
@@ -420,7 +420,7 @@ export class ConvergenceKeyMerger {
    * Redirect resolution, the diff, the folded values, and the watermark all read the documents'
    * current state in one synchronous block: the fold can never write a value older than the heads
    * it advances the watermark to, and a redirect chain that collapsed earlier in this same pass is
-   * followed to its live end. The watermark advances only when the fold write actually applied —
+   * followed to its live end. The watermark advances only when the fold write actually applied -
    * otherwise the edits stay above it for a later pass.
    */
   async #foldRedirected(
@@ -442,8 +442,8 @@ export class ConvergenceKeyMerger {
     const winnerId = resolveMergeRedirect(loserId, (id) => handles.get(id)?.doc()?.objects?.[id]?.system?.mergedInto);
     const winnerHandle = winnerId !== loserId ? handles.get(winnerId) : undefined;
     const winnerEntity = winnerHandle?.doc()?.objects?.[winnerId];
-    // The chain's end must be live to fold into. Deleted → the edits wait above the watermark
-    // until the winner is restored; still redirected (a non-decreasing edge stopped the walk) →
+    // The chain's end must be live to fold into. Deleted -> the edits wait above the watermark
+    // until the winner is restored; still redirected (a non-decreasing edge stopped the walk) ->
     // corrupt data, leave it alone.
     const winnerLive =
       winnerEntity !== undefined && winnerEntity.system?.mergedInto === undefined && !winnerEntity.system?.deleted;
@@ -517,7 +517,7 @@ export class ConvergenceKeyMerger {
 
     // Even a pass with nothing to fold re-covers referrers: a loser re-indexing is the only signal
     // that re-presents the key, so this is where late referrers (§4.11's freshness residual) catch
-    // up. Idempotent — a rewritten referrer re-indexes with rows naming the winner, so the loser's
+    // up. Idempotent - a rewritten referrer re-indexes with rows naming the winner, so the loser's
     // steady-state lookup is empty and no documents are loaded.
     if (winnerLive) {
       await this.#rewriteReferences(ctx, spaceId, new Map([[loserId, winnerId]]), handles);
@@ -527,12 +527,12 @@ export class ConvergenceKeyMerger {
 
   /**
    * Repoint references at merged-away losers to their winners, index-driven: the reverse-reference
-   * index names each referrer and the property holding the ref, so every rewrite is a point load —
+   * index names each referrer and the property holding the ref, so every rewrite is a point load -
    * no scan, no client, no hydration. A referrer holding refs to several losers is loaded and
    * written once, covering all of them.
    *
    * Best-effort by design (see §4.11): a ref that stays behind still resolves through the redirect,
-   * and the loser's next re-index re-presents the work — so every failure surface here, the write
+   * and the loser's next re-index re-presents the work - so every failure surface here, the write
    * included, is logged and swallowed, and no flush is ordered. A throw escaping this method would
    * mark the key un-serviced and wedge the intent on permanent retry, which a non-load-bearing
    * optimization must never do. The reference's own spelling (local or space-qualified) is
@@ -572,7 +572,7 @@ export class ConvergenceKeyMerger {
     for (const { referrer, rewrites } of batches.values()) {
       try {
         // A group member (the winner included) is already loaded; reuse its lease rather than
-        // taking a second one — but only when the lease holds the document the index row names.
+        // taking a second one - but only when the lease holds the document the index row names.
         const shared = handles.get(referrer.objectId);
         const reusable = shared !== undefined && shared.documentId === referrer.documentId;
         const handle = reusable
@@ -587,7 +587,7 @@ export class ConvergenceKeyMerger {
             const entity = doc.objects?.[referrer.objectId];
             // A merged-away referrer is left alone: a write would land above its own fold
             // watermark and be carried into its winner as if it were a straggler's edit. A
-            // plain-deleted referrer is also left alone — if it is restored, the loser's next
+            // plain-deleted referrer is also left alone - if it is restored, the loser's next
             // re-index re-covers it.
             if (!entity || entity.system?.mergedInto !== undefined || entity.system?.deleted || !entity.data) {
               return;
@@ -628,7 +628,7 @@ type GroupMember = {
  *
  * Objects only: relations and types index as document entities too, but merging a relation would
  * tombstone it without reconciling its endpoints, and merging a type would break schema
- * resolution for its instances. The kind is read leniently — throwing here would wedge the
+ * resolution for its instances. The kind is read leniently - throwing here would wedge the
  * indexing loop on one corrupt entity.
  */
 const _readEntity = (
@@ -649,7 +649,7 @@ const _readEntity = (
  *
  * Peers merging the same group concurrently each record their own watermark; automerge keeps one
  * as the register value and the rest as conflicts. Diffing from the union means an edit *any*
- * peer already folded is never re-presented — a re-fold from a stale surviving watermark would
+ * peer already folded is never re-presented - a re-fold from a stale surviving watermark would
  * write the loser's old value over a newer edit made on the winner since.
  */
 const _watermarkUnion = (entity: EntityStructure): string[] | undefined => {
@@ -679,7 +679,7 @@ const _watermarkUnion = (entity: EntityStructure): string[] | undefined => {
  * Rewrite the reference at one indexed property path from `loserId` to `winnerId`, preserving the
  * reference's own spelling (a space-qualified ref stays qualified). Returns whether a write
  * happened. The index row can trail the document, so a path that no longer holds a ref to the
- * loser — moved, deleted, already rewritten — is a silent no-op.
+ * loser - moved, deleted, already rewritten - is a silent no-op.
  */
 const _rewriteReferenceAt = (
   data: Record<string, unknown>,
@@ -716,7 +716,7 @@ const _rewriteReferenceAt = (
 };
 
 /**
- * Deep-copies a value read from one automerge document so it can be inserted into another —
+ * Deep-copies a value read from one automerge document so it can be inserted into another -
  * materialized automerge values may be proxied, and a document must not hold another's nodes.
  */
 const _clone = <T>(value: T): T => {
@@ -727,7 +727,7 @@ const _clone = <T>(value: T): T => {
     return new Uint8Array(value) as T;
   }
   // Long strings are stored as unmergeable raw strings; the generic branch would flatten one
-  // into a `{ val }` map — silent corruption of the field.
+  // into a `{ val }` map - silent corruption of the field.
   if (value instanceof A.RawString) {
     return new A.RawString(value.val) as T;
   }

@@ -22,5 +22,5 @@ export class FeedFetchError extends Data.TaggedError('FeedFetchError')<{
   cause?: unknown;
 }> {}
 
-/** Generic feed fetcher — protocol-specific implementations return normalized Subscription objects. */
+/** Generic feed fetcher - protocol-specific implementations return normalized Subscription objects. */
 export type FeedFetcher = (url: string, options?: FetchOptions) => Effect.Effect<FetchResult, FeedFetchError>;

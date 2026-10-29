@@ -15,7 +15,7 @@ import { defaultOptions, presets } from './three.ts';
  * Coerces a leva color control value into a 24-bit hex integer.
  * Accepts the four shapes leva may produce depending on its input control:
  * - `number`: already a packed 24-bit int, returned as-is.
- * - `string`: hex like `#RRGGBB` or `RRGGBB`, parsed via `parseInt` (NaN → fallback).
+ * - `string`: hex like `#RRGGBB` or `RRGGBB`, parsed via `parseInt` (NaN -> fallback).
  * - `[r, g, b]`: array channels assumed normalized in `[0, 1]`, clamped then scaled to `[0, 255]`.
  * - `{ r, g, b }`: object channels assumed integers in `[0, 255]`, rounded to int.
  * Unrecognized shapes return the supplied `fallback`.

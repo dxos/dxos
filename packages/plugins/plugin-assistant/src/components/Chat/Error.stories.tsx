@@ -64,7 +64,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The over-quota (HTTP 429) failure — the case this story exists for. EDGE rejects the request and
+ * The over-quota (HTTP 429) failure - the case this story exists for. EDGE rejects the request and
  * `@effect/ai` surfaces an `HttpResponseError` whose message embeds the 429 status; the agent process
  * stringifies it before it reaches the chat. Previously this fell through to "An unexpected error
  * occurred."; it is now mapped to the actionable usage-limit message.
@@ -76,7 +76,7 @@ export const QuotaExceeded: Story = {
   },
 };
 
-/** A configured model that the service does not recognize — the model name is surfaced to the user. */
+/** A configured model that the service does not recognize - the model name is surfaced to the user. */
 export const ModelUnavailable: Story = {
   args: {
     rawError: "UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found",
@@ -84,7 +84,7 @@ export const ModelUnavailable: Story = {
 };
 
 /**
- * The model resolver chain rejecting the configured model before the request leaves the browser —
+ * The model resolver chain rejecting the configured model before the request leaves the browser -
  * the user's fix is to pick a different model in settings, so the toast names the one that failed.
  */
 export const ModelNotResolved: Story = {

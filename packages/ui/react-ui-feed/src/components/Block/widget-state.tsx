@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, createContext, useCallback, useContext, 
  * State a widget keeps that must outlive the row it is drawn in.
  *
  * A virtualized feed destroys a row when it leaves the window, and React state inside a widget dies
- * with it — so a reader who expands a tool panel, scrolls away and comes back finds it shut. In a
+ * with it - so a reader who expands a tool panel, scrolls away and comes back finds it shut. In a
  * thread that is one long document the question never arises, because nothing ever unmounts; it is
  * the cost of virtualization, and it has to be paid somewhere above the row.
  *
@@ -47,7 +47,7 @@ export const createWidgetStateStore = (): WidgetStateStore => {
 /**
  * `useState` for a widget, keyed so it survives the row being destroyed and rebuilt.
  *
- * The key must identify the widget within its message — its tag and position in the document, say —
+ * The key must identify the widget within its message - its tag and position in the document, say -
  * and is scoped to the message automatically. Outside a feed this degrades to plain `useState`, so a
  * widget can still be rendered on its own.
  */

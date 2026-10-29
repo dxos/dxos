@@ -27,7 +27,7 @@ export type Status = Schema.Schema.Type<typeof Status>;
 
 /**
  * External catalog identifiers for a book, mirroring `buzz.bookhive.defs#bookIdentifiers`. Each is an
- * id assigned by an external catalog — BookHive's `hiveId`, ISBNs, Goodreads. These are catalog data
+ * id assigned by an external catalog - BookHive's `hiveId`, ISBNs, Goodreads. These are catalog data
  * (published), not ECHO sync foreign keys; `hiveId` is the one that gates publishing to BookHive.
  */
 export const Identifiers = Schema.Struct({
@@ -39,7 +39,7 @@ export const Identifiers = Schema.Struct({
 export type Identifiers = Schema.Schema.Type<typeof Identifiers>;
 
 /**
- * Reading progress, mirroring `buzz.bookhive.defs#bookProgress`. Published — denormalized to the
+ * Reading progress, mirroring `buzz.bookhive.defs#bookProgress`. Published - denormalized to the
  * record's `bookProgress`. `updatedAt` is required on the wire; the codec stamps it from the object's
  * creation time when unset so encoding stays deterministic.
  */
@@ -73,7 +73,7 @@ export const Progress = Schema.Struct({
     }),
   ),
   updatedAt: Schema.optional(Format.DateTime.annotate({ title: 'Updated' })),
-  // Exact reading position (a foliate CFI) for precise restore. Private — kept for posterity but never
+  // Exact reading position (a foliate CFI) for precise restore. Private - kept for posterity but never
   // published: the `buzz.bookhive.defs#bookProgress` lexicon has no location anchor, and it is a
   // reader-local detail. The `private` override sits inside the otherwise-published `progress` struct.
   cfi: Schema.optional(Schema.String.annotate({ title: 'Location' }).pipe(AtprotoVisibilityAnnotation.set('private'))),
@@ -81,12 +81,12 @@ export const Progress = Schema.Struct({
 export type Progress = Schema.Schema.Type<typeof Progress>;
 
 /**
- * Generic, standalone book metadata. Editable and not tied to any external catalog — BookHive is used
+ * Generic, standalone book metadata. Editable and not tied to any external catalog - BookHive is used
  * only to autofill it. The correspondence to a BookHive catalog record is `identifiers.hiveId`, one of
  * the external catalog identifiers (alongside ISBNs/Goodreads), and what gates publishing to BookHive.
  *
  * `title`/`authors`/`identifiers` are the subset denormalized to a published `buzz.bookhive.book`
- * record (marked `publish`); the remaining metadata (cover, genres, description, …) is mirrored —
+ * record (marked `publish`); the remaining metadata (cover, genres, description, ...) is mirrored -
  * the network sources it from BookHive's own catalog, not from our record.
  */
 export const Catalog = Schema.Struct({
@@ -115,7 +115,7 @@ export type Catalog = Schema.Schema.Type<typeof Catalog>;
 /**
  * A book in the user's reading list.
  *
- * The public face — everything marked `publish` via {@link AtprotoVisibilityAnnotation} — maps to a
+ * The public face - everything marked `publish` via {@link AtprotoVisibilityAnnotation} - maps to a
  * `buzz.bookhive.book` record. The private face (notes, ownership, purchase details) is unmarked and
  * never crosses the publishing boundary. Catalog metadata is an inline {@link Catalog} struct (always
  * loaded, so `catalog.title` labels the book) rather than a separate object.
@@ -161,7 +161,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
       Schema.optional,
     ),
 
-    // Private (ECHO-only) fields — unmarked, never published.
+    // Private (ECHO-only) fields - unmarked, never published.
     notes: Ref.Ref(Text.Text)
       .annotate({ title: 'Private notes' })
       .pipe(Annotation.FormInlineAnnotation.set(true), Schema.optional),
@@ -169,10 +169,10 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
     purchaseDate: Format.DateOnly.annotate({ title: 'Purchase date' }).pipe(Schema.optional),
     shelfLocation: Schema.String.annotate({ title: 'Shelf location' }).pipe(Schema.optional),
 
-    // Optional DRM-free copy of the book (PDF/EPUB/…), stored as a direct blob reference. Private —
+    // Optional DRM-free copy of the book (PDF/EPUB/...), stored as a direct blob reference. Private -
     // never published to atproto. A future reader view renders it as an alternative to the metadata.
     content: Ref.Ref(Blob.Blob)
-      .annotate({ title: 'Book file', description: 'A DRM-free copy of the book (PDF, EPUB, …).' })
+      .annotate({ title: 'Book file', description: 'A DRM-free copy of the book (PDF, EPUB, ...).' })
       .pipe(Schema.optional),
   }).pipe(
     Annotation.LabelAnnotation.set(['catalog.title']),

@@ -42,7 +42,7 @@ describe('processor topology', () => {
   });
 
   test('ignores a dependency on a processor no plugin contributed', () => {
-    // The normal case for an optional dependency — naming a processor whose plugin is not installed
+    // The normal case for an optional dependency - naming a processor whose plugin is not installed
     // must degrade to "unconstrained", not exclude the node.
     const { ordered, excluded } = sort([{ id: 'analyze', after: ['notInstalled'] }]);
     expect(ids(ordered)).toEqual(['analyze']);

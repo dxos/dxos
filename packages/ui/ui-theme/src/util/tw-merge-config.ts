@@ -4,7 +4,7 @@
 
 /**
  * Shared tailwind-merge configuration. The single source for both {@link mx} (extendTailwindMerge)
- * and the {@link tv} instance (createTV `twMergeConfig`) so conflict resolution can't drift —
+ * and the {@link tv} instance (createTV `twMergeConfig`) so conflict resolution can't drift -
  * notably for dxos custom tokens (`text-fg`, density, focus-ring).
  */
 export const twMergeConfig = {

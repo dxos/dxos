@@ -30,7 +30,7 @@ const PACKAGE_PREFIXES = { '@dxos/app-framework': 'App', '@dxos/app-toolkit': 'T
 
 /**
  * The qualifier a package's namespaces take when their bare name is taken: the package's short name,
- * PascalCase (`@dxos/plugin-graph` → `Graph`, `@dxos/echo` → `Echo`).
+ * PascalCase (`@dxos/plugin-graph` -> `Graph`, `@dxos/echo` -> `Echo`).
  */
 const packagePrefix = (packageName) =>
   PACKAGE_PREFIXES[packageName] ??
@@ -192,12 +192,12 @@ const collectDeclaredNames = (ast) => {
  * // @import-as-namespace
  * export const foo = 1;
  *
- * // ❌ Bad (in another file):
+ * // X Bad (in another file):
  * import { foo } from './LanguageModel';
  * export { foo } from './LanguageModel';
  * export * from './LanguageModel';
  *
- * // ✅ Good:
+ * // OK Good:
  * import * as LanguageModel from './LanguageModel';
  * import * as LanguageModelModule from './LanguageModel';  // Also allowed when needed
  * export * as LanguageModel from './LanguageModel';
@@ -276,7 +276,7 @@ export default {
       }
       const dir = path.dirname(currentFile);
       const resolved = path.resolve(dir, source);
-      // The specifier may already carry its extension (`./types/index.ts`) — resolve it directly
+      // The specifier may already carry its extension (`./types/index.ts`) - resolve it directly
       // rather than appending another one on top, which would never exist on disk.
       if (TS_EXTENSIONS.some((ext) => resolved.endsWith(ext))) {
         return fs.existsSync(resolved) ? resolved : null;
@@ -298,7 +298,7 @@ export default {
 
     const namespaceFromSource = (source) => {
       // A directory barrel's extensioned form (`./Foo/index.ts`) names the same target the bare
-      // `./Foo` did before `rewriteRelativeImportExtensions` — strip the trailing index file so the
+      // `./Foo` did before `rewriteRelativeImportExtensions` - strip the trailing index file so the
       // namespace derives from the directory, not the literal file.
       const withoutIndex = source.replace(/\/index\.\w+$/, '');
       const parts = withoutIndex.split('/');

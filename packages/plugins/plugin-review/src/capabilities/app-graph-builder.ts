@@ -80,7 +80,7 @@ export default Capability.makeModule(
                 }
 
                 // Fallback (non-editor objects): anchor to the current selection, or create an
-                // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
+                // unanchored thread. Only derive a label from a real cursor anchor - the unanchored
                 // placeholder is not a cursor range the resolver could span.
                 const typename = Obj.getTypename(object);
                 const selection = viewState.get(Selection.aspect, objectUri);

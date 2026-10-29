@@ -29,7 +29,7 @@ const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
 /**
  * Watchdog self-check: if the inactivity timer fires later than its schedule by more than this,
- * the local event loop was starved (heavy WASM sync compute pins it for seconds at a time) —
+ * the local event loop was starved (heavy WASM sync compute pins it for seconds at a time) -
  * our pings were not being sent and inbound pongs were not being processed, so the silence says
  * nothing about the connection. Probe and re-arm instead of restarting.
  */
@@ -429,7 +429,7 @@ export class EdgeWsConnection extends Resource {
    * Inactivity watchdog. Restarts the connection only after a fair trial: pings were actually
    * flowing (a recent send), the timer fired on schedule and no ping went out late within the
    * window (the local event loop was alive to process an answer), and still nothing was received
-   * for the full window. Wall-clock silence alone is not evidence — sync compute can pin the event
+   * for the full window. Wall-clock silence alone is not evidence - sync compute can pin the event
    * loop for seconds, during which the ping sender does not run and arrived pongs are not
    * processed; restarting a healthy connection on that basis costs a re-handshake and fails
    * in-flight sync rounds. A stalled loop is excused only until {@link KEEPALIVE_MAX_UNANSWERED_PROBES}

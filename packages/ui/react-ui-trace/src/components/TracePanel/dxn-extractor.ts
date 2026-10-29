@@ -8,10 +8,10 @@ import { URI } from '@dxos/keys';
  * Patterns for extracting references from tool call params/results.
  *
  * Supported formats:
- * - `{ "/": "echo:…" | "dxn:…" }` - IPLD-style encoded references
- * - `{ "@uri": "echo:…" }` - Self URI key
- * - `@echo:…` / `@dxn:…` - In-text references (with @ prefix)
- * - `echo:…` / `dxn:…` - Plain URI strings
+ * - `{ "/": "echo:..." | "dxn:..." }` - IPLD-style encoded references
+ * - `{ "@uri": "echo:..." }` - Self URI key
+ * - `@echo:...` / `@dxn:...` - In-text references (with @ prefix)
+ * - `echo:...` / `dxn:...` - Plain URI strings
  */
 
 /**
@@ -97,7 +97,7 @@ export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
     if (typeof value === 'object') {
       const record = value as Record<string, unknown>;
 
-      // Check for IPLD-style reference: { "/": "echo:…" | "dxn:…" }
+      // Check for IPLD-style reference: { "/": "echo:..." | "dxn:..." }
       if ('/' in record && typeof record['/'] === 'string') {
         const refStr = record['/'];
         if (typeof refStr === 'string' && (refStr.startsWith('echo:') || refStr.startsWith('dxn:'))) {
@@ -105,7 +105,7 @@ export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
         }
       }
 
-      // Check for self URI key: { "@uri": "echo:…" }
+      // Check for self URI key: { "@uri": "echo:..." }
       const selfUri = record['@uri'];
       if (typeof selfUri === 'string' && (selfUri.startsWith('dxn:') || selfUri.startsWith('echo:'))) {
         addDxn(selfUri);

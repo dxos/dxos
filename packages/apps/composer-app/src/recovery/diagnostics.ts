@@ -35,11 +35,11 @@ const formatSpaceState = (state: SpaceState): string => SpaceState[state] ?? Str
  */
 export const runRecoveryDiagnostics = async (log: (message: string) => void): Promise<RecoveryDiagnosticsResult> => {
   const started = performance.now();
-  log('Running diagnostics…');
+  log('Running diagnostics...');
   log('');
 
   if (isRecoveryClientBooted()) {
-    log('Stopping recovery client before OPFS read…');
+    log('Stopping recovery client before OPFS read...');
     await destroyRecoveryClient();
     mountDevtoolsHooks({});
     log('');
@@ -48,7 +48,7 @@ export const runRecoveryDiagnostics = async (log: (message: string) => void): Pr
   const sql = await runSqlStorageDiagnostics(log);
 
   log('');
-  log('Client (may hang if feed storage is broken — use sqlDiagnostics() to skip this step)');
+  log('Client (may hang if feed storage is broken - use sqlDiagnostics() to skip this step)');
 
   const clientAlreadyBooted = isRecoveryClientBooted();
   let clientStarted = false;
@@ -58,7 +58,7 @@ export const runRecoveryDiagnostics = async (log: (message: string) => void): Pr
 
   try {
     if (!clientAlreadyBooted) {
-      log('  starting minimal client (no replication, no auto-activate spaces)…');
+      log('  starting minimal client (no replication, no auto-activate spaces)...');
       const bootStarted = performance.now();
       await bootRecoveryClient();
       clientStarted = true;
@@ -102,7 +102,7 @@ export const runRecoveryDiagnostics = async (log: (message: string) => void): Pr
         log(`  name:    ${identity.displayName}`);
       }
     } else {
-      log('  (none — profile may be empty or not yet loaded)');
+      log('  (none - profile may be empty or not yet loaded)');
     }
 
     log('');

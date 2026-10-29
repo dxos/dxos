@@ -16,7 +16,7 @@ import { type AnalyzeContext, fileNode } from './common.ts';
 
 /**
  * TypeScript/JavaScript files: declarations, what constructs them, what they reference and from
- * which position, and a definition snippet — all structural. Nothing here names a framework; that
+ * which position, and a definition snippet - all structural. Nothing here names a framework; that
  * is the rule files' job (`design/ONTOLOGY.md`, "The parser asserts structure; rules assert
  * meaning").
  */
@@ -37,7 +37,7 @@ export const resolveSpecifier = (context: AnalyzeContext, specifier: string): Re
   return { file: inside ? relativePath : undefined, bare };
 };
 
-/** IRIs a reference to `binding` (optionally through a member path) stands for — see ONTOLOGY "Member". */
+/** IRIs a reference to `binding` (optionally through a member path) stands for - see ONTOLOGY "Member". */
 const bindingTargets = (binding: ImportBinding, path: readonly string[]): string[] => {
   const targets: string[] = [];
   const memberPath = binding.imported === '*' ? path.join('.') : [binding.imported, ...path].join('.');
@@ -66,9 +66,9 @@ type Declaration = {
   readonly name: string;
   readonly kind: string;
   readonly exported: boolean;
-  /** The declaring node (class, function, declarator, …), for construction analysis. */
+  /** The declaring node (class, function, declarator, ...), for construction analysis. */
   readonly node: Node;
-  /** The top-level statement, including any `export` wrapper — the snippet span. */
+  /** The top-level statement, including any `export` wrapper - the snippet span. */
   readonly statement: Node;
   readonly offset: number;
 };
@@ -134,7 +134,7 @@ const staticKindOf = (member: Node): string | undefined => {
 
 /**
  * Initialized static properties and static methods: the companion-object pattern
- * (`static layerEmpty = Layer.succeed(…)`, `static layer() { … }`) declares module-level values under
+ * (`static layerEmpty = Layer.succeed(...)`, `static layer() { ... }`) declares module-level values under
  * a class, and they are as much API as a top-level `const` or function.
  */
 const staticMembers = (node: Node, className: string, exported: boolean): Declaration[] => {
@@ -158,8 +158,8 @@ const staticMembers = (node: Node, className: string, exported: boolean): Declar
 };
 
 /**
- * Top-level declarations, with whether each one leaves the module. Recurses into namespace bodies —
- * `export namespace X { export const Y = … }` declares `X.Y`, which is module API under another name.
+ * Top-level declarations, with whether each one leaves the module. Recurses into namespace bodies -
+ * `export namespace X { export const Y = ... }` declares `X.Y`, which is module API under another name.
  */
 export const declarations = (body: readonly Statement[], prefix = '', inherited = false): Declaration[] =>
   (body as readonly unknown[]).flatMap((raw) => {
@@ -218,7 +218,7 @@ export const declarations = (body: readonly Statement[], prefix = '', inherited 
 // ---------------------------------------------------------------------------------------------------
 
 // TS nodes that are expressions or declarations of values, not type contexts. A reference whose
-// nearest TS ancestor is one of these — or has no TS ancestor — sits in a value position.
+// nearest TS ancestor is one of these - or has no TS ancestor - sits in a value position.
 const VALUE_TS_NODES = new Set([
   'TSAsExpression',
   'TSSatisfiesExpression',
@@ -484,7 +484,7 @@ type Reference = {
 
 type ExpressionRef = { readonly name: string; readonly path: readonly string[] };
 
-/** `a.b.c` → root `a`, path `b.c`; an identifier alone is its own root. */
+/** `a.b.c` -> root `a`, path `b.c`; an identifier alone is its own root. */
 const expressionRef = (node: Node): ExpressionRef | undefined => {
   if (node.type === 'Identifier' && typeof node.name === 'string') {
     return { name: node.name, path: [] };
@@ -560,8 +560,8 @@ const constructionOf = (initializer: Node): Construction => {
   if (!call) {
     return { constructedBy: [], pipedThrough, derivedFrom: [ref], argument: [] };
   }
-  // The first argument of the innermost call: `Layer.effect(Store, make(dir))` → `Store`; for a
-  // curried `Context.Service<…>()('id')` the innermost call is the one with no arguments.
+  // The first argument of the innermost call: `Layer.effect(Store, make(dir))` -> `Store`; for a
+  // curried `Context.Service<...>()('id')` the innermost call is the one with no arguments.
   const first = Array.isArray(call.arguments) ? call.arguments.filter(isNode)[0] : undefined;
   const argument = first ? expressionRef(headCallee(first).callee) : undefined;
   return {
@@ -578,7 +578,7 @@ const unwrapped = (node: Node): Node => {
   return call ? node : callee;
 };
 
-/** One reference passed into a call: `f(a, { k: [b] })` → `(f, "0", a)`, `(f, "1.k", b)`. */
+/** One reference passed into a call: `f(a, { k: [b] })` -> `(f, "0", a)`, `(f, "1.k", b)`. */
 type PassedRef = { readonly callee: ExpressionRef; readonly slot: string; readonly ref: ExpressionRef };
 
 /** A reference written as an argument, through the wrappers that do not change what it denotes. */
@@ -657,7 +657,7 @@ const passedRefsOf = (node: Node): PassedRef[] => {
   return found;
 };
 
-/** One string literal passed positionally into a call: `DXN.make('a', '0.1.0')` → `(DXN.make, "1", "0.1.0")`. */
+/** One string literal passed positionally into a call: `DXN.make('a', '0.1.0')` -> `(DXN.make, "1", "0.1.0")`. */
 type PassedLiteral = {
   readonly callee: ExpressionRef;
   readonly slot: string;
@@ -687,7 +687,7 @@ const stringLiteralOf = (node: Node): string | undefined => {
 
 /**
  * String literals passed into calls of a declaration's definition, as arguments or under an
- * object-literal argument's keys — never inside a function body, where literals are messages rather
+ * object-literal argument's keys - never inside a function body, where literals are messages rather
  * than the identity (`DXN.make`, a service key) a declaration is built from.
  */
 const passedLiteralsOf = (node: Node): PassedLiteral[] => {
@@ -704,7 +704,7 @@ const passedLiteralsOf = (node: Node): PassedLiteral[] => {
       return undefined;
     }
     // Object-literal arguments are followed a bounded number of keys deep, because identity often
-    // sits there: `Config2.make({ plugin: { key: 'org.dxos.plugin.chess' } })` → slot `"0.plugin.key"`.
+    // sits there: `Config2.make({ plugin: { key: 'org.dxos.plugin.chess' } })` -> slot `"0.plugin.key"`.
     const visit = (argument: Node, slot: string, depth: number) => {
       const value = stringLiteralOf(argument);
       if (value !== undefined) {
@@ -767,7 +767,7 @@ const propertyKeyOf = (property: Node): string | undefined => {
   return key !== undefined && PROPERTY_KEY.test(key) ? key : undefined;
 };
 
-/** `f(a)(b)` → head `f` and its calls, innermost first. */
+/** `f(a)(b)` -> head `f` and its calls, innermost first. */
 const curriedOf = (call: Node): { callee: Node; calls: Node[] } => {
   const calls: Node[] = [];
   let current = call;
@@ -834,7 +834,7 @@ type CallDraft = {
 
 /**
  * Every call whose head callee resolves, with the scalar literals its arguments spell out, its
- * enclosing declaration and the call it is an argument of — framework-agnostic: rules give a callee
+ * enclosing declaration and the call it is an argument of - framework-agnostic: rules give a callee
  * meaning. Only calls that carry a literal or a configuration object, and the calls those are
  * arguments of, are emitted.
  */
@@ -963,7 +963,7 @@ const callSitesOf = ({ program, path, source, declared, land: resolve }: CallSit
     }
   };
 
-  /** The call `node` is an argument of, through literals and wrappers only — never a function or member access. */
+  /** The call `node` is an argument of, through literals and wrappers only - never a function or member access. */
   const parentOf = (node: Node, ancestors: readonly Node[], drafts: ReadonlyMap<Node, CallDraft>) => {
     const keys: string[] = [];
     let child = node;
@@ -1016,7 +1016,7 @@ const callSitesOf = ({ program, path, source, declared, land: resolve }: CallSit
     }
     const { callee, calls } = curriedOf(node);
     const ref = expressionRef(callee);
-    // `x.pipe(…)` applies its arguments; the stages are the calls worth recording.
+    // `x.pipe(...)` applies its arguments; the stages are the calls worth recording.
     if (!ref || ref.path.at(-1) === 'pipe') {
       return undefined;
     }
@@ -1089,7 +1089,7 @@ export const SNIPPET_BUDGET = 1200;
 /**
  * Past this a declaration has no snippet at all. Collapsing only shrinks literal and function
  * bodies, so a declaration made of neither (a giant string, a long JSX tree, a generated table)
- * cannot be reduced — and a term the size of a source file is refused by the quad store anyway.
+ * cannot be reduced - and a term the size of a source file is refused by the quad store anyway.
  */
 export const SNIPPET_HARD_CAP = SNIPPET_BUDGET * 8;
 
@@ -1126,7 +1126,7 @@ const splice = (source: string, start: number, end: number, cuts: readonly Cut[]
 /**
  * The declaration with its implementation abbreviated: function bodies always collapse, private
  * members go, literals deeper than {@link LITERAL_DEPTH} collapse, and an annotated variable loses
- * its initializer behind `declare`. Generous by design — see ONTOLOGY "Snippets".
+ * its initializer behind `declare`. Generous by design - see ONTOLOGY "Snippets".
  */
 export const snippetOf = (
   source: string,
@@ -1154,7 +1154,7 @@ export const snippetOf = (
       return false;
     }
     if (node.type === 'VariableDeclarator' && isNode(node.id) && isNode(node.id.typeAnnotation) && isNode(node.init)) {
-      // `const x: T = …` → `declare const x: T` — the initializer is implementation, the type is API.
+      // `const x: T = ...` -> `declare const x: T` - the initializer is implementation, the type is API.
       const variable = ancestors[ancestors.length - 1];
       if (
         variable?.type === 'VariableDeclaration' &&
@@ -1248,7 +1248,7 @@ const lineOf = (source: string, offset: number): number => {
 const unique = (values: Iterable<string>): string[] => [...new Set(values)];
 
 /**
- * Parse one file and set up type inference over it — the analyzer's own path, exposed so the
+ * Parse one file and set up type inference over it - the analyzer's own path, exposed so the
  * agreement harness scores exactly what the index emits.
  */
 export const inferFile = (context: AnalyzeContext) => {
@@ -1311,7 +1311,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
   const reexports = new Set<string>();
   const importsModule = new Set<string>();
   const aliases: Array<{ name: string; origin: string | undefined; line: number; typeOnly: boolean }> = [];
-  /** `export * as N from './y'` — the name under which a whole module is published. */
+  /** `export * as N from './y'` - the name under which a whole module is published. */
   const namespaces: Array<{ name: string; module: string; line: number }> = [];
 
   for (const statement of (body as readonly unknown[]).filter(isNode)) {
@@ -1567,7 +1567,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
         ? declaration.node.init
         : declaration.node.type === 'PropertyDefinition' && isNode(declaration.node.value)
           ? declaration.node.value
-          : // `export default Capability.makeModule(…)` declares a value with no binding of its
+          : // `export default Capability.makeModule(...)` declares a value with no binding of its
             // own: the exported expression is its initializer.
             declaration.statement.type === 'ExportDefaultDeclaration' && declaration.node !== declaration.statement
             ? declaration.node
@@ -1628,7 +1628,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     };
   });
 
-  // A statement declaring nothing (`describe(…)`, `registerX()`) runs at load time, so a binding it
+  // A statement declaring nothing (`describe(...)`, `registerX()`) runs at load time, so a binding it
   // references is a value import, and the file's `top-level` symbol carries the edge so `usages` finds it.
   const markValueUse = (name: string): void => {
     const binding = bindings.get(name);
@@ -1733,8 +1733,8 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'aliasOf': alias.origin ? [alias.origin] : [],
     }));
 
-  // The namespace is a symbol of this file like any other export — `Ontology` is what an importer
-  // writes — and `namespaceOf` is the edge a rule follows to the identifiers it qualifies.
+  // The namespace is a symbol of this file like any other export - `Ontology` is what an importer
+  // writes - and `namespaceOf` is the edge a rule follows to the identifiers it qualifies.
   const namespaceSymbols: Ontology.SymbolNode[] = namespaces
     .filter((namespace) => !symbols.some((declared) => declared.name === namespace.name))
     .map((namespace) => ({

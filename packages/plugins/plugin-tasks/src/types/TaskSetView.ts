@@ -41,8 +41,8 @@ export type View = Schema.Schema.Type<typeof View>;
  * (`local`): a filter, a sort or a grouping is how this reader looks at the list here, not a property
  * of the set every member would see.
  *
- * The status menu and the text are two views over `query` — the status choice is written into it as
- * `status:` terms — so there is one value to persist and no second copy to drift. `expanded` maps a
+ * The status menu and the text are two views over `query` - the status choice is written into it as
+ * `status:` terms - so there is one value to persist and no second copy to drift. `expanded` maps a
  * task id to whether its branch is open; a task absent from it keeps the list's default (open).
  * `sort` and `group` are optional so a value persisted before they existed still decodes.
  */

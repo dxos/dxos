@@ -18,7 +18,7 @@ import type { ProcessProtocol } from '@dxos/protocols';
  * This lives with the transport rather than in `@dxos/compute-runtime`: the protocol is how EDGE
  * happens to be reached, and nothing above the `Control` interface should have to know it. Ids,
  * space ids and URIs are branded and annotation dictionaries are keyed by a branded key, so every
- * conversion is a decode rather than an assertion — the values come from another runtime.
+ * conversion is a decode rather than an assertion - the values come from another runtime.
  */
 
 /** The wire state strings are the `Process.State` enum's own values. */

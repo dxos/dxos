@@ -168,7 +168,7 @@ export const makeObject = ({
   canDrop: canDropOverride,
   blockInstruction,
 }: {
-  /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
+  /** Atom context from the enclosing connector - registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.AtomContext;
   db: Database.Database;
   object: Obj.Unknown;
@@ -466,13 +466,13 @@ export const makeSettingsPanel = ({
 // Toolbar action helpers.
 //
 
-// Mirrors `TOOLBAR_DISPOSITION`/`MenuSeparatorType` in `@dxos/react-ui-menu` — duplicated rather
+// Mirrors `TOOLBAR_DISPOSITION`/`MenuSeparatorType` in `@dxos/react-ui-menu` - duplicated rather
 // than imported so this foundational package doesn't gain a new dependency edge on a UI package.
 const TOOLBAR_DISPOSITION = 'toolbar';
 const MENU_SEPARATOR_TYPE = '@dxos/react-ui-toolbar/separator';
 
 /**
- * Build a toolbar action node — a graph action that opts into the object toolbar
+ * Build a toolbar action node - a graph action that opts into the object toolbar
  * (`disposition: 'toolbar'`) instead of context-menu-only placement. Return these from a
  * `AppGraphBuilder.createExtension`/`createTypeExtension` `actions:` callback.
  *
@@ -517,8 +517,8 @@ export const makeToolbarAction = <R = never>({
 /**
  * Build a toolbar action-GROUP node (a dropdown of child actions) that opts into the object
  * toolbar. Unlike a flat {@link makeToolbarAction}, a group MUST be returned from a `connector:`
- * extension callback — not `actions:`, which always stamps `type: AppGraphNode.ActionType` on every
- * returned node and would clobber the group's type — with the extension's `relation` set to
+ * extension callback - not `actions:`, which always stamps `type: AppGraphNode.ActionType` on every
+ * returned node and would clobber the group's type - with the extension's `relation` set to
  * `AppGraphNode.action` so `graph.actions(nodeId)` picks the group up as one of the node's
  * actions. The group's own nested `actions` are wired automatically by `@dxos/app-graph` (it
  * recurses into any `NodeArg.actions` field), so the children need no separate extension.
@@ -551,7 +551,7 @@ export const makeToolbarActionGroup = ({
     properties: {
       label,
       // Without `variant: 'dropdownMenu'`, `Menu`/`ToolbarMenu` renders a group as a toggle-button
-      // group (radio/checkbox semantics) instead of an actual dropdown — the group would render but
+      // group (radio/checkbox semantics) instead of an actual dropdown - the group would render but
       // clicking it would do nothing, since toggle groups don't invoke arbitrary action callbacks.
       variant: 'dropdownMenu',
       iconOnly,

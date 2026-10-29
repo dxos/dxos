@@ -35,11 +35,11 @@ export type ToolResult = {
 };
 
 type ShapeListConfig<T> = {
-  /** Full projection — what an LLM gets when `compact` is false/omitted. */
+  /** Full projection - what an LLM gets when `compact` is false/omitted. */
   full: (item: T) => Record<string, unknown>;
-  /** Compact projection — ids / typenames / names only. */
+  /** Compact projection - ids / typenames / names only. */
   compact: (item: T) => Record<string, unknown>;
-  /** Suffix for the `truncated` note: "<N> more results — <hint>". */
+  /** Suffix for the `truncated` note: "<N> more results - <hint>". */
   truncationHint: string;
 };
 
@@ -51,7 +51,7 @@ const shapeList = <T>(all: readonly T[], opts: ListOptions, config: ShapeListCon
   if (all.length > limit) {
     return {
       data,
-      truncated: `${all.length - limit} more results — ${config.truncationHint}`,
+      truncated: `${all.length - limit} more results - ${config.truncationHint}`,
     };
   }
   return { data };

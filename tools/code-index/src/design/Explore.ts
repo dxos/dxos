@@ -130,7 +130,7 @@ export const seeds = (
     return ranked.filter((seed) => seed.score >= floor).slice(0, count);
   });
 
-/** The package directory a path lies in (`…/src/…` is inside it). */
+/** The package directory a path lies in (`.../src/...` is inside it). */
 const packageDir = (path: string): string | undefined => {
   const index = path.indexOf('/src/');
   return index > 0 ? path.slice(0, index) : undefined;
@@ -219,7 +219,7 @@ export const resolveReexports = (
     return resolved;
   });
 
-/** Every lifted edge of the given kinds touching any of `iris`, file → file, components only. */
+/** Every lifted edge of the given kinds touching any of `iris`, file -> file, components only. */
 export const edgesTouching = (
   store: Store.Api,
   iris: readonly string[],
@@ -263,7 +263,7 @@ const MAX_FORWARDED = 6;
 
 /**
  * The seeds with each barrel replaced by the files it forwards, two levels deep and best text match
- * first. A barrel's edges are never walked, so a barrel seed would otherwise lead nowhere — and a
+ * first. A barrel's edges are never walked, so a barrel seed would otherwise lead nowhere - and a
  * question about packages seeds mostly their entry points.
  */
 const openBarrels = (
@@ -567,7 +567,7 @@ export const bfs =
       return yield* fromSeeds(store, { prompt, explorer: 'bfs', seeds: relaxed, maxNodes, hops, relations });
     });
 
-/** Candidates from a seed list and relation set — the walk both explorers share. */
+/** Candidates from a seed list and relation set - the walk both explorers share. */
 export const fromSeeds = (
   store: Store.Api,
   options: {

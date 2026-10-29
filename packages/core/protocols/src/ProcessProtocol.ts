@@ -52,7 +52,7 @@ export interface ProcessInfo {
   /**
    * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
    * Distinguishes hybernation waiting on more queued turn work from hybernation waiting only on
-   * background children — the difference between the local `runToCompletion` and `runUntilSettled`
+   * background children - the difference between the local `runToCompletion` and `runUntilSettled`
    * predicates, which cannot be told apart remotely without it.
    */
   alarmDueAt: number | null;
@@ -118,7 +118,7 @@ export interface SubmitInputRequest {
 // A process's RPC surface is served as effect-rpc-over-HTTP: the host mounts an `RpcServer` for the
 // process's declared `RpcGroup` and the client drives it with `RpcClient` over
 // `RpcClient.makeProtocolHttp`, with `ndjson` serialization on both ends. So the route has no
-// envelope type of its own — schema encoding of every request and response is effect's, not ours,
+// envelope type of its own - schema encoding of every request and response is effect's, not ours,
 // and this module stays types-only (it is boot-reachable through the package barrel, so a single
 // exported value would keep it in the eager graph).
 //
@@ -141,7 +141,7 @@ export interface ProcessEventsResponse {
   /**
    * Cursor to pass to the next read: the `seq` of the next unread event. A read at `cursor` returns
    * the events with `seq >= cursor`, so a read at or beyond the end returns an empty page whose
-   * `cursor` is the current end — which is how a caller subscribes to new events only.
+   * `cursor` is the current end - which is how a caller subscribes to new events only.
    *
    * Stated explicitly because client and host must agree on it, and the two readings (next `seq`
    * versus an opaque position) diverge as soon as `truncated` is true.
@@ -149,7 +149,7 @@ export interface ProcessEventsResponse {
   cursor: number;
   /**
    * True when events before `cursor` were dropped from the host's bounded ring before the caller
-   * read them — the caller has an incomplete output history and should say so rather than treat the
+   * read them - the caller has an incomplete output history and should say so rather than treat the
    * page as contiguous.
    */
   truncated: boolean;

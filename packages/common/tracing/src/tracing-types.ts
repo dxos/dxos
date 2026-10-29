@@ -66,7 +66,7 @@ export type StartSpanOptions = {
  * Backend-agnostic tracing interface implemented by the observability package
  * and registered on `TRACE_PROCESSOR.tracingBackend`.
  *
- * The backend receives and returns {@link TraceContextData} (W3C strings) —
+ * The backend receives and returns {@link TraceContextData} (W3C strings) -
  * no opaque runtime objects cross the interface boundary. The OTEL backend
  * performs `propagation.extract/inject` internally in {@link startSpan}.
  */

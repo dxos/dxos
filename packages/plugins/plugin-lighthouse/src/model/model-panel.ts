@@ -31,18 +31,18 @@ export const isFlag = (value: TermValue): boolean => 'has' in value || 'match' i
 
 const metres = (value: number) => (value >= 1000 ? `${Math.round(value / 100) / 10} km` : `${Math.round(value)} m`);
 
-const areaList = (areas: ReadonlyArray<GeoArea>) => areas.map((area) => `“${area.label}”`).join(' or ');
+const areaList = (areas: ReadonlyArray<GeoArea>) => areas.map((area) => `"${area.label}"`).join(' or ');
 
 /** One area's fit: 1 inside, else falling linearly over its soft edge. */
 export const areaExpression = (area: GeoArea): string =>
   area.softM
-    ? `inside(area "${area.label}") ? 1 : max(0, 1 − dist / ${metres(area.softM)})`
+    ? `inside(area "${area.label}") ? 1 : max(0, 1 - dist / ${metres(area.softM)})`
     : `inside(area "${area.label}")`;
 
 /** What `dist` means in an area formula. */
-export const DIST_NOTE = 'dist: metres from the pin to the area’s edge, plus the pin’s precision';
+export const DIST_NOTE = "dist: metres from the pin to the area's edge, plus the pin's precision";
 
-/** What a term reads, in words: "rating value", "rent + admin fee", "name matches /…/". */
+/** What a term reads, in words: "rating value", "rent + admin fee", "name matches /.../". */
 export const describeValue = (value: TermValue): string => {
   if ('within' in value) {
     return `location in ${areaList(value.within)}`;
@@ -54,7 +54,7 @@ export const describeValue = (value: TermValue): string => {
     return value.sum.map(local).join(' + ');
   }
   if ('has' in value) {
-    return value.equals !== undefined ? `${local(value.has)} is “${value.equals}”` : `has ${local(value.has)}`;
+    return value.equals !== undefined ? `${local(value.has)} is "${value.equals}"` : `has ${local(value.has)}`;
   }
   return `${local(value.match)} matches /${value.pattern}/`;
 };
@@ -75,10 +75,10 @@ export const describeShape = (shape: TermShape): string => {
   }
   const range =
     shape.min !== undefined && shape.max !== undefined
-      ? `${shape.min}–${shape.max}`
+      ? `${shape.min}-${shape.max}`
       : shape.min !== undefined
-        ? `≥ ${shape.min}`
-        : `≤ ${shape.max}`;
+        ? `>= ${shape.min}`
+        : `<= ${shape.max}`;
   return `best ${range}${(shape.soft ?? 0) > 0 ? `, fading over ${shape.soft}` : ''}`;
 };
 
@@ -120,7 +120,7 @@ export const boundsOf = (model: RatingModel, term: RatingTerm, items: readonly R
   return values.length ? { lo: Math.min(...values), hi: Math.max(...values) } : undefined;
 };
 
-/** The term's score s ∈ [0, 1] as a formula with this session's numbers (bounds, target or range). */
+/** The term's score s in [0, 1] as a formula with this session's numbers (bounds, target or range). */
 export const termExpression = (term: RatingTerm, bounds: Bounds | undefined): string => {
   const x = valueExpression(term.value);
   const grouped = 'sum' in term.value && term.value.sum.length > 1 ? `(${x})` : x;
@@ -130,36 +130,36 @@ export const termExpression = (term: RatingTerm, bounds: Bounds | undefined): st
     body = x;
   } else if (shape === 'higher' || shape === 'lower') {
     if (!bounds) {
-      body = `${shape === 'higher' ? '(x − lo)' : '(hi − x)'} / (hi − lo)  (no values yet)`;
+      body = `${shape === 'higher' ? '(x - lo)' : '(hi - x)'} / (hi - lo)  (no values yet)`;
     } else if (bounds.hi === bounds.lo) {
       body = `1  (every result has ${formatNumber(bounds.lo)})`;
     } else {
       body =
         shape === 'higher'
-          ? `(${grouped} − ${formatNumber(bounds.lo)}) / ${formatNumber(bounds.hi - bounds.lo)}`
-          : `(${formatNumber(bounds.hi)} − ${grouped}) / ${formatNumber(bounds.hi - bounds.lo)}`;
+          ? `(${grouped} - ${formatNumber(bounds.lo)}) / ${formatNumber(bounds.hi - bounds.lo)}`
+          : `(${formatNumber(bounds.hi)} - ${grouped}) / ${formatNumber(bounds.hi - bounds.lo)}`;
     }
   } else if ('target' in shape) {
-    body = `max(0, 1 − |${grouped} − ${formatNumber(shape.target)}| / ${formatNumber(shape.tolerance)})`;
+    body = `max(0, 1 - |${grouped} - ${formatNumber(shape.target)}| / ${formatNumber(shape.tolerance)})`;
   } else {
     const soft = (shape.soft ?? 0) > 0 ? (shape.soft ?? 0) : 0;
     const { min, max } = shape;
     const range =
       min !== undefined && max !== undefined
-        ? `${formatNumber(min)} ≤ ${grouped} ≤ ${formatNumber(max)}`
+        ? `${formatNumber(min)} <= ${grouped} <= ${formatNumber(max)}`
         : min !== undefined
-          ? `${grouped} ≥ ${formatNumber(min)}`
-          : `${grouped} ≤ ${formatNumber(max ?? Infinity)}`;
+          ? `${grouped} >= ${formatNumber(min)}`
+          : `${grouped} <= ${formatNumber(max ?? Infinity)}`;
     const outside =
       min !== undefined && max !== undefined
         ? `dist(${x}, [${formatNumber(min)}, ${formatNumber(max)}])`
         : min !== undefined
-          ? `max(0, ${formatNumber(min)} − ${grouped})`
-          : `max(0, ${grouped} − ${formatNumber(max ?? Infinity)})`;
-    body = soft ? `max(0, 1 − ${outside} / ${formatNumber(soft)})` : range;
+          ? `max(0, ${formatNumber(min)} - ${grouped})`
+          : `max(0, ${grouped} - ${formatNumber(max ?? Infinity)})`;
+    body = soft ? `max(0, 1 - ${outside} / ${formatNumber(soft)})` : range;
   }
   const missing =
-    term.missing !== undefined && term.missing !== 0 && !isFlag(term.value) ? `;  missing → ${term.missing}` : '';
+    term.missing !== undefined && term.missing !== 0 && !isFlag(term.value) ? `;  missing -> ${term.missing}` : '';
   return `s = ${body}${missing}`;
 };
 
@@ -187,7 +187,7 @@ export const scoreExpression = (model: RatingModel, overrides: RatingOverrides):
   const requirements =
     (model.require ?? []).some((requirement) => !overrides.require?.[requirement.label]?.off) ||
     areaRequirements(overrides).length > 0;
-  return `score = (Σ wᵢ·sᵢ${hasPenalty ? ' + Σ|negative wᵢ|' : ''}) / Σ|wᵢ|${requirements ? ` × ${model.penalty ?? 0.3}^(missed requirements)` : ''}`;
+  return `score = (\u03A3 w\u1D62·s\u1D62${hasPenalty ? ' + \u03A3|negative w\u1D62|' : ''}) / \u03A3|w\u1D62|${requirements ? ` × ${model.penalty ?? 0.3}^(missed requirements)` : ''}`;
 };
 
 /**

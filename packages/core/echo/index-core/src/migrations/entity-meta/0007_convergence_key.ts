@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
 /**
- * Adds `objectMeta.convergenceKey` — the caller-supplied domain identity duplicate detection groups
- * on — and its point-lookup index. A code migration for the same reason as 0002: databases in the
+ * Adds `objectMeta.convergenceKey` - the caller-supplied domain identity duplicate detection groups
+ * on - and its point-lookup index. A code migration for the same reason as 0002: databases in the
  * field may or may not have the column (0001 vintages differ), SQLite has no
  * `ADD COLUMN IF NOT EXISTS`, and an unconditional ALTER fails with "duplicate column".
  */

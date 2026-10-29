@@ -32,7 +32,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
         <Tooltip.Trigger asChild>
           <Button data-testid={`save-${size}`}>Save</Button>
         </Tooltip.Trigger>
-        <Tooltip.Content data-testid={`save-tooltip-${size}`}>Save changes (⌘S)</Tooltip.Content>
+        <Tooltip.Content data-testid={`save-tooltip-${size}`}>Save changes (&#x2318;S)</Tooltip.Content>
       </Tooltip.Root>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
@@ -97,9 +97,9 @@ export const Test: Story = {
     await userEvent.tab();
     await expect(save).toHaveFocus();
     const tooltip = await body.findByRole('tooltip');
-    await expect(tooltip).toHaveTextContent('Save changes (⌘S)');
+    await expect(tooltip).toHaveTextContent('Save changes (\u2318S)');
     await expect(save).toHaveAttribute('aria-describedby', tooltip.id);
-    await expect(save).toHaveAccessibleDescription('Save changes (⌘S)');
+    await expect(save).toHaveAccessibleDescription('Save changes (\u2318S)');
 
     const content = body.getByTestId('save-tooltip-xs');
     await expect(content).not.toHaveAttribute('data-surface');

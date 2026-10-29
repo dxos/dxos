@@ -71,7 +71,7 @@ const meta = {
         // Contributes the operation handlers the generators invoke (e.g. `SpaceOperation.AddType`).
         SpacePlugin.make({}),
         // This plugin contributes the space templates, and the panel below is rendered directly
-        // rather than through a surface — so without the plugin in the list nothing ever activates
+        // rather than through a surface - so without the plugin in the list nothing ever activates
         // the module that registers them and the picker stays empty.
         DebugPlugin.make(),
       ],
@@ -88,12 +88,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Empty space plus the picker — click a template to fill it. */
+/** Empty space plus the picker - click a template to fill it. */
 export const Default: Story = {};
 
 export const Tidepool: Story = {
   play: async ({ canvasElement }) => {
-    await applyTemplate(canvasElement, 'Tidepool — Offline sync v2', 'Offline sync v2');
+    await applyTemplate(canvasElement, 'Tidepool - Offline sync v2', 'Offline sync v2');
   },
 };
 

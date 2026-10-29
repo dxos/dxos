@@ -33,7 +33,7 @@ interface RawTraceMessage {
   readonly events: readonly { readonly timestamp: number; readonly type: string; readonly data: unknown }[];
 }
 
-// External JSON → typed at this boundary as a real (if partial) shape, then replayed as the
+// External JSON -> typed at this boundary as a real (if partial) shape, then replayed as the
 // genuine ECHO objects `buildSpanTree` requires, rather than laundered through `unknown`.
 const fixtureMessages: Trace.Message[] = (subAgentFixture as readonly RawTraceMessage[]).map((raw) =>
   Obj.make(Trace.Message, {
@@ -149,7 +149,7 @@ describe('buildSessionTimeline', () => {
         now: 100,
       });
 
-      // The delegated task is represented by its session alone — no task lane doubles it — and the
+      // The delegated task is represented by its session alone - no task lane doubles it - and the
       // dependency on it follows to that session.
       const [session, subSession, secondLane] = timeline.lanes;
       expect(timeline.lanes).toHaveLength(3);
@@ -182,7 +182,7 @@ describe('buildSessionTimeline', () => {
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
-          yield* toolCall('Search'); // 2 — before any task started, stays on the session.
+          yield* toolCall('Search'); // 2 - before any task started, stays on the session.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 3.
           yield* toolCall('Read file'); // 4.
           yield* Trace.write(Trace.TaskStatusChanged, {
@@ -191,7 +191,7 @@ describe('buildSessionTimeline', () => {
             status: 'done',
             previousStatus: 'started',
           }); // 5.
-          yield* toolCall('Think'); // 6 — between segments.
+          yield* toolCall('Think'); // 6 - between segments.
           yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 7.
           yield* toolCall('Write file'); // 8.
         }),
@@ -233,7 +233,7 @@ describe('buildSessionTimeline', () => {
     'cuts a delegated run, where a task is only ever closed',
     Effect.fnUntraced(function* ({ expect }) {
       // Delegation marks every task it hands over `started`, so the agent's only event per task is
-      // the one closing it — the cut comes from the previous boundary instead.
+      // the one closing it - the cut comes from the previous boundary instead.
       const first = Task.make({ title: 'First', status: 'done' });
       const second = Task.make({ title: 'Second', status: 'done' });
       const chat = makeChat('Delegated', [first, second]);
@@ -494,7 +494,7 @@ describe('buildSessionTimeline', () => {
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
-          yield* toolCall('Read file'); // 2 — the run dies here: no Trace.AgentRequestEnd.
+          yield* toolCall('Read file'); // 2 - the run dies here: no Trace.AgentRequestEnd.
         }),
       );
 
@@ -510,7 +510,7 @@ describe('buildSessionTimeline', () => {
       expect(dead.lanes[0]).toMatchObject({ kind: 'session', status: 'failed', start: 1, end: 2 });
       expect(dead.range).toEqual({ start: 1, end: 2 });
 
-      // Without a process record the begin is taken as still in flight — but an hour of silence
+      // Without a process record the begin is taken as still in flight - but an hour of silence
       // keeps the axis on the events rather than on now.
       const unknown = buildSessionTimeline({ traceMessages: messages, sessions: [chat.session], tasks: [task], now });
       expect(unknown.lanes[0]).toMatchObject({ status: 'running', end: undefined });
@@ -538,7 +538,7 @@ describe('buildSessionTimeline', () => {
             status: 'todo',
             previousStatus: 'started',
           }); // 4.
-          yield* toolCall('Think'); // 5 — after the task was put down, so the session's.
+          yield* toolCall('Think'); // 5 - after the task was put down, so the session's.
         }),
       );
 
@@ -565,7 +565,7 @@ describe('buildSessionTimeline', () => {
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
           yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
-          // Never started, so it owns nothing — not the reading the agent did before it said so.
+          // Never started, so it owns nothing - not the reading the agent did before it said so.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: dismissed.id,
             title: 'Dismissed',

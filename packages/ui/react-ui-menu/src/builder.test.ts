@@ -89,7 +89,7 @@ describe('MenuBuilder', () => {
 
     // root (toolbar) + search + root (headings) + headings group + h1 + h2 = 6 nodes.
     expect(graph.nodes).toHaveLength(6);
-    // search → root, headings root→headings group, h1→headings, h2→headings.
+    // search -> root, headings root->headings group, h1->headings, h2->headings.
     const headingsEdge = graph.edges.find((edge) => edge.target === 'headings');
     expect(headingsEdge).toEqual({ source: 'root', target: 'headings', relation: 'child' });
   });

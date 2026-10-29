@@ -26,7 +26,7 @@ export class ToolExecutionService extends Context.Service<
 export namespace ToolExecutionService {
   export const layerEmpty = Layer.succeed(ToolExecutionService, {
     // `toolkit.tools` covers every tool, while `HandlersFrom<Tools>` only requires entries for
-    // tools that need a handler — a filtered mapped type `toolkit.of`'s generic `Tools` can't
+    // tools that need a handler - a filtered mapped type `toolkit.of`'s generic `Tools` can't
     // verify against a runtime-built record, so the shape is asserted once at its source.
     handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
       toolkit.of(

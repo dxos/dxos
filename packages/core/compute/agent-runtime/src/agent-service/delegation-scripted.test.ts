@@ -60,7 +60,7 @@ const delegationHarness: DelegationHarness = { pending: [], completed: [] };
 /**
  * Stub {@link DelegationStrategy} driven by {@link delegationHarness}: each reconcile delegates the
  * pending work not already in flight and records completions, so the test can assert the
- * reconcile → spawn → onChildEvent → onComplete loop in isolation from any plan/chat semantics
+ * reconcile -> spawn -> onChildEvent -> onComplete loop in isolation from any plan/chat semantics
  * (the real strategy is covered by `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`).
  */
 const StubDelegationStrategy: DelegationStrategy = {
@@ -104,7 +104,7 @@ describe('AgentProcess delegation lifecycle (scripted)', () => {
         // Settles on the turn's reply; the delegated child runs in the background (not awaited here).
         yield* session.waitForCompletion();
 
-        // The post-turn reconcile spawned a linked child; its exit drives onChildEvent → onComplete.
+        // The post-turn reconcile spawned a linked child; its exit drives onChildEvent -> onComplete.
         yield* Effect.promise(async () => {
           await expect.poll(() => delegationHarness.completed.length, { timeout: 5_000 }).toBe(1);
         });

@@ -166,7 +166,7 @@ export const refEditor = ({ mode = 'ref', getRef, match, colorize }: RefEditorEx
       }
       // Only tag committed segments (those with a trailing comma). The final segment being typed has
       // no comma yet, so a valid-looking address stays plain text until the user commits it (comma,
-      // space, or Enter) — otherwise the tag would pop in mid-typing.
+      // space, or Enter) - otherwise the tag would pop in mid-typing.
       if (commaIndex === -1) {
         continue;
       }

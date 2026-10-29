@@ -458,7 +458,7 @@ describe('Observability', () => {
           Observability.addExtension(Effect.succeed(ext)),
           Observability.initialize,
         );
-        // Call events — errors extension should not be invoked.
+        // Call events - errors extension should not be invoked.
         obs.events.captureEvent('test', {});
         expect(captureException).not.toHaveBeenCalled();
       }),
@@ -516,7 +516,7 @@ describe('Observability', () => {
         const failingProvider: Observability.DataProvider = () =>
           Effect.fail(new ObservabilityError({ message: 'provider failed' }));
         const obs = yield* Function.pipe(Observability.make(), Observability.addDataProvider(failingProvider));
-        // Should not throw — error is caught internally.
+        // Should not throw - error is caught internally.
         yield* obs.initialize();
       }),
     );

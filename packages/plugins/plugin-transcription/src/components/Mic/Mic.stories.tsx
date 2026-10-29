@@ -13,7 +13,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { translations } from '#translations';
 
 const DEVICES: AudioInputDevice[] = [
-  { deviceId: 'default', label: 'Default — MacBook Pro Microphone' },
+  { deviceId: 'default', label: 'Default - MacBook Pro Microphone' },
   { deviceId: 'usb-1', label: 'USB Audio Interface' },
   { deviceId: 'bt-1', label: 'AirPods Pro' },
 ];

@@ -90,7 +90,7 @@ const insertWidgets = (view: EditorView): number => {
 describe('suggestions with an explicit base', () => {
   // The accepted base (main). Foreign authors' proposals are computed relative to this.
   const MAIN = 'The quick brown fox jumps over the lazy dog.';
-  // The user's own branch (the editor document): they inserted "really " — no foreign author touched it.
+  // The user's own branch (the editor document): they inserted "really " - no foreign author touched it.
   const BRANCH = 'The really quick brown fox jumps over the lazy dog.';
   // Bob's proposal vs MAIN: "lazy" -> "sleepy".
   const BOB = 'The quick brown fox jumps over the sleepy dog.';
@@ -113,7 +113,7 @@ describe('suggestions with an explicit base', () => {
     view.destroy();
   });
 
-  // The ambient (editing) path has no shared base — the editor IS main — so each source carries the
+  // The ambient (editing) path has no shared base - the editor IS main - so each source carries the
   // anchor its branch forked from. Without it, everything the reader types reads as that author's
   // deletion, once per visible suggestion.
   test('a per-source base is used when no shared base is given', ({ expect }) => {
@@ -130,7 +130,7 @@ describe('suggestions with an explicit base', () => {
   });
 
   test('without base, the foreign source diffs against the doc and strikes the user text', ({ expect }) => {
-    // Diffing BOB against the BRANCH doc reads the user's "really" as text bob would delete — the bug
+    // Diffing BOB against the BRANCH doc reads the user's "really" as text bob would delete - the bug
     // that `base` fixes.
     const view = new EditorView({
       doc: BRANCH,
@@ -144,7 +144,7 @@ describe('suggestions with an explicit base', () => {
   });
 
   // Accepting a change splices it into the document, but the author's branch still differs from the
-  // revision they wrote on — so diffing against that anchor keeps proposing a change the document
+  // revision they wrote on - so diffing against that anchor keeps proposing a change the document
   // already carries, rendering the text twice (once accepted, once as a live suggestion).
   test('a change already present in the document is no longer suggested', ({ expect }) => {
     const anchor = 'alpha\nbravo\n';

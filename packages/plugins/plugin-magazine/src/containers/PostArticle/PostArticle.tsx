@@ -25,7 +25,7 @@ export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
 export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) => {
   // When shown as a companion the `attendableId` is a linked segment, but attention lives on the
-  // parent plank — resolve to the parent so the toolbar reads as attended (active).
+  // parent plank - resolve to the parent so the toolbar reads as attended (active).
   const toolbarAttendableId =
     attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -36,7 +36,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
   const { id } = post;
   const postContent = usePostContentAtom(subject);
 
-  // Lazily fetch full article content the first time this Post is shown — covers
+  // Lazily fetch full article content the first time this Post is shown - covers
   // entry points that bypass MagazineArticle's `handleOpen` (deep-link, agent surface,
   // restored attention). LoadPostContent is idempotent (no-op if `content` already
   // populated or `link` missing), so a unique guard per Post id is enough to keep us

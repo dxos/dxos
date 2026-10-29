@@ -58,7 +58,7 @@ const SOURCE_CODE = trim`
     }
     play(): void {}
     describe(): string {
-      return \`\${this.title} — \${this.artist.name}\`;
+      return \`\${this.title} - \${this.artist.name}\`;
     }
   }
 
@@ -187,7 +187,7 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
 /**
  * Code-to-diagram over a live AI stack: the chat (left) reads the source in the markdown document
  * (middle) and generates a UML class diagram onto the canvas (right) via the mermaid classDiagram
- * dialect — the dialect owns the layout. Try: "Create a UML class diagram of the code in the
+ * dialect - the dialect owns the layout. Try: "Create a UML class diagram of the code in the
  * Media Library document", then "Add a Playlist class that aggregates Tracks".
  */
 export const Default: Story = {
@@ -199,7 +199,7 @@ export const Default: Story = {
 
 /**
  * End-to-end test: the agent analyzes the bound document's TypeScript and generates the diagram.
- * Asserts that class world objects land on the canvas — `Track` must exist and the diagram must
+ * Asserts that class world objects land on the canvas - `Track` must exist and the diagram must
  * span several classes.
  *
  * Live AI and slow, so excluded from CI test runs (`tags: ['!test']`); run manually in storybook

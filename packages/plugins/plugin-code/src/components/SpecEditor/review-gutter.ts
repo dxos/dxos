@@ -18,7 +18,7 @@ import {
 import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { type SnippetCard, type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
 
-/** A block declaration line, `feat F-1: …`, `  req F-1.2: …` or `type Scene`, captured as its kind and id. */
+/** A block declaration line, `feat F-1: ...`, `  req F-1.2: ...` or `type Scene`, captured as its kind and id. */
 const DECLARATION = /^\s*([a-z]+)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
 
 /** Kinds that describe behaviour to exercise, so a review judges whether automation runs them (`lang/review.mdl`). */

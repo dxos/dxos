@@ -11,7 +11,7 @@ import { Placement } from './placement.ts';
  *
  * These are the properties the DOM shape depends on, checked where they can be checked exactly:
  * against arithmetic rather than against a browser. `placement/*` then checks that the DOM binding
- * honours them, and `baseline/*` that a real item does not break them — three layers, each able to
+ * honours them, and `baseline/*` that a real item does not break them - three layers, each able to
  * fail on its own, which is what says where a defect is (§1).
  *
  * Nothing here names an axis. If a test reads `top` or `height`, the axis has leaked in (§9).
@@ -30,7 +30,7 @@ type Options = {
  * A model whose ids can be shifted, because that is what a prepend does.
  *
  * `getId` is read live rather than captured: the module's contract is that it reflects the model as
- * it now stands, so a fixture that maps index to id statically cannot express a prepend at all — it
+ * it now stands, so a fixture that maps index to id statically cannot express a prepend at all - it
  * describes a list where inserting at the front renames every row instead of moving it.
  */
 const create = ({ count = 500, extent = () => 100, exact, overscan = 2 }: Options = {}) => {
@@ -236,7 +236,7 @@ describe('placement', () => {
     const { placement } = create({ count: 20, extent: () => 100, exact: true });
 
     // Twenty rows of 100 is 2,000 of content, and the last of them rests when the final 800 is on
-    // screen — not when the document's end is, which is a different number as soon as anything is
+    // screen - not when the document's end is, which is a different number as soon as anything is
     // reserved past it.
     expect(placement.endOffset()).to.eq(1_200);
   });
@@ -266,7 +266,7 @@ describe('placement', () => {
     }
 
     // Settled, and settled *quickly*: a round here is a React commit, and fifty of them is the
-    // update limit — which is the wall `bridge/Tail` was hitting rather than converging.
+    // update limit - which is the wall `bridge/Tail` was hitting rather than converging.
     expect(offsets.at(-1)).to.eq(offsets.at(-2));
     expect(offsets.indexOf(offsets.at(-1)!)).to.be.lessThan(3);
   });
@@ -294,7 +294,7 @@ describe('placement', () => {
       viewport: VIEWPORT,
     });
 
-    // The host appends, which in React means a *new* closure over a *new* list — the same shape as
+    // The host appends, which in React means a *new* closure over a *new* list - the same shape as
     // `messages.map` giving a fresh `getId` on every render.
     const grown = ['a', 'b', 'c', 'd'];
     placement.setGetId((index) => grown[index]);
@@ -302,7 +302,7 @@ describe('placement', () => {
     placement.measure('d', 250);
 
     // Stored against the id the binding read off the row, and read back for the same row. Held to
-    // the stale closure, index 3 resolves to `undefined` and the measurement is never found again —
+    // the stale closure, index 3 resolves to `undefined` and the measurement is never found again -
     // the binding re-measures it every commit, which is a render loop, not a size error.
     expect(placement.extentOf(3)).to.eq(250);
   });

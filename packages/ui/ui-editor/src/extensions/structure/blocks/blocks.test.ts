@@ -14,7 +14,7 @@ import { blockSelectionField } from './selection.ts';
 
 const extensions = [markdown({ base: markdownLanguage }), blockSelectionField];
 
-// `findBlocks` walks the syntax tree, and CodeMirror's initial parse is budgeted in wall-clock time —
+// `findBlocks` walks the syntax tree, and CodeMirror's initial parse is budgeted in wall-clock time -
 // on a loaded CI runner it can expire having parsed almost nothing, collapsing the document to a single
 // block. Parse to the end before asserting so the tests measure `findBlocks`, not the parse scheduler.
 const parsed = (state: EditorState): EditorState => {
@@ -41,7 +41,7 @@ describe('moveBlocksSpec', () => {
     const state = create('A\n\nB\n\nC');
     const next = apply(state, moveBlocksSpec(state, [0], 2));
     expect(next.doc.toString()).to.eq('B\n\nA\n\nC');
-    // The caret is at the end of the moved block — not the block that took its old slot.
+    // The caret is at the end of the moved block - not the block that took its old slot.
     expect(charBeforeCaret(next)).to.eq('A');
     const moved = findBlocks(next)[1];
     expect(next.selection.main.head).to.eq(moved.to);

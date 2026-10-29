@@ -15,7 +15,7 @@ const MAX_LIMIT = 200;
 
 /**
  * Clamped to a whole number in [0, MAX_LIMIT]. `slice` reads a negative end as an offset from the
- * end, so an unchecked `limit: -1` from a remote caller returns every session but the last — more
+ * end, so an unchecked `limit: -1` from a remote caller returns every session but the last - more
  * rows than the cap, out of the argument meant to bound them.
  */
 const pageSize = (limit: number | undefined): number =>
@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.ListSessions>
   RemoteSessionOperation.ListSessions.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ state, sessionId, limit }) {
-        // A lookup by session id is pushed into the query as a foreign-key filter — that is where
+        // A lookup by session id is pushed into the query as a foreign-key filter - that is where
         // the harness id lives, and it is the one case where the whole result set is not wanted.
         // The optional `state` narrows in memory instead: built from optional inputs the filter
         // becomes a union of shapes, which erases the element type the output schema needs.

@@ -91,7 +91,7 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The filter row's editor is a CodeMirror `QueryEditor`, not an <input>/<textarea> — the only
+    // The filter row's editor is a CodeMirror `QueryEditor`, not an <input>/<textarea> - the only
     // editor instance on the canvas, so the first `.cm-content` is unambiguous. CodeMirror mounts
     // asynchronously (after the story's initial paint), so poll for it rather than querying once.
     const getEditor = () => canvasElement.querySelector('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
@@ -103,7 +103,7 @@ export const Test: Story = {
 
     await userEvent.click(editor);
 
-    // Focused and empty, the editor shows only the filter's own placeholder — not the trigger hint too.
+    // Focused and empty, the editor shows only the filter's own placeholder - not the trigger hint too.
     // The hint is a delayed placeholder (3s after focus), so wait past its delay before asserting.
     await new Promise((resolve) => setTimeout(resolve, 3_500));
     await waitFor(() =>

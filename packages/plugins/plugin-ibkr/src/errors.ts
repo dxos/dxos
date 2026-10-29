@@ -5,7 +5,7 @@
 import { BaseError } from '@dxos/errors';
 
 const CONNECTION_MESSAGE =
-  'Interactive Brokers connection is missing the Flex token or query id. Reconnect under Settings → Connections.' as const;
+  'Interactive Brokers connection is missing the Flex token or query id. Reconnect under Settings -> Connections.' as const;
 
 const SYNC_MESSAGE = 'Failed to fetch the Interactive Brokers Flex report.' as const;
 

@@ -11,7 +11,7 @@ import * as Lens from './Lens.ts';
 //
 // React bindings for the object lens, on the `@dxos/echo-panproto/react` entrypoint so the main surface
 // stays React-free (the wire runner loads in workers). Shaped like `@dxos/echo-react`'s `useObject`,
-// and destined to move there — or into core alongside `Obj` — once the lens API is internalized;
+// and destined to move there - or into core alongside `Obj` - once the lens API is internalized;
 // keeping it here means the whole lens surface lives in one package until then.
 //
 // There is one object under the hood: the view is derived from it on every change, and the update

@@ -30,15 +30,15 @@ const makeNotes = (
   organizations: Record<OrgKey, Organization.Organization>,
   taskSet: TaskSet.TaskSet,
 ): NotesBundle => {
-  // Helpers — produce markdown link / block-embed syntax that the editor understands.
+  // Helpers - produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
   const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${EID.make({ entityId: obj.id })})`;
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${EID.make({ entityId: obj.id })})`;
 
   const cuppingNotes = Markdown.make({
-    name: 'Cupping notes — Finca Esperanza Lot A',
+    name: 'Cupping notes - Finca Esperanza Lot A',
     content: [
-      '# Cupping notes — Finca Esperanza Lot A',
+      '# Cupping notes - Finca Esperanza Lot A',
       '',
       `**Farm:** ${lnk('Finca Esperanza', organizations.fincaEsperanza)} · **Contact:** ${lnk('Carmen Restrepo', people.carmen)}`,
       '',
@@ -67,13 +67,13 @@ const makeNotes = (
   });
 
   const itinerary = Markdown.make({
-    name: 'Q2 sourcing trip — itinerary',
+    name: 'Q2 sourcing trip - itinerary',
     content: [
-      '# Q2 sourcing trip — itinerary',
+      '# Q2 sourcing trip - itinerary',
       '',
       `**Traveler:** ${lnk('Diego Alvarez', people.diego)}`,
       '',
-      `**Dates:** ${daysFromNow(21).slice(0, 10)} → ${daysFromNow(35).slice(0, 10)}`,
+      `**Dates:** ${daysFromNow(21).slice(0, 10)} -> ${daysFromNow(35).slice(0, 10)}`,
       '',
       '## Colombia (Huila)',
       '',
@@ -106,7 +106,7 @@ const makeNotes = (
   const tastingProtocol = Markdown.make({
     name: 'Spring blend tasting protocol',
     content: [
-      '# Spring blend — tasting protocol',
+      '# Spring blend - tasting protocol',
       '',
       `Tasks: ${emb('Spring Blend Launch', taskSet)}`,
       '',
@@ -118,7 +118,7 @@ const makeNotes = (
       '',
       '## Brew parameters',
       '',
-      '1. **Espresso:** 18 g in / 36 g out / 27–30 s.',
+      '1. **Espresso:** 18 g in / 36 g out / 27-30 s.',
       '2. **Filter:** 1:16 ratio, 4:00 total time.',
       '',
       '## Scoring dimensions',

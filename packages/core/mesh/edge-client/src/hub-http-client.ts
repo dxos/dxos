@@ -27,11 +27,11 @@ import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } fro
  *
  * Hub-service and the edge worker are separate Cloudflare Workers deployed at different
  * URLs (`DX_HUB_URL` vs `DX_EDGE_URL`). This client is never used to talk to the edge
- * worker, and vice versa — keep them separate.
+ * worker, and vice versa - keep them separate.
  *
  * NOTE: Do NOT set `auth: true` on any call here. Hub-service has no `/auth` VP-challenge
  * endpoint (it has an admin login page that 302s and is not CORS-enabled). Auth is handled
- * via the regular request → 401 → WWW-Authenticate challenge → retry path.
+ * via the regular request -> 401 -> WWW-Authenticate challenge -> retry path.
  */
 export class HubHttpClient extends BaseHttpClient {
   constructor(hubUrl: string, options?: BaseHttpClientOptions) {
@@ -75,7 +75,7 @@ export class HubHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Existing-account email recovery. The link is delivered out of band — the response never carries
+   * Existing-account email recovery. The link is delivered out of band - the response never carries
    * a token. Test emails in dev-like environments short-circuit instead with `needsIdentity` /
    * `admitted` before any token exists. Enumeration-safe: the response is identical for unknown
    * emails. Account creation goes through {@link redeemInvitationCode}.

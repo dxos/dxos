@@ -17,8 +17,8 @@ import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-
 
 /**
  * Omitting `stream` makes the channel a handover: the `RTCDataChannel` is surfaced through
- * {@link RtcTransportChannel.channelReady} and the consumer — typically another thread it was
- * transferred to — owns it from then on.
+ * {@link RtcTransportChannel.channelReady} and the consumer - typically another thread it was
+ * transferred to - owns it from then on.
  */
 export type RtcTransportChannelOptions = Omit<TransportOptions, 'stream' | 'sendSignal'> & {
   stream?: TransportOptions['stream'];

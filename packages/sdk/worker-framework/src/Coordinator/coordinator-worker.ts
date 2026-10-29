@@ -11,7 +11,7 @@ import * as WorkerProtocol from '../WorkerProtocol.ts';
  * a custom coordinator entrypoint (e.g. to initialize observability) then attach this handler.
  *
  * Routing state (connected ports and the per-client reverse map) lives in the returned closure
- * rather than in module globals so a single coordinator instance owns exactly one routing table —
+ * rather than in module globals so a single coordinator instance owns exactly one routing table -
  * this keeps the state testable in isolation and avoids accidental cross-instance sharing.
  */
 export const createOnConnect = (): ((ev: MessageEvent) => void) => {
@@ -67,7 +67,7 @@ export const createOnConnect = (): ((ev: MessageEvent) => void) => {
       }
 
       // Broadcast leadership/heartbeat/request traffic to every connected tab (including the sender,
-      // which receivers filter by id). `provide-port` returned above — it is directed, not broadcast.
+      // which receivers filter by id). `provide-port` returned above - it is directed, not broadcast.
       let delivered = 0;
       for (const peer of ports) {
         try {

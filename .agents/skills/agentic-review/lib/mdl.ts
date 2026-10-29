@@ -109,7 +109,7 @@ const dedent = (lines: string[]): string[] => {
   return lines.map((line) => line.slice(min));
 };
 
-/** A `rule` block body before field validation — raw strings, not yet checked against the enums. */
+/** A `rule` block body before field validation - raw strings, not yet checked against the enums. */
 type ParsedRuleBody = {
   files: string[];
   context: string[];

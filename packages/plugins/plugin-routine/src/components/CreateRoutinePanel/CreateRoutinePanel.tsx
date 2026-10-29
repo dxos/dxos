@@ -46,7 +46,7 @@ type Draft = {
  *
  * A caller can seed the panel via `initialFormValues`: `templateId` skips the picker and scaffolds that
  * template immediately, and `subject` is passed to the scaffold (e.g. the connector flow seeds its sync
- * template with the just-bound target so the user sees — and can edit — the routine being created).
+ * template with the just-bound target so the user sees - and can edit - the routine being created).
  */
 export const CreateRoutinePanel = ({
   target,
@@ -128,7 +128,7 @@ export const CreateRoutinePanel = ({
     void handleSelect(seededTemplateId);
   }, [seededTemplateId, templates, handleSelect]);
 
-  // Returns the promise so the form's `saving` guard disables Save until creation settles — a
+  // Returns the promise so the form's `saving` guard disables Save until creation settles - a
   // discarded promise would let a double-click create (and sync) the routine twice.
   const handleSave = useCallback(async () => {
     if (draft) {

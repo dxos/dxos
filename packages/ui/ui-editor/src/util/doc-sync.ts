@@ -30,8 +30,8 @@ const DEFAULT_MAX_LENGTH = 4_000_000;
 /**
  * The changes that turn `current` into `next`, as narrowly as the diff can see them.
  *
- * Replacing a whole document discards everything anchored to positions in it — folds, the
- * selection, the scroll position — so a view that re-receives a value it mostly already has
+ * Replacing a whole document discards everything anchored to positions in it - folds, the
+ * selection, the scroll position - so a view that re-receives a value it mostly already has
  * dispatches only what moved. The result always produces `next` exactly; the worst case is the
  * single whole-document change that replacing it outright would have been.
  */

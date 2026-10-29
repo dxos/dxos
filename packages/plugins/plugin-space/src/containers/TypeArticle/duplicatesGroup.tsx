@@ -20,7 +20,7 @@ export type UseDuplicatesGroupOptions = {
   typeUri: string;
   typename: string;
   spaceId: SpaceId;
-  /** Shared selection; a ≥2-member subset of the current group narrows the merge to it. */
+  /** Shared selection; a >=2-member subset of the current group narrows the merge to it. */
   selectedIds: string[];
   duplicates: UseDuplicatesResult;
   /** Called after a confirmed merge with the ids merged away, so the caller can drop them from the selection. */
@@ -31,7 +31,7 @@ export type UseDuplicatesGroupOptions = {
  * Toolbar subgraph for the duplicates review: Merge stages a preview, Skip and the arrows walk the
  * groups, and the trailing gap separator pushes whatever follows (the layout toggle) to the far end.
  * While a preview is staged, Confirm/Cancel replace Merge/Skip so the whole review completes within
- * the article; the companion only mirrors the staged preview. Merge never writes — nothing touches
+ * the article; the companion only mirrors the staged preview. Merge never writes - nothing touches
  * the space until Confirm.
  *
  * Compose via `MenuBuilder.subgraph(...)` so the whole toolbar is one action graph rather than
@@ -100,7 +100,7 @@ export const useDuplicatesGroup = ({
         }
         // Bumping the timestamp is what tells the open review to rescan; without it the group the
         // user just merged stays on screen as a one-member "duplicate". Only the preview this
-        // operation was raised from is cleared — a preview staged elsewhere mid-flight survives.
+        // operation was raised from is cleared - a preview staged elsewhere mid-flight survives.
         updateEphemeral((state) => ({
           ...state,
           mergePreview: state.mergePreview === staged ? undefined : state.mergePreview,
@@ -111,7 +111,7 @@ export const useDuplicatesGroup = ({
       .finally(() => setMerging(false));
   }, [staged, current, invokePromise, spaceId, updateEphemeral, onConfirmed]);
 
-  // Skip and the next arrow are the same move — advance past the group without writing.
+  // Skip and the next arrow are the same move - advance past the group without writing.
   const handleAdvance = useCallback(() => {
     clearPreview();
     next();
@@ -176,7 +176,7 @@ export const useDuplicatesGroup = ({
           );
       }
       // Every control below clears the staged preview, so all of them freeze while the merge
-      // operation is in flight — otherwise a mid-flight clear/restage races the completion handler.
+      // operation is in flight - otherwise a mid-flight clear/restage races the completion handler.
       builder
         .action(
           'rescan',

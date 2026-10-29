@@ -18,7 +18,7 @@ export const Properties = Schema.Struct({
   channels: Schema.Array(Ref.Ref(Channel.Channel))
     .annotate({
       title: 'Channels',
-      description: 'Channels the agent converses in (Discord, freeq, a local feed, …).',
+      description: 'Channels the agent converses in (Discord, freeq, a local feed, ...).',
     })
     .pipe(Annotation.SetParent.set()),
 });

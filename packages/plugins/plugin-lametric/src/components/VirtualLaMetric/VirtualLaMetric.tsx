@@ -14,7 +14,7 @@ const FRAME_MS = 3_000;
 const SCROLL_MS = 90;
 
 export type VirtualLaMetricProps = {
-  /** The frames as pushed, never recomputed here — the replica and the device cannot drift. */
+  /** The frames as pushed, never recomputed here - the replica and the device cannot drift. */
   frames: readonly LaMetric.Frame[];
   /** Pixel size of one LED, so the same component works as a thumbnail and as a review surface. */
   scale?: number;
@@ -25,7 +25,7 @@ export type VirtualLaMetricProps = {
  * On-screen replica of the device's 37x8 matrix.
  *
  * Rasterised through the same pure function the tests use, so what is reviewed here is what the
- * hardware shows — including whether a line is too wide and has to scroll.
+ * hardware shows - including whether a line is too wide and has to scroll.
  */
 export const VirtualLaMetric = ({ frames, scale = 6, className }: VirtualLaMetricProps) => {
   const [index, setIndex] = useState(0);

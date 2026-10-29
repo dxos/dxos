@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
       const { db } = yield* Database.Service;
 
       // A draft is identified by the `properties.mailbox` its mailbox supplies (see `DraftMessage`), so
-      // without one there is nothing to scope, tag, or render it — bail before persisting an orphan.
+      // without one there is nothing to scope, tag, or render it - bail before persisting an orphan.
       if (!Mailbox.instanceOf(mailbox)) {
         return;
       }
@@ -35,13 +35,13 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
       yield* SystemTags.toggleTag(mailbox, draft, 'draft');
 
       // A reply/forward draft shares its parent's `threadId`, so the conversation the caller is already
-      // looking at renders it inline (see `ConversationStack`) — navigating anywhere would lose that view.
+      // looking at renders it inline (see `ConversationStack`) - navigating anywhere would lose that view.
       if (mode !== 'compose') {
         return;
       }
 
       // A fresh draft joins no thread, so open it as its own plank beside the mailbox view it was
-      // composed from — the add-navigation a message click uses (see `MailboxArticle`). Drafts hang off
+      // composed from - the add-navigation a message click uses (see `MailboxArticle`). Drafts hang off
       // every mailbox view node (see the `mailboxMessages` connector), so the path resolves for any view.
       const pivotId = contextId ?? getMailboxPath(db.spaceId, mailbox.id);
       yield* Operation.invoke(LayoutOperation.Select, {

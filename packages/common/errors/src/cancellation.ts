@@ -26,7 +26,7 @@ const isMarked = (value: object): boolean => 'cancellation' in value && value.ca
 /**
  * Whether a thrown value is a cancellation rather than a genuine failure.
  *
- * Walks the `cause` chain because a domain error wraps the original `DOMException` — the
+ * Walks the `cause` chain because a domain error wraps the original `DOMException` - the
  * interactive ceremony that raised it sits several frames below the handler that reports it.
  * Only the two names above match, so every other `DOMException` stays an error.
  */

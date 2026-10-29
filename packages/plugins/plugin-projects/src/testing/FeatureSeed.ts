@@ -35,7 +35,7 @@ export const types = [
 ];
 
 /**
- * Writes card models into a database as the objects and relations they are derived from — features on one spec that
+ * Writes card models into a database as the objects and relations they are derived from - features on one spec that
  * names one project, each with its subfeatures on a spec it owns, `DependsOn`, tasks and milestones with `Implements`,
  * and showcases with `Demonstrates`. Ids in the models are only keys within the seed.
  */

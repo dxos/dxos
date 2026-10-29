@@ -574,7 +574,7 @@ const TreeRoot = <T extends { id: string }>({
   //
 
   /**
-   * Runs before the machine's handler: Enter re-reports a selected row (zag emits nothing), Space toggles, and ⌘↑ / ⌘↓
+   * Runs before the machine's handler: Enter re-reports a selected row (zag emits nothing), Space toggles, and Cmd^ / Cmdv
    * jump to the parent and to the parent's next sibling.
    */
   const handleKeyDown = useCallback(

@@ -21,11 +21,11 @@ import {
 // Live integration test against the real Higgsfield API. Skipped unless HIGGSFIELD_API_KEY and
 // HIGGSFIELD_SECRET_API_KEY are set, so it never runs in CI (no secret) but can be exercised on demand:
 //
-//   HIGGSFIELD_API_KEY=… HIGGSFIELD_SECRET_API_KEY=… pnpm --filter @dxos/plugin-higgsfield exec vitest run \
+//   HIGGSFIELD_API_KEY=... HIGGSFIELD_SECRET_API_KEY=... pnpm --filter @dxos/plugin-higgsfield exec vitest run \
 //     --project=node src/services/higgsfield-provider.integration.test.ts
 //
-// It uses `makeHiggsfieldProvider` — the same proxy-wired provider the app uses — so it covers the
-// full path (edge CORS proxy → Higgsfield → response parsing → auth), which the mock-fetch unit
+// It uses `makeHiggsfieldProvider` - the same proxy-wired provider the app uses - so it covers the
+// full path (edge CORS proxy -> Higgsfield -> response parsing -> auth), which the mock-fetch unit
 // tests cannot. It submits ONE Soul image generation, which spends account credits.
 //
 
@@ -33,7 +33,7 @@ const credential = joinCredential(process.env.HIGGSFIELD_API_KEY ?? '', process.
 
 describe.skipIf(!credential)('HiggsfieldProvider (live)', () => {
   // Credit-free: an unknown request id answers 404 only once the credential has been accepted, so
-  // this proves the proxy + `Authorization: Key …` path without submitting a generation.
+  // this proves the proxy + `Authorization: Key ...` path without submitting a generation.
   test('status lookup authenticates through the proxy', async ({ expect }) => {
     if (!credential) {
       return;

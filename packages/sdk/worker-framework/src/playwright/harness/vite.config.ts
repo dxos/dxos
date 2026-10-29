@@ -42,7 +42,7 @@ const nodeStdResolvePlugin = (): Plugin => ({
 /**
  * Minimal dev server for the stress harness page. Deliberately NOT Storybook: the harness needs no
  * React, theme, or design-system assets, and Storybook's static-asset preset requires unrelated
- * packages' build output — a heavy prerequisite for a page that is one `<pre>` and a module script.
+ * packages' build output - a heavy prerequisite for a page that is one `<pre>` and a module script.
  */
 export default defineConfig({
   root: import.meta.dirname,

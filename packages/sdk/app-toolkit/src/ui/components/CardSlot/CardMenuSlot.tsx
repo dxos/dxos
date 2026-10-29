@@ -18,7 +18,7 @@ export type CardMenuSlotProps = {
 
 /**
  * Lets any plugin add items to a card header's menu. Renders every {@link AppSurface.CardMenu}
- * contribution for the subject, each of which calls `useMenuContribution(menu, …)` and renders nothing.
+ * contribution for the subject, each of which calls `useMenuContribution(menu, ...)` and renders nothing.
  */
 export const CardMenuSlot = ({ subject, menu }: CardMenuSlotProps) => (
   <Surface.Surface type={AppSurface.CardMenu} data={{ subject, menu }} />

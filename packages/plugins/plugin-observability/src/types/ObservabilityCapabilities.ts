@@ -35,7 +35,7 @@ export const Observability = Capability.makeSingleton<ObservabilityNs.Observabil
 );
 
 /**
- * Optional capability — when contributed, the help/feedback UI exposes a "Download logs" action.
+ * Optional capability - when contributed, the help/feedback UI exposes a "Download logs" action.
  * The callback is responsible for the entire download (read store, encode, save file).
  */
 export type LogDownloader = () => void | Promise<void>;

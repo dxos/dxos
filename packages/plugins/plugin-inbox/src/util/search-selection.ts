@@ -37,7 +37,7 @@ const collectRootTagUris = (ast: QueryAST.Filter): string[] => {
 const isTagsOnly = (ast: QueryAST.Filter): boolean =>
   ast.type === 'tag' || (ast.type === 'and' && ast.filters.every(isTagsOnly));
 
-/** The root-level tag uris of a parsed filter — the tags {@link buildSearchSelection} can resolve to member ids. */
+/** The root-level tag uris of a parsed filter - the tags {@link buildSearchSelection} can resolve to member ids. */
 export const getFilterTagUris = (filter: Filter.Any | undefined): string[] =>
   filter ? collectRootTagUris(filter.ast) : [];
 
@@ -48,7 +48,7 @@ export const getSearchText = (filter: Filter.Any | undefined): string | undefine
 
 export type SearchSelectionOptions = {
   /**
-   * Member ids for a tag uri, from the owner's `TagIndex` — feed objects carry no `meta.tags` of
+   * Member ids for a tag uri, from the owner's `TagIndex` - feed objects carry no `meta.tags` of
    * their own, so a tag term can only select them by becoming an id selection. Returning undefined
    * drops that tag term.
    */

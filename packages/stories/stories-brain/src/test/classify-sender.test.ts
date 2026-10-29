@@ -8,7 +8,7 @@ import { Message } from '@dxos/types';
 
 import { type SenderClass, classifySenderHeuristic, scoreSenders, uniqueSenders } from '../testing/harness/index.ts';
 
-// Deterministic coverage for the sender-triage heuristic + scorer — no fixture / model required, so it
+// Deterministic coverage for the sender-triage heuristic + scorer - no fixture / model required, so it
 // runs in CI (the model-graded eval lives in classify-sender.bench.test.ts and skips without the
 // private corpus).
 
@@ -100,9 +100,9 @@ describe('scoreSenders', () => {
   test('confusion is directional and unlabelled senders are ignored', ({ expect }) => {
     const predictions = [
       { email: 'p1@x.com', class: 'person' as const, confidence: 1, method: 'heuristic' as const },
-      { email: 'p2@x.com', class: 'org' as const, confidence: 1, method: 'heuristic' as const }, // person→org
+      { email: 'p2@x.com', class: 'org' as const, confidence: 1, method: 'heuristic' as const }, // person->org
       { email: 'o1@x.com', class: 'org' as const, confidence: 1, method: 'heuristic' as const },
-      { email: 'o2@x.com', class: 'person' as const, confidence: 1, method: 'heuristic' as const }, // org→person
+      { email: 'o2@x.com', class: 'person' as const, confidence: 1, method: 'heuristic' as const }, // org->person
       { email: 'unlabelled@x.com', class: 'person' as const, confidence: 1, method: 'heuristic' as const },
     ];
     const score = scoreSenders(predictions, gold);

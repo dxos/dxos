@@ -32,7 +32,7 @@ import {
 import { JUDGE, LADDER_N, LADDER_REFERENCE, LADDER_TASKS, LADDER_TOLERANCE } from './defs.ts';
 
 // The model-ladder experiment: for each task, run the whole ladder (open-weight tiers + haiku, the
-// bar) over the same messages, measure latency, and grade accuracy — labeling deterministically vs
+// bar) over the same messages, measure latency, and grade accuracy - labeling deterministically vs
 // haiku, summaries + drafts via the opus judge. The report lines accuracy up against latency + size
 // so we can name, per task, the smallest model that clears the bar.
 
@@ -67,11 +67,11 @@ const round = (value: number): number => Math.round(value * 1000) / 1000;
 const mean = (values: readonly number[]): number =>
   values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 
-/** Concatenated thread text — the grounding source for a thread summary's gold + faithfulness. */
+/** Concatenated thread text - the grounding source for a thread summary's gold + faithfulness. */
 const threadText = (messages: readonly Message.Message[]): string =>
   messages.map((message) => Message.extractText(message)).join('\n\n');
 
-describe.skipIf(!fixtureExists())('model ladder — open-weight vs premier, per task', () => {
+describe.skipIf(!fixtureExists())('model ladder - open-weight vs premier, per task', () => {
   test(
     'labeling / summaries / drafts across the ladder',
     async ({ expect }) => {
@@ -111,7 +111,7 @@ describe.skipIf(!fixtureExists())('model ladder — open-weight vs premier, per 
         throughput: result.latency.throughput,
       });
 
-      // (a) Labeling — spam + topic tags; scored deterministically against the reference model.
+      // (a) Labeling - spam + topic tags; scored deterministically against the reference model.
       if (tasks.includes('labeling')) {
         const progress = trackProgress('ladder:labeling', variants.length * messages.length);
         const ladder = await runLadder({
@@ -142,7 +142,7 @@ describe.skipIf(!fixtureExists())('model ladder — open-weight vs premier, per 
         }
       }
 
-      // (c1) Message summaries — coverage + faithfulness vs the message's own key points (opus judge).
+      // (c1) Message summaries - coverage + faithfulness vs the message's own key points (opus judge).
       if (tasks.includes('summarize-messages')) {
         log.info('building message gold points', { messages: messages.length });
         const golds: string[][] = [];
@@ -185,7 +185,7 @@ describe.skipIf(!fixtureExists())('model ladder — open-weight vs premier, per 
         }
       }
 
-      // (c2) Thread summaries — same metrics over grouped threads.
+      // (c2) Thread summaries - same metrics over grouped threads.
       if (tasks.includes('summarize-threads')) {
         const threads = groupThreads(messages);
         log.info('building thread gold points', { threads: threads.length });
@@ -229,7 +229,7 @@ describe.skipIf(!fixtureExists())('model ladder — open-weight vs premier, per 
         }
       }
 
-      // (d1) Drafts — reply quality rubric (opus judge) over the replyable messages.
+      // (d1) Drafts - reply quality rubric (opus judge) over the replyable messages.
       if (tasks.includes('drafts')) {
         const progress = trackProgress('ladder:drafts', variants.length * messages.length);
         const ladder = await runLadder({
@@ -249,7 +249,7 @@ describe.skipIf(!fixtureExists())('model ladder — open-weight vs premier, per 
           for (let index = 0; index < entry.runs.length; index++) {
             const output = entry.runs[index].output as { draft: string; skipped: boolean };
             if (output.skipped) {
-              continue; // Bulk/no-reply mail is correctly skipped — not a quality data point.
+              continue; // Bulk/no-reply mail is correctly skipped - not a quality data point.
             }
             const score = await gradeDraft(Message.extractText(messages[index]), output.draft, judge);
             overall.push(score.overall);
@@ -320,18 +320,18 @@ const renderReport = (
     const header = `| model | size | accuracy | ${metricKeys.join(' | ')} | p50 ms | p95 ms | items/s |`;
     const rule = `| --- | --- | --- | ${metricKeys.map(() => '---').join(' | ')} | --- | --- | --- |`;
     const lines = taskRows.map((row) => {
-      const clears = row.accuracy >= threshold ? '✓' : ' ';
-      const metricCells = metricKeys.map((key) => (key in row.metrics ? row.metrics[key].toFixed(2) : '—'));
+      const clears = row.accuracy >= threshold ? 'OK' : ' ';
+      const metricCells = metricKeys.map((key) => (key in row.metrics ? row.metrics[key].toFixed(2) : '-'));
       return `| ${clears} ${row.model} | ${row.size} | ${row.accuracy.toFixed(2)} | ${metricCells.join(' | ')} | ${row.latencyP50} | ${row.latencyP95} | ${row.throughput} |`;
     });
 
     // Smallest-sufficient tier = first model in ladder order (ascending size) that clears the bar.
     const sufficient = taskRows.find((row) => row.accuracy >= threshold);
     recommendations.push(
-      `- **${task}** — bar (${reference}) = ${bar.toFixed(2)}; smallest sufficient (≥${(LADDER_TOLERANCE * 100).toFixed(0)}%): ` +
+      `- **${task}** - bar (${reference}) = ${bar.toFixed(2)}; smallest sufficient (>=${(LADDER_TOLERANCE * 100).toFixed(0)}%): ` +
         (sufficient
           ? `**${sufficient.model}** (${sufficient.size}, ${sufficient.latencyP50}ms p50)`
-          : '**none — needs premier**'),
+          : '**none - needs premier**'),
     );
 
     sections.push({ title: `Task: ${task}`, body: [header, rule, ...lines].join('\n') });

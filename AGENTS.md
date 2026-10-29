@@ -251,6 +251,11 @@ The foreground is for short commands whose result decides your next step.
 Universal rules. Deeper conventions live in skills — see the pointers below.
 
 - TypeScript, single quotes. Prefer functional style and arrow functions.
+- **Source stays at or below U+00FF**, comments included: no em dashes, arrows or box-drawing characters.
+  One such character makes V8 hold the whole module at two bytes per character, and workerd keeps every
+  uploaded module in memory. Enforced by `@dxos/eslint-plugin-rules/latin1-source`, which has no autofix:
+  write the Latin-1 spelling its error names (`-`, `->`, `...`), and an escape only where code needs the
+  exact character.
 - **Prefer Effect over async/Promise.** Raw Promises belong only at platform boundaries —
   dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
   `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:

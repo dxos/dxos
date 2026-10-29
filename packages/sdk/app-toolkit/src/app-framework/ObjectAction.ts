@@ -7,7 +7,7 @@
 import type * as Atom from 'effect/reactivity/Atom';
 
 /**
- * A menu item one plugin contributes to another plugin's object surface — "analyse this mailbox",
+ * A menu item one plugin contributes to another plugin's object surface - "analyse this mailbox",
  * "research this sender", "delegate this task to a chat".
  *
  * The contributing plugin owns the behaviour and the host owns the surface, so neither has to import
@@ -19,7 +19,7 @@ import type * as Atom from 'effect/reactivity/Atom';
  * ```
  *
  * @deprecated Contribute an app-graph action on the subject's node instead, so every contributed action
- *   lives in the one graph the app's menus read. The host reads it with `graphActions(…, { filter })`; a
+ *   lives in the one graph the app's menus read. The host reads it with `graphActions(..., { filter })`; a
  *   subject that is not an object gets a typed hidden node, as a prompt does (`AppNode.makePrompt`).
  */
 export type ObjectAction<T> = {
@@ -34,7 +34,7 @@ export type ObjectAction<T> = {
   /** Why the action cannot run right now; the host shows it disabled with this reason. */
   unavailable?: Atom.Atom<string | undefined>;
   /**
-   * What to run, in order — a list, because the useful actions are composites (research, then image)
+   * What to run, in order - a list, because the useful actions are composites (research, then image)
    * and a contributor should not have to model that as one operation.
    *
    * An EMPTY list means the action does not apply to this subject and the host omits the item. One

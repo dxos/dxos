@@ -8,7 +8,7 @@ import init from './0001_init.sql?raw';
 import spaceRoot from './0002_space_root.sql?raw';
 import directorySnapshots from './0003_directory_snapshots.sql?raw';
 
-/** An applied migration must never be edited — nothing verifies its contents. */
+/** An applied migration must never be edited - nothing verifies its contents. */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
   '0002_space_root': SqlMigrations.apply(spaceRoot),

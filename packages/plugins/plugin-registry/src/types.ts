@@ -34,7 +34,7 @@ export const RegistrySettingsSchema = Schema.Struct({
   /**
    * When true, the registry plugin attempts to load `devPluginUrl` on every
    * app boot. Failures (dev server offline, manifest 404) are logged and
-   * the flag stays on so the next boot retries — the user explicitly turns
+   * the flag stays on so the next boot retries - the user explicitly turns
    * it off when they're done iterating.
    */
   devPluginEnabled: Schema.optional(Schema.Boolean),

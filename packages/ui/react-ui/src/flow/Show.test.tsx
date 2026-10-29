@@ -17,7 +17,7 @@ describe('Show', () => {
     expect(screen.queryByTestId(FALLBACK)).toBeNull();
   });
 
-  // ui-template `present`: only undefined/null/false are absent — 0 and '' still render.
+  // ui-template `present`: only undefined/null/false are absent - 0 and '' still render.
   test.each([0, ''])('falsy-but-present value %j renders children', (value) => {
     render(<Show.Show when={value}>{content}</Show.Show>);
     expect(screen.queryByTestId(CONTENT)).not.toBeNull();

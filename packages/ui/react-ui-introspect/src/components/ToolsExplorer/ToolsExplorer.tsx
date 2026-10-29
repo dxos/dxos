@@ -87,7 +87,7 @@ export const ToolsExplorer = Util.composable<HTMLDivElement, ToolsExplorerProps>
               options['plugin-id'] = pluginIds;
             }
           } catch {
-            // Ignore — server might not implement list_plugins.
+            // Ignore - server might not implement list_plugins.
           }
           try {
             const packages = await next.callTool({
@@ -99,7 +99,7 @@ export const ToolsExplorer = Util.composable<HTMLDivElement, ToolsExplorerProps>
               options['package-name'] = packageNames;
             }
           } catch {
-            // Ignore — server might not implement list_packages.
+            // Ignore - server might not implement list_packages.
           }
           if (!cancelled) {
             setPickerOptions(options);
@@ -185,7 +185,7 @@ export const ToolsExplorer = Util.composable<HTMLDivElement, ToolsExplorerProps>
       );
     }
 
-    // `minmax(0, …)` rows: an implicit `auto` row grows to the whole list, which then never scrolls.
+    // `minmax(0, ...)` rows: an implicit `auto` row grows to the whole list, which then never scrolls.
     return (
       <div
         {...Util.composableProps(props, {

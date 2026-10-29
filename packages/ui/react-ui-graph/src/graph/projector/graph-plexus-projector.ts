@@ -17,7 +17,7 @@ import {
 
 /** Display info for a relation group. */
 export type PlexusRelation = {
-  /** Stable grouping key — edges sharing a key fan out from the same relation node. */
+  /** Stable grouping key - edges sharing a key fan out from the same relation node. */
   key: string;
   /** Human-readable label rendered on the relation node. */
   label: string;
@@ -28,7 +28,7 @@ export type GraphPlexusProjectorOptions = GraphRadialProjectorOptions & {
   focus?: string;
   /** Reserved space around the outer ring (screen pixels). Default 100. */
   margin?: number;
-  /** Radius for object leaf nodes — the base size shared by all non-focus nodes. Default 5. */
+  /** Radius for object leaf nodes - the base size shared by all non-focus nodes. Default 5. */
   leafRadius?: number;
   /** Radius for the synthetic relation nodes. Defaults to the leaf radius. */
   relationRadius?: number;
@@ -40,7 +40,7 @@ export type GraphPlexusProjectorOptions = GraphRadialProjectorOptions & {
    * placed under the relation is the edge endpoint that is NOT the focus, so both sides of a
    * relation are supported: classify outgoing edges (focus is source) and incoming edges
    * (focus is target) under different keys to get a separate relation node for each side.
-   * Mirrors the `groupOf` callback used by the cluster / bundle projectors — all ECHO
+   * Mirrors the `groupOf` callback used by the cluster / bundle projectors - all ECHO
    * knowledge stays in the consumer.
    */
   relationOf?: (edge: GraphLayoutEdge, focusId: string) => PlexusRelation | undefined;
@@ -55,7 +55,7 @@ export const PLEXUS_NODE_TYPE_RELATION = 'plexus-relation';
 export const PLEXUS_NODE_TYPE_OBJECT = 'plexus-object';
 
 /**
- * Standard d3 radial link generator — `curveBumpRadial` (same as the cluster projector).
+ * Standard d3 radial link generator - `curveBumpRadial` (same as the cluster projector).
  * Relies on `dx-edge path { fill: none }` from graph.css.
  */
 const linkPath = linkRadial<any, any>()
@@ -63,8 +63,8 @@ const linkPath = linkRadial<any, any>()
   .radius((d: any) => d.y);
 
 /**
- * Cartesian → d3-radial polar. d3 measures angle clockwise from "up" (the -y direction).
- * Inverse of `[cos(a - π/2) * r, sin(a - π/2) * r]`.
+ * Cartesian -> d3-radial polar. d3 measures angle clockwise from "up" (the -y direction).
+ * Inverse of `[cos(a - pi/2) * r, sin(a - pi/2) * r]`.
  */
 const cartesianToPolar = (x: number, y: number): { angle: number; radius: number } => ({
   angle: Math.atan2(x, -y),
@@ -76,14 +76,14 @@ const cartesianToPolar = (x: number, y: number): { angle: number; radius: number
  * neighbourhood fans out around it, grouped by the relation that connects each neighbour
  * to the focus:
  *
- * - **Focus** (depth 0) — the focused data node, at the origin.
- * - **Relation nodes** (depth 1) — synthetic group nodes (one per `relationOf` key) on an
+ * - **Focus** (depth 0) - the focused data node, at the origin.
+ * - **Relation nodes** (depth 1) - synthetic group nodes (one per `relationOf` key) on an
  *   inner ring.
- * - **Object nodes** (depth 2) — the neighbours reached through each relation, on the
+ * - **Object nodes** (depth 2) - the neighbours reached through each relation, on the
  *   outer ring.
  *
  * Built on the same `d3.cluster` machinery as `GraphClusterProjector`: the synthesized
- * `focus → relation → object` hierarchy is laid out radially and each hierarchy edge gets
+ * `focus -> relation -> object` hierarchy is laid out radially and each hierarchy edge gets
  * a `linkRadial` `path` recomputed from current cartesian endpoints every tick, so curves
  * track moving nodes during a cross-focus (or cross-variant) tween.
  *
@@ -95,7 +95,7 @@ export class GraphPlexusProjector<
   NodeData = any,
   Options extends GraphPlexusProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
-  // Full node / edge snapshots taken right after mergeData — doPlexusLayout reads from
+  // Full node / edge snapshots taken right after mergeData - doPlexusLayout reads from
   // these because it overwrites layout.graph with the filtered focus-centric view.
   #dataNodes: GraphLayoutNode<NodeData>[] = [];
   #dataEdges: GraphLayoutEdge<NodeData>[] = [];
@@ -159,7 +159,7 @@ export class GraphPlexusProjector<
     const relationOf = this.options.relationOf ?? defaultRelationOf;
 
     // Group neighbours by relation. A neighbour reachable through more than one relation is
-    // placed once (first relation wins) — keeps hierarchy ids unique for v1.
+    // placed once (first relation wins) - keeps hierarchy ids unique for v1.
     type Group = { id: string; label: string; leaves: GraphLayoutNode<NodeData>[] };
     const groups = new Map<string, Group>();
     const placed = new Set<string>([focusId!]);
@@ -181,7 +181,7 @@ export class GraphPlexusProjector<
       group.leaves.push(neighbour);
     }
 
-    // Synthesize the focus → relation → object hierarchy.
+    // Synthesize the focus -> relation -> object hierarchy.
     type HierNode = {
       id: string;
       parent?: string;
@@ -270,7 +270,7 @@ export class GraphPlexusProjector<
     nextNodes.push(focusNode);
     this.layout.graph.nodes = nextNodes;
 
-    // Build hierarchy edges (focus → relation, relation → object). Paths are filled by
+    // Build hierarchy edges (focus -> relation, relation -> object). Paths are filled by
     // onTickFrame from current cartesian positions.
     const edges: GraphLayoutEdge<NodeData>[] = [];
     root.links().forEach((link: any) => {
@@ -304,6 +304,6 @@ const defaultRelationOf = (edge: GraphLayoutEdge, focusId: string): PlexusRelati
     return undefined;
   }
   const type = edge.type ?? 'edge';
-  const arrow = outgoing ? '→' : '←';
+  const arrow = outgoing ? '\u2192' : '\u2190';
   return { key: `${type}:${outgoing ? 'out' : 'in'}`, label: `${type} ${arrow}` };
 };

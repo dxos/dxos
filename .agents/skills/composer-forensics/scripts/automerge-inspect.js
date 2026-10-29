@@ -11,7 +11,7 @@ import { openDatabase } from './src/db.js';
 const usage = `Usage: automerge-inspect.js <DXOS.sqlite> <document-id|--largest> [--json] [--mutations]
 
 Compare combined automerge binary size (merged chunks) vs reified JSON size.
-Use when debugging slow document loads — high binary/JSON ratio or ops/MiB flags bloat.
+Use when debugging slow document loads - high binary/JSON ratio or ops/MiB flags bloat.
 
   --mutations   Decode all changes and show op action breakdown (~1 min on large docs)
 

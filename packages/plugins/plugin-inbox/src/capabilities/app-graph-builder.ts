@@ -50,8 +50,8 @@ const calendarTypename = Type.getTypename(Calendar.Calendar);
 /**
  * The live external sync binding targeting `target`, read reactively so the extension re-runs when a
  * cursor or connection appears. Every affordance that depends on being connected goes through this one
- * lookup — the sync actions, and the pipeline actions that would otherwise offer work on a mailbox with
- * no mail — and it is the same predicate the connector plugin's Connect action keys on, so a binding
+ * lookup - the sync actions, and the pipeline actions that would otherwise offer work on a mailbox with
+ * no mail - and it is the same predicate the connector plugin's Connect action keys on, so a binding
  * whose connection was deleted reads as unconnected everywhere at once.
  */
 const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): Binding.Binding | undefined => {
@@ -68,7 +68,7 @@ const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): Binding.Bin
 export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
 
 /**
- * A single attachment, addressed as its owning message plus an index — an attachment is an entry in
+ * A single attachment, addressed as its owning message plus an index - an attachment is an entry in
  * `message.attachments`, not an object, so it has no identity a surface could match on its own.
  */
 export type AttachmentRef = { message: Message.Message; index: number };
@@ -194,7 +194,7 @@ export default Capability.makeModule(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxSnapshot = get(Obj.atom(mailbox));
               // Every child here is a view onto synced mail, so an unbound mailbox listed seven
-              // folders that could only ever be empty — and buried its own Connect affordance under
+              // folders that could only ever be empty - and buried its own Connect affordance under
               // them. Unbound, it stays a leaf until a connection arrives.
               const connected = Boolean(Binding.find(cursors, connections, mailbox)?.connection);
 
@@ -215,7 +215,7 @@ export default Capability.makeModule(
                 nodes: !connected
                   ? []
                   : [
-                      // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
+                      // Pre-seeded, non-removable filter nodes - same mechanism as a saved user filter, just
                       // static with no rename/delete actions.
                       AppGraphNode.make({
                         id: getInboxId(),
@@ -226,7 +226,7 @@ export default Capability.makeModule(
                           icon: 'ph--tray--regular',
                           iconHue: 'rose',
                           // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
-                          // JMAP's inbox role), so archiving removes this tag rather than adding one —
+                          // JMAP's inbox role), so archiving removes this tag rather than adding one -
                           // no complement operator is needed here or in `MailboxArticle`.
                           filter: '#inbox',
                           systemTag: 'inbox' satisfies SystemTags.SystemTagId,
@@ -347,9 +347,9 @@ export default Capability.makeModule(
       }),
 
       // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of the
-      // mailbox node — so `…/mailboxes/<mailboxId>/<messageId>` resolves via the `message` key even
+      // mailbox node - so `.../mailboxes/<mailboxId>/<messageId>` resolves via the `message` key even
       // though messages aren't enumerated in the nav tree. Each node's data is the message Echo object
-      // itself (so it picks up the standard object companions — assistant, properties, info, debug);
+      // itself (so it picks up the standard object companions - assistant, properties, info, debug);
       // the surrounding conversation is looked up by `MessageArticle` when the message is opened.
       AppGraphBuilder.createExtension({
         id: 'mailboxMessages',
@@ -454,7 +454,7 @@ export default Capability.makeModule(
           }),
       }),
 
-      // A calendar's saved views (see `Calendar.filters`), as children of the calendar's own node only —
+      // A calendar's saved views (see `Calendar.filters`), as children of the calendar's own node only -
       // not of its saved views, which share the calendar as data.
       AppGraphBuilder.createExtension({
         id: 'calendarFilters',
@@ -465,7 +465,7 @@ export default Capability.makeModule(
       }),
 
       // Every event in a calendar's feed, plus its local draft events, as a hidden child of the
-      // calendar node — so `…/calendars/<calendarId>/<eventId>` resolves via the `event` key for any
+      // calendar node - so `.../calendars/<calendarId>/<eventId>` resolves via the `event` key for any
       // deep-link shape.
       AppGraphBuilder.createExtension({
         id: 'calendarEvents',
@@ -515,15 +515,15 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // Sync appears only for a live binding — a cursor targeting this mailbox whose Connection
+          // Sync appears only for a live binding - a cursor targeting this mailbox whose Connection
           // still exists. The connector plugin's Connect action keys on the same predicate, so exactly
           // one of the two is offered.
           const binding = liveBindingFor(mailbox, get);
           if (!binding) {
             return Effect.succeed([]);
           }
-          // A bound mailbox whose provider plugin is not registered cannot sync — `Binding.sync` resolves
-          // no connector and returns — so the item stays as the affordance but disabled,
+          // A bound mailbox whose provider plugin is not registered cannot sync - `Binding.sync` resolves
+          // no connector and returns - so the item stays as the affordance but disabled,
           // rather than looking functional and doing nothing.
           const hasConnector = get(connectorAtom)
             .flat()
@@ -547,7 +547,7 @@ export default Capability.makeModule(
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
                   spin: isSyncing,
                   disabled: isSyncing || !hasConnector,
-                  // Appears in the mailbox toolbar's ⋮ menu and as a nav-tree context-menu row.
+                  // Appears in the mailbox toolbar's : menu and as a nav-tree context-menu row.
                   disposition: [MAILBOX_MENU_DISPOSITION, 'list-item'],
                   // The toolbar emits `data-testid` only for actions that set one; browser-e2e waits on it.
                   testId: 'inbox.mailbox.sync',
@@ -578,7 +578,7 @@ export default Capability.makeModule(
             });
             // Analysis walks what sync brought down, so before the first completed run it has nothing
             // to walk. `lastTick` is the signal: only `Cursor.recordSuccess` stamps it, and it
-            // survives restarts — a message count would also answer "is there anything here", but not
+            // survives restarts - a message count would also answer "is there anything here", but not
             // "has the mailbox finished arriving". Read through the object atom so the button enables
             // the moment the first sync lands.
             const synced = Boolean(get(Obj.atom(binding.cursor)).lastTick);
@@ -622,12 +622,12 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // Sync appears only for a live binding — see `syncMailbox`.
+          // Sync appears only for a live binding - see `syncMailbox`.
           const binding = liveBindingFor(calendar, get);
           if (!binding) {
             return Effect.succeed([]);
           }
-          // Disabled rather than dropped when the provider plugin is absent — see `syncMailbox`.
+          // Disabled rather than dropped when the provider plugin is absent - see `syncMailbox`.
           const hasConnector = get(connectorAtom)
             .flat()
             .some((entry) => entry.id === binding.connection.connectorId);

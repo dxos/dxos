@@ -106,7 +106,7 @@ const InstrumentBoundStory = (props: TunerProps) => {
         onCalibrationChange={setCalibration}
       />
       <pre className='p-2 text-xs text-fg-subtle' data-testid='instrument.calibration'>
-        {calibration.map(({ pitch, strikes }) => `${pitch}×${strikes.length}`).join(' ') || '–'}
+        {calibration.map(({ pitch, strikes }) => `${pitch}×${strikes.length}`).join(' ') || '-'}
       </pre>
     </>
   );

@@ -124,12 +124,12 @@ export const Spec: Story = {
     await expect(find('inspector-typename')).toHaveTextContent('org.dxos.type.task');
 
     // Both panels are the same `Form` component and differ only in the schema they are given, so the
-    // fields are addressed by their schema-declared labels — all a form consumer knows about them.
+    // fields are addressed by their schema-declared labels - all a form consumer knows about them.
     // `status: 'started'` reads as `done: false` through the lens.
     await expect(control(lensed, 'Done')).not.toBeChecked();
     await expect(selectValue(lensed, 'Stage')).toBe('started');
 
-    // Completing it through the lens writes `status` on the base object — visible in both other panes.
+    // Completing it through the lens writes `status` on the base object - visible in both other panes.
     await userEvent.click(control(lensed, 'Done'));
     await waitFor(async () => {
       await expect(selectValue(canonical, 'Status')).toBe('done');
@@ -143,7 +143,7 @@ export const Spec: Story = {
       await expect(selectValue(lensed, 'Stage')).toBe('todo');
     });
 
-    // An overlay property — nothing on `Task` corresponds — lands in the object's annotations.
+    // An overlay property - nothing on `Task` corresponds - lands in the object's annotations.
     await selectOption(lensed, 'Context', '@work');
     await waitFor(async () => {
       await expect(find('inspector-overlay')).toHaveTextContent('"context": "@work"');

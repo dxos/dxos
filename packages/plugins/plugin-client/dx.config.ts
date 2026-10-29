@@ -56,7 +56,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         'Client',
         {
           // The boot root: everything downstream requires the client, and nothing pulls it in a host that
-          // has not asked for it yet — so it names the startup wave rather than inheriting the idle default.
+          // has not asked for it yet - so it names the startup wave rather than inheriting the idle default.
           activatesOn: ActivationEvents.Startup,
           provides: [
             ClientCapabilities.Client,
@@ -127,7 +127,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration],
           provides: [],
           // The immediate subscription reads `client.spaces` synchronously, so this needs the forked
-          // client initialization to have completed — the same point it ran at when the startup pass
+          // client initialization to have completed - the same point it ran at when the startup pass
           // awaited initialize.
           activatesOn: ClientEvents.Initialized,
           environments: ['browser', 'node', 'tauri'],
@@ -163,7 +163,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
       Capability.lazyModule(
         'RemoteTraceMonitor',
         // Startup: the process-manager runtime snapshots this capability once, in the Startup pass, and
-        // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
+        // bakes a no-op remote source if it has not been contributed yet - demand activation always loses
         // that race, silencing remote traces for every Process.Manager consumer.
         { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
         () => import('./src/capabilities/remote-trace-monitor.ts', { with: { type: 'module-url' } }),
@@ -177,7 +177,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         },
         () => import('./src/capabilities/schema-defs.ts', { with: { type: 'module-url' } }),
       ),
-      // Runtime event: spaces become ready when the client observes them, not at startup — see the
+      // Runtime event: spaces become ready when the client observes them, not at startup - see the
       // SpaceReplicationProgress module definition.
       Capability.lazyModule(
         'SpaceReplicationProgress',
@@ -191,7 +191,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         },
         () => import('./src/capabilities/space-replication-progress.ts', { with: { type: 'module-url' } }),
       ),
-      // Project remote (EDGE) trace progress into the registry (DX-1125) — see the TraceProgress
+      // Project remote (EDGE) trace progress into the registry (DX-1125) - see the TraceProgress
       // module definition for its activation gating.
       Capability.lazyModule(
         'TraceProgress',

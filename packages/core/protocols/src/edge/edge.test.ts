@@ -91,7 +91,7 @@ describe('RedeemInvitationCodeRequestSchema', () => {
 });
 
 describe('EdgeCredentialsHeaderCodec', () => {
-  // Bytes chosen so the base64 contains both `/` and `=` padding — the two characters the
+  // Bytes chosen so the base64 contains both `/` and `=` padding - the two characters the
   // WebSocket subprotocol framing has to work around.
   const PRESENTATION = new Uint8Array([0xff, 0xfe, 0xfd, 0x00, 0x01, 0x02, 0x7f, 0x80]);
 

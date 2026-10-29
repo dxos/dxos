@@ -25,7 +25,7 @@ export type FrameProps = PropsWithChildren<{
   captionStyle?: BandStyle;
   /** Top, middle or bottom (default). */
   captionPosition?: CaptionPosition;
-  /** Opacity (0–1) of the caption panel's background; unset keeps the token's default. */
+  /** Opacity (0-1) of the caption panel's background; unset keeps the token's default. */
   captionBackground?: number;
   /** White on black or black on white for the title and captions; unset, panels invert the page's theme. */
   colors?: FrameColors;

@@ -88,8 +88,8 @@ export type ClientOptions = {
   createOpfsWorker?: () => Worker;
 
   /**
-   * Opens from what the last session persisted to IndexedDB — the startup streams and each space's working
-   * set — instead of waiting for the services, which bring it current once reachable. Off when unset.
+   * Opens from what the last session persisted to IndexedDB - the startup streams and each space's working
+   * set - instead of waiting for the services, which bring it current once reachable. Off when unset.
    */
   bootCache?: BootCacheOptions;
 };
@@ -253,7 +253,7 @@ export class Client {
    * identity, spaces and queries can be used. With {@link ClientOptions.bootCache} that can be from
    * the cache, before the services answer. An app waits on this to render.
    *
-   * Waits indefinitely unless `timeout` is given, in which case it rejects with `TimeoutError` —
+   * Waits indefinitely unless `timeout` is given, in which case it rejects with `TimeoutError` -
    * opt-in because most consumers only want the completion signal, and bounding the session is the
    * caller's job (see the app entry point).
    *
@@ -310,7 +310,7 @@ export class Client {
   /**
    * True while an in-progress {@link reset} is tearing down services. Consumers that react to
    * service disconnect/reconnect (e.g. to force a reload) should check this before choosing a
-   * reload target — mid-reset, the current route is stale and reloading to it would reopen
+   * reload target - mid-reset, the current route is stale and reloading to it would reopen
    * now-cleared UI, so navigate to the origin instead.
    */
   get resetting(): boolean {
@@ -690,7 +690,7 @@ export class Client {
         try {
           edgeHttpClient.setIdentity(createEdgeIdentity(this));
         } catch (error) {
-          // Identity and device become ready asynchronously and independently — createEdgeIdentity
+          // Identity and device become ready asynchronously and independently - createEdgeIdentity
           // throws 'Identity not available' if device isn't ready yet, retried by the next
           // identity or device update once both are available. Anything else is unexpected and
           // shouldn't fail silently.
@@ -832,7 +832,7 @@ export class Client {
     this._initialized = false;
     // Back to WAITING alongside `_initialized`: leaving the trigger resolved makes
     // `waitUntilInitialized()` resolve for a client that is not initialized, which spins
-    // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
+    // `useClient` - it throws an already-settled promise, React retries, and it suspends again.
     this._initializedTrigger.reset();
     this._servicesReady = false;
     // A waiter on services that never opened would otherwise hang on a promise nothing settles.

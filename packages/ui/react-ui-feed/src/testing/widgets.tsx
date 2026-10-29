@@ -16,8 +16,8 @@ import { useWidgetState } from '../components/index.ts';
  * Widgets for the block kinds an assistant turn contains.
  *
  * Approximations of `plugin-assistant`'s, deliberately: what the engine has to prove is that a
- * per-message document can carry block widgets at all — that they mount, measure and survive
- * streaming — not that these are the widgets the plugin will ship. The real ones move down when the
+ * per-message document can carry block widgets at all - that they mount, measure and survive
+ * streaming - not that these are the widgets the plugin will ship. The real ones move down when the
  * plugin does.
  *
  * Every widget renders from the tag alone. The plugin keeps tool state beside the document and
@@ -27,10 +27,10 @@ import { useWidgetState } from '../components/index.ts';
 
 /**
  * A collapsible block: the header is what the reader sees while scrolling past, the body is what
- * they open when they care. Reasoning and tool traces are long, incidental and frequent — rendering
+ * they open when they care. Reasoning and tool traces are long, incidental and frequent - rendering
  * them expanded turns a chat into a log.
  *
- * The disclosure animates, and every frame of it is measured twice — by CodeMirror, to re-place the
+ * The disclosure animates, and every frame of it is measured twice - by CodeMirror, to re-place the
  * lines under the widget, and by the virtualizer, to re-place the rows under the item. That is what
  * it costs for the content below to travel with the panel instead of jumping to its new place; the
  * geometry stays consistent because `MarkdownBlock` re-measures the document as the widget resizes.
@@ -53,12 +53,12 @@ const Panel = ({
 
   return (
     // The open flag is published to the DOM so a test can ask whether it survived the row being
-    // unmounted — which is the whole question a virtualized feed raises about widget state.
+    // unmounted - which is the whole question a virtualized feed raises about widget state.
     <div data-testid='feed.widget' data-open={open}>
       <TogglePanel.Root open={open} onChangeOpen={setOpen}>
         {/* A minimum height, not a fixed one: the widget's content is portaled and paints after
           CodeMirror has placed the box, so without a floor the row is measured empty and grows a
-          frame later — a row jumping under the reader. `estimatedHeight` in the registry looks like
+          frame later - a row jumping under the reader. `estimatedHeight` in the registry looks like
           the answer and is not: it sets `height` and `overflow: hidden` on the widget root, which
           pins the panel shut. */}
         <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-separator-subtle', classNames)}>
@@ -151,7 +151,7 @@ const Json = ({ children }: WidgetProps) => (
 /**
  * Floor for a panel's collapsed height, reserved before its portaled content paints.
  *
- * `heightMode: 'min'` is what makes this a floor rather than a pin — the default pins the box and
+ * `heightMode: 'min'` is what makes this a floor rather than a pin - the default pins the box and
  * clips it, so an opened panel stays shut. Without any reservation the row is measured at the height
  * of an empty box and grows a frame later, which is a row moving under a reader scrolling up.
  */
@@ -159,7 +159,7 @@ const COLLAPSED_HEIGHT = 42;
 
 export const chatRegistry: XmlWidgetRegistry = {
   // No widget: the reader's own words stay in the document, where they can be selected and searched
-  // like any other text. Registered so the markdown parser keeps the tag as one block — an
+  // like any other text. Registered so the markdown parser keeps the tag as one block - an
   // unregistered tag opens a paragraph that swallows the lines after it.
   prompt: { block: true },
   reasoning: {

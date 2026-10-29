@@ -87,7 +87,7 @@ describe('counter worker e2e', () => {
     expect(await owner.increment()).toBe(1);
     expect(await nextSubscribedValue(follower)).toBe(1);
 
-    // Closing the owner terminates its worker; the remaining client must fail over — win leader
+    // Closing the owner terminates its worker; the remaining client must fail over - win leader
     // election and spawn a replacement worker.
     const reconnected = new Trigger();
     follower.reconnected.on(() => {
@@ -97,7 +97,7 @@ describe('counter worker e2e', () => {
     ownerClosed = true;
     await asyncTimeout(reconnected.wait(), 15_000);
 
-    // The replacement worker starts from zero, so the next increment returns 1 rather than 2 —
+    // The replacement worker starts from zero, so the next increment returns 1 rather than 2 -
     // proving a new worker was created rather than the original one reused.
     expect(await follower.increment()).toBe(1);
   });

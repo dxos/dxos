@@ -15,7 +15,7 @@ import { McpSession, bootstrapProfile, dxBin, runDx } from '../../testing/index.
 
 /**
  * End-to-end: a real Claude Code subprocess uploads an image through `dx mcp serve` and attaches it
- * to a task — `createUpload`, the `curl` it returns, `file.createFromUpload`, `tasks.addArtifact`.
+ * to a task - `createUpload`, the `curl` it returns, `file.createFromUpload`, `tasks.addArtifact`.
  * Every claim is read back by a separate `dx` process, down to the stored bytes, so a turn that
  * only narrates success fails.
  *

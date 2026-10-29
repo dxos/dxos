@@ -10,8 +10,8 @@
 // Usage: node e2e-invitation-smoke.mjs [--app http://localhost:5173] [--url http://localhost:8791]
 //        [--cli <path to packages/devtools/cli>] [--headed]
 //
-// Legs: 1 cli identity → 2 host invitation → 3 browser join (playwright) → 4 whoami via MCP
-//       (OAuth stub with the CLI identity, at --url) → 5 createObject document + attach → 6 assert
+// Legs: 1 cli identity -> 2 host invitation -> 3 browser join (playwright) -> 4 whoami via MCP
+//       (OAuth stub with the CLI identity, at --url) -> 5 createObject document + attach -> 6 assert
 //       in browser. NOTE: leg 3 is the open question (invitation handshake with a bun-hosted CLI
 //       peer). The script reports PASS/FAIL per leg so a leg-3 hang is itself a result.
 //
@@ -105,7 +105,7 @@ const waitFor = async (pattern, timeout, what) => {
 };
 const authCode = await waitFor(/Secret: (\d+)/, 30000, 'auth code');
 const invitationCode = await waitFor(/Invitation: (\S+)/, 30000, 'invitation code');
-console.log('authCode', authCode, 'invitation', `${invitationCode.slice(0, 16)}…`);
+console.log('authCode', authCode, 'invitation', `${invitationCode.slice(0, 16)}...`);
 
 // 3. Browser joins (fresh profile; the reset-and-join dialog from #12426 handles onboarding).
 step('browser join');
@@ -134,6 +134,6 @@ try {
 share.kill();
 
 // 4+5+6 to be enabled once leg 3 passes (whoami via stub with CLI identity key, createObject,
-// attach, assert — same pattern as e2e-oauth-smoke.mjs).
-console.log('LEG 3 PASSED — extend with MCP legs next.');
+// attach, assert - same pattern as e2e-oauth-smoke.mjs).
+console.log('LEG 3 PASSED - extend with MCP legs next.');
 await browser.close();

@@ -31,7 +31,7 @@ import { AIRLINES } from './const.ts';
  * and the framework assembles the object graph:
  *  - an existing Segment matching `(number, departAt date)` is updated in place;
  *  - otherwise a fresh flight Segment is created and attached to the Trip whose Booking shares the
- *    confirmation code (PNR) — producing one Trip with multiple Segments — or, when no such Trip
+ *    confirmation code (PNR) - producing one Trip with multiple Segments - or, when no such Trip
  *    exists, a new `Trip` + `Booking` + `Segment` trio.
  * The flight provider (airline) is derived from the sender domain + flight-number prefix and
  * linked to a matching Organization. The `match()` pre-filter (sender domain / subject keywords)
@@ -39,7 +39,7 @@ import { AIRLINES } from './const.ts';
  */
 export const TEMPLATE_ID = 'org.dxos.plugin.trip.extractor.trip';
 
-// Travel-related subject keywords used by the cheap `match()` pre-filter. Generous on purpose —
+// Travel-related subject keywords used by the cheap `match()` pre-filter. Generous on purpose -
 // the LLM returns empty fields for non-flight mail, so a false positive costs only one cheap call.
 const TRAVEL_SUBJECT_REGEX =
   /\b(?:flight|train|rail|eurostar|booking|e-?ticket|itinerary|reservation|boarding|gate\s+change|schedule\s+change)\b/i;
@@ -105,14 +105,14 @@ const ExtractionPayload = Schema.Struct({
 interface ExtractionPayload extends Schema.Schema.Type<typeof ExtractionPayload> {}
 
 const PROMPT = trim`
-  Extract EVERY travel segment from this booking/confirmation email — itineraries frequently have
+  Extract EVERY travel segment from this booking/confirmation email - itineraries frequently have
   multiple legs (connections, round-trips, multi-city). Return them in chronological order in the
   "segments" array; do NOT stop after the first one.
   Set each segment's "kind" to "train" for rail bookings (e.g. Eurostar, Amtrak, Alfa Pendular, SNCF)
   or "flight" for air travel; default to "flight".
   Return ISO 8601 UTC timestamps for departAt and arriveAt. For flights use IATA airport codes for
   origin.code/destination.code; for trains use the station name (and code if present).
-  IMPORTANT: Use the exact date stated in the email, INCLUDING the correct year — do not guess, shift,
+  IMPORTANT: Use the exact date stated in the email, INCLUDING the correct year - do not guess, shift,
   or default the year. If the year is ambiguous, prefer the year nearest the email's own date.
   Set the booking-level "confirmationCode" to the reservation/booking reference (it is shared by all
   segments). Include per-segment, if present: gate, terminal, seat (flights); platform, coach, seat (trains).
@@ -197,7 +197,7 @@ const epoch = (iso?: string): number | undefined => {
 };
 
 /**
- * Find the nearest existing Trip whose date range is within `gapDays` of this segment's departure —
+ * Find the nearest existing Trip whose date range is within `gapDays` of this segment's departure -
  * i.e. the segment falls inside `[start - gap, end + gap]`. Used to group separately-booked legs of
  * one journey (different PNRs) into a single Trip. A `gapDays` of 0 still allows same-day joins.
  */
@@ -240,7 +240,7 @@ const tripNameFor = (payload: SegmentPayload): string => {
   const origin = payload.origin?.code ?? payload.origin?.name ?? '?';
   const destination = payload.destination?.code ?? payload.destination?.name ?? '?';
   const number = payload.number ?? '';
-  return number ? `${origin} → ${destination} (${number})` : `${origin} → ${destination}`;
+  return number ? `${origin} -> ${destination} (${number})` : `${origin} -> ${destination}`;
 };
 
 const makeSegment = (
@@ -324,8 +324,8 @@ const updateExistingSegment = (segment: Segment.Segment, payload: SegmentPayload
 /**
  * Assemble ALL legs of one booking into the object graph. Every segment shares the booking's PNR, so
  * they attach to a single Trip + Booking, resolved once:
- *  - an existing Booking with the same PNR → its Trip;
- *  - else a Trip within the configured date gap (gap-join) → a new Booking parented to it;
+ *  - an existing Booking with the same PNR -> its Trip;
+ *  - else a Trip within the configured date gap (gap-join) -> a new Booking parented to it;
  *  - else a brand-new Trip + Booking.
  * Each segment that already exists (same kind/number/depart-date) is updated in place; the rest are
  * created and appended. Only the Trip is top-level, so the source message links to the Trip alone.
@@ -371,7 +371,7 @@ const assemble = (
       );
       const provider = yield* resolveProvider(db, earliest, message);
 
-      // Resolve the Trip + Booking that the new legs attach to: existing PNR → its Trip; else a Trip
+      // Resolve the Trip + Booking that the new legs attach to: existing PNR -> its Trip; else a Trip
       // within the configured gap (new Booking parented to it); else a brand-new Trip + Booking.
       let trip: Trip.Trip;
       let booking: Booking.Booking;
@@ -387,7 +387,7 @@ const assemble = (
           trip = nearbyTrip;
           updated.set(trip.id, trip);
         } else {
-          // Push the Trip BEFORE the Booking so the parent is persisted first — otherwise the
+          // Push the Trip BEFORE the Booking so the parent is persisted first - otherwise the
           // dispatcher adds the Booking while its parent is absent and gives it a provenance chip.
           trip = Trip.make({ name: tripNameFor(earliest), start: earliest.departAt, end: earliest.arriveAt });
           created.push(trip);
@@ -415,11 +415,11 @@ const assemble = (
     return { created, updated: Array.from(updated.values()), relations: [] };
   });
 
-/** Leading two-letter IATA code of a flight number (e.g. "AF0003" → "AF"). */
+/** Leading two-letter IATA code of a flight number (e.g. "AF0003" -> "AF"). */
 const airlineCodeOf = (flightNumber: string | undefined): string | undefined =>
   flightNumber?.match(/^([A-Za-z]{2})/)?.[1]?.toUpperCase();
 
-/** Title-case a domain's second-level label as a provider-name fallback (airfrance.com → Airfrance). */
+/** Title-case a domain's second-level label as a provider-name fallback (airfrance.com -> Airfrance). */
 const domainToName = (domain: string): string => {
   const label = domain.split('.')[0] ?? domain;
   return label.charAt(0).toUpperCase() + label.slice(1);
@@ -482,7 +482,7 @@ const template: ExtractionTemplate = {
   tags: [{ label: 'travel', hue: 'sky' }],
 };
 
-/** Template-driven extractor — recognises airline booking confirmations. */
+/** Template-driven extractor - recognises airline booking confirmations. */
 export const TripMessageExtractor: ObjectExtractor = makeTemplateExtractor({
   template,
   operation: TripOperation.ExtractTrip,
@@ -493,7 +493,7 @@ export const TripMessageExtractor: ObjectExtractor = makeTemplateExtractor({
 });
 
 /**
- * Operation handler — wraps the extractor so it is also a first-class registered operation. The
+ * Operation handler - wraps the extractor so it is also a first-class registered operation. The
  * trip assembly does not resolve via the `Resolver` (it dedupes segments by a direct db query),
  * so an empty resolver layer is provided to satisfy the requirement. Returns ExtractResult
  * without touching the database; the dispatcher persists.

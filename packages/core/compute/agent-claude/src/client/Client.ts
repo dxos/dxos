@@ -9,7 +9,7 @@
 // a rival schema and never match the consumer's queries. The frame shapes are therefore structural,
 // and callers decode them with their own `Message.make`.
 
-/** Mirrors `Middleware.PATH`, which cannot be imported here — that module is node-only. */
+/** Mirrors `Middleware.PATH`, which cannot be imported here - that module is node-only. */
 export const PATH = '/api/agent-claude/run';
 
 /** Structural twin of `Wire.WireMessage`; `blocks` are `ContentBlock.Any` to a consumer. */
@@ -25,7 +25,7 @@ export type Frame = {
 export type End = {
   end: true;
   denials: number;
-  /** Session the turn ran under — pass back as `resume` to continue, or with `fork` to branch. */
+  /** Session the turn ran under - pass back as `resume` to continue, or with `fork` to branch. */
   sessionId?: string;
   error?: string;
 };
@@ -50,7 +50,7 @@ export type RunOptions = {
  * Streams a turn from the host, yielding each NDJSON frame as it arrives.
  *
  * The terminal {@link End} carries the session id, so a caller continues a conversation by passing
- * it back as `resume` — or branches by passing it with `fork`.
+ * it back as `resume` - or branches by passing it with `fork`.
  */
 export const run = async function* ({
   prompt,

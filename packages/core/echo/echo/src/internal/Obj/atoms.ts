@@ -42,7 +42,7 @@ const getReactiveOption = <T extends Obj.Unknown>(snapshot: Obj.Snapshot<T>): Ef
 
 /**
  * Atom family for ECHO objects.
- * Uses object reference as key — same object returns same atom.
+ * Uses object reference as key - same object returns same atom.
  */
 const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>> => {
   return Atom.make<Obj.Snapshot<T>>((get) => {
@@ -112,7 +112,7 @@ const propertyFamily = Atom.family(([obj, key]: readonly [Obj.Unknown, PropertyK
 });
 
 /**
- * Atom family for ECHO objects — returns the live object, not a snapshot.
+ * Atom family for ECHO objects - returns the live object, not a snapshot.
  */
 const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<T> => {
   return Atom.make<T>((get) => {
@@ -127,7 +127,7 @@ const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): At
 });
 
 /**
- * Atom family for ECHO refs — returns the live reactive object, not a snapshot.
+ * Atom family for ECHO refs - returns the live reactive object, not a snapshot.
  */
 const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
   const effect = (get: Atom.AtomContext) =>
@@ -159,7 +159,7 @@ const refPropertyFamily = Atom.family(([ref, key]: readonly [Ref.Ref<any>, Prope
 );
 
 /**
- * Atom family for any ECHO entity (obj or relation) — returns a snapshot.
+ * Atom family for any ECHO entity (obj or relation) - returns a snapshot.
  */
 const entityFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
   return Atom.make<Entity.Snapshot>((get) => {
@@ -175,7 +175,7 @@ const entityFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Ato
 });
 
 /**
- * Atom family for ECHO relations — returns a typed relation snapshot.
+ * Atom family for ECHO relations - returns a typed relation snapshot.
  */
 const relationFamily = Atom.family(<T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
   return Atom.make<Relation.Snapshot<T>>((get) => {

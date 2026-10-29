@@ -25,7 +25,7 @@ import { type FormFieldDispatchProps } from './resolve-field.ts';
 const FORM_LAYOUT_NAME = 'Form.Layout';
 
 export type FormLayoutProps = {
-  /** Template in the FormLayout DSL (`<grid cols=…><field name=… span=…/></grid>`); else the schema's annotation. */
+  /** Template in the FormLayout DSL (`<grid cols=...><field name=... span=.../></grid>`); else the schema's annotation. */
   template?: string;
   /** The named layout in `FormLayoutAnnotation` when there is no `template`; `'default'` by default. */
   name?: string;
@@ -49,7 +49,7 @@ export const FormLayout = ({
   if (source === undefined) {
     throw new LayoutParseError(
       annotated
-        ? `no layout named "${name}" on schema (available: ${Object.keys(annotated).join(', ') || '∅'})`
+        ? `no layout named "${name}" on schema (available: ${Object.keys(annotated).join(', ') || '\u2205'})`
         : 'no template provided and schema has no FormLayoutAnnotation',
     );
   }

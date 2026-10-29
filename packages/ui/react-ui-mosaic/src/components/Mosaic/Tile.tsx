@@ -137,8 +137,8 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
     );
     // The `size` prop is the source of truth; internal state exists only to reflect the live extent
     // during a drag (which commits back through `onSizeChange`). Re-sync when the prop changes so a
-    // tile that first rendered without a size — e.g. before the breakpoint settled, or a
-    // mobile/fullbleed → sliding branch switch that swaps `size` in — applies it once it arrives,
+    // tile that first rendered without a size - e.g. before the breakpoint settled, or a
+    // mobile/fullbleed -> sliding branch switch that swaps `size` in - applies it once it arrives,
     // instead of staying stuck at its initial (often `undefined`) extent. A live drag never changes
     // the prop (only the committed drop does), so this does not fight the drag.
     useEffect(() => {
@@ -230,7 +230,7 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
             const data = getSourceData(source);
             return (data && eventHandler.canDrop?.({ source: data })) || false;
           },
-          // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+          // Reorder is a move, not a copy - otherwise the browser shows the green "+" copy cursor.
           getDropEffect: () => 'move',
           onDragEnter: ({ self, source }) => {
             handleChange({ self, source });
@@ -307,7 +307,7 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
 
         {/* Dragging preview. Cloned at the source size; the live tile is removed from the list while
             dragging, so this clone is what the user sees following the cursor. NOTE: external SVG sprite
-            `<use>` icons do not rasterize here — use inline SVG (see Mosaic.DragHandle) for drag affordances. */}
+            `<use>` icons do not rasterize here - use inline SVG (see Mosaic.DragHandle) for drag affordances. */}
         {state.type === 'preview' &&
           createPortal(
             <ark.div

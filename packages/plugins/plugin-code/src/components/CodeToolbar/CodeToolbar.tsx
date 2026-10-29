@@ -25,8 +25,8 @@ export type CodeToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
 };
 
 /**
- * Toolbar for `CodeArticle`. Wraps a `ActionToolbar` with two actions —
- * Build and Run — built through the standard `useMenuActions` /
+ * Toolbar for `CodeArticle`. Wraps a `ActionToolbar` with two actions -
+ * Build and Run - built through the standard `useMenuActions` /
  * `createMenuAction` idiom so the article's attendable identity threads
  * through `ActionToolbar` (and so the actions show up uniformly with other
  * toolbar-driven articles in the deck).

@@ -37,6 +37,6 @@ export const protoTimestamp: Schema.Codec<Date, Date> = Schema.Date;
  * mutable `T[]` that generated protobuf request/response interfaces expose. Service
  * handlers keep those proto types (see service-rpc-schemas.md), so inline RPC payloads
  * use mutable arrays to stay structurally compatible at the RPC boundary. The wire
- * encoding is identical — only the TypeScript element mutability differs.
+ * encoding is identical - only the TypeScript element mutability differs.
  */
 export const mutableArray = <Value extends Schema.Top>(value: Value) => Schema.mutable(Schema.Array(value));

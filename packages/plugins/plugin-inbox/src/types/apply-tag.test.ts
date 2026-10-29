@@ -17,7 +17,7 @@ import * as SystemTags from './SystemTags.ts';
 
 /**
  * Bulk labelling has to be a SET, not a flip. `toggleTag` over a batch would untag whichever members
- * already carried the tag, so a re-run would undo the previous one — which is exactly what happens
+ * already carried the tag, so a re-run would undo the previous one - which is exactly what happens
  * when a contact is created twice, or a sync labels a sender already labelled by hand.
  */
 describe('applyTagToAll', () => {
@@ -54,12 +54,12 @@ describe('applyTagToAll', () => {
     expect(applied).toBe(2);
   });
 
-  test('is idempotent — a second run changes nothing', async ({ expect }) => {
+  test('is idempotent - a second run changes nothing', async ({ expect }) => {
     const { db, mailbox, messages } = await setup();
 
     await run(db, SystemTags.applyTagToAll(mailbox, messages, 'important'));
     const second = await run(db, SystemTags.applyTagToAll(mailbox, messages, 'important'));
-    // Zero newly applied, and — the point — nothing untagged.
+    // Zero newly applied, and - the point - nothing untagged.
     expect(second).toBe(0);
 
     const tag = await SystemTags.findOrCreateSystemTag(db, 'important');

@@ -16,7 +16,7 @@ import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
- * Discovery only — list Trello boards reachable from a connection's token.
+ * Discovery only - list Trello boards reachable from a connection's token.
  *
  * Read-only: returns one descriptor per remote board, NEVER creates a local
  * Kanban. Local Kanbans are materialized eagerly when a binding is created
@@ -81,7 +81,7 @@ export const SyncTrelloBoard = Operation.make({
       updated: Schema.Number,
     }),
   }),
-  // TODO(wittjosiah): same as GetTrelloBoards above — declare
+  // TODO(wittjosiah): same as GetTrelloBoards above - declare
   //   `services: [Database.Service]` once the OperationInvoker has a
   //   `databaseResolver`. Handler provides the layer itself for now.
   services: [Trace.TraceService],

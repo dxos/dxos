@@ -55,7 +55,7 @@ const provider: ConnectorSpec.ConnectorEntry = {
  *
  * A unit test over `ConnectorAuth.actions` cannot see what matters here: the extension decides from the
  * reactive connector list, where a provider that has not activated yet looks exactly like one that is
- * not installed — which is how a disabled placeholder came to stick on a toolbar whose provider was
+ * not installed - which is how a disabled placeholder came to stick on a toolbar whose provider was
  * present all along.
  */
 describe('connectorAuth graph extension', () => {
@@ -96,7 +96,7 @@ describe('connectorAuth graph extension', () => {
 
   test('re-enables the placeholder when a binding provider registers later', async ({ expect }) => {
     // The reported bug, in sequence: a mailbox that loaded before plugin-google/plugin-jmap activated
-    // saw providers but none binding its type, so it got the disabled placeholder — and the live group
+    // saw providers but none binding its type, so it got the disabled placeholder - and the live group
     // that replaced it once they registered carries no `disabled` key of its own, so a graph node that
     // merges properties over the previous generation kept showing the frozen `true`. A mailbox created
     // after activation never had that first generation, which is why only pre-existing ones were dead.

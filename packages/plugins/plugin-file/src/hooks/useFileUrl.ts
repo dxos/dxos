@@ -18,7 +18,7 @@ export type FileUrl = {
 };
 
 /**
- * A URL the file's bytes can be rendered from — the blob's own when the store serves one, else an
+ * A URL the file's bytes can be rendered from - the blob's own when the store serves one, else an
  * object URL over the bytes, revoked when the file changes or the host unmounts.
  */
 export const useFileUrl = (file: File.File): FileUrl | undefined => {
@@ -47,7 +47,7 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
 
       const bytes = yield* Blob.read(blob);
       // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
-      // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+      // `BlobPart` only covers `ArrayBuffer`-backed views - a gap between the DOM lib types and
       // the TS standard lib, not fixable by typing `bytes` differently.
       const url = URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type }));
       // Only a URL this hook minted is its to revoke: the store's own `blob:` URL may be another consumer's.
@@ -76,7 +76,7 @@ export const useFileUrl = (file: File.File): FileUrl | undefined => {
     };
     // Keyed on the blob's URI rather than `file`/`file.data` directly: ECHO's reactive proxy returns
     // a fresh `Ref` wrapper for `.data` on every access, so including it (or the proxy object itself)
-    // here would rerun this effect on every render — clearing the render state and re-resolving it
+    // here would rerun this effect on every render - clearing the render state and re-resolving it
     // each time, which flickers the image while the object settles. The URI is what changes when a
     // download replaces the file's bytes.
     // eslint-disable-next-line react-hooks/exhaustive-deps

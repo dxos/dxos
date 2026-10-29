@@ -27,9 +27,9 @@ describe('refs', () => {
 
 describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   // Fixture shape:
-  //   @fixture/pkg-a — ECHO type definition (Schema.Struct + Type.makeObject) for Task,
+  //   @fixture/pkg-a - ECHO type definition (Schema.Struct + Type.makeObject) for Task,
   //                    plus a make() factory using Obj.make.
-  //   @fixture/pkg-b — React component (TaskCard) consuming a Task via useObject,
+  //   @fixture/pkg-b - React component (TaskCard) consuming a Task via useObject,
   //                    plus a TaskCardProps interface.
   let introspector: Introspector;
 

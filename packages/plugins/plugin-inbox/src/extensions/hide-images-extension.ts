@@ -7,23 +7,23 @@ import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
 
 const hidden = Decoration.replace({});
 
-// Markdown image of any target: `![alt](…)`, optionally wrapped in a link (`[![alt](…)](href)`,
-// common in newsletters) — the whole construct is consumed so no empty `[](href)` link is left
-// behind. The target is captured so `keep` can exempt it — the capture allows an empty target, so a
+// Markdown image of any target: `![alt](...)`, optionally wrapped in a link (`[![alt](...)](href)`,
+// common in newsletters) - the whole construct is consumed so no empty `[](href)` link is left
+// behind. The target is captured so `keep` can exempt it - the capture allows an empty target, so a
 // stray `![alt]()` is hidden rather than left as visible source. The linked form is listed first so it
 // wins over the bare form at the same position.
 const IMAGE = String.raw`!\[[^\]]*\]\(\s*([^)\s]*)[^)]*\)`;
 const IMAGE_REGEXP = new RegExp(String.raw`\[${IMAGE}\]\([^)]*\)|${IMAGE}`, 'g');
 
 /**
- * Local object references, rendered by `preview()` rather than fetched — exempt by default, since
+ * Local object references, rendered by `preview()` rather than fetched - exempt by default, since
  * hiding them would blank content that never touches the network.
  */
 const isLocalRef = (url: string): boolean => /^(dxn|echo):/i.test(url);
 
 export type HideImagesOptions = {
   /**
-   * Image targets to leave in place. Everything else is omitted — including `cid:` and
+   * Image targets to leave in place. Everything else is omitted - including `cid:` and
    * protocol-relative targets, which would otherwise render as broken images. Defaults to
    * {@link isLocalRef}.
    */
@@ -120,7 +120,7 @@ const buildDecorations = (text: string, keep?: (url: string) => boolean): Decora
  * Cleans up the rendered email body when image loading is disabled: completely omits image markdown
  * (`![alt](url)`) rather than leaving a broken image or the raw link visible, and collapses runs of
  * consecutive blank lines down to a single blank line. Every target is hidden except those `keep`
- * exempts — by default the local (`dxn:`/`echo:`) references that `preview()` renders without a fetch.
+ * exempts - by default the local (`dxn:`/`echo:`) references that `preview()` renders without a fetch.
  *
  * Implemented as a `StateField` rather than a `ViewPlugin` because the blank-line decorations
  * replace line breaks, which CodeMirror forbids for plugin-provided decorations.

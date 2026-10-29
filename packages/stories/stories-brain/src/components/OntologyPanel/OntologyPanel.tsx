@@ -38,7 +38,7 @@ const curie = (iri: string, namespace: string): string => {
 
 /**
  * Every predicate the brain knows, with its metadata and how often the facts use it, plus the ontology graph as Turtle
- * and the facts as TriG. Seed predicates keep their vocabulary's IRIs (schema.org, FOAF, …); those an extractor minted
+ * and the facts as TriG. Seed predicates keep their vocabulary's IRIs (schema.org, FOAF, ...); those an extractor minted
  * live in the brain's own namespace.
  */
 export const OntologyPanel = Util.composable<HTMLDivElement, OntologyPanelProps>(
@@ -124,15 +124,15 @@ const PredicateRow = ({
   const details: [string, string][] = [
     ['synonyms', entry.synonyms?.join(', ') ?? ''],
     [
-      'domain → range',
+      'domain -> range',
       entry.domain || entry.range
-        ? `${entry.domain ? curie(entry.domain, ontology.namespace) : 'any'} → ${entry.range ? curie(entry.range, ontology.namespace) : 'any'}`
+        ? `${entry.domain ? curie(entry.domain, ontology.namespace) : 'any'} -> ${entry.range ? curie(entry.range, ontology.namespace) : 'any'}`
         : '',
     ],
     ['inverse', entry.inverse ? curie(entry.inverse, ontology.namespace) : ''],
     ['equivalent', (entry.equivalents ?? []).map((iri) => curie(iri, ontology.namespace)).join(', ')],
     ['created', [entry.created, entry.creator].filter(Boolean).join(' · ')],
-    ['example', entry.example ? `“${entry.example}”` : ''],
+    ['example', entry.example ? `"${entry.example}"` : ''],
     ['replaced by', entry.replacedBy ? curie(entry.replacedBy, ontology.namespace) : ''],
   ];
   return (

@@ -7,7 +7,7 @@ import { type ImportBinding } from './Boundary.ts';
 
 /**
  * Lexical scopes of one file, value and type space apart, so the propagator binds an identifier
- * to the declaration TypeScript would — shadowing included. Built in one walk; lookups walk the
+ * to the declaration TypeScript would - shadowing included. Built in one walk; lookups walk the
  * parent chain.
  */
 

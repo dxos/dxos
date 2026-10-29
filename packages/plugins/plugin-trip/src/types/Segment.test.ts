@@ -36,7 +36,7 @@ describe('Segment schemas', () => {
     const depart = '2026-06-01T10:00:00.000Z';
     const arrive = '2026-06-01T17:00:00.000Z';
 
-    // Transport / activity → departAt / arriveAt.
+    // Transport / activity -> departAt / arriveAt.
     const flight = Segment.makeDefault('flight');
     Segment.setDepartAt(flight, depart);
     Segment.setArriveAt(flight, arrive);
@@ -44,7 +44,7 @@ describe('Segment schemas', () => {
     expect(Segment.getArriveAt(flight)).toBe(arrive);
     expect(flight.details._tag === 'flight' && flight.details.departAt).toBe(depart);
 
-    // Accommodation → checkIn / checkOut.
+    // Accommodation -> checkIn / checkOut.
     const stay = Segment.makeDefault('accommodation');
     Segment.setDepartAt(stay, depart);
     Segment.setArriveAt(stay, arrive);
@@ -57,19 +57,19 @@ describe('Segment schemas', () => {
   test('setOrigin writes the variant-appropriate "from" place and copies fields', ({ expect }) => {
     const place = { name: 'London Heathrow', code: 'LHR', geo: [-0.4543, 51.47] as const };
 
-    // Transport → origin.
+    // Transport -> origin.
     const flight = Segment.makeDefault('flight');
     Segment.setOrigin(flight, place);
     expect(Segment.getOrigin(flight)?.code).toBe('LHR');
     expect(flight.details._tag === 'flight' && flight.details.origin?.code).toBe('LHR');
 
-    // Accommodation → location.
+    // Accommodation -> location.
     const stay = Segment.makeDefault('accommodation');
     Segment.setOrigin(stay, place);
     expect(Segment.getOrigin(stay)?.code).toBe('LHR');
     expect(stay.details._tag === 'accommodation' && stay.details.location?.code).toBe('LHR');
 
-    // Activity → venue.
+    // Activity -> venue.
     const activity = Segment.makeDefault('activity');
     Segment.setOrigin(activity, place);
     expect(Segment.getOrigin(activity)?.code).toBe('LHR');

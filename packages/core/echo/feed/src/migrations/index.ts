@@ -19,7 +19,7 @@ import feedOptions from './0005_feed_options.sql?raw';
  *
  * Ids are permanent and must only ever increase: the migrator applies everything above the highest
  * recorded id, so a migration numbered at or below one that has shipped is skipped for good. An
- * applied migration must never be edited either — nothing verifies its contents.
+ * applied migration must never be edited either - nothing verifies its contents.
  */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),

@@ -28,12 +28,12 @@ import {
 import { SENDER_HYBRID_THRESHOLD, SENDER_LABEL_MODEL } from './defs.ts';
 
 // Sender-type triage eval (REPORT §5): does classify-sender reliably split PERSON from ORG mail? It
-// gates all downstream LLM spend (draft only to people, label — not summarize — org mail), so it needs
+// gates all downstream LLM spend (draft only to people, label - not summarize - org mail), so it needs
 // a ground-truth measurement, not agreement-with-a-model. Two entry points:
 //
-//   1. `bootstrap ...` (runs when no gold set exists) — labels every unique sender with the strongest
+//   1. `bootstrap ...` (runs when no gold set exists) - labels every unique sender with the strongest
 //      model and writes a `.candidate.json` for a HUMAN to review + promote to the gold path.
-//   2. `classify-sender ...` (runs once a gold set exists) — scores the heuristic, each model, and the
+//   2. `classify-sender ...` (runs once a gold set exists) - scores the heuristic, each model, and the
 //      hybrid (heuristic-when-confident-else-model) against the human gold set.
 
 /** The gold set lives one directory up from a per-sender review file; derive the candidate sibling. */
@@ -56,10 +56,10 @@ const readLabels = (path: string): ReadonlyMap<string, SenderClass> => {
 const round = (value: number): number => Math.round(value * 1000) / 1000;
 
 // ---------------------------------------------------------------------------------------------------
-// Bootstrap — seed a candidate gold set for human review (no gold set yet).
+// Bootstrap - seed a candidate gold set for human review (no gold set yet).
 // ---------------------------------------------------------------------------------------------------
 
-describe.skipIf(!fixtureExists() || existsSync(SENDER_LABELS))('classify-sender — bootstrap gold set', () => {
+describe.skipIf(!fixtureExists() || existsSync(SENDER_LABELS))('classify-sender - bootstrap gold set', () => {
   test(
     'label every sender with the strong model for human review',
     async ({ expect }) => {
@@ -87,7 +87,7 @@ describe.skipIf(!fixtureExists() || existsSync(SENDER_LABELS))('classify-sender 
         generatedBy: variant.name,
         generatedAt: new Date().toISOString(),
         reviewed: false,
-        note: `Candidate labels — REVIEW and correct, then rename to ${toRelative(SENDER_LABELS)} to enable the eval.`,
+        note: `Candidate labels - REVIEW and correct, then rename to ${toRelative(SENDER_LABELS)} to enable the eval.`,
         labels,
       };
       writeFileSync(CANDIDATE_LABELS, JSON.stringify(file, null, 2));
@@ -104,7 +104,7 @@ describe.skipIf(!fixtureExists() || existsSync(SENDER_LABELS))('classify-sender 
 });
 
 // ---------------------------------------------------------------------------------------------------
-// Eval — score every arm against the human-reviewed gold set.
+// Eval - score every arm against the human-reviewed gold set.
 // ---------------------------------------------------------------------------------------------------
 
 type Row = {
@@ -114,7 +114,7 @@ type Row = {
   readonly macroF1: number;
   readonly personF1: number;
   readonly orgF1: number;
-  /** Confusion (gold → predicted). */
+  /** Confusion (gold -> predicted). */
   readonly confusion: Record<string, number>;
   /** For hybrid arms: fraction of senders deferred to the model. */
   readonly deferred?: number;
@@ -122,13 +122,13 @@ type Row = {
   readonly latencyP95?: number;
 };
 
-describe.skipIf(!fixtureExists() || !existsSync(SENDER_LABELS))('classify-sender — ground-truth eval', () => {
+describe.skipIf(!fixtureExists() || !existsSync(SENDER_LABELS))('classify-sender - ground-truth eval', () => {
   test(
     'heuristic / hybrid / models vs the gold set',
     async ({ expect }) => {
       const gold = readLabels(SENDER_LABELS);
       const variants = selectVariants();
-      // Score only the labelled senders — the gold set may cover a subset, and it bounds LLM cost.
+      // Score only the labelled senders - the gold set may cover a subset, and it bounds LLM cost.
       const allSenders = uniqueSenders(loadFixtureMessages({ limit: undefined }));
       const senders = allSenders.filter((sender) => gold.has(sender.email));
       log.info('classify-sender eval', {
@@ -158,11 +158,11 @@ describe.skipIf(!fixtureExists() || !existsSync(SENDER_LABELS))('classify-sender
         };
       };
 
-      // Arm 1 — heuristic only (deterministic, foreground, zero-latency).
+      // Arm 1 - heuristic only (deterministic, foreground, zero-latency).
       const heuristic = senders.map((sender) => classifySenderHeuristic(sender));
       rows.push(rowOf('heuristic', heuristic, { latencyP50: 0, latencyP95: 0 }));
 
-      // Arm 2 — each model over the labelled senders (with latency).
+      // Arm 2 - each model over the labelled senders (with latency).
       const progress = trackProgress('classify-sender:eval', variants.length * senders.length);
       const ladder = await runLadder({
         variants,
@@ -184,8 +184,8 @@ describe.skipIf(!fixtureExists() || !existsSync(SENDER_LABELS))('classify-sender
             latencyP95: entry.latency.p95,
           }),
         );
-        // Arm 3 — hybrid derived per model: heuristic when confident, else this model's prediction. No
-        // extra LLM calls — reuses the model's already-computed labels for the deferred senders only.
+        // Arm 3 - hybrid derived per model: heuristic when confident, else this model's prediction. No
+        // extra LLM calls - reuses the model's already-computed labels for the deferred senders only.
         const hybrid = senders.map((_, index) => (defers[index] ? modelPredictions[index] : heuristic[index]));
         rows.push(rowOf(`hybrid:${entry.model}`, hybrid, { deferred }));
       }
@@ -209,12 +209,12 @@ describe.skipIf(!fixtureExists() || !existsSync(SENDER_LABELS))('classify-sender
 
 /** Renders the accuracy × class-F1 × latency matrix plus the recommended arm. */
 const renderReport = (rows: readonly Row[], goldSize: number, scored: number): { title: string; body: string }[] => {
-  const cell = (value: number | undefined): string => (value === undefined ? '—' : value.toFixed(3));
-  const header = '| arm | accuracy | macroF1 | personF1 | orgF1 | person→org | org→person | deferred | p50 ms |';
+  const cell = (value: number | undefined): string => (value === undefined ? '-' : value.toFixed(3));
+  const header = '| arm | accuracy | macroF1 | personF1 | orgF1 | person->org | org->person | deferred | p50 ms |';
   const rule = '| --- | --- | --- | --- | --- | --- | --- | --- | --- |';
   const lines = rows.map((row) => {
     const confusion = row.confusion as Record<string, number>;
-    return `| ${row.arm} | ${cell(row.accuracy)} | ${cell(row.macroF1)} | ${cell(row.personF1)} | ${cell(row.orgF1)} | ${confusion.personAsOrg} | ${confusion.orgAsPerson} | ${row.deferred === undefined ? '—' : (row.deferred * 100).toFixed(0) + '%'} | ${row.latencyP50 === undefined ? '—' : row.latencyP50} |`;
+    return `| ${row.arm} | ${cell(row.accuracy)} | ${cell(row.macroF1)} | ${cell(row.personF1)} | ${cell(row.orgF1)} | ${confusion.personAsOrg} | ${confusion.orgAsPerson} | ${row.deferred === undefined ? '-' : (row.deferred * 100).toFixed(0) + '%'} | ${row.latencyP50 === undefined ? '-' : row.latencyP50} |`;
   });
 
   // Best arm by macroF1 (fair under class imbalance); the heuristic is the free foreground baseline.
@@ -222,11 +222,11 @@ const renderReport = (rows: readonly Row[], goldSize: number, scored: number): {
   const heuristicRow = rows.find((row) => row.arm === 'heuristic');
   const summary = [
     `Gold set: ${goldSize} labelled senders; scored ${scored}.`,
-    `Best arm (macroF1): **${best.arm}** — macroF1 ${best.macroF1.toFixed(3)}, accuracy ${best.accuracy.toFixed(3)}.`,
+    `Best arm (macroF1): **${best.arm}** - macroF1 ${best.macroF1.toFixed(3)}, accuracy ${best.accuracy.toFixed(3)}.`,
     heuristicRow
       ? `Heuristic baseline (free, foreground): macroF1 ${heuristicRow.macroF1.toFixed(3)}, accuracy ${heuristicRow.accuracy.toFixed(3)}.`
       : '',
-    'Watch `person→org` (real people whose replies would be suppressed) over `org→person` (wasted draft budget).',
+    'Watch `person->org` (real people whose replies would be suppressed) over `org->person` (wasted draft budget).',
   ]
     .filter(Boolean)
     .join('\n');

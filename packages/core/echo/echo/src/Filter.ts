@@ -139,7 +139,7 @@ export const entity: {
 } = (entity: Entity.Unknown | Entity.Snapshot): Filter<any> => id(entity.id);
 
 /**
- * Filter by mnemonic — the human-memorable short form of an object's id (see `Obj.getMnemonic`).
+ * Filter by mnemonic - the human-memorable short form of an object's id (see `Obj.getMnemonic`).
  * Input is case-insensitive.
  *
  * @example
@@ -168,7 +168,7 @@ export const mnemonic = (mnemonic: string): Any => {
  *
  * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /
  * `Type.makeRelation`), a `Schema.Union` of such entities (for filtering across a
- * union of ECHO types), or a fully-qualified type URI — an `echo:` EID (stored schema)
+ * union of ECHO types), or a fully-qualified type URI - an `echo:` EID (stored schema)
  * or a `dxn:` DXN (static schema). To filter by a bare typename, wrap it: `DXN.make(typename)`.
  *
  * @performance O(1) plus O(p) for props (O(k) for a union); builds the AST without matching anything.
@@ -412,7 +412,7 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
 
 /**
  * Predicate for property to be in the provided array, or in the set of values projected
- * from a subquery's results (an uncorrelated `col IN (SELECT property FROM ...)` semi-join —
+ * from a subquery's results (an uncorrelated `col IN (SELECT property FROM ...)` semi-join -
  * see `Query.project`). The subquery may target a different scope than the parent query; it
  * is resolved once at execution time.
  * @param values - Values to check against, or a single subquery projection.
@@ -511,14 +511,14 @@ export type FeedCursorRange = {
 };
 
 /**
- * Filter feed items to a cursor range — see `Feed.getCursor` for reading a cursor off an item, and
+ * Filter feed items to a cursor range - see `Feed.getCursor` for reading a cursor off an item, and
  * `Feed.START` for the sentinel that bounds nothing.
  *
  * The range is pushed into the index scan, so a reader that keeps a cursor pays for what is new
  * rather than for the whole feed. Combine with `limit()` for a bounded page. Results come back in
- * append order and cover positioned items only — an item a peer wrote but the position authority
+ * append order and cover positioned items only - an item a peer wrote but the position authority
  * has not yet acknowledged has no place in that order, and `Feed.START` selects the same set from
- * the beginning rather than everything. Only meaningful against a feed scope — an automerge object
+ * the beginning rather than everything. Only meaningful against a feed scope - an automerge object
  * carries no position, so a query that also selects a space's documents is rejected.
  *
  * @example
@@ -602,7 +602,7 @@ export const changes = (
 
 /**
  * Filter objects by whether they have a parent, regardless of which object it is.
- * `Filter.hasParent(false)` selects root objects — those never passed to `Obj.setParent`.
+ * `Filter.hasParent(false)` selects root objects - those never passed to `Obj.setParent`.
  * Unlike {@link childOf} this reads the object's own parent slot, so it costs no traversal.
  *
  * @performance O(1); builds a filter AST node without matching anything.

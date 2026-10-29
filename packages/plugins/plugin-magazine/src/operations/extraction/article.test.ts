@@ -47,7 +47,7 @@ describe('extractArticle', () => {
   });
 
   test('strips trailing block by class hint even without a giveaway heading', async () => {
-    // No "Narrower topics"-style label — the trailing block is recognised
+    // No "Narrower topics"-style label - the trailing block is recognised
     // by its `class="related-articles"` hint alone. The text-pattern trim
     // could not catch this; the DOM rules can.
     const html = `
@@ -90,7 +90,7 @@ describe('extractArticle', () => {
   });
 
   test('pruneTrailingChrome preserves a heading that is naturally last (no chrome removed before it)', () => {
-    // Direct DOM test — defuddle's later passes may independently drop a
+    // Direct DOM test - defuddle's later passes may independently drop a
     // lone trailing heading, so we assert against the post-prune DOM rather
     // than the final markdown to isolate the pruner's guard.
     const doc = new DOMParser().parseFromString(

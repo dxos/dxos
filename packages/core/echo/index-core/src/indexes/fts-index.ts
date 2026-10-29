@@ -122,13 +122,13 @@ export interface FtsQuery {
   includeAllQueues: boolean;
 
   /**
-   * Queues to search within, each scoped by the space owning it — a queue id is unique only
+   * Queues to search within, each scoped by the space owning it - a queue id is unique only
    * within its own space. A ref without a `spaceId` matches on the id alone.
    */
   queues: readonly QueueRef[] | null;
 
   /**
-   * Type identifiers to restrict matches to (any form accepted by the meta index — typename
+   * Type identifiers to restrict matches to (any form accepted by the meta index - typename
    * DXN or stored-schema EID). Null or undefined disables type scoping; an empty list matches
    * nothing.
    */
@@ -185,12 +185,12 @@ const escapeFts5Query = (text: string): string => {
  * Trigram full-text index over {@link ObjectSnapshotIndex}.
  *
  * A secondary index: `IndexEngine` feeds it from {@link IndexedObjectSource} rather than from
- * automerge or a feed, which is what makes re-tokenization deferrable — and cheap under a burst,
+ * automerge or a feed, which is what makes re-tokenization deferrable - and cheap under a burst,
  * since 300 edits move one object's counter 300 times and are caught up in a single pass.
  *
  * Deferring it matters because re-tokenizing is what made editing expensive: FTS5 cannot update a
  * row in place and a trigram tokenizer emits one token per 3-character window, so one changed
- * property rewrote hundreds of kilobytes. Only search reads this table — every read of object data
+ * property rewrote hundreds of kilobytes. Only search reads this table - every read of object data
  * goes to the snapshot store, which is never behind. A caller that needs its own write matched
  * drains first, via `Database.flush({ secondaryIndexes: true })`.
  *
@@ -319,7 +319,7 @@ export class FtsIndex implements Index {
   /**
    * Re-tokenizes the given objects, whose text this reads from {@link IndexerObject.data} rather
    * than from the snapshot store so that one pass writes one index. Only the text
-   * {@link extractIndexableText} pulls out of the object is stored — never its property names.
+   * {@link extractIndexableText} pulls out of the object is stored - never its property names.
    */
   update = Effect.fn('FtsIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
     Effect.gen({ self: this }, function* () {

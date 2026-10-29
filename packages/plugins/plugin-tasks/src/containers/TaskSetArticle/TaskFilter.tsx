@@ -27,7 +27,7 @@ export type TaskFilterProps = PropsWithChildren<{
 }>;
 
 /**
- * Filter row for a task list's toolbar — the query editor, the status selector over the same query,
+ * Filter row for a task list's toolbar - the query editor, the status selector over the same query,
  * and a clear button, as the mailbox toolbar composes `MailboxFilter`. No save action: a task set has
  * no saved views to file one in.
  */

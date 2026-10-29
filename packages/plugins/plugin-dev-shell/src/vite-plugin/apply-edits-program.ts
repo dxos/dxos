@@ -11,7 +11,7 @@ import { Shell } from '#shell';
 /**
  * The prebaked editor, as source rather than a shipped file.
  *
- * The route's only verb is "run this script", so the editor has to arrive as a script — and a file
+ * The route's only verb is "run this script", so the editor has to arrive as a script - and a file
  * on disk cannot be located from both `src/` (dev) and `dist/lib/` (built) without guessing which
  * one loaded. A string constant is in the bundle either way, and {@link materializeScripts} writes
  * it out on mount.

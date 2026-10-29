@@ -203,7 +203,7 @@ describe('Type', () => {
   });
 
   describe('deterministic id default', () => {
-    // The default id is `EntityId.deterministic(typename, version)` — required so that
+    // The default id is `EntityId.deterministic(typename, version)` - required so that
     // `Type.makeObject(...)` never calls `crypto.getRandomValues()` at module-evaluation
     // time (forbidden by Cloudflare workerd in global scope).
     const personDxn = DXN.make('com.example.type.deterministic.person', '0.1.0');

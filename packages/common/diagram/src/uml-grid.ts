@@ -115,7 +115,7 @@ export const rerouteConnector = (from: Rect, to: Rect, obstacles: readonly Rect[
 };
 
 /**
- * Default router: an orthogonal Z along the flow axis — rank-crossing edges route through the
+ * Default router: an orthogonal Z along the flow axis - rank-crossing edges route through the
  * inter-rank gutter (channel shifted per parallel edge); same-rank edges route out the side.
  */
 export const zRouter: Router = ({ from, to, offset, horizontal, ports }) => {
@@ -321,7 +321,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
 };
 
 /**
- * Emit scene commands from a placed model — the shared back half of `compile`, also used by the
+ * Emit scene commands from a placed model - the shared back half of `compile`, also used by the
  * engine-backed dialects (`uml-engine.ts`) which supply their own placement.
  */
 export const emit = (
@@ -382,7 +382,7 @@ export const emit = (
 
   if (model.relations.length > 0) {
     // A route's channel run sits on the gutter line at the midpoint between its terminals, so ALL
-    // edges sharing that line — not just those between the same rank pair — must take distinct
+    // edges sharing that line - not just those between the same rank pair - must take distinct
     // channels or their runs overlap. Straight edges (aligned terminals) share the column/row line
     // instead, and the router shifts them sideways. Offsets center each block on its line.
     const gutterOf = (relation: UmlRelation): string => {
@@ -413,7 +413,7 @@ export const emit = (
     }
 
     // Port distribution: terminals attaching to the same node side spread across it (ordered by
-    // peer position) instead of stacking on the center — the final approach segments of distinct
+    // peer position) instead of stacking on the center - the final approach segments of distinct
     // relations would otherwise coincide exactly.
     type PortSlot = { relation: UmlRelation; end: boolean; order: number };
     const portGroups = new Map<string, PortSlot[]>();
@@ -458,7 +458,7 @@ export const emit = (
     }
 
     // Straightening: when a relation's nodes overlap on the cross axis, snap both terminals to a
-    // shared free coordinate so the connector runs straight — a jog between stacked (or abreast)
+    // shared free coordinate so the connector runs straight - a jog between stacked (or abreast)
     // nodes reads as noise. The spread ports above are the collision set; singles sit on centers.
     const takenBySide = new Map<string, Map<UmlRelation, number>>();
     for (const [key, slots] of portGroups) {

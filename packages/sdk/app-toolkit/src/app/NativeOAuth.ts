@@ -9,12 +9,12 @@
  *
  * The web app opens a tab and lets EDGE redirect it back to its own origin. Neither half works on
  * desktop: WKWebView returns null from `window.open`, and providers refuse to authenticate inside
- * an embedded webview anyway — Google's `disallowed_useragent` policy names `WKWebView` on macOS.
+ * an embedded webview anyway - Google's `disallowed_useragent` policy names `WKWebView` on macOS.
  * So the flow runs in the user's real browser, where their existing sessions, password manager and
  * 2FA already live, and returns to a loopback server the shell owns.
  *
  * That server's origin has to be the one EDGE redirects to, and EDGE takes it from the `Origin`
- * header of the initiate request — which page script cannot set. Hence `/oauth/initiate` is issued
+ * header of the initiate request - which page script cannot set. Hence `/oauth/initiate` is issued
  * from Rust here rather than through `EdgeHttpClient`.
  */
 
@@ -45,7 +45,7 @@ export type NativeOAuthRequest = {
   accessTokenId: string;
   /** The caller's EDGE presentation, so EDGE can associate the flow with the current identity. */
   authHeader?: string;
-  /** Account recovery only — selects the flow and asks EDGE to write the recovery binding. */
+  /** Account recovery only - selects the flow and asks EDGE to write the recovery binding. */
   purpose?: 'register' | 'recovery';
   registerRecovery?: boolean;
   /** atproto handle or DID; atproto cannot resolve the user's auth server without it. */
@@ -60,7 +60,7 @@ export type NativeOAuthRequest = {
  * Begin an OAuth flow in the system browser.
  *
  * Returns once the browser is open. Completion arrives out of band, on
- * {@link nativeOAuthCallbacks} — this never waits for it.
+ * {@link nativeOAuthCallbacks} - this never waits for it.
  */
 export const startNativeOAuth = async (request: NativeOAuthRequest): Promise<void> => {
   const { invoke } = await import('@tauri-apps/api/core');
@@ -102,7 +102,7 @@ export const listenForNativeOAuthCallback = async (
 };
 
 /**
- * The shell's callbacks for `callbackPath`, as a stream — a callback for any other path belongs to
+ * The shell's callbacks for `callbackPath`, as a stream - a callback for any other path belongs to
  * another flow and is dropped.
  *
  * A stream rather than a listener because each callback is handled by an effect that needs its

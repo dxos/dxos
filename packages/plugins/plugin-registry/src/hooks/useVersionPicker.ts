@@ -12,7 +12,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 
 /**
  * Owns the version picker's state machine: fetches the available versions list
- * from the provider (served from the inlined `releases` array on each entry —
+ * from the provider (served from the inlined `releases` array on each entry -
  * no separate endpoint needed) and keeps the selection clamped to whatever's
  * currently in the list so an external update doesn't strand the trigger on a
  * tag that's no longer available.
@@ -90,7 +90,7 @@ export const useVersionPicker = ({
   }, [versions, installedVersionTag, moduleUrl]);
 
   // Keep `selectedVersionTag` in sync when picker contents change (e.g. the user
-  // updated the plugin from the list view — installed version moved, picker
+  // updated the plugin from the list view - installed version moved, picker
   // shrunk, prior selection is no longer in the list).
   useEffect(() => {
     if (pickerVersions.length === 0) {

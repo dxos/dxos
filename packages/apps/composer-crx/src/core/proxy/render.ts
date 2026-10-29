@@ -126,7 +126,7 @@ const watchForComplete = (api: RenderBrowserApi, signal: AbortSignal) => {
 
 /**
  * Poll for a CSS selector to appear in the rendered page, best-effort. Resolves `true` once it
- * matches, or `false` once `deadlineMs` elapses without a match — so a wrong/late selector (lazy
+ * matches, or `false` once `deadlineMs` elapses without a match - so a wrong/late selector (lazy
  * load, anti-bot, schema drift) does NOT sink the whole render; the caller reads whatever rendered.
  */
 const waitForSelector = async (
@@ -157,9 +157,9 @@ const waitForSelector = async (
 /**
  * Render a URL in a separate popup window and return its rendered HTML.
  *
- * Flow: open a popup window (unfocused unless `active`) → await its tab's load `complete` →
- * optional `waitForSelector` poll and/or `waitForMs` delay → read
- * `document.documentElement.outerHTML` + `document.location.href` via an injected script → ALWAYS
+ * Flow: open a popup window (unfocused unless `active`) -> await its tab's load `complete` ->
+ * optional `waitForSelector` poll and/or `waitForMs` delay -> read
+ * `document.documentElement.outerHTML` + `document.location.href` via an injected script -> ALWAYS
  * remove the window. A separate window stays `document.visibilityState: 'visible'` even unfocused
  * (a background tab is `hidden`), so visibility-gated anti-bot checks pass without stealing focus.
  * The whole flow is bounded by `timeoutMs` (default {@link DEFAULT_RENDER_TIMEOUT_MS}).

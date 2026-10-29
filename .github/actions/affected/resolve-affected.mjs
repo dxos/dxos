@@ -46,10 +46,10 @@ const main = () => {
 
   const { base, reason, force } = resolve({ args, event, branch, defaultBranch });
   if (base === FULL_RUN) {
-    note(`Full run — ${reason}. Leaving MOON_AFFECTED unset.`);
+    note(`Full run - ${reason}. Leaving MOON_AFFECTED unset.`);
     if (force && process.env.CI_AFFECTED_FORCE !== 'false') {
       // Catches an input that some task's key misses, which a cached run would keep passing.
-      note('Forced — bypassing the cache.');
+      note('Forced - bypassing the cache.');
       emit(args, { MOON_FORCE: 'true' });
     }
     return;
@@ -72,16 +72,16 @@ const main = () => {
       .split('\n')
       .filter(Boolean);
   } catch {
-    note(`Full run — could not list the files changed since ${fork.slice(0, 8)}. Leaving MOON_AFFECTED unset.`);
+    note(`Full run - could not list the files changed since ${fork.slice(0, 8)}. Leaving MOON_AFFECTED unset.`);
     return;
   }
   const source = CLOSURE_SOURCES.find((file) => changed.includes(file));
   if (source) {
-    note(`Full run — ${source} changed (${reason}). Leaving MOON_AFFECTED unset.`);
+    note(`Full run - ${source} changed (${reason}). Leaving MOON_AFFECTED unset.`);
     return;
   }
   note(
-    `Affected run — ${reason} (${fork.slice(0, 8)}..${args.head ? head.slice(0, 8) : 'HEAD'}, ${changed.length} changed files).`,
+    `Affected run - ${reason} (${fork.slice(0, 8)}..${args.head ? head.slice(0, 8) : 'HEAD'}, ${changed.length} changed files).`,
   );
 
   emit(args, { MOON_AFFECTED: 'remote', MOON_BASE: fork, ...(args.head ? { MOON_HEAD: head } : {}) });
@@ -123,7 +123,7 @@ const fromRevision = (revision, reason, defaultBranch) => {
   if (!defaultBranch) {
     return { base: FULL_RUN, reason: `${reason} (${revision ?? 'absent'}) does not resolve` };
   }
-  note(`${reason} (${revision ?? 'absent'}) does not resolve here — falling back to the merge-base.`);
+  note(`${reason} (${revision ?? 'absent'}) does not resolve here - falling back to the merge-base.`);
   return fromMergeBase(defaultBranch, reason);
 };
 
@@ -197,7 +197,7 @@ const readEvent = () => {
   try {
     return JSON.parse(readFileSync(path, 'utf8'));
   } catch {
-    note(`Could not parse ${path} — treating the event payload as empty.`);
+    note(`Could not parse ${path} - treating the event payload as empty.`);
     return {};
   }
 };

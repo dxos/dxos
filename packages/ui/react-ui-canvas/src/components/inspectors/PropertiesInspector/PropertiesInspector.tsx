@@ -217,7 +217,7 @@ export type PropertiesInspectorProps = InspectorProps & {
   viewOptions?: readonly ViewOption[];
   /** The drawing's style classes (`ViewStore.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
-  /** Whether each group (`style`, `center`, …) is open, by path, for a host that keeps it; unset, a group is open. */
+  /** Whether each group (`style`, `center`, ...) is open, by path, for a host that keeps it; unset, a group is open. */
   groups?: Readonly<Record<string, boolean>>;
   onGroupsChange?: (groups: Record<string, boolean>) => void;
 };
@@ -357,7 +357,7 @@ export const PropertiesInspector = ({
     return null;
   }
 
-  const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
+  const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' - no shared properties'}`;
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
       {/* Its only command is on links, so it shows for a selection of links alone. */}

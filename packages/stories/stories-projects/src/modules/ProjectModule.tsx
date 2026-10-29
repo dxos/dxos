@@ -27,7 +27,7 @@ export type ProjectModuleProps = {
  * Creates a project from a template and renders its real article surface.
  *
  * The button is the story's entry point rather than a seeded project, because scaffolding through
- * `ProjectOperation.Create` is what the story exercises — the template resolution, the owned-graph
+ * `ProjectOperation.Create` is what the story exercises - the template resolution, the owned-graph
  * cascade, and the article rendering that follows. Setup failures render in place instead of
  * rejecting unobserved.
  */

@@ -165,12 +165,12 @@ describe('Registry', () => {
     const b = Obj.make(TestSchema.Expando, { value: 2 });
     registry.add([a, b, Type.Type]);
 
-    // Filter by Expando type — matches a and b but not the Type entity.
+    // Filter by Expando type - matches a and b but not the Type entity.
     const expandoResults = registry.query(Filter.type(TestSchema.Expando)).results;
     expect(expandoResults).toHaveLength(2);
     expect(expandoResults.map((o) => o.value).sort()).toEqual([1, 2]);
 
-    // Filter by Type.Type — matches only the type entity.
+    // Filter by Type.Type - matches only the type entity.
     const typeResults = registry.query(Filter.type(Type.Type)).results;
     expect(typeResults).toHaveLength(1);
   });
@@ -201,7 +201,7 @@ describe('Registry', () => {
     });
     registry.add([task, query]);
 
-    // Case-insensitive, and every term must match — across property values.
+    // Case-insensitive, and every term must match - across property values.
     const byText = registry.query(
       Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.text('CREATES task'))),
     ).results;

@@ -14,7 +14,7 @@ import * as MediaArtifact from './MediaArtifact.ts';
 /**
  * A spatial "lightbox" view over a set of {@link MediaArtifact}s laid out on a board grid. Layout is a
  * *view* concern (reuses `react-ui-board`'s `BoardLayout`), distinct from a `Collection` (masonry) of
- * the same artifacts — the artifacts are referenced, not owned.
+ * the same artifacts - the artifacts are referenced, not owned.
  */
 export class Lightbox extends Type.makeObject<Lightbox>(DXN.make('org.dxos.type.lightbox', '0.1.0'))(
   Schema.Struct({

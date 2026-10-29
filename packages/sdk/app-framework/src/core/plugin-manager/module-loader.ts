@@ -34,7 +34,7 @@ import { type PluginFailurePhase, PluginTimeoutError } from './manager-types.ts'
  * Prefers `scheduler.yield()` (input-priority aware); falls back to a MessageChannel hop, which is
  * a real macrotask boundary without `setTimeout`'s clamp. The fallback is `Effect.callback` rather
  * than a hand-built promise so an interrupt closes the ports instead of leaking a channel per
- * yield — this runs between every module activation, so a few hundred times at boot.
+ * yield - this runs between every module activation, so a few hundred times at boot.
  */
 export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
   const scheduler = globalThis.scheduler;
@@ -67,7 +67,7 @@ export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
  * concurrent paths await the same deferred, and {@link contribute} is idempotent per module.
  *
  * Module bodies run with the manager as the ambient `Plugin.Service`; the loader carries that
- * as a typed requirement (`R = Plugin.Service`) rather than holding a manager reference — the
+ * as a typed requirement (`R = Plugin.Service`) rather than holding a manager reference - the
  * manager satisfies it once at its public boundary.
  */
 const SLOW_MODULE_WARNING = Duration.seconds(10);
@@ -102,7 +102,7 @@ export class ModuleLoader {
     this.#yieldToHost = yieldToHostEffect;
   }
 
-  /** Whether the module's load has started (memoized) — settled or not. */
+  /** Whether the module's load has started (memoized) - settled or not. */
   isLoading(moduleId: string): boolean {
     return this.#memo.has(moduleId);
   }
@@ -114,7 +114,7 @@ export class ModuleLoader {
 
   /**
    * Loads a module exactly once. `parentEvent` is the activation event that first triggered
-   * the load — included in `activating`/`activated` messages so subscribers (e.g. the boot
+   * the load - included in `activating`/`activated` messages so subscribers (e.g. the boot
    * loader's status listener) can associate a module with its triggering event; later paths
    * await the cached deferred without re-publishing.
    */
@@ -156,8 +156,8 @@ export class ModuleLoader {
     });
 
   /**
-   * Awaits an in-flight load without starting one. A module with no memoized load — never
-   * started, or deactivated mid-wait (deactivation clears the memo) — counts as settled;
+   * Awaits an in-flight load without starting one. A module with no memoized load - never
+   * started, or deactivated mid-wait (deactivation clears the memo) - counts as settled;
    * joining via {@link load} instead would RESTART such a module (e.g. re-activating a
    * timed-out module of an auto-disabled plugin).
    */
@@ -253,7 +253,7 @@ export class ModuleLoader {
 
   /**
    * Builds the Effect context for a module's declared requires: singleton capabilities
-   * resolve to their implementation (waiting — bounded by the activation timeout — for
+   * resolve to their implementation (waiting - bounded by the activation timeout - for
    * concurrent providers), multi capabilities to their live contributions view.
    */
   #resolveRequires(module: Plugin.PluginModule): Effect.Effect<Context.Context<never>, Error> {
@@ -416,12 +416,12 @@ export class ModuleLoader {
   /**
    * Waits for providers of this module's multi requires whose load has already started in a
    * concurrent round, and ingests their contributions before this module's activate runs.
-   * Round-internal ordering only covers providers inside one round — a provider mid-load in a
+   * Round-internal ordering only covers providers inside one round - a provider mid-load in a
    * concurrent round (the startup dependency pass while an event-triggered pull runs) is
    * dropped from the pulled round's candidates entirely, so without this a consumer that reads
    * the collection once at startup (e.g. the process manager's `Capabilities.LayerSpec`
    * collection) races the provider's contribution. Bounded by the activation timeout so a
-   * multi-capability require cycle (legal — multi requires never block) degrades to the old
+   * multi-capability require cycle (legal - multi requires never block) degrades to the old
    * behaviour instead of deadlocking.
    */
   #awaitProvidersInFlight(module: Plugin.PluginModule): Effect.Effect<void> {
@@ -483,7 +483,7 @@ export class ModuleLoader {
    * Runtime provides validation (the authoritative check; the type-level one is best-effort).
    * Validated on the raw items so an empty provideAll still counts as covering its capability.
    * Undeclared contributions fail (they would bypass dependency ordering); missing ones only
-   * warn — a provider may legitimately decide at runtime not to contribute (consumers then
+   * warn - a provider may legitimately decide at runtime not to contribute (consumers then
    * surface a bounded CapabilityNotFoundError instead of silently proceeding).
    */
   #validateProvides(
@@ -509,7 +509,7 @@ export class ModuleLoader {
 
   /**
    * Failure bookkeeping for a module whose activation failed or died: logs the cause, records
-   * the failure against the owning plugin, and publishes an error activation message —
+   * the failure against the owning plugin, and publishes an error activation message -
    * symmetric with the 'activating'/'activated' messages so boot UIs observe a failed module,
    * not just a silent stall (the manager's auto-disable policy also watches these messages).
    * Returns the normalized error for the caller to fail the memoized deferred with.

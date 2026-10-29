@@ -20,7 +20,7 @@ import { InboxOperation } from '#types';
  * Creates a single `Project` seeded from one message's thread: gathers the sibling messages sharing the
  * message's derived thread id, clusters them into one topic draft (label/keywords/participants),
  * adds an LLM summary, and persists the `Project` with an `AnchoredTo` relation to the mailbox.
- * v1 is single-thread — cross-thread "find related" and fact extraction are follow-ups.
+ * v1 is single-thread - cross-thread "find related" and fact extraction are follow-ups.
  */
 const handler = InboxOperation.CreateProjectFromMessage.pipe(
   Operation.withHandler(

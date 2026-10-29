@@ -27,8 +27,8 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
 /**
  * Discriminator values that open a root discriminated union on its first member.
  *
- * A union root with no discriminator value renders as a lone select and nothing else — no member's
- * fields, and no way to submit — so the form seeds the first member rather than presenting a dead
+ * A union root with no discriminator value renders as a lone select and nothing else - no member's
+ * fields, and no way to submit - so the form seeds the first member rather than presenting a dead
  * form. Member order is therefore the declaration order of `Schema.Union`: put the common case first.
  */
 export const getDiscriminatorDefaults = (ast: SchemaAST.AST | undefined): Record<string, unknown> => {
@@ -56,7 +56,7 @@ export const getDiscriminatorDefaults = (ast: SchemaAST.AST | undefined): Record
  * discriminator value, with the discriminator field keeping the union-wide set of literals so it stays
  * switchable. (`SchemaAST.getPropertySignatures` on a union returns only the common discriminator, so a
  * union root would otherwise render just that one field.) Non-union roots are unchanged. Nested unions are
- * unaffected — those are expanded per-field by `FormFieldDispatch`, which passes a single-member type literal here.
+ * unaffected - those are expanded per-field by `FormFieldDispatch`, which passes a single-member type literal here.
  */
 export const getRootFormProperties = (
   ast: SchemaAST.AST,
@@ -103,7 +103,7 @@ export const getRootFormProperties = (
  * Container properties (nested structs, unions, arrays) keep their *raw* AST rather than
  * the `encodedBoundAST` produced by `SchemaEx.getProperties`. `encodedBoundAST` strips annotations
  * from non-keyword inner types, so a `FormInputAnnotation` nested beneath an encoded container
- * (e.g. `RouteLeg.geometry`, reached via `Segment → details → routes → Route → legs`) would
+ * (e.g. `RouteLeg.geometry`, reached via `Segment -> details -> routes -> Route -> legs`) would
  * otherwise be lost by the time recursion reaches it. Leaf/transformation fields stay encoded
  * (e.g. a `DateTime` still renders as its encoded string input).
  */

@@ -75,7 +75,7 @@ export const deliverInvoke = async (
         return ack;
       }
     } catch (err) {
-      // Content script not ready yet (tab still loading) — retry.
+      // Content script not ready yet (tab still loading) - retry.
       log.info('invoke delivery retry', { attempt, error: err instanceof Error ? err.message : String(err) });
     }
     await sleep(retryIntervalMs);
@@ -104,7 +104,7 @@ const decodeExtractResult = (value: unknown): { ok: true; inputs: unknown } | { 
  */
 export const runPageAction = async ({ actionId, tabId }: { actionId: string; tabId: number }): Promise<InvokeAck> => {
   // The function backs a runtime-message response, so it must always resolve
-  // with a well-formed ack — a rejection would skip the caller's notification
+  // with a well-formed ack - a rejection would skip the caller's notification
   // fallback and leave the user without feedback.
   try {
     const { actions } = await getRegistry();
@@ -123,7 +123,7 @@ export const runPageAction = async ({ actionId, tabId }: { actionId: string; tab
         params: action.extractor.params,
       });
     } catch (err) {
-      // No reachable content script in the tab — closed tab, restricted page, or
+      // No reachable content script in the tab - closed tab, restricted page, or
       // an orphaned script after an extension reload. Distinct from a real
       // extractor failure so the popup can suggest reloading the page.
       log.catch(err);

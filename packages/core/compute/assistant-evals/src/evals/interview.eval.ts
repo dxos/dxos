@@ -255,7 +255,7 @@ const fraction = (hits: number, total: number) => (total === 0 ? 0 : hits / tota
 const scorersFor = (persona: Persona): Scorer.Any[] => [
   Scorer.make({
     name: 'goal-recall',
-    description: 'Fraction of the persona’s goals captured as a live Goal.',
+    description: "Fraction of the persona's goals captured as a live Goal.",
     score: liveGoals.pipe(
       Effect.map((goals) =>
         fraction(
@@ -267,7 +267,7 @@ const scorersFor = (persona: Persona): Scorer.Any[] => [
   }),
   Scorer.make({
     name: 'goal-precision',
-    description: 'Fraction of live Goals that match one of the persona’s goals.',
+    description: "Fraction of live Goals that match one of the persona's goals.",
     score: liveGoals.pipe(
       Effect.map((goals) =>
         fraction(
@@ -326,7 +326,7 @@ const scorersFor = (persona: Persona): Scorer.Any[] => [
     : []),
   Scorer.make({
     name: 'fact-recall',
-    description: 'Fraction of the persona’s stated facts recorded as at least one current fact.',
+    description: "Fraction of the persona's stated facts recorded as at least one current fact.",
     score: facts.pipe(
       Effect.map((facts) =>
         fraction(
@@ -368,7 +368,7 @@ const scorersFor = (persona: Persona): Scorer.Any[] => [
   }),
   Scorer.make({
     name: 'single-person-by-handle',
-    description: 'Exactly one Person stands for the persona, and it carries the persona’s Discord handle.',
+    description: "Exactly one Person stands for the persona, and it carries the persona's Discord handle.",
     score: interviewee(persona).pipe(
       Effect.map(
         (person) =>
@@ -381,7 +381,7 @@ const scorersFor = (persona: Persona): Scorer.Any[] => [
   }),
   Scorer.make({
     name: 'profile-mentions-goals',
-    description: 'The persona’s profile document exists and names every confirmed goal.',
+    description: "The persona's profile document exists and names every confirmed goal.",
     score: Effect.gen(function* () {
       const person = yield* interviewee(persona);
       if (!person) {
@@ -460,7 +460,7 @@ const task = createEvalRunner({
 const run = DEEPSEEK_KEY ? evalite : evalite.skip;
 
 for (const persona of PERSONAS) {
-  run(`Interview — ${persona.id}: goals, facts and profile from a simulated interview`, {
+  run(`Interview - ${persona.id}: goals, facts and profile from a simulated interview`, {
     data: [
       { input: { persona: persona.id, displayName: persona.fullName.split(' ')[0], discordId: persona.discordId } },
     ],
@@ -481,7 +481,7 @@ const BAD_TRANSCRIPT: Scorer.Turn[] = [
   { role: 'assistant', text: 'Ok. Anything else? What else? Done?' },
 ];
 
-run('Interview — craft judge fails a curt, multi-question interviewer', {
+run('Interview - craft judge fails a curt, multi-question interviewer', {
   data: [{ input: BAD_TRANSCRIPT }],
   task: (input: Scorer.Turn[]) => EffectEx.runPromise(judgeCraft(input)),
   scorers: [

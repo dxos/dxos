@@ -170,7 +170,7 @@ export const Link: Story = {
     trigger: ['/', '@'],
     // The "@" picker is a combobox: the query is typed into the popover, not the document.
     searchTriggers: ['@'],
-    searchPlaceholder: 'Search or create…',
+    searchPlaceholder: 'Search or create...',
     placeholder: {
       content: () => placeholder(['/', '@']),
     },

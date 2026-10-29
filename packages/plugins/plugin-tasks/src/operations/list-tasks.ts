@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
       // Loaded, not read off `.target`: an unresolved ref would leave `milestoneId` undefined and
       // silently return every task instead of the filtered set.
       const milestoneId = milestone ? (yield* Database.load(milestone)).id : undefined;
-      // Built once — `effectiveMilestoneId` maps the whole set per call, so filtering with it is quadratic.
+      // Built once - `effectiveMilestoneId` maps the whole set per call, so filtering with it is quadratic.
       const milestoneIds = milestoneId === undefined ? undefined : Task.effectiveMilestoneIds(all);
       const filtered = scoped.filter(
         (task) =>
@@ -79,7 +79,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
   ),
 );
 
-/** Matches whichever identifier the actor carries — DID, email, or display name (case-insensitive). */
+/** Matches whichever identifier the actor carries - DID, email, or display name (case-insensitive). */
 const matchesAssignee = (task: Task.Task, assignee: string): boolean => {
   const actor = task.assignee;
   if (!actor) {

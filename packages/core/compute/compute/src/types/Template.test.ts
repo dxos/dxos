@@ -97,7 +97,7 @@ describe('Template', () => {
       () => Effect.succeed('Alice'),
     );
 
-    // Handler map: full DXN key → invocable function.
+    // Handler map: full DXN key -> invocable function.
     const handlersByKey: Record<string, (input: unknown) => Effect.Effect<unknown, unknown, unknown>> = {
       [GREET_KEY]: () => greet.handler(undefined),
     };

@@ -110,7 +110,7 @@ export class Domino<T extends HTMLElement | SVGElement> {
   }
 
   /**
-   * Convenience for attaching the root element to a parent node — useful at
+   * Convenience for attaching the root element to a parent node - useful at
    * the end of a chain to avoid a trailing `.root` / `parent.appendChild()`.
    */
   mount(parent: Node): this {

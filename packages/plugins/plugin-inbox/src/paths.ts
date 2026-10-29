@@ -11,7 +11,7 @@ const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Gra
   { groupId: GraphPath.GroupSegments.communications },
 );
 
-/** Well-known local segment names (private — use the path helpers below). */
+/** Well-known local segment names (private - use the path helpers below). */
 const Segments = {
   mailboxes: 'mailboxes',
   inbox: 'inbox',
@@ -65,7 +65,7 @@ export const getFeedObjectPath = (parentPath: string, childId: string): string =
 
 /**
  * Canonical qualified path to one of a message's attachments. Keyed by INDEX because an attachment has
- * no identity of its own — it is an entry in `message.attachments`, not an object.
+ * no identity of its own - it is an entry in `message.attachments`, not an object.
  */
 export const getMailboxAttachmentPath = (
   spaceId: string,

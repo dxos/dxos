@@ -62,7 +62,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
     Capability.lazyModule(
       'MailboxAction',
-      // Rides the inbox feature it contributes to, exactly as the plugin-brain sibling does — the
+      // Rides the inbox feature it contributes to, exactly as the plugin-brain sibling does - the
       // action is unreachable until a mailbox renders.
       {
         requires: [ClientCapabilities.Client],
@@ -96,7 +96,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'SenderAction',
-      // Rides the inbox feature it contributes to, like its MailboxAction sibling — the entry is
+      // Rides the inbox feature it contributes to, like its MailboxAction sibling - the entry is
       // unreachable until a conversation renders.
       {
         requires: [ClientCapabilities.Client],

@@ -67,7 +67,7 @@ describe('EventLoopLagTracker', () => {
     tracker.sample(2_000);
     tracker.rotate();
 
-    // A destructive read would break the moment it ran twice per window — which a second
+    // A destructive read would break the moment it ran twice per window - which a second
     // RemoteMetrics processor, or a flush() landing beside a periodic collection, would cause.
     expect(tracker.peakMs).toEqual(1_500);
     expect(tracker.peakMs).toEqual(1_500);
@@ -153,8 +153,8 @@ describe('EventLoopLagTracker implausible-gap clamp', () => {
   test('one discarded probe does not erase a real stall from the same window', () => {
     const tracker = new EventLoopLagTracker(500, 10_000);
     tracker.sample(0);
-    tracker.sample(3_000); // 2500ms — real
-    tracker.sample(90_000); // frozen — discarded
+    tracker.sample(3_000); // 2500ms - real
+    tracker.sample(90_000); // frozen - discarded
 
     expect(rotated(tracker)).toEqual(2_500);
   });

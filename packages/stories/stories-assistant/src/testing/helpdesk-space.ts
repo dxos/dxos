@@ -24,7 +24,7 @@ export const HELPDESK_SPACE_ID = 'com.example.space.helpdesk';
  */
 const PROJECT_INSTRUCTIONS = trim`
   You are the assistant for the "Helpdesk" project.
-  Work the project's checklist. Never invent a fact about the customer's environment — the details
+  Work the project's checklist. Never invent a fact about the customer's environment - the details
   are held by the person you are working for, not by you.
 `;
 
@@ -34,7 +34,7 @@ const PROJECT_INSTRUCTIONS = trim`
  * The refund window and the tone of the reply are decisions, not lookups: nothing in the project
  * states either, so an agent that does not ask has to fabricate one. That is exactly the behaviour
  * the ask-question tool exists to replace, which makes this the shortest fixture that exercises the
- * whole loop — ask, block, answer, resume — without a script telling it to.
+ * whole loop - ask, block, answer, resume - without a script telling it to.
  */
 const TASKS: { title: string; description: string }[] = [
   {
@@ -42,7 +42,7 @@ const TASKS: { title: string; description: string }[] = [
     description: trim`
       Acme asked for a refund on order #4471, placed 45 days ago. Our published refund window is not
       recorded anywhere in this project, and neither is whether we make exceptions for enterprise
-      accounts — nobody has written either down, so there is nothing here to look them up in.
+      accounts - nobody has written either down, so there is nothing here to look them up in.
       Done means: the reply to Acme is drafted in this conversation, and it states the decision that
       actually applies. Do not invent the policy.
     `,

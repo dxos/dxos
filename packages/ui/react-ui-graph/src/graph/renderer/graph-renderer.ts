@@ -14,7 +14,7 @@ import { Renderer, type RendererOptions } from './renderer.ts';
 
 /**
  * Replace the default `<circle>` with a custom node shape. Invoked once per
- * entering node — append your own elements to the supplied `<g>`. Position and
+ * entering node - append your own elements to the supplied `<g>`. Position and
  * `attributes.node` callbacks are still applied by the renderer.
  */
 export type RenderNode<NodeData = any> = (group: D3Selection<SVGGElement>, node: GraphLayoutNode<NodeData>) => void;
@@ -135,7 +135,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
   GraphLayout<NodeData, EdgeData>,
   GraphRendererOptions<NodeData, EdgeData>
 > {
-  // First render of this instance — used to clear DOM left behind by a previous
+  // First render of this instance - used to clear DOM left behind by a previous
   // renderer pointing at the same `<g>` (e.g. when the consumer swaps projectors
   // and a new renderer is constructed for the same SVG root). Without this, the
   // previous variant's node shapes (e.g. circles) would persist as d3.join sees
@@ -149,7 +149,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
 
   override render(layout: GraphLayout<NodeData, EdgeData>) {
     // The SVG group ref is unset between mount cycles and before the container has sized;
-    // skip the render rather than throw — the projector will emit again on the next tick.
+    // skip the render rather than throw - the projector will emit again on the next tick.
     if (!this.root) {
       return;
     }
@@ -267,7 +267,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
         },
       )
       // Apply update (transform / attributes / labels) to enter+update so the first render
-      // also populates `data-*` attributes and transforms — not just subsequent ticks.
+      // also populates `data-*` attributes and transforms - not just subsequent ticks.
       .call(updateNode, this.options)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       .each((node, i, elements) => {
@@ -303,7 +303,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
               select(this).remove();
             }),
       )
-      // Apply edge attributes to enter+update — see note on nodes above.
+      // Apply edge attributes to enter+update - see note on nodes above.
       .call(updateEdge, this.options)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       .each((edge, i, groups) => {
@@ -410,7 +410,7 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
   }
 
   // Click. d3 invokes `on` listeners as `(event, datum)` where datum is the bound data on
-  // the listener's host element (the dx-node `<g>`). Use it directly — reading from
+  // the listener's host element (the dx-node `<g>`). Use it directly - reading from
   // `event.target` returned undefined for the inner circle / text (which don't inherit
   // __data__), and `this` plus `select(this).datum()` was producing inconsistent results
   // across HMR reloads.
@@ -606,7 +606,7 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
 /**
  * Create the edge's shapes: `<path>` for projector-supplied geometry, otherwise `<line>`, or
  * `<polyline>` when it carries arrowheads. Line and polyline geometry are plain attributes, whereas
- * a path's `d` is a CSS property, so every `d` write forces a style recalc — the dominant per-tick
+ * a path's `d` is a CSS property, so every `d` write forces a style recalc - the dominant per-tick
  * cost for straight-edge layouts. Arrowheads are drawn into the polyline rather than as markers,
  * since painting a marker per edge cost several times the edge itself.
  */
@@ -714,7 +714,7 @@ const writeEdge = <NodeData, EdgeData>(
 };
 
 /**
- * Polyline points for a segment with chevron arrowheads (wing → tip → wing at each end), so a
+ * Polyline points for a segment with chevron arrowheads (wing -> tip -> wing at each end), so a
  * single stroked shape inherits the edge's color and hover styles.
  */
 const createArrowPoints = (x1: number, y1: number, x2: number, y2: number, start?: boolean, end?: boolean) => {
@@ -817,7 +817,7 @@ const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null)
   r.select('g.dx-edges')
     .selectAll<SVGGElement, GraphLayoutEdge>('g.dx-edge')
     .each(function (edge) {
-      // Visible edge path — exclude the wider transparent click target when present.
+      // Visible edge path - exclude the wider transparent click target when present.
       const path = select(this).select<SVGGeometryElement>(`.${EDGE_SHAPE_CLASS}`);
       if (!on) {
         path.style('stroke', null).style('stroke-width', null).style('opacity', null);
@@ -838,7 +838,7 @@ const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null)
       const groupSel = select(this);
       const shape = groupSel.select<SVGGraphicsElement>('circle, rect');
       // Hidden nodes (e.g. cluster-collapsed leaves) are kept invisible via the
-      // group's `opacity` attribute — set by `updateNode`. style.opacity would
+      // group's `opacity` attribute - set by `updateNode`. style.opacity would
       // override that attribute, so leave hidden nodes alone.
       if (node.hidden) {
         return;

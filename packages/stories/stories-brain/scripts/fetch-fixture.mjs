@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Fetches the private mailbox fixture from a live Gmail account — no storybook. Ensures an OAuth
+// Fetches the private mailbox fixture from a live Gmail account - no storybook. Ensures an OAuth
 // access token (see google-auth.mjs; one-time browser consent, then refresh-token automated), then
 // runs the in-process Gmail sync + feed export via the plugin-inbox `fetch-fixture` test, writing
 // fixtures/local/mailbox-feed.json (git-ignored).
@@ -46,7 +46,7 @@ const child = spawn(
 
 child.on('exit', (code) => {
   if (code === 0) {
-    console.error(`\nWrote fixture → ${FIXTURE_OUT}`);
+    console.error(`\nWrote fixture -> ${FIXTURE_OUT}`);
   }
   process.exit(code ?? 1);
 });

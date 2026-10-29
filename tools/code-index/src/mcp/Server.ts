@@ -70,7 +70,7 @@ export const compact = (iri: string): string => {
   return iri;
 };
 
-/** A full IRI, `<…>` or a `prefix:` name over {@link Sparql.NAMESPACES}; anything else is a name to resolve. */
+/** A full IRI, `<...>` or a `prefix:` name over {@link Sparql.NAMESPACES}; anything else is a name to resolve. */
 export const expand = (target: string): string | undefined => {
   const trimmed = target.trim();
   if (trimmed.startsWith('<') && trimmed.endsWith('>')) {
@@ -153,7 +153,7 @@ export const Query = readOnly(
       '`truncated` says whether more existed. A query is cancelled after `timeoutMs` (default 30 s). The known ' +
       'prefixes (see the server instructions) are declared automatically when a query omits them, and ' +
       '`warnings` names any deus: term the vocabulary lacks. Call `vocabulary` first for the classes and ' +
-      'predicates. Example — the operations of a package and their keys: SELECT ?op ?key WHERE { ?op a ' +
+      'predicates. Example - the operations of a package and their keys: SELECT ?op ?key WHERE { ?op a ' +
       'deus:Operation ; deus:operationKey ?key ; ^deus:declares/deus:inPackage pkg:@dxos/plugin-markdown }. ' +
       "Operation X's key, and where its definition is: SELECT ?key ?path ?line WHERE { ?op a deus:Operation ; " +
       'deus:name "Create" ; deus:operationKey ?key ; ^deus:declares/deus:path ?path . ?c deus:enclosedBy ?op ; a ' +
@@ -182,7 +182,7 @@ export const Ask = readOnly(
   Tool.make('ask', {
     description:
       'Runs a SPARQL ASK over the code index and returns { result: boolean }, with the same prefix ' +
-      'declaration, `warnings` and `timeoutMs` as `query`. Example — does any non-test file import a test ' +
+      'declaration, `warnings` and `timeoutMs` as `query`. Example - does any non-test file import a test ' +
       'file? ASK { ?a deus:importsTestFile ?b }',
     parameters: Schema.Struct({
       sparql: Schema.String.annotate({ description: 'A SPARQL ASK query.' }),
@@ -209,9 +209,9 @@ export const Vocabulary = readOnly(
   Tool.make('vocabulary', {
     description:
       'Lists the deus: classes and predicates: every documented term with its meaning, subject class and ' +
-      'range, and how many quads use it (count 0 when this graph never states it — a query on it returns ' +
+      'range, and how many quads use it (count 0 when this graph never states it - a query on it returns ' +
       'nothing), plus any undocumented term the graph contains, and the namespace prefixes. Terms concluded ' +
-      'by the N3 rules (EffectLayer, providesService, operationKey, …) are included. Read this before writing ' +
+      'by the N3 rules (EffectLayer, providesService, operationKey, ...) are included. Read this before writing ' +
       'SPARQL rather than guessing predicate names. Example follow-up: SELECT ?layer ?service WHERE { ?layer ' +
       'a deus:EffectLayer ; deus:providesService ?service } LIMIT 10',
     parameters: Tool.EmptyParams,
@@ -237,13 +237,14 @@ const Candidate = Schema.Struct({
   iri: Schema.String,
   types: Schema.Array(Schema.String),
   matchedBy: Schema.String.annotate({
-    description: 'How the target matched: iri, path, name, canonicalName, operationKey, …; partial: for a near match.',
+    description:
+      'How the target matched: iri, path, name, canonicalName, operationKey, ...; partial: for a near match.',
   }),
 });
 
 /** Every form `describe` resolves, for the hint a miss returns. */
 export const DESCRIBE_FORMS =
-  'Accepted forms: an IRI (full, <…>, or deus:/file:/pkg:/module: prefixed); a repository-relative file path, ' +
+  'Accepted forms: an IRI (full, <...>, or deus:/file:/pkg:/module: prefixed); a repository-relative file path, ' +
   'or its tail (src/Store.ts); a package name (@dxos/echo); a symbol name (layer) or canonical name ' +
   '(Operation.make); an operation key (org.dxos.operation.markdown.create); an ECHO typename ' +
   '(org.dxos.type.document); a plugin id (org.dxos.plugin.markdown); a .mdl spec id; a module member as ' +
@@ -295,8 +296,8 @@ export const Usages = readOnly(
   Tool.make('usages', {
     description:
       'Finds every symbol that uses a declaration, through `export *` barrels, named re-exports, namespaces ' +
-      '(`Order.natural` via `export * as Order`) and bare specifiers, grouped by package. Each file has a role — ' +
-      'test (a *.test.* / *.spec.* file), story (*.stories.*) or impl — and `via`. `reexportedBy` lists the ' +
+      '(`Order.natural` via `export * as Order`) and bare specifiers, grouped by package. Each file has a role - ' +
+      'test (a *.test.* / *.spec.* file), story (*.stories.*) or impl - and `via`. `reexportedBy` lists the ' +
       'barrels and alias files it passes through; `total` counts symbols, files, packages and roles before the ' +
       '`limit` on files (default 500, max 5000). `symbol` takes the forms `describe` does; an alias or a barrel ' +
       'reference is followed to its declaration, and several declarations come back as `candidates`. Example: ' +
@@ -348,7 +349,7 @@ export const Files = readOnly(
   Tool.make('files', {
     description:
       'Lists indexed files (repository-relative paths) with their language and size, optionally filtered by a ' +
-      'path prefix and a language (typescript, json, markdown, mdl, …), capped at `limit` (default 500, max ' +
+      'path prefix and a language (typescript, json, markdown, mdl, ...), capped at `limit` (default 500, max ' +
       '5000). A file path p has the IRI file:p. Example: { "prefix": "packages/plugins/plugin-markdown/src/", ' +
       '"language": "typescript" }',
     parameters: Schema.Struct({
@@ -374,7 +375,7 @@ export const Stats = readOnly(
   Tool.make('stats', {
     description:
       'Reports the size of the code index: indexed files, total quads, the quads each reasoner derived (one ' +
-      'graph per rules file under graph:derived/ and per JS pass under graph:pass/). Example follow-up — what one rules file concludes: SELECT ?p (COUNT(*) AS ?n) WHERE { ' +
+      'graph per rules file under graph:derived/ and per JS pass under graph:pass/). Example follow-up - what one rules file concludes: SELECT ?p (COUNT(*) AS ?n) WHERE { ' +
       'GRAPH <https://dxos.org/deus/graph/derived/30-compute> { ?s ?p ?o } } GROUP BY ?p',
     parameters: Tool.EmptyParams,
     success: Schema.Struct({
@@ -401,7 +402,7 @@ export const DesignTool = readOnly(
     parameters: Schema.Struct({
       prompt: Schema.String.annotate({ description: 'The design question, in prose.' }),
       budget: count(`Files to keep (default ${DESIGN_DEFAULT_BUDGET}, max ${DESIGN_MAX_BUDGET}).`),
-      threshold: Schema.optional(Schema.Finite.annotate({ description: 'Relevance a file needs, 0–1 (default 0.3).' })),
+      threshold: Schema.optional(Schema.Finite.annotate({ description: 'Relevance a file needs, 0-1 (default 0.3).' })),
     }),
     success: Schema.Struct({
       scorer: Schema.String,

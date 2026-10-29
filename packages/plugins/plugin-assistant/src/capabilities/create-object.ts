@@ -21,7 +21,7 @@ export default Capability.makeModule(
     // Withholds the create entry, not the type, so an object made in a full-catalog build still opens.
     const experimentalTypes = pluginOptions?.experimentalTypes ?? true;
     // Annotated rather than inferred so the `false` members don't cost the entries their contextual
-    // typing — `createObject`'s parameters come from `CreateObjectEntry`.
+    // typing - `createObject`'s parameters come from `CreateObjectEntry`.
     const entries: (SpaceCapabilities.CreateObjectEntry | false)[] = [
       {
         id: Type.getTypename(Chat.Chat),

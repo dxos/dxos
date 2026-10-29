@@ -26,7 +26,7 @@ export type UploadWorkerArgs = {
   version: string;
   name?: string;
   functionId?: string;
-  /** Owner identity DID (`did:halo:…`). */
+  /** Owner identity DID (`did:halo:...`). */
   ownerUri: string;
   entryPoint: string;
   assets: Record<string, Uint8Array>;

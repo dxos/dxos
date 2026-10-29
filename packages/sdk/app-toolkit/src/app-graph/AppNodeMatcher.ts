@@ -18,7 +18,7 @@ type Matcher<TData> = GraphNodeMatcher.NodeMatcher<TData, AppGraphNode.Node>;
 
 /**
  * Canonical app-graph node type for `Space` data nodes. Mirrors
- * `SPACE_TYPE` in `@dxos/plugin-space` — kept here so app-toolkit
+ * `SPACE_TYPE` in `@dxos/plugin-space` - kept here so app-toolkit
  * matchers don't have to depend on plugin-space.
  */
 const SPACE_NODE_TYPE = 'org.dxos.type.space';
@@ -27,7 +27,7 @@ const SPACE_NODE_TYPE = 'org.dxos.type.space';
 export const SETTINGS_SECTION_TYPE = 'org.dxos.plugin.space.settings';
 
 /**
- * Match space nodes and return the {@link Space} payload — saves callers from
+ * Match space nodes and return the {@link Space} payload - saves callers from
  * unwrapping `node.data` themselves and adds an `isSpace` runtime guard.
  *
  * @example
@@ -209,7 +209,7 @@ export const whenEchoObjectMatches = (node: AppGraphNode.Node): Option.Option<Ap
   Obj.isObject(node.data) ? Option.some(node) : Option.none();
 
 /**
- * Match the hidden `debug` category node under the graph root — the root of the debug panel's
+ * Match the hidden `debug` category node under the graph root - the root of the debug panel's
  * tree. Developer tools attach here instead of a space's System group so they never show in the
  * main navtree or open as deck planks.
  */

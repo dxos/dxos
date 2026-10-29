@@ -19,7 +19,7 @@ export interface SpectralPeak extends Schema.Schema.Type<typeof SpectralPeak> {}
 export const Strike = Schema.Struct({
   /** Measured fundamental (Hz). */
   frequency: Schema.Number,
-  /** Relative strength of harmonics 1…n. */
+  /** Relative strength of harmonics 1...n. */
   partials: Schema.mutable(Schema.Array(Schema.Number)),
   /** Measured spectrum, including what rang in sympathy. */
   peaks: Schema.optional(Schema.mutable(Schema.Array(SpectralPeak))),

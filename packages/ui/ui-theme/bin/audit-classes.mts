@@ -8,7 +8,7 @@
  *   2. Custom CSS class names defined in ui-theme's style sheets
  *
  * Candidates that pass neither check are reported as:
- *   - MALFORMED: looks like a broken Tailwind pattern (unclosed bracket, trailing dash, …)
+ *   - MALFORMED: looks like a broken Tailwind pattern (unclosed bracket, trailing dash, ...)
  *   - UNKNOWN:   not defined anywhere in ui-theme or Tailwind core
  *
  * Usage:
@@ -36,7 +36,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 
-// minimatch is a transitive CJS dependency — load via createRequire (ESM scope).
+// minimatch is a transitive CJS dependency - load via createRequire (ESM scope).
 const _req = createRequire(import.meta.url);
 const minimatch = _req('minimatch') as (path: string, pattern: string, opts?: object) => boolean;
 
@@ -152,7 +152,7 @@ function readCssDir(dir: string, classes: Set<string>): void {
 function extractCustomClassNames(stylesDir: string): Set<string> {
   const classes = new Set<string>();
 
-  // ui-theme config directory — highest priority
+  // ui-theme config directory - highest priority
   readCssDir(stylesDir, classes);
 
   // All other CSS files across the packages tree
@@ -194,7 +194,7 @@ function isMalformed(candidate: string): boolean {
     return true;
   }
 
-  // Trailing dash or colon — e.g. "text-" or "hover:"
+  // Trailing dash or colon - e.g. "text-" or "hover:"
   if (/[-:]$/.test(candidate)) {
     return true;
   }
@@ -383,7 +383,7 @@ function isLikelyClassCandidate(candidate: string): boolean {
       return false;
     }
     // Single words with no dash: only keep if very short (likely Tailwind
-    // one-word utilities like 'flex', 'hidden') — longer ones are probably prose.
+    // one-word utilities like 'flex', 'hidden') - longer ones are probably prose.
     // candidatesToCss will filter them further; we just skip obvious noise.
     if (candidate.length > 8) {
       return false;
@@ -397,10 +397,10 @@ function isLikelyClassCandidate(candidate: string): boolean {
  * but not emitted as CSS because they are identifiers, not utility classes.
  *
  * Examples:
- *   - `group/scroll-v` — marks a named scroll group; children use `group-hover/scroll-v:`
- *   - `peer/input`     — marks a named peer; siblings use `peer-focus/input:`
- *   - `dark`           — context modifier; generates no CSS on its own
- *   - `ltr`, `rtl`     — direction modifiers
+ *   - `group/scroll-v` - marks a named scroll group; children use `group-hover/scroll-v:`
+ *   - `peer/input`     - marks a named peer; siblings use `peer-focus/input:`
+ *   - `dark`           - context modifier; generates no CSS on its own
+ *   - `ltr`, `rtl`     - direction modifiers
  */
 function isKnownIdentifierClass(candidate: string): boolean {
   // Named group/peer syntax: group/{name} or peer/{name}
@@ -423,7 +423,7 @@ const NOISE_PATTERN = /^(?:data-|aria-|https?:|\/\/|[#.@]|\d+$|.*\/.+\/|[A-Z][a-
 /**
  * Returns true if the candidate contains an uppercase letter outside of
  * square brackets.  Tailwind class names are always lowercase outside
- * arbitrary-value brackets — camelCase strings are prop names / identifiers.
+ * arbitrary-value brackets - camelCase strings are prop names / identifiers.
  */
 function hasCamelCase(candidate: string): boolean {
   let depth = 0;
@@ -446,7 +446,7 @@ function hasCamelCase(candidate: string): boolean {
 /** Returns true if the candidate is too long to plausibly be a class name. */
 const MAX_CANDIDATE_LENGTH = 80;
 
-// File path patterns to skip entirely (not UI source — contain word lists,
+// File path patterns to skip entirely (not UI source - contain word lists,
 // generated data, or test fixtures that would produce thousands of false positives).
 const SKIP_FILE_PATTERNS = [
   /\/display-name\//, // word-list data files (adjectives, animals)
@@ -521,7 +521,7 @@ async function main(): Promise<void> {
   const topN = get('--top') ? parseInt(get('--top')!, 10) : Infinity;
 
   // Load design system
-  console.log('Loading Tailwind v4 design system from ui-theme…');
+  console.log('Loading Tailwind v4 design system from ui-theme...');
   const t0 = Date.now();
   const themeCss = fs.readFileSync(THEME_CSS_PATH, 'utf-8');
   const themeBase = path.dirname(THEME_CSS_PATH);
@@ -535,7 +535,7 @@ async function main(): Promise<void> {
       const resolved = path.resolve(base, id);
       return { path: resolved, base: path.dirname(resolved), content: fs.readFileSync(resolved, 'utf-8') };
     }
-    // Package specifier — resolve through node_modules starting from the theme CSS location.
+    // Package specifier - resolve through node_modules starting from the theme CSS location.
     // For 'tailwindcss', resolve to its index.css stylesheet entry.
     const specifier = id === 'tailwindcss' ? 'tailwindcss/index.css' : id;
     const resolved = req.resolve(specifier);
@@ -560,16 +560,16 @@ async function main(): Promise<void> {
   if (singleClass) {
     const [css] = ds.candidatesToCss([singleClass]);
     if (css !== null) {
-      console.log(`\n✓  "${singleClass}" is a valid Tailwind class.`);
+      console.log(`\n\u2713  "${singleClass}" is a valid Tailwind class.`);
       if (showCss) {
         console.log('\nGenerated CSS:\n' + css);
       }
     } else {
       const customClasses = extractCustomClassNames(STYLES_DIR);
       if (customClasses.has(singleClass)) {
-        console.log(`\n✓  "${singleClass}" is a custom DXOS class (defined in ui-theme CSS).`);
+        console.log(`\n\u2713  "${singleClass}" is a custom DXOS class (defined in ui-theme CSS).`);
       } else if (isMalformed(singleClass)) {
-        console.log(`\n✗  "${singleClass}" appears MALFORMED.`);
+        console.log(`\n\u2717  "${singleClass}" appears MALFORMED.`);
         process.exit(1);
       } else {
         console.log(`\n?  "${singleClass}" is UNKNOWN (not Tailwind, not custom DXOS).`);
@@ -588,7 +588,7 @@ async function main(): Promise<void> {
   }
 
   // Extract custom CSS classes
-  console.log('Extracting custom class names from ui-theme styles…');
+  console.log('Extracting custom class names from ui-theme styles...');
   const customClasses = extractCustomClassNames(STYLES_DIR);
   console.log(`  ${customClasses.size} custom class names collected`);
 
@@ -598,13 +598,13 @@ async function main(): Promise<void> {
   const scanner = new Scanner({ sources });
 
   const modeLabel = filterPath ? `--path ${filterPath}` : `extensions: ${extensions}`;
-  console.log(`Discovering source files  [${modeLabel}]…`);
+  console.log(`Discovering source files  [${modeLabel}]...`);
   scanner.scan(); // populate scanner.files
   const files = scanner.files;
   console.log(`  ${files.length} files to scan`);
 
   // Per-file candidate extraction
-  // candidateOccurrences: candidate → list of {file, line, col}
+  // candidateOccurrences: candidate -> list of {file, line, col}
   const candidateOccurrences = new Map<string, Array<{ file: string; line: number; col: number }>>();
 
   let scanned = 0;
@@ -625,7 +625,7 @@ async function main(): Promise<void> {
       continue;
     }
     const ext = path.extname(filePath).slice(1) || 'txt';
-    // For CSS files, only look at @apply directives — not the full file content
+    // For CSS files, only look at @apply directives - not the full file content
     // (which includes CSS property names, values, selectors, etc.)
     const withPos =
       ext === 'css' ? extractApplyCandidates(content) : scanner.getCandidatesWithPositions({ content, extension: ext });
@@ -656,13 +656,13 @@ async function main(): Promise<void> {
     }
     scanned++;
     if (scanned % 500 === 0) {
-      process.stdout.write(`  …${scanned}/${files.length}\r`);
+      process.stdout.write(`  ...${scanned}/${files.length}\r`);
     }
   }
   process.stdout.write('\n');
 
   // Batch validation
-  console.log(`Validating ${candidateOccurrences.size} unique candidates…`);
+  console.log(`Validating ${candidateOccurrences.size} unique candidates...`);
   const candidateList = Array.from(candidateOccurrences.keys());
   const cssResults = ds.candidatesToCss(candidateList);
 
@@ -705,17 +705,17 @@ async function main(): Promise<void> {
   const malformed = findings.filter((f) => f.kind === 'malformed');
   const unknown = findings.filter((f) => f.kind === 'unknown');
 
-  const hr = '─'.repeat(80);
+  const hr = '\u2500'.repeat(80);
   console.log('\n' + hr);
 
   if (findings.length === 0) {
-    console.log('✓  No unknown or malformed class candidates found.\n');
+    console.log('\u2713  No unknown or malformed class candidates found.\n');
     return;
   }
 
   // --- Malformed ---
   if (malformed.length > 0) {
-    console.log(`\n🔴  MALFORMED  (${malformed.length} occurrence${malformed.length > 1 ? 's' : ''})\n`);
+    console.log(`\n\u{1F534}  MALFORMED  (${malformed.length} occurrence${malformed.length > 1 ? 's' : ''})\n`);
     if (verbose) {
       let prevFile = '';
       const sorted = [...malformed].sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
@@ -734,7 +734,7 @@ async function main(): Promise<void> {
     }
   }
 
-  // Unknown — grouped by class name, sorted alphabetically
+  // Unknown - grouped by class name, sorted alphabetically
   if (unknown.length > 0) {
     const byClass = new Map<string, Array<{ file: string; line: number; col: number }>>();
     for (const f of unknown) {
@@ -755,7 +755,7 @@ async function main(): Promise<void> {
           console.log(`    ${file}:${line}:${col}`);
         }
         if (locs.length > 3) {
-          console.log(`    … and ${locs.length - 3} more`);
+          console.log(`    ... and ${locs.length - 3} more`);
         }
       }
     } else {
@@ -765,9 +765,9 @@ async function main(): Promise<void> {
     }
 
     if (sorted.length > topN) {
-      console.log(`\n  … and ${sorted.length - topN} more unique classes (use --top N to see more)`);
+      console.log(`\n  ... and ${sorted.length - topN} more unique classes (use --top N to see more)`);
     } else {
-      console.log(`\n🟡  UNKNOWN  (${unknown.length} occurrence${unknown.length > 1 ? 's' : ''})\n`);
+      console.log(`\n\u{1F7E1}  UNKNOWN  (${unknown.length} occurrence${unknown.length > 1 ? 's' : ''})\n`);
     }
   }
 

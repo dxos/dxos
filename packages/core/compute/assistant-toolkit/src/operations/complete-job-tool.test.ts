@@ -12,7 +12,7 @@ import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-t
 
 /**
  * Anthropic rejects tool schemas containing an empty (`{}`) or typeless subschema, and a
- * schema-less `success` invites the model to emit invalid JSON — every node must state a type.
+ * schema-less `success` invites the model to emit invalid JSON - every node must state a type.
  */
 const collectTypeless = (node: unknown, path: string, inKeyMap: boolean, out: string[]): void => {
   if (Array.isArray(node)) {

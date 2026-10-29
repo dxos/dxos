@@ -14,7 +14,7 @@ export type Topic = {
   readonly label: string;
   /** Number of facts referencing this entity (as subject or object). */
   readonly mentions: number;
-  /** Distinct agents who referenced it — reach, the FAQ/importance signal. */
+  /** Distinct agents who referenced it - reach, the FAQ/importance signal. */
   readonly agents: number;
   /** Sample source DXNs (up to 5) for drill-down. */
   readonly sources: readonly string[];
@@ -39,7 +39,7 @@ const entityId = (term: SemanticType.Term): string | undefined => (term.kind ===
 /**
  * Aggregate the fact graph into a ranked list of topics. Entities that are themselves agents
  * (senders) are excluded so the result is "what was discussed", not "who discussed it". The output
- * drives querying — each topic's `entity` feeds `FactStore.query({ entity })`.
+ * drives querying - each topic's `entity` feeds `FactStore.query({ entity })`.
  */
 export const extractTopics = (options?: TopicOptions): Effect.Effect<TopicReport, SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
@@ -97,7 +97,7 @@ export type FactLine = {
   readonly source: string;
 };
 
-/** List the stored facts (optionally filtered) as flat display lines — for inspection / demos. */
+/** List the stored facts (optionally filtered) as flat display lines - for inspection / demos. */
 export const listFacts = (query: SemanticQuery = {}): Effect.Effect<FactLine[], SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
     const store = yield* FactStore;

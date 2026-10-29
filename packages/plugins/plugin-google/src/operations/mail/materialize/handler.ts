@@ -23,7 +23,7 @@ const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGmailTarg
     Operation.withHandler(
       Effect.fnUntraced(function* ({ connection }) {
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
-        //   have it provided by the OperationInvoker — composer's invoker is wired
+        //   have it provided by the OperationInvoker - composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
         const connectionObj = connection.target;

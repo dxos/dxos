@@ -53,15 +53,15 @@ export function toCircled(char: string): string {
   if (!code) {
     return char;
   }
-  // A-Z -> Ⓐ-Ⓩ
+  // A-Z -> \u24B6-\u24CF
   if (code >= 65 && code <= 90) {
     return String.fromCodePoint(0x24b6 + (code - 65));
   }
-  // 1-9 -> ①-⑨
+  // 1-9 -> (1)-(9)
   if (code >= 49 && code <= 57) {
     return String.fromCodePoint(0x2460 + (code - 49));
   }
-  // 0 -> ⓪
+  // 0 -> (0)
   if (code === 48) {
     return String.fromCodePoint(0x24ea);
   }

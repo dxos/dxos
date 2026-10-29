@@ -35,7 +35,7 @@ export const translations = [
         'level-meter.label': 'Input level',
         'level.label': 'peak {{peak}} dB · level {{rms}} dB',
         'clip.label': 'CLIP',
-        'no-signal.label': 'NO SIGNAL — is the mic muted?',
+        'no-signal.label': 'NO SIGNAL - is the mic muted?',
         'no-input.label': 'No input',
         'unsaved-take.message': 'Not saved: {{error}}',
         'retry-save.label': 'Save again',

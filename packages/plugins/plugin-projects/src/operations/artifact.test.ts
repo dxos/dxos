@@ -48,7 +48,7 @@ describe('project skill operations', () => {
       expect(project.artifacts).toHaveLength(1);
       expect(Task.refEntityId(task.artifacts?.[0])).toBe(doc.id);
 
-      // Refs, not children — finishing the task must not cascade to the document.
+      // Refs, not children - finishing the task must not cascade to the document.
       expect(Obj.getParent(doc)?.id).not.toBe(task.id);
     }).pipe(Effect.provide(testLayer())),
   );

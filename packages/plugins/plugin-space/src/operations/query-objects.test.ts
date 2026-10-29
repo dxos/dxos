@@ -47,7 +47,7 @@ describe('SpaceOperation.QueryObjects', () => {
 
         // A second registration of the same typename persisted in the space. Resolving the typename
         // to one registration and filtering on that pinned the query to whichever copy the registry
-        // returned first, so the objects — written under the static declaration — stopped matching.
+        // returned first, so the objects - written under the static declaration - stopped matching.
         yield* Operation.invoke(SpaceOperation.AddType, {
           typename: Type.getTypename(TestObject),
           name: 'Test Object',
@@ -199,7 +199,7 @@ describe('SpaceOperation.QueryObjects', () => {
         yield* Database.flush();
 
         // The published input schema sets `additionalProperties: false`, and a caller that
-        // misspells `text` — say as `query`, which is what the tool's own description calls it —
+        // misspells `text` - say as `query`, which is what the tool's own description calls it -
         // must be told. Today the field is dropped, `text` and `typename` are both undefined, and
         // the handler's `Match.orElse` falls through to `Query.select(Filter.everything())`: the
         // search silently becomes "list everything" and is returned as a success, which a caller

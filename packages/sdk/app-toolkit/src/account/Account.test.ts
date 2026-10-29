@@ -34,7 +34,7 @@ describe('access codes', () => {
     expect(Account.isValidAccessCodeFormat('  ABCD-2345  ')).toBe(true);
   });
 
-  test('forgives hyphen placement — normalization strips them all', ({ expect }) => {
+  test('forgives hyphen placement - normalization strips them all', ({ expect }) => {
     expect(Account.isValidAccessCodeFormat('ABC-D2345')).toBe(true);
     expect(Account.isValidAccessCodeFormat('AB-CD-23-45')).toBe(true);
   });

@@ -121,7 +121,7 @@ describe('Mailbox annotations', () => {
     const feedMessages = await read(db, feed);
     const merged = [...Mailbox.mergeAnnotations(feedMessages, await read(db, mailbox.annotations!.target!))];
 
-    // Every message survives, in the order given — annotations never add, remove or reorder.
+    // Every message survives, in the order given - annotations never add, remove or reorder.
     expect(merged.map((entry) => entry.message.id)).toEqual(feedMessages.map((message) => message.id));
 
     const entryFor = (message: Message.Message) => merged.find((entry) => entry.message.id === message.id);
@@ -393,7 +393,7 @@ describe('subscriptions', () => {
       msg('news@a.io', 'A News', '<https://a.io/u>'),
       msg('news@a.io', 'A News', '<https://a.io/u>'),
       msg('digest@b.io', 'B Digest', '<mailto:unsub@b.io>'),
-      msg('alice@x.com', 'Alice'), // no unsubscribe → not a subscription
+      msg('alice@x.com', 'Alice'), // no unsubscribe -> not a subscription
     ]);
     expect(subs.map((sub) => sub.email)).toEqual(['news@a.io', 'digest@b.io']);
     expect(subs[0]).toMatchObject({ email: 'news@a.io', name: 'A News', count: 2 });

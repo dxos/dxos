@@ -43,7 +43,7 @@ export class DeferredTask {
       //
       // A single await suffices only because this is the one claim site and `_scheduled` collapses
       // schedules into one waiter. A second path claiming `_currentTask` directly would let two
-      // callbacks run at once — see dxos/edge#758.
+      // callbacks run at once - see dxos/edge#758.
       await this._currentTask; // Can't be rejected.
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.

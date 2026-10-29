@@ -36,7 +36,7 @@ describe('StateMap', () => {
     const itemA = Obj.make(Item, { text: 'a' });
     const itemB = Obj.make(Item, { text: 'b' });
 
-    // Absent → empty object (no ?-chains at call sites).
+    // Absent -> empty object (no ?-chains at call sites).
     expect(state.get(itemA.id)).toEqual({});
 
     // Patch creates, then shallow-merges.
@@ -93,7 +93,7 @@ describe('StateMap (database integration)', () => {
       }
       const totalOps = A.stats(core.getDoc()).numOps - opsBefore;
 
-      // Each new entry: makeMap + set field ≈ 2–3 ops, well under 10 per entry.
+      // Each new entry: makeMap + set field ~ 2-3 ops, well under 10 per entry.
       expect(totalOps).toBeLessThan(N * 10);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });

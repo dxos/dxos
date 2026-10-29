@@ -9,7 +9,7 @@ import { type EntityId } from '@dxos/keys';
  *
  * This is the one piece of the convergence-key merge the client needs: resolution and the
  * transitive-deletion walks follow redirects, while the merge itself (winner selection, the
- * field-wise merge function) runs in the worker — see `echo-host`'s merge core.
+ * field-wise merge function) runs in the worker - see `echo-host`'s merge core.
  *
  * Concurrent merges on different views leave chains rather than a single hop: a peer seeing
  * `{X, Y}` writes `Y -> X` while a peer that also sees a smaller `Z` writes `X -> Z`, so `Y`

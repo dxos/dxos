@@ -18,7 +18,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     key: LaMetricNamespace.key,
     name: 'LaMetric',
     author: 'DXOS',
-    description: 'Show a space on a LaMetric TIME — progress while a task runs, statistics otherwise.',
+    description: 'Show a space on a LaMetric TIME - progress while a task runs, statistics otherwise.',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-lametric',
     icon: { key: 'ph--squares-four--regular', hue: 'amber' },
     spec: 'PLUGIN.mdl',

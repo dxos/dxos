@@ -39,7 +39,7 @@ import * as GitHubPlugin from '#meta';
 import { githubLinks } from '../extensions/index.ts';
 import { FixtureLinkSourcePlugin } from '../testing/index.ts';
 
-/** The popover's card is whatever `CardContent` surface the resolved object's type has — this plugin's, for a PR or issue. */
+/** The popover's card is whatever `CardContent` surface the resolved object's type has - this plugin's, for a PR or issue. */
 const PreviewCard = () => {
   const { target } = useEditorPreview('PreviewCard');
   if (!target?.object) {

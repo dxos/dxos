@@ -7,7 +7,7 @@ import { type MenuActionProperties } from '@dxos/ui-types';
 
 /**
  * Merges an action's `presentation[surface]` chrome override (if any) into its properties, letting a
- * single action declare multiple dispositions yet render appropriately in each surface — e.g. a
+ * single action declare multiple dispositions yet render appropriately in each surface - e.g. a
  * primary toolbar button and a plain nav-tree row from the same definition.
  */
 export const applyPresentation = <A extends AppGraphNode.ActionLike>(action: A, surface: string): A => {

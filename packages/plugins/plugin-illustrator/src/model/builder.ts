@@ -3,7 +3,7 @@
 //
 
 //
-// Renderer-neutral builder contract: each variant (tldraw, excalidraw, …) implements
+// Renderer-neutral builder contract: each variant (tldraw, excalidraw, ...) implements
 // `DrawingBuilder` to compile the scene DSL onto its canvas records and derive the scene back
 // from them. Implementations are contributed via `IllustratorCapabilities.VariantProvider`.
 //
@@ -24,8 +24,8 @@ import { invariant } from '@dxos/invariant';
 import * as Drawing from '../types/Drawing.ts';
 
 /**
- * Maps the scene DSL onto a canvas. Geometry is derived from the live records — not a stored
- * copy — so the model stays coherent after users drag or resize shapes in the renderer's UI.
+ * Maps the scene DSL onto a canvas. Geometry is derived from the live records - not a stored
+ * copy - so the model stays coherent after users drag or resize shapes in the renderer's UI.
  */
 export type DrawingBuilder = {
   /** Renderer dialect this builder handles; matched against `Canvas.schema`. */
@@ -56,5 +56,5 @@ export const makeBuilder = ({ schema, handler }: { schema: string; handler: Cont
   },
 });
 
-/** Scene builder for the SVG variant — a peer of `TldrawBuilder`. */
+/** Scene builder for the SVG variant - a peer of `TldrawBuilder`. */
 export const SvgBuilder = makeBuilder({ schema: SVG_SCHEMA, handler: SvgHandler });

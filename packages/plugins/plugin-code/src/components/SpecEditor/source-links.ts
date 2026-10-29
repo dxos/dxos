@@ -16,7 +16,7 @@ export type SourceLink = { from: number; to: number } & ({ target: SourceKey } |
 
 const LINK = Decoration.mark({
   class: 'underline decoration-dotted underline-offset-2 text-accent-text cursor-pointer',
-  attributes: { 'title': 'Ctrl/⌘-click to open', 'data-testid': 'spec-editor.source-link' },
+  attributes: { 'title': 'Ctrl/\u2318-click to open', 'data-testid': 'spec-editor.source-link' },
 });
 
 const brokenLink = (error: string): Decoration =>
@@ -73,7 +73,7 @@ const decorate = (links: SourceLink[]): DecorationSet =>
 
 /**
  * Underlines every `github:` key, `<spec id>#<item>` reference and dependency id in the spec and opens it on
- * Ctrl/⌘-click (the IDE gesture for go-to-definition), so a spec reads as a hyperlinked map of the specs and code it
+ * Ctrl/Cmd-click (the IDE gesture for go-to-definition), so a spec reads as a hyperlinked map of the specs and code it
  * names. A reference the index cannot resolve is struck through, with the lint message on hover.
  */
 export const sourceLinks = (onOpen: (key: SourceKey) => void, index?: SpecIndex): Extension => {

@@ -6,7 +6,7 @@ import { RDF } from '@dxos/pipeline-rdf';
 import { formatTerm } from '@dxos/react-ui-rdf';
 
 export type EntityItem = {
-  /** Entity id (slug) — the context key for filtering / graph rooting. */
+  /** Entity id (slug) - the context key for filtering / graph rooting. */
   id: string;
   label: string;
   /** Number of facts the entity appears in (as subject or object). */

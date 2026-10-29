@@ -17,8 +17,8 @@ export type PersistentQuerySetter = (query: string | ((query: string) => string)
  * A list's filter query, held in a `ViewState` aspect (so it persists per device and per `contextId`)
  * and mirrored into the {@link QueryEditor} behind `editorRef`.
  *
- * The editor takes its text once, as `initialValue`, so a write that did not come from typing — a
- * picker over the same text, clear, another view of the same list, another tab — is pushed into it
+ * The editor takes its text once, as `initialValue`, so a write that did not come from typing - a
+ * picker over the same text, clear, another view of the same list, another tab - is pushed into it
  * here. Pushed from the subscription rather than from a render effect: the subscription fires as the
  * value is written, when the editor already holds whatever was just typed, whereas an effect can run
  * for a render that trails fast typing and rewrite the document back to older text.

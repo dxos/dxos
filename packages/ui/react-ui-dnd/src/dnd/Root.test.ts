@@ -11,7 +11,7 @@ const source: DndTileData = { type: 'tile', containerId: 'c1', id: 'a', data: { 
 const target: DndTileData = { type: 'tile', containerId: 'c1', id: 'b', data: { id: 'b' }, location: 1 };
 
 describe('resolveDrop', () => {
-  test('same handler → onDrop (reorder), onTake not called', () => {
+  test('same handler -> onDrop (reorder), onTake not called', () => {
     const onDrop = vi.fn();
     const onTake = vi.fn();
     const handler: DndContainerHandler = { id: 'c1', onDrop, onTake };
@@ -20,7 +20,7 @@ describe('resolveDrop', () => {
     expect(onTake).not.toHaveBeenCalled();
   });
 
-  test('different handlers → source.onTake then target.onDrop with transferred object', async () => {
+  test('different handlers -> source.onTake then target.onDrop with transferred object', async () => {
     const transferred = { id: 'a', moved: true };
     const sourceHandler: DndContainerHandler = {
       id: 'c1',
@@ -34,7 +34,7 @@ describe('resolveDrop', () => {
     expect(targetOnDrop).toHaveBeenCalledWith({ source: { ...source, data: transferred }, target });
   });
 
-  test('different handlers but source lacks onTake → no throw, target.onDrop not called', () => {
+  test('different handlers but source lacks onTake -> no throw, target.onDrop not called', () => {
     const targetOnDrop = vi.fn();
     resolveDrop({ id: 'c1' }, { id: 'c2', onDrop: targetOnDrop }, source, target);
     expect(targetOnDrop).not.toHaveBeenCalled();

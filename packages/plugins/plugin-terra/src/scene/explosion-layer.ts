@@ -62,7 +62,7 @@ export class ExplosionLayer {
 
   /**
    * Unlit and *additive*: a blast is light, so shells have to accumulate into a bright core rather
-   * than each one veiling the one inside it, which is what ordinary alpha blending does — three
+   * than each one veiling the one inside it, which is what ordinary alpha blending does - three
    * translucent shells over a night sky came out a muddy brown. Depth writes are off for the same
    * reason as `TrailLayer`'s puffs: overlapping shells should blend, not z-fight.
    */
@@ -111,14 +111,14 @@ export class ExplosionLayer {
       });
 
       if (reallocate) {
-        // `staticBuffer: false` — see `TrailLayer`: a static buffer ignores every later update.
+        // `staticBuffer: false` - see `TrailLayer`: a static buffer ignores every later update.
         base.thinInstanceSetBuffer('matrix', buffer, 16, false);
         this.#buffers[index] = buffer;
       } else {
         base.thinInstanceBufferUpdated('matrix');
       }
 
-      // All the blasts on screen share one fade, which is only wrong while two overlap in time —
+      // All the blasts on screen share one fade, which is only wrong while two overlap in time -
       // rare, and invisible against a blast that is already translucent.
       const material = base.material;
       if (material) {

@@ -49,13 +49,13 @@ import {
 //
 // The goal graded is that last hand-off: the session picks up a server it configured mid-run, with
 // no restart, and the call shows in its own transcript. Nothing outside the session talks to the
-// Worker — a server only the eval could reach is not a server the chat can use.
+// Worker - a server only the eval could reach is not a server the chat can use.
 //
 // The hand-off itself is pinned offline in `weather-mcp/session.test.ts`; what this run adds is the
 // Worker the session writes and the network between them. That network is the caveat: a temporary
 // deployment answers a client Cloudflare takes for a bot with a managed challenge (HTTP 403,
-// `cf-mitigated: challenge`, before CORS is even considered), and a datacenter egress — CI, a cloud
-// sandbox — is one. From there the session configures the server and dials it every turn but never
+// `cf-mitigated: challenge`, before CORS is even considered), and a datacenter egress - CI, a cloud
+// sandbox - is one. From there the session configures the server and dials it every turn but never
 // connects, and the `chess-mcp` eval probes its Worker from the EDGE sandbox for the same reason.
 //
 
@@ -71,7 +71,7 @@ const handOff = Scorer.shared(
   Scorer.invocations.pipe(Effect.map((invocations) => evaluateHandOff(invocations, { server: WORKER_URL }))),
 );
 
-/** The MCP servers the space ends up holding as connections — the configuration a chat actually reads. */
+/** The MCP servers the space ends up holding as connections - the configuration a chat actually reads. */
 const configured = Scorer.shared(
   Database.query(Filter.type(Connection.Connection)).run.pipe(
     Effect.map((connections) => connections.flatMap(({ mcp }) => (mcp ? [mcp] : []))),
@@ -205,7 +205,7 @@ const selected = process.env.DX_EVAL_MODELS?.trim()
   : undefined;
 const VARIANTS = selected ? MODELS.filter(({ name }) => selected.includes(name)) : MODELS;
 
-evalite.each(VARIANTS)('Weather MCP — the coding session deploys an MCP server, adds it to itself and calls it', {
+evalite.each(VARIANTS)('Weather MCP - the coding session deploys an MCP server, adds it to itself and calls it', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

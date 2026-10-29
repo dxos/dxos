@@ -40,7 +40,7 @@ export const generateWithIdeogram = async (
     throw new GenerationService.MissingCredentialError(IDEOGRAM_SOURCE);
   }
 
-  // Route through the DXOS edge CORS proxy — api.ideogram.ai does not permit browser CORS. The
+  // Route through the DXOS edge CORS proxy - api.ideogram.ai does not permit browser CORS. The
   // `Api-Key` header passes through unchanged (the proxy only special-cases `Authorization`).
   // Bound the call so a hung request cannot block the caller indefinitely.
   const controller = new AbortController();

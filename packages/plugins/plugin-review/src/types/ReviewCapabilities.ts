@@ -48,7 +48,7 @@ export type VersioningView = {
    */
   suggestion?: { author: string; from: number; to: number };
   /**
-   * Authors (DIDs) whose suggestions this user has hidden. A view filter only — the overlay,
+   * Authors (DIDs) whose suggestions this user has hidden. A view filter only - the overlay,
    * change bars and cards skip these sources; the branches themselves are untouched.
    */
   hiddenAuthors?: string[];
@@ -117,8 +117,8 @@ export type CommentState = {
   /** Drafts whose save is in flight, by anchor id, so a reply sent meanwhile waits for the save. */
   saving?: Record<string, Deferred.Deferred<void>>;
   /**
-   * The current thread, as an object id or an EID — writers differ, and an EID's spelling changes
-   * when a draft persists (`echo:///<id>` → `echo://<spaceId>/<id>`), so readers MUST compare via
+   * The current thread, as an object id or an EID - writers differ, and an EID's spelling changes
+   * when a draft persists (`echo:///<id>` -> `echo://<spaceId>/<id>`), so readers MUST compare via
    * `currentObjectId` (`util/comment-state.ts`), never by string equality.
    */
   current?: string | undefined;

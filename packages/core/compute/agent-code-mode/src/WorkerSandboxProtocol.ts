@@ -15,7 +15,7 @@ const DocumentHeads = Schema.Record(Schema.String, Schema.mutable(Schema.Array(S
 /**
  * What the worker needs from the host beyond ECHO itself.
  *
- * The database reaches the worker over {@link ClientServicesRpcs}, unchanged — an out-of-process
+ * The database reaches the worker over {@link ClientServicesRpcs}, unchanged - an out-of-process
  * sandbox is just another client, so there is nothing to invent there. These calls are what
  * that boundary has no service for: the turn's output buffer, the skills' operations (whose
  * handlers live here with the conversation), and the evaluation's own result.
@@ -56,7 +56,7 @@ export const SandboxHostRpcs = RpcGroup.make(
 
 /**
  * The whole contract the worker speaks: the client services it would speak anywhere, plus the few
- * calls above. One group, one port, one client — the worker is a client of both halves, because
+ * calls above. One group, one port, one client - the worker is a client of both halves, because
  * every call runs host-ward.
  */
 export class SandboxRpcs extends RpcGroup.make().merge(ClientServicesRpcs, SandboxHostRpcs) {}

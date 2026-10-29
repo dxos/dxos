@@ -71,7 +71,7 @@ describe('AssistantPlugin', () => {
     // Skills ride the assistant's start event, which the harness fires post-startup.
     expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
-    // Space-affinity LayerSpec — resolution requires a space context.
+    // Space-affinity LayerSpec - resolution requires a space context.
     const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );

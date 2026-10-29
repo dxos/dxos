@@ -16,7 +16,7 @@ import { TypeSafeResolver } from '@dxos/ai/resolvers';
 
 /**
  * TypeSafe's System One (jev) as a `DecisionModel` layer. The key is read from `TYPESAFE_API_KEY`
- * only — this code never calls `op`; locally, `op run --env-file tools/code-index/design.env.tpl`
+ * only - this code never calls `op`; locally, `op run --env-file tools/code-index/design.env.tpl`
  * puts the 1Password reference into the environment.
  */
 

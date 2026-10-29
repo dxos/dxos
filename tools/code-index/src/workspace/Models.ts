@@ -20,8 +20,8 @@ import * as Redacted from 'effect/Redacted';
 import * as ChatCompletionsAdapter from '@dxos/ai/chat-completions';
 
 /**
- * The two model back-ends. Ollama is the default — the whole point is a workspace that runs with no
- * account and no egress — and Anthropic is the escape hatch for a host that cannot run a 20B model
+ * The two model back-ends. Ollama is the default - the whole point is a workspace that runs with no
+ * account and no egress - and Anthropic is the escape hatch for a host that cannot run a 20B model
  * locally. Both are plain `LanguageModel` layers, so nothing downstream knows which is in play.
  */
 

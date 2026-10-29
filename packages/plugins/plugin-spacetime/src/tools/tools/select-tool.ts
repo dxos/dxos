@@ -170,7 +170,7 @@ const buildFaceSelectionMesh = (
   selVd.normals = selNormals;
   selVd.applyToMesh(selMesh);
 
-  // Transparent material — the HighlightLayer provides the glow.
+  // Transparent material - the HighlightLayer provides the glow.
   const selMat = new StandardMaterial('face-selection-mat', scene);
   selMat.emissiveColor = theme.selected;
   selMat.alpha = 0.3;

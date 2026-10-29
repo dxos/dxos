@@ -85,7 +85,7 @@ export class ConsolePrinter {
             break;
           case 'reasoning':
             this.log(
-              `${prefix}💭 [Reasoning] ${content.reasoningText ?? (content.redactedText ? 'REDACTED' : '')} ${
+              `${prefix}\u{1F4AD} [Reasoning] ${content.reasoningText ?? (content.redactedText ? 'REDACTED' : '')} ${
                 content.signature ? ' [signed]' : ''
               }`,
             );
@@ -114,12 +114,12 @@ export class ConsolePrinter {
             if (!payload) {
               payload = inspect(content.input, { colors: true });
             }
-            this.log(`${prefix}⚙️ [Tool Use] ${content.name} ${payload}`);
+            this.log(`${prefix}\u2699\uFE0F [Tool Use] ${content.name} ${payload}`);
             break;
           }
           case 'toolResult': {
             if (content.error) {
-              this.log(`${prefix}⚠️ [Tool Error] ${content.name} ${content.error}`);
+              this.log(`${prefix}\u26A0\uFE0F [Tool Error] ${content.name} ${content.error}`);
             } else {
               const formatter = this.#getToolFormmatter(content.name);
               const tool = this.#getTool(content.name);
@@ -146,19 +146,19 @@ export class ConsolePrinter {
               if (!payload) {
                 payload = inspect(content.result, { depth: null, colors: true });
               }
-              this.log(`${prefix}⚙️ [Tool Result] ${content.name} ${payload}`);
+              this.log(`${prefix}\u2699\uFE0F [Tool Result] ${content.name} ${payload}`);
             }
             break;
           }
           case 'reference':
-            this.log(`${prefix}🔗 [Reference] ${content.reference.uri}`);
+            this.log(`${prefix}\u{1F517} [Reference] ${content.reference.uri}`);
             break;
           case 'summary':
-            this.log(`${prefix}📝 [Summary] ${content.content}`);
+            this.log(`${prefix}\u{1F4DD} [Summary] ${content.content}`);
             break;
           case 'stats':
             this.log(
-              `${prefix}→ [End Turn] ${content.usage?.inputTokens} tokens in, ${content.usage?.outputTokens} tokens out, ${content.usage?.totalTokens} total tokens, ${content.duration}ms duration, ${content.toolCalls} tool calls, ${content.errors} errors, ${content.model}`,
+              `${prefix}-> [End Turn] ${content.usage?.inputTokens} tokens in, ${content.usage?.outputTokens} tokens out, ${content.usage?.totalTokens} total tokens, ${content.duration}ms duration, ${content.toolCalls} tool calls, ${content.errors} errors, ${content.model}`,
             );
             break;
           default: {

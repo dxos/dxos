@@ -18,7 +18,7 @@ const outFile = `${outDir}/index.mjs`;
 
 // `compiler.js` defines `Handlebars.compile` / `precompile`; `javascript-compiler.js`
 // defines `Handlebars.JavaScriptCompiler`. Both are exposed on the Handlebars object as
-// statics by `dist/cjs/handlebars.js`, but kbn-handlebars never invokes them — it walks
+// statics by `dist/cjs/handlebars.js`, but kbn-handlebars never invokes them - it walks
 // the AST through `Handlebars.parse` + `Handlebars.Visitor`. We replace both modules
 // with empty CJS shims so esbuild can prune them and their unreachable transitives.
 const STUB_FILTER = /handlebars\/dist\/cjs\/handlebars\/compiler\/(compiler|javascript-compiler)\.js$/;

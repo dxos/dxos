@@ -113,17 +113,17 @@ const ImportantExtractorPlugin = Plugin.define(
 /**
  * Fake summary text returned by the mocked `LanguageModel.generateText` call below.
  * The production `SummarizeMessageExtractor` makes the assistant produce a short paragraph;
- * the exact wording doesn't matter for the story — only that summarization completes and the
+ * the exact wording doesn't matter for the story - only that summarization completes and the
  * resulting `Markdown.Document` lands in the space.
  */
 const MOCK_SUMMARY = trim`
-  Flying Blue confirmed a multi-city itinerary (JFK → CDG → LIS) for one passenger.
+  Flying Blue confirmed a multi-city itinerary (JFK -> CDG -> LIS) for one passenger.
   Payment was settled in miles plus taxes; ticket changes incur a fee.
 `;
 
 /**
  * Canned structured output returned by the mocked `LanguageModel.generateObject` call. Drives
- * the template-driven `TripMessageExtractor`, which produces a Trip named "JFK → CDG (AF0003)".
+ * the template-driven `TripMessageExtractor`, which produces a Trip named "JFK -> CDG (AF0003)".
  */
 const MOCK_FLIGHT_PAYLOAD = {
   confirmationCode: 'FB12345',
@@ -143,7 +143,7 @@ const MOCK_FLIGHT_PAYLOAD = {
  * `AssistantPlugin`'s real wiring at `plugin-assistant/src/capabilities/ai-service.ts`.
  * The service's `model(...)` returns a `LanguageModel` whose `generateText` resolves with a
  * static text part instead of hitting Anthropic; that lets `SummarizeMessageExtractor` run
- * the full Operation.invoke → handler → `Markdown.make({...})` chain inside the story
+ * the full Operation.invoke -> handler -> `Markdown.make({...})` chain inside the story
  * runtime, which has no network access and no real API key.
  */
 const MockAiServicePlugin = Plugin.define(
@@ -175,14 +175,14 @@ const MockAiServicePlugin = Plugin.define(
 
 /**
  * Seeds a default space with a Mailbox and one message that matches FOUR extractors:
- *  - `ContactMessageExtractor` (plugin-inbox) — any sender with an email.
- *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block;
+ *  - `ContactMessageExtractor` (plugin-inbox) - any sender with an email.
+ *  - `TripMessageExtractor` (plugin-trip) - body contains a United-style flight block;
  *    creates Trip + Booking + Segment AND tags the message `travel`.
- *  - `SummarizeMessageExtractor` (plugin-inbox) — body exceeds the 200-char threshold so
+ *  - `SummarizeMessageExtractor` (plugin-inbox) - body exceeds the 200-char threshold so
  *    summarize matches. `MockAiServicePlugin` (defined above) contributes a fake
  *    `AiService` LayerSpec so the operation can run end-to-end and persist a
  *    `Markdown.Document` with the mock summary content.
- *  - `ImportantMessageExtractor` (story-local, defined above) — always matches; tags
+ *  - `ImportantMessageExtractor` (story-local, defined above) - always matches; tags
  *    the message `important` and produces no objects.
  *
  * Clicking the toolbar `Extract` items produces real Person / Trip / Booking / Segment /
@@ -198,7 +198,7 @@ const seedMessage = (space: Space) => {
     created: new Date().toISOString(),
     sender: { name: 'Flying Blue', email: 'noreply@flyingblue.com' },
     blocks: [{ _tag: 'text', text: FLIGHT_EMAIL }],
-    properties: { subject: 'Your flight confirmation — AF0003' },
+    properties: { subject: 'Your flight confirmation - AF0003' },
   });
   space.db.add(message);
   return message;
@@ -268,7 +268,7 @@ const meta = {
     ],
     types: [
       Feed.Feed,
-      // Tags are created as Tag objects (Mailbox.applyTag → Tag.findOrCreate), so the schema
+      // Tags are created as Tag objects (Mailbox.applyTag -> Tag.findOrCreate), so the schema
       // must be registered for the extractor's tagging to round-trip.
       Tag.Tag,
       Mailbox.Mailbox,
@@ -325,8 +325,8 @@ export const Default: Story = {};
  * End-to-end play function: opens the per-message overflow (`More`) menu, runs every matching
  * extractor via `Run all`, and asserts that a Trip chip AND a summary Document chip both
  * show up in the MessageHeader. The summary path proves the full
- * `ExtractMessage` → `Operation.invoke(ExtractSummaryFromMessage)` → mock AiService →
- * `Markdown.make(...)` → `db.add` → `ExtractedFrom` chain works in a non-AssistantPlugin
+ * `ExtractMessage` -> `Operation.invoke(ExtractSummaryFromMessage)` -> mock AiService ->
+ * `Markdown.make(...)` -> `db.add` -> `ExtractedFrom` chain works in a non-AssistantPlugin
  * runtime when an `AiService` LayerSpec is contributed by another plugin.
  */
 export const Test: Story = {
@@ -366,7 +366,7 @@ export const Test: Story = {
     // entry uses the extractor's short `title` ("Summary"). Use queryAllByText (the label text
     // can match both the menu item and its inner text node) and require at least one match. If
     // the body falls below the 200-char threshold or the InboxPlugin's Startup module stops
-    // contributing the extractor, this assertion fails before "Run all" even fires — so the test
+    // contributing the extractor, this assertion fails before "Run all" even fires - so the test
     // catches a missing wire-up rather than passing for the wrong reason on the trip assertions.
     const summarizeItems = await waitFor(
       () => body.queryAllByText(/^summary$/i),
@@ -389,25 +389,25 @@ export const Test: Story = {
     void expect(header).toBeInTheDocument();
     const headerScope = within(header as HTMLElement);
 
-    // Trip object chip — sourced from `ExtractedFrom` relation. With the Flying Blue body
+    // Trip object chip - sourced from `ExtractedFrom` relation. With the Flying Blue body
     // the trip extractor uses its FB-format fallback to recognise the first segment
-    // (JFK → CDG, flight AF0003). The chip label includes the JFK/CDG route via
+    // (JFK -> CDG, flight AF0003). The chip label includes the JFK/CDG route via
     // `tripNameFor(candidate)`.
     const tripButton = await waitFor(() => headerScope.queryByRole('button', { name: /JFK|CDG/i }));
     void expect(tripButton).toBeInTheDocument();
     void expect(tripButton).not.toBeDisabled();
 
-    // Summary Document chip — sourced from the `ExtractedFrom` relation the dispatcher
+    // Summary Document chip - sourced from the `ExtractedFrom` relation the dispatcher
     // attaches when SummarizeMessageExtractor returns a `Markdown.Document`. The chip's
     // label comes from `doc.name`, which the extractor sets to `${subject} (summary)`.
-    // This is the core success-path assertion: the full chain — dispatcher → Operation.invoke →
-    // mock AiService → LanguageModel.generateText → Markdown.make → db.add → ExtractedFrom →
-    // useExtractedObjects hook → header chip — must land for this to be in the document.
+    // This is the core success-path assertion: the full chain - dispatcher -> Operation.invoke ->
+    // mock AiService -> LanguageModel.generateText -> Markdown.make -> db.add -> ExtractedFrom ->
+    // useExtractedObjects hook -> header chip - must land for this to be in the document.
     const summaryButton = await waitFor(() => headerScope.queryByRole('button', { name: /\(summary\)/i }));
     void expect(summaryButton).toBeInTheDocument();
     void expect(summaryButton).not.toBeDisabled();
 
-    // Trip extractor's `tags: [{ label: 'travel', hue: 'sky' }]` — applied via
+    // Trip extractor's `tags: [{ label: 'travel', hue: 'sky' }]` - applied via
     // `Mailbox.applyTag` and rendered as a plain `Tag` chip (no click target). Scope to the
     // `extracted-tags` container so we hit the chip and not any other UI matching /travel/.
     const tagsRow = await waitFor(() => headerScope.queryByTestId('extracted-tags'));
@@ -416,7 +416,7 @@ export const Test: Story = {
     void expect(travelTag).toBeInTheDocument();
 
     // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important', hue: 'amber' }]`
-    // — exercises the tag-only path through the dispatcher (no created objects, just a tag).
+    // - exercises the tag-only path through the dispatcher (no created objects, just a tag).
     const importantTag = await waitFor(() => tagsScope.queryByText(/^important$/i));
     void expect(importantTag).toBeInTheDocument();
   },

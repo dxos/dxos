@@ -16,12 +16,12 @@ import { log } from '@dxos/log';
 import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
 
 /**
- * AI telemetry capture — data policy.
+ * AI telemetry capture - data policy.
  *
  * The AI stack already annotates every model call with the OTel GenAI conventions (`gen_ai.*`,
  * emitted by the `effect/ai` provider layers) plus the `dxos.ai.*` attributes those
  * conventions have no room for. This reads the finished spans, applies the capture policy, and
- * hands each surviving call to a sink as a {@link ObservabilityExtension.Inference} — a shape
+ * hands each surviving call to a sink as a {@link ObservabilityExtension.Inference} - a shape
  * that follows the GenAI conventions, not any vendor's schema. Mapping onto a backend's own
  * vocabulary belongs to that backend's extension.
  *
@@ -31,10 +31,10 @@ import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
  *   The gate is checked here, before a record is built, rather than left to a backend client's own
  *   opt-out flag: that flag is a separate store, so it is not the same answer as the user's
  *   DXOS-side preference.
- * - **Metadata** — model, provider, request parameters, token counts (including the prompt-cache
+ * - **Metadata** - model, provider, request parameters, token counts (including the prompt-cache
  *   reads and writes, which price the call and give the hit rate), latency, trace/span/session ids,
  *   error class.
- * - **Content** — prompt, response and tool names, kept only for a span that names its space and
+ * - **Content** - prompt, response and tool names, kept only for a span that names its space and
  *   whose space {@link Options.allowContent} accepts. Content is always stamped on the span
  *   upstream (`AiTelemetry` in `@dxos/ai`) and dropped here, rather than conditionally stamped, so
  *   a source that forgets the policy cannot bypass it.
@@ -46,7 +46,7 @@ import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
  *   span it runs; a utility model call outside both is reported as metadata only).
  * - Attribute **allowlist**: only the fields of `Inference` are read; every other span attribute
  *   is dropped (so an accidental attribute upstream cannot leak through telemetry).
- * - Errors are reduced to the exception **class name** — `exception.message` and
+ * - Errors are reduced to the exception **class name** - `exception.message` and
  *   `exception.stacktrace` recorded on the span are never forwarded, since provider error
  *   messages can embed request or response fragments.
  *
@@ -65,7 +65,7 @@ import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
  * | on                   | not declared by the call site         | metadata only    |
  *
  * Metadata is model, provider, tokens, latency, and trace/session ids. Content adds the prompt,
- * the response, and tool names — including tool results, i.e. data the agent read from the space.
+ * the response, and tool names - including tool results, i.e. data the agent read from the space.
  * The rationale: content that already leaves the device in plaintext for EDGE to replicate is not
  * newly exposed in kind by telemetry, whereas an E2E space promises that plaintext never reaches
  * infrastructure, and telemetry must not become the side channel that breaks it.
@@ -83,13 +83,13 @@ import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
 export const contentCaptureAllowed = (_spaceId: string): boolean => {
   // Always true today because every space replicates through EDGE in plaintext. This MUST NOT
   // stay unconditional: once E2E-encrypted spaces exist this predicate has to return false for
-  // them — and apply at the data boundary, not just the conversation's home space, since a turn
+  // them - and apply at the data boundary, not just the conversation's home space, since a turn
   // that reads from an E2E space via a cross-space reference would otherwise leak its content.
   return true;
 };
 
 export type Options = {
-  /** Sink for a call that survived the policy — typically `Observability.ai`. */
+  /** Sink for a call that survived the policy - typically `Observability.ai`. */
   captureInference: (inference: ObservabilityExtension.Inference) => void;
   /** Sink for a conversation turn (`dxos.ai.kind = turn`), the unit its model calls group under. */
   captureTurn: (turn: ObservabilityExtension.Turn) => void;
@@ -99,7 +99,7 @@ export type Options = {
   captureEnabled: () => boolean;
   /**
    * Whether prompt/response content may leave for the given space. Only called for a span that
-   * names one — a span with no space never reaches this predicate and never reports content.
+   * names one - a span with no space never reaches this predicate and never reports content.
    */
   allowContent: (spaceId: string) => boolean;
 };
@@ -279,7 +279,7 @@ const parseJsonOrRaw = (value: unknown): unknown => {
   }
 };
 
-/** Only the exception class name — messages and stack traces can embed prompt/response content. */
+/** Only the exception class name - messages and stack traces can embed prompt/response content. */
 const errorClass = (span: ReadableSpan): string => {
   for (const event of span.events) {
     const type = event.attributes?.['exception.type'];

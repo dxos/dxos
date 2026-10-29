@@ -32,15 +32,15 @@ export type GetAssigneeDisplayProps = {
 };
 
 /** A DID is long and mostly shared prefix, so the start is the part that tells two apart. */
-export const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
+export const shortDid = (did: string): string => `${did.slice(0, 12)}\u2026`;
 
 /** An id's tail rather than its head: object ids share a timestamp prefix and harness ids a `session_` one. */
-export const shortId = (id: string): string => `…${id.slice(-8)}`;
+export const shortId = (id: string): string => `\u2026${id.slice(-8)}`;
 
 /**
  * How an assignee reads wherever a task names it. An assistant's actor stands for a session rather
  * than a person, so its name falls through the session's own fields before the actor's, and it
- * always has one — an agent that reads as "Agent" says an assistant holds the task but never which.
+ * always has one - an agent that reads as "Agent" says an assistant holds the task but never which.
  */
 export const getAssigneeDisplay = ({
   assignee,
@@ -50,8 +50,8 @@ export const getAssigneeDisplay = ({
 }: GetAssigneeDisplayProps): AssigneeDisplay => {
   const session = Obj.instanceOf(RemoteSession.RemoteSession, subject) ? subject : undefined;
   const agent = assignee.role === 'assistant';
-  // The id tail stands in for a session's name, so only a session — or a subject not yet loaded, which
-  // may be one — is named by it; a resolved chat or service is an agent like any other.
+  // The id tail stands in for a session's name, so only a session - or a subject not yet loaded, which
+  // may be one - is named by it; a resolved chat or service is an agent like any other.
   const sessionId =
     (session && RemoteSession.getSessionId(session)) ??
     (session || subject === undefined ? Task.refEntityId(assignee.subject) : undefined);

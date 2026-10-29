@@ -28,11 +28,11 @@ export const geoInertiaDrag = (target, render, projection, options) => {
   }
   target = select(target);
 
-  // `linear` (default) constrains rotation so that mouse Δx maps to lambda
-  // (polar spin) and Δy maps to phi (tilt); gamma is held at 0.
+  // `linear` (default) constrains rotation so that mouse Deltax maps to lambda
+  // (polar spin) and Deltay maps to phi (tilt); gamma is held at 0.
   // `versor` lets the dragged point follow the cursor exactly, at the cost of
   // inducing some roll. In linear mode `lockTilt` keeps phi pinned but still
-  // allows lambda from Δx.
+  // allows lambda from Deltax.
   const linear = (options.mode ?? 'linear') === 'linear';
   const axis = restrictAxis(options.lockTilt ? [true, false, false] : [true, true, true]);
   const sharedHandlers = {
@@ -66,8 +66,8 @@ export const geoInertiaDrag = (target, render, projection, options) => {
 
 /**
  * A versor is a compact way to describe a rotation in 3D space.
- * It consists of four components [𝑤,x,y,z], where:
- * 𝑤 is a scalar representing the angle of rotation.
+ * It consists of four components [\u{1D464},x,y,z], where:
+ * \u{1D464} is a scalar representing the angle of rotation.
  * x, y, z are the vector components, representing the axis of rotation.
  */
 const geoInertiaDragHelper = (opt) => {
@@ -128,7 +128,7 @@ const geoInertiaDragHelper = (opt) => {
 };
 
 /**
- * Linear pixel-to-Euler drag: Δx → lambda, Δy → phi, gamma fixed at 0.
+ * Linear pixel-to-Euler drag: Deltax -> lambda, Deltay -> phi, gamma fixed at 0.
  * Inertia spin-down reuses the same shared decay curve as the versor path.
  */
 const DEFAULT_LINEAR_SENSITIVITY = 0.25;
@@ -137,7 +137,7 @@ const geoInertiaDragLinearHelper = (opt) => {
   const projection = opt.projection;
   const sensitivity = opt.sensitivity ?? DEFAULT_LINEAR_SENSITIVITY;
   // Scale degrees-per-pixel by 1/zoom so the drag feels consistent at any zoom
-  // level (mirrors useWheel — a more zoomed-in globe needs smaller angular
+  // level (mirrors useWheel - a more zoomed-in globe needs smaller angular
   // rotation per pixel of cursor travel). Clamped to a floor so very small
   // zoom values don't blow up the gain.
   const gain = () => sensitivity / Math.max(opt.getZoom?.() ?? 1, 0.1);
@@ -182,7 +182,7 @@ const geoInertiaDragLinearHelper = (opt) => {
     finish: opt.finish,
 
     render: (t) => {
-      // t goes 0→1 along the decay curve; at t=1 we've added ~1s of velocity.
+      // t goes 0->1 along the decay curve; at t=1 we've added ~1s of velocity.
       // dy sign flipped to match the move handler.
       const r1 = [rEnd[0] + vEnd[0] * kStart * t, rEnd[1] - vEnd[1] * kStart * t, 0];
       const r2 = opt.axis(rEnd, r1);

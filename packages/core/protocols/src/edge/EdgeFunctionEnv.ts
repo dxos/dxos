@@ -119,7 +119,7 @@ export interface QueueService {
  * Resolves server-custodied access tokens (those stored as `MANAGED_ACCESS_TOKEN`) for functions.
  *
  * The binding is created bound to the invocation's space, so a function can only reach credentials
- * for the space it runs in — the space is not a parameter the caller can choose.
+ * for the space it runs in - the space is not a parameter the caller can choose.
  */
 export interface AccessTokenService {
   getAccessToken(ctx: TraceContext, request: GetAccessTokenRequest): Promise<RpcResult<GetAccessTokenResult>>;

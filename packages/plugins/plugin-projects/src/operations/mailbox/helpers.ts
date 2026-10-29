@@ -18,7 +18,7 @@ export const PROJECT_PIPELINE_KEY_SOURCE = ProjectsNamespace.key;
 
 /**
  * Finds the named markdown document among the project's artifacts, creating and filing it on first
- * use. The name is the identity — pipelines regenerate a document's content wholesale, so reruns
+ * use. The name is the identity - pipelines regenerate a document's content wholesale, so reruns
  * converge on one artifact instead of appending copies.
  */
 export const findOrCreateDocumentArtifact = (project: Project.Project, name: string) =>
@@ -47,7 +47,7 @@ export const setDocumentContent = (document: Markdown.Document, content: string)
   });
 
 /**
- * Creates a task in the project's task set unless one with the same foreign key already exists —
+ * Creates a task in the project's task set unless one with the same foreign key already exists -
  * the message id keys the task, so re-running a request-tracking pipeline never duplicates a task
  * (and completing/editing a task survives reruns untouched). Returns whether a task was created.
  */
@@ -80,7 +80,7 @@ export const upsertTask = (
     return true;
   });
 
-/** Whether the message's sender matches any entry — a full email address or a bare domain. */
+/** Whether the message's sender matches any entry - a full email address or a bare domain. */
 export const senderMatches = (message: Message.Message, senders: readonly string[]): boolean => {
   const email = normalizeEmail(message.sender?.email);
   if (!email) {

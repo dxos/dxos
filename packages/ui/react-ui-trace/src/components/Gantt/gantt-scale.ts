@@ -4,10 +4,10 @@
 
 /**
  * What the horizontal axis measures.
- * - `time` — real duration, fitted to the width available: an idle gap is as wide as it was long.
- * - `unit` — one fixed step per event: a burst and a lull read alike, and the drawing grows to the
+ * - `time` - real duration, fitted to the width available: an idle gap is as wide as it was long.
+ * - `unit` - one fixed step per event: a burst and a lull read alike, and the drawing grows to the
  *   right instead of compressing, so an event already placed never moves again. That is what makes a
- *   live chart watchable — on a fitted axis every arrival shifts the whole history left.
+ *   live chart watchable - on a fitted axis every arrival shifts the whole history left.
  */
 export type GanttAxis = 'time' | 'unit';
 
@@ -19,7 +19,7 @@ export type GanttScale = {
   at: (time: number) => number;
   /** The drawing's width: the time axis takes what it is given, the unit axis states its own. */
   width: number;
-  /** The labelled gridlines, as many as fit — the label's own width decides, so the scale owns this. */
+  /** The labelled gridlines, as many as fit - the label's own width decides, so the scale owns this. */
   ticks: GanttTick[];
 };
 
@@ -84,7 +84,7 @@ export const timeScale = ({ range, width, pad }: TimeScaleOptions): GanttScale =
 export type UnitScaleOptions = {
   /** Every event's instant; order and duplicates do not matter. */
   times: readonly number[];
-  /** Pixels per event — the axis's one unit. */
+  /** Pixels per event - the axis's one unit. */
   step: number;
   /** Clearance at each end, which also keeps the newest node off the edge. */
   pad: number;

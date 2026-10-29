@@ -11,7 +11,7 @@ import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { CardAnnotation } from '@dxos/schema';
 
 /**
- * Canvas content shared by every renderer: an opaque map of record id → record, managed by the
+ * Canvas content shared by every renderer: an opaque map of record id -> record, managed by the
  * renderer's store adapter and CRDT-merged by ECHO without knowing its shape. `schema` identifies
  * the renderer dialect (e.g. `tldraw.com/2`, `excalidraw.com/2`) and is how a `Drawing` is matched
  * to the variant that can render it.
@@ -42,7 +42,7 @@ export const makeCanvas = ({ schema, content = {} }: MakeCanvasOptions): Canvas 
   Obj.make(Canvas, { schema, content });
 
 /**
- * The format a canvas `schema` names, without its revision (`dxos.org/scene/2` → `dxos.org/scene`); a schema with
+ * The format a canvas `schema` names, without its revision (`dxos.org/scene/2` -> `dxos.org/scene`); a schema with
  * no trailing revision is its own format.
  */
 export const getFormat = (schema: string): string => schema.replace(/\/\d+$/, '');

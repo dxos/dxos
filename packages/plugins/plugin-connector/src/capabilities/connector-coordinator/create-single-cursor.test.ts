@@ -61,7 +61,7 @@ describe('createSingleCursor', () => {
     ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>,
   );
 
-  // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
+  // Never invoked here - `ConnectorSync` requires an operation, and this test only exercises
   // target materialization and binding.
   const SyncExampleTarget = Operation.make({
     meta: { key: DXN.make('com.example.operation.test.createSingleCursor.sync') },

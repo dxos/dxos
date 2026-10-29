@@ -102,7 +102,7 @@ export const mintPluginKey = (): string => {
 const FENCE = '```';
 
 /**
- * The plugin's spec, seeded by the template and shipped in the bundle, so Plugins → Registry → Open Specification
+ * The plugin's spec, seeded by the template and shipped in the bundle, so Plugins -> Registry -> Open Specification
  * shows the same text the project started from.
  */
 export const worldClockSpec = (key: string): string => `---
@@ -171,7 +171,7 @@ ${FENCE}
 `;
 
 /** Ships {@link worldClockSpec} with the bundle, as the guide's "Ship a spec" section does. */
-const SHIP_SPEC = ` Use the key \`${PLUGIN_KEY_SLOT}\`. Write this \`PLUGIN.mdl\` beside \`dx.config.ts\` exactly as given, set \`spec: 'PLUGIN.mdl'\` in \`dx.config.ts\`, and ship it as the guide's "Ship a spec" section shows: a \`pluginAsset\` entry in \`modules\`, \`Capability.lazyModule('pluginAsset', { provides: [AppCapabilities.PluginAsset], activatesOn: ActivationEvents.PluginAssetsRequested, environments: ['browser', 'tauri'] }, () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }))\`, whose body contributes \`AppCapabilities.PluginAsset\` with \`{ pluginId: '${PLUGIN_KEY_SLOT}', path: 'PLUGIN.mdl', content, mimeType: 'application/x-mdl' }\`, \`content\` imported from \`'../../PLUGIN.mdl?raw'\`, and a \`src/raw.d.ts\` declaring \`*?raw\`. Plugins → Registry shows it as the plugin's specification.\n\n\`${FENCE}markdown\n${worldClockSpec(PLUGIN_KEY_SLOT)}\`${FENCE}`;
+const SHIP_SPEC = ` Use the key \`${PLUGIN_KEY_SLOT}\`. Write this \`PLUGIN.mdl\` beside \`dx.config.ts\` exactly as given, set \`spec: 'PLUGIN.mdl'\` in \`dx.config.ts\`, and ship it as the guide's "Ship a spec" section shows: a \`pluginAsset\` entry in \`modules\`, \`Capability.lazyModule('pluginAsset', { provides: [AppCapabilities.PluginAsset], activatesOn: ActivationEvents.PluginAssetsRequested, environments: ['browser', 'tauri'] }, () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }))\`, whose body contributes \`AppCapabilities.PluginAsset\` with \`{ pluginId: '${PLUGIN_KEY_SLOT}', path: 'PLUGIN.mdl', content, mimeType: 'application/x-mdl' }\`, \`content\` imported from \`'../../PLUGIN.mdl?raw'\`, and a \`src/raw.d.ts\` declaring \`*?raw\`. Plugins -> Registry shows it as the plugin's specification.\n\n\`${FENCE}markdown\n${worldClockSpec(PLUGIN_KEY_SLOT)}\`${FENCE}`;
 
 /** The plugin itself; `folder` is where its files go and `build` the sentence that says where it is served from. */
 export const writePlugin = (folder: string, build: string, extra = ''): TaskSeed => ({
@@ -249,7 +249,7 @@ export const cliSpec = ({ commit, cli }: PluginToolchain): string => cli ?? `htt
 
 /**
  * The browser runs the build in a sandbox on EDGE and publishes the result to the reader's private registry,
- * where Plugins → Registry lists it: nothing is loaded by URL. Publishing acts as the reader's account, so it
+ * where Plugins -> Registry lists it: nothing is loaded by URL. Publishing acts as the reader's account, so it
  * waits for them to grant the sandbox a token.
  */
 export const registryVariant = (toolchain: PluginToolchain, edgeUrl: string): Variant => {
@@ -268,7 +268,7 @@ ${IDS}`,
       ...desktop.steps.slice(0, -1),
       {
         title: 'Publish it to your registry',
-        description: `Run \`printenv DX_API_TOKEN | wc -c\`, which prints the token's length and never the token. If it prints 0, stop and ask me to grant the sandbox account access with its "Grant account access" action, then wait for my reply: the token acts as my account, so it is mine to hand over. Then run \`npx --yes --package=${cliSpec(toolchain)} dx registry publish --private --no-build --edge-url ${edgeUrl}\` with a \`timeout\` of 600000, and check that it printed an \`Uploaded:\` line. Tell me World Clock is now in Plugins → Registry. Do not emit a \`plugin-url-prompt\`: the registry lists it, and installing it is my click there.`,
+        description: `Run \`printenv DX_API_TOKEN | wc -c\`, which prints the token's length and never the token. If it prints 0, stop and ask me to grant the sandbox account access with its "Grant account access" action, then wait for my reply: the token acts as my account, so it is mine to hand over. Then run \`npx --yes --package=${cliSpec(toolchain)} dx registry publish --private --no-build --edge-url ${edgeUrl}\` with a \`timeout\` of 600000, and check that it printed an \`Uploaded:\` line. Tell me World Clock is now in Plugins -> Registry. Do not emit a \`plugin-url-prompt\`: the registry lists it, and installing it is my click there.`,
         estimate: 'xs',
       },
     ],

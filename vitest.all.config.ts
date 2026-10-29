@@ -40,12 +40,12 @@ export default defineConfig(async () => ({
     // Vitest extension for VSCode doesnt support ESM.
     await import('@dxos/vite-plugin-import-source').then((m) => m.default()),
 
-    // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
+    // Log-meta injection only - no dev file sink (vitest is a test runner, not a dev server).
     DxosLogPlugin({ logToFile: false }),
 
     // We don't care about react but we want the SWC transformers.
     // TODO(wittjosiah): Migrate to the rolldown/oxc-based `@vitejs/plugin-react` (as in
-    //   storybook-react) so `@vitejs/plugin-react-swc` can be dropped from the workspace — this is
+    //   storybook-react) so `@vitejs/plugin-react-swc` can be dropped from the workspace - this is
     //   its last remaining consumer.
     react({
       tsDecorators: true,

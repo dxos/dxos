@@ -44,7 +44,7 @@ const MIN_PROBABILITY = 1e-9;
 
 /**
  * A computed number as a literal. Arithmetic runs in doubles, so a fraction is rounded to 15
- * significant digits to read as the xsd:decimal it stands for (0.1 + 0.2 → "0.3", not "0.30000000000000004").
+ * significant digits to read as the xsd:decimal it stands for (0.1 + 0.2 -> "0.3", not "0.30000000000000004").
  */
 const numTerm = (value: number): Term =>
   Number.isInteger(value)
@@ -279,7 +279,7 @@ export class SqlSparqlEngine {
     this.#countsTotal = undefined;
   }
 
-  /** Adds the CTEs and the final decode join (term id → kind/lex/dt/lang) around the compiled select. */
+  /** Adds the CTEs and the final decode join (term id -> kind/lex/dt/lang) around the compiled select. */
   #wrap(ctes: string[], compiled: Compiled, temps: Map<number, Term>, tempTermsUsed: boolean): string {
     const cols: string[] = [];
     const joins: string[] = [];
@@ -413,7 +413,7 @@ export class SqlSparqlEngine {
     }
   }
 
-  /** DELETE/INSERT … WHERE: the WHERE compiles to one SELECT; templates are instantiated in JS. */
+  /** DELETE/INSERT ... WHERE: the WHERE compiles to one SELECT; templates are instantiated in JS. */
   #modify(deletes: Quads[], inserts: Quads[], where: Pattern[]): void {
     const temps = new Map<number, Term>();
     const compiler = this.#compiler(temps);
@@ -462,7 +462,7 @@ const constructModifiers = (query: ConstructQuery): Pick<SelectQuery, 'order' | 
 /**
  * A template position under one solution: variables take the row's binding, constants are themselves.
  * With `fresh`, template blank nodes become new blank nodes per solution (CONSTRUCT, INSERT), so two
- * solutions — or two updates — never share one.
+ * solutions - or two updates - never share one.
  */
 const instantiate = (row: Row, term: SparqlTerm | PropertyPath, fresh?: Map<string, Term>): Term | undefined => {
   if ('type' in term) {

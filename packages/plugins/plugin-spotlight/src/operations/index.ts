@@ -15,7 +15,7 @@ import { SpotlightCapabilities } from '#types';
 const DISMISS_DEBOUNCE_MS = 100;
 
 export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
-  // UpdateDialog — switch content or schedule dismiss.
+  // UpdateDialog - switch content or schedule dismiss.
   LayoutOperation.UpdateDialog.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
@@ -57,7 +57,7 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
     ),
   ),
 
-  // Open — forward to main window and dismiss.
+  // Open - forward to main window and dismiss.
   LayoutOperation.Open.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
@@ -77,7 +77,7 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
     ),
   ),
 
-  // SwitchWorkspace — forward to main window without dismissing.
+  // SwitchWorkspace - forward to main window without dismissing.
   LayoutOperation.SwitchWorkspace.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
@@ -96,7 +96,7 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
     ),
   ),
 
-  // Close — dismiss spotlight.
+  // Close - dismiss spotlight.
   LayoutOperation.Close.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* () {

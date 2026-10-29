@@ -34,7 +34,7 @@ import { useTaskListContext } from './TaskListContext.ts';
 /**
  * Cells shared by the flat row and the tree row.
  *
- * The two paths differ only in their container — a `Listbox.Item` in a grid the list owns, versus an
+ * The two paths differ only in their container - a `Listbox.Item` in a grid the list owns, versus an
  * Ark tree row whose anatomy splits content across a heading and a columns slot. That is a
  * difference in where cells are handed to the renderer, not in what a cell contains, so the cells
  * live here and both paths render the same ones. Written after the tree's own copies drifted:
@@ -44,7 +44,7 @@ import { useTaskListContext } from './TaskListContext.ts';
 export type TaskStatusControlProps = {
   classNames?: string;
   /**
-   * Overrides whether the glyph spins. Defaults to {@link Task.isAgentWorking} — a host passes this
+   * Overrides whether the glyph spins. Defaults to {@link Task.isAgentWorking} - a host passes this
    * only when it knows something the task does not, e.g. that the session behind it has stopped.
    */
   active?: boolean;
@@ -139,7 +139,7 @@ export type TaskMnemonicProps = {
  * number does not make a narrower target.
  *
  * Copies the task's full `echo://<space>/<id>` URI rather than the mnemonic it names: a mnemonic is only unique enough
- * to read, while the URI resolves the task from anywhere it is pasted — a prompt, an MCP call, another space.
+ * to read, while the URI resolves the task from anywhere it is pasted - a prompt, an MCP call, another space.
  */
 export const TaskMnemonic = ({ task, ordinal, classNames }: TaskMnemonicProps) => {
   const mnemonic = Obj.getMnemonic(task);
@@ -200,7 +200,7 @@ export type TaskCheckboxProps = {
 };
 
 /**
- * The gutter's checkbox: which rows an action will act on, never a status write — completing a task
+ * The gutter's checkbox: which rows an action will act on, never a status write - completing a task
  * is what the status control does. It takes the ordinal's cell rather than a column of its own, so a
  * list that offers it keeps one row geometry and the trailing controls do not shift.
  */
@@ -228,9 +228,9 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
 
 /**
  * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
- * (`XS`…`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
+ * (`XS`...`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
  * setting an estimate never depends on discovering a hover affordance, and falling back to
- * {@link UNSET_ICON} when unset — the same dot the priority column shows, so a row with neither set
+ * {@link UNSET_ICON} when unset - the same dot the priority column shows, so a row with neither set
  * reads as two empty controls rather than a dash beside a dot.
  */
 export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
@@ -297,10 +297,10 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 /**
  * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
  * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
- * — it is a different kind of statement from "how much", and a filled mark carries that.
+ * - it is a different kind of statement from "how much", and a filled mark carries that.
  *
- * The glyph is also the control: it opens a menu to set the level. It renders on every row —
- * including one with no priority, which shows a dot — so setting a priority never depends on
+ * The glyph is also the control: it opens a menu to set the level. It renders on every row -
+ * including one with no priority, which shows a dot - so setting a priority never depends on
  * discovering a hover affordance.
  */
 export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {

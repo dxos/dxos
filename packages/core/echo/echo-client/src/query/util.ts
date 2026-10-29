@@ -56,7 +56,7 @@ const filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
  * Whether the filter is a subquery-membership predicate (`Filter.in(query.project(...))`, AST
  * type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
  * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
- * filter's `props` — so unlike `filterContainsChildOf` above, this must also recurse into `props`.
+ * filter's `props` - so unlike `filterContainsChildOf` above, this must also recurse into `props`.
  */
 const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
   if (filter.type === 'in-query') {
@@ -186,13 +186,13 @@ export const isSimpleSelectionQuery = (
 };
 
 /**
- * Whether the query selects from spaces or feeds — the data that space-backed sources
+ * Whether the query selects from spaces or feeds - the data that space-backed sources
  * (`SpaceQuerySource`, `IndexQuerySource`) can serve.
  *
  * A query with no explicit `from` scope defaults to the owning space and returns true.
  * A query whose explicit scopes contain no space/feed entry (e.g. registry-only) returns
  * false: it is answered entirely by other sources (`RegistryQuerySource`), and forwarding
- * it to a space-backed source is at best wasted work — the edge query host rejects such
+ * it to a space-backed source is at best wasted work - the edge query host rejects such
  * queries outright ("Query must specify at least one spaceId in options"), failing the
  * whole query even though the registry source produced results.
  */
@@ -218,9 +218,9 @@ export type RegistryQueryScope = { included: boolean; locations: ReadonlySet<'lo
  * The registry is opt-in: a query only includes it when its `from` clause carries an
  * explicit registry scope (`Scope.registry(...)`).
  *
- * - No `from` clause → excluded (owning-space query; registry not consulted).
- * - `from` clause with no registry scope entries → excluded.
- * - `from` clause with registry scope entries → include the listed locations.
+ * - No `from` clause -> excluded (owning-space query; registry not consulted).
+ * - `from` clause with no registry scope entries -> excluded.
+ * - `from` clause with registry scope entries -> include the listed locations.
  */
 export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQueryScope => {
   const clause = findFromClause(query);
@@ -246,7 +246,7 @@ export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQuerySc
 /**
  * Finds the (last) `from` clause within a query AST.
  * Reading the closure-assigned result through a function return boundary preserves
- * the nullable type — a bare local would be narrowed to `null` by control-flow analysis,
+ * the nullable type - a bare local would be narrowed to `null` by control-flow analysis,
  * which cannot observe the assignment inside the `visit` callback.
  */
 const findFromClause = (query: QueryAST.Query): QueryAST.QueryFromClause | null => {

@@ -38,7 +38,7 @@ type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleM
  * Module maker contributing app-graph node builders. Gated by default on the host's idle event
  * rather than the contributing plugin's own start: a builder is what puts a plugin's items in
  * the navtree, so gating it on the plugin's own start (fired when its surface renders) is a
- * deadlock — the item never appears, so it can never be opened. Declare `activatesOn` to override.
+ * deadlock - the item never appears, so it can never be opened. Declare `activatesOn` to override.
  */
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
@@ -48,9 +48,9 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
 
 /**
  * Module maker contributing settings. Ungated by default because settings VALUES are read
- * app-wide through the strict `useAtomCapability` hook — including from components that mount
+ * app-wide through the strict `useAtomCapability` hook - including from components that mount
  * with the shell at ready (the transcription driver's `ReactContext`, `DeckLayout`) and from
- * `requires` on boot modules — where a post-ready gate trips the missing-capability invariant.
+ * `requires` on boot modules - where a post-ready gate trips the missing-capability invariant.
  * A plugin whose settings are read only from its own deferred surfaces declares
  * `activatesOn: ActivationEvents.Idle` to keep them off the startup pass.
  *
@@ -65,7 +65,7 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
 
 /**
  * Module maker contributing skill definitions. Gated by default on the assistant plugin's start
- * event — a skill belongs to the assistant feature regardless of which plugin contributes it
+ * event - a skill belongs to the assistant feature regardless of which plugin contributes it
  * (skills register into a shared registry whose consumers are reactive); declare `activatesOn`
  * to override.
  */
@@ -87,7 +87,7 @@ export const mcpServer: Maker<typeof AppCapabilities.McpServer> = Capability$.mo
 
 /**
  * Module maker contributing operation handlers. Handler sets register eagerly by default: a
- * keyed set is a definition→loader map with a thin closure (definitions carry no
+ * keyed set is a definition->loader map with a thin closure (definitions carry no
  * implementations), so the operation registry is complete at boot while each handler's BODY
  * still loads per invocation. The deferral axis is the operation, not the module.
  * A feature plugin whose operations cannot be invoked before the app is interactive declares
@@ -135,7 +135,7 @@ export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$
   'ReactContext',
   Capabilities.ReactContext,
   // A context provider has to wrap the tree on the FIRST render, and shell components read what it
-  // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
+  // provides through the strict `useCapability` hooks - arriving in the idle wave trips the
   // missing-capability invariant rather than merely rendering late.
   { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
 );
@@ -144,7 +144,7 @@ export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$
 export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.moduleMaker(
   'ReactRoot',
   Capabilities.ReactRoot,
-  // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
+  // Same reason as `reactContext` - a root that mounts at idle is a blank shell until it does.
   { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
 );
 
@@ -161,7 +161,7 @@ export const defaultParent: Maker<typeof AppCapabilities.DefaultParent> = Capabi
 /**
  * Module maker contributing navigation target resolvers. On the startup pass: URL restore runs as
  * part of boot, so a resolver that registers at idle is absent exactly when the deep link it
- * resolves is being handled — the shape behind the earlier not-found-redirect-on-load race.
+ * resolves is being handled - the shape behind the earlier not-found-redirect-on-load race.
  */
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
@@ -170,7 +170,7 @@ export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetRe
 );
 
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
- * {@link navigationResolver} — the boot-time URL restore is what invokes it. */
+ * {@link navigationResolver} - the boot-time URL restore is what invokes it. */
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
@@ -203,7 +203,7 @@ const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.module
 /**
  * Module maker contributing React surfaces. Declaring `roles` (the role NSIDs the module's
  * surfaces bind) gates the module on those roles' demand events
- * ({@link ActivationEvents.SurfacesRequested}) — it loads when a `Surface` for one of its roles
+ * ({@link ActivationEvents.SurfacesRequested}) - it loads when a `Surface` for one of its roles
  * first renders instead of at startup. Modules without declared roles stay eager; an explicit
  * `activatesOn` wins over the derived gate.
  */
@@ -284,7 +284,7 @@ export const translations = (
 };
 
 /**
- * Module contributing schemas. Prefer the loader form — schema objects ride whatever barrels
+ * Module contributing schemas. Prefer the loader form - schema objects ride whatever barrels
  * declare them, so an inline list drags those barrels into the plugin definition's static
  * closure (the boot evaluation floor); a loader keeps them in the module body chunk.
  */
@@ -370,7 +370,7 @@ export const pluginAsset = (
  * Module contributing CLI commands.
  *
  * Gated on demand rather than startup: the `dx` binary fires the event as part of its boot, so the
- * commands are there by the time it reads them, while a browser host — the devtools terminal —
+ * commands are there by the time it reads them, while a browser host - the devtools terminal -
  * pays for a plugin's command graph only once someone opens a terminal. Contributing at startup
  * instead would drag every command-bearing plugin onto the app's critical path to serve a panel
  * most sessions never open.

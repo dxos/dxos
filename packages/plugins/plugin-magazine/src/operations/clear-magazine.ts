@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
           onNone: () => Effect.succeed<Ref.Ref<Subscription.Post>[]>([]),
           onSome: (uri) =>
             Effect.gen(function* () {
-              // Resolve posts concurrently — `Effect.all` defaults to sequential.
+              // Resolve posts concurrently - `Effect.all` defaults to sequential.
               const loaded = yield* Effect.all(
                 magazine.posts.map((ref) => Database.load(ref)),
                 { concurrency: 'unbounded' },

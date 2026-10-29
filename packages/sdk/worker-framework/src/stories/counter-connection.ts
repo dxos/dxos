@@ -77,8 +77,8 @@ export class CounterConnection extends Resource {
         this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner, workerId: livenessLockKey };
         this.sessionChanged.emit(this.#sessionInfo);
 
-        // The framework provisions both directions per session. Serve the (empty) worker→client
-        // channel so the worker's worker→client protocol handshake completes; open it before the
+        // The framework provisions both directions per session. Serve the (empty) worker->client
+        // channel so the worker's worker->client protocol handshake completes; open it before the
         // client so the worker's session protocols finish building and can dispatch our requests.
         const clientServer = Rpc.serve(
           workerToClient,

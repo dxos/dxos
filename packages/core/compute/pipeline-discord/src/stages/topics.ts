@@ -159,7 +159,7 @@ export const buildTopicsForTarget = (
 
 /**
  * Pipeline stage: when a channel or thread finishes draining, group its stored messages into
- * topics and summarize each — a subthread is one topic; a main thread is segmented by reply
+ * topics and summarize each - a subthread is one topic; a main thread is segmented by reply
  * links, @mentions between participants, shared vocabulary, and session time gaps. Idempotent
  * across live crawls and {@link replayStream} passes (ECHO topics upsert by foreign key).
  */

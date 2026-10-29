@@ -19,7 +19,7 @@ export interface InvitationListProps
 
 /**
  * The invitations as a Listbox: the arrow keys move through the rows, and Enter or a click on a shareable row opens its
- * QR view; each row's ✕ cancels or removes it without picking the row.
+ * QR view; each row's x cancels or removes it without picking the row.
  */
 export const InvitationList = ({
   invitations,

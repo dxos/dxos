@@ -21,7 +21,7 @@ export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.comm
     params: Schema.Record(Schema.String, Schema.Unknown).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
     feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
-    /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
+    /** Per-Result tags keyed by tag uri -> Result ids (the `starred` flag - see {@link STARRED_TAG}). */
     tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
      * Timestamp of the last run; persisted metadata, hidden from forms.

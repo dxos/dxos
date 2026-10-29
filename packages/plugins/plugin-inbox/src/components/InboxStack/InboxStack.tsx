@@ -109,7 +109,7 @@ export type InboxStackProps = {
   /** Per-message starred atom family; each tile subscribes to only its own star state. */
   starredAtom?: StarredFamily;
   /**
-   * Per-message `inbox`-membership atom family. Drives the archive menu item's direction — archiving
+   * Per-message `inbox`-membership atom family. Drives the archive menu item's direction - archiving
    * is that tag coming off, so the same entry restores a message that no longer carries it.
    */
   inboxAtom?: MembershipFamily;
@@ -125,7 +125,7 @@ export type InboxStackProps = {
   /** Show the archive / move-to-inbox tile menu item. Off by default (only the mailbox handles `archive`). */
   enableArchive?: boolean;
   /**
-   * Show the "Ignore sender" tile menu item. Off by default — only the mailbox view handles the
+   * Show the "Ignore sender" tile menu item. Off by default - only the mailbox view handles the
    * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
    */
   enableIgnoreSender?: boolean;
@@ -258,7 +258,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
     );
 
     // Conversation tiles are keyed by conversation id, so map selected message ids up to their
-    // enclosing conversation — otherwise controlled `aria-selected`/`dx-selected` never matches.
+    // enclosing conversation - otherwise controlled `aria-selected`/`dx-selected` never matches.
     const effectiveSelectedIds = useMemo(
       () => (selectedIds ? new Set(Array.from(selectedIds, resolveTileId)) : selectedIds),
       [resolveTileId, selectedIds],
@@ -620,7 +620,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       >
         <CardTile.Header
           menu
-          // Acts on the latest message, as the star does — the conversation is represented by it
+          // Acts on the latest message, as the star does - the conversation is represented by it
           // everywhere else in this tile.
           menuItems={buildTileMenuItems({
             messageId: latest.id,
@@ -675,7 +675,7 @@ type ConversationMessageRowProps = {
 
 /**
  * One message row within a {@link ConversationTile}. Extracted so the search snippet can be
- * memoized per message via `useMemo` — inlining it in the `messages.map` would recompute the
+ * memoized per message via `useMemo` - inlining it in the `messages.map` would recompute the
  * snippet on every keystroke for every message in the conversation.
  */
 const ConversationMessageRow = ({

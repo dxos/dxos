@@ -7,8 +7,8 @@
  * Run with: npx tsx src/register-commands.ts
  *
  * Requires environment variables:
- *   DISCORD_APPLICATION_ID — Discord application ID.
- *   BOT_TOKEN — Discord bot token.
+ *   DISCORD_APPLICATION_ID - Discord application ID.
+ *   BOT_TOKEN - Discord bot token.
  */
 
 const DISCORD_API = 'https://discord.com/api/v10';

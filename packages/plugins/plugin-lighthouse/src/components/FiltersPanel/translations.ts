@@ -14,7 +14,7 @@ export const filtersTranslations: Record<string, string> = {
   'filters-more.label': 'More filters ({{count}})',
   'filters-fewer.label': 'Fewer filters',
   'filters-foot.message':
-    'Filters hide results; the rating model still scores every one. A result of a kind that has a property but whose value was not found is kept unless you untick “Include … without this”.',
+    'Filters hide results; the rating model still scores every one. A result of a kind that has a property but whose value was not found is kept unless you untick "Include ... without this".',
   'filters-model.label': 'model',
   'filters-model.description': 'The rating model reads this',
   'filters-clear-one.label': 'Clear {{label}}',
@@ -38,8 +38,8 @@ export const filtersTranslations: Record<string, string> = {
   'filters-chips.label': 'Active filters',
   'filters-chip-known.label': ' · known only',
   'filters-chip-unknown.label': ' · incl. {{count}} unknown',
-  'filters-chip-hidden.description': '{{filter}} — results without a value are hidden',
-  'filters-chip-kept.description': '{{filter}} — {{count}} without a value kept',
+  'filters-chip-hidden.description': '{{filter}} - results without a value are hidden',
+  'filters-chip-kept.description': '{{filter}} - {{count}} without a value kept',
   'filters-chip-remove.label': 'Remove {{filter}}',
   'filters-sort-reset.label': 'Sort by score again',
 };

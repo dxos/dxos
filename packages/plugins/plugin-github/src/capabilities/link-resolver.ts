@@ -26,7 +26,7 @@ import { GitHubApi } from '../services/index.ts';
 /**
  * Resolves a GitHub repository, pull-request or issue URL to an in-memory `Repo`, `PullRequest` or
  * `Issue` for the preview popover. The object comes from the contributed `LinkSource` when a host provides one and
- * from the GitHub API otherwise; either way it is built, not stored — a preview is not a sync.
+ * from the GitHub API otherwise; either way it is built, not stored - a preview is not a sync.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -59,8 +59,8 @@ export default Capability.makeModule(
 );
 
 /**
- * The default source: each of the space's GitHub connection tokens in turn — a space can hold
- * several, and only some may reach a private repository — then anonymous, which reaches a public one.
+ * The default source: each of the space's GitHub connection tokens in turn - a space can hold
+ * several, and only some may reach a private repository - then anonymous, which reaches a public one.
  */
 const fetchFromGitHub =
   (serviceResolver: ServiceResolver.ServiceResolver | undefined): GitHubCapabilities.GitHubLinkSource =>

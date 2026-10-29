@@ -14,11 +14,11 @@
 const HEADER_ID_RE = /^#\s+(WARN|ERROR)\s+([A-Za-z0-9._]+-\d+)\s+(\S+)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
 // Subagent / legacy: `# WARN \`file:line[:col]\``
 const HEADER_RE = /^#\s+(WARN|ERROR)\s+`([^`:]+):(\d+)(?::(\d+))?`\s*$/;
-// A line that is clearly attempting to be a diagnostic header — it starts with
+// A line that is clearly attempting to be a diagnostic header - it starts with
 // `#`, a severity-ish word (including the near-misses WARNING/ERRORS), and
-// carries a location cue (a backtick or a `:<line>`) — yet fails both header
+// carries a location cue (a backtick or a `:<line>`) - yet fails both header
 // patterns. Such a line is a subagent mistake surfaced rather than silently
-// dropped. Prose that merely opens with `# error …` and no location cue stays
+// dropped. Prose that merely opens with `# error ...` and no location cue stays
 // body text.
 const HEADER_CANDIDATE_RE = /^#\s*(?:warn(?:ing)?|errors?)\b/i;
 const LOCATION_CUE_RE = /`|:\d/;
@@ -26,7 +26,7 @@ const LOCATION_CUE_RE = /`|:\d/;
 /** Diagnostic severity. */
 export type Severity = 'warn' | 'error';
 
-/** One parsed diagnostic — a header plus its body prose. */
+/** One parsed diagnostic - a header plus its body prose. */
 export type Diagnostic = {
   severity: Severity;
   id: string | null;
@@ -96,7 +96,7 @@ export const parseDiagnostics = (text: string, label = 'fragment'): Diagnostic[]
       };
     } else if (HEADER_CANDIDATE_RE.test(line) && LOCATION_CUE_RE.test(line)) {
       throw new Error(
-        `${label}:${index + 1}: malformed diagnostic header ${JSON.stringify(line)} — expected \`# WARN|ERROR [<id> <rule>] \`file:line[:col]\`\``,
+        `${label}:${index + 1}: malformed diagnostic header ${JSON.stringify(line)} - expected \`# WARN|ERROR [<id> <rule>] \`file:line[:col]\`\``,
       );
     } else if (current) {
       current.body.push(line);

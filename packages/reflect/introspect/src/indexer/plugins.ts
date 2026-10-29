@@ -17,7 +17,7 @@ import {
 
 import type { Capability, Operation, Plugin, PluginId, Schema, SourceLocation, Surface } from '../types.ts';
 
-// stderr-only — stdout is reserved for the MCP JSON-RPC stream.
+// stderr-only - stdout is reserved for the MCP JSON-RPC stream.
 const warn = (msg: string, err?: unknown): void => {
   console.error(err ? `[introspect plugins] ${msg}: ${String(err)}` : `[introspect plugins] ${msg}`);
 };
@@ -61,7 +61,7 @@ export const extractPlugins = (rootPath: string, packages: readonly PackageLike[
 
   // Resolve `dependsOn`: for each plugin, intersect its package's workspace
   // dependencies with the set of packages that are themselves plugins. This
-  // is purely package-level — it doesn't infer dependencies from consumed
+  // is purely package-level - it doesn't infer dependencies from consumed
   // capability slots, only from declared workspace deps in package.json.
   // Stable order: sorted by plugin id so output is deterministic across runs.
   const pluginIdByPackage = new Map<string, PluginId>();
@@ -72,7 +72,7 @@ export const extractPlugins = (rootPath: string, packages: readonly PackageLike[
   for (const record of records) {
     const pkg = packageByName.get(record.plugin.package);
     const deps = pkg?.workspaceDependencies ?? [];
-    // Use a Set so duplicate dep entries (defensive — `discoverPackages`
+    // Use a Set so duplicate dep entries (defensive - `discoverPackages`
     // already dedupes via Object.entries) can't produce duplicate edges.
     const dependsOnSet = new Set<PluginId>();
     for (const depName of deps) {
@@ -82,7 +82,7 @@ export const extractPlugins = (rootPath: string, packages: readonly PackageLike[
       }
     }
     const dependsOn = [...dependsOnSet].sort();
-    // `Plugin.dependsOn` is `readonly` in the schema-derived type — replace
+    // `Plugin.dependsOn` is `readonly` in the schema-derived type - replace
     // the plugin object instead of mutating it in place.
     record.plugin = { ...record.plugin, dependsOn };
   }
@@ -121,7 +121,7 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
     return null;
   }
 
-  // Walk every .ts/.tsx file under src/ — capabilities and surfaces typically
+  // Walk every .ts/.tsx file under src/ - capabilities and surfaces typically
   // live in a `capabilities/` directory, schemas in the main plugin file, etc.
   const srcDir = join(rootPath, pkg.path, 'src');
   let allFiles: SourceFile[];
@@ -152,7 +152,7 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
   // `FooPlugin.node.ts` + `FooPlugin.tsx` + `cli/plugin.ts`) that each call
   // `AppCapability.schema([...])` with the same set of types. Each
   // `AppCapability.schema` call produces a separate Schema record, so the same
-  // (pluginId, name) ends up duplicated 2-3x. Dedupe — keep first occurrence
+  // (pluginId, name) ends up duplicated 2-3x. Dedupe - keep first occurrence
   // so the surfaced location is deterministic (first source file walked).
   // Capabilities and operations are intentionally NOT deduped: their `type`
   // field is the slot name (e.g. `Capabilities.OperationHandler`), and
@@ -185,7 +185,7 @@ const dedupeBy = <T>(items: T[], keyFn: (item: T) => string): T[] => {
 
 /**
  * Extracts the NSID (first string argument) from a `DXN.make('<nsid>'[, '<version>'])`
- * property value — e.g. the `key` field of a plugin `Meta`.
+ * property value - e.g. the `key` field of a plugin `Meta`.
  */
 const readDxnName = (obj: ObjectLiteralExpression, name: string): string | undefined => {
   const prop = obj.getProperty(name);
@@ -242,7 +242,7 @@ const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
     iconHue: readNestedStringProperty(initializer, 'icon', 'hue') ?? readStringProperty(initializer, 'iconHue'),
     tags: readStringArrayProperty(initializer, 'tags'),
     // Filled in by `extractPlugins` once every plugin's package mapping is
-    // known — left empty here to keep the per-package walk independent.
+    // known - left empty here to keep the per-package walk independent.
     dependsOn: [],
     metaLocation: locationOf(file, metaDecl.getStart()),
   };
@@ -357,7 +357,7 @@ type Buckets = {
 };
 
 const SURFACE_CALL = 'Surface.create';
-// Authored contributions are `Capability.contribute(tag, …)` / `Capability.contributeAll(tag, …)`;
+// Authored contributions are `Capability.contribute(tag, ...)` / `Capability.contributeAll(tag, ...)`;
 // the capability slot is the first argument in both.
 const CAPABILITY_PROVIDE_CALLS = ['Capability.contribute', 'Capability.contributeAll'];
 const SCHEMA_MODULE_CALL = 'AppCapability.schema';
@@ -453,7 +453,7 @@ const readStringProperty = (obj: ObjectLiteralExpression, name: string): string 
   if (initializer.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
     return initializer.asKindOrThrow(SyntaxKind.NoSubstitutionTemplateLiteral).getLiteralValue();
   }
-  // Tagged template — recognise `trim\`…\`` from `@dxos/util`, used by many
+  // Tagged template - recognise `trim\`...\`` from `@dxos/util`, used by many
   // plugins for multi-line `description` fields. We replicate the runtime
   // behaviour for the no-substitution case: strip leading/trailing blank
   // lines and remove the smallest common indent.

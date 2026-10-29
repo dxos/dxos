@@ -159,7 +159,7 @@ describe('SpaceOperation.AddObject', () => {
     'a target collection outside the invocation space is refused, not filed across databases',
     Effect.fnUntraced(
       function* ({ expect }) {
-        // A collection that is not in the invocation's database — detached here, the same shape a
+        // A collection that is not in the invocation's database - detached here, the same shape a
         // collection from another space presents. Filing into it would persist the object in one
         // place and push its reference somewhere else.
         const foreign = Collection.make({ objects: [] });

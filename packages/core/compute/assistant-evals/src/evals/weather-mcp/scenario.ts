@@ -44,13 +44,13 @@ export const CLAIM_URL = /https:\/\/dash\.cloudflare\.com\/claim/i;
 /**
  * A forecast carries a temperature: a number next to a degree sign, or a value after the field name
  * (quoted or JSON-escaped, since a tool result is graded as a serialized string). Naming the field
- * alone — an empty series, an error about it — is not a forecast.
+ * alone - an empty series, an error about it - is not a forecast.
  */
 export const TEMPERATURE = /(?:temperature(?:_2m)?[\\"]*\s*:\s*-?\d+(?:\.\d+)?|-?\d+(?:\.\d+)?\s*°)/i;
 
 export const OPENING_PROMPT = trim`
   You have been assigned tasks to work on in this session.
-  Read all tasks, then work on them sequentially and on your own — do not stop to ask; nothing in
+  Read all tasks, then work on them sequentially and on your own - do not stop to ask; nothing in
   this project needs the reader. The task descriptions are the specification.
   Update the tasklist as you work on each task, and mark each task done as you complete it.
 `;

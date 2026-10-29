@@ -30,7 +30,7 @@ import {
 } from '../Entity/index.ts';
 import { attachedTypedObjectInspector } from './inspect.ts';
 
-// Omits the brand slots — those get stamped on the instance by the entity
+// Omits the brand slots - those get stamped on the instance by the entity
 // handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap
 // from kind + jsonSchema.entityKind, StaticTypeSchemaSlot lazily via the
 // proxy), not supplied by the caller. Allows `[Obj.Meta]` (MetaId symbol) for

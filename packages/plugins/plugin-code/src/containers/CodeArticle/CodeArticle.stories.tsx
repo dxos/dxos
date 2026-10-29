@@ -79,7 +79,7 @@ const BROKEN_FILES = [
 
         // Deliberate type error so Build surfaces a diagnostic.
         export const main = (n: number): void => {
-          console.log('starting…');
+          console.log('starting...');
           throw new Error('boom: deliberate runtime error');
         };
 
@@ -142,7 +142,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * F-12a path. Single file with no imports — exercises the TypeScript
+ * F-12a path. Single file with no imports - exercises the TypeScript
  * language-service transpile. Press **Build** then **Run** to see "Hello,
  * World!" in the Console pane.
  */
@@ -154,7 +154,7 @@ export const HelloWorld: Story = {
 };
 
 /**
- * F-12b path. Two files with a relative import — exercises esbuild-wasm
+ * F-12b path. Two files with a relative import - exercises esbuild-wasm
  * bundling. Press **Build** then **Run** to see "Hello from util.ts!" plus
  * a timestamp printed via the imported helper.
  */
@@ -177,7 +177,7 @@ export const BuildError: Story = {
 };
 
 /**
- * Empty project — press the agent in the assistant article to scaffold,
+ * Empty project - press the agent in the assistant article to scaffold,
  * or just observe the empty-state UI here.
  */
 export const Empty: Story = {

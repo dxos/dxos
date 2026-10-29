@@ -240,7 +240,7 @@ export class SpaceStateMachine implements SpaceState {
         }
 
         if (!sourceFeed) {
-          // A document-sourced space admits no feeds, so the assertion is inert rather than invalid —
+          // A document-sourced space admits no feeds, so the assertion is inert rather than invalid -
           // migrated spaces carry the ones their control feed already wrote.
           log('ignoring feed admission from a document source', { credential: credential.id });
           break;

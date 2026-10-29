@@ -33,7 +33,7 @@ import { requirePublicKey } from '@dxos/protocols/buf';
 import * as AppSpace from '../echo/AppSpace.ts';
 
 /**
- * Account sign-up and hub-Account flows, shared by every surface that creates accounts —
+ * Account sign-up and hub-Account flows, shared by every surface that creates accounts -
  * Composer's welcome screen and OAuth redirect finalizer, and the `dx account` CLI commands.
  * The flows live here rather than in a plugin for the same reason as {@link AppSpace.setupIdentitySpaces}:
  * plugin-client (CLI) cannot depend on the plugins that own the UI, and logic split across the two
@@ -89,7 +89,7 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
     seen.add(current);
     const data = (current as { data?: unknown; context?: unknown }).data ?? (current as { context?: unknown }).context;
     if (typeof data === 'object' && data !== null && 'type' in data && typeof data.type === 'string') {
-      // Only a known discriminator counts — an unrelated `type` field on an intermediate error must
+      // Only a known discriminator counts - an unrelated `type` field on an intermediate error must
       // not resolve as an account error.
       const match = ACCOUNT_ERROR_TYPES.find((type) => type === data.type);
       if (match) {
@@ -107,7 +107,7 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 /**
  * Hub-service base URL from the client config. `runtime.app.env.DX_HUB_URL` is set by the bundler
  * config plugin from the build's environment, so surfaces without a bundler (the CLI) fall back to
- * `runtime.services.hub.url` — the key the `dx hub` admin commands already read — and finally to
+ * `runtime.services.hub.url` - the key the `dx hub` admin commands already read - and finally to
  * {@link DEFAULT_HUB_URL}, so no surface can be left with no hub to talk to.
  *
  * NOTE: The gates that treat the presence of `DX_HUB_URL` as "this is a gated deployment" read the
@@ -141,10 +141,10 @@ const CANONICAL_ACCESS_CODE = new RegExp(
   `^[A-Z0-9]{${INVITATION_CODE_LENGTH},${VANITY_PREFIX_MAX_LENGTH + VANITY_SUFFIX_LENGTH}}$`,
 );
 
-/** Whether user input normalizes to a well-formed access code — hyphens and case are forgiven. */
+/** Whether user input normalizes to a well-formed access code - hyphens and case are forgiven. */
 export const isValidAccessCodeFormat = (code: string): boolean => CANONICAL_ACCESS_CODE.test(normalizeAccessCode(code));
 
-/** Validate an access code against hub-service. Resolves false on any failure — never throws. */
+/** Validate an access code against hub-service. Resolves false on any failure - never throws. */
 export const checkAccessCode = Effect.fn(function* ({ hub, code }: { hub: HubHttpClient; code: string }) {
   return yield* Effect.tryPromise(() =>
     hub.validateInvitationCode(DxContext.default(), { code: normalizeAccessCode(code) }),
@@ -167,7 +167,7 @@ export type EmailProbeResult = 'exists' | 'available' | 'unavailable';
 /** Bounds the probe so an unresponsive hub cannot leave the signup flow pending. */
 const EMAIL_PROBE_TIMEOUT_MS = 10_000;
 
-/** Probe whether an address already has an Account. Failures resolve to `unavailable` — never throws. */
+/** Probe whether an address already has an Account. Failures resolve to `unavailable` - never throws. */
 export const probeEmail = Effect.fn(function* ({ hub, email }: { hub: HubHttpClient; email: string }) {
   return yield* Effect.tryPromise(() => hub.checkEmailExists(DxContext.default(), { email })).pipe(
     Effect.timeoutOrElse({
@@ -228,7 +228,7 @@ export const redeemAccessCode = Effect.fn(function* ({
 /**
  * Email sign-up: probe that the address is free, create the local identity, then redeem the access
  * code. Probing comes first because redemption rejects a taken address and an identity created
- * before that rejection is stranded — it cannot be bound to any account.
+ * before that rejection is stranded - it cannot be bound to any account.
  *
  * `ensureIdentity` is injected so the caller's operation invoker creates the identity (firing
  * `IdentityCreated`, which provisions the identity's spaces).
@@ -271,7 +271,7 @@ export type CompleteOAuthRegistrationResult = {
 /**
  * Complete OAuth recovery registration for the local identity: submit the registration token plus
  * the identity and space keys to Edge (which routes the OAuth refresh token into the default space
- * and records the recovery binding), then materialize the credential in the default space — an
+ * and records the recovery binding), then materialize the credential in the default space - an
  * `AccessToken` keyed by the returned id so rotated tokens land on it (an unkeyed refresh token is
  * treated as orphaned and dropped), wrapped in a `Connection` so the connected account surfaces as
  * a first-class object. Registration completes exactly once per account, so the pair is created
@@ -300,7 +300,7 @@ export const completeOAuthRegistration = Effect.fn(function* ({
       }),
     catch: OAuthRegistrationError.wrap(),
   });
-  // The verified email is re-derived server-side from the registrationToken — it is never carried
+  // The verified email is re-derived server-side from the registrationToken - it is never carried
   // in a redirect. kms-service rejects no-email flows before issuing a token, so this cannot fire.
   invariant(result.email, 'email missing from completeOAuthRegistration');
 

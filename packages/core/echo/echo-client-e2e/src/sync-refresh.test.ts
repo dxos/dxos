@@ -12,8 +12,8 @@ import { DXN, PublicKey } from '@dxos/keys';
 
 //
 // What a change arriving from elsewhere does to the objects a peer is already holding. Two clients share
-// one peer, so a write on the first reaches the second the way a synced change does — through the
-// document, `_onDocumentUpdate` and the target refresh — rather than through the local write path, which
+// one peer, so a write on the first reaches the second the way a synced change does - through the
+// document, `_onDocumentUpdate` and the target refresh - rather than through the local write path, which
 // narrows itself to the key it touches.
 //
 
@@ -101,7 +101,7 @@ describe('refresh on a change from elsewhere', { timeout: 120_000 }, () => {
 
     expect(held.value).toEqual(1);
     // The change named `value`; nothing about `assignee` or `nested` moved, so the objects handed out for
-    // them must be the same ones — a consumer that memoizes on a ref re-renders otherwise, on every
+    // them must be the same ones - a consumer that memoizes on a ref re-renders otherwise, on every
     // change to any other field of the object.
     expect(held.assignee).toBe(refBefore);
     expect(held.nested).toBe(nestedBefore);

@@ -60,7 +60,7 @@ export const chat = Command.make(
     ),
     prompt: Options.String('prompt').pipe(
       Options.withDescription(
-        'When set, runs the agent loop non-interactively with this prompt and exits — no TUI. Combine with --json to get structured object output.',
+        'When set, runs the agent loop non-interactively with this prompt and exits - no TUI. Combine with --json to get structured object output.',
       ),
       Options.optional,
     ),

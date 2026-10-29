@@ -53,8 +53,8 @@ class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.ca
  * Seed people covering every branch of the duplicate scan:
  *  - Alice: three records sharing one address, in two different cases (email identity);
  *  - Bob: two records with no shared address, chained through a Google resource name (foreign-key
- *    identity) — the F2 case where mail sync and contacts sync each made their own Person;
- *  - the two role inboxes: same display name, different addresses — deliberately NOT duplicates;
+ *    identity) - the F2 case where mail sync and contacts sync each made their own Person;
+ *  - the two role inboxes: same display name, different addresses - deliberately NOT duplicates;
  *  - Dana: unique, so the list always has a non-duplicate to compare against.
  */
 const GOOGLE = 'google.com/contacts';
@@ -217,7 +217,7 @@ export const Default: Story = {
 };
 
 /**
- * Person, whose identity rule (email + foreign key) is registered — so the toolbar offers the
+ * Person, whose identity rule (email + foreign key) is registered - so the toolbar offers the
  * Duplicates tab. Selection and the merge preview both surface in the companion beside the article.
  *
  * Test:
@@ -226,23 +226,23 @@ export const Default: Story = {
  * 2. The masonry shows the first group only: the three Alice records (they share `alice@dxos.org`,
  *    one of them cased `ALICE@`).
  * 3. Click a card. It becomes current and the companion shows its form. Click again to deselect.
- * 4. Press the right arrow. The counter reads `2 / 2` and the two Bob records appear — they share
+ * 4. Press the right arrow. The counter reads `2 / 2` and the two Bob records appear - they share
  *    no address, and are grouped only by the Google resource name on both.
  * 5. Press the left arrow to return to group 1, select two of the three Alice cards, and press
  *    Merge. The two selected cards fold into one highlighted read-only result card (no card menu)
  *    while the unselected Alice stays; the toolbar now reads Confirm merge / Cancel; the companion
  *    shows the editable preview form.
- * 6. Press Cancel — the three cards return, Merge / Skip come back. Press Merge again with nothing
+ * 6. Press Cancel - the three cards return, Merge / Skip come back. Press Merge again with nothing
  *    selected: all three fold into one result card whose `fullName` is `Alice Andrews` (the oldest
  *    record wins), `jobTitle` is `Engineer` (filled from a later record), and `emails` lists
- *    `alice@dxos.org` once — lower-cased — plus `alice@personal.com`.
+ *    `alice@dxos.org` once - lower-cased - plus `alice@personal.com`.
  * 7. Edit `nickname` in the companion form, then press Confirm merge in the article toolbar. The
  *    article rescans, the counter reads `1 / 1`, and only the Bob group remains. Switch to the
- *    Cards tab: six people, not eight — one Alice carrying every merged field plus your edit.
+ *    Cards tab: six people, not eight - one Alice carrying every merged field plus your edit.
  * 8. Switch to the Table tab and check two rows. A `Delete 2 objects` button appears in the
  *    toolbar.
  * 9. Confirm the two role inboxes (`DXOS` and `DXOS via TestFlight`) were never offered as a
- *    group — same display name, different addresses, correctly left alone.
+ *    group - same display name, different addresses, correctly left alone.
  */
 export const Duplicates: Story = {
   args: {

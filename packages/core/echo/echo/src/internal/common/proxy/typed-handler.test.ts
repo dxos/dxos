@@ -18,7 +18,7 @@ import { makeObject } from './make-object.ts';
 import { change, subscribe } from './reactive.ts';
 
 describe('nested schemas', () => {
-  test('a nested value carries its property’s AST, not a schema of its own', () => {
+  test("a nested value carries its property's AST, not a schema of its own", () => {
     const schema = Schema.Struct({ nested: Schema.Struct({ value: Schema.Number }) });
     const object = makeObject(schema, { nested: { value: 1 } });
     expect((object.nested as any)[SchemaId]).toBeUndefined();

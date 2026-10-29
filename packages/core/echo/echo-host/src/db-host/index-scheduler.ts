@@ -25,7 +25,7 @@ export class IndexPassFailedError extends BaseError.extend('IndexPassFailedError
 
 /**
  * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
- * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
+ * attributable from `app.log` alone - the counts are otherwise indistinguishable between a
  * data-driven pass and a self-sustaining invalidation cycle.
  */
 export type IndexRunReason =
@@ -73,7 +73,7 @@ export class IndexScheduler extends Resource {
   /**
    * Why the pending run was scheduled, counted per reason. `DeferredTask` coalesces overlapping
    * `schedule()` calls into one run, so attributing a run needs the full multiset of reasons that
-   * accumulated before it started — a single "last caller" field would misattribute every coalesced run.
+   * accumulated before it started - a single "last caller" field would misattribute every coalesced run.
    */
   readonly #pendingReasons = new Map<IndexRunReason, number>();
 
@@ -204,7 +204,7 @@ export class IndexScheduler extends Resource {
     );
   }
 
-  /** Records why a run is wanted without scheduling it — for callers that drive the task directly. */
+  /** Records why a run is wanted without scheduling it - for callers that drive the task directly. */
   #noteReason(reason: IndexRunReason): void {
     this.#pendingReasons.set(reason, (this.#pendingReasons.get(reason) ?? 0) + 1);
   }

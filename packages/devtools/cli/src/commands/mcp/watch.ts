@@ -45,8 +45,8 @@ export type WatchSupervisorOptions = {
  * Two strategies, because what can change differs by build:
  *
  * - **From source**, `bun --watch` runs the child and tracks exactly the module graph it imported,
- *   which is the right file set and costs nothing to maintain. It reloads *in place* — same pid,
- *   same pipes, wiped JS realm — so the connection survives while the server's state does not.
+ *   which is the right file set and costs nothing to maintain. It reloads *in place* - same pid,
+ *   same pipes, wiped JS realm - so the connection survives while the server's state does not.
  * - **From the binary**, there are no sources and bun's watcher is not in the artifact, so the
  *   supervisor re-runs a copy of itself and watches the directories the child reports: its
  *   dev-installed plugins, the only on-disk code a shipped `dx` can see change.
@@ -82,7 +82,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
     let failed = false;
     let settle: NodeJS.Timeout | undefined;
 
-    /** Resumes at most once — `error` and `exit` can both fire for the same dead child. */
+    /** Resumes at most once - `error` and `exit` can both fire for the same dead child. */
     const fail = (error: WatchError) => {
       if (failed || stopping) {
         return;
@@ -135,7 +135,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
 
     // Two windows are accepted as inherent to in-place reload: a frame sent between bun's realm
     // wipe and the sentinel can be rejected by the half-started realm, and an edit that fails to
-    // load produces no sentinel at all — the child's stderr shows the crash, and the next good
+    // load produces no sentinel at all - the child's stderr shows the crash, and the next good
     // edit recovers.
     const onReady = (paths: readonly string[]) => {
       starts += 1;
@@ -174,7 +174,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
           replay.observeClient(message);
         }
       }
-      // A queued request is not yet pending — `pending` holds only ids the child has seen, so a
+      // A queued request is not yet pending - `pending` holds only ids the child has seen, so a
       // reload errors exactly the requests it stranded while the flush delivers the rest once.
       ready ? sendToChild(line) : queued.push(line);
     };
@@ -208,7 +208,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
     };
 
     /**
-     * Re-arms the watch set to what the child just reported. Only the binary strategy needs it —
+     * Re-arms the watch set to what the child just reported. Only the binary strategy needs it -
      * under `bun --watch` a linked plugin is already in the module graph, and a second watcher
      * would race bun's in-place reload with a process kill.
      */
@@ -267,14 +267,14 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
         const bunArgs = ['--watch', '--no-clear-screen'];
         // `--watch` implies source resolution: without it every `@dxos/*` import resolves to `dist`,
         // so editing a plugin's source changes nothing the watcher tracks until that package is
-        // rebuilt — the reload would fire on builds rather than on edits. `DX_SOURCE=0` opts out.
+        // rebuilt - the reload would fire on builds rather than on edits. `DX_SOURCE=0` opts out.
         if (process.env.DX_SOURCE !== '0') {
           bunArgs.push('--conditions=source');
         }
         // Pinned to the package that owns the entry because bun resolves `tsconfig.json` from the
         // cwd, not from the file it is compiling. `--conditions=source` makes it transpile every
         // `@dxos/*` package from TypeScript, and without the `experimentalDecorators` that tsconfig
-        // carries it applies TC39 semantics to legacy decorators — `@synchronized` then dies on
+        // carries it applies TC39 semantics to legacy decorators - `@synchronized` then dies on
         // `descriptor.value` deep in client startup. An MCP client launches `dx` from the user's
         // own project, so inheriting that cwd broke the child every time.
         // The pinned cwd would re-anchor a relative `--config`, so it is resolved against the
@@ -299,7 +299,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
         if (failed) {
           return;
         }
-        // `!stopping` because a disconnect racing a reload must win — a respawn here would outlive
+        // `!stopping` because a disconnect racing a reload must win - a respawn here would outlive
         // the client, answered by nobody, and the shutdown below would never resolve.
         if (restarting && !stopping) {
           // Expected: the binary strategy kills its own child to reload it.
@@ -343,7 +343,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
     });
   });
 
-/** Splits a byte stream into NDJSON lines — the framing `McpServer.layerStdio` uses. */
+/** Splits a byte stream into NDJSON lines - the framing `McpServer.layerStdio` uses. */
 const splitLines = (onLine: (line: string) => void) => {
   // A pipe chunk can end mid-codepoint; the decoder carries the partial bytes to the next chunk.
   const decoder = new StringDecoder('utf8');

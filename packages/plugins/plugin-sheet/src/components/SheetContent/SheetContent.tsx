@@ -352,7 +352,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         onInit: (fn) => (rangeController.current = fn),
         onStateChange: (state) => {
           if (dxGrid) {
-            // This can’t dispatch a setState in this component, otherwise the cell editor remounts and loses focus.
+            // This can't dispatch a setState in this component, otherwise the cell editor remounts and loses focus.
             dxGrid.mode = typeof state.activeRange === 'undefined' ? 'edit' : 'edit-select';
           }
         },

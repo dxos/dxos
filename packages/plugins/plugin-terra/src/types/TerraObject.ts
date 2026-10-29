@@ -45,7 +45,7 @@ export class TerraObject extends Type.makeObject<TerraObject>(DXN.make('org.dxos
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     // Kind-neutral: `IconAnnotation` is a static schema-level value, so one icon covers boats,
-    // tanks, satellites and rockets alike — a plane icon would mislabel four kinds out of five.
+    // tanks, satellites and rockets alike - a plane icon would mislabel four kinds out of five.
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'green' }),
   ),
 ) {}

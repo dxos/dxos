@@ -40,7 +40,7 @@ export type EchoTypeOptions = {
   /**
    * Override the entity id stamped on the in-memory `Type.Type` value.
    *
-   * Defaults to `EntityId.deterministic(typename, version)` — stable across processes
+   * Defaults to `EntityId.deterministic(typename, version)` - stable across processes
    * and workerd-safe (no `crypto.getRandomValues()` at module-evaluation time).
    * Pass an explicit id (typically `EntityId.random()`) to opt out of the
    * deterministic default.
@@ -50,11 +50,11 @@ export type EchoTypeOptions = {
 
 /**
  * In-memory `Type.Type` entity shape produced by `Type.makeObject(dxn)` /
- * `Type.makeRelation({...})`. A live reactive `TypeSchema` instance —
+ * `Type.makeRelation({...})`. A live reactive `TypeSchema` instance -
  * identical to a persisted `Type.Type` except for database attachment.
  *
  * NOT a `Schema.Schema`. The underlying Effect Schema is cached on the hidden
- * `StaticTypeSchemaSlot` slot — retrieve it via `Type.getSchema(...)`.
+ * `StaticTypeSchemaSlot` slot - retrieve it via `Type.getSchema(...)`.
  */
 // TODO(burdon): Rename EchoEntitySchema.
 export interface EchoTypeSchema<
@@ -65,7 +65,7 @@ export interface EchoTypeSchema<
 > {
   /**
    * Entity-kind brand. Type entities are their own kind (`Type`) regardless of
-   * the kind of instance they describe — `[SchemaKindId]` carries the latter.
+   * the kind of instance they describe - `[SchemaKindId]` carries the latter.
    * This lets predicates like `Obj.isObject` / `Relation.isRelation` cleanly
    * reject type entities without also having to inspect `[SchemaKindId]`.
    */
@@ -75,7 +75,7 @@ export interface EchoTypeSchema<
   readonly [SchemaKindId]: K;
 
   /**
-   * Entity id. Always present — stamped at construction — but NOT the type's
+   * Entity id. Always present - stamped at construction - but NOT the type's
    * identity while in-memory: an unattached type resolves its URI to the typename
    * DXN, switching to `echo:///<id>` only once attached to a database (see
    * `getTypeURIFromSpecifier`, which discriminates by database attachment).
@@ -93,7 +93,7 @@ export interface EchoTypeSchema<
   /** Struct fields for introspection. */
   readonly fields: Fields;
 
-  /** Phantom — instance type produced by `Obj.make(self, ...)`. */
+  /** Phantom - instance type produced by `Obj.make(self, ...)`. */
   readonly _instance?: EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>;
 
   /**
@@ -105,7 +105,7 @@ export interface EchoTypeSchema<
    * to the matching public-side interface in `Type.ts` (`Type.Obj` /
    * `Type.Relation` / `Type.Type`). Each kind projects identity: instances of
    * an object-kind schema are object-kind entities, type-kind schemas produce
-   * type-kind (persisted Type.Type) entities — the latter additionally carry
+   * type-kind (persisted Type.Type) entities - the latter additionally carry
    * the `[SchemaKindId]` / `[StaticTypeSchemaSlot]` brands the echo-handler
    * proxy exposes on persisted Type entities.
    */
@@ -120,7 +120,7 @@ export interface EchoTypeSchema<
 }
 
 /**
- * Identity (typename + version) of the type meta-schema — the `Type.Type` that
+ * Identity (typename + version) of the type meta-schema - the `Type.Type` that
  * every ECHO type entity is itself an instance of. Shared by the materialisation
  * vehicle ({@link persistentEntitySchema}) and `TypeSchema` so the two cannot
  * drift on identity.
@@ -130,14 +130,14 @@ export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
 /**
  * Effect Schema that every `Type.Type` entity is an instance of: the meta-schema
  * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. This is
- * the materialisation vehicle for `makeObject` below — the canonical user-facing
+ * the materialisation vehicle for `makeObject` below - the canonical user-facing
  * entity is `Type/type-schema.ts`'s `TypeSchema`, which carries the same shape
  * plus UI annotations.
  *
  * Kept self-contained (no import of `TypeSchema`) to avoid a bootstrap cycle:
  * `TypeSchema` is itself produced via `makeEchoTypeSchema`, so this builder must
  * not depend on it. `jsonSchema` is declared optional here (only on the
- * materialisation vehicle — the canonical `TypeSchema` keeps it required) so the
+ * materialisation vehicle - the canonical `TypeSchema` keeps it required) so the
  * construction-time `Schema.asserts` does not force the field before it is
  * attached; it is populated immediately after via a lazy accessor (see
  * `makeEchoTypeSchema`).
@@ -164,7 +164,7 @@ const persistentEntitySchema: Schema.Codec<AnyProperties, any> = (() => {
  *
  * Build an in-memory `Type.Type` entity (the value returned by `Type.makeObject`
  * / `Type.makeRelation`). The result is a LIVE reactive `TypeSchema`
- * instance — identical in every respect to a persisted `Type.Type` except that
+ * instance - identical in every respect to a persisted `Type.Type` except that
  * it is not yet attached to a database. It is mutable via `Type.update`, can be
  * passed to `db.add(...)` (which keeps the same proxy and swaps the handler),
  * and round-trips through `jsonSchema`.
@@ -188,7 +188,7 @@ export const makeEchoTypeSchema = <
   computeJsonSchema: () => JsonSchemaType,
   explicitId?: EntityId,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
-  // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
+  // Source Effect Schema describing the user's type - cached for `Type.getSchema`.
   // v4's `Schema.make` takes the whole schema type as one parameter, and a schema exposes its
   // channels as properties rather than through `Schema.Schema.*` helpers.
   const sourceSchema =
@@ -201,8 +201,8 @@ export const makeEchoTypeSchema = <
       >
     >(ast);
 
-  // `typename` / `version` route through `EntityMeta` (`key` / `version`) — the
-  // canonical registry-provenance pair — not data fields. `keys` is empty for
+  // `typename` / `version` route through `EntityMeta` (`key` / `version`) - the
+  // canonical registry-provenance pair - not data fields. `keys` is empty for
   // in-memory declarations until persisted.
   const meta: Partial<EntityMeta> = { keys: [], key: typename, version };
 

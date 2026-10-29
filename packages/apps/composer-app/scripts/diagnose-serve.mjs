@@ -6,7 +6,7 @@
 //
 // The recurring failure is a hard loop in an ORPHANED vite process (reparented to init, so `ppid` is
 // 1). Ctrl-C only reaches the terminal's foreground process group, which an orphan has left, and a
-// process spinning synchronously never reaches the tick where a SIGTERM handler would run — so
+// process spinning synchronously never reaches the tick where a SIGTERM handler would run - so
 // SIGKILL is the only thing that ends it. The sample must be taken BEFORE the kill: once the process
 // is gone there is nothing left to explain why it was spinning.
 
@@ -40,7 +40,7 @@ if (processes.length === 0) {
 }
 
 for (const entry of processes) {
-  // ppid 1 means the parent died and the process was reparented — the signature of the hang, and the
+  // ppid 1 means the parent died and the process was reparented - the signature of the hang, and the
   // reason Ctrl-C does nothing.
   const orphaned = entry.ppid === 1 ? ' ORPHANED (ppid 1)' : '';
   console.log(`pid ${entry.pid}  cpu ${entry.pcpu}%  up ${entry.etime}${orphaned}`);
@@ -65,7 +65,7 @@ spawnSync('kill', ['-TERM', String(target.pid)]);
 spawnSync('sleep', ['3']);
 const alive = spawnSync('ps', ['-p', String(target.pid)]).status === 0;
 if (alive) {
-  console.log('SIGTERM ignored (consistent with a hard loop) — sending SIGKILL.');
+  console.log('SIGTERM ignored (consistent with a hard loop) - sending SIGKILL.');
   spawnSync('kill', ['-9', String(target.pid)]);
 }
 console.log(spawnSync('ps', ['-p', String(target.pid)]).status === 0 ? 'STILL ALIVE.' : 'Gone.');

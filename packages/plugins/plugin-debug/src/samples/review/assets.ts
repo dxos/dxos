@@ -73,7 +73,7 @@ const VIDEO_SEEDS: ReadonlyArray<SampleSpace.Seed<VideoKey, { name: string; url:
   },
   {
     key: 'haloLogin',
-    name: 'Switch identity in place — login',
+    name: 'Switch identity in place - login',
     url: `${R2}/2026-09-23-halo-in-place-identity/halo-login.webm`,
     description: 'Logging in to another identity without a reset and reload (dxos/dxos#13336).',
   },

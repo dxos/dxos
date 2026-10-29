@@ -51,7 +51,7 @@ export const setupPluginManager = ({
 
   // The framework capabilities a real host contributes, mirroring `createTestApp`. Without these
   // no MODULE provides `AtomRegistry`, so any module requiring it fails the dependency pass's
-  // missing-provider check with nothing to wait for — reached as soon as a requiring module sits
+  // missing-provider check with nothing to wait for - reached as soon as a requiring module sits
   // on the startup pass (attention, graph, the process manager).
   pluginManager.capabilities.contribute({
     interface: Capabilities.PluginManager,
@@ -66,7 +66,7 @@ export const setupPluginManager = ({
 
   if (capabilities) {
     // Fixtures hand us `Contribution`s (from `Capability.contribute`); expand them to the raw
-    // interface/implementation entries the manager ingests — the same path module activation uses.
+    // interface/implementation entries the manager ingests - the same path module activation uses.
     CapabilityManager.expandContributions(getProviderValue(capabilities, pluginManager.capabilities)).forEach(
       (capability) => {
         pluginManager.capabilities.contribute({
@@ -143,7 +143,7 @@ export const PluginManagerHost = ({ id, options, children }: PluginManagerHostPr
     return () => {
       pluginManager.capabilities.remove(capability.interface, capability.implementation);
       // A story switch tears down while the start-event trickle is still activating, which
-      // interrupts the shutdown fiber — expected; real failures still surface.
+      // interrupts the shutdown fiber - expected; real failures still surface.
       EffectEx.runDetached(pluginManager.shutdown());
     };
   }, [id, options]);
@@ -190,9 +190,9 @@ const WithPluginManagerApp = ({
     async (controller) => {
       await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
       // In the app plugins start on demand (surface render), but stories render one surface in
-      // isolation — fire every start event so start-gated modules are present regardless of
+      // isolation - fire every start event so start-gated modules are present regardless of
       // which plugin's surface the story exercises. A story switch shuts the manager down
-      // mid-trickle, interrupting the activation fiber — expected; real failures still surface.
+      // mid-trickle, interrupting the activation fiber - expected; real failures still surface.
       EffectEx.runDetached(
         activateDemandGatedModules(pluginManager).pipe(
           // Interruption skips this, so a torn-down story never flips the gate.

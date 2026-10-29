@@ -10,12 +10,12 @@ import { type TagResult } from '../pipelines/tags.ts';
 import { type Judge, gradeCoverage, gradeFaithfulness } from './judge.ts';
 
 // Task-specific accuracy graders for the model-ladder experiment. Labeling is scored deterministically
-// against the reference model (haiku) — no LLM judge, so it's cheap and unbiased. Summaries reuse the
+// against the reference model (haiku) - no LLM judge, so it's cheap and unbiased. Summaries reuse the
 // coverage/faithfulness judge. Drafts get a rubric from the opus grader. Every score is 0..1 so tasks
 // are comparable in the report.
 
 //
-// Labeling — agreement with the reference model (haiku is the bar).
+// Labeling - agreement with the reference model (haiku is the bar).
 //
 
 export type SpamAgreement = {
@@ -75,7 +75,7 @@ export const tagJaccard = (model: readonly TagResult[], reference: readonly TagR
 };
 
 //
-// Sender classification — scored against a human-reviewed ground-truth gold set (person/org).
+// Sender classification - scored against a human-reviewed ground-truth gold set (person/org).
 //
 
 export type SenderScore = {
@@ -87,7 +87,7 @@ export type SenderScore = {
   readonly macroF1: number;
   readonly personF1: number;
   readonly orgF1: number;
-  /** Confusion counts (gold → predicted), for auditing which direction the errors run. */
+  /** Confusion counts (gold -> predicted), for auditing which direction the errors run. */
   readonly confusion: {
     readonly personAsPerson: number;
     readonly personAsOrg: number;
@@ -145,7 +145,7 @@ export const scoreSenders = (
 };
 
 //
-// Summaries — coverage + faithfulness (opus grader). Gold points are the message's own key points.
+// Summaries - coverage + faithfulness (opus grader). Gold points are the message's own key points.
 //
 
 export type SummaryScore = {
@@ -169,13 +169,13 @@ export const gradeSummary = async (
 };
 
 //
-// Drafts — a 0..1 rubric from the opus grader.
+// Drafts - a 0..1 rubric from the opus grader.
 //
 
 export type DraftScore = {
   /** Addresses the sender's questions/requests. */
   readonly relevance: number;
-  /** Nothing invented — every claim supported by the original. */
+  /** Nothing invented - every claim supported by the original. */
   readonly correctness: number;
   /** Covers everything that needed a response. */
   readonly completeness: number;
@@ -187,7 +187,7 @@ export type DraftScore = {
 
 const RUBRIC_MAX = 5;
 
-/** Scores a draft reply against the original message on a 0–5 rubric, normalized to 0..1. */
+/** Scores a draft reply against the original message on a 0-5 rubric, normalized to 0..1. */
 export const gradeDraft = async (original: string, draft: string, judge: Judge): Promise<DraftScore> => {
   if (draft.trim().length === 0) {
     return { relevance: 0, correctness: 0, completeness: 0, tone: 0, overall: 0 };
@@ -196,7 +196,7 @@ export const gradeDraft = async (original: string, draft: string, judge: Judge):
     trim`
       Score the DRAFT reply to the ORIGINAL email on each axis from 0 to ${RUBRIC_MAX}:
       - relevance: addresses the questions/requests the sender actually made.
-      - correctness: invents nothing — every claim is supported by the original.
+      - correctness: invents nothing - every claim is supported by the original.
       - completeness: responds to everything that needed a response.
       - tone: professional and appropriately concise.
       Return ONLY JSON {"relevance":n,"correctness":n,"completeness":n,"tone":n}.

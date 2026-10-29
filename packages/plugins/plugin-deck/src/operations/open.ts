@@ -65,12 +65,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       input = { ...input, subject: matched.subjects };
 
       // Compute the next active deck state and apply it. Dispositions:
-      // - 'solo' (default): navigate — the deck becomes just the subjects, unless they are all already
+      // - 'solo' (default): navigate - the deck becomes just the subjects, unless they are all already
       //   open (scroll-into-view only).
       // - 'add': always insert the subjects as new planks, immediately after `pivotId` when provided,
       //   else at the end; never replaces. A card passes its own plank as `pivotId` (see
       //   `useCardPivot`), so opened objects appear beside the plank the card lives in.
-      // - 'auto': follow the deck — add beside the origin (`pivotId`, falling back to the attended
+      // - 'auto': follow the deck - add beside the origin (`pivotId`, falling back to the attended
       //   plank) when already sliding (2+ planks), otherwise navigate solo. In-plank inline references
       //   use this so they grow a sliding deck but replace a solo one.
       // Holding shift forces any disposition into an add (callers forward the raw modifier rather than
@@ -145,7 +145,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         ) {
           // The companion follows a detail swap: the new plank stands in for the replaced one, and
           // closing it mid-read would also narrow the deck, which the browser answers by clamping the
-          // scroll — a one-frame snap measured at exactly the lost width.
+          // scroll - a one-frame snap measured at exactly the lost width.
           companionPlanks = openCompanionPlank(companionPlanks, flatten, input.subject[0]);
         }
         const holder = input.subject[0];

@@ -62,7 +62,7 @@ describe('RemoteProcessManager control verbs', () => {
         const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         // `runAndExit` takes the cursor before submitting, so it carries this call's outputs only,
-        // and ends on IDLE — the local contract. Collecting it therefore terminates on its own.
+        // and ends on IDLE - the local contract. Collecting it therefore terminates on its own.
         return yield* Stream.runCollect(handle.runAndExit({ inputs: ['hello'] }));
       }),
       host,
@@ -194,7 +194,7 @@ describe('RemoteProcessManager control verbs', () => {
   test('a spawn publishes into the remote manager tree the monitor reads', async ({ expect }) => {
     const host = makeFakeHost();
     // The verbs write the atom belonging to `RemoteProcessManager.Service`, which is the remote
-    // half of the aggregate `Process.Manager` — a private atom would leave a hosted process invisible
+    // half of the aggregate `Process.Manager` - a private atom would leave a hosted process invisible
     // there. The merge itself is covered by the edge e2e, which has a real local manager too.
     const tree = await runWithMonitor(
       Effect.gen(function* () {
@@ -225,7 +225,7 @@ describe('RemoteProcessManager control verbs', () => {
 
 /**
  * The remote manager's verbs bound to the test space, so a call site reads like the local manager's
- * and the space stays where it belongs — a parameter of every remote call.
+ * and the space stays where it belongs - a parameter of every remote call.
  */
 const remoteManager = Effect.gen(function* () {
   const remote = yield* RemoteProcessManager.Service;
@@ -245,7 +245,7 @@ const remoteManager = Effect.gen(function* () {
 
 /**
  * The EDGE manager as a client sees it: a tree atom plus the verbs built over `control`, which
- * publish into that atom — the half of the aggregate `Process.Manager` where hosted processes belong.
+ * publish into that atom - the half of the aggregate `Process.Manager` where hosted processes belong.
  */
 const remoteLayer = (control: RemoteProcessManager.Control) =>
   Layer.effect(
@@ -330,8 +330,8 @@ const makeFakeHost = (
     list: () => Effect.sync(() => (terminated || !(spawnedHere || options.existing) ? [] : [info()])),
     status: () =>
       Effect.sync(() => {
-        // Settles on the Nth read, so a predicate that returns too early — or a poll loop that never
-        // runs — shows up as a wrong call count rather than passing anyway.
+        // Settles on the Nth read, so a predicate that returns too early - or a poll loop that never
+        // runs - shows up as a wrong call count rather than passing anyway.
         if (options.settleAfterStatusCalls !== undefined && ++statusCalls >= options.settleAfterStatusCalls) {
           state = Process.State.IDLE;
         }

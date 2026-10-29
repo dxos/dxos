@@ -37,7 +37,7 @@ export type Report = { answer?: string; picks: Pick[]; gaps?: string; next?: str
 
 export type SessionStatus = 'starting' | 'running' | 'idle' | 'reported' | 'stopped' | 'failed';
 
-/** `list`: "find all X that…" (ranked results); `entity`: "everything about X" (the subjects' graph). */
+/** `list`: "find all X that..." (ranked results); `entity`: "everything about X" (the subjects' graph). */
 export type Intent = 'list' | 'entity';
 
 /** A search session, normalised across API versions. */
@@ -60,7 +60,7 @@ export type Session = {
   parent?: { run: string; subject?: string; extension?: string };
 };
 
-/** One trajectory event (input, decide, act, extract, load, …). */
+/** One trajectory event (input, decide, act, extract, load, ...). */
 export type TrajectoryEvent = {
   seq: number;
   t: string;
@@ -97,7 +97,7 @@ export type Extension = {
     link: string;
     /** The rdf:type of the items the child session collects (`schema:MenuItem`). */
     class?: string;
-    /** Item field → the predicate it is stored under (name, price, currency, section, description …). */
+    /** Item field -> the predicate it is stored under (name, price, currency, section, description ...). */
     fields: Record<string, string>;
     budget: Budget;
   };
@@ -142,7 +142,7 @@ export type GraphNode = {
 
 export type GraphEdge = { from: string; to: string; predicate: string; derived?: boolean };
 
-/** A subject's neighbourhood in the graph (lighthouse `graph <iri>…`). */
+/** A subject's neighbourhood in the graph (lighthouse `graph <iri>...`). */
 export type SubjectGraph = {
   /** The roots the walk started from. */
   roots: string[];
@@ -191,7 +191,7 @@ export type ExplainNode = {
   children: ExplainNode[];
 };
 
-/** A lighthouse plugin and what it contributes (engines, extractors, access rules, browsers, models …). */
+/** A lighthouse plugin and what it contributes (engines, extractors, access rules, browsers, models ...). */
 export type Plugin = {
   id: string;
   name?: string;

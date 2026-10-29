@@ -84,7 +84,7 @@ export const runSyncPosts = (
         post.status = 'published';
       });
       // `publication` is already attached (only ever created via AddPublication), so pushing
-      // `Ref.make(post)` onto `posts` attaches `post` too — no separate `Database.add` needed.
+      // `Ref.make(post)` onto `posts` attaches `post` too - no separate `Database.add` needed.
       Obj.update(publication, (publication) => {
         publication.posts ??= [];
         publication.posts.push(Ref.make(post));
@@ -103,7 +103,7 @@ const handler: Operation.WithHandler<typeof SyncPosts> = SyncPosts.pipe(
       const publication = yield* Database.load(publicationRef);
       // Pre-warm each post and its body document/text so `postText` reads the live content during the
       // push reconciliation (cold refs would otherwise push an empty body). Tolerate individual load
-      // failures — dangling refs (e.g. a removed post, or pre-redesign posts with no `content`) must
+      // failures - dangling refs (e.g. a removed post, or pre-redesign posts with no `content`) must
       // not abort the whole sync; `runSyncPosts` reads `ref.target` and skips whatever is unresolved.
       const posts = yield* Effect.forEach(publication.posts ?? [], (ref) =>
         Database.load(ref).pipe(Effect.catch(() => Effect.succeed(undefined))),
@@ -120,7 +120,9 @@ const handler: Operation.WithHandler<typeof SyncPosts> = SyncPosts.pipe(
       // Publish a progress monitor when the app registry is present (absent in headless tests);
       // `runSyncPosts` drives it per post/draft, and it is removed when the run settles or fails.
       const registry = (yield* Capability.getAll(AppCapabilities.ProgressRegistry))[0];
-      const monitor = registry?.register(`${BloggerNamespace.key}/sync/${publication.id}`, { label: 'Syncing posts…' });
+      const monitor = registry?.register(`${BloggerNamespace.key}/sync/${publication.id}`, {
+        label: 'Syncing posts...',
+      });
       const result = yield* runSyncPosts(service, publication, connection, (current, total) => {
         monitor?.total(total);
         monitor?.set(current);

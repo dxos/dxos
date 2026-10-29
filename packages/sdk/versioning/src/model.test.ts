@@ -126,7 +126,7 @@ describe('versioning model', () => {
     expect(db.listBranches(root.id)).not.toContain(branch.key);
   });
 
-  test('concurrent same-line edits merge via the CRDT — no conflict markers', async ({ expect }) => {
+  test('concurrent same-line edits merge via the CRDT - no conflict markers', async ({ expect }) => {
     const { db, doc, root } = await setup('alpha\nbravo\n');
 
     const branch = await Branch.create(doc, { name: 'draft', parent: root });
@@ -195,7 +195,7 @@ describe('versioning model', () => {
       root.content = 'second';
     });
 
-    // The historical value is read as a detached snapshot — no pin on the live object.
+    // The historical value is read as a detached snapshot - no pin on the live object.
     expect(Version.contentAt(root, checkpoint.heads)).toBe('first');
     expect((Obj.getVersion(root, [...checkpoint.heads]) as { content: string }).content).toBe('first');
     // The live object was never mutated by viewing, so it keeps its value and stays editable.

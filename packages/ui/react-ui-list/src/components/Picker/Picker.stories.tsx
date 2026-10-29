@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Picker` stories — exercises the generic listbox-with-input compound
+// `Picker` stories - exercises the generic listbox-with-input compound
 // in isolation. The compound is search-agnostic; the `Filtering` story
 // shows how a caller wires in-memory filtering on top, and the
 // `WithDisabled` story demonstrates the registry's skip-disabled
@@ -33,7 +33,7 @@ const allItems: StoryItem[] = Array.from({ length: 24 }, (_, i) => ({
 
 //
 // Single configurable story. Each variant exported below sets a
-// different combination of props — keeps the per-variant code to one
+// different combination of props - keeps the per-variant code to one
 // line at the bottom of the file. See `AUDIT.md` §11 corrections for
 // the convention.
 //
@@ -74,7 +74,7 @@ const DefaultStory = ({
         <Picker.Input
           autoFocus
           escapeBehavior={escapeBehavior}
-          placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
+          placeholder={controlled ? 'Filter...' : '\u2191/\u2193 to navigate, Enter to pick'}
           {...(controlled && { value: query, onValueChange: setQuery })}
         />
         <ScrollArea.Root classNames='max-h-[20rem] py-form-gap'>
@@ -104,7 +104,7 @@ const DefaultStory = ({
         </ScrollArea.Root>
       </Picker.Root>
       <div className='text-sm text-fg-muted'>
-        Picked: <span className='font-mono'>{picked ?? '—'}</span>
+        Picked: <span className='font-mono'>{picked ?? '-'}</span>
       </div>
     </Layout.Container>
   );
@@ -139,7 +139,7 @@ export const WithDisabled: Story = {
 };
 
 /**
- * Escape clears the query and is then left alone — the dialog or popover the picker sits in
+ * Escape clears the query and is then left alone - the dialog or popover the picker sits in
  * dismisses on the press the picker has no use for.
  */
 export const TestEscape: Story = {

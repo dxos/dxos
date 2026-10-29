@@ -12,7 +12,7 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 /**
  * Reusable, hue-tinted text markers for CodeMirror decorations (shared by comments and pending-text).
  * The tint is driven by a `data-hue` attribute holding a standard ui-theme hue, mapped to the
- * `--color-<hue>-*` tokens — rather than hardcoded per-feature CSS variables.
+ * `--color-<hue>-*` tokens - rather than hardcoded per-feature CSS variables.
  */
 export type MarkerHue = ChromaticPalette;
 
@@ -37,7 +37,7 @@ export const markerTheme = (): Extension =>
     '.cm-marker-text': {
       display: 'inline-block',
     },
-    // Align a trailing icon (e.g. the recording spinner) inline with the text — the global reset
+    // Align a trailing icon (e.g. the recording spinner) inline with the text - the global reset
     // sets `svg { display: block }`, which would otherwise push it onto its own line.
     '.cm-marker-text svg': {
       display: 'inline-block',

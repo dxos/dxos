@@ -7,7 +7,7 @@ import { DEFAULT_SIZES, portId } from '../utils/index.ts';
 
 //
 // A three-level model diagram, one box per class: the fixture for anything that needs a scene tree to look
-// like a real model rather than one of every element type. The domain is invented — a document editor —
+// like a real model rather than one of every element type. The domain is invented - a document editor -
 // so it stays readable without tracking any package's actual classes. (The UML class shape itself is
 // plugin-uml's; the engine fixture draws each class as a labelled rectangle.)
 //

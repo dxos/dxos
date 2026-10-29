@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Static tool metadata + the Effect Schema → Zod adapter for the MCP SDK.
+// Static tool metadata + the Effect Schema -> Zod adapter for the MCP SDK.
 //
-// Pure data + a stateless converter — no introspector, no Node-only deps,
+// Pure data + a stateless converter - no introspector, no Node-only deps,
 // no MCP SDK. The introspect-mcp server consumes this map at startup to
 // register each tool with a handler closing over its `Introspector`;
 // browser-side consumers (react-ui-introspect, etc.) consume the same map
@@ -42,7 +42,7 @@ import {
 } from './schemas.ts';
 
 /**
- * Pure metadata for a single MCP tool — what an MCP client needs to know
+ * Pure metadata for a single MCP tool - what an MCP client needs to know
  * before invoking it: human-readable title, an LLM-targeted description,
  * and the Effect Schema input contract.
  */
@@ -52,7 +52,7 @@ export type ToolMetadata = {
 
   /**
    * LLM-targeted description. Models read this to decide WHEN to call the
-   * tool — write it for trigger accuracy, not for human reading. State both
+   * tool - write it for trigger accuracy, not for human reading. State both
    * what the tool does and the situations it's the right answer for.
    */
   description: string;
@@ -77,7 +77,7 @@ export type ToolMetadata = {
 
 /**
  * Static metadata for every tool the introspect-mcp server exposes. No
- * introspector or runtime state — safe to import from a browser bundle.
+ * introspector or runtime state - safe to import from a browser bundle.
  *
  * Adding a tool means: (1) define its input schema in `./schemas.ts`,
  * (2) add an entry here, (3) add a matching handler in
@@ -109,7 +109,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
     description: trim`
       Enumerate every exported symbol declared by a single package (e.g. all exports of "@dxos/echo-react").
       Use this when the user wants to know what a specific package offers, or to browse a package after get_package.
-      Returns lightweight rows with refs you can pass to get_symbol; capped at 30 — refine with \`kind\` or call get_symbol directly.
+      Returns lightweight rows with refs you can pass to get_symbol; capped at 30 - refine with \`kind\` or call get_symbol directly.
     `,
     inputSchema: ListSymbolsInput,
     outputSchema: Schema.Struct({ symbols: Schema.Array(SymbolMatchSchema) }),
@@ -167,7 +167,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
     title: 'List operations',
     description: trim`
       List operations contributed by plugins. An *operation* is a serializable
-      request (verb + payload) dispatched through the OperationInvoker —
+      request (verb + payload) dispatched through the OperationInvoker -
       Composer's equivalent of an action / command. Most plugins contribute
       these via \`Capabilities.OperationHandler\`. Filter by \`id\` (plugin id)
       to scope to a single plugin.
@@ -190,7 +190,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
     description: trim`
       List idioms catalogued across the monorepo. An *idiom* is a JSDoc-tagged
       reference example (\`@idiom <slug>\`) that pins the canonical way to use a
-      symbol — applicability, anti-pattern, and links to related idioms. Use this
+      symbol - applicability, anti-pattern, and links to related idioms. Use this
       to discover how a feature is meant to be used, or to find a worked example
       before writing new code. Filter by \`slug\` substring or by \`hostKind\`
       (\`symbol\`, \`story\`, \`test\`).

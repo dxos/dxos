@@ -31,7 +31,7 @@ export type ButtonVariantProps = {
   /**
    * Dense inline padding (one control inset), e.g. for a run of pager buttons. An icon-only button loses its square,
    * narrowing to its icon plus an inset either side, and compact icon-only buttons in an Input adornment abut (a
-   * stepper's − and +).
+   * stepper's - and +).
    */
   compact?: boolean;
   /** A trailing caret marking a button that opens a menu. */

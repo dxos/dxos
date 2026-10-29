@@ -75,7 +75,7 @@ const GRADE_GRACE_MILLIS = 5 * 60 * 1_000;
 let nextRunId = 0;
 
 /**
- * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation —
+ * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation -
  * distinct from a harness setup/disposal problem or other infrastructure failure, neither of
  * which is "the agent failed as instructed" (see `expect: 'failure'` handling below).
  */
@@ -367,7 +367,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   /**
    * Milliseconds before the run is aborted. Raise this only for scenarios with more tool
    * round-trips than a typical single/couple-tool eval (e.g. a multi-step plan, or research across
-   * several tools) — most evals should keep the default.
+   * several tools) - most evals should keep the default.
    * @default 60_000
    */
   timeout?: number;
@@ -424,7 +424,7 @@ export type VariantConfig =
 /**
  * Creates an Evalite task that runs the assistant against Instructions and returns the agent's output.
  *
- * Model precedence: `variant.model` → `options.model` → `DEFAULT_MODEL`.
+ * Model precedence: `variant.model` -> `options.model` -> `DEFAULT_MODEL`.
  *
  * The task creates a full Composer test harness via `createComposerTestApp` / `createDefaultPlugins`,
  * initializes an identity, then invokes `runInstructions` with the resolved model and the personal
@@ -437,11 +437,11 @@ export type VariantConfig =
  *
  * Pass `expect: 'failure'` for scenarios that assert the agent correctly fails; the task then
  * returns `{ failed: boolean }` instead of throwing, so a Scorer can grade "failed as instructed".
- * Only a failure of the agent's own `RunInstructions` invocation counts as `{ failed: true }` — a
+ * Only a failure of the agent's own `RunInstructions` invocation counts as `{ failed: true }` - a
  * harness setup/disposal problem or other infrastructure failure still throws, since neither is
  * evidence the agent behaved as instructed.
  *
- * The run is aborted after `timeout` (default 60s, see {@link CreateEvalRunnerOptions.timeout}) —
+ * The run is aborted after `timeout` (default 60s, see {@link CreateEvalRunnerOptions.timeout}) -
  * evalite has no per-scenario timeout of its own, so this is what keeps a hung/slow scenario from
  * eating vitest's shared `testTimeout` budget. A timeout always throws, even under
  * `expect: 'failure'` (it is not evidence the agent "failed as instructed").
@@ -505,7 +505,7 @@ export function createEvalRunner<I, O>(
         );
         // The scope owns the harness until a session that outlives this effect takes it over, so a
         // run that fails before it has anything to grade releases its harness now rather than
-        // holding it — and the whole eval's memory — until the file ends.
+        // holding it - and the whole eval's memory - until the file ends.
         let handedOver = false;
         yield* Effect.addFinalizer(() => (handedOver ? Effect.void : Effect.promise(() => harness.dispose())));
 
@@ -623,7 +623,7 @@ export function createEvalRunner<I, O>(
     }
 
     // Only a failure of the agent's own RunInstructions invocation counts as "failed as
-    // instructed" — a timeout, harness setup/disposal problem, or other infrastructure failure
+    // instructed" - a timeout, harness setup/disposal problem, or other infrastructure failure
     // means the run never got far enough to demonstrate anything, so it must propagate as a real
     // error instead of being silently scored as a pass.
     if (Option.exists(Cause.findErrorOption(exit.cause), (error) => error instanceof AgentRunFailure)) {

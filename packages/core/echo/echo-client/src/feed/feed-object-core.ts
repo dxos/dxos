@@ -54,17 +54,17 @@ type Classification = 'ignore' | 'reposition' | 'apply';
  * pending background persistence, and reconciles inbound feed re-reads (from polling or a fresh
  * query) against them so a slow-to-echo local write is never clobbered by a stale server read.
  *
- * Persistence is always a whole-object re-append reusing the entity's id — there is no partial-
+ * Persistence is always a whole-object re-append reusing the entity's id - there is no partial-
  * object update block format yet (see `EchoFeedCodec.encode`'s TODO), so every `Obj.update` produces
  * a full snapshot append; the existing index collapse-by-id does the rest. Rapid `Obj.update`s
- * coalesce to a single append (the latest combined state), so only ONE state is ever pending — we
+ * coalesce to a single append (the latest combined state), so only ONE state is ever pending - we
  * never queue intermittent states.
  *
  * Reconciliation compares block references, never content: every object read from a feed carries
  * the id (`<sequence>@<actorId>`) and, once ordered, the position of the block it came from (see
  * `EchoFeedCodec.decodeBlock`). The core keeps the reference of the block its state reflects:
  *
- *   Obj.update → dirty (local, unappended) → in flight → confirmed (the append returned its block id)
+ *   Obj.update -> dirty (local, unappended) -> in flight -> confirmed (the append returned its block id)
  *
  * A re-read of the block already applied costs nothing beyond adopting a new position; a newer block
  * is decoded and applied; an older one is ignored. While a write is in flight its block id is not
@@ -73,7 +73,7 @@ type Classification = 'ignore' | 'reposition' | 'apply';
  * Concurrent writers (two tabs/processes holding a live proxy for the same id) are last-*flush*-wins
  * at whole-object granularity: whichever write's block orders last overwrites the other in full,
  * including fields the winner never touched. This is stronger than typical per-field last-write-wins
- * and is a known limitation — precise resolution needs a real merge protocol (TODO(wittjosiah), out
+ * and is a known limitation - precise resolution needs a real merge protocol (TODO(wittjosiah), out
  * of scope for now).
  */
 export class FeedObjectCore {
@@ -264,11 +264,11 @@ export class FeedObjectCore {
   }
 
   /**
-   * Apply another entity's state onto this core's working-set instance — used when
+   * Apply another entity's state onto this core's working-set instance - used when
    * `FeedHandle.append` is called again with a different object reusing this core's id. The
    * working-set instance (`this.entity`) stays canonical/identity-stable; `source` is the argument
    * passed to `append` and is not retained afterwards. Unlike a remote apply, this is not guarded by
-   * `#applyingRemote` — the mutation is genuinely local, so it should mark the core dirty like any
+   * `#applyingRemote` - the mutation is genuinely local, so it should mark the core dirty like any
    * other `Obj.update` (the caller immediately captures it for append regardless).
    */
   applyLocalUpdate(source: Entity.Unknown): void {
@@ -279,7 +279,7 @@ export class FeedObjectCore {
     change(this.entity, (target: Entity.Mutable<Entity.Unknown>) => {
       // Dynamic keyed access over arbitrary user-data fields: `Entity.Unknown` has no index
       // signature (it's a branded interface), so treating it as a generic record needs a bridge
-      // through `unknown` — mirrors `Obj.updateFrom`'s identical cast for the same reason.
+      // through `unknown` - mirrors `Obj.updateFrom`'s identical cast for the same reason.
       const mutable = target as unknown as Record<string, unknown>;
       const sourceRecord = source as unknown as Record<string, unknown>;
       for (const key of Object.keys(mutable)) {
@@ -304,7 +304,7 @@ export class FeedObjectCore {
   /**
    * Mark the object deleted: unsubscribe and stop reacting to local changes and remote
    * reconciliation. `Obj.update` on a retained reference still mutates the entity in memory (it
-   * remains a valid live proxy) but no longer marks this core dirty or schedules persistence — it
+   * remains a valid live proxy) but no longer marks this core dirty or schedules persistence - it
    * must not throw or resurrect the object into the feed. Re-appending after delete registers a
    * fresh core.
    */

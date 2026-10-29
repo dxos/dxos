@@ -160,7 +160,7 @@ describe('reconcileBoardCards (pull)', () => {
     expect(kanban.arrangement.columns[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden).toBe(false);
   });
 
-  test('second run is idempotent (snapshot equals remote → no writes)', async ({ expect }) => {
+  test('second run is idempotent (snapshot equals remote -> no writes)', async ({ expect }) => {
     const { db, connection } = await setup();
     const layer = Database.layer(db);
     const kanban = makeKanban(db);
@@ -198,7 +198,7 @@ describe('reconcileBoardCards (pull)', () => {
       return yield* reconcileBoardCards(binding, kanban, board, [makeRemoteCard('card1', 'list1', 'Task A')], lists);
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
-    // Remote rename — local untouched.
+    // Remote rename - local untouched.
     const result = await Effect.gen(function* () {
       return yield* reconcileBoardCards(
         binding,
@@ -242,7 +242,7 @@ describe('reconcileBoardCards (pull)', () => {
       (localItem as unknown as Record<string, unknown>).description = 'local edit';
     });
 
-    // Pull again with unchanged remote — local edit must survive.
+    // Pull again with unchanged remote - local edit must survive.
     const result = await Effect.gen(function* () {
       return yield* reconcileBoardCards(
         binding,
@@ -258,7 +258,7 @@ describe('reconcileBoardCards (pull)', () => {
     expect(item.description).toBe('local edit');
   });
 
-  test('both-changed → remote wins (conflict policy)', async ({ expect }) => {
+  test('both-changed -> remote wins (conflict policy)', async ({ expect }) => {
     const { db, connection } = await setup();
     const layer = Database.layer(db);
     const kanban = makeKanban(db);
@@ -321,7 +321,7 @@ describe('reconcileBoardCards (pull)', () => {
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(result.removed).toBe(1);
-    // Closed-on-Trello (or missing) → soft-deleted in ECHO. The ref stays
+    // Closed-on-Trello (or missing) -> soft-deleted in ECHO. The ref stays
     // in `kanban.spec.items` so the arrangement is preserved, but its
     // target is no longer queryable / is flagged deleted.
     const refs = kanban.spec.kind === 'items' ? (kanban.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) : [];
@@ -415,7 +415,7 @@ describe('pushBoardCards (push)', () => {
     expect(snapshots['remote-new']?.name).toBe('New local');
   });
 
-  test('locally-edited card with foreign key → PUT only diverged fields', async ({ expect }) => {
+  test('locally-edited card with foreign key -> PUT only diverged fields', async ({ expect }) => {
     const { db, connection } = await setup();
 
     const card = db.add(

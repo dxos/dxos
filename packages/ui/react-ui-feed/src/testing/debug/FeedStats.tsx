@@ -41,7 +41,7 @@ const FEED_STATS: Stat[] = [
 
 /**
  * The scroll-quality verdict: live rate, the rate at the pass's slowest fifth, the worst frame, and
- * how many frames stuttered. Only meaningful at a real keyboard — an agent's browser throttles the
+ * how many frames stuttered. Only meaningful at a real keyboard - an agent's browser throttles the
  * frames this counts.
  *
  * `jumps` are rows moving against the scroll, sampled per frame; `shifts` are rows whose offset
@@ -114,7 +114,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
 
   const values = useMemo(
     () => ({
-      range: range ? `${range.startIndex} / ${range.endIndex}` : '—',
+      range: range ? `${range.startIndex} / ${range.endIndex}` : '-',
       index: `${currentIndex} / ${count}`,
       rows: mountedRows,
       widgets: mountedWidgets,
@@ -131,7 +131,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
     [range, currentIndex, count, mountedRows, mountedWidgets, selected, hits, meter, jumps.count, shifts, breaks],
   );
 
-  const label = `${meter.label} — p50 ${meter.p50} · ${meter.frames} frames · ${(meter.duration / 1000).toFixed(1)}s`;
+  const label = `${meter.label} - p50 ${meter.p50} · ${meter.frames} frames · ${(meter.duration / 1000).toFixed(1)}s`;
 
   return (
     <div
@@ -145,7 +145,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
     >
       <div className='flex items-center min-w-0'>
         <span className='grow truncate' data-testid='feed.stream.state'>
-          {streaming ? 'streaming…' : 'idle'}
+          {streaming ? 'streaming...' : 'idle'}
         </span>
         <Button.Root
           icon={recording ? 'ph--stop--regular' : 'ph--record--regular'}

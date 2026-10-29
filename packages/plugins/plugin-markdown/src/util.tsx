@@ -93,7 +93,7 @@ export const getFallbackName = (content = ''): string => {
           result = next;
         }
 
-        return (result || text.slice(0, maxLen)) + '…';
+        return (result || text.slice(0, maxLen)) + '\u2026';
       }
 
       return text;

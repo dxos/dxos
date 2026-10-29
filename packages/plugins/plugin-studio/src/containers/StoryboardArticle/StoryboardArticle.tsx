@@ -31,7 +31,7 @@ import { FrameVariants } from './FrameVariants.tsx';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
-/** The stack's opening width in rem — the navtree sidebar's (`--dx-nav-sidebar-size`, 350px). */
+/** The stack's opening width in rem - the navtree sidebar's (`--dx-nav-sidebar-size`, 350px). */
 const STACK_SIZE = 18;
 const isFrame = Obj.instanceOf(Frame.Frame);
 
@@ -41,7 +41,7 @@ export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.St
  * A storyboard as master/detail: the frames as a reorderable stack of previews on the left and the
  * selected frame's produced variants (the All gallery, or one variant played) on the right; the
  * frame's request form lives in the plank's frame companion, which picking a frame opens. The toolbar's Append frame opens the artifact create
- * dialog — one gesture makes the artifact, parented to its new frame, and the frame, parented to
+ * dialog - one gesture makes the artifact, parented to its new frame, and the frame, parented to
  * the storyboard. The same shape a slide deck takes; see the plugin design doc.
  */
 export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: StoryboardArticleProps) => {
@@ -157,7 +157,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   return (
     // The splitter is the article: the stack (with the storyboard's toolbar) opens at a navtree
     // sidebar's width so previews read at that scale, and the handle lets the reader trade it
-    // against the main panel — the selected frame's variants, or the storyboard playing.
+    // against the main panel - the selected frame's variants, or the storyboard playing.
     <Splitter.Root role={role} orientation='horizontal' anchor='start' resizable defaultSize={STACK_SIZE} minSize={8}>
       <Splitter.Panel position='start'>
         <Panel.Root>

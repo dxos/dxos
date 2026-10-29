@@ -26,7 +26,7 @@ export type TelemetryRow = {
   heightPercent: number;
   /** Course over ground, degrees [0, 360). */
   heading: number;
-  /** Great-circle arc travelled per second, in degrees — `TerraObject.speed` (radians/sim-second) converted to a more legible unit. */
+  /** Great-circle arc travelled per second, in degrees - `TerraObject.speed` (radians/sim-second) converted to a more legible unit. */
   speedDegPerSec: number;
 };
 

@@ -60,7 +60,7 @@ const firstRunIds = [...src.matchAll(/id: '(P\d+)'[\s\S]*?firstRun: (true|false)
   .filter((m) => m[2] === 'true')
   .map((m) => m[1]);
 
-console.log('Bundling…');
+console.log('Bundling...');
 const serveUrl = await bundle({ entryPoint: path.join(root, 'src/components/Ident/remotion.ts') });
 const comps = await getCompositions(serveUrl, { browserExecutable, chromiumOptions, inputProps });
 
@@ -96,7 +96,7 @@ for (const base of selected) {
   const [id, length, format] = comp.id.split('-');
   const file = path.join(outDir, id, `DXOS_SI_${id}_${length}_${format}${variant}_v${version}.mp4`);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  process.stdout.write(`Rendering ${comp.id} → ${path.relative(root, file)} `);
+  process.stdout.write(`Rendering ${comp.id} -> ${path.relative(root, file)} `);
   await renderMedia({
     composition: comp,
     serveUrl,

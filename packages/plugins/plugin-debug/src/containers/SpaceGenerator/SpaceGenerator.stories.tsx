@@ -24,7 +24,7 @@ import { translations } from '#translations';
 
 import { SpaceGenerator } from './SpaceGenerator.tsx';
 
-/** Live list of every object in the space — updates as the generator creates objects. */
+/** Live list of every object in the space - updates as the generator creates objects. */
 const ObjectList = ({ space }: { space: Parameters<typeof SpaceGenerator>[0]['space'] }) => {
   const objects = useQuery(space.db, Query.select(Filter.everything()));
 
@@ -99,7 +99,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-// The Progress Monitor row registers a synthetic monitor and renders its own meter — the R0 rail's
+// The Progress Monitor row registers a synthetic monitor and renders its own meter - the R0 rail's
 // only appears inside a popover, so without this a working monitor looks like a broken one.
 export const Progress: Story = {
   play: async ({ canvasElement }) => {

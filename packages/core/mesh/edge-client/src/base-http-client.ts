@@ -52,7 +52,7 @@ export type BaseHttpClientOptions = {
   clientTag?: string;
   /**
    * Admin API key, sent as `Authorization: Bearer` on every request in place of the identity
-   * verifiable-presentation flow — for headless callers (CI) that hold no HALO identity.
+   * verifiable-presentation flow - for headless callers (CI) that hold no HALO identity.
    */
   apiKey?: string;
 };
@@ -83,13 +83,13 @@ export abstract class BaseHttpClient {
   protected _authHeader: string | undefined;
   /** When the current `_authHeader` was signed; with the TTL below it decides proactive refresh. */
   private _authAcquiredAt: number | undefined;
-  /** Last TTL `/auth` advertised — a server constant, so 401-minted headers reuse it. */
+  /** Last TTL `/auth` advertised - a server constant, so 401-minted headers reuse it. */
   private _authTtlMs: number | undefined;
   /** Single-flight guard so concurrent requests with a stale header share one `/auth` round trip. */
   private _authPrefetch: Promise<void> | undefined;
 
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
-    // Slash-terminated: `new URL('account/me', '…/hub')` would otherwise drop the `/hub` prefix.
+    // Slash-terminated: `new URL('account/me', '.../hub')` would otherwise drop the `/hub` prefix.
     const url = getEdgeUrlWithProtocol(baseUrl, 'http');
     this._baseUrl = url.endsWith('/') ? url : `${url}/`;
     this._clientTag = options?.clientTag;
@@ -105,7 +105,7 @@ export abstract class BaseHttpClient {
    * The `Authorization` header this client would send on an authenticated call, minting one first
    * if none is cached or the cached one has gone stale.
    *
-   * For callers that have to make an EDGE request outside this client — the native OAuth flow
+   * For callers that have to make an EDGE request outside this client - the native OAuth flow
    * issues `/oauth/initiate` from Rust, the only place the `Origin` header can be set to the
    * loopback callback server. Resolves undefined when there is nothing to present (no identity, or
    * the challenge round trip failed), which EDGE endpoints that `skipAuth` accept.
@@ -119,7 +119,7 @@ export abstract class BaseHttpClient {
       await this._prefetchAuthHeader();
     }
     // `setIdentity` may have swapped identities while the prefetch was in flight, so the cached
-    // header now belongs to the new one — handing it back would sign the caller's request, made on
+    // header now belongs to the new one - handing it back would sign the caller's request, made on
     // behalf of the old identity, as somebody else.
     if (this._edgeIdentity !== identity) {
       return undefined;
@@ -140,7 +140,7 @@ export abstract class BaseHttpClient {
 
   protected async _call<T>(ctx: Context, url: URL, args: HttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
-    // Log presence/size only — never log raw body contents which may contain PII.
+    // Log presence/size only - never log raw body contents which may contain PII.
     log('fetch', {
       url,
       hasBody: args.body !== undefined,
@@ -173,7 +173,7 @@ export abstract class BaseHttpClient {
 
         const contentType = response.headers.get('Content-Type') ?? '';
         const isJson = contentType.includes('application/json');
-        // No-content responses (204, empty body, non-JSON) — return undefined.
+        // No-content responses (204, empty body, non-JSON) - return undefined.
         if (response.ok && (response.status === 204 || response.headers.get('Content-Length') === '0' || !isJson)) {
           return undefined as T;
         }
@@ -205,7 +205,7 @@ export abstract class BaseHttpClient {
         }
       } catch (error: any) {
         // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal
-        // rejected-api-key 401) — wrapping it as a processing failure would mark it retryable.
+        // rejected-api-key 401) - wrapping it as a processing failure would mark it retryable.
         processingError =
           error instanceof EdgeCallFailedError ? error : EdgeCallFailedError.fromProcessingFailureCause(error);
       }
@@ -219,7 +219,7 @@ export abstract class BaseHttpClient {
   }
 
   /**
-   * Like {@link _call} but returns the raw `Response` instead of parsing a JSON envelope — for
+   * Like {@link _call} but returns the raw `Response` instead of parsing a JSON envelope - for
    * endpoints with binary or absent response bodies (e.g. blob storage). A 404 is returned to the
    * caller rather than thrown, since "not found" is an expected outcome for lookups; all other
    * non-ok, non-retryable statuses throw `EdgeCallFailedError`, mirroring `_call`.
@@ -272,7 +272,7 @@ export abstract class BaseHttpClient {
         processingError = await EdgeCallFailedError.fromHttpFailure(response);
       } catch (error: any) {
         // A thrown EdgeCallFailedError already carries its retry semantics (e.g. the terminal
-        // rejected-api-key 401) — wrapping it as a processing failure would mark it retryable.
+        // rejected-api-key 401) - wrapping it as a processing failure would mark it retryable.
         processingError =
           error instanceof EdgeCallFailedError ? error : EdgeCallFailedError.fromProcessingFailureCause(error);
       }
@@ -295,7 +295,7 @@ export abstract class BaseHttpClient {
    * The `catch` is what makes that true for *signing* failures, not just network ones:
    * `fetchAuthChallengeInfo` swallows its own fetch errors, but `presentCredentials` throws on a
    * device with no HALO chain (mid-invitation), and without this the rejection would surface from
-   * `_call` as a failed request — turning a call that used to succeed unauthenticated into an error.
+   * `_call` as a failed request - turning a call that used to succeed unauthenticated into an error.
    */
   protected _prefetchAuthHeader(): Promise<void> {
     if (this._authPrefetch) {
@@ -347,7 +347,7 @@ export abstract class BaseHttpClient {
   }
 
   /**
-   * Record when the current header was signed and the TTL advertised beside its challenge — only
+   * Record when the current header was signed and the TTL advertised beside its challenge - only
    * originals; the refresh point is derived at read time. Without an advertised TTL (older
    * servers, the 401-minted path) the last known one is reused; if none was ever advertised the
    * header lives until a 401, exactly as before proactive refresh existed.
@@ -358,7 +358,7 @@ export abstract class BaseHttpClient {
   }
 
   protected async _handleUnauthorized(response: Response): Promise<string> {
-    // A rejected API key is terminal — there is no challenge an identityless caller could answer.
+    // A rejected API key is terminal - there is no challenge an identityless caller could answer.
     if (this._apiKey) {
       throw await EdgeCallFailedError.fromHttpFailure(response);
     }
@@ -380,7 +380,7 @@ const AUTH_REFRESH_MARGIN_MS = 30_000;
  * Whether a response carries a VerifiablePresentation challenge we can actually answer.
  *
  * Header *presence* is not enough: a 401 forwarded from upstream may carry an unrelated scheme
- * (`Bearer realm="…"`), and edge itself emits `challenge=""` when its server keypair is
+ * (`Bearer realm="..."`), and edge itself emits `challenge=""` when its server keypair is
  * unconfigured. Neither yields something signable, and retrying those through the auth path would
  * fail on the missing challenge and mask the real error.
  */

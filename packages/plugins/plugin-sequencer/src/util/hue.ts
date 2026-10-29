@@ -64,7 +64,7 @@ export const hueFor = (track: { id?: string; hue?: string } | undefined): string
     return track.hue;
   }
   const hashed = getHashHue(track?.id);
-  // `getHashHue` can return 'neutral' when given an undefined id — that
+  // `getHashHue` can return 'neutral' when given an undefined id - that
   // isn't a ChromaticPalette value, so fall back to the first hue in
   // that edge case rather than rendering neutral grey.
   return hashed === 'neutral' ? hues[0] : hashed;

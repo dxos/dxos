@@ -125,7 +125,7 @@ export const Default: Story = {
 /**
  * Reproduces the first-mount path for `dxn:`/`echo:` embeds: the block widget host must exist on
  * the very first render (no view-mode toggle, no edit). Without a db the component renders its
- * missing-object placeholder — the assertion is about the widget/decoration layer, not the data.
+ * missing-object placeholder - the assertion is about the widget/decoration layer, not the data.
  */
 export const WithEmbed: Story = {
   // The embed widget resolves surfaces/operations, so it needs a (bare) plugin manager.

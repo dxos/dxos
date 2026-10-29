@@ -39,7 +39,7 @@ export type MediaArtifactVariantsProps = Util.ThemedClassName<{
 /**
  * The produced side of a {@link MediaArtifact}: a toolbar with an "All" gallery tab and a tab per
  * produced variant, the gallery or the selected variant rendered through the variant surface, and
- * — for a produced variant — the cover toggle and delete. Opens on the cover; a variant that is
+ * - for a produced variant - the cover toggle and delete. Opens on the cover; a variant that is
  * still generating shows as a spinner tab, and the newest variant is selected as it lands, so a
  * Generate in the form ends on its result. A host's toolbar actions end the toolbar.
  */

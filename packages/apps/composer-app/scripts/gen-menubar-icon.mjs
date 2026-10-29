@@ -6,13 +6,13 @@
 // Regenerate the macOS menu bar icon.
 //
 // The menu bar wants a template image: macOS throws away the colour and tints the alpha channel to match
-// the bar, so the mark has to survive as a silhouette. It does not survive as-is — the four rings are drawn
+// the bar, so the mark has to survive as a silhouette. It does not survive as-is - the four rings are drawn
 // edge to edge (bands at r = 15.75, 39.75, 63.75, 87.75, 111.75 about the mark's centre) and are told apart
 // by colour alone, so flattening them to one fill yields a solid disc.
 //
 // So the rings are cut apart: everything is filled black, then a clip path drops a gap either side of each
 // band boundary. Concentric circles wound in alternating directions cancel under the default nonzero fill
-// rule, which leaves the bands and removes the gaps — `evenodd` would read more directly but is honoured
+// rule, which leaves the bands and removes the gaps - `evenodd` would read more directly but is honoured
 // less consistently across rasterizers, and a silently unclipped render is the solid disc again.
 //
 // Usage: pnpm icons:menubar
@@ -36,7 +36,7 @@ const EDGES = [15.75, 39.75, 63.75, 87.75, 111.75];
 
 /**
  * Half the width of the gap opened at each boundary, in the same units.
- * Tuned by eye at 22px — the bands read as separate swoops from here, and thin to hairlines much beyond it.
+ * Tuned by eye at 22px - the bands read as separate swoops from here, and thin to hairlines much beyond it.
  */
 const GAP = 4;
 
@@ -48,7 +48,7 @@ const VIEW_BOX = '-22.96 7.04 241.92 241.92';
 
 /**
  * `tauri icon` writes a fixed set of sizes, none of them the ~44px a retina menu bar wants. Android's mdpi
- * launcher is the closest at 48px, and is a plain transparent render like the rest — the same borrowing the
+ * launcher is the closest at 48px, and is a plain transparent render like the rest - the same borrowing the
  * favicon generator does in `gen-icon-variants.mjs`.
  */
 const RASTERIZED = join('android', 'mipmap-mdpi', 'ic_launcher.png');

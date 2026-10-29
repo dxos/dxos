@@ -79,7 +79,7 @@ describe('ExplosionLayer', () => {
 
   /**
    * One layer's shells after a single `update`. Each case builds its own layer because Babylon only
-   * rebuilds the world matrices a mesh reports inside `thinInstanceSetBuffer` — a second update at
+   * rebuilds the world matrices a mesh reports inside `thinInstanceSetBuffer` - a second update at
    * the same instance count writes the buffer in place, which the GPU sees but a reader here would
    * not.
    */

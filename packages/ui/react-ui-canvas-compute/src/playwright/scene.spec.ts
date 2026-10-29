@@ -58,7 +58,7 @@ test.describe('compute scene', () => {
   test('clicking a shape control runs its operation rather than only selecting the node', async () => {
     await page.locator(`[data-node-id] ${DICE}`).first().click();
     // The die spins only from inside the click handler that writes the output, so the animation is the
-    // operation having run — the node frame would otherwise have taken the press as select-and-drag.
+    // operation having run - the node frame would otherwise have taken the press as select-and-drag.
     await expect(page.locator('[data-node-id] svg[class*="animate-"]').first()).toBeVisible({ timeout: 2_000 });
     expect(errors).toEqual([]);
   });
@@ -137,7 +137,7 @@ test.describe('compute scene template', () => {
       .first();
     await expect(text).toBeVisible();
     // `text` was claimed by both the compute output and the engine's free-text node, and one registry
-    // holds one def per name: the engine's won, so the output rendered as an empty `NoteNodeView` —
+    // holds one def per name: the engine's won, so the output rendered as an empty `NoteNodeView` -
     // no icon, no title, no run control, and the note view's `data-part="text"`, which the compute chrome never emits.
     await expect(text.locator(ARTICLE)).not.toHaveCount(0);
     await expect(text.locator(RUN)).toHaveCount(1);
@@ -165,7 +165,7 @@ test.describe('compute scene logic', () => {
     const lit = () => beacon.evaluate((node) => node.getAttribute('class')?.includes('text-yellow-500') ?? false);
     expect(await lit()).toBe(false);
 
-    // Two switches feed the AND, whose output feeds the OR, whose output lights the beacon — so the
+    // Two switches feed the AND, whose output feeds the OR, whose output lights the beacon - so the
     // beacon is the whole chain having run off a control the node frame used to swallow.
     for (const index of [0, 1]) {
       await page.locator(SWITCH).nth(index).click();

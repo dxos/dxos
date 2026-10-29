@@ -48,7 +48,7 @@ export const matchHosts =
     } catch {
       return false;
     }
-    // A host names a web resource: `ftp://github.com/…` is not the widget's.
+    // A host names a web resource: `ftp://github.com/...` is not the widget's.
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return false;
     }
@@ -93,7 +93,7 @@ export type LinkWidgetProps<TContext = unknown> = WidgetProps<
  * editable source, and `intrinsic` builds without a reserved height. With `rebuild` (the default)
  * the decorations are rebuilt so it takes effect now; without it the state applies at the next
  * rebuild, for a change the widget applies to its own element meanwhile (see
- * {@link releaseBlockHeight}) — a redraw under the user's pointer can swap the element they are
+ * {@link releaseBlockHeight}) - a redraw under the user's pointer can swap the element they are
  * clicking. Idempotent: a report that changes nothing is skipped, so a widget may call it from a
  * render effect.
  */
@@ -124,7 +124,7 @@ export type LinkWidgetsOptions<TProps extends LinkWidgetProps = LinkWidgetProps>
   /** The block widget for `![label](url)`. */
   image?: WidgetDef<TProps>;
   /**
-   * The widget's props from the link's — how a matcher names what it parsed out of the URL for the
+   * The widget's props from the link's - how a matcher names what it parsed out of the URL for the
    * widget it hands them to (`eid` for an object link). Identity when absent.
    */
   props?: (props: LinkWidgetProps) => TProps;
@@ -144,7 +144,7 @@ export function linkWidgets({ match, link, image, props: toProps }: LinkWidgetsO
     // `URL` is the bare autolink a reader gets by pasting: GFM writes it as a `URL` node with no
     // marks, and the same link typed as `[label](url)` arrives as a `Link` with a `URL` child. A
     // matcher that took only the second form left a pasted link as plain text in the editor while
-    // the read-only renderer — which overrides every `a`, autolinks included — showed a chip.
+    // the read-only renderer - which overrides every `a`, autolinks included - showed a chip.
     nodes: ['Link', 'Image', 'URL'],
     debug: link?.debug || image?.debug,
     match: (node, { state, context, widgetStateMap, notifier, counters }) => {

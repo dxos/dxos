@@ -13,7 +13,7 @@ import type { ActionGraphProps } from './hooks/index.ts';
 import { MenuSeparatorType } from './types.ts';
 import { createMenuAction, createMenuItemGroup } from './util.ts';
 
-/** Default trigger for toolbar overflow (⋮) dropdown menus. */
+/** Default trigger for toolbar overflow (:) dropdown menus. */
 const overflowMenuProperties = {
   label: ['toolbar-overflow.menu', { ns: translationKey }],
   icon: 'ph--dots-three-vertical--regular',
@@ -70,7 +70,7 @@ export interface MenuBuilder extends ActionGroupBuilder {
   root(props: MenuItemGroupProperties): this;
 
   /**
-   * Add a root-level toolbar overflow dropdown (⋮) with built-in trigger styling.
+   * Add a root-level toolbar overflow dropdown (:) with built-in trigger styling.
    */
   menu(id: string, cb: ActionGroupBuilderFn, testId?: string): this;
 
@@ -154,7 +154,7 @@ class MenuBuilderImpl implements MenuBuilder {
   }
 }
 
-/** Id of the overflow menu (⋮) every toolbar ends with; contributors add to it with {@link MenuBuilder.extend}. */
+/** Id of the overflow menu (:) every toolbar ends with; contributors add to it with {@link MenuBuilder.extend}. */
 export const TOOLBAR_OVERFLOW_ID = 'toolbar-overflow';
 
 /** The overflow group a toolbar uses when its owner declares none, so contributors can still add to it. */

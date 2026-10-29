@@ -28,7 +28,7 @@ const NADIR_STANDOFF = 2;
  * down its nadir, since a nose-forward view from orbit is just empty space.
  *
  * Not a Babylon parented/`lockedTarget` camera: the object is a thin instance, so it has no node to
- * parent to — the pose is recomputed each frame from the same `objectFrame` the mesh is drawn with,
+ * parent to - the pose is recomputed each frame from the same `objectFrame` the mesh is drawn with,
  * which also keeps the view exactly aligned with the rendered form (a rocket's pitch included).
  */
 export class ChaseCamera {
@@ -55,7 +55,7 @@ export class ChaseCamera {
 
     if (definition.kind === 'satellite') {
       // Straight down. `upVector` must not be parallel to the view direction or the view matrix is
-      // degenerate, so the orbital forward serves as the camera's up — which also keeps the ground
+      // degenerate, so the orbital forward serves as the camera's up - which also keeps the ground
       // track running consistently up the frame rather than spinning.
       this.#camera.position = position.add(up.scale(objectScale * NADIR_STANDOFF));
       this.#camera.upVector = forward;

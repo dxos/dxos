@@ -127,11 +127,11 @@ export const updateMeshFromManifold = (manifold: Manifold, existingMesh: Mesh): 
 
   const currentIndices = existingMesh.getIndices();
   if (currentIndices && currentIndices.length === indices.length) {
-    // Same triangle count — update vertex buffers in-place (no flicker).
+    // Same triangle count - update vertex buffers in-place (no flicker).
     existingMesh.updateVerticesData(VertexBuffer.PositionKind, positions);
     existingMesh.updateVerticesData(VertexBuffer.NormalKind, normals);
   } else {
-    // Triangle count changed — must rebuild geometry.
+    // Triangle count changed - must rebuild geometry.
     const vertexData = new VertexData();
     vertexData.positions = positions;
     vertexData.indices = indices;

@@ -538,7 +538,7 @@ describe('Obj', () => {
     });
 
     test("deep: 'parent' follows transitive ownership", ({ expect }) => {
-      // grandchild ← child ← root: both are cloned because their parent chain reaches the clone root.
+      // grandchild <- child <- root: both are cloned because their parent chain reaches the clone root.
       const grandchild = Obj.make(TestSchema.Task, { title: 'Grandchild' });
       const child = Obj.make(TestSchema.Task, { title: 'Child', previous: Ref.make(grandchild) });
       const person = Obj.make(TestSchema.Person, {
@@ -685,7 +685,7 @@ describe('Obj', () => {
       expect(registry.get(employerAtom)?.uri.toString()).toBe(Ref.make(orgA).uri.toString());
       const baseline = fires;
 
-      // Unrelated writes are silent — refs compare by URI, not identity.
+      // Unrelated writes are silent - refs compare by URI, not identity.
       Obj.update(obj, (obj) => {
         obj.name = 'Bob';
       });

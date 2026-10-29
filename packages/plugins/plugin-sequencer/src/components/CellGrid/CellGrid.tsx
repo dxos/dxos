@@ -211,7 +211,7 @@ export const CellGrid = <T,>({
   }, [overlayCtx, width, height, registry, atoms.selection, atoms.playhead, atoms.viewport, headers, overlayStyle]);
 
   // Input wiring. Keep the callbacks in a ref so the listener attachment is stable
-  // across consumer re-renders — otherwise an in-progress drag is torn down when
+  // across consumer re-renders - otherwise an in-progress drag is torn down when
   // the parent's onCellToggle identity changes (e.g. after the very mutation we
   // just triggered), and subsequent pointermove events see drag === null.
   const callbacksRef = useRef<PointerHandlers>({ onCellToggle, onSelectionCommit, onDrawUpdate, onDrawCommit });
@@ -243,7 +243,7 @@ export const CellGrid = <T,>({
     <div ref={containerRef} className={mx('relative dx-fill overflow-hidden dx-base-surface', classNames)}>
       {/*
         Canvases are nudged up + left 1 CSS pixel so the gridlines (drawn at the TOP
-        and LEFT edges of each cell) sit on top of the frozen header dividers — the
+        and LEFT edges of each cell) sit on top of the frozen header dividers - the
         TrackHeader's right border and bottom-row box-shadow, which both render 1px
         inside the box. Without this offset the canvas gridlines land 1px down/right
         of the header dividers and the columns read as misaligned.

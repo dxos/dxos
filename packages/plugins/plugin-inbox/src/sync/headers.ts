@@ -29,7 +29,7 @@ const unquote = (value: string): string => value.replace(/^"(.*)"$/s, '$1').repl
  * Parses a `From` header into its name and address.
  *
  * RFC 5322 allows the display name and the angle brackets to be omitted independently, so all of
- * `Name <a@b>`, `<a@b>` and a bare `a@b` are valid and reach us in practice — a relay that emits the
+ * `Name <a@b>`, `<a@b>` and a bare `a@b` are valid and reach us in practice - a relay that emits the
  * bare form was landing messages with no sender at all.
  */
 // TODO(burdon): Reconcile with packages/plugins/plugin-script/src/templates/gmail.ts

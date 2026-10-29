@@ -27,7 +27,7 @@ export interface BranchStore {
  * and `A.merge` later is a true CRDT 3-way merge rather than an unrelated "two roots" conflict.
  *
  * @param atHeads If provided, fork from this historical frontier instead of the tip. The fork is
- * built from the ancestor closure of `atHeads` (via change dependency metadata) — a linear replay
+ * built from the ancestor closure of `atHeads` (via change dependency metadata) - a linear replay
  * of the full history can interleave concurrent siblings before the frontier and never reproduce
  * it exactly. `A.save(A.view(...))` cannot be used either, as it serializes the full underlying
  * history regardless of the view's heads. Heads not present in the source document (e.g. heads of

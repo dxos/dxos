@@ -13,7 +13,7 @@
 //   attr="v"         a static aspect
 //   data-x="a.b"     a read binding against the state object
 //   item-x="a.b"     a read binding against the current collection item
-//   on-x="key"       an event bound to an operation key — the only outbound edge
+//   on-x="key"       an event bound to an operation key - the only outbound edge
 //
 
 import { type Binding, type Node, type Tag, checkBindings, validate } from './model.ts';
@@ -82,7 +82,7 @@ const toNode = (name: string, attrs: Record<string, string>, children: Node[], p
 
   for (const [key, value] of Object.entries(attrs)) {
     // Intrinsic binding attributes: `when`/`on` are state bindings despite the missing `data-`
-    // prefix — conditionality binds against published state by construction.
+    // prefix - conditionality binds against published state by construction.
     if (
       (name === 'show' && key === 'when') ||
       (name === 'switch' && key === 'on') ||

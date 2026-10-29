@@ -112,7 +112,7 @@ export const extractFaceBoundaryFromSolid = (
   const refZ = vertProperties[refVert * numProp + 2];
 
   // Collect coplanar triangles by checking EVERY triangle individually.
-  // NOTE: faceIDs are unreliable — Manifold may assign the same faceID to non-coplanar
+  // NOTE: faceIDs are unreliable - Manifold may assign the same faceID to non-coplanar
   // triangles after boolean operations. Each triangle must be geometrically verified.
   const coplanarTris: number[] = [];
   for (let tri = 0; tri < numTri; tri++) {
@@ -255,7 +255,7 @@ export const extractFaceBoundary = (
   // Collect all coplanar triangles using both faceID grouping AND geometric coplanarity.
   // After boolean operations, a logical face may be split into multiple faceIDs
   // (e.g., the +X face of a cube becomes two faceIDs after a +Y extrusion creates
-  // a column — both sub-faces are coplanar but have different origins).
+  // a column - both sub-faces are coplanar but have different origins).
   // We merge by: first collecting all faceIDs that share the same plane as the selected face,
   // then collecting all triangles with any of those faceIDs.
   const refIdx = indices[faceId * 3];
@@ -346,7 +346,7 @@ export const extractFaceBoundary = (
     for (const [a, b] of triEdges) {
       const key = edgeKey(a, b);
       if (edgeMap.has(key)) {
-        edgeMap.delete(key); // Interior edge — shared by two triangles.
+        edgeMap.delete(key); // Interior edge - shared by two triangles.
       } else {
         edgeMap.set(key, {
           a: [positions[a * 3], positions[a * 3 + 1], positions[a * 3 + 2]],
@@ -402,7 +402,7 @@ export const extractFaceBoundary = (
 };
 
 //
-// 3D → 2D projection.
+// 3D -> 2D projection.
 //
 
 /** Builds orthonormal axes (nx, ny) on the plane perpendicular to the given normal. */
@@ -468,7 +468,7 @@ export const applyExtrusion = (
   cachedBBox?: { min: number[]; max: number[] },
 ): Manifold => {
   if (distance === 0) {
-    // Clone via getMesh() roundtrip — avoids heavyweight CSG union and ensures
+    // Clone via getMesh() roundtrip - avoids heavyweight CSG union and ensures
     // the result shares no internal WASM state with baseSolid.
     return new Manifold(baseSolid.getMesh());
   }

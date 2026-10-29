@@ -83,7 +83,7 @@ export type BuiltSideIndex = Record<string, Game.Game[]>;
 
 export type BuiltIndex = Record<ChessPositionIndex.Side, BuiltSideIndex>;
 
-/** Builds a fresh side→fen→games index from processed games. */
+/** Builds a fresh side->fen->games index from processed games. */
 export const buildIndex = (
   entries: ReadonlyArray<{ game: Game.Game; side: ChessPositionIndex.Side; fens: readonly string[] }>,
 ): BuiltIndex => {

@@ -24,7 +24,7 @@ const BATCH_SIZE = 500;
  * Fills `parentId`/`sourceId`/`targetId` for rows written before 0008 added them.
  *
  * 0008 only adds the columns, and `objectMeta` rows are rewritten by the primary indexing pass,
- * whose cursors no migration resets — so without this an upgraded database keeps the columns NULL
+ * whose cursors no migration resets - so without this an upgraded database keeps the columns NULL
  * until each object next changes, and the compiled query path, which joins through them, silently
  * omits dependency, `child-of` and relation results. Derived with {@link localEntityId}, the same
  * rule the indexing pass applies, so a backfilled row is indistinguishable from a rewritten one.

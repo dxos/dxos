@@ -14,7 +14,7 @@ import { PullRequest } from '@dxos/types';
  * fences describe the change in the order a reviewer should meet it.
  *
  * Generated against ONE commit and stale the moment the branch moves, which is why `commit` is part
- * of the record rather than something to infer — see {@link isStale}.
+ * of the record rather than something to infer - see {@link isStale}.
  */
 export class Walkthrough extends Type.makeObject<Walkthrough>(DXN.make('org.dxos.type.walkthrough', '0.1.0'))(
   Schema.Struct({
@@ -41,7 +41,7 @@ export class Walkthrough extends Type.makeObject<Walkthrough>(DXN.make('org.dxos
     /** Model that produced the prose, so a regression can be attributed after the default moves. */
     model: Schema.String.pipe(Schema.annotate({ title: 'Model' }), Schema.optional),
 
-    /** Hunks the prose accounts for, over the patch's total — how much of the change it narrates. */
+    /** Hunks the prose accounts for, over the patch's total - how much of the change it narrates. */
     covered: Schema.Number.pipe(Schema.annotate({ title: 'Hunks covered' }), Schema.optional),
     total: Schema.Number.pipe(Schema.annotate({ title: 'Hunks total' }), Schema.optional),
   }).pipe(

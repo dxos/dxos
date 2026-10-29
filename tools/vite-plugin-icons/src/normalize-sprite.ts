@@ -12,7 +12,7 @@ const ID_ATTR = /\bid\s*=\s*(?:"([^"]*)"|'([^']*)')/;
 const PAINT = /(?:^|[\s;"'{])(?:fill|stroke)\s*[:=]\s*["']?\s*([^;"'}\s>]+)/g;
 
 // Values that either inherit or paint nothing, so they cannot fight the symbol's fill. Anything else
-// is a pinned paint — classified this way round rather than by listing colors, since CSS has ~150
+// is a pinned paint - classified this way round rather than by listing colors, since CSS has ~150
 // named ones and the interesting case is always "not inheriting", never a specific hue. `var()` is
 // allowed through because its value is unknowable here and flagging it would be noise.
 const INHERITING = new Set([
@@ -52,7 +52,7 @@ export type NormalizeSpriteResult = {
  * Forces `fill="currentColor"` onto every symbol in a sprite.
  *
  * A glyph that declares no fill defaults to black and vanishes against a dark surface, and vector
- * editors drop the attribute on every re-export — so patching the source SVG loses the race. This
+ * editors drop the attribute on every re-export - so patching the source SVG loses the race. This
  * mirrors what the runtime registry already does when it ingests a standalone SVG
  * (`ingestSvgChildrenAsSymbol`), so a glyph renders the same whether it arrived via the sprite or a
  * runtime fetch.
@@ -60,7 +60,7 @@ export type NormalizeSpriteResult = {
  * Idempotent: the sprite is rewritten on every icon addition, and re-normalizing is a no-op.
  *
  * An inline `style` on the glyph's own elements still wins over the symbol's attribute, so those
- * are reported rather than rewritten — guessing which literal color was meant to be the foreground
+ * are reported rather than rewritten - guessing which literal color was meant to be the foreground
  * would silently recolor legitimately multi-tone artwork.
  */
 export const normalizeSprite = (svg: string): NormalizeSpriteResult => {

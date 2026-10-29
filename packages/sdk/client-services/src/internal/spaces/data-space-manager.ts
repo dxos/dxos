@@ -181,7 +181,7 @@ export type DataSpaceManagerRuntimeProps = {
 
   /**
    * Anchor spaces on a space root document and mirror credentials into a credentials document.
-   * Off by default — a space then keeps its key-derived id and its control feed, as before.
+   * Off by default - a space then keeps its key-derived id and its control feed, as before.
    */
   automergeCredentials?: boolean;
 };
@@ -221,7 +221,7 @@ export class DataSpaceManager extends Resource {
 
   /**
    * Spaces whose close has begun. `DataSpace.isOpen` reads the inner space, which closes last, so it
-   * still reads open through `preClose` — the window the anchor's background work resumes in.
+   * still reads open through `preClose` - the window the anchor's background work resumes in.
    */
   private readonly _closingSpaces = new Set<SpaceId>();
 
@@ -526,7 +526,7 @@ export class DataSpaceManager extends Resource {
    * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
    */
   /**
-   * @returns Whether the space needs no further anchoring attempt — either because it is now anchored
+   * @returns Whether the space needs no further anchoring attempt - either because it is now anchored
    * or because it never will be. False means the attempt no-oped and the caller should retry, which a
    * space whose directory is not assigned yet depends on.
    */
@@ -665,7 +665,7 @@ export class DataSpaceManager extends Resource {
     {
       // The manager's own context, not the caller's: the invitation flow disposes its context as
       // soon as `acceptSpace` returns, and a store bound to it would be released before its first
-      // write — the same reason `initializeDataPipelineAsync` is parented here.
+      // write - the same reason `initializeDataPipelineAsync` is parented here.
       const ctx = this._ctx;
       const store = await openCredentialsDocument(ctx, this._echoHost, space.id, { timeout });
       if (!this._isSpaceLive(space)) {
@@ -678,7 +678,7 @@ export class DataSpaceManager extends Resource {
       ctx.onDispose(space.inner.credentialProcessed.on((credential) => store.append(credential)));
 
       // Read side: the document feeds the same state machine the feed does. Processing is idempotent
-      // by credential id, so during the migration window both sources can run without conflict — a
+      // by credential id, so during the migration window both sources can run without conflict - a
       // space that has flipped simply stops gaining feed credentials.
       store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
       return true;
@@ -1114,8 +1114,8 @@ export class DataSpaceManager extends Resource {
     });
 
     // Anchoring materializes credential state, so it waits for the space to be open: a closed space
-    // must stay unmaterialized or lazy loading is defeated. Every path that opens a space — load and
-    // activate, create, accept — arrives here.
+    // must stay unmaterialized or lazy loading is defeated. Every path that opens a space - load and
+    // activate, create, accept - arrives here.
     // Latch only once the anchor has actually settled: migration no-ops while the space's directory is
     // unassigned, and latching on the attempt would strand the space unanchored for the whole session.
     let anchored = false;
@@ -1137,8 +1137,8 @@ export class DataSpaceManager extends Resource {
             return;
           }
 
-          // What an unsettled attempt waits on — an unassigned directory, or a root named by an
-          // inviter that has not replicated yet — arrives without emitting a space state update, so
+          // What an unsettled attempt waits on - an unassigned directory, or a root named by an
+          // inviter that has not replicated yet - arrives without emitting a space state update, so
           // nothing else would ever retry.
           if (retryDelay <= ANCHOR_RETRY_MAX) {
             scheduleTask(this._ctx, attemptAnchor, retryDelay);
@@ -1275,7 +1275,7 @@ export class DataSpaceManager extends Resource {
 
 /**
  * Seconds left until `expiresOn`, as `Invitation.lifetime` requires: a whole number, because the
- * field is a protobuf `int32` and a fractional value fails to encode — which silently killed the
+ * field is a protobuf `int32` and a fractional value fails to encode - which silently killed the
  * `queryInvitations` stream and hung client initialization. Floors to at least 1 since 0 means
  * "never expires", so an already-expired invitation must not become immortal.
  */

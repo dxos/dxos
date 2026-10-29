@@ -110,7 +110,7 @@ const SenderColumn = () => {
       attachments: withLink && linked ? [{ name: LINKED_OBJECT_NAME, ref: Ref.make(linked) }] : undefined,
       properties: { subject: 'Review request' },
     });
-    setStatus('Sending…');
+    setStatus('Sending...');
     void EffectEx.runPromise(sender.send(recipientDid, message)).then(
       () => {
         setText('');
@@ -151,7 +151,7 @@ const SenderColumn = () => {
             data-testid='messenger.text'
           />
           <Input.Checkbox
-            label={`Link “${LINKED_OBJECT_NAME}”`}
+            label={`Link "${LINKED_OBJECT_NAME}"`}
             checked={withLink}
             onCheckedChange={({ checked }) => setWithLink(checked === true)}
           />
@@ -251,7 +251,7 @@ const ReceiverColumn = () => {
           <span>Bob</span>
           <Toolbar.Separator variant='gap' />
           {containers.length > 0 && <UnreadBadge containers={containers} />}
-          {opened && <span className='text-sm text-fg-muted'>{`Opened “${opened}”`}</span>}
+          {opened && <span className='text-sm text-fg-muted'>{`Opened "${opened}"`}</span>}
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
@@ -310,7 +310,7 @@ const InviterColumn = () => {
       return;
     }
 
-    setStatus('Inviting…');
+    setStatus('Inviting...');
     void invokePromise(SpaceOperation.AddMembers, {
       space,
       identityKeys: [inviteeKey],
@@ -335,7 +335,7 @@ const InviterColumn = () => {
           <Button.Root
             variant='primary'
             icon='ph--user-plus--regular'
-            label={`Add Bob to “${INVITED_SPACE_NAME}”`}
+            label={`Add Bob to "${INVITED_SPACE_NAME}"`}
             disabled={!space || !inviteeKey}
             onClick={handleInvite}
             data-testid='messenger.invite'
@@ -366,7 +366,7 @@ const InviteeColumn = () => {
           {containers && containers.length > 0 && <UnreadBadge containers={containers} />}
           {joined && (
             <span className='text-sm text-fg-muted' data-testid='messenger.joined'>
-              {`Member of “${INVITED_SPACE_NAME}”`}
+              {`Member of "${INVITED_SPACE_NAME}"`}
             </span>
           )}
         </Toolbar.Root>
@@ -427,7 +427,7 @@ export const TwoUsers: Story = {
     // 3. Opening the tile marks it read, which clears the badge, and resolves the link in the shared space.
     await userEvent.click(tile);
     await waitFor(() => expect(receiver.queryByTestId('messenger.badge')).toBeNull(), { timeout: 10_000 });
-    await receiver.findByText(`Opened “${LINKED_OBJECT_NAME}”`, {}, { timeout: 10_000 });
+    await receiver.findByText(`Opened "${LINKED_OBJECT_NAME}"`, {}, { timeout: 10_000 });
   },
 };
 

@@ -149,7 +149,7 @@ export type CreateObjectEntry = Readonly<{
 export const CreateObjectEntry = Capability.make<CreateObjectEntry>()(`${SpaceNamespace.key}.capability.createObject`);
 
 /**
- * The identity rule for a type — how to key an object for duplicate detection and how to merge
+ * The identity rule for a type - how to key an object for duplicate detection and how to merge
  * two of them. Plugins that own a type contribute one (e.g. plugin-crm for Person); the type
  * article only offers its Duplicates tab for types that have one.
  */

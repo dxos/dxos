@@ -29,7 +29,7 @@ const URL = `https://github.com/ollama/ollama/releases/download/${VERSION}/${ASS
 
 // Metal shader libraries (mlx.metallib) aren't Mach-O, so codesign can only attach their
 // signature via an extended attribute. Tauri's macOS bundler strips all extended attributes from
-// the assembled .app (`xattr -crs`) before it signs anything, which destroys that signature —
+// the assembled .app (`xattr -crs`) before it signs anything, which destroys that signature -
 // verified locally; plain dylibs/executables are unaffected since their signature is embedded in
 // the binary itself. Tauri also never signs files placed via `bundle.macOS.files` (only entries
 // under `bundle.macOS.frameworks`), so the fix is to ship the metallib files inside a minimal real
@@ -43,7 +43,7 @@ const sidecarDir = join(srcTauriDir, 'sidecar');
 const runtimeDir = join(sidecarDir, 'ollama-runtime');
 // Kept outside runtimeDir: `bundle.macOS.files` copies that whole directory into the bundle
 // wholesale, and this marker is our own fetch-time cache bookkeeping, not part of the shipped
-// runtime — a plain text file here would otherwise hit the same "not signed at all" failure as
+// runtime - a plain text file here would otherwise hit the same "not signed at all" failure as
 // mlx.metallib once nested under Contents/MacOS/, since Tauri's final codesign pass requires every
 // file it finds there to already carry its own signature, whatever its type.
 const marker = join(sidecarDir, '.ollama-version');
@@ -51,10 +51,10 @@ const launcher = join(runtimeDir, 'ollama');
 const frameworkDir = join(sidecarDir, 'ollama-metal.framework');
 const frameworkLibrariesDir = join(frameworkDir, 'Libraries');
 // Resource-only framework: an Info.plist without CFBundleExecutable is enough for codesign to
-// accept the directory as a well-formed framework bundle (verified locally) — no main binary
+// accept the directory as a well-formed framework bundle (verified locally) - no main binary
 // needed. Tauri signs the framework bundle itself with `is_an_executable: false` (no hardened
 // runtime), so a real binary there would fail Apple's notarization ("signature of the binary is
-// invalid" — verified against a real notarization run); omitting it avoids that entirely, since
+// invalid" - verified against a real notarization run); omitting it avoids that entirely, since
 // the only executable code left is the metallib files in Libraries/, which do get hardened
 // runtime via Tauri's normal per-file framework signing.
 const frameworkInfoPlist = join(frameworkDir, 'Info.plist');
@@ -111,7 +111,7 @@ const ensureRuntime = async () => {
 // launcher's hardcoded lookup path is unaffected while the real bytes live somewhere Tauri signs.
 const ensureMetalFramework = async () => {
   await mkdir(frameworkLibrariesDir, { recursive: true });
-  // Clean up the stub binary from a checkout that predates the resource-only framework — its
+  // Clean up the stub binary from a checkout that predates the resource-only framework - its
   // unhardened signature is what notarization rejected, so a stale copy would defeat this fix.
   await rm(join(frameworkDir, 'ollama-metal'), { force: true });
 
@@ -158,7 +158,7 @@ const ensureMetalFramework = async () => {
 
 // Dev only: `bundle.macOS.files` is not applied and `$RESOURCE` (the scoped command's path, see
 // capabilities/desktop.json) resolves to `target/<profile>/`, so stage the launcher there with the
-// runtime symlinked into `target/<profile>/lib/ollama` — the location it searches. The launcher is
+// runtime symlinked into `target/<profile>/lib/ollama` - the location it searches. The launcher is
 // copied rather than symlinked because it resolves its libraries against its own executable path.
 const ensureDevRuntime = async () => {
   for (const profile of ['debug', 'release']) {

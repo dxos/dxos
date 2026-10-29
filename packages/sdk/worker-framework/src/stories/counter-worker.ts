@@ -24,7 +24,7 @@ const notify = (): void => {
 const blockCpuSync = (durationMs: number): number => {
   const end = Date.now() + durationMs;
   while (Date.now() < end) {
-    // Busy spin — intentionally blocks the worker event loop for lag demos.
+    // Busy spin - intentionally blocks the worker event loop for lag demos.
   }
   return durationMs;
 };

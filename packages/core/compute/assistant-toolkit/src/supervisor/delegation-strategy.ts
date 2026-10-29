@@ -26,7 +26,7 @@ import * as AgentOperation from '../types/AgentOperation.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
- * fully-qualified ref in the current space. Not resolved here — it resolves lazily when read.
+ * fully-qualified ref in the current space. Not resolved here - it resolves lazily when read.
  */
 const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
   Effect.gen(function* () {
@@ -66,7 +66,7 @@ const extractArtifactIds = (value: unknown): string[] => {
 /**
  * A task handed to a sub-agent by the delegation verbs, which assign `{ role: 'assistant' }` and
  * nothing else. An assistant assignee carrying a `subject` names a concrete session that owns the
- * task — the conversation's own agent starting it from the planning tool, or a remote session —
+ * task - the conversation's own agent starting it from the planning tool, or a remote session -
  * so it is that session's work, not a spawn request for the supervisor.
  */
 export const isSubAgentTask = (task: Task.Task): boolean =>
@@ -75,9 +75,9 @@ export const isSubAgentTask = (task: Task.Task): boolean =>
 /**
  * The durable agent tasks awaiting a sub-agent for this conversation: queued (`todo`) tasks of
  * the chat's checklist whose assignee is an agent, all of whose dependencies are done. Ordinary
- * (unassigned) tasks are never spawned — delegation happens only through the delegation verbs.
+ * (unassigned) tasks are never spawned - delegation happens only through the delegation verbs.
  * `started` always means a live process (set at spawn), so a started agent task with no process
- * is an orphan — {@link sweepOrphanedTasks}.
+ * is an orphan - {@link sweepOrphanedTasks}.
  */
 const findPendingTasks = (
   chat: Chat.Chat,
@@ -96,7 +96,7 @@ const findPendingTasks = (
   });
 
 /**
- * Fails agent tasks stuck in `started` with no live process — a crashed or never-exited
+ * Fails agent tasks stuck in `started` with no live process - a crashed or never-exited
  * sub-agent (e.g. the host reloaded mid-run) must not wedge the task or the delegation loop.
  */
 const sweepOrphanedTasks = (
@@ -121,7 +121,7 @@ const sweepOrphanedTasks = (
   });
 
 /**
- * Fails the tasks the conversation's own agent holds when its turn fails — a model error ends the
+ * Fails the tasks the conversation's own agent holds when its turn fails - a model error ends the
  * process before any reconcile, so a task left `started` would read as underway indefinitely.
  * Sub-agent tasks are left to their own process's exit, which may still succeed.
  */
@@ -150,7 +150,7 @@ const failHeldTasks = (chat: Chat.Chat, cause: Cause.Cause<unknown>): Effect.Eff
  * Supervisor behaviour for the conversational agent: after each turn, every queued agent task
  * whose dependencies are done is run by a sub-agent (a synthesized minimal `Routine` executed via
  * `RunInstructions`), marked started at spawn; on exit the task is marked done/failed and a
- * templated message is posted back to the conversation, whose turn re-runs this reconcile — so a
+ * templated message is posted back to the conversation, whose turn re-runs this reconcile - so a
  * batch of delegated tasks drains in dependency order without further prompting.
  */
 export const makeDelegationStrategy = (): DelegationStrategy => ({
@@ -163,7 +163,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       }
 
       // Sub-agents inherit the supervisor's bound skills (so they have the same tools/
-      // capabilities), minus the delegation skill itself — otherwise a sub-agent could
+      // capabilities), minus the delegation skill itself - otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
       const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
       const inheritedSkills = yield* Effect.gen(function* () {
@@ -193,8 +193,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           }),
         );
 
-        // Started is stamped when the delegation is handed to the runtime — never by the
-        // delegation verbs — so `started` always means a spawning/live sub-agent and an orphaned
+        // Started is stamped when the delegation is handed to the runtime - never by the
+        // delegation verbs - so `started` always means a spawning/live sub-agent and an orphaned
         // `started` is detectable (see the sweep).
         Obj.update(task, (task) => {
           task.status = 'started';
@@ -203,8 +203,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         delegations.push({
           id: task.id,
           spawn: Effect.gen(function* () {
-            // The task ↔ process mapping lives runtime-side (the supervisor's activeIds keyed by
-            // task id) — nothing is stamped on the durable task.
+            // The task <-> process mapping lives runtime-side (the supervisor's activeIds keyed by
+            // task id) - nothing is stamped on the durable task.
             const handle = yield* Process.spawn(OperationProcess.make(AgentOperation.RunInstructions), {
               instructions: Ref.make(instructions),
               input: {},
@@ -223,7 +223,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
     Effect.gen(function* () {
       const agent = yield* Agent.loadForChat(chat);
 
-      // Resolve the durable task by its id and record the outcome directly on it — the task set
+      // Resolve the durable task by its id and record the outcome directly on it - the task set
       // is the working surface, so there is no separate mirror to reconcile.
       let title = id;
       const tasks = yield* Database.query(Query.select(Filter.id(id))).run.pipe(Effect.orElseSucceed(() => []));
@@ -237,7 +237,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
       // Surface any artifacts the sub-agent produced as inline reference blocks in the notification
       // message, so follow-up turns can reference them (durable filing belongs to the project's
-      // collection — the agent stores no artifacts).
+      // collection - the agent stores no artifacts).
       const artifactRefs: Ref.Ref<Obj.Unknown>[] = [];
       if (agent && Exit.isSuccess(exit)) {
         for (const artifactId of extractArtifactIds(exit.value)) {
@@ -263,7 +263,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         ? `The sub-agent completed "${title}".${artifactRefs.length === 0 ? ` ${formatResult(exit.value)}` : ''}`
         : `The sub-agent failed to complete "${title}": ${failureSummary || 'unknown error'}`;
 
-      // Embed each produced artifact as a `reference` block — the chat renders these as a dx-anchor
+      // Embed each produced artifact as a `reference` block - the chat renders these as a dx-anchor
       // tag with an inline object preview, rather than a raw `echo://` URI in the text.
       const blocks = [
         { _tag: 'text' as const, text },

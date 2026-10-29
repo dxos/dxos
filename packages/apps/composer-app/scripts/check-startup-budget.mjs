@@ -16,12 +16,12 @@
  * +17 to +27 (289 -> 306/316). Signal clears noise by 2-3x, which no timing here does.
  *
  * That also makes it the metric that catches the failure mode this work introduces: moving a
- * module back onto the startup pass changes nothing statically — the boot budget cannot see it —
+ * module back onto the startup pass changes nothing statically - the boot budget cannot see it -
  * and shows up only as more activations before ready.
  *
  * TODO(startup-latency): gate on `profilerTotal` / `navToReady` / TBT once a fixed (self-hosted or
  * consistently-sized) runner exists; until then they are recorded per run and trended, never
- * failed on. Revisit the thresholds here at the same time — see the `startup-benchmarks.md` rows
+ * failed on. Revisit the thresholds here at the same time - see the `startup-benchmarks.md` rows
  * each worktree records under `.perf/`.
  */
 
@@ -38,12 +38,12 @@ import path from 'node:path';
  * enough that one run of a healthy commit can exceed this number on its own.
  *
  * TODO(startup-latency): one median per condition is thin calibration. Treat the first CI runs as
- * calibration data — if this flaps on commits that are fine, raise it against the observed spread
+ * calibration data - if this flaps on commits that are fine, raise it against the observed spread
  * rather than nudging it each time.
  */
 const MAX_MODULES_AT_READY = 300;
 
-/** Below this the median is not meaningful — one sample decides nothing. */
+/** Below this the median is not meaningful - one sample decides nothing. */
 const MIN_SAMPLES = 3;
 
 const samplePath = path.join(
@@ -84,7 +84,7 @@ const median = (values) => {
 const counts = samples.map((sample) => sample.modulesAtReady);
 const medianCount = median(counts);
 
-// Reported, never gated — see the TODO above.
+// Reported, never gated - see the TODO above.
 const trend = ['profilerTotal', 'navigationToReady']
   .map((key) => `${key} median ${Math.round(median(samples.map((sample) => sample[key])))} ms`)
   .join(', ');

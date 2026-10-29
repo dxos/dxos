@@ -20,7 +20,7 @@ export type RunOptions = Options.MakeOptions & {
 };
 
 export type SessionOptions = {
-  /** SDK session this one continues, or — with {@link SessionOptions.fork} — branches from. */
+  /** SDK session this one continues, or - with {@link SessionOptions.fork} - branches from. */
   resume?: string;
   /** Branch instead of continuing: the first turn is issued with `forkSession`, earning a new id. */
   fork?: boolean;
@@ -57,7 +57,7 @@ export class Session {
   /**
    * A new conversation branching from this one's history at its current head.
    *
-   * The branch replays the ancestor prefix and then diverges — the SDK's own tree primitive, and the
+   * The branch replays the ancestor prefix and then diverges - the SDK's own tree primitive, and the
    * counterpart to `SessionLink` on the ECHO side.
    */
   fork(): Session {
@@ -67,13 +67,13 @@ export class Session {
   /**
    * Runs one turn, emitting messages as the SDK produces them.
    *
-   * The SDK yields an `AsyncGenerator` — the platform boundary this wraps — and frames that carry no
+   * The SDK yields an `AsyncGenerator` - the platform boundary this wraps - and frames that carry no
    * conversation content (session init, stream deltas, control traffic) are dropped rather than
    * projected into empty messages.
    */
   run({ prompt, ...options }: RunOptions): Stream.Stream<Message.Message, AgentHostError> {
     // Suspended so the session id and fork flag are read when the stream is consumed, not when it is
-    // described — a run built before an earlier one drained would otherwise resume the wrong point.
+    // described - a run built before an earlier one drained would otherwise resume the wrong point.
     return Stream.suspend(() => {
       const resume = this.#sessionId;
       const forkSession = this.#forkNext;

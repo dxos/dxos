@@ -28,7 +28,7 @@ import { AssistantOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 
-/** Prompts the operation sent, in order — a stand-in for the agent that would have received them. */
+/** Prompts the operation sent, in order - a stand-in for the agent that would have received them. */
 type Prompt = { chat?: string; prompt: string; disposition?: string };
 
 const prompts: Prompt[] = [];
@@ -55,7 +55,7 @@ const StubRunPrompt = OperationHandlerSet.make(
 
 /**
  * `RunPromptInChat` declares `Capability.Service`, and the invoker resolves services from the
- * DEFINITION — so the stub above still needs one present, even though its body never reads it.
+ * DEFINITION - so the stub above still needs one present, even though its body never reads it.
  */
 const makeCapabilityManager = () => {
   const registry = AtomRegistry.make();
@@ -229,7 +229,7 @@ describe('AnswerQuestion', () => {
         yield* Database.flush();
 
         expect(accepted).toBe(true);
-        // Nothing to wake, which is not a failure — the record is the point.
+        // Nothing to wake, which is not a failure - the record is the point.
         expect(resumed).toBe(false);
         expect(answerOf(task, question.id)).toBe('The first');
         expect(prompts).toEqual([]);

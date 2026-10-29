@@ -21,7 +21,7 @@ export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormField
       const data = {
         prop,
         schema,
-        /** Property Schema AST (`fieldProps.type`). Not spread as React prop `type` — Surface peels `type` for role tokens. */
+        /** Property Schema AST (`fieldProps.type`). Not spread as React prop `type` - Surface peels `type` for role tokens. */
         fieldPropertyAst: fieldProps.type,
         ...baseData,
       };

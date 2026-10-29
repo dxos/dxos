@@ -27,7 +27,7 @@ export * from './scaffold.ts';
 
 /**
  * Templates contributed by plugin-projects itself. `inboxResearch` lives here rather than in
- * plugin-inbox because plugin-inbox is publishable and this plugin is private — a public package
+ * plugin-inbox because plugin-inbox is publishable and this plugin is private - a public package
  * cannot depend on a private one (`check-public-dependencies`); revisit when this plugin publishes.
  */
 export { defaultTemplate };

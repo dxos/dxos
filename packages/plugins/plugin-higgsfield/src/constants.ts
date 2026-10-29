@@ -19,6 +19,6 @@ export const HIGGSFIELD_DEFAULT_IMAGE_MODEL = 'higgsfield-ai/soul/v2/standard';
 
 /**
  * Default video model. Higgsfield's video models (DoP) animate a still (`image_url`): the cover of
- * the image artifact the request references — see the video service.
+ * the image artifact the request references - see the video service.
  */
 export const HIGGSFIELD_DEFAULT_VIDEO_MODEL = 'higgsfield-ai/dop/lite';

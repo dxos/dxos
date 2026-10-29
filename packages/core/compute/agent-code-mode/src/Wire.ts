@@ -143,7 +143,7 @@ const detached = (object: Obj.Unknown, db: Database.Database): unknown => {
   if (typename === undefined) {
     return JSON.parse(JSON.stringify(object));
   }
-  // System fields (`id`, `@type`, `@meta`, …) belong to this instance, not to what it describes.
+  // System fields (`id`, `@type`, `@meta`, ...) belong to this instance, not to what it describes.
   const properties = Object.fromEntries(
     Object.entries(Obj.toJSON(object)).filter(([key]) => key !== 'id' && !key.startsWith('@')),
   );

@@ -24,7 +24,7 @@ describe('decorateMarkdown links', () => {
   });
 
   test('decorates a bare URL', ({ expect }) => {
-    view = createView('PR is open — https://github.com/dxos/dxos/pull/12766');
+    view = createView('PR is open - https://github.com/dxos/dxos/pull/12766');
     expect(links(view)).toEqual([
       { text: 'https://github.com/dxos/dxos/pull/12766', href: 'https://github.com/dxos/dxos/pull/12766' },
     ]);

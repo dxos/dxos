@@ -85,7 +85,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
     }
     let cancelled = false;
     // If `open()` rejects (e.g. mic permission denied, device init failure) we must
-    // clear `recording` — otherwise the toolbar button reports "stop" forever while
+    // clear `recording` - otherwise the toolbar button reports "stop" forever while
     // nothing is actually being captured.
     void transcriber.open().then(
       () => {

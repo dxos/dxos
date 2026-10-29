@@ -22,7 +22,7 @@ import * as Scheduler from './scheduler.ts';
 
 /**
  * Emitted after an operation completes successfully. (The in-progress / failure lifecycle is observed
- * via the process monitor; this stream surfaces successful invocations for layered consumers — e.g.
+ * via the process monitor; this stream surfaces successful invocations for layered consumers - e.g.
  * the undo history tracker, which derives undoability from the operation/input/output.)
  */
 export type InvocationEvent<I = any, O = any> = {

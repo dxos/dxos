@@ -15,12 +15,12 @@ export type BlobResource = {
   url?: string;
   /** MIME type as recorded on the blob; `undefined` when the blob did not declare one. */
   type?: string;
-  /** True while resolving — distinct from "resolved to nothing", which is a failure worth reporting. */
+  /** True while resolving - distinct from "resolved to nothing", which is a failure worth reporting. */
   pending: boolean;
 };
 
 /**
- * Resolves a blob ref to a displayable object url, mirroring the `Blob.url()` → `Blob.read()` +
+ * Resolves a blob ref to a displayable object url, mirroring the `Blob.url()` -> `Blob.read()` +
  * `createObjectURL` fallback `useCidResolver` uses for inline images.
  *
  * Unlike that resolver this owns the url's lifetime: a url minted here is revoked on unmount or when
@@ -53,7 +53,7 @@ export const useBlobUrl = (ref: Ref.Ref<Obj.Unknown> | undefined, db: Database.D
         }
         const bytes = yield* Blob.read(blob);
         // `Uint8Array` is generic over `ArrayBufferLike` while DOM's `BlobPart` only covers
-        // `ArrayBuffer`-backed views — a gap in the lib types, not something a different annotation fixes.
+        // `ArrayBuffer`-backed views - a gap in the lib types, not something a different annotation fixes.
         minted = URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
         return { url: minted, type: blob.type };
       }).pipe(
@@ -73,7 +73,7 @@ export const useBlobUrl = (ref: Ref.Ref<Obj.Unknown> | undefined, db: Database.D
       })
       .catch((err) => {
         // `Effect.catch` above only handles TYPED failures; a defect still rejects here. Without this
-        // the rejection would be unhandled — logged rather than swallowed, and the viewer falls back to
+        // the rejection would be unhandled - logged rather than swallowed, and the viewer falls back to
         // its "could not be loaded" state instead of spinning forever.
         log.catch(err);
         if (!cancelled) {

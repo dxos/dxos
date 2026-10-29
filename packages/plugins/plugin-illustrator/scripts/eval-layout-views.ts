@@ -16,7 +16,7 @@
 // `--questions out.json` writes the questions and PNGs for the reference grader; `--reference answers.json`
 // runs the graders (`--graders jev:ascii+rows,clef:image`) and prints the comparison. Jev needs
 // `TYPESAFE_API_KEY`; Clef needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`.
-// Run: `moon run plugin-illustrator:eval-layout-views -- --reference /abs/answers.json /abs/path/x.mmd …`.
+// Run: `moon run plugin-illustrator:eval-layout-views -- --reference /abs/answers.json /abs/path/x.mmd ...`.
 //
 
 import * as Decision from 'effect/ai/Decision';
@@ -293,7 +293,7 @@ const pearson = (pairs: readonly (readonly [number, number])[]) => {
 };
 
 const percent = (outcomes: readonly boolean[]) =>
-  outcomes.length ? `${Math.round(mean(outcomes.map(Number)) * 100)}%` : '—';
+  outcomes.length ? `${Math.round(mean(outcomes.map(Number)) * 100)}%` : '-';
 
 const accuracy = (diagrams: readonly Diagram[], answersOf: (name: string) => Answers | undefined, type?: string) =>
   percent(
@@ -324,7 +324,7 @@ const agreement = (
   );
   return pairs.length
     ? `${mean(pairs.map(([mine, theirs]) => Math.abs(mine - theirs))).toFixed(2)} r${pearson(pairs).toFixed(2)}`
-    : '—';
+    : '-';
 };
 
 const AESTHETICS = ruleKeys(Aesthetics.RULES);
@@ -483,7 +483,7 @@ const program = Effect.gen(function* () {
     ]),
   ];
   const types = [...new Set(diagrams.flatMap(({ questions }) => questions.map(({ type }) => type)))];
-  console.log(`\nLayout questions — accuracy against the geometry, ${diagrams.length} drawings`);
+  console.log(`\nLayout questions - accuracy against the geometry, ${diagrams.length} drawings`);
   console.log(['grader'.padEnd(22), 'all'.padEnd(6), ...types.map((type) => type.padEnd(10))].join(' '));
   for (const [grader, answersOf] of columns) {
     console.log(
@@ -495,7 +495,7 @@ const program = Effect.gen(function* () {
     );
   }
 
-  console.log('\nRules — mean |grader − reference| and Pearson r over every drawing × rule');
+  console.log('\nRules - mean |grader - reference| and Pearson r over every drawing × rule');
   console.log(
     [
       'grader'.padEnd(22),

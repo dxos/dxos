@@ -51,7 +51,7 @@ const hourLabel = (time: string) => {
   return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? 'AM' : 'PM'}`;
 };
 
-/** The slot after a local hour, so a block ending in the 9 AM slot reads `– 10 AM`. */
+/** The slot after a local hour, so a block ending in the 9 AM slot reads `- 10 AM`. */
 const nextHour = (time: string) => new Date(Date.parse(`${time}Z`) + 3_600_000).toISOString().slice(0, 16);
 
 const clockLabel = (time: string) =>
@@ -194,7 +194,7 @@ const WindowCard = ({ forecast }: { forecast: Forecast }) => (
       {forecast.window ? (
         <>
           <p className='text-3xl font-semibold tabular-nums'>
-            {hourLabel(forecast.window.start)} – {hourLabel(nextHour(forecast.window.end))}
+            {hourLabel(forecast.window.start)} - {hourLabel(nextHour(forecast.window.end))}
           </p>
           <p className='text-fg-muted'>
             {forecast.window.start.slice(0, 10) === forecast.now.slice(0, 10) ? 'Today' : 'Tomorrow'} · driest, calmest
@@ -259,7 +259,7 @@ const App = () => {
           )}
         </header>
         {error && <p className='text-error-text'>{error}</p>}
-        {!forecast && !error && <p className='text-fg-muted'>Checking the sky…</p>}
+        {!forecast && !error && <p className='text-fg-muted'>Checking the sky...</p>}
         {forecast && (
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <VerdictCard forecast={forecast} />

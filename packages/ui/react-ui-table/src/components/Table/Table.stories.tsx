@@ -315,14 +315,14 @@ export const RequiredSchema: StoryObj = {
     // 30 s covers ECHO client + space + table creation (the only inherently slow step).
     const addRowButton = await canvas.findByTestId('table.toolbar.add-row', undefined, { timeout: 30_000 });
 
-    // Person.name is required, so db.add throws → useAddRow returns 'draft' →
+    // Person.name is required, so db.add throws -> useAddRow returns 'draft' ->
     // a draft row appears in frozenRowsEnd and focus is set to its first cell.
     await userEvent.click(addRowButton);
 
     const draftCell = await canvas.findByTestId('frozenRowsEnd.0.0');
     await userEvent.click(draftCell);
 
-    // Open the editor with Enter rather than typing to open — the latter routes the first
+    // Open the editor with Enter rather than typing to open - the latter routes the first
     // character into dx-grid's `initialContent` and races the editor mount. The empty value
     // fails validation; the editor must stay open so the value below can be entered.
     await userEvent.keyboard('{Enter}');
@@ -342,7 +342,7 @@ export const RequiredSchema: StoryObj = {
   },
 };
 
-// Reproduces the "form → table" reactivity path: an ECHO object edited *outside* the grid (as the selected-objects
+// Reproduces the "form -> table" reactivity path: an ECHO object edited *outside* the grid (as the selected-objects
 // companion form does via `Obj.update`) must refresh the corresponding cell. The table model subscribes to each
 // visible row via `Obj.subscribe`, bumping a `cellUpdate` atom the grid re-renders on.
 const ExternalMutationStory = () => {

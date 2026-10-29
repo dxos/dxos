@@ -21,7 +21,7 @@ import { isAtprotoConnection } from '../connection.ts';
 import { AtprotoNamespace } from '../namespace.ts';
 import { PDS_NODE_TYPE, PDS_URL_KEY } from '../pds.ts';
 
-/** The companion segment/variant for the publishing companion — shared with its surface binding. */
+/** The companion segment/variant for the publishing companion - shared with its surface binding. */
 export const ATPROTO_COMPANION_VARIANT = 'atproto';
 
 /**
@@ -63,7 +63,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Virtual "PDS" node in the system section — only when the space holds an atproto connection.
+      // Virtual "PDS" node in the system section - only when the space holds an atproto connection.
       // Positioned between Database (0) and Devtools (Infinity).
       AppGraphBuilder.createExtension({
         id: 'pdsSection',
@@ -79,7 +79,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppGraphNode.make({
               // Segment id (no '/'); the graph qualifies it under the space's system group. Must equal
-              // the registered singleton URL key — see {@link PDS_URL_KEY}.
+              // the registered singleton URL key - see {@link PDS_URL_KEY}.
               id: PDS_URL_KEY,
               type: PDS_NODE_TYPE,
               data: { type: PDS_NODE_TYPE, db: space.db },

@@ -18,7 +18,7 @@ import { type PermissionAgent, usePermissionAgents } from './PermissionContext.t
 
 const EMPTY_TREE = Atom.make<readonly Process.Process[]>([]);
 
-/** Story module: the agent configurator — prompt, granted permissions and location. */
+/** Story module: the agent configurator - prompt, granted permissions and location. */
 export const PermissionConfiguratorModule = () => {
   const { edge, ready, spawn } = usePermissionAgents();
   return <PermissionConfigurator edge={edge} ready={ready} onSpawn={spawn} />;

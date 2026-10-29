@@ -15,7 +15,7 @@ import { type DevtoolsCardData, isDebugSurface } from '../../capabilities/Devtoo
  * The profiler and dispatch metrics are sampled on each refresh rather than subscribed to: this
  * container is itself a profiled surface, so a live subscription would record an entry for every
  * re-render the notification caused and loop at frame rate, flushing every other surface out of the
- * profiler's window — which is what made the Surfaces card's count wander with no interaction.
+ * profiler's window - which is what made the Surfaces card's count wander with no interaction.
  */
 export const DevtoolsOverviewContainer = () => {
   const [stats, refreshStats] = useStats();

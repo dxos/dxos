@@ -108,7 +108,7 @@ export type WithMultiClientProviderProps = InitializeProps &
     inboxRelay?: LocalServicesOptions['inboxRelay'];
     /**
      * Wraps each client's story inside its `ClientProvider`, so the client can host what the story
-     * needs per client — e.g. a plugin manager adopting it (see plugin-client's `ClientPluginManager`).
+     * needs per client - e.g. a plugin manager adopting it (see plugin-client's `ClientPluginManager`).
      */
     wrapper?: ComponentType<PropsWithChildren<{ index: number }>>;
   };

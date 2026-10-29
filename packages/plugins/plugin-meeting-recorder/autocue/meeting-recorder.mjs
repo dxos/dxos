@@ -11,7 +11,7 @@
  *   transcription and the summary model)
  *
  * The browser cannot observe other apps, so the "Zoom took the microphone" and "Zoom released it" events
- * are invoked as `HandleDetection` — the operation the desktop app's native listener invokes for the same
+ * are invoked as `HandleDetection` - the operation the desktop app's native listener invokes for the same
  * change. Speech comes from a voice file played through Chromium's fake microphone:
  *
  *   node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out /tmp/demo \
@@ -71,7 +71,7 @@ export const steps = [
       // A fresh identity has no name, and the transcript's bylines would read as a DID.
       await demo.invoke({ key: 'org.dxos.operation.client.updateProfile', input: { displayName: 'Alex' }, hud: false });
 
-      // EDGE's AI service (the summary) serves only identities bound to a hub account; `test+…@dxos.org`
+      // EDGE's AI service (the summary) serves only identities bound to a hub account; `test+...@dxos.org`
       // addresses skip the access-code gate on non-production hubs, as the composer e2e suite does.
       const identity = await page.evaluate(() => {
         const current = globalThis.dxos.client.halo.identity.get();
@@ -128,8 +128,8 @@ export const steps = [
 
       for (const name of ['Meetings', 'Meeting Recorder']) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
-        await page.locator('input[placeholder="Filter…"]').first().waitFor({ state: 'visible', timeout: 30_000 });
-        await demo.fill({ selector: 'input[placeholder="Filter…"]', value: name, hud: false });
+        await page.locator('input[placeholder="Filter..."]').first().waitFor({ state: 'visible', timeout: 30_000 });
+        await demo.fill({ selector: 'input[placeholder="Filter..."]', value: name, hud: false });
         const toggle = page.locator(`input[role="switch"][aria-label="${name}"]`).first();
         await toggle.waitFor({ state: 'attached', timeout: 10_000 });
         // The input is visually hidden behind its styled track, so toggle it in the page.
@@ -159,7 +159,7 @@ export const steps = [
     narration: 'A Zoom call starts, and Composer notices Zoom took the microphone.',
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'A Zoom call starts — the desktop app sees Zoom take the microphone',
+        value: 'A Zoom call starts - the desktop app sees Zoom take the microphone',
         subtitle: 'plugin-meeting-recorder/PLUGIN.mdl · QA-1 step 1',
       });
       await page.waitForTimeout(BEAT);
@@ -176,7 +176,7 @@ export const steps = [
     narration: 'One click creates a meeting and starts transcribing.',
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'Take notes — a Meeting is created and opened, and transcription starts',
+        value: 'Take notes - a Meeting is created and opened, and transcription starts',
         subtitle: 'QA-1 step 2',
       });
       // The caption banner is pinned over the bottom of the page, where the prompt sits.
@@ -210,7 +210,7 @@ export const steps = [
     narration: 'Each sentence lands in the transcript as soon as the speaker pauses.',
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'Speak — each utterance is transcribed when the speaker pauses',
+        value: 'Speak - each utterance is transcribed when the speaker pauses',
         subtitle: 'QA-1 step 4 · a voice file plays through the microphone',
       });
       await demo.click({ selector: `${PLANK} button[aria-label="Transcript"]`, label: 'Transcript' });
@@ -224,7 +224,7 @@ export const steps = [
     narration: 'When Zoom lets go of the microphone, the recording stops and the meeting is saved.',
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'The call ends — Zoom releases the microphone and the recording stops',
+        value: 'The call ends - Zoom releases the microphone and the recording stops',
         subtitle: 'QA-1 step 5',
       });
       await page.waitForTimeout(BEAT);

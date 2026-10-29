@@ -47,7 +47,7 @@ import {
 import { DeveloperMode } from './core/state/index.ts';
 
 /**
- * Content script — loaded on every page at document_start. Hosts the DOM
+ * Content script - loaded on every page at document_start. Hosts the DOM
  * picker and the page-actions / search-proxy relays.
  *
  * The side panel does not await a round-trip reply: it fires a one-way
@@ -174,7 +174,7 @@ const PAGE_ACTION_ACK_TIMEOUT_MS = 8_000;
 /**
  * Composer-tab relay: forward a background request to the page as a
  * CustomEvent and resolve with the page's correlated ack. An ack with an
- * empty id is also accepted — the page acks undecodable payloads with
+ * empty id is also accepted - the page acks undecodable payloads with
  * `id: ''` and dropping those would turn a reportable error into a timeout.
  */
 const requestFromPage = <T extends { id: string }>(

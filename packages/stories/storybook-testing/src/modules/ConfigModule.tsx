@@ -8,7 +8,7 @@ import { useClient } from '@dxos/react-client';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /**
- * Renders the active client's resolved configuration as syntax-highlighted JSON —
+ * Renders the active client's resolved configuration as syntax-highlighted JSON -
  * a story-only diagnostic for seeing which services/config a story booted with.
  */
 export const ConfigModule = () => {

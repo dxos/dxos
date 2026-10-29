@@ -145,7 +145,7 @@ const isEcho = (messages: readonly Message.Message[], index: number): boolean =>
 /** How many messages before the cursor an incremental read shows the extractor, so references in new messages resolve. */
 const CONTEXT_MESSAGES = 8;
 
-const CONTEXT_HEADER = 'Earlier messages, for context only — do not extract facts from them:';
+const CONTEXT_HEADER = 'Earlier messages, for context only - do not extract facts from them:';
 const NEW_HEADER = 'New messages:';
 
 const renderSegment = ({ text, speaker, at }: Segment): string => `[${at}] ${speaker}: ${text}`;

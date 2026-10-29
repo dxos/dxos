@@ -15,7 +15,7 @@ import { type AccountMap } from './accounts.ts';
 // The pipeline board.
 //
 // A `Pipeline` column is a `View` plus an explicit `order` of object ids, so each stage is a query
-// (`status = 'qualified'`) rather than a hand-maintained membership list — an account moves stage by
+// (`status = 'qualified'`) rather than a hand-maintained membership list - an account moves stage by
 // having its `status` changed, which is what the board's drag does at runtime.
 //
 

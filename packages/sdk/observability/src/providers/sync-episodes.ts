@@ -7,7 +7,7 @@ export type ClosedEpisode = {
   durationMs: number;
   /**
    * True when the episode was already in flight at the first observation, so its start is a lower
-   * bound. Reported anyway — it under-states duration, which the stall gauge covers.
+   * bound. Reported anyway - it under-states duration, which the stall gauge covers.
    */
   truncated: boolean;
 };

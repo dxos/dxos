@@ -21,7 +21,7 @@ import { type Client, Config } from '@dxos/react-client';
 const localConfig = new Config({});
 
 // The client-services effect-rpc endpoint rejects any in-flight request with `RpcClosedError` when
-// the client is destroyed (`onTestFinished` → `client.destroy()`), surfacing as an unhandled
+// the client is destroyed (`onTestFinished` -> `client.destroy()`), surfacing as an unhandled
 // rejection that would exit the node process non-zero even though the test passed. Filter ONLY that
 // specific error and re-throw everything else, scoped to this file's lifetime (registered in
 // `beforeAll`, removed in `afterAll`) so no global handler leaks into other test files.
@@ -178,7 +178,7 @@ describe('ClientPlugin startup', () => {
     mark('total startup', totalStart);
 
     // Verify client is ready. `initialize()` is forked off the startup pass, so Startup completing
-    // no longer implies an initialized client — that is the point of the fork, and reading `halo`
+    // no longer implies an initialized client - that is the point of the fork, and reading `halo`
     // before it settles trips the client's own not-initialized invariant.
     const client = manager.capabilities.get(ClientCapabilities.Client) as Client;
     expect(client).toBeDefined();

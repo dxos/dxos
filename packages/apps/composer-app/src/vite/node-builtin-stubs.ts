@@ -16,8 +16,8 @@ const VIRTUAL_PREFIX = '\0dxos-node-builtin-stub:';
  * Give node builtins reached from unexecuted code a module with real named exports.
  *
  * Vite resolves a node builtin in the client graph to `__vite-browser-external`, which exports only
- * a `default`. The per-module dev server never notices the mismatch — a named import is not checked
- * until the importing module runs — but Rolldown links the whole graph up front and fails it with
+ * a `default`. The per-module dev server never notices the mismatch - a named import is not checked
+ * until the importing module runs - but Rolldown links the whole graph up front and fails it with
  * `MISSING_EXPORT`. Each stub is a function that throws when called, so reaching one at runtime is
  * loud rather than silent; linking succeeding is the whole point. No `default` is emitted: a default
  * import should surface here as a build error too, so it can be answered deliberately.

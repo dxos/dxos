@@ -38,8 +38,8 @@ export const isAbortError = (error: Error) => {
  * Requests an exclusive Web Lock, waiting for as long as it takes to be granted.
  *
  * Acquisition is deliberately unbounded: for an election lock, "another holder has it" is the normal
- * steady state of every follower, so a timeout would both report healthy followers as failures and —
- * worse — drop them out of the lock's wait queue, leaving nobody positioned to take over when the
+ * steady state of every follower, so a timeout would both report healthy followers as failures and -
+ * worse - drop them out of the lock's wait queue, leaving nobody positioned to take over when the
  * holder goes away. Only `ctxSignal` cancels the wait; a wedged (rather than dead) holder is handled
  * by the caller's steal path.
  */

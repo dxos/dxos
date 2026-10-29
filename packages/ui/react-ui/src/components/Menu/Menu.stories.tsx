@@ -102,20 +102,20 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Menu.Content>
           <Menu.ItemGroup>
             <Menu.ItemGroupLabel>Edit</Menu.ItemGroupLabel>
-            <Menu.Item item={{ value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '⌘X' }} />
-            <Menu.Item item={{ value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '⌘C' }} />
-            <Menu.Item item={{ value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '⌘V' }} />
+            <Menu.Item item={{ value: 'cut', label: 'Cut', icon: 'ph--scissors--regular', shortcut: '\u2318X' }} />
+            <Menu.Item item={{ value: 'copy', label: 'Copy', icon: 'ph--copy--regular', shortcut: '\u2318C' }} />
+            <Menu.Item item={{ value: 'paste', label: 'Paste', icon: 'ph--clipboard--regular', shortcut: '\u2318V' }} />
           </Menu.ItemGroup>
           <Menu.Separator />
           <Menu.Item item={{ value: 'archive', label: 'Archive', disabled: true }} />
           <Menu.Item item={{ value: 'delete', label: 'Delete', icon: 'ph--trash--regular' }} data-testid='delete'>
             <Menu.ItemIcon />
             <Menu.ItemText />
-            <Menu.ItemShortcut>⌫</Menu.ItemShortcut>
+            <Menu.ItemShortcut>&#x232B;</Menu.ItemShortcut>
           </Menu.Item>
           <Menu.Separator />
           <Menu.CheckboxItem
-            item={{ value: 'grid', label: 'Show grid', shortcut: '⌘G' }}
+            item={{ value: 'grid', label: 'Show grid', shortcut: '\u2318G' }}
             checked={grid}
             onCheckedChange={setGrid}
           />
@@ -327,7 +327,7 @@ export const Test: Story = {
     await expect(menu).toBeVisible();
     // A composed row lays out like a default one: Delete's children put its own shortcut where Cut's data puts one.
     const deleteItem = within(menu).getByRole('menuitem', { name: /Delete/ });
-    await expect(deleteItem.querySelector('[data-part="item-shortcut"]')).toHaveTextContent('⌫');
+    await expect(deleteItem.querySelector('[data-part="item-shortcut"]')).toHaveTextContent('\u232B');
     await expect(deleteItem.querySelector('[data-part="item-text"]')?.getBoundingClientRect().left).toBeCloseTo(
       within(menu)
         .getByRole('menuitem', { name: /Cut/ })
@@ -348,7 +348,7 @@ export const Test: Story = {
     const cut = within(menu).getByRole('menuitem', { name: /Cut/ });
     const block = parseFloat(getComputedStyle(menu).getPropertyValue('--dx-block-size')) * 16;
     await expect(cut.getBoundingClientRect().height).toBeCloseTo(block, 0);
-    const shortcut = within(cut).getByText('⌘X');
+    const shortcut = within(cut).getByText('\u2318X');
     await expect(shortcut.getBoundingClientRect().right).toBeLessThanOrEqual(cut.getBoundingClientRect().right);
     await expect(getComputedStyle(shortcut).color).not.toBe(getComputedStyle(cut).color);
 

@@ -446,7 +446,7 @@ const History = ({ history, open, version, onOpenChange, onVersionChange }: Hist
                     </span>
                     <span className='font-mono text-xs text-end'>
                       <span className='text-green-text'>+{entry.added}</span>{' '}
-                      <span className='text-red-text'>−{entry.removed}</span>
+                      <span className='text-red-text'>-{entry.removed}</span>
                     </span>
                   </button>
                 </li>
@@ -458,7 +458,7 @@ const History = ({ history, open, version, onOpenChange, onVersionChange }: Hist
   </div>
 );
 
-/** Tag registry keyed by the `Tag` object's uri — the id space `#tag` terms and `meta.tags` share. */
+/** Tag registry keyed by the `Tag` object's uri - the id space `#tag` terms and `meta.tags` share. */
 const useTagMap = (db: Database.Database | undefined): Tag.Map => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
   // Keyed on the tags themselves, not the result array: the query editor rebuilds its view (and drops

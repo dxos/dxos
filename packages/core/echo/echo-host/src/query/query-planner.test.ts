@@ -1809,7 +1809,7 @@ describe('QueryPlanner', () => {
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
       // Within-group OrderStep, then AggregateStep, then the group-level OrderStep (which absorbs the
-      // group-level limit via optimizeLimits — it pages over whole groups, so no separate LimitStep).
+      // group-level limit via optimizeLimits - it pages over whole groups, so no separate LimitStep).
       expect(tags).toEqual([
         'SelectStep',
         'FilterDeletedStep',
@@ -2132,7 +2132,7 @@ describe('QueryPlanner', () => {
   });
 
   test('from subquery inherits scope from inner query', () => {
-    // The outer query has no scope — the subquery carries the scope.
+    // The outer query has no scope - the subquery carries the scope.
     const subquery = Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'space', spaceId: SPACE_ID }]);
     const query = Query.select(Filter.props<TestSchema.Task>({ title: 'Test' })).from(subquery);
 
@@ -2236,7 +2236,7 @@ describe('QueryPlanner', () => {
     test('limit-guard: limit is not folded into SelectStep when a nested in-query is present', () => {
       // Mirrors the 'childOf with limit' regression test above: the guard only prevents pushing
       // the limit into the SelectStep (which would slice candidates before the semi-join runs and
-      // starve the result set) — it does not forbid a *later*, unblocked OrderStep from absorbing
+      // starve the result set) - it does not forbid a *later*, unblocked OrderStep from absorbing
       // the limit, since that OrderStep already sees the fully-filtered set.
       const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }))
         .orderBy(Order.natural('asc'))
@@ -2370,14 +2370,14 @@ describe('QueryPlanner', () => {
       expect(step.limit).toBeUndefined();
     });
 
-    test('a space scope keeps the limit downstream — only a feed scan is ordered', () => {
+    test('a space scope keeps the limit downstream - only a feed scan is ordered', () => {
       const query = Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(5);
       const step = selectStep(withSpaceIdOptions(query.ast));
       expect(step.feedScan).toBeUndefined();
       expect(step.limit).toBeUndefined();
     });
 
-    test('a cursor read stays a cursor read — it is windowed by position, not natural order', () => {
+    test('a cursor read stays a cursor read - it is windowed by position, not natural order', () => {
       const query = Query.select(Filter.feedCursor({ begin: Feed.Cursor.make('3') }))
         .limit(5)
         .from(feedScope);

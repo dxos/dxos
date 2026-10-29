@@ -155,11 +155,11 @@ describe('formatLeadSheet', () => {
     // source of truth; the formatter has no record of the input spelling).
     // Drum events without explicit duration default to 1/16.
     expect(formatted).toContain('[1:Piano]');
-    expect(formatted).toContain('1.1 F5/8 G#5/8'); // Ab5 → G#5
+    expect(formatted).toContain('1.1 F5/8 G#5/8'); // Ab5 -> G#5
     expect(formatted).toContain('1.2 C6/4');
     expect(formatted).toContain('[2:Bass]');
     expect(formatted).toContain('1.1 F2/2');
-    expect(formatted).toContain('1.3 C#2/2'); // Db2 → C#2
+    expect(formatted).toContain('1.3 C#2/2'); // Db2 -> C#2
     expect(formatted).toContain('[3:Drums]');
     expect(formatted).toContain('1.1 Kick/16');
     expect(formatted).toContain('1.2.5 Snare/16');

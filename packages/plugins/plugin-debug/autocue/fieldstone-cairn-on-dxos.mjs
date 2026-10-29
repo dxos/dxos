@@ -276,7 +276,7 @@ export const steps = [
   {
     name: 'The agents run on EDGE',
     narration:
-      'And the agents run on EDGE compute. Their chats and traces land in the same space as the team’s mail and documents.',
+      "And the agents run on EDGE compute. Their chats and traces land in the same space as the team's mail and documents.",
     run: async ({ demo, page }) => {
       await caption(demo, 'The agents run on EDGE compute');
       await demo.click({ selector: '[data-testid="deck.plank"] [data-testid="toolbar-up"] >> nth=0', label: 'Up' });

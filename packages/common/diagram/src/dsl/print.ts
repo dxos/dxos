@@ -3,8 +3,8 @@
 //
 
 //
-// Canonical text for a scene. The form is fixed — two-space indent, one element per line, a blank
-// line between statements, attributes in the order `vocabulary.ts` lists them — because
+// Canonical text for a scene. The form is fixed - two-space indent, one element per line, a blank
+// line between statements, attributes in the order `vocabulary.ts` lists them - because
 // `parse(print(x))` round-tripping is only worth anything if the text side is normalized too.
 //
 
@@ -193,6 +193,6 @@ export const formatCommand = (command: Scene.Command): string => {
 export const printCommands = (commands: readonly Scene.Command[]): string =>
   commands.length === 0 ? '' : `${commands.map(formatCommand).join('\n\n')}\n`;
 
-/** A scene document — every statement an `object`, which is what a drawing serializes to. */
+/** A scene document - every statement an `object`, which is what a drawing serializes to. */
 export const print = (scene: Scene.Scene): string =>
   printCommands(scene.objects.map((object) => ({ op: 'upsert-object', object }) as const));

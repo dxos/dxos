@@ -133,7 +133,7 @@ export class QueryPlanner {
     const indexAnswers = activityIndexAnswers(rest);
     if (!indexAnswers && select.selector.targets === undefined) {
       return fail(
-        "A space-wide Filter.changes() query must aggregate with only Aggregate.time('time', …), " +
+        "A space-wide Filter.changes() query must aggregate with only Aggregate.time('time', ...), " +
           "Aggregate.group('source'), Aggregate.count() and Aggregate.sum('ops'); pass targets to Filter.changes() " +
           'for anything else.',
       );
@@ -264,8 +264,8 @@ export class QueryPlanner {
     // without it.
     const { range, rest } = _splitFeedCursor(filter, context);
     if (range !== undefined) {
-      // Checked here rather than where the bound is applied, so the start sentinel — which bounds
-      // nothing and so reaches no window — is refused over a space's documents just the same. An
+      // Checked here rather than where the bound is applied, so the start sentinel - which bounds
+      // nothing and so reaches no window - is refused over a space's documents just the same. An
       // automerge object has no position for any cursor to name.
       if (!context.scope.every((scope) => scope._tag === 'feed')) {
         throw new QueryError({
@@ -300,7 +300,7 @@ export class QueryPlanner {
         }
         if (context.selectionInverted && isTrivialTypenameFilter(filter)) {
           invariant(filter.typename !== null);
-          // Negated plain type filter (e.g. `Filter.not(Filter.type(Foo))`) — mirrors the trivial-OR
+          // Negated plain type filter (e.g. `Filter.not(Filter.type(Foo))`) - mirrors the trivial-OR
           // handling below: select via an inverted TypeSelector when indexed, or a WildcardSelector
           // when working from the in-memory set, then re-check the negation in the FilterStep.
           const selector: QueryPlan.Selector = this._options.noIndexes
@@ -413,7 +413,7 @@ export class QueryPlanner {
         ]);
       }
 
-      // Feed cursor — always lifted out above, so reaching here means the tree changed shape.
+      // Feed cursor - always lifted out above, so reaching here means the tree changed shape.
       case 'feed-cursor':
         throw queryTooComplexError(context.originalQuery);
 
@@ -467,7 +467,7 @@ export class QueryPlanner {
         ]);
       }
 
-      // Mnemonic and annotation — local predicates on the object's own id or meta, so they run as a
+      // Mnemonic and annotation - local predicates on the object's own id or meta, so they run as a
       // filter step over a wildcard select. Inversion cannot fold into the value, so it is re-wrapped as `not`.
       case 'annotation':
       case 'mnemonic': {
@@ -488,7 +488,7 @@ export class QueryPlanner {
         ]);
       }
 
-      // HasParent — a local predicate on the object's own parent slot, so inversion folds into
+      // HasParent - a local predicate on the object's own parent slot, so inversion folds into
       // the value rather than costing a negated plan.
       case 'has-parent': {
         const planned: QueryAST.Filter = context.selectionInverted
@@ -595,7 +595,7 @@ export class QueryPlanner {
         // plan, so `and(type(X), hasParent(false))` keeps its type-indexed select.
         if (childOfFilters.length > 0 || localFilters.length > 0) {
           // A negated conjunction cannot distribute over its conjuncts (`not(and(a, b))` is not
-          // `not(a) && b`), so under inversion the WHOLE negated AND becomes one post-filter —
+          // `not(a) && b`), so under inversion the WHOLE negated AND becomes one post-filter -
           // possible only when every conjunct is root-executable (child-of is not).
           if (context.selectionInverted) {
             if (childOfFilters.length > 0 || !flatFilters.every(isRootExecutable)) {
@@ -638,7 +638,7 @@ export class QueryPlanner {
         }
 
         // Simple AND: all filters are root-executable against in-memory objects after a wildcard select.
-        // The text search must drive the selection — the in-memory matcher cannot evaluate one —
+        // The text search must drive the selection - the in-memory matcher cannot evaluate one -
         // and inverting it would need objects outside the FTS hits, which the index cannot produce.
         const textFilters = flatFilters.filter((f): f is QueryAST.FilterTextSearch => f.type === 'text-search');
         if (textFilters.length === 1 && !context.selectionInverted) {
@@ -977,7 +977,7 @@ export class QueryPlanner {
   /**
    * `aggregate` must be the outermost data clause: only `from()`/`options()` and the group-level
    * pagination clauses `limit()`/`skip()` may wrap it. At most one `aggregate` may appear anywhere
-   * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so an
+   * in the tree - including inside a `.from(subquery)` source, which the planner flattens (so an
    * aggregated subquery would otherwise produce an unsupported double-`aggregate`). The DSL's types
    * can't enforce this (`Query<RecordResult & ...>` still exposes `orderBy`/`select`/etc.), so
    * it's validated here at plan time.
@@ -1021,7 +1021,7 @@ export class QueryPlanner {
     if (root.type !== 'aggregate') {
       throw new QueryError({
         message:
-          'aggregate must be the outermost query clause — only from(), options(), orderBy(), limit() and skip() may follow it',
+          'aggregate must be the outermost query clause - only from(), options(), orderBy(), limit() and skip() may follow it',
         context: { query },
       });
     }
@@ -1143,7 +1143,7 @@ export class QueryPlanner {
       }
     }
 
-    // Find the position to insert the order step (before any trailing limit/skip/aggregate steps —
+    // Find the position to insert the order step (before any trailing limit/skip/aggregate steps -
     // aggregation must see the intended order already applied, both within and between groups).
     let insertIndex = processedPlan.steps.length;
     for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
@@ -1250,7 +1250,7 @@ export class QueryPlanner {
     }
 
     // A feed scan can be ordered and capped by the storage layer itself, so it takes the limit in
-    // either natural direction — which is the point: a bounded feed query must read bounded work.
+    // either natural direction - which is the point: a bounded feed query must read bounded work.
     const feedScan =
       selectStepIndex !== -1
         ? feedScanForLimit(processedSteps, selectStepIndex, orderStepIndex, limitStepIndex)
@@ -1281,7 +1281,7 @@ export class QueryPlanner {
 
     // A SkipStep between a propagation target and the LimitStep drops items after the limit
     // would be applied. Since the LimitStep is removed, the limit pushed into the earlier step
-    // must also cover the skipped prefix — otherwise `skip(k).limit(n)` yields only `n - k` items.
+    // must also cover the skipped prefix - otherwise `skip(k).limit(n)` yields only `n - k` items.
     // A feed scan drops the prefix itself, before any document loads, so it takes the SkipSteps instead.
     const skipBetween = (fromIndex: number): number => {
       if (feedScan !== undefined) {
@@ -1512,7 +1512,7 @@ const feedScanDirection = (
 /**
  * Whether a residual FilterStep can only re-check what the selector already enforced, so capping
  * the scan before it cannot drop a row it would have kept. True for the empty filter, and for the
- * typename re-check `_generateSelectionFromFilter` emits alongside a TypeSelector — the index
+ * typename re-check `_generateSelectionFromFilter` emits alongside a TypeSelector - the index
  * matches the same typenames, versioned or not, that `compareTypenameStrings` accepts.
  */
 const isSelectorResidualFilter = (filter: QueryAST.Filter, selector: QueryPlan.Selector): boolean => {
@@ -1542,7 +1542,7 @@ const _isAnnotationPredicate = (filter: QueryAST.Filter): boolean =>
   filter.type === 'annotation' || (filter.type === 'not' && filter.filter.type === 'annotation');
 
 /**
- * Returns true if the filter is `annotation`, `child-of`, `has-parent` or `mnemonic` — the post-select pruning filters —
+ * Returns true if the filter is `annotation`, `child-of`, `has-parent` or `mnemonic` - the post-select pruning filters -
  * or composes one via `and` / `or` / `not`. Their FilterSteps genuinely subtract from the
  * SelectStep's candidates (the step is not a re-check of the selector's own predicate), so a
  * limit must never be pushed past them.
@@ -1612,11 +1612,11 @@ export const queryContainsChanges = (query: QueryAST.Query): boolean => {
  * Returns true if the filter is a subquery-membership predicate (`Filter.in(query.project(...))`,
  * AST type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
  * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
- * filter's `props` — the residual FilterStep produced by `_generateSelectionFromFilter`'s `object`
+ * filter's `props` - the residual FilterStep produced by `_generateSelectionFromFilter`'s `object`
  * case (above) is always `type: 'object'`, so this must recurse into `props` to find it.
  *
  * Exported (unlike the sibling `_filterContains*` helpers) so `query-executor.ts`'s `extractScopes`
- * can reuse it — a bare `filter.type === 'in-query'` check there would miss the common case.
+ * can reuse it - a bare `filter.type === 'in-query'` check there would miss the common case.
  */
 export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {

@@ -24,7 +24,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Calls adds WebRTC video and audio conferencing to Composer. A call room is
-      derived from the DXN of any host object — typically a Channel — so starting
+      derived from the DXN of any host object - typically a Channel - so starting
       a call requires no extra setup beyond the object that already exists in your
       space. The live call surface (participant grid, media controls, lobby) runs
       as a deck companion alongside the chat view so chat and video are
@@ -70,7 +70,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // CallManager/CallTransport move as a set with the ReactRoot: its components read the manager
     // via strict useCapability, so the three must share an activation event. The manager's
     // constructor and open() read `client.services`/`client.config` (initialized-only), which the
-    // startup pass no longer implies — the trio rides the client-initialized event instead.
+    // startup pass no longer implies - the trio rides the client-initialized event instead.
     // Browser-only, with the transport below: the manager drives a WebRTC session against the edge
     // calling service and reads `runtime.services.edge.url` in its constructor, so activating it
     // anywhere that config is absent fails the module and auto-disables the whole plugin.

@@ -13,8 +13,8 @@ import { QaError } from '../errors.ts';
 import { loadCases, loadFeed } from './util.ts';
 
 /**
- * Captures the case keys the run covers onto the run itself. Everything afterwards — the rollup and
- * `pushResult`'s validation — reads that capture rather than the plan, so a plan edited mid-run
+ * Captures the case keys the run covers onto the run itself. Everything afterwards - the rollup and
+ * `pushResult`'s validation - reads that capture rather than the plan, so a plan edited mid-run
  * cannot change what the run was measured against. This is the only point where the plan has a say
  * in a run's coverage.
  */

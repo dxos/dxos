@@ -22,7 +22,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       Doctor adds a self-introspection skill to Composer. When the skill
       is loaded the assistant gains access to the queryComposerLogs tool, which
       reads the browser tab's own NDJSON log store (populated by
-      @dxos/log-store-idb) directly from IndexedDB — no log file download or
+      @dxos/log-store-idb) directly from IndexedDB - no log file download or
       external service required. The assistant can use this tool to investigate
       unexpected behaviour, count error occurrences, or explain what happened
       during a specific time window without leaving the chat.

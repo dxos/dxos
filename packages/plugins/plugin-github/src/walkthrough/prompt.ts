@@ -56,7 +56,7 @@ export const SYSTEM_PROMPT = [
   '- Under a heading, write a short paragraph saying what this part does and what constraint it',
   '  satisfies, then show the code it refers to.',
   '',
-  'Showing code — this is the part to get right:',
+  'Showing code - this is the part to get right:',
   '- Reference a change with an EMPTY fenced block, exactly like this, and nothing inside it:',
   '',
   '  ```diff file=path/to/file.ts lines=66-99',

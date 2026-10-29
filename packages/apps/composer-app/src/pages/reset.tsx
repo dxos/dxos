@@ -20,7 +20,7 @@ import { LOG_STORE_DB_NAME, translations } from '../util/index.ts';
 
 const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
 
-// Minimal bootstrap — theme, translations, and the dialog only; no client services or plugins, so
+// Minimal bootstrap - theme, translations, and the dialog only; no client services or plugins, so
 // the page renders even when the app itself cannot boot.
 const handleReset = async () => {
   try {
@@ -29,7 +29,7 @@ const handleReset = async () => {
     await logStore.close();
     const { ok } = await resetComposerStorage((message) => log.info(message));
     if (!ok) {
-      log.error('reset completed with errors — staying on the reset page');
+      log.error('reset completed with errors - staying on the reset page');
       return;
     }
   } catch (error) {

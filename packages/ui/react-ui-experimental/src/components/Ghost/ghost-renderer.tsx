@@ -58,9 +58,9 @@ const defaultConfig: GhostProps = {
 // module whose exports are all components.
 
 export interface GhostController {
-  /** Move the trail to (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  /** Move the trail to (x, y) in normalized canvas coordinates (0-1, top-left origin). */
   move: (x: number, y: number) => void;
-  /** Emit a burst splat at (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  /** Emit a burst splat at (x, y) in normalized canvas coordinates (0-1, top-left origin). */
   splatAt: (x: number, y: number) => void;
 }
 
@@ -94,9 +94,9 @@ export type GhostRenderer = {
   start: () => void;
   stop: () => void;
   splat: (pointer: Pointer) => void;
-  /** Move the primary pointer trail to (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  /** Move the primary pointer trail to (x, y) in normalized canvas coordinates (0-1, top-left origin). */
   move: (x: number, y: number) => void;
-  /** Emit a burst splat at (x, y) in normalized canvas coordinates (0–1, top-left origin). */
+  /** Emit a burst splat at (x, y) in normalized canvas coordinates (0-1, top-left origin). */
   splatAt: (x: number, y: number) => void;
 };
 
@@ -949,7 +949,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
   };
 
-  // Move the primary pointer to normalized (0–1, top-left) coordinates, creating a trail.
+  // Move the primary pointer to normalized (0-1, top-left) coordinates, creating a trail.
   const movePointer = (x: number, y: number) => {
     const pointer = pointers[0];
     const aspectRatio = canvas.width / canvas.height;
@@ -964,7 +964,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
   };
 
-  // Emit a burst splat at normalized (0–1, top-left) coordinates.
+  // Emit a burst splat at normalized (0-1, top-left) coordinates.
   const splatAt = (x: number, y: number) => {
     const pointer = new Pointer();
     pointer.texcoordX = x;

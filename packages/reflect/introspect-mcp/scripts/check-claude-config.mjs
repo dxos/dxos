@@ -38,7 +38,7 @@ const findRepoRoot = (start) => {
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = findRepoRoot(here);
 if (!repoRoot) {
-  console.error('✗ could not find repo root (no pnpm-workspace.yaml)');
+  console.error('X could not find repo root (no pnpm-workspace.yaml)');
   process.exit(1);
 }
 const SETTINGS = join(repoRoot, '.mcp.json');
@@ -46,9 +46,9 @@ const SETTINGS = join(repoRoot, '.mcp.json');
 // time. Subsequent runs reuse the disk cache and complete in seconds.
 const TIMEOUT_MS = 180_000;
 
-const ok = (msg) => console.log(`✓ ${msg}`);
+const ok = (msg) => console.log(`OK ${msg}`);
 const fail = (msg, detail) => {
-  console.error(`✗ ${msg}`);
+  console.error(`X ${msg}`);
   if (detail) {
     console.error(`  ${detail}`);
   }
@@ -74,20 +74,20 @@ if (!entry) {
 }
 ok('found mcpServers["dxos-introspect"] in .mcp.json');
 
-// HTTP-transport entries point at a deployed server — no command/args to validate
+// HTTP-transport entries point at a deployed server - no command/args to validate
 // and no local spawn handshake to run. Exit early with a success indication.
 if (entry.type === 'http') {
   if (typeof entry.url !== 'string' || !entry.url.trim()) {
     fail('http entry has wrong shape (missing or empty url)', JSON.stringify(entry));
   }
   ok(`http entry: ${entry.url}`);
-  console.log('\n✅ .mcp.json points at the hosted introspect MCP server.');
+  console.log('\nOK .mcp.json points at the hosted introspect MCP server.');
   process.exit(0);
 }
 
 const command = entry.command;
 const rawArgs = entry.args ?? [];
-// Resolve relative paths against the repo root — Claude Code spawns with cwd
+// Resolve relative paths against the repo root - Claude Code spawns with cwd
 // set to the workspace root, so the same resolution applies.
 const args = rawArgs.map((a) => (typeof a === 'string' && a.endsWith('.ts') ? resolve(repoRoot, a) : a));
 if (typeof command !== 'string' || !Array.isArray(args)) {
@@ -117,15 +117,15 @@ const usingConditionsSource = args.includes('--conditions=source');
 if (!usingConditionsSource) {
   fail(
     '--conditions=source missing from args',
-    'Without it, tsx fails to resolve @dxos/introspect from src/ — server crashes on import.',
+    'Without it, tsx fails to resolve @dxos/introspect from src/ - server crashes on import.',
   );
 }
 ok('--conditions=source present');
 
 // --- Step 4: spawn the exact same way Claude Code would ----------------
 // Claude Code uses the project root as cwd when spawning project-scoped MCP
-// servers, so we do the same — relative paths in args resolve correctly.
-console.log(`  (spawning server with cwd=${repoRoot} — cold cache ~80s, warm <2s)`);
+// servers, so we do the same - relative paths in args resolve correctly.
+console.log(`  (spawning server with cwd=${repoRoot} - cold cache ~80s, warm <2s)`);
 const child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'], cwd: repoRoot });
 let stdoutBuf = '';
 let stderrBuf = '';
@@ -207,10 +207,10 @@ try {
 }
 const packageCount = payload?.data?.length ?? 0;
 if (packageCount === 0) {
-  fail('list_packages returned 0 packages — indexer may have failed to find the monorepo');
+  fail('list_packages returned 0 packages - indexer may have failed to find the monorepo');
 }
 ok(`tools/call list_packages: ${packageCount} packages`);
 
-console.log('\n✅ .mcp.json entry is valid and the server round-trips real tool calls.');
+console.log('\nOK .mcp.json entry is valid and the server round-trips real tool calls.');
 console.log('   Restart Claude Code (Cmd+Q + relaunch) to pick up the entry.');
 process.exit(0);

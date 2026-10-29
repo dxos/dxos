@@ -84,8 +84,8 @@ export const HybridSkill = {
           specific person or organization, use the Retrieve Subject tool with their name.
 
           - It returns \`messages\` (the actual source emails those facts were extracted from) and
-            \`facts\` (the structured claims). Ground your answer in the \`messages\` — quote and cite
-            them by \`source\` — and use \`facts\` to organize the summary (commitments, requests, etc.).
+            \`facts\` (the structured claims). Ground your answer in the \`messages\` - quote and cite
+            them by \`source\` - and use \`facts\` to organize the summary (commitments, requests, etc.).
           - This is the best tool for "summarize messages from/about X": the facts pinpoint exactly
             which emails are relevant, and the messages give you the verbatim content.
           - If \`factCount\` is 0, say so rather than guessing.

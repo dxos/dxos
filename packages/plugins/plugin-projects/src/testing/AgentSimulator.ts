@@ -16,8 +16,8 @@ import { Task } from '@dxos/types';
 //
 // A simulated agent for delegated project work: a `ScriptedLanguageModel` turn generator that reads
 // the live task graph on every model call and answers with the next tool call a real agent would
-// make. The session, its tools, the task writes, the trace events and the UI are all real — only
-// the model is replaced — so delegation runs end to end offline, at a pace chosen for a demo.
+// make. The session, its tools, the task writes, the trace events and the UI are all real - only
+// the model is replaced - so delegation runs end to end offline, at a pace chosen for a demo.
 //
 // The next turn is derived from the tasks' current state rather than from a fixed list, so the
 // script stays correct whatever order the session's calls interleave in, and a variant is just a
@@ -30,7 +30,7 @@ const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
 export type Pace = {
   /** Held before a turn that starts work. */
   readonly think: Duration.Input;
-  /** Held before a turn that finishes work — the time a task spends `started`. */
+  /** Held before a turn that finishes work - the time a task spends `started`. */
   readonly work: Duration.Input;
 };
 
@@ -131,7 +131,7 @@ const startedAt = (task: Task.Task): number => {
 
 /**
  * Sub-tasks started one per turn, a `think` apart, until all are under way; then whichever is due
- * next finishes — each runs for its own {@link durationOf}, so they end in no fixed order.
+ * next finishes - each runs for its own {@link durationOf}, so they end in no fixed order.
  */
 export const concurrent: Strategy = (state) => {
   const pending = state.subtasks.find((task) => !isFinished(task) && task.status !== 'started');

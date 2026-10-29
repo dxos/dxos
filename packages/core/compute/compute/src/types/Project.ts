@@ -24,7 +24,7 @@ export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
  * artifacts, tasks, and AI chat sessions in project context. Successor to `Topic`.
  *
  * Fields are the refs the project owns and orders; everything that merely accumulates around it is
- * a query — chats by the ECHO parent edge, agents via chats.
+ * a query - chats by the ECHO parent edge, agents via chats.
  */
 export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.6.0'))(
   Schema.Struct({
@@ -51,7 +51,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
       Annotation.FormInputAnnotation.set(false),
     ),
 
-    /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
+    /** Ad hoc markdown checklist - the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(Annotation.SetParent.set())),
 
     /** Owned (or adopted synced) task container, holding the project's tasks and milestones. */
@@ -134,7 +134,7 @@ export type ContextBindings = {
 
 /**
  * Bindings a chat session should receive when running in this project's context: the instructions'
- * skills and context objects. The instructions object itself is NOT bound — its text/commands reach
+ * skills and context objects. The instructions object itself is NOT bound - its text/commands reach
  * the system prompt through the chat's `instructions` ref, and a bound Instructions object would
  * render as an inert context stub. Requires the instructions ref to be resolved (`.target`);
  * unresolved refs contribute nothing.

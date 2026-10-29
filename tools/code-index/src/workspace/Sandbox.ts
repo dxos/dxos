@@ -34,7 +34,7 @@ import * as Log from './Log.ts';
  * network client, no filesystem helper and no database handle, so the capability surface is
  * exactly the namespaces in `sandbox/api.d.ts`.
  *
- * The isolation here is process-level — a fresh interpreter, a scrubbed environment, a temporary
+ * The isolation here is process-level - a fresh interpreter, a scrubbed environment, a temporary
  * working directory and a wall-clock deadline. It bounds accidents (a runaway loop, a snippet that
  * writes where it should not) rather than a hostile snippet, which nothing short of a container
  * would; the model authoring the code is the trust boundary.
@@ -47,7 +47,7 @@ export class SandboxError extends Data.TaggedError('code-index/SandboxError')<{
 
 export type Result = {
   readonly ok: boolean;
-  /** Everything the snippet printed, plus its final value — the model's view of the run. */
+  /** Everything the snippet printed, plus its final value - the model's view of the run. */
   readonly output: string;
   /** What it published to the screen. Appended to the log by the caller, so a run is one commit. */
   readonly presented: readonly Events.Presented[];
@@ -73,7 +73,7 @@ const RUNTIME = fileURLToPath(new URL('./sandbox/runtime.ts', import.meta.url));
 const MAX_OUTPUT = 32_000;
 
 /**
- * The interpreter the snippet runs under. Bun, always — the runtime file is TypeScript and is
+ * The interpreter the snippet runs under. Bun, always - the runtime file is TypeScript and is
  * loaded directly. When the host is itself Bun that is its own binary; under Node (the test suite)
  * it is looked up here, because the child's environment is scrubbed and has no `PATH` to find it
  * with. `undefined` means there is no Bun on this machine, which is a diagnosable condition rather
@@ -99,11 +99,11 @@ const MAX_ROWS = 500;
 /** Edges checked against the index per diagram; past this a diagram is too big to read anyway. */
 const MAX_CHECKED_EDGES = 80;
 
-/** An IRI the indexer could have minted and that a SPARQL `<…>` can hold as written. */
+/** An IRI the indexer could have minted and that a SPARQL `<...>` can hold as written. */
 const isIndexIri = (ref: string): boolean => ref.startsWith(Ontology.IRI_BASE) && !/[\s<>"{}|^`\\]/.test(ref);
 
 const truncate = (text: string): string =>
-  text.length <= MAX_OUTPUT ? text : `${text.slice(0, MAX_OUTPUT)}\n… output truncated (${text.length} chars)`;
+  text.length <= MAX_OUTPUT ? text : `${text.slice(0, MAX_OUTPUT)}\n... output truncated (${text.length} chars)`;
 
 type HostCall = { readonly id: number; readonly method: string; readonly params: Record<string, unknown> };
 
@@ -150,8 +150,8 @@ const make = Effect.gen(function* () {
     );
 
   /**
-   * The edges between two IRI boxes that no triple links in either direction. Drawn anyway — an
-   * edge may summarise a path of several facts — but returned so the model can check them.
+   * The edges between two IRI boxes that no triple links in either direction. Drawn anyway - an
+   * edge may summarise a path of several facts - but returned so the model can check them.
    */
   const unbackedEdges = (source: string): Effect.Effect<string[], SandboxError> =>
     Effect.forEach(
@@ -284,7 +284,7 @@ const make = Effect.gen(function* () {
 
       // Every frame carries this, and the runtime drops it from its environment before evaluating
       // anything, so it is a secret the snippet shares the process with but cannot read. A snippet
-      // can reach fd 3 on its own — `import('node:fs')` and `writeSync(3, …)` — so the descriptor
+      // can reach fd 3 on its own - `import('node:fs')` and `writeSync(3, ...)` - so the descriptor
       // is not by itself an authentication boundary; requiring an unguessable token is what makes a
       // forged `{"done":true}` frame, which would let the snippet dictate its own result, useless.
       // This is integrity of the channel, not isolation: nothing here contains code that means harm.

@@ -66,7 +66,7 @@ export const commentSync = (
   const { reviewBranch, branchText, suggestionBranch, showComments = true } = options;
   const db = doc && Obj.getDatabase(doc);
   // The no-op keeps the comment facets present (so the editor never errors on their absence) while
-  // rendering nothing — used both when comments are unavailable and when the policy hides them.
+  // rendering nothing - used both when comments are unavailable and when the policy hides them.
   if (!doc || !db || !invokePromise || !showComments) {
     return [comments({ id: 'noop' })];
   }
@@ -91,7 +91,7 @@ export const commentSync = (
         // `Relation.getSource` throws while ECHO is still resolving the source proxy (e.g. a
         // just-persisted comment relation, or during restore); skip such anchors until they resolve
         // rather than crash the query listener.
-        // TODO(burdon): Mitigation — the query surfaces relations whose source isn't yet resolved.
+        // TODO(burdon): Mitigation - the query surfaces relations whose source isn't yet resolved.
         //   Fix at the source: have the query defer/await source resolution (or expose a resolved
         //   flag) so callers don't guard each `getSource`; then remove this try/catch.
         try {
@@ -141,7 +141,7 @@ export const commentSync = (
       // `getAnchors()` is already branch-scoped, so selection-style highlights show only the review
       // branch's comments.
       // The editor's comment id is the thread's OBJECT id, never its URI: a URI's spelling changes as
-      // a draft persists (see `CommentState`), which breaks every id comparison downstream —
+      // a draft persists (see `CommentState`), which breaks every id comparison downstream -
       // decoration `data-current`, `scrollCommentIntoView`'s lookup, the delete/update matching below.
       getComments: () =>
         getAnchors()

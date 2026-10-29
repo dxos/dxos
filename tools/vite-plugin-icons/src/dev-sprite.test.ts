@@ -18,7 +18,7 @@ describe('dev sprite', () => {
   const servers: ViteDevServer[] = [];
 
   beforeEach(() => {
-    // Real path: Vite resolves module ids through symlinks (macOS `/var` → `/private/var`), and the
+    // Real path: Vite resolves module ids through symlinks (macOS `/var` -> `/private/var`), and the
     // content globs must match those ids.
     root = fs.realpathSync(fs.mkdtempSync(join(tmpdir(), 'icons-test-')));
     fs.mkdirSync(join(root, 'src'));

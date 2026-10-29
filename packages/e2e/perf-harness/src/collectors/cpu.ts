@@ -15,12 +15,12 @@ export type ProcessCpu = { totalMs: number; byProcess: Record<string, number> };
 /**
  * Reads per-process CPU time, summed and broken out by process.
  *
- * `SystemInfo.getProcessInfo` is the only reading that covers the WHOLE browser — renderer,
+ * `SystemInfo.getProcessInfo` is the only reading that covers the WHOLE browser - renderer,
  * workers, GPU and browser process alike; a renderer-only number misleads for a flow whose work
  * spans realms. Monotonic counters, so a stage's cost is the delta across its boundaries: no
  * sampling, no estimation, one round trip per boundary.
  *
- * Requires the BROWSER-level session — the domain is unreachable from a page session.
+ * Requires the BROWSER-level session - the domain is unreachable from a page session.
  */
 export const readProcessCpu = async (browser: Cdp): Promise<ProcessCpu> => {
   const result = await browser.trySend<{ processInfo: Array<{ type: string; id: number; cpuTime: number }> }>(
@@ -138,7 +138,7 @@ export const readThreadMetrics = async (target: Attached): Promise<ThreadMetrics
 };
 
 /**
- * Difference of two {@link ThreadMetrics} readings — the stage's own main-thread cost.
+ * Difference of two {@link ThreadMetrics} readings - the stage's own main-thread cost.
  *
  * Every field is a cumulative counter, so the subtraction is the whole measurement; unlike
  * {@link diffProcessCpu} nothing is dropped, because a target that vanished has no `after` reading

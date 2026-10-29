@@ -7,7 +7,7 @@ import { presimplify, quantile, simplify } from 'topojson-simplify';
 import { type Topology } from 'topojson-specification';
 
 /**
- * Zoom → minWeight policy. The default thresholds were chosen empirically
+ * Zoom -> minWeight policy. The default thresholds were chosen empirically
  * against the 10m world-atlas dataset: each tier targets a percentile of
  * removable points so that the per-frame d3-geo path cost stays roughly
  * constant as the user zooms in.
@@ -40,7 +40,7 @@ const pickTier = (zoom: number, tiers: SimplifyTier[]): SimplifyTier => {
 export type UseSimplifiedTopologyOptions = {
   /**
    * Zoom buckets that map a zoom value to a simplification percentile. The
-   * hook picks the highest-`minZoom` tier whose bound is ≤ the current zoom,
+   * hook picks the highest-`minZoom` tier whose bound is <= the current zoom,
    * so tiers may be listed in any order but ascending is conventional.
    */
   tiers?: SimplifyTier[];
@@ -53,7 +53,7 @@ export type UseSimplifiedTopologyOptions = {
  * the cheap `simplify` pass against a tier-bucketed `minWeight`.
  *
  * Pass the highest-resolution source you have (typically `10m`) and let the
- * hook decimate at low zoom — that's the cheap end of the curve.
+ * hook decimate at low zoom - that's the cheap end of the curve.
  */
 export const useSimplifiedTopology = (
   topology: Topology | undefined,

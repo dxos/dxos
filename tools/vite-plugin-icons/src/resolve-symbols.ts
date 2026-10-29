@@ -13,7 +13,7 @@ export type ResolveSymbolsResult = {
   /** Symbols whose asset exists, in detection order. */
   resolved: ResolvedSymbol[];
   /**
-   * Symbols with no asset behind them — a mistyped name, or an SVG not added yet — paired with the
+   * Symbols with no asset behind them - a mistyped name, or an SVG not added yet - paired with the
    * path that was looked for. Excluded from the sprite rather than passed to `makeSprite`, whose
    * `readFile` would reject and, from the fire-and-forget debounced write, take the dev server down
    * with it. The path lets the caller watch for the file appearing.

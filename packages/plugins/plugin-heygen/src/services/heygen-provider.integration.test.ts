@@ -12,8 +12,8 @@ import { makeHeyGenProvider } from './heygen-service.ts';
 //
 //   HEYGEN_API_KEY=<key> moon run plugin-heygen:test -- heygen-provider.integration.test.ts
 //
-// It uses `makeHeyGenProvider` — the same proxy-wired provider the app uses — so it covers the full
-// path (edge CORS proxy → HeyGen → response parsing → auth), which the mock-fetch unit tests cannot.
+// It uses `makeHeyGenProvider` - the same proxy-wired provider the app uses - so it covers the full
+// path (edge CORS proxy -> HeyGen -> response parsing -> auth), which the mock-fetch unit tests cannot.
 // See `heygen-provider.test.ts` for the fast, offline contract tests. This is the DXOS pattern for
 // testing a remote API: gate the network suite on the credential env var with `describe.skipIf`.
 //

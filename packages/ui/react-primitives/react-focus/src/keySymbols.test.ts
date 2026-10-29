@@ -19,8 +19,8 @@ describe('keySymbols', () => {
   });
 
   test('names the special keys', () => {
-    expect(keySymbols('Escape')).toEqual(['⎋']);
-    expect(keySymbols('shift+Enter')).toEqual(['⇧', '⏎']);
+    expect(keySymbols('Escape')).toEqual(['\u238B']);
+    expect(keySymbols('shift+Enter')).toEqual(['\u21E7', '\u23CE']);
   });
 
   test('reads control as ctrl', () => {

@@ -82,7 +82,7 @@ const seedOrganizations = () =>
 
 const organizations = Query.select(Filter.type(Organization.Organization));
 
-/** Whether the seeded organizations are present and unchanged — the check a read-only task has to pass. */
+/** Whether the seeded organizations are present and unchanged - the check a read-only task has to pass. */
 const matchesSeed = (results: readonly Organization.Organization[]): boolean =>
   results.length === SEEDED.length &&
   SEEDED.every((seeded) =>
@@ -134,7 +134,7 @@ const defineTask = ({
     ...(seed ? { seed } : {}),
   });
 
-  evalite.each(VARIANTS)(`Code mode — ${title}`, {
+  evalite.each(VARIANTS)(`Code mode - ${title}`, {
     data: [{ input: null }],
     task,
     // Every task needs the workspace, so how many of its calls the agent got right is graded on all.
@@ -173,7 +173,7 @@ defineTask({
     }),
     Scorer.database({
       name: 'nothing-extra-created',
-      description: 'Exactly the three requested organizations exist — no duplicates, no extras.',
+      description: 'Exactly the three requested organizations exist - no duplicates, no extras.',
       query: organizations,
       // Graded apart from the names above: a run that creates all three AND three more has done the
       // task and then some, which is a different failure from having missed one.

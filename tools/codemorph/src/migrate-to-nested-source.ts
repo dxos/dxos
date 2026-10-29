@@ -381,11 +381,11 @@ const main = async () => {
   console.log(`  Total: ${results.length}`);
 
   if (dryRun && converted.length > 0) {
-    console.log('\n⚠️  Run with --apply to make changes.');
+    console.log('\nWarning:  Run with --apply to make changes.');
   }
 
   if (!dryRun && converted.length > 0) {
-    console.log('\n✅ Migration complete. Changes have been written.');
+    console.log('\nOK Migration complete. Changes have been written.');
   }
 };
 

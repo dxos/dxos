@@ -1,7 +1,7 @@
-// Prototype for the task-planning ⇄ Composer sync design
+// Prototype for the task-planning <-> Composer sync design
 // (agents/superpowers/specs/2026-08-01-task-planning-composer-sync-design.md):
 // locate a tasks outline by name, read its checklist through the content ref, and apply a
-// `$track`-style append as a CRDT text edit (updateObject.edits — never a whole-file rewrite,
+// `$track`-style append as a CRDT text edit (updateObject.edits - never a whole-file rewrite,
 // so Automerge history and concurrent Composer edits are preserved).
 //
 // Usage: node task-sync-prototype.mjs <identityKeyHex> <spaceId> [haloSpaceId] [docName] [taskText]
@@ -102,9 +102,9 @@ await mcp(
 const { results } = await call('queryObjects', { typename: 'org.dxos.type.outline', includeContent: true }, 2);
 const doc =
   results.find((candidate) => candidate?.name === docName) ??
-  fail('locate', `no outline named "${docName}" — found: ${results.map((r) => r?.name).join(', ')}`);
+  fail('locate', `no outline named "${docName}" - found: ${results.map((r) => r?.name).join(', ')}`);
 const docId = doc.id ?? doc['@id'] ?? fail('locate', `no id on result: ${JSON.stringify(doc).slice(0, 200)}`);
-console.log(`1. located "${docName}" → ${docId}`);
+console.log(`1. located "${docName}" -> ${docId}`);
 
 // --- 2. Read the checklist through the content ref (two-hop until a readText verb exists). ---
 const contentRef = doc.content?.['/'] ?? fail('content ref', JSON.stringify(doc).slice(0, 300));
@@ -119,4 +119,4 @@ console.log(`3. appended: ${line}`);
 // --- 4. Verify the edit landed. ---
 newContent.includes(line) || fail('verify', `appended line missing from newContent:\n${newContent}`);
 console.log('4. verified in returned content.');
-console.log('OK: task-sync prototype round-trip succeeded (locate → read → edit → verify).');
+console.log('OK: task-sync prototype round-trip succeeded (locate -> read -> edit -> verify).');

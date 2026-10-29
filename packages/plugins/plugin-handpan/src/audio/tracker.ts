@@ -7,7 +7,7 @@ export type PitchTrackerOptions = {
   attackFrames?: number;
   /** Consecutive empty frames (silence or no clear pitch) before the held note is released. */
   releaseFrames?: number;
-  /** Smoothing factor (0–1) for the cents reading of the held note; lower is steadier. */
+  /** Smoothing factor (0-1) for the cents reading of the held note; lower is steadier. */
   smoothing?: number;
 };
 
@@ -71,7 +71,7 @@ export class PitchTracker<T> {
     return this.#current;
   }
 
-  /** Adopts a note immediately — a resolved strike is authoritative, unlike a single frame. */
+  /** Adopts a note immediately - a resolved strike is authoritative, unlike a single frame. */
   set(pitch: TrackedPitch<T>): void {
     this.#current = pitch;
     this.#candidate = undefined;

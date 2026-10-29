@@ -48,7 +48,7 @@ export type FlyToOptions = {
   /**
    * Optional per-frame callback fired before the rotation tween advances.
    * Useful for layered animations (e.g. cursor / arc trails in tours).
-   * `t` runs 0→1 across the eased duration.
+   * `t` runs 0->1 across the eased duration.
    */
   onTick?: (t: number) => void;
   /**

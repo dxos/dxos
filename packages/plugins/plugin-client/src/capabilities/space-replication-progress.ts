@@ -31,8 +31,8 @@ import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } 
 const RECONCILE_INTERVAL = Duration.seconds(10);
 
 /**
- * Publishes per-space replication backlog — automerge documents and ECHO feed blocks combined into a
- * single monitor per space — into the {@link AppCapabilities.ProgressRegistry}. Subscribes to the
+ * Publishes per-space replication backlog - automerge documents and ECHO feed blocks combined into a
+ * single monitor per space - into the {@link AppCapabilities.ProgressRegistry}. Subscribes to the
  * combined sync-state stream and drops a space's monitor once it catches up.
  */
 export default Capability.makeModule(
@@ -72,13 +72,13 @@ export default Capability.makeModule(
     };
 
     // A space that has not finished initializing throws from its `properties` getter, and the
-    // spaces subscription fires before initialization completes (startup, space creation) —
+    // spaces subscription fires before initialization completes (startup, space creation) -
     // so the name is read lazily per sync-state update, and only once the space is SPACE_READY.
     const getSpaceName = (space: Space): string | undefined =>
       space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
 
     // The spaces subscription re-delivers the whole list on every change, so subscribing blindly
-    // would stack a fiber per space per delivery — duplicate writers then race over one monitor key.
+    // would stack a fiber per space per delivery - duplicate writers then race over one monitor key.
     const subscriptions = new Map<SpaceId, Fiber.Fiber<unknown, unknown>[]>();
     const subscribeSpace = (space: Space): void => {
       if (subscriptions.has(space.id)) {

@@ -5,8 +5,8 @@
 /**
  * A screencast recorder that keeps the resolution it is given.
  *
- * Playwright's own `recordVideo` pipes frames into its bundled ffmpeg with a fixed VP8 profile —
- * realtime deadline, one thread, `-b:v 1M` — so a larger frame only spreads the same bitrate thinner:
+ * Playwright's own `recordVideo` pipes frames into its bundled ffmpeg with a fixed VP8 profile -
+ * realtime deadline, one thread, `-b:v 1M` - so a larger frame only spreads the same bitrate thinner:
  * text at 2x device pixels comes out smeared. This takes the JPEG frames from `page.screencast` and
  * encodes them with a full ffmpeg to VP9 at a constant quality instead.
  *
@@ -77,7 +77,7 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
     }
 
     // The concat demuxer takes each entry's duration from the next entry's start, and ignores the last
-    // entry's duration unless the file is listed once more — so the final frame is repeated to hold the
+    // entry's duration unless the file is listed once more - so the final frame is repeated to hold the
     // tail through `stop` instead of collapsing to one frame.
     frames[0].ms = 0;
     const tail = path.join(framesDir, 'tail.jpg');
@@ -136,7 +136,7 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
   };
 
   /**
-   * Discards everything recorded so far — app boot, setup — and restarts the clock. The last frame is
+   * Discards everything recorded so far - app boot, setup - and restarts the clock. The last frame is
    * kept as the new first one so the video opens on the screen as it stands, not on black.
    */
   const cut = () => {

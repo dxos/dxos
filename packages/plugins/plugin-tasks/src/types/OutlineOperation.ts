@@ -14,7 +14,7 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 
 /**
  * Promotes an outline bullet to a task, creating the outline's own task set on first use and
- * appending to its membership array — a three-object write no generic create expresses.
+ * appending to its membership array - a three-object write no generic create expresses.
  */
 export const ConvertToTask = Operation.make({
   meta: {
@@ -80,7 +80,7 @@ export const GetOutline = Operation.make({
 
 /**
  * Upserts checklist items into the markdown so an agent can flip one box without rewriting the
- * document — the text is a human surface too, and prose between items has to survive. A generic
+ * document - the text is a human surface too, and prose between items has to survive. A generic
  * update can only replace the whole string.
  */
 export const UpdateOutline = Operation.make({

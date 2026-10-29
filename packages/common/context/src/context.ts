@@ -139,7 +139,7 @@ export class Context {
     this.#disposeCallbacks.push(callback);
     if (this.#disposeCallbacks.length > this.maxSafeDisposeCallbacks && !this.#leakDetected) {
       this.#leakDetected = true;
-      // A stack is never guaranteed — an engine may omit it entirely — and this is a diagnostic, so
+      // A stack is never guaranteed - an engine may omit it entirely - and this is a diagnostic, so
       // it must not be able to throw out of `onDispose` and break the caller's teardown. Several frames,
       // because the nearest is usually a helper such as `Event.on`, not the code that keeps subscribing.
       const callSite = new StackTrace()

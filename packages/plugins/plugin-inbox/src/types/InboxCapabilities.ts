@@ -27,7 +27,7 @@ export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectE
 /**
  * A mailbox-scoped action injected into the MailboxArticle toolbar menu. A plugin contributes the
  * operation to run plus the input built from the target mailbox (e.g. plugin-brain contributes
- * `Analyze` → `AnalyzeMailbox`); the toolbar renders each as a menu item and invokes it scoped to the
+ * `Analyze` -> `AnalyzeMailbox`); the toolbar renders each as a menu item and invokes it scoped to the
  * mailbox's space.
  */
 export type MailboxAction = {
@@ -39,7 +39,7 @@ export type MailboxAction = {
   icon?: string;
   /**
    * Builds the operation invocation for the target mailbox. The `operation` is returned from this
-   * closure (not held as a value property) so the contributed capability value stays plain data —
+   * closure (not held as a value property) so the contributed capability value stays plain data -
    * embedding an Effect `Operation.Definition` directly makes the capability atom read recurse.
    */
   createInvocation: (mailbox: import('./Mailbox.ts').Mailbox) => {
@@ -55,7 +55,7 @@ export const MailboxAction = Capability.make<MailboxAction>()(`${InboxNamespace.
 
 /**
  * A sender-scoped action injected into the per-message conversation menu. Mirrors {@link MailboxAction}
- * but targets the person who sent the message rather than the mailbox — plugin-crm contributes
+ * but targets the person who sent the message rather than the mailbox - plugin-crm contributes
  * research this way, which is what keeps plugin-inbox from importing it (the dependency runs the
  * other way).
  */
@@ -68,7 +68,7 @@ export type SenderAction = {
   icon?: string;
   /**
    * Builds the invocations to run for a sender, in order. Returns a LIST because the useful actions are
-   * composites — research then image, say — and a contributor should not have to model that as one
+   * composites - research then image, say - and a contributor should not have to model that as one
    * operation. Returning an empty list means the action does not apply to this sender (e.g. no email),
    * and the menu item is omitted.
    *
@@ -100,24 +100,24 @@ export type MailboxProcessorOptions = {
 };
 
 /**
- * One cursored pass over a mailbox feed, contributed by whichever plugin owns it — a node in the
+ * One cursored pass over a mailbox feed, contributed by whichever plugin owns it - a node in the
  * topology {@link import('./InboxOperation.ts').AnalyzeMailbox} resolves and runs.
  *
  * This is the seam that keeps the cascade open: a plugin owning a pass contributes it here rather
  * than plugin-inbox enumerating every pass it must know about. It is deliberately NOT the same thing
  * as `@dxos/pipeline`'s `Stage`, which is a stream transform *within* one run; a processor is coarser
- * — an independently-cursored, separately-spawned operation.
+ * - an independently-cursored, separately-spawned operation.
  */
 export type MailboxProcessor = {
   /**
    * Stable id. Doubles as the topology key and as the tag its feed cursor carries, so a processor's
-   * watermark is its own — two processors sharing an id would silently skip each other's work.
+   * watermark is its own - two processors sharing an id would silently skip each other's work.
    */
   id: string;
   /** Cost class: what the `tiers` filter selects on, and how a run is reported. */
   tier: import('./InboxOperation.ts').MailboxTier;
   /**
-   * Ids this processor must run after. Unknown ids are ignored rather than failing the run — naming a
+   * Ids this processor must run after. Unknown ids are ignored rather than failing the run - naming a
    * processor whose plugin is not installed is the normal case for an optional dependency.
    */
   after?: readonly string[];
@@ -126,7 +126,7 @@ export type MailboxProcessor = {
    * mailbox (reported as skipped rather than attempted).
    *
    * A LIST because a pass is not always about the mailbox as a whole: one scoped to something
-   * narrower — a Project tracking part of a shared feed — has one invocation per subject, and each
+   * narrower - a Project tracking part of a shared feed - has one invocation per subject, and each
    * needs its own cursor. An empty list means the pass had nothing to run and is reported as such,
    * distinctly from a skip.
    *
@@ -160,8 +160,8 @@ export const MailboxProcessor = Capability.make<MailboxProcessor>()(
  * The operation that drafts an AI reply, contributed by whichever plugin can ground one.
  *
  * A seam rather than a direct call because the generator needs a fact store that only plugin-brain
- * provides, while the surfaces that offer the affordance are plugin-inbox's — and the dependency runs
- * brain → inbox. Without a contribution the message surfaces omit the AI-reply affordance entirely,
+ * provides, while the surfaces that offer the affordance are plugin-inbox's - and the dependency runs
+ * brain -> inbox. Without a contribution the message surfaces omit the AI-reply affordance entirely,
  * which is the honest behaviour: there is nothing to invoke.
  */
 export type ReplyGenerator = {
@@ -191,7 +191,7 @@ export type MailSendOperation = {
   /** The contributing provider's `Connector.id` (matched against `Connection.connectorId`). */
   connectorId: string;
   /**
-   * The connection to send a mailbox's mail through when the mailbox has no sync binding — for a
+   * The connection to send a mailbox's mail through when the mailbox has no sync binding - for a
    * provider whose mailboxes are not synced (a sample space's local mail). Undefined declines it.
    */
   resolveConnection?: (

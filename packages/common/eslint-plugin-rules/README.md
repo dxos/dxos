@@ -21,6 +21,7 @@ so `warn` and `error` both fail CI; the distinction is documentary.
 | `effect-subpath-imports` | Subpath imports for Effect packages | warn | yes |
 | `folder-barrel-imports` | A relative import into another folder goes through that folder's barrel (`index` or `testing`) | **off**; packages opt in via `overrides` | no |
 | `import-as-namespace` | `import * as X` for modules marked `@import-as-namespace`, with `X` matching the filename | warn | yes |
+| `latin1-source` | No character above U+00FF in comments, strings, templates, regexes or JSX: one makes V8 hold the module at two bytes per character. No autofix, since a rewrite can change a value code depends on; the error names the Latin-1 spelling, and a suggestion (`oxlint --fix-suggestions`) applies it: ASCII in comments, display strings and JSX, an escape where code needs the exact value (a compared or matched literal, a symbol glyph, an ellipsis that truncation counts, a regex) or the character has no ASCII spelling. `{ loose: true }` (scripts, tools, e2e, stories and experiments in `.oxlintrc.json`) suggests ASCII for every symbol | error | suggestion |
 | `no-bare-dot-imports` | No bare `.` or `..` specifiers | error | yes |
 | `no-effect-run-promise` | `EffectEx.runPromise` from `@dxos/effect` over `Effect.runPromise` | error | no |
 | `no-empty-promise-catch` | `.catch()` is passed a handler | error | yes |

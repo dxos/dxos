@@ -137,7 +137,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
       };
     }, [adapter, editor, onActivate]);
 
-    // Selection, editor → host: the page state's `selectedShapeIds` is a session-scoped record.
+    // Selection, editor -> host: the page state's `selectedShapeIds` is a session-scoped record.
     useEffect(() => {
       if (!editor || !onSelectionChange) {
         return;
@@ -152,7 +152,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
       );
     }, [editor, onSelectionChange]);
 
-    // Selection, host → editor. Compared as sets so the echo of our own report is a no-op.
+    // Selection, host -> editor. Compared as sets so the echo of our own report is a no-op.
     useEffect(() => {
       if (!editor || !selection || sameSet(selectedObjectIds(editor), selection)) {
         return;
@@ -308,7 +308,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
         ref={containerRef}
       >
         <TldrawEditor
-          // Rebind when the adapter recreates its store (e.g. an effect-churn reopen) — a stale
+          // Rebind when the adapter recreates its store (e.g. an effect-churn reopen) - a stale
           // binding draws into an orphaned store whose change listeners are gone, so saves no-op.
           key={`${Obj.getURI(canvas)}:${adapter.store.id}`}
           store={adapter.store}

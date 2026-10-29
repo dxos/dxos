@@ -11,7 +11,7 @@ import type * as ObservabilityExtension from '../../ObservabilityExtension.ts';
  * names its parent with `$ai_parent_id`.
  *
  * `$ai_input_tokens` is the uncached count, which is what PostHog expects alongside the two cache
- * figures — together they price the call, and their ratio is the prompt-cache hit rate.
+ * figures - together they price the call, and their ratio is the prompt-cache hit rate.
  */
 export const AI_GENERATION_EVENT = '$ai_generation';
 export const AI_TRACE_EVENT = '$ai_trace';

@@ -41,7 +41,7 @@ const person = (name: string, email: string): Actor.Actor => ({ role: 'user', na
 export const EMAIL_SEEDS: ReadonlyArray<EmailSeed> = [
   {
     from: person('Dana Ruiz', 'dana@northwind.example'),
-    subject: 'Renewal — need your written OK today',
+    subject: 'Renewal - need your written OK today',
     body: [
       'Hi Sam,',
       'Our contract lapses at midnight and legal will not let us keep using the platform without a written renewal.',
@@ -83,7 +83,7 @@ export const EMAIL_SEEDS: ReadonlyArray<EmailSeed> = [
   },
   {
     from: person('Marta Kowalski', 'marta@board.example'),
-    subject: 'Board deck: slides 4–7',
+    subject: 'Board deck: slides 4-7',
     body: 'Could you review slides 4 to 7 of the board deck before Wednesday and send me your edits?',
     minutesAgo: 210,
   },

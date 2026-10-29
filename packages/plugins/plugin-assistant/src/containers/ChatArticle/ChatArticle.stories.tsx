@@ -65,8 +65,8 @@ import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
  * Replaces the AI service the plugin would build with a scripted model, so a story can drive the real
  * request loop offline and deterministically.
  *
- * The model is built **once** and shared across requests. Constructing it per request — the obvious
- * shape, since `model()` returns a layer — gives each request its own cursor, so every turn replays the
+ * The model is built **once** and shared across requests. Constructing it per request - the obvious
+ * shape, since `model()` returns a layer - gives each request its own cursor, so every turn replays the
  * first reply and a multi-turn story silently answers itself wrongly.
  *
  * Inert until something submits: the model is only consulted on a request, so stories that never submit
@@ -121,7 +121,7 @@ const sendButton = (canvasElement: HTMLElement) => {
 
 /** Two turns: the marker rail needs two prompts to appear, and the status pill needs one to finish. */
 const TWO_TURNS = [
-  { prompt: 'Hello', reply: 'Hi — how can I help?' },
+  { prompt: 'Hello', reply: 'Hi - how can I help?' },
   { prompt: 'What is a feed?', reply: 'A feed is an append-only log.' },
 ];
 
@@ -373,7 +373,7 @@ export const Default: Story = {
  * The article's working tasks, and the disclosure that shows them.
  *
  * The checklist is `Chat.Prompt`'s own collapsible region rather than a sibling the article places,
- * so the toggle in the composer's action bar is the only thing that opens and closes it — this is
+ * so the toggle in the composer's action bar is the only thing that opens and closes it - this is
  * what asserts that wiring, since the button is not the collapsible's own trigger.
  */
 export const Tasks: Story = {
@@ -404,7 +404,7 @@ export const Tasks: Story = {
     await waitFor(() => void expect(region()).not.toHaveAttribute('hidden'), { timeout: 10_000 });
     await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
 
-    // Closing hides the region rather than unmounting it — the list keeps its subscriptions, so
+    // Closing hides the region rather than unmounting it - the list keeps its subscriptions, so
     // reopening shows the checklist it already had rather than refetching it.
     await userEvent.click(toggle());
     await waitFor(() => void expect(region()).toHaveAttribute('hidden'), { timeout: 10_000 });
@@ -419,7 +419,7 @@ export const Tasks: Story = {
 };
 
 /**
- * Drives the real request loop against the scripted model — no network and no seeded feed. This is the
+ * Drives the real request loop against the scripted model - no network and no seeded feed. This is the
  * precondition for exercising rewind against turns the app itself produced.
  */
 export const Scripted: Story = {
@@ -482,7 +482,7 @@ export const Send: Story = {
  * runs after the first, rather than being dropped (the composer used to ignore a submit while a turn
  * was active) or cancelling the turn in flight (`chatModel.request` interrupts, `enqueue` does not).
  *
- * Deliberately no wait between the two submits — that is the whole case. Both replies landing is what
+ * Deliberately no wait between the two submits - that is the whole case. Both replies landing is what
  * proves the second prompt survived; the agent-level ordering and mid-turn arrival are pinned
  * deterministically in `agent-runtime`'s `queue-scripted.test.ts`.
  */
@@ -621,7 +621,7 @@ export const SkillCommandWithText: Story = {
 export const Rewind: Story = {
   args: {
     messages: [
-      { prompt: 'Hello', reply: 'Hi — how can I help?' },
+      { prompt: 'Hello', reply: 'Hi - how can I help?' },
       { prompt: 'What is a feed?', reply: 'A feed is an append-only log.' },
       { prompt: 'What is a feed, in one sentence?', reply: 'An append-only log of immutable blocks.' },
     ],
@@ -646,7 +646,7 @@ export const Rewind: Story = {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     await waitFor(() => void expect(toolbars()).toHaveLength(2), { timeout: 5_000, interval: 200 });
 
-    // Rewind the question — the second prompt's toolbar.
+    // Rewind the question - the second prompt's toolbar.
     toolbars()[1].click();
 
     // The question and its answer leave the thread, and the greeting is untouched.
@@ -674,7 +674,7 @@ export const Rewind: Story = {
 };
 
 /**
- * The rendered conversation, excluding the composer — both are CodeMirror instances, and the composer
+ * The rendered conversation, excluding the composer - both are CodeMirror instances, and the composer
  * holds the restored prompt after a rewind, so an unscoped read cannot tell "still in the thread" from
  * "waiting to be resent".
  */

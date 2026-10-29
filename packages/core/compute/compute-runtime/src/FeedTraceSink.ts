@@ -152,7 +152,7 @@ export const layerDirect: Layer.Layer<Trace.TraceSink, never, FeedTraceSink> = L
 );
 
 /**
- * Convenience that combines {@link layerLive} and {@link layerDirect} — the
+ * Convenience that combines {@link layerLive} and {@link layerDirect} - the
  * pre-refactor shape of `layerLive` (provides both services).
  */
 export const layerLiveWithDirectSink: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Database.Service> =

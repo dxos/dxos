@@ -281,7 +281,7 @@ const json = (response: ServerResponse, status: number, value: unknown) => {
 };
 
 const consentPage = (approveHref: string) => `<!doctype html>
-<html><head><title>Test MCP — Authorize</title>
+<html><head><title>Test MCP - Authorize</title>
 <style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;height:100vh;margin:0}
 main{border:1px solid #ccc;border-radius:12px;padding:32px;text-align:center}
 a{display:inline-block;margin-top:16px;padding:10px 24px;border-radius:8px;background:#2563eb;color:#fff;text-decoration:none}</style>

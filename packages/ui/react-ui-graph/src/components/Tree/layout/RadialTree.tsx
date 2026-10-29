@@ -35,7 +35,7 @@ export type RadialTreeProps = Util.ThemedClassName<{
   onNodeClick?: (node: TreeNode) => void;
   /**
    * Notified on pointerenter (and `null` on pointerleave) for nodes. Used to wire previews
-   * (dispatch `DxAnchorActivate`). The event target on enter is the hovered circle — dispatch
+   * (dispatch `DxAnchorActivate`). The event target on enter is the hovered circle - dispatch
    * from it so the preview anchors there.
    */
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;

@@ -16,16 +16,16 @@ export type CreateRendererOptions = {
 
 /**
  * The assistant's projection of a message: each block flattened to markdown, everything that is not
- * prose emitted as an XML tag for the registry's widgets. The view type is a filter over blocks —
+ * prose emitted as an XML tag for the registry's widgets. The view type is a filter over blocks -
  * the model always carries everything, so switching views is a re-render, not a re-fetch.
  *
- * Consecutive tool blocks (`toolCall`/`toolResult`/`stats`) — along with the `status` and `reasoning`
- * blocks that narrate them — render as ONE `<toolkit>` tag carrying the run as JSON: the panel
- * widget shows a run of calls as tabs, and the item is rebuilt from its message alone — there is no
+ * Consecutive tool blocks (`toolCall`/`toolResult`/`stats`) - along with the `status` and `reasoning`
+ * blocks that narrate them - render as ONE `<toolkit>` tag carrying the run as JSON: the panel
+ * widget shows a run of calls as tabs, and the item is rebuilt from its message alone - there is no
  * side channel accumulating widget state (the old `MessageSyncer` machinery this package retires).
  *
  * Narration opens a run of its own where no call follows, so a turn the model spends only saying
- * what it is doing reads as one panel rather than a widget per block — and a call arriving later
+ * what it is doing reads as one panel rather than a widget per block - and a call arriving later
  * lands in the panel the status already opened instead of displacing it.
  */
 export const createRenderer = (
@@ -77,7 +77,7 @@ export const createRenderer = (
         continue;
       }
 
-      // Stats belong to their own widget, not the tool panel — but they arrive mid-run, so they
+      // Stats belong to their own widget, not the tool panel - but they arrive mid-run, so they
       // must not flush it either, or a run becomes one panel per call again.
       if (block._tag === 'stats') {
         const rendered = blockToMarkdown(message, block, getObjectLabel);
@@ -102,7 +102,7 @@ export const createRenderer = (
 
     // A run of suggestions joins on one line so the chips flow; everything else is separated by a
     // blank line so it parses as its own markdown block. No separator character between chips,
-    // because `break-spaces` does not hang a space at a line break — it would indent the next row.
+    // because `break-spaces` does not hang a space at a line break - it would indent the next row.
     const text = segments
       .reduce<string[]>((parts, segment) => {
         const previous = parts[parts.length - 1];
@@ -144,12 +144,12 @@ const blockToMarkdown = (
       // The disposition marks system-generated input, not the sender: the thread folds a run of
       // machinery messages into one and keeps the FIRST message's identity, so an alarm turn's
       // synthetic prompt arrives on a message the previous turn's trailing `stats` made
-      // assistant-role — and keying on the role rendered it as the model's own prose.
+      // assistant-role - and keying on the role rendered it as the model's own prose.
       if (block.disposition === 'synthetic') {
         // Synthetic context riding ON a prompt is the chrome's: it renders as its own panel above
         // the bubble, so the bubble frames only the reader's words. A message that is ONLY synthetic
         // is not the reader speaking at all (a trigger, a continuation nudge), so it renders as its
-        // own panel row — emitted here, since a message the renderer maps to nothing is dropped as
+        // own panel row - emitted here, since a message the renderer maps to nothing is dropped as
         // an empty row, which left the answer to it reading as unprompted.
         return isPrompt(message) ? undefined : tag('synthetic', block.text, block);
       }
@@ -201,7 +201,7 @@ const blockToMarkdown = (
 /** Tool name of a recovered background result; the widget names it, since the original call is gone. */
 export const BACKGROUND_TOOL = 'background';
 
-/** The agent runtime's `<result pid=…>` / `<error pid=…>` prompt for a background tool's outcome. */
+/** The agent runtime's `<result pid=...>` / `<error pid=...>` prompt for a background tool's outcome. */
 const RECOVERED_RESULT = /^<(result|error) pid=([^>\s]+)>([\s\S]*)<\/\1>$/;
 
 const recoveredToolResult = (block: ContentBlock.Any): ContentBlock.ToolResult | undefined => {
@@ -306,7 +306,7 @@ const LINE_CHARS = 90;
 const PANEL_HEIGHT = 50;
 
 /**
- * What a row will measure, from the message alone. Rough on purpose — its only job is to be close
+ * What a row will measure, from the message alone. Rough on purpose - its only job is to be close
  * enough that measuring the row does not move the rows below it.
  */
 export const estimateRow = (message: Message.Message): number => {
@@ -349,7 +349,7 @@ const CODE = /(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g;
 const BARE_OBJECT_URI = /(^|\s)@?(echo:\/\/[A-Za-z0-9]+(?:\/[A-Za-z0-9]+)?)(?=$|[\s.,;:!?)])/gm;
 
 /**
- * Bare `echo://…` URIs in the model's prose become the markdown forms the editor renders: one alone
+ * Bare `echo://...` URIs in the model's prose become the markdown forms the editor renders: one alone
  * on its line is the object shown, so it becomes an embed; one inside a sentence becomes a link.
  * The model writes the bare form at least as readily as either, and unrewritten it is just text.
  */

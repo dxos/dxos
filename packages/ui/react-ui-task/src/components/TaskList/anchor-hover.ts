@@ -4,7 +4,7 @@
 
 import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
 
-/** Delay before hover opens the preview — long enough that crossing the anchor en route elsewhere does not fire it. */
+/** Delay before hover opens the preview - long enough that crossing the anchor en route elsewhere does not fire it. */
 const HOVER_OPEN_DELAY = 100;
 
 /** Grace period after the pointer leaves the anchor/card before the preview closes, so it can travel between them. */

@@ -82,7 +82,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
     }),
   );
 
-  // A companion of the doc plank. Companions need no `urlKey` — they are addressed generically as
+  // A companion of the doc plank. Companions need no `urlKey` - they are addressed generically as
   // `companion/<variant>` (variant = the `~`-stripped segment), resolved against the preceding plank.
   const comments = Effect.runSync(
     GraphBuilder.createExtension({
@@ -161,7 +161,7 @@ const buildTestBuilder = (): GraphBuilder.GraphBuilder => {
 
   // A nested shape (a subgroup under the group, docs under that). The `nested` key declares path
   // `[GROUP_ID]` and a minimum depth of 2, so the remaining segments (`subgroup`, `<id>`) are `+`-encoded
-  // into the pair id — a static path with no resolver, exercising the multi-segment tail.
+  // into the pair id - a static path with no resolver, exercising the multi-segment tail.
   const subGroup = Effect.runSync(
     GraphBuilder.createExtension({
       id: 'subGroup',
@@ -329,7 +329,7 @@ describe('path-resolution', () => {
       expect(Option.getOrThrow(represented)).toEqual({ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A });
     });
 
-    test('resolves an inline child node (produced in a parent node’s nodes array)', async ({ expect }) => {
+    test("resolves an inline child node (produced in a parent node's nodes array)", async ({ expect }) => {
       const builder = buildTestBuilder();
       const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
@@ -450,7 +450,7 @@ describe('path-resolution', () => {
 
     test('a resolver candidate waits for the deadline like a static one', async ({ expect }) => {
       // Dynamic resolvers name the recursive shapes (nested collections) whose containers are the
-      // slowest to materialize, so they need the wait at least as much as static paths do — they
+      // slowest to materialize, so they need the wait at least as much as static paths do - they
       // used to get none, and a cold deep link into one landed on not-found.
       const builder = buildTestBuilder();
       const started = Date.now();

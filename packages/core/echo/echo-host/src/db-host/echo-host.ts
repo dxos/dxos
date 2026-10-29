@@ -151,7 +151,7 @@ import { type QueryExecutorMode } from '../query/index.ts';
 /**
  * Query evaluation path for this host: the explicit option, else `DX_ECHO_QUERY_EXECUTOR`, else the
  * compiled SQL executor. Resolved here, where the option enters, so nothing below reads the
- * environment — the planner and executor take the mode they are given.
+ * environment - the planner and executor take the mode they are given.
  *
  * `memory` remains reachable so a regression can be bisected against the old path without a rebuild,
  * and the planner still falls back to it per query for the shapes the compiler declines.
@@ -602,7 +602,7 @@ export class EchoHost extends Resource {
    * (client still has an open service ref while the host is in/post-teardown)
    * has nothing to update against. The pre-loop and post-iteration
    * `_ctx.disposed` checks prevent `runBlocking` from being entered against a
-   * disposed context — which would throw `ContextDisposedError` and escape as
+   * disposed context - which would throw `ContextDisposedError` and escape as
    * an unhandled rejection at the fire-and-forget originating caller. Other
    * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
@@ -736,7 +736,7 @@ export class EchoHost extends Resource {
   /**
    * Creates a space anchored on an immutable space root document, which carries the credentials
    * document. The id still derives from the space genesis key, exactly as a feed-backed space's
-   * does — the root changes where credentials live, not how the space is identified.
+   * does - the root changes where credentials live, not how the space is identified.
    *
    * NOTE: `createSpaceRoot` above creates the DIRECTORY, which predates this naming.
    */
@@ -775,7 +775,7 @@ export class EchoHost extends Resource {
   /**
    * Mints a space root over a legacy space's existing directory, keeping the space id: it was derived
    * from the space key and cannot be reproduced from a document, which is what `spaceKey` derivation
-   * records. Idempotent — a space that already has a root keeps it, so a re-run cannot fork the anchor.
+   * records. Idempotent - a space that already has a root keeps it, so a re-run cannot fork the anchor.
    */
   async migrateSpaceToRootDocument(ctx: Context, spaceId: SpaceId): Promise<SpaceRootRefs | undefined> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
@@ -807,7 +807,7 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Links an already-created credentials document from the space root, once. Idempotent — the link is
+   * Links an already-created credentials document from the space root, once. Idempotent - the link is
    * what the per-space source flip keys off, so a second document would fork the chain. The document
    * itself is built a layer up, where credential encoding lives.
    */
@@ -1242,9 +1242,9 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Retirement, in every direction. Documents the space directory has retired are wiped without being read —
+   * Retirement, in every direction. Documents the space directory has retired are wiped without being read -
    * the share of every peer. Linked documents this host could not load, or whose history outgrew their state,
-   * are rebuilt from the index and retired in the directory — the share of the peer that found them.
+   * are rebuilt from the index and retired in the directory - the share of the peer that found them.
    */
   async #retireDocuments(spaceId: SpaceId): Promise<void> {
     if (this._ctx.disposed || !this.isOpen) {
@@ -1542,7 +1542,7 @@ export class EchoHost extends Resource {
    * maintenance, and a space that fails to reclaim is only still holding disk.
    *
    * A retired root is expanded to its whole closure rather than trusting the departed set. The
-   * diff only knows what this peer observed, and the directory listing is debounced — a document
+   * diff only knows what this peer observed, and the directory listing is debounced - a document
    * linked and then orphaned in quick succession may never have appeared in a listing at all.
    * Walking the retired root makes an epoch deterministic regardless of what was seen.
    *
@@ -1571,7 +1571,7 @@ export class EchoHost extends Resource {
         // could have been re-linked (a concurrent write merging in), and reachable data is never
         // a collection candidate.
         // An unreadable live directory is unknown reachability, not empty reachability: taking it
-        // as empty would make every candidate — including documents a new root carried forward —
+        // as empty would make every candidate - including documents a new root carried forward -
         // read as collectable. Skipping only defers, since the explicit pass scans for orphans.
         const root = this._spaceStateManager.getRootBySpaceId(spaceId);
         if (!root || !(await this.#loadFromStorage(root.documentId))) {
@@ -1580,7 +1580,7 @@ export class EchoHost extends Resource {
         }
         // Only the candidates' reachability is in question, so the walk stops as soon as every one
         // has been found rather than enumerating the whole space. Proving a candidate *unreachable*
-        // still costs a full traversal — that is inherent to reachability — but the common
+        // still costs a full traversal - that is inherent to reachability - but the common
         // re-link case now exits after a few loads instead of thousands.
         const reachable = await this.#collectClosure(root.documentId, candidates);
 
@@ -1601,7 +1601,7 @@ export class EchoHost extends Resource {
 
         // Index state first: the indexer enumerates documents from their heads rows and cursors,
         // and a pass landing between the wipe and this cleanup would re-load a document whose
-        // bytes are gone — which re-creates it as an empty document and persists it again.
+        // bytes are gone - which re-creates it as an empty document and persists it again.
         await RuntimeProvider.runPromise(this._runtime)(
           this.indexEngine.deleteObjects({ spaceId, documentIds: stale, objects: [] }),
         );
@@ -1745,7 +1745,7 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * GC step 1: remove soft-deleted objects from the space directory — deleted inlined objects are
+   * GC step 1: remove soft-deleted objects from the space directory - deleted inlined objects are
    * dropped from the root document; deleted linked objects (and links dangling to a missing
    * document) have their `links` entry removed, orphaning the document for step 2.
    */
@@ -1772,7 +1772,7 @@ export class EchoHost extends Resource {
       const doc = lease?.doc();
       if (!doc) {
         // A storage-only miss is ambiguous: the document may be genuinely gone, or it may be live
-        // data this host has not replicated yet. Retain the link — unlinking here would sync the
+        // data this host has not replicated yet. Retain the link - unlinking here would sync the
         // removal and make a live object unreachable. Only a loaded, confirmed-deleted object is
         // unlinked below.
         continue;
@@ -1817,7 +1817,7 @@ export class EchoHost extends Resource {
   /**
    * GC step 2: wipe every document owned by the space that is no longer reachable from the (post
    * step-1) directory. Reachability is recomputed here so just-unlinked documents fall out of the
-   * set. Attribution is the safety boundary — a document is wiped only when its `access.spaceId`
+   * set. Attribution is the safety boundary - a document is wiped only when its `access.spaceId`
    * matches; a document that cannot be loaded (offline) or carries no owner is left untouched.
    */
   async #wipeUnreachableDocuments(spaceId: SpaceId, root: DatabaseRoot): Promise<DocumentId[]> {
@@ -1866,7 +1866,7 @@ export class EchoHost extends Resource {
     scheduleTask(
       this._ctx,
       async () => {
-        // A later write re-armed the timer, so its run covers this one too — unless the ceiling
+        // A later write re-armed the timer, so its run covers this one too - unless the ceiling
         // has passed, where waiting again is the thing being prevented.
         if (generation !== this.#ftsFlushGeneration && performance.now() < deadline) {
           return;
@@ -2063,10 +2063,10 @@ export class EchoHost extends Resource {
         }
 
         // Convergence-key duplicates are born from replication, and a replicated write is exactly what
-        // was just indexed — so this is the earliest a duplicate can be detected on this device.
+        // was just indexed - so this is the earliest a duplicate can be detected on this device.
         // The trigger is the durable intent log, committed no later than the index cursors: a crash
-        // or a faulted merge pass leaves the intents in place, and this pass —
-        // which also runs once at every startup — retries them, so no detected duplicate is ever
+        // or a faulted merge pass leaves the intents in place, and this pass -
+        // which also runs once at every startup - retries them, so no detected duplicate is ever
         // silently dropped. The merge's own writes land back here via `documentsSaved`, which
         // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.
         const { maxId, intents } = await this.indexEngine
@@ -2186,7 +2186,7 @@ export class EchoHost extends Resource {
         log.verbose('indexEngine update completed', summary);
       }
       await sleep(1);
-      // Invalidate queries after index update — the indexer is the sole invalidation source.
+      // Invalidate queries after index update - the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }

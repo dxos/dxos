@@ -16,9 +16,9 @@ import * as Generation from './Generation.ts';
 
 /**
  * Provider-agnostic, per-`kind` generation contract shared by plugin-studio and provider
- * implementations (e.g. plugin-ideogram). These are NOT ECHO objects — they are plain Effect
+ * implementations (e.g. plugin-ideogram). These are NOT ECHO objects - they are plain Effect
  * schemas / interfaces passed across the {@link StudioCapabilities.GenerationService} capability
- * boundary. The kind-specific request config — including the prompt — is described by each provider's
+ * boundary. The kind-specific request config - including the prompt - is described by each provider's
  * `requestSchema` and validated by the provider itself; studio just renders the form.
  */
 
@@ -98,17 +98,17 @@ export interface GenerateOptions {
 /**
  * A pluggable generation provider for one `kind`. Plugins contribute implementations via the
  * {@link StudioCapabilities.GenerationService} capability; the `generate` operation resolves them by
- * kind (+ optional provider id) and is credential-agnostic — it resolves the API key from the
+ * kind (+ optional provider id) and is credential-agnostic - it resolves the API key from the
  * Connector-managed `AccessToken` (via `CredentialsService`, keyed by {@link source}) and passes it
  * in. `source` is undefined for keyless providers (e.g. the test mock).
  *
  * A provider is either **synchronous** (implements {@link generate}, e.g. a single request/response
  * like Ideogram) or **asynchronous/job-based** (implements {@link enqueue} + {@link awaitResult},
- * e.g. HeyGen: submit → poll). The generate operation persists the job id on the MediaArtifact between
+ * e.g. HeyGen: submit -> poll). The generate operation persists the job id on the MediaArtifact between
  * enqueue and completion so a long poll resumes across navigation/remount.
  */
 export interface GenerationService {
-  /** Media discriminator this provider serves: 'image' | 'video' | 'audio' | …. */
+  /** Media discriminator this provider serves: 'image' | 'video' | 'audio' | .... */
   readonly kind: string;
   /** Provider id, e.g. 'ideogram'. */
   readonly id: string;
@@ -118,7 +118,7 @@ export interface GenerationService {
   /** `AccessToken.source` of the credential this provider needs (e.g. "ideogram.ai"). */
   readonly source?: string;
   /**
-   * `Connection.connectorId` of the Connector that authenticates this provider — lets the UI render
+   * `Connection.connectorId` of the Connector that authenticates this provider - lets the UI render
    * the connector's "Connect" button (contributed to the app graph) when no credential is present.
    */
   readonly connectorId?: string;
@@ -127,13 +127,13 @@ export interface GenerationService {
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
   /**
-   * Loaders for request fields whose values come from the provider (keyed by JSON path — HeyGen's
+   * Loaders for request fields whose values come from the provider (keyed by JSON path - HeyGen's
    * avatars/voices, a model catalogue). Studio renders each as a combobox over the loaded list,
    * resolves the credential, and caches the result per provider/field/credential, so a provider
    * supplies only the fetch. A static list is a loader that ignores its request.
    */
   readonly fieldOptions?: Record<string, (request: FieldOptionsRequest) => Promise<readonly FieldOption[]>>;
-  /** Per-field renderers (keyed by JSON path) for the schema-driven form — customizes specific
+  /** Per-field renderers (keyed by JSON path) for the schema-driven form - customizes specific
    * request fields without replacing the whole form; takes precedence over {@link fieldOptions}. */
   readonly fieldMap?: FormFieldMap;
   /** One-shot generation (synchronous providers). Mutually exclusive with enqueue/awaitResult. */

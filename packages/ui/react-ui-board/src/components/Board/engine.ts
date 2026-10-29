@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 /**
  * Position of a tile in grid cells. `w`/`h` (column/row span) are optional and default to 1, so a
- * bare `{ x, y }` is a 1×1 tile — this is the shape `plugin-board` already persists.
+ * bare `{ x, y }` is a 1×1 tile - this is the shape `plugin-board` already persists.
  */
 export const GridPosition = Schema.Struct({
   x: Schema.Number,
@@ -26,7 +26,7 @@ export type Layout<Pos = GridPosition> = { items: Record<string, Pos> };
 
 /**
  * Board extent in cells. `columns` bounds the horizontal axis (used for clamping and right-push
- * fallback); `rows` is a soft minimum — the board grows past it as tiles are placed lower.
+ * fallback); `rows` is a soft minimum - the board grows past it as tiles are placed lower.
  */
 export type Bounds = { columns?: number; rows?: number };
 
@@ -48,7 +48,7 @@ export type ResolveOptions = { bounds?: Bounds; constraints?: GridConstraints; m
 
 /**
  * Decides what a drop does. Given the current layout, the id being placed and its target position
- * (carrying the desired `x,y,w,h`), returns the resulting layout — or `null` to reject the drop, in
+ * (carrying the desired `x,y,w,h`), returns the resulting layout - or `null` to reject the drop, in
  * which case the tile springs back. Built-in resolvers never produce overlaps.
  */
 export type DropResolver<Pos = GridPosition> = (
@@ -133,7 +133,7 @@ const deriveDirection = (from: Cell, to: Cell): PushDirection => {
 /**
  * Fixes the `movedId` item in place and pushes every other item that overlaps it (directly or by
  * cascade) to clear the overlap, along `direction`. Each direction places a displaced item flush to
- * the far side of what it hit (`right`→+x, `left`→−x, `down`→+y, `up`→−y). A push that would cross a
+ * the far side of what it hit (`right`->+x, `left`->-x, `down`->+y, `up`->-y). A push that would cross a
  * bound (past `columns` on the right, or before 0 on the left/top) falls back to pushing down, since
  * rows grow freely. Candidates are processed in a deterministic sweep ordered along the push axis so
  * a pushed item only ever collides with items later in the sweep.
@@ -177,7 +177,7 @@ export const resolveCollisions = <Pos extends GridPosition>(
       } else if (direction === 'up' && collision.y - current.h >= 0) {
         current = { ...current, y: collision.y - current.h };
       } else {
-        // Down push, or a horizontal/upward push that would cross a bound → fall back to down.
+        // Down push, or a horizontal/upward push that would cross a bound -> fall back to down.
         current = { ...current, y: collision.y + collision.h };
       }
       collision = settled.find((other) => overlaps(current, other));
@@ -233,7 +233,7 @@ export const pushToFit: DropResolver = (layout, id, to, options = {}) => {
 
 /**
  * Places the tile at `to`, shrinking it (width first, then height) until it no longer overlaps a
- * neighbour. Returns `null` if not even a 1×1 tile fits at that spot (reject → springs back).
+ * neighbour. Returns `null` if not even a 1×1 tile fits at that spot (reject -> springs back).
  */
 export const resizeToFit: DropResolver = (layout, id, to, options = {}) => {
   const item = layout.items[id];

@@ -24,7 +24,7 @@ export const mdlBlockDescription = LanguageDescription.of({
 /**
  * CodeMirror extensions for Spec .mdl block-body highlighting and fence decoration.
  * Given an `index`, it also lints spec references and dependencies against it.
- * Does NOT include the Markdown language itself — pass mdlBlockDescription to
+ * Does NOT include the Markdown language itself - pass mdlBlockDescription to
  * createMarkdownExtensions() instead so it merges cleanly with the standard language set.
  */
 export const mdl = ({ index }: { index?: SpecIndex | (() => SpecIndex | undefined) } = {}): Extension =>

@@ -23,7 +23,7 @@ export type AttachmentViewerProps = Util.ThemedClassName<{
 }>;
 
 /**
- * Renders an attachment's bytes according to its kind. Presentation only — resolving the blob to a url
+ * Renders an attachment's bytes according to its kind. Presentation only - resolving the blob to a url
  * is the container's job (`useBlobUrl`), so this stays testable without ECHO.
  *
  * PDFs render in a sandboxed `<iframe>`: the browser's own viewer is far better than anything worth

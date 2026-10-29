@@ -15,7 +15,7 @@ const PORT = 21999;
 
 /**
  * Buffers messages from the moment the socket exists. The server greets a client the instant it
- * connects, so a listener attached after `open` races that greeting — as the real client does not,
+ * connects, so a listener attached after `open` races that greeting - as the real client does not,
  * since it registers its handler when it constructs the socket.
  */
 class TestClient {

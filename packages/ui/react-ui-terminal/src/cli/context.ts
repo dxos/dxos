@@ -19,7 +19,7 @@ import * as XtermTerminal from './terminal.ts';
  *
  * Of `Command.Environment`, `Path` is already pure JS upstream and the CLI's browser-safe commands
  * never touch the filesystem or spawn a process, leaving `Terminal` and `Stdio` to implement. The
- * console override is merged in too — contributing no services of its own — so command output and
+ * console override is merged in too - contributing no services of its own - so command output and
  * the CLI's ANSI help text land in the terminal instead of the devtools console.
  */
 export type Provided = Command.Environment;

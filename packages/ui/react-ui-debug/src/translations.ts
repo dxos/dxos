@@ -20,9 +20,9 @@ export const translations = [
         'levels.reset.label': 'Reset all levels',
         'levels.inherit.label': 'Inherit',
         'levels.empty.message': 'No log files registered yet.',
-        'levels.filter.placeholder': 'Filter files…',
+        'levels.filter.placeholder': 'Filter files...',
         'empty.message': 'No log entries.',
-        'search.placeholder': 'Find in buffer…',
+        'search.placeholder': 'Find in buffer...',
         'search.clear.label': 'Clear filter',
         'search.no-matches.message': 'No matching entries.',
         // oxlint-disable-next-line @dxos/rules/translation-key-format

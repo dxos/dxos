@@ -6,7 +6,7 @@ import { FAVICON_BASE64, ICON_BASE64, ICON_SIZE } from './icon-data.ts';
 
 /**
  * The mark, for a host that can serve it. Kept apart from {@link identity} because only an HTTP
- * host has an origin to serve an icon from — a stdio host advertises the name and title and never
+ * host has an origin to serve an icon from - a stdio host advertises the name and title and never
  * reaches this module, so the embedded bytes stay out of its bundle.
  */
 
@@ -18,7 +18,7 @@ export const FAVICON_PATH = '/favicon.ico';
  * Icon descriptors for `serverInfo`, absolute against the origin the client actually reached.
  *
  * The specification directs clients to verify that an icon URI is same-origin as the server and to
- * fetch it without credentials, so the origin must be the external one — which is not the origin a
+ * fetch it without credentials, so the origin must be the external one - which is not the origin a
  * worker sees when TLS terminates in front of it.
  */
 export const icons = (origin: string) => [

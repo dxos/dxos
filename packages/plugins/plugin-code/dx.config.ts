@@ -27,7 +27,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       structured DEUS spec document (a .mdl file describing types, components,
       operations, and acceptance tests) with a CodeProject that holds the
       TypeScript source tree produced from that spec. Both objects live in ECHO,
-      so edits are CRDT-merged and fully reactive — the same space can be shared
+      so edits are CRDT-merged and fully reactive - the same space can be shared
       with collaborators or an AI agent without any special sync infrastructure.
 
       The Coder skill drives the authoring loop: the assistant refines the

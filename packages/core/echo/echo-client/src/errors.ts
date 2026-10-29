@@ -9,7 +9,7 @@ export class EchoClientError extends BaseError.extend('EchoClientError', 'ECHO c
 
 /**
  * The host reported that it cannot produce a document: it holds no bytes for the id and has no
- * source to fetch them from. Distinct from a slow load — nothing is in flight, so waiting longer
+ * source to fetch them from. Distinct from a slow load - nothing is in flight, so waiting longer
  * cannot help.
  */
 export class DocumentUnavailableError extends BaseError.extend(
@@ -29,7 +29,7 @@ export const CLOSE_REASON_ATTRIBUTE = 'echo-client.closeReason';
 
 /**
  * The repo proxy is no longer able to reach the host: the client is closing or has closed, so the
- * document can never be produced. Expected during teardown — work started while the proxy was open
+ * document can never be produced. Expected during teardown - work started while the proxy was open
  * routinely lands after it, and callers that can abandon quietly should.
  *
  * `closeReason` and the `cause` say what stopped the proxy: a close (the cause's stack is the call site) or the

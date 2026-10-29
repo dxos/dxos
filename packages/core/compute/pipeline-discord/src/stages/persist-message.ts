@@ -25,10 +25,10 @@ const toStored = (target: Type.Target, message: Type.Message): MessageStore.Stor
 /**
  * Persist each message into the SQLite working set, and DROP messages that are already stored:
  * after a hard interrupt the durable cursor can lag what was processed (commit-after-process), so
- * a resumed crawl refetches an overlap window — dropping known ids here keeps every downstream
+ * a resumed crawl refetches an overlap window - dropping known ids here keeps every downstream
  * effect (agent stats, extraction, question answering) exactly-once. Non-message events pass
  * through untouched; a store failure is recorded on the target and the message is dropped (not
- * forwarded) so the commit sink cannot advance the durable cursor past an un-stored message —
+ * forwarded) so the commit sink cannot advance the durable cursor past an un-stored message -
  * the message is refetched and retried on the next resume.
  */
 export const persistMessageStage = (): Stage.Stage<
@@ -46,7 +46,7 @@ export const persistMessageStage = (): Stage.Stage<
         ? Effect.succeed(event)
         : Effect.gen(function* () {
             if (yield* MessageStore.has(event.message.id)) {
-              // Replayed message (resume overlap) — drop before it reaches downstream stages. The
+              // Replayed message (resume overlap) - drop before it reaches downstream stages. The
               // commit sink also never sees it, which is safe: the cursor already covers this id.
               return undefined;
             }

@@ -12,7 +12,7 @@ import { type Stage, StageWrite } from '../types/stage.ts';
 export type SummarizationInput = { window: ContentBlock.Transcript[] };
 
 /**
- * Stage ④: maintain a cumulative summary. Fires on the silence edge, skips if a summary is already
+ * Stage (4): maintain a cumulative summary. Fires on the silence edge, skips if a summary is already
  * in flight. The deterministic implementation concatenates corrected utterances; the LLM seam
  * (see `run`) replaces it with a cumulative model summary plus referent resolution.
  */
@@ -28,7 +28,7 @@ export const makeSummarizationStage = (): Stage<SummarizationInput> => ({
         return StageWrite.empty();
       }
       // TODO(LLM seam): replace with a cumulative LLM summary that resolves deictic referents
-      // ("I" → speaker, "there" → prior entity) and writes `resolvedReferents`.
+      // ("I" -> speaker, "there" -> prior entity) and writes `resolvedReferents`.
       return StageWrite.transcript({
         summary: utterances.join(' '),
         summaryUpdatedAt: new Date().toISOString(),

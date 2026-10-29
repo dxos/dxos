@@ -91,7 +91,7 @@ describe('computeActiveUpdates', () => {
   });
 
   describe('companionPlanks', () => {
-    // Entries survived every close, so a long-lived deck accreted one per plank ever opened — a live
+    // Entries survived every close, so a long-lived deck accreted one per plank ever opened - a live
     // profile measured fourteen, with duplicates.
     test('prunes companion state for planks no longer open, and dedupes', ({ expect }) => {
       const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['a', 'a', 'b', 'ghost'] });

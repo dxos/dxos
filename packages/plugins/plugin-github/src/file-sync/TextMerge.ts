@@ -13,10 +13,10 @@ import { BaseError } from '@dxos/errors';
 import { type Text } from '@dxos/schema';
 
 /** The heads are not in the object's history, e.g. the object was replaced since the last sync. */
-export class TextMergeError extends BaseError.extend('TextMergeError', 'The heads are not in the text’s history.') {}
+export class TextMergeError extends BaseError.extend('TextMergeError', "The heads are not in the text's history.") {}
 
 /**
- * Apply the `base` → `next` change to `text` as of `heads`, so Automerge merges it with every local
+ * Apply the `base` -> `next` change to `text` as of `heads`, so Automerge merges it with every local
  * edit made since. `base` is the content `text` held at `heads`. Returns the heads at which `text`
  * holds exactly `next`, which the next sync applies its change at.
  */

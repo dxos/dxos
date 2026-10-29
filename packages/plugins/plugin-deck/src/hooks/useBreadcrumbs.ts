@@ -54,7 +54,7 @@ export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
   return crumbs;
 };
 
-/** Every ancestor path of a qualified node id, outermost first (`root/a/b/c` → `root`, `root/a`, `root/a/b`). */
+/** Every ancestor path of a qualified node id, outermost first (`root/a/b/c` -> `root`, `root/a`, `root/a/b`). */
 export const ancestorPaths = (id: string): string[] => {
   const segments = id.split('/');
   return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join('/'));

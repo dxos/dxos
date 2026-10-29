@@ -63,7 +63,7 @@ const readViewState = (): DebugPanelViewState | undefined => {
 
 /**
  * Console by default, then Logs, then the float control: the drawer closes and the persisted mode
- * records the switch — the part the floating host reads to take over.
+ * records the switch - the part the floating host reads to take over.
  */
 export const Float: Story = {
   args: { contextId: FLOAT_CONTEXT },

@@ -20,11 +20,11 @@ const succeedsRunner = createEvalRunner({
 });
 
 // `completeJob` is called without a `success` payload (nothing is requested), so the agent output
-// resolves to `undefined` — evalite's SQLite storage rejects an undefined/null task result.
+// resolves to `undefined` - evalite's SQLite storage rejects an undefined/null task result.
 const succeeds = async (input: unknown, variant: Parameters<typeof succeedsRunner>[1]) =>
   (await succeedsRunner(input, variant)) ?? {};
 
-evalite('Smoke — succeeds', {
+evalite('Smoke - succeeds', {
   data: [{ input: null }],
   trialCount: 3,
   task: succeeds,
@@ -47,7 +47,7 @@ const fails = createEvalRunner({
   expect: 'failure',
 });
 
-evalite('Smoke — fails', {
+evalite('Smoke - fails', {
   data: [{ input: null }],
   trialCount: 3,
   task: fails,

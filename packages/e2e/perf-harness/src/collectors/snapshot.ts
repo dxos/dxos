@@ -271,8 +271,8 @@ export type MemorySnapshot = {
  * per realm, written under `dir`.
  *
  * The dump comes first because a heap snapshot allocates hundreds of megabytes in the realm it
- * serializes, which would otherwise land in the footprint the dump reports. Neither is cheap —
- * seconds to minutes on a loaded tab — so this runs outside every measured window.
+ * serializes, which would otherwise land in the footprint the dump reports. Neither is cheap -
+ * seconds to minutes on a loaded tab - so this runs outside every measured window.
  *
  * Files: `memory-infra.json` (raw dump events), `allocators.json` (the parsed breakdown),
  * `<realm>.heapsnapshot` (loadable in DevTools' Memory panel), and `summary.json` indexing them.

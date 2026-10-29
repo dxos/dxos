@@ -12,10 +12,10 @@ import { log } from '@dxos/log';
 
 import * as Progress from './Progress.ts';
 
-/** A destination for progress snapshots — a log line, a file, an app surface, an EDGE stream, … */
+/** A destination for progress snapshots - a log line, a file, an app surface, an EDGE stream, ... */
 export type ProgressSink = (snapshot: Progress.ProgressSnapshot) => Effect.Effect<void>;
 
-/** One compact info-log line per snapshot (works everywhere — node, browser, EDGE). */
+/** One compact info-log line per snapshot (works everywhere - node, browser, EDGE). */
 export const logSink: ProgressSink = (snapshot) =>
   Effect.sync(() =>
     log.info('progress', {

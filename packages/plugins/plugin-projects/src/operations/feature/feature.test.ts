@@ -242,7 +242,7 @@ describe('FeatureOperation.AddDependency', () => {
       const exit = yield* Effect.exit(addDependency.handler({ feature: ref(accounts), dependsOn: ref(sync) }));
       expect(Exit.isFailure(exit)).toBe(true);
       expect(String(Exit.isFailure(exit) && exit.cause)).toContain(
-        'Accounts → Sync → Tokens → Accounts would close a cycle',
+        'Accounts -> Sync -> Tokens -> Accounts would close a cycle',
       );
     }).pipe(Effect.provide(testLayer())),
   );

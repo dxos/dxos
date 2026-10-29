@@ -15,7 +15,7 @@ import { agentTest, agentTestTimeout } from '../harness.ts';
 Obj.ID.dangerouslyDisableRandomness();
 
 // TODO(wittjosiah): Migrate to an eval (see .agents/skills/agent-eval-tests). createEvalRunner has
-// no `inferenceProvider` option yet (always AiServiceTestingPreset('direct')) — would need one
+// no `inferenceProvider` option yet (always AiServiceTestingPreset('direct')) - would need one
 // added, mirroring harness.ts's AgentTestOptions.inferenceProvider, to select 'ollama' here.
 describe('Local AI', () => {
   it.effect(

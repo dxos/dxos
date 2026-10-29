@@ -440,7 +440,7 @@ export const SpacetimeCanvas = Util.composable<HTMLDivElement, SpacetimeCanvasPr
       }
     }, [editorState.hue, editorState.selection]);
 
-    // Sync scene objects — add/remove meshes when ECHO scene changes.
+    // Sync scene objects - add/remove meshes when ECHO scene changes.
     useEffect(() => {
       const manager = managerRef.current;
       const wasm = wasmRef.current;

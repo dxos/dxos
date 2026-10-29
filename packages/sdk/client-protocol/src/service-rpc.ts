@@ -139,7 +139,7 @@ export type ClientRpcServerParams = {
    */
   port?: MessagePortLike;
   /**
-   * Pre-built server protocol (the value the {@link RpcServer.Protocol} tag resolves to — e.g. handed
+   * Pre-built server protocol (the value the {@link RpcServer.Protocol} tag resolves to - e.g. handed
    * to a worker-framework session via effect context). Provide this or {@link port}.
    */
   protocol?: RpcServer.Protocol['Service'];
@@ -173,7 +173,7 @@ export class ClientRpcServer {
     // `timing` publishes dxos.rpc.queueWait/service.duration. Queue wait is the only signal that
     // shows the worker being saturated rather than slow, and it is measurable only from the client
     // side of the port. Both ends must agree: the middleware is `requiredForClient`, so a server
-    // that applies it while the client does not would reject every request — see
+    // that applies it while the client does not would reject every request - see
     // `makeClientServicesRpc` below.
     const options = { disableTracing: true, concurrency: 'unbounded', timing: true } as const;
     if (this.#params.protocol) {
@@ -209,7 +209,7 @@ export type ServeClientServicesOverIFrameOptions = {
  * and opens the connection. The iframe uses a byte {@link RpcPort} transport (not a `MessagePort`),
  * matching the shell's {@link ClientServicesProxy} consumer, so this serves over
  * {@link layerProtocolRpcPortServer} rather than the Worker-runner protocol used by
- * {@link ClientRpcServer}. Kept here — alongside the rpc definitions — so the `RpcPort` binding is
+ * {@link ClientRpcServer}. Kept here - alongside the rpc definitions - so the `RpcPort` binding is
  * resolved in this package's type universe rather than in `@dxos/client`, whose merged-with-`main`
  * build resolves `ClientRpcServer.port` as a `MessagePort`.
  */
@@ -338,7 +338,7 @@ export const makeClientServicesHandlers = ({
  * Effect-native client for all client services, inferred from the effect-rpc definitions.
  * Keyed by the full rpc tag (e.g. `rpc['DataService.subscribe'](req)` returns a `Stream`, unary
  * methods return an `Effect`). Each service's `Client` type already carries its own prefixed tags,
- * so this is their intersection — cheaper for the type-checker than re-expanding the full merged
+ * so this is their intersection - cheaper for the type-checker than re-expanding the full merged
  * {@link RpcClient.RpcClient} mapped type over all services.
  */
 export interface ClientServicesRpc
@@ -545,7 +545,7 @@ export const streamToPbStream = <T>(
               return;
             }
             // A `PbStream` consumer may pass no error handler, in which case the failure is dropped
-            // and the consumer waits forever — a silently unencodable response field once made the
+            // and the consumer waits forever - a silently unencodable response field once made the
             // app unbootable this way. Logged here so every client service stream is diagnosable.
             log.warn('client service stream failed', { label, error: String(error) });
             close(error);

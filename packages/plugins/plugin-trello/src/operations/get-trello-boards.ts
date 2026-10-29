@@ -15,7 +15,7 @@ import { TrelloOperation } from '#types';
 import { TrelloApi } from '../services/index.ts';
 
 /**
- * Discovery only — list Trello boards reachable from the connection's token
+ * Discovery only - list Trello boards reachable from the connection's token
  * and return one descriptor per board. Read-only: NO local Kanbans are
  * created here. Local Kanbans are materialized eagerly when a binding is
  * created (see `materializeTarget`).
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.GetTrelloBoards> = T
   Operation.withHandler(
     Effect.fn(function* ({ connection }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service` and
-      //   have it provided by the OperationInvoker — composer's invoker is wired
+      //   have it provided by the OperationInvoker - composer's invoker is wired
       //   without a `databaseResolver`, so we derive the db from the input ref's
       //   target and provide `Database.layer(db)` ourselves.
       const target = connection.target;

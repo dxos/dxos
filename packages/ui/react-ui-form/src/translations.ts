@@ -33,15 +33,15 @@ export const translations = [
         'delete-field.label': 'Delete field',
         'create-option.label': 'Create',
         'add-tag.label': 'Add tag',
-        'add-tag-query.label': 'Add tag “{{text}}”',
+        'add-tag-query.label': 'Add tag "{{text}}"',
 
-        'ref-field-combobox-input.placeholder': 'Search…',
-        'ref-field.placeholder': 'Select…',
-        'ref-field.placeholder_one': 'Select…',
-        'ref-field.placeholder_other': 'Select items…',
+        'ref-field-combobox-input.placeholder': 'Search...',
+        'ref-field.placeholder': 'Select...',
+        'ref-field.placeholder_one': 'Select...',
+        'ref-field.placeholder_other': 'Select items...',
 
         'example.placeholder': 'Example',
-        'select.placeholder': 'Select…',
+        'select.placeholder': 'Select...',
         'latitude.placeholder': 'Latitude (e.g., 40.7128)',
         'longitude.placeholder': 'Longitude (e.g., -74.0060)',
 

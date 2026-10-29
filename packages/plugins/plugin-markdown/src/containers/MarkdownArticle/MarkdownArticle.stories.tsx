@@ -252,7 +252,7 @@ export const WithObjects: Story = {
 /**
  * Test:
  * 1. The sketch embed shows an error chip on a single line: no reserved height, no bare box.
- * 2. Click into the error line: the raw `![Car|390](echo://…)` source is editable.
+ * 2. Click into the error line: the raw `![Car|390](echo://...)` source is editable.
  */
 export const DeletedEmbed: Story = {
   args: {

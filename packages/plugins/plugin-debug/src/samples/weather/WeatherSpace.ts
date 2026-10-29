@@ -26,7 +26,7 @@ const partials = {
  * agent's.
  *
  * It sits between `WorkerSpace` (a deploy with nothing to call) and `StockfishSpace` (an engine, a
- * design stage and a publish step): enough to exercise the whole build → deploy → configure → call
+ * design stage and a publish step): enough to exercise the whole build -> deploy -> configure -> call
  * path, small enough to run unattended. The account stays temporary and unclaimed, and the agent adds
  * the server to the space as an MCP connection.
  */
@@ -42,7 +42,7 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
         const tasks = yield* partials.tasks();
         yield* partials.project({ tasks });
 
-        // No root collection: this space seeds no documents — the project and its tasks surface
+        // No root collection: this space seeds no documents - the project and its tasks surface
         // through their own containers.
       }),
   });

@@ -13,10 +13,10 @@ export const renderObjectLink = (obj: Obj.Unknown, block?: boolean) =>
 export type StreamerOptions = {
   /**
    * How to subdivide plain-text spans before emitting them downstream.
-   *  - `'span'` (default) — keep entire spans intact; one CM dispatch per chunk that arrived at the source.
-   *  - `'word'` — split text spans at whitespace boundaries (whitespace runs become their own tokens).
-   *  - `'character'` — split text spans into individual characters.
-   * XML/HTML fragments (`<tag>…</tag>`, self-closing tags, hyphenated custom elements) are always
+   *  - `'span'` (default) - keep entire spans intact; one CM dispatch per chunk that arrived at the source.
+   *  - `'word'` - split text spans at whitespace boundaries (whitespace runs become their own tokens).
+   *  - `'character'` - split text spans into individual characters.
+   * XML/HTML fragments (`<tag>...</tag>`, self-closing tags, hyphenated custom elements) are always
    * emitted as one token regardless of `chunkSize`, otherwise widget mounting would see partial markup.
    */
   chunkSize?: 'character' | 'word' | 'span';
@@ -33,7 +33,7 @@ export type StreamerOptions = {
  *
  * The cadence is controlled by `options.chunkSize`. `'span'` (default) preserves the
  * one-token-per-source-chunk behaviour the function had originally. Use `'word'` or
- * `'character'` to decouple the visible cadence from the source's chunk size — useful when
+ * `'character'` to decouple the visible cadence from the source's chunk size - useful when
  * the AI service emits large partial blocks but you want a smoother typewriter effect.
  */
 export const createStreamer = (

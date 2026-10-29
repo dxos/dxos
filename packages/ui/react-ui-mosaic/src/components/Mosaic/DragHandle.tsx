@@ -30,7 +30,7 @@ export type MosaicDragHandleProps = Util.ThemedClassName<
 /**
  * Affordance that initiates dragging the enclosing {@link MosaicTile}. Renders a button and
  * registers itself with the tile (via context), so consumers only need to drop it inside a
- * `Mosaic.Tile` — no `dragHandle` ref plumbing required.
+ * `Mosaic.Tile` - no `dragHandle` ref plumbing required.
  */
 export const MosaicDragHandle = forwardRef<HTMLButtonElement, MosaicDragHandleProps>(
   (

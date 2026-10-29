@@ -22,7 +22,7 @@ export interface SpanStats {
 }
 
 /**
- * In-memory OpenTelemetry harness for measuring `Effect.withSpan` durations in a test — captures the
+ * In-memory OpenTelemetry harness for measuring `Effect.withSpan` durations in a test - captures the
  * spans the sync stack emits (root, fetch, per-commit-phase) without any external collector. A
  * `NodeSDK` with a synchronous {@link SimpleSpanProcessor} exports finished spans to an
  * {@link InMemorySpanExporter}, and {@link layer} bridges Effect's tracer to that global provider (so

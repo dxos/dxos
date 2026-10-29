@@ -43,8 +43,8 @@ export type Mesh = Schema.Schema.Type<typeof Mesh>;
  * 3D model object.
  *
  * Geometry is defined by either:
- * - `primitive` — parametric shape generated at runtime, or
- * - `mesh` — arbitrary geometry stored as serialized vertex/index data.
+ * - `primitive` - parametric shape generated at runtime, or
+ * - `mesh` - arbitrary geometry stored as serialized vertex/index data.
  *
  * These are mutually exclusive; `mesh` takes precedence if both are present.
  */

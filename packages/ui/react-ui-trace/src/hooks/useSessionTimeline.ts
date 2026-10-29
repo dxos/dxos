@@ -23,7 +23,7 @@ import { useTraceMessages } from './useTraceMessages.ts';
 const TICK_MS = 5_000;
 
 // The trace feed emits continuously while anything runs, and every emission rebuilds the whole
-// timeline from the full message history — so the rebuild rate is capped rather than the feed's.
+// timeline from the full message history - so the rebuild rate is capped rather than the feed's.
 const TRACE_DEBOUNCE = Duration.millis(500);
 
 const NO_PROCESSES: readonly Process.Process[] = [];

@@ -90,7 +90,7 @@ describe('DiscordPipeline', () => {
       yield* QuestionStore.add('Who works on OPFS?', 'q-1');
       yield* DiscordPipeline.run(CONFIG);
       // The deterministic extractor never emits an `answer` field, so the question remains
-      // open — the answered path is covered by answer-questions.test.ts with a routing fake.
+      // open - the answered path is covered by answer-questions.test.ts with a routing fake.
       expect((yield* QuestionStore.get('q-1'))?.status).toBe('open');
     }, Effect.provide(TestLayer)),
   );

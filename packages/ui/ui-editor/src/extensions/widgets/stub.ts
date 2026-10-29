@@ -15,7 +15,7 @@ export interface WidgetNotifier {
   mounted(widget: WidgetState): void;
   /**
    * `root` identifies the destroyed instance: when CodeMirror replaces a widget (same id, `eq`
-   * false — e.g. a context rebuild), it draws the NEW widget before destroying the OLD one, so an
+   * false - e.g. a context rebuild), it draws the NEW widget before destroying the OLD one, so an
    * id-only unmount would wipe the replacement's fresh registration.
    */
   unmounted(id: string, root?: HTMLElement | null): void;
@@ -29,7 +29,7 @@ export interface WidgetNotifier {
   /**
    * Drop any mounted widgets whose id is not in `liveIds`. Needed because CM reuses a widget's DOM
    * via `updateDOM` (without calling `destroy`) when a decoration's widget changes in place, so an
-   * id that is no longer present — e.g. a position-keyed id after an edit shifted the node — would
+   * id that is no longer present - e.g. a position-keyed id after an edit shifted the node - would
    * otherwise leak a stale portal.
    */
   reconcile(liveIds: Set<string>): void;
@@ -48,7 +48,7 @@ export interface WidgetNotifier {
  * (Playwright, both async and plain-sync block stories) to be widget-independent: CM's measure-phase
  * scroll re-anchor correcting its content-height *estimate* when a big scroll delta reveals a lot of
  * not-yet-measured content. Gradual scrolling does not jump. That is general CM heightmap behavior, not
- * fixable here — see upstream CM #1727 (https://code.haverbeke.berlin/codemirror/dev/issues/1727).
+ * fixable here - see upstream CM #1727 (https://code.haverbeke.berlin/codemirror/dev/issues/1727).
  */
 export type StubWidgetOptions<TProps> = {
   id: string;
@@ -61,20 +61,20 @@ export type StubWidgetOptions<TProps> = {
    * tick), so a run that grows in place keeps its id and would otherwise leave CodeMirror holding the
    * instance built from the first chunk. Compared in full rather than hashed: a 32-bit hash collides on
    * pairs as short as `ab`/`bA` (djb2's adjacent-character deltas cancel), and a collision here is a
-   * widget frozen at stale props — the bug this exists to prevent.
+   * widget frozen at stale props - the bug this exists to prevent.
    */
   signature?: string;
   streaming?: boolean;
   block?: boolean;
   /**
    * Reserved block height (px). Feeds CodeMirror's off-screen viewport estimate and pre-sizes the
-   * placeholder so the block occupies its final height before the portaled content resolves —
+   * placeholder so the block occupies its final height before the portaled content resolves -
    * otherwise it collapses to the 24px minimum, causing scroll jitter and a blank on scroll-back.
    */
   blockHeight?: number;
   /**
    * How `blockHeight` is applied. `fixed` (the default) pins the box, which is right when the
-   * height is known up front — an image, a chart. `min` makes it a floor, for content that can
+   * height is known up front - an image, a chart. `min` makes it a floor, for content that can
    * legitimately grow after it mounts: a disclosure the reader opens is pinned shut by `fixed`,
    * and clipped by its `overflow: hidden`.
    */
@@ -90,7 +90,7 @@ export const WIDGET_ROOT_ATTRIBUTE = 'data-widget-root';
 
 /**
  * Frees a mounted block's reserved height in place, from any element the widget rendered: the
- * placeholder stops pinning and the editor re-measures, with no decoration rebuild — so nothing is
+ * placeholder stops pinning and the editor re-measures, with no decoration rebuild - so nothing is
  * redrawn under the user. Pair with a `LinkWidgetState.intrinsic` report so the next rebuild does
  * not pin it again.
  */
@@ -206,7 +206,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
 
     // Context too, not just the id: props are captured at build time, so an id-only comparison makes
     // CodeMirror keep the existing widget (and its stale props) when the host publishes the context
-    // after the first build — leaving every widget callback bound to `undefined`.
+    // after the first build - leaving every widget callback bound to `undefined`.
     // The signature too: an id that does not encode the tag's content (a streaming tag is keyed on
     // its opening position) would otherwise pin the widget to the props of the first chunk, so a run
     // that keeps appending to the same tag never re-renders until the document is rebuilt.
@@ -270,7 +270,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
   }
 
   // Called on the REPLACEMENT widget with the outgoing instance's DOM, so `view` arrives as the
-  // argument — `#view` is only ever set by this instance's own `toDOM`, which has not run.
+  // argument - `#view` is only ever set by this instance's own `toDOM`, which has not run.
   override updateDOM(dom: HTMLElement, view: EditorView) {
     // CodeMirror offers the outgoing DOM to any widget of the same class; a block cannot continue
     // in an inline span (or the reverse), so decline and let `toDOM` build the right element.

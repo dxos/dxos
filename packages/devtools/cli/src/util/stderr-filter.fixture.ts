@@ -20,7 +20,7 @@ import { installStderrFilter } from './stderr-filter.ts';
 
 installStderrFilter();
 
-// console.warn before any warning — must pass through.
+// console.warn before any warning - must pass through.
 console.warn('REAL warn before warning');
 
 // Mirror warnAfterTimeout's actual call: a single console.warn whose
@@ -34,7 +34,7 @@ console.warn(
   ].join('\n'),
 );
 
-// console.error after warning — must pass through.
+// console.error after warning - must pass through.
 console.error('REAL error after warning');
 
 // Defence-in-depth: also exercise the process.stderr.write path. Real lines

@@ -89,7 +89,7 @@ export const agentsNotAdministeredBy = (
     .flatMap((member) => toPublicKey(member.identity?.identityKey) ?? []);
 
 /**
- * All settings-tagged spaces, ordered by id — code-unit comparison, never locale collation, since
+ * All settings-tagged spaces, ordered by id - code-unit comparison, never locale collation, since
  * duplicate healing deletes every space but the first and the order must be identical on every device.
  */
 export const getSettingsSpaces = (client: { spaces: { get(): Space[] } }): Space[] =>
@@ -112,7 +112,7 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
   }
 
   // Properties are unreadable until a space is ready, so among the readable duplicates the
-  // designation-holder wins — and any readable one beats waiting on an unopened one.
+  // designation-holder wins - and any readable one beats waiting on an unopened one.
   const ready = tagged.filter((space) => space.state.get() === SpaceState.SPACE_READY);
   return ready.find((space) => getDefaultSpaceId(space) !== undefined) ?? ready[0] ?? tagged[0];
 };
@@ -190,7 +190,7 @@ export const setDefaultSpaceId = (settingsSpace: Space, spaceId: string): void =
 };
 
 /**
- * The space the user has designated as their default — the target for content that is not scoped
+ * The space the user has designated as their default - the target for content that is not scoped
  * to the active space (quick entry, chat, preview and entity lookup).
  *
  * Resolves the designation on the settings space, falling back to the legacy personal space for
@@ -252,7 +252,7 @@ export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) 
 });
 
 //
-// Legacy resolution — profiles created before the settings space existed.
+// Legacy resolution - profiles created before the settings space existed.
 //
 
 /**
@@ -287,7 +287,7 @@ export const isLegacyDefaultSpace = (space: Space): boolean => {
 
 /**
  * Find the legacy default space, falling back to the `DefaultSpace` HALO credential for profiles
- * that predate immutable space tags. Migration input only — read {@link getDefaultSpace} at runtime.
+ * that predate immutable space tags. Migration input only - read {@link getDefaultSpace} at runtime.
  * @deprecated
  */
 export const resolveLegacyDefaultSpace = (

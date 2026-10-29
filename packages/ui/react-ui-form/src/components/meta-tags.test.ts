@@ -14,7 +14,7 @@ import { Organization } from '../testing/schema.ts';
 import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, resolveMetaTags, withMetaTags } from './meta-tags.ts';
 
 // A feed-host schema whose own `tags` field is a `TagIndex` record (tagId -> objectId[]), not an
-// array — mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-magazine `Subscription`.
+// array - mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-magazine `Subscription`.
 const TagIndexHost = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   tags: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(Schema.optional),
@@ -98,7 +98,7 @@ describe('partitionMetaTags', () => {
   test('holds provider tags back and leaves the rest editable', ({ expect }) => {
     const { editable, preserved } = partitionMetaTags([userTag, gmailTag, canonicalTag]);
 
-    // Canonical tags stay editable — only a foreign provider owns membership.
+    // Canonical tags stay editable - only a foreign provider owns membership.
     expect(editable).toEqual([userTag, canonicalTag]);
     expect(preserved).toEqual([gmailTag]);
   });

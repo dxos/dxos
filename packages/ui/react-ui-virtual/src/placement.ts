@@ -5,7 +5,7 @@
 /**
  * Where the rows go, in one number each.
  *
- * Scalars only — `start`, `extent`, `viewport` — never `top` or `height`, so the axis is the DOM
+ * Scalars only - `start`, `extent`, `viewport` - never `top` or `height`, so the axis is the DOM
  * binding's business and never gets baked in here (§9). No DOM, no React, no CodeMirror: everything
  * this decides can be decided from arithmetic, and everything it cannot decide is a measurement
  * somebody hands it.
@@ -13,7 +13,7 @@
  * The model is one authoritative fact and derivations from it: an **anchor**, identified by message
  * id, whose absolute position in content space is known. Every other row's position is that position
  * plus or minus the extents in between. Prepending rows does not move the anchor, so it does not move
- * anything at or after it — which is the property §7 needs and the reason this is not a prefix sum
+ * anything at or after it - which is the property §7 needs and the reason this is not a prefix sum
  * from index 0.
  */
 export type Extents = {
@@ -24,8 +24,8 @@ export type Extents = {
   /**
    * Never revised by measurement.
    *
-   * The layout constrains the extent — a horizontal feed of declared-width items, a list of
-   * fixed-height rows — so offsets are an exact prefix sum and there is nothing to correct. It does
+   * The layout constrains the extent - a horizontal feed of declared-width items, a list of
+   * fixed-height rows - so offsets are an exact prefix sum and there is nothing to correct. It does
    * **not** mean unchecked: the binding still measures in dev and reports a mismatch (§8).
    */
   exact?: boolean;
@@ -52,7 +52,7 @@ export type PlacementOptions = {
 
 /** The mounted range and where its parent goes. */
 export type Layout = {
-  /** First and last mounted row, inclusive — the visible rows plus overscan. */
+  /** First and last mounted row, inclusive - the visible rows plus overscan. */
   first: number;
   last: number;
   /**
@@ -126,8 +126,8 @@ export class Placement {
   }
 
   /**
-   * The host's answer about extents can change — a row is edited, a panel opens, a story flips a
-   * fixture — and it is a *function*, so keeping the one handed over at construction quietly pins
+   * The host's answer about extents can change - a row is edited, a panel opens, a story flips a
+   * fixture - and it is a *function*, so keeping the one handed over at construction quietly pins
    * the layout to whatever was true then. Measured extents survive: they are keyed by id and this
    * only replaces what the host would say about a row nobody has measured.
    */
@@ -163,7 +163,7 @@ export class Placement {
    * Appending a message gives a *new* `getId`, and a placement holding the one it was constructed
    * with resolves the new row's index to an id nobody will ever measure. The binding then stores
    * that row's measurement under the id the DOM carries and reads it back under the stale one, so
-   * the row is measured, found to disagree, measured again — every commit, for ever. It presents as
+   * the row is measured, found to disagree, measured again - every commit, for ever. It presents as
    * a render loop rather than as a wrong size, which is what made `bridge/Tail` look like a tail
    * defect (§8: measurement is only a correction if it can be read back).
    */
@@ -202,7 +202,7 @@ export class Placement {
     return position;
   }
 
-  /** The reader moved. Nothing is corrected here — only the mounted range changes. */
+  /** The reader moved. Nothing is corrected here - only the mounted range changes. */
   scrollTo(offset: number): void {
     this.#scroll = offset;
     this.#reanchor();
@@ -257,10 +257,10 @@ export class Placement {
     }
 
     this.#anchor = { id: this.#getId(clamped), index: clamped, start };
-    // The last row's end *is* the content's end, whatever the estimates in between say — plus the
+    // The last row's end *is* the content's end, whatever the estimates in between say - plus the
     // reserve, which is part of the resting view: the tail sits that much clear of the viewport's
     // edge. Summing instead lands wherever the guesses add up to, which for a chat's "go to the
-    // bottom" is a tail that is nearly at the bottom — the one place approximately right is wrong.
+    // bottom" is a tail that is nearly at the bottom - the one place approximately right is wrong.
     const end = clamped === this.#count - 1 ? this.layout().sizerExtent : start + this.extentOf(clamped);
     this.#scroll = align === 'end' ? end - this.#viewport : start;
     this.#scroll = Math.max(0, this.#scroll);
@@ -288,12 +288,12 @@ export class Placement {
    *
    * Derived from the anchor, like every other position, and deliberately **not** from a sum over the
    * model: a follow asks this again on every commit, and each answer mounts rows whose measurement
-   * replaces the estimates that sum is over — so a sum-based end moves every time it is consulted,
+   * replaces the estimates that sum is over - so a sum-based end moves every time it is consulted,
    * and consulting it is what moves it. That is not slow convergence, it is a feedback loop, and in
    * React it terminates by exceeding the update limit rather than by settling (`bridge/Tail`).
    *
    * Anchor-relative, the answer only changes as the rows *between the anchor and the last row* are
-   * measured — each of them once — so a follow settles in a couple of commits and rows the reader
+   * measured - each of them once - so a follow settles in a couple of commits and rows the reader
    * has already passed cannot disturb it.
    */
   endOffset(): number {
@@ -332,7 +332,7 @@ export class Placement {
    *
    * The first row starting at zero is the one absolute fact of content space, and estimates being
    * replaced above the anchor break it: a feed opened at its tail whose rows measure taller than
-   * assumed pushes row 0 *negative*, where no scroll can reach it — the reader arrives at the top
+   * assumed pushes row 0 *negative*, where no scroll can reach it - the reader arrives at the top
    * and the first messages simply are not there. This is the single correction that must touch the
    * scroll (§7's rule is about corrections and readers sharing a channel; here both the content and
    * the offset move by the same delta in the same commit, so the reader sees nothing at all).
@@ -358,7 +358,7 @@ export class Placement {
    *
    * The edges are where estimate meets ground truth: the first row starts at zero and the last one
    * ends at the content's end, by definition, so a computed position that says otherwise is the
-   * measure of how wrong the estimates were. Reported rather than silently applied — absorbing it
+   * measure of how wrong the estimates were. Reported rather than silently applied - absorbing it
    * into the anchor would move what the reader is looking at, and at an edge they are looking at
    * exactly the thing that would move.
    */
@@ -386,7 +386,7 @@ export class Placement {
     return undefined;
   }
 
-  /** Visible rows, plus overscan, clamped to the model — {@link layout} without the extents. */
+  /** Visible rows, plus overscan, clamped to the model - {@link layout} without the extents. */
   range(): { first: number; last: number; visible: { first: number; last: number } } {
     let first = this.#anchor.index;
     // Walk out from the anchor rather than searching from zero: the anchor is the only position
@@ -413,12 +413,12 @@ export class Placement {
   }
 
   /**
-   * The anchor is the first row the reader can see — always, not merely when the old one leaves
+   * The anchor is the first row the reader can see - always, not merely when the old one leaves
    * the window.
    *
    * The anchor is the row held still while others are measured, so it must be the reader's
    * reference point. Clamping the old anchor into the mounted range let it drift to the window's
-   * *far* edge after an upward scroll — below everything on screen — and a widget toggled open
+   * *far* edge after an upward scroll - below everything on screen - and a widget toggled open
    * above it then pushed the whole viewport up by its own growth: the engine held a row the reader
    * could not see still, at the expense of every row they could. Re-anchoring preserves the new
    * anchor's computed position exactly, so the move itself shifts nothing.

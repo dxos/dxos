@@ -136,7 +136,7 @@ describe('Worker template', () => {
   );
 
   // Falsifiable without hardcoding the archive's contents: every typename in the archive must be one
-  // the definition DECLARED. The zero-count above would not be — `countOf` substring-matches, so
+  // the definition DECLARED. The zero-count above would not be - `countOf` substring-matches, so
   // asserting a typename is absent passes just as well when the typename is misspelled.
   test('every schema the content persists is declared', { timeout: 120_000 }, async ({ expect }) => {
     const { json } = await EffectEx.runPromise(buildArchive(WorkerSpace.make()));

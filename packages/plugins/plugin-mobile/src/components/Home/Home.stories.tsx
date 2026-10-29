@@ -31,7 +31,7 @@ import { Home } from './Home.tsx';
 
 /**
  * A root with one node per disposition Home used to mix together (workspace, user-account, pin-end)
- * plus one ordinary `disposition: 'menu'` action — the shape needed to prove Home dropped two of the
+ * plus one ordinary `disposition: 'menu'` action - the shape needed to prove Home dropped two of the
  * three and the navbar's main menu picked them back up as a distinct, later section.
  */
 const storyGraph = Capability.inlineModule(
@@ -134,7 +134,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Home must list spaces only — profile and settings moved to the navbar's main menu. Non-vacuous: the
+ * Home must list spaces only - profile and settings moved to the navbar's main menu. Non-vacuous: the
  * fixture contributes a `user-account` and a `pin-end` node alongside the `workspace` one, so this
  * fails on the old mixed-`items` behavior rather than trivially passing on an empty list.
  */
@@ -152,7 +152,7 @@ export const SpacesOnly: Story = {
 /**
  * The items Home no longer lists must still be reachable, one menu-open away: the navbar's main menu
  * keeps its existing `disposition: 'menu'` actions, then a divider, then the displaced account/pin-end
- * items — in that order, at the bottom. `corePlugins()` contributes its own real `menu` actions (e.g.
+ * items - in that order, at the bottom. `corePlugins()` contributes its own real `menu` actions (e.g.
  * plugin-settings' "Plugin Settings"), so this checks relative position against the divider rather than
  * an exact item count, which would be brittle to what else `corePlugins()` happens to add.
  */

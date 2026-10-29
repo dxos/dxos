@@ -17,7 +17,7 @@ const DEG = Math.PI / 180;
 /**
  * How far ahead, in radians of arc, a plane scans the terrain it is flying toward. This is the
  * range in which a mountain can begin to lift the plane; combined with `PLANE_MAX_PITCH` it also
- * caps how much terrain the plane can answer at all — anything higher than a full-rate climb over
+ * caps how much terrain the plane can answer at all - anything higher than a full-rate climb over
  * this arc can reach is met at whatever altitude the climb has managed.
  */
 const PLANE_LOOKAHEAD = 0.09;
@@ -31,7 +31,7 @@ const PLANE_LOOKBEHIND = 0.045;
 /**
  * Spacing of the terrain samples across that window, and the arc the climb rate is measured over.
  * Every sample is an elevation lookup and `evaluate` runs hundreds of times a frame under the trail
- * sampler (see DESIGN.md), so this is the whole cost of the behavior — but too coarse a spacing
+ * sampler (see DESIGN.md), so this is the whole cost of the behavior - but too coarse a spacing
  * steps over a narrow ridge.
  */
 const PLANE_SAMPLE_SPACING = 0.015;
@@ -76,7 +76,7 @@ export type Attitude = { radius: number; pitch: number };
 /**
  * The part of an object's state that is specific to its kind, layered on the motion its route (or
  * orbit, or arc) already determines. Motion answers *where*; a behavior answers *how it flies
- * there* — the altitude it holds and the attitude it holds it at.
+ * there* - the altitude it holds and the attitude it holds it at.
  */
 export type Behavior = {
   attitude: (input: BehaviorInput) => Attitude;
@@ -91,13 +91,13 @@ const surfaceRadius = (config: TerraConfigValues, unit: Vec3): number => {
 };
 
 /**
- * The altitude a plane holds now, and what it held/will hold a `PLANE_PITCH_BASELINE` either side —
+ * The altitude a plane holds now, and what it held/will hold a `PLANE_PITCH_BASELINE` either side -
  * all from one pass over the same terrain samples, since the other two only re-weight them.
  *
  * A peak `gap` ahead does not demand its full clearance yet: the plane has that much arc left to
  * climb, so it demands `clearance - maxClimb * gap`. Taking the highest such demand over the window
  * produces an altitude profile that rises into a mountain at the climb limit, tops out at clearance
- * over it, and — because terrain behind is weighted the same way — settles back to cruise at that
+ * over it, and - because terrain behind is weighted the same way - settles back to cruise at that
  * same limit once it is past. The plane therefore never dives at a ridge and never drops out of the
  * sky behind one.
  */
@@ -165,7 +165,7 @@ export const behaviors: Record<TerraObject.Kind, Behavior> = {
       // The nose points where the rocket is actually going: its own flight-path angle, the climb
       // rate of the ballistic profile over the ground speed it is covering the arc at. A scripted
       // angle (a cosine from +90° to -90°, say) is far steeper than a lofted arc really flies, and
-      // the rocket visibly skids — pointing up while travelling forward.
+      // the rocket visibly skids - pointing up while travelling forward.
       const total = routeLength(route);
       const climbRate = total > 0 ? (sea * BALLISTIC_APEX * Math.PI * Math.cos(Math.PI * flightFraction)) / total : 0;
       return { radius, pitch: Math.atan2(climbRate, radius) };

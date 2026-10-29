@@ -45,8 +45,8 @@ export const query = ({ tags }: QueryOptions = {}): Extension => {
 /**
  * The extension's decorations for a given state.
  *
- * Exported as a pure function of `(state, options)` so the atomicity rules — which govern whether a
- * tag can still be edited — are testable without mounting an `EditorView`.
+ * Exported as a pure function of `(state, options)` so the atomicity rules - which govern whether a
+ * tag can still be edited - are testable without mounting an `EditorView`.
  */
 export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions = {}): DecorationSet => {
   {
@@ -126,7 +126,7 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               //
               // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
               // starts at offset 0 paints before that offset's coordinate and the caret draws to its
-              // right — pressing Home appeared to leave the caret after the tag.
+              // right - pressing Home appeared to leave the caret after the tag.
               deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
             }
             break;
@@ -188,9 +188,9 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
       },
     });
 
-    // A `#` with no label yet parses as an error, not a `Tag`, so the tree cannot decorate it — but
+    // A `#` with no label yet parses as an error, not a `Tag`, so the tree cannot decorate it - but
     // the affordance has to appear on the keystroke that opens the tag, not once it is valid.
-    // A lone `#` is an error node, not a `Tag` — the grammar needs a label character — so it gets a
+    // A lone `#` is an error node, not a `Tag` - the grammar needs a label character - so it gets a
     // plain highlight until the first one arrives and the chip takes over.
     for (const range of bareTagRanges(state, tagged)) {
       collected.push({
@@ -509,7 +509,7 @@ function intersectRanges(a: Range, b: Range): Range | null {
 const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
 
 /**
- * Ranges of an in-progress tag — a `#` the parser has not yet accepted as a {@link QueryDSL.Node.Tag},
+ * Ranges of an in-progress tag - a `#` the parser has not yet accepted as a {@link QueryDSL.Node.Tag},
  * because the grammar requires at least one label character after it. Skips offsets the tree already
  * claimed, and any `#` inside a string, where it is content rather than a tag.
  */

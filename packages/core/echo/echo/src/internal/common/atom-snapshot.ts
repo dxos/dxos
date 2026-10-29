@@ -28,7 +28,7 @@ export const snapshotForComparison = <V>(value: V): V => {
     return [...value] as V;
   }
   // Refs are immutable handles whose `uri`/`target` are prototype getters over private fields, so a
-  // spread would hand the consumer an empty object — `useObject(obj, refField).uri` read `undefined`.
+  // spread would hand the consumer an empty object - `useObject(obj, refField).uri` read `undefined`.
   if (isRefLike(value)) {
     return value;
   }
@@ -41,7 +41,7 @@ export const snapshotForComparison = <V>(value: V): V => {
 // Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
 // matches two reads of the same ref. The inlined target is part of the ref's encoded value
 // (`{'/': uri, target}` for an object not yet in the database), so `Ref.make(target)` and a
-// `noInline()` of it share a URI without being the same value — comparing the URI alone would
+// `noInline()` of it share a URI without being the same value - comparing the URI alone would
 // swallow that update. The saved target is identity-stable across reads, so it needs no deeper
 // comparison.
 const valueEquals = (a: unknown, b: unknown): boolean => {
@@ -74,6 +74,6 @@ export const snapshotEquals = (value: unknown, snapshot: unknown): boolean => {
     return value.length === snapshot.length && value.every((item, index) => valueEquals(item, snapshot[index]));
   }
   // A ref held directly compares exactly as one inside an array does, so both go through `valueEquals`
-  // — two ladders would drift and reintroduce the asymmetry that left a ref field always unequal.
+  // - two ladders would drift and reintroduce the asymmetry that left a ref field always unequal.
   return valueEquals(value, snapshot);
 };

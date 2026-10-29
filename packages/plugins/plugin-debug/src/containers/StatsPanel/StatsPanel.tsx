@@ -22,7 +22,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const formatValue = (value: unknown): string => (typeof value === 'number' ? value.toLocaleString() : String(value));
 
 /**
- * Flattens a compartment into `key → value` rows, one level deep: nested objects (e.g. `coverage`)
+ * Flattens a compartment into `key -> value` rows, one level deep: nested objects (e.g. `coverage`)
  * become dotted keys (`coverage.plain`) so everything renders as flat rows.
  */
 const flatten = (stats: unknown): [string, unknown][] => {
@@ -44,7 +44,7 @@ export type StatsPanelProps = {
 
 /**
  * The {@link AppCapabilities.StatsPanel} store as one card per plugin compartment, live (re-renders
- * on each write). Purely generic — it displays whatever each plugin stores.
+ * on each write). Purely generic - it displays whatever each plugin stores.
  */
 export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
   const store = Hooks.useOptionalCapability(AppCapabilities.StatsPanel);

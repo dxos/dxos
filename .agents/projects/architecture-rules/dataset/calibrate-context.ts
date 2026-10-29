@@ -296,7 +296,7 @@ const side = (ids: (id: string) => boolean) => {
   return { own, other, bareOwn, bareOther };
 };
 const summaryRow = (label: string, { own, other, bareOwn, bareOther }: ReturnType<typeof side>, threshold: number) =>
-  `| ${label} | ${threshold} | ${pct(rate(bareOwn, threshold))} → ${pct(rate(own, threshold))} | ${pct(rate(bareOther, threshold))} → ${pct(rate(other, threshold))} |`;
+  `| ${label} | ${threshold} | ${pct(rate(bareOwn, threshold))} -> ${pct(rate(own, threshold))} | ${pct(rate(bareOther, threshold))} -> ${pct(rate(other, threshold))} |`;
 
 const locations = (pick: (result: Result) => Located | undefined) => {
   const list = scored
@@ -319,7 +319,7 @@ const report = [
   `Each rule's verdict was asked on the whole file its hunks come from, read at the commit the reviewer commented on, with the rule's declared context: ${hunks.size} hunks${skipped ? ` (${skipped} files no longer retrievable)` : ''}, ${calibrated.length} rules, ${groups.length} context groups, $${((inputTokens / 1e6) * PRICE_PER_MILLION).toFixed(2)} in input tokens.`,
   "The hunk stands in for `diff`; every other kind is fetched from today's tree, so `siblings`, `importers` and `package` are close to, not exactly, what the reviewer saw. A rule's own hunks are positives; other rules' hunks are presumed clean for it.",
   '',
-  '## Verdicts: bare hunk → whole file with context',
+  '## Verdicts: bare hunk -> whole file with context',
   '',
   '| Rules | Threshold | Recall on own hunks | Flag rate on other hunks |',
   '| ----- | --------- | ------------------- | ------------------------ |',
@@ -348,7 +348,7 @@ const report = [
   '',
   '## Per rule',
   '',
-  '| Rule | Context | Own hunks | Mean p own: bare → context | Mean p other: bare → context |',
+  '| Rule | Context | Own hunks | Mean p own: bare -> context | Mean p other: bare -> context |',
   '| ---- | ------- | --------- | -------------------------- | ---------------------------- |',
   ...calibrated
     .filter((rule) => byRule.has(rule.id))
@@ -360,7 +360,7 @@ const report = [
       return {
         rule,
         own,
-        line: `| \`${rule.id}\` | ${rule.context.join(', ') || '—'} | ${own.length} | ${mean(was.own).toFixed(2)} → ${mean(own).toFixed(2)} | ${mean(was.other).toFixed(2)} → ${mean(other).toFixed(2)} |`,
+        line: `| \`${rule.id}\` | ${rule.context.join(', ') || '-'} | ${own.length} | ${mean(was.own).toFixed(2)} -> ${mean(own).toFixed(2)} | ${mean(was.other).toFixed(2)} -> ${mean(other).toFixed(2)} |`,
         separation: mean(own) - mean(other),
       };
     })

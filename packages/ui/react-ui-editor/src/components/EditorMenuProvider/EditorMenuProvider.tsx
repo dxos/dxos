@@ -210,7 +210,7 @@ export const EditorMenuProvider = ({
               classNames='shrink-0 mb-1'
               value={query}
               placeholder={searchPlaceholder}
-              // Placeholder text is not a persistent accessible name, and it is optional — fall
+              // Placeholder text is not a persistent accessible name, and it is optional - fall
               // back to the generic label so the input is never anonymous.
               aria-label={searchPlaceholder ?? t('search.label')}
               onChange={(event) => onQueryChange?.(event.target.value)}

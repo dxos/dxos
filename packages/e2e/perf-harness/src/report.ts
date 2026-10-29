@@ -12,7 +12,7 @@ import { type HeapReading, type StageRow, type TargetKind } from './types.ts';
 /** Repo-root-relative, alongside the startup harness's rows. */
 export const reportDir = (workspaceRoot: string): string => path.join(workspaceRoot, 'test-results', 'perf');
 
-/** Appends one NDJSON row per stage — the format `scripts/ci-event.mjs --batch` consumes. */
+/** Appends one NDJSON row per stage - the format `scripts/ci-event.mjs --batch` consumes. */
 export const appendRows = (workspaceRoot: string, name: string, rows: StageRow[]): string => {
   const dir = reportDir(workspaceRoot);
   mkdirSync(dir, { recursive: true });
@@ -36,7 +36,7 @@ export const writeRunReport = (workspaceRoot: string, name: string, rows: StageR
 };
 
 /**
- * PostHog event for one stage — `measure` rows only.
+ * PostHog event for one stage - `measure` rows only.
  *
  * `diagnose` rows are deliberately unrepresentable here: their profiler and screencast inflate CPU
  * and, because an attached client makes Blink retain response bodies, their memory columns rise
@@ -121,7 +121,7 @@ const maxByRealm = <T>(
  *
  * SUBDUCTION IS TESTED FIRST, and the order is load-bearing: its module ships as
  * `automerge_subduction_wasm_bg.wasm`, so an automerge-first match would report every byte of
- * subduction as automerge — the same trap the network collector has with analytics hosts that sit
+ * subduction as automerge - the same trap the network collector has with analytics hosts that sit
  * under an edge subdomain.
  */
 const wasmLibrary = (module: string): 'Sqlite' | 'Subduction' | 'Automerge' | 'Other' => {
@@ -152,7 +152,7 @@ const wasmByLibrary = (readings: readonly HeapReading[]): Record<string, number>
       attributed += bytes;
     }
     // Whatever the module map does not account for lands in Other, so the four columns partition
-    // `wasmBytes` even when the map is absent or incomplete — a realm running a probe that predates
+    // `wasmBytes` even when the map is absent or incomplete - a realm running a probe that predates
     // per-module attribution reports bytes with no map at all, and without this the libraries would
     // sum to zero against a non-zero total and the partition this file documents would be false.
     columns[`wasmOtherBytes${REALM_SUFFIX[reading.kind]}`] += Math.max(0, (reading.wasmBytes ?? 0) - attributed);
@@ -206,7 +206,7 @@ export const DATA_COUNTER_COLUMNS = [
   'echo.activations',
 ] as const;
 
-/** `sqlite.rowsRead` → `sqliteRowsRead`. */
+/** `sqlite.rowsRead` -> `sqliteRowsRead`. */
 export const dataColumn = (name: string): string => {
   const [namespace, counter = ''] = name.split('.');
   return `${namespace}${counter.charAt(0).toUpperCase()}${counter.slice(1)}`;
@@ -296,7 +296,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
   if (row.mode !== 'measure') {
     throw new Error(`refusing to trend a ${row.mode} row: only measure rows are comparable`);
   }
-  // A failed stage's `wallMs` is its TIMEOUT, not a measurement — the budget, in the units the
+  // A failed stage's `wallMs` is its TIMEOUT, not a measurement - the budget, in the units the
   // trend is read in. Trending one publishes a fabricated regression that no code change caused.
   if (!row.ok) {
     throw new Error(`refusing to trend a failed stage (${row.stage}): its timings are its timeouts`);
@@ -328,7 +328,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
   );
   // The integrity column for the drift probe, and the one the lag columns were missing: a p95 of
   // zero is either a responsive realm or a probe that produced nothing, and until this was
-  // published the two were indistinguishable — every worker lag column read zero for weeks.
+  // published the two were indistinguishable - every worker lag column read zero for weeks.
   const lagSamplesByRealm = byRealm(
     'lagSamples',
     row.responsiveness.lagByRealm,
@@ -356,7 +356,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
 
   // Backing WITHOUT wasm, which is the disjoint quantity: `backingStorageSize` counts wasm linear
   // memory and `ArrayBuffer`s alike, so stacking it beside `wasmBytes` double counts every wasm
-  // byte. Floored at zero — the two readings are taken in the same evaluation but a realm that
+  // byte. Floored at zero - the two readings are taken in the same evaluation but a realm that
   // grew a memory between them would otherwise draw a negative segment.
   const backingNonWasmByRealm = byRealm(
     'heapBackingNonWasmBytes',
@@ -364,7 +364,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
     (reading) => reading.kind,
     (reading) => Math.max(0, (reading.backingBytes ?? 0) - (reading.wasmBytes ?? 0)),
   );
-  // Blink-side objects — DOM nodes, listeners, the document — attributed to the realm holding
+  // Blink-side objects - DOM nodes, listeners, the document - attributed to the realm holding
   // them. Disjoint from the V8 heap and collected all along without being published.
   const embedderByRealm = byRealm(
     'embedderBytes',
@@ -457,7 +457,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       ),
       // The integrity column for the two footprints, the role `sqliteRealms` plays for disk: the
       // memory-infra dump can fail or be pre-empted by another trace, and a failed read yields no
-      // processes — which sums to zero bytes and is otherwise indistinguishable from an app that
+      // processes - which sums to zero bytes and is otherwise indistinguishable from an app that
       // holds no memory. Zero processes means the row's footprints are absent, not measured.
       footprintProcesses: row.footprint.length,
       heapUsedTotalBytes: row.heapUsedTotalBytes,
@@ -469,7 +469,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       ...wasmByLibrary(row.heap),
       // EXCLUSIVE memory only, so the total is exact. A `SharedArrayBuffer`-backed memory is
       // visible in every realm it was posted to, and nothing in the probe's readings identifies
-      // one allocation across realms — so a deduplicated total cannot be computed here at all.
+      // one allocation across realms - so a deduplicated total cannot be computed here at all.
       // Taking the largest realm's shared subtotal as the union was wrong whenever two realms hold
       // DIFFERENT shared memories: 2 MB in one and 3 MB in another is 5 MB, not 3 MB.
       wasmBytesTotal: row.heap.reduce(
@@ -514,7 +514,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       // The pairs that say whether a percentile above covers the whole stage: each middleware keeps
       // a bounded sample ring, so a call count above its OWN sample count means the percentiles
       // describe the stage's tail. Served and issued are counted separately because they are
-      // different rings — summing them let 100 client samples hide a truncated server ring of 100
+      // different rings - summing them let 100 client samples hide a truncated server ring of 100
       // against 140 served calls.
       rpcCallsTotal: row.rpc.reduce((total, realm) => total + realm.calls, 0),
       rpcSamples: row.rpc.reduce((total, realm) => total + realm.samples, 0),
@@ -555,26 +555,26 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
  * Writes the events NDJSON for `ci-event.mjs --batch`, skipping every row that must not be trended.
  *
  * Skipped rather than rejected: a nightly runs both modes, so diagnose rows reaching this function
- * is the normal case. Failed stages are dropped for a different reason — their durations are the
+ * is the normal case. Failed stages are dropped for a different reason - their durations are the
  * locator budgets they exhausted, so publishing them would invent a regression.
  */
 /**
  * Publishes a batch file to PostHog by shelling out to `scripts/ci-event.mjs`.
  *
  * Reuses the repo's publisher rather than posting here, so the uuid seeding, property namespacing
- * and dedup rules live in exactly one place — a second implementation would drift from the one CI
+ * and dedup rules live in exactly one place - a second implementation would drift from the one CI
  * uses and the drift would show up as duplicate rows.
  *
  * Called PER ITERATION, and it is the ONLY publish path. An end-of-run step was the obvious
  * backstop and is deliberately absent: the case it would cover is a network failure on one
  * iteration of a job that then survives to the end, and paying for that means a second publish
  * path whose safety rests on PostHog's dedup collapsing the re-sent rows. A dedup miss would put
- * duplicate rows into the distributions, which is a worse failure than the one being prevented —
+ * duplicate rows into the distributions, which is a worse failure than the one being prevented -
  * duplicates tighten a box and there is nothing on the dashboard that would show it. The transient
  * case is covered by the retry below instead.
  *
  * NEVER throws: a stage that measured cleanly must not fail because the network did. It returns
- * false instead, which the caller logs — a silent loss is the thing to avoid, not the loss itself.
+ * false instead, which the caller logs - a silent loss is the thing to avoid, not the loss itself.
  */
 export const publishPosthogBatch = (workspaceRoot: string, file: string): boolean => {
   if (!process.env.DX_POSTHOG_API_KEY) {

@@ -268,7 +268,7 @@ const CalendarGrid = Util.composable<HTMLDivElement, CalendarGridProps>(
     useEffect(() => {
       return event.on((event) => {
         // `select` also sets the grid's selection (e.g. when the active event changes); the grid still
-        // owns selection — a user click sets it locally and isn't overwritten until the next `select`.
+        // owns selection - a user click sets it locally and isn't overwritten until the next `select`.
         if (event.type === 'select') {
           setSelected(event.date);
         }
@@ -383,7 +383,7 @@ const CalendarGrid = Util.composable<HTMLDivElement, CalendarGridProps>(
           return;
         }
         focusRef.current = date;
-        // Always render a pending range while dragging — even a single-day range
+        // Always render a pending range while dragging - even a single-day range
         // (when the pointer is on the anchor cell or returns to it). Otherwise
         // the anchor cell would appear empty mid-drag.
         setSelected(undefined);
@@ -403,7 +403,7 @@ const CalendarGrid = Util.composable<HTMLDivElement, CalendarGridProps>(
         }
         focusRef.current = date;
         if (isSameDay(anchor, date)) {
-          // Single click — toggle off if clicking the previously-selected day,
+          // Single click - toggle off if clicking the previously-selected day,
           // otherwise set as selected. (pointerenter may have cleared the ring
           // mid-drag to show a 1-day pending-range fill; restore here.)
           if (prevSelectedRef.current && isSameDay(prevSelectedRef.current, date)) {
@@ -416,7 +416,7 @@ const CalendarGrid = Util.composable<HTMLDivElement, CalendarGridProps>(
           onSelect?.({ date });
           return;
         }
-        // Drag commit — `selected` was already cleared by pointerenter.
+        // Drag commit - `selected` was already cleared by pointerenter.
         const committed = makeRange(anchor, date);
         setRange(committed);
         onSelectRange?.({ range: committed });
@@ -531,7 +531,7 @@ const CalendarGrid = Util.composable<HTMLDivElement, CalendarGridProps>(
           let anchor = anchorRef.current;
           let focus = focusRef.current;
           if (!anchor) {
-            // No prior gesture — seed from current selected/range/today.
+            // No prior gesture - seed from current selected/range/today.
             if (selected) {
               anchor = startOfDay(selected);
               focus = anchor;
@@ -549,7 +549,7 @@ const CalendarGrid = Util.composable<HTMLDivElement, CalendarGridProps>(
           updateRangeFromAnchor(newFocus, true);
           scrollIntoView(newFocus);
         } else {
-          // Plain arrow — move single selection; clear any range gesture state.
+          // Plain arrow - move single selection; clear any range gesture state.
           const current = selected ?? focusRef.current ?? anchorRef.current ?? today;
           const next = addDays(startOfDay(current), dx);
           anchorRef.current = next;

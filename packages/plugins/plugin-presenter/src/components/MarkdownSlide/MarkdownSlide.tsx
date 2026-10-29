@@ -221,7 +221,7 @@ export const parseLineHighlights = (
   lineCount = MAX_HIGHLIGHT_LINE,
 ): Set<number> | undefined => {
   const last = Math.min(lineCount, MAX_HIGHLIGHT_LINE);
-  // The first `{…}` that is not an option block such as `{lines:true}`.
+  // The first `{...}` that is not an option block such as `{lines:true}`.
   const ranges = meta && /\{([^}:]*)\}/.exec(meta)?.[1].split('|')[0].trim();
   if (!ranges || ranges === '*' || ranges === 'all') {
     return undefined;

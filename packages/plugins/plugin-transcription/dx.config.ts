@@ -36,7 +36,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       The read-only editor renders messages with speaker bylines and wall-clock timestamps,
       supporting markdown decoration and document preview.
       An optional message enricher pipeline lets plugins annotate messages before they are
-      committed — for example, to attach speaker identity from a calls service.
+      committed - for example, to attach speaker identity from a calls service.
 
       The plugin ships two skill-compatible operations: Open (loads and formats a transcript
       for reading by an AI assistant) and Summarize (sends the transcript text to an LLM and

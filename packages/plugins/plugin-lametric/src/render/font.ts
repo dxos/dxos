@@ -7,7 +7,7 @@
  *
  * Deliberately approximate: it exists so the on-screen replica shows how much text actually fits on
  * 37 pixels, not to reproduce LaMetric's own glyphs. Lowercase maps to uppercase, and an unknown
- * character renders blank rather than throwing — a display is not worth an exception.
+ * character renders blank rather than throwing - a display is not worth an exception.
  */
 export const GLYPH_WIDTH = 3;
 export const GLYPH_HEIGHT = 5;

@@ -14,7 +14,7 @@ export type AtprotoForeignKey = { source: string; id: string };
  * explain why (e.g. a Book that is not in the BookHive catalog has no `hiveId` to publish under).
  *
  * `unverifiable` distinguishes "we could not determine eligibility" (offline / upstream unreachable)
- * from a definitive "not publishable" — the companion renders the former as an "unknown" status rather
+ * from a definitive "not publishable" - the companion renders the former as an "unknown" status rather
  * than a hard ineligibility, since the true state is simply not knowable right now.
  */
 export type PublishEligibility = { ok: true } | { ok: false; reason: string; unverifiable?: boolean };
@@ -47,7 +47,7 @@ export type PublishInspection = {
  * Declares that an ECHO type maps to an atproto lexicon record via a declarative {@link Panproto.Lens}.
  *
  * Set on the schema struct (type-level) so the generic atproto companion can discover a publishable
- * object purely from its type. The mapping is serializable DATA (a `Panproto.Lens`), not a closure — the
+ * object purely from its type. The mapping is serializable DATA (a `Panproto.Lens`), not a closure - the
  * runner (`Panproto.encode`/`decode`) executes it. Publish policy (which cannot be data) lives on the
  * separate {@link AtprotoPolicyAnnotation}.
  */
@@ -64,20 +64,20 @@ export const AtprotoRecordAnnotationId = '@dxos/schema/annotation/AtprotoRecord'
 export const AtprotoRecordAnnotation = createAnnotationHelper<AtprotoRecord>(AtprotoRecordAnnotationId);
 
 /**
- * Publish policy for an atproto-mapped type — the closures that cannot be expressed as lens data:
+ * Publish policy for an atproto-mapped type - the closures that cannot be expressed as lens data:
  * eligibility gating, network-aware inspection, and post-import enrichment. Carried on a separate
  * annotation (like `OptionsLookupAnnotation`) so the serializable {@link AtprotoRecordAnnotation} stays
  * closure-free. All optional; absent hooks fall back to permissive defaults.
  */
 export type AtprotoPolicy = {
   /**
-   * Publish-eligibility gate, evaluated before publish is offered. Absent ⇒ always eligible. Synchronous;
+   * Publish-eligibility gate, evaluated before publish is offered. Absent => always eligible. Synchronous;
    * the actual publish path uses this. For richer, network-aware UI state use {@link inspect}.
    */
   canPublish?: (object: unknown) => PublishEligibility;
   /**
    * Async, network-aware inspection used by the companion for richer state: a refined eligibility and
-   * per-field publish notes (e.g. divergence from an upstream catalog). Absent ⇒ falls back to {@link canPublish}.
+   * per-field publish notes (e.g. divergence from an upstream catalog). Absent => falls back to {@link canPublish}.
    */
   inspect?: (object: unknown) => Promise<PublishInspection>;
   /**
@@ -86,7 +86,7 @@ export type AtprotoPolicy = {
    */
   onImport?: (object: unknown) => Promise<void>;
   /**
-   * Foreign keys to stamp on an object imported from a record — derived from the wire record itself
+   * Foreign keys to stamp on an object imported from a record - derived from the wire record itself
    * (e.g. an external catalog id the object should stay linked to).
    */
   foreignKeys?: (record: Record<string, unknown>) => AtprotoForeignKey[];

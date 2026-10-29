@@ -14,7 +14,7 @@ import * as Support from './Support.ts';
 import { SupportIssueResult, SupportReportResult } from './SupportService.ts';
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
-// — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
+// - kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
 export const IssueType = Schema.Literals(['bug', 'feature']).annotate({
   title: 'Type',
   description: 'Bug report or a feature request.',
@@ -61,13 +61,13 @@ export const SupportRequest = Schema.Struct({
   includeLogs: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Include debug logs',
-      description: 'Attach the debug log bundle to the report. Sent to our team only — never posted publicly.',
+      description: 'Attach the debug log bundle to the report. Sent to our team only - never posted publicly.',
     }),
     Schema.optional,
   ),
-  // Hidden — auto-populated by FeedbackPanel; never rendered as an input.
+  // Hidden - auto-populated by FeedbackPanel; never rendered as an input.
   version: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-  // Hidden — set by callers filing on the team's behalf (the debug console) so the issue lands
+  // Hidden - set by callers filing on the team's behalf (the debug console) so the issue lands
   // under the same Linear label the PostHog submissions sync under.
   labels: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 });

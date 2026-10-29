@@ -20,7 +20,7 @@ export const MAX_LIST_LIMIT = 200;
 
 /**
  * Per-call options every list-style tool accepts. Both fields are optional
- * — the defaults match `DEFAULT_LIST_LIMIT` items, full projection.
+ * - the defaults match `DEFAULT_LIST_LIMIT` items, full projection.
  */
 export type ListOptions = {
   /** Override the default `DEFAULT_LIST_LIMIT`. Capped at `MAX_LIST_LIMIT`. */

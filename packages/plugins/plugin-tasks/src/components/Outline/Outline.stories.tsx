@@ -78,7 +78,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * `#123` resolves to an issue or pull request in the repository the host names — the decoration
+ * `#123` resolves to an issue or pull request in the repository the host names - the decoration
  * plugin-github contributes, which the project article wires up from `Project.repo`.
  */
 export const WithReferences: Story = {

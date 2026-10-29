@@ -48,8 +48,8 @@ export const surfaceMetricKey = (surfaceId: string, role: string): string => `su
 
 /**
  * Singleton store of surface dev metrics. A module singleton (rather than a React
- * context) so the debug overlay — which renders in its own root outside the app's
- * provider tree — can read the same data as the in-app devtools panel.
+ * context) so the debug overlay - which renders in its own root outside the app's
+ * provider tree - can read the same data as the in-app devtools panel.
  */
 class SurfaceMetricsStore {
   #metrics = new Map<string, SurfaceMetric>();

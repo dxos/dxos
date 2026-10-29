@@ -22,7 +22,7 @@ export type UseBasicMarkdownExtensionsOptions = {
   readonly?: boolean;
   /**
    * Extra extensions appended to the returned array.
-   * Callers must memoize this array — it is used as a dependency of {@link useMemo}.
+   * Callers must memoize this array - it is used as a dependency of {@link useMemo}.
    */
   extensions?: Extension[];
 };

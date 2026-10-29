@@ -25,8 +25,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     author: 'DXOS',
     description: trim`
       Trip manages travel itineraries as local-first ECHO objects. A Trip is an
-      ordered list of typed Segments — Flight, Train, Boat, Road, Lodging, and
-      Activity — each of which may be linked to a Booking that carries the
+      ordered list of typed Segments - Flight, Train, Boat, Road, Lodging, and
+      Activity - each of which may be linked to a Booking that carries the
       confirmation code, provider, passengers, price, and attached e-ticket
       files. Trips are browsable as Articles with a calendar mini-view and a
       SegmentStack companion surface, and can be embedded inside Markdown

@@ -190,7 +190,7 @@ describe('timeline model', () => {
         const onMain = commits.find((commit) => commit.message === 'on-main');
         const onBranch = commits.find((commit) => commit.message === 'on-branch');
         invariant(onMain && onBranch);
-        // The main checkpoint lanes on main; the branch checkpoint lanes on the branch — NOT main.
+        // The main checkpoint lanes on main; the branch checkpoint lanes on the branch - NOT main.
         expect(onMain.branch).toBe(MAIN_BRANCH);
         expect(onBranch.branch).toBe(Branch.label(branch));
         expect(onBranch.branch).not.toBe(MAIN_BRANCH);
@@ -225,7 +225,7 @@ describe('timeline model', () => {
         const forkId = `branch-${branch.id}`;
         const fork = commits.find((commit) => commit.id === forkId);
         invariant(fork);
-        // The fork descends from v2 — NOT from v3 (the latest main commit) or Now.
+        // The fork descends from v2 - NOT from v3 (the latest main commit) or Now.
         expect(fork.parents).toEqual([v2.id]);
         expect(fork.parents).not.toContain(v3.id);
         // And it is ordered right after v2, before v3 (parents precede children; topological).

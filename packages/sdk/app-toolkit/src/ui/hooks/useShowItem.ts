@@ -10,7 +10,7 @@ import { LayoutOperation } from '../../operations/index.ts';
 import { useLayout } from './useLayout.ts';
 
 export type ShowItemOptions = {
-  /** Attention context id — typically the master surface's attendableId. */
+  /** Attention context id - typically the master surface's attendableId. */
   contextId: string;
   /** Id of the item being made the current selection in that context. */
   selectionId: string;
@@ -25,7 +25,7 @@ export type ShowItemOptions = {
 
 /**
  * Master-detail dispatch helper. Selects the item in the attention context,
- * then — based on the current layout mode — shows its detail surface:
+ * then - based on the current layout mode - shows its detail surface:
  *
  * - `'mobile'`: expand the complementary sidebar on the given companion segment.
  * - deck modes (`'solo'`/`'multi'`): open the item as a sibling plank beside the master
@@ -44,7 +44,7 @@ export const useShowItem = () => {
       });
 
       // `mode` carries both the layout's platform (`mobile`) and the deck's own mode, so every deck
-      // mode — whatever the plank count — opens the detail beside its master.
+      // mode - whatever the plank count - opens the detail beside its master.
       switch (layout.mode) {
         case 'mobile':
           return invokePromise(LayoutOperation.UpdateComplementary, {

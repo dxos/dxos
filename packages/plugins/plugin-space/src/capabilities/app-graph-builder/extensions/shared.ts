@@ -24,7 +24,7 @@ import { SpaceNamespace } from '../../../namespace.ts';
 
 export const DATABASE_SECTION_TYPE = `${SpaceNamespace.key}.database`;
 export const COLLECTIONS_SECTION_TYPE = `${SpaceNamespace.key}.collections`;
-/** Tags every type node under the Database section — both static (compile-time) and database (dynamic) schemas. */
+/** Tags every type node under the Database section - both static (compile-time) and database (dynamic) schemas. */
 export const SCHEMA_NODE_TYPE = `${SpaceNamespace.key}.static-schema`;
 
 //
@@ -102,7 +102,7 @@ export type ViewIndex = {
   typeUrisWithViews: Set<string>;
   /** View objects targeting a specific type URI. */
   getViewsForTypeUri: (typeUri: string) => Obj.Any[];
-  /** True when the schema has `ViewAnnotation` and that path resolves non-null on `object`; false otherwise (no annotation, or null/undefined path — e.g. Kanban with unset `view`). */
+  /** True when the schema has `ViewAnnotation` and that path resolves non-null on `object`; false otherwise (no annotation, or null/undefined path - e.g. Kanban with unset `view`). */
   isView: (object: Obj.Any) => boolean;
   /** View-annotated type URIs with at least one instance that is not a view. */
   typeUrisWithNonViewObjects: Set<string>;
@@ -147,8 +147,8 @@ export const buildViewIndex = (get: Atom.AtomContext, space: Space, schemas: Typ
         holder =
           holder == null || typeof holder !== 'object' ? undefined : (holder as Record<string, unknown>)[segment];
       }
-      // Path resolved to a non-null value → this instance is a "view". Path
-      // resolved to null/undefined → it's a regular object that happens to
+      // Path resolved to a non-null value -> this instance is a "view". Path
+      // resolved to null/undefined -> it's a regular object that happens to
       // be of a view-annotated schema.
       if (holder != null) {
         viewObjectIds.add(viewObject.id);

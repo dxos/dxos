@@ -96,7 +96,7 @@ const main = async () => {
     }
     const cells = engines.map((engine) => {
       const passed = counts.passed.get(engine.name) ?? 0;
-      return counts.total ? `${passed} (${Math.round((100 * passed) / counts.total)}%)` : '–';
+      return counts.total ? `${passed} (${Math.round((100 * passed) / counts.total)}%)` : '-';
     });
     console.log(`| ${key} | ${counts.total} | ${cells.join(' | ')} |`);
   }

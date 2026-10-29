@@ -36,10 +36,10 @@ export type TaskQuestionProps = Util.ThemedClassName<{
   thread: TaskQuestionThread;
   /** An answer is in flight; the controls are disabled until it settles. */
   busy?: boolean;
-  /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
+  /** A line under the controls - a failed write, or an answer that landed but woke nobody. */
   message?: string;
   /**
-   * One line for the question and one for its answer, with no context or controls — for a list row,
+   * One line for the question and one for its answer, with no context or controls - for a list row,
    * where the full prompt would crowd out the tasks; the host's detail surface renders it in full.
    */
   // TODO(burdon): Remove. This should be a different component.
@@ -91,7 +91,7 @@ export const TaskQuestion = ({
 
   if (compact) {
     // No event stopping: nothing here takes input, so a click falls through to the row and selects
-    // the task — which is how the reader reaches the full question.
+    // the task - which is how the reader reaches the full question.
     return (
       <div
         role='group'
@@ -135,7 +135,7 @@ export const TaskQuestion = ({
       onKeyDown={stop}
     >
       {/* The question's own row: its glyph in the shared column, its text beside it. Everything
-          below — the context, the options, the answer field — is that same second column, so the
+          below - the context, the options, the answer field - is that same second column, so the
           question reads as one block hanging off one glyph rather than as four indented things. */}
       <div className={TASK_GRID_ICON}>
         <Icon.Icon icon='ph--question--regular' valence='warning' />
@@ -175,8 +175,8 @@ export const TaskQuestion = ({
                       data-testid='task-question.option'
                       onClick={() => handleSubmit(option.title)}
                     >
-                      {/* Numbered, so the options can be referred to — an agent asking again, a
-                          person saying "the second one" — rather than quoted back in full. On the
+                      {/* Numbered, so the options can be referred to - an agent asking again, a
+                          person saying "the second one" - rather than quoted back in full. On the
                           first line and top-aligned, since an option's text wraps. */}
                       <div className='shrink-0 tabular-nums text-fg-muted self-start'>{index + 1}.</div>
                       {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}

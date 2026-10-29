@@ -5,7 +5,7 @@
 // Unattended overnight driver for the model-ladder experiment: runs the graded task sweep (labeling,
 // summaries, drafts) across the open-weight ladder + haiku (the bar), scored by the opus judge, with
 // the live stats table in the foreground and vitest logs teed to results/bench.log. Fully
-// non-interactive — set it running and read `fixtures/local/results/model-ladder.md` in the morning.
+// non-interactive - set it running and read `fixtures/local/results/model-ladder.md` in the morning.
 //
 // Usage (from packages/stories/stories-brain):
 //   moon run stories-brain:overnight
@@ -46,7 +46,7 @@ console.error(`  judge:     ${process.env.JUDGE}   reference: ${process.env.LADD
 console.error(
   `  messages:  graded ${process.env.LADDER_N} / artifacts ${process.env.ARTIFACT_N ?? 300}   tasks: ${process.env.LADDER_TASKS ?? 'labeling,summarize-messages,summarize-threads,drafts'}`,
 );
-console.error('  reports →  fixtures/local/results/{model-ladder,topics,profiles,drafts-sample}.md\n');
+console.error('  reports ->  fixtures/local/results/{model-ladder,topics,profiles,drafts-sample}.md\n');
 
 // Reuse bench.mjs: it loads .env, seeds progress.json, and tees vitest logs. Render the live stats
 // table only on a TTY; a detached/background run logs plainly (no alt-screen redraw into a file).

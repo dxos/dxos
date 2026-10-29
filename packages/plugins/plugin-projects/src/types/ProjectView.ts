@@ -34,7 +34,7 @@ export const State = Schema.Struct({
 export type State = Schema.Schema.Type<typeof State>;
 
 /**
- * A project article's view state — the selected tab and whether the pipeline chart is open — keyed
+ * A project article's view state - the selected tab and whether the pipeline chart is open - keyed
  * by the project's id and persisted (localStorage) so reopening a project restores where the reader
  * left it.
  */

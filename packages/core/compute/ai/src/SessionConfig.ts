@@ -20,13 +20,13 @@ export const SessionConfig = Schema.Struct({
   /** The model the session runs on, as the model's DXN (see `Model`). */
   model: Schema.optional(DXN.Schema),
 
-  /** The agent that runs the session, by the id its plugin registered (`composer`, `claude-code`, …). */
+  /** The agent that runs the session, by the id its plugin registered (`composer`, `claude-code`, ...). */
   harness: Schema.optional(Schema.String),
 
   /** The model an agent that chooses its own model runs on, by an id the agent offers. */
   agentModel: Schema.optional(Schema.String),
 
-  /** How hard such an agent thinks (`low` … `max`), by an id the agent offers. */
+  /** How hard such an agent thinks (`low` ... `max`), by an id the agent offers. */
   agentEffort: Schema.optional(Schema.String),
 
   /** How freely such an agent acts without asking (its permission mode), by an id the agent offers. */

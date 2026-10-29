@@ -137,7 +137,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
           // In suspend mode the caller owns initialization (typically a forked `initialize()` whose
           // failure raises the app's fatal error). A competing call here can succeed after that
           // failure and wake suspended consumers into an app whose initialization events never
-          // fired — onboarding, app-graph, and migrations all gate on those.
+          // fired - onboarding, app-graph, and migrations all gate on those.
           if (!client.initialized && !(suspend && clientProp)) {
             await client.initialize();
             log('client ready');

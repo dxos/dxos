@@ -3,7 +3,7 @@
 //
 
 // Kept out of the components: react-refresh only fast-refreshes a module whose exports are all
-// components, so a context exported beside one forces a full reload on every edit — and the edit
+// components, so a context exported beside one forces a full reload on every edit - and the edit
 // pane, which lives in its own file, needs the same context the list provides.
 
 import type { MenuItem } from '@dxos/react-ui-menu';
@@ -17,7 +17,7 @@ import { type TaskSelectModifiers } from './TaskTreeNode.tsx';
 import { type TaskGroup } from './tree-model.ts';
 
 //
-// Context — a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
+// Context - a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
 //
 
 const TASK_LIST_NAME = 'TaskList.Root';
@@ -30,13 +30,13 @@ export type TaskListContextValue = {
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;
-  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  /** Renderers for a row's description beyond its own - a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
   /** Render the questions in each task's history under its title. */
   hierarchical: boolean;
-  /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
+  /** Whether the leading gutter is rendered at all - it holds the ordinal or the checkbox. */
   showGutter: boolean;
   /** Render who holds each task; off collapses the assignee track. */
   showAssignees: boolean;
@@ -50,7 +50,7 @@ export type TaskListContextValue = {
    */
   columns: string;
   selected?: string;
-  /** Ids of the checked rows — the set an action acts on, distinct from the current row. */
+  /** Ids of the checked rows - the set an action acts on, distinct from the current row. */
   checked: ReadonlySet<string>;
   /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
   isCollapsed: (id: string) => boolean;

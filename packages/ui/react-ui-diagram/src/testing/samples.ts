@@ -5,7 +5,7 @@
 import { type Projection } from '../types/index.ts';
 
 /**
- * A hand-written projection with no DSL behind it — the fixture that proves the renderer depends on
+ * A hand-written projection with no DSL behind it - the fixture that proves the renderer depends on
  * the neutral model alone. Also covers compartments and several ports on one side.
  */
 export const CLASS_DIAGRAM: Projection = {

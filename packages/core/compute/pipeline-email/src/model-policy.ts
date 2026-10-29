@@ -5,7 +5,7 @@
 // Declarative model routing for the email pipeline stages (productized from the stories-brain research
 // harness): one place that maps each LLM-bearing stage to the model it runs on, instead of hard-coding
 // a model DXN at every call site. Product tiers only (Anthropic); the research ladder's open-weight
-// (ollama) variants stay in the harness. Each layer overrides the previous: default ← per-run policy.
+// (ollama) variants stay in the harness. Each layer overrides the previous: default <- per-run policy.
 
 /** Anthropic model DXNs available to product pipelines. */
 export const MODEL_HAIKU = 'com.anthropic.model.claude-haiku-4-5.default';
@@ -22,11 +22,11 @@ export type StageId =
   | 'extract-facts'
   | 'draft';
 
-/** A partial policy: stage → a model DXN. */
+/** A partial policy: stage -> a model DXN. */
 export type ModelPolicy = Partial<Record<StageId, string>>;
 
 /**
- * Default stage → model routing, seeded from the model-ladder findings (REPORT §4/§5): labeling and
+ * Default stage -> model routing, seeded from the model-ladder findings (REPORT §4/§5): labeling and
  * summaries want a premier model, drafting tolerates a cheaper one. Product defaults to haiku across
  * the board (the cheapest premier tier); callers override per run via a `ModelPolicy`.
  */

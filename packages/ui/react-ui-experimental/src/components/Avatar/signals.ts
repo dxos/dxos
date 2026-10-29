@@ -19,9 +19,9 @@ export type AgentSignals = {
   /** Per frame: the agent's own voice. */
   voice: {
     level: number;
-    /** 90–500 Hz. */
+    /** 90-500 Hz. */
     low: number;
-    /** 2–8 kHz: sibilants. */
+    /** 2-8 kHz: sibilants. */
     high: number;
     /** `BANDS` log-spaced bands, `LOWEST_HZ` to `HIGHEST_HZ`. */
     bands: number[];

@@ -32,7 +32,7 @@ describe('sqlite benchmarks (raw)', { tags: ['manual'], timeout: 120_000 }, () =
 
   // Neither `beforeAll` nor `beforeEach` is guaranteed to resolve before a bench's first (warmup)
   // call with vitest's experimental `bench()` API (verified directly), so setup is a memoized lazy
-  // singleton every bench awaits first — the one-time cost lands in that discarded warmup call.
+  // singleton every bench awaits first - the one-time cost lands in that discarded warmup call.
   const ensureState = (): Promise<State> => {
     if (!statePromise) {
       statePromise = (async () => {

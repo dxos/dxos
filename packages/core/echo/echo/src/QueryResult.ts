@@ -171,7 +171,7 @@ export interface QueryResult<T> {
   /**
    * Self-updating atom. Updates automatically when query results change.
    *
-   * Memoized per QueryResult instance — repeated accesses on the same instance return the same
+   * Memoized per QueryResult instance - repeated accesses on the same instance return the same
    * Atom. Safe only when the QueryResult is itself held stable across re-renders (e.g. behind a
    * `useMemo`). It must NOT be used in graph-builder connectors/actions or other atom computes,
    * where `db.query(...)` is called fresh on each re-evaluation: every run constructs a new

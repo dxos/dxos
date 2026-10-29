@@ -47,7 +47,7 @@ const usageMatchesLimit = (item: MeteringUsageItem, limit: MeteringLimit): boole
 const sumUsageForLimit = (usage: GetProfileUsageResponse['usage'], limit: MeteringLimit): number =>
   usage.reduce((total, item) => (usageMatchesLimit(item, limit) ? total + item.amount : total), 0);
 
-/** Humanize a camelCase value key, e.g. `outputTokens` → `output tokens`. */
+/** Humanize a camelCase value key, e.g. `outputTokens` -> `output tokens`. */
 const formatValueKey = (valueKey: string): string =>
   valueKey
     .replace(/([A-Z])/g, ' $1')
@@ -56,8 +56,8 @@ const formatValueKey = (valueKey: string): string =>
 
 /**
  * Human label for a limit: a scope followed by the value key, e.g.
- * `{ eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'] }` → `All models · output tokens`,
- * `{ eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-opus-4'] }` → `claude-opus-4 · input tokens`.
+ * `{ eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'] }` -> `All models · output tokens`,
+ * `{ eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-opus-4'] }` -> `claude-opus-4 · input tokens`.
  */
 const formatLimitLabel = (limit: MeteringLimit, t: TFunction): string => {
   const metric = formatValueKey(limit.valueKey);
@@ -87,7 +87,7 @@ type UsageRow = {
   label: string;
   /** Field caption (schema `description` annotation). */
   caption: string;
-  /** Consumption as a whole percentage (`0`–`100`); `undefined` for an unlimited limit. */
+  /** Consumption as a whole percentage (`0`-`100`); `undefined` for an unlimited limit. */
   percent?: number;
   windowHours: number;
 };
@@ -170,7 +170,7 @@ const STATE_MESSAGES = {
 /**
  * Presentational view of profile usage: renders loading/error/unavailable/empty states, or a
  * schema-driven settings form (one read-only field per limit), plus a refresh control and a
- * collapsible raw-response viewer. Pure — all data via props.
+ * collapsible raw-response viewer. Pure - all data via props.
  */
 export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProps) => {
   const { t } = Hooks.useTranslation(ClientNamespace.key);

@@ -210,7 +210,7 @@ const location = (target: Target): Location | undefined =>
 
 /**
  * Go-to-definition: a `github:` key opens its file at the symbol, a spec reference or dependency opens the other spec
- * at the item, and an item id (`[F-1.2]`, `affects: [F-1]`) jumps to its declaration — in this spec, or for a review,
+ * at the item, and an item id (`[F-1.2]`, `affects: [F-1]`) jumps to its declaration - in this spec, or for a review,
  * in the spec it judges.
  */
 export const definition = (workspace: Workspace, document: Document, position: Position): Location | undefined => {

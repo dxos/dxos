@@ -64,10 +64,10 @@ const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 const DEBUG_TIMEOUT_MS = 3_600_000;
 
-// Env-gated node-test instrumentation (opt-in; unset → config byte-identical to today).
+// Env-gated node-test instrumentation (opt-in; unset -> config byte-identical to today).
 // DESIGN: .agents/projects/test-profiling-leaks/DESIGN.md.
-//   DX_PROFILE_TESTS[=dir] — emit a V8 `.cpuprofile` via Node `--cpu-prof` (dir default ./profiles).
-//   DX_DEBUG_LEAKS         — before/after heap snapshots + per-test heapUsed samples of a single suite.
+//   DX_PROFILE_TESTS[=dir] - emit a V8 `.cpuprofile` via Node `--cpu-prof` (dir default ./profiles).
+//   DX_DEBUG_LEAKS         - before/after heap snapshots + per-test heapUsed samples of a single suite.
 // Both need the tests to run on a fork's main thread, so instrumentation forces `pool: 'forks'` with
 // a single non-isolated process: `--cpu-prof`/`--expose-gc` (passed via `execArgv`) apply to the
 // process main thread, which under the default worker-per-file isolation is not where tests run.
@@ -80,7 +80,7 @@ const DEBUG_LEAKS = !!process.env.DX_DEBUG_LEAKS;
 const TEST_INSTRUMENTED = Boolean(CPU_PROFILE_DIR) || DEBUG_LEAKS;
 // `execArgv` / `isolate` / `fileParallelism` / `maxWorkers` are top-level test options in vitest 4
 // (the v3 `poolOptions.forks.{singleFork,execArgv}` nesting was removed). A single, non-isolated,
-// non-parallel fork runs the whole suite in one persistent process — one coherent profile / snapshot pair.
+// non-parallel fork runs the whole suite in one persistent process - one coherent profile / snapshot pair.
 const TEST_INSTRUMENT_EXEC_ARGV = [
   ...(CPU_PROFILE_DIR ? ['--cpu-prof', `--cpu-prof-dir=${CPU_PROFILE_DIR}`] : []),
   ...(DEBUG_LEAKS ? ['--expose-gc'] : []),
@@ -100,7 +100,7 @@ const BROWSER_LOG_FILE = 'test-browser.log';
 const BROWSER_LOG_FILTER = process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FILTER ?? 'debug';
 
 // Browser/storybook tests transitively import `@anthropic-ai/tokenizer` via
-// `@dxos/ai`, which pulls in `tiktoken/lite` — a WASM bundle whose top-level
+// `@dxos/ai`, which pulls in `tiktoken/lite` - a WASM bundle whose top-level
 // `await` cannot be rewrapped by esbuild's dep pre-bundler. Composer-app's
 // vite.config.ts aliases it to an empty stub for the same reason. None of
 // the browser tests actually tokenize, so the alias is safe.
@@ -108,7 +108,7 @@ const TIKTOKEN_STUB = new URL('./vitest/tiktoken-stub.mjs', import.meta.url).pat
 const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
 
 // Default Workers runtime compatibility for the opt-in `workerd` vitest project. `nodejs_compat`
-// exposes the Node.js built-ins (`node:crypto`, `node:buffer`, …) that @dxos packages resolve to,
+// exposes the Node.js built-ins (`node:crypto`, `node:buffer`, ...) that @dxos packages resolve to,
 // mirroring what production DXOS functions run against on Cloudflare. Overridable per package.
 // Pinned to the EDGE operation-service's date: before native `node:os` the pool falls back to a
 // polyfill that crashes workerd on load, and `@dxos/log` (via chalk) imports it.
@@ -124,14 +124,14 @@ const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
  * Lets browser consumers resolve polyfills via their app's alias config.
  *
  * `isBundled` exempts a specifier the package asked to inline, so a `bundle` entry that shadows a
- * stdlib name (`events`, `buffer`, `util`, …) still resolves to the npm package.
+ * stdlib name (`events`, `buffer`, `util`, ...) still resolves to the npm package.
  */
 export const DxNodeStdPlugin = (isBundled: (id: string) => boolean = () => false): Plugin => ({
   name: 'DxNodeStd',
   enforce: 'pre',
   resolveId(id) {
-    // A package that asked to inline a stdlib-shadowing package (`events`, `buffer`, `util`, …)
-    // means the npm package of that name, so the remap below must not claim it first — the
+    // A package that asked to inline a stdlib-shadowing package (`events`, `buffer`, `util`, ...)
+    // means the npm package of that name, so the remap below must not claim it first - the
     // esbuild pipeline only ever remapped `node:`-prefixed specifiers for this reason. Otherwise
     // the inlined copy reaches `@dxos/node-std/events` through a `require()` no bundler rewrites.
     if (isBundled(id)) {
@@ -142,7 +142,7 @@ export const DxNodeStdPlugin = (isBundled: (id: string) => boolean = () => false
       if (NODE_STD_MODULES.includes(mod)) {
         return { id: `@dxos/node-std/${mod}`, external: true };
       }
-      // Other `node:*` (child_process, http, os, net, …) stay as `node:*` literals
+      // Other `node:*` (child_process, http, os, net, ...) stay as `node:*` literals
       // so downstream bundlers (esbuild, the consuming app's vite) can decide how to
       // resolve them. Returning `id` here defeats vite's library-mode default that
       // rewrites them to the unloadable `__vite-browser-external` placeholder.
@@ -159,7 +159,7 @@ export const DxNodeStdPlugin = (isBundled: (id: string) => boolean = () => false
  *
  * Rolldown wraps each inlined CJS module in a `__commonJSMin` factory and leaves its
  * `require("pkg")` calls verbatim, guarded by a `__require` shim that throws in any realm without
- * `require` — so a browser consumer of the bundle dies on the first such call ("Calling `require`
+ * `require` - so a browser consumer of the bundle dies on the first such call ("Calling `require`
  * for X in an environment that doesn't expose the `require` function"). The calls sit inside the
  * factory bodies rather than at the top level, which is why rolldown's own
  * `esmExternalRequirePlugin` cannot lift them.
@@ -171,7 +171,7 @@ export const DxNodeStdPlugin = (isBundled: (id: string) => boolean = () => false
 export const DxHoistRequirePlugin = (): Plugin => {
   // The two forms rolldown emits. Destructuring (`var { a, b } = ...`) reads named exports, so it
   // needs a namespace import; a single binding (`var X = ...`) is the whole `module.exports`, so it
-  // needs a DEFAULT import — `inherits` and friends are bare `module.exports = fn`, and a namespace
+  // needs a DEFAULT import - `inherits` and friends are bare `module.exports = fn`, and a namespace
   // object in their place fails as `inherits is not a function`.
   const NAMED_REQUIRE = /var \{[\s\S]+?\} = __require\("(.+?)"\)/g;
   const DEFAULT_REQUIRE = /var [^{}\n]+? = __require\("(.+?)"\)/g;
@@ -215,7 +215,7 @@ export const DxHoistRequirePlugin = (): Plugin => {
  * so a rewritten bare specifier is externalized under its new name.
  *
  * Not `resolve.alias`: vite's alias plugin only rewrites ids it goes on to resolve, and the
- * library build externalizes bare specifiers before that happens — so an aliased external
+ * library build externalizes bare specifiers before that happens - so an aliased external
  * (`@effect/wa-sqlite` -> `@dxos/wa-sqlite`) stayed in the output under its original name.
  */
 export const DxAliasPlugin = (alias: Record<string, string>, isBundled: (id: string) => boolean): Plugin => ({
@@ -243,11 +243,11 @@ export const DxAliasPlugin = (alias: Record<string, string>, isBundled: (id: str
 
 /**
  * Emits `?url` / `?inline` asset imports as separate files in `dist/lib/assets/` instead of
- * base64-inlining them into the JS bundle. Leaves `?raw` alone — those import the file's
+ * base64-inlining them into the JS bundle. Leaves `?raw` alone - those import the file's
  * text content as a string literal and are handled by vite's built-in `?raw` loader.
  *
  * Vite's library mode (`build.lib`) ignores `assetsInlineLimit` for `?url` imports and
- * always returns a base64 data URI — fine for small icons, ruinous for the 50 MB of
+ * always returns a base64 data URI - fine for small icons, ruinous for the 50 MB of
  * `.m4a` soundscapes in @dxos/plugin-zen. This plugin runs `enforce: 'pre'` so it
  * intercepts the import before vite's asset handler does. The output is a small JS
  * module that re-exports the emitted URL via `import.meta.ROLLUP_FILE_URL_*`, which
@@ -320,7 +320,7 @@ const rewriteDiagnosticPaths = (output: string, cwd: string, repoRoot: string): 
 /**
  * Declaration emit: clean `dist/types/` then run `tsc`.
  *
- * The clean is not housekeeping — a surviving `tsconfig.tsbuildinfo` makes an incremental
+ * The clean is not housekeeping - a surviving `tsconfig.tsbuildinfo` makes an incremental
  * `tsc` consider the (already deleted by vite) outputs up to date and emit nothing at all,
  * so the package ships a `types` entry pointing at a missing file.
  */
@@ -487,13 +487,13 @@ export type WorkerdOptions = {
   plugins?: Plugin[];
   /**
    * Extra miniflare configuration merged over the defaults, for a binding the runtime only
-   * provides when it is declared — `workerLoaders`, KV, R2. Compatibility date and flags stay
+   * provides when it is declared - `workerLoaders`, KV, R2. Compatibility date and flags stay
    * under their own options, so passing them here has no effect.
    */
   miniflare?: Record<string, unknown>;
   /**
    * Entry module of the worker under test, which `SELF` dispatches to. It runs in the SAME isolate
-   * as the tests, so a test reaches it through ordinary module state — which is what makes `SELF`
+   * as the tests, so a test reaches it through ordinary module state - which is what makes `SELF`
    * usable as an outbound target for code the test itself is driving.
    */
   main?: string;
@@ -501,8 +501,8 @@ export type WorkerdOptions = {
 
 export type StorybookOptions = {
   /**
-   * Disable per-file module isolation so the (heavy, WASM-backed) module graph — Automerge/SQLite
-   * via `@dxos/echo` — is instantiated once and shared across story files rather than re-instantiated
+   * Disable per-file module isolation so the (heavy, WASM-backed) module graph - Automerge/SQLite
+   * via `@dxos/echo` - is instantiated once and shared across story files rather than re-instantiated
    * per file. Set for packages with many ECHO-importing stories to avoid the cumulative
    * "WebAssembly instance ran out of memory during import" exhaustion in the single headless-chromium context.
    */
@@ -537,7 +537,7 @@ export type BrowserOptions = {
   /**
    * Extra deps to pre-bundle, on top of the shared list below. A dep only a worker bundle or a
    * dynamic import pulls in is discovered mid-run, and the re-optimize reloads the page under the
-   * running suite — naming it here keeps the run stable.
+   * running suite - naming it here keeps the run stable.
    */
   optimizeDeps?: string[];
   nodeExternal?: boolean;
@@ -610,7 +610,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         enabled: true,
         headless: true,
         // Pin the browser timezone so `Intl.DateTimeFormat().resolvedOptions().timeZone`
-        // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
+        // does not resolve to `Etc/Unknown` in headless CI containers - react-aria's
         // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
         provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         // `DX_STORYBOOK_BROWSER` runs the stories elsewhere, for a story that pins browser-specific behaviour.
@@ -644,7 +644,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         storybookScript: 'storybook dev --ci',
         tags: {
           include: ['test'],
-          // `manual` mirrors the vitest tag of the same name (vitest.tags.ts) — storybook tags are
+          // `manual` mirrors the vitest tag of the same name (vitest.tags.ts) - storybook tags are
           // not vitest tags, so the opt-in gate has to be repeated here. Stories needing local
           // services or spending real tokens carry it and stay out of a default run.
           exclude: [
@@ -770,7 +770,7 @@ const WorkerdHypercoreWasmPlugin = (): Plugin => ({
 });
 
 // Runs tests inside the Cloudflare Workers runtime (`workerd`) via
-// `@cloudflare/vitest-pool-workers`. Opt-in (like `browser`/`storybook`) — only
+// `@cloudflare/vitest-pool-workers`. Opt-in (like `browser`/`storybook`) - only
 // `*.workerd.test.{ts,tsx}` files run here, so packages can exercise the same source
 // against the runtime their production Cloudflare functions use. The node/browser
 // projects exclude these files so a suite runs in exactly one runtime.
@@ -790,7 +790,7 @@ const createWorkerdProject = ({
       // instead of stale `dist/` build artifacts (mirrors the node/browser projects).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       WorkerdHypercoreWasmPlugin(),
-      // Log-meta injection only — no file sink (workerd has no filesystem).
+      // Log-meta injection only - no file sink (workerd has no filesystem).
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       // Configures the vitest pool to execute tests in workerd. `@cloudflare/vitest-pool-workers`
       // is ESM-only; a static import would make vite's (CJS) config bundler `require()` it and
@@ -863,7 +863,7 @@ const createNodeProject = ({
         // Wraps the suite with before/after heap snapshots; only loaded when leak-detecting.
         ...(DEBUG_LEAKS ? [VITEST_LEAK_SETUP] : []),
       ],
-      // Env-gated CPU-profile / leak-detect instrumentation. Unset → this block is absent and the
+      // Env-gated CPU-profile / leak-detect instrumentation. Unset -> this block is absent and the
       // node project is unchanged. See DX_PROFILE_TESTS / DX_DEBUG_LEAKS above.
       ...(TEST_INSTRUMENTED
         ? {
@@ -882,7 +882,7 @@ const createNodeProject = ({
       ...plugins,
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
-      // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
+      // Log-meta injection only - no dev file sink (vitest is a test runner, not a dev server).
       DxosLogPlugin({ logToFile: false }),
       jsx === 'solid' ? solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` }) : react(),
     ],
@@ -930,7 +930,7 @@ const moonTaskForProjectType = (projectType: string | undefined): string => {
   }
 };
 
-/** Prints `moon run …` commands to rerun each failed test individually. */
+/** Prints `moon run ...` commands to rerun each failed test individually. */
 const createMoonRerunReporter = (options: { moonProject: string; projectType?: string }): Reporter => ({
   onTestRunEnd(testModules: ReadonlyArray<TestModule>, _errors, reason: TestRunEndReason) {
     if (reason === 'interrupted') {
@@ -976,7 +976,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const resultsDirectory = join(workspaceRoot, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
   const reportsDirectory = join(workspaceRoot, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
   // The v8 coverage provider imports `node:inspector/promises`, which the workerd runtime does not
-  // provide — coverage is unsupported for the workers pool, so never enable it for the workerd project.
+  // provide - coverage is unsupported for the workers pool, so never enable it for the workerd project.
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
 
   if (xmlReport) {
@@ -1074,7 +1074,7 @@ export interface DxConfigOptions {
   /**
    * React JSX transform. Defaults to `'automatic'` (emits `react/jsx-runtime` imports). Use
    * `'classic'` (`React.createElement`) for code that runs against a React the bundler externalizes
-   * to a global — notably Storybook manager addons, whose manager bundle runs on Storybook's own
+   * to a global - notably Storybook manager addons, whose manager bundle runs on Storybook's own
    * React 18 while automatic-runtime code would inline this repo's React 19 jsx-runtime and crash
    * (`recentlyCreatedOwnerStacks`). Only meaningful when `jsx === 'react'`.
    */
@@ -1095,7 +1095,7 @@ export interface DxConfigOptions {
   alias?: Record<string, string>;
   /**
    * `package.json` fields to try when resolving a dependency, highest priority first. For deps
-   * whose ESM entry is broken or node-only — the vendored bundles pick the browser build.
+   * whose ESM entry is broken or node-only - the vendored bundles pick the browser build.
    */
   mainFields?: string[];
   /**
@@ -1139,7 +1139,7 @@ const buildTestConfig = (
     ...resolveReporterConfig(dirname),
     tags: TEST_TAGS,
     // Never set `dangerouslyIgnoreUnhandledErrors`: suppressing unhandled rejections hides real
-    // teardown failures — surface and fix them at the source. See the `code-style` skill.
+    // teardown failures - surface and fix them at the source. See the `code-style` skill.
     projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
       (project): project is UserWorkspaceConfig => project !== undefined,
     ),
@@ -1150,7 +1150,7 @@ const buildTestConfig = (
  * Build entries for every per-condition subpath the package declares in `imports`.
  *
  * Derived from the manifest rather than listed by hand: a hand-maintained entry list drifts
- * silently and leaves the manifest pointing at a bundle the build never produced — which is a
+ * silently and leaves the manifest pointing at a bundle the build never produced - which is a
  * hard ERR_MODULE_NOT_FOUND for consumers and, worse, reads as a passing structure trace because
  * the subpath cannot be resolved at all. A declared condition whose source is missing is an error
  * for the same reason.
@@ -1183,7 +1183,7 @@ const conditionalSubpathEntries = (cwd: string): Record<string, string> => {
       if (!existsSync(join(cwd, sourceTarget))) {
         throw new Error(
           `package.json declares the '${condition}' condition for ${subpath} but ${sourceTarget} is missing${
-            subpath === '#capabilities' ? ' — run `pnpm exec dx-plugin gen`' : ''
+            subpath === '#capabilities' ? ' - run `pnpm exec dx-plugin gen`' : ''
           } in ${cwd}.`,
         );
       }
@@ -1275,9 +1275,9 @@ const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
 /**
  * Single entry point for a DXOS library package's `vite.config.ts`.
  *
- * - Library JS → `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
- * - Types → `dist/types/src/**\/*.d.ts` (tsc, started in `buildStart`).
- * - Tests → vitest projects (`node` / `browser` / `storybook`) wired in when `test` is set.
+ * - Library JS -> `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
+ * - Types -> `dist/types/src/**\/*.d.ts` (tsc, started in `buildStart`).
+ * - Tests -> vitest projects (`node` / `browser` / `storybook`) wired in when `test` is set.
  */
 export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
   const {
@@ -1295,7 +1295,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     importGlobals = false,
     test,
   } = options;
-  // `id === name` catches the package root, `id.startsWith(name + '/')` its subpaths — a bare
+  // `id === name` catches the package root, `id.startsWith(name + '/')` its subpaths - a bare
   // prefix test would also swallow unrelated neighbours (`buffer` matching `buffer-alloc`).
   const isBundled = (id: string) => bundle.some((name) => id === name || id.startsWith(`${name}/`));
   const aliasKeys = Object.keys(alias ?? {});
@@ -1350,11 +1350,11 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       // When the package imports `?url` / `?raw` / `?inline` assets, force every asset
       // to be emitted as a separate file rather than base64-inlined into the bundle
       // (vite's default in library mode is to inline below ~4 KB, but rolldown's chunker
-      // also lifts larger assets into a shared JS chunk — plugin-zen's 50 MB of .m4a
+      // also lifts larger assets into a shared JS chunk - plugin-zen's 50 MB of .m4a
       // ended up in a single 64 MB chunk before this).
       ...(assetsAsFiles ? { assetsInlineLimit: 0 } : {}),
       rollupOptions: {
-        // All non-relative, non-absolute imports are external — this covers @dxos/*,
+        // All non-relative, non-absolute imports are external - this covers @dxos/*,
         // effect, react, solid-js, and everything else automatically. Two carve-outs:
         //
         // - `node:*` flows through DxNodeStdPlugin's resolveId so it can remap to
@@ -1364,7 +1364,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         //   rolldown injects when lowering `@decorator` / `async` / `for-await`. The
         //   helpers aren't declared deps so we bundle them inline.
         external: (id) => {
-          // An aliased specifier must reach `DxAliasPlugin`'s `resolveId` to be renamed — rollup
+          // An aliased specifier must reach `DxAliasPlugin`'s `resolveId` to be renamed - rollup
           // consults this predicate on the raw specifier first and, on `true`, externalizes it
           // under that name without ever calling a plugin.
           if (id.startsWith('node:') || isBundled(id) || isAliased(id)) {

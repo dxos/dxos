@@ -33,9 +33,9 @@ export type TreeComponentProps = Util.ThemedClassName<{
 
 /**
  * Tree visualization wrapping the three layout variants.
- * - `tidy`   — horizontal tidy tree (collapsible)
- * - `radial` — radial tree         (collapsible)
- * - `edge`   — hierarchical edge bundling (`edges` connect leaves)
+ * - `tidy`   - horizontal tidy tree (collapsible)
+ * - `radial` - radial tree         (collapsible)
+ * - `edge`   - hierarchical edge bundling (`edges` connect leaves)
  */
 export const Tree = ({
   classNames,

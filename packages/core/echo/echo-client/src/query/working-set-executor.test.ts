@@ -15,7 +15,7 @@ import { DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
 import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor.ts';
 
-/** Ref at a nested path — unreachable by `reference`'s top-level key type. */
+/** Ref at a nested path - unreachable by `reference`'s top-level key type. */
 class Wrapper extends Type.makeObject<Wrapper>(DXN.make('com.example.type.wrapper', '0.1.0'))(
   Schema.Struct({
     spec: Schema.optional(
@@ -26,7 +26,7 @@ class Wrapper extends Type.makeObject<Wrapper>(DXN.make('com.example.type.wrappe
   }),
 ) {}
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+// -- Tests --------------------------------------------------------------------
 
 describe('WorkingSetQueryExecutor', () => {
   let builder: EchoTestBuilder;
@@ -162,7 +162,7 @@ describe('WorkingSetQueryExecutor', () => {
 
   test('reference traversal resolves a nested property path', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
-    // Same type as the hop's result, but unreferenced — so a traversal that ignored the path and
+    // Same type as the hop's result, but unreferenced - so a traversal that ignored the path and
     // returned every Person would fail this test.
     const unreferenced = Obj.make(TestSchema.Person, { name: 'Unreferenced' });
     const task = Obj.make(TestSchema.Task, { title: 'Task 1' });
@@ -300,7 +300,7 @@ describe('WorkingSetQueryExecutor', () => {
     const query = Query.select(Filter.text('foo')).from(db);
     const plan = planner.createPlan(query.ast);
     const results = executor.tryExecute(plan);
-    // TextSelector requires SQL index — executor must bail.
+    // TextSelector requires SQL index - executor must bail.
     expect(results).toBeNull();
   });
 
@@ -310,7 +310,7 @@ describe('WorkingSetQueryExecutor', () => {
     const query = Query.select(Filter.updated({ after: new Date(0) })).from(db);
     const plan = planner.createPlan(query.ast);
     const results = executor.tryExecute(plan);
-    // TimestampSelector requires SQL index — executor must bail.
+    // TimestampSelector requires SQL index - executor must bail.
     expect(results).toBeNull();
   });
 
@@ -323,7 +323,7 @@ describe('WorkingSetQueryExecutor', () => {
     const executor = makeExecutor(db);
     // Feed-scoped subquery: `_execSelectStep` would return an *empty* (not null) working set for
     // a scope outside this space, so the executor must bail rather than silently resolve an empty
-    // membership set — this is the regression the semi-join relies on `null` to prevent.
+    // membership set - this is the regression the semi-join relies on `null` to prevent.
     const subquery = Query.select(Filter.type(TestSchema.Person)).from([Scope.feed('dxn:queue:example:01')]);
     const query = Query.select(Filter.type(TestSchema.Person, { name: Filter.in(subquery.project('name')) })).from(db);
     const plan = planner.createPlan(query.ast);
@@ -470,7 +470,7 @@ describe('WorkingSetQueryExecutor', () => {
     const objects = [0, 1, 2, 3, 4].map((rank) => db.add(Obj.make(TestSchema.Expando, { category: 'a', rank })));
     await db.flush();
 
-    // The outer orderBy sorts ascending; `items.order` asks for descending — a different order.
+    // The outer orderBy sorts ascending; `items.order` asks for descending - a different order.
     const results = planAndExecute(
       db,
       Query.select(Filter.type(TestSchema.Expando))
@@ -525,7 +525,7 @@ describe('WorkingSetQueryExecutor', () => {
         .limit(2),
     );
 
-    // Two whole groups (a, b) → four items, not two.
+    // Two whole groups (a, b) -> four items, not two.
     expect(results).toHaveLength(4);
     expect(new Set(results.map((item) => item.groupKey?.category))).toEqual(new Set(['a', 'b']));
   });
@@ -578,7 +578,7 @@ describe('WorkingSetQueryExecutor', () => {
   });
 });
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// -- Helpers -----------------------------------------------------------------
 
 const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   get spaceId() {
@@ -603,7 +603,7 @@ const planAndExecute = (db: DatabaseImpl, query: Query.Query<any>) => {
   const plan = planner.createPlan(query.from(db).ast);
   const result = executor.tryExecute(plan);
   if (result === null) {
-    throw new Error('WorkingSetQueryExecutor returned null — plan requires SQL index');
+    throw new Error('WorkingSetQueryExecutor returned null - plan requires SQL index');
   }
   return result;
 };

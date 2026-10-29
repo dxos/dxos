@@ -42,7 +42,7 @@ const collect = (patterns: readonly Pattern[], triples: Triple[], filters: Expre
   }
 };
 
-/** First numeric lower-bound (`>=` / `>`) found in a FILTER — maps to `minConfidence`. */
+/** First numeric lower-bound (`>=` / `>`) found in a FILTER - maps to `minConfidence`. */
 const numericLowerBound = (filters: readonly Expression[]): number | undefined => {
   for (const expression of filters) {
     if (typeof expression !== 'object' || !('type' in expression) || expression.type !== 'operation') {
@@ -64,7 +64,7 @@ const numericLowerBound = (filters: readonly Expression[]): number | undefined =
 };
 
 /**
- * Parse a SPARQL SELECT into a structured {@link SemanticQuery} over named-graph statements — the
+ * Parse a SPARQL SELECT into a structured {@link SemanticQuery} over named-graph statements - the
  * browser/Workers-safe alternative to executing SPARQL (Comunica does not bundle for either). It
  * recognizes the bounded family of fact-retrieval patterns (entity / predicate / source /
  * confidence), the inverse of {@link buildSparql}; unsupported constructs are ignored.

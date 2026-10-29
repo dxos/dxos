@@ -7,7 +7,7 @@
  *
  * Hand-rolled rather than taken from `@aws-sdk/*`: the SDK's signer pulls in a credential-provider
  * chain, a region resolver and a Node crypto shim, none of which apply to a browser holding one
- * static key pair — and it is two orders of magnitude larger than the ~150 lines the algorithm needs.
+ * static key pair - and it is two orders of magnitude larger than the ~150 lines the algorithm needs.
  */
 
 const ALGORITHM = 'AWS4-HMAC-SHA256';
@@ -57,7 +57,7 @@ export const uriEncode = (value: string): string =>
 /** Encodes an object key for the canonical URI: every segment escaped, the separating slashes kept. */
 export const encodeObjectKey = (key: string): string => key.split('/').map(uriEncode).join('/');
 
-/** `20260826T143000Z` and `20260826` — the two timestamp forms SigV4 uses. */
+/** `20260826T143000Z` and `20260826` - the two timestamp forms SigV4 uses. */
 export const formatTimestamps = (date: Date): { amzDate: string; dateStamp: string } => {
   const amzDate = date.toISOString().replace(/[:-]|\.\d{3}/g, '');
   return { amzDate, dateStamp: amzDate.slice(0, 8) };
@@ -123,7 +123,7 @@ export type SignRequestOptions = {
 };
 
 /**
- * Signs a request with an `Authorization` header. Returns the headers to send — the caller's
+ * Signs a request with an `Authorization` header. Returns the headers to send - the caller's
  * `headers` plus `host`, `x-amz-date`, `x-amz-content-sha256` and `Authorization`.
  */
 export const signRequest = async ({

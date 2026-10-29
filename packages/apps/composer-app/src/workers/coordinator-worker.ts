@@ -14,7 +14,7 @@ export {};
 // IDB log store and its `log` processor must be registered exactly once for the
 // lifetime of the worker.
 let logStoreInstalled = false;
-// Routing state must also be shared across every tab port — a fresh handler per connect
+// Routing state must also be shared across every tab port - a fresh handler per connect
 // isolates broadcast/delivery so followers never see leader heartbeats or request-port.
 let onConnectHandler: ((ev: MessageEvent) => void) | undefined;
 

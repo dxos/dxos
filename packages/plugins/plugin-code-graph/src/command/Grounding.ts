@@ -174,5 +174,5 @@ export const describe = (candidates: readonly Candidate[]): string =>
     ? ''
     : [
         'Resources in the index that match words in the command (use their IRIs directly, e.g. in VALUES):',
-        ...candidates.map(({ iri, label, why }) => `- <${iri}> ${label} — ${why}`),
+        ...candidates.map(({ iri, label, why }) => `- <${iri}> ${label} - ${why}`),
       ].join('\n');

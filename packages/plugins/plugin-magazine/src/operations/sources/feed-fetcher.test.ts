@@ -15,7 +15,7 @@ const runFetchStandardSite = (url: string) => EffectEx.runPromise(TestHelpers.wi
 
 // RSS/Atom coverage lives in rss.test.ts.
 
-// Sample Standard.site read chain: resolveHandle → plc.directory (DID doc) → listRecords → getProfile →
+// Sample Standard.site read chain: resolveHandle -> plc.directory (DID doc) -> listRecords -> getProfile ->
 // getRecord (publication). One document references its publication by `at://` URI, the other by a bare
 // `https://` URL (resolved directly, no getRecord needed).
 const DID = 'did:plc:abc123';
@@ -175,8 +175,8 @@ const okJson = (data: unknown) =>
 /**
  * Routes a mocked `fetch` by endpoint so the resolution chain is order-independent.
  * `fetchStandardSite` takes a site reference as `url`:
- *   - `at://did:plc:abc123/…` → extract DID → plc.directory → listRecords → getProfile → getRecord
- *   - `https://alice.example.com` → /.well-known/atproto-did → plc.directory → listRecords → getProfile
+ *   - `at://did:plc:abc123/...` -> extract DID -> plc.directory -> listRecords -> getProfile -> getRecord
+ *   - `https://alice.example.com` -> /.well-known/atproto-did -> plc.directory -> listRecords -> getProfile
  */
 const routedFetch = () =>
   vi.fn(async (input: unknown) => {

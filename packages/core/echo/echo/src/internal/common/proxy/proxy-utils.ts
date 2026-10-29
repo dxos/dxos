@@ -24,7 +24,7 @@ const symbolTarget = Symbol.for('@dxos/echo/ProxyTarget');
 const symbolReactiveHandler = Symbol.for('@dxos/echo/ReactiveHandler');
 
 /**
- * A target's mutable view — the reference an `Obj.update` callback is handed. Writability belongs to the
+ * A target's mutable view - the reference an `Obj.update` callback is handed. Writability belongs to the
  * reference, not to the callback's dynamic extent: the proxy named outside the callback stays read-only
  * for the callback's whole duration, so the only way to mutate is through what the callback was given.
  */
@@ -33,7 +33,7 @@ const symbolMutableProxy = Symbol.for('@dxos/echo/MutableProxy');
 /**
  * Marker placed on a reactive-object behaviour prototype (e.g. the typed handler's
  * `TypedObject` prototype). A record target whose prototype chain carries this marker
- * is a reactive data record — equivalent, for the purposes of the "plain object" gates
+ * is a reactive data record - equivalent, for the purposes of the "plain object" gates
  * below, to one rooted directly at `Object.prototype`. This lets a handler move its
  * per-object metadata onto an intermediate prototype without those gates mistaking the
  * record for a foreign class instance.
@@ -47,7 +47,7 @@ export const isProxy = (value: unknown): boolean =>
   typeof value === 'object' && value !== null && (value as any)[symbolProxy] === value;
 
 /**
- * True if `value` is a plain data record — either rooted at `Object.prototype` or carrying
+ * True if `value` is a plain data record - either rooted at `Object.prototype` or carrying
  * a reactive behaviour prototype (see {@link symbolReactivePrototype}).
  */
 export const isReactiveRecord = (value: any): boolean => {
@@ -57,7 +57,7 @@ export const isReactiveRecord = (value: any): boolean => {
 
 export const isValidProxyTarget = (value: any): value is object => {
   // Settled before the symbol probe: a symbol lookup on a primitive boxes it and walks its wrapper
-  // prototype, and this runs on every proxy read. Functions never qualify either — their prototype
+  // prototype, and this runs on every proxy read. Functions never qualify either - their prototype
   // chain is neither `Object.prototype` nor reactive.
   if (value == null || typeof value !== 'object') {
     return false;
@@ -85,7 +85,7 @@ export const getProxyHandler = <T extends object>(proxy: any): ReactiveHandler<T
 };
 
 /**
- * Hands a target to a different handler, keeping the proxy — `db.add` converting an in-memory typed
+ * Hands a target to a different handler, keeping the proxy - `db.add` converting an in-memory typed
  * object into a database-backed one, where the object's identity has to survive the conversion.
  */
 export const setProxyHandler = <T extends object>(proxy: any, handler: ReactiveHandler<T>): void => {
@@ -119,7 +119,7 @@ export const normalizeSpliceRange = (
 // TODO(burdon): Document.
 // TODO(burdon): Tests for low-level functions.
 export const createProxy = <T extends object>(target: T, handler: ReactiveHandler<T>): T => {
-  // The target carries its own proxy, so it is also the memo — a per-handler `WeakMap` would answer the
+  // The target carries its own proxy, so it is also the memo - a per-handler `WeakMap` would answer the
   // same question, and wrongly after `setProxyHandler` moved a target between handlers.
   const raw: object = target;
   const existingProxy: T | undefined = Reflect.get(raw, symbolProxy);
@@ -166,7 +166,7 @@ const isMutableProxy = (value: unknown): boolean =>
 
 /**
  * The reference to store for a value being written. A mutable view is a callback-scoped handle and must
- * never enter the graph — storing one would hand a permanent write capability to every later reader, and
+ * never enter the graph - storing one would hand a permanent write capability to every later reader, and
  * would break identity for code that kept the read-only reference. Read off the raw target rather than
  * through the view, whose `get` would twin the answer straight back into a view.
  */
@@ -212,8 +212,8 @@ const normalizeForStorage = (value: any, seen = new Set<object>()): any => {
 };
 
 /**
- * The handler behind a mutable view. Writes reach the variant's logic with no gate — being here is the
- * permission — and reads hand back mutable twins so navigation stays mutable.
+ * The handler behind a mutable view. Writes reach the variant's logic with no gate - being here is the
+ * permission - and reads hand back mutable twins so navigation stays mutable.
  *
  * `[symbolProxy]` is twinned like any other proxy-valued read, which is what makes `isProxy` answer true
  * for a mutable view without knowing it exists: the read forwards to the target, finds the read-only
@@ -256,7 +256,7 @@ const MUTABLE_PROXY_HANDLER: ProxyHandler<any> = {
 /**
  * This reference is read-only, and no state can change that: a mutation is allowed by holding the
  * mutable view (which `Obj.update` hands its callback), never by when it happens. Constant-cost and
- * fail-closed — there is no state to be wrong about, which is what a context lookup could not promise.
+ * fail-closed - there is no state to be wrong about, which is what a context lookup could not promise.
  *
  * Symbols are exempt because they are never user data: the system stamps `[ParentId]`, `[SelfURIId]`
  * and the schema-slot cache outside any change context, on objects consumers hold read-only.
@@ -268,17 +268,17 @@ const assertReadOnly = (property: string | symbol, createError: (property: strin
 };
 
 /**
- * The handler behind every reactive proxy — one object, shared by every variant, with five traps.
+ * The handler behind every reactive proxy - one object, shared by every variant, with five traps.
  *
  * There is no `get`, `has` or `getOwnPropertyDescriptor`: a target carries its data as own properties,
  * so the engine answers all of those off the target itself with no JavaScript call. What is left is the
  * write gate, which exists because only a `Proxy` can make an assignment throw, plus two traps that
- * hide internals — `getPrototypeOf` (the instance-state prototype, so consumers see a plain object) and
+ * hide internals - `getPrototypeOf` (the instance-state prototype, so consumers see a plain object) and
  * `ownKeys` (see below).
  *
  * The read-only path through this handler is therefore identical for every variant and dispatches
  * nowhere: `getPrototypeOf` is one `Array.isArray`, `ownKeys` one `Reflect.ownKeys` and a filter, and a
- * string-keyed write outside `Obj.update` — all user data — throws before any handler is consulted.
+ * string-keyed write outside `Obj.update` - all user data - throws before any handler is consulted.
  * Dispatch happens through the mutable view, for a mutation that is actually allowed, or here for a
  * symbol-keyed write, which `assertReadOnly` exempts as the system's own bookkeeping.
  */
@@ -304,8 +304,8 @@ const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
       ? handler.deleteProperty(target, property)
       : Reflect.deleteProperty(target, property);
   },
-  // Symbol keys are hidden from enumeration. A symbol on a target is always internal bookkeeping — the
-  // same invariant the write gate relies on — and every one of them leads somewhere a generic walker
+  // Symbol keys are hidden from enumeration. A symbol on a target is always internal bookkeeping - the
+  // same invariant the write gate relies on - and every one of them leads somewhere a generic walker
   // must not go: `[symbolReactiveHandler]` to the handler, `[EventId]` to an `Event`, `[symbolInternals]`
   // to the `ObjectCore`. A consumer that enumerates own keys and reads each value, as structural hashing
   // and deep-equality do, otherwise walks into one of those, on to its prototype methods, and dies

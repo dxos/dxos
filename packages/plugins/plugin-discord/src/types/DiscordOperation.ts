@@ -20,7 +20,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { DISCORD_PROVIDER_ID, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
 
 /**
- * Discovery only — list Discord text channels across every guild the
+ * Discovery only - list Discord text channels across every guild the
  * connection's token can reach and return one descriptor per channel.
  *
  * Read-only: returns one row per remote channel, NEVER creates a local

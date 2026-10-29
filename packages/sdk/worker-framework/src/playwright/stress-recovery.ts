@@ -8,7 +8,7 @@ import { type StressFleet } from './stress-fleet.ts';
 
 /**
  * Recovery budget. Failover is not instant by design: a peer only steals the leader lock after the
- * 5s stale timeout, and a failed leader session backs off (1s, doubling) before re-electing — so a
+ * 5s stale timeout, and a failed leader session backs off (1s, doubling) before re-electing - so a
  * storm that lands mid-backoff needs several seconds of slack on top.
  */
 const RECOVERY_TIMEOUT_MS = 90_000;
@@ -39,11 +39,11 @@ export const assertRecovered = async (fleet: StressFleet, log: (message: string)
   // Exactly one leader, and every tab agrees on which one it is.
   const leaderIds = new Set(statuses.map(({ status }) => status?.leaderId));
   expect(leaderIds.size, `all tabs must agree on the leader, saw ${[...leaderIds].join(', ')}`).toBe(1);
-  // Size 1 alone is satisfied by every tab reporting `undefined` — "nobody was elected" is a
+  // Size 1 alone is satisfied by every tab reporting `undefined` - "nobody was elected" is a
   // recovery failure, not agreement.
   expect([...leaderIds][0], 'a leader must be elected').toBeTruthy();
 
-  // The worker answers every tab — a wedged worker holding the lock would hang here, not pass.
+  // The worker answers every tab - a wedged worker holding the lock would hang here, not pass.
   for (const tab of fleet.tabs) {
     const rttMs = await tab.ping();
     expect(rttMs, `${tab.label} ping must complete`).toBeGreaterThanOrEqual(0);

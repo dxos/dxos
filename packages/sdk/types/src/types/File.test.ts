@@ -42,7 +42,7 @@ describe('File', () => {
       const loaded = yield* Blob.read(blob);
       expect(loaded).toEqual(bytes);
 
-      // The File parents its Blob — deleting the File deletes the Blob with it.
+      // The File parents its Blob - deleting the File deletes the Blob with it.
       expect(Obj.getParent(blob)).toBe(file);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });

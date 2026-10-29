@@ -64,7 +64,7 @@ const softEnum = <const A extends string>(...values: readonly A[]) =>
 
 const Nature = softEnum('epistemic', 'aleatory');
 const Kind = softEnum('person', 'org', 'place', 'event', 'concept', 'thing');
-// Illocutionary force + sentence mood — the speech act the author performs (see pipeline-rdf
+// Illocutionary force + sentence mood - the speech act the author performs (see pipeline-rdf
 // `Illocution`). Soft enums so a stray value never discards the fact; default (absent) is assertive.
 const Force = softEnum('assertive', 'directive', 'commissive', 'expressive');
 const Mood = softEnum('declarative', 'interrogative', 'imperative');
@@ -134,9 +134,9 @@ export const predicateSection = (ontology: Ontology.Ontology): string => {
     .map((entry) => {
       const synonyms = entry.synonyms?.length ? ` (also: ${entry.synonyms.join(', ')})` : '';
       const typing = [entry.domain, entry.range].some(Boolean)
-        ? ` [${Ontology.labelFromIri(entry.domain ?? 'any')} → ${Ontology.labelFromIri(entry.range ?? 'any')}]`
+        ? ` [${Ontology.labelFromIri(entry.domain ?? 'any')} -> ${Ontology.labelFromIri(entry.range ?? 'any')}]`
         : '';
-      return `- ${entry.name}: "${entry.label}"${synonyms}${typing}${entry.description ? ` — ${entry.description}` : ''}`;
+      return `- ${entry.name}: "${entry.label}"${synonyms}${typing}${entry.description ? ` - ${entry.description}` : ''}`;
     });
   return [
     'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). Only when none fits, write a new short verb phrase in timeless present form and set predicateDescription to one sentence saying what it relates:',
@@ -150,7 +150,7 @@ export const entitySection = (entities: ReadonlyArray<KnownEntity>): string =>
     'Known entities. When a subject or object refers to one of these, spell it exactly as listed:',
     ...entities.map(
       (entity) =>
-        `- ${entity.label}${entity.type ? ` (${entity.type})` : ''}${entity.aliases?.length ? ` — also: ${entity.aliases.join(', ')}` : ''}`,
+        `- ${entity.label}${entity.type ? ` (${entity.type})` : ''}${entity.aliases?.length ? ` - also: ${entity.aliases.join(', ')}` : ''}`,
     ),
   ].join('\n');
 
@@ -164,11 +164,11 @@ export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
   'Keep prepositions and particles that bind to the verb in the predicate, not the object: passive voice "X was created by Y" => predicate "created by", object "Y" (just the agent). Likewise "moved to", "depends on", "reported by".',
   'Use the predicate "is_a" for class membership: "Socrates is a man" => subject "Socrates", predicate "is_a", object "man". A job title or role is "has_role" instead: "Rich is the founder" => subject "Rich", predicate "has_role", object "founder". Never use bare "is" or "was".',
   'Give propositions from the same sentence the same graph name, and propositions from another sentence a different one.',
-  'Keep every predicate in timeless present form and express tense through validFrom/validTo instead: "Alice worked at Acme until 2020" => predicate "works at" with validTo set from the stated end. Past tense alone — without an explicit date or an end cue such as "until", "former", or "no longer" — does NOT set validTo.',
+  'Keep every predicate in timeless present form and express tense through validFrom/validTo instead: "Alice worked at Acme until 2020" => predicate "works at" with validTo set from the stated end. Past tense alone - without an explicit date or an end cue such as "until", "former", or "no longer" - does NOT set validTo.',
   'Prefer short, reusable predicates and reuse the SAME predicate for the same relation throughout ("works for" / "employed by" => the listed "works_for"). Never invent a synonym variant of a listed predicate or of one you have already emitted.',
-  'The object must be a single concrete entity (a person, project, org, place, or thing) or a literal value — never a raw id, snowflake, URL, or channel reference. Drop the proposition if the only object would be such an opaque token.',
-  'Emit a proposition only when BOTH its subject and object are concrete and named. If either would be an unresolved pronoun (we/it/they/this/that) or otherwise unknown, omit the proposition entirely — never output "unknown" as a subject or object.',
-  'Classify each proposition by speech act. A statement the author commits to => force "assertive", mood "declarative" (this is the default — omit force to mean assertive). A request that the recipient do something => force "directive", mood "imperative", factuality "Uu": subject = who is asked to act, predicate = the requested action, object = the thing. A question the author asks => force "directive", mood "interrogative", factuality "Uu": the proposition being asked about. The author\'s own promise/offer => force "commissive". Requests and questions are still subject to the previous rule: emit them ONLY when both subject and object are concrete and named.',
+  'The object must be a single concrete entity (a person, project, org, place, or thing) or a literal value - never a raw id, snowflake, URL, or channel reference. Drop the proposition if the only object would be such an opaque token.',
+  'Emit a proposition only when BOTH its subject and object are concrete and named. If either would be an unresolved pronoun (we/it/they/this/that) or otherwise unknown, omit the proposition entirely - never output "unknown" as a subject or object.',
+  'Classify each proposition by speech act. A statement the author commits to => force "assertive", mood "declarative" (this is the default - omit force to mean assertive). A request that the recipient do something => force "directive", mood "imperative", factuality "Uu": subject = who is asked to act, predicate = the requested action, object = the thing. A question the author asks => force "directive", mood "interrogative", factuality "Uu": the proposition being asked about. The author\'s own promise/offer => force "commissive". Requests and questions are still subject to the previous rule: emit them ONLY when both subject and object are concrete and named.',
 ];
 
 /**
@@ -195,7 +195,7 @@ const decodeFact = Schema.decodeUnknownOption(ExtractedFact);
 const decodeTranscriptFact = Schema.decodeUnknownOption(TranscriptFact);
 
 // Top-level balanced `{...}` spans, in order. Brace-only (does not skip braces inside string
-// literals) — a best-effort tokenizer for salvage, not a JSON validator.
+// literals) - a best-effort tokenizer for salvage, not a JSON validator.
 const jsonObjectSpans = (raw: string): string[] => {
   const spans: string[] = [];
   let depth = 0;
@@ -221,7 +221,7 @@ const jsonObjectSpans = (raw: string): string[] => {
 /**
  * Salvage an {@link ExtractPayload} from free model text. Local/reasoning models (e.g. gpt-oss via
  * Ollama) wrap the JSON in prose that can itself contain braces (examples, code fences), so scan
- * every top-level object and use the first one carrying a `facts` array — a greedy first-`{`-to-last-
+ * every top-level object and use the first one carrying a `facts` array - a greedy first-`{`-to-last-
  * `}` match would span across stray braces and fail to parse. Entries that don't decode against
  * {@link ExtractedFact} are dropped rather than failing the whole document.
  */
@@ -253,8 +253,8 @@ const salvageFacts = <F>(raw: string, decode: (entry: unknown) => Option.Option<
  * Extract facts for one chunk. Optionally attempts strict `generateObject` first (strong hosted
  * models honor the schema), then falls back to a lenient `generateText` + JSON-salvage path so
  * schema-non-conforming models still yield facts instead of degrading the document to none. For a
- * provider override (Ollama) the strict pass reliably fails and is skipped by default — see
- * {@link ExtractOptions.strict} — so each chunk makes a single generation. Attempts are timed and
+ * provider override (Ollama) the strict pass reliably fails and is skipped by default - see
+ * {@link ExtractOptions.strict} - so each chunk makes a single generation. Attempts are timed and
  * logged so the strict/lenient latency split stays visible.
  */
 export const extractChunk = (
@@ -298,7 +298,7 @@ export const extractTranscript = (
   });
 };
 
-const LENIENT_SUFFIX = 'Respond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.';
+const LENIENT_SUFFIX = 'Respond with ONLY a JSON object of the form {"facts": [ ... ]} - no prose, no markdown fences.';
 
 /** The strict-then-lenient generation both request shapes share; `source` labels its logs. */
 const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, StrictError, LenientError>({

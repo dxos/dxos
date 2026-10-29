@@ -5,10 +5,10 @@
 import { type UseEditableReturn as EditableApi, useEditable as useMachine } from '@ark-ui/react/editable';
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-// The inline-edit state machine — `@ark-ui/react`'s Editable (zag) — behind DXOS's own contract.
+// The inline-edit state machine - `@ark-ui/react`'s Editable (zag) - behind DXOS's own contract.
 //
 // `Editable` renders an `<input>`, but a markdown field wants a CodeMirror editor and a rendered
-// preview — and those live in packages that depend on this one, so they cannot be reached from
+// preview - and those live in packages that depend on this one, so they cannot be reached from
 // here. Both flavours therefore share the behaviour through this hook rather than the component:
 // one definition of what commits, what reverts, and what opens.
 
@@ -23,7 +23,7 @@ export type UseEditableOptions = {
   value?: string;
   /** Initial text when uncontrolled. */
   defaultValue?: string;
-  /** Called when an edit is committed — never while typing, so a keystroke is not a write. */
+  /** Called when an edit is committed - never while typing, so a keystroke is not a write. */
   onValueChange?: (value: string) => void;
   activation?: EditableActivation;
   blurBehavior?: EditableBlurBehavior;
@@ -74,7 +74,7 @@ export type UseEditableReturn = {
  *
  * The machine owns the pending text, which state the field is in, the activation gesture, `Enter` /
  * `Escape`, and what an interaction outside the field does with the edit. This owns the thing it has
- * no notion of — the committed value — so `onValueChange` fires when an edit lands rather than on
+ * no notion of - the committed value - so `onValueChange` fires when an edit lands rather than on
  * every keystroke.
  *
  * **The value.** Controlled with `value`, uncontrolled with `defaultValue`; `draft` is the pending
@@ -83,12 +83,12 @@ export type UseEditableReturn = {
  *
  * **Who owns the edit state.** Left alone, the machine does: the field opens on `activation` and
  * closes on `Enter`, `Escape`, or an interaction outside it. Passing `editing` takes that ownership,
- * which is what a pane editor does — the pane IS the editor, so it is held open and never closes.
+ * which is what a pane editor does - the pane IS the editor, so it is held open and never closes.
  * The machine then treats a submit as a request to whoever holds the prop and announces only the
  * state change, so `commit` and `revert` here act on it directly rather than waiting to be told.
  * Either way an edit is delivered exactly once.
  *
- * **Commit and revert.** `commit` writes the pending text — or the text it is handed, for a caller
+ * **Commit and revert.** `commit` writes the pending text - or the text it is handed, for a caller
  * that already holds it and must not race the draft. `revert` restores the last committed text and
  * discards the rest, including on a field that was empty when it opened, which the machine alone
  * would leave holding the discarded text.
@@ -146,12 +146,12 @@ export const useEditable = ({
     // The machine's own revert keeps whatever it holds when the text it opened with was empty, so
     // `Escape` on a field showing its placeholder would keep the discarded text instead. Restored
     // inside the machine's own transition rather than left to the reconciling effect below, which
-    // would catch it a render later — after the discarded text had been drawn once.
+    // would catch it a render later - after the discarded text had been drawn once.
     onValueRevert: () => apiRef.current?.setValue(committed.current),
   });
   apiRef.current = api;
 
-  // A value that changed elsewhere — a peer's edit, a controlled parent refusing a commit — has to
+  // A value that changed elsewhere - a peer's edit, a controlled parent refusing a commit - has to
   // reach the machine, which otherwise holds the one it was seeded with. Never mid-edit: that would
   // overwrite what is being typed.
   useEffect(() => {
@@ -166,7 +166,7 @@ export const useEditable = ({
    * Commits, and delivers the edit rather than trusting the machine to announce it.
    *
    * A field whose editing state is controlled never leaves edit on its own, so the machine treats
-   * `SUBMIT` as a request to the host and reports only the state change — `onValueCommit` never
+   * `SUBMIT` as a request to the host and reports only the state change - `onValueCommit` never
    * runs. A pane held open that way is the whole point of driving `editing` from outside, and its
    * text would never be written.
    */
@@ -187,7 +187,7 @@ export const useEditable = ({
   }, [api]);
 
   // A gesture the machine only takes from a pointer needs the same door for a keyboard reader. Its
-  // own keyboard answer is `focus` activation, which is wrong for a field a single click opens —
+  // own keyboard answer is `focus` activation, which is wrong for a field a single click opens -
   // tabbing across a list of them would put every row into edit on the way past.
   const activationProps = useMemo<EditableActivationBinding>(() => {
     if (activation !== 'click' && activation !== 'dblclick') {
@@ -209,7 +209,7 @@ export const useEditable = ({
     () => ({
       ...api.getPreviewProps(),
       // The machine names the preview "edit", which is what the gesture does rather than what the
-      // field holds — in a list of rows that is every row with the same name.
+      // field holds - in a list of rows that is every row with the same name.
       'aria-label': undefined,
       ...activationProps,
     }),

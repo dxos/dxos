@@ -67,7 +67,7 @@ describe('buildContactFromActor', () => {
 
   test('an uncommitted contact never enters the space-wide index', async ({ expect }) => {
     // A run that dies before committing must not leave the shared index claiming a contact the
-    // space never received — the next run would then never create one for that sender.
+    // space never received - the next run would then never create one for that sender.
     const built = await EffectEx.runPromise(buildContactFromActor({ email: 'alice@dxos.org' }, db));
     expect(built).toBeDefined();
 
@@ -130,7 +130,7 @@ describe('buildContactGraph', () => {
   });
 
   test('the gate is evaluated before the Organization exists (no self-admittance)', async ({ expect }) => {
-    // A non-outbound sender at an unknown org is denied — creating the org first would have
+    // A non-outbound sender at an unknown org is denied - creating the org first would have
     // admitted them through the known-Organization allow rule.
     const index = await overlay();
     const graph = await EffectEx.runPromise(

@@ -44,14 +44,14 @@ const compareForeignKeys = (a: ForeignKey, b: ForeignKey): number =>
 /**
  * Merge a group of duplicates into a single deterministic result.
  *
- * The winner is the minimum id. Ids are ULIDs, so this is also the earliest-created entity —
+ * The winner is the minimum id. Ids are ULIDs, so this is also the earliest-created entity -
  * and, being a pure function of the id set, it is agreed on by every peer that sees the same
  * set. Because it is a minimum, a peer seeing a superset picks an id no larger than a peer
  * seeing a subset, which is what makes redirect chains terminate (see `resolveMergeRedirect`
  * in `@dxos/echo/internal`).
  *
  * The result is a pure function of the candidate **set**: for each field, the value comes from
- * the smallest-id candidate that defines it. This is deliberately not a pairwise fold —
+ * the smallest-id candidate that defines it. This is deliberately not a pairwise fold -
  * pairwise winner-preference is not associative, so different application orders would diverge
  * (for ids `Z < X < Y` where `Z` lacks field `a`, merging `X` then `Y` into `Z` yields a
  * different `a` than `Y` then `X`). Computing over the whole set at once is
@@ -59,11 +59,11 @@ const compareForeignKeys = (a: ForeignKey, b: ForeignKey): number =>
  *
  * Peers holding different candidate sets can still transiently compute different results. They
  * reconverge because losers are retained as redirects: a later pass follows a tombstoned loser's
- * chain to the live end and folds its remaining state there. That guarantees *agreement* — every
- * peer ends at the same winner with the same fields — but not that the final value of every field
+ * chain to the live end and folds its remaining state there. That guarantees *agreement* - every
+ * peer ends at the same winner with the same fields - but not that the final value of every field
  * equals what this function would return over the union: once an entity is tombstoned it never
  * re-enters the field-wise merge, so a fold can carry a field onto a winner that had defined it.
- * Likewise, folds run by different peers race as ordinary register writes on the winner —
+ * Likewise, folds run by different peers race as ordinary register writes on the winner -
  * resolved deterministically, so agreement still holds, but sequential straggler edits observed
  * by different folders can resolve to the earlier value.
  *

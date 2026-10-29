@@ -29,7 +29,7 @@ export type ChatActionsProps = Util.ThemedClassName<{
   /** The prompt's graph node, which is what contributed actions are filed under. */
   attendableId?: string;
   /**
-   * Toolbar actions other plugins filed on this chat's node — the microphone among them. Sourced
+   * Toolbar actions other plugins filed on this chat's node - the microphone among them. Sourced
    * the way `MarkdownArticle` sources its own, so a contributor reaches the prompt without either
    * side importing the other.
    */
@@ -57,7 +57,7 @@ export const ChatActions = ({
   onEvent,
 }: ChatActionsProps) => {
   const { t } = Hooks.useTranslation(AssistantNamespace.key);
-  // While a turn runs the primary control interrupts it — unless there is text waiting, in which
+  // While a turn runs the primary control interrupts it - unless there is text waiting, in which
   // case sending it (which queues it behind the running turn) is what the reader is asking for.
   const showStop = processing && !canSend;
   const controls = (

@@ -68,7 +68,7 @@ export default Capability.makeModule(
       ).catch((err) => log.catch(err));
 
     //
-    // Notifications — driven by the process monitor.
+    // Notifications - driven by the process monitor.
     //
 
     // Tracks the last-seen state per process so we only toast on transitions.
@@ -101,7 +101,7 @@ export default Capability.makeModule(
             log.warn('operation failed', { pid: process.pid, error: process.error.message });
           }
           // A failing error may still carry `context.notifyOverride` (see `LayoutOperation.getNotifyOverride`)
-          // to replace the generic title with a specific, curated message and an action — e.g. a
+          // to replace the generic title with a specific, curated message and an action - e.g. a
           // connector reporting an expired credential. Its fields are safe to display (no raw error).
           const override = LayoutOperation.getNotifyOverride(process.error);
           const actionLabel = override?.actionLabel;
@@ -132,7 +132,7 @@ export default Capability.makeModule(
     const unsubscribeMonitor = registry.subscribe(monitor.processTreeAtom, handleProcesses);
 
     //
-    // Plugin failures — show one toast when any plugin fails to activate, with a link to the registry.
+    // Plugin failures - show one toast when any plugin fails to activate, with a link to the registry.
     //
 
     let hasShownFailureToast = false;
@@ -146,7 +146,7 @@ export default Capability.makeModule(
         return;
       }
       hasShownFailureToast = true;
-      // The fixed id keeps at most one failure toast visible — `upsertToast` replaces any stale one.
+      // The fixed id keeps at most one failure toast visible - `upsertToast` replaces any stale one.
       const toast: LayoutOperation.Toast = {
         id: 'plugin-failure',
         title: ['plugin-failure.title', { ns: DeckNamespace.key }],
@@ -168,7 +168,7 @@ export default Capability.makeModule(
     const unsubscribeFailures = registry.subscribe(manager.failed, handleFailures);
 
     //
-    // Undo — driven by the history tracker's `undoable` stream (it owns the registry lookup).
+    // Undo - driven by the history tracker's `undoable` stream (it owns the registry lookup).
     //
 
     const showUndoToast = (message: LayoutOperation.Toast['title'], onUndo: () => void) => {

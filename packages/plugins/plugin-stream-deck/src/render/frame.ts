@@ -22,7 +22,7 @@ export type BuildFrameOptions = {
  *
  * Single source of pixels on purpose: rendering the panel and the hardware separately would let them
  * drift, and the panel is how the layout gets reviewed. Pure, so it is testable without a device or
- * a DOM — the icon markup is passed in.
+ * a DOM - the icon markup is passed in.
  */
 export const buildFrame = ({ device, keys, dials, icons = {} }: BuildFrameOptions): Protocol.Frame => ({
   _tag: 'frame',

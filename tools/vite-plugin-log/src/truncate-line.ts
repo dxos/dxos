@@ -12,7 +12,7 @@ export const MAX_LINE_LENGTH = 16_000;
 /**
  * Shorten an over-long JSONL line while keeping it valid JSON.
  *
- * A blind `slice` cuts mid-string and leaves a line no parser can read — and it does so
+ * A blind `slice` cuts mid-string and leaves a line no parser can read - and it does so
  * silently, so the loss looks like an absent log rather than a truncated one. Instead drop
  * the context (the only unbounded field) and mark it, preserving every metadata field the
  * line is queried by.

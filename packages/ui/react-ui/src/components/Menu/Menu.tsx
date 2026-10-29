@@ -219,7 +219,7 @@ type MenuItemData = {
   label: string;
   /** Leading icon. */
   icon?: string;
-  /** Trailing keyboard hint, e.g. `⌘C`; display only. */
+  /** Trailing keyboard hint, e.g. `CmdC`; display only. */
   shortcut?: string;
 };
 

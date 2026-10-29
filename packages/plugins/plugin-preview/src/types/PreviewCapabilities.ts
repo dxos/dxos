@@ -17,7 +17,7 @@ export type PreviewLinkContext = {
   db?: Database.Database;
 };
 
-/** Decides, synchronously, whether a URL is one this resolver answers — so a renderer can make it an anchor before anyone hovers. */
+/** Decides, synchronously, whether a URL is one this resolver answers - so a renderer can make it an anchor before anyone hovers. */
 export type PreviewLinkMatch = (url: string) => boolean;
 
 /** Answers an anchor activation with the object its link names, or undefined. */
@@ -27,7 +27,7 @@ export type PreviewLinkResolve = (
 ) => Effect.Effect<PreviewLinkTarget | undefined>;
 
 /**
- * One kind of link — an ECHO entity URI, a GitHub URL — with the test that recognises it and the
+ * One kind of link - an ECHO entity URI, a GitHub URL - with the test that recognises it and the
  * lookup that answers it. A resolver owns its kind and declines the rest, so the order resolvers
  * are asked in does not matter.
  */
@@ -35,12 +35,12 @@ export type PreviewLinkResolver = {
   match: PreviewLinkMatch;
   resolve: PreviewLinkResolve;
   /**
-   * A short name for a URL written bare — `#123` for a pull request — so a renderer can show it
+   * A short name for a URL written bare - `#123` for a pull request - so a renderer can show it
    * instead of the whole address without knowing the URL's shape.
    */
   label?: (url: string) => string | undefined;
   /**
-   * A leading icon for the URL — a pull request's, say — so a renderer's chip reads the same as the
+   * A leading icon for the URL - a pull request's, say - so a renderer's chip reads the same as the
    * editor's without knowing the URL's shape.
    */
   icon?: (url: string) => PreviewLinkIcon | undefined;

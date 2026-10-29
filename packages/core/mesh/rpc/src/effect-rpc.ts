@@ -27,7 +27,7 @@ import { type RpcPort } from './rpc.ts';
 const HANDSHAKE_RETRY_INTERVAL = Duration.millis(50);
 
 /**
- * Effect RPC protocols over a {@link RpcPort} — a transport-agnostic, reliable, ordered,
+ * Effect RPC protocols over a {@link RpcPort} - a transport-agnostic, reliable, ordered,
  * binary message channel. Envelopes and payloads are both SchemaBinary-encoded; the envelope
  * parser and the payload codec come from one {@link RpcSerialization} so the two ends agree.
  */
@@ -109,7 +109,7 @@ export const makeProtocolRpcPortClient = (
          * first client built in a process; addressing responses to a hard-coded 0 silently buffers
          * every response of every later client. The id is latched from `send` rather than read off
          * the protocol's `clientIds` set, which is only populated once the client's receive loop has
-         * been forked — after the first response can already have arrived.
+         * been forked - after the first response can already have arrived.
          */
         let boundClientId: number | undefined;
 

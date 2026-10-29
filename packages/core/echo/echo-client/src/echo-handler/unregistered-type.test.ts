@@ -23,7 +23,7 @@ const V1_URI = DXN.make('com.example.type.versioned', '0.1.0');
  * instead of failing, since there is no schema to validate against.
  *
  * The registry indexes a type under its exact `dxn:<typename>:<version>`, so an object written
- * before a type's version bump becomes unresolvable — which is what these tests reproduce by
+ * before a type's version bump becomes unresolvable - which is what these tests reproduce by
  * unregistering the version the object was written with. `db.add` refuses an unregistered type
  * up front, so unregistering after the write is the only way to reach this state in-process; in
  * a real profile it arrives via storage or replication from a peer running the older code.
@@ -49,7 +49,7 @@ describe('object whose type is absent from the registry', () => {
   test('Obj.getType returns undefined when only another version of the typename is registered', async () => {
     const { db, object } = await setup(builder, [VersionedV1, VersionedV2]);
 
-    // The registry still holds this typename, but only at 0.2.0 — resolution is exact-version.
+    // The registry still holds this typename, but only at 0.2.0 - resolution is exact-version.
     expect(db.graph.registry.getByURI(DXN.make('com.example.type.versioned', '0.2.0'))).toBe(VersionedV2);
     expect(Obj.getType(object)).toBeUndefined();
   });

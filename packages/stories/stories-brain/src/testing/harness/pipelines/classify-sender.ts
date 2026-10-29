@@ -13,15 +13,15 @@ import { type ModelVariant } from '../models.ts';
 import { emailDomain } from './contacts.ts';
 
 // Sender-type triage (REPORT §5): classify each sender as a PERSON (an individual human) or an ORG
-// (automated / organizational — invoices, newsletters, notifications, no-reply). This gates all
+// (automated / organizational - invoices, newsletters, notifications, no-reply). This gates all
 // downstream LLM spend: only people get draft replies, and org mail gets a one-line label instead of
-// a full summary. The stage runs at two costs — a deterministic HEURISTIC (foreground, zero-latency)
-// and a cheap LLM fallback — so the ground-truth eval can measure whether the heuristic alone is
+// a full summary. The stage runs at two costs - a deterministic HEURISTIC (foreground, zero-latency)
+// and a cheap LLM fallback - so the ground-truth eval can measure whether the heuristic alone is
 // enough, or where the LLM earns its cost.
 
 export type SenderClass = 'person' | 'org';
 
-/** A unique sender aggregated over the corpus — the unit of classification (dedup by email). */
+/** A unique sender aggregated over the corpus - the unit of classification (dedup by email). */
 export type SenderInfo = {
   readonly email: string;
   readonly name?: string;
@@ -69,7 +69,7 @@ export const uniqueSenders = (messages: readonly Message.Message[]): SenderInfo[
 };
 
 //
-// Heuristic classifier — deterministic, foreground, zero-latency.
+// Heuristic classifier - deterministic, foreground, zero-latency.
 //
 
 // Local-part tokens that mark an automated / role mailbox (org). Matched against the tokens of the
@@ -190,14 +190,14 @@ const isPersonName = (name: string | undefined): boolean => {
     return false;
   }
   const words = name.trim().split(/\s+/);
-  return words.length >= 2 && words.every((word) => /^[A-Z][a-zA-Z'’.-]*$/.test(word));
+  return words.length >= 2 && words.every((word) => /^[A-Z][a-zA-Z'\u2019.-]*$/.test(word));
 };
 
 /**
  * Deterministic best-guess classification with a confidence. Role/automated local parts and company
  * display names are strong ORG signals; free-mail personal addresses and human-shaped display names
  * are strong PERSON signals; everything else is a low-confidence guess the hybrid path can defer to
- * the LLM. Never rejects — always returns a class.
+ * the LLM. Never rejects - always returns a class.
  */
 export const classifySenderHeuristic = (sender: SenderInfo): SenderResult => {
   const email = sender.email.toLowerCase();
@@ -235,7 +235,7 @@ export const classifySenderHeuristic = (sender: SenderInfo): SenderResult => {
 };
 
 //
-// LLM classifier — cheap fallback for the ambiguous cases.
+// LLM classifier - cheap fallback for the ambiguous cases.
 //
 
 const PROMPT = trim`
@@ -262,13 +262,13 @@ export const classifySender = (
     if (klass === 'person' || klass === 'org') {
       return { email: sender.email, class: klass, confidence: 1, method: 'llm' as const };
     }
-    // Empty / unparseable output — fall back to the heuristic rather than scoring as wrong.
+    // Empty / unparseable output - fall back to the heuristic rather than scoring as wrong.
     return { ...classifySenderHeuristic(sender), method: 'llm' as const };
   });
 
 /**
- * Hybrid strategy: trust the heuristic when it is confident (≥ `threshold`), otherwise defer to the
- * model. This is the product-intended path — it spends LLM cost only on the ambiguous senders the
+ * Hybrid strategy: trust the heuristic when it is confident (>= `threshold`), otherwise defer to the
+ * model. This is the product-intended path - it spends LLM cost only on the ambiguous senders the
  * heuristic cannot resolve.
  */
 export const classifySenderHybrid =

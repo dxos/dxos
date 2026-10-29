@@ -118,7 +118,7 @@ const DefaultStory = () => {
             {state.status === 'idle' && (
               <p className='p-2 text-sm text-fg-subtle'>Paste an article URL and press Fetch to see the extraction.</p>
             )}
-            {state.status === 'loading' && <p className='p-2 text-sm text-fg-subtle'>Fetching and extracting…</p>}
+            {state.status === 'loading' && <p className='p-2 text-sm text-fg-subtle'>Fetching and extracting...</p>}
             {state.status === 'error' && (
               <pre className='p-2 text-sm text-error-text whitespace-pre-wrap break-all'>{state.message}</pre>
             )}
@@ -144,7 +144,7 @@ const ResultView = Util.composable<HTMLDivElement, ResultViewProps>(
           author: article.author,
           published: article.published,
           // The story renders the extracted body via `description`; the new
-          // Post schema no longer carries `content`/`imageUrl` — those live
+          // Post schema no longer carries `content`/`imageUrl` - those live
           // on Subscription.postState now. The storybook flow is a
           // standalone preview (no Subscription), so we just feed the body
           // through `description`.
@@ -195,8 +195,8 @@ type Story = StoryObj<typeof meta>;
 /**
  * Live preview of the defuddle-based article extractor.
  *
- * Paste a URL → the storybook-react vite middleware proxies the fetch via
- * `/api/rss?url=` to bypass browser CORS → the HTML is run through
- * `extractArticle` → the result is rendered with `MarkdownView`.
+ * Paste a URL -> the storybook-react vite middleware proxies the fetch via
+ * `/api/rss?url=` to bypass browser CORS -> the HTML is run through
+ * `extractArticle` -> the result is rendered with `MarkdownView`.
  */
 export const Default: Story = {};

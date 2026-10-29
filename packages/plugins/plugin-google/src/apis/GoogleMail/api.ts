@@ -84,7 +84,7 @@ export const listMessages = Effect.fn(function* (
 });
 
 /**
- * Gets the user's mailbox profile — `historyId` is the delta-resume token for incremental sync.
+ * Gets the user's mailbox profile - `historyId` is the delta-resume token for incremental sync.
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users/getProfile
  */
 export const getProfile = Effect.fn(function* (userId: string) {
@@ -94,7 +94,7 @@ export const getProfile = Effect.fn(function* (userId: string) {
 
 /**
  * Lists the history of mailbox changes since `startHistoryId` (additions, deletions, label changes).
- * A `startHistoryId` older than the server's retention (~1 week) returns HTTP 404 — the caller's cue to
+ * A `startHistoryId` older than the server's retention (~1 week) returns HTTP 404 - the caller's cue to
  * fall back to a full scan and recapture a fresh `historyId` via {@link getProfile}.
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.history/list
  */
@@ -155,7 +155,7 @@ export const sendMessage = Effect.fn('sendMessage')(function* (
  * Adds and/or removes labels on one message (requires the `gmail.modify` scope).
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/modify
  *
- * `SPAM` is accepted here as an ordinary label (verified against a live account); `TRASH` is not —
+ * `SPAM` is accepted here as an ordinary label (verified against a live account); `TRASH` is not -
  * that is {@link trashMessage}.
  */
 export const modifyMessage = Effect.fn('modifyMessage')(function* (
@@ -175,7 +175,7 @@ export const modifyMessage = Effect.fn('modifyMessage')(function* (
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/batchModify
  *
  * Returns `204 No Content` with an empty body on success, so unlike {@link modifyMessage} there is
- * nothing to decode — the response is discarded and only its status matters.
+ * nothing to decode - the response is discarded and only its status matters.
  */
 export const batchModifyMessages = Effect.fn('batchModifyMessages')(function* (
   userId: string,

@@ -67,7 +67,7 @@ export const Options = Util.composable<HTMLDivElement, OptionsProps>((props, for
   const handleSpaceIdChange = async (ev: ChangeEvent<HTMLInputElement>) => {
     const next = ev.target.value;
     // Reflect typing immediately, but persist only a valid (or cleared) id so the stored value stays
-    // consistent with the validated read path — a partial/malformed id would otherwise silently
+    // consistent with the validated read path - a partial/malformed id would otherwise silently
     // vanish on reload.
     setSpaceId(next);
     if (next === '' || SpaceId.isValid(next)) {

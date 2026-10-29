@@ -44,7 +44,7 @@ const addNotes = (count: number) =>
       .join('\n');
   });
 
-// Shared registry and cache atom — each test sets its own cache state before invoking the operation.
+// Shared registry and cache atom - each test sets its own cache state before invoking the operation.
 const testRegistry = Registry.make();
 const testCacheAtom = Atom.make<AssistantCapabilities.HomeSuggestionsCache>({}).pipe(Atom.keepAlive);
 const testManager = CapabilityManager.make({ registry: testRegistry });

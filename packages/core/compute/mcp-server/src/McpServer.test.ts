@@ -89,7 +89,7 @@ const makeSkill = (props: {
     tools: Skill.toolDefinitions({ operations: [...(props.operations ?? [])] }),
   });
 
-/** A registry over serialized operations and built skills — what a host wires up for real. */
+/** A registry over serialized operations and built skills - what a host wires up for real. */
 const testRegistry = ({
   operations = [CreateTask],
   skills = [makeSkill({ key: 'org.dxos.skill.codeProject', operations: [CreateTask] })],
@@ -175,7 +175,7 @@ const runInvoke = (
 /**
  * The isolate module run in Node as a Worker Loader would run it: written to disk beside an
  * `effect.js` that re-exports the real library, imported, and fetched with an `env.HOST` that
- * answers through `scriptCallOutcome` — the same seam EDGE's host serves.
+ * answers through `scriptCallOutcome` - the same seam EDGE's host serves.
  */
 const nodeIsolate = ({
   registry,
@@ -414,7 +414,7 @@ describe('McpServer', () => {
     });
 
     // `queryPlugins` asks what this host has installed, which is answerable before any space
-    // exists — and a profile with no identity yet is exactly when it is most useful.
+    // exists - and a profile with no identity yet is exactly when it is most useful.
     test('an operation declaring no database answers where the session has no space', async ({ expect }) => {
       const registry = testRegistry({
         operations: [QueryPlugins],
@@ -563,8 +563,8 @@ describe('McpServer', () => {
       expect((await run(registry)).map((row) => row.key)).to.deep.equal([KEY]);
     });
 
-    // The contract in one motion: which skills exist is dynamic — registry state, not server
-    // configuration — and the skill is what carries operations onto the surface. An operation
+    // The contract in one motion: which skills exist is dynamic - registry state, not server
+    // configuration - and the skill is what carries operations onto the surface. An operation
     // already in the registry stays dark until a skill naming it arrives, and lights up the moment
     // one does.
     test('a skill added at runtime brings its operations with it; nothing leaks before', async ({ expect }) => {
@@ -845,7 +845,7 @@ describe('McpServer', () => {
               key: 'org.dxos.skill.codeProject',
               name: 'Code project',
               mcpPrompt: true,
-              // A skill's `tools` carry derived tool names, not operation NSIDs — the form
+              // A skill's `tools` carry derived tool names, not operation NSIDs - the form
               // `Skill.toolDefinitions` emits and governance matches on.
               tools: [Operation.toolNameFromKey(KEY)],
               instructions: 'Bind a space first.',

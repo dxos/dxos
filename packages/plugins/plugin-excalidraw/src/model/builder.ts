@@ -79,7 +79,7 @@ const elementBoxesOf = (content: ContentMap) => {
 export const ExcalidrawBuilder = IllustratorModel.makeBuilder({ schema: Excalidraw.EXCALIDRAW_SCHEMA, handler });
 
 /**
- * Apply commands straight to a content map, bypassing ECHO — for tests and tooling that hold
+ * Apply commands straight to a content map, bypassing ECHO - for tests and tooling that hold
  * raw excalidraw elements. The object-aware path is {@link ExcalidrawBuilder}.
  */
 export const applyCommands = (content: ContentMap, commands: readonly Scene.Command[]) =>

@@ -51,7 +51,7 @@ const Score = Operation.make({
     name: 'Score',
     // Says exactly what the handler does. An earlier version promised "a number between 0 and 10"
     // while returning the title's length, and both dialects spent their whole turn budget proving
-    // the contradiction rather than writing data they had reason to distrust — correct of them, and
+    // the contradiction rather than writing data they had reason to distrust - correct of them, and
     // a bad fixture.
     description: "Scores a task title for urgency. Returns the title's length as the score.",
   },
@@ -92,7 +92,7 @@ const TestLayer = AssistantTestLayer({
 
 /**
  * The agent scenarios run on every dialect: the turn loop is shared, so what differs between the
- * columns is only what the model made of the API it was given — which is the thing worth watching.
+ * columns is only what the model made of the API it was given - which is the thing worth watching.
  */
 const DIALECTS: { name: string; dialect: Dialect }[] = [
   { name: 'plain', dialect: PlainDialect },
@@ -121,7 +121,7 @@ const feedText = Effect.fnUntraced(function* (feed: Feed.Feed) {
   return messages.map(Message.extractText).join('\n');
 });
 
-/** A typed failure for the effect dialect's error path — an Effect channel never carries a bare `Error`. */
+/** A typed failure for the effect dialect's error path - an Effect channel never carries a bare `Error`. */
 class ProbeError extends Schema.TaggedError<ProbeError>('ProbeError')('ProbeError', {
   detail: Schema.String,
 }) {}
@@ -476,7 +476,7 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   //
-  // The agent, running in code mode — every dialect, same scenarios, same assertions.
+  // The agent, running in code mode - every dialect, same scenarios, same assertions.
   //
 
   describe.each(DIALECTS)('$name dialect', ({ dialect }) => {

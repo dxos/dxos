@@ -37,9 +37,9 @@ export type DebugPanelStatusProps = {
 
 /**
  * Status-bar button showing the debug panel: docked, it toggles the deck's bottom drawer; floating,
- * it opens the panel as a window over the whole app — dragged, resized, folded to its title bar as
+ * it opens the panel as a window over the whole app - dragged, resized, folded to its title bar as
  * the session needs, and left where it was put across reloads. The red dot marks a live agent debug
- * port — an agent can evaluate code in this page — so it must be visible without opening settings.
+ * port - an agent can evaluate code in this page - so it must be visible without opening settings.
  */
 export const DebugPanelStatus = ({ controller = getDebugPortController() }: DebugPanelStatusProps) => {
   const { t } = UiHooks.useTranslation(DebugNamespace.key);

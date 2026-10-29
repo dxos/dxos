@@ -33,7 +33,7 @@ export const make = () =>
     }),
     instructions: Template.make({
       source: trim`
-        You can create and manage sandbox environments — isolated containers for running shell commands.
+        You can create and manage sandbox environments - isolated containers for running shell commands.
         Each sandbox is persisted as an ECHO object in the space and identified by its object ID.
         You can create sandboxes, run shell commands inside them, upload files from ECHO into a sandbox,
         and download files from a sandbox back into ECHO.
@@ -50,8 +50,8 @@ export const make = () =>
         A sandbox is ephemeral: its files go when it expires. A repository is durable, so keep what you build
         in a sandbox by pushing it to a repository.
         - Create a repository, then attach it to the sandbox (or pass it when creating the sandbox). Every
-          command in the sandbox then has it as a git remote named after the repository — the attach result
-          says which name — and credentials for it are already configured.
+          command in the sandbox then has it as a git remote named after the repository - the attach result
+          says which name - and credentials for it are already configured.
         - Use plain git: \`git init\`, commit, \`git push <remote> HEAD:main\`; in a new sandbox, \`git init\`
           and \`git pull <remote> main\` to continue from where an earlier one left off. \`$DX_REPOSITORIES\` lists
           the remote names. Initialize git in the directory you mean to keep, and ignore \`node_modules\`.

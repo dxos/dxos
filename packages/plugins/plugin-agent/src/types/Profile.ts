@@ -63,7 +63,7 @@ export const render = ({ name, goals, facts, keys }: RenderProps): string => {
     if (section.length > 0) {
       lines.push(`## ${heading}`, '');
       for (const goal of section) {
-        lines.push(`- **${goal.title}** (${goal.horizon})${goal.description ? ` — ${goal.description}` : ''}`);
+        lines.push(`- **${goal.title}** (${goal.horizon})${goal.description ? ` - ${goal.description}` : ''}`);
       }
       lines.push('');
     }

@@ -7,7 +7,7 @@
  * Generates the clips for a scripted conversation with HeyGen avatars (API v3): one talking clip per line and one
  * silent "listening" clip per participant. `conversation.mjs` then cuts them into one track per participant.
  *
- *   HEYGEN_API_KEY=… node .agents/skills/autocue/scripts/heygen.mjs \
+ *   HEYGEN_API_KEY=... node .agents/skills/autocue/scripts/heygen.mjs \
  *     --conversation packages/plugins/plugin-meeting/autocue/fieldstone-dashboard.conversation.json --out /tmp/meeting
  *
  * Casting: each participant's `image` (a URL, e.g. a Higgsfield still, or a file beside the conversation) becomes a
@@ -55,7 +55,7 @@ const { values: options } = parseArgs({
 const key = process.env.HEYGEN_API_KEY;
 if (!options.conversation || !key) {
   console.error(
-    'usage: HEYGEN_API_KEY=… heygen.mjs --conversation <file.json> [--out <dir>] [--cast-only] [--takes <audio dir>]',
+    'usage: HEYGEN_API_KEY=... heygen.mjs --conversation <file.json> [--out <dir>] [--cast-only] [--takes <audio dir>]',
   );
   process.exit(2);
 }

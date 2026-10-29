@@ -32,10 +32,10 @@ import { vectorStoreLayer } from './vector.ts';
 
 /**
  * The skill configuration under test (each arm adds a retrieval layer on top of the source arm):
- * - `source` — baseline: only the Database skill (reads the ECHO space + feed).
- * - `facts`  — source + Brain skill (fact-store QueryFacts/SummarizeSubject tools).
- * - `rag`    — source + RAG skill (vector-index snippet retrieval).
- * - `hybrid` — source + fact→source bridge: facts index into the actual source messages.
+ * - `source` - baseline: only the Database skill (reads the ECHO space + feed).
+ * - `facts`  - source + Brain skill (fact-store QueryFacts/SummarizeSubject tools).
+ * - `rag`    - source + RAG skill (vector-index snippet retrieval).
+ * - `hybrid` - source + fact->source bridge: facts index into the actual source messages.
  */
 export type SkillMode = 'source' | 'facts' | 'rag' | 'hybrid';
 

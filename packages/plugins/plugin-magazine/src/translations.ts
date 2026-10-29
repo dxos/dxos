@@ -65,7 +65,7 @@ export const translations = [
         'open-original.label': 'Open original',
         'mark-unread.label': 'Mark as unread',
         'refresh-content.label': 'Refresh content',
-        'refresh-content-pending.label': 'Refreshing…',
+        'refresh-content-pending.label': 'Refreshing...',
         'archive-post.label': 'Archive',
         'unarchive-post.label': 'Unarchive',
         'star-post.label': 'Star',

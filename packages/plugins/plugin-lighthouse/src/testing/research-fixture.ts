@@ -27,7 +27,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Charcoal-grilled porcini mushroom flatbread, topped with burned eggplant and honey puree, shiitake nimono, mascarpone cheese, Spanish pickled chili and grated chestnuts.',
       ],
-      'lh:menuSection': ['Food — Specials (only available for a limited time)'],
+      'lh:menuSection': ['Food - Specials (only available for a limited time)'],
     },
   },
   {
@@ -38,7 +38,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [510],
       'lh:currency': ['THB'],
       'schema:description': ['A harmony of corn and fresh Japanese sea urchin'],
-      'lh:menuSection': ['Food — Signatures'],
+      'lh:menuSection': ['Food - Signatures'],
     },
   },
   {
@@ -48,8 +48,8 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Padron Peppers'],
       'lh:price': [340],
       'lh:currency': ['THB'],
-      'schema:description': ['Perfectly fried Spanish “Russian Roulette” peppers'],
-      'lh:menuSection': ['Food — Classics'],
+      'schema:description': ['Perfectly fried Spanish "Russian Roulette" peppers'],
+      'lh:menuSection': ['Food - Classics'],
     },
   },
   {
@@ -60,7 +60,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [300],
       'lh:currency': ['THB'],
       'schema:description': ['Fresh Japanese cherry tomato with honey-mustard vinaigrette and \ncaramelized walnuts'],
-      'lh:menuSection': ['Food — Greens'],
+      'lh:menuSection': ['Food - Greens'],
     },
   },
   {
@@ -73,7 +73,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Charcoal-grilled Branzino seabass, Fennel & miso sauce, topped with fennel and orange salad',
       ],
-      'lh:menuSection': ['Food — Grill'],
+      'lh:menuSection': ['Food - Grill'],
     },
   },
   {
@@ -84,7 +84,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [899],
       'lh:currency': ['THB'],
       'schema:description': ['Squid ink paella topped with charcoal grilled prawns'],
-      'lh:menuSection': ['Food — Rice'],
+      'lh:menuSection': ['Food - Rice'],
     },
   },
   {
@@ -94,8 +94,8 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Miso Cheesecake'],
       'lh:price': [290],
       'lh:currency': ['THB'],
-      'schema:description': ['Our Signature melty Basque cheesecake made the “Fuego” way'],
-      'lh:menuSection': ['Food — Desserts'],
+      'schema:description': ['Our Signature melty Basque cheesecake made the "Fuego" way'],
+      'lh:menuSection': ['Food - Desserts'],
     },
   },
   {
@@ -107,7 +107,7 @@ export const fuegoDishes: Entity[] = [
       'lh:currency': ['THB'],
       'schema:description': ['A harmony of corn and fresh Japanese sea urchin'],
       'lh:menuSection': [
-        'Best Sellers Set Menu — Best Sellers Set Menu 3,490thb++ (Set for 2 people. Price per person)',
+        'Best Sellers Set Menu - Best Sellers Set Menu 3,490thb++ (Set for 2 people. Price per person)',
       ],
     },
   },
@@ -121,7 +121,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Pairing Notes: Bright Apple, elder flower, and lime lift the richness of ankimo and uni, while the red wine float adds depth and lenght.',
       ],
-      'lh:menuSection': ['Best Sellers Set Menu — Best sellers Cocktail Pairing 1,990thb ++ (6 Cocktails)'],
+      'lh:menuSection': ['Best Sellers Set Menu - Best sellers Cocktail Pairing 1,990thb ++ (6 Cocktails)'],
     },
   },
   {
@@ -131,8 +131,8 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Padron Peppers'],
       'lh:price': [0],
       'lh:currency': ['THB'],
-      'schema:description': ['Perfectly fried Spanish “Russian Roulette” peppers'],
-      'lh:menuSection': ['FUEGO Tapas Set — FUEGO Tapas Set 1,950thb++ (Set for 2 people. Price per person)'],
+      'schema:description': ['Perfectly fried Spanish "Russian Roulette" peppers'],
+      'lh:menuSection': ['FUEGO Tapas Set - FUEGO Tapas Set 1,950thb++ (Set for 2 people. Price per person)'],
     },
   },
   {
@@ -145,7 +145,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Shio-Yuzu Sake, Peach Liqueur, Cava & Soda\n\nTASTE: A bright sparkling cocktail with refreshing yuzu citrus, juicy peach, crisp cava, and a lively, refreshing finish.',
       ],
-      'lh:menuSection': ['Drinks — Signature cocktails'],
+      'lh:menuSection': ['Drinks - Signature cocktails'],
     },
   },
   {
@@ -158,7 +158,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Suntory Kakubin Japanese Whiskey, Soda, Lemon Peel\n\nTASTE: The traditional Japanese highball. Refreshing and easy-drinking with smooth whisky, subtle vanilla and honey notes, finished crisp with sparkling soda.',
       ],
-      'lh:menuSection': ['Drinks — Highballs'],
+      'lh:menuSection': ['Drinks - Highballs'],
     },
   },
   {
@@ -168,7 +168,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Red Wine Sangria (jar)'],
       'lh:price': [1580],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Sangria'],
+      'lh:menuSection': ['Drinks - Sangria'],
     },
   },
   {
@@ -181,7 +181,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Rose Syrup, Apple juice, Fresh Lemon Juice, Peach Soda, Pink Guava Foam\n\nTASTE: Delicately floral with rose, crisp apple, bright lemon, sparkling peach soda, and a light pink guava foam finish.',
       ],
-      'lh:menuSection': ['Drinks — Mocktails'],
+      'lh:menuSection': ['Drinks - Mocktails'],
     },
   },
   {
@@ -192,9 +192,9 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [690],
       'lh:currency': ['THB'],
       'schema:description': [
-        'Fire Ball\tWhiskey, Apple Juice, Lemon Juice, Tabasco Sauce \t\n\nTASTE: A bold and spicy shot—sweet cinnamon Fireball blended with crisp apple, zesty lemon, and a dash of Tabasco. Sweet, sour, and spicy in one fiery sip.',
+        'Fire Ball\tWhiskey, Apple Juice, Lemon Juice, Tabasco Sauce \t\n\nTASTE: A bold and spicy shot-sweet cinnamon Fireball blended with crisp apple, zesty lemon, and a dash of Tabasco. Sweet, sour, and spicy in one fiery sip.',
       ],
-      'lh:menuSection': ['Drinks — Shots'],
+      'lh:menuSection': ['Drinks - Shots'],
     },
   },
   {
@@ -204,7 +204,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Tanqueray (glass)'],
       'lh:price': [320],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Gin'],
+      'lh:menuSection': ['Drinks - Gin'],
     },
   },
   {
@@ -214,7 +214,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Jose Cuervo Gold (shot)'],
       'lh:price': [350],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Tequila & Mezcal'],
+      'lh:menuSection': ['Drinks - Tequila & Mezcal'],
     },
   },
   {
@@ -224,7 +224,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Suntory Kakubin (glass)'],
       'lh:price': [350],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Whiskey & Single Malt'],
+      'lh:menuSection': ['Drinks - Whiskey & Single Malt'],
     },
   },
   {
@@ -234,7 +234,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Myoshino no Sakura Umeshu (glass)'],
       'lh:price': [320],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Umeshu & yuzushu'],
+      'lh:menuSection': ['Drinks - Umeshu & yuzushu'],
     },
   },
   {
@@ -244,7 +244,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Tanigawadake Junmai Super Dry Karakuchi 300ML'],
       'lh:price': [890],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Sake'],
+      'lh:menuSection': ['Drinks - Sake'],
     },
   },
   {
@@ -255,7 +255,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [390],
       'lh:currency': ['THB'],
       'schema:description': ['Macabeu, Chardonnay. Cava; Spain'],
-      'lh:menuSection': ['Drinks — Cava & champagne'],
+      'lh:menuSection': ['Drinks - Cava & champagne'],
     },
   },
   {
@@ -266,7 +266,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [390],
       'lh:currency': ['THB'],
       'schema:description': ['Verdejo; Rueda; Spain'],
-      'lh:menuSection': ['Drinks — White wine'],
+      'lh:menuSection': ['Drinks - White wine'],
     },
   },
   {
@@ -277,7 +277,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [2100],
       'lh:currency': ['THB'],
       'schema:description': ['Grenache, Tempranillo; Catalunya; Spain'],
-      'lh:menuSection': ['Drinks — Rosé'],
+      'lh:menuSection': ['Drinks - Rosé'],
     },
   },
   {
@@ -288,7 +288,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [390],
       'lh:currency': ['THB'],
       'schema:description': ['Tempranillo; Rioja; Spain'],
-      'lh:menuSection': ['Drinks — Red wine'],
+      'lh:menuSection': ['Drinks - Red wine'],
     },
   },
   {
@@ -298,7 +298,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Asahi'],
       'lh:price': [220],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Beer'],
+      'lh:menuSection': ['Drinks - Beer'],
     },
   },
   {
@@ -308,7 +308,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Nordaq Still Water'],
       'lh:price': [180],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Water & soft drinks'],
+      'lh:menuSection': ['Drinks - Water & soft drinks'],
     },
   },
   {
@@ -321,7 +321,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Spanish Carabineros prawns carpaccio, served with green apple & saffron chutney, umami kombu emulsion, tangy sour cream and fried tarragon.',
       ],
-      'lh:menuSection': ['Food — Specials (only available for a limited time)'],
+      'lh:menuSection': ['Food - Specials (only available for a limited time)'],
     },
   },
   {
@@ -332,9 +332,9 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [390],
       'lh:currency': ['THB'],
       'schema:description': [
-        'Japanese Monkfish liver, the ‘‘Foie Gras of the sea’’, served on top of charcoal grilled brioche',
+        "Japanese Monkfish liver, the ''Foie Gras of the sea'', served on top of charcoal grilled brioche",
       ],
-      'lh:menuSection': ['Food — Signatures'],
+      'lh:menuSection': ['Food - Signatures'],
     },
   },
   {
@@ -345,7 +345,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [180],
       'lh:currency': ['THB'],
       'schema:description': ['Creamy croquette filled with the highest quality of Spanish iberico ham'],
-      'lh:menuSection': ['Food — Classics'],
+      'lh:menuSection': ['Food - Classics'],
     },
   },
   {
@@ -358,7 +358,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Grilled Baby Cos, egg & anchovy dressing, topped up with crispy croutons and Spanish Idiazabal cheese',
       ],
-      'lh:menuSection': ['Food — Greens'],
+      'lh:menuSection': ['Food - Greens'],
     },
   },
   {
@@ -369,7 +369,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [850],
       'lh:currency': ['THB'],
       'schema:description': ['Sous vide Spanish octopus served with an umami chorizo foam'],
-      'lh:menuSection': ['Food — Grill'],
+      'lh:menuSection': ['Food - Grill'],
     },
   },
   {
@@ -380,7 +380,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [899],
       'lh:currency': ['THB'],
       'schema:description': ['Our selection of mixed seafood paella'],
-      'lh:menuSection': ['Food — Rice'],
+      'lh:menuSection': ['Food - Rice'],
     },
   },
   {
@@ -391,7 +391,7 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [290],
       'lh:currency': ['THB'],
       'schema:description': ['Homemade churros served with a white chocolate sake sauce'],
-      'lh:menuSection': ['Food — Desserts'],
+      'lh:menuSection': ['Food - Desserts'],
     },
   },
   {
@@ -402,10 +402,10 @@ export const fuegoDishes: Entity[] = [
       'lh:price': [0],
       'lh:currency': ['THB'],
       'schema:description': [
-        'Japanese Monkfish liver, the ‘‘Foie Gras of the sea’’, served on top of charcoal grilled brioche',
+        "Japanese Monkfish liver, the ''Foie Gras of the sea'', served on top of charcoal grilled brioche",
       ],
       'lh:menuSection': [
-        'Best Sellers Set Menu — Best Sellers Set Menu 3,490thb++ (Set for 2 people. Price per person)',
+        'Best Sellers Set Menu - Best Sellers Set Menu 3,490thb++ (Set for 2 people. Price per person)',
       ],
     },
   },
@@ -419,18 +419,18 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         "Pairing Notes: Tequila Herbal and peppery character compliments the fresh flavors of Kanpachi and Tuna, while lychee and citrus add brightness.\n\nThe saline notes from  Pippara Brine enhance the fish's natural and umami, pair beautifully with the sweet roasted piquillo pepper.",
       ],
-      'lh:menuSection': ['Best Sellers Set Menu — Best sellers Cocktail Pairing 1,990thb ++ (6 Cocktails)'],
+      'lh:menuSection': ['Best Sellers Set Menu - Best sellers Cocktail Pairing 1,990thb ++ (6 Cocktails)'],
     },
   },
   {
     id: 'https://app.papaya.co.th/fuego/fuego/menu#01JTANJ1023W7D0B04J4PPG24W',
     types: ['schema:MenuItem'],
     props: {
-      'schema:name': ['“Joselito” Iberico Ham (50g)'],
+      'schema:name': ['"Joselito" Iberico Ham (50g)'],
       'lh:price': [0],
       'lh:currency': ['THB'],
-      'schema:description': ['Sliced Spanish “Joselito” iberico ham, the best money can buy'],
-      'lh:menuSection': ['FUEGO Tapas Set — FUEGO Tapas Set 1,950thb++ (Set for 2 people. Price per person)'],
+      'schema:description': ['Sliced Spanish "Joselito" iberico ham, the best money can buy'],
+      'lh:menuSection': ['FUEGO Tapas Set - FUEGO Tapas Set 1,950thb++ (Set for 2 people. Price per person)'],
     },
   },
   {
@@ -443,7 +443,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Japanese Whiskey, Tio Pepe Fino Sherry, Jasmine Syrup, Critic Acid, Soda, Pink Guava Foam\n\nTASTE: A refreshing whisky highball with floral jasmine, crisp fino sherry, lively citrus, and a delicate pink guava foam finish.',
       ],
-      'lh:menuSection': ['Drinks — Signature cocktails'],
+      'lh:menuSection': ['Drinks - Signature cocktails'],
     },
   },
   {
@@ -456,7 +456,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         'Suntory Kakubin Japanese Whiskey, Calpis Lacto, Soda\n\nTASTE: Creamy and refreshing with sweet-tangy Calpis, smooth Kakubin whisky, and a crisp sparkling finish.',
       ],
-      'lh:menuSection': ['Drinks — Highballs'],
+      'lh:menuSection': ['Drinks - Highballs'],
     },
   },
   {
@@ -466,7 +466,7 @@ export const fuegoDishes: Entity[] = [
       'schema:name': ['Red Wine Sangria (glass)'],
       'lh:price': [420],
       'lh:currency': ['THB'],
-      'lh:menuSection': ['Drinks — Sangria'],
+      'lh:menuSection': ['Drinks - Sangria'],
     },
   },
   {
@@ -479,7 +479,7 @@ export const fuegoDishes: Entity[] = [
       'schema:description': [
         "Piquillo Cordial, Schweppes Tonic\n\nTASTE: Refreshing with sweet-tangy piquillo pepper notes, balanced by tonic's gentle bitterness and a crisp finish.",
       ],
-      'lh:menuSection': ['Drinks — Mocktails'],
+      'lh:menuSection': ['Drinks - Mocktails'],
     },
   },
 ];

@@ -242,7 +242,7 @@ describe('getRootFormProperties', () => {
       expect(getRootFormProperties(CreateUnion.ast, {}).map((prop) => prop.name)).toEqual(['type']);
     });
 
-    test('survives omitId (applied by CreateObjectPanel) — union discriminant must be preserved', ({ expect }) => {
+    test('survives omitId (applied by CreateObjectPanel) - union discriminant must be preserved', ({ expect }) => {
       const omitted = omitId(CreateUnion);
       expect(getRootFormProperties(omitted.ast, { type: 'standard-site' }).map((prop) => prop.name)).toEqual([
         'type',

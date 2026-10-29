@@ -4,7 +4,7 @@
 
 import { type PlotData, type PlotDatum, type PlotValue } from '../types.ts';
 
-/** Spreadsheet column letters for a zero-based index: A–Z, then AA, AB, … (bijective base 26). */
+/** Spreadsheet column letters for a zero-based index: A-Z, then AA, AB, ... (bijective base 26). */
 const columnName = (index: number): string => {
   let name = '';
   for (let remaining = index + 1; remaining > 0; remaining = Math.floor((remaining - 1) / 26)) {

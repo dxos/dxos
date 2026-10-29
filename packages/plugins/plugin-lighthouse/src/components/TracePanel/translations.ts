@@ -5,7 +5,7 @@
 /** The trace's strings, under the plugin's namespace. */
 export const traceTranslations: Record<string, string> = {
   'trace.label': 'Trajectory explained',
-  'trace-loading.message': 'Explaining…',
+  'trace-loading.message': 'Explaining...',
   'trace-empty.message': 'Run the research to see its trace.',
   'trace-summary.label':
     '{{wall}} wall · {{cost}} · {{turns}} turns ({{tokensIn}} tokens in, {{tokensOut}} out) · {{calls}} tool calls · {{loads}} loads · {{extracts}} extractions · {{models}} System One calls · {{facts}} facts · {{results}} results',

@@ -39,7 +39,7 @@ const THICKNESS_FACTOR = 0.35;
 export type GizmoBasis = { right: Vector3; up: Vector3; forward: Vector3 };
 
 /**
- * The local axes and outward world direction for rod `axis`, given the object's own `basis` — a
+ * The local axes and outward world direction for rod `axis`, given the object's own `basis` - a
  * cyclic permutation of `(right, up, forward)`, which is itself right-handed, so every permutation
  * below is too. Each case is chosen so the rod's local +Y (the cylinder builder's own axis) lands on
  * the world direction the rod represents.
@@ -81,7 +81,7 @@ const createAxisForm = (axis: Axis, scene: Scene): Mesh => {
 };
 
 /**
- * The rotation and translation for one `axis` rod at `position`/`basis`/`scale` — shared by
+ * The rotation and translation for one `axis` rod at `position`/`basis`/`scale` - shared by
  * `GizmoLayer`'s per-frame thin-instance matrices and `createGizmo`'s one-off standalone meshes, so
  * both draw exactly the same rod.
  */
@@ -108,7 +108,7 @@ const axisTransform = (
 /**
  * The thin-instance matrix for one object's `axis` rod at its current sim state and eased
  * `heading`. Uses the same `objectFrame` the mesh itself is oriented by, so the rods track the
- * rendered form exactly — including a rocket's pitch, which the gizmo would otherwise ignore and
+ * rendered form exactly - including a rocket's pitch, which the gizmo would otherwise ignore and
  * draw level while the rocket climbed.
  */
 const matrixFor = ({ state, definition }: SimObject, axis: Axis, heading: number): Matrix => {
@@ -127,7 +127,7 @@ const matrixFor = ({ state, definition }: SimObject, axis: Axis, heading: number
 /**
  * Builds one visible instance of every axis rod at `options.position`, oriented by `options.basis`
  * and sized by `options.scale` (the same rod length/thickness convention `GizmoLayer` uses for
- * live-scene thin instances) — for one-off, non-thin-instanced placements such as the object gallery.
+ * live-scene thin instances) - for one-off, non-thin-instanced placements such as the object gallery.
  * The caller owns disposal of the returned meshes.
  */
 export const createGizmo = (scene: Scene, options: { position: Vector3; basis: GizmoBasis; scale: number }): Mesh[] =>
@@ -142,7 +142,7 @@ export const createGizmo = (scene: Scene, options: { position: Vector3; basis: G
   });
 
 /**
- * Renders rotation gizmos — three coloured axis rods per object — as thin instances, one base
+ * Renders rotation gizmos - three coloured axis rods per object - as thin instances, one base
  * cylinder per axis. Mirrors `ObjectLayer`'s `update`/`dispose` shape so both layers can be driven
  * from the same render loop. Default-off: the caller (`TerraArticle`) creates/disposes this layer
  * only while the toolbar toggle is on.
@@ -175,7 +175,7 @@ export class GizmoLayer {
     return heading;
   }
 
-  /** `deltaMs` is real (wall-clock) time since the previous frame, driving turn-rate easing only — never the sim clock. */
+  /** `deltaMs` is real (wall-clock) time since the previous frame, driving turn-rate easing only - never the sim clock. */
   update(objects: readonly SimObject[], deltaMs: number): void {
     const live = new Set<TerraObject.TerraObject>();
     const headings = new Map<SimObject, number>();
@@ -184,7 +184,7 @@ export class GizmoLayer {
       headings.set(object, this.#headingFor(object, deltaMs));
     }
 
-    // Drops headings for objects no longer simulated — removed, or orphaned by a freshly rebuilt SimEngine.
+    // Drops headings for objects no longer simulated - removed, or orphaned by a freshly rebuilt SimEngine.
     for (const definition of this.#headings.keys()) {
       if (!live.has(definition)) {
         this.#headings.delete(definition);
@@ -211,7 +211,7 @@ export class GizmoLayer {
         objects.forEach((object, index) =>
           matrixFor(object, axis, headings.get(object) ?? object.state.bearing).copyToArray(buffer, index * 16),
         );
-        // `staticBuffer: false` is load-bearing — Babylon builds the GPU buffer with
+        // `staticBuffer: false` is load-bearing - Babylon builds the GPU buffer with
         // `updatable = !staticBuffer`, so a static buffer silently ignores every later
         // `thinInstanceBufferUpdated` and the rods render frozen at their first position.
         base.thinInstanceSetBuffer('matrix', buffer, 16, false);

@@ -10,8 +10,8 @@ import { type AnalyzeContext, fileNode } from './common.ts';
 
 /**
  * `package.json` and `moon.yml`: the two files that together assert a `Package` node. Each file
- * contributes from its own graph — identity and dependencies from the manifest, the layer from
- * moon — and RDF unions them.
+ * contributes from its own graph - identity and dependencies from the manifest, the layer from
+ * moon - and RDF unions them.
  */
 
 type Manifest = {
@@ -132,7 +132,7 @@ export const analyzeMoonYml = (context: AnalyzeContext): Ontology.FileDocument =
   const layer = isRecord(parsed) && typeof parsed.layer === 'string' ? parsed.layer : undefined;
   // The sibling manifest names the package; `fileNode` already looked it up for `inPackage`. The
   // lookup walks up, so a `moon.yml` with no manifest of its own (a Rust crate) would otherwise give
-  // its layer to an ancestor — the same answer one directory up means there is no sibling.
+  // its layer to an ancestor - the same answer one directory up means there is no sibling.
   const packageName = context.packageOf(context.path);
   const sibling = packageName !== context.packageOf(join(dirname(dirname(context.path)), 'moon.yml'));
   if (!layer || !packageName || !sibling) {

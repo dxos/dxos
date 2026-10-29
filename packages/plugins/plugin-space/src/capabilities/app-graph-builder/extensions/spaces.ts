@@ -324,7 +324,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Communications section group — no single plugin owns this category; it lives here so the
+    // Communications section group - no single plugin owns this category; it lives here so the
     // group is always present when the space plugin is active. A more specific plugin (e.g. a
     // future plugin-communications) should own this once one exists.
     // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.

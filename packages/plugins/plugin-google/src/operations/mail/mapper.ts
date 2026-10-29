@@ -19,7 +19,7 @@ import { GMAIL_SOURCE } from '../../constants.ts';
 /**
  * Recursively searches a message's MIME part tree for the first part matching `mimeType`, depth-first
  * so an early sibling's subtree (e.g. `multipart/alternative`) is fully explored before a later one
- * (e.g. a forwarded `message/rfc822` attachment) — nested one or more levels deep whenever the message
+ * (e.g. a forwarded `message/rfc822` attachment) - nested one or more levels deep whenever the message
  * carries an inline image or attachment (common for `multipart/related`/`multipart/mixed` wrappers),
  * not just at the top level of `payload.parts`.
  */
@@ -45,7 +45,7 @@ export type AttachmentMetadata = {
   readonly attachmentId: string;
   readonly mimeType: string;
   readonly size: number;
-  /** The part's `Content-ID` header (angle brackets stripped), if any — matches a `cid:` reference in an HTML body. */
+  /** The part's `Content-ID` header (angle brackets stripped), if any - matches a `cid:` reference in an HTML body. */
   readonly contentId?: string;
 };
 
@@ -71,7 +71,7 @@ const collectAttachments = (parts: readonly GoogleMail.Part[] | undefined): Atta
   return attachments;
 };
 
-/** Decodes common HTML entities in Gmail snippet/header text (e.g., `&#39;` → `'`). */
+/** Decodes common HTML entities in Gmail snippet/header text (e.g., `&#39;` -> `'`). */
 const decodeHtmlEntities = (text: string | undefined): string | undefined => {
   if (text === undefined) {
     return undefined;
@@ -95,7 +95,7 @@ const decodeHtmlEntities = (text: string | undefined): string | undefined => {
 };
 
 /** Result of mapping a Gmail message. `labelIds` is propagated separately so the caller can
- * apply tags via `mailbox.tags[labelId].messages` after appending to the feed — feed-stored
+ * apply tags via `mailbox.tags[labelId].messages` after appending to the feed - feed-stored
  * Messages are immutable, so per-message tag membership has to live on the (mutable) Mailbox.
  */
 export type MappedMessage = { message: Message.Message; labelIds: readonly string[] };
@@ -110,14 +110,14 @@ export type DecodedMessage = {
 
 /**
  * Base64-decodes the message's HTML and plaintext bodies (whichever the email carries) to UTF-8.
- * Returns `null` when the message has neither. Pure and Gmail-specific; no HTML→markdown conversion —
+ * Returns `null` when the message has neither. Pure and Gmail-specific; no HTML->markdown conversion -
  * the markdown/plain views derive from these raw blocks in the component.
  */
 export const decodeBody = (message: GoogleMail.Message): DecodedMessage | null => {
   const decode = (data: string) => Buffer.from(data, 'base64').toString('utf-8');
   // A part that decodes to whitespace (or nothing) is treated as absent: some senders emit an empty
   // `text/plain` alternative alongside the real HTML. Coercing it to `undefined` lets such messages
-  // fall through to the HTML→markdown synthesis in `mapToMessage` instead of storing a blank body.
+  // fall through to the HTML->markdown synthesis in `mapToMessage` instead of storing a blank body.
   const nonEmpty = (text: string | undefined): string | undefined =>
     text !== undefined && text.trim().length > 0 ? text : undefined;
   const htmlData = getPart(message, 'text/html');
@@ -142,7 +142,7 @@ export const decodeBody = (message: GoogleMail.Message): DecodedMessage | null =
 };
 
 /**
- * Builds an ECHO message from a decoded Gmail message and an optional resolved sender contact. Pure —
+ * Builds an ECHO message from a decoded Gmail message and an optional resolved sender contact. Pure -
  * contact resolution is done by the caller so this composes into a pipeline stage without a `Resolver`
  * requirement.
  */
@@ -205,7 +205,7 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
 
 /**
  * Maps a Gmail message to an ECHO message object, resolving the sender against existing contacts.
- * Composes {@link decodeBody} → {@link mapToMessage}. Returns `null` when the message has no body.
+ * Composes {@link decodeBody} -> {@link mapToMessage}. Returns `null` when the message has no body.
  */
 export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<MappedMessage | null, never, Resolver> =
   Effect.fnUntraced(function* (message) {

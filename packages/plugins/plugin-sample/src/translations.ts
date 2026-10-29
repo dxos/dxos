@@ -4,9 +4,9 @@
 
 // Translation definitions following the i18next pattern.
 // Translations are organized into two namespaces:
-// 1. `Type.getTypename(Schema)` — translations for the schema type (used by the framework
+// 1. `Type.getTypename(Schema)` - translations for the schema type (used by the framework
 //    for object creation dialogs, deletion confirmations, etc.).
-// 2. `meta.id` — plugin-specific translations (labels, actions, companions).
+// 2. `meta.id` - plugin-specific translations (labels, actions, companions).
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';

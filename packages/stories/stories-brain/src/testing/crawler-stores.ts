@@ -14,7 +14,7 @@ import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipel
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 /**
- * The crawler-only stores the Discord pipeline needs beyond `FactStore` — which `BrainPlugin` owns
+ * The crawler-only stores the Discord pipeline needs beyond `FactStore` - which `BrainPlugin` owns
  * (per-space, via {@link BrainCapabilities.FactStoreRegistry}). This story-local plugin provides the
  * remaining stores so a Facts-story module can run a crawl whose facts land in Brain's `FactStore`.
  */
@@ -37,7 +37,7 @@ const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
 
 /**
  * A long-lived runtime over the crawler stores. Modules run a crawl program through it after
- * providing `FactStore` (from Brain's registry), the Discord `Source`, and the AI service — so the
+ * providing `FactStore` (from Brain's registry), the Discord `Source`, and the AI service - so the
  * program's remaining requirements are exactly the services this runtime holds. Durable across
  * crawls (state accumulates over the shared SQLite client), for the session.
  */

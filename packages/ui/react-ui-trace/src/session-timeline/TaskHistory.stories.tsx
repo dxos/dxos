@@ -22,7 +22,7 @@ const minute = (minutes: number): number => T0 + minutes * MINUTE;
 const at = (minutes: number): string => new Date(minute(minutes)).toISOString();
 
 /**
- * One session's checklist, and the status moves each task's edit history records — the story's tasks
+ * One session's checklist, and the status moves each task's edit history records - the story's tasks
  * live in no database, so their moves are given rather than read. With `history` off, the chart sees
  * only the trace.
  */
@@ -124,8 +124,8 @@ const Timeline = ({ title, history }: { title: string; history: boolean }) => {
 
 const DefaultStory = () => (
   <div className='flex flex-col gap-6 p-4'>
-    <Timeline title='Trace only — task lanes have no span' history={false} />
-    <Timeline title='With edit history — begin, end, status moves and questions as nodes' history={true} />
+    <Timeline title='Trace only - task lanes have no span' history={false} />
+    <Timeline title='With edit history - begin, end, status moves and questions as nodes' history={true} />
   </div>
 );
 

@@ -21,7 +21,7 @@ type Placeholder = {
 
 export type WalkthroughFill = {
   body: string;
-  /** Hunks no fence claimed, in patch order — what the appended section covers. */
+  /** Hunks no fence claimed, in patch order - what the appended section covers. */
   missed: { path: string; hunks: PatchHunk[] }[];
   /** Files the patch changed without changing any line: renames and mode changes. */
   textless: string[];
@@ -90,7 +90,7 @@ const findPlaceholders = (body: string): Placeholder[] => {
 
 /** The hunks a fence asks for: those overlapping its `lines=`, or the whole file without one. */
 const selectHunks = (file: PatchFile, lines: string | undefined): PatchHunk[] => {
-  const range = lines?.match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/);
+  const range = lines?.match(/^(\d+)(?:\s*[-\u2013]\s*(\d+))?$/);
   if (!range) {
     return file.hunks;
   }
@@ -116,7 +116,7 @@ const buildFence = (fence: string, attributes: Record<string, string>, contents:
  * Fills the walkthrough's empty diff fences from the pull request's own patch, then reports what the
  * prose never mentioned.
  *
- * The model is asked for placeholders — a path and a line range — rather than diff content, because
+ * The model is asked for placeholders - a path and a line range - rather than diff content, because
  * a model that transcribes a diff gets lines subtly wrong and the result is a review artefact that
  * lies about the change. Here the bytes come from git and only the selection is the model's.
  */
@@ -167,7 +167,7 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
 
     // A rename, a mode change or a binary file has no hunks; there is nothing to splice, and an
     // empty fence would render as a bare code block. NOT `unresolved`: the patch does contain this
-    // file, and `textless` already reports it — counting it as missing would say both at once.
+    // file, and `textless` already reports it - counting it as missing would say both at once.
     const hunks = selectHunks(file, rest.lines);
     if (hunks.length === 0) {
       filled += verbatim;
@@ -192,7 +192,7 @@ export const fillWalkthrough = (body: string, patch: string): WalkthroughFill =>
     // the walkthrough and nobody reads them.
     .filter((file) => file.hunks.length > 0 && !generatedPaths.has(file.path));
   // A rename, a mode change or a binary file has no hunks to show, but the reader still has to learn
-  // it changed — counting it nowhere would report full coverage of a pull request nobody saw.
+  // it changed - counting it nowhere would report full coverage of a pull request nobody saw.
   const textless = files
     .filter((file) => file.hunks.length === 0 && !generatedPaths.has(file.path))
     .map((file) => file.path);

@@ -21,7 +21,7 @@ const FLASH = 'com.deepseek.model.deepseek-v4-flash.default';
 
 /**
  * Two single-city tools rather than one multi-city tool, so the only way to answer about both
- * cities in one turn is two tool calls — which is what the OpenAI dialect streams as indexed
+ * cities in one turn is two tool calls - which is what the OpenAI dialect streams as indexed
  * argument deltas with no per-call terminator, and what the adapter used to leave unterminated
  * until the end of the stream.
  */
@@ -52,7 +52,7 @@ const WeatherLayer = WeatherToolkit.toLayer({
 const TestLayer = AiService.languageModel(FLASH).pipe(Layer.provide(TestAiService({ preset: 'deepseek' })));
 
 /**
- * Replays a recorded DeepSeek turn that calls two tools at once — the shape that crashed the parser
+ * Replays a recorded DeepSeek turn that calls two tools at once - the shape that crashed the parser
  * with `invariant violation [!block]`, because DeepSeek speaks the OpenAI dialect and the adapter
  * deferred every `tool-params-end` to the end of the stream.
  *

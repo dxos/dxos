@@ -9,9 +9,9 @@
  *   <grid cols="N" [fixed="true"]>  ...children...  </grid>
  *   <field name="x" span="N"/>
  *
- * - Attributes accept `"…"`, `'…'`, or unquoted integers.
+ * - Attributes accept `"..."`, `'...'`, or unquoted integers.
  * - Whitespace between tags is ignored. Text content (between tags) is forbidden.
- * - Self-closing form (`<field … />`) is required for `field`; `grid` must use a closing tag.
+ * - Self-closing form (`<field ... />`) is required for `field`; `grid` must use a closing tag.
  *
  * The parser is hand-rolled (no HTML parser) because the grammar is tiny.
  */

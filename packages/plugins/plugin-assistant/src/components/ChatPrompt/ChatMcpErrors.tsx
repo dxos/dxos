@@ -19,7 +19,7 @@ export type ChatMcpErrorsProps = Util.ThemedClassName<{
 
 /**
  * Inline banner that lists MCP servers that failed to connect during the most recent request.
- * The chat itself keeps working without these servers — this just lets the user see what was dropped.
+ * The chat itself keeps working without these servers - this just lets the user see what was dropped.
  */
 export const ChatMcpErrors = ({ classNames, chatModel }: ChatMcpErrorsProps) => {
   const { t } = Hooks.useTranslation(AssistantNamespace.key);
@@ -51,7 +51,7 @@ export const ChatMcpErrors = ({ classNames, chatModel }: ChatMcpErrorsProps) => 
                       the content's intrinsic width. */}
                   <span className='truncate min-w-0'>
                     <span className='font-mono'>{error.url}</span>
-                    {' — '}
+                    {' - '}
                     <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
                   </span>
                 </Listbox.Item>

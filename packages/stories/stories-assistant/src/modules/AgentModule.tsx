@@ -25,18 +25,18 @@ const blockText = (block: ContentBlock.Any): string => {
     case 'reasoning':
       return block.reasoningText ?? '';
     case 'toolCall':
-      return `→ ${block.name}(${block.input.slice(0, 120)})`;
+      return `-> ${block.name}(${block.input.slice(0, 120)})`;
     case 'toolResult':
-      return block.error ? `✗ ${block.name}: ${block.error}` : `✓ ${block.name}`;
+      return block.error ? `X ${block.name}: ${block.error}` : `OK ${block.name}`;
     case 'stats':
-      return `— ${block.usage?.totalTokens ?? 0} tokens · ${block.duration ?? 0}ms · ${block.finishReason ?? ''}`;
+      return `- ${block.usage?.totalTokens ?? 0} tokens · ${block.duration ?? 0}ms · ${block.finishReason ?? ''}`;
     default:
       return `[${block._tag}]`;
   }
 };
 
 /**
- * A failed tool result the agent immediately retried and got right — collapsed because the SDK's
+ * A failed tool result the agent immediately retried and got right - collapsed because the SDK's
  * `Read` wants an absolute path, so nearly every turn carries one. Scoped to the same exchange
  * (`segment`): a success in a later turn must not hide an unrelated earlier failure or a denial.
  */
@@ -72,7 +72,7 @@ const blockClass = (block: ContentBlock.Any): string => {
  *
  * Renders the projected `ContentBlock`s directly rather than through the assistant's Chat surface,
  * which reads a chat model's in-memory state and so cannot show an externally produced turn. Needs
- * the host mounted in the dev server — see `DX_AGENT_CWD` in `.storybook/main.ts`.
+ * the host mounted in the dev server - see `DX_AGENT_CWD` in `.storybook/main.ts`.
  */
 export const AgentModule = () => {
   const [prompt, setPrompt] = useState('Read agent-fixture.md and tell me the MAGIC_TOKEN.');
@@ -158,11 +158,11 @@ export const AgentModule = () => {
               <div
                 className={mx('whitespace-pre-wrap text-sm', superseded ? 'text-fg-muted text-xs' : blockClass(block))}
               >
-                {superseded ? `✗ ${block._tag === 'toolResult' ? block.name : ''} (retried)` : blockText(block)}
+                {superseded ? `X ${block._tag === 'toolResult' ? block.name : ''} (retried)` : blockText(block)}
               </div>
             </div>
           ))}
-          {running && <div className='text-sm text-fg-muted'>running…</div>}
+          {running && <div className='text-sm text-fg-muted'>running...</div>}
           {error && <div className='text-sm text-error-text'>{error}</div>}
         </div>
       </div>
@@ -171,7 +171,7 @@ export const AgentModule = () => {
         <Field.Root>
           <Input.Root
             classNames='flex-1 min-w-0'
-            placeholder='Ask the agent…'
+            placeholder='Ask the agent...'
             value={prompt}
             disabled={running}
             onChange={(event) => setPrompt(event.target.value)}

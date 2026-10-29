@@ -49,7 +49,7 @@ export class DatabaseRoot implements Disposable {
         }
       }
       // Branch documents live in the `branches` registry, not `links`, so they must be remapped here
-      // too — otherwise an imported/copied space's branches point at the source space's documents.
+      // too - otherwise an imported/copied space's branches point at the source space's documents.
       for (const byName of Object.values(draft.branches ?? {})) {
         for (const record of Object.values(byName)) {
           for (const [objectId, value] of Object.entries(record.members ?? {})) {
@@ -144,7 +144,7 @@ export class DatabaseRoot implements Disposable {
   }
 
   /**
-   * The `DocHandle` stays inside the lease — a caller holding one would read and write a document the
+   * The `DocHandle` stays inside the lease - a caller holding one would read and write a document the
    * host had evicted, so the operations the root needs are proxied instead.
    */
   change(callback: Parameters<DocumentLease<DatabaseDirectory>['change']>[0]): void {

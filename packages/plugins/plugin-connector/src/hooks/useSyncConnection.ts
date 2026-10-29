@@ -24,7 +24,7 @@ export type UseSyncConnectionResult = {
   /** True while a sync is in flight. */
   readonly syncing: boolean;
   /**
-   * Runs the account's sync — through its sync routine's trigger when the connector declares a
+   * Runs the account's sync - through its sync routine's trigger when the connector declares a
    * schedule (the dispatcher drives continuation), directly otherwise. A missing routine opens the
    * seeded create-routine form instead; saving re-runs the sync. No-op when `available` is false.
    */

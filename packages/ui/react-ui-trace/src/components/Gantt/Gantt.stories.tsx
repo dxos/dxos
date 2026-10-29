@@ -42,7 +42,7 @@ const groups: GanttGroup[] = [{ id: 'g:a' }, { id: 'g:b', parentId: 'g:a' }, { i
 const lanes: GanttLane[] = [
   {
     id: 'a',
-    label: 'Process A — Plan the release',
+    label: 'Process A - Plan the release',
     status: 'running',
     groupId: 'g:a',
     segments: [{ start: T0 }],
@@ -71,7 +71,7 @@ const lanes: GanttLane[] = [
   },
   {
     id: 'b',
-    label: 'Process B — Draft changelog',
+    label: 'Process B - Draft changelog',
     status: 'done',
     groupId: 'g:b',
     segments: [{ start: T0 + 4.1 * MINUTE, end: T0 + 7.2 * MINUTE }],
@@ -95,7 +95,7 @@ const lanes: GanttLane[] = [
   },
   {
     id: 'c',
-    label: 'Process C — Write release notes',
+    label: 'Process C - Write release notes',
     status: 'running',
     groupId: 'g:c',
     segments: [{ start: T0 + 5.1 * MINUTE }],
@@ -160,7 +160,7 @@ const markers: GanttMarker[] = [
 // Static fixtures: one shape of the model each, with nothing moving.
 //
 
-/** One band, one lane, one run of events — the smallest thing the model can say. */
+/** One band, one lane, one run of events - the smallest thing the model can say. */
 const oneLaneGroups: GanttGroup[] = [{ id: 'g' }];
 const oneLaneLanes: GanttLane[] = [
   { id: 'l', label: 'One lane', status: 'done', groupId: 'g', segments: [{ start: T0, end: T0 + 8 * MINUTE }] },
@@ -168,7 +168,7 @@ const oneLaneLanes: GanttLane[] = [
 const oneLaneMarkers: GanttMarker[] = events('l', 6, T0, T0 + 8 * MINUTE);
 
 /**
- * One band, four lanes over different spans — including one worked in two stretches and one still
+ * One band, four lanes over different spans - including one worked in two stretches and one still
  * open. Segments are what makes the gap in the third lane sayable: a lane put down and picked back up
  * is two bars, not one long one.
  */
@@ -214,11 +214,11 @@ const manyLaneMarkers: GanttMarker[] = [
  * Four facts about the same pairs of lanes, deliberately kept apart: `parentId` indents a branch
  * under the lane it belongs to, `openedFrom` draws the node it came out of, `closedInto` draws the
  * node its result landed on, and the segment says when it was actually worked. The sub-branch is
- * still working, so it has no return edge — which is the case that makes the separation earn itself.
+ * still working, so it has no return edge - which is the case that makes the separation earn itself.
  *
  * Handing work over and hearing back are separate events at separate instants, so no node does both:
  * a result gets a step of the axis to itself. A branch begins shortly *after* the node that opened it
- * and returns shortly after its own last event — a child's first event is its process starting, and a
+ * and returns shortly after its own last event - a child's first event is its process starting, and a
  * supervisor folds a result in when it next runs, so neither is ever simultaneous with the node it
  * answers. That gap is also what gives every connector the same bent shape.
  */
@@ -295,12 +295,12 @@ const branchingMarkers: GanttMarker[] = [
 ];
 
 /**
- * Four bands: two nested under the first — each opening out of a node on its parent's lane — and one
+ * Four bands: two nested under the first - each opening out of a node on its parent's lane - and one
  * unrelated band of its own. Nesting a band and opening a lane are separate statements, so the fourth
  * band sits beside the others without claiming any relation to them.
  *
  * The nested band that finished also answers back (`closedInto`, dashed); the one still running has
- * not, which is the point of keeping the two edges separate — a lane can be opened and never report.
+ * not, which is the point of keeping the two edges separate - a lane can be opened and never report.
  */
 const manyGroupGroups: GanttGroup[] = [
   { id: 'one' },
@@ -362,12 +362,12 @@ const manyGroupMarkers: GanttMarker[] = [
   ...events('p4', 5, T0 + 1.5 * MINUTE, T0 + 7.5 * MINUTE),
 ];
 
-/** One band, one lane, gaining an event a second — the fixture the live stories start from. */
+/** One band, one lane, gaining an event a second - the fixture the live stories start from. */
 const singleLaneGroups: GanttGroup[] = [{ id: 'g' }];
 const singleLaneLanes: GanttLane[] = [
   {
     id: 'lane',
-    label: 'Process — one event a second',
+    label: 'Process - one event a second',
     status: 'running',
     groupId: 'g',
     segments: [{ start: T0 }],
@@ -404,7 +404,7 @@ type EventStreamOptions = {
   interval?: number;
   /** The supervisor lane: what spawns the first children, and what they report back to. */
   laneId: string;
-  /** How far each arrival advances the clock — the axis reads the instant, `interval` is real time. */
+  /** How far each arrival advances the clock - the axis reads the instant, `interval` is real time. */
   step: number;
   /** The supervisor opens another child every so many arrivals. */
   spawnEvery?: number;
@@ -414,7 +414,7 @@ type EventStreamOptions = {
   nestedChance?: number;
   /**
    * How many lanes may be opened at each depth, deepest last. This is what makes the run finite: the
-   * budget is spent, everything in flight reports back, and the chart comes to rest — a demo that
+   * budget is spent, everything in flight reports back, and the chart comes to rest - a demo that
    * grows for as long as it is left open never shows what finishing looks like.
    */
   maxSpawns?: readonly number[];
@@ -447,10 +447,10 @@ type StreamState = {
 };
 
 /**
- * The seed, plus one event every `interval` — the only moving part any of these stories has.
+ * The seed, plus one event every `interval` - the only moving part any of these stories has.
  *
  * The supervisor fans out: it opens a child every `spawnEvery` arrivals and keeps every one, so
- * several run at once. A child spends `childEvents` events and then reports back — except that it
+ * several run at once. A child spends `childEvents` events and then reports back - except that it
  * may spend one of them delegating instead, less likely the deeper it already is, so the cascade
  * thins out rather than running away.
  *
@@ -586,7 +586,7 @@ const useEventStream = (
             closedInto: { laneId: lane.parentId, markerId: returned.id },
           });
           nextActive = nextActive.filter((candidate) => candidate.laneId !== id);
-          // The parent may have been waiting on this one alone, in which case it can answer now too —
+          // The parent may have been waiting on this one alone, in which case it can answer now too -
           // which is how a finished branch unwinds from the leaf up.
           const parent = nextActive.find((candidate) => candidate.laneId === lane.parentId);
           if (parent?.waiting && !nextActive.some((candidate) => candidate.parentId === parent.laneId)) {
@@ -807,7 +807,7 @@ export const SingleLane: Story = {
 
 /**
  * The supervisor fans out: every third arrival opens another child, and a child may delegate again
- * rather than work — less likely the deeper it already is. Each lane runs a handful of events,
+ * rather than work - less likely the deeper it already is. Each lane runs a handful of events,
  * reports back into a node of its own, and waits on anything it opened before it does.
  *
  * The run finishes: `maxSpawns` bounds how many lanes each depth may open, so the branches unwind
@@ -841,7 +841,7 @@ export const OneLane: Story = {
   },
 };
 
-/** One band, four lanes over different spans — one worked twice, one still open. */
+/** One band, four lanes over different spans - one worked twice, one still open. */
 export const ManyLanes: Story = {
   args: {
     groups: manyLaneGroups,
@@ -919,7 +919,7 @@ export const TestLegendStats: Story = {
       },
       { timeout: 10_000 },
     );
-    await expect(title).toHaveTextContent('Process A — Plan the release');
+    await expect(title).toHaveTextContent('Process A - Plan the release');
 
     await userEvent.hover(title);
     await waitFor(

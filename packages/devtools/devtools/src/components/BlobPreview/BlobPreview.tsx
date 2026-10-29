@@ -171,7 +171,7 @@ export const BlobPreview = ({ source, db }: BlobPreviewProps) => {
   const { url, type, size, text, error, pending } = useBlobResource(source, db);
 
   if (pending) {
-    return <Message icon='ph--spinner-gap--regular' text='Loading…' />;
+    return <Message icon='ph--spinner-gap--regular' text='Loading...' />;
   }
   if (error || !url) {
     return <Message icon='ph--warning--regular' text={error ?? 'Blob is not available.'} />;

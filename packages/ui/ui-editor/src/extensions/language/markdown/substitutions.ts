@@ -8,7 +8,7 @@ import { EditorView, keymap } from '@codemirror/view';
 export type Substitution = Record<string, string>;
 
 /**
- * CodeMirror key binding → inserted text, e.g. `{ 'Alt--': '—' }`.
+ * CodeMirror key binding -> inserted text, e.g. `{ 'Alt--': '-' }`.
  * https://codemirror.net/docs/ref/#view.KeyBinding
  */
 export type KeyBindings = Record<string, string>;
@@ -19,7 +19,7 @@ export type SubstitutionOptions = {
 };
 
 /**
- * Substitutes typed sequences and CodeMirror key chords (e.g. `Alt--` → em dash).
+ * Substitutes typed sequences and CodeMirror key chords (e.g. `Alt--` -> em dash).
  */
 export const substitutions = ({
   substitutions = markdownSubstitutions,
@@ -76,18 +76,18 @@ export const substitutions = ({
  * Default typographic sequence substitutions.
  */
 export const markdownSubstitutions: Substitution = {
-  '...': '…',
-  '->': '→',
-  '<-': '←',
-  '=>': '⇒',
-  '<=>': '⇔',
-  '<=': '≤',
-  '>=': '≥',
+  '...': '\u2026',
+  '->': '\u2192',
+  '<-': '\u2190',
+  '=>': '\u21D2',
+  '<=>': '\u21D4',
+  '<=': '\u2264',
+  '>=': '\u2265',
   '+-': '±',
-  '!=': '≠',
+  '!=': '\u2260',
   '(c)': '©',
-  'BTC': '₿',
-  'EUR': '€',
+  'BTC': '\u20BF',
+  'EUR': '\u20AC',
   'GBP': '£',
   'JPY': '¥',
 };
@@ -96,5 +96,5 @@ export const markdownSubstitutions: Substitution = {
  * Default key-chord substitutions.
  */
 export const markdownBindings: KeyBindings = {
-  'Alt--': '—',
+  'Alt--': '-',
 };

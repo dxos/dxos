@@ -36,7 +36,7 @@ describe('stepVelocity', () => {
 
   test('brakes onto the curve rather than easing towards it', () => {
     // Rate-limiting the slow-down would leave the speed above what the remaining distance can shed,
-    // and the follow would reach the target still moving — an abrupt stop instead of a landing.
+    // and the follow would reach the target still moving - an abrupt stop instead of a landing.
     for (const distance of [1, 10, 100, 400]) {
       const velocity = step(maxSpeed, distance);
       expect((velocity * velocity) / (2 * acceleration)).toBeLessThanOrEqual(distance + 1e-6);

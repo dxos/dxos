@@ -8,8 +8,8 @@ import { styleTags, tags } from '@lezer/highlight';
 import { parser } from '../dsl/gen/diagram.ts';
 
 //
-// Unlike deus's MDL mode — which keeps highlighting on a regex ViewPlugin so prose inside a block
-// cannot trip LR error recovery — the diagram grammar covers its whole input, so highlighting comes
+// Unlike deus's MDL mode - which keeps highlighting on a regex ViewPlugin so prose inside a block
+// cannot trip LR error recovery - the diagram grammar covers its whole input, so highlighting comes
 // off the tree. The tags are the standard ones, so most of a document inherits the editor's own
 // palette; `highlight.ts` covers only the two the theme leaves undefined.
 //

@@ -14,7 +14,7 @@ const moduleId = (name: string) => `${MermaidPlugin.meta.profile.key}.module.${n
 
 describe('MermaidPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // Use createTestApp directly — only ProcessManagerPlugin is needed.
+    // Use createTestApp directly - only ProcessManagerPlugin is needed.
     await using harness = await createTestApp({
       plugins: [ProcessManagerPlugin.make(), MermaidPlugin.make()],
     });

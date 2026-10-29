@@ -45,7 +45,7 @@ const HEARTBEAT_PERIOD = 1.4;
 const HEARTBEAT_GAP = 0.3;
 /** The first pulse waits for the dots to settle from the previous state, or the eased change swallows it. */
 const HEARTBEAT_START = 0.35;
-/** Each pulse's width (σ, seconds): wide enough to outlast the per-frame easing toward it. */
+/** Each pulse's width (sigma, seconds): wide enough to outlast the per-frame easing toward it. */
 const HEARTBEAT_WIDTH = 0.07;
 
 /**
@@ -85,7 +85,7 @@ const orbit =
     return Math.exp(-behind / 2.5);
   };
 
-/** Randomly pings dots every `interval` milliseconds; each decays back to zero (half-life ≈ 0.46s). */
+/** Randomly pings dots every `interval` milliseconds; each decays back to zero (half-life ~ 0.46s). */
 const useRandomPing = (dim: number, interval: number): DotSignal => {
   const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
   const lastTimeRef = useRef(0);

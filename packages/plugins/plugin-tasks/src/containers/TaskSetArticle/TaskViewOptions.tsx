@@ -35,7 +35,7 @@ export type TaskSortMenuProps = {
 };
 
 /**
- * The order-by field and its direction. `Manual` is the set's own order — the one a drag writes — so
+ * The order-by field and its direction. `Manual` is the set's own order - the one a drag writes - so
  * it is the only field without a direction to pick.
  */
 export const TaskSortMenu = ({ value, onChange }: TaskSortMenuProps) => {

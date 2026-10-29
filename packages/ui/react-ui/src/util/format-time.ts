@@ -60,7 +60,7 @@ export const formatCompact = (date: DateLike, { now }: FormatCompactOptions = {}
   return formatCompactDate(parsed, reference);
 };
 
-/** The day, and the year only when it is not this one — a column has no room for what is implied. */
+/** The day, and the year only when it is not this one - a column has no room for what is implied. */
 const formatCompactDate = (date: Date, reference: Date, locale?: string): string =>
   date.toLocaleDateString(locale, {
     month: 'short',
@@ -84,7 +84,7 @@ export const compactInterval = (date: DateLike, { now }: FormatCompactOptions = 
 
   const elapsed = (now ?? new Date()).getTime() - parsed.getTime();
   // A future instant shows a date until the clock catches up, and then becomes a counter: wake when
-  // it does. Capped to the range a timer accepts — beyond ~24 days `setTimeout` fires immediately,
+  // it does. Capped to the range a timer accepts - beyond ~24 days `setTimeout` fires immediately,
   // which would spin rather than wait.
   if (elapsed < 0) {
     return Math.min(-elapsed, MAX_TIMEOUT);
@@ -100,7 +100,7 @@ export const compactInterval = (date: DateLike, { now }: FormatCompactOptions = 
     return 3_600_000 - (elapsed % 3_600_000);
   }
 
-  // A calendar date: it changes at midnight, and nothing here is watching for that — a date label is
+  // A calendar date: it changes at midnight, and nothing here is watching for that - a date label is
   // read as "when", not as a countdown, and a timer per row to catch a year boundary costs more than
   // the staleness it prevents.
   return undefined;

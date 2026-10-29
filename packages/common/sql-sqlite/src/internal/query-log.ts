@@ -20,7 +20,7 @@ export const SLOW_QUERY_THRESHOLD_MS = 20;
 
 const summarizeLoggedParam = (value: unknown): unknown => {
   if (typeof value === 'string' && value.length > MAX_LOGGED_PARAM_STRING_LENGTH) {
-    return `${value.slice(0, MAX_LOGGED_PARAM_STRING_LENGTH)}…(${value.length} chars)`;
+    return `${value.slice(0, MAX_LOGGED_PARAM_STRING_LENGTH)}\u2026(${value.length} chars)`;
   }
   if (value instanceof Uint8Array) {
     return `<Uint8Array ${value.length} bytes>`;

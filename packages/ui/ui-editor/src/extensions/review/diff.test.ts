@@ -63,7 +63,7 @@ describe('diff hunks', () => {
   });
 
   test('returns undefined when the range is not on a changed hunk', ({ expect }) => {
-    // "Line two." is identical in both → no hunk there.
+    // "Line two." is identical in both -> no hunk there.
     const start = modified.indexOf('Line two');
     expect(cherryPickHunk(modified, original, { start, end: start + 4 })).toBeUndefined();
   });
@@ -91,7 +91,7 @@ describe('diff hunks', () => {
   });
 
   // A pure insertion is empty on the base side, and the review companion anchors it at that single
-  // offset — so both sides of the overlap test are zero-width. A strict half-open test never matches,
+  // offset - so both sides of the overlap test are zero-width. A strict half-open test never matches,
   // which made Accept/Reject silently no-op for every suggestion that only adds text.
   test('accepts and reverts a pure insertion anchored at an empty range', ({ expect }) => {
     const base = 'alpha\nbravo\n';
@@ -179,7 +179,7 @@ describe('diffHunks', () => {
 
   test('an insert adjacent to identical text stays a pure insertion (minimal hunk)', ({ expect }) => {
     // Word-level diffing sees `WorldHello` -> `WorldHelloWorld` as one changed word; the hunk must
-    // still not claim the unchanged `WorldHello` — a replace here strikes real document text and
+    // still not claim the unchanged `WorldHello` - a replace here strikes real document text and
     // re-inserts it, which renders as doubled content.
     const before = '# Hello WorldHello\n\n';
     const hunks = diffHunks(before, '# Hello WorldHelloWorld\n\n');
@@ -272,7 +272,7 @@ describe('rebaseHunks', () => {
 
   test('a doc insertion at a trailing pure-insert anchor stays BEHIND the proposal', ({ expect }) => {
     // The author proposed "World\n" at the end of base; the user then typed "After" at that same
-    // spot on main. The proposal must stay anchored BEFORE the user's new text — mapping it past the
+    // spot on main. The proposal must stay anchored BEFORE the user's new text - mapping it past the
     // insertion renders the user's input "in front" of the suggestion they typed after.
     const base = '# Hello World\nHello\n';
     const doc = '# Hello World\nHello\nAfter';
@@ -306,8 +306,8 @@ describe('rebaseHunks', () => {
   });
 
   test('rebaseHunksWith with a precomputed char diff equals rebaseHunks (hoist parity)', ({ expect }) => {
-    // The hoisted path (compute the base↔doc char diff once, reuse across sources) must produce
-    // identical results to the per-call rebaseHunks — several sources over the same diverged doc.
+    // The hoisted path (compute the base<->doc char diff once, reuse across sources) must produce
+    // identical results to the per-call rebaseHunks - several sources over the same diverged doc.
     const base = 'The quick brown fox jumps over the lazy dog.';
     const doc = 'The very quick brown fox leaps over the lazy dog.';
     const sources = ['The quick brown cat jumps over the lazy dog.', 'The quick brown fox jumps over the tired dog.'];
@@ -344,7 +344,7 @@ describe('groupHunks', () => {
     expect(applyAll(before, grouped)).toBe(after);
   });
 
-  test('respects block boundaries — a paragraph break is never bridged', ({ expect }) => {
+  test('respects block boundaries - a paragraph break is never bridged', ({ expect }) => {
     const before = 'alpha\n\nbravo';
     const after = 'ALPHA\n\nBRAVO';
     const hunks = diffHunks(before, after);
@@ -358,7 +358,7 @@ describe('groupHunks', () => {
 
 describe('computeCharHunks', () => {
   // Character diffing is what keeps a single keystroke from restyling a whole word, but it aligns on
-  // any matching character — so deleting whole words can anchor mid-token (the `t` of `it` matching the
+  // any matching character - so deleting whole words can anchor mid-token (the `t` of `it` matching the
   // `t` of `two`), striking half of two words the reader never touched.
   test('a whole-word deletion anchors on word boundaries, not mid-token', ({ expect }) => {
     const original = 'the revision it was written on, so two people can suggest';
@@ -379,12 +379,12 @@ describe('overlay hunks after the reader edits', () => {
   /** What the overlay renders: the proposal diffed against its anchor, rebased into doc coordinates. */
   const overlayHunks = (doc: string) => rebaseHunksWith(computeCharHunks(MAIN, doc), diffHunks(MAIN, ALICE));
 
-  /** A struck span must not cut a word in half — `written` may not render as `wri` + struck `tten`. */
+  /** A struck span must not cut a word in half - `written` may not render as `wri` + struck `tten`. */
   const splitsWord = (text: string, offset: number) =>
     offset > 0 && offset < text.length && /\w/.test(text[offset - 1]) && /\w/.test(text[offset]);
 
   test('a foreign strike keeps whole words when the reader edits inside a nearby word', ({ expect }) => {
-    // The reader corrects a typo inside `written` — a character-level edit in the middle of a word.
+    // The reader corrects a typo inside `written` - a character-level edit in the middle of a word.
     const doc = MAIN.replace('written', 'writtten');
     for (const hunk of overlayHunks(doc)) {
       if (hunk.to > hunk.from) {

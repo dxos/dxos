@@ -54,7 +54,7 @@ const useScope = (ids: readonly string[]) => {
 };
 
 /**
- * Card models for the features named by `ids` — a map's refs, or one feature — joined with their `DependsOn`,
+ * Card models for the features named by `ids` - a map's refs, or one feature - joined with their `DependsOn`,
  * `Implements` and `Demonstrates` relations. Every query is scoped to those ids, so the cost follows the map's
  * size rather than the space's.
  */

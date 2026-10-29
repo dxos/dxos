@@ -127,7 +127,7 @@ const buildDecorations = ({
 
       const cacheKey = urlText;
       const cached = blobUrlCache[cacheKey];
-      // Skip the DB query and Blob resolution entirely once a URL is cached — otherwise every
+      // Skip the DB query and Blob resolution entirely once a URL is cached - otherwise every
       // decoration rebuild (e.g. on cursor movement) re-fetches and, on the object-URL fallback
       // path, mints and leaks a new `blob:` URL even though the cached one is still valid.
       const blobUrlPromise =
@@ -147,7 +147,7 @@ const buildDecorations = ({
               }
               const bytes = yield* Blob.read(blob);
               // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while
-              // DOM's `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib
+              // DOM's `BlobPart` only covers `ArrayBuffer`-backed views - a gap between the DOM lib
               // types and the TS standard lib, not fixable by typing `bytes` differently.
               return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
             }).pipe(
@@ -158,7 +158,7 @@ const buildDecorations = ({
           if (!url) {
             return undefined;
           }
-          // Only object URLs we minted via `createObjectURL` above need revoking — `Blob.url()`
+          // Only object URLs we minted via `createObjectURL` above need revoking - `Blob.url()`
           // results (data:/https: URLs) aren't owned by this cache.
           const previous = blobUrlCache[cacheKey];
           if (previous?.startsWith('blob:')) {

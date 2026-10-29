@@ -7,7 +7,7 @@
 
 import { type Location, distanceMetres, locationOf } from './location.ts';
 
-/** A result as rated: subject id, rdf types, and property values keyed by CURIE (lh:areaM2, schema:name …). */
+/** A result as rated: subject id, rdf types, and property values keyed by CURIE (lh:areaM2, schema:name ...). */
 export interface Rateable {
   readonly id: string;
   readonly types: ReadonlyArray<string>;
@@ -137,7 +137,7 @@ export type GeoPoint = Location;
 export { locationOf };
 
 /**
- * Results whose coordinates sit on a linked node (schema:geo → schema:GeoCoordinates) get them as their own
+ * Results whose coordinates sit on a linked node (schema:geo -> schema:GeoCoordinates) get them as their own
  * properties, so locationOf sees them. The graph flattens these by a reconcile rule; a session's results read
  * from its extraction blobs are not reconciled, so they are flattened here.
  */
@@ -315,9 +315,9 @@ export const defaultAreaWeight = (model: RatingModel): number =>
 const areaNames = (areas: ReadonlyArray<GeoArea>): string => {
   const [first, second] = areas;
   return areas.length === 1 && first
-    ? `“${first.label}”`
+    ? `"${first.label}"`
     : areas.length === 2 && first && second
-      ? `“${first.label}” or “${second.label}”`
+      ? `"${first.label}" or "${second.label}"`
       : `one of ${areas.length} areas`;
 };
 

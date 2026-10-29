@@ -19,7 +19,7 @@ let _initPromise: Promise<void> | undefined;
 /**
  * Lazily initialize esbuild-wasm. In the browser the WASM blob loads over the
  * network on first call (~3MB; cached after). In Node the same call spawns a
- * helper process. The double-init guard handles concurrent callers — esbuild
+ * helper process. The double-init guard handles concurrent callers - esbuild
  * throws if `.initialize()` is called twice without a stop in between.
  */
 export const ensureEsbuild = async (): Promise<void> => {
@@ -50,7 +50,7 @@ export const ensureEsbuild = async (): Promise<void> => {
 /**
  * F-12b: bundle a multi-file `LoadedFile[]` set rooted at `entryPath`. Uses
  * an esbuild plugin to resolve `.` / `..` imports against the in-memory FS;
- * bare imports (e.g. `@dxos/echo`) intentionally fail in F-12b — host
+ * bare imports (e.g. `@dxos/echo`) intentionally fail in F-12b - host
  * externals via import maps are deferred to F-13.
  */
 export const bundleEntry = async (files: readonly LoadedFile[], entryPath: string): Promise<BundleResult> => {
@@ -89,7 +89,7 @@ export const bundleEntry = async (files: readonly LoadedFile[], entryPath: strin
           };
         }
 
-        // Bare imports — host externals not implemented until F-13.
+        // Bare imports - host externals not implemented until F-13.
         return {
           errors: [
             {

@@ -22,7 +22,7 @@ const createImage = (from: string, to: string, label: string) => {
 };
 
 const slides = [
-  ['# Presenter', '', 'Decks inside Composer.', '', '_Press → to begin._'],
+  ['# Presenter', '', 'Decks inside Composer.', '', '_Press -> to begin._'],
   [
     '# What is a presentation?',
     '',
@@ -40,8 +40,8 @@ const slides = [
   [
     '# Keyboard',
     '',
-    '- `←` / `→` previous and next slide',
-    '- `Shift+←` / `Shift+→`, `Home` / `End` jump to the first or last slide',
+    '- `<-` / `->` previous and next slide',
+    '- `Shift+<-` / `Shift+->`, `Home` / `End` jump to the first or last slide',
     '- `f` toggles fullscreen',
     '- `ESC` leaves fullscreen',
   ],

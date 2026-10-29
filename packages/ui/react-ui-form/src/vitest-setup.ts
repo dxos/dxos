@@ -11,8 +11,8 @@ import ResizeObserver from 'resize-observer-polyfill';
 global.ResizeObserver = ResizeObserver;
 
 // `ThemeProvider`'s icon registry fetches the static sprite (`/icons.svg`) and any missing glyph
-// (`/phosphor/…`) from the document origin. happy-dom points that origin at `http://localhost:3000`,
-// where nothing listens, so every request opens a real socket and dies with `ECONNREFUSED` —
+// (`/phosphor/...`) from the document origin. happy-dom points that origin at `http://localhost:3000`,
+// where nothing listens, so every request opens a real socket and dies with `ECONNREFUSED` -
 // and since the registry treats a network error as transient, each re-render retries forever.
 // Answering 404 marks the symbol permanently missing, which is the truth in a test environment.
 const ICON_ROUTES = ['/icons.svg', '/phosphor/'];

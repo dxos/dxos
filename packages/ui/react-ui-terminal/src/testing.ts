@@ -16,7 +16,7 @@ const DEFAULT_TIMEOUT = Duration.seconds(15);
  * Reads the terminal's visible contents as plain text.
  *
  * xterm splits a row into a span per style run and pads with non-breaking spaces, so a story cannot
- * assert against it with a plain text query — this flattens a row back to what the user sees.
+ * assert against it with a plain text query - this flattens a row back to what the user sees.
  */
 export const readTerminal = (element: HTMLElement): string =>
   Array.from(element.querySelectorAll('.xterm-rows > div'))
@@ -39,7 +39,7 @@ const pollTerminal = (element: HTMLElement, text: string): Effect.Effect<void> =
 /**
  * Resolves once the terminal shows `text`, or throws with the current contents.
  *
- * The terminal is painted by a fiber writing into the DOM, so there is nothing to await — polling
+ * The terminal is painted by a fiber writing into the DOM, so there is nothing to await - polling
  * is the only way to observe it. Returns a promise because a story's `play` is the boundary.
  */
 export const waitForTerminal = (element: HTMLElement, text: string, timeout = DEFAULT_TIMEOUT): Promise<void> =>
@@ -61,7 +61,7 @@ export const waitForTerminal = (element: HTMLElement, text: string, timeout = DE
  * Types a command and submits it.
  *
  * Waits for the input to echo before sending the return, because the shell drops keystrokes that
- * arrive before its line editor has subscribed — without this the command silently never runs.
+ * arrive before its line editor has subscribed - without this the command silently never runs.
  */
 export const runCommand = async (
   element: HTMLElement,

@@ -13,7 +13,7 @@ import { SlackChannel } from '#types';
 import { SLACK_SOURCE } from './constants.ts';
 
 /**
- * Slack `ts` is a string like `"1700000000.000123"` — seconds with a 6-digit subsecond fraction.
+ * Slack `ts` is a string like `"1700000000.000123"` - seconds with a 6-digit subsecond fraction.
  * `Date` has millisecond resolution, so the original `ts` is kept as the message's foreign key.
  */
 export const tsToIso = (ts: string): string => {

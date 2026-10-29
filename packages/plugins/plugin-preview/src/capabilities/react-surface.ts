@@ -18,7 +18,7 @@ import { UnsupportedType } from '../components/index.ts';
 import { OrganizationCardContent, PersonCardContent } from './RelatedCards.tsx';
 
 /**
- * Checked against the type registry rather than "no other candidate matched" — the latter is also
+ * Checked against the type registry rather than "no other candidate matched" - the latter is also
  * true while a real plugin's surface is still loading, which would flash this stand-in on every
  * session's first plank.
  */
@@ -40,7 +40,7 @@ const isTypeUnavailable = (subject: unknown): subject is Obj.Unknown => {
         .some((type) => Type.getTypename(type) === typename)
     );
   } catch {
-    // Not attached to a database (a story, a detached object) — nothing to conclude, so stay out.
+    // Not attached to a database (a story, a detached object) - nothing to conclude, so stay out.
     return false;
   }
 };
@@ -167,7 +167,7 @@ export default Capability.makeModule(() =>
       //   },
       // }),
 
-      // Last-resort candidate (plank `limit={1}`) for an object whose plugin is absent — e.g. one
+      // Last-resort candidate (plank `limit={1}`) for an object whose plugin is absent - e.g. one
       // created in a build that shares a backend with a full-catalog build.
       Surface.create({
         id: 'unsupportedTypeArticle',

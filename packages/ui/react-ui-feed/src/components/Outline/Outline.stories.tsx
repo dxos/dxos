@@ -57,7 +57,7 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
       <div className='flex flex-col gap-3'>
         <label className='flex flex-col gap-1 text-sm'>
           <span className='text-fg-muted'>
-            Visible range: {visibleRange.from}–{visibleRange.to} (drag to scroll)
+            Visible range: {visibleRange.from}-{visibleRange.to} (drag to scroll)
           </span>
           <input
             type='range'
@@ -102,14 +102,14 @@ export const Empty: Story = {
 /**
  * A click does not leave a position asserted behind it.
  *
- * Clicking a tick focuses it, and the card was gated on focus — so the reader clicked, moved away,
+ * Clicking a tick focuses it, and the card was gated on focus - so the reader clicked, moved away,
  * and a keyboard position they never asked for kept it up. What may assert a position is the pointer
  * being over a tick, or the keyboard having *navigated* to one; focus is neither, and a click
  * confers focus as a side effect.
  *
  * What this does **not** cover is the pointer actually leaving, because React synthesises enter and
  * leave from over/out pairs and three attempts to drive that from dispatched events did not reach
- * the handler — the state was still set afterwards whether or not the component was right. Asserting
+ * the handler - the state was still set afterwards whether or not the component was right. Asserting
  * it here would be asserting the probe. It needs a real pointer; see `chat-ui/TASKS.md`.
  */
 export const Dismissal: Story = {
@@ -187,7 +187,7 @@ export const Placement: Story = {
 /**
  * The arrows take the card over from the pointer, and pointing takes it back.
  *
- * A reader clicks a tick and then presses an arrow without moving the mouse — which is the whole
+ * A reader clicks a tick and then presses an arrow without moving the mouse - which is the whole
  * point of clicking one. The pointer is still resting on the tick they clicked, so a rule of
  * "the pointer always wins" pins the card to a place they have already left, and the feed scrolls
  * under a card describing somewhere else. Reported from a real session as "card does not move".
@@ -226,7 +226,7 @@ export const KeyboardTakeover: Story = {
 
     // Deliberately NOT asserted: that `data-pointer` still reads '3'. Chrome re-hit-tests a
     // stationary cursor when layout shifts under it and fires real pointerover at wherever the
-    // runner last left the mouse — so on CI the backstop clears the pointer through no fault of the
+    // runner last left the mouse - so on CI the backstop clears the pointer through no fault of the
     // component's. What the product owes the reader is that the card moved with the keyboard and
     // that pointing again takes over, and both are asserted.
 

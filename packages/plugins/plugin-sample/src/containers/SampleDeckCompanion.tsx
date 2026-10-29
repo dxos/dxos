@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// Deck companion — a workspace-wide panel that appears in the deck sidebar.
+// Deck companion - a workspace-wide panel that appears in the deck sidebar.
 // Unlike plank companions (which are attached to specific objects), deck companions
 // are global and registered via `AppNode.makeDeckCompanion` in the graph builder.
 // The surface role uses the convention `deck-companion--{id}`.

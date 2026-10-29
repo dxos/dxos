@@ -28,7 +28,7 @@ import { describeInput, describeTypes } from './fields.ts';
  * The repo's own ECHO API, written as an Effect program: `yield* Database.query(Filter.type(...)).run`.
  *
  * The bet is that a model writes better code against the API the codebase already documents and
- * that its training has seen than against a facade invented for it — and that whatever it writes
+ * that its training has seen than against a facade invented for it - and that whatever it writes
  * transfers to code a human would commit. The cost is that `Effect.gen`/`yield*` is a lot of
  * ceremony for "list the open tasks", and that live objects and module namespaces in scope pin this
  * dialect to an in-process `Sandbox` (see the note there).
@@ -68,7 +68,7 @@ export const EffectDialect: Dialect = {
       ),
 
       // Described against the code's own database, so a printed object carries the relations, children
-      // and referrers around it — what the model cannot see by reading its fields.
+      // and referrers around it - what the model cannot see by reading its fields.
       print: (...values: unknown[]) =>
         Effect.forEach(values, describe).pipe(
           Effect.map((lines) => print(...lines)),
@@ -95,9 +95,9 @@ export const EffectDialect: Dialect = {
     You have exactly one tool, \`eval\`. Its \`code\` is the body of an \`Effect.gen\` generator run
     against this workspace, so \`yield*\` is available and you must NOT write the wrapper yourself.
     It returns whatever the code printed: a value you do not \`print\` never reaches you. Do not use
-    \`import\` or \`require\` — the modules below are already in scope.
+    \`import\` or \`require\` - the modules below are already in scope.
 
-    Prefer one \`eval\` call that does the whole job — resolve, query, change, print — over a call
+    Prefer one \`eval\` call that does the whole job - resolve, query, change, print - over a call
     per step. Print the specific values you need to reason about, not long lists of whole objects.
     Stay on the objects the request names or the conversation is attached to: reading or changing
     others the request did not ask about spends calls and risks unasked-for writes.
@@ -105,18 +105,18 @@ export const EffectDialect: Dialect = {
     ### In scope
 
     - \`Database\`, \`Filter\`, \`Query\`, \`Order\`, \`Obj\`, \`Relation\`, \`Ref\`, \`Type\`, \`DXN\`,
-      \`Operation\`, \`Effect\` — the DXOS modules, as a source file would import them.
-    - \`print(...values)\` — an effect: \`yield* print('count', tasks.length)\`. Strings go through
-      verbatim. An object prints as a card: its type, id, label and fields, refs as \`→ type id "label"\`,
-      then counts of its relations, children and referrers with the exact code that fetches each —
+      \`Operation\`, \`Effect\` - the DXOS modules, as a source file would import them.
+    - \`print(...values)\` - an effect: \`yield* print('count', tasks.length)\`. Strings go through
+      verbatim. An object prints as a card: its type, id, label and fields, refs as \`-> type id "label"\`,
+      then counts of its relations, children and referrers with the exact code that fetches each -
       the only way to see that those exist. Print the object itself, never \`JSON.stringify\` it.
-      Anything else prints as JSON, long strings and arrays cut with a \`…[+N chars]\` / \`… N more\`
+      Anything else prints as JSON, long strings and arrays cut with a \`...[+N chars]\` / \`... N more\`
       marker.
-    - \`DOCS\` — the full reference for this API: a plain object mapping file names to markdown
+    - \`DOCS\` - the full reference for this API: a plain object mapping file names to markdown
       strings. Read the file you need before writing anything this prompt does not show, a long one in
       slices (\`yield* print(DOCS['queries.md'].slice(0, 1000))\`); \`README.md\` shows how to grep
       them all. These are all of its entries:
-    ${DOC_ENTRIES.map(({ name, covers }) => `  - \`${name}\` — ${covers}`).join('\n')}
+    ${DOC_ENTRIES.map(({ name, covers }) => `  - \`${name}\` - ${covers}`).join('\n')}
 
     ### Types and operations are resolved by DXN
 
@@ -130,7 +130,7 @@ export const EffectDialect: Dialect = {
     \`\`\`
 
     \`Obj.update\` is the only way to change a stored object. A \`Ref<typename>\` field takes
-    \`Ref.make(obj)\` of an object you hold — never an id or a URI string. A failed load or operation
+    \`Ref.make(obj)\` of an object you hold - never an id or a URI string. A failed load or operation
     fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
 
     Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
@@ -195,7 +195,7 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
 /**
  * `Database.resolve`, answering the turn's bound operations itself: a definition is code that lives
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
- * Every other DXN — a type, an object — goes to the real resolver.
+ * Every other DXN - a type, an object - goes to the real resolver.
  */
 /** An object's legacy ECHO DXN (`dxn:echo:<space>:<id>`, `@` for this space), which models still write. */
 const LEGACY_ECHO_DXN = /^dxn:echo:([A-Z0-9]+|@):([0-9A-Z]{26})$/;

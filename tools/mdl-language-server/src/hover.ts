@@ -54,7 +54,7 @@ const blockExcerpt = (text: string, item: string): string | undefined => {
     }
     // A nested `req` shows from its own line, a block from its header.
     const shown = lines.slice(start, start + MAX_BLOCK_LINES);
-    return fence([...shown, ...(lines.length - start > MAX_BLOCK_LINES ? ['  …'] : [])].join('\n'), 'mdl');
+    return fence([...shown, ...(lines.length - start > MAX_BLOCK_LINES ? ['  ...'] : [])].join('\n'), 'mdl');
   }
   return undefined;
 };
@@ -78,7 +78,7 @@ export const keyCard = (workspace: Workspace, key: SourceKey): string => {
   if (!snippet) {
     return `${title}\n\nSymbol not found.`;
   }
-  const code = [...snippet.lines, ...(snippet.truncated ? ['…'] : [])].join('\n');
+  const code = [...snippet.lines, ...(snippet.truncated ? ['...'] : [])].join('\n');
   return `${title} · line ${snippet.line}\n\n${fence(code, languageOf(key.path))}`;
 };
 
@@ -110,7 +110,7 @@ const keyLine = (workspace: Workspace, raw: string): string => {
  * cites. An item implemented in several places shows its walkthrough, each step above its code, as the viewer does.
  */
 export const verdictCard = (workspace: Workspace, verdict: Verdict): string => {
-  const sections = [`**${STATUS_LABEL[verdict.status]}** — ${verdict.summary ?? verdict.id}`];
+  const sections = [`**${STATUS_LABEL[verdict.status]}** - ${verdict.summary ?? verdict.id}`];
   if (verdict.note) {
     sections.push(verdict.note);
   }

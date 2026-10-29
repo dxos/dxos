@@ -23,7 +23,7 @@ export const dailyDigest: RoutineCapabilities.Template = {
   id: 'org.dxos.routine.dailyDigest',
   label: 'Daily Digest',
   icon: 'ph--list-bullets--regular',
-  // Scheduled space-level digest — not meaningful for a specific object companion.
+  // Scheduled space-level digest - not meaningful for a specific object companion.
   scaffold: ({ name }) =>
     makeScheduledRoutine({
       name: name ?? 'Daily Digest',

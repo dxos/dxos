@@ -11,7 +11,7 @@ import { type Task } from '@dxos/types';
 import { TasksNamespace } from '../namespace.ts';
 
 /**
- * A task-scoped action injected into a task row's menu — plugin-projects contributes "delegate to a
+ * A task-scoped action injected into a task row's menu - plugin-projects contributes "delegate to a
  * chat" this way, which is what keeps plugin-tasks from importing it (the dependency runs the other
  * way).
  *

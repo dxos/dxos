@@ -80,7 +80,7 @@ export const resizeTolerance = 1;
 export const selectTolerance = 4;
 
 //
-// `size`, when suffixed with ‘row’ or ‘col’, are limits on size applied when resizing
+// `size`, when suffixed with 'row' or 'col', are limits on size applied when resizing
 //
 export const sizeColMin = defaultRowSize;
 export const sizeColMax = 1024;

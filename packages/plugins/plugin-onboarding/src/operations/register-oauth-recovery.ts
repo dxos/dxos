@@ -22,7 +22,7 @@ import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from '.
  * `/redirect/oauth-recovery` rather than a `postMessage` relay. In the browser that redirect
  * reloads the app in a fresh tab, so the invitation code + hub URL needed to complete registration
  * are persisted to `localStorage` (keyed by `accessTokenId`) here and read back by the recovery
- * finalizer. This operation returns as soon as the auth page is open — it does not await
+ * finalizer. This operation returns as soon as the auth page is open - it does not await
  * completion.
  */
 const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAuthRecovery.pipe(

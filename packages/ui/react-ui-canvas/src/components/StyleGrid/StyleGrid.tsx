@@ -126,7 +126,7 @@ export const StyleGrid = ({
 const OUTLINE_TONES: readonly NodeTone[] = [0];
 
 export type StyleFieldOptions = {
-  /** Offer the fill rows (tones 1–3) as well as the outline; a link, or a selection with one, has no fill. */
+  /** Offer the fill rows (tones 1-3) as well as the outline; a link, or a selection with one, has no fill. */
   fills: boolean;
 };
 

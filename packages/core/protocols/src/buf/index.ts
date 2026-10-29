@@ -29,8 +29,8 @@ export { create as createBuf } from '@bufbuild/protobuf';
  * Reads `dxos.keys.PublicKey` as the domain key type.
  *
  * buf generates the key as an ordinary message where protobuf.js substituted the `PublicKey`
- * class, so buf-native code converts explicitly. This is the direction of travel — not a compat
- * shim — and it is shared so the substitution is spelled one way everywhere.
+ * class, so buf-native code converts explicitly. This is the direction of travel - not a compat
+ * shim - and it is shared so the substitution is spelled one way everywhere.
  */
 export const toPublicKey = (key: BufPublicKey | undefined): PublicKey | undefined => key && PublicKey.from(key.data);
 
@@ -102,7 +102,7 @@ export const unpackJson = (any: Any | undefined): JsonObject | undefined => {
  * Reads `google.protobuf.Timestamp` as a `Date`.
  *
  * protobuf.js substituted the timestamp for a `Date`; buf carries the message, whose `seconds` is a
- * BigInt. Converting at the boundary keeps `Date` the domain type — and keeps a message out of
+ * BigInt. Converting at the boundary keeps `Date` the domain type - and keeps a message out of
  * `JSON.stringify`, which throws on the BigInt.
  */
 export const toDate = (timestamp: Timestamp | undefined): Date | undefined =>

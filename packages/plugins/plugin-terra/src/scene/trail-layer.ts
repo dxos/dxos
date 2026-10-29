@@ -32,7 +32,7 @@ const renderPuffsFor = (object: SimObject, config: TerraConfigValues, nowMs: num
 /**
  * Renders ephemeral smoke/wake trails for ships, planes, and rockets as thin-instanced spheres
  * that grow and fade with age. Trails are the object's own real past positions, re-derived each
- * frame from `sim/trail`'s closed-form sampling — never persisted, never replicated, and never
+ * frame from `sim/trail`'s closed-form sampling - never persisted, never replicated, and never
  * accumulated across frames, so there is nothing here to key or drop by object identity.
  */
 export class TrailLayer {
@@ -63,7 +63,7 @@ export class TrailLayer {
     material.emissiveColor = new Color3(1, 1, 1);
     material.disableLighting = true;
     // Forces the blend pipeline regardless of the (irrelevant, always-1) material-level alpha, so
-    // each instance's own alpha — set per-puff below — is what actually varies on screen.
+    // each instance's own alpha - set per-puff below - is what actually varies on screen.
     material.transparencyMode = Material.MATERIAL_ALPHABLEND;
     material.disableDepthWrite = true;
     return material;
@@ -71,7 +71,7 @@ export class TrailLayer {
 
   /**
    * Redraws every trail-leaving object's live puffs for the sim instant `nowMs`. Holds no state
-   * between calls — the puff set is derived from `(objects, config, nowMs)` alone — so a caller may
+   * between calls - the puff set is derived from `(objects, config, nowMs)` alone - so a caller may
    * skip, repeat, or jump `nowMs` freely.
    */
   update(objects: readonly SimObject[], config: TerraConfigValues, nowMs: number): void {
@@ -116,7 +116,7 @@ export class TrailLayer {
     });
 
     if (reallocate) {
-      // `staticBuffer: false` is load-bearing — Babylon builds the GPU buffer with
+      // `staticBuffer: false` is load-bearing - Babylon builds the GPU buffer with
       // `updatable = !staticBuffer`, so a static buffer silently ignores every later
       // `thinInstanceBufferUpdated` and puffs freeze at their first position and alpha.
       this.#base.thinInstanceSetBuffer('matrix', matrixBuffer, 16, false);

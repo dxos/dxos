@@ -128,12 +128,12 @@ export class EdgeIdentityRecoveryManager {
    * devices and to their agent, which is what drives the server-side refusal.
    *
    * Refuses the last un-revoked credential. Doing so would leave the holder unable to recover their
-   * identity with no self-service way back — the replacement has to be added first.
+   * identity with no self-service way back - the replacement has to be added first.
    *
    * `@synchronized` so two revocations on this device cannot both observe two active credentials and
    * each cancel a different one. It cannot serialize across devices: the control feed is append-only
    * with no consensus, so two devices revoking at once can still drive the count to zero. The agents
-   * service is the authority there — it re-checks the active count before flipping a row to REVOKED.
+   * service is the authority there - it re-checks the active count before flipping a row to REVOKED.
    */
   @synchronized
   public async revokeRecoveryCredential({ lookupKey }: { lookupKey: PublicKey }): Promise<void> {
@@ -166,7 +166,7 @@ export class EdgeIdentityRecoveryManager {
    * Recovery credentials in the identity's HALO that no `IdentityRecoveryRevoked` assertion cancels.
    *
    * Credentials written before `lookupKey` existed cannot be matched by a revocation, so they are
-   * always active — and still count towards the last-credential check, since they remain usable.
+   * always active - and still count towards the last-credential check, since they remain usable.
    */
   public listActiveRecoveryCredentials(): { credential: Credential; assertion: IdentityRecovery }[] {
     const identity = this._identityProvider();

@@ -41,7 +41,7 @@ export const info = Command.make(
     spaceId: Common.spaceId.pipe(Options.optional),
     wait: Options.Int('wait').pipe(
       Options.withDescription(
-        'Wait up to this many seconds for the space to reach SPACE_READY. Default 0 — read whatever state is available immediately.',
+        'Wait up to this many seconds for the space to reach SPACE_READY. Default 0 - read whatever state is available immediately.',
       ),
       Options.optional,
     ),

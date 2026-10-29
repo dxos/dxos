@@ -43,7 +43,7 @@ export const handler = Effect.fn(function* ({
           return Effect.succeed(Option.getOrUndefined(authCode));
         }
         // TODO(dxos): `acceptInvitation` runs callbacks without a context, so the prompt's terminal
-        // requirement cannot be provided here — the interactive path dies without a terminal.
+        // requirement cannot be provided here - the interactive path dies without a terminal.
         return Prompt.String({ message: 'Enter the authentication code' })
           .pipe(Prompt.run)
           .pipe(Effect.catch(() => Effect.succeed(undefined))) as Effect.Effect<string | undefined>;

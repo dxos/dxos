@@ -181,7 +181,7 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistry.Service => {
               ref = COALESCE(ref, ${drop.ref})
               WHERE id = ${keepId}`;
             // Point the dropped agent's identifiers and its own id (sameAs alias) at the canonical agent.
-            // The dropped id usually IS one of its identifier keys — the conflict clause must leave
+            // The dropped id usually IS one of its identifier keys - the conflict clause must leave
             // `kind` untouched so that identifier row keeps surfacing in the merged profile.
             yield* sql`UPDATE agent_identifier SET agent_id = ${keepId} WHERE agent_id = ${mergeId}`;
             yield* sql`INSERT INTO agent_identifier (key, kind, agent_id) VALUES (${mergeId}, 'alias', ${keepId})

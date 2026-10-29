@@ -52,7 +52,7 @@ describe('runTopicsPipeline', () => {
       { messages: messages(), ownerEmail: OWNER, now: NOW, limit: 2, skipMessage: (id) => already.has(id) },
       { tag: stubTag, summarize: stubSummarize },
     );
-    // 4 messages − 1 skipped = 3 pending, capped at 2.
+    // 4 messages - 1 skipped = 3 pending, capped at 2.
     expect(result.messageTags).toHaveLength(2);
     expect(result.messageTags.some((entry) => already.has(entry.messageId))).toBe(false);
   });
@@ -89,7 +89,7 @@ describe('runTopicsPipeline', () => {
     expect(result.topicDrafts.length).toBeGreaterThan(0);
     // expect(result.topicDrafts.every((draft) => draft.participants.includes('alice@x.com'))).toBe(true);
     // expect(result.topicDrafts.some((draft) => draft.participants.includes('billing@acme.com'))).toBe(false);
-    // Tagging is unaffected by the topic gate — every message is still tagged.
+    // Tagging is unaffected by the topic gate - every message is still tagged.
     expect(result.messageTags).toHaveLength(4);
   });
 });

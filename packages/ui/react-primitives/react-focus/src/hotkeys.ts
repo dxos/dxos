@@ -25,8 +25,8 @@ export type UseHotkeysProps = {
  * Register commands for as long as the component is rendered.
  *
  * Written against `@zag-js/hotkeys` rather than `@ark-ui/react`'s equivalent hook: Ark has no
- * subpath export for it, so importing the hook pulls the barrel — and with it every component
- * machine in Zag — into whatever graph reaches this. These bindings are registered at startup, so
+ * subpath export for it, so importing the hook pulls the barrel - and with it every component
+ * machine in Zag - into whatever graph reaches this. These bindings are registered at startup, so
  * that graph is the EAGER boot graph, which is the thing this package exists to keep small.
  */
 export const useHotkeys = ({ commands, id, store = hotkeyStore }: UseHotkeysProps): void => {
@@ -78,7 +78,7 @@ export const useHotkeys = ({ commands, id, store = hotkeyStore }: UseHotkeysProp
  * scopes are active.
  *
  * The store's `subscribe` is selector-based and its command map keeps its identity when only the
- * active scopes change — so selecting the map alone would leave `useActiveHotkeys` showing the
+ * active scopes change - so selecting the map alone would leave `useActiveHotkeys` showing the
  * scopes of whichever surface was attended when it last re-rendered.
  */
 const registrationKey = (store: HotkeyStore): string => {
@@ -98,7 +98,7 @@ export const useHotkeyRegistrations = (store: HotkeyStore = hotkeyStore): Hotkey
 
 /**
  * The commands that would fire right now: unscoped ones, plus those whose scope is active. This is
- * what a shortcuts list wants — the registry holds every binding in the app, most of them for
+ * what a shortcuts list wants - the registry holds every binding in the app, most of them for
  * surfaces the user is not looking at.
  */
 export const useActiveHotkeys = (store: HotkeyStore = hotkeyStore): HotkeyCommand[] => {

@@ -38,17 +38,17 @@ export type UseSystem = {
   log: readonly SequencedLogEntry[];
   /** For the renderer: resolves the `on-*` operation key and steps the system. */
   dispatch: Dispatch;
-  /** Module-shared capability instances, mounted once per registry — pass to `viewModules`. */
+  /** Module-shared capability instances, mounted once per registry - pass to `viewModules`. */
   capabilities: CapabilityInstances;
 };
 
 /**
  * The React shell around the framework-free system: published state, the operation log, and a
- * dispatch that steps them. All state changes flow through here — the render itself is a pure
+ * dispatch that steps them. All state changes flow through here - the render itself is a pure
  * function of `ui` plus whatever context the caller derives from it.
  *
  * State lives in a ref and renders via a forced update, NOT in a `useState` updater: an operation
- * may mutate the database, and strict mode re-runs updaters — which would run the mutation twice.
+ * may mutate the database, and strict mode re-runs updaters - which would run the mutation twice.
  * The event handler runs once; the step belongs there.
  */
 const isPlainObject = (value: unknown): value is Readonly<Record<string, unknown>> =>
@@ -71,7 +71,7 @@ const deepSeed = (initial: UiState, current: UiState): UiState => {
 /**
  * Reconcile published state to the declared shape: keys come from `initial` (so state for slots
  * removed from an edited template is dropped), surviving values come from `current`. Below a
- * declared slot the current value wins wholesale — operations own that structure.
+ * declared slot the current value wins wholesale - operations own that structure.
  */
 const reconcileSeed = (initial: UiState, current: UiState): UiState => {
   const next: Record<string, unknown> = {};
@@ -92,13 +92,13 @@ export const useSystem = <Db>({ registry, root, db, inputs }: UseSystemOptions<D
   const ref = useRef<{ ui: UiState; log: readonly SequencedLogEntry[] }>({ ui: initial, log: [] });
   const seq = useRef(0);
   // An edited template can add or remove slots: seed the missing, drop the undeclared, and keep
-  // the state of the ones that survive. The log is untouched — history outlives declarations.
+  // the state of the ones that survive. The log is untouched - history outlives declarations.
   ref.current = { ...ref.current, ui: reconcileSeed(initial, ref.current.ui) };
   const [, force] = useReducer((tick: number) => tick + 1, 0);
 
   const step = useCallback(
     (operation: string, payload?: unknown, frames: readonly SlotFrame[] = []) => {
-      // A failed operation is a log entry, not a vanished promise — the loop must stay observable.
+      // A failed operation is a log entry, not a vanished promise - the loop must stay observable.
       try {
         const { ui, entries } = systemDispatch(registry, ref.current.ui, operation, payload, db, frames, inputs);
         const sequenced = entries.map((entry) => ({ ...entry, seq: seq.current++ }));

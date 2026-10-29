@@ -27,7 +27,7 @@ const extensions = [createMarkdownExtensions(), outlinerTree(), blockSelectionFi
 
 const getPos = (line: number) => LINES.slice(0, line).reduce((acc, text) => acc + text.length + 1, 0);
 
-// Runs `fn` against a fresh view (destroyed after, so pending measures can't leak between cases — the
+// Runs `fn` against a fresh view (destroyed after, so pending measures can't leak between cases - the
 // former flakiness that had this suite gated out of CI) and returns the resulting document.
 const withView = (fn: (view: EditorView) => void): string => {
   const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
@@ -41,7 +41,7 @@ const withView = (fn: (view: EditorView) => void): string => {
 
 describe('outliner blocks', () => {
   test('getExtent spans the whole subtree', ({ expect }) => {
-    // Item "2" (line 1) owns 2.1, 2.2 (with 2.2.1), and 2.3 — lines 1..5.
+    // Item "2" (line 1) owns 2.1, 2.2 (with 2.2.1), and 2.3 - lines 1..5.
     const extent = getExtent(EditorState.create({ doc: DOC, extensions }), { from: getPos(1), to: getPos(1) });
     expect(EditorState.create({ doc: DOC, extensions }).doc.sliceString(extent.from, extent.to)).to.eq(
       join(...LINES.slice(1, 6)),
@@ -111,7 +111,7 @@ describe('outliner blocks', () => {
   });
 });
 
-// See DESIGN "Drag reindent — drop level rules". The live `getDropIndent` (pointer-driven) is verified in
+// See DESIGN "Drag reindent - drop level rules". The live `getDropIndent` (pointer-driven) is verified in
 // storybook; here we lock in the drop application: `moveBlocks(view, sources, dropIndex, indent)` re-roots
 // the moved subtree to the given level. Doc:  - A / (  - B) / (  - C) / - D.
 describe('outliner drag reindent', () => {
@@ -128,16 +128,16 @@ describe('outliner drag reindent', () => {
     }
   };
 
-  test('(i) default — B dropped before D keeps its level (a child of A)', ({ expect }) => {
+  test('(i) default - B dropped before D keeps its level (a child of A)', ({ expect }) => {
     // indent 2 = a sibling of C = a child of A.
     expect(branchView((view) => moveBlocks(view, [1], 3, 2))).to.eq(join('- A', '  - C', '  - B', '- D'));
   });
 
-  test('(ii) outdent — B dropped before D at level 0 becomes a sibling of A', ({ expect }) => {
+  test('(ii) outdent - B dropped before D at level 0 becomes a sibling of A', ({ expect }) => {
     expect(branchView((view) => moveBlocks(view, [1], 3, 0))).to.eq(join('- A', '  - C', '- B', '- D'));
   });
 
-  test('getDropIndent defaults to (i) — keeps the item in its branch, no preview shift', ({ expect }) => {
+  test('getDropIndent defaults to (i) - keeps the item in its branch, no preview shift', ({ expect }) => {
     const view = new EditorView({ state: EditorState.create({ doc: join(...BRANCH), extensions }) });
     try {
       // Drop B (idx 1) before D (idx 3) with the pointer well above D's row (not over it): stays a child

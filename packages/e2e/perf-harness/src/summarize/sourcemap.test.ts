@@ -8,7 +8,7 @@ import { decodeMappings, packageOf } from './sourcemap.ts';
 
 describe('source maps', () => {
   test('decodes segments with relative fields accumulated across a line and across lines', ({ expect }) => {
-    // Line 1: column 0 → source 0, line 0, name 0; column 4 → source 0, line 1. Line 2: column 2 → source 0, line 2.
+    // Line 1: column 0 -> source 0, line 0, name 0; column 4 -> source 0, line 1. Line 2: column 2 -> source 0, line 2.
     expect(decodeMappings('AAAAA,IACA;EACA')).toEqual([
       [
         [0, 0, 0, 0],

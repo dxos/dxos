@@ -14,7 +14,7 @@ export type HandpanLayoutProps = {
   target?: Pitch;
   /** Notes sounding now (several for a chord). */
   active?: Pitch[];
-  /** Per-note completion (0–1), drawn as a ring; complete notes are drawn in the success colour. */
+  /** Per-note completion (0-1), drawn as a ring; complete notes are drawn in the success colour. */
   progress?: Record<Pitch, number>;
   onSelect?: (note: ScaleNote) => void;
   classNames?: string;
@@ -28,7 +28,7 @@ const NOTE_RADIUS = 34;
 
 /**
  * Top-down handpan: the ding in the centre and tone fields around the rim, ascending in the
- * conventional zig-zag from the bottom (1 bottom, 2 left, 3 right, …).
+ * conventional zig-zag from the bottom (1 bottom, 2 left, 3 right, ...).
  */
 export const HandpanLayout = ({ notes, target, active, progress, onSelect, classNames }: HandpanLayoutProps) => {
   const fields = notes.filter((note) => note.index > 0);

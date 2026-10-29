@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/** SVG is XML, so every interpolated label must be escaped — object names are arbitrary user text. */
+/** SVG is XML, so every interpolated label must be escaped - object names are arbitrary user text. */
 export const escapeXml = (value: string): string =>
   value.replace(/[&<>"']/g, (char) => {
     switch (char) {
@@ -55,7 +55,7 @@ export const wrapText = (value: string, maxChars: number, maxLines: number): str
   const consumed = truncated.join(' ').length;
   if (consumed < value.trim().length && truncated.length === maxLines) {
     const last = truncated[maxLines - 1];
-    truncated[maxLines - 1] = `${last.slice(0, Math.max(0, maxChars - 1))}…`;
+    truncated[maxLines - 1] = `${last.slice(0, Math.max(0, maxChars - 1))}\u2026`;
   }
 
   return truncated;

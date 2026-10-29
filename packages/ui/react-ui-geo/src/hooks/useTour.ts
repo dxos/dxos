@@ -61,7 +61,7 @@ export const useTour = (
           const ip = geoInterpolate(p1 ?? p2, p2);
 
           // Cursor + trailing arc render per frame. Must run before the
-          // rotation tween advances the projection — flyTo registers
+          // rotation tween advances the projection - flyTo registers
           // `onTick` before its rotation tween, preserving this ordering.
           const onTick = (t: number) => {
             const t1 = Math.max(0, Math.min(1, t * 2 - 1));

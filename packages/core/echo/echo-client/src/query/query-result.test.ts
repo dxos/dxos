@@ -20,7 +20,7 @@ import { QueryResultImpl } from './query-result.ts';
 
 describe('QueryResultImpl', () => {
   // Every result registers a diagnostic carrying a `StackTrace`, and an unformatted stack retains
-  // the receiver of each frame it captured — the result under construction included. Holding those
+  // the receiver of each frame it captured - the result under construction included. Holding those
   // diagnostics strongly therefore pinned the result, its query context, and the whole client graph
   // behind it, one graph per query, for the lifetime of the process. That OOMed long-lived hosts
   // (DX-1140). `QueryResultCache` is deliberately weak; this asserts the diagnostic doesn't defeat it.

@@ -20,6 +20,6 @@ export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/
 
 /**
  * Qualified graph path to a plugin's MDL spec child, which is absent unless some plugin contributes
- * an MDL renderer — hence a path convention rather than a lookup.
+ * an MDL renderer - hence a path convention rather than a lookup.
  */
 export const getPluginSpecPath = (pluginId: string): string => `${getPluginPath(pluginId)}/spec`;

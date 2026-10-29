@@ -22,7 +22,7 @@ import { StudioNamespace } from '../namespace.ts';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // A storyboard's frames' artifacts as hidden child nodes: a frame is a row of the storyboard, not
-    // a destination, so nothing is listed in the navtree — but each nested artifact article still
+    // a destination, so nothing is listed in the navtree - but each nested artifact article still
     // needs a node of its own under the storyboard, which is where its toolbar reads contributed
     // actions (Connect). Hidden rather than navigable: these nodes have no URL of their own.
     const extensions = yield* Effect.all([

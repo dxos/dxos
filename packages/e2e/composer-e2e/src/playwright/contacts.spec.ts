@@ -60,7 +60,7 @@ test.describe('Contacts', () => {
     const joinUrl = await joinUrlField.inputValue();
 
     // Resolve the join URL against the guest's own origin in case it differs from the host's (e.g.
-    // different dev-server bindings under the same suite) — keeping the PATH, not only the query:
+    // different dev-server bindings under the same suite) - keeping the PATH, not only the query:
     // `createJoinUrl` targets `invitationPath` ('/'), which is where the `?spaceKey=` handler is
     // wired, so swapping in the guest's current pathname would miss it.
     const hostJoinUrl = new URL(joinUrl);

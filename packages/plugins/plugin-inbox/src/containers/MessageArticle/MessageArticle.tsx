@@ -52,7 +52,7 @@ export type MessageArticleProps = AppSurface.ArticleProps<
 
 /**
  * Message/conversation detail view. Renders the opened conversation as a Mosaic stack (see
- * {@link ConversationStack}) — one tile per message, each with its own toolbar so reply/forward/delete
+ * {@link ConversationStack}) - one tile per message, each with its own toolbar so reply/forward/delete
  * act on that specific message. This container owns the thread-wide state (body view mode, which
  * messages are expanded) and surfaces it through the top {@link ConversationToolbar}. Only the most
  * recent message is expanded by default; the rest start collapsed.
@@ -99,7 +99,7 @@ export const MessageArticle = ({
   // Derived summaries live in the mailbox's annotation feed (immutable Messages naming their subject
   // via `parentMessage`), merged in here rather than stored on the messages, which are immutable.
   // Subscribed to as a property, because the feed is provisioned lazily on the first annotation and a
-  // bare read establishes no subscription — the component would never re-render to see it. The ref is
+  // bare read establishes no subscription - the component would never re-render to see it. The ref is
   // then taken from the live object, since the subscription yields a snapshot that cannot be resolved.
   // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
   useObject(mailbox, 'annotations');
@@ -122,7 +122,7 @@ export const MessageArticle = ({
   const orderedMessages = useMemo(() => orderThreadItems(messages), [messages]);
   const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
-  // Opening a conversation lands on its latest message, so that one auto-expands. Drafts are skipped —
+  // Opening a conversation lands on its latest message, so that one auto-expands. Drafts are skipped -
   // they render as composers regardless, and a new reply draft must not fold the message it answers.
   const latestMessageId = useMemo(() => {
     const latest = orderedMessages.findLast((message) => !DraftMessage.instanceOf(message));
@@ -160,7 +160,7 @@ export const MessageArticle = ({
   );
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only
-  // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
+  // `ConversationStack` - components must not call capability hooks (they throw without a PluginManager).
   const invoker = Hooks.useOperationInvoker();
   const runtime = Hooks.useProcessManagerRuntime();
   const graph = Hooks.useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
@@ -196,7 +196,7 @@ export const MessageArticle = ({
             icon: action.icon,
             onSelect: () => {
               // Sequential: a composite's later steps (the image pass) depend on what the earlier ones
-              // wrote, so they must not race. A plain loop rather than a `reduce` over promises — the
+              // wrote, so they must not race. A plain loop rather than a `reduce` over promises - the
               // ordering is the point, and the reduce spelled it obscurely.
               void (async () => {
                 for (const { operation, input } of invocations) {
@@ -256,7 +256,7 @@ export const MessageArticle = ({
     [invoker],
   );
 
-  // Generate a grounded reply body (thread + facts), then create the reply draft prefilled — it joins
+  // Generate a grounded reply body (thread + facts), then create the reply draft prefilled - it joins
   // this thread and renders inline. On LLM failure fall back to an empty reply draft so the action never
   // leaves the user without one.
   const handleAiReply = useCallback(

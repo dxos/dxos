@@ -16,7 +16,7 @@ type SessionProps = { sessionId: string; title?: string; repo?: string; branch?:
  * An agent's actor is the object it IS, so the assignee carries a `subject` ref to the session: a
  * bare `{ role: 'assistant' }` says an assistant owns the task but not WHICH run, and a session's
  * own check-in (`RecordSession`) lists its open tasks by matching that ref. Any fields the caller
- * passed in `assignee` are kept — the session decides the subject, not the rest of the actor.
+ * passed in `assignee` are kept - the session decides the subject, not the rest of the actor.
  *
  * `defaultTitle` (the claimed task's title) names a session the caller left untitled, so a run
  * that picks up work over MCP is listed by what it is doing rather than by a bare harness id.

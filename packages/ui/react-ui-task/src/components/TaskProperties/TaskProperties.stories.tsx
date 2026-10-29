@@ -31,7 +31,7 @@ const makeAgent = (): Actor.Actor => {
 
 /**
  * A task's properties beside the list row it came from, so the pill and the property row can be read
- * against each other — they name the same assignee and must agree.
+ * against each other - they name the same assignee and must agree.
  */
 const DefaultStory = ({ seed, members }: { seed: () => Task.Task; members?: TaskMember[] }) => {
   const [task] = useState(seed);
@@ -65,7 +65,7 @@ export const Default: Story = {
 
 /**
  * A task a coding agent has picked up: the assignee is its session, so both the pill and the property
- * row name the session and carry the harness's mark — never a bare "Agent" — and the picker lists the
+ * row name the session and carry the harness's mark - never a bare "Agent" - and the picker lists the
  * agent as the checked entry, so the reader can see who holds the task before switching it away.
  */
 export const TestAgentAssignee: Story = {

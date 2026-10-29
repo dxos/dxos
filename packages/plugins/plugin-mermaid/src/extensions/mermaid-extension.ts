@@ -11,7 +11,7 @@ export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 't
 
 /**
  * Ties the diagram to the design system on top of whichever theme is active. The SVG is inlined
- * into the editor, so `var(--color-…)` resolves against the page in both colour modes; mermaid's
+ * into the editor, so `var(--color-...)` resolves against the page in both colour modes; mermaid's
  * own `themeVariables` cannot do this, since it derives a palette from them with colour math that
  * needs concrete colours.
  */

@@ -82,7 +82,7 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
     [selectFields],
   );
 
-  // Schema is picked by `kanban.spec.kind` — they have different shapes,
+  // Schema is picked by `kanban.spec.kind` - they have different shapes,
   // so cast for `Form.Root`'s single-schema prop.
   const settingsSchema = (isView ? KanbanSchema.KanbanViewSettingsSchema : KanbanSchema.KanbanSettingsSchema) as any;
 

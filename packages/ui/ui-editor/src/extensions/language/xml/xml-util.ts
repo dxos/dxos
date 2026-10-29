@@ -94,7 +94,7 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): Tag | undefine
         child = child.nextSibling;
       }
 
-      // Trim only leading/trailing whitespace on the outer-boundary string segments —
+      // Trim only leading/trailing whitespace on the outer-boundary string segments -
       // interior strings are preserved verbatim so meaningful whitespace around inline
       // child elements (e.g. `<reasoning>foo <ref/> bar</reasoning>`) is not collapsed.
       if (children.length > 0 && typeof children[0] === 'string') {

@@ -409,7 +409,7 @@ describe('TriggerManager', () => {
           // takes. `it.effect` installs a `TestClock`, so `Effect.sleep` would never advance here.
           yield* Effect.callback<void>((resume) => {
             // `{ immediate: true }` can invoke this callback synchronously, before `subscribe`
-            // returns — reading `unsubscribe` there would hit the temporal dead zone, and a
+            // returns - reading `unsubscribe` there would hit the temporal dead zone, and a
             // synchronous `resume` skips Effect's returned-finalizer path entirely (it only runs
             // on interruption), so an immediate match unsubscribes directly instead of relying on it.
             let unsubscribe: (() => void) | undefined;

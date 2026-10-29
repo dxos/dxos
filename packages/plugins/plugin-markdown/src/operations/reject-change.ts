@@ -16,7 +16,7 @@ import { Branch } from '@dxos/versioning';
 import { Markdown } from '#types';
 
 /**
- * Reject an individual change from `branch` at an anchored region — revert that hunk on the author's
+ * Reject an individual change from `branch` at an anchored region - revert that hunk on the author's
  * branch back to the base (main), so the suggestion disappears. The reject counterpart to
  * `accept-change`: accept splices the branch's version into the base; reject splices the base back
  * into the branch. Recomputes the LATEST diff between the base content and the branch, finds the hunk

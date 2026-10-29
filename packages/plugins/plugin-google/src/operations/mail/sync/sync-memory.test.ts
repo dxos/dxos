@@ -30,7 +30,7 @@ import { runGoogleSync } from '../../../testing/sync-fixture.ts';
 // (128 MB isolate): "Query execution failed ... limited to 32MiB" (47,206,633 bytes). Two causes, each
 // asserted here:
 // - Tag heads were saved only by uncapped runs, so every backfill run re-pushed, and loaded in full, every
-//   message synced so far (production logged 100, 200, … 1100 pushed ops). No run may re-push.
+//   message synced so far (production logged 100, 200, ... 1100 pushed ops). No run may re-push.
 // - `Cursor.seedDedupSet` read the newest and oldest 500 feed objects (HTML bodies and inline attachment
 //   blobs) in one query each, only to read their foreign ids. No query response may reach the 32 MiB cap.
 // In-process there is no RPC, so the test sizes each host query response as V8 serializes it: what crosses
@@ -86,11 +86,11 @@ const measurePeak = async <T>(
   }
 };
 
-/** Pads each fixture message to a single-part HTML body of `kb` kilobytes (no Content-Type → decoded as HTML). */
+/** Pads each fixture message to a single-part HTML body of `kb` kilobytes (no Content-Type -> decoded as HTML). */
 const withHtmlBodies = (dataset: GmailDataset, kb: number): GmailDataset => ({
   ...dataset,
   messages: dataset.messages.map((message, index) => {
-    const row = `<tr><td style="padding:8px;font-family:Arial,sans-serif;color:#333">Item ${index} — offer details and tracking pixels</td></tr>\n`;
+    const row = `<tr><td style="padding:8px;font-family:Arial,sans-serif;color:#333">Item ${index} - offer details and tracking pixels</td></tr>\n`;
     const html = `<html><body><table>${row.repeat(Math.ceil((kb * 1024) / row.length))}</table></body></html>`;
     return {
       ...message,
@@ -231,7 +231,7 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     ]);
 
     // Oversized attachments are skipped before download, so nothing is fetched and the off-heap buffer
-    // peak does not scale with attachment size (before the fix: `downloads === count` and peak ≈
+    // peak does not scale with attachment size (before the fix: `downloads === count` and peak ~
     // fetch concurrency × attachMb).
     expect(counter.downloads).toBe(0);
     expect(peakMb).toBeLessThan(attachMb * 2);
@@ -255,8 +255,8 @@ const countingApi = (dataset: GmailDataset, counter: { pushed: number }): Layer.
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
 
 /**
- * Rewrites every `every`th message to a multipart payload — a `text/html` body part (so the message still
- * decodes) plus one attachment part — and registers `sizeBytes` of attachment data in the dataset, so a run
+ * Rewrites every `every`th message to a multipart payload - a `text/html` body part (so the message still
+ * decodes) plus one attachment part - and registers `sizeBytes` of attachment data in the dataset, so a run
  * must download `sizeBytes` per such message. One shared base64 blob keeps the fixture small;
  * `getAttachment` hands out the same body each call and `fetchAttachments` decodes a fresh Buffer per message.
  */

@@ -17,13 +17,13 @@ export type FramePreviewProps = Util.ThemedClassName<{
   name?: string;
   /** Resolved cover source (a remote URL, or a `data:`/`blob:` URL for a file). */
   src?: string;
-  /** Mime of the source — selects `<video>` vs `<img>`. */
+  /** Mime of the source - selects `<video>` vs `<img>`. */
   contentType?: string;
 }>;
 
 /**
  * A storyboard frame's thumbnail: the artifact's cover at 16:9, or a "Frame n" placeholder when
- * nothing has been produced yet. Presentation-only — the source is already resolved.
+ * nothing has been produced yet. Presentation-only - the source is already resolved.
  */
 export const FramePreview = ({ classNames, index, name, src, contentType }: FramePreviewProps) => {
   const { t } = Hooks.useTranslation(StudioNamespace.key);

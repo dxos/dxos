@@ -27,7 +27,7 @@ export type TaskNode = {
 };
 
 /**
- * A section of a grouped task list, as the host computed it — by status, priority, assignee,
+ * A section of a grouped task list, as the host computed it - by status, priority, assignee,
  * milestone or anything else. The list only renders the partition; deciding it is the host's.
  */
 export type TaskGroup = {
@@ -91,7 +91,7 @@ export const buildTaskForest = (tasks: readonly Task.Task[]): TaskNode => {
 };
 
 /**
- * Path to each task, keyed by id and including the synthetic root — what `Tree` addresses rows by.
+ * Path to each task, keyed by id and including the synthetic root - what `Tree` addresses rows by.
  * Unambiguous because a task has exactly one parent, so it appears at exactly one path.
  */
 export const buildTaskPaths = (root: TaskNode): Map<string, string[]> => {
@@ -126,7 +126,7 @@ export type TaskTreeModelOptions = {
   /** Namespace for the group headers' labels; without it a header reads as a raw status id. */
   translationKey?: string;
   /**
-   * Nest sub-tasks under their parent. Off renders one row per task, which is the flat list — a
+   * Nest sub-tasks under their parent. Off renders one row per task, which is the flat list - a
    * tree of depth one rather than a second rendering path.
    */
   hierarchical?: boolean;
@@ -155,7 +155,7 @@ export const buildStatusGroups = (tasks: readonly Task.Task[], order: readonly T
     .filter((group) => group.children.length > 0),
 });
 
-/** The forest a list renders under `options` — shared by the model and the paths into it. */
+/** The forest a list renders under `options` - shared by the model and the paths into it. */
 export const buildTaskTree = (
   tasks: readonly Task.Task[],
   {
@@ -191,7 +191,7 @@ const groupLabel = (node: TaskNode, translationKey?: string): Label => {
  * A {@link StaticTreeModel} over the task forest.
  *
  * The model is rebuilt whenever the task array changes, so open state is seeded from `collapsed`
- * rather than held inside it — a collapse kept only in the model would be dropped by the next
+ * rather than held inside it - a collapse kept only in the model would be dropped by the next
  * rebuild, and tasks are live ECHO objects.
  */
 export const createTaskTreeModel = (

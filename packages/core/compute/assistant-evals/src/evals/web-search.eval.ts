@@ -16,7 +16,7 @@ import * as Scorer from '../Scorer.ts';
 
 // Ported from the gated `Web` scenario (../testing/web-search.test.ts).
 // Grades the real tool-invocation and transcript effects directly instead of the agent's
-// self-reported `completedCriteria` — this is the first tool-match scorer (TESTING.md Phase 2).
+// self-reported `completedCriteria` - this is the first tool-match scorer (TESTING.md Phase 2).
 
 /** Everything the assistant said during the run, as one string. */
 const assistantText = completedBlocks().pipe(
@@ -64,7 +64,7 @@ const task = createEvalRunner({
   scored: true,
 });
 
-evalite('Web — search the web', {
+evalite('Web - search the web', {
   data: [{ input: null }],
   task,
   scorers: Scorer.toEvalite(SCORERS),

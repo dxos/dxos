@@ -25,10 +25,10 @@ import { Canvas } from './Canvas.tsx';
 
 /**
  * Test:
- * 1. The right panel lists one 0–1 score per scorer (1 is good), tagged by kind: the default `Objective`'s
+ * 1. The right panel lists one 0-1 score per scorer (1 is good), tagged by kind: the default `Objective`'s
  *    constraints (pass 1, fail 0) and cost terms (weighted cost through `Score.fromCost`).
  * 2. Drag a node onto another: `no-hard-defects` drops to 0, and so does the overall score.
- * 3. Drag nodes so two links cross: the `crossings` score falls; Δ is against the scene as first loaded.
+ * 3. Drag nodes so two links cross: the `crossings` score falls; Delta is against the scene as first loaded.
  * 4. Click a diagnostic to select the elements it names on the canvas.
  */
 
@@ -110,7 +110,7 @@ const grade = (scene: View): Graded => {
   return { converted, layout: { objects: converted.objects, report: Diagnostics.analyze(converted.objects) } };
 };
 
-/** The engine's own evaluation on the same 0–1 scale, for reference. */
+/** The engine's own evaluation on the same 0-1 scale, for reference. */
 const engineScore = ({ violations, terms }: Objective.Evaluation): number | undefined =>
   Score.overall([
     { kind: 'constraint', score: violations.length ? 0 : 1 },
@@ -120,7 +120,7 @@ const engineScore = ({ violations, terms }: Objective.Evaluation): number | unde
 const DEFAULT_SCORERS = Score.fromObjective(Objective.DEFAULT);
 
 const format = (value: number) =>
-  Number.isFinite(value) ? (Number.isInteger(value) ? `${value}` : value.toFixed(2)) : '—';
+  Number.isFinite(value) ? (Number.isInteger(value) ? `${value}` : value.toFixed(2)) : '-';
 
 const scoreColor = (score: number) =>
   score >= 0.75 ? 'text-emerald-600' : score >= 0.4 ? 'text-amber-600' : 'text-rose-500';
@@ -143,13 +143,13 @@ const KindPill = ({ kind }: { kind: string }) => (
   </span>
 );
 
-/** Change in a 0–1 score; higher is better. */
+/** Change in a 0-1 score; higher is better. */
 const Delta = ({ value }: { value: number }) =>
   Math.abs(value) < 0.005 ? (
     <span className='text-fg-subtle'>·</span>
   ) : (
     <span className={value > 0 ? 'text-emerald-600' : 'text-rose-500'}>
-      {value > 0 ? '+' : '−'}
+      {value > 0 ? '+' : '-'}
       {Math.abs(value).toFixed(2)}
     </span>
   );
@@ -176,7 +176,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
   const scene = useAtomValue(store.view(root));
   const graded = useMemo(() => (scene ? grade(scene) : undefined), [scene]);
   const [scores, setScores] = useState<readonly Score.Scored[]>();
-  // The first scores, so Δ reads against the scene as it was first loaded.
+  // The first scores, so Delta reads against the scene as it was first loaded.
   const [baseline, setBaseline] = useState<readonly Score.Scored[]>();
   useEffect(() => {
     if (!graded) {
@@ -223,20 +223,20 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
             className={mx('text-3xl font-mono', total === undefined ? 'text-fg-muted' : scoreColor(total))}
             data-testid='scene-view.scorecard.score'
           >
-            {total?.toFixed(2) ?? '—'}
+            {total?.toFixed(2) ?? '-'}
           </span>
           {total !== undefined && baselineTotal !== undefined && <Delta value={total - baselineTotal} />}
         </Layout.Flex>
         <div className='text-xs text-fg-muted'>
           0 is bad, 1 is good. A broken constraint scores 0 overall; otherwise the mean of the other scores.
-          {engine && ` Engine layout (its own routes): ${engineScore(engine)?.toFixed(2) ?? '—'}.`}
+          {engine && ` Engine layout (its own routes): ${engineScore(engine)?.toFixed(2) ?? '-'}.`}
         </div>
       </Section>
 
       <Section title='Scores'>
         {scores.map(({ id, kind, description, score, detail, error }) => {
           const previous = baseline?.find((entry) => entry.id === id);
-          // `Grid` only exposes `children`/`role`/`style` beyond `classNames` — no `title` — so the
+          // `Grid` only exposes `children`/`role`/`style` beyond `classNames` - no `title` - so the
           // row's tooltip is carried on every cell instead of the grid container.
           const title = [description, error ?? detail].filter(Boolean).join('\n');
           return (
@@ -261,7 +261,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
                 </span>
               </span>
               <span title={title} className={mx('font-mono text-end', error ? 'text-fg-muted' : scoreColor(score))}>
-                {error ? '—' : score.toFixed(2)}
+                {error ? '-' : score.toFixed(2)}
               </span>
               <span title={title} className='font-mono text-end'>
                 {previous && !error && !previous.error && <Delta value={score - previous.score} />}

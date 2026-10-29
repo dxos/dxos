@@ -140,7 +140,7 @@ describe(
     );
 
     bench(
-      'query: reference traversal (10 people → employers)',
+      'query: reference traversal (10 people -> employers)',
       async () => {
         const { db } = await ensureState();
         await db.query(Query.select(Filter.type(TestSchema.Person)).limit(10).reference('employer')).run();
@@ -149,7 +149,7 @@ describe(
     );
 
     bench(
-      'query: incoming references (org ← its people)',
+      'query: incoming references (org <- its people)',
       async () => {
         const { db, orgIds } = await ensureState();
         await db.query(Query.select(Filter.id(pick(orgIds))).referencedBy(TestSchema.Person, 'employer')).run();

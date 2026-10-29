@@ -284,7 +284,7 @@ export const JsonView: Story = {
 
 /**
  * One row of {@link GraphTree}. Subscribes to just its own node and child list, so a mutation anywhere in
- * the graph re-renders only the rows it actually touches — which is the behaviour this story exists to show.
+ * the graph re-renders only the rows it actually touches - which is the behaviour this story exists to show.
  */
 const GraphTreeItem = ({
   graph,

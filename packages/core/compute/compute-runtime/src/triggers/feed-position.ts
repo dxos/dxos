@@ -14,7 +14,7 @@ const parsePosition = (cursor: Feed.Cursor): number | undefined => {
 
 /**
  * Filter feed items to only those past the given cursor, pairing each with its own cursor and
- * ordering them by it — the dispatcher advances its cursor to the last item it invoked, so an
+ * ordering them by it - the dispatcher advances its cursor to the last item it invoked, so an
  * unordered page would skip everything positioned before that item.
  *
  * Items with no cursor are skipped defensively so that a single malformed entry does not stall

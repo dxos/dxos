@@ -91,7 +91,7 @@ const meta = {
     layout: 'fullscreen',
     translations: [
       ...nextTranslations,
-      { 'en-US': { [STORY_NS]: { 'create-organization.label': 'New organization “{{text}}”' } } },
+      { 'en-US': { [STORY_NS]: { 'create-organization.label': 'New organization "{{text}}"' } } },
     ],
   },
 } satisfies Meta<PaneArgs>;
@@ -140,7 +140,7 @@ export const Test: Story = {
     const createPopup = await body.findByRole('dialog');
     await userEvent.keyboard('Wayne');
     // The row takes the form's `createOptionLabel` (translated with the query) and `createOptionIcon`.
-    const create = within(createPopup).getByRole('option', { name: 'New organization “Wayne”' });
+    const create = within(createPopup).getByRole('option', { name: 'New organization "Wayne"' });
     await expect(create.querySelector('[data-scope="icon"]')?.getAttribute('data-icon')).toBe('ph--buildings--regular');
     await userEvent.click(create);
     const name = await within(createPopup).findByRole('textbox', { name: 'Full name' });

@@ -68,7 +68,7 @@ type MapContextValue = {
 const [MapContextProvider, useMapContext] = createContext<MapContextValue>('Map');
 
 //
-// Root — headless; owns the imperative MapController (exposed via ref) and the map registry.
+// Root - headless; owns the imperative MapController (exposed via ref) and the map registry.
 //
 
 type MapRootProps = PropsWithChildren<Pick<MapContextValue, 'onChange'>>;
@@ -164,7 +164,7 @@ const MapPinchZoom = () => {
     let frame = 0;
     let point: ReturnType<typeof L.point> | undefined;
     // Accumulate the target against the last requested value (not the live, mid-zoom `getZoom()`)
-    // and apply once per animation frame without zoom animation — overlapping animated zooms are
+    // and apply once per animation frame without zoom animation - overlapping animated zooms are
     // what made this jittery. Reset between frames so the next batch re-reads the settled zoom.
     let target: number | undefined;
 
@@ -472,7 +472,7 @@ const CustomControl = ({
       DomEvent.disableScrollPropagation(container);
       const root = createRoot(container);
       rootRef.current = root;
-      // Initial render — covers mount and any map/position remount; the effect below
+      // Initial render - covers mount and any map/position remount; the effect below
       // handles subsequent children-only updates.
       root.render(<Theme.Provider tx={Theme.defaultTx}>{children}</Theme.Provider>);
       return container;

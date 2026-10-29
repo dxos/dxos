@@ -15,7 +15,7 @@ import * as Drawing from './Drawing.ts';
  * convert it to {@link Drawing}. Never constructed by this plugin.
  *
  * Its canvas already points at `org.dxos.type.canvas` carrying `schema: 'tldraw.com/2'`, which is
- * exactly the base `Drawing.Canvas` — so only the wrapper needs migrating.
+ * exactly the base `Drawing.Canvas` - so only the wrapper needs migrating.
  */
 export class Sketch extends Type.makeObject<Sketch>(DXN.make('org.dxos.type.sketch', '0.1.0'))(
   Schema.Struct({

@@ -31,7 +31,7 @@ export const fader = (options: FaderOptions = {}): Extension => {
   const dequeue = StateEffect.define<number>();
 
   // FIFO of expiry timestamps paired with a decoration set.
-  // Tracks `batchStart` — the time the current coalesce batch began.
+  // Tracks `batchStart` - the time the current coalesce batch began.
   type FaderState = {
     decorations: DecorationSet;
     expiries: number[];
@@ -119,7 +119,7 @@ export const fader = (options: FaderOptions = {}): Extension => {
             expiries = [...expiries.slice(0, -1), now + removalDelay];
           }
         } else {
-          // New batch — record when it started.
+          // New batch - record when it started.
           batchStart = now;
           expiries = [...expiries, now + removalDelay];
           decorations = decorations.update({

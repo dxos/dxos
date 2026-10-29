@@ -106,7 +106,7 @@ export const makeSpaceService = (client: Client): Context.Service.Shape<typeof H
 
   get: (id) =>
     Effect.sync(() => {
-      // Pre-initialization none means "unknown", not "no such space" — reactive consumers get
+      // Pre-initialization none means "unknown", not "no such space" - reactive consumers get
       // the true reading from the `spaces` stream once initialization completes.
       if (!client.initialized) {
         return Option.none();

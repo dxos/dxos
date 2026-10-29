@@ -58,7 +58,7 @@ export default FeedOperation.LoadPostContent.pipe(
           // (e.g. agent operations) pass no proxy and fetch directly.
           const { text, imageUrls } = await fetchArticle(post.link!, { corsProxy: browserCorsProxy() });
           if (text) {
-            // Store the body plus refined snippet/imageUrl derived from the full article — preferred
+            // Store the body plus refined snippet/imageUrl derived from the full article - preferred
             // over the description-derived defaults wherever the Post is rendered.
             await Subscription.appendPostContent(db, subscription, {
               post,

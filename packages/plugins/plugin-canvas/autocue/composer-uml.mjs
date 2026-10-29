@@ -45,7 +45,7 @@ const TOP = [
 
 /** Frames that each hold a nested scene. */
 const FRAMES = {
-  // packages/plugins/* — the plugin set is assembled in packages/apps/composer-app/src/plugin-defs*.tsx.
+  // packages/plugins/* - the plugin set is assembled in packages/apps/composer-app/src/plugin-defs*.tsx.
   plugins: { label: 'Plugins', x: 0.47, y: 0.5, width: 384, height: 256 },
   // packages/sdk/client + packages/sdk/client-services (reached through @dxos/plugin-client).
   client: { label: 'Client', x: 0.78, y: 0.22, width: 384, height: 256 },
@@ -341,7 +341,7 @@ export const steps = [
         page.evaluate((id) => composer.plugins().some((plugin) => plugin.id === id && plugin.active), PLUGIN.id);
       if (!(await active())) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
-        const filter = 'input[placeholder="Filter…"]';
+        const filter = 'input[placeholder="Filter..."]';
         await page.locator(filter).first().waitFor({ state: 'visible', timeout: 10_000 });
         await demo.fill({ selector: filter, value: PLUGIN.name, hud: false });
         const input = `input[role="switch"][aria-label="${PLUGIN.name}"]`;

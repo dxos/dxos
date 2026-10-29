@@ -20,7 +20,7 @@ export type BridgeStatus = {
 
 /**
  * Live connection state, published by the driver so surfaces can show it without opening a
- * connection of their own — the device accepts one client, so there is exactly one bridge.
+ * connection of their own - the device accepts one client, so there is exactly one bridge.
  */
 export const BridgeStatus = Capability.makeSingleton<Atom.Writable<BridgeStatus>>()(
   `${StreamDeckNamespace.key}.capability.bridgeStatus`,

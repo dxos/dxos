@@ -24,7 +24,7 @@ export const addSpanProcessor = (processor: SpanProcessor): (() => void) => {
 
 /**
  * Passed to the provider at construction; delegates to whatever has attached by the time a span
- * ends. A processor that throws is logged and skipped — `onEnd` runs inside `Span.end()`, on the
+ * ends. A processor that throws is logged and skipped - `onEnd` runs inside `Span.end()`, on the
  * fiber that created the span, so an escaping error would fail unrelated work.
  */
 export class FanoutSpanProcessor implements SpanProcessor {

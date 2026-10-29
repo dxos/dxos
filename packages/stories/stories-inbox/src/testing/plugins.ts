@@ -33,7 +33,7 @@ const resolvePayload = (prompt: string): unknown => {
  * Story `AiService` whose `generateObject` returns a per-message flight payload and `generateText`
  * returns a static summary, so the template-driven TripMessageExtractor runs end-to-end without a
  * real provider. Mutually exclusive with the shared `StoryAiPlugin` (both provide the `AiService`
- * LayerSpec) — a story registers one or the other per variant.
+ * LayerSpec) - a story registers one or the other per variant.
  */
 export const StoryTripAiPlugin = Plugin.define(
   Plugin.makeMeta({

@@ -25,7 +25,7 @@ const { reasoning, text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 EntityId.dangerouslyDisableRandomness();
 
 // A minimal echo tool: the deterministic developer code the loop invokes when the (scripted) model
-// emits a tool call. Its handler runs for real, so a genuine tool-call → result → continue cycle is
+// emits a tool call. Its handler runs for real, so a genuine tool-call -> result -> continue cycle is
 // exercised without any live model.
 const TestToolkit = Toolkit.make(
   Tool.make('Echo', {
@@ -316,7 +316,7 @@ const retiredHistory = (): Message.Message[] => [
 
 /**
  * The failure the Anthropic adapter raises while decoding a response that calls a tool the toolkit
- * does not contain — the shape reproduced here, since the provider raises it before any tool call
+ * does not contain - the shape reproduced here, since the provider raises it before any tool call
  * reaches the loop and no scripted tool call can stand in for it.
  */
 const toolNotFound = (toolName: string, availableTools: string[]): AiError.AiError =>

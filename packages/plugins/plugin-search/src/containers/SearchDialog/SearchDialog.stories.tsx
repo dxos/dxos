@@ -121,7 +121,7 @@ export const Test: Story = {
     // Type a 3+ char term (FTS trigram minimum) the seeded fixture object contains.
     await userEvent.type(searchInput, 'the');
 
-    // Wait for search results to appear as options in the listbox — this is the
+    // Wait for search results to appear as options in the listbox - this is the
     // end-to-end proof that the FTS5 index is wired and populated.
     await waitFor(
       async () => {

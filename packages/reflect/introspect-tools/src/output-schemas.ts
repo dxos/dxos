@@ -7,7 +7,7 @@
 // These are the source of truth for the data returned by `@dxos/introspect`.
 // `@dxos/introspect/src/types.ts` re-derives its TypeScript types from these
 // schemas, and downstream consumers that can't depend on `@dxos/introspect`
-// (browser/worker contexts — `@dxos/introspect` pulls Node-only `ts-morph`
+// (browser/worker contexts - `@dxos/introspect` pulls Node-only `ts-morph`
 // and `glob`) import the schemas directly.
 
 import * as Schema from 'effect/Schema';
@@ -91,7 +91,7 @@ export const SymbolDetailSchema = Schema.Struct({
   jsdoc: Schema.optional(Schema.String),
   summary: Schema.optional(Schema.String),
   location: SourceLocationSchema,
-  /** Source text — only present when `include` requested it. */
+  /** Source text - only present when `include` requested it. */
   source: Schema.optional(Schema.String),
 });
 export type SymbolDetail = typeof SymbolDetailSchema.Type;
@@ -195,7 +195,7 @@ export const IdiomSchema = Schema.Struct({
   applies: Schema.String,
   /** Anti-pattern this replaces. */
   insteadOf: Schema.optional(Schema.String),
-  /** Raw {@link …} targets named under `uses:`. */
+  /** Raw {@link ...} targets named under `uses:`. */
   uses: Schema.Array(Schema.String),
   /** Slugs of related idioms. */
   related: Schema.Array(Schema.String),

@@ -61,8 +61,8 @@ export const NonEditable: Story = {
 };
 
 /**
- * A message carrying a `change` content-block — the reusable tile for a document suggestion (struck
- * original → proposed text) with Accept/Reject controls, driven by `onAcceptChange`/`onRejectChange`.
+ * A message carrying a `change` content-block - the reusable tile for a document suggestion (struck
+ * original -> proposed text) with Accept/Reject controls, driven by `onAcceptChange`/`onRejectChange`.
  */
 const onAcceptChange = fn();
 const onRejectChange = fn();

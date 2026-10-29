@@ -10,7 +10,7 @@ import { type FallbackValue } from '@dxos/util';
 
 /**
  * Presentational metadata for a message author, resolved by the host (e.g. from
- * space members / identity) and supplied to the UI layer — keeps this package
+ * space members / identity) and supplied to the UI layer - keeps this package
  * free of `@dxos/react-client`.
  */
 export type MessageMetadata = {
@@ -43,7 +43,7 @@ export type MessageCallbacks = {
   onAcceptChange?: (messageId: string) => void;
   /** Reject a suggested-change block on a message (omit to hide the affordance). */
   onRejectChange?: (messageId: string) => void;
-  /** Select a message — the host reveals what it refers to (omit to leave tiles inert). */
+  /** Select a message - the host reveals what it refers to (omit to leave tiles inert). */
   onMessageSelect?: (messageId: string) => void;
 };
 

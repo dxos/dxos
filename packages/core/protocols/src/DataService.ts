@@ -109,7 +109,7 @@ export const DocumentUpdate = Schema.Struct({
   mutation: Schema.optional(Schema.Uint8Array),
   /**
    * Set by the worker when the disk probe for this document completes
-   * negative — i.e. the document is not on local storage, and the worker
+   * negative - i.e. the document is not on local storage, and the worker
    * has started a network fetch. The client moves the corresponding
    * `DocHandleProxy` from `'pending'` to `'requesting'`. Once the bytes
    * eventually arrive, a normal `mutation` update follows and the handle
@@ -118,7 +118,7 @@ export const DocumentUpdate = Schema.Struct({
    */
   requesting: Schema.optional(Schema.Boolean),
   /**
-   * Set by the host when it cannot produce this document at all — the data
+   * Set by the host when it cannot produce this document at all - the data
    * plane it reads has no bytes for the id and no other source to fetch them
    * from. The client settles the corresponding `DocHandleProxy` as
    * `'unavailable'` and rejects its `whenReady()`, so a load fails at once
@@ -485,7 +485,7 @@ export class Rpcs extends RpcGroup.make(
   }),
   /**
    * Reclaim storage held by soft-deleted objects and unreachable automerge documents (and their
-   * index rows). Feed-block reclamation is deferred on the local host — `purgedFeedBlocks` is
+   * index rows). Feed-block reclamation is deferred on the local host - `purgedFeedBlocks` is
    * currently always `0` and `feeds` is reserved.
    */
   Rpc.make('runGarbageCollection', {

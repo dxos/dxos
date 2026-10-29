@@ -73,7 +73,7 @@ const AttachmentList = ({ label, attachments }: { label: string; attachments: re
             {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below the content's width. */}
             <span className='truncate min-w-0'>
               <span className='font-mono'>{name}</span>
-              {error && ` — ${error.message}`}
+              {error && ` - ${error.message}`}
             </span>
           </Listbox.Item>
         ))}

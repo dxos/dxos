@@ -9,15 +9,15 @@
  *
  * Writability belongs to the reference the callback is handed, not to the callback's dynamic extent:
  * the object named outside is read-only, and only the parameter can be mutated. Naming them alike is
- * what makes that mechanical — the outer name is shadowed, so a body that mentions it reaches the
+ * what makes that mechanical - the outer name is shadowed, so a body that mentions it reaches the
  * mutable reference and cannot silently address the read-only one.
  *
  * @example
- * // ❌ Bad
+ * // X Bad
  * Obj.update(trigger, (t) => { t.enabled = true; });
  * Obj.update(trigger, () => { Text.update(trigger, 'name', 'x'); });
  *
- * // ✅ Good
+ * // OK Good
  * Obj.update(trigger, (trigger) => { trigger.enabled = true; });
  * Obj.update(trigger, (trigger) => { Text.update(trigger, 'name', 'x'); });
  */
@@ -36,7 +36,7 @@ export default {
       mismatchedName:
         'Callback parameter "{{callbackParam}}" should be "{{firstArg}}" to match the first argument of {{caller}}.update().',
       missingParam:
-        'Callback must declare a parameter "{{firstArg}}" — mutations go through it, not through the object named outside {{caller}}.update().',
+        'Callback must declare a parameter "{{firstArg}}" - mutations go through it, not through the object named outside {{caller}}.update().',
       unnameableTarget:
         'Callback must declare a parameter to mutate through; {{caller}}.update() was passed an expression rather than a variable, so assign it to one first.',
       outerMutation:
@@ -94,7 +94,7 @@ export default {
     /**
      * Array methods that mutate the receiver. Deliberately only arrays: a document holds plain data,
      * so `Map`/`Set` names like `add` and `set` would only ever match an unrelated API call
-     * (`space.db.add(…)`).
+     * (`space.db.add(...)`).
      */
     const MUTATING_METHODS = new Set([
       'push',
@@ -108,7 +108,7 @@ export default {
       'copyWithin',
     ]);
 
-    /** The leftmost identifier of a member chain — `a.b.c` → `a`. */
+    /** The leftmost identifier of a member chain - `a.b.c` -> `a`. */
     function baseIdentifier(node) {
       let current = node;
       while (current?.type === 'MemberExpression') {
@@ -121,13 +121,13 @@ export default {
      * Report every mutation inside `callback` whose target was captured outside it. Calling a mutating
      * method directly on an outer binding (`items.push()`) is left alone: that shape is overwhelmingly a
      * plain local collection, whereas reaching *into* a captured object (`history.versions.push()`,
-     * `stored.status = …`) is the pattern that only works while the change context is ambient.
+     * `stored.status = ...`) is the pattern that only works while the change context is ambient.
      */
     function reportOuterMutations(callback) {
       // Every name bound anywhere inside the callback: its parameters, and any declaration in its body
       // or in a function nested in it. Collecting them all rather than resolving scopes is deliberately
-      // conservative — a name bound in a sibling scope suppresses the report instead of misattributing
-      // it — and it does not depend on the linter host exposing scope analysis.
+      // conservative - a name bound in a sibling scope suppresses the report instead of misattributing
+      // it - and it does not depend on the linter host exposing scope analysis.
       const bound = new Set();
 
       const bindPattern = (pattern) => {

@@ -18,7 +18,7 @@ import { assignSlots, slotOf } from '../server/slots.ts';
 
 export const MONITOR_ACTION_UUID = 'org.dxos.composer.monitor';
 
-/** Elgato's title/icon/value/indicator layout — the only predefined one with a progress bar. */
+/** Elgato's title/icon/value/indicator layout - the only predefined one with a progress bar. */
 const LAYOUT = '$B1';
 
 export type MonitorHost = {

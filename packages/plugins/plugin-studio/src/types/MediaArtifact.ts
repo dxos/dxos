@@ -40,20 +40,20 @@ const resolveArtifactConnectorIds = (
 
 /**
  * A media-agnostic unit of creative work: a set of produced {@link Variant}s. `kind` is an open
- * discriminator (`'image' | 'video' | …`) selecting rendering + provider — new media add behavior (a
+ * discriminator (`'image' | 'video' | ...`) selecting rendering + provider - new media add behavior (a
  * renderer, a provider), never columns. Each produced variant records the request that made it in
  * `Variant.config` (the generator's `requestSchema`); `request` is the one being composed.
  */
 export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.dxos.type.mediaArtifact', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    /** Open discriminator: 'image' | 'video' | … (no enum). Selects renderer + provider. */
+    /** Open discriminator: 'image' | 'video' | ... (no enum). Selects renderer + provider. */
     kind: Schema.String,
     /** Chosen GenerationService id for this kind (passed to op:generate as `provider`). */
     generator: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))),
     /**
      * The request the compose form edits (prompt + kind-specific knobs). Persisted rather than held in
-     * the article so a prompt authored elsewhere — an agent's frame, another peer — is there when the
+     * the article so a prompt authored elsewhere - an agent's frame, another peer - is there when the
      * artifact opens, and a half-written one survives a remount.
      */
     request: Schema.optional(
@@ -67,7 +67,7 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
     ),
     /** The chosen/primary variant (used for thumbnails). */
     cover: Schema.optional(Ref.Ref(Variant.Variant).pipe(Annotation.FormInputAnnotation.set(false))),
-    /** Downstream products (transcript, summary, caption, upscale, …). */
+    /** Downstream products (transcript, summary, caption, upscale, ...). */
     derived: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
@@ -82,7 +82,7 @@ export class MediaArtifact extends Type.makeObject<MediaArtifact>(DXN.make('org.
 /**
  * Creates a MediaArtifact.
  * @param props.name Optional display name.
- * @param props.kind Media kind (`'image' | 'video' | …`); defaults to `'image'`.
+ * @param props.kind Media kind (`'image' | 'video' | ...`); defaults to `'image'`.
  * @param props[Obj.Parent] Optional parent object to set at construction time.
  */
 export const make = (

@@ -29,8 +29,8 @@ describe('substitutions extension', () => {
     const view = createView([
       substitutions({
         substitutions: {
-          ':)': '😊',
-          ':(': '😢',
+          ':)': '\u{1F60A}',
+          ':(': '\u{1F622}',
         },
         bindings: {},
       }),
@@ -40,7 +40,7 @@ describe('substitutions extension', () => {
       expect(type(view, 0, ':')).toBe(false);
       view.dispatch({ changes: { from: 0, insert: ':' }, selection: { anchor: 1 } });
       expect(type(view, 1, ')')).toBe(true);
-      expect(view.state.doc.toString()).toBe('😊');
+      expect(view.state.doc.toString()).toBe('\u{1F60A}');
     } finally {
       view.destroy();
     }
@@ -59,13 +59,13 @@ describe('substitutions extension', () => {
     const view = createView([
       substitutions({
         substitutions: {},
-        bindings: { 'Alt--': '—' },
+        bindings: { 'Alt--': '-' },
       }),
     ]);
 
     try {
       expect(runKey(view, 'Alt--')).toBe(true);
-      expect(view.state.doc.toString()).toBe('—');
+      expect(view.state.doc.toString()).toBe('-');
     } finally {
       view.destroy();
     }
@@ -75,7 +75,7 @@ describe('substitutions extension', () => {
     const view = createView();
     try {
       expect(runKey(view, 'Alt--')).toBe(true);
-      expect(view.state.doc.toString()).toBe('—');
+      expect(view.state.doc.toString()).toBe('-');
     } finally {
       view.destroy();
     }

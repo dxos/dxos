@@ -12,13 +12,13 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownBlock } from '../components/index.ts';
 
 /**
- * The inline axis against real content — editors, not boxes.
+ * The inline axis against real content - editors, not boxes.
  *
  * `virtualizer/Horizontal` proves the arithmetic with rows that cannot lie about their size; this
  * is the acceptance the axis claim needs (SPEC F-1.7): a horizontal strip of real CodeMirror
  * documents, measured on the inline axis, where the *cross* axis (each card's height) is the hard
  * constraint of the layout and the extent is what varies. The axis is in scope for the
- * virtualizer only — the feed list stays vertical — so this story is the axis's whole acceptance
+ * virtualizer only - the feed list stays vertical - so this story is the axis's whole acceptance
  * suite, and it deliberately reuses the invariants the block axis is held to.
  */
 const CARDS = 200;
@@ -84,7 +84,7 @@ export const Default: Story = {};
  * The block-axis invariants, on the inline axis, with editors.
  *
  * Nothing here names a direction the arithmetic could hide behind: rows are tracked by index, a
- * scroll must move them by what was scrolled, and the far end must be reachable — the same three
+ * scroll must move them by what was scrolled, and the far end must be reachable - the same three
  * readings `bridge/*` takes vertically.
  */
 export const InlineContent: Story = {

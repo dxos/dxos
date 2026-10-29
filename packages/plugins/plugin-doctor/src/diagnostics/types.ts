@@ -13,7 +13,7 @@ export type DiagnosticSeverity = 'info' | 'warning' | 'error';
  * A single problem produced by a diagnostic provider.
  */
 export type DiagnosticIssue = {
-  /** Stable identifier within the provider — used as a React key. */
+  /** Stable identifier within the provider - used as a React key. */
   readonly id: string;
   readonly severity: DiagnosticSeverity;
   readonly message: string;
@@ -34,7 +34,7 @@ export type DiagnosticContext = {
 };
 
 /**
- * A diagnostic provider — plugins contribute these via `DoctorCapabilities.DiagnosticProvider`.
+ * A diagnostic provider - plugins contribute these via `DoctorCapabilities.DiagnosticProvider`.
  * The runner invokes `run` and surfaces the returned issues in the UI.
  */
 export type DiagnosticProvider = {

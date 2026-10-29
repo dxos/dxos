@@ -12,11 +12,11 @@ import { PwaNamespace } from '../namespace.ts';
 import { isPrecacheProgress } from '../precache.ts';
 
 // Separate from `RegisterPwa` so that an app without the progress registry still registers the
-// service worker — only the meter is lost, not the update flow itself.
+// service worker - only the meter is lost, not the update flow itself.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Optional, so that the comment above holds: requiring it would fail the whole plugin — and with
-    // it the service-worker registration — on a host that omits plugin-progress.
+    // Optional, so that the comment above holds: requiring it would fail the whole plugin - and with
+    // it the service-worker registration - on a host that omits plugin-progress.
     const registryOption = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
     if (Option.isNone(registryOption)) {
       return [];
@@ -31,7 +31,7 @@ export default Capability.makeModule(
 
       const { current, total, isUpdate, done } = event.data;
       if (done && !monitor) {
-        // Completion for a download this window never saw start — nothing to report.
+        // Completion for a download this window never saw start - nothing to report.
         return;
       }
 

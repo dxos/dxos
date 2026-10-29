@@ -41,7 +41,7 @@ export const addBlocks =
               label: [`block.${type}.label`, { ns: translationKey }],
               checked,
               // A table replaces the line it lands on, so it is offered on a blank one and withheld
-              // where it would clobber content — the condition was inverted.
+              // where it would clobber content - the condition was inverted.
               ...(type === 'table' && { disabled: !state.blankLine }),
               icon,
             },

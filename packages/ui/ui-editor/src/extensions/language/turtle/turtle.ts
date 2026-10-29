@@ -144,7 +144,7 @@ const token = (stream: StringStream, state: TurtleState): TurtleToken | null => 
   return (char ? PUNCTUATION[char] : undefined) ?? 'invalid';
 };
 
-/** RDF 1.1 Turtle, and TriG's `{ … }` graph blocks, which Turtle's tokens cover otherwise. */
+/** RDF 1.1 Turtle, and TriG's `{ ... }` graph blocks, which Turtle's tokens cover otherwise. */
 export const turtleLanguage = StreamLanguage.define<TurtleState>({
   name: 'turtle',
   startState: () => ({ local: false }),

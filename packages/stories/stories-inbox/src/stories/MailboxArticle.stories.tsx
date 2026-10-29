@@ -31,7 +31,7 @@ import { StoryModulesPlugin } from '../testing/modules.tsx';
 type StoryArgs = {
   /** Number of messages to seed. */
   count?: number;
-  /** Size of the thread-id pool messages are randomly assigned to (fewer → larger conversations). */
+  /** Size of the thread-id pool messages are randomly assigned to (fewer -> larger conversations). */
   threads?: number;
   /** Force conversation grouping on/off; when omitted, the persisted/product-default value applies. */
   conversations?: boolean;
@@ -93,7 +93,7 @@ const meta = {
       await seedSummaries(space.db, mailbox);
       if (attachments) {
         await seedAttachment(space.db, mailbox);
-        // Mailbox → Message → Attachment: the three planks the deck shows when a reader drills from
+        // Mailbox -> Message -> Attachment: the three planks the deck shows when a reader drills from
         // the list into a message and then into one of its attachments.
         return [[Cell.article(mailbox)], [StoryRole.SelectedMessage], [StoryRole.Attachment]];
       }

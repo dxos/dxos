@@ -20,7 +20,7 @@ const entry = (context: string) =>
 describe('truncateLine', () => {
   test('keeps the line parseable and preserves metadata', ({ expect }) => {
     // Regression: a blind `slice` cut mid-string, so every over-long line became unparseable
-    // JSON with no marker — indistinguishable from an absent log to any query tool.
+    // JSON with no marker - indistinguishable from an absent log to any query tool.
     const line = entry(
       JSON.stringify({
         documents: Object.fromEntries(Array.from({ length: 500 }, (_, i) => [`doc${i}`, 'a'.repeat(64)])),

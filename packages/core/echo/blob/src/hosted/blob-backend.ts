@@ -24,7 +24,7 @@ export interface EdgeBlobBackend extends BlobBackend {
 
 // `SCHEME` from `ni-uri` rather than `Blob.Scheme.ni` from `@dxos/echo`: both are the string `ni`,
 // and taking it from here is what keeps this package below `@dxos/echo` in the graph. `@dxos/echo`
-// exposes `registerBlobBackend(…: BlobBackend)`, so anything it depends on cannot depend back on it.
+// exposes `registerBlobBackend(...: BlobBackend)`, so anything it depends on cannot depend back on it.
 const parseNiUri = (uri: string): string => {
   invariant(uri.startsWith(`${SCHEME}:///`), `Invalid ni: URI: ${uri}`);
   return digestHex(uri);
@@ -38,7 +38,7 @@ export const MAX_EDGE_BLOB_SIZE = 50 * 1024 * 1024;
  * blob.
  *
  * A write is confirmed once the {@link BlobStore} on this device holds it; the backend never talks to
- * the edge blob service for reads or writes. Replication is the store's concern — in the client, the
+ * the edge blob service for reads or writes. Replication is the store's concern - in the client, the
  * client services host pushes stored blobs to the edge asynchronously (see `createBlobReplicator`) and
  * fills local misses from it.
  *

@@ -16,8 +16,8 @@ const COLLECTION_WALK_MAX_DEPTH = 32;
 
 /**
  * The path under which the nav tree shows an object, when it lives in the space's collection tree:
- * `content/collections/<ancestors…>/<objectId>`. This is an object's canonical home — the database
- * path (`system/database/<type>/<objectId>`) exists for every object but names a hidden node — so both
+ * `content/collections/<ancestors...>/<objectId>`. This is an object's canonical home - the database
+ * path (`system/database/<type>/<objectId>`) exists for every object but names a hidden node - so both
  * URL resolution and navigation-target resolution answer with this when it exists.
  *
  * Returns undefined for an object outside the collection tree (one reachable only via its type
@@ -49,11 +49,11 @@ export const resolveCollectionObjectPath = ({
 
 /**
  * Walk up a space's collection tree from `objectId` to the root collection. A single query loads the
- * space's collections — each already carries its child refs — so the ancestry is a walk of a
- * child→collections index rather than a query per step. An object listed in several collections walks
+ * space's collections - each already carries its child refs - so the ancestry is a walk of a
+ * child->collections index rather than a query per step. An object listed in several collections walks
  * through the one that is its parent, else the first indexed; a visited-set plus depth cap stop a cycle
  * from looping. Returns the intermediate collection ids in
- * root→leaf order (excluding the root collection, whose objects sit directly under
+ * root->leaf order (excluding the root collection, whose objects sit directly under
  * `content/collections`), or null if no path to the root exists.
  */
 export const walkCollectionChainToRoot = ({
@@ -76,7 +76,7 @@ export const walkCollectionChainToRoot = ({
     }
 
     const visited = new Set<string>([objectId]);
-    // Built leaf→root on the way up; the node id wants root→leaf.
+    // Built leaf->root on the way up; the node id wants root->leaf.
     const chain: string[] = [];
     let current = objectId;
     for (let depth = 0; depth < COLLECTION_WALK_MAX_DEPTH; depth++) {

@@ -10,7 +10,7 @@ import { useCardHover } from './Row.tsx';
 /**
  * The regression this guards: `useCardHover`'s cleanup depends on `open` and `enabled`, not just on
  * the stable `cancel`. Depending on `cancel` alone let a timer armed for the PREVIOUS contact fire the
- * stale `open` after the row was recycled onto another actor — a virtualized list reuses rows, so this
+ * stale `open` after the row was recycled onto another actor - a virtualized list reuses rows, so this
  * is the common case rather than an edge one.
  */
 describe('useCardHover', () => {

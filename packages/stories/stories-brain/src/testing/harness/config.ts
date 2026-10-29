@@ -7,13 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { fixturePath } from '@dxos/fixtures';
 
 // Structural harness configuration: paths, corpus/output locations, and model routing that the
-// harness infrastructure itself reads. (Non-structural, test-level knobs — subject, which model to
-// save, skill modes — live in `src/test/defs.ts` next to the tests.)
+// harness infrastructure itself reads. (Non-structural, test-level knobs - subject, which model to
+// save, skill modes - live in `src/test/defs.ts` next to the tests.)
 
 /** Shared fixture name for the real mailbox corpus (`moon run fixtures:pull -- mailbox`). */
 export const MAILBOX_FIXTURE_NAME = 'mailbox';
 
-/** Absolute package root (…/stories-brain/). Anchors fixture/result paths regardless of file depth. */
+/** Absolute package root (.../stories-brain/). Anchors fixture/result paths regardless of file depth. */
 export const PACKAGE_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
 /** Node/browser-neutral POSIX path join (no `node:path`); collapses stray slashes between segments. */
@@ -49,11 +49,11 @@ export const FACT_STORE_FIXTURE =
  */
 export const SENDER_LABELS = process.env.SENDER_LABELS ?? join(PACKAGE_ROOT, 'fixtures/local/sender-labels.json');
 
-/** Cap on messages, for fast iteration (`LIMIT=10`). Undefined → all messages. */
+/** Cap on messages, for fast iteration (`LIMIT=10`). Undefined -> all messages. */
 export const LIMIT = process.env.LIMIT ? Math.max(0, Number(process.env.LIMIT)) : undefined;
 
 /**
- * In-flight parallelism for per-message fact extraction. Undefined → the bench picks a per-variant
+ * In-flight parallelism for per-message fact extraction. Undefined -> the bench picks a per-variant
  * default (parallel for network-bound remote models, serial for local ollama). `CONCURRENCY=n`
  * forces a fixed value for every variant.
  */
@@ -70,7 +70,7 @@ export const PROGRESS_PATH = join(RESULTS_DIR, 'progress.json');
 /** Force a specific results path (single-result runs). */
 export const RESULTS_OUT = process.env.RESULTS_OUT;
 
-/** Max per-variant result rows written to JSON by benches. Undefined → all. */
+/** Max per-variant result rows written to JSON by benches. Undefined -> all. */
 export const SAMPLES = process.env.SAMPLES ? Number(process.env.SAMPLES) : undefined;
 
 //

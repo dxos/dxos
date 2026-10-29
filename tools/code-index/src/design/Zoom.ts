@@ -15,7 +15,7 @@ import * as Text from './Text.ts';
 
 /**
  * The precision stage: a decision model (System One) judges each candidate card against the prompt,
- * each relation kind, and — once the set is pruned — the grouping level the compact diagram should
+ * each relation kind, and - once the set is pruned - the grouping level the compact diagram should
  * use. Every call is one card or one relation as the whole state, so calls are small, independent
  * and cacheable, and 16 of them run at once.
  *
@@ -26,7 +26,7 @@ import * as Text from './Text.ts';
 /** System One's price per input token, for the cost line of a run. */
 export const USD_PER_INPUT_TOKEN = 0.042 / 1_000_000;
 
-/** What the judge sees of a card: no IRI, no explorer bookkeeping — only what describes the code. */
+/** What the judge sees of a card: no IRI, no explorer bookkeeping - only what describes the code. */
 const JudgedCard = Schema.Struct({
   name: Schema.String,
   kind: Schema.String,
@@ -56,7 +56,7 @@ export const NodeRelevance = Decision.make({
       instructions:
         'A developer asked `prompt` about a codebase and will be shown a small architecture diagram as the ' +
         'answer. `node` is one source file. Would a senior engineer drawing that diagram include this file as one ' +
-        'of its boxes — a component the answer is about — rather than a helper, test, type-only file or something ' +
+        'of its boxes - a component the answer is about - rather than a helper, test, type-only file or something ' +
         'from an unrelated area?',
       criteria: {
         true: 'A component the answer is about; leaving it out would leave the diagram incomplete.',
@@ -114,7 +114,7 @@ export const GroupingChoice = Decision.make({
 
 /**
  * Which of the leading candidate packages the question is about. Cards are judged one at a time, so
- * on their own they cannot tell the framework a prompt names from the dozen packages that use it —
+ * on their own they cannot tell the framework a prompt names from the dozen packages that use it -
  * "the streaming pipeline" scores every `pipeline-*` consumer as high as `@dxos/pipeline` itself.
  * The distribution this answers re-weights every card by its package.
  */
@@ -124,7 +124,7 @@ export const packageFocus = (packages: readonly { name: string; files: readonly 
     decisions: {
       focus: Decision.classify({
         instructions:
-          'A developer asked `prompt` about a monorepo. Which one package is the question mainly about — the one ' +
+          'A developer asked `prompt` about a monorepo. Which one package is the question mainly about - the one ' +
           'whose own design the answer must explain, rather than a package that merely uses it?',
         criteria: Object.fromEntries(packages.map(({ name, files }) => [name, `contains ${files.join(', ')}`])),
       }),
@@ -142,7 +142,7 @@ export const FLOOR_KINDS: readonly Graph.EdgeKind[] = ['implDependsOn', 'imports
 
 /**
  * `hybrid` blends System One's probability with the baseline normalised to the candidate set: the
- * model separates relevant from irrelevant poorly on its own (most cards land at 0.6–0.8), while the
+ * model separates relevant from irrelevant poorly on its own (most cards land at 0.6-0.8), while the
  * baseline knows which files sit at the centre of the prompt's text and graph.
  */
 export type Scorer = 'system-one' | 'baseline' | 'hybrid';
@@ -202,7 +202,7 @@ export const directoryOf = (card: Pick<Graph.NodeCard, 'path'>, packagePath?: st
   return meaningful.length > 0 ? meaningful.join('/') : '.';
 };
 
-/** The package directory a card's path implies (`…/src/…` is inside it). */
+/** The package directory a card's path implies (`.../src/...` is inside it). */
 export const packagePathOf = (path: string): string | undefined => {
   const index = path.indexOf('/src/');
   return index > 0 ? path.slice(0, index) : undefined;
@@ -381,7 +381,7 @@ export const zoom = ({
               const examples = candidates.edges
                 .filter((edge) => edge.kind === kind)
                 .slice(0, 6)
-                .map((edge) => `${labels.get(edge.from) ?? edge.from} → ${labels.get(edge.to) ?? edge.to}`);
+                .map((edge) => `${labels.get(edge.from) ?? edge.from} -> ${labels.get(edge.to) ?? edge.to}`);
               const description = DESCRIPTIONS[kind] ?? kind;
               return decide(
                 RelationRelevance,

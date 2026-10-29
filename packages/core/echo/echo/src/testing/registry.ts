@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import * as Registry from '../Registry.ts';
 
 /**
- * Noop `Registry.Service` layer for testing — always returns empty query results.
+ * Noop `Registry.Service` layer for testing - always returns empty query results.
  * Use this in test layer stacks that require `Registry.Service` but don't need
  * actual registry contents.
  */
@@ -25,7 +25,7 @@ export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(Re
   get: () => undefined,
   getByURI: () => undefined,
   list: () => [],
-  // QueryFn is an overloaded interface — a single generic function cannot satisfy both overload
+  // QueryFn is an overloaded interface - a single generic function cannot satisfy both overload
   // signatures without a cast. This is the intentional type-system boundary.
   query: ((_queryOrFilter: unknown) => ({
     results: [],

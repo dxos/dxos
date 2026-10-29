@@ -25,8 +25,8 @@ import type * as Plugin from './plugin.ts';
  *
  * The interface itself is transport-agnostic; concrete implementations live
  * alongside it in this package (see {@link EdgeRegistryPluginProvider}) so we
- * avoid `app-framework ↔ edge-client` cycles, but they only need to satisfy
- * this shape — callers can substitute their own.
+ * avoid `app-framework <-> edge-client` cycles, but they only need to satisfy
+ * this shape - callers can substitute their own.
  */
 export interface PluginProvider {
   /**

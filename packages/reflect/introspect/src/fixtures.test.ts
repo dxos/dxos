@@ -7,7 +7,7 @@
 // The fixtures aren't part of the workspace (excluded from pnpm-workspace.yaml
 // and tsconfig) so they don't get type-checked by the normal build. This test
 // loads each fixture file through ts-morph and reports any *syntactic*
-// diagnostics — catches malformed fixtures (typos, syntax errors, broken
+// diagnostics - catches malformed fixtures (typos, syntax errors, broken
 // declarations) without depending on live types being resolvable.
 //
 // We deliberately don't run full semantic typecheck here: the fixtures import
@@ -40,7 +40,7 @@ describe('fixture monorepo wellformedness', { timeout: 30_000 }, () => {
       skipFileDependencyResolution: true,
       compilerOptions: {
         target: ScriptTarget.ESNext,
-        // JsxEmit.ReactJSX = 4 — referenced by literal because JsxEmit isn't re-exported as a value by ts-morph.
+        // JsxEmit.ReactJSX = 4 - referenced by literal because JsxEmit isn't re-exported as a value by ts-morph.
         jsx: 4,
         noEmit: true,
         skipLibCheck: true,

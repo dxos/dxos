@@ -51,7 +51,7 @@ export const handler = Effect.fn(function* ({ spaceId, output, format, feeds = [
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId);
   const space = yield* getSpace(resolvedSpaceId);
 
-  // Export reads the epoch root, and a closed space never becomes ready — so cap the wait.
+  // Export reads the epoch root, and a closed space never becomes ready - so cap the wait.
   yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
     Effect.timeoutOrElse({
       duration: SPACE_READY_TIMEOUT,

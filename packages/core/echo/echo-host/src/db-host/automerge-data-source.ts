@@ -76,7 +76,7 @@ export class AutomergeDataSource implements IndexDataSource {
   /**
    * Heads for every document, captured once per `IndexEngine.update` pass. `listDocumentHeads()` is
    * an unbounded scan of `automerge_heads` and is cursor-independent, so re-reading it for each
-   * index in a pass doubles the cost for an identical result. Held only for the pass — a document
+   * index in a pass doubles the cost for an identical result. Held only for the pass - a document
    * saved mid-pass is still picked up next pass, since `documentsSaved` schedules one.
    */
   #passHeads: Promise<{ documentId: DocumentId; heads: A.Heads }[]> | null = null;

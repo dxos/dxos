@@ -3,7 +3,7 @@
 //
 
 /**
- * Everything about BlueYard from Composer: a Research opened on an existing entity session shows BlueYard's graph —
+ * Everything about BlueYard from Composer: a Research opened on an existing entity session shows BlueYard's graph -
  * partners, funds and portfolio companies as cards with pictures; a portfolio company opens in the companion with
  * its facts, where they came from, and its relations; the Results view lists the investments as logo cards; the
  * Trace shows what the session spent.
@@ -39,7 +39,7 @@ const RESULT = '[data-testid="lighthouse.result"]';
 const DETAIL = '[data-testid="lighthouse.detail"]';
 
 const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+  demo.caption({ value: `Step ${step} - ${text}`, subtitle: SUBTITLE, position: 'top' });
 
 const visible = (locator, timeout = 1_500) =>
   locator

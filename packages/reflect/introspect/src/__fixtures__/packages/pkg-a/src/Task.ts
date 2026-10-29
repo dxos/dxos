@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 /**
- * Task item — fixture ECHO type used to verify symbol extraction against
+ * Task item - fixture ECHO type used to verify symbol extraction against
  * realistic DXOS shapes (Schema.Struct + Type.makeObject + annotations).
  */
 export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.Task', '0.1.0'))(
@@ -29,7 +29,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('com.example.type.Task'
 ) {}
 
 /**
- * Task factory — mirrors the make/Obj.make pattern used by real plugins.
+ * Task factory - mirrors the make/Obj.make pattern used by real plugins.
  *
  * @idiom com.example.idiom.taskFactory
  * applies: when constructing a Task with default `done: false`

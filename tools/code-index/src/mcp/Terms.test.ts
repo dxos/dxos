@@ -38,7 +38,7 @@ describe('Terms', () => {
   test('every described term is documented in design/ONTOLOGY.md', async () => {
     const doc = await readFile(`${PACKAGE}design/ONTOLOGY.md`, 'utf8');
     const documented = deusNames(doc);
-    // Positional predicates are documented as a range, `deus:typeArg0` … `typeArg7`.
+    // Positional predicates are documented as a range, `deus:typeArg0` ... `typeArg7`.
     const missing = Object.keys(Terms.TERMS).filter(
       (name) => !documented.has(name) && !documented.has(name.replace(/\d+$/, '0')),
     );

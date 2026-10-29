@@ -18,7 +18,7 @@ import { DISABLE_DEPENDENTS_DIALOG } from '../constants.ts';
  * around that. The caller supplies a `dispatch` callback that performs the
  * actual disable (wrapping it with observability or any other side effects).
  * When there are no enabled dependents, dispatch runs immediately; otherwise
- * we open the shared {@link DISABLE_DEPENDENTS_DIALOG} surface — its
+ * we open the shared {@link DISABLE_DEPENDENTS_DIALOG} surface - its
  * `onConfirm` runs the dispatch and closes the dialog.
  *
  * Display-name resolution for the dialog is delegated to the registered

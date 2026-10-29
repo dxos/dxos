@@ -21,7 +21,7 @@ export type VersionedEditorProps = {
   object: Markdown.Document | Text.Text;
   versioning: ReturnType<typeof useVersioning>;
   identity: Identity.Info | null | undefined;
-  /** The document's live (main) content — the accepted base overlays diff against. */
+  /** The document's live (main) content - the accepted base overlays diff against. */
   mainContent: string | undefined;
   diffView: Markdown.Settings['diffView'];
   viewMode?: EditorViewMode;
@@ -36,7 +36,7 @@ export type VersionedEditor = {
   /** Remount key: changes only when the editor's bound document changes. */
   editorKey: string;
   effectiveViewMode: EditorViewMode | undefined;
-  /** True while a branch/checkpoint binding resolves — the editor must not mount against the root. */
+  /** True while a branch/checkpoint binding resolves - the editor must not mount against the root. */
   branchLoading: boolean;
   // Derived review state consumed by the extension/overlay layer and the view-mode dropdown.
   ambient: boolean;
@@ -51,7 +51,7 @@ export type VersionedEditor = {
 };
 
 /**
- * Version selection → editor binding: swaps the editor's subject to the active branch (a per-surface
+ * Version selection -> editor binding: swaps the editor's subject to the active branch (a per-surface
  * binding for core branches, the forked Text for legacy ones); a checkpoint/fork/base renders a
  * detached read-only snapshot; Ambient Suggesting binds to the CURRENT USER's own suggestion branch
  * (find-or-create) so typed edits accrue there for review rather than mutating main. Concentrates
@@ -80,17 +80,17 @@ export const useVersionedEditor = ({
   } = versioning;
 
   // Default branch compare to the accept/reject review overlay ('suggest'); the inline/sideBySide/
-  // gutter diff variants are opt-in via settings and keep the branch editable — a reviewer can
+  // gutter diff variants are opt-in via settings and keep the branch editable - a reviewer can
   // adjust the draft while seeing it diffed against the anchor (see useReviewExtensions).
   const diffViewMode = diffView ?? 'suggest';
   const compareActive = versioning.view === 'diff' && !!activeBranch && branchBaseContent !== undefined;
   // The `base` view shows the parent content at the branch anchor read-only (the state the branch
-  // diverged from) — rendered from a detached snapshot like a checkpoint/fork, never the live doc.
+  // diverged from) - rendered from a detached snapshot like a checkpoint/fork, never the live doc.
   const baseActive = versioning.view === 'base' && !!activeBranch && branchBaseContent !== undefined;
   const branchText = activeBranch ? versioning.activeText : undefined;
   // Suggestion review: instead of binding the editor to the branch, keep it on the parent (main)
   // and overlay the branch's changes as accept/reject suggestions. Accepting a change splices it
-  // into the parent (merging it); rejecting hides it. The editor stays read-only — edits are made
+  // into the parent (merging it); rejecting hides it. The editor stays read-only - edits are made
   // only through the accept controls.
   const suggestActive = compareActive && diffViewMode === 'suggest' && branchText !== undefined;
   // The core branch the editor is showing (undefined = main, or a legacy content-copy branch which
@@ -102,9 +102,9 @@ export const useVersionedEditor = ({
   const suggestionBranch = activeBranch?.kind === 'suggestion';
   // Ambient review model: the default view (`selection.kind === 'current'`) stays bound to main and
   // overlays every author's suggestions plus comments per the per-user review mode. Any explicit
-  // selection (branch/checkpoint/fork) keeps the advanced behaviour untouched — the policy is
+  // selection (branch/checkpoint/fork) keeps the advanced behaviour untouched - the policy is
   // consulted only on the ambient path. The policy capability is contributed by plugin-space (A2);
-  // absent (e.g. a host that does not install it) ⇒ the GDocs-parity default.
+  // absent (e.g. a host that does not install it) => the GDocs-parity default.
   const [reviewRenderPolicy] = Hooks.useOptionalCapabilities(ReviewCapabilities.ReviewRenderPolicy);
   const renderPolicy = reviewRenderPolicy ?? ReviewCapabilities.defaultReviewRenderPolicy;
   const ambient = selection.kind === 'current';
@@ -170,7 +170,7 @@ export const useVersionedEditor = ({
     binding.subject === 'snapshot'
       ? { id: `${id}--${binding.snapshotKey}`, text: snapshotContent ?? '' }
       : // The descriptor only selects these subjects when the binding resolved, so the fallback to
-        // `object` is unreachable — kept over a non-null assertion per the no-cast rule.
+        // `object` is unreachable - kept over a non-null assertion per the no-cast rule.
         binding.subject === 'own-branch'
         ? (ownBranchText ?? object)
         : binding.subject === 'branch'

@@ -20,7 +20,7 @@ import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/hypercore/index.ts';
 
 /**
- * True when a rejected SQL op failed because its connection was already closed — the message
+ * True when a rejected SQL op failed because its connection was already closed - the message
  * `The database connection is not open` (raised by `@effect/sql-sqlite-node`), which arrives
  * wrapped as an effect `SqlError`, so walk the `cause` chain. Signals teardown, not a real fault.
  */
@@ -184,7 +184,7 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     // If the file was closed (e.g. the storage was torn down during shutdown) before its initial
     // load completed, don't start the DB read. The underlying SQL connection may already be
     // closing, and the read would reject with "database connection is not open" as an unhandled
-    // rejection — a background read racing teardown. #buffer already defaults to empty, so reads
+    // rejection - a background read racing teardown. #buffer already defaults to empty, so reads
     // resolve against an empty file.
     if (this.#closed) {
       return Promise.resolve();
@@ -213,7 +213,7 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     } catch (err) {
       // A read racing teardown rejects with "database connection is not open". The `#closed` guard
       // in `_ensureLoaded` only catches reads not yet started, and `#closed` covers only this file
-      // being closed — during client disposal the shared SQL connection can be torn down while this
+      // being closed - during client disposal the shared SQL connection can be torn down while this
       // file's `#closed` is still false (the container closed the connection without closing every
       // file first). In either case a closed connection means there is nothing to load, so fall back
       // to the empty `#buffer`; rethrow only a genuine error against a live connection. Swallowing an
@@ -268,7 +268,7 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
         () => cb(null),
         (err) => cb(err),
       );
-    // Track the in-flight save so `close()` can drain it before reporting closed — otherwise a
+    // Track the in-flight save so `close()` can drain it before reporting closed - otherwise a
     // write racing `close()` (e.g. a background sync write racing `client.reset()`'s teardown)
     // keeps running against a connection the container may tear down immediately after.
     this.#saving = saving.catch(() => {});
@@ -319,7 +319,7 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     this.#closed = true;
     // Drain any in-flight initial load and any in-flight write/del before reporting closed, so
     // neither races a torn-down SQL connection (avoids "database connection is not open" errors,
-    // and the resulting stall in callers — e.g. `client.reset()`'s feed teardown — that wait on
+    // and the resulting stall in callers - e.g. `client.reset()`'s feed teardown - that wait on
     // this file's `close()` to settle before tearing down the connection itself).
     Promise.all([this.#loading ?? Promise.resolve(), this.#saving ?? Promise.resolve()]).then(
       () => cb(null),
@@ -455,7 +455,7 @@ export class SqliteStorage implements Storage {
     }
     this.#closed = true;
     // Close each native file before the SQL connection is torn down. `close()` marks the file
-    // closed (so any subsequent read skips the DB) and drains its in-flight initial load —
+    // closed (so any subsequent read skips the DB) and drains its in-flight initial load -
     // preventing "database connection is not open" unhandled rejections from background reads
     // that race shutdown (e.g. a test client closing while a background sync read is in flight).
     const natives = [...this.#nativeFiles.values()];

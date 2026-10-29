@@ -244,7 +244,7 @@ export const useEditorMenu = ({
   }, []);
 
   // Array props are compared by CONTENT, not identity: a caller writing `trigger={['#']}` inline
-  // hands over a new array every render, and a changed extension destroys and recreates the view —
+  // hands over a new array every render, and a changed extension destroys and recreates the view -
   // blurring the editor mid-keystroke. The memo reads them back from the key, so the React Compiler keys it the
   // same way.
   const arraysKey = JSON.stringify({ trigger, searchTriggers, activateOnDelimiters, multiWordTriggers });

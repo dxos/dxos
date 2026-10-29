@@ -9,7 +9,7 @@ import { EID, EntityId, URI } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key.ts';
 
-// Type identifier URI — either a DXN (typename) or an EID (stored-schema-as-object).
+// Type identifier URI - either a DXN (typename) or an EID (stored-schema-as-object).
 // Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null
 // matches any type.
 const TypenameSpecifier = Schema.Union([URI.Schema, Schema.Null]);
@@ -65,8 +65,8 @@ export const FilterObject: Schema.Codec<FilterObject> = FilterObject_;
 const FilterCompare_ = Schema.Struct({
   type: Schema.Literal('compare'),
   operator: Schema.Literals(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']),
-  // Optional because the wire format cannot say otherwise: `Filter.eq(undefined)` — which is how
-  // `Filter.type(T, { prop: undefined })` matches an absent property — serializes to JSON with the
+  // Optional because the wire format cannot say otherwise: `Filter.eq(undefined)` - which is how
+  // `Filter.type(T, { prop: undefined })` matches an absent property - serializes to JSON with the
   // key dropped, so the host must decode its absence back to `undefined` rather than reject.
   value: Schema.optional(Schema.Unknown),
 });
@@ -84,11 +84,11 @@ export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Codec<FilterIn> = FilterIn_;
 
 /**
- * In (subquery form) — membership against a value projected from a subquery's results,
+ * In (subquery form) - membership against a value projected from a subquery's results,
  * e.g. `threadId IN (SELECT threadId FROM feed WHERE tag = 'inbox')`.
  *
  * Nested-only (like {@link FilterIn}): valid inside an `object` filter's `props`, not at
- * the query root — the planner has no selector for a standalone membership predicate.
+ * the query root - the planner has no selector for a standalone membership predicate.
  * The subquery may target a different scope than the parent query; it is resolved once at
  * execution time by projecting `property` from its results into a set.
  */
@@ -167,7 +167,7 @@ export interface FilterTimestamp extends Schema.Schema.Type<typeof FilterTimesta
 export const FilterTimestamp: Schema.Codec<FilterTimestamp> = FilterTimestamp_;
 
 /**
- * Filter feed items to a cursor range — cursors being the positions the position authority assigned
+ * Filter feed items to a cursor range - cursors being the positions the position authority assigned
  * the blocks (`Feed.getCursor`). Both bounds name an item and are exclusive of it, so a reader
  * resumes with the last cursor it consumed as `begin` without re-reading that item. Only meaningful
  * against a feed scope: an automerge object has no position, so the query planner rejects this
@@ -246,7 +246,7 @@ export const FilterChildOf: Schema.Codec<FilterChildOf> = FilterChildOf_;
 
 /**
  * Filter objects by whether they have a parent at all, regardless of which object it is.
- * The parent lives on the object's own structure (`system.parent`), so this is a local predicate —
+ * The parent lives on the object's own structure (`system.parent`), so this is a local predicate -
  * no traversal, unlike {@link FilterChildOf}.
  */
 const FilterHasParent_ = Schema.Struct({
@@ -259,7 +259,7 @@ export interface FilterHasParent extends Schema.Schema.Type<typeof FilterHasPare
 export const FilterHasParent: Schema.Codec<FilterHasParent> = FilterHasParent_;
 
 /**
- * Filter objects by mnemonic — the human-memorable short form of an object's id
+ * Filter objects by mnemonic - the human-memorable short form of an object's id
  * (its last 6 characters, uppercased). Matching is a local predicate on the id,
  * so it needs no index.
  */
@@ -570,17 +570,17 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
 /**
  * A named aggregate computed per group over its members, exposed as a top-level field on the flat
  * result record (`row[name]`) and orderable via a following `orderBy(Order.property(name))`. A
- * tagged union per kind — `property`/`limit`/`order` are present exactly when the kind uses them,
+ * tagged union per kind - `property`/`limit`/`order` are present exactly when the kind uses them,
  * so read sites narrow by `kind` instead of guarding an unused optional field.
  * - `group` partitions members by a scalar key; its coerced key value is the field's value.
  *   Composite keys are formed from multiple `group` entries. A query with no `group` entries
  *   aggregates its entire input into a single row.
  * - `max`/`min` reduce a scalar member `property`.
  * - `items` collects the group's members, optionally ordered by `order` and capped to `limit`.
- *   Opt-in — a row carries no members otherwise. `order` is this aggregate's own per-group
+ *   Opt-in - a row carries no members otherwise. `order` is this aggregate's own per-group
  *   ordering, independent of any `orderBy` clause elsewhere in the query (which orders the whole
  *   input stream / the resulting groups, not this aggregate's member selection).
- * - `count` yields the member count. Opt-in — a row carries no count otherwise.
+ * - `count` yields the member count. Opt-in - a row carries no count otherwise.
  * - `type` partitions members by their type URI; the field carries the URI string.
  * - `timestamp` partitions members by the UTC hour or day a system timestamp falls in; the field
  *   carries the start of that interval in unix ms.
@@ -593,7 +593,7 @@ const GroupAggregateGroup_ = Schema.Struct({
   /**
    * Fallback chain: the first property holding a scalar value supplies this key component (`a ?? b`),
    * so a single entry is the plain property form. Composite keys come from multiple `group` entries,
-   * never from this list. Non-empty — an empty chain has no key to read and would silently degrade
+   * never from this list. Non-empty - an empty chain has no key to read and would silently degrade
    * to a single `null`-keyed group.
    */
   properties: Schema.NonEmptyArray(Schema.String),
@@ -651,7 +651,7 @@ export const GroupAggregate: Schema.Codec<GroupAggregate> = GroupAggregate_;
  * Aggregates results into flat records. `group`-kind entries partition members into contiguous
  * groups (one row each); with no `group` entries the whole input aggregates into a single row.
  * Groups are ordered by the first occurrence of their key in the incoming (already-ordered) result
- * stream — this lets a preceding `orderBy` also control group order (e.g. ordering thread groups by
+ * stream - this lets a preceding `orderBy` also control group order (e.g. ordering thread groups by
  * their most recent message). A following `orderBy(Order.property(name))` referencing an aggregate
  * or group field reorders whole groups instead. Must be the outermost data clause: only
  * `from`/`options`/`order` may wrap it.
@@ -717,7 +717,7 @@ export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 /**
  * Selects from a space (automerge documents).
- * When `spaceId` is omitted, targets the owning space — i.e. the space of whichever
+ * When `spaceId` is omitted, targets the owning space - i.e. the space of whichever
  * database executes the query. This lets callers reference "this space" without
  * having to look up its id.
  * When `includeAllFeeds` is true, also selects from all feeds belonging to that space.
@@ -739,8 +739,8 @@ export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
 /**
  * Selects from a code-shipped object registry.
  *
- * - `'local'`  — the in-process registry attached to the hypergraph.
- * - `'remote'` — a future remote registry service (not yet implemented).
+ * - `'local'`  - the in-process registry attached to the hypergraph.
+ * - `'remote'` - a future remote registry service (not yet implemented).
  *
  * To include both, add two separate `RegistryScope` entries to the `scopes` array.
  */

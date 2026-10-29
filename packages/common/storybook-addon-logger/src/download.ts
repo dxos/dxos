@@ -9,7 +9,7 @@ import { triggerLogsDownload } from './trigger-download.ts';
 
 /**
  * Requests the current story's buffered logs from `preview.tsx`'s `LogBuffer` and downloads them
- * as NDJSON. Usable from any component rendered inside the preview iframe — e.g. an error-boundary
+ * as NDJSON. Usable from any component rendered inside the preview iframe - e.g. an error-boundary
  * fallback, so a crashed story still offers a one-click way to grab logs without reaching for the
  * manager toolbar's "Download logs" button.
  */

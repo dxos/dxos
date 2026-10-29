@@ -22,7 +22,7 @@ const TRAVEL_SUBJECT_RE =
   /\b(flight|itinerar|booking|reservation|hotel|airline|boarding|e-?ticket|check[- ]?in|confirmation number|pnr|travel|trip)\b/i;
 const TRAVEL_SENDER_RE = /(air|airline|airways|travel|booking|hotel|expedia|kayak|delta|united|lufthansa|klm|amtrak)/i;
 
-/** Whether a message looks like mail from a travel service (booking, itinerary, check-in, …). */
+/** Whether a message looks like mail from a travel service (booking, itinerary, check-in, ...). */
 export const isTravelMessage = (message: Message.Message): boolean => {
   const subject = typeof message.properties?.subject === 'string' ? message.properties.subject : '';
   const sender = message.sender?.email ?? '';
@@ -39,7 +39,7 @@ const row = (message: Message.Message): string => {
 /**
  * Travel-log pipeline: filters the feed to travel-service mail and regenerates the project's
  * "Travel Bookings" document as a chronological table. Wholesale regeneration makes the operation
- * idempotent without a cursor — the document always reflects the current feed.
+ * idempotent without a cursor - the document always reflects the current feed.
  */
 const handler = ProjectMailboxOperation.UpdateTravelLog.pipe(
   Operation.withHandler(

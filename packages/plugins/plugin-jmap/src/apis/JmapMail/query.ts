@@ -125,7 +125,7 @@ const buildTerm = (token: Extract<Token, { _tag: 'term' }>, ctx: ParseContext): 
 const negate = (filter: Filter): FilterOperator => ({ operator: 'NOT', conditions: [filter] });
 
 //
-// Leaf construction (operator → JMAP FilterCondition).
+// Leaf construction (operator -> JMAP FilterCondition).
 //
 
 const buildLeaf = (op: Option.Option<string>, value: string, ctx: ParseContext): Option.Option<Filter> =>

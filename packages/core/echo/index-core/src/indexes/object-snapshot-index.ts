@@ -208,7 +208,7 @@ export class ObjectSnapshotIndex implements Index {
         pending.push({ recordId: object.recordId, object });
       }
 
-      // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }` tombstone
+      // A partial block carries no `@type`/body - notably the `{ id, '@deleted': true }` tombstone
       // appended by `Feed.remove`. Feed blocks are stored wholesale, so such a block is merged onto
       // the prior snapshot below to retain the body and type while layering the new marker;
       // otherwise the upsert would replace the full snapshot with the bare partial and the client

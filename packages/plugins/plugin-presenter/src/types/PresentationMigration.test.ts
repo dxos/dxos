@@ -12,7 +12,7 @@ import { Text } from '@dxos/schema';
 import * as Presentation from './Presentation.ts';
 import * as PresentationMigration from './PresentationMigration.ts';
 
-describe('presentation 0.1.0 → 0.2.0 migration', () => {
+describe('presentation 0.1.0 -> 0.2.0 migration', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {

@@ -49,7 +49,7 @@ const check = (label, condition, detail) => {
     console.log(`  ok  ${label}`);
   } else {
     failures.push(label);
-    console.error(`fail  ${label}${detail === undefined ? '' : ` — ${JSON.stringify(detail)}`}`);
+    console.error(`fail  ${label}${detail === undefined ? '' : ` - ${JSON.stringify(detail)}`}`);
   }
 };
 
@@ -179,7 +179,7 @@ try {
     feedback,
   );
 
-  // A press on the second Favorite key must reach Composer as slot 1 — slots are positional, so this
+  // A press on the second Favorite key must reach Composer as slot 1 - slots are positional, so this
   // is what proves the ordering the user sees matches the ordering the frame was built for.
   pluginSocket.send(
     JSON.stringify({

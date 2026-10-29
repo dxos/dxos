@@ -27,8 +27,8 @@ import { ensureRepo, findRepo, toRepoDescriptor } from './repo.ts';
  * a second, anonymous attempt.
  *
  * 404 is the load-bearing one. GitHub answers 404 rather than 403 wherever a credential lacks access,
- * so as not to confirm what it cannot show, and a GitHub App user-to-server token — what this
- * connector holds — reaches only the repositories the App is installed on. A public repository the
+ * so as not to confirm what it cannot show, and a GitHub App user-to-server token - what this
+ * connector holds - reaches only the repositories the App is installed on. A public repository the
  * App was never installed on therefore reads as absent. (A fine-grained PAT would not behave this
  * way: those carry read access to every public repository regardless of their selection.)
  *
@@ -42,8 +42,8 @@ const MAY_REFLECT_TOKEN_SCOPE = new Set([401, 403, 404]);
  * stored token is what stood in the way.
  *
  * A public pull request must never fail because of a credential. Three separate conditions make one
- * look unreachable — a revoked token (401), a suspended or SSO-blocked one (403), and a repository
- * outside the App installation the token belongs to (404) — and the anonymous retry, which is the
+ * look unreachable - a revoked token (401), a suspended or SSO-blocked one (403), and a repository
+ * outside the App installation the token belongs to (404) - and the anonymous retry, which is the
  * same request a space with no connection would make, resolves all three. The cost is one extra
  * request on a pull request that genuinely does not exist.
  *

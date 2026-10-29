@@ -36,7 +36,7 @@ const seedPeople = async (db: Database.Database, count: number) => {
 
 type StoryArgs = Pick<EditMessageProps, 'onSend'>;
 
-// The draft is created in the space so `Obj.getDatabase(message)` resolves — the recipient fields
+// The draft is created in the space so `Obj.getDatabase(message)` resolves - the recipient fields
 // query it for `Person` records.
 const DefaultStory = (args: StoryArgs) => {
   const { space } = useClientStory();

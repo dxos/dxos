@@ -8,7 +8,7 @@ import type { PageAction } from '@dxos/crx-protocol';
  * Page-actions wire protocol (extension side).
  *
  * The serializable *shapes* are the single source of truth in `@dxos/crx-protocol` and are imported
- * here **type-only** (erased at build) — so the extension, and in particular the per-page content
+ * here **type-only** (erased at build) - so the extension, and in particular the per-page content
  * script, carries no `effect` runtime. Decoding is done by the hand-rolled validators below (also
  * `effect`-free) rather than `effect/Schema`, keeping the content-script bundle lean.
  *
@@ -111,7 +111,7 @@ const PAGE_ACTION_CONTEXTS: readonly string[] = ['popup', 'page', 'selection', '
 
 /**
  * Serializable page-action descriptor cached in the extension's registry.
- * `operation` carries the operation key for display/diagnostics only —
+ * `operation` carries the operation key for display/diagnostics only -
  * invocation is correlated by `id`.
  */
 export type PageActionDescriptor = PageAction.Descriptor;

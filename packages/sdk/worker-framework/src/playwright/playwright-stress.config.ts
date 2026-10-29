@@ -32,7 +32,7 @@ export default defineConfig({
     reuseExistingServer: false,
   },
   // Chromium only: the suite turns on Web Locks steal semantics, SharedWorker, and timing-sensitive
-  // failover — the other engines would each need their own budgets to mean anything.
+  // failover - the other engines would each need their own budgets to mean anything.
   projects: preset.projects?.filter((project) => project.name === 'chromium'),
   // Every test drives one shared browser context full of tabs; two in parallel would elect leaders
   // against each other.

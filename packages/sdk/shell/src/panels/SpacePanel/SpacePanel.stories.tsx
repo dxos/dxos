@@ -84,7 +84,7 @@ export const SpaceManagerWithInvites = () => {
   );
 };
 
-/** A pending invitation's ✕ ends where the split button below it does, rather than padded inside the panel's edge. */
+/** A pending invitation's x ends where the split button below it does, rather than padded inside the panel's edge. */
 export const TestInvitationAlignment = () => <SpaceManagerWithInvites />;
 
 // A function story (not a story object) so the Panels overview can render every export as a component.

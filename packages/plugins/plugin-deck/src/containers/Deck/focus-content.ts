@@ -12,8 +12,8 @@ const CONTENT_FOCUS_WINDOW_MS = 2_000;
 
 /**
  * Focuses a plank's content: the control inside what its article marks as the initial focus target
- * (see `INITIAL_FOCUS_ATTRIBUTE`). Neither is usually there when the plank mounts — the article is
- * lazy, and an editor builds its control in an effect after its wrapper — so focus lands on the
+ * (see `INITIAL_FOCUS_ATTRIBUTE`). Neither is usually there when the plank mounts - the article is
+ * lazy, and an editor builds its control in an effect after its wrapper - so focus lands on the
  * nearest thing that exists (the pane, then the marked wrapper) and moves into the control when it
  * arrives, unless the reader has moved focus out of the plank meanwhile, in which case it is left
  * alone. An article that declares nothing keeps focus on the pane, where Enter dives in; its first

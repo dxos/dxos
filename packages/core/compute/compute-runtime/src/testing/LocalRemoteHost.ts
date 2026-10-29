@@ -37,7 +37,7 @@ export interface Host extends RemoteProcessManager.Control {
 
 export interface Options {
   readonly manager: ProcessManager.Manager;
-  /** Processes this host hosts, resolved by `Process.key` — a definition cannot cross the wire. */
+  /** Processes this host hosts, resolved by `Process.key` - a definition cannot cross the wire. */
   readonly definitions: readonly Operation.Durable<any, any, any, any>[];
 }
 
@@ -213,13 +213,13 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
 export interface Link {
   /** Drops every call made over the channel, as an unreachable host does. */
   readonly cut: Effect.Effect<void>;
-  /** Lets calls through again. Does NOT itself retry — that is `Queued.connected`'s job. */
+  /** Lets calls through again. Does NOT itself retry - that is `Queued.connected`'s job. */
   readonly resume: Effect.Effect<void>;
   readonly isUp: Effect.Effect<boolean>;
   /** Calls the channel refused while cut. */
   readonly refusals: Effect.Effect<number>;
   /**
-   * Delivers calls to the host but fails the caller afterwards, modelling a lost acknowledgement —
+   * Delivers calls to the host but fails the caller afterwards, modelling a lost acknowledgement -
    * the case where retrying is only safe because the command carries an idempotency key.
    */
   readonly dropAcks: (drop: boolean) => Effect.Effect<void>;
@@ -235,7 +235,7 @@ class ChannelDown extends Error {
  * Wraps a {@link RemoteProcessManager.Control} in a channel a test can cut.
  *
  * Failures surface as DEFECTS, matching the real transport (`EdgeProcessControl` pipes every verb
- * through `Effect.orDie`) — so a client that does not handle them crashes rather than quietly
+ * through `Effect.orDie`) - so a client that does not handle them crashes rather than quietly
  * treating an unreachable host as an empty one.
  */
 export const cuttable = (

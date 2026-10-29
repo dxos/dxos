@@ -227,7 +227,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
  */
 const shortError = (error: string): string => {
   const head = error.split(/\s*\(checked:/)[0].trim();
-  return head.length > 160 ? `${head.slice(0, 160)}…` : head;
+  return head.length > 160 ? `${head.slice(0, 160)}\u2026` : head;
 };
 
 /** Percent complete for an in-flight pull, or 0 when totals are not yet known. */

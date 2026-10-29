@@ -46,7 +46,7 @@ const PALETTES: Record<IdentTheme, Omit<Palette, 'theme' | 'tinted' | 'logo'>> =
 /** The one shade a logo hue takes in each theme: light on the dark ground, darker on the light one for contrast. */
 const HUE_SHADE = { dark: '500', light: '600' } as const;
 
-/** Tailwind's hues (`sky`, `rose`, …), each a scale of shades. */
+/** Tailwind's hues (`sky`, `rose`, ...), each a scale of shades. */
 const SCALES = new Map(
   Object.entries(colors).flatMap(([hue, value]) => (typeof value === 'object' ? [[hue, value] as const] : [])),
 );

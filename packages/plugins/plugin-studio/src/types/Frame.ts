@@ -14,7 +14,7 @@ import * as MediaArtifact from './MediaArtifact.ts';
  * One frame of a {@link Storyboard}: a reference to the {@link MediaArtifact} it shows plus notes.
  * A real object rather than an inline struct so it has an id (accordion value, navtree node, a
  * future slide) and can be moved between storyboards. Owned by its storyboard (`SetParent` on
- * `Storyboard.frames`); the artifact is a reference — created from the frame it is parented to
+ * `Storyboard.frames`); the artifact is a reference - created from the frame it is parented to
  * the frame, but the same artifact may sit in a Lightbox too.
  */
 export class Frame extends Type.makeObject<Frame>(DXN.make('org.dxos.type.frame', '0.1.0'))(

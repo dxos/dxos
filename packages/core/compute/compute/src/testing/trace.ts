@@ -12,7 +12,7 @@ interface Collector {
   readonly messages: Trace.Message[];
   /**
    * Monotonic counter rather than `Date.now`: several writes land in the same millisecond, and a tie
-   * leaves the order of the trace — and anything built from it — undefined.
+   * leaves the order of the trace - and anything built from it - undefined.
    */
   readonly clock: () => number;
 }
@@ -50,7 +50,7 @@ export class TestTraceService extends Context.Service<TestTraceService, Collecto
   );
 
   /**
-   * Runs the effect writing under `meta` — the pid and conversation a real emitter would carry —
+   * Runs the effect writing under `meta` - the pid and conversation a real emitter would carry -
    * keeping the collector's clock, so timestamps stay ordered across nested scopes.
    */
   static readonly withMeta = <A, E, R>(

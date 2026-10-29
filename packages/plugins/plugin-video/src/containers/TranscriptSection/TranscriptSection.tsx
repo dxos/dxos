@@ -60,7 +60,7 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     }
     runningRef.current = true;
     setTranscribeError(undefined);
-    // invokePromise always resolves with { data?, error? } — it never rejects.
+    // invokePromise always resolves with { data?, error? } - it never rejects.
     void invokePromise(
       VideoOperation.Transcribe,
       { video: Ref.make(subject) },

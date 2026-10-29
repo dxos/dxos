@@ -28,7 +28,7 @@ const subjectCandidates = (subject: Subject): Effect.Effect<string[]> =>
  * Image-enrichment pipeline over the space's contact graph: streams every Person / Organization
  * missing an `image` through candidate resolution (Gravatar / domain logo) and the hardened attach
  * path, first successful candidate wins. A subject whose candidates all fail is skipped, not an
- * error — enrichment is advisory. Idempotent: subjects with an image are excluded up front, so a
+ * error - enrichment is advisory. Idempotent: subjects with an image are excluded up front, so a
  * rerun only retries prior misses.
  */
 const handler = CrmOperation.EnrichImages.pipe(

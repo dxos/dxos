@@ -155,7 +155,7 @@ describe('resolveCollectionObjectPath', () => {
   test('resolves nothing without a root-collection annotation', async ({ expect }) => {
     const { db, resolve } = await setup();
     const leaf = db.add(Collection.make());
-    // Space properties exist but declare no root collection — a space before provisioning.
+    // Space properties exist but declare no root collection - a space before provisioning.
     db.add(Obj.make(SpaceProperties, {}));
     await db.flush({ indexes: true });
 

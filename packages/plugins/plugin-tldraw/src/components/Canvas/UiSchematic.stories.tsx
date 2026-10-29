@@ -18,7 +18,7 @@ import { Tldraw } from '#types';
 import { CanvasComponent } from './Canvas.tsx';
 
 // MOSAIC (Model-Oriented System for Adaptive Interface Composition) phase-1 spike: a schema
-// compiles to a low-fidelity form schematic — ASCII on the left, the same drawing on the canvas.
+// compiles to a low-fidelity form schematic - ASCII on the left, the same drawing on the canvas.
 
 const Contact = Schema.Struct({
   name: Schema.String,

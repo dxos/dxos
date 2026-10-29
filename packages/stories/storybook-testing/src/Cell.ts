@@ -10,7 +10,7 @@ import { type Obj } from '@dxos/echo';
 
 import { type ObjectCellSpec, type ResolvedCellProps } from './ModuleContainer.tsx';
 
-// Grid-cell factories for the object-bound story layout cells — the only cells that need helper
+// Grid-cell factories for the object-bound story layout cells - the only cells that need helper
 // construction, because they carry an ECHO object the container binds to its real plugin surface
 // (mirroring composer's `PlankComponent` dispatch) and derives an attendable id from. Cells that are
 // not object-bound are written directly in the layout as `AppSurface`/role tokens or `{ type, data }`

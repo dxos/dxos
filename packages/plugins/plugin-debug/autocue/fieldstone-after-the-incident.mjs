@@ -267,7 +267,7 @@ export const steps = [
   },
   {
     name: 'What the team decided',
-    narration: 'And the decision it led to, in the team’s decision log.',
+    narration: "And the decision it led to, in the team's decision log.",
     run: async ({ demo, page }) => {
       await caption(demo, 'The decision log');
       await open(demo, page, 'Decision log');

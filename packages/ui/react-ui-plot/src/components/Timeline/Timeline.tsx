@@ -300,7 +300,7 @@ export type TimelineProps = ThemedClassName<{
   /** The first column is the time (a year, date or date serial); each other column is a category of events. */
   data: PlotData;
   options?: TimelineOptions;
-  /** Initial vertical zoom; ctrl/⌘ + wheel zooms about the pointer. */
+  /** Initial vertical zoom; ctrl/Cmd + wheel zooms about the pointer. */
   zoom?: number;
   /** Only events whose title, description, category or date contain this text are drawn. */
   filter?: string;
@@ -574,7 +574,7 @@ export const Timeline = ({
       // With Shift, the keys step through the current event's category only.
       const events = event.shiftKey && current ? ordered.filter(({ column }) => column === current.column) : ordered;
       const index = events.findIndex((candidate) => candidate.id === currentId);
-      // With ⌘ (Ctrl elsewhere), the arrows jump to the first or last event.
+      // With Cmd (Ctrl elsewhere), the arrows jump to the first or last event.
       const toEnd = event.metaKey || event.ctrlKey;
       const target = (() => {
         switch (event.key) {
@@ -606,8 +606,8 @@ export const Timeline = ({
   );
 
   // While an event is selected its card stays put; hovering others shows no card.
-  // When the view changes (scale, size, spine, dates, future, categories, width), the selected event — or with none,
-  // the first event that was in view — moves to the middle and stays there through a scale transition. Scrolling and
+  // When the view changes (scale, size, spine, dates, future, categories, width), the selected event - or with none,
+  // the first event that was in view - moves to the middle and stays there through a scale transition. Scrolling and
   // zooming by hand are left alone.
   const viewKey = JSON.stringify([scale, fontSize, spine, dates, future, hidden, width]);
   const drawn = useRef({ yOf, viewKey: '' });
@@ -652,7 +652,7 @@ export const Timeline = ({
                     ? (hidden ?? []).filter((name) => !categories.includes(name))
                     : [...(hidden ?? []), ...categories.filter((name) => !hidden?.includes(name))],
                 );
-              // With ⌘ (Ctrl elsewhere) a tag shows only its categories; doing it again shows everything.
+              // With Cmd (Ctrl elsewhere) a tag shows only its categories; doing it again shows everything.
               const solo = (categories: string[]) => {
                 const others = columns.filter((name) => !categories.includes(name));
                 const isSolo =

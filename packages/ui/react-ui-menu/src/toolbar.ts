@@ -12,7 +12,7 @@ export const isToolbarAction = (action: AppGraphNode.ActionLike): boolean =>
   AppGraphNode.hasDisposition(action, TOOLBAR_DISPOSITION);
 
 /**
- * `disposition` value an action opts into to appear in the row beside a text input — a chat prompt
+ * `disposition` value an action opts into to appear in the row beside a text input - a chat prompt
  * today.
  *
  * Separate from {@link TOOLBAR_DISPOSITION} because the two surfaces act on different things: an

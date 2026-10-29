@@ -29,7 +29,7 @@ const compareBy: Record<Exclude<TaskSetView.SortField, 'manual'>, (left: Task.Ta
   status: (left, right) => statusRank(left.status ?? 'todo') - statusRank(right.status ?? 'todo'),
   priority: (left, right) => priorityRank(left.priority) - priorityRank(right.priority),
   estimate: (left, right) => estimateRank(left.estimate) - estimateRank(right.estimate),
-  // Object ids are ULIDs, whose leading characters are the creation time — so id order is creation
+  // Object ids are ULIDs, whose leading characters are the creation time - so id order is creation
   // order without depending on a `created` history entry an imported task may not carry.
   created: (left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
   updated: (left, right) => (updatedAt(left) ?? 0) - (updatedAt(right) ?? 0),
@@ -55,7 +55,7 @@ export const sortTasks = (tasks: readonly Task.Task[], sort: TaskSetView.Sort | 
 };
 
 export type GroupTasksOptions = {
-  /** The set's milestones in sequence — the order milestone groups render in. */
+  /** The set's milestones in sequence - the order milestone groups render in. */
   milestones?: readonly Milestone.Milestone[];
   /** Namespace of the `group-*` labels (a task with no priority, no assignee, no milestone). */
   ns: string;
@@ -63,8 +63,8 @@ export type GroupTasksOptions = {
 
 /**
  * The tasks partitioned by `field`, each group's tasks in the input order (so a sort applies within
- * every group). Groups come in the field's own order — the status table, most urgent priority first,
- * the set's milestone sequence, assignees by name — with the group of tasks that have no value last.
+ * every group). Groups come in the field's own order - the status table, most urgent priority first,
+ * the set's milestone sequence, assignees by name - with the group of tasks that have no value last.
  * Absent for `none`: an ungrouped list has no headers at all.
  */
 export const groupTasks = (

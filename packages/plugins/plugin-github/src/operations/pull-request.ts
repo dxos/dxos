@@ -157,7 +157,7 @@ export const summarizeCheckRuns = (
 const VERDICT_STATES = new Set(['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED']);
 
 /**
- * Folds a pull request's reviews into where they stand, from each reviewer's latest verdict — the
+ * Folds a pull request's reviews into where they stand, from each reviewer's latest verdict - the
  * way GitHub reads them: a later approval clears that reviewer's request for changes, and a dismissal
  * withdraws whichever verdict it replaced.
  */

@@ -23,8 +23,8 @@ export const Range = Schema.Struct({
 export interface Range extends Schema.Schema.Type<typeof Range> {}
 
 /**
- * One analyzed region, carrying its extent in the source text and — when the analysis was run over
- * a language pair — the corresponding extent in the translation.
+ * One analyzed region, carrying its extent in the source text and - when the analysis was run over
+ * a language pair - the corresponding extent in the translation.
  *
  * The paired range is what makes cross-pane selection possible: selecting a clause in one pane can
  * highlight the same clause in the other without re-analyzing or guessing at alignment.

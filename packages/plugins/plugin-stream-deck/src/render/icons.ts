@@ -20,7 +20,7 @@ const readSymbol = (name: string): IconMarkup | undefined => {
  * Reads one icon's geometry out of the app's in-DOM sprite so it can be inlined into a key.
  *
  * The device renders our SVG outside the document, where a `<use href="#name">` reference cannot
- * resolve — hence inlining. This is the only DOM-dependent part of rendering; the renderers
+ * resolve - hence inlining. This is the only DOM-dependent part of rendering; the renderers
  * themselves take the markup as an argument and stay pure.
  */
 export const resolveIcon = (name: string): IconMarkup | undefined => {

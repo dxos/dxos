@@ -40,7 +40,7 @@ export type StartupProgress = {
    * Raw activation event key (e.g. `org.dxos.app-framework.event.startup`).
    * Set on event-level transitions, *and* on module-level transitions where
    * it carries the parent activation event that first triggered the
-   * module's load (plumbed through `_loadCapabilitiesForModules` →
+   * module's load (plumbed through `_loadCapabilitiesForModules` ->
    * `_loadModule`). Consumers can use this either as the primary id (when
    * {@link module} is absent) or as an extra "context" field alongside
    * {@link module}.
@@ -58,7 +58,7 @@ export type StartupProgress = {
    * label if {@link module} is set, otherwise the event label), supplied
    * for consumers that want a sensible default. Hosts that prefer to
    * render their own label can read the raw {@link event}/{@link module}
-   * fields and ignore this — the framework leaves the policy choice
+   * fields and ignore this - the framework leaves the policy choice
    * (which transitions to surface, how to format them, whether to drop
    * sub-modules entirely) to the host's `Placeholder`.
    */
@@ -69,7 +69,7 @@ export type StartupProgress = {
    * into a single status line without re-parsing module ids.
    */
   pluginName?: string;
-  /** Slug of the plugin owning {@link module} (e.g. `markdown`) — the id the boot loader's row keys on. */
+  /** Slug of the plugin owning {@link module} (e.g. `markdown`) - the id the boot loader's row keys on. */
   pluginSlug?: string;
 };
 
@@ -141,7 +141,7 @@ export type UseAppOptions = {
    */
   timeout?: number;
   /**
-   * Relay per-plugin `Activating …` lines into the boot loader's status log. Off by default —
+   * Relay per-plugin `Activating ...` lines into the boot loader's status log. Off by default -
    * activation names framework internals, which is diagnostic detail rather than something a
    * user booting the app is asking for.
    */
@@ -247,7 +247,7 @@ export const useApp = ({
   // Hand the boot loader the enabled plugins' icons from their own meta. This registers, it does
   // not draw: barely half the enabled set activates during startup (the rest activate lazily on
   // first use), so a row seeded from it sat half-dim for the whole boot. Meta is the icon's only
-  // source — the loader is a standalone bundle with no access to the plugin registry.
+  // source - the loader is a standalone bundle with no access to the plugin registry.
   useEffect(() => {
     // Optional call, not just an optional facade: an already-loaded page can be running an
     // `index.html` whose inlined loader bundle predates this method (service-worker cache, stale
@@ -313,7 +313,7 @@ export const useApp = ({
 
         // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
         // debugger all overrun it while the run is perfectly healthy, and killing it discards the
-        // state worth looking at. Startup continues either way and the user decides — the offer raises
+        // state worth looking at. Startup continues either way and the user decides - the offer raises
         // exactly the failure this branch used to raise unprompted.
         //
         // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
@@ -354,8 +354,8 @@ export const useApp = ({
               // `{ event: 'startup', state: 'activated', module: <id> }`. Without
               // the `!module` guard the listener would mark the app ready on
               // the *first* such module rather than waiting for the event-level
-              // completion — leaving downstream capabilities (operation-invoker,
-              // app-graph, …) un-registered when the boot loader dismisses.
+              // completion - leaving downstream capabilities (operation-invoker,
+              // app-graph, ...) un-registered when the boot loader dismisses.
               if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
                 watchdog.dispose();
                 setReady(true);
@@ -363,7 +363,7 @@ export const useApp = ({
                 // Trigger startup profiler dump if available.
                 (globalThis as any).composer?.profiler?.dump();
                 // Notify any host observability layer that startup completed.
-                // A `CustomEvent` keeps this generic — app-framework doesn't
+                // A `CustomEvent` keeps this generic - app-framework doesn't
                 // import a provider, and consumers can capture the startup
                 // summary without us picking one.
                 if (typeof window !== 'undefined') {
@@ -373,7 +373,7 @@ export const useApp = ({
               }
               // `activating` is the start-of-load signal. Surface the raw
               // `module` (or `event`) plus a pre-humanized label so the
-              // boot loader can decide how to render each transition — show
+              // boot loader can decide how to render each transition - show
               // everything, suppress noisy sub-modules, group by plugin,
               // or apply its own formatting. We intentionally do NOT touch
               // these fields on `activated`: pairing the two would cause
@@ -388,7 +388,7 @@ export const useApp = ({
                   ...current,
                   // `event` here is the activation event that first
                   // triggered this module load (plumbed through
-                  // `_loadCapabilitiesForModules` → `_loadModule`).
+                  // `_loadCapabilitiesForModules` -> `_loadModule`).
                   // Falsy/empty falls back to undefined so consumers can
                   // tell "no parent context" from "parent context: <X>".
                   event: event || undefined,
@@ -413,7 +413,7 @@ export const useApp = ({
                   progress: total > 0 ? active.length / total : 0,
                 }));
               }
-              // Event-level `activating` (no `module`) — fired at the start
+              // Event-level `activating` (no `module`) - fired at the start
               // of `_activateModulesForEvent` and recursively for each
               // before/after event. Surfaces a label during the gap before
               // the first module-level message lands; subsequent module
@@ -502,10 +502,10 @@ export const useApp = ({
  * modules a plugin contributes.
  *
  * Examples:
- *   - "org.dxos.plugin.markdown.module.ReactSurface" → "Markdown: react-surface"
- *   - "org.dxos.plugin.observability.module.AppGraphBuilder" → "Observability: app-graph-builder"
- *   - "org.dxos.plugin.observability.module.observability" → "Observability"
- *     (the module name matches the plugin slug — collapsed to avoid
+ *   - "org.dxos.plugin.markdown.module.ReactSurface" -> "Markdown: react-surface"
+ *   - "org.dxos.plugin.observability.module.AppGraphBuilder" -> "Observability: app-graph-builder"
+ *   - "org.dxos.plugin.observability.module.observability" -> "Observability"
+ *     (the module name matches the plugin slug - collapsed to avoid
  *     "Observability: observability" noise.)
  */
 const humanizeModuleId = (moduleId: string): string => {
@@ -520,7 +520,7 @@ const humanizeModuleId = (moduleId: string): string => {
   // Normalise the module name to kebab-case so PascalCase capability tags
   // ("ReactSurface") read consistently with explicit kebab IDs
   // ("operation-handler"). The two-step substitution handles consecutive
-  // uppercase runs (`URLLoader` → `url-loader`) without splitting them
+  // uppercase runs (`URLLoader` -> `url-loader`) without splitting them
   // mid-acronym.
   const moduleLabel = moduleName
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
@@ -528,7 +528,7 @@ const humanizeModuleId = (moduleId: string): string => {
     .toLowerCase();
   // Capability modules whose name matches the plugin slug (e.g. the
   // observability plugin's `observability` capability module) would render
-  // as "Observability: observability" — drop the redundant suffix.
+  // as "Observability: observability" - drop the redundant suffix.
   if (moduleLabel === pluginSlug) {
     return pluginLabel;
   }
@@ -538,15 +538,15 @@ const humanizeModuleId = (moduleId: string): string => {
 /**
  * Extracts the owning plugin's slug from a module ID, or `undefined` when the id is not
  * plugin-scoped (framework-internal modules). E.g.
- * "org.dxos.plugin.markdown.module.ReactSurface" → "markdown".
+ * "org.dxos.plugin.markdown.module.ReactSurface" -> "markdown".
  */
-/** Plugin slug from a plugin key — "org.dxos.plugin.markdown" → "markdown". */
+/** Plugin slug from a plugin key - "org.dxos.plugin.markdown" -> "markdown". */
 export const pluginSlugOfKey = (key: string): string => key.split('.').at(-1) ?? key;
 
 export const pluginSlugOf = (moduleId: string): string | undefined =>
   moduleId.match(/\.plugin\.([^.]+)\.module\./)?.[1];
 
-/** Kebab slug → Title Case. */
+/** Kebab slug -> Title Case. */
 const titleCase = (slug: string): string =>
   slug
     .split('-')
@@ -555,7 +555,7 @@ const titleCase = (slug: string): string =>
 
 /**
  * Extracts a human-readable label from an activation event key.
- * E.g., "org.dxos.app-framework.event.setup-react-surface" → "Setup React Surface".
+ * E.g., "org.dxos.app-framework.event.setup-react-surface" -> "Setup React Surface".
  */
 const humanizeEventKey = (eventKey: string): string => {
   // Strip a leading specifier (composite key form: "<id>:<specifier>").

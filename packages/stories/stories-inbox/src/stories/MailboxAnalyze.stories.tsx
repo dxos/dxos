@@ -82,7 +82,7 @@ import { StoryModulesPlugin } from '../testing/modules.tsx';
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
 
-/** The fixture corpus owner's addresses — the `me` input for `ExtractCorrespondents`. */
+/** The fixture corpus owner's addresses - the `me` input for `ExtractCorrespondents`. */
 const USER_EMAILS = ['rich.burdon@gmail.com', 'rich@braneframe.com'];
 
 /** Admin-tracking anchor senders (fixture team domain first, then the demo seed's). */
@@ -128,7 +128,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
 
-  // Messages with a recorded Message → extracted-object association on the Mailbox.
+  // Messages with a recorded Message -> extracted-object association on the Mailbox.
   const linked = messages.filter((message) => Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0).length;
 
   const cursors = useQuery(space.db, Filter.type(Cursor.Cursor));
@@ -155,7 +155,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
   const [facts, setFacts] = useState(0);
 
   /**
-   * The consolidated reset group, rendered as toolbar buttons (not actions — a reset zeroes the run
+   * The consolidated reset group, rendered as toolbar buttons (not actions - a reset zeroes the run
    * counters rather than counting as a run). Same `StoryAction` shape so error handling is uniform.
    */
   const resets = useMemo<StoryAction[]>(() => {
@@ -191,7 +191,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       },
       {
         // Every pipeline cursor at once: the tagged classify cursor (reset operation) and
-        // the analyze pipeline's UNTAGGED feed cursor (a plain object removal — it predates the
+        // the analyze pipeline's UNTAGGED feed cursor (a plain object removal - it predates the
         // tagged-consumer convention), so the next run of any cursored pipeline re-reads the feed.
         id: 'reset',
         label: 'Cursors',
@@ -243,7 +243,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
 
     return [
       //
-      // The cascade — spawns the tiers below in order (deterministic gate → cheap LLM labels).
+      // The cascade - spawns the tiers below in order (deterministic gate -> cheap LLM labels).
       //
       {
         // Ollama drives the story's LLM tiers, so `strict: false` skips the structured-output pass
@@ -262,7 +262,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       //
       {
         // Correspondent pipeline: Person (+ derived Organization) per sender the user has sent or
-        // replied to — the outbound signal is derived from the feed, so no allow-list is needed.
+        // replied to - the outbound signal is derived from the feed, so no allow-list is needed.
         id: 'people',
         label: 'InboxOperation.ExtractCorrespondents',
         run: () =>
@@ -296,7 +296,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           ),
       },
       {
-        // Auto-dispatch: `ExtractMessage` per message with no extractor named — the dispatcher
+        // Auto-dispatch: `ExtractMessage` per message with no extractor named - the dispatcher
         // selects by match confidence (pairs with the `trip` seed's same-PNR collapse).
         id: 'dispatch',
         label: 'InboxOperation.ExtractMessage',
@@ -318,7 +318,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
       {
-        // Spam/label classification: cursored ≤100-message batches; known-Person senders are
+        // Spam/label classification: cursored <=100-message batches; known-Person senders are
         // short-circuited. Ollama, so `strict: false` skips the structured-output pass.
         id: 'classify',
         label: 'InboxOperation.ClassifyMailbox',
@@ -403,7 +403,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       {
         // Projects composition: create the admin tracking project from a tracked sender's message
         // (once; reruns reuse it), then run the travel-log and investor-log artifact pipelines
-        // against it — the routine→operation→artifact pattern, driven manually.
+        // against it - the routine->operation->artifact pattern, driven manually.
         id: 'projects',
         label: 'ProjectMailboxOperation.CreateTrackingProject',
         run: async () => {
@@ -414,7 +414,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             return { error: 'no anchor message' };
           }
 
-          let project = projects.find((candidate) => candidate.name?.endsWith('— Requests'));
+          let project = projects.find((candidate) => candidate.name?.endsWith('- Requests'));
           let created;
           if (!project) {
             created = await invoker.invokePromise(
@@ -423,7 +423,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
               { spaceId: space.id },
             );
             const fresh = await space.db.query(Filter.type(Project.Project)).run();
-            project = fresh.find((candidate) => candidate.name?.endsWith('— Requests'));
+            project = fresh.find((candidate) => candidate.name?.endsWith('- Requests'));
           }
           if (!project) {
             return { error: 'tracking project not found after creation', created };
@@ -555,7 +555,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
 
 /**
  * Registers the story-local process module surface plus the shared diagnostic module surfaces
- * (Logging etc. — see `@dxos/storybook-testing/modules`), so the `ModuleContainer` layout can
+ * (Logging etc. - see `@dxos/storybook-testing/modules`), so the `ModuleContainer` layout can
  * reference both by role token.
  */
 const StoryProcessPlugin = Plugin.define(
@@ -579,13 +579,13 @@ const StoryProcessPlugin = Plugin.define(
         ]),
       ]),
   }),
-  // The mailbox→project pipelines (Projects button) without activating the full ProjectsPlugin.
+  // The mailbox->project pipelines (Projects button) without activating the full ProjectsPlugin.
   Plugin.addModule(
     Capability.inlineModule('ProjectOperationHandlers', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet.handlers)]),
     ),
   ),
-  // The assistant Settings capability the TracePanel (Trace/SwarmTrace cells) requires — contributed
+  // The assistant Settings capability the TracePanel (Trace/SwarmTrace cells) requires - contributed
   // directly rather than by installing AssistantPlugin, whose AiService LayerSpec would displace the
   // per-variant story AiService (the canned trip payloads broke with AiModelNotAvailableError).
   Plugin.addModule(
@@ -617,7 +617,7 @@ const DefaultStory = () => (
 
 /**
  * `live` seeds nothing and switches the client to persistent OPFS storage against EDGE dev, so the
- * connector OAuth round trip (which reloads the page) can resume — the ex-MailboxPipeline flow. The
+ * connector OAuth round trip (which reloads the page) can resume - the ex-MailboxPipeline flow. The
  * other kinds seed a fresh in-memory profile.
  */
 type StoryArgs = { seed: 'fixture' | 'crm' | 'demo' | 'trip' };
@@ -694,7 +694,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Plain demo messages, no Organizations — the ex-MailboxPipeline seeded variant. */
+/** Plain demo messages, no Organizations - the ex-MailboxPipeline seeded variant. */
 export const Demo: Story = {
   args: {
     seed: 'demo',
@@ -708,7 +708,7 @@ export const Fixture: Story = {
 };
 
 /**
- * The cursored log-title pipeline over a seeded mailbox — the `@dxos/fixtures` corpus when pulled,
+ * The cursored log-title pipeline over a seeded mailbox - the `@dxos/fixtures` corpus when pulled,
  * the demo messages otherwise, so the assertions are count-agnostic: the first run processes every
  * seeded message and creates the tagged feed cursor; a rerun processes nothing (strictly-greater
  * skip); reset clears the cursor (reusing the object, zeroing the run counter) so the next run

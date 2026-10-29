@@ -14,7 +14,7 @@ import type * as URI from './URI.ts';
 //   echo://<spaceId>/<objectId>
 //   echo://<spaceId>
 //   echo:///<objectId>    (local, canonical)
-//   echo:/<objectId>      (local, legacy — accepted on read, normalized to the canonical triple-slash form)
+//   echo:/<objectId>      (local, legacy - accepted on read, normalized to the canonical triple-slash form)
 const ECHO_URI_REGEXP = /^echo:(?:\/\/[^/]+(?:\/[^/]+)?|(?:\/\/\/|\/)[^/]+)$/;
 
 // Sub-patterns used for extraction.
@@ -22,20 +22,20 @@ const QUALIFIED_RE = /^echo:\/\/([^/]+)\/([^/]+)$/;
 const SPACE_ONLY_RE = /^echo:\/\/([^/]+)$/;
 const LOCAL_RE = /^echo:(?:\/\/\/|\/)([^/]+)$/;
 // Legacy single-slash local form (`echo:/<objectId>`), distinguished from the canonical
-// triple-slash form so `parse` can normalize it. The negative lookahead rejects `echo://…`.
+// triple-slash form so `parse` can normalize it. The negative lookahead rejects `echo://...`.
 const LOCAL_LEGACY_RE = /^echo:\/(?!\/)([^/]+)$/;
 
 /**
  * Addresses an ECHO object or space. Uses the `echo:` URI scheme.
  *
  * Canonical forms:
- * - `echo://<spaceId>/<objectId>` — fully-qualified object.
- * - `echo://<spaceId>` — space.
- * - `echo:///<objectId>` — local (space-less) object.
+ * - `echo://<spaceId>/<objectId>` - fully-qualified object.
+ * - `echo://<spaceId>` - space.
+ * - `echo:///<objectId>` - local (space-less) object.
  *
  * Deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
  * triple-slash `echo:///<objectId>` form. It is still accepted on read (and normalized by `parse`)
- * so existing persisted data keeps resolving, but it is no longer produced — do not emit it in new
+ * so existing persisted data keeps resolving, but it is no longer produced - do not emit it in new
  * code. Construct local EIDs with `make({ entityId })`.
  *
  * @example
@@ -70,8 +70,8 @@ export const parse = (uri: string): EID => {
 /**
  * Like `parse` but returns undefined on failure instead of throwing.
  *
- * Validates rather than catching `parse`, because rejection is the common case on the query path —
- * every type filter tests each candidate's typename as an EID first — and the `Error` that used to
+ * Validates rather than catching `parse`, because rejection is the common case on the query path -
+ * every type filter tests each candidate's typename as an EID first - and the `Error` that used to
  * allocate, with its stack, dominated it.
  */
 export const tryParse = (uri: string): EID | undefined => {
@@ -85,9 +85,9 @@ export const tryParse = (uri: string): EID | undefined => {
 /**
  * Constructs an EID. Validates the result via `parse`.
  *
- * - `{ spaceId, entityId }` → `echo://<spaceId>/<entityId>` (fully qualified)
- * - `{ entityId }`          → `echo:///<entityId>` (local — current space)
- * - `{ spaceId }`           → `echo://<spaceId>` (space-only)
+ * - `{ spaceId, entityId }` -> `echo://<spaceId>/<entityId>` (fully qualified)
+ * - `{ entityId }`          -> `echo:///<entityId>` (local - current space)
+ * - `{ spaceId }`           -> `echo://<spaceId>` (space-only)
  *
  * Throws if neither id is provided, or if the result is not a valid EID.
  */

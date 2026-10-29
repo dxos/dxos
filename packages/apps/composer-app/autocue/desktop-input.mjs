@@ -19,7 +19,7 @@
 const BEAT = 800;
 
 const PLUGIN = { id: 'org.dxos.plugin.chess', name: 'Chess' };
-const FILTER = 'input[placeholder="Filter…"]';
+const FILTER = 'input[placeholder="Filter..."]';
 const TOGGLE = `input[id="${PLUGIN.id}-input"]`;
 const APP_MENU = '[data-testid="spacePlugin.addSpace"]';
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';

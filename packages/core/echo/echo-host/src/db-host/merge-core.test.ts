@@ -112,7 +112,7 @@ describe('merge core', () => {
       }
     });
 
-    test('is not a pairwise fold — the non-associative case converges', ({ expect }) => {
+    test('is not a pairwise fold - the non-associative case converges', ({ expect }) => {
       // Z < X < Y, and Z does not define `a`. A pairwise fold into Z would yield X's `a` in one
       // order and Y's in the other; merging over the whole set always yields X's.
       const zed = candidate(idA, { base: 'z' });
@@ -122,7 +122,7 @@ describe('merge core', () => {
       expect(mergeCandidates([zed, why, ex]).data.a).toBe('from X');
     });
 
-    test('is idempotent — merging the result back in changes nothing', ({ expect }) => {
+    test('is idempotent - merging the result back in changes nothing', ({ expect }) => {
       const candidates = [candidate(idA, { title: 'A' }), candidate(idB, { title: 'B', extra: 'b' })];
       const once = mergeCandidates(candidates);
       const twice = mergeCandidates([
@@ -208,7 +208,7 @@ describe('merge core', () => {
     });
   });
 
-  // The interplay between the merge function and the resolver it hands chains to — the resolver's
+  // The interplay between the merge function and the resolver it hands chains to - the resolver's
   // own unit tests live beside it in `@dxos/echo`.
   describe('mergeCandidates + resolveMergeRedirect', () => {
     const chain = (edges: Record<string, EntityId>) => (id: EntityId) => edges[id];

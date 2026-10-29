@@ -22,7 +22,7 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 const step = async (n, l) => {
-  log(`### ${n} — ${l}`);
+  log(`### ${n} - ${l}`);
   await page.screenshot({ path: `${OUT}/${n}.png` });
 };
 
@@ -60,7 +60,7 @@ try {
   await step('51-template-listed', 'the template offered in the create-space dialog');
   await item.click();
   await page.waitForTimeout(2500);
-  await step('52-template-selected', 'selected — the form takes its name and icon');
+  await step('52-template-selected', 'selected - the form takes its name and icon');
   await dialog.getByRole('button', { name: /^Create/ }).click();
   await dialog.waitFor({ state: 'detached', timeout: 60_000 });
   log('dialog closed');

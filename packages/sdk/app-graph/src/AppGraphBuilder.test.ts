@@ -280,7 +280,7 @@ describe('GraphBuilder', () => {
 
         expect(getInlineChild(graph)).to.not.be.null;
 
-        // Remove inline child without touching parent — tests change detection covers inline children.
+        // Remove inline child without touching parent - tests change detection covers inline children.
         registry.set(nodesAtom, [parent()]);
         await GraphBuilder.flush(builder);
 
@@ -307,7 +307,7 @@ describe('GraphBuilder', () => {
 
         expect(getInlineChild(graph)?.data).to.equal('v1');
 
-        // Change only the inline child's data — parent is unchanged.
+        // Change only the inline child's data - parent is unchanged.
         registry.set(nodesAtom, [parent(inlineChild({ data: 'v2' }))]);
         await GraphBuilder.flush(builder);
 
@@ -343,7 +343,7 @@ describe('GraphBuilder', () => {
 
         expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v1');
 
-        // Change only the grandchild's data — all ancestors unchanged.
+        // Change only the grandchild's data - all ancestors unchanged.
         registry.set(nodesAtom, [withGrandchild('v2')]);
         await GraphBuilder.flush(builder);
 

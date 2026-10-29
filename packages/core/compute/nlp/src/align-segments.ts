@@ -8,7 +8,7 @@ import { type Range, type RawSegment, type Segment, type Segmentation } from './
 /**
  * Scans a text forward, never re-matching earlier ground. Two runs over the same text with the
  * same needles therefore map repeated surface forms to successive occurrences, which is the whole
- * reason offsets are computed here rather than asked of the model — a model cannot count
+ * reason offsets are computed here rather than asked of the model - a model cannot count
  * characters reliably, but it can quote text verbatim.
  */
 class Cursor {
@@ -55,7 +55,7 @@ export const alignSegments = (source: string, raw: readonly RawSegment[], target
 
   const walk = (entries: readonly RawSegment[], bounds: Range, targetBounds: Range | undefined, parent?: string) => {
     // Once for the whole sibling run, not once per entry: siblings are ordered and non-overlapping,
-    // so each starts where the last ended. Re-seeking per entry defeats the cursor's only job —
+    // so each starts where the last ended. Re-seeking per entry defeats the cursor's only job -
     // repeated wording ("Go. Go.") would map every sibling onto the first occurrence.
     sourceCursor.seek(bounds.start);
     if (targetCursor && targetBounds) {

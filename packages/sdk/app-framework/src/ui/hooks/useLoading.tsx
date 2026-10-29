@@ -26,7 +26,7 @@ export const useLoading = (ready: boolean, debounce = 0) => {
   // Mirror `ready` into a ref so the interval's `setStage` callback can read
   // the latest value without depending on the effect re-running. The pure
   // closure-capture pattern (with `ready` in deps) sticks the FSM at
-  // `FadeIn` whenever HMR doesn't propagate the dep change end-to-end —
+  // `FadeIn` whenever HMR doesn't propagate the dep change end-to-end -
   // a ref sidesteps that entirely and fires the read on every tick.
   const readyRef = useRef(ready);
   readyRef.current = ready;

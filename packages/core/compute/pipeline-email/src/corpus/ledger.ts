@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { type FactStoreApi, type RDF, type SemanticIndexError } from '@dxos/pipeline-rdf';
 
 /**
- * Predicates treated as commitments (spec §3③ commitment ledger). Editable: extraction phrasing
+ * Predicates treated as commitments (spec §3(3) commitment ledger). Editable: extraction phrasing
  * varies by corpus and extraction rules, so callers tune this list rather than the query logic.
  */
 export const DEFAULT_COMMITMENT_PREDICATES: readonly string[] = ['owes', 'will send', 'will provide', 'must', 'due'];
@@ -45,7 +45,7 @@ const toCommitment = (fact: RDF.Fact): Commitment => ({
 });
 
 /**
- * Query the fact store for outstanding commitments — the spec's cross-thread "owe / owed" ledger.
+ * Query the fact store for outstanding commitments - the spec's cross-thread "owe / owed" ledger.
  * Uses the structured query path (one `query({ predicate })` per commitment predicate, compiled to
  * SPARQL on the sqlite backend), which works on both store backends; rows are advisory evidence
  * (§4 canonicality) and each carries its fact id + source message for grounding.

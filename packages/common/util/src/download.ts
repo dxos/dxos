@@ -55,7 +55,7 @@ const downloadBlobAnchor = (data: Blob, filename: string): void => {
  * Save a blob to disk, resolving false if the user cancelled and rejecting if the save failed.
  *
  * The Tauri webview registers no download handler, so `<a download>` is dropped there and the
- * native dialog is the only path that writes anything — a platform without it (the iOS build, whose
+ * native dialog is the only path that writes anything - a platform without it (the iOS build, whose
  * capabilities omit `dialog`/`fs`) has to raise, since falling back to the anchor would report a
  * success that never happened.
  */

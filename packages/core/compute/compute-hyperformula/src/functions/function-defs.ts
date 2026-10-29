@@ -252,7 +252,7 @@ export const defaultFunctions: FunctionDefinition[] = [
   },
   {
     name: 'DEC2BIN',
-    description: 'Returns the binary number for the decimal number entered between –512 and 511.',
+    description: 'Returns the binary number for the decimal number entered between -512 and 511.',
     syntax: 'DEC2BIN(Number, Places)',
     section: 'Engineering',
   },

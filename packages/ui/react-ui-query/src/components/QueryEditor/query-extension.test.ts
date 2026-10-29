@@ -16,7 +16,7 @@ const tags: Tag.Map = { [tag.id]: tag };
 const hue = tag.hue ?? getHashHue(tag.id);
 
 /**
- * A tag is one object: a widget REPLACES its text, atomically, wherever the caret is — including at
+ * A tag is one object: a widget REPLACES its text, atomically, wherever the caret is - including at
  * the tag's own edges, so Backspace against it removes the whole chip rather than a character of the
  * label. It is still typed a character at a time, since an insertion at the range's boundary lands
  * outside it and grows the node.
@@ -48,7 +48,7 @@ describe('tag rendering', () => {
 
   test('a bare `#` is marked from the keystroke that opens it', async () => {
     // The grammar needs a label character before it accepts a `Tag`, so this comes from a document
-    // scan rather than the tree — the affordance cannot wait for the parse to succeed.
+    // scan rather than the tree - the affordance cannot wait for the parse to succeed.
     const view = await viewOf('#', 1);
     expect(decorationsOf(view)).toMatchObject([{ from: 0, to: 1, atomic: false }]);
     view.destroy();
@@ -107,7 +107,7 @@ describe('buildQueryDecorations', () => {
 });
 
 /**
- * Tags are atomic, so text must never end up glued to one — and there has to be a position at the end
+ * Tags are atomic, so text must never end up glued to one - and there has to be a position at the end
  * of the document that is not adjacent to a chip.
  */
 describe('spacing', () => {

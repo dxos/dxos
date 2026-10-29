@@ -22,7 +22,7 @@ const DEEPSEEK_DEVELOPER = 'com.deepseek';
  * declining anything another resolver owns. DeepSeek speaks the OpenAI-compatible Chat Completions
  * API, so it reuses the chat-completions adapter rather than a DeepSeek-specific binding; the caller
  * supplies the configured {@link ChatCompletionsAdapter.ChatCompletionsClient}, which decides the
- * transport — through EDGE (auth + metering) in the app, or a direct client in tests.
+ * transport - through EDGE (auth + metering) in the app, or a direct client in tests.
  */
 export const make = () =>
   AiModelResolver.resolver(

@@ -10,7 +10,7 @@
  *   node packages/e2e/composer-e2e/scripts/publish-results.mjs
  *   node packages/e2e/composer-e2e/scripts/publish-results.mjs --report <file.json> --dry-run
  *
- * Reads every `test-results/playwright/report/*.json` the run produced — the reporter names each
+ * Reads every `test-results/playwright/report/*.json` the run produced - the reporter names each
  * one after the package that owns the suite, so one invocation covers whichever suites the CI cell
  * happened to run and each row carries its own `ciPackage`.
  *
@@ -59,7 +59,7 @@ const main = () => {
     // The normal case for a cache replay, which restores no outputs, and for a cell whose suite did
     // not run. Nothing to say beyond the note.
     console.log(
-      `::notice::no Playwright report under ${path.relative(WORKSPACE_ROOT, REPORT_DIR)} — nothing to publish.`,
+      `::notice::no Playwright report under ${path.relative(WORKSPACE_ROOT, REPORT_DIR)} - nothing to publish.`,
     );
     return;
   }
@@ -77,7 +77,7 @@ const main = () => {
   }
 
   if (events.length === 0) {
-    warn('the Playwright reports contained no tests — publishing nothing.');
+    warn('the Playwright reports contained no tests - publishing nothing.');
     return;
   }
 
@@ -98,7 +98,7 @@ const main = () => {
   );
 
   if (values['dry-run']) {
-    console.log(`wrote ${path.relative(WORKSPACE_ROOT, batch)} (dry run — not sent).`);
+    console.log(`wrote ${path.relative(WORKSPACE_ROOT, batch)} (dry run - not sent).`);
     return;
   }
 
@@ -115,8 +115,8 @@ const main = () => {
   }
 };
 
-// The step runs under `always()`, so a throw from the setup work outside `main`'s own try — arg
-// parsing, creating the report directory, writing the batch — would fail a run it only observes.
+// The step runs under `always()`, so a throw from the setup work outside `main`'s own try - arg
+// parsing, creating the report directory, writing the batch - would fail a run it only observes.
 try {
   main();
 } catch (err) {

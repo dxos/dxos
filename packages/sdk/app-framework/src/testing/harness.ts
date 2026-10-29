@@ -42,7 +42,7 @@ export type TestAppOptions = {
    */
   whenIdle?: Effect.Effect<void>;
   /**
-   * Resolves an id `manager.add` is given that names none of `plugins` — a URL, as a remote plugin
+   * Resolves an id `manager.add` is given that names none of `plugins` - a URL, as a remote plugin
    * is added. Without it such an id fails, as an unknown plugin does.
    */
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
@@ -107,7 +107,7 @@ const DEFAULT_TIMEOUT_MS = 5_000;
  * TODO(wittjosiah): Consider running activation tests under a browser runner.
  *   A plugin's `#capabilities` resolves to its `capabilities/node.ts` under the `node` export
  *   condition, so a Node-run activation test asserts the NODE barrel's wiring, not the one the
- *   app ships. The two are hand-maintained siblings and drifted silently — 35 modules were gated
+ *   app ships. The two are hand-maintained siblings and drifted silently - 35 modules were gated
  *   in `index.ts` and ungated in `node.ts` (found 2026-08-04; a `CreateObject` module read as
  *   startup-eager in tests while the browser build gated it correctly). They were realigned, but
  *   nothing keeps them that way, and a lint rule is the wrong instrument: the barrels legitimately
@@ -163,7 +163,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
         ]),
       );
       // In the app plugins start on demand (surface render), which a headless harness never
-      // triggers — fire every start event before the test body runs so start-gated modules
+      // triggers - fire every start event before the test body runs so start-gated modules
       // are present.
       await EffectEx.runAndForwardErrors(activateDemandGatedModules(manager));
     } catch (err) {

@@ -13,7 +13,7 @@ const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
 /**
  * Best-effort detection of `video` vs `audio` from a media URL.
  * Inspects the pathname's extension (ignoring query/hash). Returns `undefined`
- * when the URL doesn't look like a recognised media file — callers should
+ * when the URL doesn't look like a recognised media file - callers should
  * default to 'video' or render a fallback (e.g. iframe / img).
  */
 export const detectMediaKind = (src: string): MediaKind | undefined => {

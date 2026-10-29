@@ -40,7 +40,7 @@ describe('markdown', () => {
     // Mixed and longer runs (3+) also normalize to `---`.
     expect(normalizeText('above\n\n=====\n\nbelow')).to.equal('above\n\n---\n\nbelow');
     expect(normalizeText('above\n\n-=-=-\n\nbelow')).to.equal('above\n\n---\n\nbelow');
-    // Fewer than 3 characters → not an HR; removed by the no-word-char rule instead.
+    // Fewer than 3 characters -> not an HR; removed by the no-word-char rule instead.
     expect(normalizeText('above\n\n--\n\nbelow')).to.equal('above\n\nbelow');
   });
 
@@ -60,9 +60,9 @@ describe('markdown', () => {
   test('trims trailing invisible padding from a content line', ({ expect }) => {
     // Newsletter padding tacked onto the end of a real content line must be stripped, leaving the
     // text intact: combining grapheme joiner, ZWNJ, figure space, NBSP, soft hyphen.
-    const CGJ = '͏';
-    const ZWNJ = '‌';
-    const FIG = ' ';
+    const CGJ = '\u034F';
+    const ZWNJ = '\u200C';
+    const FIG = ' ';
     const NBSP = ' ';
     const SHY = '­';
     const padding = `${CGJ}${FIG}${ZWNJ}${NBSP}${SHY}`.repeat(20);
@@ -74,16 +74,16 @@ describe('markdown', () => {
   });
 
   test('strips trailing invisible characters from each line', ({ expect }) => {
-    // Zero-width space, soft hyphen, word joiner, combining grapheme joiner, ZWNBSP — the invisible
+    // Zero-width space, soft hyphen, word joiner, combining grapheme joiner, ZWNBSP - the invisible
     // chars that `.trim()` and the visible-whitespace pass leave behind when they trail visible text.
-    expect(normalizeText('aaa​​\nbbb')).to.equal('aaa\nbbb');
+    expect(normalizeText('aaa\u200B\u200B\nbbb')).to.equal('aaa\nbbb');
     expect(normalizeText('word­')).to.equal('word');
-    expect(normalizeText('a⁠﻿\nb͏')).to.equal('a\nb');
-    expect(normalizeText('mixed ​  \nnext')).to.equal('mixed\nnext');
+    expect(normalizeText('a\u2060\uFEFF\nb\u034F')).to.equal('a\nb');
+    expect(normalizeText('mixed \u200B  \nnext')).to.equal('mixed\nnext');
   });
 
   test('collapses multiple blank lines in plain text', ({ expect }) => {
-    // Three or more blank lines between text → one blank line.
+    // Three or more blank lines between text -> one blank line.
     expect(normalizeText('aaa\n\n\n\nbbb')).to.equal('aaa\n\nbbb');
     // Whitespace-only lines also count as blank.
     expect(normalizeText('aaa\n   \n\n   \nbbb')).to.equal('aaa\n\nbbb');
@@ -101,8 +101,8 @@ describe('markdown', () => {
     });
 
     test('keeps a single-line anchor as a link even when the href is an opaque redirect', ({ expect }) => {
-      // CTA buttons (e.g. "Go to Notion →") link through ESP tracking redirects; the link must be
-      // preserved — the opaque URL is hidden in rendered Markdown.
+      // CTA buttons (e.g. "Go to Notion ->") link through ESP tracking redirects; the link must be
+      // preserved - the opaque URL is hidden in rendered Markdown.
       const html = '<p><a href="https://mg.mail.notion.so/c/eJxMj01uwyAQ_DROUS">Go to Notion</a></p>';
       expect(normalizeText(html)).to.equal('[Go to Notion](https://mg.mail.notion.so/c/eJxMj01uwyAQ_DROUS)');
     });
@@ -178,7 +178,7 @@ describe('markdown', () => {
     });
 
     test('preserves literal angle-bracketed inline tags in plaintext', ({ expect }) => {
-      // Plaintext bodies that mention <font>/<u> literally must NOT be stripped — they're
+      // Plaintext bodies that mention <font>/<u> literally must NOT be stripped - they're
       // meaningful content, not residual HTML noise. The generic inline-tag pass only runs on
       // HTML-converted text. Note: <div>/<span> trigger HTML detection upstream so they hit
       // the HTML pipeline; this test covers tags that escape isHTML().
@@ -214,7 +214,7 @@ describe('markdown', () => {
     });
 
     test('a single blank line is preserved across HTML pipeline', ({ expect }) => {
-      // Two paragraphs separated by a single empty paragraph → one blank line.
+      // Two paragraphs separated by a single empty paragraph -> one blank line.
       expect(normalizeText('<p>a</p><p></p><p>b</p>')).to.equal('a\n\nb');
     });
 
@@ -222,17 +222,17 @@ describe('markdown', () => {
       // Substack-style preheader: a real preview line followed by a line of
       // U+00AD (soft hyphen), U+034F (combining grapheme joiner), and spaces
       // used to push preview text out of the inbox list view.
-      const padding = '­͏     '.repeat(10);
+      const padding = '­\u034F     '.repeat(10);
       expect(normalizeText(`Watch now\n\n${padding}\n\nForwarded this email?`)).to.equal(
         'Watch now\n\nForwarded this email?',
       );
     });
 
     test('blanks lines containing only zero-width characters', ({ expect }) => {
-      // ZWSP, ZWNJ, ZWJ, word joiner, BOM/ZWNBSP — all invisible padding.
+      // ZWSP, ZWNJ, ZWJ, word joiner, BOM/ZWNBSP - all invisible padding.
       // The blanked middle line collapses with its neighboring newlines into
       // a single blank line between aaa and bbb.
-      expect(normalizeText('aaa\n​‌‍⁠﻿\nbbb')).to.equal('aaa\n\nbbb');
+      expect(normalizeText('aaa\n\u200B\u200C\u200D\u2060\uFEFF\nbbb')).to.equal('aaa\n\nbbb');
     });
   });
 
@@ -251,7 +251,7 @@ describe('markdown', () => {
     });
 
     test('blank line between a quote and following body text is preserved', ({ expect }) => {
-      // Only blank lines *between* two quoted lines collapse; a quote→body break stays.
+      // Only blank lines *between* two quoted lines collapse; a quote->body break stays.
       expect(normalizeText('> quoted line\n\nMy reply.')).to.equal('> quoted line\n\nMy reply.');
     });
 

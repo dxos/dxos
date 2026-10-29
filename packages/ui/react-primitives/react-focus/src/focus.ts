@@ -30,8 +30,8 @@ export type FocusGroupTabBehavior =
   | 'unlimited'
   /**
    * `Tab` stops on the container; `Enter` moves inside and `Escape` comes back out. Once inside,
-   * `Tab` moves through the contents and leaves at the edge — a `Main` pane could not work
-   * otherwise — which is what the boundary sentinels enforce.
+   * `Tab` moves through the contents and leaves at the edge - a `Main` pane could not work
+   * otherwise - which is what the boundary sentinels enforce.
    */
   | 'limited'
   /** As `limited`, but `Tab` inside cycles rather than leaving; only `Escape` gets out. */
@@ -48,7 +48,7 @@ export type FocusGroupAxis = 'vertical' | 'horizontal' | 'grid' | 'grid-linear' 
 const CONTROL_SELECTORS = [
   'a[href]',
   // `:disabled` rather than `[disabled]`: a control inside a disabled `<fieldset>` carries no
-  // attribute of its own, but the browser still refuses to focus it — so an attribute test makes it
+  // attribute of its own, but the browser still refuses to focus it - so an attribute test makes it
   // an arrow-navigation target that focus can never reach.
   'button:not(:disabled)',
   'input:not(:disabled)',
@@ -84,7 +84,7 @@ const hasLayout = (document: Document): boolean => {
 /**
  * Rendered. Tabindex alone cannot see an ancestor's `display: none` or `visibility: hidden`;
  * `checkVisibility` can, and unlike a rect test it is not fooled by a hidden element that still
- * occupies space. Opacity is deliberately not considered — a faded-in list is still navigable.
+ * occupies space. Opacity is deliberately not considered - a faded-in list is still navigable.
  */
 const isRendered = (element: HTMLElement): boolean => {
   if (!hasLayout(element.ownerDocument)) {
@@ -131,7 +131,7 @@ export const findFirstFocusable = (container: HTMLElement | null | undefined): H
   container ? search(container, false) : null;
 
 /**
- * Marks the element a container wants focus to land on when focus is handed to it as a whole — a
+ * Marks the element a container wants focus to land on when focus is handed to it as a whole - a
  * document's editor rather than the toolbar button that happens to come first in the DOM. The
  * marked element may be the target itself or a wrapper around it.
  */
@@ -154,7 +154,7 @@ const searchBy = (parent: Element, matches: (element: HTMLElement) => boolean): 
 };
 
 /**
- * First control inside `parent`, in DOM order, tabbable or not — a control a wrapper keeps out of
+ * First control inside `parent`, in DOM order, tabbable or not - a control a wrapper keeps out of
  * the tab order (an editor's contenteditable) counts. Elements focusable only by `tabindex` come
  * second: an editor's scroll container carries `tabindex=-1` and precedes its content in the DOM,
  * and landing there puts no caret anywhere.
@@ -190,7 +190,7 @@ export const findLastFocusable = (container: HTMLElement | null | undefined): HT
  * Top-level arrow-navigation targets within `container`: tabbable elements and nested group
  * containers, without descending into either. A nested group is one stop, which is what makes a
  * row holding its own controls a single arrow step rather than several. A `selector` names the
- * targets outright instead, at any depth — a board's cards across its columns, but not the
+ * targets outright instead, at any depth - a board's cards across its columns, but not the
  * columns' own header controls.
  */
 export const getFocusItems = (container: HTMLElement, selector?: string): HTMLElement[] => {
@@ -222,7 +222,7 @@ export const getCurrentItem = (container: HTMLElement): HTMLElement | null =>
   getFocusItems(container).find((item) => item.hasAttribute(FOCUS_CURRENT_ATTR)) ?? null;
 
 /**
- * True while the group's contents — rather than the container itself — hold focus. A container
+ * True while the group's contents - rather than the container itself - hold focus. A container
  * that is not itself a tab stop has no state to be entered FROM: focus reaching its contents is
  * how an enclosing group steps onto it, not the user going inside.
  */

@@ -39,7 +39,7 @@ describe('bindDataChannel', () => {
   test('does not send before the channel opens', async () => {
     // `send` throws while the channel is `connecting`. The non-initiator hits this: its channel is
     // transferred straight out of `ondatachannel`, and the peer's first frame can arrive before the
-    // open event — piping the wire protocol in at that point tore the whole connection down.
+    // open event - piping the wire protocol in at that point tore the whole connection down.
     const sent: string[] = [];
     const { channel, stream, received } = setup({
       readyState: 'connecting',

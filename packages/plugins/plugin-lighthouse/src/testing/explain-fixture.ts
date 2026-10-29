@@ -2308,7 +2308,7 @@ export const explainFixture: ExplainNode = {
                 },
               ],
               detail:
-                '--pages 1 --limit 10 --q=best board game cafes in Bangkok big game library --follow 5 --depth 1 --max-pages 13 --goal=B…',
+                '--pages 1 --limit 10 --q=best board game cafes in Bangkok big game library --follow 5 --depth 1 --max-pages 13 --goal=B...',
               ok: true,
               wallMs: 32288,
             },
@@ -2403,12 +2403,12 @@ export const explainFixture: ExplainNode = {
               results: 0,
               children: [],
               detail:
-                '--select=schema:name,schema:description,schema:ratingValue,schema:reviewCount,lh:price,schema:url,lh:district --limit 2…',
+                '--select=schema:name,schema:description,schema:ratingValue,schema:reviewCount,lh:price,schema:url,lh:district --limit 2...',
               ok: true,
             },
           ],
           detail:
-            'type=schema:LocalBusiness select=schema:name,schema:description,schema:ratingValue,schema:re… limit=20',
+            'type=schema:LocalBusiness select=schema:name,schema:description,schema:ratingValue,schema:re... limit=20',
           ok: true,
           wallMs: 1566,
         },

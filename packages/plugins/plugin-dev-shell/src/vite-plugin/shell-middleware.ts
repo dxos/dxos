@@ -47,7 +47,7 @@ export type Middleware = ((req: IncomingMessage, res: ServerResponse, next: () =
 /**
  * Connect-style middleware exposing the harness's one verb: run a script, return its result.
  *
- * Hosted by whichever dev server serves the app, so the browser reaches it same-origin — no CORS, and
+ * Hosted by whichever dev server serves the app, so the browser reaches it same-origin - no CORS, and
  * nothing at all in a deployed build. The scripts themselves run in an {@link ExecRunner} process,
  * since a dev server holding more descriptors than macOS's `OPEN_MAX` cannot spawn them itself.
  *
@@ -65,12 +65,12 @@ export const make = ({
   runner = ExecRunner.make(),
 }: MakeOptions): Middleware => {
   // Canonicalized once, at mount: every path the host hands out (a request's `cwd`, and the root the
-  // editor checks its own paths against) has to be the same shape, or a symlinked root — `/tmp` on
-  // macOS — makes every file inside it look like an escape.
+  // editor checks its own paths against) has to be the same shape, or a symlinked root - `/tmp` on
+  // macOS - makes every file inside it look like an escape.
   const realRoot = resolveWithin(root);
   const scriptsDir = materializeScripts();
   // Debug, not info: the route mounts in every dev server this plugin is added to, and most sessions
-  // never call it — but the mounted root is the first thing to check when a tool misbehaves.
+  // never call it - but the mounted root is the first thing to check when a tool misbehaves.
   log.debug('dev shell mounted', { path, root: realRoot, scriptsDir });
 
   const middleware = async (req: IncomingMessage, res: ServerResponse, next: () => void): Promise<void> => {
@@ -85,7 +85,7 @@ export const make = ({
     }
 
     // A JSON content type is not a formality: it is the one request a cross-origin page cannot send
-    // without a preflight, and this route answers no preflight — so the browser blocks any caller
+    // without a preflight, and this route answers no preflight - so the browser blocks any caller
     // other than the app itself. `text/plain` would sail straight through as a simple request.
     if (!req.headers['content-type']?.includes('application/json')) {
       return fail(res, 415, 'content-type must be application/json');
@@ -115,7 +115,7 @@ export const make = ({
     }
 
     // Bounded metadata only: a script can carry credentials, and its output can carry the contents
-    // of any file the developer can read — neither belongs in a log sink.
+    // of any file the developer can read - neither belongs in a log sink.
     log.info('exec', { cwd, scriptLength: request.script.length, hasStdin: request.stdin !== undefined });
 
     let result: Shell.Result;
@@ -145,7 +145,7 @@ export const make = ({
 export const isLoopback = (address: string | undefined): boolean =>
   address !== undefined && (address === '::1' || /^127\./.test(address) || /^::ffff:127\./.test(address));
 
-/** An opaque origin — `null`, from a sandboxed frame — has no host, so it can never match. */
+/** An opaque origin - `null`, from a sandboxed frame - has no host, so it can never match. */
 export const hostOf = (origin: string): string | undefined => {
   try {
     return new URL(origin).host;
@@ -158,7 +158,7 @@ export const hostOf = (origin: string): string | undefined => {
  * A requested timeout only narrows the host's default.
  *
  * Anything unusable falls back rather than clamping: `Math.min` propagates `NaN` from a malformed
- * request, and `setTimeout(fn, NaN)` fires on the next tick — killing the script instantly and
+ * request, and `setTimeout(fn, NaN)` fires on the next tick - killing the script instantly and
  * reporting a timeout that never happened.
  */
 const clampTimeout = (requested: number | undefined, fallback: number, max: number): number =>
@@ -173,7 +173,7 @@ export const readBody = (req: IncomingMessage): Promise<string> =>
   new Promise((resolve, reject) => {
     // Chunks are concatenated as bytes and decoded once: appending them as strings decodes each
     // independently, so a multi-byte character split across two packets arrives as replacement
-    // characters — and an edit payload carries text destined for a file.
+    // characters - and an edit payload carries text destined for a file.
     const chunks: Buffer[] = [];
     req.on('data', (chunk: Buffer) => {
       chunks.push(chunk);

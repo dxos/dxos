@@ -107,7 +107,7 @@ describe('dxos-subpath-exports', () => {
           ],
         },
         {
-          // Right name, wrong module — a consumer rewritten to `/Beta` would get another module.
+          // Right name, wrong module - a consumer rewritten to `/Beta` would get another module.
           code: "export * as Alpha from './Alpha';\nexport * as Beta from './Gamma';\nexport * as Gamma from './Gamma';",
           filename,
           errors: [{ messageId: 'namespaceTargetMismatch' }],

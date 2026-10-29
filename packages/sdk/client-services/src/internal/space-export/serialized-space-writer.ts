@@ -62,7 +62,7 @@ const SYSTEM_FIELD_ORDER: readonly string[] = [
 /**
  * Reorder the keys of an {@link Obj.JSON} so that system fields appear first
  * (`id`, `@type`, `@meta`, then any other `@*` attributes), followed by data
- * fields. The returned object has identical values to the input — only the key
+ * fields. The returned object has identical values to the input - only the key
  * iteration order changes.
  */
 export const orderObjJsonFields = (obj: Obj.JSON): Obj.JSON => {
@@ -97,7 +97,7 @@ export type WriteSerializedSpaceArchiveOptions = {
 /**
  * Write a JSON space archive from a live space.
  *
- * This runs entirely inside the worker and walks automerge documents directly —
+ * This runs entirely inside the worker and walks automerge documents directly -
  * it does not require a client-side {@link EchoDatabase}. The output conforms to
  * {@link SerializedSpace} and is compatible with the JSON format consumed by the
  * importer in {@link readSerializedSpaceArchive}.
@@ -181,7 +181,7 @@ export const objectStructureToObjJson = (objectId: string, structure: EntityStru
       ...(structure.meta.tags ? { tags: structure.meta.tags } : {}),
       // Preserve the registry-provenance fields (typename / semver) so persisted
       // `Type.Type` entities round-trip with their `meta.key` / `meta.version`
-      // intact — `Type.getTypename` / `Type.getVersion` read these. Without them
+      // intact - `Type.getTypename` / `Type.getVersion` read these. Without them
       // a type loaded from an archive would fall back to its object id.
       ...(structure.meta.key !== undefined ? { key: structure.meta.key } : {}),
       ...(structure.meta.version !== undefined ? { version: structure.meta.version } : {}),

@@ -36,7 +36,7 @@ export type ProcessTreeProps = {
    * Overrides the row label for a process (e.g. the name of the chat it is serving), falling back to
    * the process name when it returns `undefined`.
    *
-   * Must be referentially stable — `ProcessTree` is memoized on its props.
+   * Must be referentially stable - `ProcessTree` is memoized on its props.
    */
   resolveLabel?: (process: Process.Process) => string | undefined;
   /** Pids drawn as selected; the tree is controlled, so a click reports through `onSelectedChange`. */
@@ -62,7 +62,7 @@ const NO_SELECTION: readonly string[] = [];
 /**
  * The agent's running processes as a tree, one row per process with its status glyph and metrics
  * in trailing columns. The forest is rebuilt on every metrics tick, so open state lives outside the
- * model and is re-seeded — a collapse must survive the next tick. Renders through `Tree`.
+ * model and is re-seeded - a collapse must survive the next tick. Renders through `Tree`.
  */
 export const ProcessTree = React.memo(
   Util.composable<HTMLDivElement, ProcessTreeProps>(

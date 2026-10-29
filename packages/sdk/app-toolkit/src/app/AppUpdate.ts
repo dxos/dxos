@@ -24,7 +24,7 @@ export type Progress = {
  * Where an app is in the update cycle.
  *
  * The union is deliberately a superset: not every platform reaches every state. `available` in
- * particular is native-only — see {@link Manager.install}.
+ * particular is native-only - see {@link Manager.install}.
  */
 export type Status =
   // The platform has no update channel at all: no OTA on native, no service worker registration on
@@ -49,7 +49,7 @@ export type Status =
  * `install` is optional because the platforms genuinely differ, and flattening that would make the
  * web lie. On native, checking and downloading are separate: you learn a version exists, then choose
  * to fetch it. On the web `registration.update()` fetches the worker and the browser installs it as
- * part of checking, so by the time anything could be reported the download has already happened —
+ * part of checking, so by the time anything could be reported the download has already happened -
  * offering "an update is available, download it?" would be offering a choice that is already made.
  * A platform without a separate download step omits `install` and never reports `available`; the UI
  * keys off its absence rather than a platform flag.
@@ -60,6 +60,6 @@ export type Manager = {
   check: () => Promise<void>;
   /** Download a known-available update. Absent where checking already downloads. */
   install?: () => Promise<void>;
-  /** Put a `ready` update live — relaunch on native, reload on the web. */
+  /** Put a `ready` update live - relaunch on native, reload on the web. */
   apply: () => Promise<void>;
 };

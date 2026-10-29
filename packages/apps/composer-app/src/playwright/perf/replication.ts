@@ -12,7 +12,7 @@ import { type SpaceId } from '@dxos/keys';
  * Restated rather than imported from `@dxos/echo-protocol`: `isEdgePeerId` is not exported from
  * that package's index, and this expression is evaluated inside the PAGE anyway, so a module
  * import would not cross the boundary. The composition is
- * `compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId)` — renaming it there means renaming it
+ * `compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId)` - renaming it there means renaming it
  * here, which is why an absent peer is reported (`edgePeer: false`) rather than read as zero work.
  */
 const EDGE_PEER_PREFIX = 'subduction-replicator';
@@ -23,8 +23,8 @@ const POLL_INTERVAL_MS = 500;
 /**
  * The fraction that counts as replicated for the hold rule below.
  *
- * Not 1: the app keeps writing after the fixture stops — presence, indexing and the space's own
- * metadata all produce mutations — so a tail of a few documents can stay outstanding indefinitely
+ * Not 1: the app keeps writing after the fixture stops - presence, indexing and the space's own
+ * metadata all produce mutations - so a tail of a few documents can stay outstanding indefinitely
  * while the bulk of the fixture is long since on the remote. Waiting for a true zero would trade a
  * noisy measurement for a timeout.
  */
@@ -83,7 +83,7 @@ export type ReplicationResult = {
    *
    * A trail rather than every poll: at 500ms over a three-minute budget the full series is a few
    * hundred identical rows, and what a timeout has to explain is whether replication was moving at
-   * all — which only the transitions show.
+   * all - which only the transitions show.
    */
   transitions: ReplicationSample[];
 };
@@ -135,7 +135,7 @@ const readState = (page: Page, spaceId: SpaceId): Promise<ReplicationState> =>
  *
  * `SpaceProxy._syncToEdge` does the same thing for the same reason: `db.flush()` propagates
  * recorded heads into the collection synchronizer, and without it the first sync state can be read
- * from stale local heads and report nothing outstanding — resolving the wait before the fixture's
+ * from stale local heads and report nothing outstanding - resolving the wait before the fixture's
  * writes have even been offered to the remote.
  */
 const flush = (page: Page, spaceId: SpaceId): Promise<void> =>
@@ -157,7 +157,7 @@ const sampleOf = (state: ReplicationState, atMs: number): ReplicationSample => {
   return { ...state, atMs, pending, total, progress };
 };
 
-/** One line carrying what the wait saw — the log line, and the error message on a timeout. */
+/** One line carrying what the wait saw - the log line, and the error message on a timeout. */
 export const describeReplication = (result: ReplicationResult): string => {
   const { final, outcome, elapsedMs, transitions } = result;
   return [
@@ -176,11 +176,11 @@ export const describeReplication = (result: ReplicationResult): string => {
  * Why the flow needs this at all: the fixture's writes keep replicating long after the last
  * `tasks.create` resolves, so whichever measured stage happens to be running absorbs the SQLite
  * writes and the socket traffic of work that belongs to setup. That is the whole explanation for a
- * per-stage I/O spread far wider than the stages themselves — a stage's disk and network columns
+ * per-stage I/O spread far wider than the stages themselves - a stage's disk and network columns
  * were measuring where a background upload landed, not what the stage did.
  *
  * Two ways to finish, because a strict zero is not reachable: `replicated` when nothing is
- * outstanding, and `held` when {@link NEARLY_REPLICATED} has held for {@link HOLD_MS} — the app
+ * outstanding, and `held` when {@link NEARLY_REPLICATED} has held for {@link HOLD_MS} - the app
  * keeps producing small mutations of its own, so the last few documents can stay outstanding
  * indefinitely while the fixture itself is long since on the remote.
  *

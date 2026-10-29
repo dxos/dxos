@@ -106,7 +106,7 @@ export const awaitTerminal = (flow: Invitation.Flow): Effect.Effect<Invitation.E
   );
 
 /**
- * Reads the current value of a HALO current-value stream — its first emission, which the adapter
+ * Reads the current value of a HALO current-value stream - its first emission, which the adapter
  * publishes immediately on subscription. Throws if the stream ends without emitting.
  */
 export const currentOf = <A, R>(stream: Stream.Stream<A, never, R>): Effect.Effect<A, never, R> =>

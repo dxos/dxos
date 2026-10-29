@@ -34,7 +34,7 @@ const TYPES = [
 
 const MEMBER = 'did:halo:alice';
 
-describe('A person’s chat with an agent', () => {
+describe("A person's chat with an agent", () => {
   let builder: EchoTestBuilder;
   let peer: EchoTestPeer;
 
@@ -47,7 +47,7 @@ describe('A person’s chat with an agent', () => {
     await builder.close();
   });
 
-  test('of a member’s two private chats with the agent, the one they last talked in opens', async ({ expect }) => {
+  test("of a member's two private chats with the agent, the one they last talked in opens", async ({ expect }) => {
     const db = await peer.createDatabase();
     const run = <A, E>(effect: Effect.Effect<A, E, Database.Service>): Promise<A> =>
       EffectEx.runPromise(

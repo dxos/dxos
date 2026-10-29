@@ -4,7 +4,7 @@
 
 export const truncate = (str = '', length = 8, pad: boolean | string = false) => {
   if (str.length >= length - 1) {
-    return str.substring(0, length - 1) + '…';
+    return str.substring(0, length - 1) + '\u2026';
   } else {
     return pad ? str.padEnd(length, typeof pad === 'boolean' ? ' ' : pad[0]) : str;
   }

@@ -7,7 +7,7 @@ export type HandpanToneOptions = {
   duration?: number;
   /** Peak amplitude. */
   gain?: number;
-  /** Relative amplitude and decay time (s) of harmonics 1, 2, 3 — a tone field's tuned partials. */
+  /** Relative amplitude and decay time (s) of harmonics 1, 2, 3 - a tone field's tuned partials. */
   partials?: { ratio: number; amplitude: number; decay: number }[];
   /** Detuning applied to the fundamental (cents). */
   detune?: number;

@@ -125,7 +125,7 @@ type StatCardRowProps = PropsWithChildren<
 
 /**
  * A label/value row: icon, disclosure toggle or control in the leading gutter, a unit or control in
- * the end rail. `span` runs the content through the end rail — via an explicit
+ * the end rail. `span` runs the content through the end rail - via an explicit
  * `grid-column-end`, since `Card.Row` places its children by `col-start` only. `children`
  * replace the label/value pair for rows that need their own columns (a `Grid`).
  */

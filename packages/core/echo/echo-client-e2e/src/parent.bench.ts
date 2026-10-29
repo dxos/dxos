@@ -48,7 +48,7 @@ afterAll(async () => {
 describe('parent edges', { tags: ['manual'], timeout: 120_000 }, () => {
   // Ten reads per call so tinybench's per-callback overhead (~80ns) does not swamp a cached read.
   bench(
-    `Obj.getParent x${BATCH} (sub-task → task)`,
+    `Obj.getParent x${BATCH} (sub-task -> task)`,
     () => {
       for (let step = 0; step < BATCH; step++) {
         const parent = Obj.getParent(children[cursor++ % children.length]);
@@ -59,7 +59,7 @@ describe('parent edges', { tags: ['manual'], timeout: 120_000 }, () => {
   );
 
   bench(
-    `Obj.getParent x${BATCH} (root task → set)`,
+    `Obj.getParent x${BATCH} (root task -> set)`,
     () => {
       for (let step = 0; step < BATCH; step++) {
         const parent = Obj.getParent(roots[cursor++ % roots.length]);

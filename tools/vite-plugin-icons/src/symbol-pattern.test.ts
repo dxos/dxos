@@ -9,7 +9,7 @@ import { iconSymbolPattern } from './symbol-pattern.ts';
 // The composer / storybook configuration: Phosphor at every weight, the custom sets at `regular`.
 const pattern = iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] });
 
-/** First match, or undefined — mirrors how `@ch-ui/icons` scans (unanchored, global). */
+/** First match, or undefined - mirrors how `@ch-ui/icons` scans (unanchored, global). */
 const scan = (content: string) => content.match(new RegExp(pattern, 'gm'))?.[0];
 
 describe('iconSymbolPattern', () => {
@@ -54,7 +54,7 @@ describe('iconSymbolPattern', () => {
     });
 
     test('rejects the set-suffix leak the single-weight lookahead would otherwise open', () => {
-      // Declining `dx--x--bold` at position 0 makes the engine retry at position 1, where `x--…`
+      // Declining `dx--x--bold` at position 0 makes the engine retry at position 1, where `x--...`
       // must not be read as a set of its own.
       expect(scan('dx--x--bold')).toBeUndefined();
       expect(iconSymbolPattern({ sets: ['ph', 'dx', 'x'], regularOnly: ['dx'] })).toBeDefined();

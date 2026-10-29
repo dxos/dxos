@@ -49,7 +49,7 @@ export const TestSelectAndExclude: Story = {
     await expect(canvas.getByTestId('contact-picker.value')).toHaveTextContent(contactKeyHex(contacts[0]));
     // Selecting closes the popover, so reopen it to search.
     await userEvent.click(canvas.getByTestId('contact-picker.trigger'));
-    await userEvent.type(body.getByPlaceholderText('Search contacts…'), 'bo');
+    await userEvent.type(body.getByPlaceholderText('Search contacts...'), 'bo');
     // Only the list items: the trigger now shows the selected contact's name.
     const items = body.getAllByTestId('contact-picker.item').map((item) => item.textContent);
     await expect(items).toEqual(['Bob Brown']);

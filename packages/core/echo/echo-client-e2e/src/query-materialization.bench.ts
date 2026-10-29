@@ -20,7 +20,7 @@ import { blackhole } from './testing/bench-util.ts';
 //
 //   reload + open                     the cost of standing the peer and database up again
 //   + query                           loading the documents and constructing the result objects
-//                                     (re-run while short — see `query` — so a sample is the time to a
+//                                     (re-run while short - see `query` - so a sample is the time to a
 //                                     full result set)
 //   + read one field per result       the first read of each object, where the object's data is materialized
 //

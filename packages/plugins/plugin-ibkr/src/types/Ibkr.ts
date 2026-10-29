@@ -59,15 +59,15 @@ export const LotSnapshot = Schema.Struct({
   sold: Schema.optional(Schema.String),
   /** Cost basis of the lot (IBKR `costBasisMoney` when open, `cost` when closed). */
   costBasis: Schema.optional(Schema.Number),
-  /** Current mark price — open lots only. */
+  /** Current mark price - open lots only. */
   markPrice: Schema.optional(Schema.Number),
-  /** Current market value — open lots only (IBKR `positionValue`). */
+  /** Current market value - open lots only (IBKR `positionValue`). */
   value: Schema.optional(Schema.Number),
-  /** Sale proceeds — closed lots only. */
+  /** Sale proceeds - closed lots only. */
   proceeds: Schema.optional(Schema.Number),
-  /** Unrealized gain/loss — open lots only (IBKR `fifoPnlUnrealized`). */
+  /** Unrealized gain/loss - open lots only (IBKR `fifoPnlUnrealized`). */
   unrealizedPnl: Schema.optional(Schema.Number),
-  /** Realized gain/loss — closed lots only (IBKR `fifoPnlRealized`). */
+  /** Realized gain/loss - closed lots only (IBKR `fifoPnlRealized`). */
   realizedPnl: Schema.optional(Schema.Number),
   currency: Schema.optional(Schema.String),
 });
@@ -262,9 +262,9 @@ export const makePortfolio = (props: PortfolioProps = {}): Portfolio => {
 };
 
 /**
- * A persisted tax lot synced from the portfolio's latest Flex report. An OPEN lot — still held —
+ * A persisted tax lot synced from the portfolio's latest Flex report. An OPEN lot - still held -
  * has no `sold` date and carries the current `markPrice`/`value` and `unrealizedPnl`. A CLOSED lot
- * — a realized disposal — has a `sold` date plus `proceeds` and `realizedPnl`. The presence of
+ * - a realized disposal - has a `sold` date plus `proceeds` and `realizedPnl`. The presence of
  * `sold` discriminates the two.
  */
 export class Lot extends Type.makeObject<Lot>(DXN.make('org.dxos.type.ibkr.Lot', '0.1.0'))(

@@ -16,7 +16,7 @@ import { CallsCapabilities } from '#types';
 
 export type CallArticleProps = {
   role?: string;
-  /** Room to join — the call anchor's URI (e.g. the meeting's). */
+  /** Room to join - the call anchor's URI (e.g. the meeting's). */
   roomId: string;
   attendableId?: string;
 };

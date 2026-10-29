@@ -106,8 +106,8 @@ const makePublicationWithPost = ({
 };
 
 /**
- * The `connection` ref is opaque to the sync handler — it is only forwarded to the `PublisherService`
- * calls, never dereferenced — so a minimal, schema-valid Connection is enough.
+ * The `connection` ref is opaque to the sync handler - it is only forwarded to the `PublisherService`
+ * calls, never dereferenced - so a minimal, schema-valid Connection is enough.
  */
 const makeConnectionRef = (): Ref.Ref<Connection.Connection> => {
   const accessToken = AccessToken.make({ source: SOURCE, token: 'secret' });

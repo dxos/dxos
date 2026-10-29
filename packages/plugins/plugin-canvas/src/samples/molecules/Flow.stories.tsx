@@ -179,7 +179,7 @@ const CHAPTERS: readonly Scene[] = [
   // The first two chapters share one stage: the monolithic agent's parts fade in over the running silos.
   {
     title: 'The Silo Problem',
-    caption: 'Users rent their own data—split across multiple vendors.',
+    caption: 'Users rent their own data-split across multiple vendors.',
     spec: MONOLITH,
     options: APP_ACTIVITY,
     revealed: false,

@@ -11,7 +11,7 @@ import { IdbLogStore } from './idb-log-store.ts';
 const fakeConfig = {} as LogConfig;
 
 const makeEntry = (level: LogLevel, message: string, timestamp = Date.now()): LogEntry => {
-  // Use a real LogEntry shape — getter access on `computedMeta`/`computedContext`/`computedError`
+  // Use a real LogEntry shape - getter access on `computedMeta`/`computedContext`/`computedError`
   // is what the encoder uses, so we mock those getters with plain values.
   return {
     level,
@@ -283,7 +283,7 @@ describe('IdbLogStore', () => {
     expect(JSON.parse(trimmedLines[trimmedLines.length - 1]).m).toBe('msg-9');
   });
 
-  test('survives reopen — persists across store instances', async ({ expect }) => {
+  test('survives reopen - persists across store instances', async ({ expect }) => {
     store = new IdbLogStore({ dbName, flushInterval: 10 });
     store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'persisted'));
     await store.flush();

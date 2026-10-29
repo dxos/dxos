@@ -5,7 +5,7 @@
 //
 // SPIKE. A stock zag machine consumed as-is: `@zag-js/splitter` supplies the whole resize
 // interaction (pointer, keyboard, cursor management) and the wrapper is prop spreading plus
-// theme classes — the shape a registry-provided machine capability would take.
+// theme classes - the shape a registry-provided machine capability would take.
 //
 
 import { normalizeProps, useMachine } from '@zag-js/react';

@@ -20,7 +20,7 @@ import landscapePdf from '../../../fixtures/landscape.pdf?inline';
 import testPdf from '../../../fixtures/test.pdf?inline';
 import { FileArticle } from './FileArticle.tsx';
 
-/** A 4×3 PNG of three coloured rows. Generated and verified to decode — see the Image story. */
+/** A 4×3 PNG of three coloured rows. Generated and verified to decode - see the Image story. */
 const PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGUlEQVR4nGN47mMDRwx6ZwrhiMFkxm04AgBTKBIF1eRh+AAAAABJRU5ErkJggg==';
 
@@ -50,7 +50,7 @@ const DefaultStory = () => {
  *
  * Bytes land in the client's default `edge` storage, which keeps them in the client services' local
  * store, so the article resolves an object URL over them without EDGE or any of the plugin wiring.
- * `Blob.Blob` must be in `types` alongside `File.File` — the file holds a `Ref` to a blob, and an
+ * `Blob.Blob` must be in `types` alongside `File.File` - the file holds a `Ref` to a blob, and an
  * unregistered schema fails at resolution rather than at insert.
  */
 const withFile = (load: () => Uint8Array, name: string, type: string) =>
@@ -100,7 +100,7 @@ export const Image: Story = {
       },
       { timeout: 20_000 },
     );
-    // `naturalWidth`, not just the `src` attribute — see the note in Preview.stories.tsx.
+    // `naturalWidth`, not just the `src` attribute - see the note in Preview.stories.tsx.
     await waitFor(() => expect(image.naturalWidth).toBe(4));
   },
 };
@@ -109,7 +109,7 @@ export const PdfPortrait: Story = {
   decorators: [withFile(() => bytesOf(testPdf), 'test.pdf', 'application/pdf')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Rendered by pdf.js, not handed to an `<iframe>` — the article must not regress to the
+    // Rendered by pdf.js, not handed to an `<iframe>` - the article must not regress to the
     // browser's own viewer, which lives in another origin and cannot be themed.
     await waitFor(
       async () => {
@@ -126,7 +126,7 @@ export const PdfLandscape: Story = {
   decorators: [withFile(() => bytesOf(landscapePdf), 'landscape.pdf', 'application/pdf')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Rendered by pdf.js, not handed to an `<iframe>` — the article must not regress to the
+    // Rendered by pdf.js, not handed to an `<iframe>` - the article must not regress to the
     // browser's own viewer, which lives in another origin and cannot be themed.
     await waitFor(
       async () => {

@@ -10,7 +10,7 @@ export type HtmlBlockProps = {
 };
 
 /**
- * A message rendered as sanitized HTML — the email case, which is not markdown and cannot be a
+ * A message rendered as sanitized HTML - the email case, which is not markdown and cannot be a
  * CodeMirror document.
  *
  * Its presence is the reason the item renderer is generalized rather than markdown-only: the

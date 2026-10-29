@@ -311,7 +311,7 @@ export const matchesFilter = (message: Pick<MessageData, 'meta' | 'events'>, fil
 
 /**
  * Wire-safe subset of {@link Meta} for broadcast. Ref fields (`conversation`, `trigger`) are not
- * carried in the payload — they are represented only as envelope tags — so the decoded message never
+ * carried in the payload - they are represented only as envelope tags - so the decoded message never
  * attempts ref resolution on the consumer.
  */
 const encodeMetaForWire = (meta: Meta): Meta => ({
@@ -326,7 +326,7 @@ const encodeMetaForWire = (meta: Meta): Meta => ({
 
 /**
  * Encode a trace message for the broadcast envelope's `google.protobuf.Any.value` (DX-1125).
- * The wire format is UTF-8 JSON of the message data (ref fields dropped — see {@link encodeMetaForWire}).
+ * The wire format is UTF-8 JSON of the message data (ref fields dropped - see {@link encodeMetaForWire}).
  */
 export const encodeTraceMessage = (message: Pick<MessageData, 'meta' | 'isEphemeral' | 'events'>): Uint8Array =>
   new TextEncoder().encode(
@@ -339,8 +339,8 @@ export const encodeTraceMessage = (message: Pick<MessageData, 'meta' | 'isEpheme
 
 /**
  * Decode a broadcast trace message back into a {@link Message} object (DX-1125). The wire payload
- * drops both ref meta fields (see {@link encodeMetaForWire}), so `tags` — the broadcast envelope's
- * tag list — is required to restore them: `trigger` addresses work for cancellation, and
+ * drops both ref meta fields (see {@link encodeMetaForWire}), so `tags` - the broadcast envelope's
+ * tag list - is required to restore them: `trigger` addresses work for cancellation, and
  * `conversation` is what {@link matchesFilter} compares, so a subscription filtered by it matches
  * nothing without this. Restored refs are address-only (`.uri`); they are never resolved.
  */
@@ -544,7 +544,7 @@ export const OperationOutput = EventType('operation.output', {
 });
 
 /**
- * Emitted when a task's status changes — a new task counts as a change from nothing.
+ * Emitted when a task's status changes - a new task counts as a change from nothing.
  *
  * Nothing else in a trace says which task an agent was working on, so these events are what cut a
  * session's timeline into per-task segments. Every tool that moves a task's status emits one.
@@ -562,7 +562,7 @@ export const TaskStatusChanged = EventType('task.statusChanged', {
 
 /**
  * An agent put a question to a person and stopped on it. Paired with {@link QuestionAnswered}, the
- * two bound the stretch a task spent blocked on someone else — the one gap in a session's timeline
+ * two bound the stretch a task spent blocked on someone else - the one gap in a session's timeline
  * that is not the agent's own latency.
  */
 export const QuestionAsked = EventType('question.asked', {
@@ -585,7 +585,7 @@ export const QuestionAnswered = EventType('question.answered', {
     questionId: Obj.ID,
     text: Schema.String,
     taskId: Schema.optional(Obj.ID),
-    /** What the reader answered — a chosen option's title, or free-form text. */
+    /** What the reader answered - a chosen option's title, or free-form text. */
     answer: Schema.String,
   }),
   isEphemeral: false,
@@ -678,7 +678,7 @@ export const AgentRequestEnd = EventType('assistant.agentRequestEnd', {
 
 /**
  * Emitted by the supervisor when a delegated task is handed to a sub-agent process; the only durable
- * record of the task ↔ pid pairing, since nothing is stamped on the task itself.
+ * record of the task <-> pid pairing, since nothing is stamped on the task itself.
  */
 export const DelegationSpawned = EventType('assistant.delegationSpawned', {
   schema: Schema.Struct({
@@ -690,7 +690,7 @@ export const DelegationSpawned = EventType('assistant.delegationSpawned', {
 
 /**
  * Emitted by the supervisor when a delegated sub-agent's result has been folded back into the
- * conversation — the counterpart of {@link DelegationSpawned}, and the only durable record that the
+ * conversation - the counterpart of {@link DelegationSpawned}, and the only durable record that the
  * return happened at all. A child's own trace ends with its operation; that it reported *to someone*
  * is knowable only from the supervisor's side, so without this the delegation reads as a one-way
  * spawn even though the runtime genuinely returns a value.

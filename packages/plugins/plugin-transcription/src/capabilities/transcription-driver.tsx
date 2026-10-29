@@ -34,7 +34,7 @@ const TranscriptionDriver = () => {
   const [session, setSession] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   // `useCapabilities` (not `useCapability`) so the driver does not throw when plugin-markdown is absent.
   const [editorViews] = Hooks.useCapabilities(MarkdownCapabilities.EditorViews);
-  // Injected entity resolver (full-text/vector/…); the driver stays decoupled from the database.
+  // Injected entity resolver (full-text/vector/...); the driver stays decoupled from the database.
   const [lookup] = Hooks.useCapabilities(TranscriptionCapabilities.EntityLookup);
   const settings = Hooks.useAtomCapability(TranscriptionCapabilities.Settings);
   const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
@@ -50,13 +50,13 @@ const TranscriptionDriver = () => {
   const hasEditorForSession = !!(liveSessionId && editorViews?.get(liveSessionId));
 
   // Lifecycle phase. Driven from `recording` via an effect (not derived synchronously) so that when
-  // the mic switches off the phase is still 'recording' for that commit — nothing tears down until
+  // the mic switches off the phase is still 'recording' for that commit - nothing tears down until
   // the drain finishes and sets 'idle'. This lets the final transcription + enrichment complete.
   const [phase, setPhase] = useState<'idle' | 'recording' | 'draining'>('idle');
   const active = phase !== 'idle';
 
   // The toolbar clears the RecordingSession on stop, but the driver must keep targeting the same
-  // editor through the drain — capture the session id for the lifetime of the active phase (the
+  // editor through the drain - capture the session id for the lifetime of the active phase (the
   // editor stays open). Cleared once the phase returns to idle.
   const [sessionId, setSessionId] = useState<string>();
   useEffect(() => {
@@ -88,8 +88,8 @@ const TranscriptionDriver = () => {
     [settings?.audioDeviceId],
   );
 
-  // Keep the track (and thus the transcriber) alive across the whole active session — including the
-  // drain — so the transcriber can flush its buffered audio before teardown. Released at idle. The
+  // Keep the track (and thus the transcriber) alive across the whole active session - including the
+  // drain - so the transcriber can flush its buffered audio before teardown. Released at idle. The
   // mic indicator therefore lingers for the brief drain after stop.
   // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
   // true, so without this the permission prompt and recording indicator appear before `open()`
@@ -102,7 +102,7 @@ const TranscriptionDriver = () => {
   const editorViewsRef = useRef(editorViews);
   editorViewsRef.current = editorViews;
 
-  // The user cancelled (✕) if the pending decoration was cleared mid-session; guards against
+  // The user cancelled (x) if the pending decoration was cleared mid-session; guards against
   // resurrecting it with late transcription / post-process writes during the drain.
   const isCancelled = useCallback(() => {
     const id = sessionIdRef.current;
@@ -126,14 +126,14 @@ const TranscriptionDriver = () => {
     // Clicking the toolbar blurs the editor and hides the caret, so anchor + placeholder give
     // immediate feedback while the first transcription is buffered.
     // When entity extraction is enabled and a lookup is available, rewrite settled text with inline
-    // `[noun](echo:/<id>)` links — decorated as dx-anchors by the markdown editor's preview extension.
+    // `[noun](echo:/<id>)` links - decorated as dx-anchors by the markdown editor's preview extension.
     const entityExtraction = settings?.entityExtraction !== false;
     const streamer = new PendingTextStreamer(editorPendingTextSink(entry.view), {
       mode: settings?.streamMode ?? 'word',
       wordIntervalMs: settings?.wordIntervalMs ?? 80,
       postProcess: entityExtraction && lookup ? (text) => linkEntities(text, lookup) : undefined,
     });
-    streamer.start({ anchor: entry.view.state.selection.main.head, placeholder: 'Recording…' });
+    streamer.start({ anchor: entry.view.state.selection.main.head, placeholder: 'Recording...' });
     streamerRef.current = streamer;
 
     return () => {
@@ -219,13 +219,13 @@ const TranscriptionDriver = () => {
   }, [transcriber, phase, setSession]);
 
   // Drain on stop: flush buffered audio (final transcription) and the streamer's post-process
-  // (entity linking) before tearing down — so the tail of speech and its enrichment are not lost.
+  // (entity linking) before tearing down - so the tail of speech and its enrichment are not lost.
   useEffect(() => {
     if (phase !== 'draining') {
       return;
     }
     let cancelled = false;
-    // Hard-abort the in-flight transcription request if the user cancels (✕) during the drain.
+    // Hard-abort the in-flight transcription request if the user cancels (x) during the drain.
     const abortTimer = setInterval(() => {
       if (isCancelled()) {
         transcriberRef.current?.abort();
@@ -234,7 +234,7 @@ const TranscriptionDriver = () => {
     void (async () => {
       try {
         // Flush buffered audio (final transcription) then settle the streamer's post-process, unless
-        // the user cancelled (✕) — in which case skip the writes so the decoration stays cleared.
+        // the user cancelled (x) - in which case skip the writes so the decoration stays cleared.
         await transcriberRef.current?.flush();
         if (!isCancelled()) {
           await streamerRef.current?.flush();

@@ -6,7 +6,7 @@
 // Regenerate the per-channel brand artwork.
 //
 // Each non-production channel installs and runs as its own app (see `.github/actions/cn-config`), so it
-// needs its own mark or a dock — and a row of browser tabs — holds several identical tiles. These are
+// needs its own mark or a dock - and a row of browser tabs - holds several identical tiles. These are
 // recolourings rather than redraws: only the hue and saturation of the shared four-colour ramp change, so
 // every variant keeps production's geometry and contrast.
 //
@@ -47,13 +47,13 @@ const RAMP = [
 
 /**
  * The only icons `bundle.icon` names. `tauri icon` also writes Windows Store, Android and iOS sets, which
- * a desktop-only channel build never reads — and the iOS set in particular would go stale here, since
+ * a desktop-only channel build never reads - and the iOS set in particular would go stale here, since
  * `tauri ios init` generates its asset catalog from the stock `icons/` directory.
  */
 const BUNDLE_ICONS = ['32x32.png', '128x128.png', '128x128@2x.png', 'icon.icns', 'icon.ico'];
 
 /**
- * The browser-facing icons — `index.html`'s `<link rel=icon>` set plus `site.webmanifest`'s pair —
+ * The browser-facing icons - `index.html`'s `<link rel=icon>` set plus `site.webmanifest`'s pair -
  * mapped to the `tauri icon` output drawn at that size. Reusing the icon generator keeps this script
  * free of a second rasterizer; the sizes line up because Android's launcher densities cover 96 and 192,
  * iOS's 60pt @3x is 180, and the root `icon.png` is 512.

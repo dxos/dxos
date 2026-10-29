@@ -26,8 +26,8 @@ export default Capability.makeModule(
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const module = (yield* Capability.CurrentModuleId) ?? ProjectsNamespace.key;
 
-    // Contributed here rather than returned, so the menu keeps one order — the default assign, each
-    // agent, then the rest — while agents come and go with the plugins that bring them.
+    // Contributed here rather than returned, so the menu keeps one order - the default assign, each
+    // agent, then the rest - while agents come and go with the plugins that bring them.
     let contributed: TasksCapabilities.TaskAction[] = [];
     const withdraw = () => contributed.forEach((action) => manager.remove(TasksCapabilities.TaskAction, action));
     const sync = (agents: AssistantCapabilities.Agent[]) => {
@@ -82,7 +82,7 @@ const OTHERS: TasksCapabilities.TaskAction[] = [
   },
   {
     id: 'move-to-project',
-    label: 'Move to…',
+    label: 'Move to...',
     icon: 'ph--arrow-square-out--regular',
     // The destination is picked in a dialog, which runs `MoveTaskToSet`; the row cannot list the
     // space's projects itself because an action resolves its invocations synchronously.

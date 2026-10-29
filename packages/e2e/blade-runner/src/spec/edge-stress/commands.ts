@@ -62,7 +62,7 @@ type CommandKind =
   | 'partition'
   /** Changes who is in a space. */
   | 'membership'
-  /** Mutates replicated state — what a plan has to reach for convergence to be tested at all. */
+  /** Mutates replicated state - what a plan has to reach for convergence to be tested at all. */
   | 'data'
   /** Compares peers mid-run; excluded by `checkpoints: false`. */
   | 'assertion';
@@ -513,7 +513,7 @@ export type FleetShape = { clients: number; spaces: number; documents: number };
  * The weighted generator over the whole vocabulary.
  *
  * Each command's arbitrary is built from its own declared fields, every field schema carrying a
- * generator bound here — the slots to the fleet shape, the rest to the literals they were declared
+ * generator bound here - the slots to the fleet shape, the rest to the literals they were declared
  * from. The result is decoded through `Command`, so a generated value that the declaration would
  * not accept cannot exist.
  */

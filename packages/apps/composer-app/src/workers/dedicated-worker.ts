@@ -42,7 +42,7 @@ let observability: ReturnType<typeof initializeObservability> | undefined;
 
 /**
  * `VITE_DX_STORAGE=memory` keeps the database in memory instead of OPFS, for webviews that cannot hand a worker
- * an OPFS sync access handle — WebKitGTK, so the Linux desktop app — where the app otherwise cannot open at all.
+ * an OPFS sync access handle - WebKitGTK, so the Linux desktop app - where the app otherwise cannot open at all.
  * Nothing survives a reload; it is for demos and automated runs, never a shipped build.
  */
 const sqliteLayer = import.meta.env.VITE_DX_STORAGE === 'memory' ? layerMemory : undefined;

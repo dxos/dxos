@@ -77,7 +77,7 @@ export const makeFakeAgent = ({
         await update({
           sessionUpdate: 'tool_call',
           toolCallId: 'tool-1',
-          title: 'Preparing file…',
+          title: 'Preparing file...',
           name: 'Write',
           kind: 'edit',
           status: 'pending',

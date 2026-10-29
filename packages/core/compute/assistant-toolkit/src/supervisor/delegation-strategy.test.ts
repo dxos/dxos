@@ -52,7 +52,7 @@ const TestLayer = AssistantTestLayer({
       turns: [
         // Immediate reply + delegation in one turn: the user sees the reply while the work runs.
         {
-          parts: [text('On it — delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
+          parts: [text('On it - delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
         },
         {
           parts: [text('Delegated. I will report back when it completes.')],
@@ -95,7 +95,7 @@ const FailingTestLayer = AssistantTestLayer({
       match: () => true,
       turns: [
         {
-          parts: [text('On it — delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
+          parts: [text('On it - delegating.'), toolCall(Operation.toolName(DelegateTask), { title: TASK_TITLE })],
         },
         {
           parts: [text('Delegated. I will report back when it completes.')],
@@ -176,7 +176,7 @@ describe('makeDelegationStrategy', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        // Parented like the app runs it — the agent, not its chat — even though the delegated task
+        // Parented like the app runs it - the agent, not its chat - even though the delegated task
         // is recorded on the chat's own checklist.
         const project = yield* Database.add(Project.make({ name: 'Test project' }));
         Obj.setParent(agent, project);
@@ -208,7 +208,7 @@ describe('makeDelegationStrategy', () => {
         expect(Message.extractText(notification)).toContain(TASK_TITLE);
         expect(Message.extractText(notification)).toContain('3628800');
 
-        // ...and marked the durable task done — the checklist is the working surface.
+        // ...and marked the durable task done - the checklist is the working surface.
         expect(tasks[0].status).toEqual('done');
       },
       Effect.provide(TestLayer),
@@ -320,7 +320,7 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
         invariant(chat, 'Agent chat not found.');
         const { held } = yield* addChecklist(chat);
 
-        // A turn that ends with the work unfinished — the agent stopped to ask a question.
+        // A turn that ends with the work unfinished - the agent stopped to ask a question.
         yield* makeDelegationStrategy().reconcile(chat, new Set());
         expect(held.status).toBe('started');
       },

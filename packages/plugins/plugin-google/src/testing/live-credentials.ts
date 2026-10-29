@@ -73,7 +73,7 @@ export const liveGmailAccessToken = (): string => {
   const client = readClientSecret();
   const token = readToken();
   if (!client || !token?.refresh_token) {
-    throw new Error(`live Gmail credentials missing from ${SECRETS_DIR} — see sync/TESTING.md`);
+    throw new Error(`live Gmail credentials missing from ${SECRETS_DIR} - see sync/TESTING.md`);
   }
   const response = execFileSync(
     'curl',

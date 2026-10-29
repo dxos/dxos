@@ -7,7 +7,7 @@ import { type PublishEligibility } from '@dxos/schema';
 
 /**
  * Read a Book's BookHive hive id from its catalog identifiers, if any. `hiveId` is an external catalog
- * identifier (like `goodreadsId`), stored in `catalog.identifiers` — not an ECHO sync foreign key. Its
+ * identifier (like `goodreadsId`), stored in `catalog.identifiers` - not an ECHO sync foreign key. Its
  * presence is what gates publishing to BookHive.
  */
 export const getHiveId = (object: Obj.Unknown): string | undefined => {

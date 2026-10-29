@@ -5,7 +5,7 @@
 
 // Uploads a file to the shared `agent-artifacts` R2 bucket and prints its public URL.
 // Signs requests with SigV4 from node's crypto so it needs no wrangler, no aws-cli, and no
-// dependencies — the cloud sandbox has only R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY.
+// dependencies - the cloud sandbox has only R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY.
 //
 // Usage:
 //   upload-artifact.mjs <file> [slug]        # key: demos/<YYYY-MM-DD>-<slug>/<basename>
@@ -118,7 +118,7 @@ const request = async ({ method, key, body = '', contentType, query }) => {
   const signed = sign({ method, key, payloadHash, headers, query });
   const response = await fetch(signed.url, { method, headers: signed.headers, body: body.length ? body : undefined });
   if (!response.ok) {
-    fail(`${method} ${key || '(bucket)'} → ${response.status} ${response.statusText}\n${await response.text()}`);
+    fail(`${method} ${key || '(bucket)'} -> ${response.status} ${response.statusText}\n${await response.text()}`);
   }
   return response;
 };
@@ -166,7 +166,7 @@ const main = async () => {
   const body = await readFile(file);
   const contentType = CONTENT_TYPES[extname(file).toLowerCase()];
   if (!contentType) {
-    fail(`unknown extension "${extname(file)}" — pass a known type or add it to CONTENT_TYPES.`);
+    fail(`unknown extension "${extname(file)}" - pass a known type or add it to CONTENT_TYPES.`);
   }
 
   await request({ method: 'PUT', key, body, contentType });
@@ -202,7 +202,7 @@ const main = async () => {
       : [
           served.length !== body.length && `served ${served.length} bytes, uploaded ${body.length}`,
           served.etag !== localMd5 && `ETag ${served.etag} does not match local md5 ${localMd5}`,
-          served.ranges !== 'bytes' && 'no Accept-Ranges: bytes — a viewer will not be able to seek',
+          served.ranges !== 'bytes' && 'no Accept-Ranges: bytes - a viewer will not be able to seek',
         ]),
   ].filter(Boolean);
 

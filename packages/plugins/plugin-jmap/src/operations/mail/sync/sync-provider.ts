@@ -29,7 +29,7 @@ import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper.ts'
 import { findOrCreateJmapTag } from '../tags.ts';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags.ts';
 
-/** The resolved delta for one run — either a fresh capture (no delta) or a fetched `Email/changes` chunk. */
+/** The resolved delta for one run - either a fresh capture (no delta) or a fetched `Email/changes` chunk. */
 type DeltaPlan = {
   readonly token: string | undefined;
   readonly createdIds: readonly string[] | undefined;
@@ -42,8 +42,8 @@ const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 /**
  * JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
  *
- * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
- * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync - a 128 MB Cloudflare Workers
+ * isolate - because it bounds the messages fetched, and so the ECHO documents held, per run.
  */
 const JMAP_SYNC_CONFIG = {
   listPageSize: 50,
@@ -53,7 +53,7 @@ const JMAP_SYNC_CONFIG = {
 } as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 /**
- * JMAP's {@link MailSyncProvider}: session/account discovery, the email source, the folder→tag map, and
+ * JMAP's {@link MailSyncProvider}: session/account discovery, the email source, the folder->tag map, and
  * the fused decode+map. Captures {@link JmapMailApi} + {@link Resolver} so the harness never names them.
  * Mirror of the Gmail provider (`googleMailSyncProvider`).
  */
@@ -81,11 +81,11 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
             const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId, downloadUrl: session.downloadUrl };
             log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
 
-            // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
-            // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`. A well-known role
+            // TODO(wittjosiah): Migrate this folder->Tag sync onto a pipeline (source: folders; sink: find-or-create Tag).
+            // Build a folder-id -> tag-uri map - mirrors Gmail's `syncLabels`. A well-known role
             // (`inbox`/`sent`) maps onto the shared canonical system tag; a custom folder gets a
-            // JMAP-scoped provider tag; a dropped role (`archive` — derived as "not in inbox";
-            // `drafts`/`trash`/`junk` — not synced) produces no tag.
+            // JMAP-scoped provider tag; a dropped role (`archive` - derived as "not in inbox";
+            // `drafts`/`trash`/`junk` - not synced) produces no tag.
             const { list: folders } = yield* api.mailboxGet(target);
             const folderTagMap = new Map<string, string>();
             for (const folder of folders) {
@@ -101,7 +101,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
               }
             }
 
-            // Keyword → canonical system tag uri (only `$flagged`/starred today). Built once so the
+            // Keyword -> canonical system tag uri (only `$flagged`/starred today). Built once so the
             // initial map and the reconcile diff resolve the same tags.
             const keywordTagMap = new Map<string, string>();
             for (const [keyword, canonical] of Object.entries(JMAP_KEYWORD_TAGS)) {
@@ -114,7 +114,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
 
             // Mail from someone the space already knows is worth surfacing, so it lands under the
             // `important` folder on arrival. Resolved once per sync rather than per message, and
-            // reusing the shared canonical tag rather than a parallel one — the Gmail provider marks
+            // reusing the shared canonical tag rather than a parallel one - the Gmail provider marks
             // known senders the same way, so both read identically downstream.
             const knownSenderTagUri = Mailbox.tagUri(
               yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, 'important')),
@@ -179,7 +179,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
 
             // Resolve the delta plan. An incremental run fetches one bounded `Email/changes` chunk since
             // the token (`maxChanges` = the per-run budget); `hasMoreChanges` drives `runAgain`, and
-            // `newState` is the chunk boundary the token advances to — so a large delta drains across
+            // `newState` is the chunk boundary the token advances to - so a large delta drains across
             // runs. A stale token (`cannotCalculateChanges`) falls back to `captureFreshDelta`;
             // `Effect.catchIf` recovers only that case.
             const resolveDelta: Effect.Effect<DeltaPlan, JmapApiError, never> =
@@ -187,7 +187,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                 ? captureFreshDelta
                 : api.emailChanges(target, token, maxMessages).pipe(
                     Effect.map((result): DeltaPlan => {
-                      // `updated` are ids whose keywords/mailboxIds may have changed — re-fetched + diffed
+                      // `updated` are ids whose keywords/mailboxIds may have changed - re-fetched + diffed
                       // against local tags in the reconcile branch. Exclude ids that are also newly
                       // created (their full fetch already carries current tags).
                       const created = new Set(result.created);
@@ -220,7 +220,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
               buildSource: ({ windows, filter, tagIndex, onEnumerated, onEstimate, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
-                // is set, the delta's account-wide created ids would bypass it — so fall back to the
+                // is set, the delta's account-wide created ids would bypass it - so fall back to the
                 // filtered forward window scan for additions (the delta still drives reconcile).
                 const forwardIds = filter ? undefined : createdIds;
                 if (forwardIds) {
@@ -264,13 +264,13 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
 
 /**
  * Reconcile branch for JMAP: for each `updated` email id, re-fetch its current `mailboxIds` + `keywords`,
- * map them to Tags, and diff against the message's current *local* tags — a remote-wins, snapshot-free
+ * map them to Tags, and diff against the message's current *local* tags - a remote-wins, snapshot-free
  * reconciliation that is idempotent (a crash re-run produces an empty diff). Emits a retag
  * {@link EmailStage.Change} keyed by the resolved EntityId; ids not in the feed or with no net change are
  * dropped.
  *
  * The two axes differ: **folder** tags are fully remote-wins (added *and* removed, since folder
- * membership is server-authoritative), while **keyword** tags (starred) are **add-only** — the remote can
+ * membership is server-authoritative), while **keyword** tags (starred) are **add-only** - the remote can
  * add a star but we never auto-remove one, which would clobber a locally-toggled star until we write
  * local flags back to the provider.
  */
@@ -403,7 +403,7 @@ const jmapIds = (
       if (!scopesMailbox && excludedFolderIds.length > 0) {
         conditions.push({ inMailboxOtherThan: excludedFolderIds });
       }
-      // Bound the query to the window. Backward's `end` is `min` — extend 1ms to include the boundary
+      // Bound the query to the window. Backward's `end` is `min` - extend 1ms to include the boundary
       // millisecond (see doc above).
       const upperBound = window.direction === 'backward' ? new Date(window.end.getTime() + 1) : window.end;
       conditions.push({ after: window.start.toISOString() });
@@ -479,9 +479,9 @@ const jmapEmailsForIds = (
 
 /**
  * Streams full JMAP emails for one run: the forward source's ids then the backward window's,
- * concatenated and fetched in full. Intentionally UNBOUNDED — the harness caps after dedup (see
+ * concatenated and fetched in full. Intentionally UNBOUNDED - the harness caps after dedup (see
  * `runMailSync`). The forward source is either the `max`-anchored forward window (first tick / stale
- * fallback) or, when `forwardIds` is set, the incremental delta's created ids — in which case the
+ * fallback) or, when `forwardIds` is set, the incremental delta's created ids - in which case the
  * backward window still runs, so an incremental tick keeps making backfill progress.
  *
  * `Cursor.skipCommitted` drops ids already in the dedup set before `emailGet`, so re-queried boundary

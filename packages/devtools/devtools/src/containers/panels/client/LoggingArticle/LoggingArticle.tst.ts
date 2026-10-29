@@ -10,7 +10,7 @@ import {
   QueryLogsRequest_MatchingOptions,
 } from '@dxos/protocols/buf/dxos/client/logging_pb';
 
-// `LoggingService.queryLogs` carries buf messages in both directions, so this pins both — the panel
+// `LoggingService.queryLogs` carries buf messages in both directions, so this pins both - the panel
 // builds the request as well as reading entries.
 
 declare const entry: LogEntry;

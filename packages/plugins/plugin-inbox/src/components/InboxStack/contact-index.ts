@@ -7,7 +7,7 @@ import { EID } from '@dxos/keys';
 import { type Person } from '@dxos/types';
 
 /**
- * Email→contact index for a whole list, built from ONE Person query rather than a query per row —
+ * Email->contact index for a whole list, built from ONE Person query rather than a query per row -
  * which is why the mailbox tiles can be contact-aware at list cost.
  *
  * Its own module (not the component file) so it can be tested in node: importing the `.tsx` pulls JSX

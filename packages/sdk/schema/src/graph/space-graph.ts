@@ -29,7 +29,7 @@ export type SpaceGraphEdge = GraphEdge.Any;
 
 const defaultFilter: Filter.Any = Filter.everything();
 
-const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
+const truncate = (id: string) => `${id.slice(0, 4)}\u2026${id.slice(-4)}`;
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
@@ -274,7 +274,7 @@ export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNod
               target: ref.target.id,
               data: {
                 force: true,
-                // Originating top-level property name (when known) — used by the plexus
+                // Originating top-level property name (when known) - used by the plexus
                 // projector to group/label outgoing references by property.
                 property,
               },

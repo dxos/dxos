@@ -139,8 +139,8 @@ const sharedCount = (left: Set<string>, right: Set<string>): number => {
 
 /**
  * Greedy agglomerative clustering of threads into topic drafts. Deterministic (Compute mode): a
- * thread joins the first cluster whose aggregate signature overlaps enough — by subject-token
- * Jaccard similarity or by shared participants — else starts its own. Bounded by O(threads ×
+ * thread joins the first cluster whose aggregate signature overlaps enough - by subject-token
+ * Jaccard similarity or by shared participants - else starts its own. Bounded by O(threads ×
  * clusters); no LLM involved, so results are stable and unit-testable.
  */
 export const clusterThreads = (threads: readonly Thread[], options?: TopicOptions): TopicDraft[] => {

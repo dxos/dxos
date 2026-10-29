@@ -125,7 +125,7 @@ const CalendarWeek = Util.composable<HTMLDivElement, CalendarWeekProps>(
     const columnsRef = useRef<(HTMLDivElement | null)[]>([]);
     const [draft, setDraft] = useState<Draft | undefined>(undefined);
 
-    // All day columns share the same vertical geometry, so any column resolves clientY → minutes.
+    // All day columns share the same vertical geometry, so any column resolves clientY -> minutes.
     const pointerMinutes = useCallback((clientY: number): number => {
       const rect = columnsRef.current.find(Boolean)?.getBoundingClientRect();
       if (!rect) {
@@ -378,7 +378,7 @@ const CalendarWeek = Util.composable<HTMLDivElement, CalendarWeekProps>(
                     return renderEvent(event, day, start, end, slot.columnIndex, slot.columnCount);
                   })}
 
-                  {/* Event being dragged in from another day — rendered full-width above this column's events. */}
+                  {/* Event being dragged in from another day - rendered full-width above this column's events. */}
                   {draftHere &&
                     draggedEvent &&
                     !dayEvents.some((event) => event.id === draggedEvent.id) &&
@@ -453,7 +453,7 @@ const EventBlock = ({
       <div className='px-1 py-0.5 text-xs leading-tight'>
         <div className='font-medium truncate'>{event.title ?? '(untitled)'}</div>
         {/* <div className='tabular-nums opacity-80'>
-          {formatTime(start)}–{formatTime(end)}
+          {formatTime(start)}-{formatTime(end)}
         </div> */}
       </div>
       <div
@@ -478,7 +478,7 @@ const PendingBlock = ({ start, end }: { start: Date; end: Date }) => {
       style={{ top, height }}
     >
       <div className='px-1 py-0.5 text-xs tabular-nums text-inverse-fg'>
-        {formatTime(start)}–{formatTime(end)}
+        {formatTime(start)}-{formatTime(end)}
       </div>
     </div>
   );

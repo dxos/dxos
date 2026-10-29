@@ -11,7 +11,7 @@ const envEnabled = (name: string): boolean => ['1', 'true'].includes(process.env
  * `--tagsFilter "<expr>"` (boolean expressions over these names).
  *
  * Kept in this lightweight module (no plugin / dependency imports) so
- * standalone vitest configs — like `tools/vite-plugin-log` — can declare
+ * standalone vitest configs - like `tools/vite-plugin-log` - can declare
  * the same tag set without pulling in DXOS Vite plugins via
  * `vitest.base.config.ts`.
  */

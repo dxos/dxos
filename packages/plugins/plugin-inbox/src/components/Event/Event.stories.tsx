@@ -192,7 +192,7 @@ export const Spec: Story = {
     await expect(card).toHaveTextContent(KNOWN_ATTENDEE.email);
     await userEvent.keyboard('{Escape}');
 
-    // The unknown attendee's row offers to create the Person instead — on hover, never before it.
+    // The unknown attendee's row offers to create the Person instead - on hover, never before it.
     // Mounted for keyboard access, faded until hover/focus (see `ContactAvatar`).
     await expect(canvas.getAllByRole('button', { name: 'Create contact' }).length).toBeGreaterThan(0);
     const unknownAvatar = [...canvasElement.querySelectorAll('[data-scope="card"][data-part="row"]')]

@@ -262,7 +262,7 @@ describe('applyExtrusion', () => {
     const result = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, 1);
     const meshAfter = result.getMesh();
 
-    // warp()-based extrusion preserves topology — triangle count stays the same.
+    // warp()-based extrusion preserves topology - triangle count stays the same.
     expect(meshAfter.numTri).toBe(12);
 
     result.delete();

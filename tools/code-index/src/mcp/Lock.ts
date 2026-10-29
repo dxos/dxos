@@ -133,7 +133,7 @@ export const isLockError = (error: unknown): boolean => {
 };
 
 const ADVICE =
-  'A store has one holder at a time — `code-index index`, `code-index serve` or another `code-index mcp` — ' +
+  'A store has one holder at a time - `code-index index`, `code-index serve` or another `code-index mcp` - ' +
   'so stop that process, or pass --store a copy of the store directory.';
 
 /**
@@ -220,7 +220,7 @@ export const layer = (
           announced = true;
           const who = found.length > 0 ? found.map(describeHolder).join(', ') : 'another process';
           yield* Console.error(
-            `Waiting up to ${Duration.format(Duration.seconds(Math.ceil((deadline - now) / 1000)))} for the store at ${dir}, held by ${who}…`,
+            `Waiting up to ${Duration.format(Duration.seconds(Math.ceil((deadline - now) / 1000)))} for the store at ${dir}, held by ${who}...`,
           );
         }
         yield* Effect.sleep(interval);

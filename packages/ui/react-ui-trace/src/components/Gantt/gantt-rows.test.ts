@@ -77,7 +77,7 @@ describe('orderRows', () => {
 
   test('every band is a contiguous run of rows that all belong to it', ({ expect }) => {
     // The invariant the rectangles rest on: one rect can only enclose adjacent rows, so a band's
-    // range must hold its own lanes and nobody else's — however the caller interleaved the input.
+    // range must hold its own lanes and nobody else's - however the caller interleaved the input.
     const groups: GanttGroup[] = [{ id: 'one' }, { id: 'one:a', parentId: 'one' }, { id: 'two' }];
     const lanes = [
       lane('from-two', { groupId: 'two' }),

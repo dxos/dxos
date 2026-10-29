@@ -20,7 +20,7 @@ import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Message } from '@dxos/types';
 
 /**
- * Fills the document with placeholder prose from the slash menu — the cheapest way to get a
+ * Fills the document with placeholder prose from the slash menu - the cheapest way to get a
  * realistic amount of text in front of a layout or scrolling bug.
  */
 export const InsertLoremIpsum = Operation.make({
@@ -38,8 +38,8 @@ export const InsertLoremIpsum = Operation.make({
 });
 
 /**
- * Shows a page of the debug panel — a node under `root/debug`, which has no URL for
- * `LayoutOperation.Open` — opening the docked drawer when the panel is docked.
+ * Shows a page of the debug panel - a node under `root/debug`, which has no URL for
+ * `LayoutOperation.Open` - opening the docked drawer when the panel is docked.
  */
 export const OpenPage = Operation.make({
   meta: {
@@ -62,7 +62,7 @@ const LayoutSummary = Schema.Struct({
   dialogOpen: Schema.Boolean,
   workspace: Schema.String,
   active: Schema.Array(Schema.String).annotate({
-    description: 'Graph path ids of the open planks — the ids layout open/close operations accept.',
+    description: 'Graph path ids of the open planks - the ids layout open/close operations accept.',
   }),
   inactive: Schema.Array(Schema.String),
   scrollIntoView: Schema.optional(Schema.String),
@@ -84,7 +84,7 @@ const ActionSummary = Schema.Struct({
   icon: Schema.optional(Schema.String),
   disabled: Schema.optional(Schema.Boolean),
   operation: Schema.optional(Schema.String).annotate({
-    description: 'Operation DXN embedded in the action id — invokable via the operation invoker.',
+    description: 'Operation DXN embedded in the action id - invokable via the operation invoker.',
   }),
   group: Schema.optional(Schema.Boolean),
 });
@@ -143,8 +143,8 @@ const ErrorSummary = Schema.Struct({
 });
 
 /**
- * One JSON document describing the live UI state — layout, attention, open planks with their
- * subjects and reachable actions, mounted surfaces, and plugin counts — so an agent can infer what
+ * One JSON document describing the live UI state - layout, attention, open planks with their
+ * subjects and reachable actions, mounted surfaces, and plugin counts - so an agent can infer what
  * the user sees and what it can do without screenshots. See app-framework/docs/INTROSPECTION.md.
  */
 export const Snapshot = Operation.make({
@@ -181,7 +181,7 @@ export const Snapshot = Operation.make({
 }).pipe(Operation.mutation('none'));
 
 /**
- * Undoes the last undoable operation — what the notification toast's **Undo** button does — so an
+ * Undoes the last undoable operation - what the notification toast's **Undo** button does - so an
  * agent driving the app through operations can exercise the undo path it cannot click.
  */
 export const Undo = Operation.make({
@@ -247,7 +247,7 @@ export const SAMPLE_MAIL_CONNECTOR_ID = 'org.dxos.plugin-debug.connector.sampleM
 
 /**
  * Sends a sample-space draft: there is no account behind a sample mailbox, so the message is
- * delivered locally — it gets a provider id and the canonical sent tag, as a real send would.
+ * delivered locally - it gets a provider id and the canonical sent tag, as a real send would.
  */
 export const SendSampleMail = Operation.make({
   meta: {

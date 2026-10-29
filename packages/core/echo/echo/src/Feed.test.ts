@@ -237,7 +237,7 @@ describe('Feed', () => {
         expect(history.shallow).toBe(true);
       });
 
-      // A malformed replicated id must not read as "no parent" — that would resolve the fork as an
+      // A malformed replicated id must not read as "no parent" - that would resolve the fork as an
       // implicit continuation and resurrect the items it abandoned.
       test('a malformed parent id truncates rather than falling through to the predecessor', ({ expect }) => {
         const [m1, m2, m3] = [

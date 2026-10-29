@@ -24,7 +24,7 @@ type ValueFormatProps = {
  * @param value - The raw value to format.
  * @param locale - BCP 47 locale tag passed to Intl formatters; defaults to the runtime locale.
  * @param compact - When true, large currency values (>= 1 billion) use compact notation (e.g. "$1.23T").
- *   Percent values are always formatted as a ratio (0.15 → "15%").
+ *   Percent values are always formatted as a ratio (0.15 -> "15%").
  */
 // TODO(burdon): Move to react-ui-form.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).

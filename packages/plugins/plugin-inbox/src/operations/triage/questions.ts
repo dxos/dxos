@@ -14,9 +14,9 @@ export const DECISION_MODEL: DXN.DXN = Model.defaultDecisionModel;
 
 /** Ordered urgency criteria; the model answers a position on this scale. */
 export const URGENCY_SCALE = [
-  'Routine — marketing, newsletters, promotions, receipts, FYIs, or anything that can wait',
-  'Timely — a person asks the recipient for something soon',
-  'Urgent — a person needs the recipient to act today',
+  'Routine - marketing, newsletters, promotions, receipts, FYIs, or anything that can wait',
+  'Timely - a person asks the recipient for something soon',
+  'Urgent - a person needs the recipient to act today',
 ] as const;
 
 /** Rating at or above which the message is tagged urgent (the top band of {@link URGENCY_SCALE}). */
@@ -34,7 +34,7 @@ export const DEFAULT_MIN_CONFIDENCE = 0.5;
  */
 export const NO_LABEL = 'none';
 
-/** What the model is told about a message. Only headers and a snippet — never the full body. */
+/** What the model is told about a message. Only headers and a snippet - never the full body. */
 export const MessageState = Schema.Struct({
   from: Schema.String,
   subject: Schema.String,
@@ -121,7 +121,7 @@ const confidenceOf = (answer: Decision.ClassifyAnswer<string> | Decision.RateAns
   answer.confidence ?? answer.probabilities[answer.label] ?? 0;
 
 /**
- * Turns answers into tags. A low-confidence answer applies nothing rather than a guess — the point
+ * Turns answers into tags. A low-confidence answer applies nothing rather than a guess - the point
  * of asking a model that reports confidence is to be able to decline.
  */
 export const toVerdict = (decisions: Decisions, minConfidence = DEFAULT_MIN_CONFIDENCE): Verdict => {

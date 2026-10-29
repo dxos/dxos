@@ -65,7 +65,7 @@ describe('ideogram mapping', () => {
 
     const generation = variants[0]?.generation;
     expect(generation).toBeDefined();
-    // No null anywhere — else Variant.make (which validates the Generation schema) throws a ParseError.
+    // No null anywhere - else Variant.make (which validates the Generation schema) throws a ParseError.
     expect(generation?.requestId).toBeUndefined();
     expect(generation?.createdAt).toBeUndefined();
     expect(generation?.prompt).toBeUndefined();

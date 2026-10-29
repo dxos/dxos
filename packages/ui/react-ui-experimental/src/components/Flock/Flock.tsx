@@ -148,7 +148,7 @@ const stepBoid = (
  *
  * Wrap-aware: boids wrap on canvas edges, so consecutive trail positions can be
  * up to (width, height) apart. Any segment that jumps further than half the
- * canvas in either axis is treated as a wrap and broken into a fresh sub-path —
+ * canvas in either axis is treated as a wrap and broken into a fresh sub-path -
  * otherwise the line would streak across the entire canvas.
  */
 const renderBoid = (
@@ -163,7 +163,7 @@ const renderBoid = (
   }
   const color = coloringFunction[coloring](b);
 
-  // Trail body — drawn first so the head sits on top.
+  // Trail body - drawn first so the head sits on top.
   if (trail.length >= 2) {
     context.strokeStyle = color;
     context.lineCap = 'round';
@@ -191,7 +191,7 @@ const renderBoid = (
         const dx = Math.abs(trail[i].x - trail[i - 1].x);
         const dy = Math.abs(trail[i].y - trail[i - 1].y);
         if (dx > width / 2 || dy > height / 2) {
-          // Edge-wrap detected — start a fresh sub-path at this position so we
+          // Edge-wrap detected - start a fresh sub-path at this position so we
           // don't draw a line across the entire canvas to the wrapped point.
           context.moveTo(trail[i].x, trail[i].y);
         } else {
@@ -203,7 +203,7 @@ const renderBoid = (
     context.globalAlpha = 1;
   }
 
-  // Head — full-radius arc on top of the trail.
+  // Head - full-radius arc on top of the trail.
   context.fillStyle = color;
   context.beginPath();
   context.arc(trail[0].x, trail[0].y, radius, 0, 2 * Math.PI);
@@ -352,7 +352,7 @@ export type FlockProps = Util.ThemedClassName<{
   /**
    * Reactive source of truth for the boid array. Flock subscribes via `model.subscribe`
    * and restarts the simulation whenever `setBoids` replaces the array. Per-tick
-   * position changes are mutated in place on the same boid objects — external readers
+   * position changes are mutated in place on the same boid objects - external readers
    * (e.g. an explorer that handed in boids with ids) sample those positions any time
    * via `model.boids` / `model.findBoid`.
    *
@@ -364,7 +364,7 @@ export type FlockProps = Util.ThemedClassName<{
   /**
    * Optional initial-population callback. Called once when the container is first
    * measured AND the model is empty. Use this to position boids using canvas
-   * dimensions (top-left origin) — typically when seeding from an external layout.
+   * dimensions (top-left origin) - typically when seeding from an external layout.
    */
   populate?: (dimensions: Dimensions) => readonly FlockBoid[];
   /** Used only when `populate` is not provided. */
@@ -391,7 +391,7 @@ export type FlockProps = Util.ThemedClassName<{
   /**
    * Canvas background CSS color. The canvas is initialised opaquely to this color
    * and each frame's trail fade is drawn in this color (so old boid pixels decay
-   * toward it). Any color the browser can parse — hex, rgb(), named — is fine.
+   * toward it). Any color the browser can parse - hex, rgb(), named - is fine.
    */
   background?: string;
 }>;
@@ -426,7 +426,7 @@ export const Flock = ({
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [{ width, height }, setSize] = useState<Dimensions>({ width: 0, height: 0 });
   const [obstacles, setObstacles] = useState<FlockObstacle[]>([]);
-  // Local snapshot of `model.boids` — the simulation reads from this so that
+  // Local snapshot of `model.boids` - the simulation reads from this so that
   // changing the model identity via `setBoids` triggers a clean restart.
   const [boids, setBoids] = useState<readonly FlockBoid[]>(() => model.boids);
 
@@ -450,7 +450,7 @@ export const Flock = ({
     return () => observer.disconnect();
   }, [container]);
 
-  // Track the model's boid array via subscribe → setBoids. Per-tick position
+  // Track the model's boid array via subscribe -> setBoids. Per-tick position
   // mutations don't emit on the atom (by design), so this only fires on
   // `model.setBoids(...)` and the initial sync. Reset each boid's renderer-owned
   // trail so a `setBoids` that reuses boid identities doesn't carry stale
@@ -467,7 +467,7 @@ export const Flock = ({
   }, [model]);
 
   // Populate the model once the container dimensions are known and the model is
-  // empty. Subsequent resizes don't repopulate — the caller owns that decision.
+  // empty. Subsequent resizes don't repopulate - the caller owns that decision.
   const populatedRef = useRef(false);
   useEffect(() => {
     if (!width || !height || populatedRef.current) {
@@ -500,7 +500,7 @@ export const Flock = ({
       radius,
       maxVelocity,
       // `trail` is now the literal number of recent positions kept and rendered per
-      // boid (one position per frame). At 60fps a value of 30 → ~0.5s visible tail.
+      // boid (one position per frame). At 60fps a value of 30 -> ~0.5s visible tail.
       trailLength: Math.max(1, Math.round(trail)),
       alignment: alignment / 100,
       cohesion: cohesion / 100,
@@ -515,7 +515,7 @@ export const Flock = ({
     }
 
     // Start transparent so the CSS background-color shows through wherever
-    // the simulation hasn't drawn (or has faded back to α=0). The fade is
+    // the simulation hasn't drawn (or has faded back to alpha=0). The fade is
     // GPU-only (`destination-out`), so no need for willReadFrequently.
     const ctx = canvas.current.getContext('2d')!;
     ctx.clearRect(0, 0, width, height);

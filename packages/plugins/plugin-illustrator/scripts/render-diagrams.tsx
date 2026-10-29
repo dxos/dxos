@@ -11,7 +11,7 @@
 // Passing `.mmd` or `.dx` (semantic DSL) paths renders just those files instead of the corpus, and writes a
 // `.png` beside each so the drawing can be looked at; `--layering down` (or a comma list of `down`, `up`,
 // `free`) restricts the candidate layerings the mermaid engine chooses among.
-// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.dx …]` (vite-node from source; bun cannot load elkjs).
+// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.dx ...]` (vite-node from source; bun cannot load elkjs).
 //
 
 import { chromium } from '@playwright/test';

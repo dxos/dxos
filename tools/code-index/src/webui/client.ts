@@ -47,7 +47,7 @@ const runtime = ManagedRuntime.make(clientLayer);
 const call = <A, E>(body: (client: Effect.Success<typeof make>) => Effect.Effect<A, E>): Promise<A> =>
   runtime.runPromise(Effect.flatMap(Client, body));
 
-/** Everything the UI can ask for, as promises — Solid's primitives take promises, not Effects. */
+/** Everything the UI can ask for, as promises - Solid's primitives take promises, not Effects. */
 export const api = {
   info: () => call((client) => client.Info()),
 
@@ -64,7 +64,7 @@ export const api = {
   dispatch: (projectId: string, event: Events.Event) => call((client) => client.Dispatch({ projectId, event })),
 
   /**
-   * Subscribes to a project's log — history first, then live. `onEntry` is called for each entry in
+   * Subscribes to a project's log - history first, then live. `onEntry` is called for each entry in
    * sequence order; the returned function stops the subscription.
    */
   watch: (projectId: string, after: number, onEntry: (entry: Events.Entry) => void): (() => void) => {

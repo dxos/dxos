@@ -38,7 +38,7 @@ export type ServiceCredential = {
  * `MANAGED_ACCESS_TOKEN`).
  *
  * An implementation detail of {@link CredentialsService}, not a consumer-facing service: it exists
- * as a tag only because the two surfaces reach EDGE differently — clients over authenticated HTTP,
+ * as a tag only because the two surfaces reach EDGE differently - clients over authenticated HTTP,
  * functions over a space-bound service binding. Implementations cache; pass `refresh` to bypass that
  * cache after an authorization failure.
  */
@@ -101,7 +101,7 @@ export class CredentialsService extends Context.Service<
 }
 
 /**
- * The credential's API key as a plain string — what a caller passing it to an HTTP client needs.
+ * The credential's API key as a plain string - what a caller passing it to an HTTP client needs.
  * Resolves a server-custodied value transparently, so callers never branch on where it came from.
  */
 export const getApiKeyValue = (query: CredentialQuery): Effect.Effect<string, never, CredentialsService> =>

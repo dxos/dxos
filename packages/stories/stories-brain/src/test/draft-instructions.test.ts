@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { DEFAULT_DRAFT_INSTRUCTIONS, buildDraftPrompt } from '../testing/harness/index.ts';
 
-// Deterministic coverage for the default draft Instructions + prompt assembly — no fixture / model
+// Deterministic coverage for the default draft Instructions + prompt assembly - no fixture / model
 // required (the model-graded re-score lives in draft-responses.bench.test.ts).
 
 describe('DEFAULT_DRAFT_INSTRUCTIONS', () => {
@@ -32,7 +32,7 @@ describe('buildDraftPrompt', () => {
     expect(prompt).toContain('Draft a reply to the email below'); // Base rules retained.
   });
 
-  test('an explicit empty string opts out — base rules only', ({ expect }) => {
+  test('an explicit empty string opts out - base rules only', ({ expect }) => {
     const prompt = buildDraftPrompt('');
     expect(prompt).not.toContain('Additional instructions from the user');
     expect(prompt).toContain('Draft a reply to the email below');

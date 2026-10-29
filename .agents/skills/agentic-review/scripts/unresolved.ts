@@ -10,7 +10,7 @@
 //   bun unresolved.ts [--path=<substr|glob>] [--rule=<rule-id>]
 //
 // `--path` matches if the issue file contains the substring (case-sensitive), or
-// — when the value includes `*`/`?` — if it matches as a glob against the file
+// - when the value includes `*`/`?` - if it matches as a glob against the file
 // path. `--rule` is an exact rule id match.
 
 import { existsSync, readdirSync } from 'node:fs';
@@ -92,7 +92,7 @@ for (const entry of readdirSync(reviewsPath, { withFileTypes: true }).sort((a, b
     continue;
   }
   if (statuses.size === 0) {
-    // No ledger (a clean run, or one that predates issue ids) — nothing to report or update.
+    // No ledger (a clean run, or one that predates issue ids) - nothing to report or update.
     continue;
   }
 

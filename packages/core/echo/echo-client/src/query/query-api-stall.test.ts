@@ -18,8 +18,8 @@ import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 // paused, the worker accepts new `addDocuments` calls but never flushes
 // document state to the client, so client `RepoProxy.find()` handles stay
 // `pending`. Any query path that needs to load a document
-// (SpaceQuerySource → batchLoadObjectCores; IndexQuerySource → ObjectLoader
-// → loadObjectCoreById) waits forever on `_updateEvent`.
+// (SpaceQuerySource -> batchLoadObjectCores; IndexQuerySource -> ObjectLoader
+// -> loadObjectCoreById) waits forever on `_updateEvent`.
 describe('Query API stalls under paused document synchronizer', () => {
   test('db.query(Filter.id(...)).run() hangs while the document synchronizer is paused', async () => {
     const testBuilder = new EchoTestBuilder();

@@ -19,17 +19,17 @@ export type ProjectResult = { project: Project.Project; instructions: Instructio
 
 const INSTRUCTIONS = `Build, deploy, configure and test the weather MCP server described by the task \
 list, on your own and in one go: start the first task now, work them in order, and set each one's \
-status as you finish it. Do not stop to ask — nothing in this project needs me.
+status as you finish it. Do not stop to ask - nothing in this project needs me.
 
 The task descriptions are the whole specification: one Worker, one tool (\`get_weather\`), one \
 upstream API. There is no design stage. If a step starts to look like architecture, it is the wrong step.
 
 Write the code yourself in one sandbox, driving it through the Sandbox skill \
-(\`org.dxos.skill.sandbox\`). Do not delegate to the coding agent in the sandbox image — it has none \
+(\`org.dxos.skill.sandbox\`). Do not delegate to the coding agent in the sandbox image - it has none \
 of this space's context.
 
 The server is called from a browser, so it must answer CORS preflights and send CORS headers on \
-every response — without them the tool silently never connects. Deploy with \`wrangler deploy --temporary\`. Do not claim the account and never file or repeat the \
+every response - without them the tool silently never connects. Deploy with \`wrangler deploy --temporary\`. Do not claim the account and never file or repeat the \
 claim URL. The container is not durable, so file the Worker URL and the tool's response on this \
 project in the turn you produce them.
 

@@ -143,7 +143,7 @@ const stubOperationService = Effect.provideService(Operation.Service, {
 
 /**
  * Light end-to-end stitching:
- *  - `GetTrelloBoards` returns descriptors only — read-only, no local Kanbans.
+ *  - `GetTrelloBoards` returns descriptors only - read-only, no local Kanbans.
  *  - Selecting a board materializes an empty local Kanban (`materializeTarget`)
  *    and creates an external-sync `Cursor` from the connection's access token
  *    to that Kanban.
@@ -201,13 +201,13 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       return binding;
     }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), FetchHttpClient.layer)));
 
-  test('full flow: GetTrelloBoards (discovery) → bind selection → SyncTrelloBoard syncs only chosen boards', async ({
+  test('full flow: GetTrelloBoards (discovery) -> bind selection -> SyncTrelloBoard syncs only chosen boards', async ({
     expect,
   }) => {
     const { db, connection } = await setup();
     const layer = Database.layer(db);
 
-    // 1. Discovery: descriptors only — NO local Kanbans created yet.
+    // 1. Discovery: descriptors only - NO local Kanbans created yet.
     const discovered = await getTrelloBoardsHandler
       .handler({ connection: Ref.make(connection) })
       .pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);

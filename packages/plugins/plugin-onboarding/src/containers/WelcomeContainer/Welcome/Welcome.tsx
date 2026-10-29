@@ -129,7 +129,7 @@ export const Welcome = ({
   // atproto handle (e.g. `you.bsky.social`) forwarded to the OAuth flow as a login hint.
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
-  // Separate from `pending`, whose call resolves as soon as the provider's page opens — this stays
+  // Separate from `pending`, whose call resolves as soon as the provider's page opens - this stays
   // set for the part the user actually waits on.
   const [oauthPending, setOauthPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
@@ -615,7 +615,7 @@ type LoginTabProps = {
  * Login tab. The "primary" auth method (passkey or email) renders at the top;
  * other options live under "More ways to log in":
  *
- * - Picking the *other* primary method (passkey ↔ email ↔ atmosphere) swaps it to primary.
+ * - Picking the *other* primary method (passkey <-> email <-> atmosphere) swaps it to primary.
  * - Picking `From another device` or `Recovery code` invokes their handler
  *   directly (those open dedicated dialogs and don't need a primary form).
  *
@@ -906,7 +906,7 @@ const InlineForm = ({
 /**
  * Error text under a login control. Shared with {@link InlineForm} so a failure reads the same
  * whether it came from a field (email, invitation code) or a button (passkey). Callers outside
- * `InlineForm` must supply their own `Field.Root` — it is context only and renders no markup.
+ * `InlineForm` must supply their own `Field.Root` - it is context only and renders no markup.
  */
 const ValidationMessage = ({ children }: PropsWithChildren) => (
   <Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Field.ErrorText>

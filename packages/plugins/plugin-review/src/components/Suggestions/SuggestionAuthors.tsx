@@ -17,7 +17,7 @@ export type SuggestionAuthorRow = {
   author: string;
   /** Display name; falls back to the DID upstream. */
   label: string;
-  /** The author's palette hue — matches their avatar/tag and inline markers. */
+  /** The author's palette hue - matches their avatar/tag and inline markers. */
   hue: Hue;
   hidden: boolean;
 };
@@ -31,7 +31,7 @@ export type SuggestionAuthorsProps = {
 /**
  * Per-author visibility toggles for the review companion: one chip per suggesting author, coloured
  * with the author's hue. Toggling filters that author's suggestions out of every review surface
- * (overlay, change bars, cards) for this user only — the branches themselves are untouched.
+ * (overlay, change bars, cards) for this user only - the branches themselves are untouched.
  */
 export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps) => {
   const { t } = Hooks.useTranslation(ReviewNamespace.key);

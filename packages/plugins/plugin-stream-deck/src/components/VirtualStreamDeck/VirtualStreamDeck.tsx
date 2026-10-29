@@ -15,7 +15,7 @@ export type VirtualStreamDeckProps = {
 };
 
 /**
- * On-screen replica of the hardware, rendering the very frame the device is sent — so what this
+ * On-screen replica of the hardware, rendering the very frame the device is sent - so what this
  * shows is what the keys show, and the layout is reviewable without the device attached.
  */
 export const VirtualStreamDeck = ({ device, frame, onKeyPress }: VirtualStreamDeckProps) => {
@@ -28,7 +28,7 @@ export const VirtualStreamDeck = ({ device, frame, onKeyPress }: VirtualStreamDe
             type='button'
             disabled={!key?.target}
             // The frame's SVG carries the device's pixel size, so the tile scales it rather than
-            // cropping it — without this the label falls outside a tile narrower than a key.
+            // cropping it - without this the label falls outside a tile narrower than a key.
             className='aspect-square rounded overflow-hidden disabled:cursor-default [&>svg]:w-full [&>svg]:h-full'
             data-testid={`stream-deck.key-${slot}`}
             onClick={key?.target ? () => onKeyPress?.(slot, key.target!) : undefined}

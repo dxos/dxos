@@ -13,7 +13,7 @@ import type * as Type from './types.ts';
 /**
  * An event-tap stage: applies `fn` to events matching `tags`, passes EVERY event through unchanged
  * (so downstream stages and the commit sink see the full stream), and isolates failures by
- * recording them on the event's target — a bad stage on one message never aborts the crawl.
+ * recording them on the event's target - a bad stage on one message never aborts the crawl.
  */
 export const tapStage = <E, R>(
   name: string,

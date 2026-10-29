@@ -67,7 +67,7 @@ describe('opfs-worker protocol browser test', { timeout: 60_000, sequential: tru
 
   test('export checkpoints committed WAL frames into the raw pool main file', async () => {
     // Worker A: write data (committed to the WAL), export (triggers wal_checkpoint(TRUNCATE)),
-    // then read the raw on-disk main file while A is still alive — before any close-time checkpoint.
+    // then read the raw on-disk main file while A is still alive - before any close-time checkpoint.
     const workerA = spawnOpfsWorker();
     let payloadDuringSession: Uint8Array;
     try {

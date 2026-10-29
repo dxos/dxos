@@ -28,13 +28,13 @@ export type BuildContactOptions = {
 /**
  * Shared contact-creation logic.
  *
- * Builds a fresh Person from the actor (no `db.add` here — caller decides whether to add directly
+ * Builds a fresh Person from the actor (no `db.add` here - caller decides whether to add directly
  * or route through an operation so the visibility/hidden flag can differ per caller).
  * Returns `undefined` when the actor has no email, or when a Person with that email already exists.
  *
  * Existence is answered by the space's shared identity index, so bulk extraction costs one query
- * per type for the whole run rather than a scan per message, and — because the index is shared and
- * the new contact is registered into it — a repeat sender never yields a second Person, whether the
+ * per type for the whole run rather than a scan per message, and - because the index is shared and
+ * the new contact is registered into it - a repeat sender never yields a second Person, whether the
  * repeat is later in this run or concurrent in another.
  */
 export const buildContactFromActor = (
@@ -88,7 +88,7 @@ export const buildContactFromActor = (
 /**
  * Builds a fresh Organization for the actor's corporate email domain (placeholder name + website
  * from the domain). Returns `undefined` for a free-mail domain, or when the domain already resolves
- * to a known Organization — the identity index (Organization by website domain) is what makes
+ * to a known Organization - the identity index (Organization by website domain) is what makes
  * repeated extraction converge instead of duplicating.
  */
 export const buildOrganizationFromActor = (
@@ -112,7 +112,7 @@ export const buildOrganizationFromActor = (
       name: organizationNameFromDomain(domain),
       website: `https://${domain}`,
     });
-    // Caller-owned overlay only — same commit discipline as the contact path above.
+    // Caller-owned overlay only - same commit discipline as the contact path above.
     provided?.register(organization);
     return organization;
   });
@@ -124,7 +124,7 @@ export type ContactGraph = {
 };
 
 /**
- * Builds the sender's full contact graph: the Person (gate included — see
+ * Builds the sender's full contact graph: the Person (gate included - see
  * {@link buildContactFromActor}) plus, when the Person was created and its corporate domain matches
  * no known Organization, a fresh Organization linked from the contact. The gate is evaluated
  * BEFORE the Organization exists, so a just-created Organization never widens the allow-list that

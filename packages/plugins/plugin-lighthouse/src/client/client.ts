@@ -127,7 +127,7 @@ const trimSlash = (url: string) => url.replace(/\/+$/, '');
 /** Reads lighthouse's error body (`{ error: { code, message, hint } }`), the CLI's error shape. */
 const toError = (status: number, body: unknown) => {
   const error = asRecord(asRecord(body)?.error);
-  const message = [asString(error?.message) ?? `HTTP ${status}`, asString(error?.hint)].filter(Boolean).join(' — ');
+  const message = [asString(error?.message) ?? `HTTP ${status}`, asString(error?.hint)].filter(Boolean).join(' - ');
   return new LighthouseError(status, asString(error?.code), { message });
 };
 

@@ -13,7 +13,7 @@ export type AudioInputDevice = {
 
 /**
  * Marks an id as an `AVAudioSession` port rather than a WebKit device. `getUserMedia` rejects an
- * unknown `deviceId` outright, so a native id must never reach its constraints — selection is applied
+ * unknown `deviceId` outright, so a native id must never reach its constraints - selection is applied
  * by routing the audio session instead. {@link isNativeAudioInput} is the check callers use.
  */
 const NATIVE_PREFIX = 'native:';
@@ -25,7 +25,7 @@ type NativeAudioInput = { id: string; name: string; selected: boolean };
 
 /**
  * The app exposes Tauri's bridge on `globalThis` (`withGlobalTauri`), so the command can be invoked
- * without this package depending on `@tauri-apps/api` — it is also loaded in plain browsers and in
+ * without this package depending on `@tauri-apps/api` - it is also loaded in plain browsers and in
  * node tests, where that dependency would be dead weight.
  */
 type TauriGlobal = {
@@ -39,7 +39,7 @@ const getInvoke = () => (globalThis as TauriGlobal).__TAURI__?.core?.invoke;
  *
  * Prefers the native command on iOS: WebKit reports no `deviceId` or `label` from
  * `enumerateDevices` until the page holds a capture grant, and never lists the simulator's
- * synthesised device at all — leaving the picker empty. `AVAudioSession` knows the real inputs.
+ * synthesised device at all - leaving the picker empty. `AVAudioSession` knows the real inputs.
  * Everywhere else (and whenever the command is absent) this falls back to the web API.
  */
 export const listAudioInputs = async (): Promise<AudioInputDevice[]> => {

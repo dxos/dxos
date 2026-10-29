@@ -18,8 +18,8 @@ import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
- * Curated set `composer.space` (and every iOS build) ships. Selection is build-time — swapping this
- * file in via `DX_PLUGIN_SET=production` — rather than a runtime flag, so a non-shipped plugin never
+ * Curated set `composer.space` (and every iOS build) ships. Selection is build-time - swapping this
+ * file in via `DX_PLUGIN_SET=production` - rather than a runtime flag, so a non-shipped plugin never
  * enters the bundle.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [

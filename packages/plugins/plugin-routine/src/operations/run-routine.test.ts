@@ -27,7 +27,7 @@ import RunRoutineHandler from './run-routine.ts';
 /** Captures the input each run receives so the test can assert on it after the invocation. */
 const received: unknown[] = [];
 
-/** Trigger ids the monitor was asked to invoke — the seam a `remote` trigger must reach instead of running here. */
+/** Trigger ids the monitor was asked to invoke - the seam a `remote` trigger must reach instead of running here. */
 const monitorInvocations: string[] = [];
 
 /** Stands in for the aggregate monitor, whose real implementation routes `remote` triggers to EDGE over HTTP. */

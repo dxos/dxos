@@ -87,7 +87,7 @@ const required = <T,>(value: T | null | undefined, name: string): T => {
 
 /**
  * Members and invitations are Listbox rows: the arrow keys move the highlight, the ring spans the whole row, and a
- * pending invitation's ✕ ends where the split button below it does.
+ * pending invitation's x ends where the split button below it does.
  */
 export const TestRows: Story = {
   play: async ({ canvasElement }) => {

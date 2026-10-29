@@ -58,8 +58,8 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         }));
         if (expanding) {
           // An expanded plank is sized to the space *between* the two spine piles, which is only where
-          // it sits once it is at the front. Left where it was, its trailing edge — and with it the
-          // whole toolbar button group — ends up underneath the following planks' spines. Only `expanded`
+          // it sits once it is at the front. Left where it was, its trailing edge - and with it the
+          // whole toolbar button group - ends up underneath the following planks' spines. Only `expanded`
           // changes here, so there is no deck write to carry the intent.
           yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
         }

@@ -61,7 +61,7 @@ class TestObjectReadToolkit extends Toolkit.make(
       objectId: EntityId,
     }),
     // Declared because `Tool.make` defaults `success` to `Schema.Void`, which discards the handler's
-    // return value — and the echoed id IS the dynamic value this suite canonicalizes.
+    // return value - and the echoed id IS the dynamic value this suite canonicalizes.
     success: Schema.String,
   }),
 ) {
@@ -73,7 +73,7 @@ class TestObjectReadToolkit extends Toolkit.make(
 }
 
 // These call through `LanguageModelFixture`/`Chat` against a real model on a cache miss, so they carry
-// the `model-fixture` tag and replay frozen conversations — skipped by default
+// the `model-fixture` tag and replay frozen conversations - skipped by default
 // (DX_RUN_MODEL_FIXTURE_TESTS=1 to replay, DX_UPDATE_MODEL_FIXTURES=1 to regenerate). The `dynamic
 // value matching` describe below tests the matching machinery itself with no model involved, so it
 // stays untagged and always runs.
@@ -267,7 +267,7 @@ describe('dynamic value matching', () => {
 
     // Stored: both turns share one clock value (dedups to a single dynamic token before the space key).
     const stored = timestampedPrompt(SPACE_A, ['2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z']);
-    // Live: the two turns have distinct clock values (two tokens) — the count diverges from stored.
+    // Live: the two turns have distinct clock values (two tokens) - the count diverges from stored.
     const live = timestampedPrompt(SPACE_B, ['2026-01-01T00:00:01.000Z', '2026-01-01T00:00:02.000Z']);
 
     // They still match: timestamps are normalized to a placeholder before canonicalization.

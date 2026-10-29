@@ -52,7 +52,7 @@ describe('prompt', () => {
       },
     ]);
     expect(rendered).toContain(
-      '- `com.example.type.task` — title: string, status: "open" | "done", priority?: number, ' +
+      '- `com.example.type.task` - title: string, status: "open" | "done", priority?: number, ' +
         'owner?: Ref<com.example.type.person>, tags: string[]',
     );
   });
@@ -103,7 +103,7 @@ describe('prompt', () => {
     expect(Object.keys(DOCS)).toEqual(STATIC_DOCS.map(({ name }) => name));
     for (const name of [...Object.keys(DOCS), 'catalog/types.md', 'catalog/operations.md']) {
       expect(DOCS['README.md']).toContain(`\`${name}\``);
-      expect(instructions).toContain(`- \`${name}\` — `);
+      expect(instructions).toContain(`- \`${name}\` - `);
     }
     expect(DOCS['queries.md']).toContain('Filter.id(id)');
     // A formatter reading a snippet as top-level code turns `yield*` into multiplication.

@@ -40,7 +40,7 @@ export type Clip = {
 };
 
 /**
- * The frames' cover variants, in order, as a playlist — the view-time splice of the storyboard.
+ * The frames' cover variants, in order, as a playlist - the view-time splice of the storyboard.
  * Shared by the article (what the player plays) and the Play action (enabled only with clips).
  */
 export const clipsAtom = (storyboard: Storyboard.Storyboard): Atom.Atom<readonly Clip[]> =>

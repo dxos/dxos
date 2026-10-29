@@ -25,7 +25,7 @@ export const isUrl = Schema.is(Format.URL);
 
 //
 // Base structs (no dynamic annotations). The capability layer (create-object.ts) applies annotation
-// closures on top — those closures reference operations/sources and so cannot live in this module.
+// closures on top - those closures reference operations/sources and so cannot live in this module.
 //
 
 export const StandardSiteCreateBase = Schema.Struct({
@@ -56,7 +56,7 @@ export const makeSubscriptionFromCreate = (input: Input): Subscription.Subscript
   switch (input.type) {
     case 'standard-site':
       // `url` stores the publication site reference (at:// or https://); sync derives the author DID
-      // from it directly — no handle stored, name resolved from the publication at sync time.
+      // from it directly - no handle stored, name resolved from the publication at sync time.
       return Subscription.makeSubscription({ type: 'standard-site', url: input.publication });
     case 'rss':
       return Subscription.makeSubscription({ type: 'rss', url: input.url, name: input.name });

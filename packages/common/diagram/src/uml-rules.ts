@@ -56,7 +56,7 @@ const upEdges = (model: UmlModel): { from: string; to: string }[] =>
   );
 
 /**
- * Inheritance trees: each supertype with claimable subtypes forms a group — the hierarchy stacks
+ * Inheritance trees: each supertype with claimable subtypes forms a group - the hierarchy stacks
  * vertically (root on top, arrows up) and peers share a horizontal axis, packed as a tidy tree
  * (each parent centered over its subtree).
  */
@@ -71,7 +71,7 @@ export const inheritanceTreeRule: GroupRule = {
         unclaimed.has(relation.from) &&
         unclaimed.has(relation.to)
       ) {
-        // relation: subtype → supertype.
+        // relation: subtype -> supertype.
         children.set(relation.to, [...(children.get(relation.to) ?? []), relation.from]);
         hasParent.add(relation.from);
       }
@@ -179,7 +179,7 @@ export const linearChainRule: GroupRule = {
     }
 
     const rects = new Map<string, Rect>();
-    // Chain runs source → target, reading left to right.
+    // Chain runs source -> target, reading left to right.
     chain.forEach((id, index) => {
       rects.set(id, { x: index * (cell.w + GAP), y: 0, w: cell.w, h: cell.h });
       unclaimed.delete(id);
@@ -215,7 +215,7 @@ export const buildGroups = (model: UmlModel, cell: Cell, rules: GroupRule[]): Gr
 
 /**
  * Pack groups as super-nodes: rank by up-oriented cross-group edges (target group above), then
- * lay ranks out as rows, bottom rank last — mirroring the node-level convention.
+ * lay ranks out as rows, bottom rank last - mirroring the node-level convention.
  */
 export const packGroups = (model: UmlModel, groups: Group[]): Map<string, Scene.Point> => {
   const groupOf = new Map<string, Group>();

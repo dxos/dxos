@@ -21,7 +21,7 @@ export type ProjectBranchArticleProps = {
 };
 
 /**
- * The Chats branch as a grid of cards, the way a database type node shows its objects — the branch
+ * The Chats branch as a grid of cards, the way a database type node shows its objects - the branch
  * stands for a set, and selecting it should show that set rather than only expand the tree.
  */
 export const ProjectChatsArticle = ({ role, project, attendableId }: ProjectBranchArticleProps) => {

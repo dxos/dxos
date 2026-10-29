@@ -25,8 +25,8 @@ export type UseToolbarProps = {
 
 /**
  * Owns the magazine toolbar: the view-filter and curate-busy atoms, the Curate/Clear operation
- * handlers, and the reactive menu action graph. The action graph reads its state — view filter,
- * curate-busy flag, and whether the magazine has feeds — via `get` inside the builder, so it
+ * handlers, and the reactive menu action graph. The action graph reads its state - view filter,
+ * curate-busy flag, and whether the magazine has feeds - via `get` inside the builder, so it
  * subscribes to those atoms and rebuilds whenever they change. Returns the menu props (spread into
  * `ActionToolbar`) plus `viewAtom`, which the article also reads to filter the visible posts.
  */

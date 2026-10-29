@@ -8,7 +8,7 @@ import { type RatingModel, type RatingOverrides } from '../model/rating.ts';
 export const sessionModel: RatingModel = {
   version: 6,
   rationale:
-    "Goal is board game cafés in Bangkok with a big game library. The thumbs-up is Timeless Garden Rooftop (4.9, 136 reviews, no published library size), so rating is scored as closeness to that proven sweet spot (4.9 ±0.15) instead of raw top-end — that stops thin-sample 5.0 mall listings outranking it — stated library size stays a strong term so Dice Cup's 400+ games remains high, and review volume is only a small tie-breaker.",
+    "Goal is board game cafés in Bangkok with a big game library. The thumbs-up is Timeless Garden Rooftop (4.9, 136 reviews, no published library size), so rating is scored as closeness to that proven sweet spot (4.9 ±0.15) instead of raw top-end - that stops thin-sample 5.0 mall listings outranking it - stated library size stays a strong term so Dice Cup's 400+ games remains high, and review volume is only a small tie-breaker.",
   terms: [
     {
       id: 'rating',

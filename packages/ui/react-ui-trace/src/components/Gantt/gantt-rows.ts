@@ -14,7 +14,7 @@ export type Row = {
   groupId: string | undefined;
 };
 
-/** A group's rows, contiguous — which is what lets one rectangle enclose them. */
+/** A group's rows, contiguous - which is what lets one rectangle enclose them. */
 export type Band = {
   group: GanttGroup;
   first: number;

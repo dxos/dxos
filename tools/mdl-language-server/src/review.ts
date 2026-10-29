@@ -30,11 +30,11 @@ export const STATUS_LABEL: Record<VerdictStatus, string> = {
 
 /** A glyph per status, since an inlay hint or code lens has no colour of its own. */
 export const STATUS_ICON: Record<VerdictStatus, string> = {
-  done: '✓',
+  done: 'OK',
   untested: '?',
-  partial: '◐',
-  diverged: '≠',
-  missing: '✗',
+  partial: '\u25D0',
+  diverged: '!=',
+  missing: 'X',
 };
 
 /** What a scenario or test is judged on: whether automation runs it. */

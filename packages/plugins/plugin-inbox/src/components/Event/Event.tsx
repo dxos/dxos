@@ -25,7 +25,7 @@ import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useT
 
 type EventContextValue = {
   attendableId?: string;
-  /** Graph node id for toolbar action lookup — differs from `attendableId` in companion mode. */
+  /** Graph node id for toolbar action lookup - differs from `attendableId` in companion mode. */
   nodeId?: string;
   event: EventType.Event;
   viewMode: ViewMode;
@@ -137,7 +137,7 @@ const EventHeader = ({ db, editable, onContactCreate, onOpenObject, starred, onT
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
+    // Card.Body is `display: contents`, so rows are direct grid items - add row-gap when editing.
     <Header.Root classNames={editable && 'gap-y-1'}>
       <EventDetails
         event={event}

@@ -31,7 +31,7 @@ export type Step = {
 };
 
 /**
- * A step pointing at a toolbar control, which a narrow toolbar may have folded into its overflow (⋮)
+ * A step pointing at a toolbar control, which a narrow toolbar may have folded into its overflow (:)
  * menu. The control keeps its test id there, so the step only has to open the menu to reach it.
  *
  * A control that collapses as part of a group is one level further in, since a group becomes a

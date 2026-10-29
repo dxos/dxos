@@ -204,7 +204,7 @@ type MasonryViewportProps<Item> = Util.ThemedClassName<{
   itemProps?: (id: string) => Focus.ItemBinding | undefined;
   /**
    * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
-   * viewport) to render the grid in a plain full-width block instead of a nested scroll container —
+   * viewport) to render the grid in a plain full-width block instead of a nested scroll container -
    * the `ScrollArea.Root` that `Masonry.Content` provides is then not needed. Nesting scroll
    * containers also risks collapsing the measured width to the scrollbar gutter, which would
    * suppress the grid entirely (see the width gate below).
@@ -249,8 +249,8 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
     // Hide the grid until the layout stops changing, then fade in; latch on so later edits never
     // re-hide it. Revealing on the first measurement is not enough: tiles mount collapsed (their
     // poster reserves height a frame later), so the first pass stacks them bunched at the top and
-    // only settles over the next few reflows. Debounce on `rects` identity — which changes on every
-    // relayout — and reveal once it has been stable for a beat, with a hard deadline as a backstop.
+    // only settles over the next few reflows. Debounce on `rects` identity - which changes on every
+    // relayout - and reveal once it has been stable for a beat, with a hard deadline as a backstop.
     const [revealed, setRevealed] = useState(false);
     useEffect(() => {
       if (revealed || contentWidth <= 0) {
@@ -315,7 +315,7 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
               // Activation alone does not make a tile selectable; only selection carries `aria-selected`.
               const selectable = bound?.['aria-selected'] !== undefined;
               const { 'aria-selected': selected = false, ...handlers } = Focus.bindItem(bound);
-              // A tile with no height at all — never measured, nothing remembered — is positioned by
+              // A tile with no height at all - never measured, nothing remembered - is positioned by
               // a guess. Painting that guess is what flashed a tile hundreds of pixels out of place
               // when the item set was swapped wholesale. A remembered height from another width is
               // close enough to paint, so a resize reflows in place instead of blanking.
@@ -323,7 +323,7 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
               const estimated = !knownIds.has(id);
               return (
                 // The tile is the collection's item: the shared focus ring marks it when current (by click or arrows),
-                // and the shared selected edge when selected — drawn on an overlay above an opaque tile (a card).
+                // and the shared selected edge when selected - drawn on an overlay above an opaque tile (a card).
                 <Focus.Item key={id} asChild selected={selectable ? selected : undefined} data-focus-click>
                   <div
                     // Let the tile clamp its card: a card's own min-width must not exceed
@@ -357,7 +357,7 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
     );
 
     // Not `dx-expand` in the non-scrolling case: the width gate needs a definite inline size
-    // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
+    // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow -
     // the grid's height comes from the computed layout.
     return scroll ? (
       <ScrollArea.Viewport classNames='px-(--gutter)' ref={viewportRef}>

@@ -84,14 +84,14 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
 };
 
 /**
- * Normalized activation specification of a module — which wave it belongs to and what it
+ * Normalized activation specification of a module - which wave it belongs to and what it
  * exchanges with the capability graph.
  *
  * Every module names a wave: `activatesOn` defaults to {@link ActivationEvent.Idle} when the
  * authoring record omits it. Within a wave, modules are ordered topologically (providers of
  * `requires` activate first) and a module may pull a provider whose own wave has already fired.
  * Because a fired event stays fired, a module gated on an event that has already passed remains
- * eligible in every later round — which is what lets a consumer activate once a provider from
+ * eligible in every later round - which is what lets a consumer activate once a provider from
  * some other wave finally lands.
  */
 export type ActivationSpec = {
@@ -129,7 +129,7 @@ export interface PluginModule {
   id: string;
 
   /**
-   * Normalized activation specification — how and when the module activates.
+   * Normalized activation specification - how and when the module activates.
    */
   readonly activation: ActivationSpec;
 
@@ -151,8 +151,8 @@ export interface PluginModule {
 /**
  * Structural authoring shape for typed modules. A module without `requires` is a root,
  * triggered by `activatesOn` (implicitly Idle). A module with `requires` is a chain
- * member: it activates once every declared capability has been contributed — by whichever
- * event's chain produced the providers, not necessarily during startup — additionally gated
+ * member: it activates once every declared capability has been contributed - by whichever
+ * event's chain produced the providers, not necessarily during startup - additionally gated
  * on `activatesOn` when declared. Consumers of event-gated providers stay pending until the
  * event fires and the provider contributes; capability cycles fail at runtime
  * (DependencyCycleError). Channel enforcement happens in {@link ValidateModuleOptions}.
@@ -247,7 +247,7 @@ class PluginModuleImpl implements PluginModule {
 }
 
 /**
- * Whether two modules come from the same authored definition — the same module object, as when a
+ * Whether two modules come from the same authored definition - the same module object, as when a
  * re-created plugin reuses it. Re-creating a plugin keeps such a module running rather than repeating
  * its activation's side effects.
  */
@@ -261,11 +261,11 @@ export const isSameDefinition = (left: PluginModule, right: PluginModule): boole
  * Runtime plugin metadata, derived from the `@dxos/protocols` registry schemas (protocols owns the
  * config + registry schemas; the runtime projection lives here).
  *
- * - {@link Profile}: version-independent identity + display + provenance — the wire `PluginProfileSchema`
+ * - {@link Profile}: version-independent identity + display + provenance - the wire `PluginProfileSchema`
  *   (which carries `key`, the display fields, `dependsOn`, `spec`) plus `author` (resolved at runtime
  *   from the publisher's handle/DID for registry plugins, or self-declared for bundled).
- * - {@link Release}: a specific hosted release — the wire `PluginReleaseSchema` (version, moduleUrl, dependencies).
- * - {@link Meta}: a resolved single-release view — `{ profile, release? }`, both nested. `release` is
+ * - {@link Release}: a specific hosted release - the wire `PluginReleaseSchema` (version, moduleUrl, dependencies).
+ * - {@link Meta}: a resolved single-release view - `{ profile, release? }`, both nested. `release` is
  *   unset for bundled plugins (compiled in) and set for registry plugins.
  */
 export const Profile = Schema.Struct({
@@ -327,7 +327,7 @@ export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
  * // src/types/MarkdownCapabilities.ts
  * export const Settings = MarkdownNamespace.makeSingleton<Atom.Writable<Settings>>()('settings');
  * // dx.config.ts
- * Plugin.config({ plugin: { key: MarkdownNamespace.key, … }, modules: [ … ] });
+ * Plugin.config({ plugin: { key: MarkdownNamespace.key, ... }, modules: [ ... ] });
  * ```
  */
 export const namespace = <const K extends string>(key: K) => ({
@@ -503,7 +503,7 @@ export function addModule<T>(
 
 /**
  * A plugin factory. The options parameter is optional exactly when `T` has no required members
- * (`{} extends T` — every field is optional, or `T` is `void`), so `SomePlugin()` is accepted
+ * (`{} extends T` - every field is optional, or `T` is `void`), so `SomePlugin()` is accepted
  * without an empty `{}`; a plugin whose options include a required field still demands them.
  */
 export type PluginFactory<T = void> = ({} extends T ? (options?: T) => Plugin : (options: T) => Plugin) & {
@@ -511,13 +511,13 @@ export type PluginFactory<T = void> = ({} extends T ? (options?: T) => Plugin : 
 };
 
 /**
- * Normalizes an authoring record to an {@link ActivationSpec} — the single boundary where the
+ * Normalizes an authoring record to an {@link ActivationSpec} - the single boundary where the
  * optional authoring shape becomes the concrete runtime shape.
  *
  * Omitting `activatesOn` means the module belongs to the IDLE wave: a module that must run at
  * boot states `activatesOn: ActivationEvents.Startup` explicitly. Inverted from a startup default
  * so that forgetting the annotation costs post-paint responsiveness rather than time-to-
- * interactive — startup was the dumping ground, and its cost becomes the transitive demand
+ * interactive - startup was the dumping ground, and its cost becomes the transitive demand
  * closure of the boot path, enforced by the capability graph instead of by remembering to
  * annotate. Un-annotated modules stay pullable as providers because the baseline wave is
  * `Startup u Idle`; see `ActivationScheduler.#isBaselineWave`, which moves with this default.
@@ -607,7 +607,7 @@ const LazyTag: unique symbol = Symbol.for('@dxos/app-framework/Plugin/Lazy');
 
 /**
  * Async loader for a lazy plugin's real implementation.
- * The default export of the loaded module must be a `PluginFactory<T>` —
+ * The default export of the loaded module must be a `PluginFactory<T>` -
  * i.e. the same shape `Plugin.make` produces.
  */
 export type LazyLoader<T = void> = () => Promise<{ default: PluginFactory<T> }>;
@@ -622,7 +622,7 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * synchronously (so callers can read `Plugin.meta.profile.key` for free) but defers
  * loading the real plugin's modules until the manager calls
  * `Plugin.resolveLazy`. This lets the plugin's main entry point ship as a
- * tiny meta-only chunk — the heavy capabilities, schema, React surfaces,
+ * tiny meta-only chunk - the heavy capabilities, schema, React surfaces,
  * etc. live behind the dynamic `import()` and become a separate Rollup
  * chunk that is only fetched when the plugin is enabled.
  *
@@ -804,12 +804,12 @@ export class LazyPluginError extends BaseError.extend('LazyPluginError', 'Failed
  *
  * `context.id` is the plugin id the manager was acting on. `context.reason`
  * discriminates the failure mode:
- *  - `'missing'` — declared dep is neither registered nor in the catalog.
+ *  - `'missing'` - declared dep is neither registered nor in the catalog.
  *    `context.missing` lists offending ids.
- *  - `'install-failed'` — dep was found in the catalog but `add()` failed.
+ *  - `'install-failed'` - dep was found in the catalog but `add()` failed.
  *    `cause` carries the original error.
- *  - `'cycle'` — closure walk detected a cycle. `context.path` is the cycle path.
- *  - `'core-dependent'` — cascade-disable would have to disable a core plugin.
+ *  - `'cycle'` - closure walk detected a cycle. `context.path` is the cycle path.
+ *  - `'core-dependent'` - cascade-disable would have to disable a core plugin.
  *    `context.coreDependent` is the blocking id.
  */
 export class PluginDependencyError extends BaseError.extend(

@@ -55,7 +55,7 @@ const seedSkills = (space: Space) => {
   );
 };
 
-/** Empty automation — no trigger or action yet. */
+/** Empty automation - no trigger or action yet. */
 const seedDefault = (space: Space) => {
   seedSkills(space);
   space.db.add(Routine.make({ name: 'Morning Report', triggers: [] }));
@@ -189,7 +189,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Empty automation — no trigger or action yet. The Run action is disabled until a runnable is set. */
+/** Empty automation - no trigger or action yet. The Run action is disabled until a runnable is set. */
 export const Empty: Story = {
   decorators: [withAutomation(seedDefault)],
 };

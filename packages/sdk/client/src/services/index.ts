@@ -5,7 +5,7 @@
 export { type CreateClientServicesOptions, createClientServices } from './client-services-factory.tsx';
 // TODO(wittjosiah): Remove this once this is internal to shell manager.
 export { IFrameManager } from './iframe-manager.ts';
-// `LocalClientServices` / `fromHost` are NOT re-exported here — see `./local.ts`. Only the type
+// `LocalClientServices` / `fromHost` are NOT re-exported here - see `./local.ts`. Only the type
 // crosses, which erases.
 export { type LocalClientServicesParams } from './local-client-services.ts';
 export { ClientServicesProxy } from './service-proxy.ts';

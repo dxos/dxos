@@ -17,7 +17,7 @@ const DARK_MEDIA_RE = /prefers-color-scheme\s*:\s*dark/i;
 
 /**
  * Reads the document's color-scheme declaration from the **raw** markup. This cannot run after
- * sanitization: `meta` is a forbidden tag, so the declaration is gone by then. Not email-specific —
+ * sanitization: `meta` is a forbidden tag, so the declaration is gone by then. Not email-specific -
  * `color-scheme` and `prefers-color-scheme` are how any HTML document states its intent.
  */
 export const detectColorScheme = (html: string): ColorScheme | undefined => {
@@ -36,7 +36,7 @@ export const detectColorScheme = (html: string): ColorScheme | undefined => {
 };
 
 /**
- * Makes the app theme — not the OS — decide whether the document's own dark rules apply.
+ * Makes the app theme - not the OS - decide whether the document's own dark rules apply.
  * `prefers-color-scheme` resolves against the user agent and cannot be overridden from the page, so the
  * rules are rewritten instead: in dark mode each dark block is re-scoped to `@media all` so it always
  * matches; in light mode it is deleted, so an OS-dark browser can't dark-render inside a light app.

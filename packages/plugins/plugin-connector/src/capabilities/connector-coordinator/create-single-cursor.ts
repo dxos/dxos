@@ -19,7 +19,7 @@ export type SingleCursorResult = {
   cursor: Cursor.ExternalCursor;
   target: Obj.Unknown;
   /**
-   * The connector declares a recurring sync trigger and the connection has no sync routine yet — the
+   * The connector declares a recurring sync trigger and the connection has no sync routine yet - the
    * caller offers one through the create-routine form (nothing is persisted here; see
    * `openCreateSyncRoutineDialog`).
    */

@@ -21,7 +21,7 @@ export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
 /**
  * Cursored fact extraction over a mailbox feed.
  *
- * Lives in plugin-brain rather than plugin-inbox because brain owns everything it needs — the
+ * Lives in plugin-brain rather than plugin-inbox because brain owns everything it needs - the
  * `FactStore` it writes to, the settings that parameterize it, and the surfaces that read the result.
  * inbox owns the Mailbox and the feed cursor helpers, which this reaches through the plugin's public
  * API; nothing here inverts that.
@@ -147,8 +147,8 @@ export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
  * Drafts a reply grounded on the thread and the facts the space knows about its participants.
  *
  * Lives here rather than in plugin-inbox because it needs the `FactStore` brain owns. The surfaces
- * that offer it are inbox's, so it reaches them through `InboxCapabilities.ReplyGenerator` — the
- * dependency runs brain → inbox and a direct call from the surface would invert it.
+ * that offer it are inbox's, so it reaches them through `InboxCapabilities.ReplyGenerator` - the
+ * dependency runs brain -> inbox and a direct call from the surface would invert it.
  */
 export const GenerateReply = Operation.make({
   meta: {

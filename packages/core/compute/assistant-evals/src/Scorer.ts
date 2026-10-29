@@ -41,7 +41,7 @@ export class Memo extends Context.Service<Memo, { readonly cache: Map<unknown, E
 
 /**
  * What a scorer may reach: the space the session worked in, the trace feed its tools were written
- * to, the runtime's operations — the same surface the run itself had, while it is still open — plus
+ * to, the runtime's operations - the same surface the run itself had, while it is still open - plus
  * what the run reports about itself. A scorer is therefore written against the database rather than
  * against a blob of state some earlier pass had to anticipate.
  */
@@ -182,7 +182,7 @@ const normalize = (result: Result): number =>
 /**
  * A run whose space is still open. The harness is disposed by the eval's `afterAll` (see
  * `runner.ts`) rather than when the task returns, because evalite runs a row's scorers inside that
- * row's own test, after the task and before the file ends — so a scorer reads what the session
+ * row's own test, after the task and before the file ends - so a scorer reads what the session
  * actually left instead of a snapshot an earlier pass had to anticipate.
  */
 export type Session = {
@@ -245,8 +245,8 @@ type Graded = { readonly runId?: string; readonly scores?: Scores };
  * The evalite side of the same list, so a dimension is declared once and wired once.
  *
  * A run that left its space open is graded here, against that space. A staged run has none left to
- * ask — `claude-harness` disposes its own harness, because the facts it scores are only true between
- * two of its turns — so it records its marks with {@link runAll} and they are read back instead.
+ * ask - `claude-harness` disposes its own harness, because the facts it scores are only true between
+ * two of its turns - so it records its marks with {@link runAll} and they are read back instead.
  */
 export const toEvalite = (scorers: readonly Any[]) =>
   scorers.map((scorer) => ({

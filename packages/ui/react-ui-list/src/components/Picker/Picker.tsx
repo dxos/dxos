@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Picker` — generic listbox-with-input compound implementing the
+// `Picker` - generic listbox-with-input compound implementing the
 // WAI-ARIA combobox keyboard pattern. Search / filtering live one layer
 // up in `@dxos/react-ui-search`.
 //
@@ -69,7 +69,7 @@ const PickerRoot = ({ children, resetSelectionOnChange = false }: PickerRootProp
   // Tracks the last-seen item set so a reset fires only when items change, not on selection change.
   const prevItemVersionRef = useRef(itemVersion);
 
-  // Auto-select the first non-disabled item when the current selection is gone or disabled — or, when
+  // Auto-select the first non-disabled item when the current selection is gone or disabled - or, when
   // `resetSelectionOnChange`, whenever the item set itself changes.
   useEffect(() => {
     const itemsChanged = prevItemVersionRef.current !== itemVersion;
@@ -186,7 +186,7 @@ type EscapeBehavior = 'clear' | 'dismiss';
 
 type PickerInputProps = Util.ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & {
-    /** Controlled input value. Caller owns this — e.g. binds to query state. */
+    /** Controlled input value. Caller owns this - e.g. binds to query state. */
     value?: string;
     /** Called on every keystroke with the new input string. */
     onValueChange?: (value: string) => void;
@@ -207,8 +207,8 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     const inputRef = useRef<HTMLInputElement>(null);
     const shouldAutoFocus = !!autoFocus && !hasIosKeyboard;
 
-    // React's `autoFocus` fires during commit, so a host that restores focus afterwards — a dialog's
-    // focus trap, or the editor the palette was opened over — wins and the caret never reaches the
+    // React's `autoFocus` fires during commit, so a host that restores focus afterwards - a dialog's
+    // focus trap, or the editor the palette was opened over - wins and the caret never reaches the
     // input. Claiming it again on the next frame is what makes a command palette typable on open.
     useEffect(() => {
       if (!shouldAutoFocus) {
@@ -355,7 +355,7 @@ type PickerItemProps = Util.ThemedClassName<{
   value: string;
   /** Callback when the item is committed (click, or Enter while highlighted). */
   onSelect?: () => void;
-  /** Disable the item — registry-visible but not focusable, not navigable, not clickable. */
+  /** Disable the item - registry-visible but not focusable, not navigable, not clickable. */
   disabled?: boolean;
   asChild?: boolean;
   children?: ReactNode;

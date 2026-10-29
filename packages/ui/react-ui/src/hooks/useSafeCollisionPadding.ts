@@ -17,7 +17,7 @@ const propIsNumber = (prop: PaddingProp): prop is number => Number.isFinite(prop
 const propsIsRecord = (prop: PaddingProp): prop is PaddingRecord => !!(prop && typeof prop === 'object');
 
 // The safe area is optional on the theme context, and absent entirely when a consumer resolves the
-// fallback context — which any portalled surface does under the dev server's dual-module split. Its
+// fallback context - which any portalled surface does under the dev server's dual-module split. Its
 // insets are also `NaN` until the first viewport measurement, so every read here is already written
 // to fall back to zero; an absent object is the same case, not a different one.
 const safePadding = (propsPadding: PaddingProp, safeArea: SafeAreaPadding | undefined, side: keyof SafeAreaPadding) => {

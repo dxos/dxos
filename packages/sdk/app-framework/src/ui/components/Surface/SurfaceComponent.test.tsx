@@ -145,7 +145,7 @@ const RoleGated = Role.make<Record<string, unknown>>('org.dxos.test.role.gated')
 
 const gatedMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceGated'), name: 'SurfaceGatedTest' });
 
-// The surface module parks on its role's demand event instead of activating at startup —
+// The surface module parks on its role's demand event instead of activating at startup -
 // the shape the surface maker's `roles` option produces.
 const GatedPlugin = Plugin.define(gatedMeta).pipe(
   Plugin.addModule({
@@ -192,7 +192,7 @@ describe('SurfaceComponent demand activation', () => {
 
 //
 // A role served by BOTH an eager catch-all (`Position.last`, matching anything) and a gated module
-// whose activation is held open by a latch — the shape behind #12717, where plugin-space's record
+// whose activation is held open by a latch - the shape behind #12717, where plugin-space's record
 // article claimed a feed plank for a second while plugin-magazine's chunk loaded.
 //
 
@@ -285,7 +285,7 @@ describe('SurfaceComponent fallback hold', () => {
 
   test('limit={0} renders nothing while the role is still activating', async ({ expect }) => {
     // `limit={0}` means render nothing, and a held fallback must not reintroduce output through the
-    // placeholder — which is only visible with an explicit one, since the default is empty.
+    // placeholder - which is only visible with an explicit one, since the default is empty.
     const { plugin, release } = makeHeldPlugin();
     await using harness = await createTestApp({ plugins: [CatchAllPlugin(), plugin()] });
 
@@ -516,7 +516,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
     // Legacy: the entire fleet re-renders on every contribution.
     expect(legacyPerContribution).toBe(fleet);
     // Per-role: re-renders per contribution are bounded by the affected role's surfaces
-    // (plus a small fleet-independent commit-phase constant) — NOT the fleet size.
+    // (plus a small fleet-independent commit-phase constant) - NOT the fleet size.
     expect(nextPerContribution).toBeLessThanOrEqual(3 * SURFACES_PER_ROLE);
     expect(next.reRenders).toBeLessThan(legacy.reRenders / 2);
   });
@@ -601,7 +601,7 @@ describe('SurfaceComponent dev metrics', () => {
     try {
       await using harness = await createTestApp({ plugins: [TestPlugin()] });
 
-      // Host passes a fresh `data` object of identical content on every render — the unstable-prop footgun.
+      // Host passes a fresh `data` object of identical content on every render - the unstable-prop footgun.
       let bump: () => void = () => {};
       const Host = () => {
         const [, setN] = useState(0);

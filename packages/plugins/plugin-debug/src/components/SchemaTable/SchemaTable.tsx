@@ -14,7 +14,7 @@ export type SchemaTableProps = Util.ThemedClassName<{
   types: any[];
   objects?: Record<string, number | undefined>;
   label: string;
-  /** May be async — the row awaits it, so a generator's failure is reported rather than unowned. */
+  /** May be async - the row awaits it, so a generator's failure is reported rather than unowned. */
   onClick: (typename: string) => Promise<void> | void;
 }>;
 
@@ -22,7 +22,7 @@ export type SchemaTableProps = Util.ThemedClassName<{
  * Row display name: a preset descriptor may carry one, otherwise the key it is created by.
  *
  * The field is `presetLabel` rather than `name` because a class-based type entity already has a
- * `name` — its JS class name — so keying off that suppressed the count on every real type row.
+ * `name` - its JS class name - so keying off that suppressed the count on every real type row.
  */
 const rowName = (type: { presetLabel?: string }, typename: string | undefined): string =>
   (typeof type.presetLabel === 'string' ? type.presetLabel : undefined) ?? typename ?? '';
@@ -51,14 +51,14 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
       <h2 className='p-2'>{label}</h2>
       {types.map((type) => {
         // Preset descriptors are plain `{ typename }` objects, while class-based type entities carry
-        // no `typename` property — those resolve via `Type.getTypename`.
+        // no `typename` property - those resolve via `Type.getTypename`.
         const typename = typeof type.typename === 'string' ? type.typename : Type.getTypename(type);
         return (
           <Layout.Grid key={typename} cols='subgrid' align='center'>
             <div className='px-2 text-sm font-mono text-fg-subtle'>{rowName(type, typename)}</div>
             {/* A labelled row is a preset rather than a type, so it has no object count to show. */}
             <div className='px-2 text-right font-mono'>
-              {typeof type.presetLabel === 'string' ? '—' : typename ? (objects[typename] ?? 0) : 0}
+              {typeof type.presetLabel === 'string' ? '-' : typename ? (objects[typename] ?? 0) : 0}
             </div>
             <Button.Root
               variant='ghost'

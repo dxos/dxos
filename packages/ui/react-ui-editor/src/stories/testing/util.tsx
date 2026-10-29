@@ -31,7 +31,7 @@ export const img = '![dxos](https://media.dxos.network/dxos-logotype-blue.png)';
 export type GenerateListOptions = {
   /** Maximum nesting depth. */
   depth?: number;
-  /** Children per node — a fixed count or an inclusive `[min, max]` range. */
+  /** Children per node - a fixed count or an inclusive `[min, max]` range. */
   children?: number | [number, number];
   /** Emit task markers (`- [ ]`) rather than plain bullets (`- `). */
   task?: boolean;
@@ -250,7 +250,7 @@ export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) 
   el.appendChild(
     Domino.of('a')
       .attributes({ 'href': url, 'target': '_blank', 'rel': 'noreferrer', 'aria-label': 'Open link' })
-      // Not the accent link color: the tooltip sits on the inverse surface — inherit its own fg.
+      // Not the accent link color: the tooltip sits on the inverse surface - inherit its own fg.
       .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)
       .append(Domino.svg('ph--arrow-square-out--regular')).root,

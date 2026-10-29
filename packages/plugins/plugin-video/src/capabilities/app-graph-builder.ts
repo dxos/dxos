@@ -14,7 +14,7 @@ import { Video } from '@dxos/types';
 
 import { VideoNamespace } from '../namespace.ts';
 
-// Import only the (lightweight) Video type directly — NOT via the `#types` barrel. The barrel also
+// Import only the (lightweight) Video type directly - NOT via the `#types` barrel. The barrel also
 // evaluates `VideoOperation`, which pulls the `@dxos/ai` stack; importing that here would drag the
 // whole AI stack into early boot (this module contributes `AppCapabilities.AppGraphBuilder`). The
 // operations are lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu

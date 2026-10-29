@@ -25,7 +25,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
   const [currentPostId, setCurrentPostId] = useState<string>();
   const [subscription] = useObject(subject);
   const syncProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createSyncProgressKey(subject));
-  // Subscribe to the backing queue via its Ref — `.target` alone does not re-render when the
+  // Subscribe to the backing queue via its Ref - `.target` alone does not re-render when the
   // feed loads after navigation (same pitfall as plugin-inbox MailboxArticle).
   const [postFeed] = useObject(subscription?.feed);
   const db = Obj.getDatabase(subscription);

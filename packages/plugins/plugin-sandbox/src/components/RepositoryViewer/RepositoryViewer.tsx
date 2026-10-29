@@ -40,7 +40,7 @@ export type RepositoryViewerProps = {
 
 /**
  * A repository at one branch or commit: its files as a tree beside the selected file, or its
- * history. Fully controlled — the container owns fetching, so this renders the same in a story.
+ * history. Fully controlled - the container owns fetching, so this renders the same in a story.
  */
 export const RepositoryViewer = ({
   role,

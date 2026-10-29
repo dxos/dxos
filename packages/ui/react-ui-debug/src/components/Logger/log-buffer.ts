@@ -23,7 +23,7 @@ export type LogBufferOptions = {
  *
  * The panel that displays these rows is a deck companion: closing it unmounts the tree. When the
  * buffer and the recorder lived in component state, that unmount disposed the recorder and discarded
- * every row, so the log only covered the time the panel happened to be open — useless for the case it
+ * every row, so the log only covered the time the panel happened to be open - useless for the case it
  * exists for, which is looking at what happened *before* you went looking. Keeping both here means
  * recording starts when the app starts and survives every open/close.
  *

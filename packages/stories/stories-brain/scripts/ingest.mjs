@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Ingest the mailbox end-to-end: authenticate (once, front-loaded — approve in the browser, then walk
-// away), sync the fixture from live Gmail, then extract facts — including questions and requests as
-// directive facts (see illocutions in the pipeline-rdf DESIGN) — into the fact store. Stops there; use
+// Ingest the mailbox end-to-end: authenticate (once, front-loaded - approve in the browser, then walk
+// away), sync the fixture from live Gmail, then extract facts - including questions and requests as
+// directive facts (see illocutions in the pipeline-rdf DESIGN) - into the fact store. Stops there; use
 // run-all.mjs for the full bench suite.
 //
 // Usage (from packages/stories/stories-brain):
@@ -25,11 +25,11 @@ import { getAccessToken } from './google-auth.mjs';
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const run = (command, args) => spawnSync(command, args, { cwd: PACKAGE_ROOT, stdio: 'inherit', env: process.env });
 
-// 1. Auth — front-load the browser consent so the sync + extraction run unattended.
-console.error('===== auth — approve in the browser now; the rest runs unattended =====');
+// 1. Auth - front-load the browser consent so the sync + extraction run unattended.
+console.error('===== auth - approve in the browser now; the rest runs unattended =====');
 await getAccessToken();
 
-// 2. Sync — live Gmail → fixtures/local/mailbox-feed.json (unless reusing the existing fixture).
+// 2. Sync - live Gmail -> fixtures/local/mailbox-feed.json (unless reusing the existing fixture).
 if (!process.env.SKIP_FETCH) {
   console.error('\n===== sync (fetch-fixture) =====');
   const fetched = run('node', ['scripts/fetch-fixture.mjs']);
@@ -38,7 +38,7 @@ if (!process.env.SKIP_FETCH) {
   }
 }
 
-// 3. Extract facts + questions/requests → fixtures/local/fact-store.json.
+// 3. Extract facts + questions/requests -> fixtures/local/fact-store.json.
 console.error('\n===== extract facts / questions =====');
 const facts = run('pnpm', ['exec', 'vitest', 'run', '--project=node', 'src/test/extract-facts.bench.test.ts']);
 process.exit(facts.status ?? 1);

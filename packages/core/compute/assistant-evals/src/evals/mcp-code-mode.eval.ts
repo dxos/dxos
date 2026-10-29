@@ -21,7 +21,7 @@ import * as Scorer from '../Scorer.ts';
 // MCP code mode against the plain tool surface, on the work code mode exists for: one instruction
 // that touches many objects. Both variants drive the in-process host with the same Claude Code agent,
 // skills, seed and prompt; the only difference is whether `runScript` is served. Correctness is
-// graded from the database, and the cost of getting there — tool calls, tokens, wall clock — rides
+// graded from the database, and the cost of getting there - tool calls, tokens, wall clock - rides
 // the output, since that is the comparison the variant exists to make.
 //
 
@@ -99,7 +99,7 @@ const scorers = ({ opsUpdated, othersUntouched, count, reported }: Outcome): Sco
   }),
   Scorer.make({
     name: 'others-untouched',
-    description: 'Every non-Ops task is still todo with no priority — the update was targeted.',
+    description: 'Every non-Ops task is still todo with no priority - the update was targeted.',
     score: Effect.succeed(othersUntouched),
   }),
   Scorer.make({
@@ -109,7 +109,7 @@ const scorers = ({ opsUpdated, othersUntouched, count, reported }: Outcome): Sco
   }),
   Scorer.database({
     name: 'ledger-intact',
-    description: 'Still exactly the seeded tasks — the agent updated the ledger rather than adding to it.',
+    description: 'Still exactly the seeded tasks - the agent updated the ledger rather than adding to it.',
     query: Query.select(Filter.type(Task.Task)),
     score: (tasks) => tasks.length === count,
   }),
@@ -181,7 +181,7 @@ const task = ({ codeMode }: { codeMode: boolean }) =>
   );
 
 evalite.each(selected ? VARIANTS.filter(({ name }) => selected.includes(name)) : VARIANTS)(
-  'MCP code mode — bulk task update, tools vs runScript',
+  'MCP code mode - bulk task update, tools vs runScript',
   {
     data: [{ input: null }],
     task: (_input: null, variant: { codeMode: boolean }) => task(variant),

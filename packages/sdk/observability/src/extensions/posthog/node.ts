@@ -31,7 +31,7 @@ const isEncrypted = (host: string): boolean => {
 /**
  * PostHog for a node host, over `posthog-node`.
  *
- * The client is `PostHogMCP` rather than plain `PostHog` — a drop-in subclass that builds the
+ * The client is `PostHogMCP` rather than plain `PostHog` - a drop-in subclass that builds the
  * canonical `$mcp_*` events this extension answers `kind: 'mcp'` with.
  */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(

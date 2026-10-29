@@ -28,8 +28,8 @@ import { Actor, File, Milestone, type Person, Task, TaskSet } from '@dxos/types'
  */
 
 /**
- * Files a task into its set's tree — the `tasks` list for a root, its parent's `subtasks` for a
- * sub-task, which a generic object create leaves untouched — and rejects a milestone or parent
+ * Files a task into its set's tree - the `tasks` list for a root, its parent's `subtasks` for a
+ * sub-task, which a generic object create leaves untouched - and rejects a milestone or parent
  * belonging to another set.
  */
 export const CreateTask = Operation.make({
@@ -54,7 +54,7 @@ export const CreateTask = Operation.make({
     milestone: Schema.optional(Ref.Ref(Milestone.Milestone)),
   }),
   // JSON snapshot, not a live object: the handler may run on a remote host (edge
-  // operation-service) where only serializable values cross the wire — same contract as
+  // operation-service) where only serializable values cross the wire - same contract as
   // `database.objectCreate`.
   output: Schema.Struct({
     task: Type.getSchema(Task.Task),
@@ -90,7 +90,7 @@ export const UpdateTask = Operation.make({
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
-    // `null` clears an optional field, matching `Task.Edit` — without it the operation can set an
+    // `null` clears an optional field, matching `Task.Edit` - without it the operation can set an
     // assignee but never remove one.
     description: Schema.optional(Schema.NullOr(Schema.String)),
     status: Schema.optional(Task.Status),
@@ -98,7 +98,7 @@ export const UpdateTask = Operation.make({
     estimate: Schema.optional(Schema.NullOr(Task.Estimate)),
     assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
     /**
-     * Assign the task to a coding-agent session, by the harness session id — one call, rather than
+     * Assign the task to a coding-agent session, by the harness session id - one call, rather than
      * looking the session object up first and composing the actor by hand.
      *
      * An agent's actor is the object it IS, so the assignee it produces carries a `subject` ref to
@@ -114,7 +114,7 @@ export const UpdateTask = Operation.make({
     parentTask: Schema.optional(Schema.NullOr(Ref.Ref(Task.Task))),
   }),
   // JSON snapshot, not a live object: the handler may run on a remote host (edge
-  // operation-service) where only serializable values cross the wire — same contract as
+  // operation-service) where only serializable values cross the wire - same contract as
   // `database.objectCreate`.
   output: Schema.Struct({
     task: Type.getSchema(Task.Task),
@@ -122,7 +122,7 @@ export const UpdateTask = Operation.make({
 }).pipe(Operation.mutation('write'));
 
 /**
- * Files a question on a task and blocks the task on it — the task-addressed counterpart of the chat's
+ * Files a question on a task and blocks the task on it - the task-addressed counterpart of the chat's
  * planning tool, for an agent that has a task ref but no conversation (one driving the MCP verbs).
  * The question is an entry in the task's own history, so the person answering sees it on the task.
  */
@@ -144,7 +144,7 @@ export const AskQuestion = Operation.make({
     task: Ref.Ref(Task.Task),
     question: Schema.String.annotate({ description: 'The question, as put to the user.' }),
     context: Schema.optional(
-      Schema.String.annotate({ description: 'Why you are asking — what you are blocked on, in a sentence or two.' }),
+      Schema.String.annotate({ description: 'Why you are asking - what you are blocked on, in a sentence or two.' }),
     ),
     options: Schema.optional(
       Schema.Array(Task.AnswerOption).annotate({
@@ -155,11 +155,11 @@ export const AskQuestion = Operation.make({
     actor: Schema.optional(Actor.Actor),
     /**
      * Assigns the blocked task to the asking coding-agent session, as `UpdateTask` does, and makes
-     * that session the asker — a session's check-in lists its open tasks by the assignee ref.
+     * that session the asker - a session's check-in lists its open tasks by the assignee ref.
      */
     remoteSession: Schema.optional(RemoteSessionInput),
   }),
-  // JSON snapshot, not a live object — see the create/update verbs above.
+  // JSON snapshot, not a live object - see the create/update verbs above.
   output: Schema.Struct({
     /** Id of the question's entry in the task's history. */
     questionId: Schema.String,
@@ -219,7 +219,7 @@ export const TaskRestorePoint = Schema.Struct({
 export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
 
 /**
- * Records an object the task produced — a file, a document, a sheet — on `Task.artifacts`. Its own
+ * Records an object the task produced - a file, a document, a sheet - on `Task.artifacts`. Its own
  * verb because membership is compared by entity id, so adding the same object twice is a no-op,
  * which a generic patch of the ref array cannot promise.
  */
@@ -230,7 +230,7 @@ export const AddArtifact = Operation.make({
     description:
       'Attach an existing object (e.g. a File created by file.createFromUpload) to a task as an artifact ' +
       'the task produced. Adding the same object twice is a no-op. A pull request is recorded on the task ' +
-      'given — attach a PR that fixes one sub-task to that sub-task, and one covering the whole tree to its ' +
+      'given - attach a PR that fixes one sub-task to that sub-task, and one covering the whole tree to its ' +
       'root; it is refused only when that task already has a different open PR.',
     icon: 'ph--paperclip--regular',
   },
@@ -296,7 +296,7 @@ export const RemoveAttachment = Operation.make({
 
 /**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the list
- * that holds the task — its parent's `subtasks` or the set's `tasks` — is a separate record, so a
+ * that holds the task - its parent's `subtasks` or the set's `tasks` - is a separate record, so a
  * generic delete leaves the entry dangling behind it.
  */
 export const DeleteTask = Operation.make({
@@ -329,8 +329,8 @@ export const RestoreTasks = Operation.make({
 }).pipe(Operation.mutation('write'));
 
 /**
- * Repositions a task among its siblings — the set's `tasks` for a root, its parent's `subtasks`
- * otherwise. There is no sort key to patch — list order is the order — so ordering is unreachable
+ * Repositions a task among its siblings - the set's `tasks` for a root, its parent's `subtasks`
+ * otherwise. There is no sort key to patch - list order is the order - so ordering is unreachable
  * from a generic object update.
  *
  * Re-parenting is part of the same verb because a drop in the tree is both at once: doing it as
@@ -338,15 +338,15 @@ export const RestoreTasks = Operation.make({
  * before the position lands, and costs two undo entries for one gesture.
  *
  * The input carries every object the write touches, so the handler needs no query and no
- * services. With loaded refs it completes without an async boundary — a drop runs it under
- * `Effect.runSync` so the write lands in the gesture frame, with no optimistic overlay — while
+ * services. With loaded refs it completes without an async boundary - a drop runs it under
+ * `Effect.runSync` so the write lands in the gesture frame, with no optimistic overlay - while
  * unloaded refs (e.g. an agent caller) load asynchronously through the same path.
  */
 export const MoveTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.move'),
     name: 'Move Task',
-    description: 'Reposition a task among its siblings, optionally re-parenting it — list order is the task order.',
+    description: 'Reposition a task among its siblings, optionally re-parenting it - list order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
   input: Schema.Struct({
@@ -412,13 +412,13 @@ export const ListTasks = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    /** Container to list. Exactly one of `taskSet` / `project` — a project lists its own task set. */
+    /** Container to list. Exactly one of `taskSet` / `project` - a project lists its own task set. */
     taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
     project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task set is listed (org.dxos.type.project).',
     }),
     status: Schema.optional(Task.Status),
-    /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
+    /** Matches the assignee by DID, email, or display name - whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Only tasks under this milestone (inherited by sub-tasks from their nearest ancestor). */
     milestone: Schema.optional(Ref.Ref(Milestone.Milestone)),
@@ -427,7 +427,7 @@ export const ListTasks = Operation.make({
     after: Schema.optional(TaskCursor),
     limit: Schema.optional(Schema.Number).annotate({ description: 'Page size (default 50, max 200).' }),
   }),
-  // JSON snapshots, not live objects — see the create/update verbs above.
+  // JSON snapshots, not live objects - see the create/update verbs above.
   output: Schema.Struct({
     tasks: Schema.Array(Type.getSchema(Task.Task)),
     /** Present when more results remain; pass back as `after`. */
@@ -442,7 +442,7 @@ export const ListTasks = Operation.make({
 
 /**
  * Appends to the set's `milestones` array, which is both the membership record and the sequence
- * `milestoneMove` reorders — neither reachable from a generic object create.
+ * `milestoneMove` reorders - neither reachable from a generic object create.
  */
 export const CreateMilestone = Operation.make({
   meta: {
@@ -486,14 +486,14 @@ export const DeleteMilestone = Operation.make({
 }).pipe(Operation.mutation('destructive'));
 
 /**
- * Repositions a milestone within its set's `milestones` array, which is the milestone sequence —
+ * Repositions a milestone within its set's `milestones` array, which is the milestone sequence -
  * order is the array, not a field a generic update could patch.
  */
 export const MoveMilestone = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.moveMilestone'),
     name: 'Move Milestone',
-    description: 'Reposition a milestone within its task set — array order is the milestone sequence.',
+    description: 'Reposition a milestone within its task set - array order is the milestone sequence.',
     icon: 'ph--arrows-down-up--regular',
   },
   services: [Database.Service],
@@ -532,7 +532,7 @@ export const ListMilestones = Operation.make({
         name: Schema.String,
         description: Schema.optional(Schema.String),
         targetDate: Schema.optional(Format.DateOnly),
-        /** Tasks owed (cancelled ones excluded) and how many are done — a milestone stores no status. */
+        /** Tasks owed (cancelled ones excluded) and how many are done - a milestone stores no status. */
         total: Schema.Number,
         done: Schema.Number,
       }),

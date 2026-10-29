@@ -125,7 +125,7 @@ const ChatRoot = ({
   const commands = useSlashCommands({ registry: chatModel?.registry, db });
   const slashCommands = UiHooks.useDynamicRef(commands);
 
-  // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
+  // Reactive subscription - re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
   const [feedSnapshot] = useObject(chat?.feed);
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
@@ -270,7 +270,7 @@ const ChatRoot = ({
         case 'submit': {
           const text = ev.text.trim();
           if (text.length) {
-            // A leading /command is a deterministic shortcut — executed directly, no model in
+            // A leading /command is a deterministic shortcut - executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
             const resolved = SlashCommand.resolveSlashCommand(text, slashCommands.current);
             if (resolved) {
@@ -341,7 +341,7 @@ const ChatRoot = ({
           const text = ev.text.trim();
           if (text.length) {
             // Same seam as a submitted prompt (persist first, queue while a turn runs), but the
-            // content is synthetic — nobody typed it.
+            // content is synthetic - nobody typed it.
             void Promise.resolve(onSubmit?.(text)).then(() =>
               active
                 ? chatModel.enqueue({ message: text, disposition: 'synthetic' })
@@ -492,7 +492,7 @@ const authoredText = (message: Message.Message): string =>
 const promptTitle = (message: Message.Message): string => {
   const text = authoredText(message).trim();
   const firstLine = text.split('\n').find((line) => line.trim().length) ?? '';
-  return firstLine.length > PROMPT_TITLE_CHARS ? `${firstLine.slice(0, PROMPT_TITLE_CHARS)}…` : firstLine;
+  return firstLine.length > PROMPT_TITLE_CHARS ? `${firstLine.slice(0, PROMPT_TITLE_CHARS)}\u2026` : firstLine;
 };
 
 /** First few text lines of an assistant reply (tool calls, reasoning and status are excluded). */
@@ -507,12 +507,12 @@ const replySnippet = (message: Message.Message): string | undefined => {
     .filter((line) => line.trim().length)
     .slice(0, PROMPT_SNIPPET_LINES)
     .join('\n');
-  return snippet.length > PROMPT_SNIPPET_CHARS ? `${snippet.slice(0, PROMPT_SNIPPET_CHARS)}…` : snippet;
+  return snippet.length > PROMPT_SNIPPET_CHARS ? `${snippet.slice(0, PROMPT_SNIPPET_CHARS)}\u2026` : snippet;
 };
 
 /**
  * Build one outline marker per user-prompt turn: title = the prompt text, description = a snippet
- * of the following assistant reply, range = the turn's index span (prompt → next prompt). Message
+ * of the following assistant reply, range = the turn's index span (prompt -> next prompt). Message
  * indices, not document offsets: the feed navigates by index, so no range table exists any more.
  */
 const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
@@ -566,7 +566,7 @@ const chatRegistry = {
 
 type ChatThreadProps = Util.ThemedClassName<{
   viewType?: ChatView;
-  /** Blank lines kept below the tail at rest — breathing room above the composer. */
+  /** Blank lines kept below the tail at rest - breathing room above the composer. */
   tailLines?: number;
   /** Hue of the user's messages; defaults to the identity's hue. */
   userHue?: string;
@@ -594,8 +594,8 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
-  // A block reference's chip reads the object's name once it is loaded — resolved through the
-  // database's own ref, which honours the URI's space and the DXN forms — and the package default's
+  // A block reference's chip reads the object's name once it is loaded - resolved through the
+  // database's own ref, which honours the URI's space and the DXN forms - and the package default's
   // bare "Object" until then; the thread re-renders as the message's blocks settle.
   const getObjectLabel = useCallback(
     (uri: URI.URI): string => {
@@ -614,7 +614,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
   const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
 
   // The model is the adapter: the projected array is folded in with `replace`, streaming chunks
-  // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
+  // arrive as updates on one identity, and the window is told - the old `MessageSyncer`'s cursor
   // and range table have no equivalent left.
   const model = useFeedModel(messages, { stops: 'prompt' });
   useInPlaceUpdates(model, messages);
@@ -949,7 +949,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   }, []);
 
   // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
-  // delegation, status), so the row asks for the work the way the reader would, by ordinal — the
+  // delegation, status), so the row asks for the work the way the reader would, by ordinal - the
   // number the row shows, and the one `/task:run` and the agent's selectors resolve.
   const handleExecute = useCallback(
     (task: Task.Task) => {
@@ -1003,7 +1003,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
           <TaskList.Content />
         </TaskList.Viewport>
         {/* What the agent is blocked on, under the list it asked about: the list itself carries no
-            questions — a row replaying them grew by a line each — but a chat is where the asking
+            questions - a row replaying them grew by a line each - but a chat is where the asking
             happened, so the answer is given here rather than in a pane the reader has to open. */}
         <ChatTaskQuestions tasks={tasks} />
         {/* Only creates: a task is changed through its own row controls, not by selecting it into the strip. */}
@@ -1019,7 +1019,7 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
  * The open questions across the chat's tasks, each with the means to answer it.
  *
  * Answers go through the operation rather than `Task.answer`, so the conversation that asked is
- * resumed — which is the whole point of answering here instead of on the task.
+ * resumed - which is the whole point of answering here instead of on the task.
  */
 const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
   const { invokePromise } = Hooks.useOperationInvoker();

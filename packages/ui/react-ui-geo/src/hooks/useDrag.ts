@@ -18,7 +18,7 @@ export type DragOptions = {
   duration?: number;
   /**
    * When true, drag is constrained to rotation around the polar (vertical)
-   * axis only — i.e. longitude changes freely but the camera's tilt
+   * axis only - i.e. longitude changes freely but the camera's tilt
    * (latitude / phi) stays pinned at whatever value the root's `rotation`
    * prop was initialised with. Useful for "earth-spinning-at-an-angle"
    * presentations where the inclination should not change.
@@ -26,8 +26,8 @@ export type DragOptions = {
   lockTilt?: boolean;
   /**
    * Drag rotation mode:
-   * - `linear` (default): direct pixel-to-Euler mapping (Δx → lambda,
-   *   Δy → phi, gamma fixed at 0). Rotation is constrained to two axes;
+   * - `linear` (default): direct pixel-to-Euler mapping (Deltax -> lambda,
+   *   Deltay -> phi, gamma fixed at 0). Rotation is constrained to two axes;
    *   no roll. The dragged point does not track the cursor exactly.
    * - `versor`: quaternion-based rotation so that the dragged point
    *   follows the cursor exactly. May induce roll (gamma).
@@ -61,7 +61,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
         lockTilt: options.lockTilt,
         mode: options.mode,
         sensitivity: options.sensitivity,
-        // Zoom-driven gain: matches useWheel — degrees-per-pixel shrinks as the
+        // Zoom-driven gain: matches useWheel - degrees-per-pixel shrinks as the
         // globe gets larger on screen so the drag feel is consistent across zoom.
         getZoom: () => controller.zoom,
         time: 3_000,

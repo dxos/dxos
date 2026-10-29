@@ -4,7 +4,7 @@
 
 //
 // The semantic diagram: what the DSL's `diagram`/`group`/`node`/`edge` statements say, before any
-// coordinate exists. Every hint is optional — a pin, a relation, an allowed side, a waypoint — and
+// coordinate exists. Every hint is optional - a pin, a relation, an allowed side, a waypoint - and
 // `semantic-engine.ts` fills whatever is left open. Source ranges ride along so the engine can
 // report a contradiction against the statement that caused it.
 //
@@ -227,7 +227,7 @@ export type Diagram = {
   edges: Edge[];
   /** Trunk labels by bus key (`<hub>|<name>|<direction>`), from multi-target statements. */
   busLabels: Map<string, string>;
-  /** Whether any statement said how to place or route — when none did, the mermaid engine's search is also tried. */
+  /** Whether any statement said how to place or route - when none did, the mermaid engine's search is also tried. */
   hinted: boolean;
   /** Messages, notes and fragments in source order; what a sequence diagram draws top to bottom. */
   timeline: Step[];

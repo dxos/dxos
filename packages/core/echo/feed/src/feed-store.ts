@@ -186,8 +186,8 @@ export class FeedStore {
    */
   migrate = Effect.fn('FeedStore.migrate')(() =>
     Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      // A MigrationError means the bundled manifest is malformed — a defect, not something a caller
-      // can recover from — so it dies rather than widening this signature beyond SqlError.
+      // A MigrationError means the bundled manifest is malformed - a defect, not something a caller
+      // can recover from - so it dies rather than widening this signature beyond SqlError.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
       Effect.withSpan('FeedStore.migrate'),
@@ -346,8 +346,8 @@ export class FeedStore {
    * space/namespace holding that slot (`displaced`) and of the holder itself when it sits at a
    * different one (`moved`), so the caller can write the position without tripping the unique
    * index. It runs once per pulled block, so each half has to be a single index search: written as
-   * one `UPDATE … WHERE (displaced OR moved)`, SQLite planned a multi-index OR whose `displaced`
-   * branch scanned every block in the store — 220 ms per pulled block on a 12k-block OPFS profile,
+   * one `UPDATE ... WHERE (displaced OR moved)`, SQLite planned a multi-index OR whose `displaced`
+   * branch scanned every block in the store - 220 ms per pulled block on a 12k-block OPFS profile,
    * which kept the storage worker saturated for the whole initial feed sync. The halves cannot
    * match the same row (one excludes the holder, the other requires it), and every caller runs
    * inside a transaction, so splitting them changes nothing else.
@@ -391,7 +391,7 @@ export class FeedStore {
 
   /**
    * Seals block payloads for a batch, returning storage columns aligned by input index. A block
-   * whose feed the cypher declines — or any block when no cypher is configured — passes through as
+   * whose feed the cypher declines - or any block when no cypher is configured - passes through as
    * plaintext with no envelope.
    */
   #sealBlocks = (
@@ -427,7 +427,7 @@ export class FeedStore {
     Effect.gen({ self: this }, function* () {
       const data = new Uint8Array(row.data);
       const blockId = blockNaturalKey(row.feedId!, row.actorId, row.sequence);
-      // Both envelope fields move together; exactly one present is a corrupt row, never plaintext —
+      // Both envelope fields move together; exactly one present is a corrupt row, never plaintext -
       // fail closed rather than hand ciphertext to a caller as if it were cleartext.
       if ((row.encryptionKeyId == null) !== (row.iv == null)) {
         return yield* Effect.fail(
@@ -461,7 +461,7 @@ export class FeedStore {
   #openRows = (rows: readonly Block[], spaceId: string, feedNamespace: string): Effect.Effect<Block[], CypherError> =>
     this.#options.cypher
       ? Effect.forEach(rows, (row) => this.#openBlock(row, spaceId, feedNamespace), { concurrency: 'unbounded' })
-      : // Normalise the SQLite NULL envelope columns to undefined — the Block schema types them
+      : // Normalise the SQLite NULL envelope columns to undefined - the Block schema types them
         // `string | undefined`, not nullable, so a raw null trips schema encode on the sync path.
         // Cloning the buffer avoids an empty Uint8Array.
         Effect.succeed(
@@ -601,7 +601,7 @@ export class FeedStore {
 
         // A client whose remembered positions were assigned by a different store names slots that
         // no longer exist, so serve the namespace from the start rather than from a meaningless
-        // offset — recovering in the same round-trip the client already paid for.
+        // offset - recovering in the same round-trip the client already paid for.
         const serverChanged = request.expectedServerToken != null && request.expectedServerToken !== validCursorToken;
         const position = serverChanged ? -1 : (request.position ?? -1);
         // The block at the cursor is how a client checks its ordering once this store has been

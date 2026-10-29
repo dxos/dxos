@@ -13,7 +13,7 @@ describe('isBlockedHost', () => {
     }
   });
 
-  // 169.254.169.254 is the cloud metadata endpoint — the single most valuable SSRF target.
+  // 169.254.169.254 is the cloud metadata endpoint - the single most valuable SSRF target.
   test('blocks private and link-local IPv4 ranges', ({ expect }) => {
     for (const host of ['10.0.0.1', '172.16.0.1', '172.31.255.255', '192.168.1.1', '169.254.169.254', '100.64.0.1']) {
       expect(isBlockedHost(host), host).toBe(true);

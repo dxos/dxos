@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         id: 'artifactArticle',
         filter: AppSurface.object(AppSurface.Article, MediaArtifact.MediaArtifact),
         component: MediaArtifactArticle,
-        // `nodeId` rides along for an article nested in another (a storyboard frame) — see the article.
+        // `nodeId` rides along for an article nested in another (a storyboard frame) - see the article.
         props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
@@ -78,7 +78,7 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
-      // Card rendering of a MediaArtifact (cover thumbnail) — composes Artifacts into collections/boards.
+      // Card rendering of a MediaArtifact (cover thumbnail) - composes Artifacts into collections/boards.
       Surface.create({
         id: 'artifactCard',
         filter: AppSurface.object(AppSurface.CardContent, MediaArtifact.MediaArtifact),

@@ -27,8 +27,8 @@ import sequence from './testing/sequence.dx?raw';
 import stacked from './testing/stacked.dx?raw';
 
 //
-// Constraints bench: the semantic DSL (left, editable) states intent — nodes, edges, groups and
-// whatever placement or routing hints matter — and the engine fills the rest. The centre shows the
+// Constraints bench: the semantic DSL (left, editable) states intent - nodes, edges, groups and
+// whatever placement or routing hints matter - and the engine fills the rest. The centre shows the
 // compiled diagram with its problems, recompiling as you type; the right scores it. With `compare`
 // on, the same graph with every hint stripped is compiled beneath it, so each hint's worth shows.
 //
@@ -124,7 +124,7 @@ const Header = ({ children }: { children: string }) => (
 /** One rendering with its problems listed beneath it. */
 const Drawing = ({ title, compiled, testId }: { title: string; compiled?: Compiled; testId: string }) => (
   <Layout.Grid rows={['min', 'fill', 'min']} classNames='min-h-0 gap-px bg-separator'>
-    <Header>{compiled ? `${title} · ${compiled.ms} ms` : `${title} · compiling…`}</Header>
+    <Header>{compiled ? `${title} · ${compiled.ms} ms` : `${title} · compiling...`}</Header>
     <SceneSvg
       classNames='dx-attention-surface dx-base-surface min-h-0 min-w-0'
       objects={compiled?.objects ?? []}

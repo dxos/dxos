@@ -6,19 +6,19 @@
  * Prototype harness for running the three pipeline packages over a shared ECHO space, structured as
  * Inputs · Pipeline · Outputs:
  *
- * - `InputPanel` (Inputs): a tabbed source selector — a markdown Document editor (RDF), a Dataset
- *   picker (sample inbox → Email), and a Record tab whose mic captures a sample transcript
+ * - `InputPanel` (Inputs): a tabbed source selector - a markdown Document editor (RDF), a Dataset
+ *   picker (sample inbox -> Email), and a Record tab whose mic captures a sample transcript
  *   (Transcription). The active tab's input is handed to the selected pipeline on run.
  * - `PipelinePanel` (Pipeline): a picker (RDF / Email / Transcription) + the selected pipeline's
  *   fixed stage list.
- * - `OutputPanel` (Outputs): tabbed output — the `FactPanel`, the live ECHO objects list (`useQuery`),
+ * - `OutputPanel` (Outputs): tabbed output - the `FactPanel`, the live ECHO objects list (`useQuery`),
  *   a Stats tab of per-pipeline metrics, and pipeline-specific detail views (email messages +
  *   summaries, threads; transcription transcript + summary).
  *
  * All three assemble via each package's uniform `.run()` (`FactPipeline` / `EmailPipeline` /
  * `TranscriptionPipeline`). RDF and Email use the edge AI service (needs edge credentials);
  * Transcription runs offline. POS decorations use the offline stub tagger. Real audio capture is out
- * of scope — the Record tab replays a canned transcript.
+ * of scope - the Record tab replays a canned transcript.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -122,7 +122,7 @@ const PIPELINES: PipelineInfo[] = [
     label: 'Email',
     stages: [
       { id: 'summarize', description: 'Summarize + spam/keywords (LLM)', enabled: true },
-      { id: 'extract-contacts', description: 'Person / Organization → ECHO space', enabled: true },
+      { id: 'extract-contacts', description: 'Person / Organization -> ECHO space', enabled: true },
       { id: 'stats', description: 'Tally senders / recipients', enabled: true },
       { id: 'extract-facts', description: 'Index message facts (pipeline-rdf)', enabled: true },
       { id: 'threads', description: 'Group messages into canonical Threads', enabled: true },
@@ -155,7 +155,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
   const [space] = useSpaces();
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
-  // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
+  // Fact-extraction options for the active backend (undefined -> pipeline-rdf's Claude/edge defaults).
   const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
     () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
     [ai],

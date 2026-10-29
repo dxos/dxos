@@ -102,11 +102,11 @@ export type DeckOptions = {
 type Point = { x: number; y: number };
 
 /**
- * The console loop: the wall is laid out as one giant Composer window — L0 rail, navtree, three planks (the centre one
- * wide), companion and right rail — and runs the shift loop on it. A close-up fills the frame with the centre plank's
+ * The console loop: the wall is laid out as one giant Composer window - L0 rail, navtree, three planks (the centre one
+ * wide), companion and right rail - and runs the shift loop on it. A close-up fills the frame with the centre plank's
  * middle section; the camera snaps out to the whole console (about three plank widths, the 3x3 limit); the planks
- * shift — on even cycles the deck scrolls sideways, on odd ones the plank stacks scroll up and down in alternate
- * directions — while the navtree and companion cells slide vertically in opposite directions; the camera snaps in on
+ * shift - on even cycles the deck scrolls sideways, on odd ones the plank stacks scroll up and down in alternate
+ * directions - while the navtree and companion cells slide vertically in opposite directions; the camera snaps in on
  * the section now in the centre.
  */
 export const deckShots = ({ cells, sequence, slots, viewport, zoom, shift, distance }: DeckOptions): ShiftShot[] => {

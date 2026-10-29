@@ -27,8 +27,8 @@ export type CreateTranscriberOptions = {
 };
 
 /**
- * Builds a {@link Transcriber} backed by a browser {@link MediaStreamRecorder} for the given track —
- * the low-level audio→text construction, co-located with the recorder so it can be tested outside the
+ * Builds a {@link Transcriber} backed by a browser {@link MediaStreamRecorder} for the given track -
+ * the low-level audio->text construction, co-located with the recorder so it can be tested outside the
  * plugin. Consumed directly via the {@link useTranscriber} hook.
  */
 export const createTranscriber = ({

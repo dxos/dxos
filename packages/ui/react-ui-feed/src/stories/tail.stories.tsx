@@ -13,7 +13,7 @@ import { FeedStory, type FeedStoryProps } from '../testing/index.ts';
  * A feed opened at its tail shows its last message, and stays there.
  *
  * Both halves matter and both have been broken. The feed has landed at the tail the *estimate*
- * predicted — 60,000px into a document that measured 71,565 — and been marked positioned there, so
+ * predicted - 60,000px into a document that measured 71,565 - and been marked positioned there, so
  * it opened part-way up the conversation and crept the rest of the way at two rows a second. And
  * with space reserved past the end it has scrolled straight through the last message into the blank
  * area below it, because the follow chased the element's own maximum rather than the last row.
@@ -52,7 +52,7 @@ const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(r
 /**
  * The last message's bottom edge relative to the viewport's; `null` while it is not mounted.
  *
- * Zero means the last message is resting on the bottom of the screen — which is what "at the tail"
+ * Zero means the last message is resting on the bottom of the screen - which is what "at the tail"
  * means to a reader. Positive means it is below the fold, negative means the feed has scrolled past
  * it into empty space.
  */
@@ -83,8 +83,8 @@ const playTail = (count: number) =>
     // The rest position includes the reserve: the tail sits its tail-lines clear of the edge.
     const rest = -reserveOf(viewport, count - 1);
     const settled = samples.slice(ARRIVING);
-    // Reported as a set rather than a count: a failure then shows what the tail was doing — absent
-    // (`null`), below the fold, or drifting a pixel at a time — instead of only that it was wrong.
+    // Reported as a set rather than a count: a failure then shows what the tail was doing - absent
+    // (`null`), below the fold, or drifting a pixel at a time - instead of only that it was wrong.
     await expect({
       distinct: [...new Set(settled)].sort(),
       offBy: [...new Set(settled.map((value) => (value === null || Math.abs(value - rest) > TOLERANCE ? value : 0)))],
@@ -94,7 +94,7 @@ const playTail = (count: number) =>
 //
 // The same feed with and without space reserved past the last row. Reserving it moves the
 // element's maximum well beyond the tail, so everything that opens or follows the feed has to stop
-// short of it — which is exactly what a test of the offset alone would not notice.
+// short of it - which is exactly what a test of the offset alone would not notice.
 //
 
 /** Passive: open at the tail and look. */
@@ -145,7 +145,7 @@ export const AssistantPastEnd: Story = {
  * Its `scrollPastEnd` twin is **not** here, and deliberately. It fails, and what it fails on is not
  * fixable in this engine: the reserved space is a DOM spacer, so it is in the element's
  * `scrollHeight` and not in the virtualizer's total, and an offset inside it is beyond the
- * virtualizer's own maximum — `scrollToOffset` then silently declines to move (verified: the element
+ * virtualizer's own maximum - `scrollToOffset` then silently declines to move (verified: the element
  * stayed exactly where it was). The feed opens at the document's end with its last message near the
  * top of an empty screen. Two coordinate systems for one document is the defect the placement layer
  * exists to remove, so the requirement is stated where it can be met: `bridge/VariedPastEnd`.

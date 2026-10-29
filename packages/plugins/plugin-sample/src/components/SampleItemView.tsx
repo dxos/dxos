@@ -6,7 +6,7 @@
 // `Form.Root` takes an Effect/Schema and renders fields automatically.
 // The schema is derived from the ECHO object schema with `omitId` to exclude the
 // internal id field. The status field renders as a select dropdown because the schema
-// uses `FormatAnnotation.set(Format.TypeFormat.SingleSelect)` — no custom field needed.
+// uses `FormatAnnotation.set(Format.TypeFormat.SingleSelect)` - no custom field needed.
 
 import React, { useCallback, useMemo } from 'react';
 

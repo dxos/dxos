@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = Task
         taskSet = yield* Database.load(taskSetRef);
       } else if (project) {
         const projectObject = yield* Database.load(project);
-        // Structural read — plugin-tasks must not depend on @dxos/compute (see `list-tasks`).
+        // Structural read - plugin-tasks must not depend on @dxos/compute (see `list-tasks`).
         const ref = (projectObject as { taskSet?: Ref.Ref<Obj.Unknown> }).taskSet;
         taskSet = ref
           ? ((yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined))) as TaskSet.TaskSet | undefined)

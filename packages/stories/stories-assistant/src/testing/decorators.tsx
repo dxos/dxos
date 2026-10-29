@@ -144,7 +144,7 @@ type DecoratorsProps = Merge<
     /** Skill-definition keys to clone into the space and bind into the latest chat's context. */
     skills?: string[];
     /**
-     * Replace the AI service with a scripted (offline, deterministic) model — see
+     * Replace the AI service with a scripted (offline, deterministic) model - see
      * `ScriptedLanguageModel`. Makes the full-stack story runnable without a network AI service,
      * e.g. from a `play` function in CI; routed scripts can drive cooperating sessions
      * (supervisor + sub-agents).
@@ -165,7 +165,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
   // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
-  // definitions may all be contributed before this mounts — a one-shot query that finds no chat
+  // definitions may all be contributed before this mounts - a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
   const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
@@ -185,7 +185,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
     const binder = new AiContext.Binder({ feed, runtime, registry: atomRegistry });
     await binder.use(async (binder) => {
       // The effect re-runs whenever the chat query or the skill definitions change, and each run would
-      // otherwise clone (and bind) a fresh copy under a new URI — the duplicate skills ListSkills reported.
+      // otherwise clone (and bind) a fresh copy under a new URI - the duplicate skills ListSkills reported.
       const bound = new Set(binder.getSkills().map((skill) => Obj.getMeta(skill).key));
       const missing = skills.filter((key) => !bound.has(key));
       if (missing.length === 0) {
@@ -272,7 +272,7 @@ type CreateAgentOptions = {
   instructions?: string;
 
   /**
-   * Name of a project to parent the agent to. Delegation files tasks into the project's task set —
+   * Name of a project to parent the agent to. Delegation files tasks into the project's task set -
    * a conversation with no project above it has nowhere durable to promote to, so a story that
    * delegates has to supply one.
    */
@@ -289,7 +289,7 @@ type StoryPluginOptions = {
   onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 
   /**
-   * Runs once the space is available and operations can be invoked — for seeding that goes through
+   * Runs once the space is available and operations can be invoked - for seeding that goes through
    * plugin operations (creating an agent, its chats) rather than writing objects directly.
    */
   onReady?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
@@ -331,7 +331,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         ]),
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
-        // against `AgentService`'s layer — that layer reads this capability once, at build time.
+        // against `AgentService`'s layer - that layer reads this capability once, at build time.
         Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, DelegationStrategy.make()),
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet.handlers,

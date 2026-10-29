@@ -72,7 +72,7 @@ describe('document leases', () => {
   test('evicting a document that was never flushed persists it first', async ({ expect }) => {
     const host = await setup();
     // An unsaved document exists only in memory, so eviction has to write it out before dropping the
-    // handle — otherwise releasing a freshly created object would lose it.
+    // handle - otherwise releasing a freshly created object would lose it.
     const created = await host.createDoc<{ text: string }>({ text: 'unflushed' });
     const documentId = created.documentId;
     created[Symbol.dispose]();
@@ -201,7 +201,7 @@ describe('document lease eviction policy', () => {
 
   test('a document left resident is retried rather than forgotten', async ({ expect }) => {
     // A document that is still loading cannot be dropped, and the registry has already taken it off
-    // the queue — without a requeue it would stay resident with nothing tracking it.
+    // the queue - without a requeue it would stay resident with nothing tracking it.
     const { registry, evicted, attempts } = createRegistry({ evictionDelay: 1 }, (_id, attempt) => attempt > 1);
     registry.acquire(documentId(0))[Symbol.dispose]();
 

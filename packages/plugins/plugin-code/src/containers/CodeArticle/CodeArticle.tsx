@@ -36,7 +36,7 @@ export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodePro
 
 /**
  * Synthetic failed-build record used when the operation envelope contains no
- * data (invocation error or thrown). Drives `canRun` → false in the toolbar
+ * data (invocation error or thrown). Drives `canRun` -> false in the toolbar
  * and surfaces the message in BuildOutput so the user doesn't sit with stale
  * green output after a real failure.
  */
@@ -56,13 +56,13 @@ const languageForPath = (path: string) => {
 
 // Three-pane layout mirroring `react-ui-introspect`'s `ToolsExplorer`:
 //
-//   ┌───────────┬─────────────────┐
-//   │  Browse   │                 │
-//   │  (files)  │     Output      │
-//   ├───────────┤   (editor)      │
-//   │  Inspect  │                 │
-//   │  (form)   │                 │
-//   └───────────┴─────────────────┘
+//   +-----------+-----------------+
+//   |  Browse   |                 |
+//   |  (files)  |     Output      |
+//   +-----------+   (editor)      |
+//   |  Inspect  |                 |
+//   |  (form)   |                 |
+//   +-----------+-----------------+
 //
 // 30rem fixed left column, 1fr right; left split 1:2 vertically. Same
 // `dx-expand grid` + `divide-x`/`divide-y separator` idiom as the
@@ -76,7 +76,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
     const projectState = buildRunState[projectId];
 
     // The handlers run with `Database.Service` in scope, so the invoker must be
-    // given the project's space id — that's how the process manager resolves
+    // given the project's space id - that's how the process manager resolves
     // the right database into the Effect environment.
     const db = Obj.getDatabase(project);
     const spaceId = db?.spaceId;
@@ -111,7 +111,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           },
         }));
       } catch (err) {
-        // Operation invocation threw outright — invalidate `lastBuild` to a
+        // Operation invocation threw outright - invalidate `lastBuild` to a
         // synthetic failure so Run is disabled and BuildOutput surfaces the
         // error, and clear busy so the toolbar doesn't stick.
         log.catch(err);
@@ -158,8 +158,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
                 }
               : current[projectId]?.lastRun,
             // Run can fail for two reasons: (a) the underlying build had
-            // diagnostics — surface them on the build slot; (b) invocation
-            // failed entirely — invalidate the prior clean build so the
+            // diagnostics - surface them on the build slot; (b) invocation
+            // failed entirely - invalidate the prior clean build so the
             // user can't keep re-running stale output.
             lastBuild: data
               ? data.diagnostics.length > 0 && !data.ok

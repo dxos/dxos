@@ -114,7 +114,7 @@ describe('feeds', () => {
 
   // Holds for the writer only: its query returns the relation it appended without decoding it again,
   // since the feed handle already reflects that block. A reader that has to decode it still hangs,
-  // because the strong-dep resolver cannot yet bridge feed→database.
+  // because the strong-dep resolver cannot yet bridge feed->database.
   test('relation between feed object and a database object', async ({ expect }) => {
     await using peer = await builder.createPeer({
       types: [Feed.Feed, TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
@@ -257,7 +257,7 @@ describe('feeds', () => {
       const db = await peer.createDatabase();
       const feed = db.add(Feed.make({ name: 'people' }));
 
-      // Append the original object, then append a second object reusing the same id — this is an update.
+      // Append the original object, then append a second object reusing the same id - this is an update.
       const john = Obj.make(TestSchema.Person, { name: 'john' });
       await db.appendToFeed(feed, [john]);
       await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { id: john.id, name: 'john v2' })]);
@@ -402,7 +402,7 @@ describe('feeds', () => {
       });
       expect(notified).toEqual(1);
 
-      // Re-appending by id is an update: the working-set instance (`john`) updates in place —
+      // Re-appending by id is an update: the working-set instance (`john`) updates in place -
       // locks in PR #12226's contract against the unified working set.
       await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { id: john.id, name: 'john v3' })]);
       expect(notified).toEqual(2);
@@ -603,7 +603,7 @@ describe('feeds', () => {
       await db2.flush();
 
       // Whole-object last-flush-wins: client2's flush (observed last) overwrites client1's field
-      // too — client1's `name` edit is silently reverted even though client2 never touched `name`,
+      // too - client1's `name` edit is silently reverted even though client2 never touched `name`,
       // since client2's captured snapshot still carries the pre-edit value. This is the documented
       // data-loss mode, not a bug to "fix" without a real merge protocol.
       const [finalResult] = await queryFeed(db1, feed, Filter.everything()).run();
@@ -654,7 +654,7 @@ describe('feeds', () => {
 });
 
 /**
- * Queries a feed through the database with a feed scope — the canonical non-Effect feed query.
+ * Queries a feed through the database with a feed scope - the canonical non-Effect feed query.
  */
 const queryFeed = (db: EchoDatabase, feed: Feed.Feed, filter: Filter.Any) =>
   db.query(Query.select(filter).from(Scope.feed(Feed.getFeedUri(feed)!)));

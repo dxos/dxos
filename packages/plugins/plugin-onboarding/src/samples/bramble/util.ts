@@ -26,7 +26,7 @@ export const actor = (name: string, email: string): Actor.Actor => ({ role: 'use
 // thread key. Case-insensitive; collapses surrounding whitespace.
 const normalizeSubject = (subject: string): string => subject.replace(/^(\s*(re|fwd?):\s*)+/i, '').trim();
 
-// Deterministic, human-readable thread id from a normalized subject — keeps the 1-line JSON diff
+// Deterministic, human-readable thread id from a normalized subject - keeps the 1-line JSON diff
 // legible on regeneration (Gmail uses opaque hex ids; any stable string works for grouping).
 const threadSlug = (normalizedSubject: string): string =>
   // NFKD splits accented letters into base + combining mark; the non-alphanumeric replace then drops

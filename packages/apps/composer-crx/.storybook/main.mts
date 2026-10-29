@@ -21,7 +21,7 @@ export default {
   ...base,
   viteFinal: async (config: any, options: any) => {
     const merged = (await base.viteFinal?.(config, options)) ?? config;
-    // Assign directly rather than `mergeConfig` — a second merge concatenates the base's
+    // Assign directly rather than `mergeConfig` - a second merge concatenates the base's
     // `oxc.target` array with itself ("'chrome108' is already specified").
     const aliases: Record<string, string> = {
       'webextension-polyfill': mock('webextension-polyfill.ts'),

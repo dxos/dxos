@@ -6,7 +6,7 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 
 /**
  * Literal colours for the device, which renders our SVG outside the app and so cannot resolve the
- * theme's CSS custom properties. Values track the 400 step of each ramp — the tone the icons use
+ * theme's CSS custom properties. Values track the 400 step of each ramp - the tone the icons use
  * on a dark surface.
  */
 const HUE_COLORS: Record<ChromaticPalette, string> = {

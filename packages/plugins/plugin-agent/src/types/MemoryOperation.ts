@@ -14,7 +14,7 @@ import { RDF, predicateSection } from '@dxos/pipeline-rdf';
 import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
 
-/** A handle on an external identity, e.g. `{ label: 'discord', value: '1234' }` or `{ label: 'did', value: 'did:halo:…' }`. */
+/** A handle on an external identity, e.g. `{ label: 'discord', value: '1234' }` or `{ label: 'did', value: 'did:halo:...' }`. */
 export const Handle = Schema.Struct({
   label: Schema.optional(Schema.String.annotate({ description: 'The identity system, e.g. "discord" or "did".' })),
   value: Schema.String.annotate({ description: 'The id within that system.' }),

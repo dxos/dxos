@@ -24,7 +24,7 @@ export type GraphMenuOptions = {
   /** Keep only the actions the predicate accepts (e.g. by `disposition`). */
   filter?: (action: AppGraphNode.ActionLike) => boolean;
   /**
-   * Disposition key this surface renders — when set, each action's `presentation[surface]` chrome
+   * Disposition key this surface renders - when set, each action's `presentation[surface]` chrome
    * override (if any) is merged into its properties, letting one action multi-target dispositions
    * (e.g. `['toolbar', 'list-item']`) with per-surface chrome.
    */
@@ -55,7 +55,7 @@ export const buildGraphMenu = (
       if (filter && !filter(action)) {
         continue;
       }
-      // Always record the parent→child edge (a shared action may sit under multiple groups).
+      // Always record the parent->child edge (a shared action may sit under multiple groups).
       edges.push({ source: parentId, target: action.id, relation: 'child' });
       if (seen.has(action.id)) {
         continue;
@@ -93,7 +93,7 @@ export const graphActions = (
   graph && nodeId ? buildGraphMenu((id) => get(graph.actions(id)), nodeId, options) : { nodes: [], edges: [] };
 
 /**
- * Menu actions sourced entirely from a node's app-graph contributions — the common "show every action
+ * Menu actions sourced entirely from a node's app-graph contributions - the common "show every action
  * the graph offers for this object" toolbar/menu. Compose with hand-built items via {@link graphActions}.
  */
 export const useGraphMenuActions = (

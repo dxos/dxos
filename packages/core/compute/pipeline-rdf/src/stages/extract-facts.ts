@@ -35,8 +35,8 @@ const URL_PATTERN = /^https?:\/\/\S+$/i;
 /**
  * Normalize a surface form (subject/object label, or an author token) to its canonical entity id: an email address
  * as its `mailto:` IRI, a web address as itself, anything else as a slug. Consumers that join against
- * `attribution.agent` / entity ids MUST apply this — the stored value is the normalized form, not the raw label
- * (e.g. `discord-user:123` → `discord-user-123`). Idempotent.
+ * `attribution.agent` / entity ids MUST apply this - the stored value is the normalized form, not the raw label
+ * (e.g. `discord-user:123` -> `discord-user-123`). Idempotent.
  */
 export const normalizeEntityId = (label: string) => {
   const trimmed = label.trim();
@@ -54,7 +54,7 @@ export const normalizeEntityId = (label: string) => {
 
 /**
  * Whether a subject/object label is groundable. The model emits the literal `unknown` (or an empty
- * string) when it can't resolve a referent — typically an unbound pronoun ("we"/"it") — and a fact
+ * string) when it can't resolve a referent - typically an unbound pronoun ("we"/"it") - and a fact
  * whose subject or object is unknown is noise, not a proposition.
  */
 const isGrounded = (label: string) => {
@@ -120,7 +120,7 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
     return undefined;
   }
 
-  // Speech act: a non-assertive force, or a non-declarative mood (interrogative/imperative ⇒
+  // Speech act: a non-assertive force, or a non-declarative mood (interrogative/imperative =>
   // directive), records an `illocution`; a plain assertion (the default) leaves it absent.
   const illocution =
     candidate.force && candidate.force !== 'assertive'
@@ -179,7 +179,7 @@ const placeFacts = (
 };
 
 /**
- * Extract → link (slug) facts for a single document. Pure derivation: chunk → LLM extract → map to
+ * Extract -> link (slug) facts for a single document. Pure derivation: chunk -> LLM extract -> map to
  * {@link Fact}; touches neither the {@link FactStore} nor any cursor, so it can generate facts
  * from a raw document with only an {@link AiService} in context (e.g. a UI preview).
  */
@@ -331,7 +331,7 @@ export type DocumentFacts = {
 
 /**
  * Pure extraction stage: derives {@link Fact}s per document via {@link extractDocFacts} without
- * touching the {@link FactStore} or any cursor — only an {@link AiService} in context.
+ * touching the {@link FactStore} or any cursor - only an {@link AiService} in context.
  */
 export const extractFactsStage = (
   options?: ExtractOptions,

@@ -13,7 +13,7 @@ import { Framer, decodeFrame, encodeFrame } from './framer.ts';
 
 /**
  * Re-chunks the byte flow at random boundaries, so framing is exercised against splits that do not
- * line up with frames — which is the whole point of this test.
+ * line up with frames - which is the whole point of this test.
  */
 const pipeWithRandomizedChunks = (from: ReadableStream<Uint8Array>, to: WritableStream<Uint8Array>): (() => void) => {
   let buffers: Uint8Array[] = [];

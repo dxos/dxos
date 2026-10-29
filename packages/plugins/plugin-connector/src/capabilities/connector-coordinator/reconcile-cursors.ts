@@ -32,7 +32,7 @@ export type ReconcileCursorsInput = {
 /**
  * Reconcile a connection's external-sync {@link Cursor} objects against the chosen remote targets:
  * remove deselected cursors (the synced object is left in place), and create one cursor per
- * newly-selected target — binding `existingTarget` for the first new selection, otherwise
+ * newly-selected target - binding `existingTarget` for the first new selection, otherwise
  * materializing a fresh local root via `connector.sync.materializeTarget`. A connector with no
  * `materializeTarget` (no dedicated local root type, e.g. Google Contacts) binds the connection
  * itself as the target; its synced objects land directly in the space keyed by foreign id. Returns

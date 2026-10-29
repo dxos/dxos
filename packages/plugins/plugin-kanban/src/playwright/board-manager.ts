@@ -7,7 +7,7 @@ import { BoardManager as MosaicBoardManager } from '@dxos/react-ui-mosaic/playwr
 /** Budget for the story to boot and paint its first column; passing boots measure ~10-25s. */
 const STORY_BOOT_TIMEOUT = 45_000;
 
-/** Budget for the rest of the board once any column has painted — one render, not a boot. */
+/** Budget for the rest of the board once any column has painted - one render, not a boot. */
 const RENDER_TIMEOUT = 5_000;
 
 export class BoardManager extends MosaicBoardManager {

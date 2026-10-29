@@ -35,7 +35,7 @@ import { type ViewModeItem, addViewMode } from './view-mode.ts';
 /** Named group, after the editor's own blocks, that consumers extend with `MenuBuilder.extend` to insert content. */
 export const EDITOR_TOOLBAR_INSERT_GROUP = 'insert';
 
-// Local copy of AppSurface.Section.role — react-ui-editor cannot depend on app-toolkit without a circular dep.
+// Local copy of AppSurface.Section.role - react-ui-editor cannot depend on app-toolkit without a circular dep.
 const SECTION_ROLE = 'org.dxos.role.section';
 
 export type EditorToolbarFeatureFlags = Partial<{

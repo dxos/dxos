@@ -22,7 +22,7 @@ export type ToolWidgetProps = WidgetProps;
 
 /**
  * A run of tool blocks as one collapsible panel with a row per call. The `<toolkit>` tag carries
- * the run as JSON — the item is rebuilt from its message alone, so there is no widget-state side
+ * the run as JSON - the item is rebuilt from its message alone, so there is no widget-state side
  * channel to accumulate blocks through.
  */
 export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
@@ -34,7 +34,7 @@ export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
   const entries = useMemo(() => toEntries(blocks), [blocks]);
 
   // CodeMirror measures the block as the portal mounts, before the panel has settled to its
-  // collapsed height — leaving the heightmap taller than the row and the editor scrolling behind it.
+  // collapsed height - leaving the heightmap taller than the row and the editor scrolling behind it.
   useEffect(() => {
     const frame = requestAnimationFrame(() => view?.requestMeasure());
     return () => cancelAnimationFrame(frame);
@@ -57,10 +57,10 @@ export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
 
 /**
  * One row of the run: a call and everything that came back for it, or a status or reasoning block
- * narrating it — a run that never reaches a call is narration alone.
+ * narrating it - a run that never reaches a call is narration alone.
  *
  * The runtime delivers a call, its result and its stats as separate blocks, but a reader thinks in
- * calls — so the result folds into the call it answers rather than becoming a sibling row. Status
+ * calls - so the result folds into the call it answers rather than becoming a sibling row. Status
  * and reasoning join the same list because they narrate the same run: emitted as their own widgets
  * they broke a run into a panel per call.
  */
@@ -234,7 +234,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
   // still unanswered; a lone call's name; and otherwise the count.
   //
   // Narration leads only while the run is in flight. It says what the model is ABOUT to do, so on a
-  // settled run it reads as a sentence stalled mid-step — and the count is what the reader wants
+  // settled run it reads as a sentence stalled mid-step - and the count is what the reader wants
   // from a run that is over.
   const count = t('tool-run.label', { count: calls.length });
   const narrating = calls.length === 0 ? (status ?? entries[entries.length - 1]) : undefined;
@@ -251,7 +251,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         : count;
   const icon = narrating?.icon ?? running?.icon ?? singleCall?.icon ?? TOOL_ICON;
 
-  // Nothing an expansion could show — a lone status, which is what a run looks like while the model
+  // Nothing an expansion could show - a lone status, which is what a run looks like while the model
   // is still saying what it is about to do. A caret that reveals emptiness reads as a failure, so
   // the row stays plain prose until a call or a second line of narration joins it.
   if (single && !hasDetail(single)) {
@@ -303,7 +303,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
     <Accordion.Root onValueChange={(value) => onOpen?.(value.length > 0)}>
       {entries.map((entry) => {
         // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a row with
-        // no payload is a disabled item — same frame and rhythm, no caret, no toggle.
+        // no payload is a disabled item - same frame and rhythm, no caret, no toggle.
         const detail = hasDetail(entry);
         return (
           <Accordion.Item key={entry.id} value={entry.id} disabled={!detail}>
@@ -391,7 +391,7 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
 
 /**
  * A string, or the entries of a record whose fields are all strings, when one spans lines or runs
- * long — a code-mode `eval`'s `code` and its printed output. JSON would escape every newline onto
+ * long - a code-mode `eval`'s `code` and its printed output. JSON would escape every newline onto
  * one line and cut the string short, so these render as the text they are.
  */
 const multilineFields = (data: unknown): [string, string][] | undefined => {

@@ -61,7 +61,7 @@ describe('a credential signed by an earlier build', () => {
 describe('a credential signed by this build', () => {
   test('flattens its assertion into the signing payload rather than leaving it packed', async () => {
     // `anyPack` writes a `type.googleapis.com/` prefix while the registry is keyed by the bare
-    // name, so a lookup on the raw `type_url` silently leaves every assertion packed — signing an
+    // name, so a lookup on the raw `type_url` silently leaves every assertion packed - signing an
     // opaque blob whose shape no future change can be checked against.
     const keyring = new Keyring();
     const issuer = await keyring.createKey();
@@ -94,7 +94,7 @@ describe('the assertion type_url a credential carries', () => {
   });
 
   test('does not reach the signature or the id, which cover the prefixed form identically', async ({ expect }) => {
-    // Both are digests of the signing payload, and `canonicalStringify` drops `@type` — so the url
+    // Both are digests of the signing payload, and `canonicalStringify` drops `@type` - so the url
     // form is outside what is signed, and switching it cannot invalidate an issued credential.
     const { credential } = await makeCredential();
     const prefixed = withPrefixedAssertionUrl(credential);

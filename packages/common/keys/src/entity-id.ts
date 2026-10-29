@@ -62,7 +62,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
    *
    * The same inputs always produce the same id, across processes, isolates, and workers.
    * Unlike `random()`, this method does not call `crypto.getRandomValues()` and is therefore
-   * safe to call at module top-level — required for Cloudflare workerd, which forbids random
+   * safe to call at module top-level - required for Cloudflare workerd, which forbids random
    * generation in global scope.
    *
    * Intended for stable identity of declarative artefacts (e.g. `Type.Type` entities derived

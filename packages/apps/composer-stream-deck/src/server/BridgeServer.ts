@@ -28,7 +28,7 @@ export type BridgeServerOptions = {
  *
  * The device plugin listens and Composer dials in, rather than the reverse: a browser tab cannot
  * accept connections, and Elgato's application (and therefore this process) outlives any Composer
- * window. Bound to `127.0.0.1` — the port must never be reachable off the machine.
+ * window. Bound to `127.0.0.1` - the port must never be reachable off the machine.
  */
 export class BridgeServer {
   #server?: WebSocketServer;

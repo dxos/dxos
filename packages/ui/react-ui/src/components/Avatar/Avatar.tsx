@@ -95,7 +95,7 @@ const AvatarRoot = forwardRef<HTMLDivElement, AvatarRootProps>(
       hueVariant = 'fill',
       src,
       backdrop,
-      fallback = '🫥',
+      fallback = '\u{1FAE5}',
       icon,
       label,
       children,

@@ -31,7 +31,7 @@ export const createServer = (options: ServerOptions): McpServer => {
   });
 
   // Every tool handler is wrapped with `withReady` so it blocks on indexing
-  // before running — but ONLY when the handler runs. `initialize` and
+  // before running - but ONLY when the handler runs. `initialize` and
   // `tools/list` are answered by the SDK from the static tool registry below,
   // so MCP clients (Inspector, Claude Code, Composer) connect immediately
   // even on a cold cache. Cold-start cost is paid once, on the first

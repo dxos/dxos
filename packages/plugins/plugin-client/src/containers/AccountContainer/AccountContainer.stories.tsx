@@ -21,7 +21,7 @@ import { AccountContainer } from './AccountContainer.tsx';
 
 /**
  * A `HubHttpClient` whose account lookup is answered locally. Constructed for real and overridden
- * per method — a partial stand-in would need a cast, and `setIdentity` (called by the hook on every
+ * per method - a partial stand-in would need a cast, and `setIdentity` (called by the hook on every
  * identity change) has to keep working.
  */
 const stubHubHttpClient = (account: { email: string; emailVerified: boolean }) => {

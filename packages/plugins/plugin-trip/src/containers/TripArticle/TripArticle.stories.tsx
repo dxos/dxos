@@ -62,7 +62,7 @@ const seedRoadTrip = (space: Space, name: string, cities: string[]): void => {
 // Live OSRM + Nominatim routing service hitting the public demo servers. Network-dependent and
 // non-deterministic; used only by the `LiveRoute` story to exercise real geocoding + routing of
 // arbitrary city names. The OSRM/Nominatim mapping is inlined here (mirrors @dxos/plugin-osrm)
-// because plugin-trip cannot depend on plugin-osrm — which depends on plugin-trip.
+// because plugin-trip cannot depend on plugin-osrm - which depends on plugin-trip.
 //
 
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
@@ -85,7 +85,7 @@ const liveRoutingService: Routing.RoutingService = {
         places.push(waypoint);
         continue;
       }
-      // Respect Nominatim's ≤ 1 req/s policy.
+      // Respect Nominatim's <= 1 req/s policy.
       if (geocodeCount++ > 0) {
         await delay(1_100);
       }
@@ -96,7 +96,7 @@ const liveRoutingService: Routing.RoutingService = {
       if (!response.ok) {
         throw new Routing.GeocodeError(waypoint);
       }
-      // External, untyped JSON — asserted to the documented Nominatim shape at this boundary.
+      // External, untyped JSON - asserted to the documented Nominatim shape at this boundary.
       const [first] = (await response.json()) as NominatimResult[];
       if (!first) {
         throw new Routing.GeocodeError(waypoint);
@@ -119,7 +119,7 @@ const liveRoutingService: Routing.RoutingService = {
     if (!response.ok) {
       throw new Routing.RouteError(`OSRM request failed: ${response.status}`);
     }
-    // External, untyped JSON — asserted to the documented OSRM shape at this boundary.
+    // External, untyped JSON - asserted to the documented OSRM shape at this boundary.
     const data = (await response.json()) as OsrmResponse;
     const routes: Routing.Route[] = (data.routes ?? []).map((route) => ({
       distance: route.distance ?? 0,
@@ -236,7 +236,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   decorators: baseDecorators((space) => {
-    // NYC → CDG, CDG → BHX, LTV → EUS, STP → Paris Nord (Eurostar), CDG → SIN, SIN → CDG, CDG → NYC.
+    // NYC -> CDG, CDG -> BHX, LTV -> EUS, STP -> Paris Nord (Eurostar), CDG -> SIN, SIN -> CDG, CDG -> NYC.
     const { trip, segments, bookings } = new TripBuilder()
       .addFlight({
         from: PLACES.JFK,
@@ -315,7 +315,7 @@ export const Default: Story = {
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
   }),
-  // The seed used to throw before `build()` — `airline.code` is not a `Provider` field — so nothing
+  // The seed used to throw before `build()` - `airline.code` is not a `Provider` field - so nothing
   // was ever added and the article sat on its loading state. Asserting a segment renders is what
   // catches that; the render-only smoke test did not, because the throw was swallowed by the
   // client-initialization Effect.
@@ -324,13 +324,13 @@ export const Default: Story = {
   },
 };
 
-// A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake
+// A multi-city driving route (London -> Avignon -> Barcelona) pre-planned with the deterministic fake
 // router. The Route section seeds its city list from these planned road segments; adding / removing
 // a city re-plans via the contributed RoutingService and updates the map polyline.
 export const RoadTrip: Story = {
   args: { showMap: true },
   decorators: baseDecorators((space) => {
-    seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
+    seedRoadTrip(space, 'London -> Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
   }),
 };
 
@@ -339,18 +339,18 @@ export const RoadTrip: Story = {
 export const RoadTripMap: Story = {
   render: MapStory,
   decorators: baseDecorators((space) => {
-    seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
+    seedRoadTrip(space, 'London -> Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
   }),
 };
 
 // A single road segment whose origin/destination have ONLY the `city` property set (no name, code,
-// or geo). Exercises the city-based geocoding path (`toWaypoint` → "City" query → RoutingService)
-// and the segment form rendering city-only places. The London → Avignon pair has a captured route
+// or geo). Exercises the city-based geocoding path (`toWaypoint` -> "City" query -> RoutingService)
+// and the segment form rendering city-only places. The London -> Avignon pair has a captured route
 // fixture, so planning yields a real road-following polyline (not a straight haversine fallback).
 export const CityOnly: Story = {
   args: { showMap: true },
   decorators: baseDecorators((space) => {
-    const trip = Trip.make({ name: 'London → Avignon (city only)' });
+    const trip = Trip.make({ name: 'London -> Avignon (city only)' });
     const segment = Segment.make({
       details: {
         _tag: 'road',
@@ -372,7 +372,7 @@ export const CityOnly: Story = {
 export const LiveRoute: Story = {
   args: { showMap: true },
   decorators: baseDecorators((space) => {
-    const trip = Trip.make({ name: 'London → Birmingham (live)' });
+    const trip = Trip.make({ name: 'London -> Birmingham (live)' });
     const segment = Segment.make({
       details: {
         _tag: 'road',

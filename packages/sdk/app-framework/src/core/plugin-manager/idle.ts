@@ -12,7 +12,7 @@ import * as Effect from 'effect/Effect';
 const IDLE_TIMEOUT = 15_000;
 
 /**
- * Backstop for the paint wait, for hosts where frames never come — a backgrounded tab does not
+ * Backstop for the paint wait, for hosts where frames never come - a backgrounded tab does not
  * run `requestAnimationFrame`, and the idle wave must not be lost to that.
  */
 const PAINT_TIMEOUT = 2_000;
@@ -20,7 +20,7 @@ const PAINT_TIMEOUT = 2_000;
 /**
  * Completes after the shell has painted. Two frames: the first callback runs before paint, the
  * second after it. Without this the idle timeout below can expire mid-render-pipeline, flooding
- * the main thread ahead of first paint — precisely the cost the wait exists to avoid.
+ * the main thread ahead of first paint - precisely the cost the wait exists to avoid.
  */
 const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
   if (typeof requestAnimationFrame !== 'function') {
@@ -43,7 +43,7 @@ const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
 
 /**
  * Whether the host has a paint the idle wave should yield to. False under node and workerd, where
- * {@link whenIdle} completes immediately — so forking the wave there buys nothing and only leaves
+ * {@link whenIdle} completes immediately - so forking the wave there buys nothing and only leaves
  * it unfinished when `start()` returns.
  */
 export const hostYieldsToPaint = (): boolean => typeof requestIdleCallback === 'function';

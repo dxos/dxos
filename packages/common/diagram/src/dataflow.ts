@@ -17,7 +17,7 @@ const COMPARTMENT = 48;
 /** A data-flow node's role; a node that names none is a process. */
 export const roleOf = (node: Semantic.Node): Semantic.Role => node.role ?? 'process';
 
-/** Store ids in declaration order (`D1`, `D2`, …), the numbering a data dictionary refers to. */
+/** Store ids in declaration order (`D1`, `D2`, ...), the numbering a data dictionary refers to. */
 const storeIds = (diagram: Semantic.Diagram): Map<string, string> =>
   new Map(
     diagram.nodes.filter((node) => roleOf(node) === 'store').map((node, index) => [node.id, `D${index + 1}`] as const),

@@ -110,7 +110,7 @@ export const Default: Story = {};
 //   2. Click Clear. magazine.posts empties; "No articles yet" placeholder
 //      appears.
 //   3. Click Curate again. With the canonical-proxy reuse fix, this must NOT
-//      throw the `addCore` invariant — and the tiles must come back, proving
+//      throw the `addCore` invariant - and the tiles must come back, proving
 //      magazine.posts re-renders reactively after a second Curate.
 //
 
@@ -225,7 +225,7 @@ export const CurateFlow: Story = {
     // Second Curate (back-to-back, no Clear). This is the user-reported
     // failure mode: the second invocation previously tripped ECHO's
     // `!_objects.has(core.id)` invariant in `addCore`. With the
-    // reuse-or-add fix it must NOT throw — the tiles already on screen
+    // reuse-or-add fix it must NOT throw - the tiles already on screen
     // must remain visible (curate is purely additive, dedups by id).
     const curateAgain = await canvas.findByRole('button', { name: /^curate$/i });
     await userEvent.click(curateAgain);

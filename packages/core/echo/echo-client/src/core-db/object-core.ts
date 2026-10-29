@@ -89,7 +89,7 @@ export type SnapshotState = Omit<ObjectSnapshot, 'root' | 'handle'> & {
 export type TargetRefreshScope = { target: object; key: string };
 
 /**
- * {@link ObjectCore.isDeleted} verdicts by remaining depth, valid only while no core changes — that is,
+ * {@link ObjectCore.isDeleted} verdicts by remaining depth, valid only while no core changes - that is,
  * within one synchronous read.
  */
 export type DeletionMemo = Map<ObjectCore, boolean[]>;
@@ -142,7 +142,7 @@ export class ObjectCore {
   /**
    * The branch this core instance is bound to (`'main'` = the canonical document). Set on switch
    * (device-global canonical) and on `db.branch` bindings (independent instances), so the branch is
-   * a property of the instance — `Obj.getBranch(obj)` reads it. Distinct from the device-global
+   * a property of the instance - `Obj.getBranch(obj)` reads it. Distinct from the device-global
    * current-branch selection (persisted separately), which a `db.branch` instance overrides locally.
    */
   public branch: string = 'main';
@@ -165,7 +165,7 @@ export class ObjectCore {
   #refreshScope: TargetRefreshScope | undefined;
 
   /**
-   * Runs `fn` — a write of exactly `key` on `target` — with the refresh narrowed to that one key. The
+   * Runs `fn` - a write of exactly `key` on `target` - with the refresh narrowed to that one key. The
    * unnarrowed refresh re-reads every key of the record, which would make a single-property write cost
    * the width of the object. Narrowed rather than deferred because the write notifies subscribers
    * synchronously, and they must already see the new value.
@@ -195,7 +195,7 @@ export class ObjectCore {
    * Run a write against the bound document, refreshing afterwards only if the DB did not route the
    * change event back to this core and refresh from it (it does for a routed core, synchronously,
    * inside `write`). A core bound to a branch, or dropped from the DB's `_objects`, stays bound but
-   * unrouted and would otherwise never refresh — so this cannot simply be dropped.
+   * unrouted and would otherwise never refresh - so this cannot simply be dropped.
    *
    * The second pass was not merely redundant: for a container write `_writeThrough` sees the proxy
    * the first pass installed, returns false, and falls through to a refresh of the object's full
@@ -217,7 +217,7 @@ export class ObjectCore {
   // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
   // The EchoDatabase reference is typed `unknown` here to avoid a circular dep
-  // between core-db ← proxy-db; echo-handler casts it at the usage sites.
+  // between core-db <- proxy-db; echo-handler casts it at the usage sites.
   // -------------------------------------------------------------------------
 
   /**
@@ -393,7 +393,7 @@ export class ObjectCore {
     return this.hasDoc && getDeep(this.#root(), this.mountPath) != null;
   }
 
-  /** Undefined until the body arrives — see {@link isBodyAvailable}. */
+  /** Undefined until the body arrives - see {@link isBodyAvailable}. */
   getObjectStructure(): EntityStructure | undefined {
     return getDeep<EntityStructure>(this.#root(), this.mountPath);
   }
@@ -746,7 +746,7 @@ export class ObjectCore {
    * The fold watermark: the stored `mergedAtHeads` unioned with every conflicting value of the
    * register. Peers merging concurrently each record their own watermark and automerge keeps one
    * plus conflicts; a fold diffing from the union never re-presents an edit any peer already
-   * folded — a re-fold from a stale surviving watermark would overwrite newer winner edits.
+   * folded - a re-fold from a stale surviving watermark would overwrite newer winner edits.
    */
   getMergedAtHeads(): string[] | undefined {
     const value = this.getRaw([SYSTEM_NAMESPACE, 'mergedAtHeads']);
@@ -793,7 +793,7 @@ export class ObjectCore {
    *
    * Appends to the existing list rather than assigning a new one: concurrent assignments are
    * whole-list conflicts and last-write-wins would drop one peer's ids, while concurrent inserts
-   * both survive — {@link getMergedFrom} deduplicates.
+   * both survive - {@link getMergedFrom} deduplicates.
    */
   addMergedFrom(ids: readonly EntityId[]): void {
     const existing = new Set(this.getMergedFrom());
@@ -931,7 +931,7 @@ export class ObjectCore {
 
     if (this.entityManager && remainingDepth > 0) {
       // An entity is transitively deleted when one of its strong dependencies is deleted: a child
-      // when its parent is removed, or a relation when either endpoint is removed — a dangling
+      // when its parent is removed, or a relation when either endpoint is removed - a dangling
       // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
       if (this._isReferencedCoreDeleted(this.getParent(), remainingDepth, memo)) {
         return true;
@@ -955,7 +955,7 @@ export class ObjectCore {
   /**
    * Whether the same-space entity referenced by `ref` is (transitively) deleted. Cross-space and
    * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
-   * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
+   * endpoints load alongside the dependent entity, so this stays a synchronous core lookup -
    * `loadObjectCoreById` is avoided because it may be async.
    *
    * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
@@ -982,7 +982,7 @@ export class ObjectCore {
 
   /**
    * Follow `mergedInto` redirects to the live end of the chain. Edges must strictly decrease the
-   * id — a non-decreasing edge is corrupt data and terminates the walk at the current entity,
+   * id - a non-decreasing edge is corrupt data and terminates the walk at the current entity,
    * matching `resolveMergeRedirect` in `@dxos/echo/internal`. A hop whose core is not loaded returns `undefined`: the
    * survivor cannot be judged synchronously, and an unresolvable dependency is treated as live.
    */
@@ -1079,7 +1079,7 @@ const upgradeMeta = (path: Doc.KeyPath, value: unknown): unknown => {
     };
   }
   // `meta.keys`: peers merging concurrently both append the same missing key, and automerge keeps
-  // both insertions — normalizing on read makes the list a set.
+  // both insertions - normalizing on read makes the list a set.
   if (path.length === 2 && path[1] === 'keys') {
     return Array.isArray(value) ? dedupeForeignKeys(value) : value;
   }

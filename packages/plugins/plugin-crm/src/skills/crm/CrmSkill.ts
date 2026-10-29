@@ -17,7 +17,7 @@ import { CRM_SKILL_KEY as SKILL_KEY } from '../keys.ts';
 /**
  * Skill instructions are deliberately thin: entity shapes, dedup, and profile structure are owned
  * by the CRM operations (ProcessMailbox / ResearchPerson / ResearchOrganization), so the prose only
- * covers what the tools cannot — subject resolution and content enrichment conventions.
+ * covers what the tools cannot - subject resolution and content enrichment conventions.
  */
 const INSTRUCTIONS = trim`
   {{! CRM }}

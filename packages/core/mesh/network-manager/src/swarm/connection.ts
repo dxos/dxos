@@ -181,8 +181,8 @@ export class Connection {
     this._protocol.closed.on((err) => {
       log('protocol stream closed', { err });
       this._protocolClosed.wake();
-      // Scheduled on the connection's own context so that a teardown already under way — which
-      // disposes that context first — cancels this one instead of racing it. The Node `close` event
+      // Scheduled on the connection's own context so that a teardown already under way - which
+      // disposes that context first - cancels this one instead of racing it. The Node `close` event
       // this replaced could not fire before the stream was destroyed and so always arrived after
       // teardown; the web-stream `closed` fires as soon as the muxer disposes.
       scheduleTask(this._ctx, async () => {

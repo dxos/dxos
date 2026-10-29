@@ -12,7 +12,7 @@ import { Annotation } from '@dxos/echo';
 
 /**
  * What a queued command asks the host to do. Space-scoped like every {@link RemoteProcessManager}
- * verb, and addressed by the LOCAL pid — the client mints one at enqueue time so an input or a
+ * verb, and addressed by the LOCAL pid - the client mints one at enqueue time so an input or a
  * terminate can name a process the host has not acknowledged yet.
  */
 export const CommandPayload = Schema.Union([
@@ -54,7 +54,7 @@ export const Command = Schema.Struct({
   seq: Schema.Number,
   /** Client-minted pid of the process this command addresses; aliased to the host's pid after spawn. */
   localPid: Process.ID,
-  /** Delivery attempts made so far — what the retry backoff is computed from. */
+  /** Delivery attempts made so far - what the retry backoff is computed from. */
   attempts: Schema.Number,
   payload: CommandPayload,
 });
@@ -109,7 +109,7 @@ export class RemoteCommandQueue {
   }
 
   /**
-   * Appends a command, or returns the pending one carrying the same `id` — the enqueue side of
+   * Appends a command, or returns the pending one carrying the same `id` - the enqueue side of
    * idempotency, which is what makes a spawn retried by a caller resolve to the process already
    * queued rather than a second one.
    */

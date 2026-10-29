@@ -13,7 +13,7 @@ const resolveModule = (source, fromFile) => {
     return null;
   }
   const base = path.resolve(path.dirname(fromFile), source);
-  // The specifier may already carry its extension (`./types/index.ts`) — resolve it directly
+  // The specifier may already carry its extension (`./types/index.ts`) - resolve it directly
   // rather than appending another one on top, which would never exist on disk.
   if (MODULE_EXTENSIONS.some((ext) => base.endsWith(ext))) {
     return fs.existsSync(base) ? base : null;
@@ -77,7 +77,7 @@ const aliasTargets = (pkg) => {
 /**
  * ESLint rule requiring a package's own `imports` aliases to be used in place of a relative path
  * that resolves to the same file. An alias nobody imports looks unused when it is in fact being
- * routed around — `#apis` had 29 relative imports reaching the module it names.
+ * routed around - `#apis` had 29 relative imports reaching the module it names.
  *
  * The mapping is derived per package from its own manifest, so this enforces consistency with what
  * the package already declared rather than imposing a convention: a package that declares no
@@ -139,10 +139,10 @@ export default {
       }
 
       // Naming one branch of a conditional alias is not a bypass: the alias resolves per
-      // condition, so it and the relative path are different modules. Both readings are in use —
+      // condition, so it and the relative path are different modules. Both readings are in use -
       // a plugin's `testing.ts` may want the full default build (`./plugin`) or the
       // condition-appropriate one (`#plugin`, which under vitest yields the headless node
-      // variant) — and picking one for the author would be wrong.
+      // variant) - and picking one for the author would be wrong.
       if (match.conditional) {
         return;
       }

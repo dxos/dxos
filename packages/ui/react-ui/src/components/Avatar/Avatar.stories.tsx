@@ -33,7 +33,7 @@ const DefaultStory = ({ size, variant, status, hue, hueVariant, fallback }: Stor
       data-testid={`initials-${size}`}
     />
     <span id={`name-${size}`}>{fallback}</span>
-    <Avatar.Root fallback='🦊' hue='amber' variant={variant} label='Fox' data-testid={`emoji-${size}`} />
+    <Avatar.Root fallback='&#x1F98A;' hue='amber' variant={variant} label='Fox' data-testid={`emoji-${size}`} />
     <Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
     <Avatar.Root src={PORTRAIT} fallback='Pat Lee' status='active' label='Pat Lee' data-testid={`image-${size}`} />
     <Avatar.Root src={PORTRAIT} backdrop='dominant' hue='rose' label='Backdrop' data-testid={`backdrop-${size}`} />
@@ -81,7 +81,7 @@ export const Test: Story = {
       // Named by the visible text beside it; the fallback shows the name's initials.
       await expect(canvas.getByRole('img', { name: 'Ada Lovelace' })).toBe(initials);
       await expect(initials).toHaveTextContent('AL');
-      await expect(canvas.getByTestId(`emoji-${size}`)).toHaveTextContent('🦊');
+      await expect(canvas.getByTestId(`emoji-${size}`)).toHaveTextContent('\u{1F98A}');
 
       // The hue fills the frame and the status draws a ring.
       await expect(getComputedStyle(initials).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');

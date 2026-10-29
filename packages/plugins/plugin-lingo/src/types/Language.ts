@@ -16,7 +16,7 @@ export type Level = Schema.Schema.Type<typeof Level>;
  * A (studied, target) pairing, held as its own object so a Spanish-speaker and an English-speaker
  * learning German never share a word list by accident.
  *
- * `code` is the studied side and BOTH `baseCode` and `name` describe the target — the studied
+ * `code` is the studied side and BOTH `baseCode` and `name` describe the target - the studied
  * language is the one with no name, which has been misread as the reverse.
  */
 export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.lingo.language', '0.1.0'))(
@@ -50,7 +50,7 @@ export const DEFAULT_BASE_CODE = 'en';
  * often as furigana, and the two are not interchangeable for someone learning to read kana.
  */
 const READING_SYSTEMS: Record<string, string> = {
-  ja: 'furigana — hiragana readings for kanji only',
+  ja: 'furigana - hiragana readings for kanji only',
   zh: 'Hanyu Pinyin with tone marks',
   ko: 'Revised Romanization',
   ar: 'romanization',

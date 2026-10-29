@@ -14,7 +14,7 @@ export const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
  * namespaces disagree on names (`workers_kv:write` is `workers-kv-storage.write` here).
  *
  * Cloudflare defines a write as full CRUDL, so a write scope already carries its read.
- * `workers-scripts.bind` is not a level above write — binding is its own capability.
+ * `workers-scripts.bind` is not a level above write - binding is its own capability.
  *
  * `offline_access` cannot be listed: Cloudflare attaches it from the client's refresh-token grant
  * and fails the authorization request with `invalid_scope` when it is named.

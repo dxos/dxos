@@ -23,7 +23,7 @@ export type FreeqRestMessage = Schema.Schema.Type<typeof FreeqRestMessage>;
 
 const RestPayload = Schema.Struct({ messages: Schema.optional(Schema.Array(FreeqRestMessage)) });
 
-/** Derives the REST/HTTP base from a freeq WebSocket URL (`wss` → `https`, `ws` → `http`). */
+/** Derives the REST/HTTP base from a freeq WebSocket URL (`wss` -> `https`, `ws` -> `http`). */
 export const httpBaseFromWs = (serverUrl: string): string => serverUrl.replace(/^ws(s?):\/\//, 'http$1://');
 
 /** Fetches recent channel history from the read-only freeq REST API. */

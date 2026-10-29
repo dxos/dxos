@@ -17,7 +17,7 @@ if (process.env.DX_PWA !== 'false') {
 /**
  * Deliberately the cheapest possible round trip: a single-token answer whose expected word does not
  * appear in the prompt, so the thread assertion cannot pass on the echoed prompt alone. This suite
- * checks that the chat is wired to the AI service at all — not agent behaviour — so it must never
+ * checks that the chat is wired to the AI service at all - not agent behaviour - so it must never
  * grow a prompt that invites tool use or a long response.
  */
 /**
@@ -66,7 +66,7 @@ test.describe('Chat', () => {
     // the service leaves the thread empty and surfaces the reason in a toast, so folding the toast,
     // the echoed prompt and the reply into a single value reports which of them actually happened
     // instead of a bare "expected substring" timeout. The toast is latched because it auto-dismisses
-    // after 20s — polling for it live would report the post-dismissal state and lose the reason.
+    // after 20s - polling for it live would report the post-dismissal state and lose the reason.
     let failure: string | undefined;
     await expect
       .poll(

@@ -48,7 +48,7 @@ export type GenerateOptions<R = never> = {
   /**
    * Runs the model over the prompt. Injected so the decision logic can be tested without one, and
    * generic in its requirement so the model service it needs is DECLARED by the caller rather than
-   * quietly dropped — a requirement erased here is a defect at the first real invocation.
+   * quietly dropped - a requirement erased here is a defect at the first real invocation.
    */
   narrate: (prompt: string) => Effect.Effect<string, never, R>;
   /** Phase reporter; `current` counts against {@link GENERATE_PHASES}. */
@@ -193,7 +193,7 @@ export const findWalkthrough = (
  *
  * Two generations racing on one pull request both see none and both add: the check and the write
  * are separate steps, and ECHO has neither a uniqueness constraint nor an atomic upsert to close
- * that. Picking deterministically makes the duplicate inert instead — every reader lands on the
+ * that. Picking deterministically makes the duplicate inert instead - every reader lands on the
  * same object, and the next regeneration updates that one in place rather than forking again. The
  * loser stays in the space; removing it from a read path would delete another client's object.
  */
@@ -234,7 +234,7 @@ const upsert = (
       return yield* Database.add(Walkthrough.make(props));
     }
 
-    // One notification for the whole replacement, rather than six — a subscriber re-rendering the
+    // One notification for the whole replacement, rather than six - a subscriber re-rendering the
     // document between the body and the commit would show one against the other.
     return Obj.update(existing, (existing) => {
       existing.title = props.title;

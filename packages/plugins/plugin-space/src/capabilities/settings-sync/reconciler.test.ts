@@ -169,7 +169,7 @@ describe('Reconciler', () => {
     expect(local.get()).toEqual({ toolbar: true });
   });
 
-  test('rejoining the account replaces this device’s values', async ({ expect }) => {
+  test("rejoining the account replaces this device's values", async ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const view = store.device();

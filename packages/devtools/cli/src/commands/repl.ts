@@ -12,7 +12,7 @@ import { closeLineReader, multilinePrompt } from '../util/index.ts';
 
 /**
  * Splits a raw input line into argv tokens. Supports single/double-quoted
- * segments so quoted strings with spaces survive. Intentionally simple — if
+ * segments so quoted strings with spaces survive. Intentionally simple - if
  * users need complex shell features they can drop out of the REPL.
  */
 const tokenize = (input: string): string[] => {
@@ -34,11 +34,11 @@ const rewriteHelpAliases = (tokens: string[]): string[] => {
   if (tokens.length === 0) {
     return tokens;
   }
-  // Bare `help` / `?` → top-level `--help`.
+  // Bare `help` / `?` -> top-level `--help`.
   if (tokens.length === 1 && (tokens[0] === 'help' || tokens[0] === '?')) {
     return ['--help'];
   }
-  // `help foo bar` / `? foo bar` → `foo bar --help`.
+  // `help foo bar` / `? foo bar` -> `foo bar --help`.
   if (tokens[0] === 'help' || tokens[0] === '?') {
     return [...tokens.slice(1), '--help'];
   }

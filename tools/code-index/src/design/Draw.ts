@@ -13,7 +13,7 @@ import * as Compact from './Compact.ts';
 
 /**
  * Lays out and judges compact diagrams. Node only: the semantic engine also tries ELK's placements,
- * and elkjs's bundled fake worker Bun's CJS interop cannot construct — the Bun CLI reaches this module through a Node child
+ * and elkjs's bundled fake worker Bun's CJS interop cannot construct - the Bun CLI reaches this module through a Node child
  * (`draw-main.ts`).
  */
 
@@ -102,7 +102,7 @@ const escape = (text: string): string =>
 
 /**
  * A standalone SVG of a laid-out scene: frames, boxes, connectors and labels, styled inline so any
- * browser shows it as is. Deliberately plain — plugin-illustrator's `SceneSvg` is the full renderer,
+ * browser shows it as is. Deliberately plain - plugin-illustrator's `SceneSvg` is the full renderer,
  * and pulling a React plugin into a CLI to draw rectangles is not worth its dependency graph.
  */
 export const svgOf = (objects: readonly Scene.WorldObject[]): string => {
@@ -156,7 +156,7 @@ export const svgOf = (objects: readonly Scene.WorldObject[]): string => {
 /** A markdown table of a judged diagram's scores. */
 export const scoreTable = (judged: Judged): string =>
   [
-    `**${judged.name}** — overall ${judged.overall?.toFixed(2) ?? '—'}`,
+    `**${judged.name}** - overall ${judged.overall?.toFixed(2) ?? '-'}`,
     '',
     '| kind | rule | score |',
     '| --- | --- | --- |',

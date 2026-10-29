@@ -26,7 +26,7 @@ export const median = (values: ReadonlyArray<number>): number => {
 export const mean = (values: ReadonlyArray<number>): number =>
   values.reduce((total, value) => total + value, 0) / values.length;
 
-/** ln Γ(x), Lanczos approximation; accurate to ~15 digits for x > 0. */
+/** ln Gamma(x), Lanczos approximation; accurate to ~15 digits for x > 0. */
 const logGamma = (x: number): number => {
   const coefficients = [
     676.5203681218851, -1259.1392167224028, 771.3234287776531, -176.6150291621406, 12.507343278686905,
@@ -79,13 +79,13 @@ const incompleteBeta = (x: number, a: number, b: number): number => {
   return front * result;
 };
 
-/** P(T ≤ t) for Student's t with `df` degrees of freedom. */
+/** P(T <= t) for Student's t with `df` degrees of freedom. */
 const studentCdf = (t: number, df: number): number => {
   const tail = 0.5 * incompleteBeta(df / (df + t * t), df / 2, 0.5);
   return t >= 0 ? 1 - tail : tail;
 };
 
-/** The t with P(T ≤ t) = p, for p above one half; by bisection, since the CDF is monotone. */
+/** The t with P(T <= t) = p, for p above one half; by bisection, since the CDF is monotone. */
 export const studentQuantile = (p: number, df: number): number => {
   let low = 0;
   let high = 1;
@@ -118,7 +118,7 @@ export const tInterval = (values: ReadonlyArray<number>, confidence = 0.95): [nu
 };
 
 /**
- * Cliff's delta: P(candidate > base) − P(candidate < base), from −1 to 1. Rank-based, so a few slow
+ * Cliff's delta: P(candidate > base) - P(candidate < base), from -1 to 1. Rank-based, so a few slow
  * outlier rounds do not dominate it the way they would a difference of means.
  */
 export const cliffsDelta = (base: ReadonlyArray<number>, candidate: ReadonlyArray<number>): number => {

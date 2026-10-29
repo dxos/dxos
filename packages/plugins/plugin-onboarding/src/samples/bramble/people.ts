@@ -16,7 +16,7 @@ export type PersonKey = 'kai' | 'diego' | 'sam' | 'riley' | 'carmen' | 'abel' | 
 
 export type PersonMap = Record<PersonKey, Person.Person>;
 
-// The template's main character — the mailbox's primary user. Mail this person authored is
+// The template's main character - the mailbox's primary user. Mail this person authored is
 // tagged `sent`; everything else is received into the shared team inbox. Kai (co-founder / head
 // roaster) anchors the Spring Blend narrative, so her outbox reads as the natural protagonist's.
 export const MAIN_CHARACTER: PersonKey = 'kai';
@@ -131,7 +131,7 @@ export const People: SampleSpace.Partial<PersonMap, OrgMap> = SampleSpace.partia
 
 const SEED_BY_KEY = Object.fromEntries(PEOPLE_SEEDS.map((seed) => [seed.key, seed])) as Record<PersonKey, PersonSeed>;
 
-/** Seed row for a person key. Throws rather than returning undefined — a typo is a build error. */
+/** Seed row for a person key. Throws rather than returning undefined - a typo is a build error. */
 export const personSeed = (key: PersonKey): PersonSeed => {
   const seed = SEED_BY_KEY[key];
   if (!seed) {

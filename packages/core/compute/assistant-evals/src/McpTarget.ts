@@ -9,7 +9,7 @@ import { SpaceId } from '@dxos/keys';
 /**
  * Which MCP surface an eval runs against.
  *
- * `local` is the in-process host (`src/mcp-host.ts`) over the harness's own database — the only
+ * `local` is the in-process host (`src/mcp-host.ts`) over the harness's own database - the only
  * target whose writes a scorer can read back. The rest are the deployed `mcp-space-service` workers,
  * which own their own data plane: against those an eval measures the surface the way a client sees
  * it (discovery, governance, latency) rather than what reached a space this process controls.
@@ -24,7 +24,7 @@ export const DEFAULT: Target = 'local';
  * The deployed endpoints, from `packages/services/mcp-space-service/wrangler.jsonc` in the edge
  * repo; `main` is the `preview` worker, whose legacy alias is `main.dxos.network`.
  *
- * `local-edge` is `wrangler dev` on the port the hub's `DX_MCP_CALLBACK_ORIGINS` names — `127.0.0.1`
+ * `local-edge` is `wrangler dev` on the port the hub's `DX_MCP_CALLBACK_ORIGINS` names - `127.0.0.1`
  * rather than `localhost`, which resolves to `::1` first on Linux and reaches no IPv4 listener.
  */
 const URLS: Record<Target, string | undefined> = {
@@ -54,8 +54,8 @@ export const fromEnv = (value: string | undefined = process.env.DX_EVAL_MCP_TARG
  *
  * Exactly those whose test-account hatch admits a throwaway identity, which the run needs before it
  * can replicate its space and mint its token (`McpAuth.mintApiToken`). Edge's
- * `isTestAccountEnvironment` is the authority — dev-like environments plus preview, never staging or
- * production — so `prod` has no entry and never will.
+ * `isTestAccountEnvironment` is the authority - dev-like environments plus preview, never staging or
+ * production - so `prod` has no entry and never will.
  */
 const EDGE_URLS: Partial<Record<Target, string>> = {
   dev: 'https://dev.dxos.network',
@@ -70,7 +70,7 @@ export const isLocal = (target: Target): boolean => target === 'local';
  *
  * - `local`: the in-process host over the harness's own database.
  * - `provisioned`: a deployed worker whose EDGE the harness replicates its own space to, minting the
- *   grant itself — the same database is on both ends, so the run is graded like a local one.
+ *   grant itself - the same database is on both ends, so the run is graded like a local one.
  * - `token`: a deployed worker reached with a hand-minted `DX_EVAL_MCP_TOKEN` over a space this
  *   process cannot see; only discovery and latency are measurable.
  *
@@ -125,7 +125,7 @@ export const headers = (target: Target, token = process.env.DX_EVAL_MCP_TOKEN): 
  * Ceiling for the p95 of a tool call, in ms.
  *
  * Parsed rather than `Number(...)`: an empty variable coerces to `0`, which fails every report, and
- * a typo to `NaN`, which fails every comparison — both of them silently.
+ * a typo to `NaN`, which fails every comparison - both of them silently.
  */
 export const latencyBudget = (fallback: number): number => {
   const value = process.env.DX_EVAL_MCP_LATENCY_BUDGET_MS;

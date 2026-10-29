@@ -26,19 +26,19 @@ const handler: Operation.WithHandler<typeof CrmOperation.ProcessMailbox> = CrmOp
       const feed = yield* Database.load(mailbox.feed);
       const cursor = yield* findOrCreateCursor(mailbox);
 
-      // Run-scoped overlay over the space's shared identity index — the same dedup semantics as
+      // Run-scoped overlay over the space's shared identity index - the same dedup semantics as
       // mail sync, so a repeat sender never yields a second Person regardless of which path ran.
       const index = overlayIdentityIndex(identitySpecs, yield* getIdentityIndex(db, { refresh: true }));
 
       // NOTE(workaround): keyed on `message.created` epoch-ms because ECHO's native feed cursor is
-      // unimplemented (`Feed.cursor` is stubbed) — same as `runFactPipeline`. The cursor is a coarse
+      // unimplemented (`Feed.cursor` is stubbed) - same as `runFactPipeline`. The cursor is a coarse
       // skip (`< cursorKey`); the identity index is the precise idempotency backstop.
       let cursorKey = Cursor.parseKey(cursor.max);
       const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
       const pending = messages
         .filter((message) => {
           const key = Date.parse(message.created);
-          // A malformed `created` cannot be ordered against the cursor — skip it rather than
+          // A malformed `created` cannot be ordered against the cursor - skip it rather than
           // re-scan it on every run.
           return Number.isFinite(key) && !(key < cursorKey);
         })

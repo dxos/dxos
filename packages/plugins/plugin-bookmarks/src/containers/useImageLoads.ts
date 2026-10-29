@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
  * og-images are frequently blocked by the host's Cross-Origin-Resource-Policy
  * (ERR_BLOCKED_BY_RESPONSE.NotSameOrigin), which only surfaces at load time.
  * Needed for `Card.Poster`, whose underlying `Image` exposes no load-error
- * callback — a plain `<img>` can hide itself with an inline `onError` instead.
+ * callback - a plain `<img>` can hide itself with an inline `onError` instead.
  */
 export const useImageLoads = (src: string | undefined): boolean => {
   const [loaded, setLoaded] = useState(false);

@@ -61,7 +61,7 @@ const connectionsSource = () =>
     }),
   );
 
-/** Pipeline stage: map a Google contact to an upsert unit — Person props + the `updateTime` cursor key. */
+/** Pipeline stage: map a Google contact to an upsert unit - Person props + the `updateTime` cursor key. */
 const mapPersonStage: Stage.Stage<GoogleContacts.Person, Cursor.UpsertUnit<MappedPerson>, never, never> = Stage.map(
   'map-person',
   (remote: GoogleContacts.Person) =>
@@ -73,7 +73,7 @@ const mapPersonStage: Stage.Stage<GoogleContacts.Person, Cursor.UpsertUnit<Mappe
 );
 
 /**
- * Commit sink: find the Person this contact already is and update it, or create a new one — the
+ * Commit sink: find the Person this contact already is and update it, or create a new one - the
  * single non-idempotent write, deferred out of the pure map stage. Returns `true` when a new Person
  * was created.
  *
@@ -126,13 +126,13 @@ const upsertPerson =
       return false;
     });
 
-/** Syncs one bound contact group: stream connections → filter to group members → map → upsert. */
+/** Syncs one bound contact group: stream connections -> filter to group members -> map -> upsert. */
 export const syncContactGroup = (binding: Cursor.ExternalCursor) =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(binding);
     const groupResourceName = binding.spec.externalId;
     if (!db || !groupResourceName) {
-      // A misconfigured binding, not an empty group — visible in the log rather than a silent zero.
+      // A misconfigured binding, not an empty group - visible in the log rather than a silent zero.
       log.warn('contact-group binding skipped', { binding: binding.id, hasDb: !!db, groupResourceName });
       return { upserted: 0 };
     }
@@ -151,11 +151,11 @@ export const syncContactGroup = (binding: Cursor.ExternalCursor) =>
           reporter.total(memberCount);
           const cursorKey = Cursor.parseKey(binding.max);
 
-          // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
+          // Pipeline: stream connections -> filter to group members -> map -> upsert into the space. It's a
           // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
           // cursor (high-water contact `updateTime`) + run status in the same place as the write.
           //
-          // NB: no dedup-by-cursor here — a contact added to the group without being modified has an
+          // NB: no dedup-by-cursor here - a contact added to the group without being modified has an
           // `updateTime` older than the cursor, so deduping would silently drop it. We re-upsert every
           // member each run (idempotent).
           // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group

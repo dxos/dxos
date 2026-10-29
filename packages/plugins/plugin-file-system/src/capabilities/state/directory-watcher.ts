@@ -14,7 +14,7 @@ import { watchDirectory } from './disk-io.ts';
 const WATCHER_DEBOUNCE_MS = 500;
 
 /**
- * A watcher transitions through: pending → active.
+ * A watcher transitions through: pending -> active.
  * `pending` means the Tauri watch call is in-flight but hasn't resolved yet.
  * `active` means the native watcher is live and holds a teardown handle.
  */

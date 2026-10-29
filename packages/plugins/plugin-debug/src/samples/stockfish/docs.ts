@@ -11,12 +11,12 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 //
 // The one artifact this space ships with.
 //
-// The brief is INPUT — what to build and what not to. The design (the tool surface and the request
+// The brief is INPUT - what to build and what not to. The design (the tool surface and the request
 // path) is the first task's output, so it is deliberately absent: seeding it would answer the
 // question the project exists to work through.
 //
 
-const BRIEF_MD = `# Brief — chess engine as an MCP server on Workers
+const BRIEF_MD = `# Brief - chess engine as an MCP server on Workers
 
 A chess engine any chat in this space can consult, built as one Cloudflare Worker speaking MCP and
 added to this space as a connection. The reader runs it end to end from the assistant, with no Cloudflare
@@ -24,8 +24,8 @@ account, no GitHub account until the last stage, and no Anthropic key at any poi
 
 ## Shape
 
-One Worker. One Streamable-HTTP MCP endpoint on it. Two tools — evaluate a position, and name the
-best move from it — over a chess engine compiled to WebAssembly and bundled into the Worker.
+One Worker. One Streamable-HTTP MCP endpoint on it. Two tools - evaluate a position, and name the
+best move from it - over a chess engine compiled to WebAssembly and bundled into the Worker.
 
 ## Constraints
 
@@ -35,7 +35,7 @@ best move from it — over a chess engine compiled to WebAssembly and bundled in
   temporary Cloudflare account and prints a URL to claim it. GitHub comes last, and only to publish.
 - **No Anthropic key.** The chat driving this runs DeepSeek V4 Pro through the DXOS edge.
 - **Written by the assistant, not delegated.** The assistant edits and runs things itself in the
-  sandbox. The coding harness pre-installed in the sandbox image is not the path — see the
+  sandbox. The coding harness pre-installed in the sandbox image is not the path - see the
   Development skill.
 - **Bounded search.** A fixed, low depth or a fixed millisecond budget per call. An MCP tool that
   thinks for thirty seconds is a tool a chat gives up on.
@@ -48,7 +48,7 @@ and authentication beyond the shared key the MCP connection already carries.
 ## Done means
 
 The Worker is added to this space as an MCP connection, and a chat opened on the seeded game
-answers "what is the best move here?" from the engine's reply rather than from its own knowledge —
+answers "what is the best move here?" from the engine's reply rather than from its own knowledge -
 visible as a tool call in the transcript.
 `;
 

@@ -11,7 +11,7 @@
  * staying on the Effect 3 line and v4 has no counterpart. Only the styles the CLI uses are kept.
  *
  * `chalk` would cover this file (it is already a catalog dependency of `@dxos/log`), but not
- * `doc.ts`'s layout — so a swap would leave the vendoring in place and add a dependency.
+ * `doc.ts`'s layout - so a swap would leave the vendoring in place and add a dependency.
  */
 
 /** An ANSI style: the escape written before the text and the one that restores the default. */

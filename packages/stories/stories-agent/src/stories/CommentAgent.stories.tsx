@@ -191,10 +191,10 @@ const markdownSubject: SubjectFactory = ({ trace }) =>
 /** An instruction to the agent, so a story with the real agent starts with a turn in progress. */
 const CANVAS_INSTRUCTION = '@kai add a box C connected from B';
 
-/** `A → B` with boxes sized to the canvas's 64px major grid, so every edge lands on a grid line. */
+/** `A -> B` with boxes sized to the canvas's 64px major grid, so every edge lands on a grid line. */
 const CANVAS_SOURCE = 'diagram box=128x128\nnode A "A"\nnode B "B" right-of A\nedge A -> B';
 
-/** A canvas drawing of `A → B`, with a comment asking the agent to extend it. */
+/** A canvas drawing of `A -> B`, with a comment asking the agent to extend it. */
 const canvasSubject: SubjectFactory = ({ trace }) =>
   makeSubject({
     trace,
@@ -365,7 +365,7 @@ export const MarkdownAgent: Story = {
 };
 
 /**
- * A canvas drawing of `A → B` whose seeded comment asks Kai to add `C`: the real assistant answers it on load with the
+ * A canvas drawing of `A -> B` whose seeded comment asks Kai to add `C`: the real assistant answers it on load with the
  * illustrator's skills (pick an EDGE in the toolbar; dev by default).
  *
  * Try:

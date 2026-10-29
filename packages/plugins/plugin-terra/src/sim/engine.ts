@@ -32,7 +32,7 @@ const initialTargetFor = (definition: TerraObject.TerraObject): Vec3 | undefined
 
 /**
  * The destination for `leg`: `initialTarget` (the object's placed target) for leg 0, otherwise a
- * reachable point seeded by the world's seed, the object's own stable ECHO id, and the leg number —
+ * reachable point seeded by the world's seed, the object's own stable ECHO id, and the leg number -
  * so every peer re-derives the same sequence of destinations without any of them ever being stored.
  * `pickReachableTarget` reuses the same nav-grid + `planRoute` reachability that
  * `Terra.makeDemoWorld` places objects with, rather than duplicating it.
@@ -73,13 +73,13 @@ const legDuration = (route: readonly Vec3[], speed: number): number =>
 /** A leg in progress: its number, the (spawn-relative) elapsed second it began, and its route. */
 type LegCursor = { leg: number; legStart: number; route: Vec3[] };
 
-/** The unit-sphere point `cursor`'s route currently ends at — i.e. where its next leg, if any, begins. */
+/** The unit-sphere point `cursor`'s route currently ends at - i.e. where its next leg, if any, begins. */
 const cursorEnd = (cursor: LegCursor, fallback: Vec3): Vec3 => cursor.route.at(-1) ?? fallback;
 
 /**
  * The leg after `cursor`: a fresh destination seeded by `(config.seed, definition.id, leg)`, routed
  * from wherever the previous leg ended, starting the instant the previous leg's own arc length was
- * fully walked at `speed`. Pure given its arguments — a leg's start position and time follow by
+ * fully walked at `speed`. Pure given its arguments - a leg's start position and time follow by
  * induction from spawn, never from wall-clock deltas between calls, so legs are variable-length but
  * still a closed-form recurrence.
  */
@@ -101,7 +101,7 @@ const advanceLeg = (
 };
 
 /**
- * The leg containing `elapsed`, walking forward one arrival at a time from `start` — each leg's own
+ * The leg containing `elapsed`, walking forward one arrival at a time from `start` - each leg's own
  * duration (its route's arc length over `speed`) decides when the next begins, so a re-target never
  * waits on a fixed clock: a fast object's legs are short, a slow object's are long, and there is no
  * dead time at an arrival. Bounded by `MAX_CATCHUP_LEGS`; past the cap, snaps straight to a leg

@@ -161,7 +161,7 @@ export interface DatabaseDirectory {
    * links, so branch docs never materialize as phantom objects. The implicit `'main'` branch is
    * never listed here (it is the object's main doc via {@link links}).
    *
-   * Which branch a device is currently viewing is NOT stored here — that is device-local,
+   * Which branch a device is currently viewing is NOT stored here - that is device-local,
    * non-synced state.
    */
   branches?: SpaceBranchRegistry;
@@ -209,7 +209,7 @@ export type BranchRecord = {
   /** Subtree member object id -> automerge doc url holding that member on this branch. */
   members: { [objectId: string]: string | RawString };
   /**
-   * The root object's main-doc heads at fork time. Provenance only — currently written but never
+   * The root object's main-doc heads at fork time. Provenance only - currently written but never
    * read; the merge relies on shared automerge ancestry, not this field.
    */
   baseHeads?: string[];
@@ -510,7 +510,7 @@ export type EntityMeta = {
    * Caller-supplied domain identity, unique within a space: two entities carrying the same
    * convergence key are the same entity and are merged into one.
    *
-   * Opaque to the storage engine — callers that need generations encode them in the string
+   * Opaque to the storage engine - callers that need generations encode them in the string
    * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
    * Distinct from {@link key}/{@link version}, which record the registry entry an instance was
    * created from (provenance, not identity).
@@ -539,7 +539,7 @@ export type EntitySystem = {
   kind?: 'object' | 'relation' | 'type';
 
   /**
-   * Object reference ('protobuf' protocol) type — DXN of the schema this
+   * Object reference ('protobuf' protocol) type - DXN of the schema this
    * entity instantiates.
    *
    * - For `kind === 'object'` / `'relation'` instances, this is the URI of the
@@ -602,7 +602,7 @@ export type EntitySystem = {
    *
    * The reverse edge of {@link mergedInto}, stored rather than derived: finding it the other way
    * means scanning for entities whose `mergedInto` points here, which no index supports. Holding
-   * it forward also lets a loaded winner reach its absorbed entities directly — what the
+   * it forward also lets a loaded winner reach its absorbed entities directly - what the
    * straggler fold needs when the merge is driven lazily.
    *
    * Transitively closed: when a chain collapses, the surviving entity absorbs the losers' own

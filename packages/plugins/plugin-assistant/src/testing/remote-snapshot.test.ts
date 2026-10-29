@@ -18,7 +18,7 @@ import { buildExecutionGraph } from '@dxos/react-ui-trace';
  * `Create object` / `Add schema` / `List schemas` / `Query` / `Add to context` sub-operation.
  * Its `operation.start` lives near the front of the stream (index 70). Before the fix, the
  * default `eventLimit = 300` would `slice(-300)` away that begin event, leaving the sub-ops'
- * `parentPid` lookup unsatisfied — they ended up as top-level collapsible spans rendering their
+ * `parentPid` lookup unsatisfied - they ended up as top-level collapsible spans rendering their
  * end commits on `main`.
  */
 describe('TracePanel remote snapshot', () => {
@@ -27,7 +27,7 @@ describe('TracePanel remote snapshot', () => {
     const { commits } = buildExecutionGraph({ traceMessages: messages });
 
     // Commits whose message starts with one of these names originate from sub-operations
-    // (Trace.OperationEnd) — every one should live on the Routine's branch, never on `main`.
+    // (Trace.OperationEnd) - every one should live on the Routine's branch, never on `main`.
     const subOpPrefixes = ['Create object', 'Add schema', 'List schemas', 'Query', 'Add to context'];
     const isSubOpEnd = (message: string | undefined): boolean =>
       message !== undefined && subOpPrefixes.some((prefix) => message.startsWith(prefix));
@@ -58,7 +58,7 @@ describe('TracePanel remote snapshot', () => {
     expect(mainCommits).toHaveLength(8);
 
     // For each commit on main, its first parent (if any) must be a commit that appears
-    // *earlier* in the main commit sequence — no "skip-back" edges to an older begin commit.
+    // *earlier* in the main commit sequence - no "skip-back" edges to an older begin commit.
     const idToMainIndex = new Map(mainCommits.map((commit, index) => [commit.id, index]));
     for (let index = 1; index < mainCommits.length; index += 1) {
       const commit = mainCommits[index];

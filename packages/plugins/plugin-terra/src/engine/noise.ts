@@ -16,8 +16,8 @@ export type NoiseConfig = {
   continentPower: number; // >1 flattens lowlands into oceans, sharpens continents.
   waterLevel: number; // 0..1 in elevation space.
   mountainScale: number; // extra elevation added inside mountain belts (0 = none).
-  maskFrequency: number; // low → large, few mountain belts.
-  maskThreshold: number; // 0..1; higher → mountains confined to fewer, tighter belts.
+  maskFrequency: number; // low -> large, few mountain belts.
+  maskThreshold: number; // 0..1; higher -> mountains confined to fewer, tighter belts.
 };
 
 const smoothstep = (edge0: number, edge1: number, x: number): number => {
@@ -68,7 +68,7 @@ const buildSampler = (config: NoiseConfig): Sampler => {
     return sum / norm; // [0, 1]
   };
 
-  // Elevation in [0, ∞): low-frequency continents (ocean-biased) plus ridged mountains
+  // Elevation in [0, infinity): low-frequency continents (ocean-biased) plus ridged mountains
   // confined to belts by a low-frequency mask, and only rising on land.
   const elevation = (unit: Vec3): number => {
     const base = Math.pow((fbm(elevationNoise, unit, config.frequency) + 1) / 2, config.continentPower);
@@ -108,7 +108,7 @@ const samplerCache = new Map<string, Sampler>();
 
 /**
  * Deterministic seeded fBm sampler over the unit sphere (seamless: sampled in 3D), memoized on the
- * config's noise fields. Building one seeds four simplex permutation tables — negligible once, but
+ * config's noise fields. Building one seeds four simplex permutation tables - negligible once, but
  * `sim/motion.ts` builds a sampler inside `evaluate`, which the smoke trails call ~25 times per
  * object per frame; uncached, that construction alone cost ~26ms/frame at 20 objects and timed the
  * `Objects` story out in CI. Memoizing is semantically invisible: a sampler is a pure function of

@@ -9,7 +9,7 @@
 // PR's earlier review stores are then superseded: their `ignored` statuses carry onto matching
 // rows of the new index and the old stores are deleted, so a PR keeps one review. Pairs
 // System One is unsure of, and `system-one: off` rules, are counted in its appendix and not
-// reviewed — that is the trade for the speed.
+// reviewed - that is the trade for the speed.
 //
 // Usage:
 //   bun fast.ts [--main=origin/main] [--base=<ref>] [--max-cost=5] [--dry-run]
@@ -49,7 +49,7 @@ const store = join(root, REVIEWS_DIR, slug);
 const script = (name: string): string => join(import.meta.dir, name);
 
 if (!dryRun && !process.env.TYPESAFE_API_KEY) {
-  console.error('fast: TYPESAFE_API_KEY is not set — export it (see the 1password skill), or pass --dry-run.');
+  console.error('fast: TYPESAFE_API_KEY is not set - export it (see the 1password skill), or pass --dry-run.');
   process.exit(1);
 }
 
@@ -99,7 +99,7 @@ if (groups.length > 0) {
 if (dryRun) {
   // A dry run prices the pass without judging anything, so there is nothing to finalize.
   rmSync(store, { recursive: true, force: true });
-  console.log('\nfast: dry run — store removed.');
+  console.log('\nfast: dry run - store removed.');
   process.exit(0);
 }
 run('finalize.ts', [`--slug=${slug}`]);
@@ -128,5 +128,5 @@ Next:
   2. Set its row in that file's \`## Index\` to \`resolved\` or \`ignored\`.
   3. Commit the store, and the deletion of any store it superseded, with your fixes. CI (Agentic
      Review) accepts the PR while less than 20% of it has changed since this review; past that,
-     run this script again — it replaces this store rather than adding another.
+     run this script again - it replaces this store rather than adding another.
 Pairs Jev left uncertain stay unreviewed by design: do not spawn subagents for them.`);

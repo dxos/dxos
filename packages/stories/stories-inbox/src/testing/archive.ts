@@ -21,7 +21,7 @@ import { Message } from '@dxos/types';
 
 /**
  * Serializes the feed's messages to plain JSON (the download payload). `filter` narrows the export to a
- * curated subset — the story passes the starred predicate so an archive holds only the messages the user
+ * curated subset - the story passes the starred predicate so an archive holds only the messages the user
  * deliberately marked as fixtures.
  */
 export const exportFeedMessages = async (
@@ -75,7 +75,7 @@ export const importMessages = async (
 
 /**
  * Replaces the mailbox's backing feed with a fresh one seeded from serialized messages, then deletes
- * the previous feed. Returns the number of messages imported. Destructive — see {@link importMessages}
+ * the previous feed. Returns the number of messages imported. Destructive - see {@link importMessages}
  * for the import path.
  */
 export const replaceFeed = async (
@@ -108,7 +108,7 @@ export const replaceFeed = async (
 /**
  * Returns the mailbox to a clean slate: removes the sync binding(s) targeting it, deletes the sync
  * trigger(s) wired up by the connector integration, deletes every saved {@link Connection} (and its
- * {@link AccessToken}), and empties the feed. Used by the story's Reset control — the binding removal
+ * {@link AccessToken}), and empties the feed. Used by the story's Reset control - the binding removal
  * alone leaves Connection accounts behind, so they otherwise accumulate in the Connect menu across
  * reconnects.
  */

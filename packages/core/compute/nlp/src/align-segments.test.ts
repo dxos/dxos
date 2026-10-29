@@ -31,15 +31,15 @@ describe('alignSegments', () => {
   });
 
   test('aligns a translation whose clauses are reordered against the source', ({ expect }) => {
-    const source = '市場で小麦粉を買う';
+    const source = '\u5E02\u5834\u3067\u5C0F\u9EA6\u7C89\u3092\u8CB7\u3046';
     const target = 'buys flour at the market';
     const raw: RawSegment[] = [
-      { kind: 'vocab', text: '市場', translation: 'market' },
-      { kind: 'vocab', text: '小麦粉', translation: 'flour' },
+      { kind: 'vocab', text: '\u5E02\u5834', translation: 'market' },
+      { kind: 'vocab', text: '\u5C0F\u9EA6\u7C89', translation: 'flour' },
     ];
 
     const { segments } = alignSegments(source, raw, target);
-    expect(segments.map((segment) => slice(source, segment.source))).toEqual(['市場', '小麦粉']);
+    expect(segments.map((segment) => slice(source, segment.source))).toEqual(['\u5E02\u5834', '\u5C0F\u9EA6\u7C89']);
     // Both counterparts resolve, in the order the TARGET happens to put them.
     expect(segments.map((segment) => segment.target && slice(target, segment.target))).toEqual(['market', 'flour']);
   });
@@ -130,16 +130,16 @@ describe('alignSegments', () => {
   });
 
   test('pairs source and translation ranges', ({ expect }) => {
-    const source = '毎朝、パン屋は店を開けます。';
+    const source = '\u6BCE\u671D\u3001\u30D1\u30F3\u5C4B\u306F\u5E97\u3092\u958B\u3051\u307E\u3059\u3002';
     const target = 'Every morning the bakery opens its shop.';
     const { segments, targetHash } = alignSegments(
       source,
       [
         {
           kind: 'sentence',
-          text: '毎朝、パン屋は店を開けます。',
+          text: '\u6BCE\u671D\u3001\u30D1\u30F3\u5C4B\u306F\u5E97\u3092\u958B\u3051\u307E\u3059\u3002',
           translation: 'Every morning the bakery opens its shop.',
-          children: [{ kind: 'vocab', text: 'パン屋', translation: 'bakery', gloss: 'bakery' }],
+          children: [{ kind: 'vocab', text: '\u30D1\u30F3\u5C4B', translation: 'bakery', gloss: 'bakery' }],
         },
       ],
       target,
@@ -175,7 +175,7 @@ describe('segmentAt', () => {
         {
           kind: 'sentence',
           text: 'The dog barks loudly.',
-          // Vocab nests INSIDE its clause, as `toRawSegments` builds it — siblings never overlap,
+          // Vocab nests INSIDE its clause, as `toRawSegments` builds it - siblings never overlap,
           // which is what lets the aligner scan each sibling run forward without rewinding.
           children: [{ kind: 'clause', text: 'barks loudly', children: [{ kind: 'vocab', text: 'loudly' }] }],
         },

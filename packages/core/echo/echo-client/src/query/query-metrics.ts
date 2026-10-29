@@ -12,7 +12,7 @@ export type QueryMetrics = {
   query: string;
   /** Query results constructed for this query. */
   created: number;
-  /** One-shot executions (`run`, `first`, …). */
+  /** One-shot executions (`run`, `first`, ...). */
   runs: number;
   /** Times a subscription started the query reactively. */
   subscriptions: number;

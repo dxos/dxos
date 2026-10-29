@@ -18,7 +18,7 @@ describe('StackTrace', () => {
 
   // JavaScriptCore (Safari, and tauri's WKWebView) emits no `Error` header before the frames, so a
   // constant offset skips one real frame too many there and returns nothing at all on a shallow
-  // stack — which made `Context.onDispose`'s leak warning throw instead of report (DX-1299).
+  // stack - which made `Context.onDispose`'s leak warning throw instead of report (DX-1299).
   test('reads the same frame whether or not the engine emits a header line', ({ expect }) => {
     const v8 = new StackTrace();
     Reflect.set(v8, '_frames', ['Error', '    at new StackTrace (stack-trace.ts:1:1)', '    at caller (a.ts:2:2)']);
@@ -43,7 +43,7 @@ describe('StackTrace', () => {
   });
 
   // An unformatted trace holds V8's structured frames, and each frame strongly references its
-  // receiver — so a retained-but-never-formatted trace pins every `this` that was on the stack at
+  // receiver - so a retained-but-never-formatted trace pins every `this` that was on the stack at
   // capture time. Dropping the `Error` is what releases them, so this asserts on the field directly:
   // the equivalent black-box check needs GC plus `FinalizationRegistry`, which this package's `lib`
   // excludes. `echo-client`'s query-result test covers the end-to-end collectability (DX-1140).

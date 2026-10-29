@@ -11,6 +11,6 @@ export const imageTranslations: Record<string, string> = {
   'input-image.alt': 'attached image',
   'input-image-read.label': 'Read: {{title}}',
   'input-image-item.label': 'an item',
-  'input-image-reading.message': 'Reading the image…',
+  'input-image-reading.message': 'Reading the image...',
   'input-image-queries.label': 'Queries: {{queries}}',
 };

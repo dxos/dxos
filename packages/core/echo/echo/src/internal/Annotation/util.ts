@@ -15,7 +15,7 @@ export interface AnnotationHelper<T> {
   /**
    * Get the annotation value from an Effect schema.
    *
-   * Only accepts `Schema.Top` — to read an annotation off a `Type.Type`
+   * Only accepts `Schema.Top` - to read an annotation off a `Type.Type`
    * entity, unwrap it first with `Type.getSchema(entity)`. This keeps the
    * annotation pipeline single-shaped and forces annotations to live on the
    * source schema, not on the post-construction Type entity.
@@ -28,7 +28,7 @@ export interface AnnotationHelper<T> {
   /**
    * Set the annotation on an Effect schema.
    *
-   * Only accepts `Schema.Top` — annotations must be applied to the
+   * Only accepts `Schema.Top` - annotations must be applied to the
    * source schema BEFORE wrapping it with `Type.makeObject` / `Type.makeRelation`.
    * In a pipe, place every `Annotation.X.set(...)` before the `Type.make...` step.
    */

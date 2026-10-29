@@ -62,7 +62,7 @@ export const Summarize = Operation.make({
  * player endpoint (via the EDGE CORS proxy) to discover the timed-text tracks, download the
  * best-matching track, and link the formatted transcript onto the video. An alternative to
  * {@link Transcribe} (which uses the remote EDGE transcription service) for videos that already
- * publish captions — no server-side ASR round-trip.
+ * publish captions - no server-side ASR round-trip.
  */
 export const FetchTranscript = Operation.make({
   meta: {

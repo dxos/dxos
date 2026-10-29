@@ -11,7 +11,7 @@ import { Diagnostics, MermaidEngine, type Scene } from '@dxos/diagram';
 //
 // Tier 1 over the committed diagram corpus (`docs/diagrams/*.mmd`): every diagram must render
 // with no hard defects, its soft metrics are golden-filed, and every `%% ref` must name a path
-// that exists in the repository — a diagram of the code should not drift from the code.
+// that exists in the repository - a diagram of the code should not drift from the code.
 //
 // Tagged manual, so it does not run in CI. The ELK candidate sweep is ~170s of the package's ~185s
 // on a 4-core sandbox and exceeds ten minutes on CI hardware even with every other task cached,
@@ -20,8 +20,8 @@ import { Diagnostics, MermaidEngine, type Scene } from '@dxos/diagram';
 //
 //   DX_RUN_MANUAL_TESTS=1 moon run plugin-illustrator:test -- src/model/corpus.test.ts
 //
-// TODO(burdon): Make the sweep affordable in CI — memoize the layout per diagram hash, or sample
-// the corpus — and drop the gate. Skipping it means corpus drift is caught only when run by hand.
+// TODO(burdon): Make the sweep affordable in CI - memoize the layout per diagram hash, or sample
+// the corpus - and drop the gate. Skipping it means corpus drift is caught only when run by hand.
 //
 
 const DIAGRAMS = join(__dirname, '../../docs/diagrams');
@@ -63,10 +63,10 @@ describe.skipIf(!MANUAL).each(corpus)('corpus: %s', (_name, source) => {
 
     expect(refs.length).toBeGreaterThan(0);
     for (const [id, ref] of refs) {
-      // A path must resolve inside the repository — `../` out of it would pass `existsSync` alone.
+      // A path must resolve inside the repository - `../` out of it would pass `existsSync` alone.
       const target = resolve(REPO, ref);
       const inRepo = target.startsWith(resolve(REPO) + sep) && existsSync(target);
-      expect(/^[a-z]+:\/\//.test(ref) || inRepo, `${id} → ${ref}`).toBe(true);
+      expect(/^[a-z]+:\/\//.test(ref) || inRepo, `${id} -> ${ref}`).toBe(true);
     }
   });
 });

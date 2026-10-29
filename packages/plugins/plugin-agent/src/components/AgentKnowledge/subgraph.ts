@@ -32,7 +32,7 @@ export type EntityCardOptions = {
   types?: Readonly<Record<string, string>>;
   /** Labels by normalized predicate; the predicate as said otherwise. */
   labels?: Readonly<Record<string, string>>;
-  /** Inverse labels by normalized predicate (`knows` → `known-by`); `<label>-of` otherwise. Labels are `Predicate.label`. */
+  /** Inverse labels by normalized predicate (`knows` -> `known-by`); `<label>-of` otherwise. Labels are `Predicate.label`. */
   inverses?: Readonly<Record<string, string>>;
   /** Also give a card to entities that are only ever objects (an employer, a paper), as browsing needs. */
   objects?: boolean;
@@ -150,7 +150,7 @@ export type BrowseSelection = {
 
 /**
  * The ids the next column shows for a selection: the chip's entity, else the property's entity values, else every
- * entity the card relates to in either direction — in order, without repeats.
+ * entity the card relates to in either direction - in order, without repeats.
  */
 export const related = (card: EntityCardModel, selection: BrowseSelection): string[] => {
   if (selection.entity) {

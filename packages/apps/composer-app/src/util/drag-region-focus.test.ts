@@ -69,7 +69,7 @@ describe('restoreDragRegionFocus', () => {
     { attr: 'true', hitSelf: true, focused: true },
     { attr: '', hitSelf: false, focused: false },
     { attr: 'false', hitSelf: true, focused: false },
-  ])('region "$attr", hit on itself: $hitSelf → focused: $focused', ({ attr, hitSelf, focused }, { expect }) => {
+  ])('region "$attr", hit on itself: $hitSelf -> focused: $focused', ({ attr, hitSelf, focused }, { expect }) => {
     const pane = document.createElement('div');
     pane.tabIndex = 0;
     const region = document.createElement('div');

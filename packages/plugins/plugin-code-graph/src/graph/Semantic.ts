@@ -22,9 +22,9 @@ const CONTAINMENT = new Set(['declares', 'inPackage', 'hasMember']);
 
 export type Diagram = {
   source: string;
-  /** DSL id → node IRI; the DSL takes bare words, IRIs do not lex as one. */
+  /** DSL id -> node IRI; the DSL takes bare words, IRIs do not lex as one. */
   ids: Map<string, string>;
-  /** DSL id → package, for each frame. */
+  /** DSL id -> package, for each frame. */
   groups: Map<string, string>;
 };
 

@@ -18,7 +18,7 @@ import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness.ts
  *   DX_UPDATE_MODEL_FIXTURES=1 VITEST_TAGS_FILTER='manual' moon run assistant-e2e:test -- src/testing/sandbox.test.ts
  */
 // TODO(wittjosiah): Migrate to an eval (see .agents/skills/agent-eval-tests). createEvalRunner has
-// no `randomEntityIds`, `sandbox`, or `clientTypes` options yet — all three would need adding,
+// no `randomEntityIds`, `sandbox`, or `clientTypes` options yet - all three would need adding,
 // mirroring harness.ts's AgentTestOptions, plus a live sandbox-service worker to run against.
 describe('Sandbox', { tags: ['manual'] }, () => {
   it.effect(

@@ -54,8 +54,8 @@ import {
 /** Creates collection-related extensions: collections section, collections, objects, and object actions. */
 
 /**
- * Typenames available in this build — schemas registered by enabled plugins, plus those stored in the
- * space — so the tree can omit an object whose type has no article rather than offer a row that opens
+ * Typenames available in this build - schemas registered by enabled plugins, plus those stored in the
+ * space - so the tree can omit an object whose type has no article rather than offer a row that opens
  * nothing.
  *
  * TODO(wittjosiah): Name the plugin that would render the object instead of hiding it.
@@ -70,7 +70,7 @@ const getAvailableTypenames = (types: readonly Entity.Unknown[]): ReadonlySet<st
 
 const isTypeAvailable = (typenames: ReadonlySet<string>, object: Obj.Unknown): boolean => {
   const typename = Obj.getTypename(object);
-  // No typename at all is not an unavailable type — leave those to the renderers.
+  // No typename at all is not an unavailable type - leave those to the renderers.
   return !typename || typenames.has(typename);
 };
 
@@ -91,7 +91,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
 
   return yield* Effect.all([
-    // Content section group — created alongside collections so the group always
+    // Content section group - created alongside collections so the group always
     // appears when the space plugin is active and hides when there are no children.
     AppGraphBuilder.createExtension({
       id: GraphPath.GroupSegments.content,
@@ -198,7 +198,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
       // through a space's collection tree, not just the root collection's direct children. The shape is
       // data-dependent (the object's collection ancestry), so the id is the object's own segment and
-      // `resolve` finds the rest — see `resolveCollectionObjectPath`.
+      // `resolve` finds the rest - see `resolveCollectionObjectPath`.
       url: {
         key: 'object',
         kind: 'item',
@@ -208,7 +208,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             if (!SpaceId.isValid(workspace)) {
               return null;
             }
-            // Look the Client up lazily (at resolve time) rather than at graph-setup time — it is not yet
+            // Look the Client up lazily (at resolve time) rather than at graph-setup time - it is not yet
             // available when the AppGraphBuilder activates, and forward resolution only runs much later.
             const client = capabilities.get(ClientCapabilities.Client);
             const space = client.spaces.get(workspace);
@@ -314,7 +314,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 )?.target;
                 yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                   // Qualified id of the collections section node (root/<spaceId>/collections), so the new
-                  // object's navigation path resolves under the section — the bare segment would not.
+                  // object's navigation path resolves under the section - the bare segment would not.
                   target: rootCollection ?? space.db,
                   targetNodeId: GraphPath.getCollectionsPath(space.id),
                 });

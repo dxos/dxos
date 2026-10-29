@@ -132,7 +132,7 @@ export const EmojiPickerBlock = ({
         </Popover.Trigger>
         {/* Portalled, like `EmojiPickerToolbarButton` above and `PickerButton` (which is why the hue
             picker never had this problem): rendered in place, a 300px panel is clipped by the first
-            scrolling ancestor — in the profile page, the settings panel's own overflow. */}
+            scrolling ancestor - in the profile page, the settings panel's own overflow. */}
         <Popover.Content
           classNames='p-0'
           onKeyDownCapture={(event) => {

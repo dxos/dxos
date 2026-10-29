@@ -30,7 +30,7 @@ export const make = () =>
         {{! UML }}
 
         You can create UML class diagrams from source code and render them on a shared canvas.
-        The ${Operation.toolName(DrawingOperation.Draw)} tool lays out semantic diagram statements —
+        The ${Operation.toolName(DrawingOperation.Draw)} tool lays out semantic diagram statements -
         you state the classes and how they relate, the engine owns the layout.
 
         ## Workflow
@@ -41,7 +41,7 @@ export const make = () =>
              with your available tools (e.g. fetch the raw file, or the repository tree and then
              the relevant files). Prefer the few files that define the core types over crawling
              an entire repository.
-        2. Extract the class model — classes, interfaces, and the relationships between them:
+        2. Extract the class model - classes, interfaces, and the relationships between them:
            inheritance (extends), realization (implements), composition/aggregation (owned
            fields), association (references), and dependency (parameter/return types). Keep it to
            the essential types; a readable diagram has fewer than ~15 classes.
@@ -63,7 +63,7 @@ export const make = () =>
         5. Read \`problems\` and \`diagnostics\` in the result. Every \`error\` (nodes overlapping, a
            connector drawn through a node, a label that does not fit) means the picture is wrong:
            shorten labels, drop or split nodes, or reduce edges, then draw again. \`warning\`s
-           (crossings, bends) are quality hints — fewer is better, zero is not required.
+           (crossings, bends) are quality hints - fewer is better, zero is not required.
         6. For manual touch-ups afterwards (moving a class, restyling an element), read the
            scene and apply targeted edit commands; each class is a world object whose id is the
            node id.
@@ -115,7 +115,7 @@ export const make = () =>
         }
         \`\`\`
 
-        - \`object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { … }\` places a group; \`@\` is its
+        - \`object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { ... }\` places a group; \`@\` is its
           canvas origin and elements inside it are in object-local units. Omit \`@\` to leave an
           existing object where it is.
         - Elements are \`<kind> <id> <geometry> ["label"] <name=value>*\`: \`rect\`/\`ellipse\`/
@@ -130,11 +130,11 @@ export const make = () =>
           \`closed=true\` on \`line\`; \`head\` and \`tail\` on \`arrow\`. Values are the schema's
           literals (\`head=triangle\`, \`stroke=dashed\`); free text and ids that are not bare words
           are quoted.
-        - The other statements edit in place: \`elements <objectId> { … }\` adds or replaces
+        - The other statements edit in place: \`elements <objectId> { ... }\` adds or replaces
           elements, \`move <id> @ <x>,<y>\`, \`remove object <id>\`,
-          \`remove elements <objectId> <elementId>…\`.
+          \`remove elements <objectId> <elementId>...\`.
 
-        Read \`problems\` in the result first — each carries a line and column, and a single
+        Read \`problems\` in the result first - each carries a line and column, and a single
         \`error\` means nothing was applied at all. Then read \`diagnostics\` as above.
 
         When asked for the diagram source rather than a canvas rendering (e.g. to embed in a

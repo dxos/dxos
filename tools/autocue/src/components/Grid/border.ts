@@ -46,7 +46,7 @@ export type BorderLayout = {
 
 /**
  * The cell's frame for a tile `width` px wide on screen: every size is a fraction of that width, so the frame scales
- * with the camera and a close-up keeps a thin edge; `strength` (0–1) scales it down, so it can fade out at a close-up.
+ * with the camera and a close-up keeps a thin edge; `strength` (0-1) scales it down, so it can fade out at a close-up.
  */
 export const borderLayout = (border: Border, width: number, index: number, strength: number): BorderLayout => {
   const size = (fraction: number) => fraction * width * strength;

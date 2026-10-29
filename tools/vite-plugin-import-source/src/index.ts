@@ -80,10 +80,10 @@ const PluginImportSource = ({
 
         // Don't re-route `#*` subpath imports to source when the importer
         // is already in a compiled `dist/` tree. Compiled packages expect
-        // their own subpath imports to stay on the dist→dist chain;
+        // their own subpath imports to stay on the dist->dist chain;
         // jumping back to source would pull in TypeScript that may not be
         // browser-safe (e.g. raw `node:path` in `random-access-storage`'s
-        // src). Non-subpath `@dxos/*` imports from dist are unaffected —
+        // src). Non-subpath `@dxos/*` imports from dist are unaffected -
         // they still benefit from source resolution.
         if (source.startsWith('#') && importer.includes('/dist/')) {
           return null;
@@ -113,7 +113,7 @@ const PluginImportSource = ({
     // NOTE: A previous version called `this.addWatchFile(filePath)` here for
     // every loaded module. Vite already watches resolved files; the redundant
     // calls flooded chokidar with thousands of registrations on cold start
-    // (one per file, including non-`@dxos/*` modules — the include filter
+    // (one per file, including non-`@dxos/*` modules - the include filter
     // only runs in resolveId), turning warm starts into multi-minute hangs
     // when the watcher backend falls back to polling. Watches added in
     // `resolveId` (above) for resolved package paths are sufficient to pick

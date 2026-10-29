@@ -69,7 +69,7 @@ const findAll = (graph: Hypergraph.Hypergraph, sessionId: string) =>
  * The object's own id, from either URI form.
  *
  * A ref made against the object's own database carries the relative `echo:///<id>`, while
- * `Obj.getURI` always answers the absolute `echo://<space>/<id>` — comparing them as strings finds
+ * `Obj.getURI` always answers the absolute `echo://<space>/<id>` - comparing them as strings finds
  * nothing, which is the whole bug this exists to avoid.
  */
 const objectId = (uri: string | undefined): string | undefined => uri?.split('/').filter(Boolean).at(-1);
@@ -81,7 +81,7 @@ const CLOSED: ReadonlySet<string> = new Set(['done', 'duplicate', 'cancelled', '
  * The open tasks whose assignee stands for this session.
  *
  * Filtered in memory rather than in the query: `assignee` is an inline actor, not a relation, so
- * there is no edge to select on — the subject ref is a field of a struct on the task.
+ * there is no edge to select on - the subject ref is a field of a struct on the task.
  */
 const assignedTasks = (graph: Hypergraph.Hypergraph, session: RemoteSession.RemoteSession) =>
   Effect.promise(() => graph.query(Query.select(Filter.type(Task.Task)).from('all-accessible-spaces')).run()).pipe(
@@ -139,7 +139,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
         const { graph } = yield* Hypergraph.Service;
         const now = new Date().toISOString();
 
-        // The graph spans every space, so the session is found wherever it was first registered —
+        // The graph spans every space, so the session is found wherever it was first registered -
         // which is the whole point: a hook cannot name a space, but it can be told where the
         // session already lives.
         const matches = yield* findAll(graph, sessionId);
@@ -147,7 +147,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
 
         if (!existing) {
           // Nothing to update. Without a space there is nowhere to put it either, so report back
-          // rather than guessing one — the outcome worse than not recording the session at all.
+          // rather than guessing one - the outcome worse than not recording the session at all.
           if (!spaceId) {
             return { sessionId, created: false, instructions: NEEDS_SPACE(sessionId) };
           }
@@ -174,7 +174,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
             }),
           );
           yield* Effect.promise(() => db.flush());
-          // A session created by this call has never checked in before, so it is not stale — only
+          // A session created by this call has never checked in before, so it is not stale - only
           // a missing title can ask for prose here.
           return { session, sessionId, created: true, ...(yield* reminder(graph, session, false)) };
         }
@@ -236,8 +236,8 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
           if (worktree !== undefined) {
             existing.worktree = worktree;
           }
-          // A terminal session keeps its state. Reports keep arriving after one ends — a queued
-          // hook, a resumed transcript — and letting `running` win would leave a finished session
+          // A terminal session keeps its state. Reports keep arriving after one ends - a queued
+          // hook, a resumed transcript - and letting `running` win would leave a finished session
           // looking live, contradicting the `finished` time it still carries.
           if (state !== undefined && !RemoteSession.isTerminal(existing)) {
             existing.state = state;

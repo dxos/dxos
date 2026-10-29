@@ -26,11 +26,11 @@ export interface McpEndpoint extends Schema.Schema.Type<typeof McpEndpoint> {}
  * The connection is the durable, user-facing handle; the credential it holds is
  * an internal primitive (shared across subsystems), and the things it syncs are
  * external-sync {@link Cursor} objects whose `spec.source` is this
- * connection's access token — matched by token, not by a direct relation, since
+ * connection's access token - matched by token, not by a direct relation, since
  * `Cursor` is an infrastructure type with no dependency on `Connection`. One
  * connector backs many connections (e.g. several Gmail accounts); one connection
  * backs many cursors (e.g. several mailboxes). Routed by `connectorId` (not
- * `accessToken.source` alone — multiple connectors may share a source).
+ * `accessToken.source` alone - multiple connectors may share a source).
  */
 export class Connection extends Type.makeObject<Connection>(DXN.make('org.dxos.type.connection', '0.1.0'))(
   Schema.Struct({

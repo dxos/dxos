@@ -37,7 +37,7 @@ export type DiffLayout = 'split' | 'inline' | 'auto';
 export type DiffBlocksOptions = {
   /**
    * `split` renders before and after as two columns, `inline` as one unified column, and `auto`
-   * (the default) picks by measured width — two columns of code are unreadable in a narrow pane.
+   * (the default) picks by measured width - two columns of code are unreadable in a narrow pane.
    */
   layout?: DiffLayout;
   /** Syntax-highlight the code; the language is loaded lazily. Defaults to true. */
@@ -164,7 +164,7 @@ class DiffBlockWidget extends WidgetType {
 
   override eq(other: this): boolean {
     // Only the DEFAULTS are normalized: an absent layout means `auto` and an absent `highlight`
-    // means on, so a widget configured either way renders identically and must not be torn down —
+    // means on, so a widget configured either way renders identically and must not be torn down -
     // that would lose the collapse the reader toggled and the width the observer measured. `auto`
     // and `split` stay distinct despite both starting split, since only `auto` observes its width.
     return (
@@ -292,7 +292,7 @@ class DiffBlockWidget extends WidgetType {
     if (range) {
       const element = header.appendChild(document.createElement('span'));
       element.className = 'cm-diff-range';
-      element.textContent = `Lines ${range.replace('-', '–')}`;
+      element.textContent = `Lines ${range.replace('-', '\u2013')}`;
     }
 
     return header;

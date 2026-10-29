@@ -64,12 +64,12 @@ export const Ref: {
   // `Obj.Unknown`, whose object kind brand conflicts and collapses to `never`).
   <S extends Type$.AnyRelation>(type: S): RefSchema<Type$.InstanceType<S> & Relation.Unknown>;
 
-  // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
+  // `Type.Type` entities (the meta-schema kind) can be referenced too - e.g. a
   // trigger that points to a stored function/workflow definition.
   <T extends Type$.Type<any>>(type: T): RefSchema<Type$.InstanceType<T>>;
 
   // Schema-side overload for the well-known "any object" / "any relation" schemas.
-  // Other raw `Schema.Schema` values are intentionally rejected — callers should
+  // Other raw `Schema.Schema` values are intentionally rejected - callers should
   // pass a `Type.Type` entity instead.
   <S extends internal.UnknownTypeSchema<any, any>>(schema: S): RefSchema<Schema.Schema.Type<S> & Obj.Unknown>;
 } = refInternal.Ref as any;

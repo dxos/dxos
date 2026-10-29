@@ -24,14 +24,14 @@ import { type MessageAuthor } from '../MessageChrome/index.ts';
 import { ChatThread, type ChatThreadController } from './ChatThread.tsx';
 
 /**
- * The canonical assistant thread: `ChatThread` end to end — the view-typed renderer, the real
- * widget registry, the prompt/answer chrome — with a reader typing prompts while an agent streams
+ * The canonical assistant thread: `ChatThread` end to end - the view-typed renderer, the real
+ * widget registry, the prompt/answer chrome - with a reader typing prompts while an agent streams
  * multi-block answers into the tail (status, reasoning, a tool run, then the answer: exactly the
  * block sequence a model emits, via `streamTurn`).
  *
  * Everything goes through the shipping path and the model's *told* APIs: a typed prompt is
  * `model.append`, the agent's turn mutates one identity via `model.patch`, and the follow keeps
- * the tail at rest because the reader is there — scrolling up withdraws it, returning restores it.
+ * the tail at rest because the reader is there - scrolling up withdraws it, returning restores it.
  */
 type StoryArgs = {
   count?: number;
@@ -79,7 +79,7 @@ const DefaultStory = ({
       try {
         for await (const blocks of streamTurn({ wordsPerChunk, chunkDelay, calls, failAt })) {
           // Patched, not mutated: a schema-made message is frozen, so each chunk is a fresh value
-          // under the same identity — which is also what an item needs to reconcile by delta.
+          // under the same identity - which is also what an item needs to reconcile by delta.
           model.patch(reply.id, { ...reply, blocks } as Message.Message);
         }
       } finally {
@@ -91,7 +91,7 @@ const DefaultStory = ({
   );
 
   // The thread's outward events: a suggestion or select click is a submit; the prompt toolbar's
-  // rewind truncates the thread back to that prompt — the host shapes both, which is the point.
+  // rewind truncates the thread back to that prompt - the host shapes both, which is the point.
   const handleEvent = useCallback(
     (event: ChatThreadEvent) => {
       switch (event.type) {
@@ -193,7 +193,7 @@ const PromptInput = ({
     <div className='p-2'>
       <Field.Root>
         <Input.Root
-          placeholder={busy ? 'Answering…' : 'Ask something…'}
+          placeholder={busy ? 'Answering...' : 'Ask something...'}
           value={prompt}
           data-testid='assistant.prompt'
           onChange={(event) => setPrompt(event.target.value)}
@@ -271,14 +271,14 @@ const Probes = ({ model }: { model: FeedModel }) => {
     {
       id: 'streaming',
       group: 'model',
-      read: () => (state.current.model.streamingId ? 'yes' : '—'),
+      read: () => (state.current.model.streamingId ? 'yes' : '-'),
     },
     {
       id: 'range',
       group: 'window',
       read: () => {
         const { range } = state.current;
-        return range ? `${range.startIndex}–${range.endIndex}` : '—';
+        return range ? `${range.startIndex}-${range.endIndex}` : '-';
       },
     },
     {
@@ -337,7 +337,7 @@ const type = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
-/** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
+/** The loop, hands on: type a prompt, or press > and watch. No play - this one is for people. */
 export const Default: Story = {};
 
 /** The raw document, tags and all: no widgets, but the tags are highlighted so the structure reads. */
@@ -349,7 +349,7 @@ export const DebugView: Story = {
  * A turn that calls several tools, one of which fails.
  *
  * The run is what the tool panel summarises: it names the call in flight while the turn is live,
- * then counts the run once it settles — so this is the story that shows the summary changing as the
+ * then counts the run once it settles - so this is the story that shows the summary changing as the
  * blocks arrive, rather than a finished run rendered from a fixture.
  */
 export const ToolRun: Story = {
@@ -376,7 +376,7 @@ export const Assistant: Story = {
     const countRows = () => scroller.querySelectorAll('[data-index]').length > 0;
 
     // 1. The reader asks. "Asked" is read from what a reader would see: the input cleared on
-    // submit, and the turn started (the placeholder flips while the agent answers) — never from
+    // submit, and the turn started (the placeholder flips while the agent answers) - never from
     // mounted-row counts, which *shrink* as taller streamed rows fill the window.
     const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="assistant.prompt"]')!;
     type(input, 'What is an anchor-relative placement?');
@@ -385,7 +385,7 @@ export const Assistant: Story = {
     const asked = input.value === '';
 
     // 2. The answer streams in blocks while the follow keeps the tail near rest. The glide is
-    // allowed to lag a growing tail by a bounded distance — that is what travelling means — so the
+    // allowed to lag a growing tail by a bounded distance - that is what travelling means - so the
     // reading is the worst lag during the stream, and exact rest once the turn lands.
     const lag = () => {
       const rows = [...scroller.querySelectorAll<HTMLElement>('[data-index]')];
@@ -400,7 +400,7 @@ export const Assistant: Story = {
       sawStream = sawStream || atTail();
       worst = Math.max(worst, lag());
       // The turn is over when the input re-enables.
-      if (sawStream && input.placeholder !== 'Answering…') {
+      if (sawStream && input.placeholder !== 'Answering\u2026') {
         break;
       }
     }
@@ -451,7 +451,7 @@ export const Interrupted: Story = {
     const stayed = Math.abs(scroller.scrollTop - away) <= 2;
 
     // Returning to the tail opts back in: the next answer keeps it at rest. Without this half the
-    // story passes with no follow at all — "stays away" is trivially true then.
+    // story passes with no follow at all - "stays away" is trivially true then.
     let previous = -1;
     for (let attempt = 0; attempt < 8 && scroller.scrollTop !== previous; attempt++) {
       previous = scroller.scrollTop;
@@ -542,8 +542,8 @@ const READER_DID = 'did:halo:reader';
 /** Profiles a host would resolve from space members, keyed by DID. */
 const AUTHORS: Record<string, MessageAuthor> = {
   [READER_DID]: { name: 'Rich' },
-  'did:halo:alice': { name: 'Alice Park', hue: 'emerald', emoji: '🦊' },
-  'did:halo:bob': { name: 'Bob Okafor', hue: 'violet', emoji: '🐙' },
+  'did:halo:alice': { name: 'Alice Park', hue: 'emerald', emoji: '\u{1F98A}' },
+  'did:halo:bob': { name: 'Bob Okafor', hue: 'violet', emoji: '\u{1F419}' },
 };
 
 const prompt = (identityDid: string, text: string) =>

@@ -26,7 +26,7 @@ import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
 random.seed(1);
 
 /**
- * A short activity log, oldest first, ending `minutesAgo` minutes ago — the shape
+ * A short activity log, oldest first, ending `minutesAgo` minutes ago - the shape
  * `Task.update`/`Task.setStatus` write, so the pane renders the same entries it would in the app.
  */
 const seedHistory = (minutesAgo: number, ...descriptions: string[]): Task.HistoryEntry[] =>
@@ -105,7 +105,7 @@ const seedFlat = (): Task.Task[] => [
 ];
 
 /**
- * Ten tasks, one per row and every status represented — enough to fill the viewport, take the
+ * Ten tasks, one per row and every status represented - enough to fill the viewport, take the
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
@@ -114,8 +114,8 @@ const when = <T,>(set: boolean, value: () => T): T | undefined => (set ? value()
 
 /**
  * Every optional field is left unset on some rows: each renders a control whether or not it holds a
- * value, so a seed that fills them all leaves the unset half of the list — the dot, the blank
- * description — with no story behind it.
+ * value, so a seed that fills them all leaves the unset half of the list - the dot, the blank
+ * description - with no story behind it.
  *
  * Which rows is a rule on the index rather than a coin flip: a flip can land the same way forty
  * times, and a story that only sometimes covers the state it exists for is not coverage. The moduli
@@ -140,7 +140,7 @@ const adopt = (parent: Task.Task, ...children: Task.Task[]): void => {
 
 /**
  * A full tree: every node down to `depth` has `children` sub-tasks, so the seed exercises what a
- * two-level fixture cannot — indentation compounding past the second level, a branch under a
+ * two-level fixture cannot - indentation compounding past the second level, a branch under a
  * branch under a branch, and enough rows at each depth to see the columns hold. Titles carry the
  * path (`2.1.3`) so a row's depth can be read off it without counting pixels, and the leaf rows
  * are listed depth-first so array order and tree order agree.
@@ -150,7 +150,7 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
   const statuses: Task.Status[] = ['todo', 'started', 'done'];
   const visit = (parent: Task.Task | undefined, path: number[]) => {
     const task = Task.make({
-      title: `Task ${path.join('.')} — ${random.lorem.words(random.number.int({ min: 2, max: 5 }))}`,
+      title: `Task ${path.join('.')} - ${random.lorem.words(random.number.int({ min: 2, max: 5 }))}`,
       status: statuses[(path.length + path[path.length - 1]) % statuses.length],
       description: when(path[path.length - 1] === 2, () => random.lorem.paragraph()),
       estimate: when(path.length === depth, () => random.helpers.arrayElement([...Task.Estimate.literals])),
@@ -173,7 +173,7 @@ const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
 
 /**
  * Two roots with sub-tasks two levels deep. The flat list deliberately interleaves the two branches
- * — a list that walked it instead of the tree would render them out of order, which is the bug this
+ * - a list that walked it instead of the tree would render them out of order, which is the bug this
  * story exists to catch.
  */
 const seedHierarchy = (): Task.Task[] => {
@@ -228,7 +228,7 @@ const seedDrag = (): Task.Task[] => {
 
 /**
  * Tasks an agent stopped on to ask something: one question still open with options to pick from,
- * one open with nothing but the free-form field, and one already answered — so the three shapes a
+ * one open with nothing but the free-form field, and one already answered - so the three shapes a
  * question takes in a row sit side by side.
  */
 const seedQuestions = (): Task.Task[] => {
@@ -284,7 +284,7 @@ const makePngBytes = (): Uint8Array => {
 };
 
 /**
- * One task per artifact kind — a GitHub pull request, an image and a video — plus a task blocked on a
+ * One task per artifact kind - a GitHub pull request, an image and a video - plus a task blocked on a
  * question in its history, and one carrying all three artifacts, so a row with several tags is covered too. Media is a `File` owning a `Blob`, which is the
  * shape an uploaded attachment takes in a space.
  */
@@ -402,12 +402,13 @@ const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequ
   <>
     <Card.Row>
       <Card.Text variant='muted'>
-        {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} → {pullRequest.baseBranch}
+        {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} {'->'}{' '}
+        {pullRequest.baseBranch}
       </Card.Text>
     </Card.Row>
     <Card.Row>
       <Card.Text variant='muted' data-testid='artifact-preview.pullRequest'>
-        +{pullRequest.additions ?? 0} −{pullRequest.deletions ?? 0}
+        +{pullRequest.additions ?? 0} -{pullRequest.deletions ?? 0}
       </Card.Text>
     </Card.Row>
   </>
@@ -551,7 +552,7 @@ const DefaultStory = ({
 }: {
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
-   * (`() => seedMany(100)`) without a union to extend — and because `useState` reads its initial
+   * (`() => seedMany(100)`) without a union to extend - and because `useState` reads its initial
    * value once, which is what made the booleans this replaces useless as live controls.
    */
   seed?: () => Task.Task[];
@@ -602,7 +603,7 @@ const DefaultStory = ({
   );
 
   // Stands in for the host: a title starting `fail` is refused, one starting `slow` lands late, and
-  // store-and-attach fails for any file named `fail…`.
+  // store-and-attach fails for any file named `fail...`.
   const handleCreate = useCallback<TaskCreateHandler>(async ({ title, ...props }, files) => {
     if (title.startsWith('fail')) {
       return { error: new Error('Refused.') };
@@ -688,8 +689,8 @@ const DefaultStory = ({
 
 /**
  * The list beside the task's detail, as a project lays them out with its `~task` companion: the rows
- * carry each question as one line, and the detail — its own root holding just the selected task, as
- * `TaskArticle` does — carries the open ones in full, with the controls to answer them.
+ * carry each question as one line, and the detail - its own root holding just the selected task, as
+ * `TaskArticle` does - carries the open ones in full, with the controls to answer them.
  */
 const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] }) => {
   const [tasks] = useState<Task.Task[]>(seed);
@@ -811,7 +812,7 @@ export const WithQuestions: Story = {
 /**
  * A task's questions live on the detail surface, not in the list: a row carries its title and its
  * description, and the strip below carries the fields. Answering is `TaskArticle`'s, and is covered
- * where it happens — plugin-projects' `ProjectArticle` › Task Detail story.
+ * where it happens - plugin-projects' `ProjectArticle` > Task Detail story.
  */
 export const TestNoQuestionsInList: Story = {
   args: {
@@ -856,7 +857,7 @@ export const TestListAndDetail: Story = {
       'Draft the refund reply',
     );
 
-    // Neither side carries the task's questions or its log — both belong to the article surface,
+    // Neither side carries the task's questions or its log - both belong to the article surface,
     // which is what a host mounts in place of this strip when it has the room for them.
     for (const pane of [list(), detail()]) {
       await expect(pane?.querySelector('[data-testid="task-question"]')).toBeNull();
@@ -905,7 +906,7 @@ const assertDescriptionClamp: Story['play'] = async ({ canvasElement }) => {
   }
 };
 
-/** Every block the default renderer pads or rescales — heading, code, quote, list — inside the clamp. */
+/** Every block the default renderer pads or rescales - heading, code, quote, list - inside the clamp. */
 export const TestDescriptionClamp: Story = {
   args: {
     seed: seedDescription(
@@ -1003,7 +1004,7 @@ export const GroupedTree: Story = {
 };
 
 /**
- * The status glyph spins for a task an agent has taken and started — and only then.
+ * The status glyph spins for a task an agent has taken and started - and only then.
  *
  * Both halves matter: `started` alone is a person working, and an agent assignee alone is work that
  * is queued. The seed carries one of each, so a rule that dropped either half fails here.
@@ -1034,7 +1035,7 @@ export const TestArtifactsHiddenInRow: Story = {
         title: 'Finish the third-party DNS delegation that has blocked ACME automation',
         status: 'started',
         assignee: { role: 'assistant' },
-        artifacts: [Ref.make(Task.make({ title: 'Certificate renewal automation — implementation plan' }))],
+        artifacts: [Ref.make(Task.make({ title: 'Certificate renewal automation - implementation plan' }))],
       }),
     ],
   },
@@ -1070,8 +1071,8 @@ export const WithArtifacts: Story = {
 };
 
 /**
- * Tags render as chips with the task's artifacts — a line of their own under the title, starting
- * where the title cell does and above the description — while the assignee stays on the title line,
+ * Tags render as chips with the task's artifacts - a line of their own under the title, starting
+ * where the title cell does and above the description - while the assignee stays on the title line,
  * right-aligned before the trailing controls.
  */
 export const WithTags: Story = {
@@ -1227,7 +1228,7 @@ export const TestCheckboxSelection: Story = {
     const before = statuses();
     await userEvent.click(boxes()[0]);
     await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
-    // A second row checks alongside the first — a set, not a single selection.
+    // A second row checks alongside the first - a set, not a single selection.
     await userEvent.click(boxes()[1]);
     await waitFor(async () => expect(boxes()[1].getAttribute('data-state')).toBe('checked'));
     await expect(boxes()[0].getAttribute('data-state')).toBe('checked');
@@ -1333,7 +1334,7 @@ export const TestEdit: Story = {
     first.click();
     await waitFor(async () => expect(description()).not.toBeNull());
 
-    // The description is a markdown editor, held open — the pane IS the editor, so there is nothing
+    // The description is a markdown editor, held open - the pane IS the editor, so there is nothing
     // to click into.
     await waitFor(async () => expect(requireDescription().querySelector('.cm-content')).not.toBeNull());
 
@@ -1386,7 +1387,7 @@ export const TestEdit: Story = {
 
     // Cancel leaves the same way but throws the pending edit away. The buttons must not take focus:
     // the fields commit on blur, so a Cancel that stole focus would have written the very text it is
-    // meant to discard — as would the blur that tearing the editor down fires.
+    // meant to discard - as would the blur that tearing the editor down fires.
     rows()[0].click();
     await waitFor(async () => expect(description()).not.toBeNull());
     await userEvent.click(content());
@@ -1440,7 +1441,7 @@ export const TestCreateFailureKeepsDraft: Story = {
 };
 
 /**
- * Files dropped on the create pane are held there, one chip each, until the task is created — then
+ * Files dropped on the create pane are held there, one chip each, until the task is created - then
  * they are handed over with it, for the host to store and attach. A chip can be taken back first.
  */
 export const TestCreateWithAttachments: Story = {
@@ -1511,13 +1512,13 @@ export const TestCreateWithDescription: Story = {
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
-    // Nothing selected, and the field is there anyway — a new task can be given a description.
+    // Nothing selected, and the field is there anyway - a new task can be given a description.
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(description()).not.toBeNull());
     const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
     await waitFor(async () => expect(content()).not.toBeNull());
 
-    // Type the description FIRST, then the title, and create from the title with Enter — the field
+    // Type the description FIRST, then the title, and create from the title with Enter - the field
     // is still held open at that point, so the create is what has to commit it.
     const before = rows().length;
     await userEvent.click(content());
@@ -1542,7 +1543,7 @@ export const TestCreateWithDescription: Story = {
 /**
  * A description typed while creating, then abandoned by selecting a row, must not ride along into
  * the NEXT task created. The field remounts empty on the way back, but committing an already-empty
- * field never calls back — so the mirror the create reads has to be cleared with the selection.
+ * field never calls back - so the mirror the create reads has to be cleared with the selection.
  */
 export const TestAbandonedDescriptionDoesNotLeak: Story = {
   args: {
@@ -1558,7 +1559,7 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
 
     await waitFor(async () => expect(content()).not.toBeNull());
 
-    // Type a description with no title, then commit it by leaving the field — nothing is created,
+    // Type a description with no title, then commit it by leaving the field - nothing is created,
     // but the create row's mirror now holds the text.
     await userEvent.click(content());
     await userEvent.keyboard('LEAKED');
@@ -1588,7 +1589,7 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
 
 /**
  * Cmd/Ctrl-Enter in the description saves, as the Save button does: for an edit it writes the
- * pending text and leaves, and for a create it adds the task — without CodeMirror inserting a line
+ * pending text and leaves, and for a create it adds the task - without CodeMirror inserting a line
  * first. With no title to create from, the key does nothing.
  */
 export const TestSaveDescriptionWithModEnter: Story = {
@@ -1656,7 +1657,7 @@ export const TestSaveDescriptionWithModEnter: Story = {
 };
 
 /**
- * With `showDescription` off the pane is title-only, even for a selected task the list can update —
+ * With `showDescription` off the pane is title-only, even for a selected task the list can update -
  * which is what a host with no room for a markdown field (the chat strip) renders.
  */
 export const TestEditWithoutDescription: Story = {
@@ -1674,7 +1675,7 @@ export const TestEditWithoutDescription: Story = {
     const firstTitle = first.querySelector('[data-testid="taskList.item.title"]')!.textContent;
     first.click();
 
-    // The task IS selected — the title proves the pane followed the selection — and the description
+    // The task IS selected - the title proves the pane followed the selection - and the description
     // is still absent, so its absence is the prop and not a pane that failed to select.
     await waitFor(async () => expect(title().value).toEqual(firstTitle));
     await expect(description()).toBeNull();
@@ -1689,7 +1690,7 @@ export const TestEditWithoutDescription: Story = {
 
 /**
  * `Tab` indents the focused task under its previous sibling and `Shift+Tab` outdents it to follow its
- * parent — the outliner keys — and `Shift+ArrowUp`/`Down` move it among its siblings. `Tab` from a
+ * parent - the outliner keys - and `Shift+ArrowUp`/`Down` move it among its siblings. `Tab` from a
  * control inside the row still moves focus, and a `Tab` that cannot indent leaves focus to travel.
  */
 export const TestTabIndent: Story = {
@@ -1855,7 +1856,7 @@ export const TestHierarchy: Story = {
           row,
           title: row.querySelector('[data-testid="taskList.item.title"]')?.textContent ?? '',
           // A leaf IS the `treeitem`, but a branch's `treeitem` is a wrapper around the focusable
-          // row — so the level is read from whichever of the two carries it.
+          // row - so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
           ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
@@ -1877,7 +1878,7 @@ export const TestHierarchy: Story = {
       'Log every profile:2',
     ]);
 
-    // Ordinals run 1..N down the list as rendered, not by position in the set's array — the walk
+    // Ordinals run 1..N down the list as rendered, not by position in the set's array - the walk
     // interleaves the two branches, so the two orders differ.
     await expect(rows().map(({ ordinal }) => ordinal)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
 
@@ -1969,7 +1970,7 @@ export const TestHierarchy: Story = {
     const paneInput = paneInputElement.getBoundingClientRect();
     await expect(Math.round(paneInput.left)).toBeGreaterThan(Math.round(create.getBoundingClientRect().left));
 
-    // The row itself is the drag source — the tree publishes each row to pragmatic-dnd rather than
+    // The row itself is the drag source - the tree publishes each row to pragmatic-dnd rather than
     // a handle in the gutter, which is what the navtree does too. The drop is a native HTML5 drag
     // and cannot be driven from a play function; the manual script covers the gesture and its
     // landing places.
@@ -1989,7 +1990,7 @@ export const TestHierarchy: Story = {
     }
 
     // A description lines up under its own title cell (the mnemonic chip leads the title in it), not
-    // under the column — it is indented with the row and clears the disclosure toggle.
+    // under the column - it is indented with the row and clears the disclosure toggle.
     const described = rows().find(({ row }) => row.querySelector('.line-clamp-3'))!;
     const description = described.row.querySelector<HTMLElement>('.line-clamp-3')!;
     const textStart = (element: HTMLElement) =>
@@ -2036,7 +2037,7 @@ export const TestStatusPickerBuildsOnFirstClick: Story = {
     await expect(checked?.textContent).toEqual(nextLabel);
 
     // The row's other pickers defer the same way, and the priority one is the picker whose absence
-    // from the tree row changed when the row commits — so it is opened here rather than assumed.
+    // from the tree row changed when the row commits - so it is opened here rather than assumed.
     await userEvent.keyboard('{Escape}');
     await waitFor(async () => expect(options()).toHaveLength(0), { timeout: 5_000 });
     await userEvent.click(first.querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!);

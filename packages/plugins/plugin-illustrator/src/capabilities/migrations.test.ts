@@ -34,7 +34,7 @@ const addLegacySketch = (db: any, { name, schema = 'tldraw.com/2' }: { name?: st
   return db.add(Obj.make(LegacySketch.Sketch, { name, canvas: Ref.make(canvas) }));
 };
 
-describe('sketch → drawing migration', () => {
+describe('sketch -> drawing migration', () => {
   test('converts a legacy sketch in place, preserving id and canvas', async ({ expect }) => {
     const db = await setup();
     const sketch = addLegacySketch(db, { name: 'Diagram' });
@@ -101,7 +101,7 @@ describe('sketch → drawing migration', () => {
   });
 
   test('runs against a space reopened without the legacy schema registered', async ({ expect }) => {
-    // The plugin registers only `Drawing`, never `LegacySketch.Sketch` — so the migration has to
+    // The plugin registers only `Drawing`, never `LegacySketch.Sketch` - so the migration has to
     // work on a client whose registry has no entry for the type it is reading.
     const { db, peer, key } = await builder.createDatabase();
     db.graph.registry.add([LegacySketch.Sketch, Drawing.Drawing, Drawing.Canvas]);

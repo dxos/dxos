@@ -48,7 +48,7 @@ const listen = (socket: SocketLike, type: string, listener: (event: any) => void
  *
  * The device plugin listens and this dials in: a browser tab cannot accept connections, and the
  * Elgato-hosted process outlives any Composer window. Most users have no device plugin running, so
- * a failed connection is the normal case — it retries quietly with backoff and never surfaces an
+ * a failed connection is the normal case - it retries quietly with backoff and never surfaces an
  * error.
  */
 export class StreamDeckBridge {

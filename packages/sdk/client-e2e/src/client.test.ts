@@ -152,7 +152,7 @@ describe('Client', () => {
     await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'reset-check' }));
     await client.destroy();
 
-    // After closing, identity must have been persisted to SQLite — attempting
+    // After closing, identity must have been persisted to SQLite - attempting
     // to create another identity (when one already exists) should reject.
     await client.initialize();
     await expect(

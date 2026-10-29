@@ -10,10 +10,10 @@ import { EID } from '@dxos/keys';
 import { Person } from '@dxos/types';
 
 /**
- * `useContactLookup` builds its email→contact map by parsing each Person's URI with
+ * `useContactLookup` builds its email->contact map by parsing each Person's URI with
  * `EID.tryParse(Obj.getURI(person).toString())`, silently skipping anything that fails to parse. If
  * a freshly-added object's URI does not round-trip through that, the map is empty and every avatar
- * reads as unknown — which is exactly the reported symptom.
+ * reads as unknown - which is exactly the reported symptom.
  */
 describe('contact lookup URI round-trip', () => {
   let builder: EchoTestBuilder;

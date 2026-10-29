@@ -37,7 +37,7 @@ export const crm: RoutineCapabilities.Template = {
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
       return Wire.makeRoutine({
-        name: name ?? `CRM — ${mailbox.name ?? 'Mailbox'}`,
+        name: name ?? `CRM - ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(CrmOperation.ProcessMailbox.meta.key) },
         trigger: Trigger.make({
           enabled: true,

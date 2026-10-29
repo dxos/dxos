@@ -17,7 +17,7 @@ export const useShell = (): Shell => {
 };
 
 /**
- * Hook to access the shell’s display state.
+ * Hook to access the shell's display state.
  */
 export const useShellDisplay = (): ShellDisplay => {
   const client = useClient();

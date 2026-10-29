@@ -23,7 +23,7 @@ describe('clipboard', () => {
     const scene = fixture();
     const clipboard = copySelection(scene, ['scene:r/a', 'scene:r/b', 'scene:r/ab', 'scene:r/ac']);
     expect(clipboard?.nodes.map(({ id }) => id)).toEqual(['scene:r/a', 'scene:r/b']);
-    // a→b joins two copied nodes; a→c does not, selected or not.
+    // a->b joins two copied nodes; a->c does not, selected or not.
     expect(clipboard?.links.map(({ id }) => id)).toEqual(['scene:r/ab']);
     expect(copySelection(scene, ['scene:r/ab'])).toBeUndefined();
   });
@@ -40,7 +40,7 @@ describe('clipboard', () => {
     if (!copy) {
       throw new Error('the selection holds nodes, so it duplicates');
     }
-    // Two nodes and the a→b link between them.
+    // Two nodes and the a->b link between them.
     expect(copy.ids).toHaveLength(3);
     const after = reduceIntent(scene, copy.intent);
     expect(Object.keys(after.nodes)).toHaveLength(Object.keys(scene.nodes).length + 2);

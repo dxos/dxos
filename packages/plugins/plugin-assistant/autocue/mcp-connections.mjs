@@ -134,7 +134,7 @@ export const steps = [
     name: 'Manage connections opens beside the chat',
     run: async ({ demo, page }) => {
       await caption(demo, "Manage connections opens the space's Connections", 'middle');
-      await demo.click({ selector: MANAGE, label: 'Manage connections…' });
+      await demo.click({ selector: MANAGE, label: 'Manage connections...' });
       await page.getByText('Link an external service to this space.').waitFor({ timeout: 10_000 });
       await demo.sleep({ ms: 2_500 });
     },
@@ -153,7 +153,7 @@ export const steps = [
     },
   },
   {
-    name: 'The chat uses the connection’s tools',
+    name: "The chat uses the connection's tools",
     run: async ({ demo, page }) => {
       await demo.click({ selector: 'text="MCP servers" >> nth=0', label: 'MCP servers' });
       await page.locator(PROMPT).waitFor({ state: 'visible', timeout: 10_000 });

@@ -4,7 +4,7 @@
 
 //
 // SPIKE. The React face of the zag probe: `useMachine` runs the framework-free machine from
-// `src/testing/multi-select.ts`, and the component is nothing but bindings onto its connect surface —
+// `src/testing/multi-select.ts`, and the component is nothing but bindings onto its connect surface -
 // the machine is the capability, the component one of its observers.
 //
 
@@ -29,7 +29,7 @@ export type MultiSelectListProps = {
 /**
  * Multi-select list over the shared machine: plain click replaces the selection, shift-click
  * toggles the row, shift+alt-click extends the anchor range. The Listbox runs without its own
- * value model — selection lives in the machine, the rows only mark and dispatch.
+ * value model - selection lives in the machine, the rows only mark and dispatch.
  */
 export const MultiSelectList = ({ items, onChange }: MultiSelectListProps) => {
   const service = useMachine<MultiSelectSchema>(multiSelectMachine, {

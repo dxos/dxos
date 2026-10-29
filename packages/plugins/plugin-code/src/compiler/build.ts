@@ -29,7 +29,7 @@ export const ENTRY_CANDIDATES = ['src/hello.ts', 'src/plugin.ts'];
  * and will surface its own errors if a module really is missing.
  *
  * - 2307: Cannot find module 'X' or its corresponding type declarations.
- * - 2792: Cannot find module 'X'. Did you mean to set 'moduleResolution'…?
+ * - 2792: Cannot find module 'X'. Did you mean to set 'moduleResolution'...?
  * - 7016: Could not find a declaration file for module 'X'.
  */
 const MODULE_RESOLUTION_CODES = new Set([2307, 2792, 7016]);
@@ -140,14 +140,14 @@ export const compileEntry = async (files: readonly LoadedFile[]): Promise<BuildR
  * **Async limitations.** Execution is synchronous. `await` expressions inside
  * the entry resolve as normal microtasks, but any work scheduled past the
  * first turn (timers, unresolved Promises, top-level `await` patterns that
- * don't fully drain before the function returns) is not captured — those
+ * don't fully drain before the function returns) is not captured - those
  * `console.log`s land in the buffer *after* {@link RunResult} has already
  * been returned. To support async entries we would need to compile the entry
  * with `'use strict'` + async wrapping and await it before returning.
  *
  * **Security boundary.** The wrapper only shadows `console` and `exports`; it
  * does **not** prevent access to browser globals (`window`, `document`,
- * `fetch`), the network, or browser storage APIs. This is intentional — the
+ * `fetch`), the network, or browser storage APIs. This is intentional - the
  * function exists to run the user's *own* code from a `CodeProject` so they
  * can iterate on a plugin. **Do not use it to execute untrusted code.**
  */

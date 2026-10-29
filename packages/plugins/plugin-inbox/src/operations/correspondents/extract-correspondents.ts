@@ -23,9 +23,9 @@ import { deriveCorrespondents } from './correspondence.ts';
 /**
  * Materializes the user's correspondents as Person objects: derives "anyone I have sent or replied
  * to" from the feed ({@link deriveCorrespondents}), then builds contacts through the shared
- * identity index so a rerun — or a concurrent extractor — never creates a duplicate. The outbound
+ * identity index so a rerun - or a concurrent extractor - never creates a duplicate. The outbound
  * signal satisfies the contact gate's allow-list, so no Organization match is required. Mechanical
- * (no LLM); no cursor — idempotency comes from the index, not from feed position.
+ * (no LLM); no cursor - idempotency comes from the index, not from feed position.
  */
 const handler = InboxOperation.ExtractCorrespondents.pipe(
   Operation.withHandler(
@@ -58,7 +58,7 @@ const handler = InboxOperation.ExtractCorrespondents.pipe(
       reportStatus({ current: 0, total: correspondents.length });
 
       // Refresh picks up contacts committed by other writers since the index was first built, and
-      // passing the shared index into the builder registers each new contact for in-run dedup —
+      // passing the shared index into the builder registers each new contact for in-run dedup -
       // safe here (unlike an uncommitted overlay) because every contact is committed immediately.
       const index = yield* getIdentityIndex(db, { refresh: true });
 

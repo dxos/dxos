@@ -112,7 +112,7 @@ const sync: ConnectorSpec.ConnectorEntry['sync'] = {
  * one as DXOS's GitHub App installed on an account or org. Both wire the same sync operations and
  * target materializer to the `'github.com'` source; plugin-connector routes by `connectorId`.
  *
- * Sync targets are repositories, not organizations — orgs and their members
+ * Sync targets are repositories, not organizations - orgs and their members
  * are auto-pulled as a side effect of syncing any repo they own.
  *
  * `scopes` is intentionally empty: this is a GitHub *App* (not a classic

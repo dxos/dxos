@@ -26,7 +26,7 @@ describe('matchPicks', () => {
     const matched = matchPicks(
       [
         { title: 'Anything', subject: 'urn:b', why: '' },
-        { title: 'Nam Cafe — best library', why: '' },
+        { title: 'Nam Cafe - best library', why: '' },
         { title: 'Unknown place', url: 'https://nam.example', why: '' },
         { title: 'Nowhere', why: '' },
       ],

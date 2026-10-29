@@ -24,11 +24,11 @@ describe('wrapText', () => {
   test('ellipsises past the last line', ({ expect }) => {
     const lines = wrapText('Weekly team notes and other things', 11, 2);
     expect(lines).toHaveLength(2);
-    expect(lines[1].endsWith('…')).toBe(true);
+    expect(lines[1].endsWith('\u2026')).toBe(true);
   });
 
   test('hard-splits a word longer than the budget', ({ expect }) => {
-    expect(wrapText('Unmaintainability', 11, 1)).toEqual(['Unmaintain…']);
+    expect(wrapText('Unmaintainability', 11, 1)).toEqual(['Unmaintain...']);
   });
 
   test('returns nothing for a blank label', ({ expect }) => {

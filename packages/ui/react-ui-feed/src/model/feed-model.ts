@@ -14,7 +14,7 @@ export type ItemContent =
   | { kind: 'html'; html: string }
   | { kind: 'custom'; key: string; data?: unknown };
 
-/** Resolves a message to the content its item renders. One per scenario (chat, email, …). */
+/** Resolves a message to the content its item renders. One per scenario (chat, email, ...). */
 export type MessageRenderer = (message: Message.Message) => ItemContent;
 
 /**
@@ -26,7 +26,7 @@ export const defaultRenderer: MessageRenderer = (message) => createContent(messa
 /**
  * Assistant chat: as {@link defaultRenderer}, plus the reader's own turns marked with `<prompt>`.
  *
- * Separate because the tag is only meaningful where a widget registry knows it — a feed rendered
+ * Separate because the tag is only meaningful where a widget registry knows it - a feed rendered
  * without one would show the reader their own angle brackets, which is what a human chat, a
  * transcript and a comment list all are.
  */
@@ -88,7 +88,7 @@ const blockToMarkdown = (message: Message.Message, block: ContentBlock.Any, prom
  *
  * A pending block is emitted **unclosed**, which is the streaming contract: the item reconciles by
  * appending, so a closing tag written before the content is complete would have to be rewritten on
- * every chunk — and rewriting the document is what discards decorations and scroll position.
+ * every chunk - and rewriting the document is what discards decorations and scroll position.
  *
  * Paragraph breaks inside the content are collapsed, since a blank line would end the enclosing
  * markdown block and leave the rest of the tag parsing as prose.
@@ -108,7 +108,7 @@ const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/<
 /**
  * Whether a message is the reader's own prompt. Role alone cannot say: tool results travel back as
  * `user`-role messages (the AI protocol convention), and a synthetic turn is system-generated input
- * — neither is the reader speaking, so neither gets the prompt frame or counts as a stop.
+ * - neither is the reader speaking, so neither gets the prompt frame or counts as a stop.
  */
 export const isPrompt = (message: Message.Message): boolean =>
   message.sender.role === 'user' &&
@@ -127,7 +127,7 @@ export const messageText = (message: Message.Message, renderer: MessageRenderer)
   }
 };
 
-/** Crude tag strip — the engine only needs searchable/copyable text, not a parse tree. */
+/** Crude tag strip - the engine only needs searchable/copyable text, not a parse tree. */
 const stripHtml = (html: string): string =>
   html
     .replace(/<[^>]*>/g, ' ')
@@ -151,7 +151,7 @@ export type SearchHit = {
  * Search the model rather than the DOM.
  *
  * Virtualization means most messages are not mounted, and a `viewType` filter can hide blocks that
- * are still in the model — neither is reachable by a per-view CodeMirror search, so thread-wide find
+ * are still in the model - neither is reachable by a per-view CodeMirror search, so thread-wide find
  * has to run over the projection.
  */
 export const searchFeed = (

@@ -39,7 +39,7 @@ export type TranscriptionManagerOptions = {
 
   /**
    * Transcription service base URL, normally `<edge>/calls` (the worker that serves `/transcribe`).
-   * Transcription fails with a clear error when absent — there is no built-in endpoint.
+   * Transcription fails with a clear error when absent - there is no built-in endpoint.
    */
   transcriptionEndpoint?: string;
 
@@ -113,8 +113,8 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     }
 
     // Set first because `_maybeRestartTranscriber` gates on it, but roll back on failure: an
-    // endpoint-less enable throws, and a latched atom would show "Stop transcription" — and tell
-    // remote peers transcription is on — while nothing records, with the equality guard above
+    // endpoint-less enable throws, and a latched atom would show "Stop transcription" - and tell
+    // remote peers transcription is on - while nothing records, with the equality guard above
     // blocking any retry in the same direction.
     this._registry.set(this._enabledAtom, enabled);
     try {

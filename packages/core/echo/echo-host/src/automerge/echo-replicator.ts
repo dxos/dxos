@@ -15,7 +15,7 @@ import { type AutomergeProtocolMessage, type SubductionProtocolMessage } from '@
  * - {@link AutomergeProtocolMessage}: the classical automerge-repo sync frames
  *   (carried by mesh replication and the in-memory `TestAdapter`).
  * - {@link SubductionProtocolMessage}: the in-process subduction shape
- *   (carried by `EchoEdgeSubductionReplicator` — envelopes are unwrapped to
+ *   (carried by `EchoEdgeSubductionReplicator` - envelopes are unwrapped to
  *   raw `SubductionConnectionMessage` before they reach the stream).
  *
  * The interface uses the union so a single `EchoNetworkAdapter` instance can

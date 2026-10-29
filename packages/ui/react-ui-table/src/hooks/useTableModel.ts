@@ -26,7 +26,7 @@ export type UseTableModelProps<T extends TableRow = TableRow> = {
   rowActions?: TableRowAction[];
   /**
    * Rows to select when the model is built. Overrides the selection read from the view state for
-   * the table object — pass this when the surrounding container owns the selection under a
+   * the table object - pass this when the surrounding container owns the selection under a
    * different context id (e.g. a type article keyed by the type's URI), so switching into the
    * table preserves what was already selected.
    */
@@ -54,7 +54,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   const viewState = useManagerOptional();
   const selected = useSelection(object && Obj.getURI(object), 'multi');
   // Read at construction time, not frozen into the effect's deps. The model is rebuilt whenever any
-  // of its inputs change identity, and each rebuild re-seeds from here — a frozen snapshot would
+  // of its inputs change identity, and each rebuild re-seeds from here - a frozen snapshot would
   // reset the selection to whatever it was when the table mounted, discarding the user's clicks.
   const initialSelection = useRef<readonly string[]>(selection ?? selected);
   initialSelection.current = selection ?? selected;

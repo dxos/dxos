@@ -11,7 +11,7 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import { type PersonKey, type PersonMap } from './people.ts';
 
 //
-// Task sets — one per project. Tasks with no assignee are written as self-contained briefs an agent
+// Task sets - one per project. Tasks with no assignee are written as self-contained briefs an agent
 // can pick up from the task's "delegate" action; the rest belong to someone on the team.
 //
 
@@ -43,7 +43,7 @@ const LEDGERS = {
     ],
     tasks: [
       {
-        title: 'Source green coffee — Esperanza + Guatemalan parcel',
+        title: 'Source green coffee - Esperanza + Guatemalan parcel',
         milestone: 'roast',
         status: 'done',
         priority: 'high',
@@ -67,7 +67,7 @@ const LEDGERS = {
         description: 'North Star, Hatch, Olive & Vine. 2 lb each.',
       },
       {
-        title: 'Design label — Letterform Press',
+        title: 'Design label - Letterform Press',
         milestone: 'launch',
         status: 'started',
         priority: 'medium',
@@ -119,7 +119,7 @@ const LEDGERS = {
         assignee: 'diego',
       },
       {
-        title: 'Book flights and drivers — Bogotá, Neiva, Addis Ababa',
+        title: 'Book flights and drivers - Bogotá, Neiva, Addis Ababa',
         milestone: 'booked',
         status: 'started',
         priority: 'high',
@@ -177,14 +177,14 @@ const LEDGERS = {
     milestones: [{ key: 'firstOrder', name: 'First order', description: 'Mateo places a first paid order.' }],
     tasks: [
       {
-        title: 'Send the sampler — Linden, Field Notes, current single-origin',
+        title: 'Send the sampler - Linden, Field Notes, current single-origin',
         milestone: 'firstOrder',
         status: 'done',
         priority: 'medium',
         assignee: 'kai',
       },
       {
-        title: 'Onboarding call with Mateo — pricing and ordering',
+        title: 'Onboarding call with Mateo - pricing and ordering',
         milestone: 'firstOrder',
         status: 'todo',
         priority: 'high',

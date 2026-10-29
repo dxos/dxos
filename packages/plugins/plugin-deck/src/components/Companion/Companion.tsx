@@ -28,7 +28,7 @@ import { Pane, type PaneTab } from '../Pane/index.ts';
 //
 
 export type CompanionProps = Util.ThemedClassName<{
-  /** The plank's companions, or undefined until they have been read — an empty array is a plank with none. */
+  /** The plank's companions, or undefined until they have been read - an empty array is a plank with none. */
   companions?: AppGraphNode.Node[];
   /** Selected companion id. */
   value?: string;

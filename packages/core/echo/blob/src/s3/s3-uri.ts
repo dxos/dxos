@@ -11,7 +11,7 @@ import { DEFAULT_REGION, S3_SCHEME } from './constants.ts';
  * endpoint (`media.<account>.r2.cloudflarestorage.com`, `media.s3.eu-west-1.amazonaws.com`).
  *
  * The host carries the bucket, so it is also the `AccessToken.source` the credential is filed
- * under — one connection per bucket, resolved without a side table mapping URIs to configuration.
+ * under - one connection per bucket, resolved without a side table mapping URIs to configuration.
  */
 export type S3Uri = {
   host: string;
@@ -35,7 +35,7 @@ export const parseUri = (uri: string): S3Uri | undefined => {
  * The HTTPS URL the object is served from. Public buckets resolve this without a signature.
  *
  * Rejects `.` and `..` segments rather than trying to carry them. WHATWG URL parsing resolves them
- * away, and percent-encoding does not help — it decodes `%2E` and normalizes anyway — so such a key
+ * away, and percent-encoding does not help - it decodes `%2E` and normalizes anyway - so such a key
  * would silently be requested at a different path than the one it was stored under. Nothing this
  * package writes produces one (`objectKey` is a space id and a hex digest), so a key that reaches
  * here with a dot segment is a corrupted or hand-authored URI, and failing is better than reading
@@ -51,13 +51,13 @@ export const toHttpsUrl = ({ host, key }: S3Uri): URL => {
 
   // Userinfo makes the authority lie: in `bucket.s3.amazonaws.com:443@169.254.169.254` everything
   // before the `@` is credentials, and the request goes to the address after it. Refuse it outright
-  // rather than try to read past it — no legitimate bucket endpoint carries any.
+  // rather than try to read past it - no legitimate bucket endpoint carries any.
   if (url.username !== '' || url.password !== '') {
     throw new Error(`Refusing to address an S3 endpoint carrying userinfo: ${host}`);
   }
 
   // Checked against the *parsed* hostname, which is what `fetch` will actually connect to. The host
-  // comes from a stored `Blob` URI — replicated data, so on a headless host it is attacker-influenced
+  // comes from a stored `Blob` URI - replicated data, so on a headless host it is attacker-influenced
   // input to a server-side fetch. A browser is bounded by CORS; EDGE's function runtime is not, and
   // the unsigned read path needs no credential to reach an internal address.
   if (isBlockedHost(url.hostname)) {
@@ -87,7 +87,7 @@ export const regionFromHost = (host: string): string => {
 /**
  * Object key for a blob. Content-addressed by the digest the blob manager already computed, under a
  * space-scoped prefix so one bucket can serve many spaces and a listing stays navigable. The
- * original filename is deliberately not in the path — it is not unique, and ECHO holds it.
+ * original filename is deliberately not in the path - it is not unique, and ECHO holds it.
  */
 export const objectKey = ({ spaceId, contentHash }: { spaceId: string; contentHash: string }): string =>
   `${spaceId}/${contentHash}`;

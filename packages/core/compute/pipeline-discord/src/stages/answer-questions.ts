@@ -29,7 +29,7 @@ const answerPrompt = (question: string, facts: readonly RDF.Fact[]): string => {
   );
   return trim`
     Answer the question using ONLY the facts below. If the facts do not contain enough information
-    for a confident, specific answer, omit the "answer" field entirely — do not guess.
+    for a confident, specific answer, omit the "answer" field entirely - do not guess.
 
     Question: ${question}
 
@@ -38,7 +38,7 @@ const answerPrompt = (question: string, facts: readonly RDF.Fact[]): string => {
   `;
 };
 
-/** Default cap on failed answer attempts per question — bounds redundant LLM calls over a crawl. */
+/** Default cap on failed answer attempts per question - bounds redundant LLM calls over a crawl. */
 const DEFAULT_MAX_ATTEMPTS = 5;
 
 export type AnswerOptions = {
@@ -48,7 +48,7 @@ export type AnswerOptions = {
 
 /**
  * Attempt each still-answerable open question against the current fact graph: translate the
- * question to a structured fact query, and — when facts match — ask the model to synthesize a
+ * question to a structured fact query, and - when facts match - ask the model to synthesize a
  * cited answer. A failed attempt (query generation, retrieval, or synthesis) is logged, increments
  * the question's attempt counter, and leaves it open; it never fails the surrounding crawl. Once a
  * question reaches `maxAttempts` it is skipped, so a permanently-unanswerable question does not
@@ -71,7 +71,7 @@ export const answerOpenQuestions = (
         }
         // Provide the model directly (no `Layer.orDie`): an unavailable model surfaces
         // `AiModelNotAvailableError` in the error channel, where the per-question `catchAll` below
-        // leaves the question open — `orDie` would make it a defect that aborts the whole crawl.
+        // leaves the question open - `orDie` would make it a defect that aborts the whole crawl.
         const { value } = yield* LanguageModel.generateObject({
           schema: AnswerShape,
           prompt: answerPrompt(question.text, facts),
@@ -89,7 +89,7 @@ export const answerOpenQuestions = (
       });
       const ok = yield* attempt.pipe(
         Effect.catch((error) =>
-          Effect.logWarning(`answer-questions: ${question.id} left open — ${error}`).pipe(Effect.as(false)),
+          Effect.logWarning(`answer-questions: ${question.id} left open - ${error}`).pipe(Effect.as(false)),
         ),
       );
       if (ok) {
@@ -104,7 +104,7 @@ export const answerOpenQuestions = (
 
 /**
  * Pipeline stage: when a channel or thread finishes draining, try to answer the open questions
- * against the facts accumulated so far. Not per-message — answering costs an LLM round trip.
+ * against the facts accumulated so far. Not per-message - answering costs an LLM round trip.
  */
 export const answerQuestionsStage = (): Stage.Stage<
   Type.Event,

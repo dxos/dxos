@@ -126,7 +126,7 @@ const FOLD_CONTEXT = 3;
 /** A remote-tracking ref as people say it: `origin/main` is `main`. */
 const shortRef = (ref: string): string => ref.replace(/^origin\//, '');
 
-/** A declaration line (`feat F-1: …`, `  req F-1.2: …`, `type Scene`) for the given id. */
+/** A declaration line (`feat F-1: ...`, `  req F-1.2: ...`, `type Scene`) for the given id. */
 const declarationOf = (id: string) =>
   new RegExp(`^\\s*[a-z]+\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(?::|$)`);
 
@@ -148,7 +148,7 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<SpecDocument.S
 };
 
 /**
- * A spec as an IDE page: the MDL editor beside a panel of views. `github:` keys in the text are links (Ctrl/⌘-click):
+ * A spec as an IDE page: the MDL editor beside a panel of views. `github:` keys in the text are links (Ctrl/Cmd-click):
  * a code key opens the file at its symbol, another spec's key opens that spec, synced from its checkout. The latest
  * compliance review (`<SPEC>.review.mdl` beside the spec) marks each reviewed item in the margin and on the graph.
  * Each ```diagram fence is drawn in place of its source until the selection enters it.
@@ -551,7 +551,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                     {pullRequest ? (
                       <Toolbar.Link
                         href={pullRequest.url}
-                        title={`${pullRequest.title} (${git?.branch} → ${pullRequest.base})`}
+                        title={`${pullRequest.title} (${git?.branch} -> ${pullRequest.base})`}
                         onClick={(event) => {
                           event.preventDefault();
                           void openExternalUrl(pullRequest.url);
@@ -564,7 +564,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                       </Toolbar.Link>
                     ) : (
                       git?.branch && (
-                        <Tag.Tag title={`${git.branch} → ${shortRef(git.base)}`} data-testid='spec-article.branch'>
+                        <Tag.Tag title={`${git.branch} -> ${shortRef(git.base)}`} data-testid='spec-article.branch'>
                           <Icon.Icon icon='ph--git-branch--regular' size='xs' />
                           {git.branch}
                         </Tag.Tag>

@@ -27,7 +27,7 @@ export type Credentials = {
  * Mirrors `GoogleCredentials`: an operation invoked with a `Connection` composes
  * `fromConnection(ref)`; one invoked with an external-sync cursor composes
  * `fromAccessToken(cursor.spec.source)` directly (the cursor no longer relates to `Connection`).
- * Unlike Google, there is no database-credential fallback — a JMAP connection always carries host +
+ * Unlike Google, there is no database-credential fallback - a JMAP connection always carries host +
  * token in its token record.
  */
 export class JmapCredentials extends Context.Service<JmapCredentials, Credentials>()('JmapCredentials') {

@@ -69,7 +69,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
   const rootElement = useRef<HTMLDivElement | null>(null);
 
   // NOTE(thure): This is the same workaround as in Plank, but that component is out of scope for this story.
-  // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
+  // TODO(thure): Tabster's focus group should handle moving focus to Main, but something is blocking it.
   // Attached imperatively because `Focus.Item`/`Panel.Root` expose a narrow (slottable) prop surface.
   useEffect(() => {
     const element = rootElement.current;
@@ -249,7 +249,7 @@ export const Default: Story = {
 };
 
 /** Opening a row's action menu is not choosing the row: the menu stays open and the selection stays put. */
-/** Right-clicking a row opens the app's context menu: the row's node's actions, as its "…" menu lists them. */
+/** Right-clicking a row opens the app's context menu: the row's node's actions, as its "..." menu lists them. */
 export const ContextMenu: Story = {
   render: () => (
     <>

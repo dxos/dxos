@@ -29,8 +29,8 @@ const config: Plugin.PluginConfig = Plugin.config({
       reusable driver for a service; a Connection is the durable authenticated
       instance (a name, the connector id, and a Ref to an AccessToken stored in
       ECHO). One connector can back many connections (multi-account), and each
-      connection sources one or more sync Cursors — a remote target paired with
-      a local ECHO root object — that carry per-cursor sync state.
+      connection sources one or more sync Cursors - a remote target paired with
+      a local ECHO root object - that carry per-cursor sync state.
 
       Other plugins register themselves as Connector capability entries,
       describing their OAuth scopes, target-discovery and sync operations, how to
