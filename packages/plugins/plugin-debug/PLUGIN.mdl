@@ -546,7 +546,7 @@ decision D-2: The take assigns all three planning tasks to one chat and never sh
 ```
 
 ```mdl
-decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-forecast page built with DXOS UI on live Open-Meteo data, in place of [QA-9]'s JSON greeting. Fills in [D-1].
+decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-forecast page built with DXOS UI on live Open-Meteo data, in place of [QA-9]'s JSON greeting.
   date: 2026-10-27
   by: agent:claude-code
   for: user:dmaretskyi
