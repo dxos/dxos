@@ -4,3 +4,4 @@
 
 export * as Otel from './otel/index.ts';
 export * as PostHog from './posthog/index.ts';
+export * as Relay from './relay/index.ts';
