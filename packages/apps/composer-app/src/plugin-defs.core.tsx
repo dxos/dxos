@@ -57,6 +57,7 @@ export type PluginConfig = State & {
   externalPlugins?: boolean;
   isDev?: boolean;
   isLocal?: boolean;
+  isPreview?: boolean;
   isPwa?: boolean;
   isTauri?: boolean;
   isStrict?: boolean;
@@ -90,6 +91,7 @@ export const getCorePlugins = ({
   onFatalError,
   externalPlugins = true,
   isLocal,
+  isPreview,
   isPwa,
   isTauri,
   isPopover,
@@ -144,7 +146,7 @@ export const getCorePlugins = ({
     PreviewPlugin.make(),
     ProcessManagerPlugin.make(),
     ProgressPlugin.make(),
-    !isTauri && isPwa && PwaPlugin.make(),
+    !isTauri && PwaPlugin.make({ defaultAutoUpdate: isPreview, serviceWorker: isPwa }),
     RegistryPlugin.make({ externalPlugins }),
     RoutinePlugin.make(),
     SearchPlugin.make(),

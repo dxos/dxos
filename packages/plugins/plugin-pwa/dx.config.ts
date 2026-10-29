@@ -11,9 +11,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { trim } from '@dxos/util';
 
 import { PwaNamespace } from './src/namespace.ts';
+import { type PwaOptions } from './src/settings-store.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig = Plugin.config({
+const config: Plugin.PluginConfig<PwaOptions> = Plugin.config<PwaOptions>({
   plugin: {
     key: PwaNamespace.key,
     name: 'PWA',
@@ -31,9 +32,22 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
+    // Startup, because a gate must decide before the loader dismisses.
+    Capability.lazyModule(
+      'BootGate',
+      {
+        activatesOn: ActivationEvents.Startup,
+        requires: [Capabilities.AtomRegistry, AppCapabilities.UpdateManager],
+        provides: [Capabilities.BootGate],
+      },
+      () => import('./src/capabilities/boot-gate.ts', { with: { type: 'module-url' } }),
+    ),
     Capability.lazyModule(
       'RegisterPwa',
       {
+        // Startup for `BootGate`: the startup pass runs only startup modules, so an idle provider
+        // would leave the gate waiting until after the loader had dismissed.
+        activatesOn: ActivationEvents.Startup,
         requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry],
         provides: [AppCapabilities.UpdateManager],
       },
