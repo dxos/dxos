@@ -16,8 +16,9 @@ tasks:
       runInCI: false
 
   # The Zed extension ships its own copy of the highlight queries, since a Zed language reads them from its own folder.
+  # A script rather than a command, since CI appends vitest flags to every `test` task and `cmp` rejects them.
   test:
-    command: cmp queries/highlights.scm ../zed-mdl/languages/mdl-block/highlights.scm
+    script: cmp queries/highlights.scm ../zed-mdl/languages/mdl-block/highlights.scm
     inputs:
       - queries/highlights.scm
       - /tools/zed-mdl/languages/mdl-block/highlights.scm

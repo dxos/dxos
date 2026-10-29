@@ -19,9 +19,6 @@
       "default": "./src/index.ts"
     }
   },
-  "bin": {
-    "mdl-language-server": "./dist/server.cjs"
-  },
   "dependencies": {
     "@dxos/deus": "workspace:*",
     "vscode-languageserver": "catalog:",
