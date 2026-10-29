@@ -88,7 +88,33 @@ export default Capability.makeModule(
       performance.mark('milestone:client-initialized-callback:end');
       log('called client initialized callback');
 
-      yield* Plugin.activate(ClientEvents.Initialized);
+      // Before the Initialized wave rather than after it: a boot-cached client is ready long before that
+      // wave's modules finish loading, and the space list is all `SpacesAvailable` consumers need.
+      let spacesAvailableFired = false;
+      subscription = client.spaces.subscribe(async () => {
+        if (!spacesAvailableFired) {
+          spacesAvailableFired = true;
+          // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
+          performance.mark('milestone:spaces-ready');
+          markMilestone('spaces.ready');
+          const exit = await Effect.gen(function* () {
+            yield* Plugin.activate(ClientEvents.SpacesAvailable);
+            if (onSpacesAvailable) {
+              yield* onSpacesAvailable({ client });
+            }
+          }).pipe(
+            Effect.provideService(Capability.Service, capabilityManager),
+            Effect.provideService(Plugin.Service, pluginManager),
+            Effect.runPromiseExit,
+          );
+          // Shutting the manager down mid-activation interrupts this fiber, which is the subscription
+          // ending rather than a failure — and rethrowing it from this floating promise surfaces as an
+          // unhandled rejection. Real failures still propagate.
+          if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
+            EffectEx.throwCause(exit.cause);
+          }
+        }
+      });
 
       // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
       client.reloaded.on(() => {
@@ -138,31 +164,12 @@ export default Capability.makeModule(
 
       removeUnloadGuard = guardUnload(client);
 
-      let spacesAvailableFired = false;
-      subscription = client.spaces.subscribe(async () => {
-        if (!spacesAvailableFired) {
-          spacesAvailableFired = true;
-          // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
-          performance.mark('milestone:spaces-ready');
-          markMilestone('spaces.ready');
-          const exit = await Effect.gen(function* () {
-            yield* Plugin.activate(ClientEvents.SpacesAvailable);
-            if (onSpacesAvailable) {
-              yield* onSpacesAvailable({ client });
-            }
-          }).pipe(
-            Effect.provideService(Capability.Service, capabilityManager),
-            Effect.provideService(Plugin.Service, pluginManager),
-            Effect.runPromiseExit,
-          );
-          // Shutting the manager down mid-activation interrupts this fiber, which is the subscription
-          // ending rather than a failure — and rethrowing it from this floating promise surfaces as an
-          // unhandled rejection. Real failures still propagate.
-          if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
-            EffectEx.throwCause(exit.cause);
-          }
-        }
-      });
+      yield* Plugin.activate(ClientEvents.Initialized);
+
+      // A boot-cached client is ready before its services answer; what needs them waits for this. Bounded
+      // like `initialize()`, so services that never open become a failure the app can surface.
+      yield* Effect.tryPromise(() => untilStalled(client, client.waitUntilServicesReady(), initializeTimeout));
+      yield* Plugin.activate(ClientEvents.ServicesReady);
     }).pipe(
       // A failed client init is fatal to the session: every dependent surface stays suspended.
       // The fork is outside the render tree, so the app has to be told — React never sees it.
