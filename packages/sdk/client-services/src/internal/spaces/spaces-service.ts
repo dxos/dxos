@@ -530,7 +530,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     const databaseRoot = space.databaseRoot;
     assertState(databaseRoot, 'Space database root is not ready');
 
-    const directory = databaseRoot.doc();
+    const directory = databaseRoot.directory();
     const objects: Record<string, EntityStructure> = {};
     for (const obj of serialized.objects) {
       // Merging into a live space keeps its own copy of an object the archive also holds, whether it is linked or

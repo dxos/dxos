@@ -2953,8 +2953,9 @@ export class QueryExecutor extends Resource {
       log.warn('no space state found for', { spaceId });
       return null;
     }
-    const dbDirectory = spaceRoot.doc();
-    if (!dbDirectory) {
+    const dbDirectory = spaceRoot.directory();
+    const directoryHeads = spaceRoot.heads();
+    if (!dbDirectory || !directoryHeads) {
       log.warn('no space state found for', { spaceId });
       return null;
     }
@@ -2975,7 +2976,7 @@ export class QueryExecutor extends Resource {
         // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
         createdAt: null,
         updatedAt: null,
-        heads: A.getHeads(dbDirectory),
+        heads: directoryHeads,
       };
     }
 

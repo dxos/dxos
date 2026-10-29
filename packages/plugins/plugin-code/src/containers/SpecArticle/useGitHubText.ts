@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import { useEffect, useState } from 'react';
 
+import { type SourceKey } from '@dxos/deus/review';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-
-import { type SourceKey } from '#sync';
 
 /** The branch read when the review names no commit. */
 const DEFAULT_REF = 'main';

@@ -24,6 +24,16 @@
       "types": "./dist/types/src/extension/index.d.ts",
       "import": "./dist/lib/extension.mjs"
     },
+    "./parse": {
+      "source": "./src/extension/parse.ts",
+      "types": "./dist/types/src/extension/parse.d.ts",
+      "import": "./dist/lib/parse.mjs"
+    },
+    "./review": {
+      "source": "./src/review/index.ts",
+      "types": "./dist/types/src/review/index.d.ts",
+      "import": "./dist/lib/review.mjs"
+    },
     "./spec-index": {
       "source": "./src/spec-index/index.ts",
       "types": "./dist/types/src/spec-index/index.d.ts",

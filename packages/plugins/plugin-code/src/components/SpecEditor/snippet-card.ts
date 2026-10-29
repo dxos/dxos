@@ -4,10 +4,14 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type SourceKey, formatSourceKey, parseSourceKey } from '#sync';
+import {
+  type SourceKey,
+  type WalkthroughStep,
+  declarationSnippet,
+  formatSourceKey,
+  parseSourceKey,
+} from '@dxos/deus/review';
 
-import { declarationSnippet } from '../CodeView/symbol.ts';
-import { type WalkthroughStep } from '../SpecModel/index.ts';
 import { mountSnippet } from './snippet-view.ts';
 
 /** The text of the file a key names, when the checkout has it. */

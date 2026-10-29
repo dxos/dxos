@@ -6,9 +6,8 @@ import { type Extension, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { findSpecRefs, specDependencies, specReferenceFilter } from '@dxos/deus/extension';
+import { type SourceKey, findSourceKeys } from '@dxos/deus/review';
 import { type SpecIndex, frontmatter } from '@dxos/deus/spec-index';
-
-import { type SourceKey, findSourceKeys } from '#sync';
 
 import { resolveSpecRef } from './spec-ref.ts';
 

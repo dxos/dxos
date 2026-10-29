@@ -3,9 +3,15 @@
 //
 
 import { type MdlBlock, findSpecRefs, parseMdlBlocks, specReferenceFilter } from '@dxos/deus/extension';
+import {
+  type Annotation,
+  type SourceKey,
+  findSourceKeys,
+  formatSourceKey,
+  isSpecKey,
+  parseFields,
+} from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
-
-import { type SourceKey, findSourceKeys, formatSourceKey, isSpecKey } from '#sync';
 
 import { resolveSpecRef } from '../SpecEditor/spec-ref.ts';
 
@@ -131,36 +137,8 @@ const firstSentence = (prose: string): string => prose.split(/(?<=\.)\s/)[0];
 /** Dotted identifiers, so `CallsCapabilities.Manager` and `F-1.2` each read as one token. */
 const IDENTIFIER = /[A-Za-z][\w-]*(?:\.[\w-]+)*/g;
 
-const indentOf = (line: string): number => line.length - line.trimStart().length;
-
 /** One top-level field of a block body: its inline value and its indented lines. */
 export type BlockField = { inline?: string; lines: string[] };
-
-/**
- * The top-level fields of a block body: a field's inline value, or for a `|` block or nested map, its
- * indented lines with the common indent removed.
- */
-export const parseFields = (body: string): Map<string, BlockField> => {
-  const lines = body.split('\n');
-  const contentIndents = lines.filter((line) => line.trim() !== '').map(indentOf);
-  const base = contentIndents.length > 0 ? Math.min(...contentIndents) : 0;
-  const fields = new Map<string, BlockField>();
-  let current: BlockField | undefined;
-  for (const line of lines) {
-    if (line.trim() === '') {
-      continue;
-    }
-    const match = indentOf(line) === base && line.trim().match(/^([\w-]+)(\??):(?:\s+(.*))?$/);
-    if (match) {
-      const inline = match[3]?.trim();
-      current = { inline: inline && inline !== '|' && inline !== '>' ? inline : undefined, lines: [] };
-      fields.set(match[1], current);
-    } else if (current && indentOf(line) > base) {
-      current.lines.push(line.trim());
-    }
-  }
-  return fields;
-};
 
 /** A field's inline value and lines as one paragraph. */
 export const proseOf = (field?: BlockField): string | undefined => {
@@ -284,17 +262,6 @@ const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel =
     dependsOn: [],
     external: { target: 'spec', key, ...(key.fragment && { fragment: key.fragment }), resolved: block !== undefined },
   };
-};
-
-/** Keys attached to a spec item from outside its text, e.g. a review's evidence; `id` may name a nested req (`F-1.2`). */
-export type Annotation = {
-  id: string;
-  /** The code that implements the item. */
-  keys: readonly SourceKey[];
-  /** Whether a review found tests for the item; absent when it does not say. */
-  testing?: 'tested' | 'untested';
-  /** The tests that exercise the item. */
-  tests?: readonly SourceKey[];
 };
 
 /**

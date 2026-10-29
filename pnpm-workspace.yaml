@@ -682,6 +682,9 @@ catalog:
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
   vitest: 4.1.10
+  vscode-languageclient: ^9.0.1
+  vscode-languageserver: ^9.0.1
+  vscode-languageserver-textdocument: ^1.0.12
   vscode-oniguruma: ^2.0.1
   vscode-textmate: ^9.3.2
   wait-on: ^8.0.3

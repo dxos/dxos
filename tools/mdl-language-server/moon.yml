@@ -1,0 +1,22 @@
+layer: tool
+language: typescript
+tags:
+  - typecheck
+  - ts-test
+
+tasks:
+  # The standalone vitest config writes no JUnit or coverage, so the inherited outputs would never exist.
+  test:
+    options:
+      mergeOutputs: replace
+    outputs: []
+
+  # `dist/server.cjs`: the server and its dependencies in one file, run with `node dist/server.cjs --stdio`.
+  bundle:
+    command: node scripts/bundle.ts
+    inputs:
+      - src/**/*
+      - scripts/bundle.ts
+      - /packages/reflect/deus/src/**/*
+    outputs:
+      - dist/server.cjs

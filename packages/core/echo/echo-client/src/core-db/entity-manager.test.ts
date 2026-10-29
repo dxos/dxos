@@ -134,6 +134,43 @@ describe('DatabaseImpl', () => {
     });
   });
 
+  describe('passive space root', () => {
+    const openReader = async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer();
+      const db = await peer.createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { name: 'linked' }));
+      await db.flush();
+      const client = await peer.createClient();
+      invariant(db.rootUrl);
+      const reader = await peer.openDatabase(db.spaceKey, db.rootUrl, { client });
+      const root = reader.getSpaceRootDocHandle();
+      expect(root.state).toBe('passive');
+      return { db, reader, root, object };
+    };
+
+    test('a link another client removes loads a passive root and evicts the object', async () => {
+      const { db, reader, root, object } = await openReader();
+      expect((await reader.loadObjectCoreById(object.id))?.id).toBe(object.id);
+
+      db._entityManager.unlinkObjects([object.id]);
+      await db.flush();
+      await waitForCondition({ condition: () => reader.getObjectDocumentId(object.id) === undefined, timeout: 5_000 });
+      expect(reader.getObjectById(object.id)).toBeUndefined();
+      expect(root.state).not.toBe('passive');
+    });
+
+    test('an inline object another client writes into the root loads the root and shows the object', async () => {
+      const { db, reader, root } = await openReader();
+      const { id } = addObjectToDoc(db.getSpaceRootDocHandle(), { id: EntityId.random(), name: 'inline' });
+      await db.flush();
+      await waitForCondition({ condition: () => reader.getObjectById(id) !== undefined, timeout: 5_000 });
+      expect(root.state).not.toBe('passive');
+      expect(reader.getObjectDocumentId(id)).toBe(root.documentId);
+    });
+  });
+
   describe('index rows', () => {
     const indexBacked = async () => {
       const db = await createClientDbInSpaceWithObject(Obj.make(TestSchema.Expando, { value: 1 }));

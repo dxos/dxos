@@ -3,9 +3,8 @@
 //
 
 import { duplicateSpecMessage, missingItemMessage, unknownSpecMessage } from '@dxos/deus/extension';
+import { type SourceKey } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
-
-import { type SourceKey } from '#sync';
 
 /** The repository the bundled index describes; another repository needs its own index. */
 const INDEX_REPO = { owner: 'dxos', repo: 'dxos' } as const;

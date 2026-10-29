@@ -3,10 +3,11 @@
 //
 
 import { QUESTION_STATUSES, type QuestionStatus, parseMdlBlocks } from '@dxos/deus/extension';
+import { parseFields } from '@dxos/deus/review';
 import { Key } from '@dxos/echo';
 import { type Task } from '@dxos/types';
 
-import { inlineValueOf, listOf, parseFields, proseOf } from './spec-model.ts';
+import { inlineValueOf, listOf, proseOf } from './spec-model.ts';
 
 /** One `question` block of a spec. */
 export type SpecQuestion = {
