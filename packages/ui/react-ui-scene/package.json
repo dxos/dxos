@@ -26,6 +26,8 @@
     "src"
   ],
   "dependencies": {
+    "@babylonjs/core": "catalog:",
+    "@dxos/animation": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@effect/atom-react": "catalog:"
