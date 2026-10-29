@@ -2959,6 +2959,8 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
+    // Deprecated inline directory object, read until the inline object migration moves it.
+    // TODO(dmaretskyi): Drop once every space has run the inline object migration.
     const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, objectId);
     if (inlineObject) {
       return {
