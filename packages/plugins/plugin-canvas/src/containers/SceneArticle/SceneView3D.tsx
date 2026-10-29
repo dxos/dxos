@@ -3,8 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Entity, Obj } from '@dxos/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type VersionedSource, combinedSource, patchSource, recordChanges } from '@dxos/react-ui-canvas/headless';
@@ -35,11 +36,21 @@ import {
 } from '@dxos/react-ui-scene';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
-import { type LayoutIntent, Scene, bounds3D, findLayout, reachedObjects, resolveLayout3D } from '@dxos/scene';
+import {
+  type LayoutIntent,
+  Scene,
+  bounds3D,
+  copyElements,
+  findLayout,
+  pasteIntent,
+  placesCycle,
+  reachedObjects,
+  resolveLayout3D,
+} from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 
-import { applyLayoutIntent, layoutSource, openScene, writeModelIntent } from '#model';
+import { applyLayoutIntent, fragmentText, layoutSource, openScene, writeModelIntent } from '#model';
 import { type Canvas } from '#types';
 
 import { CanvasNamespace } from '../../namespace.ts';
@@ -53,6 +64,7 @@ import {
   elementFormValues,
 } from './element-form.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
+import { getSessionClipboard, nextPaste, pasteOffset, setSessionClipboard } from './scene-clipboard.ts';
 import { type SessionHistory, sessionHistory } from './session-history.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
@@ -222,6 +234,67 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   const resolved =
     selected && document && record?.dim === '3d' ? resolveLayout3D(document, record)[selected.id] : undefined;
 
+  // The clipboard: the selection as a fragment (kept for this session) and as `.dx` text on the system clipboard.
+  const copy = useCallback((): boolean => {
+    if (!document || !record || record.dim !== '3d' || selection.length === 0) {
+      return false;
+    }
+    const fragment = copyElements(record, selection);
+    const text = fragmentText(document, record, fragment);
+    setSessionClipboard({ fragment, text, pasted: 0 });
+    void navigator.clipboard?.writeText(text).catch(() => undefined);
+    return true;
+  }, [document, record, selection]);
+  const pasteFrom = useCallback(
+    (text: string | undefined) => {
+      const layout = editingLayout;
+      const next = nextPaste(getSessionClipboard(), text, '3d');
+      if (!layout || !record || !document || !next) {
+        return;
+      }
+      const taken = new Set(Object.keys(record.elements));
+      const paste = pasteIntent(record, next.fragment, {
+        offset: pasteOffset(next.pasted, '3d'),
+        newId: (prefix) => {
+          let index = 1;
+          while (taken.has(`${prefix}-${index}`)) {
+            index++;
+          }
+          taken.add(`${prefix}-${index}`);
+          return `${prefix}-${index}`;
+        },
+        refuses: (object) => placesCycle(document, layout, object),
+      });
+      if (!paste) {
+        setNotice(t('paste.refused.message'));
+        return;
+      }
+      setSessionClipboard(next);
+      handleIntent(layout, paste.intent);
+      setSelection(paste.ids);
+    },
+    [editingLayout, record, document, handleIntent, t],
+  );
+  const paste = useCallback(() => {
+    // Read the system clipboard when it can be, so text copied elsewhere pastes; the session's copy otherwise.
+    const read = navigator.clipboard?.readText?.() ?? Promise.resolve(undefined);
+    void read.then(
+      (text) => pasteFrom(text),
+      () => pasteFrom(undefined),
+    );
+  }, [pasteFrom]);
+  const cut = useCallback(() => {
+    if (editingLayout && copy()) {
+      handleIntent(editingLayout, { kind: 'delete', ids: selection });
+      setSelection([]);
+    }
+  }, [editingLayout, copy, handleIntent, selection]);
+  const duplicate = useCallback(() => {
+    if (copy()) {
+      pasteFrom(undefined);
+    }
+  }, [copy, pasteFrom]);
+
   // The canvas model is the Library; extracting a selection makes a composite object of it.
   const modelId = document?.models[0]?.id;
   const objects = useMemo(() => Object.values(document?.models[0]?.objects ?? {}), [document]);
@@ -266,6 +339,50 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
     const builder = MenuBuilder.make();
     const layout = editingLayout;
     builder
+      .action(
+        'cut',
+        {
+          label: label('cut.label'),
+          icon: 'ph--scissors--regular',
+          disabled: selection.length === 0,
+          disposition: 'toolbar',
+          testId: 'canvas3d.cut',
+        },
+        cut,
+      )
+      .action(
+        'copy',
+        {
+          label: label('copy.label'),
+          icon: 'ph--copy--regular',
+          disabled: selection.length === 0,
+          disposition: 'toolbar',
+          testId: 'canvas3d.copy',
+        },
+        () => void copy(),
+      )
+      .action(
+        'paste',
+        {
+          label: label('paste.label'),
+          icon: 'ph--clipboard--regular',
+          disposition: 'toolbar',
+          testId: 'canvas3d.paste',
+        },
+        paste,
+      )
+      .action(
+        'duplicate',
+        {
+          label: label('duplicate.label'),
+          icon: 'ph--copy-simple--regular',
+          disabled: selection.length === 0,
+          disposition: 'toolbar',
+          testId: 'canvas3d.duplicate',
+        },
+        duplicate,
+      )
+      .separator()
       .action(
         'group',
         {
@@ -475,6 +592,53 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   );
   const themes = useMemo(() => THEMES.map(({ id, key }) => ({ id, name: t(key) })), [t]);
 
+  // The app's edit commands and the same shortcuts as 2D, on the whole article; typing in a field keeps its own.
+  const [element, setElement] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!element || !chrome.editing) {
+      return;
+    }
+    const editable = () => !readonly;
+    const unregister = AppNode.registerEditCommands(element, {
+      undo: { run: () => step('undo'), enabled: () => editable() && history.current.done.length > 0 },
+      redo: { run: () => step('redo'), enabled: () => editable() && history.current.undone.length > 0 },
+      cut: { run: cut, enabled: () => editable() && selection.length > 0 },
+      copy: { run: () => void copy(), enabled: () => selection.length > 0 },
+      paste: { run: paste, enabled: editable },
+    });
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      if (typing || !(event.metaKey || event.ctrlKey) || event.altKey) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      const command =
+        key === 'c'
+          ? () => void copy()
+          : key === 'x' && editable()
+            ? cut
+            : key === 'v' && editable()
+              ? paste
+              : key === 'd' && editable()
+                ? duplicate
+                : key === 'z' && editable()
+                  ? () => step(event.shiftKey ? 'redo' : 'undo')
+                  : undefined;
+      if (command) {
+        event.preventDefault();
+        command();
+      }
+    };
+    element.addEventListener('keydown', onKeyDown);
+    return () => {
+      unregister();
+      element.removeEventListener('keydown', onKeyDown);
+    };
+  }, [element, chrome.editing, readonly, selection, cut, copy, paste, duplicate, step]);
+
   if (!stored || !document) {
     return null;
   }
@@ -491,7 +655,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   }
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} ref={setElement}>
       <Panel.Body>
         <InspectorPanel.Root docked={!readonly && dock.docked} readonly={readonly} onDockedChange={dock.onDockedChange}>
           <InspectorPanel.Frame>

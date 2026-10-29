@@ -9,7 +9,7 @@ import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Scene, resolveLayout3D } from '@dxos/scene';
 
 import { project } from './camera.ts';
-import { PIXELS_PER_UNIT, camera2DTo3D, liftScene } from './lift.ts';
+import { PIXELS_PER_UNIT, camera2DTo3D, flattenLayout, liftLayout, liftScene } from './lift.ts';
 import { renderList } from './render-list.ts';
 
 const viewport = { width: 800, height: 600 };
@@ -43,5 +43,34 @@ describe('liftScene', () => {
     expect(at(0, 0)?.y).toBeCloseTo(300);
     expect(at(100, 0)?.x).toBeCloseTo(500, 0);
     expect(at(0, 100)?.y).toBeCloseTo(400, 0);
+  });
+});
+
+describe('flattenLayout', () => {
+  test('a 3D layout flattens to the 2D one its top-down view shows, and a lifted layout flattens back', () => {
+    const layout: Scene.LayoutRecord3D = {
+      id: 'l',
+      dim: '3d',
+      elements: {
+        a: { id: 'a', kind: 'cube', center: { x: 1, y: 0.5, z: -2 }, scale: { x: 2, y: 1, z: 1 } },
+        s: { id: 's', kind: 'sphere', center: { x: 0, y: 0, z: 0 } },
+        ab: { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 's' } },
+      },
+    };
+    const flat = flattenLayout(layout);
+    expect(flat.dim).toBe('2d');
+    expect(flat.elements.a).toMatchObject({
+      kind: 'rect',
+      center: { x: 100, y: 200 },
+      size: { width: 200, height: 100 },
+    });
+    expect(flat.elements.s).toMatchObject({
+      kind: 'ellipse',
+      center: { x: 0, y: 0 },
+      size: { width: 100, height: 100 },
+    });
+    expect(flat.elements.ab).toMatchObject({ kind: 'link', from: { element: 'a' }, to: { element: 's' } });
+    const again = flattenLayout(liftLayout(flat));
+    expect(again.elements.a).toMatchObject({ center: { x: 100, y: 200 }, size: { width: 200, height: 100 } });
   });
 });

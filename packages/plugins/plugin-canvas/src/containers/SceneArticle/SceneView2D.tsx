@@ -74,6 +74,7 @@ import {
   useCanvasNodes,
   useReconciledMigrations,
 } from '../CanvasArticle/use-canvas-scene.ts';
+import { CanvasClipboardText } from './CanvasClipboardText.tsx';
 import { display2D, sceneChrome } from './scene-chrome.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { canvasViewAspect } from './view-state.ts';
@@ -387,6 +388,7 @@ export const CanvasEngineView = ({
             >
               <Canvas.Viewport liveDepth={settings.liveDepth} />
               <CanvasEditCommands element={element} />
+              <CanvasClipboardText element={element} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
               {article && (settings.showToolbar ?? true) && (
                 <>

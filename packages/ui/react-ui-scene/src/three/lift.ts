@@ -30,7 +30,11 @@ const KINDS: Readonly<Record<string, string>> = {
 };
 
 /** A canvas point on the ground plane; canvas y runs down the screen, which is −z seen from above (yaw 0). */
-const toGround = ({ x, y }: Scene.Vec2): Scene.Vec3 => ({ x: x / PIXELS_PER_UNIT, y: 0, z: -y / PIXELS_PER_UNIT });
+const toGround = ({ x, y }: Scene.Vec2): Scene.Vec3 => ({
+  x: x / PIXELS_PER_UNIT || 0,
+  y: 0,
+  z: -y / PIXELS_PER_UNIT || 0,
+});
 
 /** The top-down orthographic camera that shows what the 2D camera shows in a viewport of `viewport`. */
 export const camera2DTo3D = (camera: Scene.Camera2D, viewport: Viewport): Scene.Camera3D => {
@@ -67,7 +71,8 @@ const liftObject = ({ size, ...object }: Scene.Object2D): Scene.Object3D => ({
   ...(size ? { scale: liftSize(size) } : {}),
 });
 
-const liftLayout = (layout: Scene.LayoutRecord): Scene.LayoutRecord3D =>
+/** A layout lifted onto the ground plane. */
+export const liftLayout = (layout: Scene.LayoutRecord): Scene.LayoutRecord3D =>
   layout.dim === '3d'
     ? layout
     : {
@@ -107,3 +112,46 @@ export const liftScene = (doc: Scene.SceneDocument): Scene.SceneDocument => ({
   layouts: doc.layouts.map(liftLayout),
   models: doc.models.map(liftModel),
 });
+
+/** The 2D kind each 3D kind flattens to; a kind missing here keeps its name (links, groups, labels). */
+const FLAT_KINDS: Readonly<Record<string, string>> = {
+  cube: 'rect',
+  sphere: 'ellipse',
+  cylinder: 'ellipse',
+  cone: 'polygon',
+  pyramid: 'polygon',
+};
+
+/** A ground point as a canvas point: the inverse of lifting, never `-0`. */
+const toCanvas = ({ x, z }: Scene.Vec3): Scene.Vec2 => ({ x: x * PIXELS_PER_UNIT || 0, y: -z * PIXELS_PER_UNIT || 0 });
+
+const flattenElement = ({
+  center,
+  scale,
+  rotation,
+  arrange: _arrange,
+  ...element
+}: Scene.Element3D): Scene.Element2D => {
+  const shape = element.kind !== undefined && element.kind !== 'link' && element.kind !== 'group';
+  return {
+    ...element,
+    ...(element.kind !== undefined ? { kind: FLAT_KINDS[element.kind] ?? element.kind } : {}),
+    ...(center ? { center: toCanvas(center) } : {}),
+    ...(shape ? { size: { width: (scale?.x ?? 1) * PIXELS_PER_UNIT, height: (scale?.z ?? 1) * PIXELS_PER_UNIT } } : {}),
+    ...(rotation?.y ? { rotation: rotation.y } : {}),
+  };
+};
+
+/** A 3D layout as its top-down view: each element's ground footprint drawn as the 2D shape that matches its kind. */
+export const flattenLayout = (layout: Scene.LayoutRecord): Scene.LayoutRecord2D =>
+  layout.dim === '2d'
+    ? layout
+    : {
+        id: layout.id,
+        dim: '2d',
+        ...(layout.name !== undefined ? { name: layout.name } : {}),
+        ...(layout.model !== undefined ? { model: layout.model } : {}),
+        elements: Object.fromEntries(
+          Object.entries(layout.elements).map(([key, element]) => [key, flattenElement(element)]),
+        ),
+      };

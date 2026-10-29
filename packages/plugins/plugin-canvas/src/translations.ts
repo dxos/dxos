@@ -41,6 +41,11 @@ export const translations = [
         'library.place.label': 'Place',
         'library.edit-parts.label': 'Edit parts',
         'library.empty.message': 'No objects. Select elements and choose Make object.',
+        'cut.label': 'Cut',
+        'copy.label': 'Copy',
+        'paste.label': 'Paste',
+        'duplicate.label': 'Duplicate',
+        'paste.refused.message': 'Cannot paste an object inside its own parts.',
         'undo.label': 'Undo',
         'redo.label': 'Redo',
         'newer-format.message':

@@ -11,3 +11,4 @@ export * from './intent.ts';
 export * from './model-intent.ts';
 export * from './validate.ts';
 export * from './watch.ts';
+export * from './clipboard.ts';

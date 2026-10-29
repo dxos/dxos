@@ -690,3 +690,11 @@ decision D-68: The 3D inspector's Properties section is the 2D canvas's own sect
   for: user:richburdon
   why: A 3D Properties section with no pane fell into the docked panel's lower half, leaving the upper half empty.
 ```
+
+```mdl
+decision D-69: A copy puts the selection on the system clipboard as `.dx` text with every placed model object folded in, so the text reads anywhere without the model; the session also keeps the copy, so a paste between canvases works where the system clipboard cannot be read, lifted or flattened into the dimension it lands in. Pastes step one grid unit further each time (3D: along x and z; 2D: the canvas's own step). Fills in [D-61] and [D-62].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Text with object references would not resolve outside the canvas it came from.
+```
