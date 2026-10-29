@@ -27,8 +27,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
   ({ classNames, document, extensions, ...props }, forwardedRef) => {
     const themeMode = Hooks.useThemeMode();
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
-    // The body is a ref, so the editor initializes once it resolves. The live object, not a snapshot, so edits to the
-    // text do not rebuild the editor.
+    // The live text rather than a snapshot, so an edit does not rebuild the editor; it initializes once the ref resolves.
     const text = useResolveRef(document.content);
     const { parentRef } = useTextEditor(() => {
       if (!text) {

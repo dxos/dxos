@@ -24,6 +24,7 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as TasksUtil from '@dxos/plugin-tasks/TasksUtil';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
@@ -114,8 +115,6 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
   const artifacts = useRefTargets(project.artifacts);
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
-  // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
-  const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
   const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
   // The level's spec: the project's own, or the one breaking the level's feature down; the Spec tab offers to add it.
   const projectSpec = useProjectSpec(subject);
@@ -138,6 +137,22 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
   });
   // A level's tasks are the ones working on its feature or any feature beneath it.
   const scope = useLevelTaskIds(feature, spec);
+  // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
+  const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet, scope);
+  // A task added at a level works on its feature, which is what keeps it in the level's scope.
+  const handleTaskCreated = useMemo(
+    () =>
+      feature
+        ? async (task: Task.Task) => {
+            await invokePromise(
+              FeatureOperation.LinkTask,
+              { task: Ref.make(task), feature: Ref.make(feature) },
+              { spaceId: db?.spaceId },
+            );
+          }
+        : undefined,
+    [feature, invokePromise, db],
+  );
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -218,7 +233,6 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
   });
-  const levelTasks = useMemo(() => (scope ? tasks.filter((task) => scope.includes(task.id)) : tasks), [tasks, scope]);
 
   const handleSelectChat = useCallback(
     (chat: Chat.Chat) => {
@@ -416,6 +430,7 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
                     // Unset means shown: settings saved before the preference existed hold no key.
                     showDescription: settings.showTaskDescriptions ?? true,
                     scope,
+                    onTaskCreated: handleTaskCreated,
                   }}
                   limit={1}
                 />
@@ -429,7 +444,7 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
                   <ProjectPipeline
                     space={space}
                     project={subject}
-                    tasks={levelTasks}
+                    tasks={tasks}
                     axis={axis}
                     onAxisChange={setAxis}
                     legend={legend}
@@ -552,7 +567,7 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
  * neither owns it. Ordered by the tree walk rather than by tick order: what a reader means by
  * "these tasks" is the order they read them in, not the order they happened to tick them.
  */
-const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
+const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly string[]) => {
   const ids = useSelection(taskSet?.id, 'multi');
   const { clear } = useSelectionActions(taskSet?.id);
 
@@ -578,7 +593,13 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
       return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
-  const tasks = useAtomValue(atom);
+  const setTasks = useAtomValue(atom);
+  // The level's tasks as its ledger shows them, so a row checked on another level is neither charted nor delegated.
+  const scopeKey = scope?.join(',');
+  const tasks = useMemo(
+    () => (scopeKey === undefined ? setTasks : TasksUtil.withinScope(setTasks, new Set(scopeKey.split(',')))),
+    [setTasks, scopeKey],
+  );
 
   const checkedTasks = useMemo(() => {
     const checked = new Set(ids);

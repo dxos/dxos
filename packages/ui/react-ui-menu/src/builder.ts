@@ -133,16 +133,30 @@ class MenuBuilderImpl implements MenuBuilder {
     if (typeof subgraphOrCb === 'function') {
       subgraphOrCb(new MenuBuilderImpl(this._data, this._rootId));
     } else {
-      this._data.nodes.push(...subgraphOrCb.nodes);
-      this._data.edges.push(...subgraphOrCb.edges);
+      // A graph built on its own numbers its separators from one, so they are renumbered into this one.
+      const ids = new Map<string, string>();
+      for (const node of subgraphOrCb.nodes) {
+        if (node.type === MenuSeparatorType) {
+          const id = this._nextSeparatorId();
+          ids.set(node.id, id);
+          this._data.nodes.push({ ...node, id });
+        } else {
+          this._data.nodes.push(node);
+        }
+      }
+      this._data.edges.push(
+        ...subgraphOrCb.edges.map((edge) => ({
+          ...edge,
+          source: ids.get(edge.source) ?? edge.source,
+          target: ids.get(edge.target) ?? edge.target,
+        })),
+      );
     }
     return this;
   }
 
   separator(variant: 'gap' | 'line' = 'gap'): this {
-    // Numbered across the whole graph: a nested group or subgraph builds into the same nodes, so a count of its own
-    // would reuse an id and the later separator would replace the earlier one.
-    const id = `separator-${this._data.nodes.filter((node) => node.type === MenuSeparatorType).length + 1}`;
+    const id = this._nextSeparatorId();
     this._data.nodes.push({
       id,
       type: MenuSeparatorType,
@@ -151,6 +165,12 @@ class MenuBuilderImpl implements MenuBuilder {
     });
     this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     return this;
+  }
+
+  // Numbered across the whole graph: a nested group or subgraph builds into the same nodes, so a count of its own
+  // would reuse an id and the later separator would replace the earlier one.
+  private _nextSeparatorId(): string {
+    return `separator-${this._data.nodes.filter((node) => node.type === MenuSeparatorType).length + 1}`;
   }
 }
 

@@ -7,6 +7,7 @@ version: 0.1.0
 ```mdl
 plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code they describe.
   id: org.dxos.plugin.code
+  dependsOn: [org.dxos.plugin.projects]
   modules:
     - AppGraphBuilder: graph nodes for specs and code projects
     - BuildRunState: the state of the running build agent, from CodeEvents.Start
@@ -1415,7 +1416,7 @@ decision D-34: The decision graph draws questions as cards with an `answers` edg
 ```
 
 ```mdl
-decision D-35: This plugin depends on plugin-projects and renders a spec document only as an article. A spec document embedded as a section, as in a project's Document view, is plugin-projects' plain MDL editor.
+decision D-35: This plugin depends on plugin-projects and renders a spec document only as an article. A spec document embedded as a section, as in a project's Document view, is plugin-projects' plain MDL editor. Supersedes [D-30] where it says the plugin has no runtime plugin dependencies.
   date: 2026-10-29
   by: user:wittjosiah
   why: plugin-projects owns specs and their documents, and a plugin reaches another's UI through surfaces, never its components. This page's margins, diff view and jumps need the editor itself, so it keeps its own.
