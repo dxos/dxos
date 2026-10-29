@@ -174,6 +174,27 @@ describe('identity/identity-manager', () => {
       await waitForCondition({ condition: () => store.read().length >= identity.space.spaceState.credentials.length });
     });
 
+    test('with the flag on, a HALO mints no root of its own while edge cannot be asked', async () => {
+      const peer = await createServiceContext({ runtimeProps: { automergeCredentials: true } });
+      await peer.open(new Context());
+      onTestFinished(() => peer.close());
+      const edgeHttpClient = {
+        getSpaceRoot: async (): Promise<{ rootDocumentUrl: string | null }> => {
+          throw new Error('edge unreachable');
+        },
+        migrateSpaceRoot: async (): Promise<{ rootDocumentUrl: string }> => {
+          throw new Error('edge unreachable');
+        },
+      };
+      await peer.identityManager.setEdgeServices({ edgeHttpClient });
+
+      await peer.createIdentity();
+      const identity = peer.identityManager.identity;
+      invariant(identity, 'Identity not initialized.');
+      // EDGE may already hold a root this device could not see, so minting one here could fork the HALO.
+      expect(peer.echoHost.getSpaceRootRefs(identity.haloSpaceId)).to.be.undefined;
+    });
+
     test('migrating on edge retries until edge can anchor, then adopts its root', async () => {
       const { peer, identity, edge, edgeHttpClient, rootUrl } = await setupHaloWithEdgeRoot();
       await peer.identityManager.setEdgeServices({ edgeHttpClient });

@@ -59,6 +59,7 @@ import { deferFunction, isNode, isTauri, markMilestone } from '@dxos/util';
 import * as Auth from '../../Auth.ts';
 import * as IdentityContract from '../../contracts/identity.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
+import { lookupEdgeSpaceRoot } from '../../EdgeSpaceRoot.ts';
 import * as Events from '../../Events.ts';
 import { Identity } from '../../Identity.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
@@ -622,14 +623,19 @@ export class IdentityManager {
       if (!echoHost.getSpaceRootRefs(spaceId)) {
         // A root the inviting device named, or one edge holds, is the HALO's only root: adopting it
         // comes before anything local could mint a second one, whatever the flag says.
-        const named = this._pendingHaloSpaceRootUrl ?? (await this._readEdgeHaloRoot(identity));
-        if (named !== undefined && isValidAutomergeUrl(named)) {
-          if (!(await this._adoptHaloRoot(ctx, identity, named))) {
+        const pending = this._pendingHaloSpaceRootUrl;
+        const edgeRoot =
+          pending !== undefined && isValidAutomergeUrl(pending)
+            ? ({ kind: 'found', url: pending } as const)
+            : await lookupEdgeSpaceRoot(this._ctx, this._edgeHttpClient, spaceId);
+        if (edgeRoot.kind === 'found') {
+          if (!(await this._adoptHaloRoot(ctx, identity, edgeRoot.url))) {
             return;
           }
         } else {
-          // Minting a root locally is the opt-in behaviour; without the flag the HALO keeps its control feed.
-          if (!this._automergeCredentials) {
+          // Minting a root locally is the opt-in behaviour, and never follows a failed lookup: EDGE may
+          // already hold a root this device could not see.
+          if (!this._automergeCredentials || edgeRoot.kind === 'unavailable') {
             return;
           }
 
@@ -671,21 +677,6 @@ export class IdentityManager {
       store.subscribe(ctx, (credential) => identity.space.processDocumentCredential(credential));
     } catch (err) {
       log.warn('failed to anchor the halo space on a root document', { spaceId, err });
-    }
-  }
-
-  /** The HALO root edge holds, or undefined if it has none or cannot be asked. */
-  private async _readEdgeHaloRoot(identity: Identity): Promise<AutomergeUrl | undefined> {
-    if (!this._edgeHttpClient) {
-      return undefined;
-    }
-    try {
-      const { rootDocumentUrl } = await this._edgeHttpClient.getSpaceRoot(this._ctx, identity.haloSpaceId);
-      return rootDocumentUrl !== null && isValidAutomergeUrl(rootDocumentUrl) ? rootDocumentUrl : undefined;
-    } catch (err) {
-      // An edge without the lookup, or one that is unreachable, leaves the HALO as it is.
-      log('could not read the HALO root from edge', { spaceId: identity.haloSpaceId, err });
-      return undefined;
     }
   }
 

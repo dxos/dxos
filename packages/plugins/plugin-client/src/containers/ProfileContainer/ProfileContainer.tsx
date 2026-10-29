@@ -8,6 +8,7 @@ import React, {
   type Dispatch,
   type SetStateAction,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -127,6 +128,11 @@ export const ProfileContainer = () => {
   );
 
   const [haloSpaceRootUrl, setHaloSpaceRootUrl] = useState(client.halo.identity.get()?.haloSpaceRootUrl);
+  // Followed rather than read once: the identity can adopt a root without this button, on open or from another device.
+  useEffect(() => {
+    const subscription = client.halo.identity.subscribe((next) => setHaloSpaceRootUrl(next?.haloSpaceRootUrl));
+    return () => subscription.unsubscribe();
+  }, [client]);
   const [migrating, setMigrating] = useState(false);
   // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
   const handleMigrateIdentityRoot = useCallback(async () => {
