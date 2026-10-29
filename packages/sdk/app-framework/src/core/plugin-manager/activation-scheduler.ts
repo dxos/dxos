@@ -13,7 +13,6 @@ import * as Ref from 'effect/Ref';
 import * as Performance from '@dxos/effect/Performance';
 import { log } from '@dxos/log';
 
-import { ActivationEvents } from '../../common/index.ts';
 import * as ActivationEvent from '../activation-event.ts';
 import type * as CapabilityManager from '../capability-manager.ts';
 import * as Capability from '../capability.ts';
@@ -191,7 +190,7 @@ export class ActivationScheduler {
   #activateWhenIdle(): Effect.Effect<void, never, Plugin.Service> {
     return Effect.gen({ self: this }, function* () {
       yield* this.#whenIdle;
-      yield* this.activate(ActivationEvents.Idle).pipe(
+      yield* this.activate(ActivationEvent.Idle).pipe(
         Effect.catch((error) => Effect.sync(() => log.warn('idle activation failed', { error: String(error) }))),
       );
     });

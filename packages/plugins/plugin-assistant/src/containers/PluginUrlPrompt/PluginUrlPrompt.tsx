@@ -14,9 +14,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
 import { useChatReportContext } from '../../components/Chat/context.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 
 const PLUGIN_URL_PROMPT_NAME = 'PluginUrlPrompt';
 
@@ -33,7 +32,7 @@ export type PluginUrlPromptProps = {
  * button here is the only path that loads it.
  */
 export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_URL_PROMPT_NAME);
   const { invokePromise } = Hooks.useOperationInvoker();

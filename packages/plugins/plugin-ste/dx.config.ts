@@ -2,12 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { SteNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.ste',
+    key: SteNamespace.key,
     name: 'Simplified Technical English',
     author: 'DXOS',
     description: trim`
@@ -19,4 +24,23 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['labs', 'assistant'],
   },
+  modules: [
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

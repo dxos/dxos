@@ -4,10 +4,19 @@
 
 import { describe, test } from 'vitest';
 
+import { checkChangelogChange } from '@dxos/deus/extension';
+
 import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?raw';
 import CANVAS_AUTOGROW_SPEC from './__fixtures__/canvas-autogrow.mdl?raw';
 import INBOX_SYNC_SPEC from './__fixtures__/inbox-sync.mdl?raw';
-import { type DecisionModel, SPEC_BLOCK_PREFIX, buildChangelogGraph, groupByDecider } from './decision-model.ts';
+import {
+  type DecisionModel,
+  SPEC_BLOCK_PREFIX,
+  answerQuestion,
+  buildChangelogGraph,
+  buildQuestions,
+  groupByDecider,
+} from './decision-model.ts';
 
 const decisionsOf = (content: string) =>
   new Map(
@@ -59,5 +68,54 @@ describe('changelog graph', () => {
     expect(groups.reduce((total, { decisions }) => total + decisions.length, 0)).toBe(
       decisionsOf(CANVAS_AUTOGROW_SPEC).size,
     );
+  });
+
+  test('pairs each question with the decision that answers it, open ones first', ({ expect }) => {
+    const questions = buildQuestions(CANVAS_AUTOGROW_SPEC);
+    expect(questions.map(({ id, answer }) => [id, answer?.id])).toEqual([
+      ['Q-2', undefined],
+      ['Q-1', 'D-12'],
+    ]);
+    expect(questions[1].entry.options.map(({ title }) => title)).toEqual(['Never', 'On drop']);
+    expect(buildChangelogGraph(CANVAS_AUTOGROW_SPEC).edges).toContainEqual(
+      expect.objectContaining({ kind: 'answers', from: 'Q-1', to: 'D-12' }),
+    );
+  });
+});
+
+describe('answer question', () => {
+  const props = { question: 'Q-1', answer: 'Never,\n ever.', by: 'user:alice', date: '2026-10-09' };
+  const apply = (text: string) => {
+    const edit = answerQuestion(text, props);
+    return edit && text.slice(0, edit.from) + edit.insert + text.slice(edit.to);
+  };
+
+  test('appends the next decision at the end of the changelog', ({ expect }) => {
+    const text = '# Spec\n\n## Changelog\n\n```mdl\ndecision D-4: X.\n  by: user:bob\n```\n\n\n## Appendix\n\nA.\n';
+    expect(apply(text)).toBe(
+      '# Spec\n\n## Changelog\n\n```mdl\ndecision D-4: X.\n  by: user:bob\n```\n\n' +
+        '```mdl\ndecision D-5: Never, ever.\n  date: 2026-10-09\n  by: user:alice\n  answers: Q-1\n```\n\n## Appendix\n\nA.\n',
+    );
+  });
+
+  test('records an answer the changelog check accepts', ({ expect }) => {
+    const text = [
+      '# Spec',
+      '',
+      '## Changelog',
+      '',
+      '```mdl\ndecision D-1: X.\n  date: 2026-10-08\n  by: user:bob\n```',
+      '',
+      '```mdl\nquestion Q-1: X or Y?\n  date: 2026-10-08\n  by: agent:claude-code\n  for: user:bob\n```',
+      '',
+    ].join('\n');
+    const answered = apply(text);
+    expect(answered).toBeDefined();
+    expect(checkChangelogChange(text, answered ?? '')).toEqual([]);
+    expect(buildQuestions(answered ?? '')[0].answer?.id).toBe('D-2');
+  });
+
+  test('needs a changelog', ({ expect }) => {
+    expect(answerQuestion('# Spec\n', props)).toBeUndefined();
   });
 });

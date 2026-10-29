@@ -19,9 +19,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { Vocabulary } from '#types';
 
+import { LingoNamespace } from '../namespace.ts';
 import { getVocabulariesPath } from '../paths.ts';
 
 export default Capability.makeModule(
@@ -56,7 +56,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'flashcards',
-              label: ['flashcards-companion.label', { ns: meta.profile.key }],
+              label: ['flashcards-companion.label', { ns: LingoNamespace.key }],
               icon: 'ph--cards-three--regular',
               data: 'flashcards',
               position: Position.first,
@@ -73,7 +73,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'reader',
-              label: ['reader-companion.label', { ns: meta.profile.key }],
+              label: ['reader-companion.label', { ns: LingoNamespace.key }],
               icon: 'ph--translate--regular',
               data: 'reader',
             }),

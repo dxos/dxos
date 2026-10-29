@@ -23,9 +23,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { toSearchResults, useGlobalSearch } from '#hooks';
-import { meta } from '#meta';
 import { SearchCapabilities, SearchEvents } from '#types';
 
+import { SearchNamespace } from '../../namespace.ts';
 import { type SelectHandle } from '../../select-handle.ts';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
@@ -35,7 +35,7 @@ export type SearchDialogProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: SearchDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SearchNamespace.key);
   const { invoke, invokePromise } = Hooks.useOperationInvoker();
   Hooks.useActivationSignal(SearchEvents.Start);
   const queryActions = Hooks.useCapabilities(SearchCapabilities.QueryAction);
@@ -127,9 +127,9 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: Sea
             const error = Cause.squash(cause);
             log.warn('search query action failed', { action: action.id, err: error });
             yield* invoke(LayoutOperation.AddToast, {
-              id: `${meta.profile.key}.query-action`,
+              id: `${SearchNamespace.key}.query-action`,
               icon: 'ph--warning--regular',
-              title: ['query-action-failed.title', { ns: meta.profile.key }],
+              title: ['query-action-failed.title', { ns: SearchNamespace.key }],
               description: error instanceof Error ? error.message : String(error),
             });
           }).pipe(Effect.ignore),

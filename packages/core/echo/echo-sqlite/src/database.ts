@@ -19,6 +19,7 @@ import {
   type Filter,
   type Hypergraph,
   JsonSchema,
+  type Migration,
   Obj,
   Query,
   Ref,
@@ -481,6 +482,10 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     throw new UnsupportedOperationError('getChanges');
   }
 
+  async beginMigration(): Promise<Migration.Transaction> {
+    throw new UnsupportedOperationError('beginMigration');
+  }
+
   async createBranch(): Promise<void> {
     throw new UnsupportedOperationError('createBranch');
   }
@@ -516,6 +521,10 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   async appendToFeed(_feed: Feed.Feed, _entities: Entity.Unknown[]): Promise<void> {
     throw new UnsupportedOperationError('appendToFeed');
+  }
+
+  async forkFeed(_feed: Feed.Feed, _base: Entity.Unknown): Promise<Feed.BranchId> {
+    throw new UnsupportedOperationError('forkFeed');
   }
 
   async deleteFromFeed(_feed: Feed.Feed, _entities: Entity.Unknown[]): Promise<void> {

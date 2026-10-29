@@ -7,8 +7,9 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Feature, Spec } from '#types';
+
+import { ProjectsNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -54,7 +55,7 @@ export const translations = [
         'delete-object.label': 'Delete feature',
         'object-deleted.label': 'Feature deleted',
       },
-      [meta.profile.key]: {
+      [ProjectsNamespace.key]: {
         'plugin.name': 'Projects',
         'project-tour.label': 'Take the project tour',
         'project.label': 'Project',
@@ -147,6 +148,7 @@ export const translations = [
         'feature-map.mode.label': 'View',
         'feature-map.mode.canvas.label': 'Canvas',
         'feature-map.mode.kanban.label': 'Kanban',
+        'feature-map.mode.document.label': 'Spec document',
       },
     },
   },

@@ -4,8 +4,7 @@
 
 import { Ref } from '@dxos/echo';
 
-import { meta } from '#meta';
-
+import { DoctorNamespace } from '../../namespace.ts';
 import { getReadyDatabases, labelObject, queryAllObjects } from '../helpers.ts';
 import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
@@ -15,8 +14,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
  */
 export const danglingRefsDiagnostic: DiagnosticProvider = {
   id: 'dangling-refs',
-  label: ['diagnostic.dangling-refs.label', { ns: meta.profile.key }],
-  description: ['diagnostic.dangling-refs.description', { ns: meta.profile.key }],
+  label: ['diagnostic.dangling-refs.label', { ns: DoctorNamespace.key }],
+  description: ['diagnostic.dangling-refs.description', { ns: DoctorNamespace.key }],
   run: async ({ spaces, graph, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const databases = await getReadyDatabases({ spaces, graph });

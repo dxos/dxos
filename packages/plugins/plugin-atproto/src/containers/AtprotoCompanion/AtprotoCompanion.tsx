@@ -21,12 +21,12 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 import { type PublishFieldNote } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import { getFieldPublishFlags } from '../../annotation.ts';
 import { isAtprotoConnection } from '../../connection.ts';
 import { resolveDisplayValue } from '../../field-values.ts';
+import { AtprotoNamespace } from '../../namespace.ts';
 import {
   type DisplayStatus,
   computeStatus,
@@ -60,7 +60,7 @@ const INDENT_REM = 1;
  * unpublish toolbar against the space's atproto connection.
  */
 export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompanionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AtprotoNamespace.key);
   const makeRepoLayer = Hooks.useCapability(AtprotoCapabilities.RepoLayer);
   const db = Obj.getDatabase(subject);
   // Subscribe to the object so edits recompute status and field values (read from this snapshot).
@@ -173,12 +173,12 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
   const menuActions = useMenuBuilder(() => {
     const inSync = status === 'published';
     const builder = MenuBuilder.make()
-      .root({ label: ['publish-actions.label', { ns: meta.profile.key }] })
+      .root({ label: ['publish-actions.label', { ns: AtprotoNamespace.key }] })
       .action(
         'publish',
         {
           // "Update" once a record exists (regardless of status), "Publish" for the first push.
-          label: [publication ? 'update.label' : 'publish.label', { ns: meta.profile.key }],
+          label: [publication ? 'update.label' : 'publish.label', { ns: AtprotoNamespace.key }],
           icon: 'ph--cloud-arrow-up--regular',
           disabled: busy || !connection || !canPublish || inSync,
         },
@@ -187,7 +187,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
     if (publication) {
       builder.action(
         'unpublish',
-        { label: ['unpublish.label', { ns: meta.profile.key }], icon: 'ph--cloud-slash--regular', disabled: busy },
+        { label: ['unpublish.label', { ns: AtprotoNamespace.key }], icon: 'ph--cloud-slash--regular', disabled: busy },
         handleUnpublish,
       );
     }

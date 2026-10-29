@@ -140,7 +140,7 @@ const makeStoryOptions = (provider: 'higgsfield' | 'mock') => ({
     ]);
     return {
       plugins: [
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         ProjectsPlugin.make(),
         // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
         TasksPlugin.make(),

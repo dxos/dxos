@@ -47,9 +47,9 @@ import {
   useSelectedCompanion,
   useSelectedCompanionVariant,
 } from '#hooks';
-import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
+import { DeckNamespace } from '../../namespace.ts';
 import { Navigation } from '../../url/index.ts';
 import {
   findAttendedPlank,
@@ -496,7 +496,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const index = rendered.indexOf(id);
   // Resolve the node's (possibly localized) label the same way the plank heading does, falling back to
   // the id only when there is no label at all.
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
   const spineLabel = Theme.toLocalizedString(node?.properties?.label ?? '', t) || id;
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
@@ -1908,7 +1908,7 @@ const ToggleComplementarySidebarButton = () => (
 );
 
 const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
   return (
     <div
       className={mx(

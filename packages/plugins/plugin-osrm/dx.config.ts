@@ -2,12 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
+import * as TripEvents from '@dxos/plugin-trip/TripEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { OsrmNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.osrm',
+    key: OsrmNamespace.key,
     name: 'OSRM',
     author: 'DXOS',
     description: trim`
@@ -22,4 +28,15 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-osrm',
     tags: ['labs'],
   },
+  modules: [
+    Capability.lazyModule(
+      'RoutingService',
+      { provides: [TripCapabilities.RoutingService], activatesOn: TripEvents.Start },
+      () => import('./src/capabilities/routing-service.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

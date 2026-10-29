@@ -34,11 +34,12 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
-import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
+
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const { actions, onAction } = useMenuActions(attendableId);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
@@ -174,7 +175,7 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action, { caller: meta.profile.key });
+      void runAction(action, { caller: SpaceNamespace.key });
     },
     [runAction],
   );
