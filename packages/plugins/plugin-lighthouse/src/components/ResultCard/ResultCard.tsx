@@ -4,7 +4,6 @@
 
 import React, { type MouseEvent } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -30,14 +29,12 @@ export type ResultCardProps = {
   score?: number;
   /** Requirements the result misses. */
   missed?: readonly string[];
-  vote?: 'up' | 'down';
   /**
    * `outside`: the result lies beyond every drawn area (and its soft edge), so the card is dimmed and says so;
    * `no-location`: it has no point. Without it, a card that names a place but has no point still says "no location".
    */
   areaNote?: AreaNote;
   onToggleStar?: () => void;
-  onVote?: (vote: 'up' | 'down') => void;
 };
 
 /** A click on an action inside the tile must not also select the tile. */
@@ -48,14 +45,11 @@ const stop = (handler?: () => void) => (event: MouseEvent) => {
 
 /**
  * Masonry tile for a lighthouse result, in plugin-commerce's ResultCard shape: the first photo, the star in the
- * header's leading slot, title and price in its centre; then the key facts, the kind, and the score with thumbs.
+ * header's leading slot, title and price in its centre; then the key facts, the kind, and the score.
  * Composable so a masonry item (`Focus.Item asChild`) can make it the focusable, selectable unit.
  */
 export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
-  (
-    { card, current, starred = false, score, missed, vote, areaNote, onToggleStar, onVote, classNames, ...props },
-    forwardedRef,
-  ) => {
+  ({ card, current, starred = false, score, missed, areaNote, onToggleStar, classNames, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const image = card.images[0];
     const note = areaNote ?? (card.unlocated ? 'no-location' : undefined);
@@ -143,33 +137,7 @@ export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
             </Card.Row>
           );
         })}
-        <Card.Row
-          icon='ph--chart-bar--regular'
-          trailing={
-            onVote && (
-              <Layout.Flex gap='xs'>
-                <Button.Root
-                  variant={vote === 'up' ? 'primary' : 'ghost'}
-                  icon='ph--thumbs-up--regular'
-                  iconOnly
-                  label={t('vote-up.label')}
-                  aria-pressed={vote === 'up'}
-                  onClick={stop(() => onVote('up'))}
-                  data-testid='lighthouse.vote-up'
-                />
-                <Button.Root
-                  variant={vote === 'down' ? 'primary' : 'ghost'}
-                  icon='ph--thumbs-down--regular'
-                  iconOnly
-                  label={t('vote-down.label')}
-                  aria-pressed={vote === 'down'}
-                  onClick={stop(() => onVote('down'))}
-                  data-testid='lighthouse.vote-down'
-                />
-              </Layout.Flex>
-            )
-          }
-        >
+        <Card.Row icon='ph--chart-bar--regular'>
           <Layout.Flex gap='xs' align='center' classNames='min-w-0'>
             {card.tags.map((tag) => (
               <Tag key={tag.label} hue={tag.hue ?? 'neutral'}>

@@ -500,7 +500,7 @@ test QA-4: Areas on the map
       expect: a popover with a small map, the pin and its precision ring, the address, and links to OpenStreetMap and Google Maps; Esc closes it
     - name: The areas in the rating model
       do: Open the Rating model.
-      expect: the preferred area as a term marked yours, `s = inside(area "Mokotów") ? 1 : max(0, 1 − dist / 400 m)`, Edit on the map; the required area as a requirement with Prefer instead
+      expect: the preferred area as a term marked yours, `s = inside(area "Mokotów") ? 1 : max(0, 1 − dist / 400 m)`, Edit on the map; the required area as a requirement with Prefer instead; each area a chip under its term or requirement with a prefer/require switch and a delete
     - name: Draw a circle near a point
       do: Pick Near a point, press on the map and drag out a radius.
       expect: a third area chip with its count inside; the cards re-rank; the areas are saved to the session through /v1
@@ -703,4 +703,12 @@ decision D-22: The map is built on react-ui-geo's Map (Leaflet and react-leaflet
   for: user:dmaretskyi
   affects: [ResultsMap, LocationPopover]
   why: react-ui-geo already gives the tile layer, Leaflet's CSS, resizing and dark tiles; it has no drawing or clustering, and turns attribution off, so those are added as children reaching the map through useMap.
+```
+
+```mdl
+decision D-23: Cards and the companion have no thumbs up or down (the agent's rating model and its panel stay; star and keep stay); the rating panel lists each drawn area as its own chip under the areas term or the required area, with a prefer/require switch and a delete; cards carry up to 20 photos. Follows lighthouse 54afadb. Fills in [D-21].
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResultCard, ResultDetail, ModelPanel, ResearchArticle, ResultArticle]
+  why: Votes made the model guess preferences wrongly; areas shown only as one combined term could not be deleted from the panel.
 ```

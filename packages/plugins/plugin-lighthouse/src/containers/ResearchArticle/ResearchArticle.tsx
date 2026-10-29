@@ -46,14 +46,12 @@ import {
   type CardModel,
   type Rating,
   type RatingOverrides,
-  applyVote,
   formatBudget,
   imagesOf,
   isResult,
   isThin,
   locationOf,
   matchPicks,
-  nextVote,
   pickKey,
   rank,
   toCard,
@@ -87,7 +85,6 @@ type TileData = {
   rating?: Rating;
   current: boolean;
   starred: boolean;
-  vote?: 'up' | 'down';
   why?: string;
   /** While areas are drawn: beyond them all ("outside your areas"), or no point to place ("no location"). */
   areaNote?: AreaNote;
@@ -228,7 +225,6 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
           entity,
           current: finding.iri === currentId,
           starred: starredIris.has(finding.iri),
-          vote: state.rating.feedback[finding.iri],
           why: finding.why,
         };
       });
@@ -272,7 +268,6 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         rating: matched.entity ? ratings?.get(matched.entity.id) : undefined,
         current: tileId === currentId,
         starred: starredIris.has(tileId),
-        vote: state.rating.feedback[tileId],
         why: matched.pick.why,
       };
     });
@@ -292,7 +287,6 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         rating: ratings?.get(entity.id),
         current: entity.id === currentId,
         starred: starredIris.has(entity.id),
-        vote: state.rating.feedback[entity.id],
       }));
     const noted = (tiles: TileData[]): TileData[] =>
       areas?.length
@@ -356,15 +350,6 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   const handleStop = useCallback(() => {
     void invoke(LighthouseOperation.StopResearch, { research: Ref.make(research) });
   }, [research, invoke]);
-
-  const handleVote = useCallback(
-    (tile: TileData, clicked: 'up' | 'down') => {
-      const vote = nextVote(tile.vote, clicked);
-      update((state) => applyVote(state, tile.id, vote));
-      void invoke(LighthouseOperation.VoteFinding, { research: Ref.make(research), iri: tile.id, vote });
-    },
-    [research, update, invoke],
-  );
 
   const handleToggleStar = useCallback(
     (tile: TileData) => {
@@ -758,7 +743,6 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                         items={tiles.map((tile) => ({
                           tile,
                           onToggleStar: handleToggleStar,
-                          onVote: view === 'all' ? handleVote : undefined,
                         }))}
                         itemProps={itemProps}
                       />
@@ -777,14 +761,13 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
 type TileProps = {
   tile: TileData;
   onToggleStar: (tile: TileData) => void;
-  onVote?: (tile: TileData, vote: 'up' | 'down') => void;
 };
 
 const TileAdapter = ({ data }: { data: TileProps | undefined; index: number }) => {
   if (!data) {
     return null;
   }
-  const { tile, onToggleStar, onVote } = data;
+  const { tile, onToggleStar } = data;
   return (
     <ResultCard
       card={tile.card}
@@ -793,10 +776,8 @@ const TileAdapter = ({ data }: { data: TileProps | undefined; index: number }) =
       starred={tile.starred}
       score={tile.rating?.score}
       missed={tile.rating?.missed}
-      vote={tile.vote}
       areaNote={tile.areaNote}
       onToggleStar={() => onToggleStar(tile)}
-      onVote={onVote && tile.entity ? (vote) => onVote(tile, vote) : undefined}
     />
   );
 };

@@ -73,8 +73,6 @@ export const translations = [
         'pick.label': 'Pick #{{index}}',
         'kept-pick.label': 'Kept · pick',
         'kept-person.label': 'Kept · starred',
-        'vote-up.label': 'Good result',
-        'vote-down.label': 'Bad result',
         'missed.label': 'Misses: {{requirements}}',
         'score.label': 'Score {{score}}',
         'close.label': 'Close',

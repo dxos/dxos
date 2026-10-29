@@ -23,10 +23,12 @@ import {
   expressionParts,
   isFlag,
   locatedCount,
+  removeArea,
   requirementExpression,
   resetOverrides,
   roundWeight,
   scoreExpression,
+  setAreaMode,
   setAreasMode,
   setRequirementOverride,
   setTermOverride,
@@ -78,6 +80,74 @@ export type ModelPanelProps = {
  * this session's numbers, and its share of the total. Each weight can be nudged and each term or requirement turned
  * off; the adjustments are the person's own and survive the agent rebuilding the model.
  */
+/**
+ * The person's drawn areas of one mode as chips, each with a switch to the other mode and a delete: the panel is
+ * where people look for their areas, so each can be changed here, not only on the map (lighthouse web AreaList).
+ */
+const AreaList = ({
+  mode,
+  overrides,
+  onChange,
+}: {
+  mode: 'prefer' | 'require';
+  overrides: RatingOverrides;
+  onChange: (overrides: RatingOverrides) => void;
+}) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const list = (overrides.areas ?? []).filter((area) => (area.mode ?? 'prefer') === mode);
+  if (!list.length) {
+    return null;
+  }
+  const stop = (event: React.MouseEvent, handler: () => void) => {
+    event.preventDefault();
+    event.stopPropagation();
+    handler();
+  };
+  return (
+    <Layout.Flex
+      gap='xs'
+      wrap
+      role='list'
+      aria-label={t(mode === 'prefer' ? 'model-areas-preferred.label' : 'model-areas-required.label')}
+      classNames='mt-1'
+    >
+      {list.map((area) => (
+        <Layout.Flex
+          key={area.id}
+          gap='xs'
+          align='center'
+          role='listitem'
+          classNames='ps-1.5 rounded-sm border border-separator text-xs'
+          data-testid='lighthouse.model.area'
+          data-area={area.id}
+        >
+          <Icon.Icon icon='ph--map-pin-area--regular' />
+          <span className='font-medium'>{area.label}</span>
+          <Button.Root
+            variant='ghost'
+            classNames='h-6 min-h-0 px-1 text-xs text-accent-text font-normal'
+            onClick={(event) =>
+              stop(event, () => onChange(setAreaMode(overrides, area.id, mode === 'prefer' ? 'require' : 'prefer')))
+            }
+            data-testid='lighthouse.model.area.mode'
+          >
+            {t(mode === 'prefer' ? 'model-area-require.label' : 'model-area-prefer.label')}
+          </Button.Root>
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--x--regular'
+            classNames='h-6 min-h-0 px-1'
+            label={t('model-area-delete.label', { area: area.label })}
+            onClick={(event) => stop(event, () => onChange(removeArea(overrides, area.id)))}
+            data-testid='lighthouse.model.area.delete'
+          />
+        </Layout.Flex>
+      ))}
+    </Layout.Flex>
+  );
+};
+
 export const ModelPanel = ({ model, overrides = {}, items, onChange, onMap, onClose }: ModelPanelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [showRationale, setShowRationale] = useState(false);
@@ -199,6 +269,7 @@ export const ModelPanel = ({ model, overrides = {}, items, onChange, onMap, onCl
                     </>
                   )}
                 </span>
+                {'within' in term.value && <AreaList mode='prefer' overrides={overrides} onChange={onChange} />}
                 <Expression
                   text={termExpression(term, boundsOf(model, term, items))}
                   title={t('model-term.description')}
@@ -308,9 +379,12 @@ export const ModelPanel = ({ model, overrides = {}, items, onChange, onMap, onCl
               data-testid='lighthouse.model.req.area'
             >
               <Icon.Icon icon='ph--map-trifold--regular' />
-              <Layout.Flex gap='xs' align='center'>
-                <span className='font-medium'>{requirement.label}</span>
-                <Own />
+              <Layout.Flex column classNames='min-w-0'>
+                <Layout.Flex gap='xs' align='center'>
+                  <span className='font-medium'>{requirement.label}</span>
+                  <Own />
+                </Layout.Flex>
+                <AreaList mode='require' overrides={overrides} onChange={onChange} />
               </Layout.Flex>
               <Expression text={requirementExpression(requirement)} note={DIST_NOTE} />
               <Button.Root

@@ -166,7 +166,8 @@ export const imagesOf = (entity: Entity): string[] =>
   ['schema:image', 'lh:image', 'lh:images', 'schema:thumbnailUrl', 'schema:logo', 'lh:logo']
     .flatMap((key) => entity.props[key] ?? [])
     .filter((value): value is string => typeof value === 'string' && /^https?:/.test(value))
-    .slice(0, 8);
+    // A listing page carries its whole gallery (otodom: ~15–20 photos); a search result only its tile's few.
+    .slice(0, 20);
 
 /** Properties a card shows as rows: the first few with readable values, in a sensible order. */
 const ROWS: Array<{ keys: string[]; icon: string; format?: (value: Value) => string; location?: boolean }> = [

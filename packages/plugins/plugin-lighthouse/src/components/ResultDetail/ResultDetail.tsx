@@ -101,7 +101,6 @@ export type ResultDetailProps = {
   card: CardModel;
   rating?: Rating;
   starred?: boolean;
-  vote?: 'up' | 'down';
   /** Extensions that apply to the result's types. */
   extensions?: readonly Extension[];
   /** The extension nodes already read for this result, by extension id. */
@@ -115,7 +114,6 @@ export type ResultDetailProps = {
   /** Deep extensions' research sessions, by extension id: their status and the items they collected. */
   research?: Readonly<Record<string, { status: string; busy: boolean; items: readonly Entity[] }>>;
   onToggleStar?: () => void;
-  onVote?: (vote: 'up' | 'down') => void;
   onExtend?: (extension: string, deep: boolean) => void;
   onClose?: () => void;
 };
@@ -129,7 +127,6 @@ export const ResultDetail = ({
   card,
   rating,
   starred = false,
-  vote,
   extensions = [],
   extensionNodes = {},
   busy = {},
@@ -137,7 +134,6 @@ export const ResultDetail = ({
   areaNote,
   research = {},
   onToggleStar,
-  onVote,
   onExtend,
   onClose,
 }: ResultDetailProps) => {
@@ -170,24 +166,6 @@ export const ResultDetail = ({
           <span className='text-sm text-fg-muted tabular-nums'>
             {t('score.label', { score: Math.round(rating.score * 100) })}
           </span>
-        )}
-        {onVote && (
-          <Layout.Flex gap='xs'>
-            <Button.Root
-              variant={vote === 'up' ? 'primary' : 'ghost'}
-              icon='ph--thumbs-up--regular'
-              iconOnly
-              label={t('vote-up.label')}
-              onClick={() => onVote('up')}
-            />
-            <Button.Root
-              variant={vote === 'down' ? 'primary' : 'ghost'}
-              icon='ph--thumbs-down--regular'
-              iconOnly
-              label={t('vote-down.label')}
-              onClick={() => onVote('down')}
-            />
-          </Layout.Flex>
         )}
       </Layout.Flex>
 

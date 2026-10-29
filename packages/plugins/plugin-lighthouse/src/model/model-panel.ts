@@ -256,6 +256,18 @@ export const setAreasMode = (overrides: RatingOverrides, mode: 'prefer' | 'requi
   areas: (overrides.areas ?? []).map((area) => ({ ...area, mode })),
 });
 
+/** One area switched between a preference and a requirement; the panel lists each area so it can be changed alone. */
+export const setAreaMode = (overrides: RatingOverrides, id: string, mode: 'prefer' | 'require'): RatingOverrides => ({
+  ...overrides,
+  areas: (overrides.areas ?? []).map((area) => (area.id === id ? { ...area, mode } : area)),
+});
+
+/** The overrides without one drawn area. */
+export const removeArea = (overrides: RatingOverrides, id: string): RatingOverrides => ({
+  ...overrides,
+  areas: (overrides.areas ?? []).filter((area) => area.id !== id),
+});
+
 /** What reset leaves: the agent's model, with the person's drawn areas kept (they are a place, not a nudge). */
 export const resetOverrides = (overrides: RatingOverrides): RatingOverrides =>
   overrides.areas?.length ? { areas: overrides.areas } : {};

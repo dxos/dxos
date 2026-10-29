@@ -31,7 +31,7 @@ import {
   useSubjectGraph,
 } from '#hooks';
 import { meta } from '#meta';
-import { applyOverrides, applyVote, matchPicks, nextVote, rateAll, toCard, withLinkedGeo } from '#model';
+import { applyOverrides, matchPicks, rateAll, toCard, withLinkedGeo } from '#model';
 import { Finding, LighthouseOperation, Research } from '#types';
 
 import { findingEntity } from '../../util/index.ts';
@@ -154,19 +154,6 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
   );
 
   const card = useMemo(() => (entity ? toCard(entity) : undefined), [entity]);
-  const vote = iri ? state.rating.feedback[iri] : undefined;
-
-  const handleVote = useCallback(
-    (clicked: 'up' | 'down') => {
-      if (!iri) {
-        return;
-      }
-      const next = nextVote(vote, clicked);
-      update((state) => applyVote(state, iri, next));
-      void invoke(LighthouseOperation.VoteFinding, { research: Ref.make(research), iri, vote: next });
-    },
-    [iri, vote, update, invoke, research],
-  );
 
   const handleToggleStar = useCallback(() => {
     if (!entity || !card) {
@@ -232,14 +219,12 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
                   card={card}
                   rating={rating}
                   starred={starred}
-                  vote={vote}
                   why={why}
                   extensions={applicable}
                   extensionNodes={extensionNodes}
                   research={deepResearch}
                   busy={busy}
                   onToggleStar={handleToggleStar}
-                  onVote={snapshot.run ? handleVote : undefined}
                   onExtend={snapshot.run ? handleExtend : undefined}
                   onClose={handleClose}
                 />

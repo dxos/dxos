@@ -25,11 +25,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { card: toCard(meeple), score: 0.92, onVote: () => {}, onToggleStar: () => {} },
+  args: { card: toCard(meeple), score: 0.92, onToggleStar: () => {} },
 };
 
 export const Starred: Story = {
-  args: { card: toCard(dice), score: 0.61, starred: true, vote: 'up', onVote: () => {}, onToggleStar: () => {} },
+  args: { card: toCard(dice), score: 0.61, starred: true, onToggleStar: () => {} },
 };
 
 export const NoImage: Story = {
@@ -38,7 +38,7 @@ export const NoImage: Story = {
 
 /** A pinned Warsaw rental: hover or focus the district row for the map popover. */
 export const Located: Story = {
-  args: { card: toCard(pulawska), score: 0.88, onVote: () => {}, onToggleStar: () => {} },
+  args: { card: toCard(pulawska), score: 0.88, onToggleStar: () => {} },
 };
 
 /** Placed to the street only: the popover shows a precision ring. */

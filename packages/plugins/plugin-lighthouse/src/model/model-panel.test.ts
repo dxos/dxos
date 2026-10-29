@@ -12,9 +12,11 @@ import {
   describeValue,
   expressionParts,
   locatedCount,
+  removeArea,
   requirementExpression,
   resetOverrides,
   scoreExpression,
+  setAreaMode,
   setAreasMode,
   setRequirementOverride,
   setTermOverride,
@@ -161,5 +163,20 @@ describe('area rows', () => {
 
   test('counts the results with a location', ({ expect }) => {
     expect(locatedCount(geoEntities)).toBe(3);
+  });
+});
+
+describe('one area at a time', () => {
+  const circle = { type: 'Circle' as const, center: [21.0129, 52.1906] as [number, number], radiusM: 500 };
+  const overrides = {
+    areas: [
+      { id: 'a', label: 'A', shape: circle, mode: 'require' as const },
+      { id: 'b', label: 'B', shape: circle, mode: 'prefer' as const },
+    ],
+  };
+
+  test('switches and removes a single area', ({ expect }) => {
+    expect(setAreaMode(overrides, 'a', 'prefer').areas?.map((area) => area.mode)).toEqual(['prefer', 'prefer']);
+    expect(removeArea(overrides, 'b').areas?.map((area) => area.id)).toEqual(['a']);
   });
 });

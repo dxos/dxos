@@ -17,6 +17,11 @@ export const modelTranslations: Record<string, string> = {
   'model-coverage-inside.label': '{{count}}/{{total}} inside · {{unlocated}} with no location score 0',
   'model-areas-edit.label': 'Edit on the map',
   'model-areas-prefer.label': 'Prefer instead',
+  'model-areas-preferred.label': 'Preferred areas',
+  'model-areas-required.label': 'Required areas',
+  'model-area-require.label': 'require',
+  'model-area-prefer.label': 'prefer',
+  'model-area-delete.label': 'Delete area “{{area}}”',
   'model-draw.label': 'Draw an area on the map',
   'model-draw-another.label': 'Draw another area',
   'model-located.label': '{{count}}/{{total}} results have a location',
@@ -35,6 +40,5 @@ export const modelTranslations: Record<string, string> = {
   'model-term-reset.label': 'Back to the agent’s {{weight}}',
   'model-requirements-heading.label': 'Requirements · a miss multiplies the score by {{penalty}}',
   'model-requirement-on.label': 'Require {{requirement}}',
-  'model-foot.message':
-    'Your adjustments re-rank the results at once and stay when the agent rebuilds the model; thumbs on cards still teach the agent.',
+  'model-foot.message': 'Your adjustments re-rank the results at once and stay when the agent rebuilds the model.',
 };

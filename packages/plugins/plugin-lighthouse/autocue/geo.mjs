@@ -126,9 +126,15 @@ export const steps = [
   {
     name: 'The areas in the rating model',
     run: async ({ demo, page }) => {
-      await caption(demo, 5, 'The rating model reads the areas as a term with its formula');
+      await caption(
+        demo,
+        5,
+        'The rating model: the areas as a term with its formula, each area a chip to switch or delete',
+      );
       await demo.click({ selector: `${PLANK} [aria-label="Rating model"]`, label: 'Rating model' });
       await page.locator(MODEL).first().waitFor({ timeout: 10_000 });
+      // Each drawn area is its own chip under its term or requirement.
+      await page.locator(`${MODEL} [data-testid="lighthouse.model.area"]`).nth(1).waitFor({ timeout: 10_000 });
       const edit = page.locator('[data-testid="lighthouse.model.areas.edit"]').first();
       if (await visible(edit, 3_000)) {
         await edit.evaluate((element) => element.scrollIntoView({ block: 'center' }));
