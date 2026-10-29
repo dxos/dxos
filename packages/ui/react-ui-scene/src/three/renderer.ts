@@ -8,6 +8,8 @@
 //
 
 import {
+  type AbstractEngine,
+  type AbstractMesh,
   ArcRotateCamera,
   Camera,
   Color3,
@@ -35,7 +37,7 @@ import {
 import { type Instance3D } from '@dxos/animation';
 import { type Scene as Model } from '@dxos/scene';
 
-import { orthoHalfHeight, toOrbit } from './camera.ts';
+import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
 import {
   LATTICE_OPACITY,
   PRESENTATION_BACKGROUND,
@@ -72,11 +74,28 @@ type ItemMeshes = {
 };
 
 export type SceneRenderer3DOptions = {
-  canvas: HTMLCanvasElement;
   theme: Theme3D;
   /** The CAD background, read from the surface the view sits on. */
   background: string;
+} & (
+  | { canvas: HTMLCanvasElement; engine?: undefined }
+  /** An engine of the caller's, e.g. a `NullEngine` in a test. */
+  | { engine: AbstractEngine; canvas?: undefined }
+);
+
+/** What a pick under the pointer found: an item's render-list key, and where the ray met it or the ground. */
+export type PickResult = { item?: string; point?: Model.Vec3; normal?: Model.Vec3 };
+
+/** The render-list key a surface carries, and whether it is a composite's frame. */
+const pickTag = (mesh: AbstractMesh): { key: string; frame: boolean } | undefined => {
+  const metadata: unknown = mesh.metadata;
+  if (typeof metadata !== 'object' || metadata === null || !('key' in metadata) || typeof metadata.key !== 'string') {
+    return undefined;
+  }
+  return { key: metadata.key, frame: 'frame' in metadata && metadata.frame === true };
 };
+
+const vec3 = ({ x, y, z }: Vector3): Model.Vec3 => ({ x, y, z });
 
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
 
@@ -95,7 +114,8 @@ export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData |
 
 /** Draws a render list; never reads a clock and never writes ECHO. */
 export class SceneRenderer3D {
-  readonly #engine: Engine;
+  readonly #engine: AbstractEngine;
+  #view?: Model.Camera3D;
   readonly #scene: Scene;
   readonly #camera: ArcRotateCamera;
   readonly #theme: Theme3D;
@@ -103,10 +123,11 @@ export class SceneRenderer3D {
   readonly #links = new Map<string, LinesMesh>();
   readonly #instances: Record<Instance3D['primitive'], Mesh>;
 
-  constructor({ canvas, theme, background }: SceneRenderer3DOptions) {
+  constructor({ canvas, engine, theme, background }: SceneRenderer3DOptions) {
     this.#theme = theme;
     const presentation = theme === 'presentation';
-    this.#engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, adaptToDeviceRatio: true });
+    this.#engine =
+      engine ?? new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, adaptToDeviceRatio: true });
     this.#scene = new Scene(this.#engine);
     this.#scene.clearColor = Color4.FromHexString(`${presentation ? PRESENTATION_BACKGROUND : background}ff`);
     // Dithering keeps the smooth shading of large spheres from banding in 8-bit colour.
@@ -149,11 +170,35 @@ export class SceneRenderer3D {
     this.#updateLinks(list);
     this.#updateInstances(effects);
     this.#pose(camera);
+    this.#view = camera;
     this.#scene.render();
     // Shaders compile asynchronously, so a still view's only frame can draw before its materials are ready.
     if (!this.#scene.isReady()) {
       this.#scene.executeWhenReady(() => this.#scene.render());
     }
+  }
+
+  /**
+   * The item under a pixel (CSS pixels from the canvas's top left) and where the ray met it, else where it meets the
+   * ground. `through` looks past composites' frames to the parts inside them, as an editor drilled into one does.
+   */
+  pick(screen: { x: number; y: number }, { through = false }: { through?: boolean } = {}): PickResult {
+    const hit = this.#scene.pick(screen.x, screen.y, (mesh) => {
+      const tag = pickTag(mesh);
+      return tag !== undefined && mesh.isEnabled() && !(through && tag.frame);
+    });
+    const tag = hit?.hit && hit.pickedMesh ? pickTag(hit.pickedMesh) : undefined;
+    if (tag && hit?.pickedPoint) {
+      const normal = hit.getNormal(true, true);
+      return { item: tag.key, point: vec3(hit.pickedPoint), ...(normal ? { normal: vec3(normal) } : {}) };
+    }
+    const scaling = this.#engine.getHardwareScalingLevel();
+    const viewport = {
+      width: this.#engine.getRenderWidth() * scaling,
+      height: this.#engine.getRenderHeight() * scaling,
+    };
+    const point = this.#view && groundPoint(this.#view, viewport, screen);
+    return point ? { point } : {};
   }
 
   dispose(): void {
@@ -237,7 +282,8 @@ export class SceneRenderer3D {
 
   #createItem(item: RenderItem, spec: MaterialSpec, data: MeshData | undefined, signature: string): ItemMeshes {
     const surface = this.#createSurface(item, data);
-    surface.isPickable = false;
+    // Picking finds an item by the key its surface carries; a composite's frame says so, to be looked through.
+    surface.metadata = { key: item.key, frame: item.frame === true };
     const material = createSurfaceMaterial(this.#scene, `surface-${item.key}`, spec.kind !== 'standard');
     surface.material = material;
     if (spec.edges) {
@@ -254,6 +300,8 @@ export class SceneRenderer3D {
       rim.position = Vector3.Zero();
       rim.scaling = Vector3.One();
       rim.disableEdgesRendering();
+      rim.metadata = undefined;
+      rim.isPickable = false;
       const rimMaterial = createRimMaterial(this.#scene, `rim-${item.key}`);
       rim.material = rimMaterial;
       const lattice = CreateIcoSphere(`lattice-${item.key}`, { radius: 0.5, subdivisions: 3 }, this.#scene);

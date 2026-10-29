@@ -90,6 +90,44 @@ export const project = (
   };
 };
 
+/** The ray through a pixel: from the eye (perspective) or the view plane (orthographic), along the view. */
+const screenRay = (camera: Scene.Camera3D, viewport: Viewport, screen: { x: number; y: number }) => {
+  const { eye, forward, right, up } = basis(camera);
+  const aspect = viewport.width / Math.max(1, viewport.height);
+  const ndcX = (screen.x / Math.max(1, viewport.width)) * 2 - 1;
+  const ndcY = 1 - (screen.y / Math.max(1, viewport.height)) * 2;
+  const along = (axis: Vec3, amount: number): Vec3 => ({ x: axis.x * amount, y: axis.y * amount, z: axis.z * amount });
+  const sum = (...vectors: Vec3[]): Vec3 =>
+    vectors.reduce((total, vector) => ({ x: total.x + vector.x, y: total.y + vector.y, z: total.z + vector.z }));
+  if (camera.projection === 'orthographic') {
+    const half = orthoHalfHeight(camera);
+    return { origin: sum(eye, along(right, ndcX * half * aspect), along(up, ndcY * half)), direction: forward };
+  }
+  const half = Math.tan(camera.fov / 2);
+  return { origin: eye, direction: sum(forward, along(right, ndcX * half * aspect), along(up, ndcY * half)) };
+};
+
+/**
+ * Where the ray through a pixel meets the horizontal plane at `height` (the ground by default); undefined when the ray
+ * runs parallel to the plane or points away from it. The inverse of `project` for points on that plane.
+ */
+export const groundPoint = (
+  camera: Scene.Camera3D,
+  viewport: Viewport,
+  screen: { x: number; y: number },
+  height = 0,
+): Vec3 | undefined => {
+  const { origin, direction } = screenRay(camera, viewport, screen);
+  if (Math.abs(direction.y) < 1e-9) {
+    return undefined;
+  }
+  const distance = (height - origin.y) / direction.y;
+  if (distance <= 0) {
+    return undefined;
+  }
+  return { x: origin.x + direction.x * distance, y: height, z: origin.z + direction.z * distance };
+};
+
 /** Degrees the orbit turns per pixel dragged. */
 const DEGREES_PER_PIXEL = 0.4;
 

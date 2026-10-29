@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type Scene } from '@dxos/scene';
 
-import { cameraPosition, orbitBy, panBy, project, toOrbit, zoomBy } from './camera.ts';
+import { cameraPosition, groundPoint, orbitBy, panBy, project, toOrbit, zoomBy } from './camera.ts';
 
 const camera = (props: Partial<Scene.Camera3D> = {}): Scene.Camera3D => ({
   target: { x: 0, y: 0, z: 0 },
@@ -74,6 +74,44 @@ describe('camera', () => {
     test('zooming scales the distance and keeps it positive', () => {
       expect(zoomBy(camera({ distance: 10 }), 0.5).distance).toBeCloseTo(5);
       expect(zoomBy(camera({ distance: 10 }), 0).distance).toBeGreaterThan(0);
+    });
+  });
+
+  describe('groundPoint', () => {
+    const viewport = { width: 800, height: 600 };
+
+    test('is the inverse of project for points on the ground', () => {
+      for (const projection of ['perspective', 'orthographic'] as const) {
+        const view = camera({ yaw: 25, pitch: 35, projection });
+        for (const point of [
+          { x: 0, y: 0, z: 0 },
+          { x: 1.5, y: 0, z: -2 },
+        ]) {
+          const screen = project(view, viewport, point);
+          const back = screen && groundPoint(view, viewport, screen);
+          expect(back?.x).toBeCloseTo(point.x);
+          expect(back?.y).toBeCloseTo(0);
+          expect(back?.z).toBeCloseTo(point.z);
+        }
+      }
+    });
+
+    test('lands on a raised plane when given its height', () => {
+      const view = camera({ yaw: 10, pitch: 40 });
+      const point = { x: 1, y: 2, z: 1 };
+      const screen = project(view, viewport, point);
+      const back = screen && groundPoint(view, viewport, screen, 2);
+      expect(back?.x).toBeCloseTo(1);
+      expect(back?.z).toBeCloseTo(1);
+    });
+
+    test('is undefined when the ray is parallel to the plane or points away from it', () => {
+      expect(
+        groundPoint(camera({ pitch: 0, projection: 'orthographic' }), viewport, { x: 400, y: 300 }),
+      ).toBeUndefined();
+      // Looking down from above, a pixel at the top of a steep perspective view still meets the ground; one far above
+      // the horizon of a level view does not.
+      expect(groundPoint(camera({ pitch: 0 }), viewport, { x: 400, y: 0 })).toBeUndefined();
     });
   });
 });
