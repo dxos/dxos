@@ -350,21 +350,6 @@ describe('DataSpaceManager', () => {
         .to.equal(minted.spaceRootDocUrl);
       expect(peer2.dataSpaceManager.getSpaceRootUrl(space2.key)).to.equal(minted.spaceRootDocUrl);
       expect(edge.migrations).to.equal(0);
-
-      // After another reload the space is already anchored, and still copies a credential issued later
-      // into its document even though the flag is off.
-      await space2.deactivate(new Context());
-      await space2.activate(new Context());
-      await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
-      const store = await openCredentialsDocument(new Context(), peer2.echoHost, space2.id);
-      await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(0);
-      const before = store.read().length;
-      await peer2.dataSpaceManager.admitMember({
-        spaceKey: space2.key,
-        identityKey: PublicKey.random(),
-        role: SpaceMember_Role.EDITOR,
-      });
-      await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(before);
     });
 
     test('migrating on edge retries until edge can anchor, then adopts its root', async ({ expect }) => {
@@ -380,6 +365,33 @@ describe('DataSpaceManager', () => {
       // Idempotent: asking again returns the same root and does not re-adopt.
       expect(await peer2.dataSpaceManager.migrateSpaceRootOnEdge(new Context(), space2.key)).to.equal(spaceRootUrl);
     });
+  });
+
+  test('an anchored space keeps mirroring new credentials after a reload, with the flag off', async ({ expect }) => {
+    const builder = new TestBuilder();
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { useSpaceRootDocument: false });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+    await peer.dataSpaceManager.migrateSpaceToRootDocument(new Context(), space.key);
+
+    // The reload is the case that matters: the session that anchored the space mirrors anyway.
+    await peer.dataSpaceManager.close();
+    await peer.dataSpaceManager.open();
+    await peer.dataSpaceManager.spaces.get(space.key)?.activate(new Context());
+    await peer.dataSpaceManager.waitUntilSpaceReady(space.key);
+
+    const store = await openCredentialsDocument(new Context(), peer.echoHost, space.id);
+    await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(0);
+    const before = store.read().length;
+    await peer.dataSpaceManager.admitMember({
+      spaceKey: space.key,
+      identityKey: PublicKey.random(),
+      role: SpaceMember_Role.EDITOR,
+    });
+    await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(before);
   });
 
   test('a legacy hypercore space migrates onto a space root document, keeping its id', async () => {
