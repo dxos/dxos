@@ -11,14 +11,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type View } from '@dxos/react-ui-canvas/headless';
 import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
 import { Scene, bounds2D, toEcho } from '@dxos/scene';
+import { CreatedFrom } from '@dxos/types';
 
 import { Canvas } from '#types';
 
+import { canvasDocument, removeCanvas } from './canvas-document.ts';
 import {
   canvasRecordOf,
   clone,
@@ -31,6 +33,7 @@ import {
   readViews,
   rootOf,
 } from './content.ts';
+import { plain } from './layout-writer.ts';
 
 /** The one model a migrated canvas's portals and instances place their objects from. */
 const MODEL_ID = 'model';
@@ -139,8 +142,139 @@ export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing
       scenes: [...stored.scenes.values()].map((scene) => Ref.make(scene)),
     }),
   );
+  // Another peer may migrate the same drawing at the same time; the relation is how the copies find each other.
+  yield* Database.add(
+    CreatedFrom.make({
+      [Relation.Source]: canvas,
+      [Relation.Target]: legacy,
+      reason: MIGRATION,
+      createdAt: new Date().toISOString(),
+    }),
+  );
   Obj.update(drawing, (drawing) => {
     drawing.canvas = Ref.make(canvas);
   });
+  return true;
+});
+
+const MIGRATION = 'migration';
+
+type Fields = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is Fields => typeof value === 'object' && value !== null;
+
+const fieldsOf = (value: unknown): Fields => (isRecord(value) ? value : {});
+
+/**
+ * Writes onto `target` each field `copy` changed from `base` that `target` still holds at `base`'s value: a change
+ * only the other copy made is kept, and where both changed a field, the target's change stands.
+ */
+const replayFields = (target: object, base: unknown, copy: unknown): boolean => {
+  const before = fieldsOf(base);
+  const after = fieldsOf(copy);
+  const current = fieldsOf(clone(target));
+  let changed = false;
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (same(after[key], before[key]) || !same(current[key], before[key])) {
+      continue;
+    }
+    after[key] === undefined ? Reflect.deleteProperty(target, key) : Reflect.set(target, key, clone(after[key]));
+    changed = true;
+  }
+  return changed;
+};
+
+const same = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
+
+/** Replays what a losing copy changed in one layout onto the winner's layout of the same key. */
+const replayLayout = (target: Scene.Layout2D, base: Scene.LayoutRecord2D, copy: Scene.LayoutRecord2D) =>
+  Obj.update(target, (target) => {
+    for (const [id, element] of Object.entries(copy.elements)) {
+      const before = base.elements[id];
+      const current = target.elements[id];
+      if (!before) {
+        // An element the other copy added, which the winner does not have.
+        current === undefined && (target.elements[id] = plain(element));
+      } else if (current !== undefined) {
+        // An element the winner deleted stays deleted.
+        replayFields(current, before, element);
+      }
+    }
+    for (const [id, before] of Object.entries(base.elements)) {
+      const current = target.elements[id];
+      if (!(id in copy.elements) && current !== undefined && same(clone(current), before)) {
+        delete target.elements[id];
+      }
+    }
+    copy.name !== base.name && target.name === base.name && (target.name = copy.name);
+  });
+
+/**
+ * When `drawing`'s canvas was migrated while another peer migrated the same legacy canvas, adopts the drawing's
+ * canvas as the winner: each other canvas created from that legacy canvas has what it changed (relative to the legacy
+ * content) replayed into the winner, then is removed with its scenes, layouts, model and relation. Returns whether it
+ * found any; a second run finds none.
+ */
+export const reconcileMigrations = Effect.fn(function* (drawing: Drawing.Drawing) {
+  const winner = yield* Database.load(drawing.canvas);
+  if (!Canvas.isCanvas(winner)) {
+    return false;
+  }
+  const [origin] = yield* Database.query(Query.select(Filter.id(winner.id)).sourceOf(CreatedFrom.CreatedFrom)).run;
+  const legacy = origin && origin.reason === MIGRATION ? Relation.getTarget(origin) : undefined;
+  if (!Drawing.isCanvas(legacy)) {
+    return false;
+  }
+  const relations = yield* Database.query(Query.select(Filter.id(legacy.id)).targetOf(CreatedFrom.CreatedFrom)).run;
+  const losers = relations.flatMap((relation) => {
+    const source = Relation.getSource(relation);
+    return relation.reason === MIGRATION && source !== winner && Canvas.isCanvas(source)
+      ? [{ relation, canvas: source }]
+      : [];
+  });
+  if (losers.length === 0) {
+    return false;
+  }
+  const base = legacyDocument(legacy.content);
+  const baseLayouts = new Map(base.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, layout]] : [])));
+  const baseScenes = new Map(base.scenes.map((scene) => [scene.id, scene]));
+  const baseSettings = (() => {
+    const {
+      kind: _kind,
+      root: _root,
+      ...settings
+    } = clone(canvasRecordOf(legacy.content) ?? { kind: 'canvas', root: '' });
+    return settings;
+  })();
+  const winnerLayouts = new Map(
+    winner.layouts.flatMap((ref) => (Obj.instanceOf(Scene.Layout2D, ref.target) ? [[ref.target.key, ref.target]] : [])),
+  );
+  const winnerScenes = new Map(
+    winner.scenes.flatMap((ref) => (Obj.instanceOf(Scene.Scene2D, ref.target) ? [[ref.target.key, ref.target]] : [])),
+  );
+  for (const { relation, canvas } of losers) {
+    const copy = canvasDocument(canvas);
+    for (const layout of copy.layouts) {
+      const before = baseLayouts.get(layout.id);
+      const target = winnerLayouts.get(layout.id);
+      if (layout.dim === '2d' && before && target) {
+        replayLayout(target, before, layout);
+      }
+    }
+    for (const scene of copy.scenes) {
+      const before = baseScenes.get(scene.id);
+      const target = winnerScenes.get(scene.id);
+      if (scene.dim === '2d' && before?.dim === '2d' && target) {
+        Obj.update(target, (target) => {
+          replayFields(target, { camera: before.camera }, { camera: scene.camera });
+        });
+      }
+    }
+    Obj.update(winner, (winner) => {
+      replayFields(winner.settings, baseSettings, canvas.settings);
+    });
+    yield* Database.remove(relation);
+    removeCanvas(canvas);
+  }
   return true;
 });

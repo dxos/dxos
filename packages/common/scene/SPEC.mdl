@@ -474,3 +474,35 @@ decision D-39: A projection's own model (the constrained projection's constraint
   for: user:richburdon
   why: Every react-ui-canvas mode must run on Layout2D before the switch (D-22), and those modes are their models.
 ```
+
+```mdl
+decision D-40: A migrated or converted canvas records what it was created from with a `CreatedFrom` relation; a peer that migrated in parallel adopts the winning canvas and replays its edits into it.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-41: `CreatedFrom` is a generic relation in `@dxos/types` (`org.dxos.relation.createdFrom`), beside `HasSubject` and `AnchoredTo`, with a free `reason` string and a `createdAt` date. Fills in [D-40].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Provenance is not specific to canvases, and `@dxos/types` is where relations every plugin may use already live; plugin-canvas and plugin-illustrator register it in their schema lists.
+  rejected: A relation inside plugin-canvas, which plugin-illustrator's conversions could not use without depending on it.
+```
+
+```mdl
+decision D-42: The winner is the canvas the drawing references. Each other canvas created from the same legacy canvas has every element, layout name, camera and setting field it changed from the legacy content replayed into the winner where the winner still holds the legacy value; where both changed a field, the winner's value stands. Elements only the loser added are added; elements the winner deleted stay deleted; layouts only the loser made are not replayed. The loser is then removed with its scenes, layouts, model and relation. Fills in [D-40].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Both copies came from the same records, so element ids match and the legacy content is a common base for a three-way, field-level merge.
+  rejected: Copying the loser's elements wholesale, which would undo the winner's edits.
+```
+
+```mdl
+decision D-43: A conversion records `CreatedFrom` only when it makes a copy; a conversion that replaces its source removes the source, so there is nothing left to point at.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A relation to a removed object dangles.
+```

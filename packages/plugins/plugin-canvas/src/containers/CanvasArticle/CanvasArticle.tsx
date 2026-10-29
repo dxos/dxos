@@ -78,6 +78,7 @@ import {
   useCanvasGenerators,
   useCanvasNodes,
   useMigratedCanvas,
+  useReconciledMigrations,
 } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
@@ -111,6 +112,7 @@ const SceneCanvasArticle = ({
 }: Omit<CanvasArticleProps, 'canvas'> & { canvas: CanvasFormat.Canvas }) => {
   const registry = useRegistry();
   const bound = useBoundLayoutStore(canvas);
+  useReconciledMigrations(props.drawing, canvas, props.role === AppSurface.Article.role);
   const [snapshot] = useObject(canvas);
   const settings = snapshot.settings;
   const handleSettingsChange = useCallback(

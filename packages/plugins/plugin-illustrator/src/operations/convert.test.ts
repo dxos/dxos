@@ -9,10 +9,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Dsl, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
-import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { CreatedFrom } from '@dxos/types';
 
 import { SvgBuilder, bindArrowEnds, makeBuilder } from '#model';
 import { Drawing, IllustratorCapabilities, IllustratorError } from '#types';
@@ -66,7 +67,9 @@ describe('convert', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Drawing.Drawing, Drawing.Canvas, Collection.Collection] }));
+    ({ db } = await builder.createDatabase({
+      types: [Drawing.Drawing, Drawing.Canvas, Collection.Collection, CreatedFrom.CreatedFrom],
+    }));
   });
 
   afterEach(async () => {
@@ -175,6 +178,17 @@ describe('convert', () => {
     expect((await loadCanvas(copy)).schema).toBe(FAKE_SCHEMA);
     expect((await loadCanvas(drawing)).id).toBe(original.id);
     expect(folder.objects.map((ref) => ref.target?.id)).toContain(copy.id);
+  });
+
+  test('a copy records the canvas it was converted from', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const original = await loadCanvas(drawing);
+    const result = await EffectEx.runPromise(run(drawing, FAKE_SCHEMA, { copy: true }));
+    const converted = await loadCanvas(await result.drawing.load());
+    const relations = await db.query(Query.select(Filter.id(converted.id)).sourceOf(CreatedFrom.CreatedFrom)).run();
+    expect(relations).toHaveLength(1);
+    expect(Relation.getTarget(relations[0])).toBe(original);
+    expect(relations[0].reason).toBe('conversion');
   });
 
   test("uses a converter registered for the pair over the scene replay, so a variant's own mapping wins", async ({

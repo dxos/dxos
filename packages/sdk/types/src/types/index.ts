@@ -7,6 +7,7 @@ import * as Actor from './Actor.ts';
 import * as AnchoredTo from './AnchoredTo.ts';
 import * as Channel from './Channel.ts';
 import * as ContentBlock from './ContentBlock.ts';
+import * as CreatedFrom from './CreatedFrom.ts';
 import * as DraftMessage from './DraftMessage.ts';
 import * as Employer from './Employer.ts';
 import * as Event from './Event.ts';
@@ -59,6 +60,7 @@ export {
   AnchoredTo,
   Channel,
   ContentBlock,
+  CreatedFrom,
   DraftMessage,
   Employer,
   Event,

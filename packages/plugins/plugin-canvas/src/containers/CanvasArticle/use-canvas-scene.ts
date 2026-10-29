@@ -30,6 +30,7 @@ import {
   bindLayoutStore,
   migrateSceneDrawing,
   openScene,
+  reconcileMigrations,
 } from '#model';
 import { Canvas, CanvasCapabilities, Generator } from '#types';
 
@@ -100,6 +101,33 @@ export const useMigratedCanvas = (
     };
   }, [migrate, db, drawing.id, canvas]);
   return migrated;
+};
+
+/**
+ * Folds into `canvas` what another peer's parallel migration of the same legacy drawing changed, and removes that
+ * copy (`reconcileMigrations`); run once when the drawing opens for writing.
+ */
+export const useReconciledMigrations = (
+  drawing: Obj.Snapshot<Drawing.Drawing> | Drawing.Drawing,
+  canvas: Canvas.Canvas,
+  reconcile: boolean,
+) => {
+  const db = Obj.getDatabase(canvas);
+  useEffect(() => {
+    if (!reconcile || !db) {
+      return;
+    }
+    // The surface may hand a snapshot, so the live drawing is read from the database.
+    void EffectEx.runPromise(
+      Effect.gen(function* () {
+        const [live] = yield* Database.query(Filter.id(drawing.id)).run;
+        if (Obj.instanceOf(Drawing.Drawing, live)) {
+          yield* reconcileMigrations(live);
+        }
+      }).pipe(Effect.provide(Database.layer(db))),
+      // A copy that fails to reconcile stays, and is tried again the next time the drawing opens.
+    ).catch(() => undefined);
+  }, [reconcile, db, drawing.id, canvas]);
 };
 
 /**

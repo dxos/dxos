@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -25,6 +25,7 @@ import {
   createViewTree,
 } from '@dxos/react-ui-canvas/testing';
 import { Scene } from '@dxos/scene';
+import { CreatedFrom } from '@dxos/types';
 
 import { Canvas } from '#types';
 
@@ -33,7 +34,7 @@ import { CanvasBuilder } from './builder.ts';
 import { openScene } from './canvas-document.ts';
 import { updateCanvasRecord, writeStyles, writeViews } from './content.ts';
 import { bindLayoutStore } from './layout-store.ts';
-import { legacyDocument, migrateSceneDrawing } from './migrate-scenes.ts';
+import { legacyDocument, migrateSceneDrawing, reconcileMigrations } from './migrate-scenes.ts';
 import { bindCanvasStore, createCanvas } from './store.ts';
 
 const SAMPLES = {
@@ -218,6 +219,74 @@ describe('migrateSceneDrawing', () => {
     const target: unknown = drawing.canvas.target;
     const schema = isRecord(target) && typeof target.schema === 'string' ? target.schema : '';
     expect([LEGACY_VARIANT].find((entry) => Drawing.isSameFormat(entry.id, schema))).toBeUndefined();
+  });
+
+  describe('parallel migrations', () => {
+    const reconcile = (drawing: Drawing.Drawing) =>
+      EffectEx.runPromise(reconcileMigrations(drawing).pipe(Effect.provide(Database.layer(db))));
+
+    const rootLayout = (canvas: Canvas.Canvas): Scene.Layout2D => {
+      const layout = openScene(canvas)?.layout.target;
+      if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+        throw new Error('A migrated canvas opens a 2D layout.');
+      }
+      return layout;
+    };
+
+    /** Two peers migrate one legacy drawing: the drawing keeps the first canvas, the second is a loser. */
+    const migratedTwice = async () => {
+      const tree = createSquareTree();
+      const drawing = legacyDrawing(tree.views, tree.root);
+      const legacy = drawing.canvas.target;
+      if (!Drawing.isCanvas(legacy)) {
+        throw new Error('A legacy drawing has a base canvas.');
+      }
+      expect(await migrate(drawing)).toBe(true);
+      const winner = migratedCanvas(drawing);
+      Obj.update(drawing, (drawing) => {
+        drawing.canvas = Ref.make(legacy);
+      });
+      expect(await migrate(drawing)).toBe(true);
+      const loser = migratedCanvas(drawing);
+      Obj.update(drawing, (drawing) => {
+        drawing.canvas = Ref.make(winner);
+      });
+      const [id] = Object.keys(rootLayout(winner).elements);
+      return { drawing, legacy, winner, loser, id };
+    };
+
+    test('a migration records the legacy canvas the new one was created from', async () => {
+      const { winner, legacy } = await migratedTwice();
+      const relations = await db.query(Query.select(Filter.id(winner.id)).sourceOf(CreatedFrom.CreatedFrom)).run();
+      expect(relations).toHaveLength(1);
+      expect(Relation.getTarget(relations[0])).toBe(legacy);
+      expect(relations[0].reason).toBe('migration');
+    });
+
+    test("the loser's edits are replayed into the winner, the loser is removed, and a second run does nothing", async () => {
+      const { drawing, winner, loser, id } = await migratedTwice();
+      Obj.update(rootLayout(loser), (layout) => {
+        layout.elements[id].center = { x: 640, y: 320 };
+      });
+      expect(await reconcile(drawing)).toBe(true);
+      expect(rootLayout(winner).elements[id].center).toEqual({ x: 640, y: 320 });
+      expect(await db.query(Filter.type(Canvas.Canvas)).run()).toEqual([winner]);
+      expect(await db.query(Filter.type(CreatedFrom.CreatedFrom)).run()).toHaveLength(1);
+      expect(await reconcile(drawing)).toBe(false);
+    });
+
+    test("the winner's own edit wins where both changed a field; the loser's other changes are kept", async () => {
+      const { drawing, winner, loser, id } = await migratedTwice();
+      Obj.update(rootLayout(winner), (layout) => {
+        layout.elements[id].center = { x: 64, y: 64 };
+      });
+      Obj.update(rootLayout(loser), (layout) => {
+        layout.elements[id].center = { x: 640, y: 320 };
+        layout.elements[id].label = 'From the other peer';
+      });
+      expect(await reconcile(drawing)).toBe(true);
+      expect(rootLayout(winner).elements[id]).toMatchObject({ center: { x: 64, y: 64 }, label: 'From the other peer' });
+    });
   });
 });
 
