@@ -1,6 +1,6 @@
 # Scene model: one ontology and DSL for 2D and 3D
 
-Status: draft for review, 2026-10-28.
+Status: approved by the user, 2026-10-28. Calls 12–24 are the agent's, accepted with the design.
 
 ## Intent
 
