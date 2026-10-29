@@ -36,6 +36,7 @@ export const handlers = OperationHandlerSet.lazy([
   InboxOperation.ExtractSummaryFromMessage.pipe(
     Operation.lazyHandler(() => import('./extractor/summarize-extractor.ts')),
   ),
+  InboxOperation.TriageMailbox.pipe(Operation.lazyHandler(() => import('./triage/triage-mailbox.ts'))),
   InboxOperation.SummarizeMailbox.pipe(Operation.lazyHandler(() => import('./summarize/summarize-mailbox.ts'))),
   InboxOperation.ReadEmail.pipe(Operation.lazyHandler(() => import('./read-email.ts'))),
   InboxOperation.SendReply.pipe(Operation.lazyHandler(() => import('./send-reply.ts'))),

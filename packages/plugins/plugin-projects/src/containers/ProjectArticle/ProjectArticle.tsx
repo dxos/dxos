@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import React, { type ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -39,7 +39,6 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { ProjectFeatures } from '#containers';
 import { meta } from '#meta';
 import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
@@ -109,9 +108,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         </Tabs.Trigger>
         <Tabs.Trigger value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
-        </Tabs.Trigger>
-        <Tabs.Trigger value='features' data-testid='projectsPlugin.tab.features'>
-          {t('features.label')}
         </Tabs.Trigger>
       </Tabs.List>
     ),
@@ -370,12 +366,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 )}
               </Splitter.Panel>
             </Splitter.Root>
-          )}
-
-          {tab === 'features' && (
-            <Suspense fallback={null}>
-              <ProjectFeatures project={subject} attendableId={attendableId} />
-            </Suspense>
           )}
         </Panel.Body>
       </Panel.Root>

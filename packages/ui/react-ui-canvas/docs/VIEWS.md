@@ -1,7 +1,8 @@
 # Views, objects and tags — Design
 
-Status: designed 2026-10-18; Phase 1 (the View rename), Phase 2 (groups are Objects) and the orphans rule (§7.4) built 2026-10-19, the rest not built. Ledger: [TASKS.md](./TASKS.md). Supersedes the scene, frame, composite and
-layer terms of [DESIGN.md](./DESIGN.md) §4 and [ANIMATION.md](./ANIMATION.md) §4.1 where they conflict.
+Status: designed 2026-10-18; Phases 1, 2, 3b, 5 and 6 built, Phases 3 (tags) and 4 (order) not built. Ledger:
+[TASKS.md](./TASKS.md). The model itself is specified in `SPEC.mdl` (Ontology, `type:View`, `type:Tag`, [F-4], [F-9]);
+this document keeps the reasoning, the migration from the old terms and the undo design.
 
 ## 1. Goal
 
@@ -197,4 +198,4 @@ versioned-store interface (`heads()`, `read(path, heads)`, `write(path, value)`)
 4. ~~Orphaned contents~~ Decided 2026-10-18: deleting the last node that points at a contents record (a View, or an
    anonymous Object's last Instance) deletes the record in the same intent, so undo restores both. There is no
    "Unplaced" group. A named Object with no Instances is a library entry, not an orphan.
-5. Can an Object contain a View? This design says no, so an Object stays a drawing rather than a navigable place.
+5. ~~Can an Object contain a View?~~ Decided 2026-10-27: no, so an Object stays a drawing rather than a navigable place (SPEC.mdl [F-9.9]).

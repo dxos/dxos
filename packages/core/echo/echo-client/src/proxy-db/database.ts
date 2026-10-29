@@ -134,6 +134,8 @@ export interface EchoDatabase extends Database.Database {
 
   /**
    * Returns the number of objects stored inline in the space root document.
+   *
+   * @deprecated Inline directory objects are migrated into linked documents; this counts the ones not migrated yet.
    */
   getNumberOfInlineObjects(): number;
 
@@ -769,7 +771,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // endpoints become absolute, same-space relative, and unpersisted endpoints are added here.
     EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._entityManager.addCore(getObjectCore(obj), opts);
+    this._entityManager.addCore(getObjectCore(obj));
     if (created) {
       trace.events.emit(Database.TraceEvents.objectAdd, this.#entityAttributes(obj, opts?.origin));
     }

@@ -126,7 +126,8 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 
 ## Follow-ups
 
-- [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).
+- [x] Fold VIEWS.md's model into SPEC.mdl (Ontology, `type:View`/`Tag`, [F-4], [F-9]); DESIGN.md §3–4 and ANIMATION.md §4 point at it.
+- [ ] Decide VIEWS.md §7 open questions: merged View record (Q3). Views inside Objects (Q5) decided no (SPEC.mdl D-5, approved D-6).
 - [ ] Rotation: ports and link ends turn with the node (`portPoint`, route side normals, the pointer machine's port picks); the selection frame and its handles turn too; marquee and content bounds use the rotated frame.
 - [ ] Docked inspectors: the bottom-left (navigation) and bottom-centre (actions) bars overlap when the canvas is narrow (seen in `Canvas › Docked` with the dock open).
 - [x] Ungroup brings the Object's animation tracks back out, renamed to the new nodes and mapped through the Instance's transform.

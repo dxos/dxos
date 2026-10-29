@@ -30,6 +30,12 @@ export const BuildRunState = Capability.lazyModule(
   () => import('./build-run-state.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+// Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.lazyModule(
+  'CodeMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
+);
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
 );

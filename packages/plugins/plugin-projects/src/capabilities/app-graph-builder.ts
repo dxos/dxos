@@ -25,9 +25,10 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { FEATURE_COMPANION, meta } from '#meta';
-import { ProjectOperation } from '#types';
+import { FEATURE_COMPANION, SPEC_DOCUMENT_COMPANION, meta } from '#meta';
+import { ProjectOperation, Spec } from '#types';
 
+import { refId } from '../operations/feature/util.ts';
 import { inboxResearch } from '../templates/index.ts';
 
 /**
@@ -57,6 +58,24 @@ export default Capability.makeModule(
         }),
     });
 
+    // Specs sit beside projects, since a spec's features are delivered by the project it names; `spec` is
+    // plugin-code's key for a plugin's bundled spec.
+    const specSectionExtensions = yield* TypeSection.createTypeSectionExtension(Spec.Spec, {
+      urlKey: 'features',
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+      groupSegment: GraphPath.GroupSegments.ai,
+      createObject: (space) =>
+        Operation.invoke(SpaceOperation.OpenObjectForm, {
+          target: space.db,
+          typename: Type.getTypename(Spec.Spec),
+          targetNodeId: GraphPath.getSpacePath(
+            space.db.spaceId,
+            GraphPath.GroupSegments.ai,
+            Type.getTypename(Spec.Spec),
+          ),
+        }),
+    });
+    const specBreakdownExtensions = yield* createSpecBreakdownsExtension();
     const actionExtensions = yield* createProjectActionExtension();
     const chatExtensions = yield* createProjectChatsExtension();
     const chatChildrenExtensions = yield* createProjectChatsChildrenExtension();
@@ -64,11 +83,11 @@ export default Capability.makeModule(
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const taskExtensions = yield* createProjectTasksExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
-    // The feature companion: the feature selected on the project's map, beside the project plank.
+    // The feature companion: the feature selected on the spec's map, beside the spec plank.
     const featureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
       id: 'featureCompanion',
       relation: AppNode.companion,
-      type: Project.Project,
+      type: Spec.Spec,
       connector: () =>
         Effect.succeed([
           AppNode.makeCompanion({
@@ -79,8 +98,11 @@ export default Capability.makeModule(
           }),
         ]),
     });
+    const documentCompanionExtensions = yield* createSpecDocumentCompanionExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
+      ...specSectionExtensions,
+      ...specBreakdownExtensions,
       ...actionExtensions,
       ...chatExtensions,
       ...chatChildrenExtensions,
@@ -89,9 +111,52 @@ export default Capability.makeModule(
       ...taskExtensions,
       ...mailboxExtensions,
       ...featureCompanionExtensions,
+      ...documentCompanionExtensions,
     ]);
   }),
 );
+
+/**
+ * One URL binding for a spec and the specs nested beneath it, shared with the Specs type section, so
+ * `features/<id>+<nested>+<nested>` reconstructs the chain the way {@link PROJECT_URL} does for a project.
+ */
+const SPEC_URL: AppGraphBuilder.UrlBinding = {
+  key: 'features',
+  kind: 'item',
+  path: [GraphPath.GroupSegments.ai, Type.getTypename(Spec.Spec)],
+};
+
+/**
+ * The specs that break down a spec's features, as its children in the navtree, in the order of the features they
+ * break down. Each child is itself a spec, so this extension matches it too and the tree nests to any depth.
+ */
+export const createSpecBreakdownsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'specBreakdowns',
+    url: SPEC_URL,
+    match: (node) => (Spec.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+    connector: (spec, get) => {
+      const db = Obj.getDatabase(spec);
+      if (!db) {
+        return Effect.succeed([]);
+      }
+
+      const order = get(Obj.atom(spec)).features.map(refId);
+      const nested = get(db.query(Filter.type(Spec.Spec)).atom)
+        .map((child) => ({ child, owner: Spec.getOwner(child) }))
+        .flatMap(({ child, owner }) =>
+          owner && Spec.getContainer(owner)?.id === spec.id
+            ? [{ child, index: order.findIndex((id) => id === owner.id) }]
+            : [],
+        )
+        .sort((left, right) => left.index - right.index);
+      return Effect.succeed(
+        nested
+          .map(({ child }) => AppNode.makeObject({ get, db, object: child, navigable: true }))
+          .filter((node): node is NonNullable<typeof node> => node !== null),
+      );
+    },
+  });
 
 /**
  * "Set up project" on the primary mailbox node (`systemTag: 'inbox'`, so it appears once, not on
@@ -101,6 +166,35 @@ export default Capability.makeModule(
  * dependency direction); injecting actions into another plugin's nodes is the established pattern
  * (e.g. plugin-brain's mailbox Analyze action).
  */
+/** The spec's `.mdl` document as a companion beside the spec plank; absent while the spec holds none. */
+export const createSpecDocumentCompanionExtension = () =>
+  AppGraphBuilder.createTypeExtension({
+    id: 'specDocumentCompanion',
+    relation: AppNode.companion,
+    type: Spec.Spec,
+    connector: (spec, get) => {
+      const ref = get(Obj.atom(spec)).document;
+      if (!ref) {
+        return Effect.succeed([]);
+      }
+      // Subscribed through the atom so the node re-runs once the document loads, then the live target is handed on.
+      get(Obj.atom(ref));
+      const document = ref.target;
+      return Effect.succeed(
+        document
+          ? [
+              AppNode.makeCompanion({
+                variant: SPEC_DOCUMENT_COMPANION,
+                label: ['spec-document-companion.label', { ns: meta.profile.key }],
+                icon: 'ph--file-text--regular',
+                data: document,
+              }),
+            ]
+          : [],
+      );
+    },
+  });
+
 export const createMailboxProjectExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',

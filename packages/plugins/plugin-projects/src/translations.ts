@@ -8,7 +8,7 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature, Showcase } from '#types';
+import { Feature, Spec } from '#types';
 
 export const translations = [
   {
@@ -33,6 +33,17 @@ export const translations = [
         'delete-object.label': 'Delete repository',
         'object-deleted.label': 'Repository deleted',
       },
+      [Type.getTypename(Spec.Spec)]: {
+        'typename.label': 'Spec',
+        'typename.label_zero': 'Specs',
+        'typename.label_one': 'Spec',
+        'typename.label_other': 'Specs',
+        'object-name.placeholder': 'New spec',
+        'add-object.label': 'Add spec',
+        'rename-object.label': 'Rename spec',
+        'delete-object.label': 'Delete spec',
+        'object-deleted.label': 'Spec deleted',
+      },
       [Type.getTypename(Feature.Feature)]: {
         'typename.label': 'Feature',
         'typename.label_zero': 'Features',
@@ -42,16 +53,6 @@ export const translations = [
         'rename-object.label': 'Rename feature',
         'delete-object.label': 'Delete feature',
         'object-deleted.label': 'Feature deleted',
-      },
-      [Type.getTypename(Showcase.Showcase)]: {
-        'typename.label': 'Showcase',
-        'typename.label_zero': 'Showcases',
-        'typename.label_one': 'Showcase',
-        'typename.label_other': 'Showcases',
-        'object-name.placeholder': 'New showcase',
-        'rename-object.label': 'Rename showcase',
-        'delete-object.label': 'Delete showcase',
-        'object-deleted.label': 'Showcase deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
@@ -64,7 +65,6 @@ export const translations = [
         'views.label': 'Views',
         'overview.label': 'Overview',
         'tasks.label': 'Tasks',
-        'features.label': 'Features',
         'view.label': 'View',
         'show-pipeline.label': 'Show pipeline',
         'hide-pipeline.label': 'Hide pipeline',
@@ -123,29 +123,29 @@ export const translations = [
         'feature-edit-error.title': 'Edit not applied',
         'feature-article.add-dependency.label': 'Add dependency',
         'feature-article.link-task.label': 'Link task',
-        'feature-article.file-task.placeholder': "File a task in this feature's project…",
+        'feature-article.file-task.placeholder': "File a task in this spec's project…",
         'feature-article.set-key.placeholder': 'Set a key to cite this feature in code, e.g. org.example.features.sync',
         'feature-map.add-feature.label': 'Add an existing feature',
         'feature-map.new-feature.label': 'New feature',
+        'feature-map.open-document.label': 'Open spec document',
         'feature-map.new-feature.name': 'New feature',
         'feature-map.root.label': 'All features',
         'feature-map.zoom-out.label': 'Zoom out',
         'feature-map.trail.label': 'Feature map level',
         'feature-map.empty.message': 'No subfeatures yet. Add one with New feature.',
         'feature-companion.label': 'Feature',
+        'spec-document-companion.label': 'Spec document',
         'feature-companion.empty.message': 'Select a feature on the map to see its details.',
         'feature-article.zoom.label': 'Show subfeatures on the map',
         'feature-article.open.label': 'Open in a plank',
         'feature-article.add-subfeature.placeholder': 'Add a subfeature…',
         'feature-card.dependents.title': 'Needed by',
+        'feature-card.external.label_one': 'Needs {{count}} feature on another spec',
+        'feature-card.external.label_other': 'Needs {{count}} features on other specs',
         'requirement-editor.add.label': 'Add requirement',
         'requirement-editor.text.label': 'Requirement',
         'requirement-editor.remove.label': 'Remove requirement',
         'feature-article.relations.label': 'Relations',
-        'showcase-article.targets.label': 'Demonstrates',
-        'showcase-article.artifacts.label': 'Artifacts',
-        'showcase-card.artifacts.label_one': '{{count}} artifact',
-        'showcase-card.artifacts.label_other': '{{count}} artifacts',
         'feature-map.mode.label': 'View',
         'feature-map.mode.canvas.label': 'Canvas',
         'feature-map.mode.kanban.label': 'Kanban',

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
-import { type PluginView } from '@dxos/protocols';
+import { EdgeCallFailedError, type GetPluginsResponseBody, type PluginView } from '@dxos/protocols';
 
 import { PluginManagerError } from './plugin-manager/errors.ts';
 import type * as Plugin from './plugin.ts';
@@ -48,6 +48,9 @@ const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
  * `listVersions` is served directly from the `releases` array inlined on each
  * entry — no separate endpoint is needed.
  */
+const isAccountRequired = (error: unknown): boolean =>
+  error instanceof EdgeCallFailedError && error.data?.type === 'identity_not_associated_with_account';
+
 /** The plugin registry behind EDGE did not answer, or answered with something unusable. */
 export class RegistryError extends BaseError.extend('RegistryError', 'Plugin registry request failed.') {}
 
@@ -83,7 +86,13 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
       return Effect.tryPromise({
         try: () =>
           this.#catalog === 'private'
-            ? this._client.getPrivateRegistryPlugins(Context.default())
+            ? this._client.getPrivateRegistryPlugins(Context.default()).catch((error) => {
+                // An identity with no account cannot have published anything, so its catalog is empty.
+                if (isAccountRequired(error)) {
+                  return { version: 2, plugins: [], refreshedAt: 0 } satisfies GetPluginsResponseBody;
+                }
+                throw error;
+              })
             : this._client.getRegistryPlugins(Context.default()),
         catch: RegistryError.wrap(),
       }).pipe(
