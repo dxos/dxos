@@ -3,4 +3,6 @@
 //
 
 export * as Scene from './Scene.ts';
+export * from './hierarchy.ts';
+export * from './layout.ts';
 export * from './validate.ts';
