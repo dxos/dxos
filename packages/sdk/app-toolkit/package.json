@@ -61,6 +61,11 @@
       "types": "./dist/types/src/app-framework/PluginAssetAdapter.d.ts",
       "import": "./dist/lib/app-framework/PluginAssetAdapter.mjs"
     },
+    "./RegistryDescriptor": {
+      "source": "./src/app-framework/RegistryDescriptor.ts",
+      "types": "./dist/types/src/app-framework/RegistryDescriptor.d.ts",
+      "import": "./dist/lib/app-framework/RegistryDescriptor.mjs"
+    },
     "./SurfaceAdapter": {
       "source": "./src/app-framework/SurfaceAdapter.ts",
       "types": "./dist/types/src/app-framework/SurfaceAdapter.d.ts",
