@@ -272,6 +272,48 @@ describe('DocumentsSynchronizer', () => {
     expect(acquireDoc).not.toHaveBeenCalled();
   });
 
+  test('a save made while a passive directory is read from storage still reaches the client', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const root = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: SpaceId.random() },
+      links: {},
+    });
+    await host.flush(Context.default());
+    const heads = A.getHeads(root.doc());
+    const updates: DataService.DocumentUpdate[] = [];
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
+      readDirectorySnapshot: async () => ({ heads, json: '{"links":{}}' }),
+    });
+    await openAndClose(synchronizer);
+    const readStoredChanges = host.readStoredChanges.bind(host);
+    vi.spyOn(host, 'readStoredChanges').mockImplementationOnce(async (...args) => {
+      const bytes = await readStoredChanges(...args);
+      // Saved and announced before the synchronizer holds a sync state for the root.
+      const saved = host.documentHeadsChanged.waitFor(({ documentId }) => documentId === root.documentId);
+      root.change((doc) => {
+        doc.links = { added: new A.RawString('automerge:added') };
+      });
+      await host.flush(Context.default());
+      await saved;
+      return bytes;
+    });
+
+    await synchronizer.addDocuments([{ documentId: root.documentId, passive: true }]);
+    await waitForCondition({ condition: () => updates.length > 1, timeout: 5_000 });
+    const [first, second] = updates;
+    expect(first.passive?.json).toBe('{"links":{}}');
+    expect(second.passive?.json).toBeUndefined();
+    invariant(first.mutation && second.mutation, 'updates carry no changes');
+    const doc = A.loadIncremental(A.loadIncremental(A.init<DatabaseDirectory>(), first.mutation), second.mutation);
+    expect(String(doc.links?.added)).toBe('automerge:added');
+  });
+
   test('re-adding a document switches its mode', async () => {
     const { synchronizer, createDirectory, next } = await setupPassive();
     const { handle, objectId } = await createDirectory('shown');

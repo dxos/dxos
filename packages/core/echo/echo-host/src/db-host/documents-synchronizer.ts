@@ -192,12 +192,19 @@ export class DocumentsSynchronizer extends Resource {
       return false;
     }
     // The stored changes may be ahead of the snapshot's heads, never behind; the next change sends what follows them.
-    this._syncStates.set(documentId, { passive: true, lastSentHead: snapshot.heads });
+    const syncState: DocSyncState = { passive: true, lastSentHead: snapshot.heads };
+    this._syncStates.set(documentId, syncState);
     this.#storedSends.set(documentId, {
       documentId,
       mutation: bytes,
       passive: { heads: [...snapshot.heads], json: snapshot.json },
     });
+    // The snapshot matched the stored heads when read, so heads that moved since mean a save the stored changes may
+    // lack, made before this sync state existed for the heads-changed handler to queue it.
+    const [storedHeads] = await this._params.automergeHost.getStoredHeads([documentId]);
+    if (this._syncStates.get(documentId) === syncState && (!storedHeads || !sameHeads(storedHeads, snapshot.heads))) {
+      this._pendingUpdates.add(documentId);
+    }
     this._sendUpdatesJob?.trigger();
     return true;
   }
@@ -323,8 +330,6 @@ export class DocumentsSynchronizer extends Resource {
       updates.push(update);
       bytes += (update.mutation?.byteLength ?? 0) + (update.passive?.json?.length ?? 0);
       this.#storedSends.delete(documentId);
-      // Superseded: what is pending now follows the stored changes this send carries.
-      this._pendingUpdates.delete(documentId);
     }
 
     // Consumed one at a time so whatever does not fit stays pending for the next tick.
