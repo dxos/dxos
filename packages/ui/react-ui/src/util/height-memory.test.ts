@@ -36,16 +36,6 @@ describe('height memory', () => {
     expect(element.style.minHeight).toBe('');
   });
 
-  test('an element that has not rendered this session holds the fallback while its content arrives', async () => {
-    const element = document.createElement('div');
-    const observed = observeResizes();
-    renderHook(() => useReservedHeight(createHeightMemory(), 'section', { current: element }, { fallback: 240 }));
-    observed.resize(640, 80);
-    expect(element.style.minHeight).toBe('240px');
-    await vi.advanceTimersByTimeAsync(1_000);
-    expect(element.style.minHeight).toBe('');
-  });
-
   test('content taller than its reservation is remembered at once', async () => {
     const memory = createHeightMemory();
     const element = document.createElement('div');

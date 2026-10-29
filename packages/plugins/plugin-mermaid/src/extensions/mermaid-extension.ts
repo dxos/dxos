@@ -7,7 +7,7 @@ import { type EditorState, type Extension, type Range, StateField } from '@codem
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import Mermaid, { type MermaidConfig } from 'mermaid';
 
-import { getDiagram, setDiagram } from './diagram-cache.ts';
+import { type DiagramCache, createDiagramCache } from './diagram-cache.ts';
 
 export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 'themeCSS'>;
 
@@ -72,7 +72,10 @@ const mermaidTheme = EditorView.theme({
  * `@dxos/ui-editor`'s markdown bundle rather than here: `codeLanguages` is read once when the
  * markdown parser is built, so an extension contributed afterwards cannot add a fenced-code language.
  */
-export const mermaid = (options: MermaidOptions = {}): Extension => {
+export const mermaid = ({
+  cache = createDiagramCache(),
+  ...options
+}: MermaidOptions & { cache?: DiagramCache } = {}): Extension => {
   // One config per colour mode, built once: the widget's identity includes its config, so a fresh
   // object per rebuild would replace (and re-render) every diagram on each selection change.
   const configs = {
@@ -110,7 +113,7 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
             .map((line) => line.trim())
             .find((line) => line.length > 0 && !line.startsWith('%%'))
             ?.split(/\s/)[0] ?? '';
-        const widget = new MermaidWidget(content, config.config, `${config.key}\n${content}`, label);
+        const widget = new MermaidWidget(cache, content, config.config, `${config.key}\n${content}`, label);
         const from = state.doc.lineAt(node.from).from;
         const to = state.doc.lineAt(node.to).to;
         decorations.push(Decoration.replace({ widget, block: true }).range(from, to));
@@ -150,6 +153,7 @@ let renders = 0;
 
 class MermaidWidget extends WidgetType {
   constructor(
+    private readonly _cache: DiagramCache,
     private readonly _source: string,
     private readonly _config: MermaidConfig,
     /** The config and source, which together decide what the diagram renders as. */
@@ -176,7 +180,7 @@ class MermaidWidget extends WidgetType {
     const div = document.createElement('div');
     div.className = 'cm-mermaid';
 
-    const svg = getDiagram(this._key);
+    const svg = this._cache.get(this._key);
     if (svg !== undefined) {
       this.fill(div, view, svg);
       return div;
@@ -192,7 +196,7 @@ class MermaidWidget extends WidgetType {
         // https://github.com/mermaid-js/mermaid
         await Mermaid.parse(this._source);
         const { svg } = await Mermaid.render(`mermaid-${++renders}`, this._source);
-        setDiagram(this._key, svg);
+        this._cache.set(this._key, svg);
         this.fill(div, view, svg);
       } catch (err) {
         this.fill(div, view, undefined, String(err));

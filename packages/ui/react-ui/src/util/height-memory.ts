@@ -44,11 +44,6 @@ const RESERVE_MS = 1_000;
 /** Heights are remembered per width, in steps this wide: the same content is taller in a narrower column. */
 const WIDTH_STEP = 32;
 
-export type ReservedHeightOptions = {
-  /** Reserved when `key` has not rendered this session. */
-  fallback?: number;
-};
-
 /**
  * Reserves the height `key` last rendered at, at this width if known, as `ref`'s minimum height while its content arrives, then
  * records the heights it renders at. A section whose content loads a moment after it mounts otherwise grows into it and
@@ -58,16 +53,15 @@ export const useReservedHeight = (
   memory: HeightMemory,
   key: string | undefined,
   ref: RefObject<HTMLElement | null>,
-  { fallback }: ReservedHeightOptions = {},
 ) => {
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element || key === undefined) {
       return;
     }
-    // At mount, the height it last rendered at whatever the width, else the fallback; observations then refine it by width. A column can
+    // At mount, the height it last rendered at whatever the width; observations then refine it by width. A column can
     // lay out at no width first, or settle its width while the content arrives (a companion opening beside the plank).
-    let reserved = memory.get(key) ?? fallback;
+    let reserved = memory.get(key);
     let reservedFor: string | undefined;
     let released = false;
     const reserve = (height: number | undefined) => {
@@ -104,5 +98,5 @@ export const useReservedHeight = (
       observer.disconnect();
       element.style.minHeight = '';
     };
-  }, [memory, key, ref, fallback]);
+  }, [memory, key, ref]);
 };
