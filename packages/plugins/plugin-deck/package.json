@@ -102,6 +102,11 @@
       "types": "./dist/types/src/Overlays.d.ts",
       "import": "./dist/lib/ns/Overlays.mjs"
     },
+    "./Pane": {
+      "source": "./src/Pane.ts",
+      "types": "./dist/types/src/Pane.d.ts",
+      "import": "./dist/lib/ns/Pane.mjs"
+    },
     "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",

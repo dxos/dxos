@@ -5,14 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
+import { type SourceKey, parseReview, walkthroughOf } from '@dxos/deus/review';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { type SourceKey } from '#sync';
 import { translations } from '#translations';
 
 import CODE_REVIEW from '../../../PLUGIN.review.mdl?raw';
-import { parseReview, walkthroughOf } from '../SpecModel/index.ts';
 import { Walkthrough } from './Walkthrough.tsx';
 
 /** This file's directory in the repo, which the glob's keys are relative to. */

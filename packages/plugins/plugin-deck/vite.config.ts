@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     'ns/Overlays': 'src/Overlays.ts',
     'ns/Hooks': 'src/Hooks.ts',
+    'ns/Pane': 'src/Pane.ts',
     'index': 'src/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
