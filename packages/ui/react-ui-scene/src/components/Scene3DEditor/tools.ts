@@ -13,6 +13,10 @@ export const orbitButtons = (tool: Tool3D): 'all' | 'secondary' => (tool === 'or
 /** A click picks with every tool but orbit, whose drags only move the camera. */
 export const clickSelects = (tool: Tool3D): boolean => tool !== 'orbit';
 
+/** Whether a click makes an element: a create or place tool on empty space; on an element it selects, as Select does. */
+export const clickCreates = (tool: Tool3D, element: string | undefined): boolean =>
+  typeof tool === 'object' && element === undefined;
+
 /** Half a new shape's unit height: a created shape stands on the point clicked rather than sinking through the ground. */
 const HALF_UNIT = 0.5;
 

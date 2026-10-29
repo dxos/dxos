@@ -25,7 +25,15 @@ import { DEFAULT_CAMERA, onScene, useManifoldGeometry, useOrbit, useSceneRendere
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
-import { type Tool3D, clickSelects, editableTool, groundSnap, orbitButtons, restingCenter } from './tools.ts';
+import {
+  type Tool3D,
+  clickCreates,
+  clickSelects,
+  editableTool,
+  groundSnap,
+  orbitButtons,
+  restingCenter,
+} from './tools.ts';
 
 /**
  * What a left click does: select, transform the selection with a gizmo, link two elements, place one, or (extrude)
@@ -240,7 +248,7 @@ export const Scene3DEditor = ({
     (point: { x: number; y: number }, shift: boolean, free = false) => {
       const { hit, element, frame } = elementAt(point);
       frame !== undefined && setFrameHint(frame);
-      if (typeof tool === 'object') {
+      if (clickCreates(tool, element) && typeof tool === 'object') {
         // A layout that is not drawn has nowhere to put an element; an object may not be placed inside its own parts.
         if (!hit?.point || unplaced || ('place' in tool && placesCycle(doc, editing, tool.place))) {
           return;

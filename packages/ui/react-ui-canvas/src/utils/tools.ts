@@ -72,6 +72,9 @@ export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilitie
 export const toolEntries = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolEntry[][] =>
   toolGroups(nodes, links, capabilities).map((group) => group.entries);
 
+/** Whether a press on an element selects (and drags) it: with Select, and with a create tool, which makes only on empty space. */
+export const pressSelects = (tool: Tool): boolean => tool.kind === 'select' || tool.kind === 'node';
+
 export const sameTool = (left: Tool, right: Tool): boolean =>
   left.kind === right.kind && ('type' in left ? left.type === ('type' in right ? right.type : undefined) : true);
 

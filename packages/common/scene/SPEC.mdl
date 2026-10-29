@@ -768,3 +768,9 @@ decision D-79: Both rails group their tools alike: the fixed tools (Select, the 
   date: 2026-10-29
   by: user:richburdon
 ```
+
+```mdl
+decision D-80: Rectangle, oval and link (2D) and cube, sphere and link (3D) are create tools; in both dimensions, with a create tool, a click or Shift-click on an element selects or toggles it as Select does, and a drag on it moves it in 2D, so a create tool makes an element only on empty space.
+  date: 2026-10-29
+  by: user:richburdon
+```

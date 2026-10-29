@@ -71,6 +71,7 @@ import {
   polylineVertices,
   portAccepts,
   portPoint,
+  pressSelects,
   refitPolyline,
   resizeBounds,
   screenToScene,
@@ -417,7 +418,12 @@ export const usePointerMachine = ({
   const onNodePointerDown = useCallback(
     (node: Node, event: PointerEvent) => {
       const currentTool = registry.get(atoms.tool);
-      if ((currentTool.kind !== 'select' && currentTool.kind !== 'link') || event.button !== 0) {
+      // A drawing in progress (a polyline's vertices) takes the press where the canvas does.
+      if (
+        (!pressSelects(currentTool) && currentTool.kind !== 'link') ||
+        event.button !== 0 ||
+        registry.get(atoms.drag)?.kind === 'vertices'
+      ) {
         return;
       }
       event.stopPropagation();
