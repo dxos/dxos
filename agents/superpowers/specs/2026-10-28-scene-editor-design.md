@@ -1,6 +1,6 @@
 # Scene editor (stage 3): common editing for 2D and 3D
 
-Status: draft; four questions decided 2026-10-29, three open with provisional defaults; plan in progress. Nothing in it is built. It follows stage 2
+Status: all questions decided 2026-10-29; plan `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md` to be revised to match 10–12. Nothing in it is built. It follows stage 2
 (`2026-10-28-scene-model-design.md`), which built the Scene model, its `.dx` form, the renderers and the animator
 stages.
 
@@ -23,6 +23,13 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
 7. (2026-10-29) Assistant operations are in stage 3, as its last step (§6.4).
 8. (2026-10-29) 3D handles are Babylon's `GizmoManager`.
 9. (2026-10-29) The 3D viewer orbits, zooms and pans; inside an animator stage the animation drives the camera.
+10. (2026-10-29) Every drawing is a `Drawing` (one query finds them all; formats convert into one another).
+    `Drawing.content` is a Ref to one plugin-owned content type: `Excalidraw`, `TLDraw` or `Canvas`. plugin-canvas's
+    `Canvas` holds its metadata, including named style classes, and `Canvas.content` is a Ref to a `Scene2D` or
+    `Scene3D`. This replaces 6's "root Ref" wording; the editor still picks the viewport from the scene's type.
+11. (2026-10-29) plugin-spacetime is deleted within stage 3 once each of its tools has a test in the new editor.
+12. (2026-10-29) plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free, lattice,
+    constrained and scored.
 
 ## What exists to build on
 
@@ -83,18 +90,7 @@ both forms.
 
 ## Open questions for the user
 
-The first four were decided on 2026-10-29 (5–8 above). Three remain; the plan proceeds on the **recommended
-default** of each, marked provisional, until the user answers.
-
-1. **Which plugin owns the canvas object?** `Drawing.Canvas` lives in plugin-illustrator today.
-   1. plugin-canvas owns it, and plugin-illustrator keeps only diagram rendering. _(default)_
-   2. plugin-illustrator keeps it, and plugin-canvas contributes the editor surface for it.
-2. **What happens to plugin-spacetime at the end of stage 3?**
-   1. Delete it once solid tools reach parity, in the same PR series. _(default)_
-   2. Mark it deprecated and hide it, and delete it in a later release.
-3. **Which react-ui-canvas modes must reach parity on Scene2D in the model switch?**
-   1. The free canvas only; lattice, constrained and scored modes move later. _(default)_
-   2. Every mode, before plugin-canvas switches over.
+None. The last three were decided on 2026-10-29 (10–12 above).
 
 ## Not in scope
 

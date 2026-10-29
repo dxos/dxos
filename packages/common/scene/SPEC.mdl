@@ -289,3 +289,24 @@ decision D-19: The 3D viewer orbits, zooms and pans with the mouse; inside an an
   date: 2026-10-29
   by: user:richburdon
 ```
+
+```mdl
+decision D-20: Every drawing is a `Drawing`, so one query finds them all and a user can convert one format into another. `Drawing.content` is a Ref to one content type, each owned by its plugin: `Excalidraw`, `TLDraw` or `Canvas`. plugin-canvas's `Canvas` holds its metadata, including named style classes, and `Canvas.content` is a Ref to a `Scene2D` or `Scene3D`.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+  supersedes: D-17
+```
+
+```mdl
+decision D-21: plugin-spacetime is deleted within stage 3, once each of its tools has a test in the new editor; its objects are not migrated.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-22: plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free, lattice, constrained and scored.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D]
+```
