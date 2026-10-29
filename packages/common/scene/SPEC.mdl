@@ -575,3 +575,12 @@ decision D-51: A 3D canvas offers no "Copy as" targets: a variant may declare wh
   for: user:richburdon
   why: Offering the copy made an empty drawing in the other format.
 ```
+
+```mdl
+decision D-52: Solids are edited with three more `LayoutIntent`s: `join` (union), `subtract` (difference: base, then tool) and `extrude` (target, face, distance). Each adds an inline `solid` element whose operation tree is in `props`, as the `.dx` `solid` statement writes it, and hides its operands; deleting a solid shows its operands again unless another solid still builds from them. A solid naming itself, a missing operand or an existing id is refused. Fills in [F-1.6] and [D-45].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.6]
+  why: The operands stay in the layout so the solid can be re-evaluated and taken apart, but drawing them as well as the solid would show both.
+```

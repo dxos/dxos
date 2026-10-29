@@ -5,7 +5,7 @@
 import type { ManifoldToplevel } from 'manifold-3d';
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { type Resolved3D } from '@dxos/scene';
+import { type Resolved3D, type Scene, applyIntent, resolveLayout3D } from '@dxos/scene';
 
 import { type Elements3D, evaluateSolid, solidVolume } from './solid.ts';
 
@@ -89,5 +89,36 @@ describe('evaluateSolid failures', () => {
       { id: 'u', kind: 'solid', props: { op: 'union', operands: 'box' } },
     ]);
     expect('error' in evaluateSolid(record, 'u', wasm)).toBe(true);
+  });
+
+  test('a solid over an element that places a library object evaluates that object, and follows edits to it', () => {
+    const document = (scale: number): Scene.SceneDocument => {
+      const layout: Scene.LayoutRecord3D = {
+        id: 'l',
+        dim: '3d',
+        model: 'm',
+        elements: {
+          p: { id: 'p', object: 'part', center: { x: 0, y: 0, z: 0 } },
+          q: { id: 'q', kind: 'cube', center: { x: 5, y: 0, z: 0 } },
+        },
+      };
+      return {
+        scenes: [],
+        models: [
+          {
+            id: 'm',
+            dim: '3d',
+            objects: { part: { id: 'part', kind: 'cube', scale: { x: scale, y: scale, z: scale } } },
+          },
+        ],
+        layouts: [applyIntent(layout, { kind: 'join', id: 'u', operands: ['p', 'q'] })],
+      };
+    };
+    const volume = (doc: Scene.SceneDocument) => {
+      const [layout] = doc.layouts;
+      return layout.dim === '3d' ? solidVolume(resolveLayout3D(doc, layout), 'u', wasm) : Number.NaN;
+    };
+    expect(volume(document(2))).toBeCloseTo(8 + 1, 3);
+    expect(volume(document(3))).toBeCloseTo(27 + 1, 3);
   });
 });

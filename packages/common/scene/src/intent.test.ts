@@ -128,3 +128,70 @@ describe('applyIntent', () => {
     });
   });
 });
+
+describe('solid intents', () => {
+  const parts = () =>
+    layout3D('l', [
+      cube('box'),
+      { id: 'hole', kind: 'cylinder', center: { x: 0, y: 0, z: 0 } },
+      { id: 'other', kind: 'sphere', center: { x: 2, y: 0, z: 0 } },
+    ]);
+
+  test('join and subtract add a solid over their operands and hide them', () => {
+    const joined = applyIntent(parts(), { kind: 'join', id: 'u', operands: ['box', 'other'] });
+    expect(joined.elements.u).toEqual({ id: 'u', kind: 'solid', props: { op: 'union', operands: 'box other' } });
+    expect(joined.elements.box.hidden).toBe(true);
+    expect(joined.elements.other.hidden).toBe(true);
+    const cut = applyIntent(parts(), { kind: 'subtract', id: 'd', base: 'box', tool: 'hole' });
+    expect(cut.elements.d).toEqual({ id: 'd', kind: 'solid', props: { op: 'difference', operands: 'box hole' } });
+    expect([cut.elements.box.hidden, cut.elements.hole.hidden, cut.elements.other.hidden]).toEqual([
+      true,
+      true,
+      undefined,
+    ]);
+  });
+
+  test('extrude adds a solid over its target with the face and distance', () => {
+    const after = applyIntent(parts(), {
+      kind: 'extrude',
+      id: 'e',
+      target: 'box',
+      face: { x: 0, y: 1, z: 0 },
+      distance: 0.5,
+    });
+    expect(after.elements.e).toEqual({
+      id: 'e',
+      kind: 'solid',
+      props: { op: 'extrude', target: 'box', face: { x: 0, y: 1, z: 0 }, distance: 0.5 },
+    });
+    expect(after.elements.box.hidden).toBe(true);
+  });
+
+  test('deleting a solid shows its operands again, unless another solid still uses them', () => {
+    const joined = applyIntent(parts(), { kind: 'join', id: 'u', operands: ['box', 'other'] });
+    const both = applyIntent(joined, {
+      kind: 'extrude',
+      id: 'e',
+      target: 'box',
+      face: { x: 1, y: 0, z: 0 },
+      distance: 1,
+    });
+    const after = applyIntent(both, { kind: 'delete', ids: ['u'] });
+    expect(after.elements.other.hidden).toBeUndefined();
+    expect(after.elements.box.hidden).toBe(true);
+  });
+
+  test('a solid naming itself, a missing operand or an existing id is refused', () => {
+    const layout = parts();
+    expect(applyIntent(layout, { kind: 'join', id: 'u', operands: ['box', 'u'] })).toBe(layout);
+    expect(applyIntent(layout, { kind: 'join', id: 'u', operands: ['box', 'missing'] })).toBe(layout);
+    expect(applyIntent(layout, { kind: 'subtract', id: 'box', base: 'other', tool: 'hole' })).toBe(layout);
+    expect(applyIntent(layout, { kind: 'join', id: 'u', operands: [] })).toBe(layout);
+  });
+
+  test('solid intents are 3D only', () => {
+    const flat = layout2D('f', [{ id: 'r', kind: 'rect' }]);
+    expect(isLayoutIntent({ kind: 'join', id: 'u', operands: ['r'] }, '2d')).toBe(false);
+    expect(applyIntent(flat, { kind: 'join', id: 'u', operands: ['r'] })).toBe(flat);
+  });
+});

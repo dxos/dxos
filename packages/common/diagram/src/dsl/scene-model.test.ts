@@ -4,6 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { applyIntent } from '@dxos/scene';
+
 import { EXEMPLAR_NAMES, EXEMPLARS } from '../testing.ts';
 import { parse } from './parse.ts';
 import { printScenes, readScenes } from './scene-model.ts';
@@ -143,5 +145,29 @@ describe('printScenes', () => {
     const { document, problems } = readScenes(intent);
     expect(problems).toEqual([]);
     expect(printScenes(document)).toBe(EXEMPLARS.cluster);
+  });
+
+  test('solids made by solid intents print and read back unchanged', () => {
+    const { document } = readScenes(EXEMPLARS.solid);
+    const [layout] = document.layouts;
+    expect(layout.dim).toBe('3d');
+    if (layout.dim !== '3d') {
+      return;
+    }
+    const base = {
+      ...layout,
+      elements: Object.fromEntries(Object.entries(layout.elements).filter(([id]) => id === 'box' || id === 'hole')),
+    };
+    const after = applyIntent(applyIntent(base, { kind: 'subtract', id: 'cut', base: 'box', tool: 'hole' }), {
+      kind: 'extrude',
+      id: 'lip',
+      target: 'cut',
+      face: { x: 0, y: 1, z: 0 },
+      distance: 0.25,
+    });
+    const edited = { ...document, layouts: [after] };
+    const read = readScenes(printScenes(edited));
+    expect(read.problems).toEqual([]);
+    expect(read.document.layouts[0]).toEqual(after);
   });
 });

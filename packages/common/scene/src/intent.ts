@@ -31,6 +31,15 @@ export type LayoutIntent =
   | { readonly kind: 'move'; readonly ids: readonly string[]; readonly delta: Vec2 | Vec3 }
   | { readonly kind: 'rotate'; readonly ids: readonly string[]; readonly delta: number | Vec3 }
   | { readonly kind: 'scale'; readonly ids: readonly string[]; readonly factor: Size2 | Vec3 }
+  | {
+      readonly kind: 'extrude';
+      readonly id: string;
+      readonly target: string;
+      readonly face: Vec3;
+      readonly distance: number;
+    }
+  | { readonly kind: 'join'; readonly id: string; readonly operands: readonly string[] }
+  | { readonly kind: 'subtract'; readonly id: string; readonly base: string; readonly tool: string }
   | { readonly kind: 'batch'; readonly intents: readonly LayoutIntent[] };
 
 const ElementSchema = Schema.Union([Element3D, Element2D]);
@@ -58,6 +67,15 @@ export const LayoutIntent: Schema.Codec<LayoutIntent> = Schema.Union([
   Schema.Struct({ kind: Schema.Literal('rotate'), ids, delta: Schema.Union([Schema.Number, Vec3]) }),
   Schema.Struct({ kind: Schema.Literal('scale'), ids, factor: Schema.Union([Vec3, Size2]) }),
   Schema.Struct({
+    kind: Schema.Literal('extrude'),
+    id: Schema.String,
+    target: Schema.String,
+    face: Vec3,
+    distance: Schema.Number,
+  }),
+  Schema.Struct({ kind: Schema.Literal('join'), id: Schema.String, operands: ids }),
+  Schema.Struct({ kind: Schema.Literal('subtract'), id: Schema.String, base: Schema.String, tool: Schema.String }),
+  Schema.Struct({
     kind: Schema.Literal('batch'),
     intents: Schema.Array(Schema.suspend((): Schema.Codec<LayoutIntent> => LayoutIntent)),
   }),
@@ -80,6 +98,10 @@ const fitsDimension = (intent: LayoutIntent, dim: Dimension): boolean => {
       return typeof intent.delta === 'number' ? dim === '2d' : dim === '3d';
     case 'scale':
       return isVec3(intent.factor) === (dim === '3d');
+    case 'extrude':
+    case 'join':
+    case 'subtract':
+      return dim === '3d';
     case 'batch':
       return intent.intents.every((inner) => fitsDimension(inner, dim));
     default:
@@ -107,12 +129,40 @@ const setPath = (value: unknown, path: readonly string[], next: unknown): unknow
 
 type Elements<E> = Readonly<Record<string, E>>;
 
+type SolidIntent = Extract<LayoutIntent, { kind: 'extrude' | 'join' | 'subtract' }>;
+
+/** The elements a solid intent builds from, in operation order. */
+const solidIntentInputs = (intent: SolidIntent): string[] => {
+  switch (intent.kind) {
+    case 'extrude':
+      return [intent.target];
+    case 'join':
+      return [...intent.operands];
+    case 'subtract':
+      return [intent.base, intent.tool];
+  }
+};
+
+/** The elements a stored solid builds from, as the `solid` element's props name them. */
+const solidInputs = (element: Element | undefined): string[] => {
+  if (element?.kind !== 'solid') {
+    return [];
+  }
+  const operands = element.props?.operands;
+  const target = element.props?.target;
+  return [
+    ...(typeof operands === 'string' ? operands.split(/\s+/).filter(Boolean) : []),
+    ...(typeof target === 'string' ? [target] : []),
+  ];
+};
+
 /** The structure of intents shared by both dimensions; geometry goes to `geometry`. Undefined when nothing changed. */
 const reduce = <E extends Element>(
   elements: Elements<E>,
   intent: LayoutIntent,
   isElement: (value: unknown) => value is E,
   geometry: (element: E, intent: LayoutIntent) => E | undefined,
+  solid: (intent: SolidIntent) => E | undefined,
 ): Elements<E> | undefined => {
   switch (intent.kind) {
     case 'create':
@@ -129,15 +179,42 @@ const reduce = <E extends Element>(
         return undefined;
       }
       const boundTo = (element: E) => [element.from, element.to].some((end) => end && gone.has(end.element));
+      // A deleted solid's operands are drawn again, unless a solid that stays still builds from them.
+      const kept = Object.values(elements).filter((element) => !gone.has(element.id));
+      const stillUsed = new Set(kept.flatMap(solidInputs));
+      const shown = new Set(
+        [...gone].flatMap((id) => solidInputs(elements[id])).filter((id) => !stillUsed.has(id) && !gone.has(id)),
+      );
       return Object.fromEntries(
         Object.entries(elements).flatMap(([id, element]): [string, E][] => {
           if (gone.has(id) || boundTo(element)) {
             return [];
           }
           const members = element.members?.filter((member) => !gone.has(member));
-          return [[id, members && members.length !== element.members?.length ? { ...element, members } : element]];
+          const next = members && members.length !== element.members?.length ? { ...element, members } : element;
+          const unhidden = shown.has(id) ? setPath(next, ['hidden'], undefined) : next;
+          return [[id, isElement(unhidden) ? unhidden : next]];
         }),
       );
+    }
+    case 'extrude':
+    case 'join':
+    case 'subtract': {
+      const inputs = solidIntentInputs(intent);
+      const valid =
+        elements[intent.id] === undefined &&
+        inputs.length > 0 &&
+        inputs.every((id) => id !== intent.id && elements[id] !== undefined);
+      const element = valid ? solid(intent) : undefined;
+      if (!element) {
+        return undefined;
+      }
+      // A solid draws in place of its operands, so they are hidden (and shown again when it is deleted).
+      return {
+        ...elements,
+        ...Object.fromEntries(inputs.map((id) => [id, { ...elements[id], hidden: true }])),
+        [intent.id]: element,
+      };
     }
     case 'update': {
       const element = elements[intent.id];
@@ -190,7 +267,7 @@ const reduce = <E extends Element>(
     case 'batch': {
       let current = elements;
       for (const inner of intent.intents) {
-        current = reduce(current, inner, isElement, geometry) ?? current;
+        current = reduce(current, inner, isElement, geometry, solid) ?? current;
       }
       return current === elements ? undefined : current;
     }
@@ -213,6 +290,22 @@ const geometry2D = (element: Element2D, intent: LayoutIntent): Element2D | undef
     };
   }
   return undefined;
+};
+
+/** A `solid` element whose operation tree is in `props`, as the `.dx` `solid` statement writes it. */
+const solid3D = (intent: SolidIntent): Element3D => {
+  switch (intent.kind) {
+    case 'join':
+      return { id: intent.id, kind: 'solid', props: { op: 'union', operands: intent.operands.join(' ') } };
+    case 'subtract':
+      return { id: intent.id, kind: 'solid', props: { op: 'difference', operands: `${intent.base} ${intent.tool}` } };
+    case 'extrude':
+      return {
+        id: intent.id,
+        kind: 'solid',
+        props: { op: 'extrude', target: intent.target, face: intent.face, distance: round(intent.distance) },
+      };
+  }
 };
 
 const add3 = (left: Vec3, right: Vec3): Vec3 => ({
@@ -246,9 +339,9 @@ export function applyIntent(layout: LayoutRecord3D, intent: LayoutIntent): Layou
 export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutRecord;
 export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutRecord {
   if (layout.dim === '2d') {
-    const elements = reduce(layout.elements, intent, isElement2D, geometry2D);
+    const elements = reduce(layout.elements, intent, isElement2D, geometry2D, () => undefined);
     return elements ? { ...layout, elements } : layout;
   }
-  const elements = reduce(layout.elements, intent, isElement3D, geometry3D);
+  const elements = reduce(layout.elements, intent, isElement3D, geometry3D, solid3D);
   return elements ? { ...layout, elements } : layout;
 }
