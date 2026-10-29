@@ -16,6 +16,7 @@ export const translations = [
         'unlock-drawing.label': 'Edit drawing',
         'newer-format.title': 'Read only',
         'tool.select.label': 'Select',
+        'tool.orbit.label': 'Orbit',
         'tool.move.label': 'Move',
         'tool.rotate.label': 'Rotate',
         'tool.scale.label': 'Scale',

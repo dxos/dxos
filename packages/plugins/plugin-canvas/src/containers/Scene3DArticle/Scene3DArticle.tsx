@@ -185,6 +185,7 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
     const builder = MenuBuilder.make();
     const tools: { id: string; tool: Tool3D; icon: string }[] = [
       { id: 'select', tool: 'select', icon: 'ph--cursor--regular' },
+      { id: 'orbit', tool: 'orbit', icon: 'ph--globe-simple--regular' },
       { id: 'move', tool: 'move', icon: 'ph--arrows-out-cardinal--regular' },
       { id: 'rotate', tool: 'rotate', icon: 'ph--arrow-clockwise--regular' },
       { id: 'scale', tool: 'scale', icon: 'ph--arrows-out--regular' },
@@ -207,6 +208,8 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
         {
           label: label(`tool.${entry.id}.label`),
           icon: entry.icon,
+          // A toggle draws the active tool pressed, so the toolbar shows which one a click will use.
+          variant: 'toggle',
           checked: JSON.stringify(entry.tool) === JSON.stringify(tool),
           disposition: 'toolbar',
           testId: `canvas3d.tool.${entry.id}`,

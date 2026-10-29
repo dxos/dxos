@@ -12,7 +12,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
-import { Scene3DEditor, type Tool3D } from './Scene3DEditor.tsx';
+import { Scene3DEditor } from './Scene3DEditor.tsx';
+import { type Tool3D } from './tools.ts';
 
 const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] as const;
 
@@ -20,6 +21,7 @@ type StoryProps = { exemplar: (typeof EXEMPLARS_3D)[number] };
 
 const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
   { tool: 'select', icon: 'ph--cursor--regular', label: 'Select' },
+  { tool: 'orbit', icon: 'ph--globe-simple--regular', label: 'Orbit' },
   { tool: 'move', icon: 'ph--arrows-out-cardinal--regular', label: 'Move' },
   { tool: 'rotate', icon: 'ph--arrow-clockwise--regular', label: 'Rotate' },
   { tool: 'scale', icon: 'ph--arrows-out--regular', label: 'Scale' },
@@ -33,7 +35,7 @@ const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
  * 1. Click selects (shift toggles); Move, Rotate or Scale puts a gizmo on the one selected element.
  * 2. Cube or Sphere places one where the pointer meets the ground; Link binds the next two clicked elements.
  * 3. Double-click a composite (the encapsulated cluster's shell) to edit its parts; Escape goes back out.
- * 4. Delete removes the selection; the middle button orbits, the right button pans, the wheel zooms.
+ * 4. Delete removes the selection; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
  */
 const DefaultStory = ({ exemplar }: StoryProps) => {
   const initial = useMemo(() => Dsl.readScenes(EXEMPLARS[exemplar]).document, [exemplar]);

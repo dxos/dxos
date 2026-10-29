@@ -23,12 +23,12 @@ import { DEFAULT_CAMERA, useManifoldGeometry, useOrbit, useSceneRenderer } from 
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
+import { type Tool3D, clickSelects, orbitButtons } from './tools.ts';
 
 /**
  * What a left click does: select, transform the selection with a gizmo, link two elements, place one, or (extrude)
  * drag a face along its normal.
  */
-export type Tool3D = 'select' | GizmoMode | 'link' | 'extrude' | { create: string } | { place: string };
 
 export type Scene3DEditorProps = Util.ThemedClassName<{
   document: Scene.SceneDocument;
@@ -98,7 +98,11 @@ export const Scene3DEditor = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { renderer, size } = useSceneRenderer(containerRef, canvasRef, look);
-  const view = useOrbit(containerRef, given, size, { enabled: true, buttons: 'secondary', onChange: onCameraChange });
+  const view = useOrbit(containerRef, given, size, {
+    enabled: true,
+    buttons: orbitButtons(tool),
+    onChange: onCameraChange,
+  });
 
   // The edited layout's drawn items, by the frame that shows them (`''` at the top level) and then by element id. A
   // composite placed several times is edited through the frame last clicked, or else the first.
@@ -340,7 +344,7 @@ export const Scene3DEditor = ({
         const moved = start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP;
         // A gizmo drag, however short, is not a click.
         const dragged = renderer?.takeDrag() || renderer?.dragging;
-        if (start && !moved && !dragged) {
+        if (start && !moved && !dragged && clickSelects(tool)) {
           onClick(local(event), event.shiftKey);
         }
       }}
