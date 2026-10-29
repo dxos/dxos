@@ -132,9 +132,6 @@ export const useTextEditor = (
     };
   }, deps);
 
-  // A layout effect, so the restore reaches CodeMirror before its first measure and the editor never paints at the top.
-  // It goes through `restoreEditorState`, which leaves alone an editor that does not scroll itself: a section in a
-  // collection otherwise scrolls the whole stack to its recorded position.
   useLayoutEffect(() => {
     if (!view || (scrollTo == null && !selection)) {
       return;
