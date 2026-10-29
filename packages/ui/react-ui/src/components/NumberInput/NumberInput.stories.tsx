@@ -212,12 +212,13 @@ export const VariantsTest: Story = {
     await expect(getComputedStyle(canvas.getByRole('spinbutton', { name: 'Split' })).textAlign).not.toBe('end');
 
     const leading = byTestId(md, 'leading-md');
-    const leadingInput = within(leading).getByRole('spinbutton');
+    const leadingInput = within(leading).getByRole<HTMLInputElement>('spinbutton');
     // Hidden until hovered; focus reveals the pair through the same rule.
     await expect(getComputedStyle(within(leading).getAllByRole('button', { hidden: true })[0]).visibility).toBe(
       'hidden',
     );
-    await userEvent.click(leadingInput);
+    // Clicks before the first digit, which focus overrides.
+    await userEvent.pointer({ keys: '[MouseLeft]', target: leadingInput, offset: 0 });
     const leadingIncrement = within(leading).getByRole('button', { name: 'Increment' });
     await expect(leadingIncrement.getBoundingClientRect().right).toBeLessThanOrEqual(
       leadingInput.getBoundingClientRect().left,
@@ -226,6 +227,8 @@ export const VariantsTest: Story = {
       within(leading).getByRole('button', { name: 'Decrement' }).getBoundingClientRect().left,
     ).toBeGreaterThanOrEqual(leading.getBoundingClientRect().left);
     await expect(getComputedStyle(leadingInput).textAlign).toBe('end');
+    // Focus puts the caret after the last digit.
+    await waitFor(() => expect(leadingInput.selectionStart).toBe(leadingInput.value.length));
     await userEvent.click(leadingIncrement);
     await waitFor(() => expect(leadingInput).toHaveValue('13'));
 

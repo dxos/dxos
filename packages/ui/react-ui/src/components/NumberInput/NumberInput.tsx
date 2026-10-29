@@ -3,7 +3,7 @@
 //
 
 import { NumberInput as NumberInputPrimitive } from '@ark-ui/react/number-input';
-import React, { forwardRef } from 'react';
+import React, { type FocusEvent, type MouseEvent, forwardRef, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
@@ -99,6 +99,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const caretAtEnd = useCaretAtEnd();
     const placement =
       stepper && stepperOnHover ? (align === 'end' ? 'start' : 'end') : stepper === true ? 'end' : stepper;
     const reveal = stepperOnHover ? '' : undefined;
@@ -163,6 +164,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             placeholder={placeholder}
             autoFocus={autoFocus}
             aria-label={ariaLabel}
+            {...(align === 'end' ? caretAtEnd : {})}
             className={recipes.inputField()}
             ref={forwardedRef}
           />
@@ -180,6 +182,32 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 );
 
 NumberInput.displayName = 'NumberInput';
+
+const placeCaretAtEnd = (input: HTMLInputElement) => input.setSelectionRange(input.value.length, input.value.length);
+
+/**
+ * Focus handlers that put the caret after the last digit, where a right-aligned number is edited from. A click that
+ * focuses the input places its own caret through mouseup, so that focus waits for the mouseup.
+ */
+const useCaretAtEnd = () => {
+  const clickingRef = useRef(false);
+  return {
+    onMouseDown: (event: MouseEvent<HTMLInputElement>) => {
+      clickingRef.current = event.currentTarget.ownerDocument.activeElement !== event.currentTarget;
+    },
+    onMouseUp: (event: MouseEvent<HTMLInputElement>) => {
+      if (clickingRef.current) {
+        clickingRef.current = false;
+        placeCaretAtEnd(event.currentTarget);
+      }
+    },
+    onFocus: (event: FocusEvent<HTMLInputElement>) => {
+      if (!clickingRef.current) {
+        placeCaretAtEnd(event.currentTarget);
+      }
+    },
+  };
+};
 
 type NumberInputSliderProps = {
   label: string;
