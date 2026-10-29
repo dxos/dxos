@@ -11,10 +11,10 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import * as DebugPlugin from '#meta';
 import { translations } from '#translations';
 import { DebugNodes } from '#types';
 
-import * as DebugPlugin from '../../DebugPlugin.ts';
 import { STUB_TOOL_PAGES, STUB_TOOLS_BRANCH, StubToolsPlugin } from '../../testing/index.ts';
 import { DebugPanel, type DebugPanelRootProps } from './DebugPanel.tsx';
 import { type DebugPanelViewState, debugPanelAspect } from './view-state.ts';

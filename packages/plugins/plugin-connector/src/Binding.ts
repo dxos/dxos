@@ -27,7 +27,6 @@ import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
 import * as Wire from '@dxos/plugin-routine/Wire';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { meta } from '#meta';
 import { ConnectorSpec } from '#types';
 
 import { connectionDeckSubject } from './constants.ts';
@@ -38,6 +37,7 @@ import {
   TargetAccountMismatchError,
   isUnauthorizedError,
 } from './errors.ts';
+import { ConnectorNamespace } from './namespace.ts';
 import * as SyncTemplate from './SyncTemplate.ts';
 
 /**
@@ -731,12 +731,12 @@ const reportSyncRoutineDisabled = (spaceId: Key.SpaceId): Effect.Effect<void, ne
   Effect.gen(function* () {
     const invoker = yield* Operation.Service;
     yield* Operation.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}.sync-routine-disabled`,
+      id: `${ConnectorNamespace.key}.sync-routine-disabled`,
       icon: 'ph--warning--regular',
-      title: ['sync-routine-disabled.title', { ns: meta.profile.key }],
-      description: ['sync-routine-disabled.description', { ns: meta.profile.key }],
-      actionLabel: ['open-routines.label', { ns: meta.profile.key }],
-      actionAlt: ['open-routines.label', { ns: meta.profile.key }],
+      title: ['sync-routine-disabled.title', { ns: ConnectorNamespace.key }],
+      description: ['sync-routine-disabled.description', { ns: ConnectorNamespace.key }],
+      actionLabel: ['open-routines.label', { ns: ConnectorNamespace.key }],
+      actionAlt: ['open-routines.label', { ns: ConnectorNamespace.key }],
       onAction: () =>
         void invoker.invokePromise(LayoutOperation.Open, {
           subject: [RoutinePath.getRoutinesSettingsPath(spaceId)],
@@ -920,10 +920,10 @@ export const prepare = ({
  */
 export const reportAccountMismatch: Effect.Effect<void, never, Operation.Service> = Effect.ignore(
   Operation.invoke(LayoutOperation.AddToast, {
-    id: `${meta.profile.key}.account-mismatch`,
+    id: `${ConnectorNamespace.key}.account-mismatch`,
     icon: 'ph--warning--regular',
-    title: ['account-mismatch.title', { ns: meta.profile.key }],
-    description: ['account-mismatch.description', { ns: meta.profile.key }],
+    title: ['account-mismatch.title', { ns: ConnectorNamespace.key }],
+    description: ['account-mismatch.description', { ns: ConnectorNamespace.key }],
   }),
 );
 

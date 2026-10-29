@@ -19,13 +19,14 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { useSyncTrigger } from '#hooks';
-import { meta } from '#meta';
 import { Mailbox } from '#types';
+
+import { InboxNamespace } from '../../namespace.ts';
 
 export type MailboxPropertiesProps = AppSurface.ObjectPropertiesProps<Mailbox.Mailbox>;
 
 export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(InboxNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector);

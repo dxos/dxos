@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { PwaNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [PwaNamespace.key]: {
         'need-refresh.label': 'Refresh now to get app updates',
         'need-refresh.description': 'You’ll need these updates to continue without interruption.',
         'refresh.label': 'Refresh',

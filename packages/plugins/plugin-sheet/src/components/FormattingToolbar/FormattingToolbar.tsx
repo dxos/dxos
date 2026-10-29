@@ -9,9 +9,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
 import { SheetRange } from '#types';
 
+import { SheetNamespace } from '../../namespace.ts';
 import { ALIGN_ICONS, type Formatting, STYLE_ICONS } from './formatting.ts';
 
 /** A highlight's tones; text over them is black up to 500 and white beyond. */
@@ -37,7 +37,7 @@ export type FormattingToolbarProps = {
  * highlight color. Renders inside a `Toolbar.Root`.
  */
 export const FormattingToolbar = ({ formatting, onChange, disabled, testId }: FormattingToolbarProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SheetNamespace.key);
   const id = (key: string, value: string) => testId && `${testId}.${key}.${value}`;
   return (
     <>

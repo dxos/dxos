@@ -533,7 +533,7 @@ const meta = {
       await space.db.flush({ indexes: true, secondaryIndexes: true });
     },
     plugins: [
-      SpacePlugin({}),
+      SpacePlugin.make({}),
       MarkdownPlugin.make(),
       TranscriptionPlugin.make(),
       BrainPlugin.make(),

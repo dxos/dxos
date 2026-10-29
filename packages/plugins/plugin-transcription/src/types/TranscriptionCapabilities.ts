@@ -11,8 +11,7 @@ import { type Database, type Feed } from '@dxos/echo';
 import { type EntityLookup as EntityLookupFn } from '@dxos/pipeline-transcription';
 import { type Message } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { TranscriptionNamespace } from '../namespace.ts';
 import * as SettingsModule from './Settings.ts';
 
 /**
@@ -44,11 +43,11 @@ export type TranscriptionManagerProviderProps = {
 export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManager;
 
 export const TranscriptionManagerProvider = Capability.makeSingleton<TranscriptionManagerProvider>()(
-  `${meta.profile.key}.capability.transcriptionManager`,
+  `${TranscriptionNamespace.key}.capability.transcriptionManager`,
 );
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${TranscriptionNamespace.key}.capability.settings`,
 );
 
 /**
@@ -59,7 +58,7 @@ export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Se
 export type RecordingSession = { id: string; recording: boolean };
 
 export const RecordingSession = Capability.makeSingleton<Atom.Writable<RecordingSession | null>>()(
-  `${meta.profile.key}.capability.recordingSession`,
+  `${TranscriptionNamespace.key}.capability.recordingSession`,
 );
 
 /**
@@ -68,7 +67,9 @@ export const RecordingSession = Capability.makeSingleton<Atom.Writable<Recording
  */
 export type EntityLookup = EntityLookupFn;
 
-export const EntityLookup = Capability.makeSingleton<EntityLookupFn>()(`${meta.profile.key}.capability.entityLookup`);
+export const EntityLookup = Capability.makeSingleton<EntityLookupFn>()(
+  `${TranscriptionNamespace.key}.capability.entityLookup`,
+);
 
 /**
  * Live transcription lifecycle, published by the driver for observers (toolbar spinner, testbench):
@@ -77,5 +78,5 @@ export const EntityLookup = Capability.makeSingleton<EntityLookupFn>()(`${meta.p
 export type PipelinePhase = 'idle' | 'recording' | 'draining';
 
 export const PipelineStatus = Capability.makeSingleton<Atom.Writable<{ phase: PipelinePhase }>>()(
-  `${meta.profile.key}.capability.pipelineStatus`,
+  `${TranscriptionNamespace.key}.capability.pipelineStatus`,
 );

@@ -14,10 +14,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
-
 import { type InputImage } from '../../client/types.ts';
 import { RETRY, RUN_ROLE } from '../../model/trajectory.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { AttachButton, AttachmentStrip, useAttachments } from '../ImageAttach/ImageAttach.tsx';
 import { ResultPills } from '../ResultPills/ResultPills.tsx';
 
@@ -62,7 +61,7 @@ const Thread = ({
  * a composer below for follow-ups. Results land in the masonry, not here.
  */
 export const ResearchThread = ({ messages, busy, disabled, onSend }: ResearchThreadProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const attachments = useAttachments();

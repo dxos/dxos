@@ -9,7 +9,7 @@ import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin'
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ClientPlugin } from '#plugin';
+import * as ClientPlugin from '#meta';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
@@ -23,7 +23,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

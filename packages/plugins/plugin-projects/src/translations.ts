@@ -7,8 +7,9 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Feature, Spec } from '#types';
+
+import { ProjectsNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -54,7 +55,7 @@ export const translations = [
         'delete-object.label': 'Delete feature',
         'object-deleted.label': 'Feature deleted',
       },
-      [meta.profile.key]: {
+      [ProjectsNamespace.key]: {
         'plugin.name': 'Projects',
         'project-tour.label': 'Take the project tour',
         'project.label': 'Project',
@@ -127,14 +128,12 @@ export const translations = [
         'feature-article.set-key.placeholder': 'Set a key to cite this feature in code, e.g. org.example.features.sync',
         'feature-map.add-feature.label': 'Add an existing feature',
         'feature-map.new-feature.label': 'New feature',
-        'feature-map.open-document.label': 'Open spec document',
         'feature-map.new-feature.name': 'New feature',
         'feature-map.root.label': 'All features',
         'feature-map.zoom-out.label': 'Zoom out',
         'feature-map.trail.label': 'Feature map level',
         'feature-map.empty.message': 'No subfeatures yet. Add one with New feature.',
         'feature-companion.label': 'Feature',
-        'spec-document-companion.label': 'Spec document',
         'feature-companion.empty.message': 'Select a feature on the map to see its details.',
         'feature-article.zoom.label': 'Show subfeatures on the map',
         'feature-article.open.label': 'Open in a plank',
@@ -149,6 +148,7 @@ export const translations = [
         'feature-map.mode.label': 'View',
         'feature-map.mode.canvas.label': 'Canvas',
         'feature-map.mode.kanban.label': 'Kanban',
+        'feature-map.mode.document.label': 'Spec document',
       },
     },
   },

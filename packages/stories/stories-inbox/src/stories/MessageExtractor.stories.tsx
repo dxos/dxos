@@ -290,9 +290,9 @@ const meta = {
       await space.db.flush({ indexes: true });
     },
     plugins: [
-      InboxPlugin(),
+      InboxPlugin.make(),
       MarkdownPlugin.make(),
-      TripPlugin(),
+      TripPlugin.make(),
       PreviewPlugin.make(),
       MockDeckOperationsPlugin(),
       ImportantExtractorPlugin(),

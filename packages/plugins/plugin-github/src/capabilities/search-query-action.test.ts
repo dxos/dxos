@@ -4,14 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { meta } from '#meta';
-
+import { GitHubNamespace } from '../namespace.ts';
 import { matchPullRequestQuery } from './search-query-action.ts';
 
 describe('matchPullRequestQuery', () => {
   test('labels a pull request URL with its coordinates', ({ expect }) => {
     expect(matchPullRequestQuery('https://github.com/dxos/dxos/pull/1234/files')).toEqual({
-      label: ['import-pull-request-query.label', { ns: meta.profile.key, reference: 'dxos/dxos#1234' }],
+      label: ['import-pull-request-query.label', { ns: GitHubNamespace.key, reference: 'dxos/dxos#1234' }],
       icon: 'ph--git-pull-request--regular',
     });
   });

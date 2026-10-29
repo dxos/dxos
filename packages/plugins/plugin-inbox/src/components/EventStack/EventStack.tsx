@@ -13,8 +13,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { type Event } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { InboxNamespace } from '../../namespace.ts';
 import { EventDetails } from '../Event/index.ts';
 
 export type EventStackAction =
@@ -120,7 +119,7 @@ type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' |
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current, binding }, forwardedRef) => {
   const { event, starred, onAction } = data;
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   const { setCurrentId } = useMosaicContainer('EventTile');
 
   // Click / Enter commit current; the container's `itemProps` selects. Arrow keys only move focus.

@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { Selection } from '@dxos/react-ui-attention/types';
 
-import { meta } from '#meta';
+import { AttentionNamespace } from '../namespace.ts';
 
-const ATTENTION_ACTION = `${meta.profile.key}.action`;
+const ATTENTION_ACTION = `${AttentionNamespace.key}.action`;
 
 export class Select extends Schema.TaggedClass<Select>()(`${ATTENTION_ACTION}.select`, {
   input: Schema.Struct({

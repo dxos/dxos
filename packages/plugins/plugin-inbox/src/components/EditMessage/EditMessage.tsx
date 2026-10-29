@@ -20,8 +20,7 @@ import { type Message as MessageType, Person } from '@dxos/types';
 import { type Extension, keymap } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { InboxNamespace } from '../../namespace.ts';
 import { Editor } from '../Editor/index.ts';
 
 type MessageField = 'to' | 'cc' | 'bcc' | 'subject';
@@ -113,7 +112,7 @@ export type EditMessageProps = {
 
 export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
   ({ message, extensions, onSend, title, onDelete, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(InboxNamespace.key);
     const db = Obj.getDatabase(message);
     const [showCc, setShowCc] = useState(!!message.properties?.cc);
     const [showBcc, setShowBcc] = useState(!!message.properties?.bcc);

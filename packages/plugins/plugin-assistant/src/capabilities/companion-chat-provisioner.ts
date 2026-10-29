@@ -23,8 +23,9 @@ import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Attention } from '@dxos/react-ui-attention/types';
 import * as Position from '@dxos/util/Position';
 
-import { ASSISTANT_COMPANION_VARIANT } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats

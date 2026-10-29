@@ -14,8 +14,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { MobileNamespace } from '../../namespace.ts';
 import { useMobileLayout } from './MobileLayoutContext.ts';
 
 const APP_BAR_NAME = 'MobileLayout.AppBar';
@@ -47,7 +46,7 @@ export type MobileAppBarProps = {
  */
 export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
   ({ classNames, title, actions, showBackButton, popoverAnchorId, onAction, onBack, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(MobileNamespace.key);
     const menuActions = useMenuActions(actions);
     const actionsValue = useAtomValue(actions);
     const hasActions = actionsValue.nodes.length > 0;
@@ -95,7 +94,7 @@ export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
         <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
         {hasActions ? (
           <AnchorRoot>
-            <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
+            <ActionMenu {...menuActions} caller={MobileNamespace.key} onAction={onAction}>
               <Button.Root
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'

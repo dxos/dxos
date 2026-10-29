@@ -9,8 +9,9 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 
-import { meta } from '#meta';
 import { Sheet } from '#types';
+
+import { SheetNamespace } from '../namespace.ts';
 
 /** Offers a "Charts" companion on every sheet. */
 export default Capability.makeModule(
@@ -24,7 +25,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'charts',
-              label: ['charts-companion.label', { ns: meta.profile.key }],
+              label: ['charts-companion.label', { ns: SheetNamespace.key }],
               icon: 'ph--chart-bar--regular',
               data: 'charts',
             }),

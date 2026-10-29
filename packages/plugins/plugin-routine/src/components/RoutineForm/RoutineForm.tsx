@@ -18,8 +18,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { type ActionStash, switchActionKind, wireTriggers } from '../../util/index.ts';
 import { InstructionsEditor } from '../InstructionsEditor/index.ts';
 import {
@@ -154,7 +153,7 @@ const RoutineFormImpl = ({
   forwardedRef,
   ...props
 }: RoutineFormImplProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
 
@@ -291,7 +290,7 @@ const ActionSection = ({
   routine: Routine.Routine;
   readonly?: boolean;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const action = useFormValues<ActionFormInput>('RoutineForm.ActionSection', ACTION_PATH);
   const trigger = useFormValues<TriggerFormInput>('RoutineForm.ActionSection', TRIGGER_PATH);
   const kind = action?.kind ?? 'runnable';
@@ -315,7 +314,7 @@ const ActionSection = ({
 };
 
 const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: (kind: Routine.Kind) => void }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   return (
     // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
     // other non-kind value so it can't fall through and overwrite the current action.

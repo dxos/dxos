@@ -15,7 +15,7 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { CLOSE_REASON_ATTRIBUTE, RepoClosedError } from '../errors.ts';
-import { type ChangeEvent, DocHandleProxy, type PassiveDocument } from './doc-handle-proxy.ts';
+import { type ChangeEvent, DocHandleProxy, type PassiveDirectory, type PassiveDocument } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 import { sameHeads } from './heads.ts';
 
@@ -228,15 +228,29 @@ export class RepoProxy extends Resource {
    * With `passive`, bytes the client already holds: the subscribed handle if there is one, else a
    * passive one, which loads the bytes and subscribes from their heads when first used.
    *
+   * With `directory`, a space directory: the held handle as it is, else a passive one, from `passive` or, without
+   * it, empty until the host's first send (see {@link DocHandleProxy.whenPassiveShown}). Nothing is loaded.
+   *
    * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
    * a caller whose work is abandonable should treat this as the client going away.
    */
-  find<T>(id: AnyDocumentId, { passive }: { passive?: PassiveDocument } = {}): DocHandleProxy<T> {
+  find<T>(
+    id: AnyDocumentId,
+    { passive, directory = false }: { passive?: PassiveDirectory; directory?: boolean } = {},
+  ): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
     }
 
     const documentId = toDocumentId(id);
+    if (directory && !passive) {
+      this.#requireOpen(documentId);
+      return (
+        this._handles[documentId] ??
+        this._passiveHandles.get(documentId) ??
+        this._loadHandle<T>({ documentId, directory })
+      );
+    }
     if (passive) {
       this.#requireOpen(documentId);
       const held = this._handles[documentId] ?? this._passiveHandles.get(documentId);
@@ -245,7 +259,7 @@ export class RepoProxy extends Resource {
         held._setPassive(passive);
         this.#subscribePassive(documentId);
       }
-      return held ?? this._loadHandle<T>({ documentId, passive });
+      return held ?? this._loadHandle<T>({ documentId, passive, directory });
     }
     return this._getOrLoadHandle<T>({ documentId });
   }
@@ -673,14 +687,17 @@ export class RepoProxy extends Resource {
   private _loadHandle<T>({
     documentId,
     passive,
+    directory = false,
   }: {
     documentId: DocumentId;
-    passive?: PassiveDocument;
+    passive?: PassiveDirectory;
+    directory?: boolean;
   }): DocHandleProxy<T> {
     this.#requireOpen(documentId);
     const handle: DocHandleProxy<T> = new DocHandleProxy<T>({
       documentId,
       passive,
+      directory: directory && { json: passive?.json },
       onDelete: () => {
         log('onDelete', { documentId });
         handle.off('change', this.#onHandleChange);
@@ -694,7 +711,7 @@ export class RepoProxy extends Resource {
         this._passiveHandles.delete(documentId);
       },
     });
-    if (passive) {
+    if (passive || directory) {
       this._passiveHandles.set(documentId, handle);
       this.#watchActivation(handle, documentId);
       this.#subscribePassive(documentId);
@@ -918,6 +935,11 @@ export class RepoProxy extends Resource {
   ): void {
     const passiveHandle = this._passiveHandles.get(documentId as DocumentId);
     if (passiveHandle) {
+      // A passive directory waiting on the host's first send fails its waiter rather than waiting forever.
+      if (unavailable && !mutation) {
+        passiveHandle._failPassiveWait(documentId);
+        return;
+      }
       try {
         passiveHandle._integratePassiveUpdate(mutation, passive);
       } catch (err) {

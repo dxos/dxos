@@ -197,7 +197,14 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
       return result;
     }
   }
-  throw new Error('Remote module default export is not a Plugin or a zero-arg plugin factory.');
+  // A `Plugin.config` entry, or the manifest a build makes of one, exports `{ meta, make }`.
+  if (typeof exported === 'object' && exported !== null && 'make' in exported && typeof exported.make === 'function') {
+    const result: unknown = exported.make();
+    if (Plugin.isPlugin(result)) {
+      return result;
+    }
+  }
+  throw new Error('Remote module default export is not a Plugin, a zero-arg plugin factory or a plugin config.');
 };
 
 /**

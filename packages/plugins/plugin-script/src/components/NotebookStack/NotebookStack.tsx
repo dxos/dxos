@@ -16,9 +16,9 @@ import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Notebook } from '#types';
 
+import { ScriptNamespace } from '../../namespace.ts';
 import { type TypescriptEditorProps } from '../TypescriptEditor/index.ts';
 import { NotebookCell, type NotebookCellProps } from './NotebookCell.tsx';
 import { NotebookMenu } from './NotebookMenu.tsx';
@@ -125,7 +125,7 @@ const NotebookSection = ({
   onCellDelete,
   ...tileProps
 }: NotebookSectionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ScriptNamespace.key);
   const resizable = cell.type === 'query';
   const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 

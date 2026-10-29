@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 
+import * as PresenterPlugin from '#meta';
 import { Presentation, PresenterOperation } from '#types';
-
-import * as PresenterPlugin from './PresenterPlugin.ts';
 
 describe('PresenterPlugin in workerd', () => {
   test('activates headless and contributes its skill, operations and types', async ({ expect }) => {

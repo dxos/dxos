@@ -17,8 +17,7 @@ import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
+import { KanbanNamespace } from '../../namespace.ts';
 import { type KanbanCardProps, useKanbanBoard } from './context.ts';
 
 export { type KanbanCardProps };
@@ -31,7 +30,7 @@ const KANBAN_CARD_TILE_NAME = 'KanbanBoard.Card';
  */
 export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(KanbanNamespace.key);
     const label = useLabel(data);
     const { model } = useBoard(KANBAN_CARD_TILE_NAME);
     const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);

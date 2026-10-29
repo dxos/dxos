@@ -20,7 +20,8 @@ import { Unit, type UnitFormat } from '@dxos/util';
 
 import { type SaveState, createClientSaveTracker, getIcon, getStatus } from '#components';
 import { useEdgeStatus, useStalled } from '#hooks';
-import { meta } from '#meta';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 const SYNC_COLS = ['min', 'fill', 'min', 'min'] as const;
 
@@ -35,7 +36,7 @@ export const SyncStatus = () => {
   return <SyncStatusIndicator state={state} save={save} edgeStatus={edgeStatus} />;
 };
 
-const SAVE_FAILURE_TOAST_ID = `${meta.profile.key}/save-failing`;
+const SAVE_FAILURE_TOAST_ID = `${SpaceNamespace.key}/save-failing`;
 
 /**
  * A failed save leaves changes only in this page, where a reload loses them, so the warning stays up
@@ -50,8 +51,8 @@ const useSaveFailureToast = (save: SaveState) => {
       void invokePromise(LayoutOperation.AddToast, {
         id: SAVE_FAILURE_TOAST_ID,
         icon: 'ph--warning--regular',
-        title: ['persistence-error.label', { ns: meta.profile.key }],
-        description: ['persistence-error.message', { ns: meta.profile.key }],
+        title: ['persistence-error.label', { ns: SpaceNamespace.key }],
+        description: ['persistence-error.message', { ns: SpaceNamespace.key }],
         duration: Infinity,
       });
     } else if (save === 'saved' && raised.current) {
@@ -59,7 +60,7 @@ const useSaveFailureToast = (save: SaveState) => {
       void invokePromise(LayoutOperation.AddToast, {
         id: SAVE_FAILURE_TOAST_ID,
         icon: 'ph--check-circle--regular',
-        title: ['persistence-recovered.label', { ns: meta.profile.key }],
+        title: ['persistence-recovered.label', { ns: SpaceNamespace.key }],
         duration: 4_000,
       });
     }
@@ -75,7 +76,7 @@ export const SyncStatusIndicator = ({
   save: SaveState;
   edgeStatus: EdgeStatus;
 }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const summary = getSyncSummary(state);
   // Absent peer sync state is indistinguishable from having no connection.
   const offline = edgeStatus.state !== EdgeStatus_ConnectionState.CONNECTED || Object.values(state).length === 0;
@@ -107,7 +108,7 @@ export const SyncStatusIndicator = ({
 };
 
 const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const client = useClient();
 
   const isConnected = status.state === EdgeStatus_ConnectionState.CONNECTED;

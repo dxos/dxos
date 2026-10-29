@@ -2,12 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as BloggerCapabilities from '@dxos/plugin-blogger/BloggerCapabilities';
+import * as BloggerEvents from '@dxos/plugin-blogger/BloggerEvents';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { TypefullyNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.typefully',
+    key: TypefullyNamespace.key,
     name: 'Typefully',
     author: 'DXOS',
     description: trim`
@@ -21,4 +30,27 @@ export default Config2.make({
     tags: ['labs'],
     dependsOn: ['org.dxos.plugin.blogger'],
   },
+  modules: [
+    Capability.lazyModule(
+      'TypefullyConnector',
+      { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.pluginAsset({
+      pluginId: TypefullyNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    Capability.lazyModule(
+      'TypefullyPublisherService',
+      { provides: [BloggerCapabilities.PublisherService], activatesOn: BloggerEvents.Start },
+      () => import('./src/capabilities/publisher-service.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

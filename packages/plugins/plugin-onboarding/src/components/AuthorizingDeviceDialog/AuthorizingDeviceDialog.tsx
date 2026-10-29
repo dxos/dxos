@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '../../meta.ts';
+import { OnboardingNamespace } from '../../namespace.ts';
 
 /**
  * Shown while a magic-link token is being redeemed and this device admitted to the existing
@@ -19,7 +19,7 @@ import { meta } from '../../meta.ts';
  * the two dialogs reads as a continuation of the login gate rather than a different screen.
  */
 export const AuthorizingDeviceDialog = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(OnboardingNamespace.key);
 
   return (
     <Layout.Grid

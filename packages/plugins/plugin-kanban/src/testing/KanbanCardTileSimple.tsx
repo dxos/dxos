@@ -15,7 +15,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { type KanbanCardProps, useKanbanBoard } from '#components';
-import { meta } from '#meta';
+
+import { KanbanNamespace } from '../namespace.ts';
 
 const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
 
@@ -24,7 +25,7 @@ const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
  */
 export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(KanbanNamespace.key);
     const { model } = useBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const { onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);

@@ -7,7 +7,7 @@ import { translations as queryTranslations } from '@dxos/react-ui-query/translat
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { DevtoolsNamespace } from './namespace.ts';
 
 export const translations = [
   ...introspectTranslations,
@@ -17,7 +17,7 @@ export const translations = [
   ...queryTranslations,
   {
     'en-US': {
-      [meta.profile.key]: {
+      [DevtoolsNamespace.key]: {
         'plugin.name': 'Devtools',
         'open-devtools.label': 'Open DevTools',
         'devtools.label': 'DevTools',

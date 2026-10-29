@@ -22,6 +22,16 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { findSpecRefs, mdl, mdlBlockDescription, specReferenceFilter } from '@dxos/deus/extension';
+import {
+  type SourceKey,
+  citedFiles,
+  findSourceKeys,
+  formatSourceKey,
+  isSpecKey,
+  parseReview,
+  parseSourceKey,
+  reviewKeyOf,
+} from '@dxos/deus/review';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
@@ -61,26 +71,16 @@ import {
   ReviewPanel,
   SPEC_INDEX,
   buildChangelogGraph,
-  citedFiles,
   decisionGutter,
-  parseReview,
   pendingReveal,
   resolveSpecRef,
   reviewGutter,
   sourceLinks,
 } from '#components';
-import { meta } from '#meta';
-import {
-  type SourceKey,
-  findSourceKeys,
-  formatSourceKey,
-  getSpecKey,
-  isSpecKey,
-  parseSourceKey,
-  reviewKeyOf,
-} from '#sync';
+import { getSpecKey } from '#sync';
 import { CodeOperation } from '#types';
 
+import { CodeNamespace } from '../../namespace.ts';
 import {
   type DiffAgainst,
   fileKey,
@@ -164,7 +164,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(CodeNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;

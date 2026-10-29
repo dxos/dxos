@@ -15,8 +15,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tour from '@dxos/react-ui/Tour';
 
-import { meta } from '#meta';
-
+import { SupportNamespace } from '../../namespace.ts';
 import { TourContext } from './TourContext.ts';
 
 const resolveTarget = (target: ToolkitTour.Step['target']) =>
@@ -51,7 +50,7 @@ export type GuidedTourProps = {
 };
 
 export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: GuidedTourProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const layout = ToolkitHooks.useLayout();
   const paused = layout.dialogOpen;

@@ -8,6 +8,7 @@ import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { findSymbolLine } from '@dxos/deus/review';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -23,9 +24,7 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
-
-import { findSymbolLine } from './symbol.ts';
+import { CodeNamespace } from '../../namespace.ts';
 
 /** Highlights the symbol's line and scrolls it to the top third of the view once the editor has laid out. */
 const revealLine = (line: number): Extension => [
@@ -75,7 +74,7 @@ export type CodeViewProps = {
 
 /** A read-only source file revealed at a symbol: where Ctrl/⌘-click on a code key in a spec lands. */
 export const CodeView = ({ label, path, content, symbol, error, onOpenExternal }: CodeViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const themeMode = Hooks.useThemeMode();
   const line = useMemo(() => (content && symbol ? findSymbolLine(content, symbol) : undefined), [content, symbol]);
   const extensions = useMemo(

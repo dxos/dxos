@@ -10,9 +10,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
 
 import { type Entity } from '#client';
-import { meta } from '#meta';
 import { type Facet, type ResultsView, type ViewContext, type ViewFilter, facetCounts, isActive } from '#model';
 
+import { LighthouseNamespace } from '../../namespace.ts';
 import { FacetBox } from './FacetControls.tsx';
 import { sortKey, sortOptions } from './sort-options.ts';
 
@@ -38,7 +38,7 @@ export type FiltersPanelProps = {
  * the score stays the model's.
  */
 export const FiltersPanel = ({ facets, items, view, ctx, shown, hasAreas, onChange, onClose }: FiltersPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [more, setMore] = useState(false);
   const ref = useRef<HTMLElement>(null);
   useEffect(() => ref.current?.focus(), []);
