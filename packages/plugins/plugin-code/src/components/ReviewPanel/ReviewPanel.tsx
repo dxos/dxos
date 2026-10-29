@@ -14,7 +14,6 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 
-
 import { CodeNamespace } from '../../namespace.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
 import { STATUS_STYLE } from '../SpecModel/index.ts';

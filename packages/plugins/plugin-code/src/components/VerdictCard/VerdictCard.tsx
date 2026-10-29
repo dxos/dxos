@@ -20,7 +20,6 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 
-
 import { CodeNamespace } from '../../namespace.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
 import { STATUS_STYLE } from '../SpecModel/index.ts';

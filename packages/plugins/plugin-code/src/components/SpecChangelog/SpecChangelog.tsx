@@ -22,7 +22,6 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 
-
 import { CodeNamespace } from '../../namespace.ts';
 import { ApiSurface } from '../ApiSurface/index.ts';
 import { ChangelogGraph, type DecisionModel, buildChangelogGraph } from '../ChangelogGraph/index.ts';
