@@ -4,6 +4,7 @@
 
 import { type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -52,6 +53,7 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -979,8 +981,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         contentTypes.add(migration.type);
       } else if (Migration.isTransactionMigration(migration)) {
         const transaction = await this.beginMigration(migration.options);
-        await migration.run(transaction);
-        await transaction.commit();
+        await EffectEx.runPromise(migration.run(transaction, { db: this }).pipe(Effect.andThen(transaction.commit())));
       }
     }
     // Content steps run per type, after object migrations have moved objects onto the types they name.

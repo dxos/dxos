@@ -21154,12 +21154,12 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       effect:
         specifier: 4.0.4
         version: 4.0.4

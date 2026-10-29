@@ -4,8 +4,10 @@
 
 import { next as A, type Doc } from '@automerge/automerge';
 import { isValidAutomergeUrl } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { type Migration, type Obj } from '@dxos/echo';
+import { Error as EchoError, type Migration, type Obj } from '@dxos/echo';
 import {
   type DatabaseDirectory,
   EncodedReference,
@@ -63,14 +65,11 @@ export class MigrationTransaction implements Migration.Transaction {
     this.#props = props;
   }
 
-  async get(id: EntityId): Promise<Obj.JSON | undefined> {
-    this.#assertOpen();
-    const change = this.#changes.get(id);
-    if (change?.deleted) {
-      return undefined;
-    }
-    const structure = change?.structure ?? (await this.#readStored(id));
-    return structure && toObjectJSON(id, structure);
+  get(id: EntityId): Effect.Effect<Option.Option<Obj.JSON>, EchoError.MigrationError> {
+    return Effect.tryPromise({
+      try: () => this.#get(id),
+      catch: (cause) => new EchoError.MigrationError({ operation: 'get', id }, { cause }),
+    }).pipe(Effect.map(Option.fromNullishOr));
   }
 
   add(object: Obj.Unknown): void {
@@ -85,15 +84,22 @@ export class MigrationTransaction implements Migration.Transaction {
     this.#stage(object);
   }
 
-  async migrate(id: EntityId, transform: (current: Obj.JSON) => Obj.Unknown | Promise<Obj.Unknown>): Promise<boolean> {
-    const current = await this.get(id);
-    if (!current) {
-      return false;
-    }
-    const next = await transform(current);
-    invariant(next.id === id, 'Migrated object must keep its id.');
-    this.#stage(next);
-    return true;
+  migrate<E = never, R = never>(
+    id: EntityId,
+    transform: (current: Obj.JSON) => Obj.Unknown | Effect.Effect<Obj.Unknown, E, R>,
+  ): Effect.Effect<boolean, E | EchoError.MigrationError, R> {
+    const self = this;
+    return Effect.gen(function* () {
+      const current = yield* self.get(id);
+      if (Option.isNone(current)) {
+        return false;
+      }
+      const result = transform(current.value);
+      const next = Effect.isEffect(result) ? yield* result : result;
+      invariant(next.id === id, 'Migrated object must keep its id.');
+      self.#stage(next);
+      return true;
+    });
   }
 
   delete(id: EntityId): void {
@@ -117,7 +123,24 @@ export class MigrationTransaction implements Migration.Transaction {
     return { compacted, skipped };
   }
 
-  async commit(): Promise<void> {
+  commit(): Effect.Effect<void, EchoError.MigrationError> {
+    return Effect.tryPromise({
+      try: () => this.#commit(),
+      catch: (cause) => new EchoError.MigrationError({ operation: 'commit' }, { cause }),
+    });
+  }
+
+  async #get(id: EntityId): Promise<Obj.JSON | undefined> {
+    this.#assertOpen();
+    const change = this.#changes.get(id);
+    if (change?.deleted) {
+      return undefined;
+    }
+    const structure = change?.structure ?? (await this.#readStored(id));
+    return structure && toObjectJSON(id, structure);
+  }
+
+  async #commit(): Promise<void> {
     this.#assertOpen();
     this.#committed = true;
 

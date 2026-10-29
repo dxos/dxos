@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import type * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
@@ -13,6 +14,7 @@ import { DXN, type URI } from '@dxos/keys';
 
 import type * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
+import type * as EchoError from './Error.ts';
 import { ContentVersionAnnotation, type EntityMeta, MetaId, getSchemaURI } from './internal/index.ts';
 import type * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
@@ -465,18 +467,18 @@ export type TransactionOptions = {
  * @example
  * ```ts
  * const migration = await space.db.beginMigration();
- * await migration.migrate(contact.id, (json) => Obj.make(ContactV2, { id: json.id, name: String(json.name) }));
+ * yield* migration.migrate(contact.id, (json) => Obj.make(ContactV2, { id: json.id, name: String(json.name) }));
  * migration.add(Obj.make(Note, { title: 'Imported' }));
  * migration.delete(legacy.id);
- * await migration.commit();
+ * yield* migration.commit();
  * ```
  */
 export interface Transaction {
   /**
    * The staged state of an object: what earlier calls in this transaction left, else what is stored.
-   * Returns `undefined` for an object that is not stored or that this transaction deletes.
+   * None for an object that is not stored or that this transaction deletes.
    */
-  get(id: Obj.ID): Promise<Obj.JSON | undefined>;
+  get(id: Obj.ID): Effect.Effect<Option.Option<Obj.JSON>, EchoError.MigrationError>;
 
   /**
    * Stages a new object, with every object it references that is not stored yet.
@@ -498,7 +500,10 @@ export interface Transaction {
    *
    * @returns Whether the object was found.
    */
-  migrate(id: Obj.ID, transform: (current: Obj.JSON) => Obj.Unknown | Promise<Obj.Unknown>): Promise<boolean>;
+  migrate<E = never, R = never>(
+    id: Obj.ID,
+    transform: (current: Obj.JSON) => Obj.Unknown | Effect.Effect<Obj.Unknown, E, R>,
+  ): Effect.Effect<boolean, E | EchoError.MigrationError, R>;
 
   /**
    * Stages removing an object from the space. The object leaves no tombstone.
@@ -515,16 +520,24 @@ export interface Transaction {
    * Writes the staged changes as {@link TransactionOptions.root} selects.
    * The transaction cannot be used afterwards.
    */
-  commit(): Promise<void>;
+  commit(): Effect.Effect<void, EchoError.MigrationError>;
 }
 
 /**
- * A migration that stages its changes in a {@link Transaction}, which the runner commits once `run` resolves.
+ * Context passed to a {@link TransactionMigration}.
+ */
+export type TransactionMigrationContext = {
+  /** The database being migrated, for queries; writes go through the transaction. */
+  db: Database.Database;
+};
+
+/**
+ * A migration that stages its changes in a {@link Transaction}, which the runner commits once `run` succeeds.
  */
 export interface TransactionMigration extends Migration {
   readonly kind: 'transaction';
   readonly options: TransactionOptions;
-  readonly run: (transaction: Transaction) => Promise<void>;
+  readonly run: (transaction: Transaction, context: TransactionMigrationContext) => Effect.Effect<void, unknown>;
 }
 
 /**
@@ -537,19 +550,20 @@ export const isTransactionMigration = (migration: Migration): migration is Trans
 
 /**
  * Define a migration that stages structural changes in a {@link Transaction}.
+ * A failure of `run` rejects `db.runMigrations` and commits nothing.
  *
  * @example
  * ```ts
- * const migration = Migration.defineTransaction(async (transaction) => {
- *   transaction.delete(legacyId);
- * });
+ * const migration = Migration.defineTransaction((transaction) =>
+ *   Effect.sync(() => transaction.delete(legacyId)),
+ * );
  * await db.runMigrations([migration]);
  * ```
  *
  * @performance O(1) at definition time.
  */
-export const defineTransaction = (
-  run: (transaction: Transaction) => Promise<void>,
+export const defineTransaction = <E>(
+  run: (transaction: Transaction, context: TransactionMigrationContext) => Effect.Effect<void, E>,
   options: TransactionOptions = {},
 ): TransactionMigration => ({
   [TypeId]: TypeId,

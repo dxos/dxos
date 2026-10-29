@@ -2,7 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { Migration } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 export type CompactDocumentsOptions = {
@@ -29,9 +32,15 @@ export const compactDocumentsEpochMigration = async (
 ): Promise<CompactDocumentsResult> => {
   invariant(space.state.get() === SpaceState.SPACE_READY, 'Space must be open and ready before compaction.');
 
-  const migration = await space.db.beginMigration();
-  const { compacted, skipped } = migration.compact(options.objectIds);
-  await migration.commit();
+  let result: Migration.CompactResult = { compacted: [], skipped: [] };
+  await space.db.runMigrations([
+    Migration.defineTransaction((transaction) =>
+      Effect.sync(() => {
+        result = transaction.compact(options.objectIds);
+      }),
+    ),
+  ]);
+  const { compacted, skipped } = result;
 
   const epochs = await space.internal.getEpochs();
   const lastEpoch = epochs[epochs.length - 1];

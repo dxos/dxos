@@ -2,47 +2,45 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Annotation, Filter, Obj } from '@dxos/echo';
+import { Annotation, Filter, Migration, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { MigrationVersionAnnotation } from './annotations.ts';
 import { Migrations } from './migrations.ts';
 
+/** Multiplies `count` on every test object. */
+const scaleCount = (factor: number) =>
+  Migration.defineTransaction((transaction, { db }) =>
+    Effect.gen(function* () {
+      const objects = yield* Effect.promise(() =>
+        db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run(),
+      );
+      for (const object of objects) {
+        yield* transaction.migrate(object.id, (json) =>
+          Obj.make(TestSchema.Expando, { id: json.id, namespace: json.namespace, count: Number(json.count) * factor }),
+        );
+      }
+    }),
+  );
+
 Migrations.define('test', [
   {
     version: '1970-01-01',
-    next: async ({ migration }) => {
-      migration.add(Obj.make(TestSchema.Expando, { namespace: 'test', count: 1 }));
-    },
+    migrations: [
+      Migration.defineTransaction((transaction) =>
+        Effect.sync(() => transaction.add(Obj.make(TestSchema.Expando, { namespace: 'test', count: 1 }))),
+      ),
+    ],
   },
-  {
-    version: '1970-01-02',
-    next: async ({ space, migration }) => {
-      const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
-      for (const object of objects) {
-        await migration.migrate(object.id, (json) =>
-          Obj.make(TestSchema.Expando, { id: json.id, namespace: json.namespace, count: 2 }),
-        );
-      }
-    },
-  },
-  {
-    version: '1970-01-03',
-    next: async ({ space, migration }) => {
-      const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
-      for (const object of objects) {
-        await migration.migrate(object.id, (json) =>
-          Obj.make(TestSchema.Expando, { id: json.id, namespace: json.namespace, count: Number(json.count) * 3 }),
-        );
-      }
-    },
-  },
+  { version: '1970-01-02', migrations: [scaleCount(2)] },
+  { version: '1970-01-03', migrations: [scaleCount(3)] },
 ]);
 
 describe('Migrations', () => {

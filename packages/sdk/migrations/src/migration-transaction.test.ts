@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
@@ -9,6 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Filter, Migration, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 describe('Migration.Transaction', () => {
   let client: Client;
@@ -37,15 +40,15 @@ describe('Migration.Transaction', () => {
     await space.db.flush();
 
     const migration = await space.db.beginMigration();
-    const found = await migration.migrate(task.id, (json) =>
-      Obj.make(TestSchema.Expando, { id: json.id, label: String(json.title) }),
+    const found = await EffectEx.runPromise(
+      migration.migrate(task.id, (json) => Obj.make(TestSchema.Expando, { id: json.id, label: String(json.title) })),
     );
     expect(found).toBe(true);
-    expect((await migration.get(task.id))?.label).toBe('Write tests');
+    expect(Option.getOrUndefined(await EffectEx.runPromise(migration.get(task.id)))?.label).toBe('Write tests');
 
     // Staged changes stay out of the database until commit.
     expect(await space.db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(1);
-    await migration.commit();
+    await EffectEx.runPromise(migration.commit());
 
     await expect.poll(() => space.db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(0);
     const [migrated] = await space.db.query(Filter.type(TestSchema.Expando)).run();
@@ -56,7 +59,7 @@ describe('Migration.Transaction', () => {
   test('migrate skips objects that are not stored', async ({ expect }) => {
     const space = await createSpace();
     const migration = await space.db.beginMigration();
-    const found = await migration.migrate(Obj.ID.random(), () => Obj.make(TestSchema.Expando, {}));
+    const found = await EffectEx.runPromise(migration.migrate(Obj.ID.random(), () => Obj.make(TestSchema.Expando, {})));
     expect(found).toBe(false);
   });
 
@@ -67,8 +70,8 @@ describe('Migration.Transaction', () => {
 
     const migration = await space.db.beginMigration();
     migration.add(person);
-    expect((await migration.get(organization.id))?.name).toBe('DXOS');
-    await migration.commit();
+    expect(Option.getOrUndefined(await EffectEx.runPromise(migration.get(organization.id)))?.name).toBe('DXOS');
+    await EffectEx.runPromise(migration.commit());
 
     await expect.poll(() => space.db.query(Filter.type(TestSchema.Person)).run()).toHaveLength(1);
     const [stored] = await space.db.query(Filter.type(TestSchema.Person)).run();
@@ -84,8 +87,8 @@ describe('Migration.Transaction', () => {
 
     const migration = await space.db.beginMigration();
     migration.delete(removed.id);
-    expect(await migration.get(removed.id)).toBeUndefined();
-    await migration.commit();
+    expect(Option.isNone(await EffectEx.runPromise(migration.get(removed.id)))).toBe(true);
+    await EffectEx.runPromise(migration.commit());
 
     await expect
       .poll(async () => (await space.db.query(Filter.type(TestSchema.Expando)).run()).map(({ id }) => id))
@@ -100,12 +103,12 @@ describe('Migration.Transaction', () => {
     const epochsBefore = await space.internal.getEpochs();
 
     const migration = await space.db.beginMigration({ root: 'update' });
-    await migration.migrate(task.id, (json) =>
-      Obj.make(TestSchema.Expando, { id: json.id, label: String(json.title) }),
+    await EffectEx.runPromise(
+      migration.migrate(task.id, (json) => Obj.make(TestSchema.Expando, { id: json.id, label: String(json.title) })),
     );
     migration.delete(removed.id);
     migration.add(Obj.make(TestSchema.Expando, { name: 'added' }));
-    await migration.commit();
+    await EffectEx.runPromise(migration.commit());
 
     await expect
       .poll(async () =>
@@ -122,9 +125,7 @@ describe('Migration.Transaction', () => {
     await space.db.flush();
 
     await space.db.runMigrations([
-      Migration.defineTransaction(async (transaction) => {
-        transaction.delete(removed.id);
-      }),
+      Migration.defineTransaction((transaction) => Effect.sync(() => transaction.delete(removed.id))),
     ]);
 
     await expect.poll(() => space.db.query(Filter.type(TestSchema.Expando)).run()).toHaveLength(0);
@@ -133,7 +134,7 @@ describe('Migration.Transaction', () => {
   test('a committed transaction cannot be reused', async ({ expect }) => {
     const space = await createSpace();
     const migration = await space.db.beginMigration();
-    await migration.commit();
+    await EffectEx.runPromise(migration.commit());
     expect(() => migration.delete(Obj.ID.random())).toThrow();
   });
 });

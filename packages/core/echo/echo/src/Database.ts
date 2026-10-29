@@ -624,6 +624,19 @@ export const resolve: {
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
+ * Starts staging structural changes in the current database; see {@link Migration.Transaction}.
+ *
+ * @performance Async; loads the transaction code on first use, then O(1).
+ */
+export const beginMigration = (
+  options?: Migration.TransactionOptions,
+): Effect.Effect<Migration.Transaction, never, Service> =>
+  Effect.gen(function* () {
+    const { db } = yield* Service;
+    return yield* Effect.promise(() => db.beginMigration(options));
+  }).pipe(Effect.withSpan('Database.beginMigration'), withSpaceId);
+
+/**
  * Loads an object reference. A deleted target reads as absent unless `{ deleted: 'include' }` asks
  * for it.
  *
