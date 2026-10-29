@@ -748,3 +748,17 @@ decision D-76: The shared inspectors take rows built per dimension: 2D builds th
   for: user:richburdon
   why: One component per inspector, fed by an adapter, keeps both dimensions' panels identical without changing 2D's engine.
 ```
+
+```mdl
+decision D-77: Holding Cmd turns a left-button drag into the hand tool in both dimensions: pan in 2D, orbit in 3D (Cmd+Shift pans); a Cmd-click that does not move keeps its meaning, the grab cursor shows while Cmd is held, and it works on a locked canvas.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-78: One rule decides it for both (`isHandDrag`, the command key with the left button) and one hook shows its cursor (`useCommandHeld`). In 2D the drag pans from the canvas's empty space; a Cmd-drag that starts on an element keeps the 2D engine's copy-drag, which the command key already meant there. Fills in [D-77].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Taking Cmd-drag from elements would remove 2D's copy-drag with no other gesture for it; on empty space nothing else used it.
+```

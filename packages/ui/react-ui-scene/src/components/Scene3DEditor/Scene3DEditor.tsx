@@ -4,6 +4,7 @@
 
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { isHandDrag, useCommandHeld } from '@dxos/react-ui-canvas';
 import type * as Util from '@dxos/react-ui/Util';
 import { type LayoutIntent, type Scene, findLayout, findScene, placesCycle, resolveLayout3D } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -145,6 +146,7 @@ export const Scene3DEditor = ({
     return byFrame;
   }, [doc, sceneId, list, editing]);
   const [frameHint, setFrameHint] = useState<string>();
+  const commandHeld = useCommandHeld();
   const drilled = editing !== scene?.layout;
   const prefix = frameHint !== undefined && frames.has(frameHint) ? frameHint : (frames.keys().next().value ?? '');
   const keys = useMemo(() => frames.get(prefix) ?? new Map<string, RenderItem>(), [frames, prefix]);
@@ -355,7 +357,11 @@ export const Scene3DEditor = ({
     <div
       ref={containerRef}
       tabIndex={0}
-      className={mx('relative dx-fill overflow-hidden bg-(--surface-bg) touch-none outline-none', classNames)}
+      className={mx(
+        'relative dx-fill overflow-hidden bg-(--surface-bg) touch-none outline-none',
+        (tool === 'orbit' || commandHeld) && 'cursor-grab',
+        classNames,
+      )}
       data-testid='scene.3d.editor'
       data-selection={selection.join(' ')}
       data-editing={editing}
@@ -365,7 +371,8 @@ export const Scene3DEditor = ({
         }
         renderer?.takeDrag();
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
-        if (tool === 'extrude' && event.button === 0) {
+        // With the command key held a left drag moves the camera, whatever the tool, so it starts no tool gesture.
+        if (tool === 'extrude' && event.button === 0 && !isHandDrag(event)) {
           const screen = local(event);
           const { hit, element } = elementAt(screen);
           extruding.current =

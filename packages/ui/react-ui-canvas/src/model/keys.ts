@@ -91,6 +91,13 @@ export type KeyEventLike = {
 /** The command modifier, held: the same test on a pointer event reveals a node's ports for linking. */
 export const hasCommandKey = (event: { metaKey: boolean; ctrlKey: boolean }): boolean => event.metaKey || event.ctrlKey;
 
+/**
+ * A left-button press with the command key held: whatever the tool, the drag moves the view as the hand tool does
+ * (pans in 2D, orbits in 3D), and a press that does not move stays a click.
+ */
+export const isHandDrag = (event: { button: number; metaKey: boolean; ctrlKey: boolean }): boolean =>
+  event.button === 0 && hasCommandKey(event);
+
 export const matchesBinding = (event: KeyEventLike, binding: KeyBinding): boolean => {
   const key =
     binding.key.length === 1 ? event.key.toLowerCase() === binding.key.toLowerCase() : event.key === binding.key;

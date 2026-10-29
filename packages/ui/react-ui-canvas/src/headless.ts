@@ -8,6 +8,7 @@ export * from './generator/check.ts';
 export * from './generator/compile.ts';
 export * from './generator/types.ts';
 export * from './model/intent.ts';
+export * from './model/keys.ts';
 export * from './model/orphans.ts';
 export * from './model/store.ts';
 export * from './model/style-set.ts';

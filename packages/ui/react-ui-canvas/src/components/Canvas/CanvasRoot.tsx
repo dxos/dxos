@@ -23,6 +23,7 @@ import {
   SceneLookContext,
   useCanvasController,
   useCanvasHistory,
+  useCommandHeld,
   useDocumentCommands,
   useEditMode,
   useElementHandlers,
@@ -157,6 +158,7 @@ export const CanvasRoot = ({
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
   const tool = useAtomValue(atoms.tool);
+  const commandHeld = useCommandHeld();
   const snapEnabled = useAtomValue(atoms.snap);
   // The margin is in major cells, taken from the model's grid rather than the level currently drawn,
   // so a fit puts the same gap around the scene whatever the zoom.
@@ -575,8 +577,8 @@ export const CanvasRoot = ({
                         !transparent && 'bg-base-surface',
                         // A theme with a mode takes it over the app's, for everything over the canvas.
                         look.tone === 'dark' && 'dark',
-                        tool.kind === 'hand' && 'cursor-grab',
-                        tool.kind === 'node' && 'cursor-crosshair',
+                        (tool.kind === 'hand' || commandHeld) && 'cursor-grab',
+                        tool.kind === 'node' && !commandHeld && 'cursor-crosshair',
                       )}
                       style={look.tone === 'light' ? { ...LIGHT_MODE, contain: 'strict' } : { contain: 'strict' }}
                       data-testid='scene-view'

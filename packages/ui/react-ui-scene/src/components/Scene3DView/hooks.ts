@@ -16,6 +16,7 @@ import {
   panBy,
   zoomBy,
 } from '../../three/index.ts';
+import { orbitGesture } from './orbit-gesture.ts';
 
 export const DEFAULT_CAMERA: Scene.Camera3D = {
   target: { x: 0, y: 0, z: 0 },
@@ -176,10 +177,11 @@ export const useOrbit = (
     };
     let drag: { x: number; y: number; pan: boolean } | undefined;
     const onPointerDown = (event: PointerEvent) => {
-      if (!onScene(event) || (buttons === 'secondary' && event.button === 0)) {
+      const gesture = onScene(event) ? orbitGesture(event, buttons) : undefined;
+      if (!gesture) {
         return;
       }
-      drag = { x: event.clientX, y: event.clientY, pan: event.shiftKey || event.button === 2 };
+      drag = { x: event.clientX, y: event.clientY, pan: gesture === 'pan' };
       container.setPointerCapture(event.pointerId);
     };
     const onPointerMove = (event: PointerEvent) => {

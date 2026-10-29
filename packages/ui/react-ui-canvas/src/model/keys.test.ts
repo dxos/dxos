@@ -4,7 +4,15 @@
 
 import { describe, test } from 'vitest';
 
-import { KEY_BINDINGS, type KeyEventLike, isToolKey, keyAction, matchesBinding, shortcutLabel } from './keys.ts';
+import {
+  KEY_BINDINGS,
+  type KeyEventLike,
+  isHandDrag,
+  isToolKey,
+  keyAction,
+  matchesBinding,
+  shortcutLabel,
+} from './keys.ts';
 
 const press = (key: string, modifiers: Partial<Omit<KeyEventLike, 'key'>> = {}): KeyEventLike => ({
   key,
@@ -33,6 +41,13 @@ describe('keys', () => {
     expect(keyAction(press('d', { metaKey: true }))).toBe('duplicate');
     expect(keyAction(press('d', { ctrlKey: true }))).toBe('duplicate');
     expect(keyAction(press('d'))).toBe('debug');
+  });
+
+  test('a left-button press with the command key held is the hand tool, with any tool', ({ expect }) => {
+    expect(isHandDrag({ button: 0, metaKey: true, ctrlKey: false })).toBe(true);
+    expect(isHandDrag({ button: 0, metaKey: false, ctrlKey: true })).toBe(true);
+    expect(isHandDrag({ button: 0, metaKey: false, ctrlKey: false })).toBe(false);
+    expect(isHandDrag({ button: 2, metaKey: true, ctrlKey: false })).toBe(false);
   });
 
   test('letters without a command or option modifier fall through to the tool palette', ({ expect }) => {

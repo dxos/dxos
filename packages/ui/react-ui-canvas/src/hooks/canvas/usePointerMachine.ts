@@ -39,6 +39,7 @@ import {
   type View,
   type ViewStore,
   endpointNode,
+  isHandDrag,
   isPointEndpoint,
   isPolylineNode,
   isViewNode,
@@ -340,7 +341,7 @@ export const usePointerMachine = ({
       if (event.target !== event.currentTarget) {
         return;
       }
-      if (event.button === 1 || currentTool.kind === 'hand') {
+      if (event.button === 1 || currentTool.kind === 'hand' || isHandDrag(event)) {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
