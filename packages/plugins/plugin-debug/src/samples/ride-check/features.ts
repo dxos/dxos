@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database, Ref, Relation } from '@dxos/echo';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Spec from '@dxos/plugin-projects/Spec';
 
 import { type ProjectResult } from './project.ts';
-import { SPEC_PATH } from './spec.ts';
+import { SPEC_PATH, type SpecResult } from './spec.ts';
 import { type TasksResult } from './tasks.ts';
 
 //
@@ -23,7 +24,7 @@ export type FeatureSeed = {
   readonly feat: string;
   /** The spec block's `req` lines. */
   readonly requirements: readonly Feature.Requirement[];
-  /** Its parts, each added as a feature whose parent is this one. */
+  /** Its parts, each a feature on the spec that breaks this one down. */
   readonly subfeatures?: readonly string[];
 };
 
@@ -59,15 +60,17 @@ export const FEATURES: readonly FeatureSeed[] = [
   },
 ];
 
-export type FeaturesInput = { tasks: TasksResult; project: ProjectResult };
+export type FeaturesInput = { tasks: TasksResult; project: ProjectResult; spec: SpecResult };
 
-export type FeaturesResult = { features: Feature.Feature[] };
+export type FeaturesResult = { map: Spec.Spec; features: Feature.Feature[] };
 
 export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput> = SampleSpace.partial('features', {
-  schemas: [Feature.Feature, Feature.DependsOn, Feature.Implements],
-  run: ({ tasks, project }: FeaturesInput) =>
+  schemas: [Spec.Spec, Feature.Feature, Feature.DependsOn, Feature.Implements],
+  run: ({ tasks, project, spec }: FeaturesInput) =>
     Effect.gen(function* () {
-      const projectRef = Ref.make(project.project);
+      const map = yield* Database.add(
+        Spec.make({ name: 'Ride Check', project: Ref.make(project.project), document: Ref.make(spec.spec) }),
+      );
       const features: Feature.Feature[] = [];
       for (const seed of FEATURES) {
         const feature = yield* Database.add(
@@ -77,14 +80,23 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
             requirements: seed.requirements.map((requirement) => ({ ...requirement })),
             status: 'planned',
             specs: [`${SPEC_PATH}#${seed.feat}`],
-            project: projectRef,
           }),
         );
-        for (const name of seed.subfeatures ?? []) {
-          yield* Database.add(Feature.make({ name, status: 'planned', parent: Ref.make(feature) }));
+        if (seed.subfeatures) {
+          const parts: Ref.Ref<Feature.Feature>[] = [];
+          for (const name of seed.subfeatures) {
+            parts.push(Ref.make(yield* Database.add(Feature.make({ name, status: 'planned' }))));
+          }
+          const breakdown = yield* Database.add(Spec.make({ name: seed.name, features: parts }));
+          Obj.update(feature, (feature) => {
+            feature.spec = Ref.make(breakdown);
+          });
         }
         features.push(feature);
       }
+      Obj.update(map, (map) => {
+        map.features.push(...features.map((feature) => Ref.make(feature)));
+      });
 
       const [verdict, ...rest] = features;
       for (const feature of rest) {
@@ -95,6 +107,6 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
         yield* Database.add(Feature.makeImplements({ [Relation.Source]: build, [Relation.Target]: feature }));
       }
 
-      return { features };
+      return { map, features };
     }),
 });

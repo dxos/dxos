@@ -179,13 +179,13 @@ const settleSubfeatures = (page) =>
     async ({ key, name }) => {
       const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
       const features = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.feature'))).run();
-      const root = features.find((feature) => feature.name === name && !feature.parent);
+      // The verdict is the top-level feature with a breakdown; its parts are the features on that spec.
+      const root = features.find((feature) => feature.name === name && feature.spec);
       if (root?.status !== 'operational') {
         return 0;
       }
-      const stale = features.filter(
-        (feature) => feature.parent?.target?.id === root.id && feature.status !== 'operational',
-      );
+      const parts = await Promise.all((root.spec.target?.features ?? []).map((ref) => ref.load()));
+      const stale = parts.filter((feature) => feature && feature.status !== 'operational');
       for (const feature of stale) {
         dxos.Obj.update(feature, (feature) => {
           feature.status = 'operational';

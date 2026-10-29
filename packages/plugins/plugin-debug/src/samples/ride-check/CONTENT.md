@@ -31,7 +31,7 @@ A reader hands an agent a written spec of one page — should a cyclist ride now
 ### Features (`features.ts`)
 
 - 4 `Feature.Feature`, all `planned`, → the project (`project`), each citing one spec block (`specs: ['ride-check/SPEC.mdl#F-n']`):
-  - `verdict` "Go / no-go" (F-1), subfeatures "Rain rule" and "Wind rule" (features whose parent is it), both `planned`; each feature carries its spec block's `req` lines as requirements.
+  - `verdict` "Go / no-go" (F-1), subfeatures "Rain rule" and "Wind rule" (features on the spec that breaks it down), both `planned`; each feature carries its spec block's `req` lines as requirements.
   - `hourly` "Hourly forecast" (F-2).
   - `window` "Best window" (F-3).
   - `daylight` "Daylight" (F-4).

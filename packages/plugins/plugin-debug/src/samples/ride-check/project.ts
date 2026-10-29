@@ -61,7 +61,7 @@ no tests, no README and no extra artifacts.
 
 When I change a feature's card or its spec block, I file a task for it: add the change to the spec's requirements, \
 change the code in the same repository, redeploy to the same URL, check it, and set the feature and the subfeature \
-back to operational. A subfeature is a feature whose \`parent\` is the one it belongs to; set its status like any other feature's.`;
+back to operational. A subfeature is a feature on the spec its feature's \`spec\` refers to; set its status like any other feature's.`;
 
 /**
  * The work-stream. It adopts the task set the tasks partial built (`Project.make` would otherwise create its own

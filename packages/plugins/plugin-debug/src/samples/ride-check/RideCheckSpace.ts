@@ -42,8 +42,8 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
       Effect.gen(function* () {
         const tasks = yield* partials.tasks();
         const project = yield* partials.project({ tasks });
-        yield* partials.spec();
-        yield* partials.features({ tasks, project });
+        const spec = yield* partials.spec();
+        yield* partials.features({ tasks, project, spec });
 
         // No root collection: the project, its tasks and features, and the spec surface through their own containers.
       }),
