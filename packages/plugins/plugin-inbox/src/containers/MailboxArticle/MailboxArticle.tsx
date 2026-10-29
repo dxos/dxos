@@ -95,13 +95,15 @@ export const MailboxArticle = ({
   const showItem = ToolkitHooks.useShowItem();
   const runAction = GraphHooks.useActionRunner();
 
-  // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
+  // Mail sync (`#sync`), the analyze cascade (`#analyze`), Triage inbox (`#triage`) and a message's extraction (`#extract`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = ToolkitHooks.useProgressMonitor(createSyncProgressKey(mailbox));
   const scanProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
+  const triageProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createTriageProgressKey(mailbox));
+  const extractProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createExtractProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
-  const progress = [syncProgress, scanProgress].find(isActive);
+  const progress = [syncProgress, scanProgress, triageProgress, extractProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 

@@ -19,12 +19,10 @@ import {
   ProjectArticle,
   ProjectArtifactsArticle,
   ProjectChatsArticle,
-  ShowcaseArticle,
-  ShowcaseCardContent,
   SpecArticle,
 } from '#containers';
 import { FEATURE_COMPANION, MOVE_TASK_DIALOG } from '#meta';
-import { Feature, Showcase, Spec } from '#types';
+import { Feature, Spec } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
@@ -64,18 +62,6 @@ export default Capability.makeModule(() =>
         id: 'feature.card',
         filter: AppSurface.object(AppSurface.CardContent, Feature.Feature),
         component: FeatureCardContent,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: 'showcase.article',
-        filter: AppSurface.object(AppSurface.Article, Showcase.Showcase),
-        component: ShowcaseArticle,
-        props: ({ role, data }) => ({ role, ...data }),
-      }),
-      Surface.create({
-        id: 'showcase.card',
-        filter: AppSurface.object(AppSurface.CardContent, Showcase.Showcase),
-        component: ShowcaseCardContent,
         props: ({ data: { subject } }) => ({ subject }),
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
