@@ -138,17 +138,27 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
   // A level's tasks are the ones working on its feature or any feature beneath it.
   const scope = useLevelTaskIds(feature, spec);
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
-  const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet, scope);
-  // A task added at a level works on its feature, which is what keeps it in the level's scope.
+  const { tasks, delegatableTasks, uncheck } = useCheckedTasks(taskSet, scope);
+  // A task added at a level works on its feature, which is what keeps it in the level's scope. A failed link leaves the
+  // task in the project, where the feature's Link task can still reach it, so the draft is not kept for a second create.
   const handleTaskCreated = useMemo(
     () =>
       feature
         ? async (task: Task.Task) => {
-            await invokePromise(
+            const { error } = await invokePromise(
               FeatureOperation.LinkTask,
               { task: Ref.make(task), feature: Ref.make(feature) },
               { spaceId: db?.spaceId },
             );
+            if (error) {
+              await invokePromise(LayoutOperation.AddToast, {
+                id: `${ProjectsNamespace.key}/link-task-error/${Date.now()}`,
+                icon: 'ph--warning--regular',
+                duration: 6_000,
+                title: ['link-task-error.title', { ns: ProjectsNamespace.key }],
+                description: error.message,
+              });
+            }
           }
         : undefined,
     [feature, invokePromise, db],
@@ -185,8 +195,6 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
     [updateView],
   );
 
-  const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
-
   // A session starting is what the chart is for, so a delegation run from this app — the toolbar or
   // a row's menu — brings the pipeline into view. Read off the invoker's own events rather than
   // inferred from the chat query, which also emits as a project's history hydrates and would open
@@ -220,7 +228,7 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
     checkedTasks: delegatableTasks,
     showPipeline,
     onAddArtifact: () => void handleAddArtifact(),
-    onDelegated: handleDelegated,
+    onDelegated: uncheck,
     onTogglePipeline: togglePipeline,
   });
 
@@ -569,7 +577,7 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
  */
 const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly string[]) => {
   const ids = useSelection(taskSet?.id, 'multi');
-  const { clear } = useSelectionActions(taskSet?.id);
+  const { multi } = useSelectionActions(taskSet?.id);
 
   // Same query the article's own list runs: membership is the ECHO parent edge, and the `tasks` and
   // `subtasks` lists carry sibling order, which the tree walk turns into the order rows appear in.
@@ -609,7 +617,16 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
   // A row the agent is already working on is left out rather than handed to a second session.
   const delegatableTasks = useMemo(() => checkedTasks.filter((task) => !Task.isAgentWorking(task)), [checkedTasks]);
 
-  return { tasks, checkedTasks, delegatableTasks, clearChecked: clear };
+  // Only the given rows, since rows checked on another level stay checked while this one shows.
+  const uncheck = useCallback(
+    (done: readonly Task.Task[]) => {
+      const doneIds = new Set(done.map(({ id }) => id));
+      multi(ids.filter((id) => !doneIds.has(id)));
+    },
+    [ids, multi],
+  );
+
+  return { tasks, checkedTasks, delegatableTasks, uncheck };
 };
 
 export type ToolbarActionsProps = {
@@ -626,7 +643,7 @@ export type ToolbarActionsProps = {
   showPipeline: boolean;
   onAddArtifact: () => void;
   /** Called once the checked tasks are delegated, so the boxes clear with the work. */
-  onDelegated: () => void;
+  onDelegated: (tasks: readonly Task.Task[]) => void;
   onTogglePipeline: () => void;
 };
 
@@ -692,7 +709,7 @@ const useToolbarActions = ({
       // Only a delegation that produced a chat moves the reader on; a refused one keeps the
       // selection so they can correct it and retry.
       if (data?.chat) {
-        onDelegated();
+        onDelegated(checkedTasks);
       }
     } finally {
       setDelegating(false);

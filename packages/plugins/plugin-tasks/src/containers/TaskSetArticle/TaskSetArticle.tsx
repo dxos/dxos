@@ -131,6 +131,9 @@ export const TaskSetArticle = ({
   // Dragging writes the set's own order, so it is offered only while that is the order shown: under a
   // sort the row would not land where it was dropped, and a group header is not a parent.
   const arranged = sort.field !== 'manual' || !!groups;
+  // A scoped list roots a branch at its first kept task, so a drop placed against the rows shown could detach that
+  // task from a parent outside the scope.
+  const movable = !arranged && scope === undefined;
   // Row order as rendered, so the article's arrow keys walk the rows the reader sees.
   const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
@@ -322,7 +325,7 @@ export const TaskSetArticle = ({
       onCollapsedChange={setCollapsed}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      onTaskMove={arranged ? undefined : handleMove}
+      onTaskMove={movable ? handleMove : undefined}
       onTaskSelect={handleOpen}
     >
       <Panel.Root role={role}>
