@@ -5,6 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { type SourceKey, parseReview } from '@dxos/deus/review';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -21,8 +22,6 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 
-import { type SourceKey } from '#sync';
-
 import { CodeNamespace } from '../../namespace.ts';
 import { ApiSurface } from '../ApiSurface/index.ts';
 import { ChangelogGraph, buildChangelogGraph } from '../ChangelogGraph/index.ts';
@@ -31,7 +30,6 @@ import { DecisionLog } from '../DecisionLog/index.ts';
 import { DefinitionGraph } from '../DefinitionGraph/index.ts';
 import { ReviewPanel } from '../ReviewPanel/index.ts';
 import { type SourceReader, reviewGutter } from '../SpecEditor/index.ts';
-import { parseReview } from '../SpecModel/index.ts';
 import { type GutterItem, decisionGutter } from './decision-gutter.ts';
 
 /** What the panel beside the spec shows. */

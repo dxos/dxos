@@ -60,6 +60,8 @@ const CONTENT_TYPES = {
   '.md': 'text/markdown',
   '.log': 'text/plain',
   '.zip': 'application/zip',
+  '.vsix': 'application/vsix',
+  '.cjs': 'text/javascript; charset=utf-8',
   '.gz': 'application/gzip',
   '.cpuprofile': 'application/json',
 };

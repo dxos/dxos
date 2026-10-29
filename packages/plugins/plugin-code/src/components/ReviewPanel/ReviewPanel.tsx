@@ -4,6 +4,7 @@
 
 import React, { createContext, forwardRef, useCallback, useContext, useMemo } from 'react';
 
+import { type ReviewModel, type SourceKey, type Verdict, VERDICT_STATUSES, summarizeReview } from '@dxos/deus/review';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -13,11 +14,9 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { type SourceKey } from '#sync';
-
 import { CodeNamespace } from '../../namespace.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
-import { type ReviewModel, STATUS_STYLE, type Verdict, VERDICT_STATUSES, summarizeReview } from '../SpecModel/index.ts';
+import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { VerdictCard } from '../VerdictCard/index.ts';
 
 export type ReviewPanelProps = {

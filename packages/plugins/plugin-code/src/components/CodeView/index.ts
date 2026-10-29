@@ -3,4 +3,3 @@
 //
 
 export * from './CodeView.tsx';
-export * from './symbol.ts';
