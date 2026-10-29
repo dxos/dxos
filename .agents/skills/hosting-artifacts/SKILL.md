@@ -34,7 +34,7 @@ file store — see "What must never go in" before your first upload.
 | Bucket          | `agent-artifacts` (Cloudflare R2, WEUR, DXOS account `950816f3f59b079880a1ae33fb0ec320`) |
 | Public base URL | `https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev`                                    |
 | S3 endpoint     | `https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com`                      |
-| Demo bundles    | `https://dx.pub/demo/<path>` serves the bucket's `autocue/<path>` (edge router `/demo`) |
+| Demo bundles    | `https://dx.pub/demo/<path>` serves the bucket's `autocue/<path>` (edge router `/demo`)  |
 
 **Prefer the dx.pub link for autocue bundles.** A bundle (`autocue/<date>-<slug>/`, written by the autocue skill's
 `pack.mjs`) is shared as `https://dx.pub/demo/<date>-<slug>/`: short, stable, and it serves the folder's
