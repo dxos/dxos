@@ -175,8 +175,16 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
   );
   const handleAdd = useCallback((id: string) => editing.moveFeature(id, zoomed?.id), [editing, zoomed]);
 
-  // The spec's `.mdl` document is a third view of the spec, offered only when the spec holds one.
-  const specDocument = useResolveRef(useObject(spec)[0]?.document);
+  // The spec's `.mdl` document is a third view of the spec, offered only when the spec holds one and a plugin
+  // renders it (plugin-code, which some builds leave out).
+  const resolvedDocument = useResolveRef(useObject(spec)[0]?.document);
+  const isSurfaceAvailable = Surface.useIsAvailable();
+  const specDocument =
+    resolvedDocument &&
+    attendableId &&
+    isSurfaceAvailable({ type: AppSurface.Article, data: { subject: resolvedDocument, attendableId } })
+      ? resolvedDocument
+      : undefined;
   const shown: FeatureMapView.Mode = mode === 'document' && !specDocument ? 'canvas' : mode;
   const modes = useMemo(() => MODES.filter(({ mode }) => mode !== 'document' || specDocument), [specDocument]);
 
