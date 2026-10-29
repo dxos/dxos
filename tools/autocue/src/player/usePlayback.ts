@@ -225,14 +225,15 @@ export const usePlayback = (chapters: Chapter[], fallbackDuration = 0): Playback
   );
 
   const toggleMute = useCallback(() => {
-    setMuted((current) => {
-      notify(current ? `Volume ${Math.round(volume * 100)}%` : 'Muted');
-      return !current;
-    });
+    // A zero volume reads as muted, so unmuting it restores an audible level.
+    const unmute = muted || volume === 0;
+    const next = volume === 0 ? 0.8 : volume;
     if (volume === 0) {
-      setVolumeState(0.8);
+      setVolumeState(next);
     }
-  }, [volume, notify]);
+    setMuted(!unmute);
+    notify(unmute ? `Volume ${Math.round(next * 100)}%` : 'Muted');
+  }, [muted, volume, notify]);
 
   return {
     videoRef,

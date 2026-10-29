@@ -431,8 +431,8 @@ const manifest = {
   demos,
 };
 
-/** `</script>` inside the JSON would end the manifest's script element early. */
-const embed = (value) => JSON.stringify(value).replaceAll('</', '<\\/').replaceAll('<!--', '<\\!--');
+/** Every `<` as a JSON escape, so neither `</script>` nor `<!--` in a flow or spec can end the element early. */
+const embed = (value) => JSON.stringify(value).replaceAll('<', '\\u003c');
 const escapeHtml = (value) =>
   String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
