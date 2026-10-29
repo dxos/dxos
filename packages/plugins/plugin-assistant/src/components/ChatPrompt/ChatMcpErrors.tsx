@@ -10,9 +10,8 @@ import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
 import { type ChatModel } from '../../chat-model/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 
 export type ChatMcpErrorsProps = Util.ThemedClassName<{
   chatModel: ChatModel;
@@ -23,7 +22,7 @@ export type ChatMcpErrorsProps = Util.ThemedClassName<{
  * The chat itself keeps working without these servers — this just lets the user see what was dropped.
  */
 export const ChatMcpErrors = ({ classNames, chatModel }: ChatMcpErrorsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const errors = useAtomValue(chatModel.mcpErrors);
 
   const handleDismiss = useCallback(() => {

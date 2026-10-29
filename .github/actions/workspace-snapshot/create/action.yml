@@ -69,12 +69,20 @@ runs:
         stage() (
           set -euo pipefail
           timeout 600 pnpm exec playwright install chromium firefox webkit
-          for attempt in 1 2 3; do sudo timeout 240 apt-get update -qq && break; [ "$attempt" = 3 ] && exit 1; done
+          bash .github/actions/playwright/ubuntu-sources-only.sh
+          for attempt in 1 2 3; do sudo timeout 240 apt-get update -q && break; [ "$attempt" = 3 ] && exit 1; done
           mapfile -t pkgs < <(pnpm exec playwright install-deps --dry-run chromium firefox webkit 2>&1 | sed -n 's/^  //p')
           mkdir -p "$bundle/archives/partial" "$bundle/lists"
+          # `--reinstall` keeps a package this runner already has, which a job on another image may lack.
+          # The mirror has stalled mid-download; apt resumes from `partial/`, so each attempt picks up where the
+          # last one stopped.
           if [ "${#pkgs[@]}" -gt 0 ]; then
-            sudo timeout 600 env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
-              --download-only -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}" >/dev/null
+            for attempt in 1 2 3; do
+              sudo timeout --kill-after=15 180 env DEBIAN_FRONTEND=noninteractive apt-get install -y -q \
+                --no-install-recommends --download-only --reinstall -o Acquire::http::Timeout=30 -o Acquire::Retries=3 \
+                -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}" && break
+              [ "$attempt" = 3 ] && exit 1
+            done
           fi
           sudo cp -a /var/lib/apt/lists/. "$bundle/lists/"
           sudo rm -rf "$bundle/lists/partial" "$bundle/lists/lock" "$bundle/archives/partial" "$bundle/archives/lock"

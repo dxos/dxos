@@ -57,6 +57,7 @@ import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
+import * as LighthousePlugin from '@dxos/plugin-lighthouse/LighthousePlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
@@ -295,6 +296,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     JmapPlugin.make(),
     KanbanPlugin.make(),
     LibraryPlugin.make(),
+    // Not in the defaults: it talks to a lighthouse server on localhost, which raises the local network prompt.
+    LighthousePlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
     isLocal && MapSolidMapPlugin.make(),

@@ -69,26 +69,41 @@ describe('DatabaseImpl', () => {
       await db.query(Query.type(TestSchema.Expando, { id: textObject.id })).first({ timeout: 1000 });
     });
 
-    test("separate-doc object is treated as inline if it's both linked and inline", async () => {
-      const object = Obj.make(TestSchema.Expando, { content: '' });
-      // The second peer treats text as inline right after opening the document
+    test('an object both linked and inline is moved out of the directory when the space opens', async () => {
+      const object = Obj.make(TestSchema.Expando, { content: 'moved' });
+      let textUrl: string | undefined;
+      // An older peer copies the object into the space root, leaving its own document empty.
       const db = await createClientDbInSpaceWithObject(object, (handles) => {
-        const textHandle = handles.linkedDocHandles[0]!;
-        expect(getObjectCore(object).docHandle?.url).to.eq(textHandle.url);
+        const textHandle = handles.linkedDocHandles[0];
+        invariant(textHandle);
+        textUrl = textHandle.url;
         handles.spaceRootHandle.change((newDocument: DatabaseDirectory) => {
           newDocument.objects = textHandle.doc()?.objects;
         });
-        textHandle.change((newDocument: any) => {
+        textHandle.change((newDocument: DatabaseDirectory) => {
           newDocument.objects = {};
         });
       });
 
-      const text = db.getObjectById(object.id)!;
-      expect(text).not.to.be.undefined;
+      // The host migrates the inline copy into a document of its own and re-points the link at it.
       const spaceRootHandle = getDocHandles(db).spaceRootHandle;
-      expect(getObjectCore(text).docHandle?.url).to.eq(spaceRootHandle.url);
-      // The first peer rebinds its object to space root too
-      expect(getObjectCore(object).docHandle?.url).to.eq(spaceRootHandle.url);
+      await waitForCondition({
+        condition: () => {
+          const link = spaceRootHandle.doc()?.links?.[object.id]?.toString();
+          const loaded = db.getObjectById(object.id);
+          return (
+            spaceRootHandle.doc()?.objects?.[object.id] == null &&
+            link != null &&
+            loaded != null &&
+            getObjectCore(loaded).docHandle?.url === link
+          );
+        },
+        timeout: 5_000,
+      });
+      const link = spaceRootHandle.doc()?.links?.[object.id]?.toString();
+      expect(link).not.to.eq(textUrl);
+      expect(link).not.to.eq(spaceRootHandle.url);
+      expect(db.getObjectById<Obj.Unknown & { content: string }>(object.id)?.content).to.eq('moved');
     });
   });
 
@@ -116,6 +131,59 @@ describe('DatabaseImpl', () => {
       // open itself started, so a space that opened its links would hold five handles here.
       await db.loadObjectCoreById(objectIds[0]);
       expect(db.getLinkedDocHandles()).toHaveLength(1);
+    });
+
+    test('a batch load answers a child once its parent has loaded', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const task = db.add(Obj.make(TestSchema.Task, { title: 'Owned' }));
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Owner', tasks: [Ref.make(task)] }));
+      Obj.setParent(task, person);
+      await db.flush({ indexes: false });
+
+      // A fresh client holds neither document, so the parent's load starts only once the child's body names it.
+      const reader = await peer.openLastDatabase({ client: await peer.createClient() });
+      const [core] = await reader.batchLoadObjectCores([task.id]);
+      expect(core?.id).toBe(task.id);
+    });
+  });
+
+  describe('passive space root', () => {
+    const openReader = async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer();
+      const db = await peer.createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { name: 'linked' }));
+      await db.flush();
+      const client = await peer.createClient();
+      invariant(db.rootUrl);
+      const reader = await peer.openDatabase(db.spaceKey, db.rootUrl, { client });
+      const root = reader.getSpaceRootDocHandle();
+      expect(root.state).toBe('passive');
+      return { db, reader, root, object };
+    };
+
+    test('a link another client removes loads a passive root and evicts the object', async () => {
+      const { db, reader, root, object } = await openReader();
+      expect((await reader.loadObjectCoreById(object.id))?.id).toBe(object.id);
+
+      db._entityManager.unlinkObjects([object.id]);
+      await db.flush();
+      await waitForCondition({ condition: () => reader.getObjectDocumentId(object.id) === undefined, timeout: 5_000 });
+      expect(reader.getObjectById(object.id)).toBeUndefined();
+      expect(root.state).not.toBe('passive');
+    });
+
+    test('an inline object another client writes into the root loads the root and shows the object', async () => {
+      const { db, reader, root } = await openReader();
+      const { id } = addObjectToDoc(db.getSpaceRootDocHandle(), { id: EntityId.random(), name: 'inline' });
+      await db.flush();
+      await waitForCondition({ condition: () => reader.getObjectById(id) !== undefined, timeout: 5_000 });
+      expect(root.state).not.toBe('passive');
+      expect(reader.getObjectDocumentId(id)).toBe(root.documentId);
     });
   });
 

@@ -15,8 +15,8 @@ import { Canvas, createCanvasAtoms, useRegistry } from '@dxos/react-ui-canvas/sc
 import { Loading } from '@dxos/react-ui/testing';
 import { createStoryDecorators } from '@dxos/storybook-testing';
 
+import * as CanvasPlugin from '#meta';
 import { generatorCompiler, seedContent, updateCanvasRecord, writeViews } from '#model';
-import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Canvas as CanvasType, Generator } from '#types';
 
@@ -136,7 +136,7 @@ const meta: Meta<FilmProps> = {
   args: { chrome: false },
   decorators: createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, Generator.Generator],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
   }),
   parameters: { layout: 'fullscreen', translations },
 };

@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { NativeNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [NativeNamespace.key]: {
         'update-ready.label': 'Ready to update',
         'update-ready.description': 'A new version of Composer is available.',
         'update.label': 'Restart to update',

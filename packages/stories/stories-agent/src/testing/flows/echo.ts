@@ -360,7 +360,7 @@ export const echoFlow: ActorFlow<EchoTarget> = {
     SheetPlugin.make(),
     ...(SCRIPTS[name]
       ? [
-          RoutinePlugin(),
+          RoutinePlugin.make(),
           AssistantPlugin.make({ aiServiceMiddleware: scriptedAssistant(SCRIPTS[name]) }),
           PreviewPlugin.make(),
           TasksPlugin.make(),

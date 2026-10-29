@@ -8,8 +8,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
+import { SandboxNamespace } from '../../namespace.ts';
 import type { RepositoryFile } from '../../services/RepositoryClient.ts';
 import { imageTypeForPath, languageForPath } from './languages.ts';
 
@@ -19,7 +18,7 @@ export type RepositoryFileViewProps = {
 
 /** One file at a commit: highlighted text, an image, or a note that the file is binary. */
 export const RepositoryFileView = ({ file }: RepositoryFileViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SandboxNamespace.key);
   if (file.encoding === 'utf-8') {
     return (
       <SyntaxHighlighter

@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { TaskQuestion } from '@dxos/react-ui-task';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -13,14 +14,15 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import {
   ACTOR_STYLE,
   ActorAvatar,
   type DeciderGroup,
   type DecisionModel,
+  type QuestionModel,
   buildChangelogGraph,
+  buildQuestions,
   groupByDecider,
 } from '../ChangelogGraph/index.ts';
 
@@ -30,7 +32,7 @@ const ROW_COLUMNS = ['4rem', 'fill'] as const;
 type DecisionRowProps = { decision: DecisionModel; item: Listbox.Option; selected: boolean };
 
 const DecisionRow = ({ decision, item, selected }: DecisionRowProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { entry, actor, principal, supersededBy, approvedBy } = decision;
   const reason = actor === 'user' ? (entry.quote ?? entry.why) : entry.why;
   return (
@@ -84,7 +86,7 @@ const DecisionRow = ({ decision, item, selected }: DecisionRowProps) => {
 };
 
 const DeciderSection = ({ group, selected }: { group: DeciderGroup; selected?: string }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const style = group.actor ? ACTOR_STYLE[group.actor] : undefined;
   const items = useMemo(
     () => group.decisions.map(({ entry }) => ({ value: entry.id, label: entry.title })),
@@ -127,19 +129,84 @@ const DeciderSection = ({ group, selected }: { group: DeciderGroup; selected?: s
   );
 };
 
+type QuestionItemProps = Pick<DecisionLogProps, 'onAnswer'> & { question: QuestionModel; selected: boolean };
+
+const QuestionItem = ({ question: { entry, actor, handle, answer }, selected, onAnswer }: QuestionItemProps) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const thread = useMemo(
+    () => ({
+      question: { text: entry.title, context: entry.context, options: entry.options },
+      answer: answer && { answer: answer.entry.title },
+    }),
+    [entry, answer],
+  );
+  return (
+    <li
+      className={mx('flex flex-col gap-2 px-3 py-2', selected && 'bg-current-surface')}
+      data-testid='decision-log.question'
+      data-question={entry.id}
+      data-answered={answer ? '' : undefined}
+    >
+      <Layout.Flex align='center' gap='sm' classNames='min-w-0'>
+        <ActorAvatar actor={actor} handle={handle} />
+        <span className='font-mono text-sm'>{entry.id}</span>
+        <span className='text-xs text-description truncate'>
+          {[handle ?? t('changelog-graph.unknown-actor.label'), entry.date].filter(Boolean).join(' · ')}
+        </span>
+        <span className='grow' />
+        {answer ? (
+          <Tag.Tag hue='success'>{t('changelog-graph.question.answered-in.label', { id: answer.id })}</Tag.Tag>
+        ) : (
+          <Tag.Tag hue='warning'>{t('changelog-graph.question.open.label')}</Tag.Tag>
+        )}
+      </Layout.Flex>
+      {/* The chat's question component, so a spec question reads and answers like one an agent asks in a thread. */}
+      <TaskQuestion thread={thread} onAnswer={onAnswer && ((text) => onAnswer(entry.id, text))} />
+    </li>
+  );
+};
+
+const QuestionSection = ({
+  questions,
+  selected,
+  onAnswer,
+}: Pick<DecisionLogProps, 'onAnswer' | 'selected'> & { questions: QuestionModel[] }) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const open = questions.filter(({ answer }) => !answer).length;
+  return (
+    <section className='rounded-md bg-card-surface border-2 border-warning-border' data-testid='decision-log.questions'>
+      <Layout.Flex asChild align='center' gap='sm' classNames='px-3 py-2 border-b border-separator'>
+        <header>
+          <Icon.Icon icon='ph--question--regular' />
+          <span className='font-medium'>{t('decision-log.questions.label')}</span>
+          <span className='grow' />
+          {open > 0 && <Tag.Tag hue='warning'>{t('decision-log.questions.open.label', { count: open })}</Tag.Tag>}
+        </header>
+      </Layout.Flex>
+      <ul className='divide-y divide-separator'>
+        {questions.map((question) => (
+          <QuestionItem key={question.id} question={question} selected={question.id === selected} onAnswer={onAnswer} />
+        ))}
+      </ul>
+    </section>
+  );
+};
+
 export type DecisionLogProps = {
   /** The text of a `.mdl` spec; only its `## Changelog` is listed. */
   content: string;
-  /** A decision id whose row is highlighted. */
+  /** A decision or question id whose row is highlighted. */
   selected?: string;
+  /** Records an answer to an open question as a decision; without it questions are read-only. */
+  onAnswer?: (question: string, answer: string) => void;
 };
 
 /**
- * A spec's `## Changelog` as a log grouped by decider: one section per person, then per agent at the bottom,
- * each listing that decider's decisions in the order they were made.
+ * A spec's `## Changelog` as a log grouped by decider: the questions first, open ones on top, then one section per
+ * person, then per agent at the bottom, each listing that decider's decisions in the order they were made.
  */
-export const DecisionLog = ({ content, selected }: DecisionLogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+export const DecisionLog = ({ content, selected, onAnswer }: DecisionLogProps) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const groups = useMemo(
     () =>
       groupByDecider(
@@ -147,8 +214,9 @@ export const DecisionLog = ({ content, selected }: DecisionLogProps) => {
       ),
     [content],
   );
+  const questions = useMemo(() => buildQuestions(content), [content]);
 
-  if (groups.length === 0) {
+  if (groups.length === 0 && questions.length === 0) {
     return (
       <Status.Empty classNames='dx-fill' data-testid='decision-log.empty'>
         {t('decision-log.empty.message')}
@@ -160,6 +228,7 @@ export const DecisionLog = ({ content, selected }: DecisionLogProps) => {
     <ScrollArea.Root orientation='vertical' classNames='dx-fill' data-testid='decision-log'>
       <ScrollArea.Viewport>
         <Layout.Flex column gap='lg' classNames='p-4'>
+          {questions.length > 0 && <QuestionSection questions={questions} selected={selected} onAnswer={onAnswer} />}
           {groups.map((group) => (
             <DeciderSection key={`${group.actor}:${group.handle}`} group={group} selected={selected} />
           ))}

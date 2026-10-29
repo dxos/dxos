@@ -2,12 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { ThemeNamespace } from './src/namespace.ts';
+import { type ThemePluginOptions } from './src/react-context.tsx';
+import * as ThemeCapabilities from './src/types/ThemeCapabilities.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig<ThemePluginOptions> = Plugin.config<ThemePluginOptions>({
   plugin: {
-    key: 'org.dxos.plugin.theme',
+    key: ThemeNamespace.key,
     name: 'Theme',
     author: 'DXOS',
     description: trim`
@@ -17,4 +26,21 @@ export default Config2.make({
     icon: { key: 'ph--palette--regular', hue: 'pink' },
     tags: ['system'],
   },
+  modules: [
+    AppCapability.reactContext(() => import('./src/react-context.tsx', { with: { type: 'module-url' } }), {
+      requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings],
+    }),
+    AppCapability.settings(() => import('./src/settings.ts', { with: { type: 'module-url' } }), {
+      provides: [ThemeCapabilities.Settings],
+    }),
+    Capability.lazyModule(
+      'Translator',
+      { requires: [Capabilities.AtomRegistry, AppCapabilities.Translations], provides: [AppCapabilities.Translator] },
+      () => import('./src/translator.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

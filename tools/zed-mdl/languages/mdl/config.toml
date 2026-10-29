@@ -1,0 +1,14 @@
+# A `.mdl` file is markdown; its ```mdl fences are injected as `MDL Block` (see injections.scm).
+name = "DEUS MDL"
+grammar = "markdown"
+path_suffixes = ["mdl"]
+block_comment = ["<!-- ", " -->"]
+word_characters = ["-", "."]
+brackets = [
+  { start = "{", end = "}", close = true, newline = true },
+  { start = "[", end = "]", close = true, newline = true },
+  { start = "(", end = ")", close = true, newline = true },
+  { start = "\"", end = "\"", close = false, newline = false },
+  { start = "`", end = "`", close = true, newline = false },
+]
+tab_size = 2

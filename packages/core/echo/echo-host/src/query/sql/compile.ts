@@ -21,6 +21,7 @@ import {
   buildSourceCondition,
   buildTypeDxnCondition,
   normalizePropPath,
+  queueBranchesOf,
 } from '@dxos/index-core';
 import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 
@@ -51,6 +52,7 @@ const UNION_BRANCH_STRIDE = 1_000_000_000;
 const INDEX_SPACE_OBJECT = 'idx_object_index_objectId';
 const INDEX_SPACE_TYPE = 'idx_object_index_typeDXN';
 const INDEX_SPACE_QUEUE_OBJECT = 'idx_object_index_queueObjectId';
+const INDEX_SPACE_QUEUE_BRANCH = 'idx_object_index_queueBranch';
 const INDEX_SPACE_PARENT = 'idx_object_index_parentId';
 const INDEX_SPACE_SOURCE = 'idx_object_index_sourceId';
 const INDEX_SPACE_TARGET = 'idx_object_index_targetId';
@@ -256,10 +258,7 @@ export class SqlPlanCompiler {
     const spaces = spaceScopes.map((scope) => scope.spaceId as SpaceId);
     const queues = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
     const includeAllQueues = spaceScopes.some((scope) => scope.includeAllFeeds === true);
-    const queueRefs = withFeedCutoffs(
-      extractQueueRefs(queues.map((scope) => String(scope.feedUri))),
-      this.#feedCutoffs,
-    );
+    const queueRefs = withFeedCutoffs(extractQueueRefs(queues), this.#feedCutoffs);
     const scope = buildSourceCondition(sql, spaces, includeAllQueues, queueRefs);
     const window = buildQueueWindow(sql, extractQueueWindow(step));
 
@@ -279,11 +278,18 @@ export class SqlPlanCompiler {
         // Pinned: over a space the planner otherwise seeks `(spaceId, queueId)` and scans the space's
         // documents for the type. One feed is the exception: the type index would read that type in
         // every feed of the space (a chat's messages among every chat's), where the feed seek reads
-        // only its rows. An inverted select cannot seek the type index, so it is left free.
-        const index =
+        // only its rows, and one branch of one feed seeks that branch. An inverted select cannot seek
+        // the type index, so it is left free.
+        const singleQueue =
           spaces.length === 0 && queueRefs?.length === 1 && queueRefs[0].spaceId !== undefined
-            ? INDEX_SPACE_QUEUE_OBJECT
-            : INDEX_SPACE_TYPE;
+            ? queueRefs[0]
+            : undefined;
+        const index =
+          singleQueue === undefined
+            ? INDEX_SPACE_TYPE
+            : singleQueue.branches?.length === 1
+              ? INDEX_SPACE_QUEUE_BRANCH
+              : INDEX_SPACE_QUEUE_OBJECT;
         base = step.selector.inverted
           ? sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m WHERE ${scope} AND NOT (${typeCondition})${window}`
           : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(index)} WHERE ${scope} AND (${typeCondition})${window}`;
@@ -1595,21 +1601,26 @@ const spaceIdOfUri = (sql: SqlClient.SqlClient, uri: Fragment): Fragment =>
 
 /**
  * The queues a feed scope names, each carrying the space its URI qualifies it with, so the index
- * seek cannot cross spaces. An unqualified URI matches on its id alone.
+ * seek cannot cross spaces, and the branches it is restricted to. An unqualified URI matches on its
+ * id alone.
  */
-const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
+const extractQueueRefs = (queues: readonly QueryAST.FeedScope[]): QueueRef[] | null => {
   if (queues.length === 0) {
     return null;
   }
   const refs: QueueRef[] = [];
-  for (const feedUri of queues) {
-    const eid = EID.tryParse(feedUri);
+  for (const scope of queues) {
+    const eid = EID.tryParse(String(scope.feedUri));
     const queueId = eid ? EID.getEntityId(eid) : undefined;
     if (!eid || !queueId) {
       continue;
     }
     const spaceId = EID.getSpaceId(eid);
-    refs.push(spaceId !== undefined ? { queueId, spaceId } : { queueId });
+    refs.push({
+      queueId,
+      ...(spaceId !== undefined ? { spaceId } : {}),
+      ...queueBranchesOf(scope.branches),
+    });
   }
   return refs;
 };

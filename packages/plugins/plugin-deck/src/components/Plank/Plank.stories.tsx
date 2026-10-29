@@ -22,8 +22,7 @@ import * as Button from '@dxos/react-ui/Button';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { DeckState, OperationHandler } from '#capabilities';
-import { meta as pluginMeta } from '#meta';
+import DeckConfig, { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import type { DeckCapabilities } from '#types';
 
@@ -32,8 +31,8 @@ import { Plank } from './Plank.tsx';
 random.seed(99);
 
 const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta).pipe(
-  Plugin.addModule(DeckState),
-  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Plugin.getModule(DeckConfig, 'DeckState')),
+  Plugin.addModule(Plugin.getModule(DeckConfig, 'OperationHandler')),
   Plugin.make,
 );
 

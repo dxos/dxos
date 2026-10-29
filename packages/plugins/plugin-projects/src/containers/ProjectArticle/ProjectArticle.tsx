@@ -39,10 +39,10 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { meta } from '#meta';
 import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import { useRefTargets } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
@@ -68,7 +68,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
   const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
@@ -535,7 +535,7 @@ const useToolbarActions = ({
           'tabs',
           {
             variant: 'custom',
-            label: ['views.label', { ns: meta.profile.key }],
+            label: ['views.label', { ns: ProjectsNamespace.key }],
             render: () => tabs,
           },
           () => {},
@@ -544,7 +544,7 @@ const useToolbarActions = ({
         .action(
           'create-chat',
           {
-            label: ['create-chat.label', { ns: meta.profile.key }],
+            label: ['create-chat.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--sparkle--regular',
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
@@ -556,7 +556,7 @@ const useToolbarActions = ({
         .action(
           'delegate-tasks',
           {
-            label: ['delegate-tasks.label', { ns: meta.profile.key }],
+            label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--paper-plane-tilt--regular',
             disposition: 'toolbar',
             disabled: checkedTasks.length === 0 || delegating,
@@ -568,7 +568,7 @@ const useToolbarActions = ({
         .group(
           'view',
           {
-            label: ['view.label', { ns: meta.profile.key }],
+            label: ['view.label', { ns: ProjectsNamespace.key }],
             variant: 'toggleGroup',
             selectCardinality: 'multiple',
             value: showPipeline ? ['pipeline'] : [],
@@ -577,7 +577,7 @@ const useToolbarActions = ({
             group.action(
               'pipeline',
               {
-                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: meta.profile.key }],
+                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: ProjectsNamespace.key }],
                 icon: 'ph--chart-bar-horizontal--regular',
                 testId: 'projectsPlugin.pipeline',
               },
@@ -592,7 +592,7 @@ const useToolbarActions = ({
             group.action(
               'add-artifact',
               {
-                label: ['create-artifact.label', { ns: meta.profile.key }],
+                label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
                 icon: 'ph--plus--regular',
                 testId: 'projectsPlugin.addArtifact',
               },

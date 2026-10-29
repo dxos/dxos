@@ -5,12 +5,12 @@
 import { translations as transcriptionTranslations } from '@dxos/react-ui-transcription/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { TranscriptionNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [TranscriptionNamespace.key]: {
         'plugin.name': 'Transcription',
         'transcript-companion.label': 'Transcript',
 

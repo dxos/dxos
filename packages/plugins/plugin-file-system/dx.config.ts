@@ -2,12 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { FileSystemNamespace } from './src/namespace.ts';
+import * as FileSystemCapabilities from './src/types/FileSystemCapabilities.ts';
+import * as FileSystemEvents from './src/types/FileSystemEvents.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.fileSystem',
+    key: FileSystemNamespace.key,
     name: 'FileSystem',
     author: 'DXOS',
     description: trim`
@@ -22,4 +34,53 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        requires: [Capabilities.AtomRegistry, FileSystemCapabilities.State],
+      },
+    ),
+    Capability.lazyModule(
+      'MarkdownExtension',
+      {
+        // `State` is declared alongside the manager because the provider callbacks read it and it is
+        // contributed by this plugin's own idle-gated module, which markdown start can otherwise precede.
+        requires: [FileSystemCapabilities.FileSystemManager, FileSystemCapabilities.State],
+        provides: [MarkdownCapabilities.ExtensionProvider],
+        activatesOn: MarkdownEvents.Start,
+      },
+      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: FileSystemNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      requires: [FileSystemCapabilities.State],
+      roles: ['org.dxos.role.article'],
+    }),
+    Capability.lazyModule(
+      'State',
+      {
+        requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+        provides: [FileSystemCapabilities.State, FileSystemCapabilities.FileSystemManager],
+        activatesOn: FileSystemEvents.Start,
+      },
+      () => import('./src/capabilities/state/state.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

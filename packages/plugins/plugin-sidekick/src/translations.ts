@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Profile, Sidekick } from '#types';
+
+import { SidekickNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -31,7 +32,7 @@ export const translations = [
         'rename-object.label': 'Rename sidekick',
         'delete-object.label': 'Delete sidekick',
       },
-      [meta.profile.key]: {
+      [SidekickNamespace.key]: {
         'plugin.name': 'Sidekick',
         'dashboard.title': 'Sidekick Dashboard',
         'day-ahead.title': 'Day Ahead',

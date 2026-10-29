@@ -7,8 +7,7 @@ import type * as Layer from 'effect/Layer';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Connection } from '@dxos/link';
 
-import { meta } from '#meta';
-
+import { AtprotoNamespace } from '../namespace.ts';
 import type * as AtprotoRepo from '../services/AtprotoRepo.ts';
 
 /**
@@ -20,7 +19,7 @@ import type * as AtprotoRepo from '../services/AtprotoRepo.ts';
  */
 export type RepoLayerFactory = (connection: Connection.Connection) => Layer.Layer<AtprotoRepo.Service, unknown>;
 
-export const RepoLayer = Capability.make<RepoLayerFactory>()(`${meta.profile.key}.capability.repoLayer`);
+export const RepoLayer = Capability.make<RepoLayerFactory>()(`${AtprotoNamespace.key}.capability.repoLayer`);
 
 /**
  * Builds a public, read-only {@link AtprotoRepo.Service} layer for an arbitrary handle/DID (no
@@ -28,4 +27,6 @@ export const RepoLayer = Capability.make<RepoLayerFactory>()(`${meta.profile.key
  */
 export type ReadRepoLayerFactory = (handle: string) => Layer.Layer<AtprotoRepo.Service, unknown>;
 
-export const ReadRepoLayer = Capability.make<ReadRepoLayerFactory>()(`${meta.profile.key}.capability.readRepoLayer`);
+export const ReadRepoLayer = Capability.make<ReadRepoLayerFactory>()(
+  `${AtprotoNamespace.key}.capability.readRepoLayer`,
+);

@@ -3,11 +3,13 @@
 //
 
 import { Type } from '@dxos/echo';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { SpecDocument } from '@dxos/types';
 
-import { meta } from '#meta';
 import { CodeProject, SourceFile } from '#types';
+
+import { CodeNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -41,7 +43,7 @@ export const translations = [
         'typename.label_other': 'Source Files',
         'object-name.placeholder': 'New source file',
       },
-      [meta.profile.key]: {
+      [CodeNamespace.key]: {
         'plugin.name': 'Code',
         'code-projects-section.label': 'Code Projects',
         'spec.label': 'Spec',
@@ -80,6 +82,9 @@ export const translations = [
         'changelog-graph.edge.supersedes.label': 'Supersedes',
         'changelog-graph.edge.approves.label': 'Approves',
         'changelog-graph.edge.affects.label': 'Affects',
+        'changelog-graph.edge.answers.label': 'Answers',
+        'changelog-graph.question.open.label': 'Open',
+        'changelog-graph.question.answered-in.label': 'Answered in {{id}}',
         'spec-view.label': 'View',
         'spec-diff.label': 'Diff',
         'spec-diff.base.label': 'Changes since {{base}}',
@@ -92,6 +97,9 @@ export const translations = [
         'spec-view.api.label': 'API',
         'spec-view.review.label': 'Review',
         'spec-view.code.label': 'Code',
+        'spec-panel.hide.label': 'Hide panel',
+        'spec-panel.show.label': 'Show panel',
+        'spec-panel.resize.label': 'Resize panel',
         'definition-graph.code.label': 'Code',
         'verdict-card.menu.label': 'Verdict actions',
         'verdict-card.reveal.label': 'Show in spec',
@@ -102,8 +110,9 @@ export const translations = [
         'review-panel.empty.label': 'No review yet. Run the spec-review skill to write one beside the spec:',
         'code-view.loading.label': 'Loading…',
         'code-view.empty.label': 'Ctrl/⌘-click a code key in the spec, or double-click a code box, to open it here.',
-        'code-view.no-files.label': 'Local files are reachable only from the desktop app or a Composer dev server.',
-        'code-view.no-checkout.label': 'No local checkout of {{repo}}. Add it in Code settings.',
+        'code-view.github-source.label': 'GitHub @ {{ref}}',
+        'code-view.github-error.label': 'GitHub returned {{status}} for {{url}}.',
+        'code-view.github-unreachable.label': 'Could not reach GitHub for {{url}}.',
         'code-view.symbol-not-found.label': 'Symbol not found',
         'code-view.open-external.label': 'Open in VS Code',
         'spec-sync.synced.label': 'Synced',
@@ -116,6 +125,9 @@ export const translations = [
         'decision-log.count.label_one': '{{count}} decision',
         'decision-log.count.label_other': '{{count}} decisions',
         'decision-log.empty.message': 'This spec has no changelog.',
+        'decision-log.questions.label': 'Questions',
+        'decision-log.questions.open.label_one': '{{count}} open',
+        'decision-log.questions.open.label_other': '{{count}} open',
         'definition-graph.group-concepts.label': 'Concepts',
         'definition-graph.group-requirements.label': 'Features & requirements',
         'definition-graph.group-qa.label': 'Scenarios & tests',
@@ -150,4 +162,5 @@ export const translations = [
       },
     },
   },
+  ...taskTranslations,
 ] as const satisfies Theme.Resource[];

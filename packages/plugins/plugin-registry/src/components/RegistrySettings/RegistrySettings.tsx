@@ -14,8 +14,9 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
 import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '#types';
+
+import { RegistryNamespace } from '../../namespace.ts';
 
 export type RegistrySettingsProps = AppSurface.SettingsProps<
   RegistrySettingsType,
@@ -51,7 +52,7 @@ export const RegistrySettings = ({
   onPluginScopeLocalChange,
   scope,
 }: RegistrySettingsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RegistryNamespace.key);
   const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;

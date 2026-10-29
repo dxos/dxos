@@ -69,13 +69,20 @@ runs:
           # The dry run asks apt what it would install, so it reads the bundle's lists, not the image's.
           sudo cp -a "$bundle/lists/." /var/lib/apt/lists/
           mapfile -t pkgs < <(pnpm exec playwright install-deps --dry-run "$BROWSER" 2>&1 | sed -n 's/^  //p')
+          source=snapshot
           if [ "${#pkgs[@]}" -gt 0 ]; then
             mkdir -p "$bundle/archives/partial"
-            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends --no-download \
-              -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}" >/dev/null
+            install=(sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends
+              -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}")
+            # A runner image newer or older than the snapshot's can need a package the bundle lacks: fetch just
+            # that one against the bundle's lists, still without `apt-get update`.
+            if ! "${install[@]}" --no-download >/dev/null; then
+              source="snapshot, plus packages it lacked"
+              timeout --kill-after=15 240 "${install[@]}" -o Acquire::http::Timeout=30 -o Acquire::Retries=3 >/dev/null
+            fi
           fi
           timeout 240 pnpm exec playwright install "$BROWSER"
-          echo "installed $BROWSER and ${#pkgs[@]} system packages from the snapshot"
+          echo "installed $BROWSER and ${#pkgs[@]} system packages from the $source"
         )
         set +e
         offline_install
@@ -131,6 +138,7 @@ runs:
       env:
         BROWSER: ${{ inputs.browser }}
       run: |
+        bash "$GITHUB_ACTION_PATH/ubuntu-sources-only.sh"
         for attempt in 1 2 3; do
           timeout --kill-after=15 240 pnpm exec playwright install --with-deps "$BROWSER" && exit 0
           echo "::warning::Playwright install attempt $attempt failed or stalled (exit $?)."

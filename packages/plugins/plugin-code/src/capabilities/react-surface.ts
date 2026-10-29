@@ -11,9 +11,9 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { SpecDocument } from '@dxos/types';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
-import { meta } from '#meta';
 import { CodeProject } from '#types';
 
+import { CodeNamespace } from '../namespace.ts';
 import { isPluginSpecSubject } from '../plugin-spec.ts';
 
 export default Capability.makeModule(() =>
@@ -45,7 +45,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'codeSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, CodeNamespace.key),
         component: CodeSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

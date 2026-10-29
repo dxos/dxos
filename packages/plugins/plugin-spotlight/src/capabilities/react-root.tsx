@@ -9,12 +9,13 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { SpotlightLayout } from '#components';
-import { meta } from '#meta';
+
+import { SpotlightNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactRoot, {
-      id: meta.profile.key,
+      id: SpotlightNamespace.key,
       root: () => <SpotlightLayout />,
     }),
   ),

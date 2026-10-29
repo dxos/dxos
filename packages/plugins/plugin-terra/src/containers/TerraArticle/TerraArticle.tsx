@@ -18,10 +18,10 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
-import { meta } from '#meta';
 import { Terra, TerraCapabilities, TerraObject } from '#types';
 
 import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine/index.ts';
+import { TerraNamespace } from '../../namespace.ts';
 import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene/index.ts';
 import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim/index.ts';
 
@@ -96,7 +96,7 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
   // The selected view tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TerraNamespace.key);
   const { themeMode } = useThemeContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
@@ -344,7 +344,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
         .action(
           'toggle-playing',
           {
-            label: isPlaying ? ['pause.label', { ns: meta.profile.key }] : ['play.label', { ns: meta.profile.key }],
+            label: isPlaying ? ['pause.label', { ns: TerraNamespace.key }] : ['play.label', { ns: TerraNamespace.key }],
             icon: isPlaying ? 'ph--pause--regular' : 'ph--play--regular',
             disposition: 'toolbar',
             testId: 'terra.toolbar.toggle-playing',
@@ -354,7 +354,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
         .action(
           'add-random-object',
           {
-            label: ['add-random-object.label', { ns: meta.profile.key }],
+            label: ['add-random-object.label', { ns: TerraNamespace.key }],
             icon: 'ph--dice-five--regular',
             disposition: 'toolbar',
             testId: 'terra.toolbar.add-random-object',
@@ -367,15 +367,15 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           'toggle-gizmos',
           {
             label: gizmosVisible
-              ? ['hide-gizmos.label', { ns: meta.profile.key }]
-              : ['show-gizmos.label', { ns: meta.profile.key }],
+              ? ['hide-gizmos.label', { ns: TerraNamespace.key }]
+              : ['show-gizmos.label', { ns: TerraNamespace.key }],
             icon: gizmosVisible ? 'ph--cube--regular' : 'ph--cube-transparent--regular',
             disposition: 'toolbar',
             testId: 'terra.toolbar.toggle-gizmos',
           },
           () => handleToggleGizmos(),
         )
-        .custom('view', { label: ['view.label', { ns: meta.profile.key }] }, () => (
+        .custom('view', { label: ['view.label', { ns: TerraNamespace.key }] }, () => (
           <Tabs.Root
             orientation='horizontal'
             value={view}

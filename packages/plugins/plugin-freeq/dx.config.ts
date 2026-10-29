@@ -2,12 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import * as FreeqCapabilities from './src/FreeqCapabilities.ts';
+import { FreeqNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.freeq',
+    key: FreeqNamespace.key,
     name: 'Freeq',
     author: 'DXOS',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-freeq',
@@ -29,4 +37,29 @@ export default Config2.make({
     tags: ['labs', 'connector'],
     dependsOn: ['org.dxos.plugin.thread'],
   },
+  modules: [
+    // Single module contributes both the connection manager and the channel backend
+    // (see channel-backend.ts) — same-wave modules cannot `waitFor` each other's contributions.
+    // Contributes both the connection manager and the channel backend (see channel-backend.ts).
+    Capability.lazyModule(
+      'FreeqChannelBackend',
+      {
+        provides: [FreeqCapabilities.ConnectionManager, ThreadCapabilities.ChannelBackend],
+        activatesOn: ThreadEvents.Start,
+      },
+      () => import('./src/capabilities/channel-backend.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.pluginAsset({
+      pluginId: FreeqNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

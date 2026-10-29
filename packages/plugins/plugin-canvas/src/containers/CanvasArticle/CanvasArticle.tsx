@@ -49,7 +49,6 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Scene } from '@dxos/scene';
 
-import { meta } from '#meta';
 import {
   canvasRecordOf,
   generatorCompiler,
@@ -68,6 +67,7 @@ import {
 // Aliased: `Canvas` here is the scene engine's component namespace.
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
+import { CanvasNamespace } from '../../namespace.ts';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
@@ -89,7 +89,7 @@ const NO_REFITS = Atom.make<Record<string, number>>({});
 
 /** Why a canvas a newer plugin saved opens read-only, and what unlocks it. */
 const NewerFormatBanner = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CanvasNamespace.key);
   return (
     <Banner.Root valence='warning' data-testid='canvas.newer-format'>
       <Banner.Title>{t('newer-format.title')}</Banner.Title>

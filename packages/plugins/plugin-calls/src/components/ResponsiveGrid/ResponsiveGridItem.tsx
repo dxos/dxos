@@ -12,7 +12,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { CallsNamespace } from '../../namespace.ts';
 
 export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   Util.ThemedClassName<{
@@ -49,7 +49,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   speaking,
   onClick,
 }: ResponsiveGridItemProps<T>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CallsNamespace.key);
   const iconProps: Record<string, { icon: string; label: string; classNames?: string }> = {
     wave: {
       icon: 'ph--hand-waving--duotone',

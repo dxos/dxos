@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
+import { JmapNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [JmapNamespace.key]: {
         'plugin.name': 'JMAP',
       },
     },

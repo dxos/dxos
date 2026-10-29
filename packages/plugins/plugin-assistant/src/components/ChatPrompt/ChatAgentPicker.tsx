@@ -15,9 +15,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 
 import { useChatAgent } from '#hooks';
-import { meta } from '#meta';
 import { type AssistantCapabilities, type AssistantPreset } from '#types';
 
+import { AssistantNamespace } from '../../namespace.ts';
 import { type AgentOption, type AgentPlacement, optionForHarness } from '../../util/agent-options.ts';
 
 const LOCATION_ICONS: Record<AssistantCapabilities.AgentLocation, string> = {
@@ -34,7 +34,7 @@ export type ChatAgentPickerProps = AssistantPreset.ChatPresetProps & {
 };
 
 export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange }: ChatAgentPickerProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { current: harness, options } = useChatAgent(chat);
   const option = optionForHarness(options, harness);
   const { placements, location, offered, select } = usePlacement(chat, option, harness);

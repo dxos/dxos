@@ -35,12 +35,12 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { Expando } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
 import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync.ts';
 import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors.ts';
+import { ConnectorNamespace } from './namespace.ts';
 
 await Harness.preload({ plugins: [ClientPlugin.make({})] });
 
@@ -311,7 +311,7 @@ describe('Binding.sync', () => {
     );
 
     expect(fired).toEqual([]);
-    expect(toasts).toEqual([`${meta.profile.key}.sync-routine-disabled`]);
+    expect(toasts).toEqual([`${ConnectorNamespace.key}.sync-routine-disabled`]);
   });
 
   test('a routine saved switched off fails as disabled instead of running', async ({ expect }) => {

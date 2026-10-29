@@ -11,7 +11,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
+import { StreamDeckNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -24,7 +24,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: 'streamDeck',
-              label: ['deck-companion.label', { ns: meta.profile.key }],
+              label: ['deck-companion.label', { ns: StreamDeckNamespace.key }],
               icon: 'ph--squares-four--regular',
               data: 'stream-deck' as const,
               position: Position.last,
