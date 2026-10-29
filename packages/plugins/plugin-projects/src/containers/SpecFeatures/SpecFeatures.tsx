@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment, useCallback, useMemo } from 'react';
 
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -51,6 +52,9 @@ const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
 ];
 
 const nothing = Query.select(Filter.nothing());
+
+/** plugin-code, which renders a spec document; named by id since neither plugin depends on the other. */
+const SPEC_EDITOR_PLUGIN = 'org.dxos.plugin.code';
 
 /**
  * The features from the map's spec down to `feature`, each the owner of the next one's spec, read through atoms so a
@@ -175,16 +179,13 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
   );
   const handleAdd = useCallback((id: string) => editing.moveFeature(id, zoomed?.id), [editing, zoomed]);
 
-  // The spec's `.mdl` document is a third view of the spec, offered only when the spec holds one and a plugin
-  // renders it (plugin-code, which some builds leave out).
+  // The spec's `.mdl` document is a third view of the spec, offered only when the spec holds one and plugin-code is
+  // enabled: it renders the document, and some builds (production, mobile) leave it out. A generic object article
+  // would otherwise match, so availability is read from the enabled plugins rather than from the surfaces.
   const resolvedDocument = useResolveRef(useObject(spec)[0]?.document);
-  const isSurfaceAvailable = Surface.useIsAvailable();
+  const enabledPlugins = useAtomValue(PluginManagerProvider.usePluginManager().enabled);
   const specDocument =
-    resolvedDocument &&
-    attendableId &&
-    isSurfaceAvailable({ type: AppSurface.Article, data: { subject: resolvedDocument, attendableId } })
-      ? resolvedDocument
-      : undefined;
+    resolvedDocument && attendableId && enabledPlugins.includes(SPEC_EDITOR_PLUGIN) ? resolvedDocument : undefined;
   const shown: FeatureMapView.Mode = mode === 'document' && !specDocument ? 'canvas' : mode;
   const modes = useMemo(() => MODES.filter(({ mode }) => mode !== 'document' || specDocument), [specDocument]);
 
