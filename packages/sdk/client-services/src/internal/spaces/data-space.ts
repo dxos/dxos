@@ -579,6 +579,8 @@ export class DataSpace {
             this.stateUpdate.emit();
           } else if (this._state !== SpaceState.SPACE_READY) {
             await this._enterReadyState();
+          } else {
+            this.stateUpdate.emit();
           }
           return;
         }
