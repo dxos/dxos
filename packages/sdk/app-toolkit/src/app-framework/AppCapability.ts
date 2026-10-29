@@ -43,7 +43,7 @@ type Maker<C extends Capability$.AnyTag> = ReturnType<typeof Capability$.moduleM
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
-  { activatesOn: ActivationEvents.Idle, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: ActivationEvents.Idle, environments: ['browser', 'node', 'tauri'] },
 );
 
 /**
@@ -60,7 +60,7 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
-  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri'] },
 );
 
 /**
@@ -72,7 +72,7 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
-  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri'] },
 );
 
 /**
@@ -82,7 +82,7 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 export const mcpServer: Maker<typeof AppCapabilities.McpServer> = Capability$.moduleMaker(
   'McpServer',
   AppCapabilities.McpServer,
-  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri'] },
 );
 
 /**
@@ -100,7 +100,7 @@ export const mcpServer: Maker<typeof AppCapabilities.McpServer> = Capability$.mo
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
-  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri'] },
 );
 
 /**
@@ -114,14 +114,14 @@ export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Cap
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
   Capabilities.LayerSpec,
-  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri'] },
 );
 
 /** Module maker contributing undo operation mappings. */
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',
   Capabilities.UndoMapping,
-  { environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { environments: ['browser', 'node', 'tauri'] },
 );
 
 /** Module maker contributing observability event mappings. */
@@ -155,7 +155,7 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
 export const defaultParent: Maker<typeof AppCapabilities.DefaultParent> = Capability$.moduleMaker(
   'DefaultParent',
   AppCapabilities.DefaultParent,
-  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri'] },
 );
 
 /**
@@ -166,7 +166,7 @@ export const defaultParent: Maker<typeof AppCapabilities.DefaultParent> = Capabi
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
-  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri'] },
 );
 
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
@@ -232,14 +232,14 @@ export const surface = <
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
   'CommentConfig',
   AppCapabilities.CommentConfig,
-  { environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { environments: ['browser', 'node', 'tauri'] },
 );
 
 /** Module maker contributing a text content extractor. */
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
   AppCapabilities.TextContent,
-  { environments: ['browser', 'node', 'tauri', 'workerd'] },
+  { environments: ['browser', 'node', 'tauri'] },
 );
 
 /** Module maker contributing an anchor sort comparator. */
@@ -264,7 +264,7 @@ export const translations = (
 ) => {
   const spec = {
     provides: [AppCapabilities.Translations],
-    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+    environments: options?.environments ?? ['browser', 'node', 'tauri'],
   } as const;
   // The loader form keeps the strings in their own chunk, out of the plugin definition's closure.
   if (typeof resources === 'function') {
@@ -294,7 +294,7 @@ export const schema = (
 ) => {
   const spec = {
     provides: [AppCapabilities.Schema],
-    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+    environments: options?.environments ?? ['browser', 'node', 'tauri'],
   } as const;
   if (typeof types === 'function') {
     const loader = types;
@@ -409,7 +409,7 @@ export const commands = (
   const spec = {
     activatesOn: ActivationEvents.CommandsRequested,
     provides: [Capabilities.Command],
-    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+    environments: options?.environments ?? ['browser', 'node', 'tauri'],
   } as const;
   if (typeof values === 'function') {
     const loader = values;

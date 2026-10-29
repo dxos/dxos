@@ -57,7 +57,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'DiscordConnector',
-      { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+      {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+        provides: [ConnectorSpec.Connector],
+        activatesOn: ConnectorEvents.Start,
+      },
       () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
     ),
     // EDGE's bot routes over the client's EDGE HTTP client; EDGE provides the service itself, over a worker binding.
@@ -67,9 +71,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: DiscordNamespace.key,
@@ -80,11 +82,16 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
   ],
 });
 

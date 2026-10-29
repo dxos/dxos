@@ -558,13 +558,20 @@ export interface Module<Options = void> {
  *
  * Every condition is treated alike: the list names each runtime the module loads under, so a browser
  * module that should also reach the desktop app names `'tauri'` too. Omitting `environments` means
- * the module loads under every condition the plugin names.
+ * the module loads under every condition except `'workerd'`, which is opt-in (see {@link runsIn}).
  *
  * The annotation must be a literal array at the authoring site: barrel generation reads it
  * statically (variants are emitted per condition, since bundlers follow lazy loaders), so a
  * computed value would be invisible to the generator.
  */
 export type Environment = string;
+
+/**
+ * Whether a module with these `environments` loads under `environment`. `'workerd'` is opt-in: an EDGE worker
+ * keeps every module it loads resident, so only a module that names it reaches one.
+ */
+export const runsIn = (environments: readonly Environment[] | undefined, environment: Environment): boolean =>
+  environments?.includes(environment) ?? environment !== 'workerd';
 
 /**
  * Spec shared by {@link lazyModule} and {@link inlineModule}: the requires/provides

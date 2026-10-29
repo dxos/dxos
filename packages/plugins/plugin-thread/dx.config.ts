@@ -71,9 +71,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: ThreadNamespace.key,
@@ -84,8 +82,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
-    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
+    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
   ],
 });
 

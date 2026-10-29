@@ -48,12 +48,16 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'AutomationTemplates',
-      { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+      {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+        provides: [RoutineCapabilities.Template],
+        activatesOn: RoutineEvents.Start,
+      },
       () => import('./src/capabilities/automation-templates.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'contact-extractor',
-      { provides: [InboxCapabilities.ObjectExtractor] },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [InboxCapabilities.ObjectExtractor] },
       () => import('./src/capabilities/contact-extractor.ts', { with: { type: 'module-url' } }),
     ),
     SpaceCapability.createObject(
@@ -64,17 +68,22 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'IdentitySpecs',
-      { provides: [SpaceCapabilities.IdentitySpec] },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [SpaceCapabilities.IdentitySpec] },
       () => import('./src/capabilities/identity-specs.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
       provides: [InboxCapabilities.Settings],
       activatesOn: ActivationEvents.Idle,
     }),
     // Read only by AnalyzeMailbox, which fires the start event before it reads them.
     Capability.lazyModule(
       'MailboxProcessors',
-      { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
+      {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+        provides: [InboxCapabilities.MailboxProcessor],
+        activatesOn: InboxEvents.Start,
+      },
       () => import('./src/capabilities/mailbox-processors.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.navigationResolver(
@@ -86,9 +95,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
@@ -100,7 +107,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         'org.dxos.role.section',
       ],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       {
@@ -109,10 +118,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'summarize-extractor',
-      { provides: [InboxCapabilities.ObjectExtractor] },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [InboxCapabilities.ObjectExtractor] },
       () => import('./src/capabilities/summarize-extractor.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
   ],
 });
 

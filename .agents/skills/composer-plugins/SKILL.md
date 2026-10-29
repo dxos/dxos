@@ -666,10 +666,15 @@ See: `plugin-sheet/src/operations/node.ts`,
 ### Runtime conditions
 
 `environments` on a module lists every runtime condition it loads in: `browser`, `tauri`, `node`,
-`workerd`. The per-runtime build keeps a module when its list names the runtime or it has no list.
+`workerd`. The per-runtime build keeps a module when its list names the runtime, or when it has no list
+and the runtime is not `workerd` (`Capability.runsIn`).
 
-- Maker families set the usual list: UI families `['browser', 'tauri']`, headless families all four.
-  A call site that restates a list names every runtime it wants, `tauri` included.
+- Maker families set the usual list: UI families `['browser', 'tauri']`, headless families
+  `['browser', 'node', 'tauri']`. A call site that restates a list names every runtime it wants, `tauri`
+  included.
+- `workerd` is opt-in: no family defaults to it and a module with no list stays out. Name it only on a module an
+  EDGE operation needs (operation handlers, schema, skills, connectors, layer specs); an EDGE worker keeps every
+  module it bundles resident.
 - A module that only works inside the Tauri shell is `['tauri']` (`LocalLauncher`).
 - A plugin loaded under a runtime needs that condition on its `./FooPlugin` export. A UI-only plugin has no
   `node` condition, so its plugin tests run in browser mode (`plugin-mermaid`).

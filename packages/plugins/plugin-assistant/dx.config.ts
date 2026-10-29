@@ -67,10 +67,13 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       AppCapability.skillDefinition(
         () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
         {
+          environments: ['browser', 'node', 'tauri', 'workerd'],
           provides: [RoutineCapabilities.AgentDelegationStrategy],
         },
       ),
-      AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } })),
+      AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+      }),
       Capability.lazyModule(
         'McpServerRegistry',
         {
@@ -88,12 +91,13 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       ),
       AppCapability.operationHandler(
         () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-        {
-          activatesOn: ActivationEvents.Idle,
-        },
+        { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
       ),
-      AppCapability.schema(() => import('./src/capabilities/schema-defs.ts', { with: { type: 'module-url' } })),
+      AppCapability.schema(() => import('./src/capabilities/schema-defs.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+      }),
       AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
         activatesOn: ActivationEvents.Idle,
         provides: [AssistantCapabilities.Settings],
       }),
@@ -110,10 +114,16 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           'org.dxos.role.statusIndicator',
         ],
       }),
-      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+      }),
       Capability.lazyModule(
         'AutomationTemplates',
-        { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+        {
+          environments: ['browser', 'node', 'tauri', 'workerd'],
+          provides: [RoutineCapabilities.Template],
+          activatesOn: RoutineEvents.Start,
+        },
         () => import('./src/capabilities/automation-templates.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
@@ -142,15 +152,24 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       //   provider client bindings; needs the AI service to read resolvers per request, not snapshot them.
       Capability.lazyModule(
         'EdgeModelResolver',
-        { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
+        {
+          environments: ['browser', 'node', 'tauri', 'workerd'],
+          provides: [AppCapabilities.AiModelResolver],
+          activatesOn: ActivationEvents.Startup,
+        },
         () => import('./src/capabilities/edge-model-resolver.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'LocalModelResolver',
-        { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
+        {
+          environments: ['browser', 'node', 'tauri', 'workerd'],
+          provides: [AppCapabilities.AiModelResolver],
+          activatesOn: ActivationEvents.Startup,
+        },
         () => import('./src/capabilities/local-model-resolver.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.layerSpec(() => import('./src/capabilities/ai-service.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
         name: 'AiService',
         requires: [AppCapabilities.AiModelResolver],
       }),
@@ -160,9 +179,11 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       // conversation-scoped services without an inline `Effect.provideService`
       // upstream. See `capabilities/ai-context.ts` for the rationale.
       AppCapability.layerSpec(() => import('./src/capabilities/ai-context.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
         name: 'AiContext',
       }),
       AppCapability.layerSpec(() => import('./src/capabilities/agent-service.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
         name: 'AgentRuntime',
       }),
       // Present from startup so a comment posted before the assistant UI opens can still be answered. Headless hosts
@@ -180,6 +201,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       Capability.lazyModule(
         'Agents',
         {
+          environments: ['browser', 'node', 'tauri', 'workerd'],
           provides: [AssistantCapabilities.Agent, AssistantCapabilities.CodeModeAvailable],
           activatesOn: ActivationEvents.Startup,
         },
@@ -233,12 +255,20 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       ),
       Capability.lazyModule(
         'SubjectContext',
-        { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
+        {
+          environments: ['browser', 'node', 'tauri', 'workerd'],
+          provides: [AssistantCapabilities.SubjectContext],
+          activatesOn: AssistantEvents.Start,
+        },
         () => import('./src/capabilities/subject-context.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'AnthropicConnector',
-        { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+        {
+          environments: ['browser', 'node', 'tauri', 'workerd'],
+          provides: [ConnectorSpec.Connector],
+          activatesOn: ConnectorEvents.Start,
+        },
         () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.pluginAsset({

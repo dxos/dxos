@@ -66,14 +66,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Migration providers stay eager: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'PresenterMigrations',
-      { provides: [ClientCapabilities.Migration] },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [ClientCapabilities.Migration] },
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: PresenterNamespace.key,
@@ -84,14 +82,20 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.slide'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
       provides: [PresenterCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
   ],
 });
 

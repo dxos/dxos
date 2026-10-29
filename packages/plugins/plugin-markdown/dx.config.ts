@@ -73,6 +73,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
     ),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
       provides: [MarkdownCapabilities.Settings],
     }),
     // Browser-only: requires attention's view state, which only the app shell provides.
@@ -87,13 +88,17 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     Capability.lazyModule(
       'Tour',

@@ -63,12 +63,13 @@ const config: Plugin.PluginConfig = Plugin.config({
         requires: [AttentionCapabilities.ViewState],
       },
     ),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      { environments: ['browser', 'node', 'tauri', 'workerd'] },
+    ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
+      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: MagazineNamespace.key,
@@ -81,12 +82,19 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     Capability.lazyModule(
       'RoutineTemplates',
-      { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+      {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+        provides: [RoutineCapabilities.Template],
+        activatesOn: RoutineEvents.Start,
+      },
       () => import('./src/capabilities/routine-templates.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     AppCapability.spaceTemplates(
       () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),
@@ -95,9 +103,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     // (`capabilities.getAll`) instead of declaring it as a requirement, so nothing would ever demand it
     // and a Post would stay unreadable — no reading companion, no extraction.
     AppCapability.textContent(() => import('./src/capabilities/text-content.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
       activatesOn: ActivationEvents.Startup,
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri', 'workerd'],
+    }),
   ],
 });
 

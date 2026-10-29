@@ -661,7 +661,7 @@ export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
 
 /**
  * Builds a plugin from its module list, keeping only the modules that run in this build's
- * {@link Environment.current}; a module with no `environments` runs everywhere.
+ * {@link Environment.current}, by {@link Capability.runsIn}.
  */
 export const fromModules = <T = void>(
   meta: Meta,
@@ -670,7 +670,7 @@ export const fromModules = <T = void>(
   make(
     modules
       .filter((module) => module !== undefined)
-      .filter((module) => module.environments?.includes(Environment.current) ?? true)
+      .filter((module) => Capability.runsIn(module.environments, Environment.current))
       .reduce((builder, module) => addModule<T>(module)(builder), define<T>(meta)),
   );
 
