@@ -3,14 +3,27 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, type Dispatch, type SetStateAction, useCallback, useMemo, useRef } from 'react';
+import React, {
+  type ChangeEvent,
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
+import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -52,6 +65,7 @@ export const ProfileContainer = () => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
+  const client = useClient();
   const pendingRef = useRef(false);
   // Bumped on every edit, so a write's completion can tell whether a newer edit has queued behind
   // it — a debounced call in flight when another edit lands is still the stale one once it settles.
@@ -112,6 +126,30 @@ export const ProfileContainer = () => {
     },
     [identity, updateProfile],
   );
+
+  const [haloSpaceRootUrl, setHaloSpaceRootUrl] = useState(client.halo.identity.get()?.haloSpaceRootUrl);
+  // Followed rather than read once: the identity can adopt a root without this button, on open or from another device.
+  useEffect(() => {
+    const subscription = client.halo.identity.subscribe((next) => setHaloSpaceRootUrl(next?.haloSpaceRootUrl));
+    return () => subscription.unsubscribe();
+  }, [client]);
+  const [migrating, setMigrating] = useState(false);
+  // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
+  const handleMigrateIdentityRoot = useCallback(async () => {
+    setMigrating(true);
+    try {
+      setHaloSpaceRootUrl(await client.halo.migrateIdentityRoot());
+    } catch (err) {
+      log.catch(err, { stage: 'migrate identity root' });
+      void invokePromise(LayoutOperation.AddToast, {
+        id: 'migrate-identity-root-failed',
+        title: t('migrate-identity-root-failed.message'),
+        icon: 'ph--warning--regular',
+      });
+    } finally {
+      setMigrating(false);
+    }
+  }, [client, invokePromise, t]);
 
   const values = useMemo(
     () => ({
@@ -201,6 +239,25 @@ export const ProfileContainer = () => {
         <Form.Content>
           <Form.FieldSet label={t('profile.label')} description={t('profile.description')}>
             <Form.Fields />
+          </Form.FieldSet>
+          <Form.FieldSet label={t('identity-controls.label')}>
+            <Form.Field
+              standalone
+              label={t('migrate-identity-root.title')}
+              description={t('migrate-identity-root.description')}
+            >
+              <Button.Root
+                disabled={migrating || haloSpaceRootUrl !== undefined}
+                onClick={handleMigrateIdentityRoot}
+                data-testid='profile.migrateIdentityRoot'
+              >
+                {haloSpaceRootUrl !== undefined
+                  ? t('migrate-identity-root.migrated.label')
+                  : migrating
+                    ? t('migrate-identity-root.pending.label')
+                    : t('migrate-identity-root.label')}
+              </Button.Root>
+            </Form.Field>
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>

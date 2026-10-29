@@ -66,6 +66,9 @@ message Identity {
   dxos.keys.PublicKey identity_key = 1;
   optional dxos.keys.PublicKey space_key = 2;
   optional halo.credentials.ProfileDocument profile = 3;
+
+  /// URL of the HALO space root document this device has adopted; absent while the HALO is still on its control feed.
+  optional string halo_space_root_url = 5;
 }
 
 message RecoverIdentityRequest {

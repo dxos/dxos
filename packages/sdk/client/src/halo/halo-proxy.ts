@@ -45,6 +45,9 @@ import { trace } from '@dxos/tracing';
 import { RPC_TIMEOUT } from '../common.ts';
 import { InvitationsProxy } from '../invitations/index.ts';
 
+/** Migration waits on edge minting the root and on it replicating back, so it outlasts an ordinary call. */
+const IDENTITY_ROOT_MIGRATION_TIMEOUT = 60_000;
+
 /**
  * Selects the `request` oneof from the public union. The service dispatches on the case, and the
  * rpc payload codec refuses to encode a message that leaves it unset, so the mapping cannot be
@@ -369,6 +372,19 @@ export class HaloProxy implements Halo {
     );
     this._identityChanged.emit(identity);
     return identity;
+  }
+
+  async migrateIdentityRoot(): Promise<string> {
+    const { haloSpaceRootUrl } = await runServiceCall(
+      this._runtime,
+      this._serviceProvider.rpc,
+      'IdentityService.migrateHaloRoot',
+      undefined,
+      { timeout: IDENTITY_ROOT_MIGRATION_TIMEOUT },
+    );
+    // Callers read the migration state off the identity, so resolve only once the update carrying it lands.
+    await this._identityChanged.waitForCondition(() => this._identity.get()?.haloSpaceRootUrl === haloSpaceRootUrl);
+    return haloSpaceRootUrl;
   }
 
   async updateProfile(profile: ProfileDocument): Promise<Identity> {

@@ -91,6 +91,7 @@ import * as IdentityContract from '../../contracts/identity.ts';
 import * as InvitationsContract from '../../contracts/invitations.ts';
 import * as SpacesContract from '../../contracts/spaces.ts';
 import { openCredentialsDocument } from '../../CredentialsDocument.ts';
+import { lookupEdgeSpaceRoot } from '../../EdgeSpaceRoot.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
@@ -537,24 +538,30 @@ export class DataSpaceManager extends Resource {
     if (awaitingMirror) {
       return this._adoptEdgeSpaceRoot(ctx, space, awaitingMirror);
     }
-    if (!this._echoHost.getSpaceRootRefs(space.id)) {
-      const edgeRoot = await this._readEdgeSpaceRoot(space);
-      if (edgeRoot) {
-        return this._adoptEdgeSpaceRoot(ctx, space, edgeRoot);
+    const anchored = this._echoHost.getSpaceRootRefs(space.id) !== undefined;
+    if (!anchored) {
+      const edgeRoot = await lookupEdgeSpaceRoot(this._ctx, this._edgeHttpClient, space.id);
+      if (edgeRoot.kind === 'found') {
+        return this._adoptEdgeSpaceRoot(ctx, space, edgeRoot.url);
       }
-    }
 
-    // Migrating a space is the opt-in behaviour, so without the flag a space keeps its control feed
-    // and never grows a root. An explicit `migrateSpaceToRootDocument` call still forces it.
-    if (!force && !this._automergeCredentials) {
-      return true;
-    }
+      // Minting a root locally is the opt-in behaviour, so without the flag a space keeps its control
+      // feed and never grows one. An explicit `migrateSpaceToRootDocument` call still forces it.
+      if (!force && !this._automergeCredentials) {
+        return true;
+      }
 
-    // A space created legacy stays unanchored for this session, or there would be no way to produce
-    // the pre-migration state the migration path starts from. It anchors on the next load, which is
-    // exactly the migration this project is for.
-    if (!force && this._legacyCreatedSpaces.has(space.id)) {
-      return true;
+      // Unsettled rather than minted: EDGE may already hold a root this device could not see.
+      if (edgeRoot.kind === 'unavailable') {
+        return false;
+      }
+
+      // A space created legacy stays unanchored for this session, or there would be no way to produce
+      // the pre-migration state the migration path starts from. It anchors on the next load, which is
+      // exactly the migration this project is for.
+      if (!force && this._legacyCreatedSpaces.has(space.id)) {
+        return true;
+      }
     }
 
     try {
@@ -589,10 +596,14 @@ export class DataSpaceManager extends Resource {
 
       // Unsettled when the mirror bailed on a closing space: latching would leave the credentials
       // half-written with nothing to retry it, since an anchored space never attempts again.
+      // An anchored space mirrors whatever the flag says: its document must gain every credential the
+      // feed does, or it falls behind as soon as the device that adopted the root reloads.
       if (!(await this._mirrorCredentialsToDocument(space))) {
         return false;
       }
-      this._reportSpaceRootToEdge(space);
+      if (force || this._automergeCredentials) {
+        this._reportSpaceRootToEdge(space);
+      }
       return true;
     } catch (err) {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
@@ -682,22 +693,6 @@ export class DataSpaceManager extends Resource {
       // space that has flipped simply stops gaining feed credentials.
       store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
       return true;
-    }
-  }
-
-  /** The root edge holds for the space, or undefined if it has none or cannot be asked. */
-  private async _readEdgeSpaceRoot(space: DataSpace): Promise<AutomergeUrl | undefined> {
-    if (!this._edgeHttpClient) {
-      return undefined;
-    }
-
-    try {
-      const { rootDocumentUrl } = await this._edgeHttpClient.getSpaceRoot(this._ctx, space.id);
-      return rootDocumentUrl !== null && isValidAutomergeUrl(rootDocumentUrl) ? rootDocumentUrl : undefined;
-    } catch (err) {
-      // An edge without the lookup, or one that is unreachable, leaves the space as it is.
-      log('could not read the space root from edge', { spaceId: space.id, err });
-      return undefined;
     }
   }
 

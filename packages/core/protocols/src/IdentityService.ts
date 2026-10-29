@@ -92,6 +92,12 @@ export const SignPresentationRequest = Schema.Struct({
 });
 export interface SignPresentationRequest extends Schema.Schema.Type<typeof SignPresentationRequest> {}
 
+export const MigrateHaloRootResponse = Schema.Struct({
+  /** The HALO space root EDGE holds in force, which every device of the identity adopts. */
+  haloSpaceRootUrl: Schema.String,
+});
+export interface MigrateHaloRootResponse extends Schema.Schema.Type<typeof MigrateHaloRootResponse> {}
+
 // TODO(wittjosiah): Align pluralization with other services.
 /**
  * Effect RPC definitions for `dxos.client.services.IdentityService`.
@@ -143,6 +149,14 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('createAuthCredential', {
     success: bufMessage(CredentialSchema),
+    error: serviceError,
+  }),
+  /**
+   * Move the identity's credentials off its HALO control feed onto a space root document minted by
+   * EDGE, then adopt that root on this device. Idempotent: a migrated identity returns its root.
+   */
+  Rpc.make('migrateHaloRoot', {
+    success: MigrateHaloRootResponse,
     error: serviceError,
   }),
 ).prefix('IdentityService.') {}
