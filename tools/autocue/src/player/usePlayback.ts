@@ -73,7 +73,9 @@ export const usePlayback = (chapters: Chapter[], fallbackDuration = 0): Playback
     flashTimer.current = setTimeout(() => setFlash(undefined), 800);
   }, []);
 
-  useEffect(() => setDuration(fallbackDuration), [fallbackDuration]);
+  useEffect(() => {
+    setDuration(fallbackDuration);
+  }, [fallbackDuration]);
 
   useEffect(() => {
     const video = videoRef.current;

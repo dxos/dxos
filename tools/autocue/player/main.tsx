@@ -25,7 +25,12 @@ globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) =>
 /** The manifest `pack.mjs` wrote into the page, or the example data while developing the player. */
 const readManifest = (): Manifest => {
   const text = document.getElementById('autocue-manifest')?.textContent?.trim() ?? '';
-  return text.startsWith('{{') || !text ? sampleManifest : (JSON.parse(text) as Manifest);
+  if (text.startsWith('{{') || !text) {
+    return sampleManifest;
+  }
+  // Written by pack.mjs from the same types, so it is not re-validated here.
+  const manifest: Manifest = JSON.parse(text);
+  return manifest;
 };
 
 const VIEW_KEY = 'autocue:view';

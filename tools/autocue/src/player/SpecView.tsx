@@ -45,7 +45,10 @@ const SourceLine = ({ text, header }: { text: string; header?: boolean }) => {
  */
 export const SpecView = ({ spec, current, onSelect }: SpecViewProps) => {
   const currentRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => currentRef.current?.scrollIntoView({ block: 'nearest' }), [current]);
+  useEffect(() => {
+    // Recent Chromium returns a promise here, which React would take for a cleanup function.
+    void currentRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [current]);
 
   const blocks: ReactNode[] = [];
   let line = 0;

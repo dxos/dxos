@@ -213,21 +213,16 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
         </Layout.Flex>
 
         <Panel.Root classNames='max-h-[70vh] lg:row-span-2 lg:h-[min(80vh,52rem)] lg:max-h-none overflow-hidden rounded-md border border-separator bg-card-surface'>
-          <Panel.Header classNames='flex items-center gap-2 px-2'>
+          <Panel.Header classNames='px-2'>
             <ToggleGroup.Root
               type='single'
               value={view}
-              onValueChange={(value) => value && changeView(value as PlayerView)}
+              onValueChange={(value) => (value === 'chapters' || value === 'spec') && changeView(value)}
               aria-label='Side panel'
             >
               <ToggleGroup.Item value='chapters' icon='ph--list-numbers--regular' label='Chapters' />
               <ToggleGroup.Item value='spec' icon='ph--file-code--regular' label='Spec' disabled={!demo.spec} />
             </ToggleGroup.Root>
-            <span className='ms-auto min-w-0 truncate px-2 text-sm text-fg-muted'>
-              {view === 'spec' && demo.spec
-                ? `${demo.spec.path.split('/').slice(-2).join('/')} · ${demo.spec.test}`
-                : `${demo.chapters.length} chapters`}
-            </span>
           </Panel.Header>
           <Panel.Body asChild>
             <ScrollArea.Root orientation='vertical'>
