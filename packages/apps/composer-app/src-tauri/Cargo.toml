@@ -72,6 +72,8 @@ hyper-util = { version = "0.1", features = ["tokio"] }
 http-body-util = "0.1"
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2"
+# Local notifications while Composer runs; 2.6 is the first that reports clicks on desktop (`Notification::on_action`).
+tauri-plugin-notification = "2.6"
 # Meeting detection and system-audio capture (plugin-meeting-recorder).
 tauri-plugin-meeting-capture = { path = "plugins/meeting-capture" }
 

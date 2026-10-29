@@ -49,7 +49,7 @@ export const PushNotifications = Capability.lazyModule(
     requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
     provides: [AppCapabilities.PushNotifications],
     activatesOn: ClientEvents.SpacesAvailable,
-    environments: ['browser'],
+    environments: ['browser', 'tauri'],
   },
   () => import('./push-notifications.ts'),
 );

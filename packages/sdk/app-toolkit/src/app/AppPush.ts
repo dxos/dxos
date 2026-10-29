@@ -58,8 +58,11 @@ export type Provider = {
  */
 export type Status = 'unsupported' | 'off' | 'pending' | 'denied' | 'on' | 'failed';
 
-/** Whether a test notification reached this device; `failed` means it could not be sent. */
-export type TestResult = 'shown' | 'not-shown' | 'failed';
+/**
+ * Whether a test notification reached this device; `failed` means it could not be sent. A local notification reads
+ * `sent`, since the system does not confirm that it displayed one.
+ */
+export type TestResult = 'shown' | 'not-shown' | 'sent' | 'failed';
 
 /**
  * Push notifications for this device, kept registered with the server that sends them. Contributed by the plugin
@@ -76,4 +79,18 @@ export type Notifications = {
   disable: () => Promise<Status>;
   /** Asks the server for a test notification and waits for it to reach this device. */
   sendTest: () => Promise<TestResult>;
+};
+
+/** A notification this device shows by itself, without a push. */
+export type LocalNotification = {
+  title: string;
+  body: string;
+};
+
+/**
+ * Shows notifications while the app runs, on a platform with no push service (the desktop app). Contributed by the
+ * plugin that owns the platform's notification API.
+ */
+export type LocalNotifier = {
+  show: (notification: LocalNotification) => Promise<void>;
 };

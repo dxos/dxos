@@ -12,7 +12,10 @@ import { log } from '@dxos/log';
 
 import { saveBeforeLeaving, unsavedChangesToast } from '../unsaved-changes.ts';
 
-/** Emitted by the shell when an exit is requested: the tray's Quit or closing the window, not macOS Cmd+Q. */
+/**
+ * Emitted by the shell when an exit is requested: the tray's Quit, or closing the window outside macOS (where closing
+ * hides Composer to the menu bar); not macOS Cmd+Q.
+ */
 const EXIT_REQUESTED_EVENT = 'composer://exit-requested';
 
 /**

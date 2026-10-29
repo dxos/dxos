@@ -571,6 +571,15 @@ export const PushNotifications = Capability$.makeSingleton<AppPush$.Notification
   'org.dxos.app-toolkit.capability.pushNotifications',
 );
 
+/**
+ * Notifications the device shows by itself while the app runs, contributed where there is no push service —
+ * `plugin-native` for the desktop app. Absent elsewhere.
+ * @category Capability
+ */
+export const LocalNotifier = Capability$.makeSingleton<AppPush$.LocalNotifier>()(
+  'org.dxos.app-toolkit.capability.localNotifier',
+);
+
 export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
 
 /**
