@@ -4,12 +4,12 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Pane, type PaneTab } from '@dxos/plugin-deck/Pane';
+import { RootAttentionProvider, useAttentionContext } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Tabs from '@dxos/react-ui/Tabs';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
 import { ChapterList } from './ChapterList.tsx';
@@ -32,6 +32,22 @@ export type PlayerProps = {
   /** The side panel to open on; the chapter list unless the viewer chose the spec before. */
   initialView?: PlayerView;
   onViewChange?: (view: PlayerView) => void;
+};
+
+/** The player is one plank that always has the reader's attention, so its sigil, title and tabs read as current. */
+const ATTENDABLE_ID = 'autocue';
+
+const SIDE_TABS: PaneTab[] = [
+  { id: 'chapters', icon: 'ph--list-numbers--regular', label: 'Chapters' },
+  { id: 'spec', icon: 'ph--file-code--regular', label: 'Spec' },
+];
+
+const Attended = ({ id }: { id: string }) => {
+  const { attention } = useAttentionContext('Attended');
+  useEffect(() => {
+    attention.update([id]);
+  }, [attention, id]);
+  return null;
 };
 
 /** A bundle path, or the hosted copy of it when the page cannot reach the file itself (inside an Artifact). */
@@ -143,161 +159,154 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
     );
   }
 
-  const created = manifest.created && new Date(manifest.created).toLocaleDateString(undefined, { dateStyle: 'medium' });
-
   return (
-    <div className='flex flex-col bg-base-surface text-fg'>
-      {/* The first screen is the player, edge to edge; the details are below the fold. */}
-      <div className='grid grid-cols-1 grid-rows-[auto_auto_auto] lg:h-dvh lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-[auto_minmax(0,1fr)]'>
-        <Layout.Flex
-          gap='md'
-          align='center'
-          classNames='min-w-0 border-b border-separator px-3 py-1.5 lg:col-span-2'
-          asChild
-        >
-          <header>
-            <h1 className='min-w-12 truncate font-semibold text-fg'>{manifest.title}</h1>
-            <span className='hidden shrink-0 text-sm text-fg-muted sm:inline'>
-              {demos.length} demo{demos.length === 1 ? '' : 's'}
-              {created ? ` · ${created}` : ''}
-            </span>
-            {demos.length > 1 && (
-              <Tabs.Root
-                value={demo.id}
-                onValueChange={(id) => selectDemo(demos.findIndex((item) => item.id === id))}
-                classNames='min-w-0'
-              >
-                <Tabs.List aria-label='Demos' classNames='overflow-x-auto'>
-                  {demos.map((item, position) => (
-                    <Tabs.Trigger
-                      key={item.id}
-                      value={item.id}
-                      label={`${position + 1}. ${item.title} · ${formatClock(item.duration)}`}
-                    />
-                  ))}
-                </Tabs.List>
-              </Tabs.Root>
-            )}
-            <Layout.Flex gap='xs' grow={false} classNames='ms-auto shrink-0'>
+    <RootAttentionProvider>
+      <Attended id={ATTENDABLE_ID} />
+      <div className='flex flex-col bg-base-surface text-fg'>
+        {/* The first screen is a plank and its companion, as in Composer's deck; the details are below the fold. */}
+        <div className='grid grid-cols-1 lg:h-dvh lg:grid-cols-[minmax(0,1fr)_24rem]'>
+          <Pane.Root classNames='min-w-0'>
+            <Pane.Toolbar>
+              <Pane.Sigil attendableId={ATTENDABLE_ID} isMenu={false} aria-hidden>
+                <Icon.Icon icon='ph--film-strip--regular' />
+              </Pane.Sigil>
+              <Pane.Title attendableId={ATTENDABLE_ID}>{manifest.title}</Pane.Title>
+              {demos.length > 1 && (
+                <Pane.Tabs
+                  attendableId={ATTENDABLE_ID}
+                  tabs={demos.map((item, position) => ({
+                    id: item.id,
+                    icon: 'ph--video--regular',
+                    label: `${position + 1}. ${item.title} · ${formatClock(item.duration)}`,
+                  }))}
+                  value={demo.id}
+                  onValueChange={(id) => selectDemo(demos.findIndex((item) => item.id === id))}
+                />
+              )}
               <Button.Root
                 variant='ghost'
                 icon='ph--info--regular'
                 label='Details'
+                iconOnly
                 onClick={() => detailsRef.current?.scrollIntoView({ behavior: 'smooth' })}
               />
               <Button.Root
                 variant='ghost'
                 icon='ph--keyboard--regular'
                 label='Shortcuts'
+                iconOnly
                 onClick={() => setHelp(true)}
               />
-            </Layout.Flex>
-          </header>
-        </Layout.Flex>
-
-        <Layout.Flex column classNames='min-h-0 min-w-0'>
-          <div ref={screenRef} className='relative aspect-video min-h-0 bg-black lg:aspect-auto lg:flex-1'>
-            <video
-              ref={playback.videoRef}
-              playsInline
-              preload='metadata'
-              poster={demo.poster}
-              onClick={playback.toggle}
-              className='dx-cover dx-fill object-contain'
-            >
-              {demo.videos.map((video) => (
-                <source key={video.src} src={video.src} type={video.type} />
-              ))}
-            </video>
-            {!playback.playing && playback.time < 0.05 && (
-              <Layout.Flex center classNames='pointer-events-none dx-cover'>
-                <Button.Root
-                  variant='primary'
-                  icon='ph--play--fill'
-                  label='Play'
-                  iconOnly
-                  size='lg'
-                  onClick={playback.toggle}
-                  classNames='pointer-events-auto rounded-full'
-                />
+            </Pane.Toolbar>
+            <Pane.Content asChild>
+              <Layout.Flex column classNames='min-h-0'>
+                <div ref={screenRef} className='relative aspect-video min-h-0 bg-black lg:aspect-auto lg:flex-1'>
+                  <video
+                    ref={playback.videoRef}
+                    playsInline
+                    preload='metadata'
+                    poster={demo.poster}
+                    onClick={playback.toggle}
+                    className='dx-cover dx-fill object-contain'
+                  >
+                    {demo.videos.map((video) => (
+                      <source key={video.src} src={video.src} type={video.type} />
+                    ))}
+                  </video>
+                  {!playback.playing && playback.time < 0.05 && (
+                    <Layout.Flex center classNames='pointer-events-none dx-cover'>
+                      <Button.Root
+                        variant='primary'
+                        icon='ph--play--fill'
+                        label='Play'
+                        iconOnly
+                        size='lg'
+                        onClick={playback.toggle}
+                        classNames='pointer-events-auto rounded-full'
+                      />
+                    </Layout.Flex>
+                  )}
+                  <div
+                    aria-live='polite'
+                    className={mx(
+                      'pointer-events-none absolute end-3 top-3 rounded-sm bg-scrim-surface px-2.5 py-1 font-mono text-sm text-fg transition-opacity',
+                      playback.flash ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
+                    {playback.flash}
+                  </div>
+                </div>
+                <div className='border-t border-separator px-3'>
+                  <Timeline
+                    chapters={demo.chapters}
+                    time={playback.time}
+                    duration={playback.duration}
+                    current={playback.chapter}
+                    onSeek={playback.seek}
+                  />
+                </div>
+                <div className='px-1 pb-1'>
+                  <Transport
+                    playback={playback}
+                    chapters={demo.chapters}
+                    downloads={downloads}
+                    onFullscreen={fullscreen}
+                  />
+                </div>
               </Layout.Flex>
-            )}
-            <div
-              aria-live='polite'
-              className={mx(
-                'pointer-events-none absolute end-3 top-3 rounded-sm bg-scrim-surface px-2.5 py-1 font-mono text-sm text-fg transition-opacity',
-                playback.flash ? 'opacity-100' : 'opacity-0',
-              )}
-            >
-              {playback.flash}
-            </div>
-          </div>
-          <div className='border-t border-separator px-3'>
-            <Timeline
-              chapters={demo.chapters}
-              time={playback.time}
-              duration={playback.duration}
-              current={playback.chapter}
-              onSeek={playback.seek}
+            </Pane.Content>
+          </Pane.Root>
+
+          <Pane.Root classNames='h-[60vh] min-h-0 border-t border-separator lg:h-auto lg:border-s lg:border-t-0'>
+            <Pane.Toolbar>
+              <Pane.Tabs
+                attendableId={ATTENDABLE_ID}
+                tabs={SIDE_TABS.filter((tab) => tab.id !== 'spec' || demo.spec)}
+                value={view}
+                onValueChange={(id) => (id === 'chapters' || id === 'spec') && changeView(id)}
+              />
+            </Pane.Toolbar>
+            <Pane.Content asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport>
+                  {view === 'spec' && demo.spec ? (
+                    <SpecView spec={demo.spec} current={playback.chapter} onSelect={playback.seekChapter} />
+                  ) : (
+                    <ChapterList chapters={demo.chapters} current={playback.chapter} onSelect={playback.seekChapter} />
+                  )}
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Pane.Content>
+          </Pane.Root>
+        </div>
+
+        <section
+          ref={detailsRef}
+          aria-label='Details'
+          className='grid grid-cols-1 border-t border-separator xl:grid-cols-3 xl:divide-x xl:divide-separator'
+        >
+          <Slate demo={demo} />
+          {demo.prompt && (
+            <CopyBlock
+              title='Run it yourself'
+              text={demo.prompt}
+              copied={copied === 'prompt'}
+              onCopy={() => void copy('prompt', demo.prompt ?? '')}
             />
-          </div>
-          <div className='px-1 pb-1'>
-            <Transport playback={playback} chapters={demo.chapters} downloads={downloads} onFullscreen={fullscreen} />
-          </div>
-        </Layout.Flex>
+          )}
+          {demo.script && (
+            <CopyBlock
+              title='Autocue script'
+              text={demo.script.source}
+              copied={copied === 'script'}
+              onCopy={() => void copy('script', demo.script?.source ?? '')}
+              collapsed={`${demo.script.path} · ${demo.script.source.split('\n').length} lines`}
+            />
+          )}
+        </section>
 
-        <Panel.Root classNames='h-[60vh] min-h-0 border-t border-separator bg-base-surface lg:h-auto lg:border-s lg:border-t-0'>
-          <Panel.Header classNames='border-b border-separator px-2'>
-            <ToggleGroup.Root
-              type='single'
-              value={view}
-              onValueChange={(value) => (value === 'chapters' || value === 'spec') && changeView(value)}
-              aria-label='Side panel'
-            >
-              <ToggleGroup.Item value='chapters' icon='ph--list-numbers--regular' label='Chapters' />
-              <ToggleGroup.Item value='spec' icon='ph--file-code--regular' label='Spec' disabled={!demo.spec} />
-            </ToggleGroup.Root>
-          </Panel.Header>
-          <Panel.Body asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport>
-                {view === 'spec' && demo.spec ? (
-                  <SpecView spec={demo.spec} current={playback.chapter} onSelect={playback.seekChapter} />
-                ) : (
-                  <ChapterList chapters={demo.chapters} current={playback.chapter} onSelect={playback.seekChapter} />
-                )}
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Panel.Body>
-        </Panel.Root>
+        <Shortcuts open={help} onOpenChange={setHelp} />
       </div>
-
-      <section
-        ref={detailsRef}
-        aria-label='Details'
-        className='grid grid-cols-1 border-t border-separator xl:grid-cols-3 xl:divide-x xl:divide-separator'
-      >
-        <Slate demo={demo} />
-        {demo.prompt && (
-          <CopyBlock
-            title='Run it yourself'
-            text={demo.prompt}
-            copied={copied === 'prompt'}
-            onCopy={() => void copy('prompt', demo.prompt ?? '')}
-          />
-        )}
-        {demo.script && (
-          <CopyBlock
-            title='Autocue script'
-            text={demo.script.source}
-            copied={copied === 'script'}
-            onCopy={() => void copy('script', demo.script?.source ?? '')}
-            collapsed={`${demo.script.path} · ${demo.script.source.split('\n').length} lines`}
-          />
-        )}
-      </section>
-
-      <Shortcuts open={help} onOpenChange={setHelp} />
-    </div>
+    </RootAttentionProvider>
   );
 };

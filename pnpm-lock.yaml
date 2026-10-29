@@ -26379,9 +26379,15 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../packages/common/node-std
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../../packages/plugins/plugin-deck
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-attention
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-canvas

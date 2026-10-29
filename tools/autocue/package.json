@@ -37,7 +37,9 @@
   },
   "devDependencies": {
     "@dxos/node-std": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
