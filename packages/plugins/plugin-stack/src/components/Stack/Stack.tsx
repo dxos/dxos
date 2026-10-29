@@ -191,7 +191,10 @@ const DragHandleGlyph = () => (
 );
 
 /** Where each section's height is remembered, so a collection opened again keeps its sections still while they load. */
-const sectionHeights = Hooks.createHeightMemory('stack-section');
+const sectionHeights = Hooks.createHeightMemory();
+
+/** What a section not yet rendered this session reserves. */
+const SECTION_PLACEHOLDER = 320;
 
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
@@ -203,7 +206,9 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
   const contentRef = useRef<HTMLDivElement>(null);
-  Hooks.useReservedHeight(sectionHeights, isCollapsed ? undefined : id, contentRef);
+  Hooks.useReservedHeight(sectionHeights, isCollapsed ? undefined : id, contentRef, {
+    fallback: SECTION_PLACEHOLDER,
+  });
   const icon = Obj.getIcon(object)?.icon ?? 'ph--circle-dashed--regular';
   const title = useLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
 

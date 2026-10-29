@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-
 /** Rendered this session, so a document opened again shows its diagrams at once. Errors are not kept: a retry may pass. */
 const diagrams = new Map<string, string>();
 
@@ -42,6 +40,3 @@ export const setDiagram = (key: string, svg: string) => {
     chars -= size(oldest, old);
   }
 };
-
-/** Each diagram's last rendered height, which a diagram not yet rendered this session reserves. */
-export const diagramHeights = Hooks.createHeightMemory('mermaid');

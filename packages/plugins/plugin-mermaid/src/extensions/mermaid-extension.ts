@@ -7,7 +7,7 @@ import { type EditorState, type Extension, type Range, StateField } from '@codem
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import Mermaid, { type MermaidConfig } from 'mermaid';
 
-import { diagramHeights, getDiagram, setDiagram } from './diagram-cache.ts';
+import { getDiagram, setDiagram } from './diagram-cache.ts';
 
 export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 'themeCSS'>;
 
@@ -142,6 +142,9 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
 /** A config with the key its diagrams are cached under. */
 const withKey = (config: MermaidConfig) => ({ config, key: JSON.stringify(config) });
 
+/** What a diagram not yet rendered this session reserves, so the text below it moves less when it arrives. */
+const DIAGRAM_PLACEHOLDER = 240;
+
 /** Mermaid removes the element with a render's id before rendering, so no two renders, cached or not, share one. */
 let renders = 0;
 
@@ -162,7 +165,7 @@ class MermaidWidget extends WidgetType {
   }
 
   override get estimatedHeight() {
-    return diagramHeights.get(this._key) ?? -1;
+    return DIAGRAM_PLACEHOLDER;
   }
 
   override ignoreEvent(ev: Event) {
@@ -173,17 +176,12 @@ class MermaidWidget extends WidgetType {
     const div = document.createElement('div');
     div.className = 'cm-mermaid';
 
-    // A diagram rendered before shows at once; a new one holds the height it last rendered at, so the text below it
-    // does not move when it arrives.
     const svg = getDiagram(this._key);
     if (svg !== undefined) {
       this.fill(div, view, svg);
       return div;
     }
-    const height = diagramHeights.get(this._key);
-    if (height) {
-      div.style.minHeight = `${height}px`;
-    }
+    div.style.minHeight = `${DIAGRAM_PLACEHOLDER}px`;
 
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
@@ -219,13 +217,6 @@ class MermaidWidget extends WidgetType {
         div.appendChild(label);
       }
     }
-    view.requestMeasure({
-      read: () => div.offsetHeight,
-      write: (height) => {
-        if (height > 0) {
-          diagramHeights.set(this._key, height);
-        }
-      },
-    });
+    view.requestMeasure();
   }
 }

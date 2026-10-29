@@ -11,7 +11,6 @@ import { createHeightMemory, useReservedHeight } from './height-memory.ts';
 describe('height memory', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    localStorage.clear();
   });
 
   afterEach(() => {
@@ -19,15 +18,8 @@ describe('height memory', () => {
     vi.unstubAllGlobals();
   });
 
-  test('a height recorded in one session is there in the next, stored without its key', async () => {
-    createHeightMemory('test').set('echo://space/document', 420);
-    await vi.advanceTimersByTimeAsync(1_000);
-    expect(createHeightMemory('test').get('echo://space/document')).toBe(420);
-    expect(JSON.stringify({ ...localStorage })).not.toContain('document');
-  });
-
   test('an element keeps the height it last rendered at, at its width, while its content arrives', async () => {
-    const memory = createHeightMemory('test');
+    const memory = createHeightMemory();
     const element = document.createElement('div');
     const observed = observeResizes();
 
@@ -44,8 +36,18 @@ describe('height memory', () => {
     expect(element.style.minHeight).toBe('');
   });
 
+  test('an element that has not rendered this session holds the fallback while its content arrives', async () => {
+    const element = document.createElement('div');
+    const observed = observeResizes();
+    renderHook(() => useReservedHeight(createHeightMemory(), 'section', { current: element }, { fallback: 240 }));
+    observed.resize(640, 80);
+    expect(element.style.minHeight).toBe('240px');
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(element.style.minHeight).toBe('');
+  });
+
   test('content taller than its reservation is remembered at once', async () => {
-    const memory = createHeightMemory('test');
+    const memory = createHeightMemory();
     const element = document.createElement('div');
     const observed = observeResizes();
     const first = renderHook(() => useReservedHeight(memory, 'section', { current: element }));
@@ -61,7 +63,7 @@ describe('height memory', () => {
   });
 
   test('a width that settles while its content arrives finds the height remembered for it', async () => {
-    const memory = createHeightMemory('test');
+    const memory = createHeightMemory();
     const element = document.createElement('div');
     const observed = observeResizes();
     const narrow = renderHook(() => useReservedHeight(memory, 'section', { current: element }));
