@@ -112,7 +112,7 @@ verdict InvokeAck: InvokeAck is a union of the ok acks with objectId and the err
 ```mdl
 verdict F-1.1: The settings module contributes one KvsStore atom to CrxCapabilities.Settings and AppCapabilities.Settings.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/settings.ts, github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/index.ts#CrxSettings]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/settings.ts, github:dxos/dxos/packages/plugins/plugin-crx/dx.config.ts]
   note: No test activates the plugin and reads either capability.
 ```
 
@@ -162,7 +162,7 @@ verdict F-2c.3: With autoOpenAfterClip off only the success toast is invoked.
 ```mdl
 verdict F-3.1: Three picker-only actions (Person, Organization, Note) with http(s) patterns and the snapshot extractor are contributed.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/page-action-provider.ts, github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/index.ts#PageActionProvider]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/page-action-provider.ts, github:dxos/dxos/packages/plugins/plugin-crx/dx.config.ts]
   note: |
     No test lists the plugin's own three actions; the unit and e2e tests use a stub action and plugin-github's.
 ```
@@ -178,7 +178,7 @@ verdict F-3.2: Listeners resolve actions with getAll on every event, so later pl
 ```mdl
 verdict F-4.1: Both window listeners are installed and the ready event is dispatched.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#installPageActionListeners, github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/index.ts#InstallPageActions]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#installPageActionListeners, github:dxos/dxos/packages/plugins/plugin-crx/dx.config.ts]
   tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts]
   note: The e2e exercises both listeners; no test asserts the `composer:page-actions:ready` event.
 ```

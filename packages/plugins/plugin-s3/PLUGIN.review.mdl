@@ -36,10 +36,10 @@ verdict S3Uri: Blobs are addressed s3://<host>/<spaceId>/<contentHash>, and the 
 ```mdl
 verdict S3Connector: The credential-form connector exists, but the form splits bucket from endpoint and validates before submit.
   status: diverged
-  evidence: [github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#createS3ConnectorEntry, github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#composeHost, github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/index.ts#Connector]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#createS3ConnectorEntry, github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#composeHost, github:dxos/dxos/packages/plugins/plugin-s3/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.test.ts, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.test.ts]
   walkthrough:
-    - The lazy module activates the connector on ConnectorEvents.Start. github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/index.ts#Connector
+    - The lazy module activates the connector on ConnectorEvents.Start. github:dxos/dxos/packages/plugins/plugin-s3/dx.config.ts
     - The entry joins bucket and endpoint into a bare lowercase host and builds the AccessToken and Connection. github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#createS3ConnectorEntry
     - testConnection probes a missing key with a signed HEAD and tells 404 from 403. github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.ts#probeAccess
   note: |
