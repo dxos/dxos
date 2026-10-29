@@ -84,6 +84,7 @@ export default Capability.makeModule(
     });
 
     // Copied out: the atom compares by identity, and the stored value keeps its identity across a write.
+    const ready = Atom.make(false).pipe(Atom.keepAlive);
     const unsynced = Atom.make<readonly string[]>([]).pipe(Atom.keepAlive);
     const pinned = Atom.make<AppSettings.DeviceSettings>(structuredClone(registry.get(device))).pipe(Atom.keepAlive);
 
@@ -161,6 +162,7 @@ export default Capability.makeModule(
         () => unsubscribeSettings(),
       );
       bound = { store, sync };
+      registry.set(ready, true);
       refresh();
     });
 
@@ -192,6 +194,7 @@ export default Capability.makeModule(
     };
 
     return Capability.contribute(AppCapabilities.SettingsSync, {
+      ready,
       unsynced,
       pinned,
       takeLocal: (namespace) =>

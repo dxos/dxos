@@ -12,11 +12,12 @@ import * as AppCapabilities from '../../app-framework/AppCapabilities.ts';
 import * as AppSettings from '../../types/AppSettings.ts';
 
 /** Stable fallback so the atom hook keeps a constant identity while the sync is unavailable. */
+const notReady = Atom.make(false);
 const emptyUnsynced = Atom.make<readonly string[]>([]);
 const emptyPinned = Atom.make<AppSettings.DeviceSettings>({});
 
 export type SettingsScopeState = {
-  /** Whether the device-synced settings store is available at all. */
+  /** Whether the device-synced settings store is bound, so the actions take effect. */
   readonly available: boolean;
   /** Whether this prefix follows the account rather than staying on this device. */
   readonly synced: boolean;
@@ -29,7 +30,7 @@ export type SettingsScopeState = {
 };
 
 export type SettingsKeyScopeState = {
-  /** Whether the device-synced settings store is available at all. */
+  /** Whether the device-synced settings store is bound, so the actions take effect. */
   readonly available: boolean;
   /** Whether this key follows the account, rather than being pinned to this device. */
   readonly synced: boolean;
@@ -44,6 +45,7 @@ export type SettingsKeyScopeState = {
 /** Reactive sync scope for one settings prefix. */
 export const useSettingsScope = (prefix: string): SettingsScopeState => {
   const sync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
+  const ready = useAtomValue(sync?.ready ?? notReady);
   const unsynced = useAtomValue(sync?.unsynced ?? emptyUnsynced);
   const takeLocal = useCallback(() => sync?.takeLocal(prefix), [sync, prefix]);
   const rejoinAccount = useCallback(
@@ -52,19 +54,20 @@ export const useSettingsScope = (prefix: string): SettingsScopeState => {
   );
   const getConflicts = useCallback(() => sync?.conflicts(prefix) ?? [], [sync, prefix]);
 
-  return { available: !!sync, synced: !unsynced.includes(prefix), takeLocal, rejoinAccount, getConflicts };
+  return { available: ready, synced: !unsynced.includes(prefix), takeLocal, rejoinAccount, getConflicts };
 };
 
 /** Reactive sync scope for one key within a prefix, rather than the prefix as a whole. */
 export const useSettingsKeyScope = (prefix: string, key: string): SettingsKeyScopeState => {
   const sync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
+  const ready = useAtomValue(sync?.ready ?? notReady);
   const pins = useAtomValue(sync?.pinned ?? emptyPinned);
   const pin = useCallback(() => sync?.pinKey(prefix, key), [sync, prefix, key]);
   const unpin = useCallback(() => sync?.unpinKey(prefix, key), [sync, prefix, key]);
   const pinned = (pins[prefix]?.keys ?? []).includes(key);
 
   return {
-    available: !!sync,
+    available: ready,
     synced: !pinned,
     diverged: pinned && (sync?.conflicts(prefix) ?? []).includes(key),
     pin,

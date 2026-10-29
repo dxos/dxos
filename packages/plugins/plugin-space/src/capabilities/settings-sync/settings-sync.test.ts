@@ -29,15 +29,18 @@ describe('SettingsSync', () => {
     await client.waitUntilInitialized();
     await harness.waitForEvent(ClientEvents.SpacesAvailable);
     expect(client.halo.identity.get()).toBeNull();
+    // Contributed before the identity exists, but its actions take no effect until it binds.
+    const sync = await harness.waitForCapability(AppCapabilities.SettingsSync);
+    expect(harness.registry.get(sync.ready)).toBe(false);
 
     // An existing profile's identity loads without `CreateIdentity`, so `IdentityCreated` never fires.
     await client.halo.createIdentity();
     const { settingsSpace } = await EffectEx.runPromise(AppSpace.setupIdentitySpaces(client));
 
-    await harness.waitForCapability(AppCapabilities.SettingsSync);
     // With `IdentityCreated` never fired, only the binding names the settings object.
     await vi.waitFor(
       () => {
+        expect(harness.registry.get(sync.ready)).toBe(true);
         expect(Option.isSome(Annotation.get(settingsSpace.properties, AppAnnotation.AppSettingsAnnotation))).toBe(true);
       },
       { timeout: 10_000, interval: 100 },
