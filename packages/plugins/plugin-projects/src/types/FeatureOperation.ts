@@ -49,6 +49,9 @@ export class SpecCycleError extends BaseError.extend(
   'A feature cannot move into its own spec or the spec of one of its subfeatures.',
 ) {}
 
+/** Another spec already names the project; the message names that spec. */
+export class ProjectHasSpecError extends BaseError.extend('ProjectHasSpecError', 'A project has at most one spec.') {}
+
 /** The input names neither a spec nor a feature to place the result under. */
 export class NoSpecError extends BaseError.extend('NoSpecError', 'Pass a spec or a parent feature.') {}
 
@@ -149,7 +152,7 @@ export const CreateSpec = Operation.make({
     description: trim`
       Creates a spec: a map of the features a product area should reach. Pass a feature to make the spec that breaks
       that feature down (a feature has at most one; its existing one is returned). Pass a project to track the spec's
-      work in that project's tasks.
+      work in that project's tasks; a project has at most one spec, so one that already has a spec is refused.
     `,
   },
   services: [Database.Service],
@@ -169,7 +172,7 @@ export const UpdateSpec = Operation.make({
     name: 'Update spec',
     icon: 'ph--pencil-simple--regular',
     description:
-      "Changes a spec's name, description or project; fields left out are kept, and a null project clears it.",
+      "Changes a spec's name, description or project; fields left out are kept, and a null project clears it. A project has at most one spec, so one that already has another spec is refused.",
   },
   services: [Database.Service],
   types: [Spec.Spec, Project.Project],
@@ -310,7 +313,8 @@ export const ImportSpec = Operation.make({
       feature named by its title, with the block's prose as its description and its req lines as its requirements.
       Pass the repo path of the spec, which is recorded on each feature so importing again updates them rather than
       adding more. Pass a spec to import into it, a feature to import into the spec that breaks it down, or neither to
-      make a new spec (named by name, else the path); a project makes a new spec track its work there.
+      make a new spec (named by name, else the path); a project makes a new spec track its work there, and is refused
+      when the project already has a spec.
       Review each description afterwards: it should state the ideal, not the current state.
     `,
   },

@@ -7,7 +7,7 @@ import { lazy } from 'react';
 
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
-import { type FeatureCompanionProps } from './FeatureCompanion/index.ts';
+import { type FeatureCompanionProps, type ProjectFeatureCompanionProps } from './FeatureCompanion/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
 import { type SpecArticleProps } from './SpecFeatures/index.ts';
@@ -22,6 +22,10 @@ export const FeatureCardContent: ComponentType<FeatureCardContentProps> = lazy((
 
 export const FeatureCompanion: ComponentType<FeatureCompanionProps> = lazy(() =>
   import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureCompanion })),
+);
+
+export const ProjectFeatureCompanion: ComponentType<ProjectFeatureCompanionProps> = lazy(() =>
+  import('./FeatureCompanion/index.ts').then((module) => ({ default: module.ProjectFeatureCompanion })),
 );
 
 // Lazy: the canvas engine is large, and only a spec's map needs it.

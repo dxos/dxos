@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as Project from '@dxos/compute/Project';
 import { Database, EID, Obj, Ref, Relation } from '@dxos/echo';
 
-import { type Feature, Spec } from '#types';
+import { type Feature, FeatureOperation, Spec } from '#types';
 
 /** Entity id of a ref or a relation endpoint; space-qualified and local URIs may name the same object. */
 export const entityId = (uri: string): string => {
@@ -21,6 +22,28 @@ export const endpoints = (relation: Relation.Unknown): readonly [string, string]
   entityId(Relation.getSourceURI(relation)),
   entityId(Relation.getTargetURI(relation)),
 ];
+
+/** Fails when a spec other than `spec` already names the project: a project has at most one spec. */
+export const ensureProjectFree = Effect.fn(function* (project: Ref.Ref<Project.Project> | undefined, spec?: Spec.Spec) {
+  if (!project) {
+    return;
+  }
+  const target = yield* Database.load(project);
+  const existing = (yield* Database.query(Spec.projectFilter(target)).run).find((other) => other.id !== spec?.id);
+  if (existing) {
+    return yield* Effect.fail(
+      new FeatureOperation.ProjectHasSpecError({
+        message: `Project "${target.name ?? target.id}" already has a spec: "${existing.name}" (${existing.id}).`,
+      }),
+    );
+  }
+});
+
+/** Adds a top-level spec, refused when its project already has one. */
+export const addSpec = Effect.fn(function* (props: Spec.MakeProps) {
+  yield* ensureProjectFree(props.project);
+  return yield* Database.add(Spec.make(props));
+});
 
 /** The spec that breaks the feature down, made (named after it) when it has none. */
 export const ensureBreakdown = Effect.fn(function* (feature: Feature.Feature) {

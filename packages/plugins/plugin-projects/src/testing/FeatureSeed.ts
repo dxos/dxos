@@ -36,14 +36,17 @@ export const types = [
 
 /**
  * Writes card models into a database as the objects and relations they are derived from — features on one spec that
- * names one project, each with its subfeatures on a spec it owns, `DependsOn`, tasks and milestones with `Implements`,
- * and showcases with `Demonstrates`. Ids in the models are only keys within the seed.
+ * names one project (made unless given), each with its subfeatures on a spec it owns, `DependsOn`, tasks and
+ * milestones with `Implements`, and showcases with `Demonstrates`. Ids in the models are only keys within the seed.
  */
 export const seed = (
   db: Database.Database,
-  { name = 'Inbox and agents', features = SAMPLE_FEATURES }: { name?: string; features?: readonly FeatureModel[] } = {},
+  {
+    name = 'Inbox and agents',
+    features = SAMPLE_FEATURES,
+    project = db.add(Project.make({ name })),
+  }: { name?: string; features?: readonly FeatureModel[]; project?: Project.Project } = {},
 ): Spec.Spec => {
-  const project = db.add(Project.make({ name }));
   const spec = db.add(Spec.make({ name, project: Ref.make(project) }));
   const objects = new Map<string, Feature.Feature>();
   for (const model of features) {

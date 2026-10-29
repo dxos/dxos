@@ -14,7 +14,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, SpecDocument, Task } from '@dxos/types';
 
-import { Feature, Showcase, Spec } from '#types';
+import { Feature, FeatureOperation, Showcase, Spec } from '#types';
 
 import addDependency from './add-dependency.ts';
 import createSpec from './create-spec.ts';
@@ -25,6 +25,7 @@ import importLinks from './import-links.ts';
 import importSpec from './import-spec.ts';
 import linkTask from './link-task.ts';
 import removeDependency from './remove-dependency.ts';
+import updateSpec from './update-spec.ts';
 import update from './update.ts';
 
 const testLayer = () =>
@@ -124,6 +125,44 @@ describe('FeatureOperation.Update', () => {
       const exit = yield* Effect.exit(update.handler({ feature: ref(sync), spec: ref(breakdown) }));
       expect(Exit.isFailure(exit)).toBe(true);
       expect(Spec.getContainer(sync)?.id).toBe(inbox.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('FeatureOperation.CreateSpec', () => {
+  it.effect('refuses a second spec for a project, naming the one it has, and writes nothing', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Mail' }));
+      const { spec: inbox } = yield* createSpec.handler({ name: 'Inbox', project: ref(project) });
+      const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(inbox) });
+
+      const error = yield* Effect.flip(createSpec.handler({ name: 'Outbox', project: ref(project) }));
+      expect(error).toBeInstanceOf(FeatureOperation.ProjectHasSpecError);
+      expect(error.message).toContain('"Inbox"');
+      const breakdown = yield* Effect.exit(
+        createSpec.handler({ name: 'Sync', feature: ref(sync), project: ref(project) }),
+      );
+      expect(Exit.isFailure(breakdown)).toBe(true);
+      expect(sync.spec).toBeUndefined();
+      expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(1);
+      const { db } = yield* Database.Service;
+      expect((yield* Effect.promise(() => Spec.getForProject(db, project)))?.id).toBe(inbox.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('FeatureOperation.UpdateSpec', () => {
+  it.effect('keeps a spec on its own project and refuses moving another onto it', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Mail' }));
+      const inbox = yield* Database.add(Spec.make({ name: 'Inbox', project: ref(project) }));
+      const outbox = yield* addSpec('Outbox');
+
+      yield* updateSpec.handler({ spec: ref(inbox), name: 'Inbox v2', project: ref(project) });
+      expect(inbox.name).toBe('Inbox v2');
+      const error = yield* Effect.flip(updateSpec.handler({ spec: ref(outbox), project: ref(project) }));
+      expect(error.message).toContain('"Inbox v2"');
+      expect(outbox.project).toBeUndefined();
     }).pipe(Effect.provide(testLayer())),
   );
 });

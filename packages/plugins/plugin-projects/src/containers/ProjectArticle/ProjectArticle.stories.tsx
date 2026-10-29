@@ -29,6 +29,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import { FeatureSeed } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -45,6 +46,7 @@ import { Text } from '@dxos/schema';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
+import { ProjectView } from '#types';
 
 import { ProjectArticle } from './ProjectArticle.tsx';
 
@@ -62,6 +64,7 @@ const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 const OTHER_PROJECT_NAME = 'Project 2';
+const SPEC_NAME = 'Inbox and agents';
 const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
@@ -168,7 +171,10 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  // A second project, so a task row's `Move to…` has somewhere to go.
+  // The project's spec, which puts the Spec tab and the overview's summary line on the article.
+  FeatureSeed.seed(space.db, { name: SPEC_NAME, project });
+
+  // A second project, so a task row's `Move to…` has somewhere to go; it has no spec.
   const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
 
   seeded = { generation: storyGeneration, space, project, taskSet, task, destination };
@@ -218,19 +224,21 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
 };
 
 /** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
-const showTab = async (canvas: ReturnType<typeof within>, tab: 'overview' | 'tasks') => {
+const showTab = async (canvas: ReturnType<typeof within>, tab: ProjectView.Tab) => {
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
 };
 
 type StoryArgs = {
   role: string;
   attendableId: string;
+  /** The seeded project the article opens. */
+  projectName?: string;
 };
 
-const DefaultStory = ({ role, attendableId }: StoryArgs) => {
+const DefaultStory = ({ role, attendableId, projectName = PROJECT_NAME }: StoryArgs) => {
   const [space] = useSpaces();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
-  const project = projects.find((entry) => entry.name === PROJECT_NAME);
+  const project = projects.find((entry) => entry.name === projectName);
   if (!space?.db || !project) {
     return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
@@ -298,15 +306,18 @@ const meta = {
         FixtureLinkSourcePlugin(),
         ClientPlugin.make({
           types: [
-            Project.Project,
-            Instructions.Instructions,
-            Skill.Skill,
-            Text.Text,
-            Outline.Outline,
-            TaskSet.TaskSet,
-            Task.Task,
-            Milestone.Milestone,
-            Repo.Repo,
+            ...new Set([
+              ...FeatureSeed.types,
+              Project.Project,
+              Instructions.Instructions,
+              Skill.Skill,
+              Text.Text,
+              Outline.Outline,
+              TaskSet.TaskSet,
+              Task.Task,
+              Milestone.Milestone,
+              Repo.Repo,
+            ]),
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -358,6 +369,36 @@ export const Default: Story = {
   args: {
     role: 'article',
     attendableId: 'test',
+  },
+};
+
+/**
+ * A project with a spec: the overview counts the spec's features, and its Spec tab shows their map. The summary's
+ * name opens the tab.
+ */
+export const WithSpec: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    const summary = await canvas.findByTestId('projectsPlugin.specSummary', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(summary.textContent).toMatch(/\d+ features/), { timeout: 10_000 });
+    await userEvent.click(within(summary).getByRole('button', { name: SPEC_NAME }));
+    await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
+  },
+};
+
+/** A project without a spec: no Spec tab and no summary line. */
+export const WithoutSpec: Story = {
+  args: { ...Default.args, projectName: OTHER_PROJECT_NAME },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await expect(canvas.findByDisplayValue(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByTestId('projectsPlugin.tab.tasks')).resolves.toBeTruthy();
+    await expect(canvas.queryByTestId('projectsPlugin.tab.spec')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.specSummary')).toBeNull();
   },
 };
 

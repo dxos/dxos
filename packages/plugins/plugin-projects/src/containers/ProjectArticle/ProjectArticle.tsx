@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -29,6 +29,7 @@ import { useSelection, useSelectionActions, useViewState, useViewStateActions } 
 import { Form } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -39,9 +40,9 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
+import { Feature, ProjectCapabilities, ProjectOperation, ProjectView, type Spec } from '#types';
 
-import { useRefTargets } from '../../hooks/index.ts';
+import { useFeatureGraph, useProjectSpec, useRefTargets, useSpecTreeIds } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
 
@@ -52,6 +53,11 @@ type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'repositories
 
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
   SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories']),
+);
+
+// Lazy: the canvas engine is large, and only the Spec tab needs it.
+const SpecFeatures = lazy(() =>
+  import('../SpecFeatures/index.ts').then((module) => ({ default: module.SpecFeatures })),
 );
 
 // The Context section edits only the instructions' standing context objects.
@@ -96,6 +102,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
   const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
+  // The Spec tab is offered only while a spec names the project; a saved `spec` tab falls back to the overview.
+  const spec = useProjectSpec(subject);
+  const shownTab: ProjectView.Tab = tab === 'spec' && !spec ? 'overview' : tab;
+  const openSpec = useCallback(() => setTab('spec'), [setTab]);
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -106,12 +116,17 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         <Tabs.Trigger value='overview' data-testid='projectsPlugin.tab.overview'>
           {t('overview.label')}
         </Tabs.Trigger>
+        {spec && (
+          <Tabs.Trigger value='spec' data-testid='projectsPlugin.tab.spec'>
+            {t('spec.label')}
+          </Tabs.Trigger>
+        )}
         <Tabs.Trigger value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
         </Tabs.Trigger>
       </Tabs.List>
     ),
-    [t],
+    [t, spec],
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
@@ -255,7 +270,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     <Tabs.Root
       asChild
       orientation='horizontal'
-      value={tab}
+      value={shownTab}
       onValueChange={(value) => setTab(Schema.decodeUnknownSync(ProjectView.Tab)(value))}
     >
       <Panel.Root role={role}>
@@ -266,7 +281,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
           {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
               hidden for a frame, and the artifact gallery's masonry measures zero there and
               never recovers. The tablist still owns the switching. */}
-          {tab === 'overview' && (
+          {shownTab === 'overview' && (
             <Form.Root
               db={db}
               schema={HeaderValues}
@@ -276,6 +291,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               <Form.Viewport scroll>
                 <Form.Content>
                   <Form.Fields />
+
+                  {spec && (
+                    <Form.FieldSet label={t('spec.label')} data-testid='projectsPlugin.spec'>
+                      <SpecSummary spec={spec} onOpen={openSpec} />
+                    </Form.FieldSet>
+                  )}
 
                   {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
 
@@ -321,11 +342,17 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             </Form.Root>
           )}
 
+          {shownTab === 'spec' && spec && (
+            <Suspense fallback={null}>
+              <SpecFeatures spec={spec} attendableId={attendableId} />
+            </Suspense>
+          )}
+
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-          {tab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
+          {shownTab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
           {/* One splitter whether or not the chart is shown: collapsing to the ledger keeps the pane the
               section lays out in, so its add row stays below the list rather than past the panel. */}
-          {tab === 'tasks' && taskSet && (
+          {shownTab === 'tasks' && taskSet && (
             <Splitter.Root
               orientation='vertical'
               anchor='end'
@@ -383,6 +410,34 @@ const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milesto
     ))}
   </Layout.Container>
 );
+
+/**
+ * One line over the project's spec, counting every feature on its map and the maps nested beneath it: how many there
+ * are by status, and how many have an implementing task still open. The spec's name opens the Spec tab.
+ */
+const SpecSummary = ({ spec, onOpen }: { spec: Spec.Spec; onOpen: () => void }) => {
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  const [name] = useObject(spec, 'name');
+  const ids = useSpecTreeIds(spec);
+  const { features } = useFeatureGraph(Obj.getDatabase(spec), ids);
+  const counts = Feature.Status.literals.flatMap((status) => {
+    const count = features.filter((feature) => feature.status === status).length;
+    return count > 0
+      ? [t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })]
+      : [];
+  });
+  const open = features.filter((feature) => feature.tasks.some((task) => !task.done)).length;
+
+  return (
+    <Layout.Flex gap='sm' align='center' classNames='min-w-0 flex-wrap' data-testid='projectsPlugin.specSummary'>
+      <Button.Root variant='ghost' icon='ph--blueprint--regular' label={name} onClick={onOpen} />
+      <span className='text-fg-subtle'>
+        {[t('spec-summary.features.label', { count: features.length }), ...counts].join(' · ')}
+      </span>
+      {open > 0 && <span className='text-fg-subtle'>{t('spec-summary.open-tasks.label', { count: open })}</span>}
+    </Layout.Flex>
+  );
+};
 
 /** One row, holding its own subscription so a rename re-renders just that row. */
 const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milestone> }) => {

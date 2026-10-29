@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { FeatureOperation, Spec } from '#types';
+import { FeatureOperation } from '#types';
 
-import { ensureBreakdown } from './util.ts';
+import { addSpec, ensureBreakdown, ensureProjectFree } from './util.ts';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.CreateSpec> = FeatureOperation.CreateSpec.pipe(
   Operation.withHandler(
@@ -17,6 +17,9 @@ const handler: Operation.WithHandler<typeof FeatureOperation.CreateSpec> = Featu
       if (featureRef) {
         const feature = yield* Database.load(featureRef);
         const hadSpec = !!feature.spec;
+        if (!hadSpec) {
+          yield* ensureProjectFree(project);
+        }
         const spec = yield* ensureBreakdown(feature);
         if (!hadSpec) {
           Obj.update(spec, (spec) => {
@@ -28,7 +31,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.CreateSpec> = Featu
         yield* Database.flush();
         return { spec };
       }
-      const spec = yield* Database.add(Spec.make({ name, description, project }));
+      const spec = yield* addSpec({ name, description, project });
       yield* Database.flush();
       return { spec };
     }),

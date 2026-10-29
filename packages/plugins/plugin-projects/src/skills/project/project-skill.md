@@ -287,7 +287,9 @@ Features live on **specs**. A spec is a map of the features one product area sho
 exactly one spec's map. Features **nest** through specs: a feature may own one spec of its own that breaks it down,
 and the features on that spec are its **subfeatures**, each a feature in its own right with its own description,
 requirements, status, dependencies and tasks. A reader zooms into a feature to see its subfeatures. A spec may name
-the **project** whose tasks deliver it, and may hold the normative `.mdl` document its features came from.
+the **project** whose tasks deliver it, and may hold the normative `.mdl` document its features came from. A project
+has at most one spec: naming a project that already has one is refused, and the error names that spec. A breakdown
+spec needs no project of its own, since its work is tracked in the project of the spec above it.
 A dependency may cross specs: a feature can need a feature on another spec's map.
 
 **Keep every string short.** A feature map is read at a glance, so write the fewest words that say it:

@@ -19,6 +19,7 @@ import {
   ProjectArticle,
   ProjectArtifactsArticle,
   ProjectChatsArticle,
+  ProjectFeatureCompanion,
   SpecArticle,
 } from '#containers';
 import { Feature, Spec } from '#types';
@@ -57,6 +58,16 @@ export default Capability.makeModule(() =>
         ),
         component: FeatureCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, spec: companionTo, attendableId }),
+      }),
+      // The same companion beside a project, for the map on its Spec tab.
+      Surface.create({
+        id: 'project.feature.companion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, FEATURE_COMPANION),
+          AppSurface.companion(AppSurface.Article, Project.Project),
+        ),
+        component: ProjectFeatureCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
       }),
       Surface.create({
         id: 'feature.card',

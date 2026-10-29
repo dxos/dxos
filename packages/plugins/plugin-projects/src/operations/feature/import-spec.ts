@@ -10,7 +10,7 @@ import { SpecDocument } from '@dxos/types';
 
 import { Feature, FeatureOperation, FeatureSpec, Spec } from '#types';
 
-import { attach, detach, ensureBreakdown } from './util.ts';
+import { addSpec, attach, detach, ensureBreakdown } from './util.ts';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = FeatureOperation.ImportSpec.pipe(
   Operation.withHandler(
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
         ? yield* Database.load(specRef)
         : featureRef
           ? yield* ensureBreakdown(yield* Database.load(featureRef))
-          : (imported ?? (yield* Database.add(Spec.make({ name: name ?? key.id, project }))));
+          : (imported ?? (yield* addSpec({ name: name ?? key.id, project })));
 
       // A target without a document takes over this path's existing one, so the path keeps a single document. A target
       // nested beneath that spec writes through to it instead: the features stay put there, and deleting one would take

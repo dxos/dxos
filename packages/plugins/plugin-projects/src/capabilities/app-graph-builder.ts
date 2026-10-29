@@ -84,20 +84,30 @@ export default Capability.makeModule(
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const taskExtensions = yield* createProjectTasksExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
+    const featureCompanion = () =>
+      AppNode.makeCompanion({
+        variant: FEATURE_COMPANION,
+        label: ['feature-companion.label', { ns: ProjectsNamespace.key }],
+        icon: 'ph--puzzle-piece--regular',
+        data: FEATURE_COMPANION,
+      });
     // The feature companion: the feature selected on the spec's map, beside the spec plank.
     const featureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
       id: 'featureCompanion',
       relation: AppNode.companion,
       type: Spec.Spec,
-      connector: () =>
-        Effect.succeed([
-          AppNode.makeCompanion({
-            variant: FEATURE_COMPANION,
-            label: ['feature-companion.label', { ns: ProjectsNamespace.key }],
-            icon: 'ph--puzzle-piece--regular',
-            data: FEATURE_COMPANION,
-          }),
-        ]),
+      connector: () => Effect.succeed([featureCompanion()]),
+    });
+    // The same companion beside a project, while a spec names it: the project's Spec tab shows that spec's map.
+    const projectFeatureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
+      id: 'projectFeatureCompanion',
+      relation: AppNode.companion,
+      type: Project.Project,
+      connector: (project, get) => {
+        const db = Obj.getDatabase(project);
+        const specs = db ? get(db.query(Spec.projectFilter(project)).atom) : [];
+        return Effect.succeed(specs.length > 0 ? [featureCompanion()] : []);
+      },
     });
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
@@ -111,6 +121,7 @@ export default Capability.makeModule(
       ...taskExtensions,
       ...mailboxExtensions,
       ...featureCompanionExtensions,
+      ...projectFeatureCompanionExtensions,
     ]);
   }),
 );

@@ -123,7 +123,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
     let spec = state.byProject.get(project.id);
     if (!spec) {
       // A spec made for this project by an earlier run is reused rather than duplicated.
-      const [existing] = await db.query(Filter.type(Spec.Spec, { project: Ref.make(project) })).run();
+      const existing = await Spec.getForProject(db, project);
       spec = existing ?? db.add(Spec.make({ name: project.name ?? '', project: Ref.make(project) }));
       state.byProject.set(project.id, spec);
     }

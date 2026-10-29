@@ -9,10 +9,15 @@ import { Database, Obj } from '@dxos/echo';
 
 import { FeatureOperation } from '#types';
 
+import { ensureProjectFree } from './util.ts';
+
 const handler: Operation.WithHandler<typeof FeatureOperation.UpdateSpec> = FeatureOperation.UpdateSpec.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ spec: specRef, name, description, project }) {
       const spec = yield* Database.load(specRef);
+      if (project) {
+        yield* ensureProjectFree(project, spec);
+      }
       Obj.update(spec, (spec) => {
         if (name !== undefined) {
           spec.name = name;

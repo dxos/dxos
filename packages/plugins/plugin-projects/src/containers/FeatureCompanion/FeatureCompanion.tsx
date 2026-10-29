@@ -4,6 +4,7 @@
 
 import React, { useCallback } from 'react';
 
+import type * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
@@ -15,7 +16,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Feature, FeatureMapView, type Spec } from '#types';
 
-import { useOpenObject } from '../../hooks/index.ts';
+import { useOpenObject, useProjectSpec } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { FeatureDetail } from '../FeatureArticle/index.ts';
 
@@ -103,4 +104,15 @@ export const FeatureCompanion = ({ role, spec, attendableId }: FeatureCompanionP
       </Panel.Body>
     </Panel.Root>
   );
+};
+
+export type ProjectFeatureCompanionProps = Omit<FeatureCompanionProps, 'spec'> & {
+  /** The project whose Spec tab shows the map. */
+  project: Project.Project;
+};
+
+/** The feature companion beside a project: the one its spec's map shows, on the project's Spec tab. */
+export const ProjectFeatureCompanion = ({ project, ...props }: ProjectFeatureCompanionProps) => {
+  const spec = useProjectSpec(project);
+  return spec ? <FeatureCompanion spec={spec} {...props} /> : null;
 };

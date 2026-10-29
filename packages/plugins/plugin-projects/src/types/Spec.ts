@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Project from '@dxos/compute/Project';
-import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, Filter, Format, Obj, Ref, Type } from '@dxos/echo';
 import { SpecDocument } from '@dxos/types';
 
 import * as Feature from './Feature.ts';
@@ -71,6 +71,15 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Spec>, 'features'> &
 export const make = (props: MakeProps): Spec => Obj.make(Spec, { features: [], ...props });
 
 export const instanceOf = (value: unknown): value is Spec => Obj.instanceOf(Spec, value);
+
+/** Matches the specs that name the project; the operations keep that to one. */
+export const projectFilter = (project: Project.Project) => Filter.type(Spec, { project: Ref.make(project) });
+
+/** The project's spec: the one whose `project` names it. */
+export const getForProject = async (db: Database.Database, project: Project.Project): Promise<Spec | undefined> => {
+  const [spec] = await db.query(projectFilter(project)).run();
+  return spec;
+};
 
 /** The spec whose map lists the feature: its ECHO parent. */
 export const getContainer = (feature: Feature.Feature): Spec | undefined => {
