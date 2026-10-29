@@ -11,7 +11,7 @@ import { Scene } from '@dxos/scene';
 import types from '../capabilities/schema.ts';
 import { canvasDocument, makeCanvas } from './canvas-document.ts';
 import { applyLayoutIntent } from './layout-source.ts';
-import { writeModelIntent } from './model-writer.ts';
+import { writeDocument, writeModelIntent } from './model-writer.ts';
 
 describe('writeModelIntent', () => {
   let builder: EchoTestBuilder;
@@ -86,6 +86,30 @@ describe('writeModelIntent', () => {
         .layouts.map((record) => record.id)
         .sort(),
     ).toEqual(['layout', 'pair-parts']);
+  });
+
+  test('writing back the document from before an extract undoes it, and the one after redoes it', async () => {
+    const { canvas, layout } = await canvas3D();
+    const before = canvasDocument(canvas);
+    writeModelIntent(canvas, {
+      kind: 'extract',
+      model: 'model',
+      layout: 'layout',
+      ids: ['a', 'b'],
+      object: { id: 'pair', kind: 'sphere' },
+    });
+    const after = canvasDocument(canvas);
+    writeDocument(canvas, before);
+    expect(canvasDocument(canvas).layouts.map((record) => record.id)).toEqual(['layout']);
+    expect(Object.keys(layout.elements).sort()).toEqual(['a', 'b']);
+    expect(canvasDocument(canvas).models[0]?.objects.pair).toBeUndefined();
+    writeDocument(canvas, after);
+    expect(
+      canvasDocument(canvas)
+        .layouts.map((record) => record.id)
+        .sort(),
+    ).toEqual(['layout', 'pair-parts']);
+    expect(Object.values(layout.elements).map((element) => element.object)).toEqual(['pair']);
   });
 
   test('extract on a layout with no model gives it the model its new element places from', async () => {

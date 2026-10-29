@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Entity, Obj } from '@dxos/echo';
@@ -50,7 +50,15 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 
-import { applyLayoutIntent, fragmentText, layoutSource, openScene, writeModelIntent } from '#model';
+import {
+  applyLayoutIntent,
+  canvasDocument,
+  fragmentText,
+  layoutSource,
+  openScene,
+  writeDocument,
+  writeModelIntent,
+} from '#model';
 import { type Canvas } from '#types';
 
 import { CanvasNamespace } from '../../namespace.ts';
@@ -65,7 +73,7 @@ import {
 } from './element-form.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { getSessionClipboard, nextPaste, pasteOffset, setSessionClipboard } from './scene-clipboard.ts';
-import { type SessionHistory, sessionHistory } from './session-history.ts';
+import { type SessionHistory, isDocumentStep, sessionHistory } from './session-history.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
@@ -179,16 +187,20 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       if (!change) {
         return;
       }
-      direction === 'undo'
-        ? patchSource(source, { from: change.after, to: change.before, paths: change.paths })
-        : patchSource(source, { from: change.before, to: change.after, paths: change.paths });
+      if (isDocumentStep(change)) {
+        writeDocument(canvas, direction === 'undo' ? change.before : change.after);
+      } else {
+        direction === 'undo'
+          ? patchSource(source, { from: change.after, to: change.before, paths: change.paths })
+          : patchSource(source, { from: change.before, to: change.after, paths: change.paths });
+      }
       history.current =
         direction === 'undo'
           ? { done: done.slice(0, -1), undone: [...undone, change] }
           : { done: [...done, change], undone: undone.slice(0, -1) };
       setHistoryVersion((version) => version + 1);
     },
-    [source],
+    [source, canvas],
   );
 
   // The orbit, grid and look are this viewer's own view; the scene's camera and theme are the authored ones.
@@ -484,6 +496,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               index++;
             }
             const id = `object-${index}`;
+            const before = canvasDocument(canvas);
             const problems = writeModelIntent(canvas, {
               kind: 'extract',
               model: modelId,
@@ -497,9 +510,12 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
             }
             setNotice(undefined);
             setSelection([]);
-            // Make object moves elements between layouts, which the undo history recorded paths in: its entries would
-            // patch elements that are no longer there, so the history starts over rather than skip them silently.
-            history.current = { done: [], undone: [] };
+            // One undo step: writing back the document from before the edit undoes it.
+            history.current = {
+              done: [...history.current.done, { kind: 'document', before, after: canvasDocument(canvas) }],
+              undone: [],
+            };
+            setHistoryVersion((version) => version + 1);
             setHistoryVersion((version) => version + 1);
           }
         },
@@ -594,6 +610,8 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
 
   // The app's edit commands and the same shortcuts as 2D, on the whole article; typing in a field keeps its own.
   const [element, setElement] = useState<HTMLElement | null>(null);
+  // Whether the last press was in this article; kept across the effect's re-runs as the selection changes.
+  const pressedInside = useRef(false);
   useEffect(() => {
     if (!element || !chrome.editing) {
       return;
@@ -632,10 +650,23 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         command();
       }
     };
-    element.addEventListener('keydown', onKeyDown);
+    // Shortcuts follow the last press in the article, so they still work once a clicked control drops focus to the
+    // page (a toolbar button disabled by its own action).
+    const onPointerDown = (event: PointerEvent) => {
+      pressedInside.current = event.target instanceof Node && element.contains(event.target);
+    };
+    const onWindowKeyDown = (event: KeyboardEvent) => {
+      const focus = globalThis.document.activeElement;
+      pressedInside.current &&
+        (focus === null || focus === globalThis.document.body || element.contains(focus)) &&
+        onKeyDown(event);
+    };
+    window.addEventListener('pointerdown', onPointerDown, { capture: true });
+    window.addEventListener('keydown', onWindowKeyDown);
     return () => {
       unregister();
-      element.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('pointerdown', onPointerDown, { capture: true });
+      window.removeEventListener('keydown', onWindowKeyDown);
     };
   }, [element, chrome.editing, readonly, selection, cut, copy, paste, duplicate, step]);
 

@@ -42,6 +42,16 @@ export const writeModelIntent = (canvas: Canvas.Canvas, intent: ModelIntent): Pr
   if (problems.length > 0 || doc === before) {
     return problems;
   }
+  writeDocument(canvas, doc);
+  return [];
+};
+
+/**
+ * Writes `doc` over the canvas's stored layouts and models: changed elements and objects, new layouts stored and
+ * listed, and layouts the canvas lists that `doc` has not removed. Writing the document from before a model edit undoes
+ * it; the one after redoes it.
+ */
+export const writeDocument = (canvas: Canvas.Canvas, doc: Scene.SceneDocument): void => {
   const db = Obj.getDatabase(canvas);
   const layouts = new Map(
     canvas.layouts.flatMap((ref) => (isStoredLayout(ref.target) ? [[ref.target.key, ref.target] as const] : [])),
@@ -113,5 +123,13 @@ export const writeModelIntent = (canvas: Canvas.Canvas, intent: ModelIntent): Pr
     Obj.update(canvas, (canvas) => {
       canvas.layouts.push(...created.map((layout) => Ref.make(layout)));
     });
-  return [];
+  // A layout the document no longer has (an undone extract's parts) leaves the canvas.
+  const kept = new Set(doc.layouts.map((record) => record.id));
+  const gone = [...layouts.values()].filter((layout) => !kept.has(layout.key));
+  if (gone.length > 0) {
+    Obj.update(canvas, (canvas) => {
+      canvas.layouts = canvas.layouts.filter((ref) => !gone.some((layout) => ref.target === layout));
+    });
+    gone.forEach((layout) => db?.remove(layout));
+  }
 };

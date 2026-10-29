@@ -73,8 +73,11 @@ export const Scene3D: Story = {
       camera target=0,1,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
     }
 
-    layout cube dim=3d {
+    layout cube dim=3d model=library {
       element box cube @ 0,1,0 scale=2 hue=blue surface=solid
+    }
+
+    model library dim=3d {
     }
   `),
 };
