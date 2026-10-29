@@ -8,6 +8,8 @@ import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 
+import type { SpaceId } from '@dxos/keys';
+
 import { serviceError } from './service-rpc.ts';
 import { mutableArray, protoStruct } from './service-schemas.ts';
 
@@ -15,8 +17,19 @@ import { mutableArray, protoStruct } from './service-schemas.ts';
 // RPC message schemas.
 //
 
+/** Automerge `DocumentId` (`@automerge/automerge-repo`): the base58check id, without the `automerge:` url prefix. */
+const DocumentIdString = Schema.String;
+
+/** Automerge `Heads` (`@automerge/automerge`): the hex hashes of a document's latest changes. */
+const HeadsArray = mutableArray(Schema.String);
+
 export const SubscribeRequest = Schema.Struct({
+  /**
+   * Opaque id the client chooses for the subscription, and passes again to `updateSubscription` and `update`
+   * (`RepoProxy` uses a random hex key).
+   */
   subscriptionId: Schema.String,
+  /** {@link SpaceId} of the space whose documents the subscription carries. */
   spaceId: Schema.String,
 });
 export interface SubscribeRequest extends Schema.Schema.Type<typeof SubscribeRequest> {}
@@ -38,31 +51,36 @@ export const UpdateSubscriptionRequest = Schema.Struct({
   add: Schema.optional(
     mutableArray(
       Schema.Struct({
-        id: Schema.String,
-        heads: Schema.optional(mutableArray(Schema.String)),
+        /** Automerge `DocumentId` (see {@link DocumentIdString}). */
+        id: DocumentIdString,
+        /** Automerge `Heads` the client already holds (see {@link HeadsArray}). */
+        heads: Schema.optional(HeadsArray),
         passive: Schema.optional(Schema.Boolean),
       }),
     ),
   ),
   /**
-   * Automerge document ids to unsubscribe from.
+   * Automerge `DocumentId`s to unsubscribe from (see {@link DocumentIdString}).
    */
-  removeIds: Schema.optional(mutableArray(Schema.String)),
+  removeIds: Schema.optional(mutableArray(DocumentIdString)),
 });
 export interface UpdateSubscriptionRequest extends Schema.Schema.Type<typeof UpdateSubscriptionRequest> {}
 
 export const CreateDocumentRequest = Schema.Struct({
   /**
-   * Space id where the document will be created.
+   * {@link SpaceId} of the space where the document will be created.
    */
   spaceId: Schema.String,
   /**
-   * Initial document state, as `Automerge.save()` bytes.
+   * Initial document state, as `Automerge.save()` bytes of a
+   * [`DatabaseDirectory`](../../echo/echo-protocol/src/document-structure.ts) document.
    * Optional - if neither this nor `initialValue` is provided, an empty document will be created.
    */
   initialDocument: Schema.optional(Schema.Uint8Array),
   /**
-   * Initial document value as plain JSON, which cannot carry Automerge values such as `RawString` or bytes.
+   * Initial document value as a plain JSON
+   * [`DatabaseDirectory`](../../echo/echo-protocol/src/document-structure.ts), which cannot carry Automerge values
+   * such as `RawString` or bytes.
    * @deprecated Use `initialDocument`; kept so a client older than its services can still create documents.
    */
   initialValue: Schema.optional(protoStruct),
@@ -71,17 +89,17 @@ export interface CreateDocumentRequest extends Schema.Schema.Type<typeof CreateD
 
 export const CreateDocumentResponse = Schema.Struct({
   /**
-   * The generated document id.
+   * The generated Automerge `DocumentId` (see {@link DocumentIdString}).
    */
-  documentId: Schema.String,
+  documentId: DocumentIdString,
 });
 export interface CreateDocumentResponse extends Schema.Schema.Type<typeof CreateDocumentResponse> {}
 
 export const DocumentUpdate = Schema.Struct({
   /**
-   * Automerge document id.
+   * Automerge `DocumentId` (see {@link DocumentIdString}).
    */
-  documentId: Schema.String,
+  documentId: DocumentIdString,
   /**
    * Automerge document incremental update.
    * Value returned by `Automerge.saveSince()`.
@@ -119,8 +137,21 @@ export const DocumentUpdate = Schema.Struct({
    */
   passive: Schema.optional(
     Schema.Struct({
-      heads: mutableArray(Schema.String),
+      /** Automerge `Heads` that `json` was read at (see {@link HeadsArray}). */
+      heads: HeadsArray,
+      /**
+       * `JSON.stringify` text of one of two shapes, told apart by a top-level `id`:
+       * - With `id`: the document's one object, an
+       *   [`ObjectJSON`](../../echo/echo/src/internal/Entity/model.ts) (`Obj.JSON` in `@dxos/echo`), built by
+       *   `objectStructureToJson` and capped at `BACKED_OBJECT_LIMIT` by
+       *   [`backingJson`](../../echo/echo-protocol/src/document-structure.ts).
+       * - Without `id`: a space directory with no inline objects, a
+       *   [`DirectoryJson`](../../echo/echo-protocol/src/document-structure.ts) (`DatabaseDirectory` minus
+       *   `objects`, with each link an `AutomergeUrl` string), built by `directoryJson` and capped at
+       *   `BACKED_DIRECTORY_LIMIT`. Sent on the first update of a subscription only.
+       */
       json: Schema.optional(Schema.String),
+      /** Time of the latest change at `heads`, in milliseconds since the Unix epoch. */
       updatedAt: Schema.optional(Schema.Number),
     }),
   ),
@@ -128,6 +159,7 @@ export const DocumentUpdate = Schema.Struct({
 export interface DocumentUpdate extends Schema.Schema.Type<typeof DocumentUpdate> {}
 
 export const UpdateRequest = Schema.Struct({
+  /** Id the client passed to `subscribe`. */
   subscriptionId: Schema.String,
   updates: Schema.optional(mutableArray(DocumentUpdate)),
 });
@@ -140,20 +172,23 @@ export interface BatchedDocumentUpdates extends Schema.Schema.Type<typeof Batche
 
 export const FlushRequest = Schema.Struct({
   /**
-   * Automerge specific document ids to wait to flush.
+   * Automerge `DocumentId`s to wait to flush (see {@link DocumentIdString}).
    */
-  documentIds: Schema.optional(mutableArray(Schema.String)),
+  documentIds: Schema.optional(mutableArray(DocumentIdString)),
 });
 export interface FlushRequest extends Schema.Schema.Type<typeof FlushRequest> {}
 
 export const GetDocumentHeadsRequest = Schema.Struct({
-  documentIds: Schema.optional(mutableArray(Schema.String)),
+  /** Automerge `DocumentId`s (see {@link DocumentIdString}). */
+  documentIds: Schema.optional(mutableArray(DocumentIdString)),
 });
 export interface GetDocumentHeadsRequest extends Schema.Schema.Type<typeof GetDocumentHeadsRequest> {}
 
 export const Entry = Schema.Struct({
-  documentId: Schema.String,
-  heads: Schema.optional(mutableArray(Schema.String)),
+  /** Automerge `DocumentId` (see {@link DocumentIdString}). */
+  documentId: DocumentIdString,
+  /** Automerge `Heads` of the document (see {@link HeadsArray}). */
+  heads: Schema.optional(HeadsArray),
 });
 export interface Entry extends Schema.Schema.Type<typeof Entry> {}
 
@@ -173,7 +208,8 @@ export const WaitUntilHeadsReplicatedRequest = Schema.Struct({
 export interface WaitUntilHeadsReplicatedRequest extends Schema.Schema.Type<typeof WaitUntilHeadsReplicatedRequest> {}
 
 export const ReIndexHeadsRequest = Schema.Struct({
-  documentIds: Schema.optional(mutableArray(Schema.String)),
+  /** Automerge `DocumentId`s (see {@link DocumentIdString}). */
+  documentIds: Schema.optional(mutableArray(DocumentIdString)),
 });
 export interface ReIndexHeadsRequest extends Schema.Schema.Type<typeof ReIndexHeadsRequest> {}
 
@@ -187,11 +223,16 @@ export const UpdateIndexesRequest = Schema.Struct({
 export interface UpdateIndexesRequest extends Schema.Schema.Type<typeof UpdateIndexesRequest> {}
 
 export const GetSpaceSyncStateRequest = Schema.Struct({
+  /** {@link SpaceId} of the space. */
   spaceId: Schema.String,
 });
 export interface GetSpaceSyncStateRequest extends Schema.Schema.Type<typeof GetSpaceSyncStateRequest> {}
 
 const peerStateSchema = Schema.Struct({
+  /**
+   * Automerge repo `PeerId` of the remote replicator; an EDGE replicator's id carries the prefix that
+   * [`isEdgePeerId`](../../echo/echo-protocol/src/edge-peer.ts) checks.
+   */
   peerId: Schema.String,
 
   /**
@@ -241,6 +282,7 @@ export namespace SpaceSyncState {
 }
 
 export const DatabaseStatsRequest = Schema.Struct({
+  /** {@link SpaceId} of the space. */
   spaceId: Schema.String,
 });
 export interface DatabaseStatsRequest extends Schema.Schema.Type<typeof DatabaseStatsRequest> {}
@@ -283,6 +325,7 @@ export const DatabaseStats = Schema.Struct({
 export interface DatabaseStats extends Schema.Schema.Type<typeof DatabaseStats> {}
 
 export const RunGarbageCollectionRequest = Schema.Struct({
+  /** {@link SpaceId} of the space. */
   spaceId: Schema.String,
   /** Also delete stale index rows for reclaimed documents/objects. @default true */
   index: Schema.optional(Schema.Boolean),
