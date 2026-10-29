@@ -23,6 +23,9 @@ tasks:
       - /tools/vite-plugin-log/src/**/*
       - tsconfig.json
       - vite.config.ts
+      # A plugin's per-runtime entries are generated from its module list; without it a changed
+      # `environments` replays a stale build.
+      - dx.config.ts
       - '@group(sources)'
     outputs:
       - dist/lib/

@@ -19,7 +19,8 @@ dx-trace-imports (--from <entry.ts> | --export <subpath> | --all-exports | --con
   - A relative or absolute file path (e.g. `./src/foo.ts`).
   - A glob pattern matched against package names, paths, and external specifiers (e.g. `*.pcss`, `@dxos/react-ui*`).
   A bare specifier that matches the selector is a terminal even when it resolves to a file, so a package subpath such as `defuddle/full` can be selected on its own.
-- `--to-file <file>`: Reads `--to` targets from a file, one per line; `#` starts a comment. Repeatable, and combines with `--to`. Keeps a shared ban list in one place (`.config/server-import-bans.txt`).
+- `--to-file <file>`: Reads `--to` targets from a file, one per line; a `!`-prefixed line is an `--allow` entry and `#` starts a comment. Repeatable, and combines with `--to`. Keeps a shared ban list in one place (`.config/server-import-bans.txt`).
+- `--allow <specifier>`: A bare specifier (package, subpath or glob) exempt from `--to`. The files it resolves to are traced instead of ending the chain, so `--to "@dxos/react-*" --allow "@dxos/react-ui-*/translations"` passes only while those subpaths import nothing banned. Repeatable.
 - `--max-chains <n>`: Stop after this many chains (default: `10`).
 - `--conditions <list>`: Comma-separated package.json export conditions (default: `workerd,worker,node`). Include `source` to trace TypeScript sources instead of compiled output. Repeatable — each occurrence is an **independent** set traced separately, so one run can assert the same property under several runtimes (e.g. `--conditions workerd,worker --conditions node`). A subpath that resolves to a different module per runtime is only checked under the runtimes you pass.
 - `--packages-only`: Strip filenames, render package-to-package chains, and dedupe.
@@ -44,13 +45,12 @@ dx-trace-imports \
   --conditions node \
   --fail-on present
 
-# Verify every server build of a plugin against the shared ban list (the `check-server-imports`
+# Verify every EDGE build of a plugin against the shared ban list (the `check-server-imports`
 # task every composer plugin inherits from .moon/tasks/tag-composer-plugin.yml).
 dx-trace-imports \
   --conditional-exports \
   --to-file ../../../.config/server-import-bans.txt \
   --conditions workerd,worker \
-  --conditions node \
   --fail-on present
 
 # Find import paths from a file to a package.

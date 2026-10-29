@@ -679,6 +679,11 @@ and the runtime is not `workerd` (`Capability.runsIn`).
 - A plugin loaded under a runtime needs that condition on its `./FooPlugin` export. A UI-only plugin has no
   `node` condition, so its plugin tests run in browser mode (`plugin-mermaid`).
 
+Every composer plugin inherits `check-server-imports` (`.moon/tasks/tag-composer-plugin.yml`), which fails when a
+`workerd` export reaches a package in `.config/server-import-bans.txt` (CodeMirror, React and the design system, Lit,
+the local client stack and CLI, …). Fix a violation at its source; a UI-free subpath of a banned package (`/types`,
+`/translations`) goes in that file as a `!` exception, which the tracer still walks into.
+
 Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`, or `tauri dev`
 via `TAURI_ENV_PLATFORM`).
 

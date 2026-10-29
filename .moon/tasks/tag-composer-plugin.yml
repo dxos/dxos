@@ -1,16 +1,15 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
-  # Fail when a plugin's server build reaches a package listed in `/.config/server-import-bans.txt`.
-  # `--conditional-exports` picks every export subpath that declares `workerd` or `node`, so a plugin
-  # is checked under exactly the runtimes it ships a build for and no subpath needs naming here.
+  # Fail when a plugin's EDGE build reaches a package listed in `/.config/server-import-bans.txt`.
+  # `--conditional-exports` picks every export subpath that declares `workerd`, so no subpath needs
+  # naming here. `node` is not checked: a node build keeps every module without an `environments`
+  # list, UI included, so React stays legitimate there.
   check-server-imports:
     command: >-
       bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --conditional-exports
       --to-file $workspaceRoot/.config/server-import-bans.txt
       --conditions workerd,worker
-      --conditions node
-      --packages-only
       --fail-on present
     deps:
       - dx-trace-imports:build
@@ -18,6 +17,7 @@ tasks:
     inputs:
       - tsconfig.json
       - package.json
+      - dx.config.ts
       - '@group(production)'
       - /.config/server-import-bans.txt
       - /pnpm-lock.yaml

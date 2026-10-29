@@ -1,11 +1,18 @@
-# Packages a plugin's server build must not reach: every export subpath that declares a `workerd`
-# or `node` condition (normally `./XPlugin`, loaded by EDGE's operation-service and the CLI).
-# Enforced by the `check-server-imports` task (.moon/tasks/tag-composer-plugin.yml) through
+# Packages a plugin's EDGE build must not reach: every export subpath that declares a `workerd`
+# condition (normally `./XPlugin`, which EDGE's operation-service bundles). Enforced by the
+# `check-server-imports` task (.moon/tasks/tag-composer-plugin.yml) through
 # `dx-trace-imports --to-file`. One package, subpath or glob per line; `#` starts a comment.
 #
-# A server build needs schema, operation handlers, skills and connectors. A ban here means the
-# package has no use without a DOM or a mounted editor; fix a violation at its source (an
-# `environments` list without the runtime, a subpath instead of a barrel, a per-runtime `#import`).
+# A workerd build needs schema, operation handlers, skills and connectors. A ban here means the
+# package has no use on EDGE; fix a violation at its source (an `environments` list without
+# `workerd`, a subpath instead of a barrel, a per-runtime `#import`) rather than here.
+#
+# A `!` line exempts a subpath of a banned package. The tracer then walks into the files it resolves
+# to, so the subpath still fails the check if it imports anything banned.
+#
+# TODO(plan step 4-6): still reached and not yet banned: `@dxos/echo-host` (echo-client's query
+# planner), `@dxos/sql-sqlite` (pipeline-rdf, keyring), `@dxos/vendor-hypercore` (crypto) and `bip39`
+# (credentials' seed phrases).
 
 # Editor: CodeMirror state, views and grammars only run against a mounted EditorView.
 @codemirror/*
@@ -19,11 +26,39 @@ react
 react-dom
 @radix-ui/*
 @dxos/react-*
+@dxos/ui
+@dxos/ui-icons
 @dxos/ui-theme
+@phosphor-icons/*
 tailwind-merge
+
+# The Lit and Solid component libraries.
+lit
+@dxos/lit-*
+@dxos/solid-*
 
 # Browser storage (IndexedDB/WebSQL).
 localforage
 
-# defuddle's DOM build; a server parses HTML with `defuddle/node`.
+# defuddle's DOM build; workerd parses HTML with `defuddle/node`.
 defuddle/full
+
+# The local client stack and CLI: EDGE reads data through its data service, never a local host.
+@dxos/cli-util
+@dxos/client-services
+@dxos/network-manager
+
+# UI-free subpaths of UI packages: the schema, annotations and translation strings that operations
+# share with the components.
+!@dxos/react-ui-*/translations
+!@dxos/react-ui-*/types
+!@dxos/react-ui-form/annotations
+!@dxos/ui-editor/types
+
+# The editor's word-level text diff, which accept/reject-change handlers apply on the server.
+!@dxos/ui-editor/hunks
+
+# Lezer's LR parser runtime, not an editor: `@dxos/diagram` parses its DSL with it when the
+# illustrator `generate` operation compiles a drawing.
+!@lezer/common
+!@lezer/lr

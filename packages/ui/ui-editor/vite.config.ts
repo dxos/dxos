@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     headless: 'src/headless.ts',
+    hunks: 'src/hunks.ts',
     types: 'src/types/index.ts',
   },
   test: { node: { environment: 'happy-dom' } },

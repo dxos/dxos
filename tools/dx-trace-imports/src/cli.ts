@@ -22,6 +22,8 @@ interface ParsedArgs {
   /** Restricts each condition set to the subpaths whose export entry names one of its conditions. */
   conditionalExports: boolean;
   to: string;
+  /** Exceptions to `to`, folded like it; `null` when none were given. */
+  allow: string | null;
   maxChains: number;
   /**
    * Independent condition sets, one per `--conditions` occurrence. A plugin resolves
@@ -85,8 +87,8 @@ const conditionalExportSubpaths = (cwd: string, conditions: readonly string[]): 
 };
 
 /**
- * Reads `--to-file` targets: one package, path or glob per line; `#` starts a comment, so each ban
- * can carry its reason beside it.
+ * Reads `--to-file` lines: one package, path or glob per line, or a `!`-prefixed exception; `#`
+ * starts a comment, so each entry can carry its reason beside it.
  */
 const readTargetFile = (file: string): string[] =>
   fs
@@ -94,6 +96,8 @@ const readTargetFile = (file: string): string[] =>
     .split('\n')
     .map((line) => line.replace(/#.*$/, '').trim())
     .filter((line) => line.length > 0);
+
+const isException = (line: string): boolean => line.startsWith('!');
 
 const parseFailOn = (value: unknown): FailMode | null => {
   if (value === undefined || value === null || value === '') {
@@ -142,7 +146,14 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     .option('to-file', {
       type: 'string',
       array: true,
-      describe: 'File of --to targets, one per line; `#` starts a comment. Repeatable.',
+      describe: 'File of --to targets, one per line; `!` marks an --allow entry, `#` starts a comment. Repeatable.',
+    })
+    .option('allow', {
+      type: 'string',
+      array: true,
+      describe:
+        'Bare specifier (package, subpath or glob) exempt from --to; the files it resolves to are traced ' +
+        'instead, so e.g. "@dxos/react-ui-attention/types" passes only while it imports nothing banned. Repeatable.',
     })
     .option('max-chains', { type: 'number', default: 10, describe: 'Stop after this many chains' })
     .option('conditions', {
@@ -189,7 +200,9 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     throw new Error(`Invalid --max-chains value: ${String(argv.maxChains)}. Must be a positive integer.`);
   }
 
-  const targets = [...stringList(argv.to), ...stringList(argv.toFile).flatMap(readTargetFile)];
+  const fileLines = stringList(argv.toFile).flatMap(readTargetFile);
+  const targets = [...stringList(argv.to), ...fileLines.filter((line) => !isException(line))];
+  const exceptions = [...stringList(argv.allow), ...fileLines.filter(isException).map((line) => line.slice(1).trim())];
   if (targets.length === 0) {
     throw new Error('Provide at least one --to <package-or-pattern-or-path> or a non-empty --to-file.');
   }
@@ -206,6 +219,7 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     exportSubpaths: argv.allExports ? allExportSubpaths(process.cwd()) : stringList(argv.export),
     conditionalExports: Boolean(argv.conditionalExports),
     to: foldTargets(targets),
+    allow: exceptions.length > 0 ? foldTargets(exceptions) : null,
     maxChains,
     conditionSets,
     packagesOnly: Boolean(argv.packagesOnly),
@@ -219,6 +233,7 @@ const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditi
     from: args.from ?? undefined,
     exportSubpath,
     to: args.to,
+    allow: args.allow ?? undefined,
     maxChains: args.maxChains,
     conditions,
     packagesOnly: args.packagesOnly,

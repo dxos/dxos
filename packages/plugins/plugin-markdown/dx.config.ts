@@ -90,6 +90,10 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
+      { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
+    ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
     }),
