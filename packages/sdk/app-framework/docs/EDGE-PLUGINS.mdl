@@ -535,6 +535,8 @@ dist-tags: versions are immutable, and a channel is a tag that points at one of 
 - **Concurrency.** A Durable Object may have 10 Dynamic Workers in flight, a Worker request 4. An
   agent process that calls operations of many plugins must spread them across I/O contexts.
 - **Version pinning per space.** Whether a space can pin a plugin version, or only the caller.
+- **Sandboxing options.** Whether a plugin's egress, CPU and subrequest limits become configurable.
+  Any such option applies to every plugin alike, whoever publishes it.
 - **Facet scope.** Whether one supervisor per (space, plugin) is the right grain, or per plugin
   instance object.
 
@@ -689,4 +691,11 @@ decision D-16: A channel (stable, next, dev) is a movable tag on one published v
   rejected:
     - A channel fixed on each release at upload — promotion would mean a rebuild, so stable would never run the bytes that were tested.
     - Each space picks its channel — Composer already chooses the plugin version per client, and a second choice per space could disagree with it.
+```
+
+```mdl
+decision D-17: Treat all plugins the same. Sandboxing options may become configurable, but they never single out DXOS plugins.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  supersedes: D-11
 ```
