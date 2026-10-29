@@ -191,6 +191,7 @@ const NumberInputSlider = ({ label, min, max, step, disabled }: NumberInputSlide
             icon='ph--sliders-horizontal--regular'
             label={label}
             iconOnly
+            compact
             variant='ghost'
             showTooltip={false}
             disabled={disabled}

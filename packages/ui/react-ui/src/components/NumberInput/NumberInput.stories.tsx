@@ -233,6 +233,11 @@ export const VariantsTest: Story = {
     await waitFor(() => expect(canvas.getByRole('spinbutton', { name: 'Hover' })).toHaveValue('4'));
 
     const sliderRow = byTestId(md, 'slider-md');
+    // A trailing slider button takes the same end cell as a trailing stepper, so end-aligned figures line up.
+    await expect(within(sliderRow).getByRole('spinbutton').getBoundingClientRect().right).toBeCloseTo(
+      canvas.getByRole('spinbutton', { name: 'Aligned' }).getBoundingClientRect().right,
+      0,
+    );
     await expect(within(sliderRow).queryByRole('button', { name: 'Increment' })).toBeNull();
     await userEvent.click(within(sliderRow).getByRole('button', { name: 'Adjust' }));
     const thumb = await within(canvasElement.ownerDocument.body).findByRole('slider', { name: 'Adjust' });
