@@ -28,7 +28,7 @@ describe('wrapText', () => {
   });
 
   test('hard-splits a word longer than the budget', ({ expect }) => {
-    expect(wrapText('Unmaintainability', 11, 1)).toEqual(['Unmaintain...']);
+    expect(wrapText('Unmaintainability', 11, 1)).toEqual(['Unmaintain\u2026']);
   });
 
   test('returns nothing for a blank label', ({ expect }) => {
