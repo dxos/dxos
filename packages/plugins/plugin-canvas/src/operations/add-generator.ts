@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { type GeneratorNode, topZ } from '@dxos/react-ui-canvas/headless';
 
 import { CanvasOperation, Generator } from '#types';
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = Canv
   Operation.withHandler(
     Effect.fn(function* ({ drawing, generator: ref, scene, bounds, params, seed, layer }) {
       const generator = yield* Database.load(ref);
-      const { canvas, id: sceneId, scenes } = yield* loadScene(drawing, scene);
+      const { id: sceneId, scenes, edit } = yield* loadScene(drawing, scene);
       const node: GeneratorNode = {
         type: 'generator',
         id: `generator-${crypto.randomUUID().slice(0, 8)}`,
@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = Canv
         ...(seed !== undefined ? { seed } : {}),
         ...(layer !== undefined ? { layer } : {}),
       };
-      Obj.update(canvas, (canvas) => putNodeRecord(canvas.content, sceneId, node));
+      edit((content) => putNodeRecord(content, sceneId, node));
       return { node: node.id };
     }),
   ),

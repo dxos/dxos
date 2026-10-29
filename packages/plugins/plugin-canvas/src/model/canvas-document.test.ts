@@ -9,7 +9,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Scene } from '@dxos/scene';
 
 import types from '../capabilities/schema.ts';
-import { canvasDocument, deleteScene, makeCanvas, openScene } from './canvas-document.ts';
+import { addScene, canvasDocument, deleteScene, makeCanvas, openScene } from './canvas-document.ts';
 
 describe('canvas document', () => {
   let builder: EchoTestBuilder;
@@ -98,5 +98,17 @@ describe('canvas document', () => {
     });
     deleteScene(canvas, scene);
     expect(canvas.layouts.map((ref) => ref.target)).toEqual([layout]);
+  });
+
+  test('adding a scene keeps one layout and two cameras', () => {
+    const { canvas, layout, scene } = makeCanvas();
+    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+      throw new Error('A 2D canvas opens a 2D scene.');
+    }
+    const added = addScene(canvas, scene, { center: { x: 10, y: 20 }, zoom: 2 });
+    expect(canvas.scenes.map((ref) => ref.target)).toEqual([scene, added]);
+    expect(canvas.layouts.map((ref) => ref.target)).toEqual([layout]);
+    expect(added.layout.target).toBe(layout);
+    expect([scene.camera.zoom, added.camera.zoom]).toEqual([1, 2]);
   });
 });

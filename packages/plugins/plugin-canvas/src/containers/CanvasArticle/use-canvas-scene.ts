@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { type Database, Filter } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
   type GeneratorSource,
   type Node,
@@ -17,9 +19,19 @@ import {
   defaultNodeTypes,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
+import { Scene } from '@dxos/scene';
 
-import { type BoundCanvasStore, CanvasViewNode, ImageNode, bindCanvasStore } from '#model';
-import { CanvasCapabilities, Generator } from '#types';
+import {
+  type BoundCanvasStore,
+  type BoundLayoutStore,
+  CanvasViewNode,
+  ImageNode,
+  bindCanvasStore,
+  bindLayoutStore,
+  migrateSceneDrawing,
+  openScene,
+} from '#model';
+import { Canvas, CanvasCapabilities, Generator } from '#types';
 
 import { CanvasViewNodeView, CanvasViewToolbar } from './CanvasViewNodeView.tsx';
 import { ImageNodeView } from './ImageNodeView.tsx';
@@ -34,6 +46,60 @@ export const useBoundCanvasStore = (canvas: Drawing.Canvas): BoundCanvasStore | 
     return () => next.dispose();
   }, [registry, canvas]);
   return bound;
+};
+
+/** The canvas's open scene's layout store, bound for the canvas's lifetime in this view; a new canvas rebinds. */
+export const useBoundLayoutStore = (canvas: Canvas.Canvas): BoundLayoutStore | undefined => {
+  const registry = useRegistry();
+  const [bound, setBound] = useState<BoundLayoutStore>();
+  const scene = openScene(canvas);
+  useEffect(() => {
+    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+      return;
+    }
+    const next = bindLayoutStore(registry, scene, { canvas });
+    setBound(next);
+    return () => next.dispose();
+  }, [registry, canvas, scene]);
+  return bound;
+};
+
+/**
+ * A legacy scene drawing's `Canvas`, once `migrate` has moved it onto one (the article opening it for writing); until
+ * then, and for a drawing that does not migrate (a newer plugin's), undefined.
+ */
+export const useMigratedCanvas = (
+  drawing: Obj.Snapshot<Drawing.Drawing> | Drawing.Drawing,
+  canvas: Drawing.Canvas,
+  migrate: boolean,
+): Canvas.Canvas | undefined => {
+  const [migrated, setMigrated] = useState<Canvas.Canvas>();
+  const db = Obj.getDatabase(canvas);
+  useEffect(() => {
+    if (!migrate || !db) {
+      return;
+    }
+    let cancelled = false;
+    // The surface may hand a snapshot, so the live drawing is read from the database.
+    void EffectEx.runPromise(
+      Effect.gen(function* () {
+        const [live] = yield* Database.query(Filter.id(drawing.id)).run;
+        if (!Obj.instanceOf(Drawing.Drawing, live)) {
+          return undefined;
+        }
+        yield* migrateSceneDrawing(live);
+        const target = live.canvas.target;
+        return Canvas.isCanvas(target) ? target : undefined;
+      }).pipe(Effect.provide(Database.layer(db))),
+    )
+      .then((next) => !cancelled && setMigrated(next))
+      // A drawing that fails to migrate stays on its legacy canvas, which the legacy view still shows.
+      .catch(() => !cancelled && setMigrated(undefined));
+    return () => {
+      cancelled = true;
+    };
+  }, [migrate, db, drawing.id, canvas]);
+  return migrated;
 };
 
 /**

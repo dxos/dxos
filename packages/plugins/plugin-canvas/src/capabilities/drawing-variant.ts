@@ -7,23 +7,37 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
-import { CanvasArticle, CanvasCard } from '#containers';
-import { CanvasBuilder, createCanvas } from '#model';
+import { CanvasArticle, CanvasCard, LegacyCanvasArticle, LegacyCanvasCard } from '#containers';
+import { CanvasBuilder, CanvasLayoutBuilder, addCanvas } from '#model';
 import { Canvas } from '#types';
 
-// The base `Drawing.Canvas` holds the scene records, discriminated by `schema`; the canvas is created
-// here so a new drawing starts with its root scene.
+// New drawings are a `Canvas` over a model, layouts and scenes; a conversion asks for `diagramShapes`, so a laid-out
+// diagram keeps the look its renderer gave it.
 const variant: IllustratorCapabilities.DrawingVariant = {
   id: Canvas.SCENE_SCHEMA,
   label: 'Canvas',
   icon: 'ph--graph--regular',
-  // A conversion asks for `diagramShapes`, so a laid-out diagram keeps the look its renderer gave it.
-  createCanvas: (input) => Effect.succeed(createCanvas(input?.diagramShapes === true ? { diagramShapes: true } : {})),
-  builder: CanvasBuilder,
+  canvasType: Canvas.Canvas,
+  createCanvas: (input) => addCanvas(input?.diagramShapes === true ? { diagramShapes: true } : {}),
+  builder: CanvasLayoutBuilder,
   card: CanvasCard,
   article: CanvasArticle,
 };
 
+// Scene drawings saved before `Canvas` keep their base `Drawing.Canvas` until their article migrates them.
+const legacy: IllustratorCapabilities.DrawingVariant = {
+  id: Canvas.SCENE_SCHEMA,
+  label: 'Canvas',
+  icon: 'ph--graph--regular',
+  hidden: true,
+  builder: CanvasBuilder,
+  card: LegacyCanvasCard,
+  article: LegacyCanvasArticle,
+};
+
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(IllustratorCapabilities.VariantProvider, variant)),
+  Effect.succeed([
+    Capability.contribute(IllustratorCapabilities.VariantProvider, variant),
+    Capability.contribute(IllustratorCapabilities.VariantProvider, legacy),
+  ]),
 );

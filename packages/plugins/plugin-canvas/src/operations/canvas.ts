@@ -5,23 +5,38 @@
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 
-import { Database, type Ref } from '@dxos/echo';
+import { type ContentMap } from '@dxos/diagram';
+import { Database, Obj, type Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type ViewId } from '@dxos/react-ui-canvas/headless';
 
 import { Canvas } from '#types';
 
-import { readViews, rootOf, seedContent } from '../model/content.ts';
+import { readCanvasContent, writeCanvasContent } from '../model/canvas-content.ts';
+import { clone, readViews, rootOf, seedContent } from '../model/content.ts';
 
-/** A drawing's canvas, loaded, with its scenes read and the scene `scene` (the root by default) resolved. */
+/**
+ * A drawing's canvas, loaded, with its scenes read, the scene `scene` (the root by default) resolved, and `edit` to
+ * change its content records: a legacy canvas's own, or a `Canvas`'s open layouts through their records.
+ */
 export const loadScene = Effect.fn(function* (ref: Ref.Ref<Drawing.Drawing>, scene?: ViewId) {
   const drawing = yield* Database.load(ref);
   const canvas = yield* Database.load(drawing.canvas);
+  if (Canvas.isCanvas(canvas)) {
+    const content = readCanvasContent(canvas);
+    const edit = (change: (content: ContentMap) => void) => {
+      const next = clone(content);
+      change(next);
+      writeCanvasContent(canvas, next, content);
+    };
+    return { canvas, id: scene ?? rootOf(content) ?? seedContent({}), scenes: readViews(content), edit };
+  }
   if (!Drawing.isCanvas(canvas) || !Canvas.isSceneSchema(canvas.schema)) {
     return yield* Effect.fail(new DrawingDialectError({ message: 'The drawing is not a scene canvas.' }));
   }
+  const edit = (change: (content: ContentMap) => void) => Obj.update(canvas, (canvas) => change(canvas.content));
   const id = scene ?? rootOf(canvas.content) ?? seedContent({});
-  return { canvas, id, scenes: readViews(canvas.content) };
+  return { canvas, id, scenes: readViews(canvas.content), edit };
 });
 
 /** The drawing has no scene or node of the id an operation named. */

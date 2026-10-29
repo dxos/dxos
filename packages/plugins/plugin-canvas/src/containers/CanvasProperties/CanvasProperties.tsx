@@ -5,12 +5,22 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { DEFAULT_GRID } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_GRID, type StyleClass } from '@dxos/react-ui-canvas/scene';
 import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
 
-import { canvasRecordOf, deleteStyleClass, readStyles, styleClassUses, updateCanvasRecord, writeStyles } from '#model';
+import {
+  canvasRecordOf,
+  deleteStyleClass,
+  readCanvasContent,
+  readStyles,
+  styleClassUses,
+  updateCanvasRecord,
+  writeCanvasContent,
+  writeStyles,
+} from '#model';
 import { Canvas, Settings } from '#types';
 
 import { StyleClassList } from './StyleClassList.tsx';
@@ -68,31 +78,88 @@ export type CanvasPropertiesProps = { drawing: Drawing.Drawing };
 export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
   const [snapshot] = useObject(drawing.canvas);
   const canvas = snapshot ? drawing.canvas.target : undefined;
-  return Drawing.isCanvas(canvas) ? <SceneCanvasProperties canvas={canvas} /> : null;
+  return Canvas.isCanvas(canvas) ? (
+    <SceneCanvasProperties canvas={canvas} />
+  ) : Drawing.isCanvas(canvas) ? (
+    <LegacyCanvasProperties canvas={canvas} />
+  ) : null;
 };
 
-const SceneCanvasProperties = ({ canvas: subject }: { canvas: Drawing.Canvas }) => {
+const valuesOf = (record: Partial<Canvas.CanvasSettings> | undefined): CanvasPropertiesValues => ({
+  lattice: record?.lattice,
+  grid: record?.grid ?? DEFAULT_GRID,
+  theme: isThemeChoice(record?.theme) ? record.theme : undefined,
+  styleSet: isStyleSetChoice(record?.styleSet) ? record.styleSet : undefined,
+  background: isBackgroundChoice(record?.background) ? record.background : undefined,
+});
+
+const settingsOf = (next: CanvasPropertiesValues): Partial<Canvas.CanvasSettings> => ({
+  lattice: next.lattice || undefined,
+  grid: next.grid === DEFAULT_GRID ? undefined : next.grid,
+  theme: next.theme,
+  styleSet: next.styleSet,
+  background: next.background,
+});
+
+/** A `Canvas`'s settings and style classes; a class's uses are counted across its open scene's layouts. */
+const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) => {
+  const [canvas] = useObject(subject);
+  const handleSave = useCallback(
+    (next: CanvasPropertiesValues) =>
+      Obj.update(subject, (subject) => {
+        // ECHO stores no `undefined`, so an unset value removes its key.
+        subject.settings = Object.fromEntries(
+          Object.entries({ ...subject.settings, ...settingsOf(next) }).filter(([, value]) => value !== undefined),
+        );
+      }),
+    [subject],
+  );
+  const classes = useMemo(() => Object.values(readStyles(canvas.styles)), [canvas]);
+  const uses = useMemo(() => styleClassUses(readCanvasContent(subject)), [canvas, subject]);
+  const handleRename = useCallback(
+    (id: string, name: string) =>
+      Obj.update(subject, (subject) => {
+        const styles = readStyles(subject.styles);
+        const styleClass = styles[id];
+        if (styleClass && styleClass.name !== name) {
+          subject.styles = { ...styles, [id]: { ...styleClass, name } };
+        }
+      }),
+    [subject],
+  );
+  const handleDelete = useCallback(
+    (id: string) => {
+      const before = readCanvasContent(subject);
+      const content = structuredClone(before);
+      const styles: Record<string, unknown> = { ...readStyles(subject.styles) };
+      deleteStyleClass(content, styles, id);
+      writeCanvasContent(subject, content, before);
+      Obj.update(subject, (subject) => {
+        subject.styles = readStyles(styles);
+      });
+    },
+    [subject],
+  );
+  return (
+    <PropertiesView
+      values={valuesOf(canvas.settings)}
+      onSave={handleSave}
+      classes={classes}
+      uses={uses}
+      onRename={handleRename}
+      onDelete={handleDelete}
+    />
+  );
+};
+
+/** A legacy scene canvas's settings record and style classes. */
+const LegacyCanvasProperties = ({ canvas: subject }: { canvas: Drawing.Canvas }) => {
   const [canvas, updateCanvas] = useObject(subject);
-  const values = useMemo<CanvasPropertiesValues>(() => {
-    const record = canvas ? canvasRecordOf(canvas.content) : undefined;
-    return {
-      lattice: record?.lattice,
-      grid: record?.grid ?? DEFAULT_GRID,
-      theme: isThemeChoice(record?.theme) ? record.theme : undefined,
-      styleSet: isStyleSetChoice(record?.styleSet) ? record.styleSet : undefined,
-      background: isBackgroundChoice(record?.background) ? record.background : undefined,
-    };
-  }, [canvas]);
+  const values = useMemo(() => valuesOf(canvasRecordOf(canvas.content)), [canvas]);
   const handleSave = useCallback(
     (next: CanvasPropertiesValues) =>
       updateCanvas((canvas) => {
-        updateCanvasRecord(canvas.content, {
-          lattice: next.lattice || undefined,
-          grid: next.grid === DEFAULT_GRID ? undefined : next.grid,
-          theme: next.theme,
-          styleSet: next.styleSet,
-          background: next.background,
-        });
+        updateCanvasRecord(canvas.content, settingsOf(next));
       }),
     [updateCanvas],
   );
@@ -127,19 +194,39 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Drawing.Canvas }) 
   }
 
   return (
-    <>
-      <Form.Root
-        schema={CanvasPropertiesSchema}
-        values={values}
-        fieldOverrides={FIELD_OVERRIDES}
-        autoSave
-        onSave={handleSave}
-      >
-        <Form.Fields />
-      </Form.Root>
-      <StyleClassList classes={classes} uses={uses} onRename={handleRename} onDelete={handleDelete} />
-    </>
+    <PropertiesView
+      values={values}
+      onSave={handleSave}
+      classes={classes}
+      uses={uses}
+      onRename={handleRename}
+      onDelete={handleDelete}
+    />
   );
 };
+
+type PropertiesViewProps = {
+  values: CanvasPropertiesValues;
+  onSave: (next: CanvasPropertiesValues) => void;
+  classes: StyleClass[];
+  uses: Readonly<Record<string, number>>;
+  onRename: (id: string, name: string) => void;
+  onDelete: (id: string) => void;
+};
+
+const PropertiesView = ({ values, onSave, classes, uses, onRename, onDelete }: PropertiesViewProps) => (
+  <>
+    <Form.Root
+      schema={CanvasPropertiesSchema}
+      values={values}
+      fieldOverrides={FIELD_OVERRIDES}
+      autoSave
+      onSave={onSave}
+    >
+      <Form.Fields />
+    </Form.Root>
+    <StyleClassList classes={classes} uses={uses} onRename={onRename} onDelete={onDelete} />
+  </>
+);
 
 CanvasProperties.displayName = 'CanvasProperties';

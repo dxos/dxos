@@ -4,6 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -23,13 +24,22 @@ import {
   type Camera,
   Canvas,
   type CanvasPropertiesProps,
+  type ConstrainedModel,
   type Element,
+  type FreehandProjectionOptions,
+  type GraphModel,
   type InspectorMode,
   MAX_ZOOM,
   type Node,
+  type Overlay,
+  type Projection,
   type SceneDisplay,
   type ViewId,
+  type ViewStore,
+  createConstrainedProjection,
+  createDynamicProjection,
   createLatticeProjection,
+  defaultNodeRegistry,
   isLink,
   isViewNode,
   useRegistry,
@@ -37,14 +47,20 @@ import {
 import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import { Scene } from '@dxos/scene';
 
 import { meta } from '#meta';
 import {
   canvasRecordOf,
   generatorCompiler,
   isCanvasDrawing,
+  isConstrainedModel,
+  isGraphModel,
+  isOverlay,
+  layoutModelAtom,
   objectRef,
   objectUri,
+  openScene,
   parseLinkedViewId,
   resolveDrawingLook,
   updateCanvasRecord,
@@ -55,10 +71,19 @@ import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
-import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
+import {
+  createGeneratorWorker,
+  useBoundCanvasStore,
+  useBoundLayoutStore,
+  useCanvasGenerators,
+  useCanvasNodes,
+  useMigratedCanvas,
+} from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
-export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown>;
+
+export type LegacyCanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
 const NO_REFITS = Atom.make<Record<string, number>>({});
 
@@ -73,10 +98,136 @@ const NewerFormatBanner = () => {
   );
 };
 
-/** The article surface of the canvas variant: the scene engine over the drawing's canvas. */
-export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
+/** The article surface of the canvas variant: the scene engine over the drawing's `Canvas`. */
+export const CanvasArticle = (props: CanvasArticleProps) =>
+  CanvasFormat.isCanvas(props.canvas) ? <SceneCanvasArticle {...props} canvas={props.canvas} /> : null;
+
+CanvasArticle.displayName = 'CanvasArticle';
+
+/** A `Canvas`: its open scene's layouts, its settings, and the mode its settings name. */
+const SceneCanvasArticle = ({
+  canvas,
+  ...props
+}: Omit<CanvasArticleProps, 'canvas'> & { canvas: CanvasFormat.Canvas }) => {
+  const registry = useRegistry();
+  const bound = useBoundLayoutStore(canvas);
+  const [snapshot] = useObject(canvas);
+  const settings = snapshot.settings;
+  const handleSettingsChange = useCallback(
+    (values: Partial<CanvasFormat.CanvasSettings>) =>
+      Obj.update(canvas, (canvas) => {
+        // ECHO stores no `undefined`, so an unset value removes its key.
+        canvas.settings = Object.fromEntries(
+          Object.entries({ ...canvas.settings, ...values }).filter(([, value]) => value !== undefined),
+        );
+      }),
+    [canvas],
+  );
+  const mode = CanvasFormat.projectionOf(settings);
+  const layout = bound ? openScene(canvas)?.layout.target : undefined;
+  const createProjection = useMemo<CreateProjection | undefined>(() => {
+    if (mode === 'lattice') {
+      return createLatticeProjection;
+    }
+    if (!Obj.instanceOf(Scene.Layout2D, layout) || (mode !== 'constrained' && mode !== 'dynamic')) {
+      return undefined;
+    }
+    // The projection's own model lives in the layout, so it persists with the arrangement.
+    return ({ registry }) =>
+      mode === 'constrained'
+        ? createConstrainedProjection({
+            registry,
+            model: layoutModelAtom(registry, layout, ['constrained'], isConstrainedModel, EMPTY_CONSTRAINED).atom,
+            options: { nodes: defaultNodeRegistry },
+          })
+        : createDynamicProjection({
+            registry,
+            graph: layoutModelAtom(registry, layout, ['dynamic', 'graph'], isGraphModel, EMPTY_GRAPH).atom,
+            overlay: layoutModelAtom(registry, layout, ['dynamic', 'overlay'], isOverlay, EMPTY_OVERLAY).atom,
+            options: { nodes: defaultNodeRegistry },
+          });
+  }, [mode, layout]);
+  return (
+    <CanvasArticleView
+      {...props}
+      canvas={canvas}
+      registry={registry}
+      bound={bound}
+      settings={settings}
+      onSettingsChange={handleSettingsChange}
+      createProjection={createProjection}
+      newer={false}
+    />
+  );
+};
+
+/**
+ * The base canvas of a scene drawing saved before scene canvases: the article opening it moves it onto a `Canvas`
+ * (`migrateSceneDrawing`) and shows that; until then, and in a section or slide, which only look at it, it shows the
+ * legacy records.
+ */
+export const LegacyCanvasArticle = ({ canvas, drawing, ...props }: LegacyCanvasArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const registry = useRegistry();
+  const newer = CanvasFormat.isNewerScene(canvas.schema);
+  const migrated = useMigratedCanvas(drawing, canvas, props.role === AppSurface.Article.role && !newer);
+  const bound = useBoundCanvasStore(canvas);
+  const [snapshot, updateCanvas] = useObject(canvas);
+  const record = canvasRecordOf(snapshot.content);
+  const handleSettingsChange = useCallback(
+    (values: Partial<CanvasFormat.CanvasSettings>) =>
+      updateCanvas((canvas) => updateCanvasRecord(canvas.content, values)),
+    [updateCanvas],
+  );
+  if (migrated) {
+    return <SceneCanvasArticle {...props} drawing={drawing} canvas={migrated} />;
+  }
+  return (
+    <CanvasArticleView
+      {...props}
+      drawing={drawing}
+      canvas={canvas}
+      registry={registry}
+      bound={bound}
+      settings={record}
+      onSettingsChange={handleSettingsChange}
+      createProjection={record?.lattice === true ? createLatticeProjection : undefined}
+      newer={newer}
+    />
+  );
+};
+
+LegacyCanvasArticle.displayName = 'LegacyCanvasArticle';
+
+type CanvasArticleViewProps = Omit<CanvasArticleProps, 'canvas'> & {
+  canvas: Obj.Unknown;
+  registry: Registry.AtomRegistry;
+  bound: { store: ViewStore; root: ViewId } | undefined;
+  settings: Partial<CanvasFormat.CanvasSettings> | undefined;
+  onSettingsChange: (values: Partial<CanvasFormat.CanvasSettings>) => void;
+  createProjection: CreateProjection | undefined;
+  /** A legacy canvas a newer plugin saved: read-only here. */
+  newer: boolean;
+};
+
+/** How the engine makes a canvas's projection over its store. */
+type CreateProjection = (options: FreehandProjectionOptions) => Projection;
+
+const EMPTY_CONSTRAINED: ConstrainedModel = { nodes: [], constraints: [] };
+const EMPTY_GRAPH: GraphModel = { nodes: [], edges: [] };
+const EMPTY_OVERLAY: Overlay = { positions: {} };
+
+/** The scene engine over a canvas's store, with its settings: what both canvas kinds show. */
+const CanvasArticleView = ({
+  role,
+  canvas,
+  registry,
+  bound,
+  settings: record,
+  onSettingsChange,
+  createProjection,
+  newer,
+}: CanvasArticleViewProps) => {
   const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
   // A frame showing an object (not a canvas drawing) opens it in the app; the frame's view shows the frame's own
   // scene until the object loads, so opening drills into that scene until then too.
@@ -104,27 +255,18 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     [tracker, invoker, canvas],
   );
   const nodes = useCanvasNodes(openObject);
-  const bound = useBoundCanvasStore(canvas);
   // An agent's drawing edit asks for a refit, so the view frames what changed rather than where the viewer left it.
   const [refitAtom] = Hooks.useCapabilities(IllustratorCapabilities.Refit);
   const refits = useAtomValue(refitAtom ?? NO_REFITS);
   const refitKey = refits[Obj.getURI(canvas)];
   const generators = useCanvasGenerators(db);
 
-  // The drawing's settings, edited in the properties companion: the lattice picks the projection.
-  const [snapshot, updateCanvas] = useObject(canvas);
-  const record = canvasRecordOf(snapshot.content);
-  const lattice = record?.lattice === true;
   // The drawing's look is shared with collaborators, so it wins over the viewer's own default.
   const look = resolveDrawingLook(record, settings);
-  const handleThemeChange = useCallback(
-    (theme: string | undefined) => updateCanvas((canvas) => updateCanvasRecord(canvas.content, { theme })),
-    [updateCanvas],
-  );
+  const handleThemeChange = useCallback((theme: string | undefined) => onSettingsChange({ theme }), [onSettingsChange]);
   const handleBackgroundGridChange = useCallback(
-    (backgroundGrid: BackgroundGrid | undefined) =>
-      updateCanvas((canvas) => updateCanvasRecord(canvas.content, { backgroundGrid })),
-    [updateCanvas],
+    (backgroundGrid: BackgroundGrid | undefined) => onSettingsChange({ backgroundGrid }),
+    [onSettingsChange],
   );
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
@@ -147,7 +289,6 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const embedded = section || slide;
   // Only the main article draws the canvas chrome (top edge, grid, guides); elsewhere it is the bare drawing.
   const article = role === AppSurface.Article.role;
-  const newer = CanvasFormat.isNewerScene(canvas.schema);
   const readonly = (viewReadonly ?? record?.readonly ?? false) || embedded || newer;
   const handleInspectorsChange = useCallback(
     (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
@@ -253,7 +394,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               store={bound.store}
               root={bound.root}
               nodes={nodes}
-              createProjection={lattice ? createLatticeProjection : undefined}
+              createProjection={createProjection}
               history={history}
               grid={record?.grid}
               theme={look.theme}
@@ -319,5 +460,3 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     </Panel.Root>
   );
 };
-
-CanvasArticle.displayName = 'CanvasArticle';

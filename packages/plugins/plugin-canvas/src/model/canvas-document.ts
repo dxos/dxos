@@ -87,6 +87,26 @@ export const canvasDocument = (canvas: Canvas.Canvas): Scene.SceneDocument => {
   });
 };
 
+/**
+ * Adds a scene over `scene`'s layout at `camera`, as another saved view of the same drawing, and lists it last.
+ */
+export const addScene = (canvas: Canvas.Canvas, scene: Scene.Scene2D, camera: Scene.Camera2D): Scene.Scene2D => {
+  const layout = scene.layout.target;
+  if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+    throw new Error('A scene is added over a loaded 2D layout.');
+  }
+  const added = Obj.make(Scene.Scene2D, {
+    key: `${scene.key}:${canvas.scenes.length}`,
+    layout: Ref.make(layout),
+    camera,
+  });
+  Obj.getDatabase(canvas)?.add(added);
+  Obj.update(canvas, (canvas) => {
+    canvas.scenes.push(Ref.make(added));
+  });
+  return added;
+};
+
 /** Whether any of the canvas's scenes, or a composite object of its model, still shows `layout`. */
 const layoutInUse = (canvas: Canvas.Canvas, layout: StoredLayout): boolean => {
   const model = canvas.model?.target;
