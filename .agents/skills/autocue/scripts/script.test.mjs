@@ -28,6 +28,20 @@ describe('parseFlowHeader', () => {
       app: 'composer-app via `moon run composer-app:serve` on :5173',
     });
   });
+  test('joins a first sentence that wraps across comment lines', () => {
+    const source = [
+      '/**',
+      ' * A feature shows the tests that cite it; a feature with no key',
+      ' * offers to set one.',
+      ' *',
+      ' * @mdl spec/X.mdl test QA-1',
+      ' */',
+    ].join('\n');
+    assert.equal(
+      parseFlowHeader(source).title,
+      'A feature shows the tests that cite it; a feature with no key offers to set one.',
+    );
+  });
 });
 
 describe('script round trip', () => {

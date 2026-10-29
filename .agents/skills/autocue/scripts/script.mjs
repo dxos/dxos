@@ -44,7 +44,10 @@ export const parseFlowHeader = (source) => {
       .find((line) => line.startsWith(`@${name} `))
       ?.slice(name.length + 2)
       .trim();
-  const title = lines.find((line) => line.length > 0 && !line.startsWith('@'));
+  // The title is the whole first paragraph, since a long one wraps across comment lines.
+  const start = lines.findIndex((line) => line.length > 0 && !line.startsWith('@'));
+  const end = lines.findIndex((line, index) => index > start && (line.length === 0 || line.startsWith('@')));
+  const title = start < 0 ? undefined : lines.slice(start, end < 0 ? undefined : end).join(' ');
   return { title, mdl: tag('mdl'), app: tag('app') };
 };
 
