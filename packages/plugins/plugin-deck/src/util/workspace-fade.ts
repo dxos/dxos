@@ -4,8 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as UiHooks from '@dxos/react-ui/Hooks';
-
 /** The workspace being left fades out over this before the switch writes anything. */
 const FADE_OUT_MS = 90;
 
@@ -39,11 +37,20 @@ export const setWorkspaceFadeTarget = (element: HTMLElement): (() => void) => {
   };
 };
 
+/**
+ * `VITE_DX_DISABLE_ANIMATIONS`, as `animationsDisabled` in `@dxos/react-ui` reads it: the operations that fade are
+ * reachable from the plugin's node and workerd entries, which must not load React.
+ */
+const animationsDisabled = (): boolean => {
+  const value = (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_DX_DISABLE_ANIMATIONS;
+  return value === 'true' || value === '1';
+};
+
 const canFade = (): boolean =>
   typeof document !== 'undefined' &&
   document.visibilityState === 'visible' &&
   !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-  !UiHooks.animationsDisabled();
+  !animationsDisabled();
 
 /**
  * Starts the dip on the next frame, from wherever the deck's opacity is, and resolves once the deck is out. One
