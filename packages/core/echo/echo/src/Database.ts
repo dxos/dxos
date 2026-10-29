@@ -630,10 +630,13 @@ export const resolve: {
  */
 export const beginMigration = (
   options?: Migration.TransactionOptions,
-): Effect.Effect<Migration.Transaction, never, Service> =>
+): Effect.Effect<Migration.Transaction, Error.MigrationError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
-    return yield* Effect.promise(() => db.beginMigration(options));
+    return yield* Effect.tryPromise({
+      try: () => db.beginMigration(options),
+      catch: (cause) => new Error.MigrationError({ operation: 'begin' }, { cause }),
+    });
   }).pipe(Effect.withSpan('Database.beginMigration'), withSpaceId);
 
 /**

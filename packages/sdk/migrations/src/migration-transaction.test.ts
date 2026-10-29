@@ -119,6 +119,22 @@ describe('Migration.Transaction', () => {
     expect(await space.internal.getEpochs()).toHaveLength(epochsBefore.length);
   });
 
+  test('root replace keeps the branch registry', async ({ expect }) => {
+    const space = await createSpace();
+    const note = space.db.add(Obj.make(TestSchema.Expando, { name: 'note' }));
+    await space.db.flush();
+    await space.db.createBranch(note.id, 'draft');
+    await space.db.flush();
+    expect(space.db.listBranches(note.id)).toContain('draft');
+
+    const migration = await space.db.beginMigration();
+    migration.add(Obj.make(TestSchema.Expando, { name: 'added' }));
+    await EffectEx.runPromise(migration.commit());
+
+    await expect.poll(() => space.db.query(Filter.type(TestSchema.Expando)).run()).toHaveLength(2);
+    expect(space.db.listBranches(note.id)).toContain('draft');
+  });
+
   test('runMigrations commits a transaction migration', async ({ expect }) => {
     const space = await createSpace();
     const removed = space.db.add(Obj.make(TestSchema.Expando, { name: 'removed' }));

@@ -2043,24 +2043,39 @@ export class EntityManager implements IDatabaseBinding {
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
 
     // A root write can re-point a loaded object at another document (a migration committed in place),
-    // which no epoch switch will rebind.
-    for (const [objectId, url] of Object.entries(links)) {
-      const boundUrl = this._objects.get(objectId)?.handle?.url;
-      if (boundUrl != null && boundUrl !== url && isValidAutomergeUrl(url)) {
+    // which no epoch switch will rebind. The handle map covers objects whose core was collected, which
+    // rehydrate from it; an object viewed on another branch keeps its branch document.
+    for (const [objectId, link] of Object.entries(links)) {
+      const url = link.toString();
+      const boundUrl = this._objectDocumentHandles.get(objectId)?.url;
+      if (
+        boundUrl != null &&
+        boundUrl !== url &&
+        isValidAutomergeUrl(url) &&
+        this.getCurrentBranch(objectId) === 'main'
+      ) {
         this.#rebindWhenReady(this._repoProxy.find<DatabaseDirectory>(url), objectId, this.#generation);
       }
     }
   }
 
-  /** Rebinds a loaded object to the document its root link now names, once that document is ready. */
+  /** Rebinds an object to the document its root link now names, once that document is ready. */
   #rebindWhenReady(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
     handle
       .whenReady()
       .then(() => {
-        if (this.#isStale(generation) || this._getLinkedDocumentUrl(objectId) !== handle.url) {
+        if (
+          this.#isStale(generation) ||
+          this._getLinkedDocumentUrl(objectId) !== handle.url ||
+          this.getCurrentBranch(objectId) !== 'main'
+        ) {
           return;
         }
-        this._rebindObjects(handle, [objectId]);
+        if (this._objects.has(objectId)) {
+          this._rebindObjects(handle, [objectId]);
+        } else if (this._objectDocumentHandles.has(objectId)) {
+          this._bindObjectDocument(objectId, handle);
+        }
       })
       .catch((err) => log.catch(err));
   }

@@ -197,9 +197,13 @@ export class MigrationTransaction implements Migration.Transaction {
 
     const createEpoch = this.#props.createEpoch;
     invariant(createEpoch, 'Database cannot create epochs.');
+    // Branches and retired documents are synced state the new root must carry over.
+    const { branches, retired } = A.toJS(root);
     const next: DatabaseDirectory = {
       ...this.#directory({ ...root.objects }),
       links: { ...root.links },
+      ...(branches != null && { branches }),
+      ...(retired != null && { retired }),
     };
     applyChanges(next, objects, links);
     const rootHandle = this.#props.repo.create<DatabaseDirectory>(next);
