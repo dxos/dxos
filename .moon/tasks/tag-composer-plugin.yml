@@ -1,0 +1,28 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  # Fail when a plugin's server build reaches a package listed in `/.config/server-import-bans.txt`.
+  # `--conditional-exports` picks every export subpath that declares `workerd` or `node`, so a plugin
+  # is checked under exactly the runtimes it ships a build for and no subpath needs naming here.
+  check-server-imports:
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --conditional-exports
+      --to-file $workspaceRoot/.config/server-import-bans.txt
+      --conditions workerd,worker
+      --conditions node
+      --packages-only
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - package.json
+      - '@group(production)'
+      - /.config/server-import-bans.txt
+      - /pnpm-lock.yaml
+    options:
+      timeout: 120
+
+inheritedBy:
+  tags: composer-plugin

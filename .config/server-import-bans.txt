@@ -1,0 +1,29 @@
+# Packages a plugin's server build must not reach: every export subpath that declares a `workerd`
+# or `node` condition (normally `./XPlugin`, loaded by EDGE's operation-service and the CLI).
+# Enforced by the `check-server-imports` task (.moon/tasks/tag-composer-plugin.yml) through
+# `dx-trace-imports --to-file`. One package, subpath or glob per line; `#` starts a comment.
+#
+# A server build needs schema, operation handlers, skills and connectors. A ban here means the
+# package has no use without a DOM or a mounted editor; fix a violation at its source (an
+# `environments` list without the runtime, a subpath instead of a barrel, a per-runtime `#import`).
+
+# Editor: CodeMirror state, views and grammars only run against a mounted EditorView.
+@codemirror/*
+@lezer/*
+@replit/codemirror-vim
+codemirror-lang-*
+@dxos/ui-editor
+
+# React, its component libraries and the design system.
+react
+react-dom
+@radix-ui/*
+@dxos/react-*
+@dxos/ui-theme
+tailwind-merge
+
+# Browser storage (IndexedDB/WebSQL).
+localforage
+
+# defuddle's DOM build; a server parses HTML with `defuddle/node`.
+defuddle/full

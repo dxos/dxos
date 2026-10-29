@@ -23,6 +23,9 @@ const findPackageRoot = (filePath: string): string | null => {
   }
 };
 
+const isBareSpecifier = (specifier: string): boolean =>
+  !specifier.startsWith('.') && !specifier.startsWith('/') && !specifier.startsWith('#');
+
 const shouldRecurseInto = (
   resolved: string,
   matcher: Matcher,
@@ -83,6 +86,15 @@ export const buildImportGraph = (
 
     const deps = new Set<string>();
     for (const specifier of parseImportSpecifiers(source, fileKey)) {
+      // A target naming a package subpath (`defuddle/full`) is matched on the specifier, since the
+      // file it resolves to no longer carries the subpath.
+      if (isBareSpecifier(specifier) && matchesKey(externalKey(specifier), matcher, resolveWorkspacePackage)) {
+        const external = externalKey(specifier);
+        deps.add(external);
+        ensureNode(external);
+        continue;
+      }
+
       const resolved = resolver.resolve(fileKey, specifier);
       if (resolved) {
         deps.add(resolved);
