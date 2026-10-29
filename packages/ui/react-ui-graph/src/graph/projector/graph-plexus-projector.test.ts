@@ -75,9 +75,9 @@ describe('GraphPlexusProjector', () => {
     // Three relation nodes: outgoing relation, incoming relation, outgoing ref.
     const relations = byType(PLEXUS_NODE_TYPE_RELATION);
     expect(relations.map((node) => node.label).sort()).toEqual([
-      'HasRelationship <-',
-      'HasRelationship ->',
-      'organization ->',
+      'HasRelationship \u2190',
+      'HasRelationship \u2192',
+      'organization \u2192',
     ]);
 
     // Four object leaves (org, p2, p3 outgoing; p4 incoming); the non-incident edge is excluded.
