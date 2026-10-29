@@ -50,6 +50,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "effect": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }

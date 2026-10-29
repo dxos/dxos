@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Pane, type PaneTab } from '@dxos/plugin-deck/Pane';
-import { RootAttentionProvider, useAttentionContext } from '@dxos/react-ui-attention';
+import { Attention, RootAttentionProvider } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -42,14 +43,6 @@ const SIDE_TABS: PaneTab[] = [
   { id: 'spec', icon: 'ph--file-code--regular', label: 'Spec' },
 ];
 
-const Attended = ({ id }: { id: string }) => {
-  const { attention } = useAttentionContext('Attended');
-  useEffect(() => {
-    attention.update([id]);
-  }, [attention, id]);
-  return null;
-};
-
 /** A bundle path, or the hosted copy of it when the page cannot reach the file itself (inside an Artifact). */
 const resolve = (manifest: Manifest, path: string) =>
   manifest.hosted && !/^[a-z]+:/i.test(path) ? new URL(path, manifest.hosted).href : path;
@@ -71,6 +64,7 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
   const playback = usePlayback(demo?.chapters ?? [], demo?.duration);
   const [view, setView] = useState<PlayerView>(initialView === 'spec' && demo?.spec ? 'spec' : 'chapters');
   const [help, setHelp] = useState(false);
+  const attention = useMemo(() => new Attention.AttentionManager(Registry.make(), [ATTENDABLE_ID]), []);
   const { copied, copy } = useCopy();
   const screenRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLElement>(null);
@@ -160,8 +154,7 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
   }
 
   return (
-    <RootAttentionProvider>
-      <Attended id={ATTENDABLE_ID} />
+    <RootAttentionProvider attention={attention}>
       <div className='flex flex-col bg-base-surface text-fg'>
         {/* The first screen is a plank and its companion, as in Composer's deck; the details are below the fold. */}
         <div className='grid grid-cols-1 lg:h-dvh lg:grid-cols-[minmax(0,1fr)_24rem]'>
