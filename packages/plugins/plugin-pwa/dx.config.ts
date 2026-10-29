@@ -32,7 +32,6 @@ const config: Plugin.PluginConfig<PwaOptions> = Plugin.config<PwaOptions>({
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
-    // Startup, because a gate must decide before the loader dismisses.
     Capability.lazyModule(
       'BootGate',
       {
@@ -45,8 +44,7 @@ const config: Plugin.PluginConfig<PwaOptions> = Plugin.config<PwaOptions>({
     Capability.lazyModule(
       'RegisterPwa',
       {
-        // Startup for `BootGate`: the startup pass runs only startup modules, so an idle provider
-        // would leave the gate waiting until after the loader had dismissed.
+        // Startup: `BootGate` requires this, and the startup pass activates only startup modules.
         activatesOn: ActivationEvents.Startup,
         requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry],
         provides: [AppCapabilities.UpdateManager],

@@ -9,13 +9,13 @@ import type * as AppUpdate from '@dxos/app-toolkit/AppUpdate';
 export type VersionCheckOptions = {
   status: Atom.Writable<AppUpdate.Status>;
   setStatus: (status: AppUpdate.Status) => void;
-  /** Served by the vite dev server, which rebuilds in place rather than deploying versions. */
+  /** Served by the vite dev server. */
   dev: boolean;
   /** The build this page is running, or `undefined` when it cannot be told. */
   current: string | undefined;
   /** The build the server serves now. */
   fetchLatest: () => Promise<string | undefined>;
-  /** The build the last reload was for; must outlive the reload, so session storage on the web. */
+  /** The build the last reload was for; must survive the reload. */
   reloadedFor: { get: () => string | undefined; set: (build: string) => void };
   reload: () => void;
 };
@@ -24,10 +24,7 @@ export type VersionCheckOptions = {
 export const entryScript = (document: Pick<Document, 'querySelector'>): string | undefined =>
   document.querySelector('script[type="module"][src]')?.getAttribute('src') ?? undefined;
 
-/**
- * The update manager for a build without a service worker. Nothing is cached, so there is nothing to
- * download: a newer build on the server is `ready` as soon as it is seen, and a reload fetches it.
- */
+/** The update manager for a build without a service worker: a newer build is `ready` once seen. */
 export const makeVersionCheckManager = ({
   status,
   setStatus,
@@ -59,8 +56,7 @@ export const makeVersionCheckManager = ({
       if (!latest || latest === current) {
         setStatus({ kind: 'up-to-date', checkedAt: Date.now() });
       } else if (latest === reloadedFor.get()) {
-        // A reload for this build already came back with the old one (a stale cache, or an edge the
-        // deploy has not reached), so another would loop rather than update.
+        // A reload for this build already came back with the old one; another would loop.
         setStatus({ kind: 'failed', error: `reloading did not load ${latest}` });
       } else {
         setStatus({ kind: 'ready' });

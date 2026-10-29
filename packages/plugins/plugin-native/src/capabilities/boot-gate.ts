@@ -18,7 +18,6 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const manager = yield* NativeCapabilities.UpdateManager;
 
-    // A dev or unsupported build reports that status at once, which releases the gate.
     const gate = AppUpdate.makeBootGate(registry, manager, isAutoUpdateOn(registry.get(settingsAtom), options));
     yield* Effect.addFinalizer(() => Effect.sync(gate.dispose));
 

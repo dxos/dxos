@@ -28,8 +28,7 @@ export default Capability.makeModule(
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const atomRegistry = yield* Capabilities.AtomRegistry;
 
-    // `registerSW` stays uncalled here: in a build without a worker it would register the
-    // self-destroying one, which exists only to clear out installs from before PWA was turned off.
+    // No `registerSW`: in this build it registers the self-destroying worker, meant only for old installs.
     if (!serviceWorker) {
       const statusAtom = Atom.make<AppUpdate.Status>({ kind: 'idle' }).pipe(Atom.keepAlive);
       return Capability.contribute(

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 export const Settings = Schema.Struct({
-  /** Download and apply an update while the app starts. Unset follows the plugin's `defaultAutoUpdate`. */
+  /** Download and apply an update while the app starts. */
   autoUpdate: Schema.optional(Schema.Boolean),
 }).mapFields(Struct.map(Schema.mutableKey));
 

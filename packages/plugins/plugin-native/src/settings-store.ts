@@ -13,10 +13,7 @@ export type NativeOptions = {
   defaultAutoUpdate?: boolean;
 };
 
-/**
- * Shared by the settings module and the boot gate: the gate runs at startup, long before the
- * idle-wave settings module, and two atoms on one key would not see each other's writes.
- */
+/** The only atom on this key: a second `KvsStore.make` on it would not see this one's writes. */
 export const settingsAtom = KvsStore.make({
   key: NativeNamespace.key,
   schema: Settings.Settings,

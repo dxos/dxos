@@ -11,17 +11,11 @@ import { PwaNamespace } from './namespace.ts';
 export type PwaOptions = {
   /** Whether auto-update is on for a user who has not set it. */
   defaultAutoUpdate?: boolean;
-  /**
-   * Whether the build registers a service worker. Without one, updates are found by comparing the
-   * running build with the one the server serves, and applied by reloading.
-   */
+  /** Whether the build registers a service worker; without one, updates are found by comparing builds. */
   serviceWorker?: boolean;
 };
 
-/**
- * Shared by the settings module and the boot gate: the gate runs at startup, long before the
- * idle-wave settings module, and two atoms on one key would not see each other's writes.
- */
+/** The only atom on this key: a second `KvsStore.make` on it would not see this one's writes. */
 export const settingsAtom = KvsStore.make({
   key: PwaNamespace.key,
   schema: Settings.Settings,

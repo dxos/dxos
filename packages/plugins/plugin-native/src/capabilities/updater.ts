@@ -153,7 +153,6 @@ export default Capability.makeModule(
       return false;
     };
 
-    // The boot gate and the background fiber both start at boot; a caller that arrives mid-flight joins it.
     let checking: Promise<Updater.Update | null> | undefined;
     let installing: Promise<boolean> | undefined;
     const doCheck = () =>

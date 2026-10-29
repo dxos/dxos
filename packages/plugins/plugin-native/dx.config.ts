@@ -80,7 +80,6 @@ const config: Plugin.PluginConfig<NativeOptions> = Plugin.config<NativeOptions>(
       () => import('./src/capabilities/spotlight-listener.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
-    // Startup, because a gate must decide before the loader dismisses.
     Capability.lazyModule(
       'BootGate',
       {
@@ -90,8 +89,7 @@ const config: Plugin.PluginConfig<NativeOptions> = Plugin.config<NativeOptions>(
       },
       () => import('./src/capabilities/boot-gate.ts', { with: { type: 'module-url' } }),
     ),
-    // Startup for `BootGate`: the startup pass runs only startup modules, so a provider on the plugin's
-    // start event would leave the gate waiting until after the loader had dismissed.
+    // Startup: `BootGate` requires this, and the startup pass activates only startup modules.
     Capability.lazyModule(
       'Updater',
       {

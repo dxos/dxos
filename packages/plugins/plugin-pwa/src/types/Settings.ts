@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 export const Settings = Schema.Struct({
-  /** Apply an update found at boot before the app shows. Unset follows the plugin's `defaultAutoUpdate`. */
+  /** Apply an update found at boot before the app shows. */
   autoUpdate: Schema.optional(Schema.Boolean),
 }).mapFields(Struct.map(Schema.mutableKey));
 

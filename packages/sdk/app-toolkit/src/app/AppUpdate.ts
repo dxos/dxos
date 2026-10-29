@@ -94,7 +94,7 @@ const gateStateFor = (status: Status): Capabilities.BootGateState => {
     }
     case 'ready':
       return { pending: true, status: 'Updating', progress: 1 };
-    // Native only: the gate starts the download itself, see `followUpdate`.
+    // `followUpdate` starts the download at once.
     case 'available':
       return { pending: true, status: 'Downloading update', progress: 0 };
     default:
@@ -102,7 +102,6 @@ const gateStateFor = (status: Status): Capabilities.BootGateState => {
   }
 };
 
-/** The budget once an update is found; `undefined` while the check's own deadline still runs. */
 const budgetFor = (status: Status): number | undefined =>
   status.kind === 'available' || status.kind === 'downloading'
     ? BOOT_GATE_STALL_BUDGET
@@ -112,8 +111,7 @@ const budgetFor = (status: Status): number | undefined =>
 
 /**
  * Drives a boot gate: checks once and, if that finds an update, holds the loader through its download
- * (starting it where `install` is separate) and applies it. Once released the gate stays released.
- * A check that fails calls `onCheckFailed`, so the caller can treat it as no check at all.
+ * and applies it. Once released it stays released; a failed check calls `onCheckFailed`.
  */
 export const followUpdate = (
   manager: Pick<Manager, 'check' | 'install' | 'apply'>,
@@ -196,8 +194,8 @@ export const followUpdate = (
 };
 
 /**
- * A boot gate's state: when `enabled`, it holds the loader while {@link followUpdate} runs. Offline it
- * does not check, and a check that fails leaves the status `idle`: the app boots on the version it has.
+ * A boot gate's state: when `enabled` and online, it holds the loader while {@link followUpdate} runs.
+ * A failed check resets the status to `idle`.
  */
 export const makeBootGate = (
   registry: AtomRegistry.AtomRegistry,

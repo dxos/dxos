@@ -17,8 +17,7 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const manager = yield* AppCapabilities.UpdateManager;
 
-    // With a worker but no controller this is a first visit: the install under way is the first
-    // precache, not an update, and there is nothing older to replace.
+    // No controller means a first visit: the install under way is the first precache, not an update.
     const controlled = typeof navigator !== 'undefined' && !!navigator.serviceWorker?.controller;
     const enabled =
       (options.serviceWorker === false || controlled) && isAutoUpdateOn(registry.get(settingsAtom), options);

@@ -80,7 +80,6 @@ describe('followUpdate', () => {
 
   test('releases on a failed check and reports it, whether the check rejects or reports it', async () => {
     const rejected = setup({ check: () => Promise.reject(new Error('offline')) });
-    // Lets the rejection handler run; no timer is advanced, so the budget cannot be what released it.
     await Promise.resolve();
     expect(rejected.states.at(-1)).toEqual({ pending: false });
     expect(rejected.onCheckFailed).toHaveBeenCalledOnce();
