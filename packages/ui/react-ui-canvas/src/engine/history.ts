@@ -119,12 +119,23 @@ export const createCommitter = (
   };
 };
 
+/** Which of a view's sources a change was to: its store, or its projection's own model. */
+type SourceRole = 'store' | 'model';
+
+/** A change by the role of its source, so a later binding of the same view (a remount) can patch it. */
+type RoleChange = { source: SourceRole; change: VersionChange };
+
 type LocalEntry = {
-  changes: SourceChange[];
+  changes: RoleChange[];
   context: HistoryContext;
   mergeKey?: string;
   updated: number;
 };
+
+/** A local history's undo and redo stacks; a host that keeps them across mounts keeps the history for the session. */
+export type LocalHistoryStacks = { past: LocalEntry[]; future: LocalEntry[] };
+
+export const createLocalStacks = (): LocalHistoryStacks => ({ past: [], future: [] });
 
 export type LocalHistoryOptions = {
   /** Entries kept on each stack. */
@@ -133,9 +144,11 @@ export type LocalHistoryOptions = {
   mergeWindow?: number;
   /** The clock merging reads; injectable for tests. */
   now?: () => number;
+  /** The stacks to keep steps on; the host's own outlive the view, a fresh pair by default. */
+  stacks?: LocalHistoryStacks;
 };
 
-const fold = (earlier: SourceChange[], later: SourceChange[]): SourceChange[] => {
+const fold = (earlier: RoleChange[], later: RoleChange[]): RoleChange[] => {
   const folded = earlier.map(({ source, change }) => {
     const next = later.find((entry) => entry.source === source)?.change;
     return next
@@ -147,18 +160,23 @@ const fold = (earlier: SourceChange[], later: SourceChange[]): SourceChange[] =>
 
 /** The history a canvas keeps for itself when its host has none: two stacks of patches in memory. */
 export const createLocalHistory =
-  ({ limit = 100, mergeWindow = 500, now = Date.now }: LocalHistoryOptions = {}): CreateHistory =>
+  ({ limit = 100, mergeWindow = 500, now = Date.now, stacks }: LocalHistoryOptions = {}): CreateHistory =>
   (binding) => {
-    const past: LocalEntry[] = [];
-    const future: LocalEntry[] = [];
+    const { past, future } = stacks ?? createLocalStacks();
     // An entry may take later commits only until an undo or redo has stepped over it.
     let mergeable = false;
     const state = Atom.keepAlive(Atom.make<HistoryState>({ canUndo: false, canRedo: false }));
     const publish = () => binding.registry.set(state, { canUndo: past.length > 0, canRedo: future.length > 0 });
+    // Kept stacks may already hold steps, which this view can undo.
+    publish();
 
     const commit = createCommitter(
       { ...binding, model: () => binding.view.projection?.model },
-      (changes, context, { mergeKey }) => {
+      (sourceChanges, context, { mergeKey }) => {
+        const changes = sourceChanges.map(({ source, change }): RoleChange => ({
+          source: source === binding.store ? 'store' : 'model',
+          change,
+        }));
         const time = now();
         const last = past.at(-1);
         if (
@@ -183,9 +201,10 @@ export const createLocalHistory =
     /** Moves `entry` from one end of its changes to the other, its sources in reverse order on the way back. */
     const step = (entry: LocalEntry, direction: 'undo' | 'redo') => {
       const changes = direction === 'undo' ? [...entry.changes].reverse() : entry.changes;
-      for (const { source, change } of changes) {
+      for (const { source: role, change } of changes) {
+        const source = role === 'store' ? binding.store : binding.view.projection?.model;
         const [from, to] = direction === 'undo' ? [change.after, change.before] : [change.before, change.after];
-        patchSource(source, { from, to, paths: change.paths });
+        source && patchSource(source, { from, to, paths: change.paths });
       }
       afterPatch(binding.view, entry.context);
     };

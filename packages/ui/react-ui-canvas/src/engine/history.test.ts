@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type Intent, type NodeBase, createMemoryStore, storeVersions } from '../model/index.ts';
-import { type HistoryContext, createLocalHistory, withHistory } from './history.ts';
+import { type HistoryContext, createLocalHistory, createLocalStacks, withHistory } from './history.ts';
 import { type Projection, createFreehandProjection } from './projection.ts';
 import { type ConstrainedModel, createConstrainedProjection } from './projections/index.ts';
 
@@ -129,5 +129,32 @@ describe('local history', () => {
     history.undo();
     expect(registry.get(model).nodes[0].label).toBe('A');
     expect(caughtUp).toBe(1);
+  });
+
+  test('stacks the host keeps outlive the view: a remounted view undoes the steps made before it', ({ expect }) => {
+    const registry = Registry.make();
+    const store = createMemoryStore([{ id: 'root', nodes: { a: box('a') }, links: {} }]);
+    const stacks = createLocalStacks();
+    const mount = () => {
+      const history = createLocalHistory({ stacks })({
+        registry,
+        store: storeVersions(registry, store),
+        context: () => ({ path: ['root'], selection: ['a'] }),
+        view: { restore: () => {} },
+      });
+      const projection = withHistory(createFreehandProjection({ registry, store, sceneId: 'root' }), history);
+      history.view.projection = projection;
+      return { history, projection };
+    };
+    const x = () => registry.get(store.views).root?.nodes.a?.center.x;
+    const first = mount();
+    first.projection.apply({ kind: 'move', ids: ['a'], delta: { x: 10, y: 0 } });
+    expect(x()).toBe(10);
+    const second = mount();
+    expect(registry.get(second.history.state).canUndo).toBe(true);
+    expect(second.history.undo()).toBe(true);
+    expect(x()).toBe(0);
+    expect(second.history.redo()).toBe(true);
+    expect(x()).toBe(10);
   });
 });

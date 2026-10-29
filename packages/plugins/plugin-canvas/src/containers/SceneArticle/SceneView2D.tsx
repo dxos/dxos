@@ -37,6 +37,7 @@ import {
   createConstrainedProjection,
   createDynamicProjection,
   createLatticeProjection,
+  createLocalHistory,
   defaultNodeRegistry,
   isLink,
   isViewNode,
@@ -74,6 +75,7 @@ import {
   useCanvasNodes,
   useReconciledMigrations,
 } from '../CanvasArticle/use-canvas-scene.ts';
+import { sessionStacks } from './canvas-history.ts';
 import { CanvasClipboardText } from './CanvasClipboardText.tsx';
 import { display2D, sceneChrome } from './scene-chrome.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
@@ -230,7 +232,11 @@ export const CanvasEngineView = ({
   const tracker = Hooks.useOptionalCapability(Capabilities.HistoryTracker);
   const [element, setElement] = useState<HTMLDivElement | null>(null);
   const history = useMemo(
-    () => (tracker ? createTrackerHistory({ tracker, invoker, canvas }) : undefined),
+    () =>
+      tracker
+        ? createTrackerHistory({ tracker, invoker, canvas })
+        : // Without the app's history, the canvas keeps its own for the session, so reopening keeps the steps.
+          createLocalHistory({ stacks: sessionStacks(canvas) }),
     [tracker, invoker, canvas],
   );
   const nodes = useCanvasNodes(openObject);

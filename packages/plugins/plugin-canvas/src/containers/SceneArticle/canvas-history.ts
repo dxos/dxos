@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type VersionChange } from '@dxos/react-ui-canvas/headless';
+import { type LocalHistoryStacks, type VersionChange, createLocalStacks } from '@dxos/react-ui-canvas/scene';
 import { type Scene } from '@dxos/scene';
 
 /** A model edit (Make object) as the canvas documents before and after it, undone by writing back the first. */
@@ -29,4 +29,16 @@ export const sessionHistory = (canvas: object): SessionHistory => {
     histories.set(canvas, history);
   }
   return history;
+};
+
+const stacks = new WeakMap<object, LocalHistoryStacks>();
+
+/** The 2D engine's undo stacks for a canvas this session, so reopening its article keeps the steps. */
+export const sessionStacks = (canvas: object): LocalHistoryStacks => {
+  let kept = stacks.get(canvas);
+  if (!kept) {
+    kept = createLocalStacks();
+    stacks.set(canvas, kept);
+  }
+  return kept;
 };

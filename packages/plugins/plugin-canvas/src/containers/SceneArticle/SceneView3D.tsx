@@ -64,6 +64,7 @@ import { type Canvas } from '#types';
 import { CanvasNamespace } from '../../namespace.ts';
 import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
+import { type SessionHistory, isDocumentStep, sessionHistory } from './canvas-history.ts';
 import {
   ELEMENT_FORM_FIELDS,
   ELEMENT_FORM_OVERRIDES,
@@ -73,7 +74,6 @@ import {
 } from './element-form.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { getSessionClipboard, nextPaste, pasteOffset, setSessionClipboard } from './scene-clipboard.ts';
-import { type SessionHistory, isDocumentStep, sessionHistory } from './session-history.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useScene3DView } from './use-scene3d-view.ts';

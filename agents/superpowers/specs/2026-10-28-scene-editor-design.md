@@ -43,6 +43,14 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
     composite objects whose `parts` is a nested layout; playback samples a scene's layout and never writes it back.
     The group arranger type is `Arrangement`. Wherever this document says a scene holds elements, read: its layout.
 
+## Principle: one editor, two viewports (the user's, 2026-10-29)
+
+Every feature is decided for both dimensions first, in behaviour (tools, shortcuts, selection, panels, inspectors, undo,
+clipboard, snapping, roles, cursors) and in implementation (one shared component, helper or intent generalised over the
+dimension; never a 3D copy of a 2D piece, nor the reverse). Only the viewport and geometry that is genuinely
+dimension-specific differ. A request that names one dimension applies to both unless it is inherently
+dimension-specific, and the change says which.
+
 ## What exists to build on
 
 - **react-ui-canvas** has the editor shell: `Canvas.Root`, a viewport, a palette, the select/hand/node/link tools, the

@@ -698,3 +698,17 @@ decision D-69: A copy puts the selection on the system clipboard as `.dx` text w
   for: user:richburdon
   why: Text with object references would not resolve outside the canvas it came from.
 ```
+
+```mdl
+decision D-70: Every editing feature is decided for both dimensions first, in behaviour (tools, shortcuts, selection, panels, inspectors, undo, clipboard, snapping, roles, cursors) and in implementation (one shared component, helper or intent generalised over the dimension; never a copy of one dimension's piece for the other). Only the viewport and genuinely dimension-specific geometry differ, and a request naming one dimension applies to both unless it is inherently dimension-specific.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-71: Without the app's history, a 2D canvas keeps its engine's undo stacks for the session, as a 3D canvas does, so reopening its article keeps the steps; the stacks hold each change by its source's role, so the reopened view patches its own store. Fills in [D-63].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A change bound to the first mount's store could not be undone through a later mount's.
+```

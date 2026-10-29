@@ -66,7 +66,7 @@ import {
   viewLayers,
 } from '../../../utils/index.ts';
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
-import { OutlineStyleField, STYLE_FIELDS, STYLE_FIELD_OVERRIDES } from '../../StyleGrid/index.ts';
+import { OutlineStyleField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS } from '../../StyleGrid/index.ts';
 import { type InspectorProps } from '../types.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
