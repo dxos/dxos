@@ -24,8 +24,8 @@ export type FeatureEmbedsOptions = {
    * place, or undefined to paste it as is.
    */
   onCopy?: (id: string) => string | undefined;
-  /** `/feature`: makes a feature named by the line's text before it, if any, and returns its embed source. */
-  onCreate?: (name: string | undefined) => string | undefined;
+  /** `/feature`: makes a feature from the line's text before it, if any, and returns its embed source. */
+  onCreate?: (text: string | undefined) => string | undefined;
   /** How long local edits settle before `onChange`. */
   delay?: number;
 };
@@ -105,7 +105,7 @@ export const featureEmbeds = ({
             if (!embed) {
               return;
             }
-            // The line's text names the feature, so the embed takes the whole line.
+            // The line's text is the feature's, so the embed takes the whole line.
             const start = before ? line.from : from;
             view.dispatch({
               changes: { from: start, to, insert: embed },

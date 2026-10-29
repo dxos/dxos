@@ -17,6 +17,7 @@ import {
   FeatureArticle,
   FeatureCardContent,
   FeatureCompanion,
+  FeatureSection,
   MoveTaskDialog,
   ProjectArticle,
   ProjectArtifactsArticle,
@@ -98,6 +99,12 @@ export default Capability.makeModule(() =>
           feature: companionTo.feature,
           attendableId,
         }),
+      }),
+      Surface.create({
+        id: 'feature.section',
+        filter: AppSurface.object(AppSurface.Section, Feature.Feature),
+        component: FeatureSection,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'feature.card',

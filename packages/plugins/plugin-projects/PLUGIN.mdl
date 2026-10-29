@@ -46,18 +46,26 @@ feat F-1: A spec's document is the spec
 
 ```mdl
 feat F-2: Feature embeds in the editor
-  req F-2.1: Each embed is drawn as the feature's card, one atomic block: typing cannot change its id, and it moves,
-             cuts, copies and deletes like a line.
+  req F-2.1: Each embed is drawn as the feature's editable section, one atomic block: typing cannot change its id, and
+             it moves, cuts, copies and deletes like a line.
   req F-2.2: Moving an embed reorders the spec's features.
-  req F-2.3: Deleting an embed deletes its feature. Undo, or pasting the embed back, restores the same feature.
+  req F-2.3: Deleting an embed deletes its feature: Backspace with the cursor after it, or deleting its line. Undo, or
+             pasting the embed back, restores the same feature.
   req F-2.4: An embed cut from one spec's document and pasted into another moves the feature to that spec. An embed of
              a feature whose own spec's document still embeds it is a reference and moves nothing.
   req F-2.5: Pasting an embed into a document that already embeds it embeds a copy of the feature.
-  req F-2.6: `/feature` makes a feature named by the text before it on the line, or "New feature" on an empty line, and
-             puts its embed in place of the line.
-  req F-2.7: Clicking a card selects the feature, which the companion then shows.
-  req F-2.8: org.dxos.plugin.code#SpecArticle draws the same cards, through `ProjectCapabilities.SpecDocumentExtensions`,
-             which this plugin contributes, so plugin-code imports none of its components.
+  req F-2.6: `/feature` puts a new feature's embed in place of its line, and the cursor in its section. A phrase before it
+             names the feature, and the cursor goes to its description. A sentence before it (ending in `.`, `!` or
+             `?`) becomes its description, and the cursor goes to its name, "New feature" until changed, as on an empty
+             line.
+  req F-2.7: A section is inert until it has attention, so the cursor and scrolling pass through it. A click gives it
+             attention, its form then edits the feature's name, description, requirements and status in place, and
+             Escape returns the cursor to the text.
+  req F-2.8: org.dxos.plugin.code#SpecArticle draws the same sections, through
+             `ProjectCapabilities.SpecDocumentExtensions`, which this plugin contributes, so plugin-code imports none of
+             its components.
+  req F-2.9: A feature's `section` surface is that form, so any document embedding the feature can edit it in place. Its
+             card is the read-only version, shown on the map, the board and in search.
 ```
 
 ```mdl
@@ -328,34 +336,38 @@ test QA-6: Walk a spec's feature map
 ```mdl
 test QA-7: Grow a spec from prose
   desc: |
-    A spec starts as a wall of text and takes structure a line at a time, with nothing forced on it. Walked by the
-    autocue flow `spec-document` against the SpecDocumentArticle story "Prose", whose spec "Mail" is three
-    paragraphs of prose with no features.
+    A spec starts as plain prose and takes structure a paragraph at a time, with nothing forced on it: each paragraph
+    turned into a feature becomes that feature's description, in a form edited where the paragraph was. Walked by the
+    autocue flow `spec-document` against the SpecDocumentArticle story "Prose", whose spec "Mail" is three paragraphs
+    of prose with no features.
   actors: human
   covers: [F-1.3, F-2.1, F-2.2, F-2.3, F-2.6, F-2.7]
-  status: passing            # 2026-10-29, recorded by autocue/spec-document.mjs
+  status: unverified
   given:
     - storybook serves plugin-projects
     - the spec "Mail" holds no features, and its document is three paragraphs of prose
   steps:
     - name: Open a spec written as prose
       do: Open the spec "Mail".
-      expect: the document shows its three paragraphs and no feature cards
-    - name: Make a line a feature
-      do: On a new line at the end, type "Instant inbox /feature" and accept the completion.
-      expect: the line becomes the "Instant inbox" card, and the companion shows the new feature
-    - name: Make another
-      do: On a new line at the end, type "Search /feature" and accept the completion.
-      expect: a "Search" card appears below "Instant inbox"; the prose above is unchanged
+      expect: the document shows its three paragraphs, none of them a feature
+    - name: Turn a paragraph into a feature
+      do: Put the cursor at the end of the paragraph "Search finds any message…", type " /feature" and accept the completion.
+      expect: the paragraph becomes a feature's section, whose description is the paragraph, with the cursor in its name
+    - name: Name it
+      do: Type "Search" and press Escape.
+      expect: the section is named "Search", and the cursor is back in the text, after the section
+    - name: Turn another paragraph into a feature
+      do: Put the cursor at the end of the paragraph "Mail should feel instant…", type " /feature", accept it, type "Instant inbox" and press Escape.
+      expect: a second section, "Instant inbox", above "Search", with the cursor after it; the last paragraph is still prose
     - name: Reorder by moving the embed
-      do: With the cursor on the "Search" card's line, press Alt+Up.
-      expect: the "Search" card sits above "Instant inbox", and the spec lists Search first
+      do: Press Alt+Down twice.
+      expect: the "Instant inbox" section sits below "Search", and the spec lists Search first
     - name: Delete a feature by deleting its embed
-      do: Select the "Instant inbox" card's line and press Delete.
-      expect: the card is gone and the spec holds only Search
+      do: With the cursor still after the "Instant inbox" section, press Backspace.
+      expect: the section is gone and the spec holds only Search
     - name: Undo restores it
       do: Press Cmd+Z.
-      expect: the "Instant inbox" card returns, the same feature as before
+      expect: the "Instant inbox" section returns, the same feature with its description
 ```
 
 ## Changelog
@@ -538,4 +550,38 @@ decision D-21: This plugin defines and contributes `ProjectCapabilities.SpecDocu
   for: user:wittjosiah
   affects: [F-2.8, F-3.5]
   why: plugin-code already depends on this plugin, which owns specs and their documents (org.dxos.plugin.code D-35). A sync pass before the codec arrives would read the file's `feat` blocks into the document as text. A factory can arrive after an editor opens, which rebuilds it, where a hook that arrives late breaks React's hook order.
+```
+
+```mdl
+decision D-22: A feature embedded in a spec's document is drawn as an editable section of the feature, and its card is the read-only version. The section shows the feature's form, so it can be edited in place, as if the document were all Markdown. An embed is deleted the way other embeds are: Backspace with the cursor after it. Refines [D-13] and [D-17].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.1, F-2.3, F-2.7, F-2.9]
+```
+
+```mdl
+decision D-23: The section holds the feature's core fields: name, description, requirements and status; subfeatures, dependencies and tasks stay in the companion. It is inert until it has attention, like other section embeds. After `/feature` the new section takes the cursor so it can be filled in place, and the companion does not open. Fills in [D-22].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.6, F-2.7]
+```
+
+```mdl
+decision D-24: `/feature` after a sentence (text ending in `.`, `!` or `?`) makes the sentence the new feature's description and puts the cursor in its name; after a phrase, the phrase is the name and the cursor goes to the description. Fills in [D-23].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.6]
+  why: A paragraph of prose is what a feature describes, not its name; making it the description is what turns unstructured text into a structured feature, and the name is then the one field left to write.
+  rejected:
+    - Always naming the feature by the line, which names a feature after a whole paragraph.
+```
+
+```mdl
+decision D-25: A feature contributes a `section` surface holding its form, and embeds in a spec's document draw it inside the same inert-until-attended frame as other section embeds, with Escape returning the cursor to the text. Fills in [D-22] and [D-23].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.7, F-2.9]
+  why: One form serves the spec's document, plugin-code's spec page and any Markdown document that embeds a feature; the companion's detail shares the same fields, so the two cannot drift.
 ```

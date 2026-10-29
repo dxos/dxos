@@ -3,72 +3,72 @@
 //
 
 /**
- * A spec starts as prose and takes structure a line at a time: `/feature` makes a line a feature embedded as its card,
- * the embed moves like any line, and deleting it deletes the feature until undo brings it back.
+ * A spec starts as prose and takes structure a paragraph at a time: `/feature` at the end of a paragraph makes it the
+ * description of a new feature, drawn in place as the feature's editable section. The section moves like a line, and
+ * Backspace deletes it, and its feature, until undo brings both back.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-7
  * @app storybook-react, narrowed to plugin-projects, on :9009
  *
  *   DX_STORIES=plugins/plugin-projects VITE_DX_DISABLE_ANIMATIONS=true moon run storybook-react:serve-nodeps
- *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --url http://localhost:9009 --out /tmp/demo
+ *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --out /tmp/demo \
+ *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-projects-containers-specdocumentarticle--prose&viewMode=story'
+ *   node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/demo.webm --out /tmp/demo/demo-trimmed.webm \
+ *     --duration off --max-static 3 --caption-hold 4
  */
 
 const STORYBOOK = 'http://localhost:9009';
 const SUBTITLE = 'from plugin-projects/PLUGIN.mdl QA-7';
 const STORY = `${STORYBOOK}/iframe.html?id=plugins-plugin-projects-containers-specdocumentarticle--prose&viewMode=story`;
 
-/** A beat for the viewer after a visible change. */
-const BEAT = 1_500;
+/** Time to read a caption before the gesture it describes. */
+const READ = 3_000;
 
-const CARD = '[data-testid="feature-embed"]';
+/** Time to look at what a gesture changed. */
+const LOOK = 3_000;
 
-const caption = (demo, step, text) =>
-  demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, position: 'top' });
+const SECTION = '[data-testid="feature-embed"]';
 
-/** The names on the cards, top to bottom. */
-const cardNames = (page) =>
-  page.$$eval(CARD, (cards) =>
-    cards.map((card) => card.querySelector('[data-testid="feature-card"]')?.textContent ?? ''),
-  );
+const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, hold: READ });
 
-const waitForCards = (page, count) =>
+const waitForNames = (page, expected) =>
   page.waitForFunction(
-    ([selector, expected]) => document.querySelectorAll(selector).length === expected,
-    [CARD, count],
-    {
-      timeout: 15_000,
-    },
+    ([selector, expected]) =>
+      JSON.stringify(
+        [...document.querySelectorAll(`${selector} input[data-testid="name"]`)].map((input) => input.value),
+      ) === JSON.stringify(expected),
+    [SECTION, expected],
+    { timeout: 10_000 },
   );
 
-/** Selects the line that holds the named feature's embed; block widgets sit outside `.cm-line`, so through the view. */
-const selectEmbedLine = (page, name) =>
-  page.evaluate((name) => {
-    const view = document.querySelector('.cm-content')?.cmTile?.root?.view;
-    const text = view?.state.doc.toString() ?? '';
-    const index = text.indexOf(`![${name}](`);
-    if (!view || index === -1) {
-      throw new Error(`no embed of ${name}`);
-    }
-    const line = view.state.doc.lineAt(index);
-    view.focus();
-    view.dispatch({ selection: { anchor: line.from, head: line.to } });
-  }, name);
-
-/** Types on a new line at the end of the document, then accepts `/feature` from the completion. */
-const makeFeature = async (demo, page, name) => {
-  await demo.click({ selector: '.cm-line:has-text("Later, maybe")', label: 'Document' });
-  await page.keyboard.press('ControlOrMeta+End');
-  await page.keyboard.press('Enter');
-  await demo.keys({ key: `${name} /feature` });
-  await page.keyboard.type(`${name} /feat`, { delay: 60 });
+/** Puts the cursor at the end of a paragraph, types `/feature` after it and accepts the completion. */
+const makeFeature = async (demo, page, paragraph) => {
+  await demo.click({ selector: `.cm-line:has-text("${paragraph}")`, label: 'End of the paragraph' });
+  await demo.press({ key: 'End' });
+  await demo.keys({ key: '/feature' });
+  await page.keyboard.type(' /feature', { delay: 140 });
   await page.locator('.cm-tooltip-autocomplete').waitFor({ state: 'visible', timeout: 5_000 });
-  await demo.sleep({ ms: 400 });
+  await demo.sleep({ ms: 1_200 });
   await demo.press({ key: 'Enter' });
+  await page.waitForFunction(() => document.activeElement?.getAttribute('data-testid') === 'name', undefined, {
+    timeout: 10_000,
+  });
+};
+
+/** Types the new feature's name into its focused name field, then returns to the text. */
+const nameFeature = async (demo, page, name) => {
+  await demo.keys({ key: name });
+  await page.keyboard.type(name, { delay: 140 });
+  await demo.sleep({ ms: 1_500 });
+  await demo.press({ key: 'Escape' });
+  await page.waitForFunction(() => document.activeElement?.classList.contains('cm-content'), undefined, {
+    timeout: 5_000,
+  });
 };
 
 export const steps = [
   {
-    name: 'Prep (off camera): warm the story',
+    name: 'Prep (off camera): load the story',
     setup: true,
     run: async ({ page }) => {
       await page.goto(STORY);
@@ -80,57 +80,63 @@ export const steps = [
   {
     name: 'Open a spec written as prose',
     run: async ({ demo, page }) => {
-      await demo.title({ value: 'Specs', subtitle: 'From prose to features, a line at a time' });
-      await caption(demo, 1, 'Open the spec "Mail"');
-      await waitForCards(page, 0);
-      await demo.sleep({ ms: BEAT });
-    },
-  },
-  {
-    name: 'Make a line a feature',
-    run: async ({ demo, page }) => {
-      await caption(demo, 2, 'On a new line, type "Instant inbox /feature" and accept it');
-      await makeFeature(demo, page, 'Instant inbox');
-      await waitForCards(page, 1);
-      await page.getByTestId('feature-companion').waitFor({ state: 'visible', timeout: 10_000 });
-      await demo.sleep({ ms: BEAT });
-    },
-  },
-  {
-    name: 'Make another',
-    run: async ({ demo, page }) => {
-      await caption(demo, 3, 'On a new line, type "Search /feature" and accept it');
-      await makeFeature(demo, page, 'Search');
-      await waitForCards(page, 2);
-      const names = await cardNames(page);
-      if (!names[0].includes('Instant inbox') || !names[1].includes('Search')) {
-        throw new Error(`cards out of order: ${names.join(', ')}`);
+      await demo.title({ value: 'Specs', subtitle: 'From prose to features, one paragraph at a time' });
+      await caption(demo, 1, '"Mail" is three paragraphs of prose, with no structure yet');
+      if ((await page.locator(SECTION).count()) !== 0) {
+        throw new Error('the spec already holds features');
       }
-      await demo.sleep({ ms: BEAT });
+      await demo.hover({ selector: '.cm-line:has-text("Mail should feel instant.")', label: 'Prose' });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Turn a paragraph into a feature',
+    run: async ({ demo, page }) => {
+      await caption(demo, 2, 'At the end of a paragraph, type /feature and press Enter');
+      await makeFeature(demo, page, 'Search finds any message');
+      await caption(demo, 2, 'The paragraph is now a feature, as its description');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Name it',
+    run: async ({ demo, page }) => {
+      await caption(demo, 3, 'Type its name, then press Escape to go back to the text');
+      await nameFeature(demo, page, 'Search');
+      await waitForNames(page, ['Search']);
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Turn another paragraph into a feature',
+    run: async ({ demo, page }) => {
+      await caption(demo, 4, 'The same for the first paragraph: "Instant inbox"');
+      await makeFeature(demo, page, 'Mail should feel instant.');
+      await nameFeature(demo, page, 'Instant inbox');
+      await waitForNames(page, ['Instant inbox', 'Search']);
+      await caption(demo, 4, 'Two features; the last paragraph is still prose');
+      await demo.sleep({ ms: LOOK });
     },
   },
   {
     name: 'Reorder by moving the embed',
     run: async ({ demo, page }) => {
-      await caption(demo, 4, 'With the cursor on the "Search" line, press Alt+Up');
-      await demo.press({ key: 'Alt+ArrowUp' });
-      await page.waitForFunction(
-        (selector) => document.querySelector(selector)?.textContent?.includes('Search'),
-        CARD,
-        { timeout: 5_000 },
-      );
-      await demo.sleep({ ms: BEAT });
+      await caption(demo, 5, 'A feature moves like a line: press Alt+Down twice');
+      await demo.press({ key: 'Alt+ArrowDown' });
+      await demo.sleep({ ms: 1_000 });
+      await demo.press({ key: 'Alt+ArrowDown' });
+      await waitForNames(page, ['Search', 'Instant inbox']);
+      await caption(demo, 5, "The spec's features follow the text: Search is first");
+      await demo.sleep({ ms: LOOK });
     },
   },
   {
     name: 'Delete a feature by deleting its embed',
     run: async ({ demo, page }) => {
-      await caption(demo, 5, 'Select the "Instant inbox" line and press Delete');
-      await demo.hover({ selector: `${CARD}:has-text("Instant inbox")`, label: 'Instant inbox' });
-      await selectEmbedLine(page, 'Instant inbox');
+      await caption(demo, 6, 'With the cursor after "Instant inbox", press Backspace');
       await demo.press({ key: 'Backspace' });
-      await waitForCards(page, 1);
-      await demo.sleep({ ms: BEAT });
+      await waitForNames(page, ['Search']);
+      await demo.sleep({ ms: LOOK });
     },
   },
   {
@@ -138,9 +144,10 @@ export const steps = [
     narration:
       'The spec is its document: features are ECHO objects embedded in the text, so people and agents edit the same spec.',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, 'Press Cmd+Z');
+      await caption(demo, 7, 'Cmd+Z brings back the same feature, description and all');
       await demo.press({ key: 'ControlOrMeta+z' });
-      await waitForCards(page, 2);
+      await waitForNames(page, ['Search', 'Instant inbox']);
+      await demo.caption({ value: 'Each feature is an ECHO object, embedded in the text', subtitle: SUBTITLE });
       await demo.sleep({ ms: 6_000 });
     },
   },

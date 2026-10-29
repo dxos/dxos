@@ -20,16 +20,14 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { SpecDocument } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { Spec } from '#types';
+import { FeatureEmbed, Spec } from '#types';
 
-import { FeatureCompanion } from '../FeatureCompanion/index.ts';
 import { SpecDocumentArticle } from './SpecDocumentArticle.tsx';
 
 type StoryArgs = {
@@ -69,10 +67,7 @@ const DefaultStory = ({ attendableId, prose }: StoryArgs) => {
 
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <Layout.Grid classNames='dx-fill grid-cols-[1fr_24rem] divide-x divide-separator'>
-        <SpecDocumentArticle role='article' subject={document} attendableId={attendableId} />
-        <FeatureCompanion spec={spec} attendableId={attendableId} />
-      </Layout.Grid>
+      <SpecDocumentArticle role='article' subject={document} attendableId={attendableId} />
     </AttendableContainer>
   );
 };
@@ -80,15 +75,20 @@ const DefaultStory = ({ attendableId, prose }: StoryArgs) => {
 const findView = async (canvasElement: HTMLElement) =>
   waitFor(
     () => {
-      const content = canvasElement.querySelector<HTMLElement>('.cm-content');
-      const view = content && EditorView.findFromDOM(content);
+      // The editor's root, not its content: lookup takes the first content within, and each section holds an editor.
+      const root = canvasElement.querySelector<HTMLElement>('.cm-editor');
+      const view = root && EditorView.findFromDOM(root);
       invariant(view, 'Missing editor.');
       return view;
     },
     { timeout: 10_000 },
   );
 
+/** The embeds drawn; only those in the viewport are. */
 const embeds = (canvasElement: HTMLElement) => within(canvasElement).queryAllByTestId('feature-embed');
+
+/** The features the text embeds, in order. */
+const embedded = (view: EditorView) => FeatureEmbed.parse(view.state.doc.toString()).map(({ id }) => id);
 
 const meta = {
   title: 'plugins/plugin-projects/containers/SpecDocumentArticle',
@@ -133,54 +133,87 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Each feature the spec holds is embedded in its document and drawn as its card; a click shows it in the companion. */
+/** Waits for the editor to settle on `/feature`'s completion, then accepts it. */
+const acceptFeature = async () => {
+  await waitFor(() => expect(document.querySelector('.cm-tooltip-autocomplete')).not.toBeNull(), { timeout: 5_000 });
+  // Completion ignores an Enter that lands within its interaction delay of opening.
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  await userEvent.keyboard('{Enter}');
+};
+
+/** Puts the cursor at the end of the line that holds `text`. */
+const placeCursor = async (view: EditorView, text: string) => {
+  await userEvent.click(view.contentDOM.querySelector<HTMLElement>('.cm-line') ?? view.contentDOM);
+  const index = view.state.doc.toString().indexOf(text);
+  invariant(index !== -1, `Missing line: ${text}`);
+  const line = view.state.doc.lineAt(index);
+  view.dispatch({ selection: EditorSelection.cursor(line.to) });
+};
+
+const names = () => shown?.features.map((ref) => ref.peek()?.name);
+
+/** Each feature the spec holds is embedded in its document as a section; once attended, its form edits the feature. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(embeds(canvasElement)).toHaveLength(8), { timeout: 10_000 });
-    const [first] = embeds(canvasElement);
-    await userEvent.click(within(first).getByTestId('feature-card'));
-    await waitFor(() => expect(first).toHaveAttribute('data-selected', 'true'), { timeout: 5_000 });
-    await expect(within(canvasElement).findByTestId('feature-companion')).resolves.toBeTruthy();
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const first = await waitFor(() => embeds(canvasElement)[0], { timeout: 10_000 });
+    const feature = shown?.features.find((ref) => ref.peek()?.id === first.dataset.feature)?.peek();
+    invariant(feature, 'Missing feature.');
+
+    await userEvent.click(first);
+    const name = within(first).getByTestId<HTMLInputElement>('name');
+    await waitFor(() => expect(name.closest('[inert]')).toBeNull(), { timeout: 5_000 });
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Renamed');
+    await waitFor(() => expect(feature.name).toBe('Renamed'), { timeout: 5_000 });
   },
 };
 
-/** `/feature` at the end of a line of prose turns the line into a new feature named by it, embedded where it was. */
+/** `/feature` after a phrase makes a feature named by it, embedded where the line was, with its description to write. */
 export const SlashFeature: Story = {
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(embeds(canvasElement)).toHaveLength(8), { timeout: 10_000 });
     const view = await findView(canvasElement);
-    // Typing goes to the focused element, which a click on the text gives the editor.
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
     await userEvent.click(view.contentDOM.querySelector<HTMLElement>('.cm-line') ?? view.contentDOM);
     view.dispatch({ selection: EditorSelection.cursor(view.state.doc.length) });
     await userEvent.keyboard('{Enter}Undo send /feat');
-    await waitFor(() => expect(document.querySelector('.cm-tooltip-autocomplete')).not.toBeNull(), {
+    await acceptFeature();
+
+    await waitFor(() => expect(embedded(view)).toHaveLength(9), { timeout: 5_000 });
+    const id = embedded(view)[8];
+    const embed = await waitFor(
+      () => {
+        const element = embeds(canvasElement).find((element) => element.dataset.feature === id);
+        invariant(element, 'Missing embed.');
+        return element;
+      },
+      { timeout: 5_000 },
+    );
+    await expect(within(embed).getByTestId<HTMLInputElement>('name').value).toBe('Undo send');
+    await waitFor(() => expect(document.activeElement?.closest('[data-testid="feature-embed"]')).toBe(embed), {
       timeout: 5_000,
     });
-    // Completion ignores an Enter that lands within its interaction delay of opening.
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    await userEvent.keyboard('{Enter}');
-
-    await waitFor(() => expect(embeds(canvasElement)).toHaveLength(9), { timeout: 5_000 });
-    await expect(within(embeds(canvasElement)[8]).getByText('Undo send')).toBeInTheDocument();
+    await expect(document.activeElement?.getAttribute('contenteditable')).toBe('true');
     await waitFor(() => expect(shown?.features).toHaveLength(9), { timeout: 5_000 });
     await expect(view.state.doc.toString()).not.toContain('/feat');
   },
 };
 
-/** Cutting an embed's line takes the feature out of the spec and deletes it; nothing else moves. */
+/** Backspace with the cursor after an embed deletes it, and its feature with it; nothing else moves. */
 export const RemoveEmbed: Story = {
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(embeds(canvasElement)).toHaveLength(8), { timeout: 10_000 });
-    const [first] = embeds(canvasElement);
-    const id = first.dataset.feature;
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const [id] = embedded(view);
     const feature = shown?.features.find((ref) => ref.peek()?.id === id)?.peek();
     invariant(feature, 'Missing feature.');
 
-    const view = await findView(canvasElement);
-    const line = view.state.doc.lineAt(view.state.doc.toString().indexOf(`echo:///${id}`));
-    view.dispatch({ changes: { from: line.from, to: line.to + 1 }, userEvent: 'delete.cut' });
+    await placeCursor(view, `${id})`);
+    await userEvent.keyboard('{Backspace}');
 
-    await waitFor(() => expect(embeds(canvasElement)).toHaveLength(7), { timeout: 5_000 });
+    await waitFor(() => expect(embedded(view)).toHaveLength(7), { timeout: 5_000 });
+    await expect(embedded(view)).not.toContain(id);
     await waitFor(() => expect(Obj.isDeleted(feature)).toBe(true), { timeout: 5_000 });
     await expect(shown?.features).toHaveLength(7);
   },
@@ -192,38 +225,37 @@ export const Prose: Story = {
 };
 
 /**
- * A spec can start as prose and take structure a piece at a time: `/feature` makes a line a feature, an embed moves like
- * any line and the order of the spec follows, and the prose around the features stays as it was written.
+ * A spec can start as prose and take structure a piece at a time: `/feature` at the end of a paragraph makes it the
+ * description of a new feature whose name takes the cursor, and an embed moves like any line, the spec's order with it.
  */
 export const FromProse: Story = {
   ...Prose,
   play: async ({ canvasElement }) => {
     const view = await findView(canvasElement);
     await waitFor(() => expect(view.state.doc.toString()).toContain('Mail should feel instant.'), { timeout: 10_000 });
-    await expect(embeds(canvasElement)).toHaveLength(0);
+    await expect(embedded(view)).toHaveLength(0);
 
-    const makeFeature = async (line: string) => {
-      await userEvent.click(view.contentDOM.querySelector<HTMLElement>('.cm-line') ?? view.contentDOM);
-      view.dispatch({ selection: EditorSelection.cursor(view.state.doc.length) });
-      await userEvent.keyboard(`{Enter}${line} /feat`);
-      await waitFor(() => expect(document.querySelector('.cm-tooltip-autocomplete')).not.toBeNull(), {
+    const makeFeature = async (paragraph: string, name: string) => {
+      await placeCursor(view, paragraph);
+      await userEvent.keyboard(' /feat');
+      await acceptFeature();
+      await waitFor(() => expect(document.activeElement?.getAttribute('data-testid')).toBe('name'), {
         timeout: 5_000,
       });
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard(name);
+      await userEvent.keyboard('{Escape}');
     };
-    await makeFeature('Instant inbox');
-    await makeFeature('Search');
-    await waitFor(() => expect(embeds(canvasElement)).toHaveLength(2), { timeout: 5_000 });
-    await waitFor(() => expect(shown?.features.map((ref) => ref.peek()?.name)).toEqual(['Instant inbox', 'Search']), {
-      timeout: 5_000,
-    });
+    await makeFeature('Mail should feel instant.', 'Instant inbox');
+    await makeFeature('Search finds any message', 'Search');
+    await waitFor(() => expect(names()).toEqual(['Instant inbox', 'Search']), { timeout: 5_000 });
+    await expect(shown?.features[1].peek()?.description).toBe(
+      'Search finds any message by a word in it, attachments included.',
+    );
 
-    // The cursor sits on the Search embed's line; moving the line up moves the feature up.
-    await userEvent.keyboard('{Alt>}{ArrowUp}{/Alt}');
-    await waitFor(() => expect(shown?.features.map((ref) => ref.peek()?.name)).toEqual(['Search', 'Instant inbox']), {
-      timeout: 5_000,
-    });
+    // Escape left the cursor on the Search embed's line; moving it up past the blank line and the other embed moves
+    // the feature up.
+    await userEvent.keyboard('{Alt>}{ArrowUp}{ArrowUp}{/Alt}');
+    await waitFor(() => expect(names()).toEqual(['Search', 'Instant inbox']), { timeout: 5_000 });
     await expect(view.state.doc.toString()).toContain('Later, maybe: snooze, and sending at a set time.');
   },
 };

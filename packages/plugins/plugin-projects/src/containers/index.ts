@@ -9,6 +9,7 @@ import { type AddFeatureDialogProps } from './AddFeatureDialog/index.ts';
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
 import { type FeatureCompanionProps, type ProjectFeatureCompanionProps } from './FeatureCompanion/index.ts';
+import { type FeatureSectionProps } from './FeatureSection/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
 import { type SpecDocumentArticleProps } from './SpecDocumentArticle/index.ts';
@@ -28,6 +29,10 @@ export const FeatureCardContent: ComponentType<FeatureCardContentProps> = lazy((
 
 export const FeatureCompanion: ComponentType<FeatureCompanionProps> = lazy(() =>
   import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureCompanion })),
+);
+
+export const FeatureSection: ComponentType<FeatureSectionProps> = lazy(() =>
+  import('./FeatureSection/index.ts').then((module) => ({ default: module.FeatureSection })),
 );
 
 export const ProjectFeatureCompanion: ComponentType<ProjectFeatureCompanionProps> = lazy(() =>
