@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/** When a typed number commits: as each value parses, or only on blur and Enter. */
-export type CommitOn = 'change' | 'blur';
+import { type CommitOn } from '#types';
 
 /** The field's text, and a typed value waiting for blur when the form commits on blur. */
 export type NumberEditState = { text: string; pending?: number };

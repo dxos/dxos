@@ -720,3 +720,17 @@ decision D-72: Cmd/Ctrl+D duplicates the selection one step aside in both dimens
   for: user:richburdon
   why: The 2D engine's duplicate already handles promoted composites and portal Views, which the record-level helper does not see.
 ```
+
+```mdl
+decision D-73: Both dimensions' Properties forms commit a typed value once, on blur or Enter, and Escape puts back the saved value; steppers, pickers, toggles and swatches commit at once, and an outside change does not overwrite a field mid-edit.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-74: Commit-on-blur is an opt-in `commitOn: 'blur'` of the form library, which both inspectors set, and a number input reports whether a change came from a stepper or typing. Fills in [D-73].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One form behaviour for every inspector, rather than each field kind special-cased in the canvas.
+```

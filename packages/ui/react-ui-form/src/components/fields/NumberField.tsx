@@ -10,15 +10,20 @@ import * as Input from '@dxos/react-ui/Input';
 import { type FormFieldRendererProps } from '#types';
 
 import { StepAnnotation } from '../../annotations.ts';
+import { useFormContext } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
+import { type NumberEditEvent, type NumberEditState, numberEdit } from './number-edit.ts';
 import { getNumericConstraints } from './numeric-constraints.ts';
 
 /** A fractional field without a declared step moves by 0.01 below magnitude 1, else by 0.1. */
 const defaultStep = (value: number | undefined, integer: boolean): number =>
   integer ? 1 : value !== undefined && Math.abs(value) < 1 ? 0.01 : 0.1;
 
-/** Ark's number input parses, steps and clamps on blur; the field commits every value that parses. */
+/**
+ * Ark's number input parses, steps and clamps on blur. A stepper press commits at once; a typed value commits as it
+ * parses, or on blur and Enter when the form commits on blur; Escape puts the committed value back.
+ */
 export const NumberField = ({
   type,
   format,
@@ -31,7 +36,11 @@ export const NumberField = ({
   getValue,
   onValueChange,
   onBlur,
+  onRevert,
 }: FormFieldRendererProps<number>) => {
+  const {
+    form: { commitOn },
+  } = useFormContext('NumberField');
   const constraints = getNumericConstraints(type);
   // A caller's override narrows the schema's bounds for this form; a whole-number step reads as an integer.
   const min = minProp ?? constraints.min;
@@ -45,13 +54,27 @@ export const NumberField = ({
   // survives; Ark clamps it on blur, which commits.
   const inBounds = (value: number) => (min === undefined || value >= min) && (max === undefined || value <= max);
   const committed = getValue();
-  // The text is kept locally so a partial edit ("1.", "-") survives until it parses.
-  const [text, setText] = useState(committed === undefined ? '' : String(committed));
+  // The text is kept locally so a partial edit ("1.", "-") survives until it parses, and a value typed into a form that
+  // commits on blur waits here until the field blurs.
+  const [edit, setEdit] = useState<NumberEditState>({ text: committed === undefined ? '' : String(committed) });
   useEffect(() => {
-    if (committed !== undefined && Number(text) !== committed) {
-      setText(String(committed));
+    // An outside change (a drag, a peer) shows, unless the user is mid-edit with a value not yet committed.
+    if (committed !== undefined && Number(edit.text) !== committed && edit.pending === undefined) {
+      setEdit({ text: String(committed) });
     }
   }, [committed]); // eslint-disable-line react-hooks/exhaustive-deps
+  const dispatch = (event: NumberEditEvent) => {
+    const result = numberEdit(edit, event, { commitOn, committed });
+    setEdit(result.state);
+    if (result.commit !== undefined && inBounds(result.commit)) {
+      onValueChange(type, result.commit);
+      // A stepper press never blurs, so a committed value commits itself, as a pick does.
+      onBlur();
+    }
+    if (result.restore !== undefined) {
+      onRevert();
+    }
+  };
 
   if (presentationFor(presentation).isStatic) {
     return <FormStaticValue value={committed} format={format} />;
@@ -65,15 +88,17 @@ export const NumberField = ({
       max={max}
       step={step ?? defaultStep(committed, integer)}
       formatOptions={integer ? { maximumFractionDigits: 0 } : { useGrouping: false }}
-      value={text}
-      onValueChange={(next, valueAsNumber) => {
+      value={edit.text}
+      onValueChange={(next, valueAsNumber, source) => {
         const rounded = Number.isNaN(valueAsNumber) ? valueAsNumber : round(valueAsNumber);
         // A digit past the step's precision is dropped as it is typed, so the text is what commits.
-        setText(rounded === valueAsNumber || Number.isNaN(rounded) ? next : String(rounded));
-        if (!Number.isNaN(rounded) && inBounds(rounded)) {
-          onValueChange(type, rounded);
-          // A stepper press never blurs, so every value that parses commits itself, as a pick does.
-          onBlur();
+        const text = rounded === valueAsNumber || Number.isNaN(rounded) ? next : String(rounded);
+        dispatch({ kind: source, text, value: rounded });
+      }}
+      onValueCommit={() => dispatch({ kind: 'commit' })}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          dispatch({ kind: 'revert' });
         }
       }}
     />

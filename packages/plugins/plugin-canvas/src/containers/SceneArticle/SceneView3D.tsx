@@ -765,6 +765,8 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
                 fieldOverrides={ELEMENT_FORM_OVERRIDES}
                 readonly={readonly}
                 autoSave
+                // A typed value writes the scene once, when the field blurs, not on every keystroke.
+                commitOn='blur'
                 onSave={handleSave}
               >
                 <Form.Viewport scroll={false}>

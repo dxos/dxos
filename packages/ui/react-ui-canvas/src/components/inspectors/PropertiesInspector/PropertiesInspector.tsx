@@ -372,6 +372,8 @@ export const PropertiesInspector = ({
                   getOptions={getOptions}
                   readonly={readonly}
                   autoSave
+                  // A typed value writes the scene once, when the field blurs, not on every keystroke.
+                  commitOn='blur'
                   onSave={onSave}
                 >
                   {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}

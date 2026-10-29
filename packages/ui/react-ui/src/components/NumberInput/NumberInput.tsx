@@ -3,7 +3,7 @@
 //
 
 import { NumberInput as NumberInputPrimitive } from '@ark-ui/react/number-input';
-import React, { forwardRef } from 'react';
+import React, { type KeyboardEventHandler, forwardRef, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
@@ -13,6 +13,12 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { Button } from '../Button/Button.tsx';
+
+/** Keys Ark steps the value by, rather than typing into it. */
+const STEP_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
+
+/** What changed a number input's value: a stepper press or arrow key, or typing. */
+export type NumberInputChangeSource = 'step' | 'type';
 
 export type NumberInputProps = ThemedClassName<
   Pick<
@@ -36,7 +42,11 @@ export type NumberInputProps = ThemedClassName<
   /** The formatted text; `valueAsNumber` in `onValueChange` is the number (NaN when empty). */
   'value'?: string;
   'defaultValue'?: string;
-  'onValueChange'?: (value: string, valueAsNumber: number) => void;
+  /** `source` tells a stepper press or arrow key (`step`) from typing (`type`). */
+  'onValueChange'?: (value: string, valueAsNumber: number, source: NumberInputChangeSource) => void;
+  /** The value is committed: the input blurred, or Enter was pressed. */
+  'onValueCommit'?: (value: string, valueAsNumber: number) => void;
+  'onKeyDown'?: KeyboardEventHandler<HTMLInputElement>;
   'placeholder'?: string;
   'autoFocus'?: boolean;
   /** Hide the trailing decrement and increment buttons (the arrow keys still step). */
@@ -62,6 +72,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       value,
       defaultValue,
       onValueChange,
+      onValueCommit,
+      onKeyDown,
       placeholder,
       autoFocus,
       stepper = true,
@@ -74,12 +86,25 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    // Ark reports no cause with a change, so a press on a stepper or a stepping key marks the changes it makes.
+    const stepping = useRef(false);
+    const startStep = () => {
+      stepping.current = true;
+    };
+    const endStep = () => {
+      stepping.current = false;
+    };
+    const stepperProps = { onPointerDown: startStep, onPointerUp: endStep, onPointerLeave: endStep };
     return (
       <NumberInputPrimitive.Root
         {...props}
         value={value}
         defaultValue={defaultValue}
-        onValueChange={onValueChange && (({ value, valueAsNumber }) => onValueChange(value, valueAsNumber))}
+        onValueChange={
+          onValueChange &&
+          (({ value, valueAsNumber }) => onValueChange(value, valueAsNumber, stepping.current ? 'step' : 'type'))
+        }
+        onValueCommit={onValueCommit && (({ value, valueAsNumber }) => onValueCommit(value, valueAsNumber))}
         className={recipes.controlRoot()}
       >
         <NumberInputPrimitive.Control data-testid={testId} className={mx(recipes.numberInput(), classNames)}>
@@ -88,12 +113,18 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             autoFocus={autoFocus}
             aria-label={ariaLabel}
             className={recipes.inputField()}
+            onKeyDown={(event) => {
+              stepping.current = STEP_KEYS.has(event.key);
+              onKeyDown?.(event);
+            }}
+            onKeyUp={endStep}
             ref={forwardedRef}
           />
           {stepper && (
             <span data-scope='number-input' data-part='end' className={recipes.inputAdornment()}>
               <NumberInputPrimitive.DecrementTrigger asChild>
                 <Button
+                  {...stepperProps}
                   icon='ph--minus--regular'
                   label={decrementLabel ?? t('number-input.decrement.label')}
                   iconOnly
@@ -104,6 +135,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
               </NumberInputPrimitive.DecrementTrigger>
               <NumberInputPrimitive.IncrementTrigger asChild>
                 <Button
+                  {...stepperProps}
                   icon='ph--plus--regular'
                   label={incrementLabel ?? t('number-input.increment.label')}
                   iconOnly

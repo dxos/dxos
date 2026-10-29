@@ -23,6 +23,7 @@ export const TextField = ({
   getValue,
   onBlur,
   onValueChange,
+  onRevert,
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
   if (presentationFor(presentation).isStatic) {
@@ -44,6 +45,10 @@ export const TextField = ({
       onKeyDown={(event) => {
         if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
           onBlur();
+        }
+        // Escape drops the uncommitted edit, so the field shows the saved value and its blur saves nothing.
+        if (event.key === 'Escape') {
+          onRevert();
         }
       }}
       data-testid={jsonPath}
