@@ -1,8 +1,7 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 //
 // Copyright 2026 DXOS.org
 //
-
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -11,8 +10,6 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import { mx } from '@dxos/ui-theme';
-
-import { meta } from '#meta';
 
 import { type ExplainCategory, type ExplainNode } from '../../client/types.ts';
 import {
@@ -29,6 +26,7 @@ import {
   summarize,
   timeOf,
 } from '../../model/explain.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 
 const ICONS: Record<string, string> = {
   session: 'ph--tree-structure--regular',
@@ -69,7 +67,7 @@ const CATEGORY_CLASSES: Record<ExplainCategory, { row: string; bar: string; icon
 const COLUMNS = ['minmax(16rem, 1fr)', '8rem', '4.2rem', '4.6rem', '3rem', '3.6rem', '3.4rem'] as const;
 
 const Histogram = ({ title, counts }: { title: string; counts: Record<string, number> }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [all, setAll] = useState(false);
   const rows = histogram(counts);
   const shown = all ? rows : rows.slice(0, 14);
@@ -112,7 +110,7 @@ type RowProps = {
 };
 
 const Row = ({ node, depth, start, span, open, onToggle }: RowProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const expanded = open.has(node.id);
   const hasDetail = !!(node.predicates || node.types || node.error || node.tokens?.in);
   const canOpen = node.children.length > 0 || hasDetail;
@@ -240,7 +238,7 @@ const Row = ({ node, depth, start, span, open, onToggle }: RowProps) => {
 const CATEGORIES: ExplainCategory[] = ['llm', 'system-one', 'tool'];
 
 const Summary = ({ tree, summary }: { tree: ExplainNode; summary: TraceSummary }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   return (
     <Layout.Flex wrap gap='md' align='center' classNames='text-xs text-fg-muted'>
       <span>
@@ -298,7 +296,7 @@ export type TracePanelProps = {
  * model); runs of System One calls are folded into one row. Extractions open to their predicates and types.
  */
 export const TracePanel = ({ tree, loading, error }: TracePanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const [initialized, setInitialized] = useState(false);
   // The inputs open on first load, so the agent's turns show; later refreshes keep what the reader opened.

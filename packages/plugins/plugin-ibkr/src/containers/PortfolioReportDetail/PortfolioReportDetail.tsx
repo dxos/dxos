@@ -17,7 +17,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta.ts';
+import { IbkrNamespace } from '../../namespace.ts';
 import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services/index.ts';
 
 export type PortfolioReportDetailProps = Pick<
@@ -32,7 +32,7 @@ export type PortfolioReportDetailProps = Pick<
  * copies the raw XML and can sync lots from this report into the owning portfolio.
  */
 export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioReportDetailProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IbkrNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const positions = useMemo(() => parsePositions(subject.xml), [subject.xml]);

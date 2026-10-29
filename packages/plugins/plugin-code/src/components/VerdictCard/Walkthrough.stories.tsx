@@ -18,10 +18,14 @@ import { Walkthrough } from './Walkthrough.tsx';
 /** This file's directory in the repo, which the glob's keys are relative to. */
 const STORY_DIR = 'packages/plugins/plugin-code/src/components/VerdictCard/';
 
-/** plugin-code's sources as the checkout would serve them, keyed by repo path. */
+/** plugin-code's config and sources as the checkout would serve them, keyed by repo path. */
 const SOURCES: Record<string, string> = Object.fromEntries(
   Object.entries(
-    import.meta.glob<string>('../../**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+    import.meta.glob<string>(['../../../dx.config.ts', '../../**/*.{ts,tsx}'], {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }),
   ).map(([file, text]) => [new URL(file, `file:///${STORY_DIR}`).pathname.slice(1), text]),
 );
 

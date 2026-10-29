@@ -21,9 +21,9 @@ import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { slideSourcesAtom } from '#deck';
-import { meta } from '#meta';
 import { Presentation } from '#types';
 
+import { PresenterNamespace } from '../namespace.ts';
 import { createSectionsExtension, createSlideActionsExtension } from './app-graph-builder.ts';
 
 const ROOT_ID = 'root';
@@ -88,18 +88,18 @@ describe('presentation sections', () => {
         registry
           .get(graph.actions(node.id))
           .filter(AppGraphNode.isAction)
-          .find(({ id }) => id.endsWith(`/${meta.profile.key}.toggle-hidden`));
+          .find(({ id }) => id.endsWith(`/${PresenterNamespace.key}.toggle-hidden`));
       AppGraph.expandSync(graph, node.id, 'action');
       await AppGraphBuilder.flush(graphBuilder);
       const hide = toggle();
       if (!hide) {
         throw new Error('The slide has no toggle-hidden action.');
       }
-      expect(hide.properties.label).toEqual(['hide-slide.label', { ns: meta.profile.key }]);
+      expect(hide.properties.label).toEqual(['hide-slide.label', { ns: PresenterNamespace.key }]);
       await EffectEx.runPromise(hide.data());
       expect(slide.hidden).toBe(true);
       await AppGraphBuilder.flush(graphBuilder);
-      expect(toggle()?.properties.label).toEqual(['show-slide.label', { ns: meta.profile.key }]);
+      expect(toggle()?.properties.label).toEqual(['show-slide.label', { ns: PresenterNamespace.key }]);
     }
   });
 
@@ -111,7 +111,7 @@ describe('presentation sections', () => {
     expect(nodes.map((node) => node.data.id)).toEqual(slideIds(presentation));
     expect(nodes.map((node) => node.properties.label)).toEqual([
       'One',
-      ['slide-fallback.label', { ns: meta.profile.key, count: 2 }],
+      ['slide-fallback.label', { ns: PresenterNamespace.key, count: 2 }],
       'Notes',
     ]);
     expect(Obj.instanceOf(Presentation.Slide, nodes[2].data) && nodes[2].data.content.target?.id).toBe(notes.id);
@@ -134,7 +134,7 @@ describe('presentation sections', () => {
   test('slides are owned, so they are deleted rather than unlinked', async ({ expect }) => {
     const { presentation, parent } = await setup();
     const container = AppNode.getListOf(parent());
-    expect(container?.removeLabel).toEqual(['remove-section.label', { ns: meta.profile.key }]);
+    expect(container?.removeLabel).toEqual(['remove-section.label', { ns: PresenterNamespace.key }]);
     for (const ref of presentation.slides) {
       const slide = ref.target;
       expect(slide && container && ContainerModel.isRemovable(container, slide)).toBe(false);

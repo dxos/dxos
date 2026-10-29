@@ -19,7 +19,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
-import { LighthousePlugin } from '#plugin';
+import * as LighthousePlugin from '#meta';
 import { translations } from '#translations';
 
 import { metaTranslations } from '../../components/LighthouseMeta/index.ts';
@@ -60,10 +60,10 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({ types: [Connection.Connection, AccessToken.AccessToken], onClientInitialized: seed }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
         FixtureClientPlugin(),
-        LighthousePlugin(),
+        LighthousePlugin.make(),
       ],
     }),
   ],

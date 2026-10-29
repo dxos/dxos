@@ -12,8 +12,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { meta } from '#meta';
 import { Generation, GenerationService, StudioCapabilities, StudioOperation, Variant } from '#types';
+
+import { StudioNamespace } from '../namespace.ts';
 
 const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOperation.Generate.pipe(
   Operation.withHandler(
@@ -72,7 +73,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       // provider drives it via `onProgress`, and the meter's cancel aborts the in-flight request.
       const registry = (yield* Capability.getAll(AppCapabilities.ProgressRegistry))[0];
       const controller = new AbortController();
-      const monitor = registry?.register(`${meta.profile.key}/${artifactObj.id}`, {
+      const monitor = registry?.register(`${StudioNamespace.key}/${artifactObj.id}`, {
         label: `Generating ${artifactObj.kind}…`,
         onCancel: () => controller.abort(),
       });

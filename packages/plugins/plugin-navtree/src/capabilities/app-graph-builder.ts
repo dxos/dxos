@@ -12,7 +12,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { COMMANDS_DIALOG, meta } from '#meta';
+import { meta } from '#meta';
+
+import { COMMANDS_DIALOG } from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

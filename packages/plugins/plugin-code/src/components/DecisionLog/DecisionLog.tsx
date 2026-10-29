@@ -13,8 +13,7 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import {
   ACTOR_STYLE,
   ActorAvatar,
@@ -30,7 +29,7 @@ const ROW_COLUMNS = ['4rem', 'fill'] as const;
 type DecisionRowProps = { decision: DecisionModel; item: Listbox.Option; selected: boolean };
 
 const DecisionRow = ({ decision, item, selected }: DecisionRowProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { entry, actor, principal, supersededBy, approvedBy } = decision;
   const reason = actor === 'user' ? (entry.quote ?? entry.why) : entry.why;
   return (
@@ -84,7 +83,7 @@ const DecisionRow = ({ decision, item, selected }: DecisionRowProps) => {
 };
 
 const DeciderSection = ({ group, selected }: { group: DeciderGroup; selected?: string }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const style = group.actor ? ACTOR_STYLE[group.actor] : undefined;
   const items = useMemo(
     () => group.decisions.map(({ entry }) => ({ value: entry.id, label: entry.title })),
@@ -139,7 +138,7 @@ export type DecisionLogProps = {
  * each listing that decider's decisions in the order they were made.
  */
 export const DecisionLog = ({ content, selected }: DecisionLogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const groups = useMemo(
     () =>
       groupByDecider(

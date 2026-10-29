@@ -11,15 +11,16 @@ import * as KvsStore from '@dxos/effect/KvsStore';
 import type * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
 import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
 
-import { meta } from '#meta';
 import { makeDuffelBookingService } from '#services';
 import { DuffelCapabilities, Settings } from '#types';
+
+import { DuffelNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: DuffelNamespace.key,
       schema: Settings.Settings,
       defaultValue: () => ({ apiKey: undefined }),
     });
@@ -29,7 +30,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(DuffelCapabilities.Settings, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+        prefix: DuffelNamespace.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

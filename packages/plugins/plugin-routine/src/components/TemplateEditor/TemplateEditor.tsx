@@ -22,8 +22,7 @@ import {
 } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { handlebars, xmlDecorator } from './extensions/index.ts';
 
 export type TemplateEditorProps = {
@@ -35,7 +34,7 @@ export type TemplateEditorProps = {
 
 export const TemplateEditor = Util.composable<HTMLDivElement, TemplateEditorProps>(
   ({ classNames, id, source, lineNumbers = true, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(RoutineNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const [resolved] = useObject(source);
     const { parentRef } = useTextEditor(() => {

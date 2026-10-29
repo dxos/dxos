@@ -14,8 +14,7 @@ import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../../namespace.ts';
 import {
   FEATURE_STATUSES,
   FeatureCard,
@@ -104,7 +103,7 @@ const FeatureKanbanCard = ({ data: feature, location, draggable, binding }: Mosa
 };
 
 const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<FeatureStatus>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { model } = useBoard<FeatureStatus, FeatureModel>('FeatureKanban.Column');
   const { onChange } = useContext(FeatureKanbanContext);
   const count = useAtomValue(model.items(status)).length;

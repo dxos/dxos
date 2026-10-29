@@ -10,9 +10,9 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { WordList } from '#components';
-import { meta } from '#meta';
 import { type Vocabulary, Word } from '#types';
 
+import { LingoNamespace } from '../../namespace.ts';
 import { useDeckWords } from '../useDeckWords.ts';
 
 /** Row order; `due` and `weakest` are what a learner actually wants before a drill. */
@@ -45,11 +45,11 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
             variant: 'toggleGroup',
             selectCardinality: 'single',
             value: order,
-            label: ['order.label', { ns: meta.profile.key }],
+            label: ['order.label', { ns: LingoNamespace.key }],
           },
           (group) => {
             ORDERS.forEach(({ value, icon }) => {
-              group.action(value, { label: [`order-${value}.label`, { ns: meta.profile.key }], icon }, () =>
+              group.action(value, { label: [`order-${value}.label`, { ns: LingoNamespace.key }], icon }, () =>
                 setOrder(value),
               );
             });

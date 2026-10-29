@@ -12,15 +12,15 @@ import localforage from 'localforage';
 import { log } from '@dxos/log';
 import { type Text } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { FileSystemCapabilities } from '#types';
 
+import { FileSystemNamespace } from '../../namespace.ts';
 import { refreshWorkspace } from '../../util.ts';
 import type { DirectoryWatcher } from './directory-watcher.ts';
 import type { MarkdownDocuments } from './markdown-documents.ts';
 import type { MirrorSpaceManager } from './mirror-space-manager.ts';
 
-const STORAGE_KEY = `${meta.profile.key}.workspaces`;
+const STORAGE_KEY = `${FileSystemNamespace.key}.workspaces`;
 
 /** Load workspace list from local storage, returning an empty array on failure. */
 export const loadPersistedWorkspaces = (): Effect.Effect<FileSystemCapabilities.FileSystemWorkspace[]> =>

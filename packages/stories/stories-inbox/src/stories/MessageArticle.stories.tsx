@@ -36,7 +36,7 @@ const meta = {
   render: DefaultStory,
   decorators: createStoryDecorators<StoryArgs>(({ args: { length = 8 } }) => ({
     types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
-    plugins: [InboxPlugin(), PreviewPlugin.make(), StoryModulesPlugin()],
+    plugins: [InboxPlugin.make(), PreviewPlugin.make(), StoryModulesPlugin()],
     onInit: async ({ space }) => {
       // Thread pool of size 1 assigns every seeded message the same threadId — a single
       // conversation of exactly `length` messages, oldest to newest.

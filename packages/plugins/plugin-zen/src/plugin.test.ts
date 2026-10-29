@@ -7,17 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ZenPlugin } from '#plugin';
+import * as ZenPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), ZenPlugin()] });
+import { ZenNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), ZenPlugin.make()] });
+
+const moduleId = (name: string) => `${ZenNamespace.key}.module.${name}`;
 
 describe('ZenPlugin', () => {
   test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ZenPlugin()],
+      plugins: [ClientPlugin.make({}), ZenPlugin.make()],
     });
 
     // Modules expected to be active after a normal startup.

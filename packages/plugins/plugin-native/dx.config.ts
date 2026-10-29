@@ -2,12 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { NativeNamespace } from './src/namespace.ts';
+import * as NativeCapabilities from './src/types/NativeCapabilities.ts';
+import * as NativeEvents from './src/types/NativeEvents.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.native',
+    key: NativeNamespace.key,
     name: 'App',
     author: 'DXOS',
     description: trim`
@@ -29,4 +40,56 @@ export default Config2.make({
     icon: { key: 'ph--app-window--regular' },
     tags: ['system'],
   },
+  modules: [
+    Capability.lazyModule(
+      'ExitGuard',
+      { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
+      () => import('./src/capabilities/exit-guard.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      activatesOn: ActivationEvents.Idle,
+      provides: [NativeCapabilities.Settings],
+    }),
+    // Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
+    // require once during startup, so the sidecar resolver contributed in a later round is invisible to
+    // it and every `built-in` model fails to resolve. Activation stays cheap — it builds the manager and
+    // a lazy layer; the sidecar process spawns on first use, not here.
+    Capability.lazyModule(
+      'Ollama',
+      {
+        requires: [Capabilities.AtomRegistry],
+        provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.OllamaManager],
+        activatesOn: ActivationEvents.Startup,
+      },
+      () => import('./src/capabilities/ollama.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.pluginAsset({
+      pluginId: NativeNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: ['org.dxos.role.article'],
+    }),
+    Capability.lazyModule(
+      'SpotlightListener',
+      { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
+      () => import('./src/capabilities/spotlight-listener.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    Capability.lazyModule(
+      'Updater',
+      {
+        requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker],
+        provides: [NativeCapabilities.UpdateManager],
+        activatesOn: NativeEvents.Start,
+      },
+      () => import('./src/capabilities/updater.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

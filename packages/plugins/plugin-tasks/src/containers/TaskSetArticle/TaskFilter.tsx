@@ -11,8 +11,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { TasksNamespace } from '../../namespace.ts';
 import { TaskStatusFilter } from './TaskStatusFilter.tsx';
 
 export type TaskFilterProps = PropsWithChildren<{
@@ -43,7 +42,7 @@ export const TaskFilter = ({
   editorRef,
   children,
 }: TaskFilterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   return (
     <>
       <QueryEditor

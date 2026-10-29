@@ -667,15 +667,15 @@ const meta = {
       }
     },
     plugins: [
-      SpacePlugin({}),
-      InboxPlugin(),
+      SpacePlugin.make({}),
+      InboxPlugin.make(),
       BrainPlugin.make(),
       ConnectorPlugin.make(),
       CrmPlugin.make(),
       MarkdownPlugin.make(),
       PreviewPlugin.make(),
       ProgressPlugin.make(),
-      TripPlugin(),
+      TripPlugin.make(),
       // Both provide the `AiService` LayerSpec, so exactly one is registered per variant: the trip
       // seed needs the canned flight payloads; every other variant targets local Ollama.
       args.seed === 'trip' ? StoryTripAiPlugin() : StoryAiPlugin({ ai: 'ollama' }),

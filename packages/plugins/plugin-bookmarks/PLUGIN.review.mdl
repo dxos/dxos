@@ -37,7 +37,7 @@ verdict Bookmark: The ECHO type has every field the spec lists, with summary as 
 ```mdl
 verdict F-1.1: The schema capability registers Bookmark (and Text) with the schema module.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/index.ts#Schema, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/schema.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/dx.config.ts, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/schema.ts]
   note: No test activates the plugin and checks the registered schema.
 ```
 
@@ -74,7 +74,7 @@ verdict F-2.2: A snapshot with no hints and no selection still yields a Bookmark
 ```mdl
 verdict F-3.1: The "Add bookmark" page action is contributed, but with an extra `picker` context.
   status: diverged
-  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/page-action.ts, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/index.ts#PageActionProvider]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/page-action.ts, github:dxos/dxos/packages/plugins/plugin-bookmarks/dx.config.ts]
   note: |
     URL patterns, the `snapshot` extractor and the `AddFromSnapshot` operation match. `contexts` is
     `['popup', 'page', 'picker']`, where the spec lists only popup and page. No test checks the contribution

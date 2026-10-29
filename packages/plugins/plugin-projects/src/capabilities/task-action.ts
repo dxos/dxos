@@ -13,8 +13,10 @@ import { Ref } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 
-import { MOVE_TASK_DIALOG, meta } from '#meta';
 import { ProjectOperation } from '#types';
+
+import { MOVE_TASK_DIALOG } from '../constants.ts';
+import { ProjectsNamespace } from '../namespace.ts';
 
 const ASSIGN_GROUP = 'assign';
 
@@ -22,7 +24,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const module = (yield* Capability.CurrentModuleId) ?? meta.profile.key;
+    const module = (yield* Capability.CurrentModuleId) ?? ProjectsNamespace.key;
 
     // Contributed here rather than returned, so the menu keeps one order — the default assign, each
     // agent, then the rest — while agents come and go with the plugins that bring them.

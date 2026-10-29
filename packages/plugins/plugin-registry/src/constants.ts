@@ -4,7 +4,7 @@
 
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
+import { RegistryNamespace } from './namespace.ts';
 
 /** Cascade-disable confirmation dialog surface id. */
-export const DISABLE_DEPENDENTS_DIALOG = DXN.make(`${meta.profile.key}.disableDependentsDialog`);
+export const DISABLE_DEPENDENTS_DIALOG = DXN.make(`${RegistryNamespace.key}.disableDependentsDialog`);

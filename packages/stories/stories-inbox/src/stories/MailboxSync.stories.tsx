@@ -100,8 +100,8 @@ const DECORATORS = [
             }
           }),
       }),
-      SpacePlugin({}),
-      InboxPlugin(),
+      SpacePlugin.make({}),
+      InboxPlugin.make(),
       ConnectorPlugin.make(),
       DebugPlugin.make({}),
       // `Mailbox` resolves its connector-auth providers from the registry, so without one registered

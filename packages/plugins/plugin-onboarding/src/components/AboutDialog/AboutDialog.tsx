@@ -14,7 +14,7 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '../../meta.ts';
+import { OnboardingNamespace } from '../../namespace.ts';
 
 // Keyed by edge host, including legacy names still present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {
@@ -44,7 +44,7 @@ const parseUrl = (url: string): URL | undefined => {
 };
 
 export const AboutDialog = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(OnboardingNamespace.key);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 

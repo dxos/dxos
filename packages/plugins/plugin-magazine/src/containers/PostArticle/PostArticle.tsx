@@ -16,9 +16,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
-import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
 
+import { MagazineNamespace } from '../../namespace.ts';
 import { PostToolbar } from './PostToolbar.tsx';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
@@ -114,7 +114,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
       await invokePromise(
         FeedOperation.LoadPostContent,
         { post: Ref.make(subject), force: true },
-        { notify: { error: ['refresh-content-error.message', { ns: meta.profile.key }] } },
+        { notify: { error: ['refresh-content-error.message', { ns: MagazineNamespace.key }] } },
       );
     } finally {
       registry.set(refreshingAtom, false);

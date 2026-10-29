@@ -16,8 +16,8 @@ import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
 import * as Card from '@dxos/react-ui/Card';
 import { Cell, ModuleContainer, type ResolvedCellProps, createStoryDecorators } from '@dxos/storybook-testing';
 
+import * as CanvasPlugin from '#meta';
 import { createCanvas, nodeKey, rootOf } from '#model';
-import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
 // Dispatched through the illustrator's card surface, as a stack or popover shows it, so the story covers the variant
@@ -46,7 +46,7 @@ const meta: Meta<typeof ModuleContainer> = {
   render: ModuleContainer,
   decorators: createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
       const canvas = space.db.add(createCanvas());
       const root = rootOf(canvas.content);

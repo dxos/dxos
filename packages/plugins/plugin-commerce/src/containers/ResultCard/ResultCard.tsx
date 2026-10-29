@@ -11,8 +11,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { CommerceNamespace } from '../../namespace.ts';
 import { type Result } from '../../types/Result.ts';
 
 export type ResultCardProps = {
@@ -34,7 +33,7 @@ export type ResultCardProps = {
  */
 export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, starred = false, onToggleStar, classNames, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(CommerceNamespace.key);
     // Subscribe so the card re-renders when the result (or its image) loads.
     const [result] = useObject(subject);
     const imageUrl = result.images?.[0];
