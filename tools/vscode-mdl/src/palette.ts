@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Block-type hues of the CodeMirror extension (`packages/reflect/deus/src/extension/fences.ts`), Tailwind 400. */
+/** Block-type hues of the CodeMirror extension (`packages/reflect/deus/src/extension/fences.ts`), Tailwind 400 (question 300). */
 export const BLOCK_TYPE_COLORS = {
   ext: '#a78bfa',
   type: '#60a5fa',
@@ -16,6 +16,7 @@ export const BLOCK_TYPE_COLORS = {
   module: '#818cf8',
   suite: '#a3e635',
   decision: '#fbbf24',
+  question: '#fdba74',
 } as const;
 
 /**

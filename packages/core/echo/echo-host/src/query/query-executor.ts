@@ -46,6 +46,7 @@ import {
   type QueueRef,
   type QueueWindow,
   type ReverseRef,
+  queueBranchesOf,
 } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
@@ -171,6 +172,12 @@ type QueryItem = {
   result?: QueryService.QueryResult;
 
   recordId?: number;
+
+  /**
+   * The place of the item on a walk, which the natural order of a walk scope sorts by: the index of its
+   * first block on the path read forward, so a descending order gives the backward walk.
+   */
+  walkIndex?: number;
 
   backing?: { heads: readonly string[]; json: string };
 
@@ -1205,8 +1212,9 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * Of the feeds the plan scopes to — by name, or as every feed of a space — those whose indexing is
-   * disabled, keyed by feed id, and the retention cutoff of the named ones with a `maxAge`, keyed
+   * Of the feeds the plan scopes to — by name, or as every feed of a space — those read from the store,
+   * keyed by feed id: indexing disabled, or named with a branch other than main while the index holds
+   * only the main branch. Also the retention cutoff of the named ones with a `maxAge`, keyed
    * `<spaceId>/<feedId>`.
    */
   async #readScopedFeeds(
@@ -1215,7 +1223,7 @@ export class QueryExecutor extends Resource {
     const storeFeeds = new Map<string, StoreFeed>();
     const feedCutoffs = new Map<string, number>();
     const feedStore = this.#feedStore;
-    const feedRefs = extractQueueRefs(extractFeedUris(this.#uncompiledPlan)) ?? [];
+    const feedRefs = extractQueueRefs(extractFeedScopes(this.#uncompiledPlan)) ?? [];
     if (!feedStore || (feedRefs.length === 0 && this.#allFeedsSpaces.size === 0)) {
       return { storeFeeds, feedCutoffs };
     }
@@ -1229,7 +1237,14 @@ export class QueryExecutor extends Resource {
         storeFeeds.set(feedId, { spaceId, feedNamespace });
       }
     };
+    // A walk reads the branch tree of the store, which the index does not hold.
+    const walkRefs = extractQueueRefs(extractFeedScopes(this.#uncompiledPlan).filter((scope) => scope.walk)) ?? [];
     for (const spaceId of spaceIds) {
+      for (const ref of walkRefs) {
+        if (ref.spaceId === spaceId && !storeFeeds.has(ref.queueId)) {
+          await addStoreFeed(spaceId, ref.queueId);
+        }
+      }
       const options = await this.#listFeedOptions(spaceId);
       if (this.#allFeedsSpaces.has(spaceId)) {
         for (const [feedId, feedOptions] of options) {
@@ -1243,10 +1258,14 @@ export class QueryExecutor extends Resource {
         if (maxAge !== undefined) {
           feedCutoffs.set(`${spaceId}/${ref.queueId}`, now - maxAge);
         }
+        // A feed indexing only its main branch has no rows for any other, so reading one is a store read.
+        const feedOptions = options.get(ref.queueId);
         if (
           ref.spaceId === spaceId &&
           !storeFeeds.has(ref.queueId) &&
-          options.get(ref.queueId)?.indexing?.enabled === false
+          (feedOptions?.indexing?.enabled === false ||
+            (feedOptions?.indexing?.mode !== 'all' &&
+              (ref.branches === undefined || ref.branches.some((branch) => branch !== null))))
         ) {
           await addStoreFeed(spaceId, ref.queueId);
         }
@@ -1332,9 +1351,99 @@ export class QueryExecutor extends Resource {
           position: block.position,
         });
       }
-      items.push(...byId.values());
+      items.push(...[...byId.values()].filter((item) => item.data !== null && isOnBranches(item.data, ref.branches)));
     }
     return items;
+  }
+
+  /**
+   * The items of a walk of one feed after the cursor of `range`, in walk order, each once at the place of its
+   * first block on the walk and with the content of its latest one [D-69]. The direction is the natural order
+   * the query asks for.
+   */
+  async #walkFeed(scope: QueryAST.FeedScope, range: QueryPlan.SelectStep['feedCursorRange']): Promise<QueryItem[]> {
+    const feedStore = this.#feedStore;
+    const ref = extractQueueRefs([scope])?.[0];
+    const feed = ref === undefined ? undefined : this.#storeFeeds.get(ref.queueId);
+    if (!feedStore || ref === undefined || feed === undefined) {
+      return [];
+    }
+    if (range?.end !== undefined || range?.positions === 'edge') {
+      throw new QueryError({
+        message: 'A walk starts after a local cursor and has no end cursor.',
+        context: { query: null },
+      });
+    }
+    const direction = walkDirection(this.#uncompiledPlan);
+    const cursor = range?.begin ? parseLocalCursor(range.begin) : undefined;
+    // The whole path, read forward: an item's place is its first block, which may lie before the cursor.
+    const branch = scope.walk?.branch !== undefined ? scope.walk.branch : direction === 'desc' ? cursor?.branch : null;
+    const blocks = await this._runInRuntime(
+      feedStore.walk({
+        spaceId: feed.spaceId,
+        feedNamespace: feed.feedNamespace,
+        feedId: ref.queueId,
+        ...(branch !== undefined ? { branch } : {}),
+        direction: 'asc',
+        forks: scope.walk?.forks === true,
+      }),
+    );
+
+    // Each item once: placed at its first block, with the content of its latest one.
+    const items = new Map<string, { first: number; last: number; data: Obj.JSON | null }>();
+    const blockItems: (string | undefined)[] = [];
+    blocks.forEach((block, index) => {
+      const data = EchoFeedCodec.decodeBlock(block);
+      const id = typeof data.id === 'string' ? data.id : undefined;
+      blockItems.push(id);
+      if (id === undefined) {
+        return;
+      }
+      const previous = items.get(id);
+      // A partial block (a removal tombstone) keeps the body of the block before it, as the index does.
+      const merged = data[ATTR_TYPE] === undefined && previous?.data ? { ...previous.data, ...data } : data;
+      items.set(id, { first: previous?.first ?? index, last: index, data: isObjectJSON(merged) ? merged : null });
+    });
+
+    // A cursor names the latest block of an item, so the walk resumes after the place of that item.
+    let after: number | undefined;
+    if (cursor !== undefined) {
+      const cursorIndex = blocks.findIndex(
+        (block) => EchoFeedCodec.blockId(block.actorId, block.sequence) === cursor.block,
+      );
+      const cursorItem = cursorIndex === -1 ? undefined : blockItems[cursorIndex];
+      after = cursorItem === undefined ? undefined : items.get(cursorItem)?.first;
+      if (after === undefined) {
+        return [];
+      }
+    }
+
+    const sign = direction === 'desc' ? -1 : 1;
+    return [...items.entries()]
+      .filter(([, { first }]) => after === undefined || sign * (first - after) > 0)
+      .sort(([, left], [, right]) => sign * (left.first - right.first))
+      .flatMap(([objectId, { first, last, data }]): QueryItem[] => {
+        if (data === null || !EntityId.isValid(objectId)) {
+          return [];
+        }
+        const block = blocks[last];
+        return [
+          {
+            objectId: EntityId.make(objectId),
+            spaceId: feed.spaceId,
+            queueId: ref.queueId,
+            queueNamespace: feed.feedNamespace,
+            documentId: null,
+            doc: null,
+            data,
+            rank: 1,
+            createdAt: blocks[first].timestamp,
+            updatedAt: block.timestamp,
+            position: block.position,
+            walkIndex: first,
+          },
+        ];
+      });
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
@@ -1412,9 +1521,7 @@ export class QueryExecutor extends Resource {
 
     const execSpaceScopes = step.scope.filter((s): s is QueryAST.SpaceScope => s._tag === 'space');
     const spaces = execSpaceScopes.map((s) => s.spaceId as SpaceId);
-    const scopedQueues = step.scope
-      .filter((s): s is QueryAST.FeedScope => s._tag === 'feed')
-      .map((s) => String(s.feedUri));
+    const scopedQueues = step.scope.filter((s): s is QueryAST.FeedScope => s._tag === 'feed');
     const allQueuesFromSpaces = execSpaceScopes.some((s) => s.includeAllFeeds === true);
 
     const trace: ExecutionTrace = {
@@ -1424,22 +1531,38 @@ export class QueryExecutor extends Resource {
       beginTs: performance.now(),
     };
 
+    const walkScopes = scopedQueues.filter((scope) => scope.walk !== undefined);
+    if (walkScopes.length > 0) {
+      if (scopedQueues.length > 1 || execSpaceScopes.length > 0) {
+        throw new QueryError({ message: 'A walk reads one feed scope alone.', context: { query: null } });
+      }
+      const walked = await this.#walkFeed(walkScopes[0], step.feedCursorRange);
+      // The walk itself is the window, so the selector applies without the cursor range the walk consumed.
+      const selected = selectStoreItems({ ...step, feedCursorRange: undefined, feedScan: undefined }, walked);
+      workingSet.push(...(step.limit === undefined ? selected : selected.slice(0, step.limit)));
+      trace.documentsLoaded += walked.length;
+      trace.objectCount = workingSet.length;
+      return { workingSet, trace };
+    }
+
     // A feed with indexing disabled has no index rows, so its items come from the store, selected here.
-    const isStoreFeed = (feedUri: string) => {
-      const ref = extractQueueRefs([feedUri])?.[0];
+    const isStoreFeed = (scope: QueryAST.FeedScope) => {
+      const ref = extractQueueRefs([scope])?.[0];
       return ref !== undefined && this.#storeFeeds.has(ref.queueId);
     };
     const allFeedsSpaces = new Set(execSpaceScopes.flatMap((s) => (s.includeAllFeeds === true ? [s.spaceId] : [])));
     const storeRefs = new Map<string, QueueRef>([
       ...[...this.#storeFeeds]
         .filter(([, feed]) => allFeedsSpaces.has(feed.spaceId))
-        .map(([queueId, feed]): [string, QueueRef] => [queueId, { queueId, spaceId: feed.spaceId }]),
-      ...(extractQueueRefs(scopedQueues.filter(isStoreFeed)) ?? []).map((ref): [string, QueueRef] => [
-        ref.queueId,
-        ref,
-      ]),
+        // A read of every feed is a default read, so it covers only the main branch.
+        .map(([queueId, feed]): [string, QueueRef] => [queueId, { queueId, spaceId: feed.spaceId, branches: [null] }]),
     ]);
-    const queues = scopedQueues.filter((feedUri) => !isStoreFeed(feedUri));
+    // Several scopes of one feed read it once, over the union of their branches.
+    for (const ref of extractQueueRefs(scopedQueues.filter(isStoreFeed)) ?? []) {
+      const previous = storeRefs.get(ref.queueId);
+      storeRefs.set(ref.queueId, previous === undefined ? ref : { ...ref, branches: unionBranches(previous, ref) });
+    }
+    const queues = scopedQueues.filter((scope) => !isStoreFeed(scope));
     if (storeRefs.size > 0) {
       const storeItems = selectStoreItems(step, await this.#readStoreFeedItems([...storeRefs.values()]));
       workingSet.push(...storeItems);
@@ -1497,15 +1620,15 @@ export class QueryExecutor extends Resource {
         }
 
         const items = await Promise.all(
-          step.selector.objectIds.map((id) => {
+          step.selector.objectIds.map(async (id) => {
             if (!EntityId.isValid(id)) {
               return null;
             }
             if (queues.length > 0) {
-              const spaceId = extractSpaceIdFromQueue(queues[0]);
-              const queueId = extractQueueRefs([queues[0]])?.[0]?.queueId;
-              if (spaceId && queueId) {
-                return this._loadQueueItemById(spaceId, queueId, id);
+              const ref = extractQueueRefs([queues[0]])?.[0];
+              if (ref?.spaceId !== undefined && SpaceId.isValid(ref.spaceId) && EntityId.isValid(ref.queueId)) {
+                const item = await this._loadQueueItemById(ref.spaceId, ref.queueId, id);
+                return item?.data && isOnBranches(item.data, ref.branches) ? item : null;
               }
               return null;
             } else if (spaces.length > 0) {
@@ -1702,9 +1825,9 @@ export class QueryExecutor extends Resource {
               return true;
             }
             if (item.queueId) {
-              return queues.some((queueRef) => {
-                const queueId = extractQueueRefs([queueRef])?.[0]?.queueId;
-                const spaceId = extractSpaceIdFromQueue(queueRef);
+              return queues.some((scope) => {
+                const queueId = extractQueueRefs([scope])?.[0]?.queueId;
+                const spaceId = extractSpaceIdFromQueue(String(scope.feedUri));
                 return queueId === item.queueId && spaceId === item.spaceId;
               });
             }
@@ -2395,6 +2518,10 @@ export class QueryExecutor extends Resource {
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
+        if (a.walkIndex !== undefined && b.walkIndex !== undefined) {
+          const comparison = a.walkIndex - b.walkIndex;
+          return order.direction === 'desc' ? -comparison : comparison;
+        }
         // Code-unit order, not `localeCompare`: the feed scan pushes this ordering into SQLite's
         // `ORDER BY objectId`, which collates BINARY, and an entity id may be lower-case (the
         // format check is case-insensitive). Under a locale collation the two would disagree on a
@@ -2826,8 +2953,9 @@ export class QueryExecutor extends Resource {
       log.warn('no space state found for', { spaceId });
       return null;
     }
-    const dbDirectory = spaceRoot.doc();
-    if (!dbDirectory) {
+    const dbDirectory = spaceRoot.directory();
+    const directoryHeads = spaceRoot.heads();
+    if (!dbDirectory || !directoryHeads) {
       log.warn('no space state found for', { spaceId });
       return null;
     }
@@ -2848,7 +2976,7 @@ export class QueryExecutor extends Resource {
         // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
         createdAt: null,
         updatedAt: null,
-        heads: A.getHeads(dbDirectory),
+        heads: directoryHeads,
       };
     }
 
@@ -3057,20 +3185,30 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
 const isObjectJSON = (value: Record<string, unknown>): value is Obj.JSON =>
   typeof value.id === 'string' && EntityId.isValid(value.id);
 
-/** Every feed URI any select step of the plan (subplans included) scopes to. */
-const extractFeedUris = (plan: QueryPlan.Plan): string[] =>
+/** Every feed scope any select step of the plan (subplans included) names. */
+const extractFeedScopes = (plan: QueryPlan.Plan): QueryAST.FeedScope[] =>
   plan.steps.flatMap((step) => {
     switch (step._tag) {
       case 'SelectStep':
-        return step.scope.flatMap((scope) => (scope._tag === 'feed' ? [String(scope.feedUri)] : []));
+        return step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
       case 'UnionStep':
-        return step.plans.flatMap(extractFeedUris);
+        return step.plans.flatMap(extractFeedScopes);
       case 'SetDifferenceStep':
-        return [...extractFeedUris(step.source), ...extractFeedUris(step.exclude)];
+        return [...extractFeedScopes(step.source), ...extractFeedScopes(step.exclude)];
       default:
         return [];
     }
   });
+
+/** Whether a feed item is a member of one of `branches` (`null` is main); absent admits every branch. */
+const isOnBranches = (data: Record<string, unknown>, branches: QueueRef['branches']): boolean =>
+  branches === undefined || branches.includes(EchoFeedCodec.branchOf(data) ?? null);
+
+/** The branches two scopes of one feed read together; either reading every branch reads them all. */
+const unionBranches = (left: QueueRef, right: QueueRef): QueueRef['branches'] =>
+  left.branches === undefined || right.branches === undefined
+    ? undefined
+    : [...new Set([...left.branches, ...right.branches])];
 
 /**
  * The store-read feed items a select step picks, as the index would have answered it: by selector,
@@ -3181,6 +3319,30 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
   };
 };
 
+/** The block id a local cursor (`<branch>|<block>`) resumes after; the start sentinel `''` names none. */
+/** A local cursor is `<branch>|<block id>`, with an empty branch for the root. */
+const parseLocalCursor = (cursor: string): { branch: string | null; block: string } => {
+  const separator = cursor.indexOf('|');
+  const branch = cursor.slice(0, separator);
+  return { branch: branch === '' ? null : branch, block: cursor.slice(separator + 1) };
+};
+
+/**
+ * The direction of a walk: the natural order the plan asks for, ascending when it asks for none. A
+ * walk has no other order, since its natural order is the walk itself.
+ */
+const walkDirection = (plan: QueryPlan.Plan): 'asc' | 'desc' => {
+  const orders = plan.steps.flatMap((step) => (step._tag === 'OrderStep' ? step.order : []));
+  const unsupported = orders.find((order) => order.kind !== 'natural');
+  if (unsupported !== undefined) {
+    throw new QueryError({
+      message: `A walk accepts only the natural order, not the ${unsupported.kind} order.`,
+      context: { query: null, order: unsupported.kind },
+    });
+  }
+  return orders[0]?.kind === 'natural' ? orders[0].direction : 'asc';
+};
+
 /** A cursor's position, or `unsatisfiable` when it does not name one. */
 const parseCursor = (cursor: string, unsatisfiable: number): number => {
   const position = /^\d+$/.test(cursor) ? Number(cursor) : Number.NaN;
@@ -3192,13 +3354,13 @@ const parseCursor = (cursor: string, unsatisfiable: number): number => {
  * seek cannot cross spaces — a queue id is unique only within its own. An unqualified URI
  * (`echo:///<id>`) names no space, and matches on its id alone.
  */
-const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
+const extractQueueRefs = (queues: readonly QueryAST.FeedScope[]): QueueRef[] | null => {
   if (queues.length === 0) {
     return null;
   }
   return queues
-    .map((feedUri): QueueRef | undefined => {
-      const echoUri = EID.tryParse(feedUri);
+    .map((scope): QueueRef | undefined => {
+      const echoUri = EID.tryParse(String(scope.feedUri));
       if (!echoUri) {
         return undefined;
       }
@@ -3207,7 +3369,11 @@ const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
         return undefined;
       }
       const spaceId = EID.getSpaceId(echoUri);
-      return spaceId !== undefined ? { queueId, spaceId } : { queueId };
+      return {
+        queueId,
+        ...(spaceId !== undefined ? { spaceId } : {}),
+        ...queueBranchesOf(scope.branches),
+      };
     })
     .filter(isNonNullable);
 };

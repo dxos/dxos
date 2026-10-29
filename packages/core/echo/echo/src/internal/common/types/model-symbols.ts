@@ -51,6 +51,13 @@ export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
 export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');
 
 /**
+ * Hidden, non-reactive feed block keys of a live feed object this client wrote: what a read of its
+ * latest block would stamp in `@meta.keys`, set when the store confirms the write. Read via the `Feed`
+ * block getters, which prefer it to `@meta.keys`.
+ */
+export const FeedBlockKeysId = Symbol.for('@dxos/echo/FeedBlockKeys');
+
+/**
  * Branch accessor symbol. Resolves to the branch name this object instance is bound to (`'main'` for
  * the canonical object, or the branch of a `db.branch()` independent instance). Read via `Obj.getBranch`.
  */
