@@ -57,6 +57,7 @@ import {
   classedNode,
   commonSchema,
   elementLayer,
+  flipLink,
   mergeValues,
   patchValues,
   portsPerSideOf,
@@ -73,7 +74,7 @@ import { FontField, FontSizeField } from './FontField.tsx';
 import { FrameField } from './FrameField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
-import { MarkerField } from './MarkerField.tsx';
+import { FlipLinksContext, MarkerField } from './MarkerField.tsx';
 import { PolygonFitField } from './PolygonFitField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
@@ -322,6 +323,18 @@ export const PropertiesInspector = ({
     [projection, elements, nodes, styles, styleMap, layers, registry],
   );
 
+  // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
+  const links = useMemo(() => elements.filter(isLink), [elements]);
+  const onFlip = useCallback(() => {
+    projection.apply({
+      kind: 'batch',
+      intents: links.map((link) => ({ kind: 'update' as const, id: link.id, values: flipLink(link) })),
+    });
+    // A spline's control points run the other way after a flip, so a selected point's index names another one.
+    registry.set(atoms.point, undefined);
+  }, [projection, links, registry, atoms.point]);
+  const flip = !readonly && links.length > 0 && links.length === elements.length ? onFlip : undefined;
+
   // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for
   // every kind: its fill rows only when every element is a node, since a link has a colour but no fill.
   const fieldMap = useMemo(
@@ -347,31 +360,33 @@ export const PropertiesInspector = ({
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
       {schema && (
-        <LayersContext.Provider value={layers}>
-          <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
-            <ViewOptionsContext.Provider value={viewOptions ?? []}>
-              <Form.Root
-                key={[...selection].join()}
-                schema={schema}
-                values={values}
-                fieldOverrides={fieldOverrides}
-                fieldMap={fieldMap}
-                db={db}
-                getOptions={getOptions}
-                readonly={readonly}
-                autoSave
-                onSave={onSave}
-              >
-                {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
-                <Form.Viewport scroll={false}>
-                  <Form.Content>
-                    <Form.Fields exclude={HIDDEN} sort={fieldOrder} />
-                  </Form.Content>
-                </Form.Viewport>
-              </Form.Root>
-            </ViewOptionsContext.Provider>
-          </StyleClassesContext.Provider>
-        </LayersContext.Provider>
+        <FlipLinksContext.Provider value={flip}>
+          <LayersContext.Provider value={layers}>
+            <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
+              <ViewOptionsContext.Provider value={viewOptions ?? []}>
+                <Form.Root
+                  key={[...selection].join()}
+                  schema={schema}
+                  values={values}
+                  fieldOverrides={fieldOverrides}
+                  fieldMap={fieldMap}
+                  db={db}
+                  getOptions={getOptions}
+                  readonly={readonly}
+                  autoSave
+                  onSave={onSave}
+                >
+                  {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
+                  <Form.Viewport scroll={false}>
+                    <Form.Content>
+                      <Form.Fields exclude={HIDDEN} sort={fieldOrder} />
+                    </Form.Content>
+                  </Form.Viewport>
+                </Form.Root>
+              </ViewOptionsContext.Provider>
+            </StyleClassesContext.Provider>
+          </LayersContext.Provider>
+        </FlipLinksContext.Provider>
       )}
       {summary && (
         <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>
