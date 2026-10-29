@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { afterEach, describe, test } from 'vitest';
 
 import { DXN, Obj, Type } from '@dxos/echo';
 import * as Position from '@dxos/util/Position';
@@ -72,6 +72,45 @@ describe('matchers', () => {
   test('a type matcher accepts its own type and nothing else', ({ expect }) => {
     expect(Tour.whenType(Widget)(Obj.make(Widget, { name: 'x' }))).toBe(true);
     expect(Tour.whenType(Widget)({ typename: 'org.dxos.type.document' })).toBe(false);
+  });
+});
+
+describe('toolbarStep', () => {
+  const step = Tour.toolbarStep('editor.toolbar.viewMode', { title: 'Modes', description: 'Switch mode.' });
+
+  const stubToolbarDocument = ({ at, expanded = false }: { at: 'row' | 'menu' | 'nowhere'; expanded?: boolean }) => {
+    const clicks: string[] = [];
+    const overflow = {
+      getAttribute: (name: string) => (name === 'aria-expanded' ? String(expanded) : null),
+      click: () => clicks.push('overflow'),
+    };
+    const control = at === 'nowhere' ? null : { closest: (selector: string) => (at === 'menu' ? overflow : null) };
+    (globalThis as any).document = {
+      querySelector: (selector: string) => (selector.includes('toolbar.overflow') ? overflow : control),
+    };
+    return clicks;
+  };
+
+  afterEach(() => {
+    delete (globalThis as any).document;
+  });
+
+  test('opens the menu when the toolbar has folded the control away', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'nowhere' });
+    await step.before?.(null as any);
+    expect(clicks).toEqual(['overflow']);
+  });
+
+  test('leaves the menu open when the control is in it', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'menu', expanded: true });
+    await step.before?.(null as any);
+    expect(clicks).toEqual([]);
+  });
+
+  test('closes a menu an earlier step opened over the control', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'row', expanded: true });
+    await step.before?.(null as any);
+    expect(clicks).toEqual(['overflow']);
   });
 });
 

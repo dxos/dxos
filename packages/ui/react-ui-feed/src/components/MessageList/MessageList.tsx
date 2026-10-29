@@ -381,16 +381,24 @@ const MessageListRoot = ({
   // Per-message revision, bumped when the model says a message changed in place: a streamed message
   // keeps its identity, so a memoized row cannot tell it changed from the message alone.
   const revisions = useRef(new Map<string, number>());
+  // The context republishes only when a value it carries changes, so the viewport (and the rows it
+  // passes revisions to) re-renders on an in-place change only if `revisionOf` changes with it.
+  const [revisionsVersion, setRevisionsVersion] = useState(0);
   useEffect(
     () =>
       model.subscribe(({ updated }) => {
-        for (const id of updated ?? []) {
+        if (!updated?.length) {
+          return;
+        }
+        for (const id of updated) {
           revisions.current.set(id, (revisions.current.get(id) ?? 0) + 1);
         }
+        setRevisionsVersion((version) => version + 1);
       }),
     [model],
   );
-  const revisionOf = useCallback((id: string) => revisions.current.get(id) ?? 0, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const revisionOf = useCallback((id: string) => revisions.current.get(id) ?? 0, [revisionsVersion]);
 
   // The follow is an aspect the host composes, not part of the window (SPEC §Aspects) — the intent,
   // its withdrawal by a backwards scroll, and the glide all live there.
@@ -719,24 +727,29 @@ type MessageListRowProps = {
  * One mounted row. Memoized because the window re-renders on every scroll event and after every
  * measurement, and nothing in a row depends on where the window is — only on its own props.
  */
-const MessageListRow = memo(({ message, index, empty, selected, gutter, Chrome, onSelect }: MessageListRowProps) => (
-  // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
-  // in the browser, in the same frame; placing each row ourselves meant re-placing every row
-  // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
-  <div data-object-id={message.id} {...windowRowProps(index, message.id)}>
-    {!empty && (
-      <Layout.Container gutter={gutter}>
-        {/* The widgets' query container: it must be an element whose width is definite, since
+const MessageListRow = memo(({ message, index, empty, selected, gutter, Chrome, onSelect }: MessageListRowProps) => {
+  // Opted out of the React Compiler: `memo` already re-renders this row when its revision changes,
+  // and a compiled cache of the item element keyed on the message would skip the item anyway.
+  'use no memo';
+  return (
+    // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
+    // in the browser, in the same frame; placing each row ourselves meant re-placing every row
+    // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
+    <div data-object-id={message.id} {...windowRowProps(index, message.id)}>
+      {!empty && (
+        <Layout.Container gutter={gutter}>
+          {/* The widgets' query container: it must be an element whose width is definite, since
             containment stops a descendant's content sizing it (a prompt's bubble collapses). */}
-        <div className='dx-container-type-inline-size'>
-          <Chrome message={message} index={index} selected={selected} onSelect={onSelect}>
-            <MessageListItem message={message} />
-          </Chrome>
-        </div>
-      </Layout.Container>
-    )}
-  </div>
-));
+          <div className='dx-container-type-inline-size'>
+            <Chrome message={message} index={index} selected={selected} onSelect={onSelect}>
+              <MessageListItem message={message} />
+            </Chrome>
+          </div>
+        </Layout.Container>
+      )}
+    </div>
+  );
+});
 
 MessageListRow.displayName = 'MessageList.Row';
 
@@ -755,6 +768,9 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = Util.composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
+  // Opted out of the React Compiler: it would cache `renderer(message)` on the message's identity,
+  // which an in-place change (a streamed chunk, an answered request) keeps.
+  'use no memo';
   const { model, renderer, registry, objectImage, Custom, debug, reportWidgets } =
     useMessageListItemContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);

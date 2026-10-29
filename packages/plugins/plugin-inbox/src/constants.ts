@@ -10,3 +10,6 @@ export const POPOVER_SAVE_FILTER = DXN.make(`${meta.profile.key}.saveFilterPopov
 
 export const MAILBOXES_SECTION_TYPE = `${meta.profile.key}.mailboxes-section`;
 export const MAILBOX_SUBSCRIPTIONS_TYPE = `${meta.profile.key}.subscriptions`;
+
+/** Disposition of the mailbox-wide jobs (sync, analyze) the mailbox toolbar puts in its ⋮ menu. */
+export const MAILBOX_MENU_DISPOSITION = `${meta.profile.key}.mailbox-menu`;

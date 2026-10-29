@@ -13,4 +13,6 @@ export { Shell } from './shell.ts';
 export { ShellManager } from './shell-manager.ts';
 export { type AgentHostingProviderClient, AgentManagerClient } from './agent-hosting-provider.ts';
 export { FakeAgentHostingProvider } from './fake-agent-hosting-provider.ts';
+// Types only: the boot cache itself loads lazily, when a client enables it.
+export type { BootCacheOptions, WorkingSetSource } from './boot-cache/index.ts';
 export * from './dedicated/index.ts';

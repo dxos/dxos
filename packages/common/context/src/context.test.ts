@@ -4,6 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { LogLevel, type LogProcessor, log } from '@dxos/log';
+
 import { Context } from './context.ts';
 
 describe('Context', () => {
@@ -92,18 +94,28 @@ describe('Context', () => {
     expect(order).toEqual([2, 1]);
   });
 
-  test('leak test', async () => {
-    const ctx = new Context();
-
-    ctx.maxSafeDisposeCallbacks = 1;
-
-    ctx.onDispose(() => {});
-
-    const triggerLeak = () => {
-      ctx.onDispose(() => {});
+  test('leak warning names the caller behind a subscription helper, once', ({ onTestFinished }) => {
+    const warnings: { message?: string; callSite?: string }[] = [];
+    const collect: LogProcessor = (_, entry) => {
+      if (entry.level === LogLevel.WARN) {
+        warnings.push({ message: entry.message, callSite: entry.context?.callSite });
+      }
     };
+    onTestFinished(log.addProcessor(collect));
 
-    triggerLeak();
-    triggerLeak();
+    const ctx = new Context();
+    ctx.maxSafeDisposeCallbacks = 1;
+    const subscribe = () => ctx.onDispose(() => {});
+    const keepSubscribing = () => {
+      subscribe();
+      subscribe();
+      subscribe();
+    };
+    keepSubscribing();
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0].message).toContain('large number of dispose callbacks');
+    expect(warnings[0].callSite).toContain('subscribe');
+    expect(warnings[0].callSite).toContain('keepSubscribing');
   });
 });

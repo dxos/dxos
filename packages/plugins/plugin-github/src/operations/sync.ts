@@ -8,6 +8,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Progress from '@dxos/app-toolkit/Progress';
@@ -19,10 +20,11 @@ import * as Binding from '@dxos/plugin-connector/Binding';
 import { Milestone, Organization, Person, PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { GitHubOperation } from '#types';
+import { GitHubCapabilities, GitHubOperation } from '#types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
 import { GitHubRepoInaccessibleError, GitHubRepoUnresolvedError, formatGitHubSyncFailure } from '../errors.ts';
+import { type FileSyncResult, isFileBinding, syncFileBinding } from '../file-sync/sync-files.ts';
 import { GitHubApi } from '../services/index.ts';
 import { ensureRepo, toRepoDescriptor } from './repo.ts';
 
@@ -876,7 +878,9 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
   const snapshot = Cursor.readSnapshot<RepoSnapshot>(binding, externalId);
 
   const hourly = snapshot?.readAt === undefined || now - snapshot.readAt >= REPO_READ_INTERVAL_MS;
-  if (hourly) {
+  // A pending local description edit is merged against a fresh read, or the push could overwrite a newer GitHub edit.
+  const localEdit = snapshot?.description !== undefined && snapshot.description !== (repo.description ?? '');
+  if (hourly || localEdit) {
     const result = yield* GitHubApi.fetchRepoConditional(repo.owner, repo.name, snapshot?.etag).pipe(
       Effect.catchIf(
         (error) => {
@@ -896,8 +900,10 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
     } else if (snapshot) {
       Cursor.writeSnapshot(binding, externalId, { ...snapshot, readAt: now });
     }
-    // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
-    // carries only the milestones its issues name.
+  }
+  // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
+  // carries only the milestones its issues name.
+  if (hourly) {
     const milestones = yield* GitHubApi.fetchRepoMilestones(repo.owner, repo.name);
     requests++;
     for (const milestone of milestones) {
@@ -1162,29 +1168,59 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
   }
 }, Effect.provide(FetchHttpClient.layer));
 
+type BindingOutcome =
+  | { readonly kind: 'items'; readonly items: BindingSyncResult }
+  | { readonly kind: 'files'; readonly files: FileSyncResult };
+
 /** Folds per-binding results into the operation's {@link GitHubOperation.SyncResult}. */
-const foldResults = (results: readonly BindingSyncResult[]): GitHubOperation.SyncResult => ({
-  bindings: results.length,
-  notModified: results.filter((result) => result.notModified).length,
-  requests: results.reduce((total, result) => total + result.requests, 0),
-  pulled: {
-    issues: results.reduce((total, result) => total + result.pulled.issues, 0),
-    pullRequests: results.reduce((total, result) => total + result.pulled.pullRequests, 0),
-  },
-  pushed: {
-    issues: results.reduce((total, result) => total + result.pushed.issues, 0),
-    repos: results.reduce((total, result) => total + result.pushed.repos, 0),
-  },
-});
+const foldResults = (outcomes: readonly BindingOutcome[]): GitHubOperation.SyncResult => {
+  const results = outcomes.flatMap((outcome) => (outcome.kind === 'items' ? [outcome.items] : []));
+  const files = outcomes.flatMap((outcome) => (outcome.kind === 'files' ? [outcome.files] : []));
+  return {
+    bindings: outcomes.length,
+    notModified: results.filter((result) => result.notModified).length,
+    requests:
+      results.reduce((total, result) => total + result.requests, 0) +
+      files.reduce((total, result) => total + result.requests, 0),
+    pulled: {
+      issues: results.reduce((total, result) => total + result.pulled.issues, 0),
+      pullRequests: results.reduce((total, result) => total + result.pulled.pullRequests, 0),
+    },
+    pushed: {
+      issues: results.reduce((total, result) => total + result.pushed.issues, 0),
+      repos: results.reduce((total, result) => total + result.pushed.repos, 0),
+    },
+    ...(files.length > 0
+      ? {
+          files: {
+            pulled: files.reduce((total, result) => total + result.pulled, 0),
+            pushed: files.reduce((total, result) => total + result.pushed, 0),
+            skipped: files.reduce((total, result) => total + result.skipped.length, 0),
+          },
+        }
+      : {}),
+  };
+};
 
 const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositories> =
   GitHubOperation.SyncGitHubRepositories.pipe(
     Operation.withHandler(({ connection, priority }) =>
-      Binding.syncAll({
-        connection,
-        priority,
-        sync: (binding) => syncRepoBinding(binding),
-      }).pipe(Effect.map(({ outputs }) => foldResults(outputs))),
+      Effect.gen(function* () {
+        const mappings = yield* Capability.getAll(GitHubCapabilities.FileMapping);
+        const { outputs } = yield* Binding.syncAll({
+          connection,
+          priority,
+          // A repository's file binding shares its target with the item binding; `options.stream` tells them apart.
+          sync: (binding) =>
+            Effect.gen(function* () {
+              const outcome: BindingOutcome = isFileBinding(binding)
+                ? { kind: 'files', files: yield* syncFileBinding(binding, mappings) }
+                : { kind: 'items', items: yield* syncRepoBinding(binding) };
+              return outcome;
+            }),
+        });
+        return foldResults(outputs);
+      }),
     ),
   );
 

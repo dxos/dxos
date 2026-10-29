@@ -344,7 +344,7 @@ export class IndexEngine {
     this.#activityIndex = new ActivityIndex(sql);
     this.#convergenceKeyIntents = new ConvergenceKeyIntentStore(sql);
     this.#feedOptionsIntents = new FeedOptionsIntentStore(sql);
-    this.#indexedObjectSource = new IndexedObjectSource(sql);
+    this.#indexedObjectSource = new IndexedObjectSource(this.#objectSnapshotIndex);
   }
 
   /** Applies every store's pending migrations; `onProgress` receives the running count applied. */

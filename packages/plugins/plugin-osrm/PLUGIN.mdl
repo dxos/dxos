@@ -90,7 +90,9 @@ Schema with derived interfaces — matching how `BookingSearch.SearchQuery`
 ```mdl
 type RouteProfile
   literals: 'driving'               # room to grow: 'walking' | 'cycling'
+```
 
+```mdl
 type Waypoint
   desc: >
     A stop on the route. Either a resolved Place (geo may be present) or
@@ -99,18 +101,24 @@ type Waypoint
   union:
     - Place                         # plugin-trip Place (may carry geo)
     - string                        # raw city / place name
+```
 
+```mdl
 type RouteQuery
   fields:
     waypoints: Waypoint[]           # ordered; >= 2 required
     profile?: RouteProfile          # default 'driving'
+```
 
+```mdl
 type RouteStep
   desc: A turn / segment within a leg.
   fields:
     name?: string
     ref?: string                    # road reference, e.g. "A4"
+```
 
+```mdl
 type RouteLeg
   desc: A leg between two consecutive route waypoints.
   fields:
@@ -119,7 +127,9 @@ type RouteLeg
     summary?: string                # major roads, e.g. "Pall Mall, The Mall"
     geometry: GeoPoint[]            # decoded polyline ([lon, lat]) for this leg
     steps: RouteStep[]
+```
 
+```mdl
 type Route
   desc: A computed route. `geometry` is the concatenation of its legs' geometry.
   fields:
@@ -127,13 +137,17 @@ type Route
     duration: number                # seconds
     geometry: GeoPoint[]            # computed from legs[].geometry
     legs: RouteLeg[]
+```
 
+```mdl
 type RouteResult
   desc: Service result — geocoded stops plus the route alternatives.
   fields:
     waypoints: Place[]              # geocoded, index-aligned with the query waypoints
     routes: Route[]                 # alternatives (usually one)
+```
 
+```mdl
 type MissingApiKeyError
   desc: >
     Reused convention from BookingSearch — a RoutingService throws this
@@ -249,7 +263,9 @@ type TileProvider
     domain?: string                 # apiKeys[].domain to match; absent for keyless 'osm'
     requiresKey: boolean
     urlTemplate: (key?: string) => string   # Leaflet {z}/{x}/{y} template, key substituted
+```
 
+```mdl
 type Settings (plugin-map, extended)
   desc: Existing map Settings struct gains the selected provider id.
   adds-fields:
@@ -355,7 +371,9 @@ scenario OsrmRoutingService geocoding
     - name-only waypoint → Place with geo populated from first result.
     - Place already carrying geo → not re-geocoded.
     - no result for a name → throws GeocodeError naming the waypoint.
+```
 
+```mdl
 scenario OsrmRoutingService routing
   desc: OSRM route parsing with mocked fetch.
   cases:
@@ -363,7 +381,9 @@ scenario OsrmRoutingService routing
       totals + geometry derived from legs, leg.summary / steps mapped.
     - geometry coords are [lon, lat] (GeoPoint) order.
     - OSRM code !== 'Ok' → throws RouteError.
+```
 
+```mdl
 scenario PlanRoute operation (plugin-trip)
   desc: Operation enriches existing road segments in place. Uses a fake
         in-memory RoutingService registered in plugin-trip/src/testing.
@@ -373,13 +393,17 @@ scenario PlanRoute operation (plugin-trip)
     - non-road segments are left untouched.
     - road segment missing an endpoint is skipped.
     - no RoutingService registered → fails with "No routing service".
+```
 
+```mdl
 scenario tripMarkerProvider polyline (plugin-trip)
   desc: Marker provider emits real geometry.
   cases:
     - road segment with RoadDetails.routes → polyline line geometry emitted.
     - road segment without routes → straight-arc fallback.
+```
 
+```mdl
 scenario buildTileUrl (plugin-map)
   desc: Tile URL construction across providers.
   cases:

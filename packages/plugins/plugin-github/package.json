@@ -95,6 +95,11 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
+    "./TextMerge": {
+      "source": "./src/file-sync/TextMerge.ts",
+      "types": "./dist/types/src/file-sync/TextMerge.d.ts",
+      "import": "./dist/lib/TextMerge.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -130,6 +135,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@automerge/automerge": "catalog:",
     "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
@@ -139,6 +145,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -166,6 +173,7 @@
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-query": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",

@@ -24,6 +24,11 @@
       "types": "./dist/types/src/extension/index.d.ts",
       "import": "./dist/lib/extension.mjs"
     },
+    "./spec-index": {
+      "source": "./src/spec-index/index.ts",
+      "types": "./dist/types/src/spec-index/index.d.ts",
+      "import": "./dist/lib/spec-index.mjs"
+    },
     "./cli": {
       "source": "./src/cli/index.ts",
       "types": "./dist/types/src/cli/index.d.ts",

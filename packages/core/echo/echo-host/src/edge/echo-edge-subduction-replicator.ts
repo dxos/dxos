@@ -534,11 +534,12 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           return;
         }
         // The edge lost the session, not the link: re-running the handshake here keeps the peer id
-        // and every piece of sync state keyed by it.
+        // and every piece of sync state keyed by it. Verbose because the edge recycles an active
+        // space's instance every 15-25 s (DX-1275); the restart fallback below stays at info.
         if (this.#inPlaceRehandshakes < MAX_IN_PLACE_REHANDSHAKES && this._context.onConnectionTransportReset(this)) {
           this.#discardPendingFrames();
           this.#inPlaceRehandshakes++;
-          log.info('received subduction error; re-handshaking in place', {
+          log.verbose('received subduction error; re-handshaking in place', {
             message: payload.message,
             attempt: this.#inPlaceRehandshakes,
           });

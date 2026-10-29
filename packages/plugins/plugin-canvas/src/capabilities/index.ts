@@ -9,6 +9,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
+import { meta } from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
@@ -32,6 +33,12 @@ export const TldrawConverter = Capability.lazyModule(
   },
   () => import('./tldraw-converter.ts'),
 );
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: () => import('../../PLUGIN.mdl?raw'),
+  mimeType: 'application/x-mdl',
+});
 // Migration providers stay eager: a migration missing when a space opens is a data hazard.
 export const Migrations = Capability.lazyModule(
   'CanvasMigrations',

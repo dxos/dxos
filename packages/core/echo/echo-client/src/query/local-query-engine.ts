@@ -429,8 +429,10 @@ export class LocalQueryEngine implements QueryContext {
         this.#membersQueries.set(query, listed);
       }
       const members = views.flatMap((view) => view.evaluate(listed));
+      // A by-id selection also returns members whose dependencies settled unavailable, which `surfaces` does not admit.
+      const evaluated = new Set(members.map((entry) => entry.id));
       const adjusted = adjustGroups(plan.manifest, remote, members, {
-        held: (id) => views.some((view) => view.surfaces(id)),
+        held: (id) => evaluated.has(id) || views.some((view) => view.surfaces(id)),
         survivor: (id) => views.find((view) => view.holdsBody(id))?.survivorId(id) ?? id,
       });
       if (adjusted) {
