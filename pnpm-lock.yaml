@@ -10173,6 +10173,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-task':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-task
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

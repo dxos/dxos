@@ -108,6 +108,24 @@ describe('mdl lint', () => {
     });
   });
 
+  describe('question', () => {
+    test('agent question with principal', ({ expect }) => {
+      expect(messages(block('question Q-1: X or Y?\n  by: agent:claude-code\n  for: user:bob'))).toEqual([]);
+    });
+
+    test('agent question without principal', ({ expect }) => {
+      expect(messages(block('question Q-1: X or Y?\n  by: agent:claude-code'))).toEqual([
+        'Agent question is missing `for:` — name the user: the agent acted for.',
+      ]);
+    });
+
+    test('missing asker', ({ expect }) => {
+      expect(messages(block('question Q-1: X or Y?'))).toEqual([
+        'Question is missing `by:` — name the user: or agent: that made it.',
+      ]);
+    });
+  });
+
   describe('changelog change', () => {
     const decision = (id: string, prose: string, extra = '') =>
       block(`decision ${id}: ${prose}\n  date: 2026-10-20\n  by: user:bob${extra}`);
@@ -174,6 +192,59 @@ describe('mdl lint', () => {
       expect(
         checkChangelogChange(spec('X', d1), spec('Y', d1, decision('D-2', 'Use Z.', '\n  supersedes: D-9'))),
       ).toEqual(['Decision D-2 supersedes D-9, which is not in the changelog.']);
+    });
+
+    describe('questions', () => {
+      const question = (id: string, prose: string) =>
+        block(`question ${id}: ${prose}\n  date: 2026-10-20\n  by: agent:claude-code\n  for: user:bob`);
+      const q1 = question('Q-1', 'X or Y?');
+
+      test('asking a question needs no decision', ({ expect }) => {
+        expect(checkChangelogChange(spec('X', d1), spec('X', d1, q1))).toEqual([]);
+      });
+
+      test('answering a question', ({ expect }) => {
+        expect(
+          checkChangelogChange(spec('X', d1, q1), spec('X', d1, q1, decision('D-2', 'Y.', '\n  answers: Q-1'))),
+        ).toEqual([]);
+      });
+
+      test('edited question', ({ expect }) => {
+        expect(checkChangelogChange(spec('X', d1, q1), spec('X', d1, question('Q-1', 'X or Z?')))).toEqual([
+          'Question Q-1 was edited — the changelog is append-only; ask a new question instead.',
+        ]);
+      });
+
+      test('removed question', ({ expect }) => {
+        expect(checkChangelogChange(spec('X', d1, q1), spec('X', d1, d2))).toEqual([
+          'Question Q-1 was removed — the changelog is append-only; answer it with a decision instead.',
+        ]);
+      });
+
+      test('out of sequence id', ({ expect }) => {
+        expect(checkChangelogChange(spec('X', d1, q1), spec('X', d1, q1, question('Q-3', 'Z?')))).toEqual([
+          'Question Q-3 is out of sequence — the next id is Q-2.',
+        ]);
+      });
+
+      test('answers an unknown question', ({ expect }) => {
+        expect(checkChangelogChange(spec('X', d1), spec('X', d1, decision('D-2', 'Y.', '\n  answers: Q-9')))).toEqual([
+          'Decision D-2 answers Q-9, which is not in the changelog.',
+        ]);
+      });
+
+      test('a second answer must supersede the first', ({ expect }) => {
+        const a1 = decision('D-2', 'Y.', '\n  answers: Q-1');
+        expect(
+          checkChangelogChange(spec('X', d1, q1, a1), spec('X', d1, q1, a1, decision('D-3', 'Z.', '\n  answers: Q-1'))),
+        ).toEqual(['Decision D-3 answers Q-1, which D-2 already answered — supersede D-2 instead.']);
+        expect(
+          checkChangelogChange(
+            spec('X', d1, q1, a1),
+            spec('X', d1, q1, a1, decision('D-3', 'Z.', '\n  answers: Q-1\n  supersedes: D-2')),
+          ),
+        ).toEqual([]);
+      });
     });
 
     test('decisions outside the changelog are examples', ({ expect }) => {
@@ -276,6 +347,42 @@ describe('mdl lint', () => {
         rejected: ['Fixed padding: clips large nodes.', 'Minor grid: re-lays on every drag.'],
       });
     });
+  });
+});
+
+describe('parse changelog questions', () => {
+  test('reads the fields of each question and the answer of a decision', ({ expect }) => {
+    const text = [
+      '## Changelog',
+      '',
+      block(
+        [
+          'question Q-1: Does the canvas shrink?',
+          '  date: 2026-10-06',
+          '  by: agent:claude-code',
+          '  for: user:alice',
+          '  affects: [Scene]',
+          '  context: Nothing says whether bounds shrink.',
+          '  options:',
+          '    - Never: the view never jumps.',
+          '    - On drop',
+        ].join('\n'),
+      ),
+      block('decision D-1: Never.\n  date: 2026-10-07\n  by: user:alice\n  answers: Q-1'),
+    ].join('\n');
+    const { entries, questions } = parseChangelog(text);
+    expect(questions).toEqual([
+      expect.objectContaining({
+        id: 'Q-1',
+        title: 'Does the canvas shrink?',
+        by: 'agent:claude-code',
+        for: 'user:alice',
+        affects: ['Scene'],
+        context: 'Nothing says whether bounds shrink.',
+        options: [{ title: 'Never', description: 'the view never jumps.' }, { title: 'On drop' }],
+      }),
+    ]);
+    expect(entries[0]).toMatchObject({ id: 'D-1', answers: 'Q-1' });
   });
 });
 
