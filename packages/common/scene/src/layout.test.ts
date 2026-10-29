@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { type Vec3 } from '@dxos/animation';
+import { Vec3 } from '@dxos/animation';
 
 import { applyLayout, bounds2D, bounds3D, fitChild, ring } from './layout.ts';
 import type * as Scene from './Scene.ts';
@@ -32,7 +33,7 @@ describe('layout', () => {
   test('ring places n members on a circle of the radius', () => {
     const positions = ring({ targets: ['a', 'b', 'c', 'd'], params: { radius: 2 }, values: () => ({}) });
     for (const value of Object.values(positions)) {
-      const { x, y, z } = value as Vec3;
+      const { x, y, z } = Schema.decodeUnknownSync(Vec3)(value);
       expect(Math.hypot(x, y, z)).toBeCloseTo(2);
     }
     expect(Object.keys(positions)).toHaveLength(4);
