@@ -86,28 +86,11 @@ export const authorize = async ({
   spaceIds: readonly string[];
   haloSpaceId?: string;
 }): Promise<McpSession> => {
-  const base = serverUrl.replace(/\/(mcp)?$/, '');
+  const base = serverBase(serverUrl);
 
-  const registerResponse = await fetch(`${base}/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      client_name: 'dx mcp',
-      redirect_uris: [REDIRECT_URI],
-      token_endpoint_auth_method: 'none',
-    }),
-  });
-  if (registerResponse.status !== 201) {
-    throw new McpProtocolError({
-      message: `Client registration failed (${registerResponse.status}): ${await registerResponse.text()}`,
-    });
-  }
-  const { client_id: clientId } = Schema.decodeUnknownSync(Schema.Struct({ client_id: Schema.String }))(
-    await registerResponse.json(),
-  );
+  const clientId = await registerClient(base);
 
-  const codeVerifier = randomBytes(32).toString('base64url');
-  const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+  const { codeVerifier, codeChallenge } = createPkce();
   const authorizeUrl = new URL(`${base}/authorize`);
   authorizeUrl.searchParams.set('client_id', clientId);
   authorizeUrl.searchParams.set('redirect_uri', REDIRECT_URI);
@@ -150,6 +133,61 @@ export const authorize = async ({
     throw new McpProtocolError({ message: 'Authorization did not return a code.' });
   }
 
+  const tokens = await redeemCode({ base, clientId, code, codeVerifier });
+
+  return {
+    serverUrl: base,
+    clientId,
+    ...tokens,
+    identityKey,
+    spaceIds: [...spaceIds],
+  };
+};
+
+/** Strips a trailing `/mcp` so the OAuth endpoints resolve against the server's origin. */
+export const serverBase = (serverUrl: string): string => serverUrl.replace(/\/(mcp)?$/, '');
+
+/** RFC 7591 dynamic registration of a public client; returns its id. */
+export const registerClient = async (base: string): Promise<string> => {
+  const registerResponse = await fetch(`${base}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_name: 'dx mcp',
+      redirect_uris: [REDIRECT_URI],
+      token_endpoint_auth_method: 'none',
+    }),
+  });
+  if (registerResponse.status !== 201) {
+    throw new McpProtocolError({
+      message: `Client registration failed (${registerResponse.status}): ${await registerResponse.text()}`,
+    });
+  }
+  const { client_id: clientId } = Schema.decodeUnknownSync(Schema.Struct({ client_id: Schema.String }))(
+    await registerResponse.json(),
+  );
+
+  return clientId;
+};
+
+/** A PKCE S256 verifier and its challenge. */
+export const createPkce = (): { codeVerifier: string; codeChallenge: string } => {
+  const codeVerifier = randomBytes(32).toString('base64url');
+  return { codeVerifier, codeChallenge: createHash('sha256').update(codeVerifier).digest('base64url') };
+};
+
+/** Redeems an authorization code for a session; the code may come from `authorize` or the server's `delegateToCli` tool. */
+export const redeemCode = async ({
+  base,
+  clientId,
+  code,
+  codeVerifier,
+}: {
+  base: string;
+  clientId: string;
+  code: string;
+  codeVerifier: string;
+}): Promise<Pick<McpSession, 'accessToken' | 'refreshToken'>> => {
   const tokens = await exchange(base, {
     grant_type: 'authorization_code',
     code,
@@ -157,15 +195,7 @@ export const authorize = async ({
     client_id: clientId,
     code_verifier: codeVerifier,
   });
-
-  return {
-    serverUrl: base,
-    clientId,
-    accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token,
-    identityKey,
-    spaceIds: [...spaceIds],
-  };
+  return { accessToken: tokens.access_token, refreshToken: tokens.refresh_token };
 };
 
 const exchange = async (

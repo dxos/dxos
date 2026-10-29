@@ -10,6 +10,7 @@
 // Usage:
 //   upload-artifact.mjs <file> [slug]        # key: demos/<YYYY-MM-DD>-<slug>/<basename>
 //   upload-artifact.mjs <file> --key <key>   # explicit key
+//   upload-artifact.mjs <file> --key <key> --type <content-type>   # file without a known extension
 //   upload-artifact.mjs --delete <key>
 //   upload-artifact.mjs --list [prefix]
 
@@ -61,6 +62,8 @@ const CONTENT_TYPES = {
   '.zip': 'application/zip',
   '.gz': 'application/gzip',
   '.cpuprofile': 'application/json',
+  '.sh': 'text/plain',
+  '.exe': 'application/octet-stream',
 };
 
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
@@ -161,9 +164,10 @@ const main = async () => {
       : `demos/${new Date().toISOString().slice(0, 10)}-${slugify(args[1] ?? 'artifact')}/${name}`;
 
   const body = await readFile(file);
-  const contentType = CONTENT_TYPES[extname(file).toLowerCase()];
+  const typeIndex = args.indexOf('--type');
+  const contentType = typeIndex > 0 ? args[typeIndex + 1] : CONTENT_TYPES[extname(file).toLowerCase()];
   if (!contentType) {
-    fail(`unknown extension "${extname(file)}" — pass a known type or add it to CONTENT_TYPES.`);
+    fail(`unknown extension "${extname(file)}" — pass --type <content-type> or add it to CONTENT_TYPES.`);
   }
 
   await request({ method: 'PUT', key, body, contentType });
