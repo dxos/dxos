@@ -8,7 +8,7 @@ import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
-import { type Message, build } from 'esbuild';
+import { type Message, type Plugin, build } from 'esbuild';
 import { statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import * as fs from 'node:fs/promises';
@@ -29,15 +29,62 @@ type BundleOptions = {
 export type BundleResult = {
   entryPoint: string;
   assets: Record<string, Uint8Array>;
+  /** Specifiers the bundle imports but does not contain, which the runtime must provide. */
+  externals: string[];
 };
 
 /**
  * Bundles a function.
  * Pulls in node_modules and wasm files.
  */
-export const bundleFunction = async (options: BundleOptions): Promise<BundleResult> => {
+export const bundleFunction = async (options: BundleOptions): Promise<BundleResult> =>
+  bundleModule({
+    sourcePath: options.entryPoint,
+    verbose: options.verbose,
+    // NOTE: Compute the module directory via `fileURLToPath`, not
+    // `new URL('.', import.meta.url)`. Vite's library-mode build treats the latter as an
+    // asset reference and base64-inlines the resolved `.ts` module as a
+    // `data:video/mp2t;base64,…` data URL, so `resolveDir` becomes garbage in `dist` and
+    // the bundler can no longer resolve `@dxos/compute-runtime` /
+    // `@dxos/functions-runtime-cloudflare`.
+    resolveDir: dirname(fileURLToPath(import.meta.url)),
+    contents: trim`
+      export default {
+        fetch: async (...args) => {
+          const { wrapFunctionHandler } = await import('@dxos/compute-runtime');
+          const { wrapHandlerForCloudflare, setupFunctionsLogger } = await import('@dxos/functions-runtime-cloudflare');
+          const { default: handler } = await import('${options.entryPoint}');
+
+          setupFunctionsLogger();
+
+          //
+          // Wrapper to make the function cloudflare-compatible.
+          //
+          return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
+        },
+      };
+    `,
+  });
+
+export type BundleModuleOptions = {
+  /** The source the bundle is built from; source map paths are made relative to its repository. */
+  sourcePath: string;
+  /** The generated main module. */
+  contents: string;
+  /** Where the main module's imports resolve from. */
+  resolveDir: string;
+  /** Extra esbuild plugins, run before the built-in ones. */
+  plugins?: Plugin[];
+  verbose?: boolean;
+};
+
+/**
+ * Bundles a generated main module for the Workers runtime: `workerd` conditions, ESM with code splitting, wasm
+ * copied, and source map paths made relative to the repository.
+ */
+export const bundleModule = async (options: BundleModuleOptions): Promise<BundleResult> => {
   const outdir = `/tmp/dxos-functions-bundle-${new Date().toISOString()}-${PublicKey.random().toHex()}`;
-  const gitDir = findGitDir(dirname(options.entryPoint));
+  const gitDir = findGitDir(dirname(options.sourcePath));
 
   const result = await build({
     entryPoints: {
@@ -61,6 +108,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     },
     external: ['node:*', 'cloudflare:workers', 'functions-service:user-script'],
     plugins: [
+      ...(options.plugins ?? []),
       httpPlugin,
       {
         name: 'entrypoint',
@@ -70,29 +118,8 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
             namespace: 'dxos:entrypoint',
           }));
           build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => ({
-            contents: trim`
-              export default {
-                fetch: async (...args) => {
-                  const { wrapFunctionHandler } = await import('@dxos/compute-runtime');
-                  const { wrapHandlerForCloudflare, setupFunctionsLogger } = await import('@dxos/functions-runtime-cloudflare');
-                  const { default: handler } = await import('${options.entryPoint}');
-
-                  setupFunctionsLogger();
-
-                  //
-                  // Wrapper to make the function cloudflare-compatible.
-                  //
-                  return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
-                },
-              };
-            `,
-            // NOTE: Compute the module directory via `fileURLToPath`, not
-            // `new URL('.', import.meta.url)`. Vite's library-mode build treats the latter as an
-            // asset reference and base64-inlines the resolved `.ts` module as a
-            // `data:video/mp2t;base64,…` data URL, so `resolveDir` becomes garbage in `dist` and
-            // the bundler can no longer resolve `@dxos/compute-runtime` /
-            // `@dxos/functions-runtime-cloudflare`.
-            resolveDir: dirname(fileURLToPath(import.meta.url)),
+            contents: options.contents,
+            resolveDir: options.resolveDir,
           }));
         },
       },
@@ -176,7 +203,16 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
   }
 
   // Must match esbuild entry point.
-  return { entryPoint: 'index.js', assets };
+  const externals = Function.pipe(
+    Record.values(result.metafile.outputs),
+    Array.flatMap((output) => output.imports),
+    Array.filter((entry) => entry.external === true),
+    Array.map((entry) => entry.path),
+    Array.dedupe,
+    Array.sort(Order.String),
+  );
+
+  return { entryPoint: 'index.js', assets, externals };
 };
 
 class BundleCreationError extends BaseError.extend('BundleCreationError', 'Bundle creation failed') {

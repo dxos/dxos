@@ -1,0 +1,21 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  check-edge-release:
+    # Bundles each `./<X>Plugin` workerd build as an EDGE release, loads it through Worker Loader in
+    # workerd, and fails when the release is not self-contained, a module fails to activate, or it
+    # contributes no operations, skills or types. See `@dxos/plugin-host-cloudflare/bundler`.
+    command: node $workspaceRoot/packages/core/compute/plugin-host-cloudflare/dist/lib/bin/check-release.mjs --package .
+    deps:
+      # The release is bundled from the package's own workerd build and its plugin dependencies' builds.
+      - build
+      - ^:build
+      - plugin-host-cloudflare:build
+    inputs:
+      - '@group(sources)'
+      - package.json
+      - /packages/core/compute/plugin-host-cloudflare/src/**/*
+    options:
+      timeout: 600
+
+inheritedBy:
+  tags: edge-release
