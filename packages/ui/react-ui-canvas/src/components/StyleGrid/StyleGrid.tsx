@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-form';
+import {
+  Form,
+  type FormFieldMap,
+  type FormFieldOverride,
+  type FormFieldRenderer,
+  useFormFieldState,
+} from '@dxos/react-ui-form';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
@@ -130,6 +136,13 @@ export type StyleFieldOptions = {
   fills: boolean;
 };
 
+/** A style with a pick applied: with fills, the hue and its tone together; without, the hue alone. */
+export const applyStyleChoice = <S extends object>(
+  style: S,
+  { hue, tone }: StyleChoice,
+  fills: boolean,
+): S & { hue: StyleHue; tone?: NodeTone } => (fills ? { ...style, hue, tone } : { ...style, hue });
+
 /**
  * The properties panel's style picker, rendered at `style.hue`, for every kind of element: with `fills`, one pick
  * sets the hue and its tone together (a node); without, the outline row sets the hue alone (a link, or a
@@ -151,9 +164,9 @@ export const createStyleField = ({ fills }: StyleFieldOptions): FormFieldRendere
           tones={fills ? undefined : OUTLINE_TONES}
           indeterminate={indeterminate}
           readonly={!!readonly}
-          onValueChange={({ hue, tone }) => {
+          onValueChange={(choice) => {
             // A pick is a commit: the grid never blurs, so it commits itself.
-            styleField.onValueChange(NodeStyle.ast, fills ? { ...style, hue, tone } : { ...style, hue });
+            styleField.onValueChange(NodeStyle.ast, applyStyleChoice(style, choice, fills));
             onBlur();
           }}
         />
@@ -168,3 +181,12 @@ export const StyleGridField = createStyleField({ fills: true });
 
 /** The style picker's outline row alone: a link's, or a selection with a link in it. */
 export const OutlineStyleField = createStyleField({ fills: false });
+
+/** The style fields every scene view's properties form takes: the grid at `style.hue`, which also sets the tone. */
+export const STYLE_FIELDS: FormFieldMap = { 'style.hue': StyleGridField };
+
+/** How those fields present: the swatches sit under the Style heading, and the tone has no field of its own. */
+export const STYLE_FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
+  'style.hue': { label: 'Style', hideLabel: true },
+  'style.tone': { hidden: true },
+};

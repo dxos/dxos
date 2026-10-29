@@ -6,10 +6,17 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
+import { StyleGridField, applyStyleChoice } from '@dxos/react-ui-canvas';
 import { StepAnnotation } from '@dxos/react-ui-form';
 import { type Scene } from '@dxos/scene';
 
-import { ElementForm, elementFormIntents, elementFormValues } from './element-form.ts';
+import {
+  ELEMENT_FORM_FIELDS,
+  ELEMENT_FORM_OVERRIDES,
+  ElementForm,
+  elementFormIntents,
+  elementFormValues,
+} from './element-form.ts';
 
 const cube: Scene.Element3D = { id: 'box', kind: 'cube', label: 'Cube' };
 
@@ -55,5 +62,30 @@ describe('element form', () => {
     expect(stepOf('center')).toBe(1);
     expect(stepOf('rotation')).toBe(15);
     expect(stepOf('scale')).toBe(0.1);
+  });
+
+  test("the style fields are the 2D canvas's: its colour grid at style.hue, the tone without a field of its own", () => {
+    expect(ELEMENT_FORM_FIELDS['style.hue']).toBe(StyleGridField);
+    expect(ELEMENT_FORM_OVERRIDES['style.tone']).toMatchObject({ hidden: true });
+  });
+
+  test("a pick in the colour grid writes the element's hue and tone, keeping its surface", () => {
+    const element: Scene.Element3D = { ...cube, style: { hue: 'blue', surface: 'glass' } };
+    const values = elementFormValues(element);
+    const style = applyStyleChoice(values.style ?? {}, { hue: 'red', tone: 1 }, true);
+    expect(elementFormIntents(element, { ...values, style })).toEqual([
+      { kind: 'update', id: 'box', path: ['style'], value: { hue: 'red', tone: 1, surface: 'glass' } },
+    ]);
+  });
+
+  test('opacity steps by a tenth, as in 2D', () => {
+    const style = SchemaAST.isObjects(ElementForm.ast)
+      ? ElementForm.ast.propertySignatures.find((field) => field.name === 'style')?.type
+      : undefined;
+    const inner = style && SchemaAST.isUnion(style) ? style.types[0] : style;
+    const opacity =
+      inner && SchemaAST.isObjects(inner) ? inner.propertySignatures.find((f) => f.name === 'opacity') : undefined;
+    const type = opacity && SchemaAST.isUnion(opacity.type) ? opacity.type.types[0] : opacity?.type;
+    expect(type && Option.getOrUndefined(StepAnnotation.getFromAst(type))).toBe(0.1);
   });
 });

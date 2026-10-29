@@ -52,6 +52,7 @@ import {
 import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
 import { SceneLayer } from '../SceneLayer/index.ts';
 import { useCanvasDocument, useCanvasNavigation, useCanvasSelection, useCanvasServices } from './CanvasContext.ts';
+import { propertiesShown } from './properties-section.ts';
 
 //
 // Properties
@@ -81,16 +82,9 @@ export const CanvasProperties = ({
   const scenes = useAtomValue(store.views);
   const options = useMemo(() => viewOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
 
-  // Docked, the section keeps its place in the panel so the panes do not shift; floating, it goes with nothing to edit.
-  const docked = InspectorPanel.useDocked();
-  if (selection.size === 0) {
-    return docked ? (
-      <InspectorSection section={PROPERTIES_INSPECTOR}>
-        <p className='p-2 text-sm text-fg-subtle' data-testid='properties-empty'>
-          Nothing selected
-        </p>
-      </InspectorSection>
-    ) : null;
+  const shown = propertiesShown({ docked: InspectorPanel.useDocked(), selected: selection.size > 0 });
+  if (shown !== 'form') {
+    return shown === 'empty' ? <PropertiesEmpty /> : null;
   }
   return (
     <InspectorSection section={PROPERTIES_INSPECTOR}>
@@ -182,6 +176,15 @@ export const useSelectionActions = ({
 //
 // Inspectors
 //
+
+/** The Properties section with nothing selected, as a docked panel shows it in every scene view. */
+export const PropertiesEmpty = () => (
+  <InspectorSection section={PROPERTIES_INSPECTOR}>
+    <p className='p-2 text-sm text-fg-subtle' data-testid='properties-empty'>
+      Nothing selected
+    </p>
+  </InspectorSection>
+);
 
 /** The Properties section, shared by every scene view so it stacks first, in the panel's upper half when docked. */
 export const PROPERTIES_INSPECTOR: InspectorSectionDef = {

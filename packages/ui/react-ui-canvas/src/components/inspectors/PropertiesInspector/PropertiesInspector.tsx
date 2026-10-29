@@ -66,7 +66,7 @@ import {
   viewLayers,
 } from '../../../utils/index.ts';
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
-import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
+import { OutlineStyleField, STYLE_FIELDS, STYLE_FIELD_OVERRIDES } from '../../StyleGrid/index.ts';
 import { type InspectorProps } from '../types.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
@@ -125,7 +125,7 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 
 /** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
-  'style.hue': StyleGridField,
+  ...STYLE_FIELDS,
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'style.lineStyle': LineStyleField,
@@ -180,9 +180,7 @@ const formValues = (
  * grid at `style.hue` also sets `style.tone`, which has no field of its own.
  */
 const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
-  // The swatches sit under the Style section's own heading, which names them.
-  'style.hue': { label: 'Style', hideLabel: true },
-  'style.tone': { hidden: true },
+  ...STYLE_FIELD_OVERRIDES,
   'style.alignVertical': { hidden: true },
   'style.fontSize': { hidden: true },
   // Drawn beside the rotation by `FrameField`.

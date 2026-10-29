@@ -14,9 +14,11 @@ import {
   FLOATING_BAR,
   InspectorPanel,
   InspectorSection,
+  PropertiesEmpty,
   ReadonlyToggle,
   type ToolGroup,
   ToolRail,
+  propertiesShown,
 } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -43,7 +45,13 @@ import { type Canvas } from '#types';
 import { CanvasNamespace } from '../../namespace.ts';
 import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
-import { ElementForm, elementFormIntents, elementFormValues } from './element-form.ts';
+import {
+  ELEMENT_FORM_FIELDS,
+  ELEMENT_FORM_OVERRIDES,
+  ElementForm,
+  elementFormIntents,
+  elementFormValues,
+} from './element-form.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { type SessionHistory, sessionHistory } from './session-history.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
@@ -549,12 +557,17 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               )}
             </Scene3DEditor>
           </InspectorPanel.Frame>
+          {!selected && propertiesShown({ docked: !readonly && dock.docked, selected: false }) === 'empty' && (
+            <PropertiesEmpty />
+          )}
           {selected && (
             <InspectorSection section={{ ...SECTIONS_3D.properties, title: t('properties.label') }}>
               <Form.Root
                 key={selected.id}
                 schema={ElementForm}
                 values={elementFormValues(selected)}
+                fieldMap={ELEMENT_FORM_FIELDS}
+                fieldOverrides={ELEMENT_FORM_OVERRIDES}
                 readonly={readonly}
                 autoSave
                 onSave={handleSave}

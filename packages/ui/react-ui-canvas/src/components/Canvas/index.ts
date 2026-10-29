@@ -10,3 +10,4 @@ export * from './CanvasRootProps.ts';
 export * from './CanvasViewport.tsx';
 export * from './constants.ts';
 export * from './CanvasContext.ts';
+export * from './properties-section.ts';
