@@ -53,6 +53,7 @@ const CONTENT_TYPES = {
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.json': 'application/json',
+  '.mjs': 'text/javascript; charset=utf-8',
   '.ndjson': 'application/x-ndjson',
   '.txt': 'text/plain',
   '.html': 'text/html; charset=utf-8',
