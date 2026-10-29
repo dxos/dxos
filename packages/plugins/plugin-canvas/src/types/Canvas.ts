@@ -43,6 +43,8 @@ export const TLDRAW_SCHEMA = 'tldraw.com/2';
 export const CanvasSettings = Schema.Struct({
   /** Shapes snap to the lattice's cells and links route along its gutters. */
   lattice: Schema.optional(Schema.Boolean),
+  /** The mode the canvas opens in; unset is `freehand`, or `lattice` while `lattice` is set. */
+  projection: Schema.optional(Schema.Literals(['freehand', 'lattice', 'constrained', 'dynamic'])),
   /** Minor grid spacing in scene px; the engine's default when unset. */
   grid: Schema.optional(Schema.Number),
   /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
@@ -62,6 +64,12 @@ export const CanvasSettings = Schema.Struct({
   diagramShapes: Schema.optional(Schema.Boolean),
 });
 export type CanvasSettings = Schema.Schema.Type<typeof CanvasSettings>;
+
+export type CanvasProjection = NonNullable<CanvasSettings['projection']>;
+
+/** The mode a canvas opens in. */
+export const projectionOf = (settings: CanvasSettings): CanvasProjection =>
+  settings.projection ?? (settings.lattice ? 'lattice' : 'freehand');
 
 /**
  * This plugin's canvas: the drawing's settings and named style classes, and its content as `@dxos/scene` objects — a

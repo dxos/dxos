@@ -73,4 +73,6 @@ stage 3; the work stays in dxos/dxos#14282.
         (`readCanvasContent`/`writeCanvasContent`), typed targets in the tldraw converter, any canvas as a source.
   - [x] Task 6 — lattice mode runs over the layout store (moves and resizes land on cells, written to Layout2D); the
         article's projection choice from `Canvas.settings.lattice` lands with Task 9.
+  - [x] Task 7 — constrained and dynamic models kept in `layout.props` (`layoutModelAtom`), undo patches them;
+        `CanvasSettings.projection` names the mode a canvas opens in.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.

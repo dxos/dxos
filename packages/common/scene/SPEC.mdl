@@ -466,3 +466,11 @@ decision D-38: An element's `props` keys belong to their writers: the canvas kee
   for: user:richburdon
   why: The canvas editor and the illustrator's commands both write the same elements; neither may drop what the other keeps.
 ```
+
+```mdl
+decision D-39: A projection's own model (the constrained projection's constraints, the dynamic projection's graph and overlay) lives in its layout's props, so it persists with the arrangement it constrains and undo patches it; a canvas's settings name the mode it opens in. Fills in [D-34].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Every react-ui-canvas mode must run on Layout2D before the switch (D-22), and those modes are their models.
+```
