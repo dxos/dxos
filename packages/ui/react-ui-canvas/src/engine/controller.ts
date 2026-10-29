@@ -65,7 +65,6 @@ import {
   exitPortal,
   fitBounds,
   fitFrame,
-  flipLink,
   nodeBounds,
   pastedRecords,
   pasteFragment,
@@ -207,8 +206,6 @@ export type SelectionCommands = {
   ungroup: () => ElementId[];
   /** A new style class with the one selected element's look, which the element then follows. */
   classFrom: () => string | undefined;
-  /** Reverses every selected link as one undo step; false unless the selection is links alone. */
-  flip: () => boolean;
 };
 
 /** The intent helpers on the open View's document (DESIGN.md §13.1, the Document aspect). */
@@ -423,21 +420,6 @@ export const createCanvasController = ({
       registry.set(store.styles, { ...styleMap, [id]: styleClass });
       projection().apply({ kind: 'update', id: element.id, values: { class: id, style: undefined } });
       return id;
-    },
-    flip: () => {
-      const scene = currentScene();
-      const elements = [...registry.get(atoms.selection)].flatMap((id) => getElement(scene, id) ?? []);
-      const links = elements.filter(isLink);
-      if (!capabilities().update || links.length === 0 || links.length !== elements.length) {
-        return false;
-      }
-      projection().apply({
-        kind: 'batch',
-        intents: links.map((link) => ({ kind: 'update' as const, id: link.id, values: flipLink(link) })),
-      });
-      // A spline's control points run the other way after a flip, so a selected point's index names another one.
-      registry.set(atoms.point, undefined);
-      return true;
     },
   };
 
