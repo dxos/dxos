@@ -1259,6 +1259,35 @@ describe('EchoHost directory snapshots', () => {
     expect(Object.keys(root.directory()?.links ?? {})).toHaveLength(2);
   });
 
+  test('a root change saved only by the flush on close reopens from storage, not a stale snapshot', async ({
+    expect,
+  }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const objectId = EntityId.random();
+    {
+      const host = new EchoHost({ runtime });
+      await host.open(Context.default());
+      const root = await host.createSpaceRoot(Context.default(), spaceKey);
+      await host.updateIndexes();
+      root.change((doc) => {
+        doc.links ??= {};
+        doc.links[objectId] = new A.RawString(generateAutomergeUrl());
+      });
+      await host.close();
+    }
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    expect(root.directory()?.links?.[objectId]).toBeDefined();
+  });
+
   test('a directory with inline objects has no snapshot', async ({ expect }) => {
     const { host, spaceId } = await setup();
     const lease = await host.createDoc<DatabaseDirectory>({

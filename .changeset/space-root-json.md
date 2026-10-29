@@ -2,4 +2,4 @@
 '@dxos/echo': patch
 ---
 
-A space root that holds only links now opens without loading Automerge: the client reads it from JSON, served by the host from a new SQLite cache (`DataService.getDirectorySnapshot`) or kept in the boot cache, and loads the root's CRDT only when it writes to it. Host updates to an unloaded root carry its directory JSON, so routing stays current without a load. The boot cache format moves to version 2.
+A space whose root directory holds only links now opens without loading that root into Automerge, on the host or the client. The host's index keeps each root's directory JSON in SQLite, and a client is sent the root's stored changes with that JSON, or reads both from the boot cache. The root loads only when something writes to it or it changes. The boot cache format moves to version 2.
