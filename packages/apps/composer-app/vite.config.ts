@@ -779,8 +779,6 @@ export default defineConfig((env) => ({
         // so any icon the app has rendered once stays available offline.
         globIgnores: ['**/phosphor/**', ...ON_DEMAND_FONTS.map((font) => `**/${font}-${FONT_SUBSETS}-*.woff2`)],
       },
-      // No `includeAssets`: the glob already precaches the emitted favicon, and listing the source copy
-      // too gives a channel build two `favicon.ico` revisions, which workbox rejects at install.
       manifest: {
         name: 'DXOS Composer',
         short_name: 'Composer',
