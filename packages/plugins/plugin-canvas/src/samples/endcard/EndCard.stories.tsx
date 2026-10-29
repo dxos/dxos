@@ -71,7 +71,7 @@ const useEndCard = () => {
 const Film = ({ chrome }: FilmProps) => {
   const { db, drawing } = useEndCard();
   const canvas = drawing?.canvas.target;
-  if (!db || !canvas) {
+  if (!db || !Drawing.isCanvas(canvas)) {
     return <Loading />;
   }
   return <FilmView db={db} canvas={canvas} chrome={chrome} />;

@@ -78,7 +78,7 @@ export const loadDiagramDrawings = async (
   // in its lightest, so the coloured boxes carry the emphasis; a box that sets a hue or a tone of its own keeps it.
   for (const drawing of drawings.values()) {
     const canvas = drawing.canvas.target;
-    if (!canvas) {
+    if (!Drawing.isCanvas(canvas)) {
       continue;
     }
     Obj.update(canvas, (canvas) => {
@@ -100,7 +100,7 @@ export const loadDiagramDrawings = async (
 
   for (const [id, drills] of Object.entries(set.drills)) {
     const canvas = drawings.get(id)?.canvas.target;
-    if (!canvas) {
+    if (!Drawing.isCanvas(canvas)) {
       continue;
     }
     Obj.update(canvas, (canvas) => {

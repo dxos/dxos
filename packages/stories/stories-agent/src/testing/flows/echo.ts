@@ -123,6 +123,7 @@ const seed: ActorFlow<EchoTarget>['seed'] = async ({ space }) => {
     const drawing = drawings.get(id);
     invariant(drawing, `no ${id} drawing`);
     const canvas = await drawing.canvas.load();
+    invariant(Drawing.isCanvas(canvas), `the ${id} drawing has no base canvas`);
     const entries = Object.entries(canvas.content).filter(([key, record]) => {
       // Group frames stay, so the empty diagram shows its sections from the start.
       return (key.startsWith('node:') && !isGroupFrame(record)) || key.startsWith('link:');

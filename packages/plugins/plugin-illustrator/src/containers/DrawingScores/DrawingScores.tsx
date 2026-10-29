@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type Drawing, IllustratorCapabilities } from '#types';
-import { findVariant, scoreScene } from '#util';
+import { scoreScene } from '#util';
 
 export type DrawingScoresProps = {
   role?: string;
@@ -36,7 +36,7 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
   const ref = drawing.canvas;
   const [snapshot] = useObject(ref);
   const canvas = snapshot ? ref.target : undefined;
-  const match = canvas ? findVariant(variants, canvas) : undefined;
+  const match = IllustratorCapabilities.variantFor(canvas, variants);
 
   // Keyed on the snapshot so every committed change to the canvas rescores it.
   const result = useMemo(() => {

@@ -26,6 +26,12 @@ afterEach(async () => {
   await builder.close();
 });
 
+/** A drawing's base-canvas content, or none when its canvas is not loaded or not a base canvas. */
+const contentOf = (drawing: Drawing.Drawing) => {
+  const canvas = drawing.canvas.target;
+  return Drawing.isCanvas(canvas) ? canvas.content : {};
+};
+
 describe('loadDiagramSet', () => {
   test.each([
     ['composer', composerDiagrams],
@@ -38,7 +44,7 @@ describe('loadDiagramSet', () => {
     await db.flush();
 
     const canvas = root.canvas.target;
-    if (!canvas) {
+    if (!Drawing.isCanvas(canvas)) {
       throw new Error('The root drawing has no canvas.');
     }
     const registry = Registry.make();
@@ -74,7 +80,8 @@ describe('loadDiagramSet', () => {
     // Composer's EDGE box opens the EDGE overview, and a detail diagram's box opens a third level.
     expect(set.drills.composer.Edge).toBe('edge');
     for (const [parent, drills] of Object.entries(set.drills)) {
-      const content = drawings.get(parent)?.canvas.target?.content ?? {};
+      const target = drawings.get(parent)?.canvas.target;
+      const content = Drawing.isCanvas(target) ? target.content : {};
       for (const [box, target] of Object.entries(drills)) {
         const record = content[nodeKey(elementId(box, 'box'))];
         const node = isNodeRecord(record) ? record.node : undefined;
@@ -99,7 +106,7 @@ describe('loadDiagramSet', () => {
 
     const violations: string[] = [];
     for (const [id, drawing] of drawings) {
-      const nodes = Object.values(drawing.canvas.target?.content ?? {})
+      const nodes = Object.values(contentOf(drawing))
         .filter(isNodeRecord)
         .map((record) => record.node);
       expect(nodes.some((node) => node.style?.guide && node.style.lineStyle === 'dashed')).toBe(true);
@@ -132,7 +139,7 @@ describe('loadDiagramSet', () => {
 
     const counts = [...drawings].map(([id, drawing]) => {
       // A drill-down box is a frame onto its child drawing, so it counts as a box of this scene.
-      const boxes = Object.values(drawing.canvas.target?.content ?? {})
+      const boxes = Object.values(contentOf(drawing))
         .filter(isNodeRecord)
         .map((record) => record.node)
         .filter((node) => !node.style?.guide && (node.type === 'rect' || node.type === 'view'));

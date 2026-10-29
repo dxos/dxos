@@ -6,8 +6,10 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 
 import { Database, type Ref } from '@dxos/echo';
-import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type ViewId } from '@dxos/react-ui-canvas/headless';
+
+import { Canvas } from '#types';
 
 import { readViews, rootOf, seedContent } from '../model/content.ts';
 
@@ -15,6 +17,9 @@ import { readViews, rootOf, seedContent } from '../model/content.ts';
 export const loadScene = Effect.fn(function* (ref: Ref.Ref<Drawing.Drawing>, scene?: ViewId) {
   const drawing = yield* Database.load(ref);
   const canvas = yield* Database.load(drawing.canvas);
+  if (!Drawing.isCanvas(canvas) || !Canvas.isSceneSchema(canvas.schema)) {
+    return yield* Effect.fail(new DrawingDialectError({ message: 'The drawing is not a scene canvas.' }));
+  }
   const id = scene ?? rootOf(canvas.content) ?? seedContent({});
   return { canvas, id, scenes: readViews(canvas.content) };
 });

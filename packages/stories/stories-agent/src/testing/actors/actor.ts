@@ -221,6 +221,7 @@ export class Actor {
     const object = this.binding.object(drawing);
     invariant(Obj.instanceOf(Drawing.Drawing, object), `${this.spec.name}: no drawing "${drawing}"`);
     const canvas = await object.canvas.load();
+    invariant(Drawing.isCanvas(canvas), `${this.spec.name}: "${drawing}" has no base canvas`);
     Obj.update(canvas, (canvas) => {
       canvas.content[key] = record;
     });

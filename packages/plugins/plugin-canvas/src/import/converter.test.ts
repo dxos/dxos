@@ -64,6 +64,9 @@ describe('tldrawConverter', () => {
     const content = frameWithChildren();
     const source = db.add(Drawing.makeCanvas({ schema: Canvas.TLDRAW_SCHEMA, content }));
     const { canvas: target, upserted } = await convert(source);
+    if (!Drawing.isCanvas(target)) {
+      throw new Error('The converter writes a base canvas.');
+    }
     expect(target.schema).toBe(Canvas.SCENE_SCHEMA);
     const views = readViews(target.content);
     const root = rootOf(target.content) ?? '';
@@ -80,7 +83,7 @@ describe('tldrawConverter', () => {
     TldrawBuilder.apply(source, scene);
     const objects = TldrawBuilder.read(source).scene.objects.map(({ id }) => id);
     const { canvas: target, upserted } = await convert(source);
-    expect(target.schema).toBe(Canvas.SCENE_SCHEMA);
+    expect(Drawing.isCanvas(target) && target.schema).toBe(Canvas.SCENE_SCHEMA);
     // The generic path writes the scene's objects, by their ids, rather than mapping tldraw shapes.
     expect([...upserted].sort()).toEqual([...objects].sort());
     expect(Obj.isObject(target)).toBe(true);

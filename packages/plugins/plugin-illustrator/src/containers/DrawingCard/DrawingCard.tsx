@@ -8,8 +8,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
 
+import { VariantSurface } from '#components';
 import { Drawing, IllustratorCapabilities } from '#types';
-import { findVariant } from '#util';
 
 export type DrawingCardProps = AppSurface.ObjectCardProps<Drawing.Drawing>;
 
@@ -24,13 +24,14 @@ export const DrawingCard = ({ role, subject: drawing, editable }: DrawingCardPro
     return null;
   }
 
-  const match = findVariant(variants, canvas);
+  const match = IllustratorCapabilities.variantFor(canvas, variants);
   if (!match?.card) {
     return null;
   }
 
-  const Component = match.card;
-  return <Component drawing={drawing} canvas={canvas} role={role} editable={editable} />;
+  return (
+    <VariantSurface variant={match} slot='card' drawing={drawing} canvas={canvas} role={role} editable={editable} />
+  );
 };
 
 DrawingCard.displayName = 'DrawingCard';

@@ -66,7 +66,13 @@ export type CanvasPropertiesProps = { drawing: Drawing.Drawing };
 
 /** The drawing's canvas settings in the properties companion; renders nothing for another renderer's drawing. */
 export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
-  const [canvas, updateCanvas] = useObject(drawing.canvas);
+  const [snapshot] = useObject(drawing.canvas);
+  const canvas = snapshot ? drawing.canvas.target : undefined;
+  return Drawing.isCanvas(canvas) ? <SceneCanvasProperties canvas={canvas} /> : null;
+};
+
+const SceneCanvasProperties = ({ canvas: subject }: { canvas: Drawing.Canvas }) => {
+  const [canvas, updateCanvas] = useObject(subject);
   const values = useMemo<CanvasPropertiesValues>(() => {
     const record = canvas ? canvasRecordOf(canvas.content) : undefined;
     return {

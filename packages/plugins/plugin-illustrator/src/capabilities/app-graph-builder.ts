@@ -41,11 +41,15 @@ export default Capability.makeModule(
       id: 'convertActions',
       type: Drawing.Drawing,
       actions: (drawing, get) => {
-        const canvas = get(Obj.atom(drawing.canvas));
-        if (!canvas) {
+        // Read through the atom so the actions follow the canvas; the variant is matched on the live object.
+        const variants = get(variantsAtom);
+        const from = get(Obj.atom(drawing.canvas))
+          ? IllustratorCapabilities.variantFor(drawing.canvas.target, variants)
+          : undefined;
+        if (!from) {
           return Effect.succeed([]);
         }
-        const targets = IllustratorCapabilities.editTargets(get(variantsAtom), canvas.schema);
+        const targets = IllustratorCapabilities.editTargets(variants, from.id);
         return Effect.succeed(
           targets.map((variant) => {
             const slug = IllustratorCapabilities.variantSlug(variant);
