@@ -147,6 +147,10 @@ const VariantsStory = ({ size }: SizeArgs) => {
         <NumberInput defaultValue='1250' align='end' stepper='split' data-testid={`aligned-${size}`} />
       </Field.Root>
       <Field.Root>
+        <Field.Label>Leading</Field.Label>
+        <NumberInput defaultValue='12' align='end' stepper='start' data-testid={`leading-${size}`} />
+      </Field.Root>
+      <Field.Root>
         <Field.Label>Hover</Field.Label>
         <NumberInput defaultValue='3' stepper='hover' data-testid={`hover-${size}`} />
       </Field.Root>
@@ -183,7 +187,7 @@ const VariantsStory = ({ size }: SizeArgs) => {
   );
 };
 
-/** Stepper placements (`split`, `hover`), end-aligned figures and the slider button. */
+/** Stepper placements (`split`, `start`, `hover`), end-aligned figures and the slider button. */
 export const Variants: Story = {
   render: VariantsStory,
 };
@@ -218,6 +222,19 @@ export const VariantsTest: Story = {
 
     await expect(getComputedStyle(canvas.getByRole('spinbutton', { name: 'Aligned' })).textAlign).toBe('end');
     await expect(getComputedStyle(canvas.getByRole('spinbutton', { name: 'Split' })).textAlign).not.toBe('end');
+
+    const leading = byTestId(md, 'leading-md');
+    const leadingInput = within(leading).getByRole('spinbutton');
+    const leadingIncrement = within(leading).getByRole('button', { name: 'Increment' });
+    await expect(leadingIncrement.getBoundingClientRect().right).toBeLessThanOrEqual(
+      leadingInput.getBoundingClientRect().left,
+    );
+    await expect(
+      within(leading).getByRole('button', { name: 'Decrement' }).getBoundingClientRect().left,
+    ).toBeGreaterThanOrEqual(leading.getBoundingClientRect().left);
+    await expect(getComputedStyle(leadingInput).textAlign).toBe('end');
+    await userEvent.click(leadingIncrement);
+    await waitFor(() => expect(leadingInput).toHaveValue('13'));
 
     const hover = byTestId(md, 'hover-md');
     // Hidden buttons have no accessible name, so take the pair by position.

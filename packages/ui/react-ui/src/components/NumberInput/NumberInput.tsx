@@ -17,11 +17,11 @@ import * as Popover from '../Popover/Popover.tsx';
 import { Slider } from '../Slider/Slider.tsx';
 
 /**
- * Where the decrement and increment buttons go: `end` (or `true`) trails the input with the pair, `split` puts
- * decrement at the start and increment at the end, `hover` trails the pair but shows it only while the row is hovered
+ * Where the decrement and increment buttons go: `end` (or `true`) trails the input with the pair, `start` leads it
+ * with the pair, `split` puts decrement at the start and increment at the end, `hover` trails the pair but shows it only while the row is hovered
  * or focused, and `false` drops them (the arrow keys still step).
  */
-export type NumberInputStepper = boolean | 'end' | 'split' | 'hover';
+export type NumberInputStepper = boolean | 'start' | 'end' | 'split' | 'hover';
 
 export type NumberInputProps = ThemedClassName<
   Pick<
@@ -146,9 +146,10 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           data-stepper={placement || undefined}
           className={mx(recipes.numberInput(), classNames)}
         >
-          {placement === 'split' && (
+          {(placement === 'start' || placement === 'split') && (
             <span data-scope='number-input' data-part='start' className={recipes.inputAdornment()}>
               {decrement}
+              {placement === 'start' && increment}
             </span>
           )}
           <NumberInputPrimitive.Input
@@ -158,7 +159,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             className={recipes.inputField()}
             ref={forwardedRef}
           />
-          {(sliderButton || placement) && (
+          {(sliderButton || endPair || placement === 'split') && (
             <span data-scope='number-input' data-part='end' className={recipes.inputAdornment()}>
               {endPair && decrement}
               {(endPair || placement === 'split') && increment}
