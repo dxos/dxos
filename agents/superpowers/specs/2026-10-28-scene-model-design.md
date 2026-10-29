@@ -1,6 +1,6 @@
 # Scene model: one ontology and DSL for 2D and 3D
 
-Status: approved by the user, 2026-10-28. Calls 12–24 are the agent's, accepted with the design. Stage 2 is built (plan: `agents/superpowers/plans/2026-10-28-scene-model-stage-2.md`, ledger: `packages/common/scene/TASKS.md`); its animator stages live in plugin-canvas, where the user chose to grow the stage 3 editor.
+Status: approved by the user, 2026-10-28; the ontology was revised on 2026-10-29 into Model, Layout and Scene (spec decisions D-27..D-33), which the Ontology and DSL sections below now describe. Calls 12–24 are the agent's, accepted with the design. Stage 2 is built (plan: `agents/superpowers/plans/2026-10-28-scene-model-stage-2.md`, ledger: `packages/common/scene/TASKS.md`); its animator stages live in plugin-canvas, where the user chose to grow the stage 3 editor.
 
 ## Intent
 
@@ -138,43 +138,43 @@ Filled in by the agent (for review):
 
 ## Ontology
 
+Revised 2026-10-29 (spec D-27..D-33): a drawing has three aspects, each its own ECHO object with its records inside it.
+
 ```
-Scene (one ECHO object; abstract base)
-  dimension-specific scene type: Scene2D | Scene3D
+Model<O> (Model2D | Model3D)            reusable objects, no positions
+  objects: Record<id, Object>
+Object                                   id, kind, size (2D) | scale (3D), style?, props?
+  parts?: Layout                         a composite: a nested layout shown fitted to each placing element's frame
+
+Layout<E> (Layout2D | Layout3D)          positioned elements in one coordinate space
+  model?: Model
   elements: Record<id, Element>
-  layers:   Record<id, Layer>
-  camera:   Camera2D | Camera3D        (the resting camera)
-  theme?:   ThemeRef
-  layout?:  scene-level arrangement intent
+Element (BaseElement + geometry)         id, object? | kind?, order, layer?, hidden?, locked?, label?, style?,
+                                         from?/to? (Bindings), members?, arrange? (Arrangement), pinned?, props?
+  2D: center: Vec2, size: Size2, rotation: number
+  3D: center: Vec3, scale: Vec3, rotation: Vec3 (Euler degrees)
 
-Element (record; shared base)
-  id, kind, order, layer?, locked?
-  label?, style? (hue, tone, surface, border, rounded, opacity), class?
-  layout? (placement relations, pin)
-  + geometry from the scene type:
-      2D: center: Point, size: Size, rotation: number
-      3D: center: Vec3, scale: Vec3, rotation: Vec3 (Euler degrees)
-  + kind-specific fields
+Scene<C> (Scene2D | Scene3D)             a layout seen through a camera
+  layout: Layout
+  camera: Camera2D | Camera3D
+  theme?, name?
 
-Binding (on a link element)
-  from / to: { element: id, anchor? }   or a free point
-
-Element kinds (initial)
-  shared:   link, label, scene (child scene), instance (of a Component), group (members: id[])
+Element kinds
+  shared:   link, label, group (members: id[])
   2D:       rect, ellipse, polygon, path, note, image, ...   (from react-ui-canvas)
   3D:       cube, sphere, cylinder, cone, pyramid, mesh (imported),
             solid (operation tree: union | difference | extrude over operand element ids; operands hidden)
-
-Component
-  a Scene marked reusable; placed by `instance` elements with overrides
 ```
 
-A child scene is an element of kind `scene` that references another Scene object by ECHO Ref. Its shape (a rect in 2D,
-a sphere shell in 3D) frames the child. A hierarchy is nested child scenes. This covers "B contains a sub-scene" and "a
-cluster of spheres encapsulated in another sphere".
+An element places a model object, or names its own kind inline. Resolving it applies the object's kind, size, style and
+props; the element's own fields win, and style and props merge. A 3D animation has one model and several scenes that
+place its objects differently; a 2D drawing's zoom levels are several scenes over one layout. An animator shot stages a
+scene and never writes its samples back to the layout (D-28).
 
-A `group` is different (decision 10): its members stay in the parent scene's space, and links bind to them directly.
-Exemplar 6 is a group inside a sphere that is a child scene.
+What were child scenes are composite objects (D-29): "B contains a sub-scene" is an object whose `parts` is B's
+layout, and "a cluster encapsulated in a sphere" is a sphere object whose parts are the cluster's layout. A hierarchy is
+composites whose parts place further composites. A `group` is different (decision 10): its members stay in their
+layout's space, and links bind to them directly.
 
 A `solid` recomputes its mesh from its operation tree with Manifold when loaded (decision 9). Only the renderer and
 the editor need Manifold; the model package does not.
@@ -187,33 +187,31 @@ must not use the id `camera`. The stage binding emits plain data, as today.
 
 ## DSL
 
-The DSL extends `.dx`. Records print to it and parse back from it without loss. The draft syntax below is illustrative;
-stage 2 settles it.
+The DSL extends `.dx`. Records print to it and parse back from it without loss. A document lists its scenes, then its
+layouts, then its models; the first scene is the root. In a layout, the word after an element's id names an object of
+the layout's model, or else a kind.
 
 ```
-scene root dim=2d theme=flat
-element a rect "A" @0,0 size=120,60 rounded surface=solid hue=blue border
-element b scene "B" @240,0 size=160,100 scene=b-detail
-element c ellipse "C" @480,0 size=120,60
-element ab link from=a to=b end=arrow
-element bc link from=b to=c end=arrow
-camera center=240,0 zoom=1
+scene links dim=2d layout=links name="Links" theme=flat {
+  camera center=256,0 zoom=1
+}
+
+layout links dim=2d model=shapes {
+  element a box "A" @ 0,0 hue=blue
+  element b box "B" @ 256,0 hue=green
+  element c box "C" @ 512,0 hue=amber
+  element ab link from=a to=b end=arrow
+  element bc link from=b to=c end=arrow
+}
+
+model shapes dim=2d {
+  object box rect size=128x128 surface=solid border=true rounded=true
+}
 ```
 
-```
-scene cluster dim=3d theme=presentation
-element hub sphere "Hub" @0,0,0 scale=1
-element s1 sphere ~ring(radius=3)
-element s2 sphere ~ring(radius=3)
-element s3 sphere ~ring(radius=3)
-element l1 link from=hub to=s1
-element l2 link from=hub to=s2
-element l3 link from=hub to=s3
-camera target=0,0,0 yaw=-45 pitch=30 distance=14 fov=0.8 projection=perspective
-```
-
-The semantic layer (`node`, `edge`, `group`, relationship words) stays as a shorthand that compiles to elements, now
-keeping its intent on the elements (decision 15).
+A group arranges members that have no position when the text is read (`arrange=ring arrange-radius=3`), and the
+arranged positions are printed back. The semantic layer (`node`, `edge`, `group`, relationship words) stays as a
+shorthand that compiles to elements, now keeping its intent on the elements (decision 15).
 
 ## Stage 2: exemplars
 
@@ -244,8 +242,9 @@ Each exemplar is checked by:
 
 ## Migration
 
-Existing `Drawing.Canvas` content (revision `dxos.org/scene/2`) is migrated to Scene and Element: views become scenes,
-nodes and links become elements, links' endpoints become bindings, composites become components, `z` becomes `order`.
+Existing `Drawing.Canvas` content (revision `dxos.org/scene/2`) is migrated to Layout, Scene and Model: views become
+layouts, each with a scene for its camera, nodes and links become elements, links' endpoints become bindings,
+composites become model objects with parts, `z` becomes `order`.
 The migration runs when plugin-canvas switches to the new model (stage 3 or later), not in stage 2.
 
 ## Left to the builder

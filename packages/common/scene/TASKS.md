@@ -1,7 +1,7 @@
 # Scene model — Tasks
 
-_Resume: write the stage 3 design (editing tooling) for review. Uncommitted: none. Last: stage 2 exemplars render and
-animate in storybook._
+_Resume: the user reviews the stage 3 plan, then execute it. Uncommitted: none. Last: the stage 2 code split into Model,
+Layout and Scene (D-27..D-33)._
 
 Design: `agents/superpowers/specs/2026-10-28-scene-model-design.md`. Plan:
 `agents/superpowers/plans/2026-10-28-scene-model-stage-2.md`. Spec: `SPEC.mdl`.
@@ -23,11 +23,15 @@ play an animation.
 - [x] **Solids** — Manifold operation trees; rounded cubes.
 - [x] **2D drawn in 3D** — `liftScene`, `camera2DTo3D`.
 - [x] **Animator stages** — plugin-canvas `scene2dStage`, `scene3dStage`, `SceneStage` story over every exemplar.
+- [x] **Model, Layout and Scene** (2026-10-29, D-27..D-33) — `Model2D/3D` objects, `Layout2D/3D` elements placing them
+      (`object`) or inline (`kind`), `Scene2D/3D` = layout + camera; child scenes became composite objects with
+      `parts`; `Arrangement` replaces the old group `Layout`; `.dx` `scene`/`layout`/`model` blocks; every exemplar,
+      renderer, stage and test moved over; `useSceneDocument` follows the layout and model as well as the scene.
 
 ### Follow-ups
 
 - [ ] A flat frame's label floats half its width above it (the label anchor uses the largest scale).
-- [ ] Child scenes in the 2D canvas show only on zoom or drill-in, not as a thumbnail inside their frame.
+- [ ] Composites' parts in the 2D canvas show only on zoom or drill-in, not as a thumbnail inside their frame.
 - [ ] 2D colour cannot be keyed: canvas hues are names, which OKLab colour keys cannot interpolate.
 - [ ] The 2D stage reports no projection for overlay effects; the 3D stage does.
 - [ ] The scene stages are not contributed by plugin-canvas or registered in Composer yet.
@@ -35,8 +39,13 @@ play an animation.
 - [ ] **Publish `@dxos/scene` and `@dxos/animation`** (user, 2026-10-29) — published `@dxos/diagram` and
       react-ui-canvas depend on them. First publish and trusted publisher via `scripts/publish-package.mjs`
       (`npm-publishing` skill); remove `"private": true` only after the trusted publisher exists.
-- [ ] Child-scene edits do not reach a playing stage: `useSceneDocument` subscribes to the root scene only.
+- [ ] Edits to parts layouts do not reach a playing stage: `useSceneDocument` follows the scene, its layout and its
+      model, not the layouts that composite objects' parts name.
 - [ ] `bind` reads the stored scene (`fromEcho`) on every sample.
+- [ ] `fromEcho` reads only the scene it is given and what it reaches; other scenes of a canvas are read through the
+      canvas (stage 3, Task 4).
+- [ ] An object id that is a `.dx` keyword (`node`, `group`, …) prints quoted in its `object` statement; consider
+      reporting it, as an object id that is a kind is.
 - [ ] Manifold load failure is unhandled and cached; until it loads, solids draw as unit boxes.
 - [ ] `then`/`reduce` in `solid.ts` leak a Manifold when a step throws.
 - [ ] Duplicate element ids share one render-list key.

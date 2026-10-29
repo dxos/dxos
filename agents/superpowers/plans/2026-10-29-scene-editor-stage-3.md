@@ -3,37 +3,46 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** One editor, grown inside plugin-canvas, edits 2D and 3D scenes stored as `Scene2D`/`Scene3D`, so today's
-canvas becomes its 2D case, plugin-spacetime is retired, and the assistant edits scenes through the `.dx` DSL.
+**Goal:** One editor, grown inside plugin-canvas, edits 2D and 3D drawings stored as Model, Layout and Scene objects
+(`Model2D`/`Layout2D`/`Scene2D` and their 3D twins), so today's canvas becomes its 2D case, plugin-spacetime is retired,
+and the assistant edits drawings through the `.dx` DSL.
 
 **Architecture:** react-ui-canvas keeps its `View`/`ViewStore`/`VersionedSource` engine; a lossless adapter backs its
-`ViewStore` with `Scene2D` ECHO objects, so the 2D mechanism depends only on `Scene` (decision 5). 3D gets a shared
-`SceneIntent` reducer in `@dxos/scene`, a picking contract on `SceneRenderer3D`, Babylon `GizmoManager` handles and a
-`VersionedSource` over `Scene3D` for undo. Every drawing is a plugin-illustrator `Drawing`; its existing `canvas` Ref is
-widened to name either the unchanged `Drawing.Canvas` (tldraw, excalidraw) or plugin-canvas's typed `Canvas`, which
-holds the metadata and named style classes and whose `content` Ref names a `Scene2D` or `Scene3D`; that type picks the
-viewport (decision 10, SPEC D-26).
+`ViewStore` with `Layout2D` ECHO objects (a View is a layout; its camera is a `Scene2D`), so the 2D mechanism depends
+only on `@dxos/scene` (decision 5). 3D gets a shared `SceneIntent` reducer over layout records in `@dxos/scene`, a
+picking contract on `SceneRenderer3D`, Babylon `GizmoManager` handles and a `VersionedSource` over `Layout3D` for undo.
+Every drawing is a plugin-illustrator `Drawing`; its existing `canvas` Ref is widened to name either the unchanged
+`Drawing.Canvas` (tldraw, excalidraw) or plugin-canvas's typed `Canvas`, which holds the metadata, named style classes,
+its model, layouts and scenes; the scene's type picks the viewport (decisions 10, 14; SPEC D-26, D-27).
 
 **Tech Stack:** TypeScript, Effect Schema, ECHO (`@dxos/echo`), effect-atom, React, Babylon.js, manifold-3d, vitest.
 
 **Spec:** `agents/superpowers/specs/2026-10-28-scene-editor-design.md` (decisions 1–13; no open questions); model spec
-`packages/common/scene/SPEC.mdl` (D-1…D-26); stage 2 design
+`packages/common/scene/SPEC.mdl` (D-1…D-33); stage 2 design
 `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
+
+**Model terms (2026-10-29, D-27..D-33):** elements live in a **Layout** (`LayoutRecord2D/3D`, ECHO `Layout2D/3D`), a
+**Scene** is a layout plus a camera (`SceneRecord2D/3D`, ECHO `Scene2D/3D`, holding `layout: Ref`), and a **Model**
+(`Model2D/3D`) holds reusable objects that elements place (`element.object`); a composite object's `parts` is a nested
+layout, which replaces child scenes and `child` Refs. Records resolve against their model with `resolveLayout2D/3D`.
+Where a task below says an element is in a scene, it is in the scene's layout.
 
 ## Global Constraints
 
 - The editor grows inside plugin-canvas; no new editor plugin (decision 1).
 - The plugin owns a canvas object for its metadata; editing, rendering and animation depend only on `Scene` (decision 5).
 - Every drawing is a `Drawing`; `Drawing.canvas` is a Ref to either the existing `Drawing.Canvas` (tldraw and
-  excalidraw, structurally unchanged) or plugin-canvas's `Canvas`. `Canvas` holds the metadata and named style classes;
-  `Canvas.content` is a Ref to a `Scene2D` or `Scene3D`, and that type picks the viewport (decisions 6, 10; D-26).
+  excalidraw, structurally unchanged) or plugin-canvas's `Canvas`. `Canvas` holds the metadata, named style classes,
+  `model?: Ref<Model>`, `layouts: Ref<Layout>[]` and `scenes: Ref<Scene>[]`; a scene's type picks the viewport
+  (decisions 6, 10, 14; D-26, D-27).
 - plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free (freehand), lattice,
   constrained and scored — and dynamic, which is also a projection mode (decision 12).
 - plugin-spacetime is deleted within stage 3 once each of its tools has a test in the new editor (decision 11).
 - 3D handles are Babylon's `GizmoManager` (decision 8). The 3D viewer orbits; in an animator stage the animation drives
   the camera (decision 9).
 - tldraw and excalidraw drawings do not change or migrate. Only scene canvases (`dxos.org/scene/2`) migrate, into a
-  `Canvas` plus `Scene2D` objects. plugin-spacetime data does not migrate.
+  `Canvas` plus `Layout2D`, `Scene2D` and `Model2D` objects. plugin-spacetime data does not migrate.
+- Playback samples a scene's layout and never writes it back (D-28).
 - Records are the source of truth; the DSL is their lossless text form. Positions round to 0.001.
 - New packages: none. Workspace deps use `workspace:*`; never let `pnpm add` bump the catalog — revert
   `pnpm-workspace.yaml` with `git checkout pnpm-workspace.yaml` if it changes.
@@ -50,14 +59,14 @@ viewport (decision 10, SPEC D-26).
 2. Linked drawings (portal frames) whose target is not migrated yet: the scene store must open them read-through, not
    drop them.
 3. Undo across an ECHO-backed `Scene3D` after a remote edit to the same element: `patchSource` must skip, not clobber.
-4. A gizmo drag on an element inside a child scene: the intent must target the child scene, not the root.
+4. A gizmo drag on an element inside a composite's parts: the intent must target the parts layout, not the root layout.
 5. `EditScene` given DSL text with problems: no partial write; problems return to the caller.
 
 ---
 
-## Phase A — Model switch (2D on Scene2D)
+## Phase A — Model switch (2D on Layout2D and Scene2D)
 
-### Task 1: Lossless View ⇄ Scene2D mapping
+### Task 1: Lossless View ⇄ Layout2D mapping
 
 **Files:**
 
@@ -68,10 +77,11 @@ viewport (decision 10, SPEC D-26).
 
 - Consumes: `toCanvasViews(doc: Scene.SceneDocument)` (exists), react-ui-canvas `View`, `Node`, `Link`, `Layer`.
 - Produces:
-  - `toCanvasView(scene: Scene.SceneRecord2D): View`
-  - `fromCanvasView(view: View, camera?: Scene.Camera2D): Scene.SceneRecord2D`
+  - `toCanvasView(doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View`
+  - `fromCanvasView(view: View): Scene.LayoutRecord2D`
   - Node fields with no `Element2D` field are kept under `element.props.canvas`; View-level fields (`layers`, `kind`,
-    `anonymous`) under the scene's new `props.canvas` (Step 3).
+    `anonymous`) under the layout's new `props.canvas` (Step 3); a portal node becomes an element placing a composite
+    object whose `parts` is the portal's view.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -82,7 +92,7 @@ test('round-trips every node type and link shape in the canvas samples', () => {
   }
 });
 test('keeps a node field Element2D has no slot for under props.canvas', () => {
-  const scene = fromCanvasView(
+  const layout = fromCanvasView(
     viewWith({
       type: 'rect',
       id: 'a',
@@ -91,7 +101,7 @@ test('keeps a node field Element2D has no slot for under props.canvas', () => {
       text: { align: 'left' },
     }),
   );
-  expect(scene.elements.a.props?.canvas).toMatchObject({ text: { align: 'left' } });
+  expect(layout.elements.a.props?.canvas).toMatchObject({ text: { align: 'left' } });
 });
 test('maps z to order and a link endpoint to a binding', () => {
   /* order === node.z; from.element === source.node */
@@ -102,13 +112,14 @@ test('maps z to order and a link endpoint to a binding', () => {
 link `type`).
 
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/react-ui-scene exec vitest run --project=node src/canvas/adapter.test.ts` → `fromCanvasView is not a function`.
-- [ ] **Step 3: Implement.** Layers and `kind`/`anonymous` (View-level fields) go in a reserved scene-level record:
-      add `props?: Record<string, unknown>` to `sceneFields` in `@dxos/scene` (`Scene.ts`), with SPEC decision
-      "Scenes carry renderer-specific props, as elements do." `toCanvasViews` becomes `doc.scenes.map(toCanvasView)`.
+- [ ] **Step 3: Implement.** Layers and `kind`/`anonymous` (View-level fields) go in a reserved layout-level record:
+      add `props?: Record<string, unknown>` to `makeLayoutSchema` in `@dxos/scene` (`Scene.ts`), with SPEC decision
+      "Layouts carry renderer-specific props, as elements do." `toCanvasViews` maps each 2D layout with
+      `toCanvasView`.
 - [ ] **Step 4: Run, expect PASS** (same command), plus `pnpm --filter @dxos/scene exec vitest run --project=node`.
-- [ ] **Step 5: Commit** `react-ui-scene: lossless View and Scene2D mapping`.
+- [ ] **Step 5: Commit** `react-ui-scene: lossless View and Layout2D mapping`.
 
-### Task 2: A ViewStore backed by Scene2D objects
+### Task 2: A ViewStore backed by Layout2D objects
 
 **Files:**
 
@@ -117,29 +128,31 @@ link `type`).
 
 **Interfaces:**
 
-- Consumes: Task 1 `toCanvasView`/`fromCanvasView`; `Scene.Scene2D`; react-ui-canvas `ViewStore`, `VersionedSource`.
-- Produces: `bindSceneStore(registry: Registry.AtomRegistry, root: Scene.Scene2D): BoundSceneStore` where
-  `BoundSceneStore = { store: ViewStore; root: ViewId; dispose: () => void }`. View ids are scene `key`s; child scenes
-  are reached through elements' `child` Refs and loaded on demand.
+- Consumes: Task 1 `toCanvasView`/`fromCanvasView`; `Scene.Scene2D`, `Scene.Layout2D`, `Scene.Model2D`;
+  react-ui-canvas `ViewStore`, `VersionedSource`.
+- Produces: `bindSceneStore(registry: Registry.AtomRegistry, scene: Scene.Scene2D): BoundSceneStore` where
+  `BoundSceneStore = { store: ViewStore; root: ViewId; dispose: () => void }`. View ids are layout `key`s; the root is
+  the scene's layout, and parts layouts are reached through the model's composite objects' `parts` Refs and loaded on
+  demand.
 
 - [ ] **Step 1: Failing tests**
 
 ```ts
-test('a node moved through the store is written to the Scene2D element', ...);   // elements.a.center updated
-test('an ECHO edit to the Scene2D reaches the View atom', ...);                    // registry.get(store.view(root)).nodes.a
-test('a child scene reached by Ref opens as its own View', ...);                  // store.view('b-detail') defined
+test('a node moved through the store is written to the Layout2D element', ...);  // elements.a.center updated
+test('an ECHO edit to the Layout2D reaches the View atom', ...);                   // registry.get(store.view(root)).nodes.a
+test("a composite's parts layout opens as its own View", ...);                     // store.view('b-detail') defined
 test('versions.read at earlier heads returns the earlier View', ...);             // undo reads the past
 test('an unchanged element is not rewritten when another moves', ...);           // per-element writes, so ECHO merges by element
 ```
 
-Use `EchoTestBuilder` with `Scene.Scene2D` registered, as `use-scene-document.test.ts` does.
+Use `EchoTestBuilder` with `Scene.Scene2D`, `Scene.Layout2D` and `Scene.Model2D` registered.
 
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-canvas exec vitest run --project=node src/model/scene-store.test.ts`.
 - [ ] **Step 3: Implement.** Writes diff the new View against the old (`diffPaths`) and write only changed elements via
       `Obj.change`; `versions` maps `[viewId, 'nodes', id, …]` paths onto `elements.<id>` and reads past values with
       the object's heads, as `bindCanvasStore` does for content records.
 - [ ] **Step 4: Run, expect PASS.**
-- [ ] **Step 5: Commit** `plugin-canvas: ViewStore over Scene2D objects`.
+- [ ] **Step 5: Commit** `plugin-canvas: ViewStore over Layout2D objects`.
 
 ### Task 3: `Drawing.canvas` accepts either canvas type
 
@@ -182,25 +195,26 @@ Use `EchoTestBuilder` with `Scene.Scene2D` registered, as `use-scene-document.te
 
 - Consumes: Task 1 `fromCanvasView`; Task 3 `variantFor`/`canvasType`; the v2 reader in `store.ts`.
 - Produces:
-  - `Canvas.Canvas` — DXN `org.dxos.type.canvas.canvas@0.1.0`, `{ settings: CanvasSettings; styles?: Record<string, StyleClass>; content: Ref.Ref(Obj.Unknown) }`,
+  - `Canvas.Canvas` — DXN `org.dxos.type.canvas.canvas@0.1.0`, `{ settings: CanvasSettings; styles?: Record<string, StyleClass>; model?: Ref.Ref(Obj.Unknown); layouts: Ref.Ref(Obj.Unknown)[]; scenes: Ref.Ref(Obj.Unknown)[] }`,
     where `CanvasSettings` is today's `CanvasRecord` minus `kind` and `root` (lattice, grid, readonly, theme, styleSet,
     background, backgroundGrid, diagramShapes).
-  - `createCanvas(settings?: Partial<CanvasSettings> & { dimension?: Scene.Dimension }): { canvas: Canvas.Canvas; scene: Scene.Scene2D | Scene.Scene3D }`
-  - `canvasScene(canvas: Canvas.Canvas): Scene.Scene2D | Scene.Scene3D | undefined`
+  - `createCanvas(settings?: Partial<CanvasSettings> & { dimension?: Scene.Dimension }): { canvas: Canvas.Canvas; scene: Scene.Scene2D | Scene.Scene3D; layout: Scene.Layout2D | Scene.Layout3D }` — one empty layout and one scene over it
+  - `canvasScene(canvas: Canvas.Canvas): Scene.Scene2D | Scene.Scene3D | undefined` — the first scene, which opens
   - `migrateSceneDrawing(drawing: Drawing.Drawing): Effect.Effect<boolean, Error, Database.Service>` — for a drawing
-    whose canvas is a `Drawing.Canvas` with schema `dxos.org/scene/2`: one `Scene2D` per scene record (child scenes
-    linked by `child` Ref), the canvas record's settings and the legacy `styles` onto a new `Canvas`, and
+    whose canvas is a `Drawing.Canvas` with schema `dxos.org/scene/2`: one `Layout2D` and one `Scene2D` per view, a
+    `Model2D` whose composite objects hold the views portals open as `parts`, the canvas record's settings and the
+    legacy `styles` onto a new `Canvas`, and
     `drawing.canvas` repointed to it in one change; returns whether it changed anything. Any other drawing is left as
     it is.
 
 - [ ] **Step 1: Failing tests**
 
 ```ts
-test('createCanvas() makes a Canvas whose content is a Scene2D; dimension 3d makes a Scene3D', ...);
+test('createCanvas() makes a Canvas with a Scene2D over a Layout2D; dimension 3d makes 3D ones', ...);
 test('every sample canvas reads the same Views before and after migration', ...); // bindCanvasStore(legacy) vs bindSceneStore
 test('running it twice changes nothing the second time', ...);
 test('a tldraw drawing is left as it is', ...);
-test('a portal frame becomes an element with a child Ref', ...);
+test('a portal frame becomes an element placing a composite object whose parts are its view', ...);
 test('named style classes and settings move onto the Canvas', ...);
 test('a lattice canvas keeps lattice: true in its settings', ...);
 ```
@@ -211,11 +225,11 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 - [ ] **Step 3: Implement.** ECHO's `Migration.define` maps one type to one type and `Migration.defineContent` cannot
       create objects, so this runs when a scene drawing is opened for writing (the article surface) and from a
       space-level `MigrateDrawings` operation; a read-only viewer reads the legacy canvas (Review Focus 1). SPEC decision
-      (agent, for user): "plugin-canvas's `Canvas` keeps settings and style classes; elements live in its scene."
-      Fills in D-26. The existing `dxos.org/scene/1 → 2` content migration stays, so a v1
+      (agent, for user): "plugin-canvas's `Canvas` keeps settings and style classes; elements live in its layouts."
+      Fills in D-26 and D-27. The existing `dxos.org/scene/1 → 2` content migration stays, so a v1
       canvas reaches v2 before this one runs.
 - [ ] **Step 4: Run, expect PASS.**
-- [ ] **Step 5: Commit** `plugin-canvas: Canvas type over a Scene, migrated from scene canvases`.
+- [ ] **Step 5: Commit** `plugin-canvas: Canvas type over model, layouts and scenes, migrated from scene canvases`.
 
 ### Task 5: Convert to and from a canvas through Scene2D
 
@@ -338,11 +352,11 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 
 - Produces:
   - `SceneIntent` (Schema union, `kind` tag): `create { element }`, `delete { ids }`, `update { id, path: string[], value }`,
-    `reorder { id, order }`, `group { id, members, layout? }`, `ungroup { id }`, `bind { link: Element }`,
+    `reorder { id, order }`, `group { id, members, arrange? }`, `ungroup { id }`, `bind { link: Element }`,
     `move { ids, delta: Vec2 | Vec3 }`, `rotate { ids, delta: number | Vec3 }`, `scale { ids, factor: Size2 | Vec3 }`,
     `batch { intents }`.
-  - `applyIntent<S extends SceneRecord>(scene: S, intent: SceneIntent): S` — pure; geometric intents dispatch on
-    `scene.dim`.
+  - `applyIntent<L extends LayoutRecord>(layout: L, intent: SceneIntent): L` — pure; geometric intents dispatch on
+    `layout.dim`.
   - `isSceneIntent: (value: unknown) => value is SceneIntent`.
 
 - [ ] **Step 1: Failing tests**
@@ -406,8 +420,8 @@ test('batch applies its intents in order', ...);
 
 - [ ] **Step 1: Failing tests** (`gizmo.test.ts`): a move gizmo drag yields a `move` with the center delta; rotate
       yields degrees; scale yields per-axis factors; an unchanged transform yields undefined; an element in a child
-      scene yields an intent whose ids name the child element (Review Focus 4: `onIntent` receives `{ scene, intent }`
-      — make the prop `onIntent: (scene: string, intent: SceneIntent) => void`).
+      composite's parts yields an intent whose ids name the parts element (Review Focus 4: `onIntent` receives the
+      parts layout's id — make the prop `onIntent: (layout: string, intent: SceneIntent) => void`).
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/react-ui-scene exec vitest run --project=node src/components/Scene3DEditor/gizmo.test.ts`.
 - [ ] **Step 3: Implement.** Click selects (shift toggles); empty click clears; `{ create: kind }` places a unit element
       at `groundPoint`; `link` binds the first and second clicked elements. Orbit stays on the middle/right button
@@ -415,7 +429,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 4: Run, expect PASS.** Story with every exemplar; verify in the browser pane and link the story.
 - [ ] **Step 5: Commit** `react-ui-scene: 3D editor viewport with gizmos`.
 
-### Task 13: Undo over Scene3D
+### Task 13: Undo over Layout3D
 
 **Files:**
 
@@ -424,8 +438,8 @@ test('batch applies its intents in order', ...);
 
 **Interfaces:**
 
-- Produces: `scene3dSource(scene: Scene.Scene3D): VersionedSource` (paths `['elements', id, …]`) and
-  `applySceneIntent(scene: Scene.Scene2D | Scene.Scene3D, intent: Scene.SceneIntent): void` — applies via `applyIntent`
+- Produces: `layout3dSource(layout: Scene.Layout3D): VersionedSource` (paths `['elements', id, …]`) and
+  `applySceneIntent(layout: Scene.Layout2D | Scene.Layout3D, intent: Scene.SceneIntent): void` — applies via `applyIntent`
   and writes only changed elements in one `Obj.change`.
 
 - [ ] **Step 1: Failing tests** — apply, undo (react-ui-canvas `recordChanges` + `patchSource`) restores elements, redo
@@ -544,12 +558,13 @@ test('batch applies its intents in order', ...);
 - Produces:
   - `ReadScene` — key `org.dxos.operation.canvas.readScene`; input `{ drawing: Ref<Drawing.Drawing> }` (resolved through its `Canvas`); output `{ dx: string }`.
   - `EditScene` — key `org.dxos.operation.canvas.editScene`; input `{ drawing: Ref<Drawing.Drawing>; dx: string }`;
-    output `{ problems: { scene: string; element?: string; message: string }[] }`. Applies the difference between the
-    stored and the given document as one `batch` intent per scene, so undo reverts one edit.
+    output `{ problems: { part: 'scene' | 'layout' | 'model'; id: string; element?: string; message: string }[] }`.
+    Applies the difference between the stored and the given document as one `batch` intent per layout, so undo reverts
+    one edit.
 
 - [ ] **Step 1: Failing tests** — `ReadScene` on each exemplar drawing returns text that `readScenes` reads back equal;
       `EditScene` moving one element changes only that element; text with a problem writes nothing and returns it
-      (Review Focus 5); a removed scene unlinks its child Ref.
+      (Review Focus 5); a removed layout unlinks the `parts` Ref of every object that names it.
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-canvas exec vitest run --project=node src/operations/scene.test.ts`.
 - [ ] **Step 3–5:** implement, PASS, commit `plugin-canvas: read and edit scenes as DSL`.
 
@@ -563,8 +578,9 @@ test('batch applies its intents in order', ...);
 
 **Interfaces:**
 
-- Produces: a skill whose instructions (via `trim`) describe `scene`, `camera` and `element` statements, kinds per
-  dimension, bindings, groups, child scenes and solids, with one 2D and one 3D example from `EXEMPLARS`; tools
+- Produces: a skill whose instructions (via `trim`) describe the `scene`, `layout` and `model` blocks and their
+  `camera`, `element` and `object` statements, kinds per dimension, bindings, groups, composite objects and solids,
+  with one 2D and one 3D example from `EXEMPLARS`; tools
   `ReadScene`, `EditScene`.
 
 - [ ] **Step 1: Failing test** — the skill lists exactly the two operations, and every `.dx` example in its

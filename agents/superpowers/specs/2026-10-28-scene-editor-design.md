@@ -34,6 +34,12 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
 12. (2026-10-29) plugin-spacetime is deleted within stage 3 once each of its tools has a test in the new editor.
 13. (2026-10-29) plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free, lattice,
     constrained and scored.
+14. (2026-10-29) A drawing has three aspects (spec D-27..D-30): a **Model** of reusable objects, **Layouts** of
+    positioned elements that place them (or define a kind inline), and **Scenes**, each a layout plus a camera.
+    plugin-canvas's `Canvas` holds the model, its layouts and its scenes (`model?: Ref<Model>`,
+    `layouts: Ref<Layout>[]`, `scenes: Ref<Scene>[]`), which replaces 10's `Canvas.content`. Child scenes are
+    composite objects whose `parts` is a nested layout; playback samples a scene's layout and never writes it back.
+    The group arranger type is `Arrangement`. Wherever this document says a scene holds elements, read: its layout.
 
 ## What exists to build on
 
@@ -49,16 +55,17 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
 
 ### 1. One model: react-ui-canvas edits Scene records
 
-react-ui-canvas's `View` model becomes `Scene2D`: a View is a scene, nodes and links are elements, a link's endpoints
-are bindings, a composite is a component, `z` is `order`. The engine's stores, atoms, projections and undo keep their
-shape and change their element type. `toCanvasViews` then disappears: the 2D renderer draws Scene records directly.
+react-ui-canvas's `View` model is backed by `Layout2D`: a View is a layout (its camera a `Scene2D`), nodes and links are
+elements, a link's endpoints are bindings, a composite is a model object with parts, `z` is `order`. The engine's
+stores, atoms, projections and undo keep their shape and change their element type. `toCanvasViews` then disappears:
+the 2D renderer draws layout records directly.
 
 ### 2. One intent vocabulary, geometry per dimension
 
 Intents name elements by id and are shared: `create`, `delete`, `update(path, value)`, `reorder`, `group`, `ungroup`,
 `bind`, `layout`. Geometric intents carry the scene type's values: `move` (a `Vec2` or `Vec3` delta), `scale`,
 `rotate`. One reducer handles the shared intents; each dimension supplies the geometric ones. Undo stays
-`VersionedSource` over the scene's records, so 2D and 3D undo work the same way.
+`VersionedSource` over the layout's records, so 2D and 3D undo work the same way.
 
 ### 3. Pluggable viewports with one picking contract
 
@@ -77,17 +84,17 @@ rotate and scale are handles: today's 2D handles, and Babylon's `GizmoManager` i
 
 The Properties inspector is already a form over the selection's schema, so `Element2D`/`Element3D` and each kind's
 `props` schema drive it in both dimensions. Layers and Views (renamed Scenes) work unchanged. A Library panel lists
-components, which use case 6 (custom objects with effects) needs.
+the model's objects, which use case 6 (custom objects with effects) needs.
 
 ### 5. Migration
 
-A migration reads `Drawing.Canvas` content (revision `dxos.org/scene/2`) and writes Scene2D objects, one per View, with
-child scenes linked by Ref. It runs before plugin-canvas switches over, and its tests run the `.dx` corpus through
-both forms.
+A migration reads `Drawing.Canvas` content (revision `dxos.org/scene/2`) and writes a `Canvas` with one Layout2D and one
+Scene2D per View, and a Model2D whose composite objects hold the views that nested views referenced as parts. It runs
+before plugin-canvas switches over, and its tests run the `.dx` corpus through both forms.
 
 ### 6. Order of work
 
-1. **Model switch:** react-ui-canvas on Scene2D, with the migration, at parity with today's canvas.
+1. **Model switch:** react-ui-canvas on Layout2D and Scene2D, with the migration, at parity with today's canvas.
 2. **3D viewport and arranging:** the Babylon viewport, picking, select, move/rotate/scale gizmos, group, link, undo.
 3. **Solid tools:** extrude, join, subtract, GLB/OBJ import, STL export. plugin-spacetime is then retired.
 4. **Assistant:** Read/Edit operations over the `.dx` scene statements, and a skill (use case 7).
