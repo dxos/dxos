@@ -4,7 +4,7 @@
 
 import { type LayoutIntent, type Resolved3D, type Scene } from '@dxos/scene';
 
-import { type GizmoMode } from '../../three/index.ts';
+import { type GizmoMode, type Viewport, project } from '../../three/index.ts';
 
 /** An element's transform in its layout's coordinates, as a gizmo leaves it. */
 export type Transform3D = { center: Scene.Vec3; rotation: Scene.Vec3; scale: Scene.Vec3 };
@@ -51,4 +51,71 @@ export const gizmoIntent = (
       return changed(moved, 0) ? { kind: 'update', id, path: ['scale'], value } : undefined;
     }
   }
+};
+
+/** How far a face drag must travel, in pixels, to extrude. */
+const EXTRUDE_SLOP = 4;
+
+/** The axis a face normal points along, with its sign: a box's faces, which extrusion moves, are axis-aligned. */
+export const axisOf = ({ x, y, z }: Scene.Vec3): Scene.Vec3 => {
+  const [ax, ay, az] = [Math.abs(x), Math.abs(y), Math.abs(z)];
+  if (ax >= ay && ax >= az) {
+    return { x: Math.sign(x) || 1, y: 0, z: 0 };
+  }
+  return ay >= az ? { x: 0, y: Math.sign(y) || 1, z: 0 } : { x: 0, y: 0, z: Math.sign(z) || 1 };
+};
+
+/** The pixels one world unit along `direction` spans on screen at `point`; undefined behind the camera. */
+export const screenLength = (
+  camera: Scene.Camera3D,
+  viewport: Viewport,
+  point: Scene.Vec3,
+  direction: Scene.Vec3,
+): number | undefined => {
+  const from = project(camera, viewport, point);
+  const to = project(camera, viewport, {
+    x: point.x + direction.x,
+    y: point.y + direction.y,
+    z: point.z + direction.z,
+  });
+  return from && to ? Math.hypot(to.x - from.x, to.y - from.y) : undefined;
+};
+
+export type ExtrudeDrag = {
+  /** The new solid's id. */
+  id: string;
+  /** The element whose face was dragged. */
+  target: string;
+  /** The picked face's world normal. */
+  normal: Scene.Vec3;
+  /** The drag's length along the normal as the screen shows it, positive outwards. */
+  dragPixels: number;
+  camera: Scene.Camera3D;
+  viewport: Viewport;
+  /** Where the face was picked, in world coordinates. */
+  point: Scene.Vec3;
+};
+
+/**
+ * The `extrude` a face drag makes: its distance is the world length the drag spans along the face's normal at the
+ * picked point. Undefined for a drag shorter than a click's slop, or a normal seen end-on.
+ */
+export const extrudeIntent = ({
+  id,
+  target,
+  normal,
+  dragPixels,
+  camera,
+  viewport,
+  point,
+}: ExtrudeDrag): LayoutIntent | undefined => {
+  if (Math.abs(dragPixels) < EXTRUDE_SLOP) {
+    return undefined;
+  }
+  const face = axisOf(normal);
+  const pixels = screenLength(camera, viewport, point, face);
+  if (pixels === undefined || pixels < 1e-3) {
+    return undefined;
+  }
+  return { kind: 'extrude', id, target, face, distance: round(dragPixels / pixels) };
 };

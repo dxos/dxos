@@ -17,7 +17,7 @@ import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Scene3DEditor, type Tool3D } from '@dxos/react-ui-scene';
 import * as Panel from '@dxos/react-ui/Panel';
-import { type LayoutIntent, Scene, reachedObjects, resolveLayout3D } from '@dxos/scene';
+import { type LayoutIntent, Scene, findLayout, reachedObjects, resolveLayout3D } from '@dxos/scene';
 
 import { applyLayoutIntent, layoutSource, openScene, writeModelIntent } from '#model';
 import { type Canvas } from '#types';
@@ -31,6 +31,16 @@ export type Scene3DArticleProps = {
   canvas: Canvas.Canvas;
   role?: string;
   attendableId?: string;
+};
+
+/** The first id of the form `base-n` the layout does not use. */
+const freeElementId = (document: Scene.SceneDocument | undefined, layout: string, base: string): string => {
+  const elements = (document && findLayout(document, layout)?.elements) ?? {};
+  let index = 1;
+  while (elements[`${base}-${index}`]) {
+    index++;
+  }
+  return `${base}-${index}`;
 };
 
 const CREATE_KINDS = ['cube', 'sphere', 'cylinder', 'cone'] as const;
@@ -130,6 +140,7 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
       { id: 'rotate', tool: 'rotate', icon: 'ph--arrow-clockwise--regular' },
       { id: 'scale', tool: 'scale', icon: 'ph--arrows-out--regular' },
       { id: 'link', tool: 'link', icon: 'ph--line-segment--regular' },
+      { id: 'extrude', tool: 'extrude', icon: 'ph--arrow-fat-line-up--regular' },
       ...CREATE_KINDS.map((kind) => ({
         id: kind,
         tool: { create: kind },
@@ -203,6 +214,41 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
           if (layout) {
             handleIntent(layout, { kind: 'delete', ids: selection });
             setSelection([]);
+          }
+        },
+      )
+      .action(
+        'join',
+        {
+          label: label('join.label'),
+          icon: 'ph--unite--regular',
+          disabled: selection.length < 2,
+          disposition: 'toolbar',
+          testId: 'canvas3d.join',
+        },
+        () => {
+          if (layout) {
+            const id = freeElementId(document, layout, 'union');
+            handleIntent(layout, { kind: 'join', id, operands: selection });
+            setSelection([id]);
+          }
+        },
+      )
+      .action(
+        'subtract',
+        {
+          label: label('subtract.label'),
+          icon: 'ph--subtract--regular',
+          // The first selected is the base, the second the tool cut from it.
+          disabled: selection.length !== 2,
+          disposition: 'toolbar',
+          testId: 'canvas3d.subtract',
+        },
+        () => {
+          if (layout && selection.length === 2) {
+            const id = freeElementId(document, layout, 'difference');
+            handleIntent(layout, { kind: 'subtract', id, base: selection[0], tool: selection[1] });
+            setSelection([id]);
           }
         },
       )

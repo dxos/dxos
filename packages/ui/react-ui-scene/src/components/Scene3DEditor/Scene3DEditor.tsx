@@ -16,15 +16,19 @@ import {
   type Theme3D,
   type WorldTransform,
   isTheme3D,
+  project,
   renderList,
 } from '../../three/index.ts';
 import { DEFAULT_CAMERA, useManifoldGeometry, useOrbit, useSceneRenderer } from '../Scene3DView/index.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
-import { gizmoIntent } from './gizmo.ts';
+import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
 
-/** What a left click does: select, transform the selection with a gizmo, link two elements, or place one. */
-export type Tool3D = 'select' | GizmoMode | 'link' | { create: string } | { place: string };
+/**
+ * What a left click does: select, transform the selection with a gizmo, link two elements, place one, or (extrude)
+ * drag a face along its normal.
+ */
+export type Tool3D = 'select' | GizmoMode | 'link' | 'extrude' | { create: string } | { place: string };
 
 export type Scene3DEditorProps = Util.ThemedClassName<{
   document: Scene.SceneDocument;
@@ -249,6 +253,55 @@ export const Scene3DEditor = ({
     [elementAt, resolved, onEdit, onSelect],
   );
 
+  // A face drag with the extrude tool: where it started, and the face it started on.
+  const extruding = useRef<{
+    screen: { x: number; y: number };
+    element: string;
+    normal: Scene.Vec3;
+    point: Scene.Vec3;
+  }>(undefined);
+  const onExtrudeEnd = useCallback(
+    (end: { x: number; y: number }) => {
+      const start = extruding.current;
+      extruding.current = undefined;
+      if (!start) {
+        return false;
+      }
+      const face = axisOf(start.normal);
+      const from = project(view, size, start.point);
+      const to = project(view, size, {
+        x: start.point.x + face.x,
+        y: start.point.y + face.y,
+        z: start.point.z + face.z,
+      });
+      const length = from && to ? Math.hypot(to.x - from.x, to.y - from.y) : 0;
+      if (!from || !to || length < 1e-3) {
+        return false;
+      }
+      // The drag's length along the face's normal as the screen shows it.
+      const dragPixels =
+        ((end.x - start.screen.x) * (to.x - from.x) + (end.y - start.screen.y) * (to.y - from.y)) / length;
+      const id = freeId(layout, 'extrude');
+      const intent = extrudeIntent({
+        id,
+        target: start.element,
+        normal: face,
+        dragPixels,
+        camera: view,
+        viewport: size,
+        point: start.point,
+      });
+      if (intent?.kind === 'extrude') {
+        // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
+        onIntent(editing, { ...intent, distance: Math.round((intent.distance / transform.scale) * 1000) / 1000 });
+        onSelect([id]);
+        return true;
+      }
+      return false;
+    },
+    [view, size, layout, editing, transform, onIntent, onSelect],
+  );
+
   const press = useRef<{ x: number; y: number }>(undefined);
   const local = (event: { clientX: number; clientY: number }) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -266,8 +319,22 @@ export const Scene3DEditor = ({
       onPointerDown={(event) => {
         renderer?.takeDrag();
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
+        if (tool === 'extrude' && event.button === 0) {
+          const screen = local(event);
+          const { hit, element } = elementAt(screen);
+          extruding.current =
+            element !== undefined && hit?.normal && hit.point
+              ? { screen, element, normal: hit.normal, point: hit.point }
+              : undefined;
+          extruding.current && event.currentTarget.setPointerCapture(event.pointerId);
+        }
       }}
       onPointerUp={(event) => {
+        // A face drag that extruded is not a click; one too short to extrude selects, as a click does.
+        if (extruding.current && onExtrudeEnd(local(event))) {
+          press.current = undefined;
+          return;
+        }
         const start = press.current;
         press.current = undefined;
         const moved = start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP;
