@@ -28,6 +28,21 @@
   .dx-number-input > .dx-input-field {
     font-variant-numeric: tabular-nums;
   }
+  .dx-number-input[data-align='end'] > .dx-input-field {
+    text-align: end;
+  }
+  /* A split stepper's decrement mirrors the end cell, centred on the row's start column. */
+  .dx-number-input:has(> .dx-input-adornment[data-part='start'] > .dx-button[data-square]:first-child) {
+    padding-inline-start: 0;
+  }
+  .dx-number-input > .dx-input-adornment[data-part='start'] > .dx-button[data-square][data-compact]:first-child {
+    margin-inline-start: calc((var(--dx-block-size) - var(--dx-control-icon)) / 2 - var(--dx-control-inset));
+    margin-inline-end: 0;
+  }
+  /* A hover stepper keeps its place, so the row never reflows, and shows at once while the row is hovered or focused. */
+  .dx-number-input:not(:hover, :focus-within) .dx-button[data-reveal] {
+    visibility: hidden;
+  }
   .dx-pin-input-cell:disabled {
     opacity: 0.5;
   }
