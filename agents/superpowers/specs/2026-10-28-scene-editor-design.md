@@ -29,10 +29,10 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
     named style classes, and `Canvas.content` is a Ref to a `Scene2D` or `Scene3D`. Only `dxos.org/scene/2` drawings
     migrate, to a `Canvas` plus a `Scene2D`. This replaces 6's "root Ref" wording; the editor still picks the viewport
     from the scene's type.
-13. (2026-10-29) Elements share a `BaseElement` type; a 3D element's location is `center`, as in 2D; both dimensions
+11. (2026-10-29) Elements share a `BaseElement` type; a 3D element's location is `center`, as in 2D; both dimensions
     share one generic `Scene<E, C>` type.
-11. (2026-10-29) plugin-spacetime is deleted within stage 3 once each of its tools has a test in the new editor.
-12. (2026-10-29) plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free, lattice,
+12. (2026-10-29) plugin-spacetime is deleted within stage 3 once each of its tools has a test in the new editor.
+13. (2026-10-29) plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free, lattice,
     constrained and scored.
 
 ## What exists to build on
