@@ -8,12 +8,12 @@
 import {
   type RatingModel,
   type RatingOverrides,
-  cleanAreas,
-  cleanShape,
   type RatingTerm,
   type Requirement,
   type TermShape,
   type TermValue,
+  cleanAreas,
+  cleanShape,
 } from '../model/rating.ts';
 import {
   type Budget,

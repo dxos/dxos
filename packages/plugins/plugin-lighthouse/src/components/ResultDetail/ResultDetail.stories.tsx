@@ -11,6 +11,7 @@ import { translations } from '#translations';
 import { rateAll } from '../../model/rating.ts';
 import { toCard } from '../../model/results.ts';
 import { entities, extensionNode, extensions, meeple, ratingModel } from '../../testing/fixtures.ts';
+import { odynca } from '../../testing/geo-areas-fixture.ts';
 import { fuegoDishes } from '../../testing/research-fixture.ts';
 import { ResultDetail } from './ResultDetail.tsx';
 
@@ -56,5 +57,15 @@ export const DeepResearch: Story = {
     entity,
     card: toCard(entity),
     research: { menu: { status: 'reported', busy: false, items: fuegoDishes } },
+  },
+};
+
+/** A Warsaw rental: the location row opens the map popover; it lies outside the drawn areas. */
+export const Located: Story = {
+  args: {
+    entity: odynca,
+    card: toCard(odynca),
+    areaNote: 'outside',
+    onClose: () => {},
   },
 };

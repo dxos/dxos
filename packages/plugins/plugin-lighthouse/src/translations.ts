@@ -10,7 +10,9 @@ import { meta } from '#meta';
 import { Finding, Research } from '#types';
 
 import { metaTranslations } from './components/LighthouseMeta/translations.ts';
+import { geoTranslations } from './components/LocationPopover/translations.ts';
 import { modelTranslations } from './components/ModelPanel/translations.ts';
+import { mapTranslations } from './components/ResultsMap/translations.ts';
 import { graphTranslations } from './components/SubjectGraph/translations.ts';
 import { traceTranslations } from './components/TracePanel/translations.ts';
 
@@ -34,7 +36,9 @@ export const translations = [
         ...graphTranslations,
         ...traceTranslations,
         ...modelTranslations,
+        ...mapTranslations,
         ...metaTranslations,
+        ...geoTranslations,
         'plugin.name': 'Lighthouse',
         'view-mode.label': 'View',
         'edit-goal.label': 'Edit goal',

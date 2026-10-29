@@ -17,6 +17,10 @@ import * as Util from '@dxos/react-ui/Util';
 import { meta } from '#meta';
 
 import { type CardModel } from '../../model/results.ts';
+import { LocationPopover } from '../LocationPopover/LocationPopover.tsx';
+
+/** Why a card's location row carries a note: outside the person's drawn areas, or no point to place it. */
+export type AreaNote = 'outside' | 'no-location';
 
 export type ResultCardProps = {
   card: CardModel;
@@ -27,6 +31,11 @@ export type ResultCardProps = {
   /** Requirements the result misses. */
   missed?: readonly string[];
   vote?: 'up' | 'down';
+  /**
+   * `outside`: the result lies beyond every drawn area (and its soft edge), so the card is dimmed and says so;
+   * `no-location`: it has no point. Without it, a card that names a place but has no point still says "no location".
+   */
+  areaNote?: AreaNote;
   onToggleStar?: () => void;
   onVote?: (vote: 'up' | 'down') => void;
 };
@@ -44,17 +53,26 @@ const stop = (handler?: () => void) => (event: MouseEvent) => {
  */
 export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
   (
-    { card, current, starred = false, score, missed, vote, onToggleStar, onVote, classNames, ...props },
+    { card, current, starred = false, score, missed, vote, areaNote, onToggleStar, onVote, classNames, ...props },
     forwardedRef,
   ) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const image = card.images[0];
+    const note = areaNote ?? (card.unlocated ? 'no-location' : undefined);
+    // The first location row carries the map popover, or the note.
+    const locationRow = card.rows.findIndex((row) => row.location);
 
     return (
       <Card.Root
         ref={forwardedRef}
-        classNames={['dx-hover cursor-pointer', current && 'dx-current', classNames]}
+        classNames={[
+          'dx-hover cursor-pointer',
+          current && 'dx-current',
+          areaNote === 'outside' && 'opacity-55 hover:opacity-90 transition-opacity',
+          classNames,
+        ]}
         data-testid='lighthouse.result'
+        data-area-note={areaNote}
         {...props}
       >
         {!image && (
@@ -95,13 +113,36 @@ export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
             </Typography.Text>
           </Card.Row>
         )}
-        {card.rows.map((row) => (
-          <Card.Row key={row.icon} icon={row.icon} title={row.title}>
+        {card.rows.map((row, index) => {
+          const text = (
             <Typography.Text truncate classNames='text-sm'>
               {row.text}
             </Typography.Text>
-          </Card.Row>
-        ))}
+          );
+          const first = index === locationRow;
+          return (
+            <Card.Row
+              key={row.icon}
+              icon={row.icon}
+              title={row.title}
+              trailing={
+                first && note ? (
+                  <span className='text-xs text-fg-subtle whitespace-nowrap' data-testid='lighthouse.card.geo-note'>
+                    {t(note === 'outside' ? 'geo-outside.label' : 'geo-no-location.label')}
+                  </span>
+                ) : undefined
+              }
+            >
+              {first && card.geo ? (
+                <LocationPopover point={card.geo} address={card.geo.address}>
+                  {text}
+                </LocationPopover>
+              ) : (
+                text
+              )}
+            </Card.Row>
+          );
+        })}
         <Card.Row
           icon='ph--chart-bar--regular'
           trailing={

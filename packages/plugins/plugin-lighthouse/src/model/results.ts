@@ -5,8 +5,13 @@
 // The entity → card mapping follows lighthouse's web UI (`web/src/results.ts`), so a result reads the same in both.
 
 import { type Entity, type Value } from '../client/types.ts';
+import { type Location, locationOf } from './location.ts';
 
-export type CardRow = { icon: string; text: string; title?: string };
+/** `location`: the row places the result (district, street); the first such row carries the map popover. */
+export type CardRow = { icon: string; text: string; title?: string; location?: boolean };
+
+/** Where the card's result is: its point (through `locationOf`) and its address as one line. */
+export type CardGeo = Location & { address: string };
 
 export type CardTag = { label: string; hue?: 'emerald' | 'red' | 'amber' | 'neutral' };
 
@@ -29,6 +34,10 @@ export type CardModel = {
   logo?: boolean;
   rows: CardRow[];
   tags: CardTag[];
+  /** The result's point, when it has one. */
+  geo?: CardGeo;
+  /** The card names a place (a district, a street) but has no point to map: "no location". */
+  unlocated?: boolean;
 };
 
 /** Subjects that are scaffolding rather than results: results pages, and the result nodes of a web search. */
@@ -160,14 +169,19 @@ export const imagesOf = (entity: Entity): string[] =>
     .slice(0, 8);
 
 /** Properties a card shows as rows: the first few with readable values, in a sensible order. */
-const ROWS: Array<{ keys: string[]; icon: string; format?: (value: Value) => string }> = [
+const ROWS: Array<{ keys: string[]; icon: string; format?: (value: Value) => string; location?: boolean }> = [
   { keys: ['lh:areaM2'], icon: 'ph--ruler--regular', format: (value) => `${formatNumber(toNumber(value), 1)} m²` },
   { keys: ['schema:numberOfRooms', 'lh:rooms'], icon: 'ph--door--regular', format: (value) => `${value} rooms` },
   {
     keys: ['lh:district', 'lh:neighbourhood', 'schema:addressLocality', 'lh:city'],
     icon: 'ph--map-pin--regular',
+    location: true,
   },
-  { keys: ['lh:statedStreet', 'schema:streetAddress', 'schema:address'], icon: 'ph--signpost--regular' },
+  {
+    keys: ['lh:statedStreet', 'schema:streetAddress', 'schema:address'],
+    icon: 'ph--signpost--regular',
+    location: true,
+  },
   { keys: ['lh:amenity'], icon: 'ph--check-circle--regular' },
   {
     keys: ['schema:brand', 'lh:brand', 'schema:hiringOrganization', 'lh:company'],
@@ -271,8 +285,11 @@ export const toCard = (entity: Entity): CardModel => {
       : row.format
         ? row.format(values[0])
         : String(values[0]);
-    return text && text !== 'undefined' ? [{ icon: row.icon, text: clip(text, 160), title: local(key) }] : [];
+    return text && text !== 'undefined'
+      ? [{ icon: row.icon, text: clip(text, 160), title: local(key), ...(row.location ? { location: true } : {}) }]
+      : [];
   }).slice(0, 5);
+  const at = locationOf(entity);
 
   return {
     id: entity.id,
@@ -287,7 +304,27 @@ export const toCard = (entity: Entity): CardModel => {
     ...(/Organization|VentureFund|Corporation/.test(entity.types.join(' ')) ? { logo: true } : {}),
     rows,
     tags: [{ label: kindOf(entity) }, ...legalTags(entity)],
+    ...(at
+      ? { geo: { ...at, address: addressOf(entity) } }
+      : rows.some((row) => row.location)
+        ? { unlocated: true }
+        : {}),
   };
+};
+
+/** The address as one line, most specific first: street, neighbourhood, district, town (no repeats). */
+export const addressOf = (entity: Entity): string => {
+  const parts = [
+    'lh:statedStreet',
+    'schema:streetAddress',
+    'lh:neighbourhood',
+    'lh:district',
+    'schema:addressLocality',
+    'lh:city',
+  ]
+    .map((key) => entity.props[key]?.[0])
+    .filter((value): value is string => typeof value === 'string' && value.trim() !== '' && !/^https?:/.test(value));
+  return [...new Set(parts)].join(', ') || titleOf(entity);
 };
 
 /** Every property of an entity as label/value rows, for the detail pane. */

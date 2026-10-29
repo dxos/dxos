@@ -4,20 +4,25 @@
 
 import { describe, test } from 'vitest';
 
+import { geoAreas, geoEntities, geoModel } from '../testing/geo-areas-fixture.ts';
 import { sessionModel } from '../testing/model-fixture.ts';
 import {
   adjustedCount,
-  describeValue,
-  valueExpression,
   boundsOf,
+  describeValue,
   expressionParts,
+  locatedCount,
   requirementExpression,
+  resetOverrides,
   scoreExpression,
+  setAreasMode,
   setRequirementOverride,
   setTermOverride,
   termExpression,
   termRows,
+  valueExpression,
 } from './model-panel.ts';
+import { AREA_TERM } from './rating.ts';
 import { type Rateable, type RatingModel, type RatingTerm, type Requirement } from './rating.ts';
 
 const items: Rateable[] = [
@@ -129,5 +134,32 @@ describe('area notation', () => {
     expect(requirementExpression({ label: 'Inside', value: { within: [near] }, op: '>', target: 0 })).toBe(
       'inside(area "Near Wierzbno") or dist < 400 m',
     );
+  });
+});
+
+describe('area rows', () => {
+  const overrides = { areas: geoAreas };
+
+  test('lists the preferred areas as one own term the person can weight and turn off', ({ expect }) => {
+    const rows = termRows(geoModel, overrides, geoEntities);
+    const area = rows.find((row) => row.term.id === AREA_TERM);
+    expect(area?.term.own).toBe(true);
+    expect(area?.coverage).toBe(2);
+    expect(adjustedCount(geoModel, overrides)).toBe(1);
+    const off = setTermOverride(overrides, AREA_TERM, { off: true });
+    expect(termRows(geoModel, off, geoEntities).find((row) => row.term.id === AREA_TERM)?.off).toBe(true);
+  });
+
+  test('flips the areas between prefer and require, and reset keeps them', ({ expect }) => {
+    const required = setAreasMode(overrides, 'require');
+    expect(termRows(geoModel, required, geoEntities).some((row) => row.term.id === AREA_TERM)).toBe(false);
+    expect(adjustedCount(geoModel, required)).toBe(1);
+    expect(scoreExpression(geoModel, required)).toContain('missed requirements');
+    expect(resetOverrides({ ...overrides, terms: { price: { off: true } } })).toEqual({ areas: geoAreas });
+    expect(resetOverrides({ terms: { price: { off: true } } })).toEqual({});
+  });
+
+  test('counts the results with a location', ({ expect }) => {
+    expect(locatedCount(geoEntities)).toBe(3);
   });
 });

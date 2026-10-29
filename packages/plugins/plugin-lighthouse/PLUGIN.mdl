@@ -483,6 +483,33 @@ test QA-3: Everything about BlueYard
     - name: The trace
       do: Pick Trace.
       expect: the session's turns, calls and page loads as rows with time and cost
+
+test QA-4: Areas on the map
+  desc: An apartment session opened in Composer, ranked by where its listings are: the map beside the cards, the location popover, the areas in the rating model, a circle drawn and deleted.
+  actors: both
+  status: passing            # 2026-10-29; autocue/geo.mjs against web-20261028-110009, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon holds the session web-20261028-110009 with the areas "Around Mokotów" (require) and "Mokotów" (prefer, 400 m)
+  steps:
+    - name: Open the session
+      do: Create a Research named "Warsaw apartments" with Existing session "web-20261028-110009".
+      expect: the Research opens on the Map, OSM tiles with attribution, pins coloured by score with clusters, unrated places as small grey markers, both areas drawn with their chips (name, Prefer/Require, soft edge, count inside, zoom, delete); cards outside the areas say "outside your areas"
+    - name: Hover a card's location
+      do: Hover the location row of the first card.
+      expect: a popover with a small map, the pin and its precision ring, the address, and links to OpenStreetMap and Google Maps; Esc closes it
+    - name: The areas in the rating model
+      do: Open the Rating model.
+      expect: the preferred area as a term marked yours, `s = inside(area "Mokotów") ? 1 : max(0, 1 − dist / 400 m)`, Edit on the map; the required area as a requirement with Prefer instead
+    - name: Draw a circle near a point
+      do: Pick Near a point, press on the map and drag out a radius.
+      expect: a third area chip with its count inside; the cards re-rank; the areas are saved to the session through /v1
+    - name: Delete it again
+      do: Delete the new area's chip.
+      expect: the session's areas are the two it had
+    - name: Open a result
+      do: Click a card.
+      expect: the companion shows its location row with the popover, and "outside your areas" when it is
 ```
 
 ## Open questions
@@ -660,4 +687,20 @@ decision D-20: A Research can be created on an existing lighthouse run (the crea
   for: user:dmaretskyi
   affects: [Research, ResearchArticle]
   why: The demos show sessions that ran outside Composer (Fuego's menu in bkk-restaurant).
+```
+
+```mdl
+decision D-21: Areas drawn on the results map rank a Research's results exactly as lighthouse's web UI does: rating.ts and locationOf are ported (the {within: areas} value form, the lh-areas term, a required area as a requirement), the article has a Map view with lasso and circle tools and area chips saved through /v1, cards and the companion have a location popover, and the rating model panel shows the areas with their formula.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResearchArticle, ResultsMap, LocationPopover, ResultCard, ResultDetail, ModelPanel, QA-4]
+```
+
+```mdl
+decision D-22: The map is built on react-ui-geo's Map (Leaflet and react-leaflet with OSM tiles) with the plugin's own layers for clustering, drawing and areas, ported from lighthouse's ResultsMap, rather than plain Leaflet or a Leaflet plugin. Fills in [D-21].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResultsMap, LocationPopover]
+  why: react-ui-geo already gives the tile layer, Leaflet's CSS, resizing and dark tiles; it has no drawing or clustering, and turns attribution off, so those are added as children reaching the map through useMap.
 ```

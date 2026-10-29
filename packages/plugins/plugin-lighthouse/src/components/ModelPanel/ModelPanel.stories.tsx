@@ -12,6 +12,7 @@ import { translations } from '#translations';
 
 import { type Rateable, type RatingModel, type RatingOverrides } from '../../model/rating.ts';
 import { entities, ratingModel } from '../../testing/fixtures.ts';
+import { aroundMokotow, geoAreas, geoEntities, geoModel } from '../../testing/geo-areas-fixture.ts';
 import { sessionModel, sessionOverrides } from '../../testing/model-fixture.ts';
 import { ModelPanel } from './ModelPanel.tsx';
 import { modelTranslations } from './translations.ts';
@@ -27,7 +28,16 @@ const DefaultStory = ({
   initial?: RatingOverrides;
 }) => {
   const [overrides, setOverrides] = useState<RatingOverrides | undefined>(initial);
-  return <ModelPanel model={model} overrides={overrides} items={items} onChange={setOverrides} onClose={() => {}} />;
+  return (
+    <ModelPanel
+      model={model}
+      overrides={overrides}
+      items={items}
+      onChange={setOverrides}
+      onMap={() => {}}
+      onClose={() => {}}
+    />
+  );
 };
 
 const meta = {
@@ -66,4 +76,14 @@ export const WithRequirements: Story = {
     },
     items: entities,
   },
+};
+
+/** Two preferred areas drawn on the Warsaw apartments map: one "yours" term with the area formula. */
+export const PreferredAreas: Story = {
+  args: { model: geoModel, items: geoEntities, initial: { areas: geoAreas } },
+};
+
+/** A required area: a requirement row with "Prefer instead". */
+export const RequiredArea: Story = {
+  args: { model: geoModel, items: geoEntities, initial: { areas: [{ ...aroundMokotow, mode: 'require' }] } },
 };

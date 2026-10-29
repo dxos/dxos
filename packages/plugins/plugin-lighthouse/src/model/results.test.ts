@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type Entity } from '../client/types.ts';
+import { odynca, unplaced } from '../testing/geo-areas-fixture.ts';
 import { decodeEntities, isResult, isThin, kindOf, toCard } from './results.ts';
 
 const listing: Entity = {
@@ -94,5 +95,20 @@ describe('results', () => {
 
   test('decodeEntities handles named and numeric entities', ({ expect }) => {
     expect(decodeEntities('Tom &amp; Jerry &#038; &#x27;co&#x27;')).toBe("Tom & Jerry & 'co'");
+  });
+});
+
+describe('card location', () => {
+  test('places a card through locationOf, with its address, or says it has none', ({ expect }) => {
+    const card = toCard(odynca);
+    expect(card.geo).toEqual({
+      lat: 52.2005,
+      lng: 21.0081,
+      precisionM: 250,
+      address: 'ul. Odyńca, Stary Mokotów, Mokotów, Warszawa',
+    });
+    expect(card.rows.find((row) => row.location)?.text).toBe('Mokotów');
+    expect(toCard(unplaced).unlocated).toBe(true);
+    expect(toCard(unplaced).geo).toBeUndefined();
   });
 });

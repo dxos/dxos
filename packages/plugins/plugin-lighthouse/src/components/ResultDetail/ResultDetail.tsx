@@ -7,6 +7,7 @@ import React, { Fragment } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Carousel from '@dxos/react-ui/Carousel';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { Tag } from '@dxos/react-ui/Tag';
@@ -17,6 +18,8 @@ import { meta } from '#meta';
 import { type Entity, type Extension } from '../../client/types.ts';
 import { type Rating } from '../../model/rating.ts';
 import { type CardModel, factsOf } from '../../model/results.ts';
+import { LocationPopover } from '../LocationPopover/LocationPopover.tsx';
+import { type AreaNote } from '../ResultCard/ResultCard.tsx';
 
 /** The predicate an extension field is stored under (mirrors lighthouse `src/extend/Extend.ts` fieldPredicate). */
 const fieldPredicate = (extension: string, field: string) =>
@@ -107,6 +110,8 @@ export type ResultDetailProps = {
   busy?: Readonly<Record<string, boolean>>;
   /** The agent's reason, when the result is a pick. */
   why?: string;
+  /** As on the result's card: outside the drawn areas, or no point. */
+  areaNote?: AreaNote;
   /** Deep extensions' research sessions, by extension id: their status and the items they collected. */
   research?: Readonly<Record<string, { status: string; busy: boolean; items: readonly Entity[] }>>;
   onToggleStar?: () => void;
@@ -129,6 +134,7 @@ export const ResultDetail = ({
   extensionNodes = {},
   busy = {},
   why,
+  areaNote,
   research = {},
   onToggleStar,
   onVote,
@@ -189,6 +195,24 @@ export const ResultDetail = ({
         <Typography.Link href={card.url} target='_blank' rel='noreferrer' classNames='text-sm truncate'>
           {card.url}
         </Typography.Link>
+      )}
+
+      {(card.geo || card.unlocated) && (
+        <Layout.Flex gap='xs' align='center' classNames='text-sm min-w-0' data-testid='lighthouse.detail.location'>
+          <Icon.Icon icon='ph--map-pin--regular' classNames='shrink-0 text-fg-subtle' />
+          {card.geo ? (
+            <LocationPopover point={card.geo} address={card.geo.address}>
+              {card.geo.address}
+            </LocationPopover>
+          ) : (
+            <span className='text-fg-muted'>{t('geo-no-location.label')}</span>
+          )}
+          {areaNote === 'outside' && (
+            <span className='text-xs text-fg-subtle whitespace-nowrap' data-testid='lighthouse.card.geo-note'>
+              {t('geo-outside.label')}
+            </span>
+          )}
+        </Layout.Flex>
       )}
 
       {why && <Typography.Text classNames='text-sm whitespace-normal'>{why}</Typography.Text>}

@@ -14,6 +14,9 @@ import {
   type Requirement,
   type TermShape,
   type TermValue,
+  areaRequirements,
+  areaTerms,
+  locationOf,
   readValue,
 } from './rating.ts';
 
@@ -181,7 +184,9 @@ export const scoreExpression = (model: RatingModel, overrides: RatingOverrides):
   const hasPenalty = model.terms.some(
     (term) => !overrides.terms?.[term.id]?.off && (overrides.terms?.[term.id]?.weight ?? term.weight) < 0,
   );
-  const requirements = (model.require ?? []).some((requirement) => !overrides.require?.[requirement.label]?.off);
+  const requirements =
+    (model.require ?? []).some((requirement) => !overrides.require?.[requirement.label]?.off) ||
+    areaRequirements(overrides).length > 0;
   return `score = (Σ wᵢ·sᵢ${hasPenalty ? ' + Σ|negative wᵢ|' : ''}) / Σ|wᵢ|${requirements ? ` × ${model.penalty ?? 0.3}^(missed requirements)` : ''}`;
 };
 
@@ -214,7 +219,8 @@ export type TermRow = {
 
 /** Each term with the person's adjustments applied, its coverage and its share. */
 export const termRows = (model: RatingModel, overrides: RatingOverrides, items: readonly Rateable[]): TermRow[] => {
-  const rows = model.terms.map((term) => {
+  // The person's preferred areas make one more term (`lh-areas`), weighted and turned off like the agent's.
+  const rows = [...model.terms, ...areaTerms(model, overrides)].map((term) => {
     const override = overrides.terms?.[term.id];
     const weight = typeof override?.weight === 'number' ? override.weight : term.weight;
     const coverage = items.filter((item) =>
@@ -233,12 +239,26 @@ export const termRows = (model: RatingModel, overrides: RatingOverrides, items: 
   return rows.map((row) => ({ ...row, share: row.off ? 0 : Math.abs(row.weight) / total }));
 };
 
-/** How many terms and requirements the person adjusted. */
+/** How many terms and requirements the person adjusted; a drawn area's term or requirement counts as one. */
 export const adjustedCount = (model: RatingModel, overrides: RatingOverrides | undefined): number =>
   overrides
-    ? termRows(model, overrides, []).filter((row) => row.off || row.nudged).length +
-      (model.require ?? []).filter((requirement) => overrides.require?.[requirement.label]?.off).length
+    ? termRows(model, overrides, []).filter((row) => row.off || row.nudged || row.term.own).length +
+      (model.require ?? []).filter((requirement) => overrides.require?.[requirement.label]?.off).length +
+      areaRequirements(overrides).length
     : 0;
+
+/** Results with a point to place, read through `locationOf`. */
+export const locatedCount = (items: readonly Rateable[]): number => items.filter((item) => locationOf(item)).length;
+
+/** The overrides with every drawn area preferred, or every one required. */
+export const setAreasMode = (overrides: RatingOverrides, mode: 'prefer' | 'require'): RatingOverrides => ({
+  ...overrides,
+  areas: (overrides.areas ?? []).map((area) => ({ ...area, mode })),
+});
+
+/** What reset leaves: the agent's model, with the person's drawn areas kept (they are a place, not a nudge). */
+export const resetOverrides = (overrides: RatingOverrides): RatingOverrides =>
+  overrides.areas?.length ? { areas: overrides.areas } : {};
 
 /**
  * The overrides with one term's adjustment changed: `weight: undefined` returns to the agent's weight, `off: false`

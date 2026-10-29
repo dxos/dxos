@@ -168,6 +168,7 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-feed": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-geo": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -175,7 +176,9 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
-    "react": "catalog:"
+    "leaflet": "catalog:",
+    "react": "catalog:",
+    "react-leaflet": "catalog:"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
@@ -184,6 +187,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
+    "@types/leaflet": "catalog:",
     "@types/react": "catalog:",
     "vitest": "catalog:"
   },

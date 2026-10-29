@@ -88,6 +88,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-geo"
+    },
+    {
       "path": "../../ui/react-ui-masonry"
     },
     {

@@ -29,7 +29,16 @@ import { Tag as TagChip } from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { type Entity, type Session } from '#client';
-import { ModelPanel, ResearchThread, ResultCard, SubjectGraph, TracePanel } from '#components';
+import {
+  type AreaNote,
+  ModelPanel,
+  ResearchThread,
+  ResultCard,
+  ResultsMap,
+  SubjectGraph,
+  TracePanel,
+  areaNoteOf,
+} from '#components';
 import { useEngines, useExplain, useLighthouseClient, useSession, useSubjectGraph } from '#hooks';
 import { meta } from '#meta';
 import {
@@ -42,6 +51,7 @@ import {
   imagesOf,
   isResult,
   isThin,
+  locationOf,
   matchPicks,
   nextVote,
   pickKey,
@@ -79,7 +89,12 @@ type TileData = {
   starred: boolean;
   vote?: 'up' | 'down';
   why?: string;
+  /** While areas are drawn: beyond them all ("outside your areas"), or no point to place ("no location"). */
+  areaNote?: AreaNote;
 };
+
+/** Edits to drawn areas re-rank at once; the save follows once they settle (lighthouse SessionView waits 400 ms). */
+const AREA_SAVE_DELAY = 400;
 
 /** What the operations keep of a result: the article's copy of its facts and its score. */
 const toFindingInput = (entity: Entity, card: CardModel, extra: { score?: number; why?: string } = {}) => ({
@@ -150,8 +165,11 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   );
 
   const [view, setView] = useState<'all' | 'findings'>('all');
-  // Results (the ranked masonry), Graph (the subjects' neighbourhood) or Trace (the trajectory as a tree).
-  const [mode, setMode] = useState<'results' | 'graph' | 'trace'>('results');
+  // Results (the ranked masonry), Graph (the subjects' neighbourhood), Trace (the trajectory as a tree) or Map (the
+  // located results on OSM above the masonry, with the person's drawn areas).
+  const [mode, setMode] = useState<'results' | 'graph' | 'trace' | 'map'>('results');
+  // Bumped by the rating model panel's "Draw an area on the map": the map starts a lasso.
+  const [drawRequest, setDrawRequest] = useState(0);
   const [showModel, setShowModel] = useState(false);
   // A double-click refocuses the graph on a node; Back to subjects returns to the session's roots.
   const [focus, setFocus] = useState<string>();
@@ -194,6 +212,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     () => matchPicks(session?.report?.picks ?? [], state.results),
     [session?.report, state.results],
   );
+  const located = useMemo(() => items.some((entity) => locationOf(entity)), [items]);
+  const areas = state.rating.overrides?.areas;
 
   const tiles = useMemo<TileData[]>(() => {
     if (view === 'findings') {
@@ -274,18 +294,34 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         starred: starredIris.has(entity.id),
         vote: state.rating.feedback[entity.id],
       }));
+    const noted = (tiles: TileData[]): TileData[] =>
+      areas?.length
+        ? tiles.map((tile) => (tile.entity ? { ...tile, areaNote: areaNoteOf(tile.entity, areas) } : tile))
+        : tiles;
     if (session?.intent === 'entity') {
       // "Everything about X" opens on pictures: whatever has a photo or logo (picks first), then the rest.
       const pictured = (tile: TileData) => tile.card.images.length > 0;
-      return [
+      return noted([
         ...pickTiles.filter(pictured),
         ...rest.filter(pictured),
         ...pickTiles.filter((tile) => !pictured(tile)),
         ...rest.filter((tile) => !pictured(tile)),
-      ];
+      ]);
     }
-    return [...pickTiles, ...rest];
-  }, [view, findings, picks, ranked, ratings, currentId, starredIris, state.rating.feedback, session?.intent, t]);
+    return noted([...pickTiles, ...rest]);
+  }, [
+    view,
+    findings,
+    picks,
+    ranked,
+    ratings,
+    currentId,
+    starredIris,
+    state.rating.feedback,
+    session?.intent,
+    areas,
+    t,
+  ]);
 
   //
   // Actions
@@ -416,7 +452,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   useEffect(() => {
     if (session && defaulted.current !== session.run) {
       defaulted.current = session.run;
-      setMode(session.intent === 'entity' ? 'graph' : 'results');
+      // A session with drawn areas opens on its map, as the web UI's does.
+      setMode(session.intent === 'entity' ? 'graph' : state.rating.overrides?.areas?.length ? 'map' : 'results');
       setFocus(undefined);
     }
   }, [session]);
@@ -425,18 +462,68 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   const subjectGraph = useSubjectGraph(mode === 'graph' ? client : undefined, graphRoots);
   const trace = useExplain(mode === 'trace' ? client : undefined, snapshot.run, state.lastSeq);
 
-  const handleOverrides = useCallback(
+  const saveOverrides = useCallback(
     (overrides: RatingOverrides) => {
       const run = snapshot.run;
-      update((state) => ({ ...state, rating: { ...state.rating, overrides } }));
       if (client && run) {
         void EffectEx.runPromise(client.setOverrides(run, overrides)).catch((err: unknown) =>
           setError(err instanceof Error ? err.message : String(err)),
         );
       }
     },
-    [client, snapshot.run, update],
+    [client, snapshot.run],
   );
+
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const pendingSave = useRef<RatingOverrides>(undefined);
+  const handleOverrides = useCallback(
+    (overrides: RatingOverrides) => {
+      clearTimeout(saveTimer.current);
+      pendingSave.current = undefined;
+      update((state) => ({ ...state, rating: { ...state.rating, overrides } }));
+      saveOverrides(overrides);
+    },
+    [saveOverrides, update],
+  );
+
+  // Drawing and dragging areas re-ranks at once; the save is debounced so a soft-edge drag is one PUT.
+  const handleAreaOverrides = useCallback(
+    (overrides: RatingOverrides) => {
+      update((state) => ({ ...state, rating: { ...state.rating, overrides } }));
+      clearTimeout(saveTimer.current);
+      pendingSave.current = overrides;
+      saveTimer.current = setTimeout(() => {
+        pendingSave.current = undefined;
+        saveOverrides(overrides);
+      }, AREA_SAVE_DELAY);
+    },
+    [saveOverrides, update],
+  );
+  // Leaving the article flushes an edit still waiting to be saved.
+  useEffect(
+    () => () => {
+      clearTimeout(saveTimer.current);
+      if (pendingSave.current) {
+        saveOverrides(pendingSave.current);
+      }
+    },
+    [saveOverrides],
+  );
+
+  const handleMap = useCallback((draw?: boolean) => {
+    setMode('map');
+    if (draw) {
+      setDrawRequest((count) => count + 1);
+    }
+  }, []);
+
+  const describePin = useCallback((item: Entity) => {
+    const card = toCard(item);
+    const address = [item.props['schema:streetAddress']?.[0], item.props['lh:neighbourhood']?.[0]]
+      .filter((value) => typeof value === 'string' && value)
+      .join(', ');
+    return { title: card.title, detail: [card.price, address].filter(Boolean).join(' · ') };
+  }, []);
 
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().group(
@@ -485,6 +572,13 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
           { label: ['mode-trace.label', { ns: meta.profile.key }], icon: 'ph--tree-structure--regular' },
           () => setMode('trace'),
         );
+        if (located) {
+          group.action(
+            'map',
+            { label: ['mode-map.label', { ns: meta.profile.key }], icon: 'ph--map-trifold--regular' },
+            () => setMode('map'),
+          );
+        }
       },
     );
     if (mode === 'graph' && focus) {
@@ -494,7 +588,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         () => setFocus(undefined),
       );
     }
-    if (state.rating.model && mode === 'results') {
+    if (state.rating.model && (mode === 'results' || mode === 'map')) {
       builder.action(
         'model',
         {
@@ -512,7 +606,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       );
     }
     return builder.build();
-  }, [view, mode, focus, showModel, state.rating.model, busy, handleStop]);
+  }, [view, mode, focus, located, showModel, state.rating.model, busy, handleStop]);
 
   const hasConnection = !!snapshot.connection || connections.length > 0;
   const budget = snapshot.budget ?? 'quick';
@@ -628,9 +722,22 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                     overrides={state.rating.overrides}
                     items={items}
                     onChange={handleOverrides}
+                    onMap={located ? handleMap : undefined}
                     onClose={() => setShowModel(false)}
                   />
                 </Layout.Flex>
+              )}
+              {mode === 'map' && (
+                <ResultsMap
+                  items={items}
+                  ratings={ratings}
+                  overrides={state.rating.overrides}
+                  describe={describePin}
+                  drawRequest={drawRequest}
+                  selected={currentId}
+                  onOverrides={handleAreaOverrides}
+                  onSelect={handleSelect}
+                />
               )}
               <Layout.Flex column grow>
                 {tiles.length === 0 ? (
@@ -687,6 +794,7 @@ const TileAdapter = ({ data }: { data: TileProps | undefined; index: number }) =
       score={tile.rating?.score}
       missed={tile.rating?.missed}
       vote={tile.vote}
+      areaNote={tile.areaNote}
       onToggleStar={() => onToggleStar(tile)}
       onVote={onVote && tile.entity ? (vote) => onVote(tile, vote) : undefined}
     />

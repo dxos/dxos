@@ -21,7 +21,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 
 import { type Entity } from '#client';
-import { RelationsPanel, ResultDetail } from '#components';
+import { RelationsPanel, ResultDetail, areaNoteOf } from '#components';
 import {
   useChildResearch,
   useExtensionNodes,
@@ -100,6 +100,15 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
       withLinkedGeo(state.results, state.results),
     ).get(entity.id);
   }, [entity, state.rating, state.results]);
+
+  // The companion says when the result lies outside the person's drawn areas, like its card does.
+  const areaNote = useMemo(
+    () =>
+      entity
+        ? areaNoteOf(withLinkedGeo([entity], state.results)[0] ?? entity, state.rating.overrides?.areas)
+        : undefined,
+    [entity, state.results, state.rating.overrides],
+  );
   const why = useMemo(
     () =>
       matchPicks(state.session?.report?.picks ?? [], state.results).find((pick) => pick.entity?.id === iri)?.pick.why ??
@@ -219,6 +228,7 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
               <Layout.Flex column>
                 <ResultDetail
                   entity={entity}
+                  areaNote={areaNote}
                   card={card}
                   rating={rating}
                   starred={starred}

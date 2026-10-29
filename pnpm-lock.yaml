@@ -13727,6 +13727,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-geo':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-geo
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
@@ -13748,9 +13751,15 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      leaflet:
+        specifier: 'catalog:'
+        version: 1.9.4
       react:
         specifier: ~19.2.7
         version: 19.2.7
+      react-leaflet:
+        specifier: 'catalog:'
+        version: 5.0.0(leaflet@1.9.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
       '@dxos/client':
         specifier: workspace:*
@@ -13770,6 +13779,9 @@ importers:
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      '@types/leaflet':
+        specifier: 'catalog:'
+        version: 1.9.17
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17

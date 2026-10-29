@@ -6,6 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -14,15 +15,19 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 import {
+  DIST_NOTE,
   adjustedCount,
   boundsOf,
   describeShape,
   describeValue,
   expressionParts,
   isFlag,
+  locatedCount,
   requirementExpression,
+  resetOverrides,
   roundWeight,
   scoreExpression,
+  setAreasMode,
   setRequirementOverride,
   setTermOverride,
   stepOf,
@@ -30,10 +35,10 @@ import {
   termRows,
   weightRange,
 } from '../../model/model-panel.ts';
-import { type Rateable, type RatingModel, type RatingOverrides } from '../../model/rating.ts';
+import { type Rateable, type RatingModel, type RatingOverrides, areaRequirements } from '../../model/rating.ts';
 
 /** A formula with each CURIE's prefix dimmed: the namespace tells `lh:category` from `schema:category`. */
-const Expression = ({ text, title }: { text: string; title?: string }) => (
+const Expression = ({ text, title, note }: { text: string; title?: string; note?: string }) => (
   <code title={title} className='font-mono text-[0.625rem] text-fg-subtle break-words self-start max-w-full'>
     {expressionParts(text).map((part, index) =>
       index % 2 === 1 ? (
@@ -44,8 +49,15 @@ const Expression = ({ text, title }: { text: string; title?: string }) => (
         part
       ),
     )}
+    {note && <span className='italic opacity-80'>{`   ${note}`}</span>}
   </code>
 );
+
+/** Marks a term or requirement the person made (a drawn area), not the agent. */
+const Own = () => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return <span className='text-[0.625rem] uppercase tracking-wide text-accent-text'>{t('model-own.label')}</span>;
+};
 
 export type ModelPanelProps = {
   /** The agent's rating model. */
@@ -56,6 +68,8 @@ export type ModelPanelProps = {
   items: readonly Rateable[];
   /** The whole new set of adjustments; the host applies it at once and saves it. */
   onChange: (overrides: RatingOverrides) => void;
+  /** Opens the results map: to draw an area (`draw`), or to edit the drawn ones. */
+  onMap?: (draw?: boolean) => void;
   onClose?: () => void;
 };
 
@@ -64,12 +78,15 @@ export type ModelPanelProps = {
  * this session's numbers, and its share of the total. Each weight can be nudged and each term or requirement turned
  * off; the adjustments are the person's own and survive the agent rebuilding the model.
  */
-export const ModelPanel = ({ model, overrides = {}, items, onChange, onClose }: ModelPanelProps) => {
+export const ModelPanel = ({ model, overrides = {}, items, onChange, onMap, onClose }: ModelPanelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [showRationale, setShowRationale] = useState(false);
   const rows = useMemo(() => termRows(model, overrides, items), [model, overrides, items]);
   const changed = adjustedCount(model, overrides);
   const range = weightRange(model);
+  const ownRequire = useMemo(() => areaRequirements(overrides), [overrides]);
+  const located = useMemo(() => locatedCount(items), [items]);
+  const hasAreas = (overrides.areas?.length ?? 0) > 0;
 
   const setTerm = useCallback(
     (id: string, patch: { weight?: number | undefined; off?: boolean }) =>
@@ -98,8 +115,8 @@ export const ModelPanel = ({ model, overrides = {}, items, onChange, onClose }: 
           <Button.Root
             variant='ghost'
             icon='ph--arrow-counter-clockwise--regular'
-            label={t('model-reset.label')}
-            onClick={() => onChange({})}
+            label={t(hasAreas ? 'model-reset-areas.label' : 'model-reset.label')}
+            onClick={() => onChange(resetOverrides(overrides))}
             data-testid='lighthouse.model.reset'
           />
         )}
@@ -150,6 +167,7 @@ export const ModelPanel = ({ model, overrides = {}, items, onChange, onClose }: 
                       {t('model-penalty.label')}
                     </span>
                   )}
+                  {term.own && <Own />}
                 </Layout.Flex>
                 <span className='text-xs text-fg-subtle'>
                   {describeValue(term.value)} · {describeShape(term.shape)}
@@ -157,14 +175,34 @@ export const ModelPanel = ({ model, overrides = {}, items, onChange, onClose }: 
                     ? ` · ${t('model-missing.label', { score: term.missing })}`
                     : ''}{' '}
                   ·{' '}
-                  {t(isFlag(term.value) ? 'model-coverage-match.label' : 'model-coverage-have.label', {
-                    count: coverage,
-                    total: items.length,
-                  })}
+                  {'within' in term.value
+                    ? t('model-coverage-inside.label', {
+                        count: coverage,
+                        total: items.length,
+                        unlocated: items.length - located,
+                      })
+                    : t(isFlag(term.value) ? 'model-coverage-match.label' : 'model-coverage-have.label', {
+                        count: coverage,
+                        total: items.length,
+                      })}
+                  {'within' in term.value && onMap && (
+                    <>
+                      {' · '}
+                      <Button.Root
+                        variant='ghost'
+                        classNames='h-auto p-0 min-h-0 text-xs text-accent-text font-normal hover:underline'
+                        onClick={() => onMap()}
+                        data-testid='lighthouse.model.areas.edit'
+                      >
+                        {t('model-areas-edit.label')}
+                      </Button.Root>
+                    </>
+                  )}
                 </span>
                 <Expression
                   text={termExpression(term, boundsOf(model, term, items))}
                   title={t('model-term.description')}
+                  note={'within' in term.value ? DIST_NOTE : undefined}
                 />
               </Layout.Flex>
               <Layout.Grid
@@ -231,7 +269,7 @@ export const ModelPanel = ({ model, overrides = {}, items, onChange, onClose }: 
         })}
       </Layout.Flex>
 
-      {(model.require ?? []).length > 0 && (
+      {(model.require ?? []).length + ownRequire.length > 0 && (
         <Layout.Flex column gap='xs'>
           <span className='text-xs uppercase tracking-wide text-fg-subtle'>
             {t('model-requirements-heading.label', { penalty: model.penalty ?? 0.3 })}
@@ -260,6 +298,46 @@ export const ModelPanel = ({ model, overrides = {}, items, onChange, onClose }: 
               </Layout.Grid>
             );
           })}
+          {ownRequire.map((requirement) => (
+            <Layout.Grid
+              key={requirement.label}
+              cols={['min', 'auto', 'fill', 'min']}
+              gap='sm'
+              align='center'
+              classNames='text-sm'
+              data-testid='lighthouse.model.req.area'
+            >
+              <Icon.Icon icon='ph--map-trifold--regular' />
+              <Layout.Flex gap='xs' align='center'>
+                <span className='font-medium'>{requirement.label}</span>
+                <Own />
+              </Layout.Flex>
+              <Expression text={requirementExpression(requirement)} note={DIST_NOTE} />
+              <Button.Root
+                variant='ghost'
+                classNames='text-xs text-accent-text'
+                onClick={() => onChange(setAreasMode(overrides, 'prefer'))}
+                data-testid='lighthouse.model.req.prefer'
+              >
+                {t('model-areas-prefer.label')}
+              </Button.Root>
+            </Layout.Grid>
+          ))}
+        </Layout.Flex>
+      )}
+
+      {onMap && (
+        <Layout.Flex gap='sm' align='center' wrap>
+          <Button.Root
+            variant='ghost'
+            icon='ph--polygon--regular'
+            label={t(hasAreas ? 'model-draw-another.label' : 'model-draw.label')}
+            onClick={() => onMap(true)}
+            data-testid='lighthouse.model.draw'
+          />
+          <span className='text-xs text-fg-subtle'>
+            {t('model-located.label', { count: located, total: items.length })}
+          </span>
         </Layout.Flex>
       )}
 
