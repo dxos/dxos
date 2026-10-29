@@ -21,6 +21,7 @@ import { translationKey } from '#translations';
 import { recipes } from '../../recipes.ts';
 import { animationsDisabled, useReducedMotion } from '../../util/animation.ts';
 import { Button } from '../Button/Button.tsx';
+import { resolveMediaElement } from '../MediaPlayer/media-kind.ts';
 import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/MediaPlayer.tsx';
 
 //
@@ -126,9 +127,10 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
     forwardedRef,
   ) => {
     const { page } = useCarouselContext();
-    // Media mounts only on the slide in view and its neighbours: every mounted `<video controls>` reruns its controls
-    // on each layout of the page, and the slides keep their size empty.
-    const near = Math.abs(index - page) <= 1;
+    // Slides keep their size empty, so media mounts only where it is seen: playable media on the slide in view, which
+    // also stops it when the slide is left (an embed cannot be paused from here), and an image on its neighbours too.
+    const mounted =
+      src !== undefined && (resolveMediaElement(src, kind) === 'image' ? Math.abs(index - page) <= 1 : index === page);
     return (
       <CarouselPrimitive.Item
         {...props}
@@ -137,13 +139,12 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
         ref={forwardedRef}
       >
         {children ??
-          (src && near && (
+          (src && mounted && (
             <MediaPlayer
               src={src}
               kind={kind}
               alt={alt}
-              // Every slide stays in the track, so only the one on show may play: the others would be heard, not seen.
-              autoPlay={autoPlay && page === index}
+              autoPlay={autoPlay}
               loop={loop}
               muted={muted}
               controls={controls}
