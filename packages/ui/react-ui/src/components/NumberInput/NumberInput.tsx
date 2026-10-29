@@ -18,10 +18,10 @@ import { Slider } from '../Slider/Slider.tsx';
 
 /**
  * Where the decrement and increment buttons go: `end` (or `true`) trails the input with the pair, `start` leads it
- * with the pair, `split` puts decrement at the start and increment at the end, `hover` trails the pair but shows it only while the row is hovered
- * or focused, and `false` drops them (the arrow keys still step).
+ * with the pair, `split` puts decrement at the start and increment at the end, and `false` drops them (the arrow keys
+ * still step).
  */
-export type NumberInputStepper = boolean | 'start' | 'end' | 'split' | 'hover';
+export type NumberInputStepper = boolean | 'start' | 'end' | 'split';
 
 export type NumberInputProps = ThemedClassName<
   Pick<
@@ -49,6 +49,8 @@ export type NumberInputProps = ThemedClassName<
   'placeholder'?: string;
   'autoFocus'?: boolean;
   'stepper'?: NumberInputStepper;
+  /** Shows the stepper only while the row is hovered or focused; it keeps its place, so the number never moves. */
+  'stepperOnHover'?: boolean;
   /** Aligns the number to the row's end, as figures in a column do. */
   'align'?: 'start' | 'end';
   /** Adds an end button that opens a slider over `min`..`max` (0..100 when unset). */
@@ -81,6 +83,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       placeholder,
       autoFocus,
       stepper = true,
+      stepperOnHover,
       align = 'start',
       slider,
       incrementLabel,
@@ -94,7 +97,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   ) => {
     const { t } = useTranslation(translationKey);
     const placement = stepper === true ? 'end' : stepper;
-    const reveal = placement === 'hover' ? '' : undefined;
+    const reveal = stepperOnHover ? '' : undefined;
     const decrement = (
       <NumberInputPrimitive.DecrementTrigger asChild>
         <Button
@@ -130,7 +133,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         disabled={props.disabled || props.readOnly}
       />
     );
-    const endPair = placement === 'end' || placement === 'hover';
+    const endPair = placement === 'end';
 
     return (
       <NumberInputPrimitive.Root

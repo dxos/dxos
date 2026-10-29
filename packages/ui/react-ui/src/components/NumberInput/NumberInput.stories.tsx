@@ -148,11 +148,11 @@ const VariantsStory = ({ size }: SizeArgs) => {
       </Field.Root>
       <Field.Root>
         <Field.Label>Leading</Field.Label>
-        <NumberInput defaultValue='12' align='end' stepper='start' data-testid={`leading-${size}`} />
+        <NumberInput defaultValue='12' align='end' stepper='start' stepperOnHover data-testid={`leading-${size}`} />
       </Field.Root>
       <Field.Root>
         <Field.Label>Hover</Field.Label>
-        <NumberInput defaultValue='3' stepper='hover' data-testid={`hover-${size}`} />
+        <NumberInput defaultValue='3' stepperOnHover data-testid={`hover-${size}`} />
       </Field.Root>
       <Field.Root>
         <Field.Label>Volume</Field.Label>
@@ -173,28 +173,20 @@ const VariantsStory = ({ size }: SizeArgs) => {
       </Field.Root>
       <Field.Root>
         <Field.Label>Opacity</Field.Label>
-        <NumberInput
-          min={0}
-          max={1}
-          step={0.05}
-          defaultValue='0.5'
-          stepper='hover'
-          slider
-          data-testid={`all-${size}`}
-        />
+        <NumberInput min={0} max={1} step={0.05} defaultValue='0.5' stepperOnHover slider data-testid={`all-${size}`} />
       </Field.Root>
     </>
   );
 };
 
-/** Stepper placements (`split`, `start`, `hover`), end-aligned figures and the slider button. */
+/** Stepper placements (`split`, `start`), hover-revealed steppers, end-aligned figures and the slider button. */
 export const Variants: Story = {
   render: VariantsStory,
 };
 
 /**
  * `split` puts decrement before the input and increment after it, each inside the row; `align='end'` right-aligns the
- * figures; `hover` steppers are hidden until the row is hovered; the slider button opens a slider that drives the value.
+ * figures; `stepperOnHover` steppers are hidden until the row is hovered or focused; the slider button opens a slider that drives the value.
  */
 export const VariantsTest: Story = {
   render: VariantsStory,
@@ -225,6 +217,11 @@ export const VariantsTest: Story = {
 
     const leading = byTestId(md, 'leading-md');
     const leadingInput = within(leading).getByRole('spinbutton');
+    // Hidden until hovered; focus reveals the pair through the same rule.
+    await expect(getComputedStyle(within(leading).getAllByRole('button', { hidden: true })[0]).visibility).toBe(
+      'hidden',
+    );
+    await userEvent.click(leadingInput);
     const leadingIncrement = within(leading).getByRole('button', { name: 'Increment' });
     await expect(leadingIncrement.getBoundingClientRect().right).toBeLessThanOrEqual(
       leadingInput.getBoundingClientRect().left,
