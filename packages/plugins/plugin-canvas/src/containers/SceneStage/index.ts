@@ -4,3 +4,4 @@
 
 export * from './definition.ts';
 export * from './SceneStage.tsx';
+export * from './use-scene-document.ts';

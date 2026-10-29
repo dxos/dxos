@@ -71,6 +71,20 @@ describe('readScenes', () => {
   });
 });
 
+test('readScenes reports a child-scene cycle', () => {
+  const { problems } = readScenes(`scene a dim=2d {
+  camera center=0,0 zoom=1
+  element to-b scene @ 0,0 size=10x10 scene=b
+}
+
+scene b dim=2d {
+  camera center=0,0 zoom=1
+  element to-a scene @ 0,0 size=10x10 scene=a
+}
+`);
+  expect(problems.map((problem) => problem.message).join()).toContain('cycle');
+});
+
 describe('printScenes', () => {
   test.each(EXEMPLAR_NAMES)('round-trips %s', (name) => {
     const { document, problems } = readScenes(EXEMPLARS[name]);

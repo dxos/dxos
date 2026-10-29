@@ -80,6 +80,19 @@ export type SceneRenderer3DOptions = {
 
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
 
+const geometryIds = new WeakMap<MeshData, number>();
+let nextGeometryId = 1;
+
+/** What an item's meshes are built from; a change rebuilds them. Geometry counts by identity, not size. */
+export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData | undefined): string => {
+  let geometry = 0;
+  if (data) {
+    geometry = geometryIds.get(data) ?? nextGeometryId++;
+    geometryIds.set(data, geometry);
+  }
+  return `${kind}:${spec.kind}:${spec.edges}:${geometry}`;
+};
+
 /** Draws a render list; never reads a clock and never writes ECHO. */
 export class SceneRenderer3D {
   readonly #engine: Engine;
@@ -265,7 +278,7 @@ export class SceneRenderer3D {
     for (const item of items) {
       const spec = materialSpec(item.style, this.#theme);
       const data = geometry?.(item);
-      const signature = `${item.kind}:${spec.kind}:${spec.edges}:${data ? data.positions.length : 0}`;
+      const signature = itemSignature(item.kind, spec, data);
       let meshes = this.#items.get(item.key);
       if (meshes?.signature !== signature) {
         meshes?.surface.dispose(false, true);

@@ -4,26 +4,18 @@
 
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import { Scene2DView, Scene3DView, project, renderList } from '@dxos/react-ui-scene';
-import { Scene, fromEcho } from '@dxos/scene';
 
 import { applySample, camera2DOf, camera3DOf } from '../../model/scene-stage.ts';
-
-/** A stage object as a scene document, or undefined when it is not a Scene2D or Scene3D. */
-export const sceneDocumentOf = (stage: unknown): Scene.SceneDocument | undefined =>
-  isStoredScene(stage) ? fromEcho(stage) : undefined;
-
-const isStoredScene = (stage: unknown): stage is Scene.Scene2D | Scene.Scene3D =>
-  Obj.instanceOf(Scene.Scene2D, stage) || Obj.instanceOf(Scene.Scene3D, stage);
+import { useSceneDocument } from './use-scene-document.ts';
 
 /**
  * A scene (`@dxos/scene`) drawn as an animator stage: the sample's values are applied to a copy of the scene, which
  * the 2D or 3D view draws read-only; the 3D stage also reports where its elements are for overlay effects.
  */
 export const SceneStage = ({ stage, sample, effects, onFrameDrawn, onProjection }: AnimatorCapabilities.StageProps) => {
-  const document = useMemo(() => sceneDocumentOf(stage), [stage]);
+  const document = useSceneDocument(stage);
   const sampled = useMemo(() => (document ? applySample(document, sample) : undefined), [document, sample]);
   const root = sampled?.scenes[0];
   const items3d = useMemo(() => effects.flatMap((frame) => (frame.renderer === '3d' ? frame.items : [])), [effects]);

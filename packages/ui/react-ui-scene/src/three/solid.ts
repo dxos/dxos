@@ -205,15 +205,34 @@ export const evaluateSolid = (
 ): { mesh: MeshData } | { error: string } => {
   try {
     const solid = build(scene, id, wasm, []);
-    const mesh = toMeshData(solid);
-    solid.delete();
-    return { mesh };
-  } catch (error) {
-    if (error instanceof SolidError) {
-      return { error: error.message };
+    try {
+      // An operand of size 0, or a difference that removes everything, builds a valid solid with nothing in it.
+      if (solid.isEmpty()) {
+        return { error: `Solid "${id}" is empty.` };
+      }
+      return { mesh: toMeshData(solid) };
+    } finally {
+      solid.delete();
     }
-    throw error;
+  } catch (error) {
+    // Any failure, a WASM abort included, draws the operands instead rather than unmounting the view.
+    return { error: error instanceof Error ? error.message : String(error) };
   }
+};
+
+/** The elements a solid is built from, itself included, so equal trees can share one result. */
+export const solidKey = (scene: Scene.SceneRecord3D, id: string): string => {
+  const seen = new Set<string>();
+  const visit = (name: string) => {
+    const element = scene.elements[name];
+    if (!element || seen.has(name)) {
+      return;
+    }
+    seen.add(name);
+    [...(stringProp(element, 'operands') ?? '').split(/\s+/), stringProp(element, 'target') ?? ''].forEach(visit);
+  };
+  visit(id);
+  return JSON.stringify([...seen].sort().map((name) => scene.elements[name]));
 };
 
 /** The volume of a solid element, for checks; NaN when it cannot be built. */

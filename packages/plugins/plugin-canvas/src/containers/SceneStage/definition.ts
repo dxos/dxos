@@ -7,7 +7,8 @@ import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabi
 import { LAYOUTS_3D, Scene } from '@dxos/scene';
 
 import { camera2DValues, camera3DValues, sceneBinding, sceneTargets } from '../../model/scene-stage.ts';
-import { SceneStage, sceneDocumentOf } from './SceneStage.tsx';
+import { SceneStage } from './SceneStage.tsx';
+import { sceneDocumentOf } from './use-scene-document.ts';
 
 const EMPTY_BINDING: AnimatorCapabilities.StageBinding = { objects: {}, links: [] };
 

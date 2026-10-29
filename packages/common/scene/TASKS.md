@@ -32,6 +32,17 @@ play an animation.
 - [ ] The 2D stage reports no projection for overlay effects; the 3D stage does.
 - [ ] The scene stages are not contributed by plugin-canvas or registered in Composer yet.
 - [ ] No storybook play tests for the scene stories.
+- [ ] Policy: `@dxos/diagram` (published) now depends on the private `@dxos/scene`, and plugin-canvas on `@dxos/scene`
+      and `@dxos/react-ui-scene` (react-ui-canvas already depends on the private `@dxos/animation`).
+- [ ] Child-scene edits do not reach a playing stage: `useSceneDocument` subscribes to the root scene only.
+- [ ] `bind` reads the stored scene (`fromEcho`) on every sample.
+- [ ] Manifold load failure is unhandled and cached; until it loads, solids draw as unit boxes.
+- [ ] `then`/`reduce` in `solid.ts` leak a Manifold when a step throws.
+- [ ] Duplicate element ids share one render-list key.
+- [ ] Printer edge cases: prop names that are not names, member ids with spaces or `#`, `-0`, `order=10` reads back as a
+      string.
+- [ ] Silent drops in the reader: 3D `rotation=<number>`, 2D `scale=`, 3D `size=`, out-of-range `tone`, a second
+      `camera`; `zoom=0` divides by zero.
 
 ## Stage 3: editing tooling
 

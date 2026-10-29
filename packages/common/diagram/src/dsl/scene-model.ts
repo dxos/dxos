@@ -4,7 +4,7 @@
 
 import type { SyntaxNode } from '@lezer/common';
 
-import { Scene as Model, applyLayout, validateDocument } from '@dxos/scene';
+import { Scene as Model, applyLayout, sceneTree, validateDocument } from '@dxos/scene';
 
 import { parser } from './gen/diagram.ts';
 import { type Problem, type Range, childrenOf, optional, unquote } from './parse.ts';
@@ -301,7 +301,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
   }
 
   const document: Model.SceneDocument = { scenes };
-  for (const problem of validateDocument(document)) {
+  for (const problem of [...validateDocument(document), ...sceneTree(document).problems]) {
     const range = ranges.get(problem.element ? `${problem.scene}/${problem.element}` : problem.scene) ??
       ranges.get(problem.scene) ?? { from: 0, to: 0 };
     report(range, problem.message);

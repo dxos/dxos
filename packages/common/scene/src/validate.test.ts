@@ -64,6 +64,11 @@ describe('validateDocument', () => {
     expect(problems.map((problem) => problem.element)).toEqual(['b']);
   });
 
+  test('reports a duplicate scene id', () => {
+    const problems = validateDocument({ scenes: [scene2d([rect('a')], 's'), scene2d([rect('b')], 's')] });
+    expect(problems.map((problem) => problem.message).join()).toContain('Duplicate scene');
+  });
+
   test('accepts the A→B→C scene', () => {
     const scene = scene2d([rect('a'), rect('b', 200), rect('c', 400), link('ab', 'a', 'b'), link('bc', 'b', 'c')]);
     expect(validateDocument({ scenes: [scene] })).toEqual([]);

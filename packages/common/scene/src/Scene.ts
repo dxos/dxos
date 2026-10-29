@@ -84,9 +84,12 @@ const geometry3D = {
   rotation: Schema.optional(Vec3.pipe(AnimatableAnnotation.set('rotation'))),
 };
 
-/** In record form a child scene is named by its scene id; in ECHO it is a Ref to the child Scene object. */
+/**
+ * In record form a child scene is named by its scene id; in ECHO it is also a Ref to the child Scene object, which an
+ * element closing a cycle goes without, so the id is kept beside it.
+ */
 const childById = { scene: Schema.optional(Schema.String) };
-const childByRef = { child: Schema.optional(Ref.Ref(Obj.Unknown)) };
+const childByRef = { ...childById, child: Schema.optional(Ref.Ref(Obj.Unknown)) };
 
 export const Element2D = Schema.Struct({ ...baseFields, ...geometry2D, ...childById });
 export type Element2D = Schema.Schema.Type<typeof Element2D>;

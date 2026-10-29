@@ -68,3 +68,30 @@ describe('evaluateSolid', () => {
     expect('mesh' in result && result.mesh.positions.length).toBeGreaterThan(0);
   });
 });
+
+describe('evaluateSolid failures', () => {
+  let wasm: ManifoldToplevel;
+
+  beforeAll(async () => {
+    const Module = await import('manifold-3d');
+    wasm = await Module.default();
+    wasm.setup();
+  });
+
+  test('a difference that removes everything is an error, not an empty mesh', () => {
+    const record = scene([
+      box,
+      { ...box, id: 'big', scale: { x: 4, y: 4, z: 4 } },
+      { id: 'diff', kind: 'solid', props: { op: 'difference', operands: 'box big' } },
+    ]);
+    expect(evaluateSolid(record, 'diff', wasm)).toMatchObject({ error: expect.stringContaining('empty') });
+  });
+
+  test('an operand of scale 0 is an error', () => {
+    const record = scene([
+      { ...box, scale: { x: 0, y: 0, z: 0 } },
+      { id: 'u', kind: 'solid', props: { op: 'union', operands: 'box' } },
+    ]);
+    expect('error' in evaluateSolid(record, 'u', wasm)).toBe(true);
+  });
+});

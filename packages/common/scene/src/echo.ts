@@ -25,10 +25,10 @@ const isStoredScene = (value: unknown): value is StoredScene =>
   Obj.instanceOf(Scene2D, value) || Obj.instanceOf(Scene3D, value);
 
 const storeElement = <E extends Element2D | Element3D>(
-  { scene, ...element }: E,
+  element: E,
   made: ReadonlyMap<string, StoredScene>,
-): Omit<E, 'scene'> & { child?: Ref.Ref<StoredScene> } => {
-  const child = scene === undefined ? undefined : made.get(scene);
+): E & { child?: Ref.Ref<StoredScene> } => {
+  const child = element.scene === undefined ? undefined : made.get(element.scene);
   return child ? { ...element, child: Ref.make(child) } : element;
 };
 
@@ -50,13 +50,16 @@ const storeScene = (record: SceneRecord, made: ReadonlyMap<string, StoredScene>)
 
 /**
  * Makes one ECHO object per scene (design call 20). Children are made before the scenes that hold them, so each
- * child-scene element carries a Ref to its child; a child that would close a cycle is left unlinked.
+ * child-scene element carries a Ref to its child; one that would close a cycle keeps only the child's id.
  */
 export const toEcho = (doc: SceneDocument): { root: StoredScene; scenes: Map<string, StoredScene> } => {
   const byId = new Map(doc.scenes.map((scene) => [scene.id, scene]));
   const made = new Map<string, StoredScene>();
-  // Pre-order lists a parent before its descendants, so its reverse makes every child first.
-  for (const id of [...sceneTree(doc).order].reverse()) {
+  // Pre-order lists a parent before its descendants, so its reverse makes every child first; scenes the root does not
+  // reach come last, so none is lost.
+  const order = sceneTree(doc).order;
+  const unreached = doc.scenes.map((scene) => scene.id).filter((id) => !order.includes(id));
+  for (const id of [...[...order].reverse(), ...unreached]) {
     const record = byId.get(id);
     if (record) {
       made.set(id, storeScene(record, made));
