@@ -1,6 +1,6 @@
 # Scene editor (stage 3): common editing for 2D and 3D
 
-Status: all questions decided 2026-10-29; plan `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md` to be revised to match 10–12. Nothing in it is built. It follows stage 2
+Status: all questions decided 2026-10-29; plan `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md` (21 tasks, rewritten for 14) awaits review. Nothing in it is built. It follows stage 2
 (`2026-10-28-scene-model-design.md`), which built the Scene model, its `.dx` form, the renderers and the animator
 stages.
 
@@ -57,13 +57,13 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
 
 react-ui-canvas's `View` model is backed by `Layout2D`: a View is a layout (its camera a `Scene2D`), nodes and links are
 elements, a link's endpoints are bindings, a composite is a model object with parts, `z` is `order`. The engine's
-stores, atoms, projections and undo keep their shape and change their element type. `toCanvasViews` then disappears:
-the 2D renderer draws layout records directly.
+stores, atoms, projections and undo keep their shape; a store over `Layout2D` objects replaces the content-record
+store, and the viewport camera is the open `Scene2D`'s. Several scenes over one layout are saved views of one drawing.
 
 ### 2. One intent vocabulary, geometry per dimension
 
-Intents name elements by id and are shared: `create`, `delete`, `update(path, value)`, `reorder`, `group`, `ungroup`,
-`bind`, `layout`. Geometric intents carry the scene type's values: `move` (a `Vec2` or `Vec3` delta), `scale`,
+Layout intents (`LayoutIntent`) name elements by id and are shared: `create`, `delete`, `update(path, value)`, `reorder`, `group`, `ungroup`,
+`bind`, `group` with an `arrange`. Geometric intents carry the scene type's values: `move` (a `Vec2` or `Vec3` delta), `scale`,
 `rotate`. One reducer handles the shared intents; each dimension supplies the geometric ones. Undo stays
 `VersionedSource` over the layout's records, so 2D and 3D undo work the same way.
 
@@ -83,8 +83,9 @@ rotate and scale are handles: today's 2D handles, and Babylon's `GizmoManager` i
 ### 4. Panels stay, and read the schemas
 
 The Properties inspector is already a form over the selection's schema, so `Element2D`/`Element3D` and each kind's
-`props` schema drive it in both dimensions. Layers and Views (renamed Scenes) work unchanged. A Library panel lists
-the model's objects, which use case 6 (custom objects with effects) needs.
+`props` schema drive it in both dimensions. Layers work unchanged; Views lists the canvas's scenes. A Library panel lists the model's
+objects and is in stage 3 (the agent's call: the Model exists, so it is cheap, and use case 6 needs it); model edits
+are `ModelIntent`s.
 
 ### 5. Migration
 
@@ -97,7 +98,9 @@ before plugin-canvas switches over, and its tests run the `.dx` corpus through b
 1. **Model switch:** react-ui-canvas on Layout2D and Scene2D, with the migration, at parity with today's canvas.
 2. **3D viewport and arranging:** the Babylon viewport, picking, select, move/rotate/scale gizmos, group, link, undo.
 3. **Solid tools:** extrude, join, subtract, GLB/OBJ import, STL export. plugin-spacetime is then retired.
-4. **Assistant:** Read/Edit operations over the `.dx` scene statements, and a skill (use case 7).
+4. **Assistant:** `ReadScene`/`EditScene` over a canvas's whole `.dx` document (scenes, layouts, models), and a skill
+   (use case 7). The illustrator `Read`/`Edit` operations keep speaking the diagram DSL, reaching a canvas through its
+   builder.
 
 ## Open questions for the user
 

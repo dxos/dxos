@@ -62,8 +62,7 @@ stage 3; the work stays in dxos/dxos#14282.
 
 - [x] **Write the stage 3 design** — `agents/superpowers/specs/2026-10-28-scene-editor-design.md`; every question
       decided 2026-10-29 (decisions 1–13).
-- [x] **Write the stage 3 plan** — `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md`, 20 tasks in four
-      phases (A 9, B 5, C 4, D 2), revised for the widened `Drawing.canvas` Ref and every-mode parity.
+- [x] **Write the stage 3 plan** — `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md`, 21 tasks in four
+      phases (A 9, B 6, C 4, D 2), rewritten in Model, Layout and Scene terms (2026-10-29).
 - [ ] **Execute the plan** — waits for the user's review of the plan.
-- [ ] Follow-up: a Library panel listing components (use case 6).
-- [ ] Follow-up: converge react-ui-canvas's `Intent` with `SceneIntent`.
+- [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.
