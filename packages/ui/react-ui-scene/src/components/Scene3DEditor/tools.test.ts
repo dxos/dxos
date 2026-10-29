@@ -4,7 +4,15 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { clickCreates, clickSelects, editableTool, groundSnap, orbitButtons, restingCenter } from './tools.ts';
+import {
+  clickCreates,
+  clickSelects,
+  editableTool,
+  groundSnap,
+  menuSelection,
+  orbitButtons,
+  restingCenter,
+} from './tools.ts';
 
 describe('tools', () => {
   test('the orbit tool gives the left button to the orbit; every other tool keeps it', () => {
@@ -43,5 +51,11 @@ describe('tools', () => {
     expect(clickCreates({ create: 'cube' }, 'box')).toBe(false);
     expect(clickCreates({ place: 'hub' }, 'box')).toBe(false);
     expect(clickCreates('select', undefined)).toBe(false);
+  });
+
+  test('a right-click on an unselected element selects it first; on the selection or empty space it keeps it', () => {
+    expect(menuSelection(['a'], 'b')).toEqual(['b']);
+    expect(menuSelection(['a', 'b'], 'b')).toEqual(['a', 'b']);
+    expect(menuSelection(['a'], undefined)).toEqual(['a']);
   });
 });

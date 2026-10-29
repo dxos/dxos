@@ -102,3 +102,32 @@ export const sceneMenuItems = (state: SceneMenuState): SceneMenuItem[] => {
     };
   });
 };
+
+/** One command as every surface runs it: the actions bar, the shortcuts, the app's edit commands and the menu. */
+export type SceneCommand = { run: () => void; enabled: () => boolean };
+
+/** A view's commands by menu id; one it leaves out is offered disabled. */
+export type SceneCommands = Partial<Record<SceneMenuCommand, SceneCommand>>;
+
+/** The menu's own rules alone; the command table supplies each command's state. */
+const ALL_ENABLED = {
+  canUndo: true,
+  canRedo: true,
+  canPaste: true,
+  canCreate: true,
+  canDelete: true,
+  canGroup: true,
+  canUngroup: true,
+  canMakeObject: true,
+};
+
+/** The menu's items from a view's command table, so its states are the ones the bar and shortcuts read. */
+export const commandMenuItems = (
+  kind: SceneMenuState['kind'],
+  readonly: boolean,
+  commands: SceneCommands,
+): SceneMenuItem[] =>
+  sceneMenuItems({ kind, readonly, ...ALL_ENABLED }).map((item) => ({
+    ...item,
+    disabled: item.disabled || !(commands[item.id]?.enabled() ?? false),
+  }));

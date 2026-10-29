@@ -31,6 +31,7 @@ import {
   clickSelects,
   editableTool,
   groundSnap,
+  menuSelection,
   orbitButtons,
   restingCenter,
 } from './tools.ts';
@@ -69,6 +70,8 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   onEdit: (layout: string) => void;
   /** The orbit camera, each time it moves. */
   onCameraChange?: (camera: Scene.Camera3D) => void;
+  /** A right-click, where it was and on what; an unselected element is selected first. */
+  onContextMenu?: (at: { x: number; y: number }, kind: 'element' | 'canvas') => void;
 }>;
 
 /** How far a press may travel and still be a click rather than a drag. */
@@ -113,6 +116,7 @@ export const Scene3DEditor = ({
   onIntent: onIntentProp,
   onEdit,
   onCameraChange,
+  onContextMenu,
 }: Scene3DEditorProps) => {
   const tool = editableTool(toolProp, readonly);
   // Locked, every edit stops here, whichever gesture or key would have made it.
@@ -409,6 +413,19 @@ export const Scene3DEditor = ({
         }
       }}
       onDoubleClick={(event) => onScene(event.nativeEvent) && onDoubleClick(local(event))}
+      onContextMenu={(event) => {
+        if (!onScene(event.nativeEvent) || !onContextMenu) {
+          return;
+        }
+        event.preventDefault();
+        const at = local(event);
+        const { element } = elementAt(at);
+        const next = menuSelection(selection, element);
+        if (next.length !== selection.length || next.some((id, index) => id !== selection[index])) {
+          onSelect(next);
+        }
+        onContextMenu(at, element === undefined ? 'canvas' : 'element');
+      }}
       onKeyDown={(event) => {
         // A key typed in a panel (a form field) is the panel's.
         if (event.target !== event.currentTarget) {

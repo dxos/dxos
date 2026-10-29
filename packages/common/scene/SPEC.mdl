@@ -788,3 +788,11 @@ decision D-82: The menu's items come from one builder (`sceneMenuItems`) and ren
   for: user:richburdon
   why: Generalising 2D's existing menu keeps one menu and one list of commands without moving 2D's commands into the action graph first.
 ```
+
+```mdl
+decision D-83: Each view keeps one table of its scene commands (`SceneCommands`: run and enabled per command) that its actions bar, shortcuts, app edit commands and context menu all read; the menu's states come from that table (`commandMenuItems`). In 3D, the editor reports a right-click with where and on what, having selected an unselected element first. Fills in [D-81].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Four surfaces each deciding "is Delete enabled" drift apart; one table makes them agree by construction.
+```

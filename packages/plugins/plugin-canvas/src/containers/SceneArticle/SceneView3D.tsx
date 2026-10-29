@@ -20,10 +20,13 @@ import {
   ObjectsInspector,
   PropertiesEmpty,
   ReadonlyToggle,
+  type SceneCommands,
+  SceneContextMenu,
   type ToolGroup,
   ToolRail,
   ViewsInspector,
   between,
+  commandMenuItems,
   propertiesShown,
 } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
@@ -380,6 +383,91 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
     await downloadBlob(new Blob([buffer], { type: 'model/stl' }), `${layout}.stl`);
   }, [document, editing, selection]);
 
+  const deleteSelection = useCallback(() => {
+    if (editingLayout) {
+      handleIntent(editingLayout, { kind: 'delete', ids: selection });
+      setSelection([]);
+    }
+  }, [editingLayout, handleIntent, selection]);
+  const group = useCallback(() => {
+    if (editingLayout) {
+      const id = `group-${Date.now().toString(36)}`;
+      handleIntent(editingLayout, { kind: 'group', id, members: selection });
+      setSelection([id]);
+    }
+  }, [editingLayout, handleIntent, selection]);
+  const ungroup = useCallback(() => {
+    if (editingLayout && selected) {
+      handleIntent(editingLayout, { kind: 'ungroup', id: selected.id });
+      setSelection([]);
+    }
+  }, [editingLayout, handleIntent, selected]);
+  const makeObject = useCallback(() => {
+    if (!editingLayout || modelId === undefined) {
+      return;
+    }
+    const taken = new Set(Object.keys(document?.models.find((model) => model.id === modelId)?.objects ?? {}));
+    let index = 1;
+    while (taken.has(`object-${index}`)) {
+      index++;
+    }
+    const id = `object-${index}`;
+    const before = canvasDocument(canvas);
+    const problems = writeModelIntent(canvas, {
+      kind: 'extract',
+      model: modelId,
+      layout: editingLayout,
+      ids: selection,
+      object: { id, kind: 'sphere' },
+    });
+    if (problems.length > 0) {
+      setNotice(problems.map(({ message }) => message).join(' '));
+      return;
+    }
+    setNotice(undefined);
+    setSelection([]);
+    // One undo step: writing back the document from before the edit undoes it.
+    history.current = {
+      done: [...history.current.done, { kind: 'document', before, after: canvasDocument(canvas) }],
+      undone: [],
+    };
+    setHistoryVersion((version) => version + 1);
+  }, [editingLayout, modelId, document, canvas, selection, history]);
+
+  // The one source of the scene's commands: the actions bar, the shortcuts, the app's edit commands and the menu.
+  const commands = useMemo<SceneCommands>(() => {
+    const editable = () => !readonly;
+    const some = () => editable() && selection.length > 0;
+    return {
+      'undo': { run: () => step('undo'), enabled: () => editable() && history.current.done.length > 0 },
+      'redo': { run: () => step('redo'), enabled: () => editable() && history.current.undone.length > 0 },
+      'cut': { run: cut, enabled: some },
+      'copy': { run: () => void copy(), enabled: () => selection.length > 0 },
+      'paste': { run: paste, enabled: editable },
+      'duplicate': { run: duplicate, enabled: some },
+      'delete': { run: deleteSelection, enabled: some },
+      'group': { run: group, enabled: () => editable() && selection.length > 1 },
+      'ungroup': { run: ungroup, enabled: () => editable() && resolved?.kind === 'group' },
+      'make-object': { run: makeObject, enabled: () => some() && modelId !== undefined },
+    };
+  }, [
+    readonly,
+    selection,
+    step,
+    history,
+    cut,
+    copy,
+    paste,
+    duplicate,
+    deleteSelection,
+    group,
+    ungroup,
+    resolved,
+    makeObject,
+    modelId,
+  ]);
+  const [menuAt, setMenuAt] = useState<{ at: { x: number; y: number }; kind: 'element' | 'canvas' }>();
+
   const menu = useMenuBuilder(() => {
     const builder = MenuBuilder.make();
     const layout = editingLayout;
@@ -389,7 +477,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('cut.label'),
           icon: 'ph--scissors--regular',
-          disabled: selection.length === 0,
+          disabled: !commands.cut?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.cut',
         },
@@ -400,7 +488,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('copy.label'),
           icon: 'ph--copy--regular',
-          disabled: selection.length === 0,
+          disabled: !commands.copy?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.copy',
         },
@@ -421,7 +509,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('duplicate.label'),
           icon: 'ph--copy-simple--regular',
-          disabled: selection.length === 0,
+          disabled: !commands.duplicate?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.duplicate',
         },
@@ -433,49 +521,33 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('group.label'),
           icon: 'ph--selection-plus--regular',
-          disabled: selection.length < 2,
+          disabled: !commands.group?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.group',
         },
-        () => {
-          if (layout) {
-            const id = `group-${Date.now().toString(36)}`;
-            handleIntent(layout, { kind: 'group', id, members: selection });
-            setSelection([id]);
-          }
-        },
+        group,
       )
       .action(
         'ungroup',
         {
           label: label('ungroup.label'),
           icon: 'ph--selection-slash--regular',
-          disabled: resolved?.kind !== 'group',
+          disabled: !commands.ungroup?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.ungroup',
         },
-        () => {
-          if (layout && selected) {
-            handleIntent(layout, { kind: 'ungroup', id: selected.id });
-            setSelection([]);
-          }
-        },
+        ungroup,
       )
       .action(
         'delete',
         {
           label: label('delete.label'),
           icon: 'ph--trash--regular',
-          disabled: selection.length === 0,
+          disabled: !commands.delete?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.delete',
         },
-        () => {
-          if (layout) {
-            handleIntent(layout, { kind: 'delete', ids: selection });
-            setSelection([]);
-          }
-        },
+        deleteSelection,
       )
       .action(
         'join',
@@ -517,41 +589,11 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('make-object.label'),
           icon: 'ph--package--regular',
-          disabled: selection.length === 0 || modelId === undefined,
+          disabled: !commands['make-object']?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.make-object',
         },
-        () => {
-          if (layout && modelId !== undefined) {
-            const taken = new Set(Object.keys(document?.models.find((model) => model.id === modelId)?.objects ?? {}));
-            let index = 1;
-            while (taken.has(`object-${index}`)) {
-              index++;
-            }
-            const id = `object-${index}`;
-            const before = canvasDocument(canvas);
-            const problems = writeModelIntent(canvas, {
-              kind: 'extract',
-              model: modelId,
-              layout,
-              ids: selection,
-              object: { id, kind: 'sphere' },
-            });
-            if (problems.length > 0) {
-              setNotice(problems.map(({ message }) => message).join(' '));
-              return;
-            }
-            setNotice(undefined);
-            setSelection([]);
-            // One undo step: writing back the document from before the edit undoes it.
-            history.current = {
-              done: [...history.current.done, { kind: 'document', before, after: canvasDocument(canvas) }],
-              undone: [],
-            };
-            setHistoryVersion((version) => version + 1);
-            setHistoryVersion((version) => version + 1);
-          }
-        },
+        makeObject,
       )
       .separator()
       .action(
@@ -581,7 +623,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('undo.label'),
           icon: 'ph--arrow-counter-clockwise--regular',
-          disabled: history.current.done.length === 0,
+          disabled: !commands.undo?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.undo',
         },
@@ -592,7 +634,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('redo.label'),
           icon: 'ph--arrow-clockwise--regular',
-          disabled: history.current.undone.length === 0,
+          disabled: !commands.redo?.enabled(),
           disposition: 'toolbar',
           testId: 'canvas3d.redo',
         },
@@ -600,16 +642,21 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       );
     return builder.build();
   }, [
+    commands,
+    cut,
+    copy,
+    paste,
+    duplicate,
+    group,
+    ungroup,
+    deleteSelection,
+    makeObject,
+    step,
     selection,
     editingLayout,
-    resolved,
-    selected,
-    handleIntent,
-    step,
-    history.current,
-    modelId,
     document,
-    canvas,
+    modelId,
+    handleIntent,
     onImportMesh,
     onExportSTL,
   ]);
@@ -649,13 +696,16 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
     if (!element || !chrome.editing) {
       return;
     }
-    const editable = () => !readonly;
+    const editCommand = (id: 'undo' | 'redo' | 'cut' | 'copy' | 'paste') => {
+      const command = commands[id];
+      return { run: () => command?.run(), enabled: () => command?.enabled() ?? false };
+    };
     const unregister = AppNode.registerEditCommands(element, {
-      undo: { run: () => step('undo'), enabled: () => editable() && history.current.done.length > 0 },
-      redo: { run: () => step('redo'), enabled: () => editable() && history.current.undone.length > 0 },
-      cut: { run: cut, enabled: () => editable() && selection.length > 0 },
-      copy: { run: () => void copy(), enabled: () => selection.length > 0 },
-      paste: { run: paste, enabled: editable },
+      undo: editCommand('undo'),
+      redo: editCommand('redo'),
+      cut: editCommand('cut'),
+      copy: editCommand('copy'),
+      paste: editCommand('paste'),
     });
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
@@ -666,18 +716,22 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         return;
       }
       const key = event.key.toLowerCase();
-      const command =
+      const id =
         key === 'c'
-          ? () => void copy()
-          : key === 'x' && editable()
-            ? cut
-            : key === 'v' && editable()
-              ? paste
-              : key === 'd' && editable()
-                ? duplicate
-                : key === 'z' && editable()
-                  ? () => step(event.shiftKey ? 'redo' : 'undo')
+          ? 'copy'
+          : key === 'x'
+            ? 'cut'
+            : key === 'v'
+              ? 'paste'
+              : key === 'd'
+                ? 'duplicate'
+                : key === 'z'
+                  ? event.shiftKey
+                    ? 'redo'
+                    : 'undo'
                   : undefined;
+      const entry = id === undefined ? undefined : commands[id];
+      const command = entry?.enabled() ? entry.run : undefined;
       if (command) {
         event.preventDefault();
         command();
@@ -701,7 +755,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       window.removeEventListener('pointerdown', onPointerDown, { capture: true });
       window.removeEventListener('keydown', onWindowKeyDown);
     };
-  }, [element, chrome.editing, readonly, selection, cut, copy, paste, duplicate, step]);
+  }, [element, chrome.editing, commands]);
 
   if (!stored || !document) {
     return null;
@@ -737,6 +791,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               onSelect={setSelection}
               onIntent={handleIntent}
               onEdit={(layout) => setEditing(layout === document.scenes[0]?.layout ? undefined : layout)}
+              onContextMenu={(at, kind) => setMenuAt({ at, kind })}
               camera={view.camera}
               onCameraChange={view.onCameraChange}
               onResize={setViewport}
@@ -758,6 +813,12 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
                   <ActionToolbar {...menu} classNames={FLOATING_BAR} attendableId={attendableId} />
                 </div>
               )}
+              <SceneContextMenu
+                at={menuAt?.at}
+                items={menuAt ? commandMenuItems(menuAt.kind, readonly, commands) : []}
+                onCommand={(id) => commands[id]?.run()}
+                onClose={() => setMenuAt(undefined)}
+              />
               {cameraActions && current && authored && (
                 <div className='absolute w-max bottom-2 left-2'>
                   <CameraToolbar actions={cameraActions}>{zoomPercent(current, authored)}%</CameraToolbar>

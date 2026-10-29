@@ -36,3 +36,7 @@ export const groundSnap = (
   unit: number,
 ): { x: number; y: number; z: number } =>
   unit > 0 ? { x: Math.round(point.x / unit) * unit, y: point.y, z: Math.round(point.z / unit) * unit } : point;
+
+/** The selection a right-click acts on: an unselected element becomes the selection; otherwise it stays as it is. */
+export const menuSelection = (selection: readonly string[], element: string | undefined): string[] =>
+  element === undefined || selection.includes(element) ? [...selection] : [element];
