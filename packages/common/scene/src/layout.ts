@@ -18,6 +18,11 @@ const isVec3 = (value: unknown): value is Vec3 =>
   typeof value.y === 'number' &&
   typeof value.z === 'number';
 
+/** Rounds to thousandths, so trigonometry's residue (`1.8e-16`) never reaches printed text; `+ 0` drops `-0`. */
+const round = (value: number): number => Math.round(value * 1000) / 1000 + 0;
+
+const point = (x: number, y: number, z: number): Vec3 => ({ x: round(x), y: round(y), z: round(z) });
+
 const numberParam = (params: ArrangeInput['params'], name: string, fallback: number): number => {
   const value = params[name];
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
@@ -40,7 +45,7 @@ export const ring: Arranger = (input) => {
   return Object.fromEntries(
     input.targets.map((target, index) => {
       const angle = start + (index / input.targets.length) * Math.PI * 2;
-      return [target, { x: centre.x + Math.cos(angle) * radius, y: centre.y, z: centre.z + Math.sin(angle) * radius }];
+      return [target, point(centre.x + Math.cos(angle) * radius, centre.y, centre.z + Math.sin(angle) * radius)];
     }),
   );
 };
@@ -55,11 +60,11 @@ export const grid: Arranger = (input) => {
   return Object.fromEntries(
     input.targets.map((target, index) => [
       target,
-      {
-        x: centre.x + ((index % columns) - (columns - 1) / 2) * spacing,
-        y: centre.y,
-        z: centre.z + (Math.floor(index / columns) - (rows - 1) / 2) * spacing,
-      },
+      point(
+        centre.x + ((index % columns) - (columns - 1) / 2) * spacing,
+        centre.y,
+        centre.z + (Math.floor(index / columns) - (rows - 1) / 2) * spacing,
+      ),
     ]),
   );
 };

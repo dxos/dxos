@@ -1,0 +1,7 @@
+scene solid dim=3d name="Solid" theme=cad {
+  camera target=0,0.5,0 yaw=-45 pitch=30 distance=7 fov=0.8 projection=perspective
+  element box cube @ 0,0,0 scale=2 hidden=true
+  element hole cylinder @ 0,0,0 scale=1x3x1 hidden=true
+  element diff solid hidden=true op=difference operands="box hole"
+  element bracket solid "Bracket" hue=blue surface=solid border=true op=extrude target=diff face=0,1,0 distance=0.5
+}

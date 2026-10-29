@@ -39,6 +39,11 @@ describe('layout', () => {
     expect(Object.keys(positions)).toHaveLength(4);
   });
 
+  test('ring rounds positions to thousandths', () => {
+    const positions = ring({ targets: ['a', 'b'], params: { radius: 3 }, values: () => ({}) });
+    expect(Schema.decodeUnknownSync(Vec3)(positions.b)).toEqual({ x: -3, y: 0, z: 0 });
+  });
+
   test('applyLayout places unpositioned members and keeps a pinned member', () => {
     const pinned: Vec3 = { x: 9, y: 9, z: 9 };
     const scene = applyLayout(

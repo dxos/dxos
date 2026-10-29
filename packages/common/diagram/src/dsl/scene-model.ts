@@ -8,6 +8,8 @@ import { Scene as Model, applyLayout, validateDocument } from '@dxos/scene';
 
 import { parser } from './gen/diagram.ts';
 import { type Problem, type Range, childrenOf, optional, unquote } from './parse.ts';
+import { formatId, formatNumber, formatString } from './print.ts';
+import { BARE_ID } from './vocabulary.ts';
 
 /** A value an attribute can carry, as read from its `AttrValue`. */
 export type AttrValue = number | string | boolean | Model.Vec2 | Model.Vec3 | Model.Size2;
@@ -332,3 +334,128 @@ const ELEMENT_KEYS = new Set([
 const optionalString = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asString(value));
 const optionalBoolean = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asBoolean(value));
 const optionalBinding = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, parseBinding(value));
+
+//
+// Printing.
+//
+
+/** Bare when it lexes as a `Word`, which admits keywords (`rect`, `arrow`); `true`/`false` are quoted to stay strings. */
+const formatWord = (value: string): string =>
+  BARE_ID.test(value) && value !== 'true' && value !== 'false' ? value : formatString(value);
+
+const formatVec2 = ({ x, y }: Model.Vec2): string => `${formatNumber(x)},${formatNumber(y)}`;
+const formatVec3 = ({ x, y, z }: Model.Vec3): string => `${formatNumber(x)},${formatNumber(y)},${formatNumber(z)}`;
+
+/** A value in the form `readValue` reads back to the same value. */
+const formatValue = (value: unknown): string | undefined => {
+  if (typeof value === 'number') {
+    return formatNumber(value);
+  }
+  if (typeof value === 'boolean') {
+    return String(value);
+  }
+  if (typeof value === 'string') {
+    return formatWord(value);
+  }
+  if (typeof value === 'object' && value !== null) {
+    if ('width' in value && 'height' in value && typeof value.width === 'number' && typeof value.height === 'number') {
+      return `${formatNumber(value.width)}x${formatNumber(value.height)}`;
+    }
+    if ('x' in value && 'y' in value && typeof value.x === 'number' && typeof value.y === 'number') {
+      return 'z' in value && typeof value.z === 'number'
+        ? formatVec3({ x: value.x, y: value.y, z: value.z })
+        : formatVec2({ x: value.x, y: value.y });
+    }
+  }
+  return undefined;
+};
+
+const attr = (name: string, value: unknown): string[] => {
+  const text = formatValue(value);
+  return text === undefined ? [] : [`${name}=${text}`];
+};
+
+const formatScale = (scale: Model.Vec3): string =>
+  scale.x === scale.y && scale.y === scale.z
+    ? formatNumber(scale.x)
+    : `${formatNumber(scale.x)}x${formatNumber(scale.y)}x${formatNumber(scale.z)}`;
+
+/** The attributes every element shares, in the canonical order after its geometry. */
+const formatBase = (element: Model.Element): string[] => [
+  ...attr('order', element.order),
+  ...attr('layer', element.layer),
+  ...attr('hidden', element.hidden),
+  ...attr('locked', element.locked),
+  ...attr('pinned', element.pinned),
+  ...(element.from ? [`from=${formatBinding(element.from)}`] : []),
+  ...(element.to ? [`to=${formatBinding(element.to)}`] : []),
+  ...(element.members ? [`members=${formatString(element.members.join(' '))}`] : []),
+  ...attr('layout', element.layout?.kind),
+  ...Object.entries(element.layout?.params ?? {}).flatMap(([key, value]) => attr(`${LAYOUT_PARAM}${key}`, value)),
+  ...attr('scene', element.scene),
+  ...STYLE_KEYS.flatMap((key) => attr(key, element.style?.[key])),
+  ...Object.entries(element.props ?? {}).flatMap(([key, value]) => attr(key, value)),
+];
+
+const formatBinding = ({ element, anchor }: Model.Binding): string =>
+  formatWord(anchor === undefined ? element : `${element}#${anchor}`);
+
+const formatHead = (element: Model.Element): string[] => [
+  'element',
+  formatId(element.id),
+  formatWord(element.kind),
+  ...(element.label === undefined ? [] : [formatString(element.label)]),
+];
+
+const formatElement2D = (element: Model.Element2D): string =>
+  [
+    ...formatHead(element),
+    ...(element.center ? ['@', formatVec2(element.center)] : []),
+    ...attr('size', element.size),
+    ...attr('rotation', element.rotation),
+    ...formatBase(element),
+  ].join(' ');
+
+const formatElement3D = (element: Model.Element3D): string =>
+  [
+    ...formatHead(element),
+    ...(element.position ? ['@', formatVec3(element.position)] : []),
+    ...(element.scale ? [`scale=${formatScale(element.scale)}`] : []),
+    ...attr('rotation', element.rotation),
+    ...formatBase(element),
+  ].join(' ');
+
+const formatCamera = (scene: Model.SceneRecord): string =>
+  scene.dim === '2d'
+    ? ['camera', ...attr('center', scene.camera.center), ...attr('zoom', scene.camera.zoom)].join(' ')
+    : [
+        'camera',
+        ...attr('target', scene.camera.target),
+        ...attr('yaw', scene.camera.yaw),
+        ...attr('pitch', scene.camera.pitch),
+        ...attr('distance', scene.camera.distance),
+        ...attr('fov', scene.camera.fov),
+        ...attr('projection', scene.camera.projection),
+      ].join(' ');
+
+const formatSceneRecord = (scene: Model.SceneRecord): string => {
+  const head = [
+    'scene',
+    formatId(scene.id),
+    `dim=${scene.dim}`,
+    ...(scene.name === undefined ? [] : [`name=${formatString(scene.name)}`]),
+    ...attr('theme', scene.theme),
+    ...attr('component', scene.component),
+  ].join(' ');
+  const elements =
+    scene.dim === '2d'
+      ? Object.values(scene.elements).map(formatElement2D)
+      : Object.values(scene.elements).map(formatElement3D);
+  return [`${head} {`, `  ${formatCamera(scene)}`, ...elements.map((line) => `  ${line}`), '}', ''].join('\n');
+};
+
+/**
+ * Canonical text for a document: one block per scene separated by a blank line, the camera first, then one line per
+ * element in record order, with every placed element's position written out so the text is the whole of the records.
+ */
+export const printScenes = (doc: Model.SceneDocument): string => doc.scenes.map(formatSceneRecord).join('\n');

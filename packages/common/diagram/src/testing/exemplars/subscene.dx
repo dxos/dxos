@@ -1,0 +1,15 @@
+scene subscene dim=2d name="Sub-scene" theme=flat {
+  camera center=220,0 zoom=1
+  element a rect "A" @ 0,0 size=120x80 hue=blue surface=solid border=true rounded=true
+  element b scene "B" @ 220,0 size=200x140 scene=b-detail hue=green surface=tint border=true rounded=true
+  element c rect "C" @ 440,0 size=120x80 hue=amber surface=solid border=true rounded=true
+  element ab link from=a to=b end=arrow
+  element bc link from=b to=c end=arrow
+}
+
+scene b-detail dim=2d name="B detail" theme=flat {
+  camera center=100,0 zoom=1
+  element x rect "X" @ 0,0 size=80x60 hue=green surface=solid border=true rounded=true
+  element y ellipse "Y" @ 200,0 size=80x60 hue=green surface=solid border=true
+  element xy link from=x to=y end=arrow
+}

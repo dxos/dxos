@@ -4,8 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { EXEMPLAR_NAMES, EXEMPLARS } from '../testing.ts';
 import { parse } from './parse.ts';
-import { readScenes } from './scene-model.ts';
+import { printScenes, readScenes } from './scene-model.ts';
 
 const LINKS = `scene root dim=2d theme=flat {
   camera center=200,0 zoom=1
@@ -67,5 +68,21 @@ describe('readScenes', () => {
 }
 `);
     expect(problems.map((problem) => problem.message).join()).toContain('"a"');
+  });
+});
+
+describe('printScenes', () => {
+  test.each(EXEMPLAR_NAMES)('round-trips %s', (name) => {
+    const { document, problems } = readScenes(EXEMPLARS[name]);
+    expect(problems).toEqual([]);
+    expect(printScenes(document)).toBe(EXEMPLARS[name]);
+  });
+
+  test('an intent-only cluster prints with positions', () => {
+    const intent = EXEMPLARS.cluster.replace(/(element s\d sphere "S\d") @ [^ ]+/g, '$1');
+    expect(intent).not.toBe(EXEMPLARS.cluster);
+    const { document, problems } = readScenes(intent);
+    expect(problems).toEqual([]);
+    expect(printScenes(document)).toBe(EXEMPLARS.cluster);
   });
 });

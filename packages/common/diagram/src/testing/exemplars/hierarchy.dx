@@ -1,0 +1,42 @@
+scene org dim=3d name="Organization" theme=presentation {
+  camera target=0,0,0 yaw=-45 pitch=30 distance=24 fov=0.8 projection=perspective
+  element eng scene "Engineering" @ -5,0,0 scale=8 scene=team-a hue=violet surface=glass shape=sphere
+  element ops scene "Operations" @ 5,0,0 scale=8 scene=team-b hue=teal surface=glass shape=sphere
+  element works link from=eng to=ops
+}
+
+scene team-a dim=3d name="Engineering" theme=presentation {
+  camera target=0,0,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
+  element hub sphere "Hub" @ 0,0,0 scale=1.2 hue=blue surface=solid
+  element s1 sphere @ 3,0,0 scale=0.6 hue=blue surface=solid
+  element s2 sphere @ -1.5,0,2.598 scale=0.6 hue=blue surface=solid
+  element sub scene "Platform" @ -1.5,0,-2.598 scale=2.4 scene=team-c hue=indigo surface=glass shape=sphere
+  element team group members="s1 s2 sub" layout=ring layout-radius=3
+  element l1 link from=hub to=s1
+  element l2 link from=hub to=s2
+  element l3 link from=hub to=sub
+}
+
+scene team-c dim=3d name="Platform" theme=presentation {
+  camera target=0,0,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
+  element hub sphere "Hub" @ 0,0,0 scale=1.2 hue=indigo surface=solid
+  element s1 sphere @ 3,0,0 scale=0.6 hue=indigo surface=solid
+  element s2 sphere @ -1.5,0,2.598 scale=0.6 hue=indigo surface=solid
+  element s3 sphere @ -1.5,0,-2.598 scale=0.6 hue=indigo surface=solid
+  element team group members="s1 s2 s3" layout=ring layout-radius=3
+  element l1 link from=hub to=s1
+  element l2 link from=hub to=s2
+  element l3 link from=hub to=s3
+}
+
+scene team-b dim=3d name="Operations" theme=presentation {
+  camera target=0,0,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
+  element hub sphere "Hub" @ 0,0,0 scale=1.2 hue=teal surface=solid
+  element s1 sphere @ 3,0,0 scale=0.6 hue=teal surface=solid
+  element s2 sphere @ -1.5,0,2.598 scale=0.6 hue=teal surface=solid
+  element s3 sphere @ -1.5,0,-2.598 scale=0.6 hue=teal surface=solid
+  element team group members="s1 s2 s3" layout=ring layout-radius=3
+  element l1 link from=hub to=s1
+  element l2 link from=hub to=s2
+  element l3 link from=hub to=s3
+}

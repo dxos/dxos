@@ -1,0 +1,4 @@
+scene cube dim=3d name="Cube" theme=presentation {
+  camera target=0,0,0 yaw=-45 pitch=30 distance=6 fov=0.8 projection=perspective
+  element box cube "Cube" @ 0,0,0 scale=2 hue=blue surface=glass border=true rounded=true
+}

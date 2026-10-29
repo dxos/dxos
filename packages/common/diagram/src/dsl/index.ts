@@ -23,7 +23,7 @@ export {
   toScene,
   withLayout,
 } from './parse.ts';
-export { type AttrValue, readScenes } from './scene-model.ts';
+export { type AttrValue, printScenes, readScenes } from './scene-model.ts';
 export { formatCommand, formatElement, formatId, formatObject, formatString, print, printCommands } from './print.ts';
 export {
   type AttrSpec,
