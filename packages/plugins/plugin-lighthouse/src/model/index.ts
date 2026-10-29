@@ -9,4 +9,5 @@ export * from './results.ts';
 export * from './session-state.ts';
 export * from './trajectory.ts';
 export * from './explain.ts';
+export * from './location.ts';
 export * from './model-panel.ts';

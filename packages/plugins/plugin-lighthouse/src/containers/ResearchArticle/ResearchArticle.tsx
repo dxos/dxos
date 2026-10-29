@@ -48,6 +48,7 @@ import {
   rank,
   toCard,
   toMessages,
+  withLinkedGeo,
 } from '#model';
 import { Finding, LighthouseOperation, Research } from '#types';
 
@@ -175,7 +176,16 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   // Results
   //
 
-  const items = useMemo(() => state.results.filter((entity) => isResult(entity) && !isThin(entity)), [state.results]);
+  // Listings that place themselves through a linked schema:geo node get its point copied on, so rating, the map and
+  // the cards read one location (lighthouse SessionView does the same).
+  const items = useMemo(
+    () =>
+      withLinkedGeo(
+        state.results.filter((entity) => isResult(entity) && !isThin(entity)),
+        state.results,
+      ),
+    [state.results],
+  );
   const { ranked, ratings } = useMemo(
     () => rank(items, state.rating.model, state.rating.overrides),
     [items, state.rating.model, state.rating.overrides],

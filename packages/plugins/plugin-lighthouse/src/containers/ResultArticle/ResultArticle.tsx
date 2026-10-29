@@ -31,7 +31,7 @@ import {
   useSubjectGraph,
 } from '#hooks';
 import { meta } from '#meta';
-import { applyOverrides, applyVote, matchPicks, nextVote, rateAll, toCard } from '#model';
+import { applyOverrides, applyVote, matchPicks, nextVote, rateAll, toCard, withLinkedGeo } from '#model';
 import { Finding, LighthouseOperation, Research } from '#types';
 
 import { findingEntity } from '../../util/index.ts';
@@ -95,7 +95,10 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
     if (!entity || !state.rating.model) {
       return undefined;
     }
-    return rateAll(applyOverrides(state.rating.model, state.rating.overrides), state.results).get(entity.id);
+    return rateAll(
+      applyOverrides(state.rating.model, state.rating.overrides),
+      withLinkedGeo(state.results, state.results),
+    ).get(entity.id);
   }, [entity, state.rating, state.results]);
   const why = useMemo(
     () =>

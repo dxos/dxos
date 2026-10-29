@@ -254,7 +254,7 @@ export const makeClient = (endpoint: LighthouseEndpoint): LighthouseClient => {
     sendFeedback: (run, id, vote) =>
       post(`${session(run)}/feedback`, { id, vote, from: CLIENT_NAME }).pipe(Effect.asVoid),
     setOverrides: (run, overrides) => {
-      const body = { terms: overrides.terms ?? {}, require: overrides.require ?? {} };
+      const body = { terms: overrides.terms ?? {}, require: overrides.require ?? {}, areas: overrides.areas ?? [] };
       return request('PUT', `${session(run)}/rating/overrides`, body).pipe(Effect.asVoid);
     },
     extend: (run, input) =>

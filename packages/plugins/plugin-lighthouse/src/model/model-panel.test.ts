@@ -7,6 +7,8 @@ import { describe, test } from 'vitest';
 import { sessionModel } from '../testing/model-fixture.ts';
 import {
   adjustedCount,
+  describeValue,
+  valueExpression,
   boundsOf,
   expressionParts,
   requirementExpression,
@@ -105,5 +107,27 @@ describe('model panel', () => {
     expect(
       adjustedCount(model, { terms: { price: { weight: 3 }, dice: { off: true } }, require: { Cheap: { off: true } } }),
     ).toBe(3);
+  });
+});
+
+describe('area notation', () => {
+  const near = {
+    id: 'w',
+    label: 'Near Wierzbno',
+    shape: { type: 'Circle' as const, center: [21.0129, 52.1906] as [number, number], radiusM: 500 },
+    softM: 400,
+  };
+  const square = { ...near, id: 's', label: 'Mokotów', softM: 0 };
+
+  test('reads an area term and requirement like the web UI', ({ expect }) => {
+    const term = { id: 'lh-areas', label: 'In', weight: 1, value: { within: [near] }, shape: 'flag' as const };
+    expect(termExpression(term, undefined)).toBe('s = inside(area "Near Wierzbno") ? 1 : max(0, 1 − dist / 400 m)');
+    expect(valueExpression({ within: [near, square] })).toBe(
+      'max((inside(area "Near Wierzbno") ? 1 : max(0, 1 − dist / 400 m)), (inside(area "Mokotów")))',
+    );
+    expect(describeValue({ within: [near, square] })).toBe('location in “Near Wierzbno” or “Mokotów”');
+    expect(requirementExpression({ label: 'Inside', value: { within: [near] }, op: '>', target: 0 })).toBe(
+      'inside(area "Near Wierzbno") or dist < 400 m',
+    );
   });
 });

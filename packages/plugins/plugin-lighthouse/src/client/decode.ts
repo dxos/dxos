@@ -8,6 +8,8 @@
 import {
   type RatingModel,
   type RatingOverrides,
+  cleanAreas,
+  cleanShape,
   type RatingTerm,
   type Requirement,
   type TermShape,
@@ -231,6 +233,18 @@ const toTermValue = (value: unknown): TermValue | undefined => {
     const equals = typeof record.equals === 'string' || typeof record.equals === 'number' ? record.equals : undefined;
     return equals !== undefined ? { has, equals } : { has };
   }
+  if (Array.isArray(record.within)) {
+    const within = record.within.flatMap((item) => {
+      const area = asRecord(item);
+      const id = asString(area?.id);
+      const shape = cleanShape(area?.shape);
+      const softM = asNumber(area?.softM);
+      return area && id && shape
+        ? [{ id, label: asString(area.label) ?? id, shape, ...(softM !== undefined ? { softM } : {}) }]
+        : [];
+    });
+    return within.length ? { within } : undefined;
+  }
   const match = asString(record.match);
   const pattern = asString(record.pattern);
   return match && pattern ? { match, pattern } : undefined;
@@ -332,7 +346,13 @@ const toOverrides = (value: unknown): RatingOverrides | undefined => {
   for (const [label, override] of Object.entries(asRecord(record.require) ?? {})) {
     require[label] = asRecord(override)?.off === true ? { off: true } : {};
   }
-  return { terms, require, ...(asString(record.updatedAt) ? { updatedAt: asString(record.updatedAt) } : {}) };
+  const areas = cleanAreas(record.areas);
+  return {
+    terms,
+    require,
+    ...(areas.length ? { areas } : {}),
+    ...(asString(record.updatedAt) ? { updatedAt: asString(record.updatedAt) } : {}),
+  };
 };
 
 /** The rating state from a legacy (`{ rating, overrides, feedback }`) or /v1 (`{ model, overrides, feedback }`) body. */

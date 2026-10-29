@@ -6,6 +6,7 @@
 // and written as a formula with the session's numbers, and the person's adjustments edited.
 
 import {
+  type GeoArea,
   type Rateable,
   type RatingModel,
   type RatingOverrides,
@@ -23,10 +24,26 @@ const local = (curie: string) =>
     .toLowerCase();
 
 /** has/match terms read 0 or 1 for every result, so their coverage is how many match. */
-export const isFlag = (value: TermValue): boolean => 'has' in value || 'match' in value;
+export const isFlag = (value: TermValue): boolean => 'has' in value || 'match' in value || 'within' in value;
+
+const metres = (value: number) => (value >= 1000 ? `${Math.round(value / 100) / 10} km` : `${Math.round(value)} m`);
+
+const areaList = (areas: ReadonlyArray<GeoArea>) => areas.map((area) => `“${area.label}”`).join(' or ');
+
+/** One area's fit: 1 inside, else falling linearly over its soft edge. */
+export const areaExpression = (area: GeoArea): string =>
+  area.softM
+    ? `inside(area "${area.label}") ? 1 : max(0, 1 − dist / ${metres(area.softM)})`
+    : `inside(area "${area.label}")`;
+
+/** What `dist` means in an area formula. */
+export const DIST_NOTE = 'dist: metres from the pin to the area’s edge, plus the pin’s precision';
 
 /** What a term reads, in words: "rating value", "rent + admin fee", "name matches /…/". */
 export const describeValue = (value: TermValue): string => {
+  if ('within' in value) {
+    return `location in ${areaList(value.within)}`;
+  }
   if ('prop' in value) {
     return local(value.prop);
   }
@@ -67,6 +84,12 @@ const formatNumber = (value: number) =>
 
 /** The raw value x a term reads, as an expression over CURIEs. */
 export const valueExpression = (value: TermValue): string => {
+  if ('within' in value) {
+    const [only] = value.within;
+    return value.within.length === 1 && only
+      ? areaExpression(only)
+      : `max(${value.within.map((area) => `(${areaExpression(area)})`).join(', ')})`;
+  }
   if ('prop' in value) {
     return value.prop;
   }
@@ -139,6 +162,13 @@ export const termExpression = (term: RatingTerm, bounds: Bounds | undefined): st
 
 /** A requirement as an expression: `lh:monthlyPrice < 4000`, `schema:addressLocality = "Mokotów"`. */
 export const requirementExpression = (requirement: Requirement): string => {
+  if ('within' in requirement.value) {
+    return requirement.value.within
+      .map((area) =>
+        area.softM ? `inside(area "${area.label}") or dist < ${metres(area.softM)}` : `inside(area "${area.label}")`,
+      )
+      .join(' or ');
+  }
   const target =
     typeof requirement.target === 'string' && !/^-?\d+(\.\d+)?$/.test(requirement.target.trim())
       ? `"${requirement.target}"`
