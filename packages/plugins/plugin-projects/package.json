@@ -63,6 +63,11 @@
       "types": "./dist/types/src/types/Feature.d.ts",
       "import": "./dist/lib/Feature.mjs"
     },
+    "./FeatureEmbed": {
+      "source": "./src/types/FeatureEmbed.ts",
+      "types": "./dist/types/src/types/FeatureEmbed.d.ts",
+      "import": "./dist/lib/FeatureEmbed.mjs"
+    },
     "./FeatureLink": {
       "source": "./src/types/FeatureLink.ts",
       "types": "./dist/types/src/types/FeatureLink.d.ts",
@@ -155,6 +160,11 @@
       "types": "./dist/types/src/types/Spec.d.ts",
       "import": "./dist/lib/Spec.mjs"
     },
+    "./SpecText": {
+      "source": "./src/types/SpecText.ts",
+      "types": "./dist/types/src/types/SpecText.d.ts",
+      "import": "./dist/lib/SpecText.mjs"
+    },
     "./Templates": {
       "source": "./src/Templates.ts",
       "types": "./dist/types/src/Templates.d.ts",
@@ -194,7 +204,9 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
     "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",

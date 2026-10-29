@@ -184,7 +184,9 @@ component SpecArticle
     data model, API).
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
-    reviewed item and links it to its code (F-16).
+    reviewed item and links it to its code (F-16). Extensions plugin-projects
+    contributes (`ProjectCapabilities.SpecDocumentExtensions`), such as feature
+    cards for the objects the text embeds, are added to the editor.
   props:
     role: string
     subject?: SpecDocument
@@ -757,6 +759,10 @@ feat F-14: Two-way spec sync with a local checkout
               `DX_FS_ROOTS`) and writes only `.mdl` files.
   req F-14.6: op:importSpec links a file to a new Spec, or returns the Spec that
               already carries the key.
+  req F-14.7: A document a plugin-projects spec holds syncs through
+              `ProjectCapabilities.SpecDocumentCodec`: a push writes the codec's text for
+              it, made against the last synced text, and a pull hands the file to the
+              codec. Any other document's text is copied as it is.
 ```
 
 ```mdl
@@ -1413,6 +1419,22 @@ decision D-35: This plugin depends on plugin-projects and renders a spec documen
   date: 2026-10-29
   by: user:wittjosiah
   why: plugin-projects owns specs and their documents, and a plugin reaches another's UI through surfaces, never its components. This page's margins, diff view and jumps need the editor itself, so it keeps its own.
+```
+
+```mdl
+decision D-36: The two-way file sync writes a plugin-projects spec's document through its export and reads the file through its import, so the file in the repository keeps its `feat` blocks while the document holds embeds of the feature objects. This page draws the feature cards as well, through a capability plugin-projects contributes.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-14, SpecArticle]
+```
+
+```mdl
+decision D-37: The sync asks each `ProjectCapabilities.SpecDocumentCodec` in turn for a document's file text, passing the text last synced as the base, and copies the text as it is when none answers; a pull goes to the codec that wrote. The page adds every `ProjectCapabilities.SpecDocumentExtensions` contribution to its editor, which rebuilds when they change. Fills in [D-36].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-14.7, SpecArticle]
+  why: The base lets the codec copy what has not changed, so a push touches only the blocks that did. Documents of no plugin keep the copying they had.
 ```
 
 ---

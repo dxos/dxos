@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { FeatureOperation, Spec } from '#types';
+import { Feature, FeatureOperation, Spec, SpecText } from '#types';
 
 import { attach, detach } from './util.ts';
 
@@ -41,14 +41,21 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
         if (status !== undefined) {
           feature.status = status;
         }
-        if (specs !== undefined) {
-          feature.specs = [...specs];
-        }
       });
-      // A position belongs to the canvas it was dragged on, so a move leaves it behind.
-      if (target && Spec.getContainer(feature)?.id !== target.id) {
+      if (specs !== undefined) {
+        Feature.setSources(feature, specs);
+      }
+      const container = Spec.getContainer(feature);
+      // A position belongs to the canvas it was dragged on, so a move leaves it behind; the embed moves with it.
+      if (target && container?.id !== target.id) {
+        if (container) {
+          yield* Effect.promise(() => SpecText.unembed(container, feature.id));
+        }
         detach(feature);
         attach(target, feature);
+        yield* Effect.promise(() => SpecText.embed(target, feature));
+      } else if (name !== undefined && container) {
+        yield* Effect.promise(() => SpecText.relabel(container, feature));
       }
       yield* Database.flush();
     }),

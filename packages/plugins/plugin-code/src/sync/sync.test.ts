@@ -3,15 +3,21 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { findSourceKeys, formatSourceKey, parseGitHubRemote, parseSourceKey, reviewKeyOf } from '@dxos/deus/review';
+import { Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Doc } from '@dxos/echo-doc';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import { Text } from '@dxos/schema';
+import { SpecDocument } from '@dxos/types';
 
 import { detectRepo, parseGitConfigRemote, parseRepoEntry, resolvePath, resolveRoots } from './repo-roots.ts';
 import { fromMetaKey, keyFromTreeUrl, toMetaKey } from './spec-key.ts';
-import { reconcile } from './spec-sync.ts';
+import { SyncBases, reconcile, syncSpec } from './spec-sync.ts';
 
 /** An in-memory file service; `roots` stands in for the dev server's own checkout. */
 const memoryFs = (
@@ -128,5 +134,49 @@ describe('repo roots', () => {
     expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: '../etc/passwd' })).toBeUndefined();
     expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: 'a/../../b.mdl' })).toBeUndefined();
     expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: '/etc/passwd' })).toBeUndefined();
+  });
+});
+
+describe('syncSpec', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('a codec writes the file and reads it back, in place of copying the text', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [SpecDocument.SpecDocument, Text.Text] });
+    const spec = db.add(SpecDocument.make({ content: 'a' }));
+    Obj.update(spec, (spec) => {
+      Obj.getMeta(spec).keys.push(toMetaKey({ owner: 'dxos', repo: 'dxos', path: 'a/SPEC.mdl' }));
+    });
+    const content = await spec.content.load();
+    const codec: ProjectCapabilities.SpecDocumentCodec = {
+      write: async (document) => `file:${(await document.content.load()).content}`,
+      read: async (document, text) => {
+        Doc.updateText(await document.content.load(), 'content', text.replace(/^file:/, ''));
+        return true;
+      },
+    };
+    const files: Record<string, string> = { '/host/a/SPEC.mdl': 'file:a' };
+    const context = {
+      fs: memoryFs(files),
+      roots: [{ repo: 'dxos/dxos', path: '/host' }],
+      bases: new SyncBases(),
+      codecs: [codec],
+    };
+    const sync = () => EffectEx.runPromise(syncSpec(spec, context));
+
+    expect((await sync()).status).toBe('synced');
+    files['/host/a/SPEC.mdl'] = 'file:b';
+    expect((await sync()).status).toBe('pulled');
+    expect(content.content).toBe('b');
+    Doc.updateText(content, 'content', 'c');
+    expect((await sync()).status).toBe('pushed');
+    expect(files['/host/a/SPEC.mdl']).toBe('file:c');
   });
 });

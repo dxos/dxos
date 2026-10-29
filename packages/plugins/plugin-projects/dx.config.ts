@@ -89,6 +89,23 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
+    // Eager, as the migrations are: a spec synced to its file before the codec arrives would take the file's `feat`
+    // blocks in as text.
+    Capability.lazyModule(
+      'SpecDocumentCodec',
+      { provides: [ProjectCapabilities.SpecDocumentCodec] },
+      () => import('./src/capabilities/spec-document-codec.ts', { with: { type: 'module-url' } }),
+    ),
+    // Off the boot path: an editor that opened before they arrive is rebuilt with the cards.
+    Capability.lazyModule(
+      'SpecDocumentExtensions',
+      {
+        provides: [ProjectCapabilities.SpecDocumentExtensions],
+        activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/spec-document-extensions.ts', { with: { type: 'module-url' } }),
+    ),
     Capability.lazyModule(
       'SubjectContext',
       { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },

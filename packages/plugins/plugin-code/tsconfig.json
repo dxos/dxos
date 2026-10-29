@@ -122,6 +122,9 @@
       "path": "../plugin-github"
     },
     {
+      "path": "../plugin-projects"
+    },
+    {
       "path": "../plugin-space"
     },
     {

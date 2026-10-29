@@ -10158,6 +10158,9 @@ importers:
       '@dxos/plugin-github':
         specifier: workspace:*
         version: link:../plugin-github
+      '@dxos/plugin-projects':
+        specifier: workspace:*
+        version: link:../plugin-projects
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -15842,9 +15845,15 @@ importers:
 
   packages/plugins/plugin-projects:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: 'catalog:'
+        version: 6.20.3
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai

@@ -9,6 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { type SpecDocument } from '@dxos/types';
 
 import { resolvePath } from './repo-roots.ts';
@@ -89,7 +90,18 @@ export type SyncResult = { status: SyncStatus; path?: string; error?: string };
 export const syncSpec = Effect.fnUntraced(
   function* (
     spec: SpecDocument.SpecDocument,
-    { fs, roots, bases }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; bases: SyncBases },
+    {
+      fs,
+      roots,
+      bases,
+      codecs = [],
+    }: {
+      fs: FileSystem.FileSystem;
+      roots: readonly FileSystem.RepoRoot[];
+      bases: SyncBases;
+      /** Tried in order for a document whose file text is not its own text as it is. */
+      codecs?: readonly ProjectCapabilities.SpecDocumentCodec[];
+    },
   ) {
     const key = getSpecKey(spec);
     const path = key && resolvePath(roots, key);
@@ -105,10 +117,22 @@ export const syncSpec = Effect.fnUntraced(
       return { status: 'missing', path } satisfies SyncResult;
     }
 
-    const local = text.content;
-    const { action, status } = reconcile({ local, disk, base: yield* bases.get(spec.id) });
+    const base = yield* bases.get(spec.id);
+    const written = yield* Effect.promise(async () => {
+      for (const codec of codecs) {
+        const text = await codec.write(spec, { base });
+        if (text !== undefined) {
+          return { codec, text };
+        }
+      }
+    });
+    const local = written?.text ?? text.content;
+    const { action, status } = reconcile({ local, disk, base });
     if (action === 'pull') {
-      Doc.updateText(text, ['content'], disk);
+      const read = written && (yield* Effect.promise(() => written.codec.read(spec, disk, { path: key.path })));
+      if (!read) {
+        Doc.updateText(text, ['content'], disk);
+      }
     } else if (action === 'push') {
       yield* fs.write(path, local);
     }
