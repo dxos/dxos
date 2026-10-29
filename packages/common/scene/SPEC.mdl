@@ -516,3 +516,12 @@ decision D-44: Reconciling a parallel migration also adopts what only the losing
   why: Dropping a peer's new View lost user work the replay of edited fields was meant to keep.
   rejected: Copying the loser's layouts, which would break the Refs between a composite object's parts and its model.
 ```
+
+```mdl
+decision D-45: Layouts are edited by `LayoutIntent`s (create, delete, update, reorder, group, ungroup, bind, move, rotate, scale, batch): one pure reducer, `applyIntent`, with geometry by dimension. Deleting an element removes the links bound to it and its group memberships; moving a member of an arranged group pins it; an intent that changes nothing returns the same layout. 2D keeps react-ui-canvas's own `Intent` in stage 3.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: The 3D editor, undo and the assistant need one vocabulary of edits that is pure and testable without a renderer.
+```
