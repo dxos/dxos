@@ -19,6 +19,7 @@ import {
   type Filter,
   type Hypergraph,
   JsonSchema,
+  type Migration,
   Obj,
   Query,
   Ref,
@@ -479,6 +480,10 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   getChanges<T extends Obj.Unknown>(_obj: T, _opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[] {
     throw new UnsupportedOperationError('getChanges');
+  }
+
+  async beginMigration(): Promise<Migration.Transaction> {
+    throw new UnsupportedOperationError('beginMigration');
   }
 
   async createBranch(): Promise<void> {
