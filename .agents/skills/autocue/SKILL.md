@@ -767,23 +767,31 @@ fix mostly proves the app still runs.
 ## 5c. Package it: the autocue format
 
 When the demo is for people to browse rather than one PR, pack it. `scripts/pack.mjs` turns one or more trimmed
-takes into an autocue bundle: a folder whose player shows each demo with its chapters on the timeline, keyboard
-navigation (`←`/`→` chapters, `[`/`]` demos, `<`/`>` speed, `?` for the rest), sound and speed controls, where it
-was recorded (branch, commit, Composer and EDGE environment, space template), the flow script, and a prompt to
-copy to an agent that records it again. The full spec is [FORMAT.md](FORMAT.md).
+takes into an autocue bundle: a player page (built from `@dxos/react-ui`) with each demo's chapters on the timeline,
+a side panel that switches between the chapter list and the `.mdl` test with the current step highlighted (click a
+step to jump to it), keyboard navigation (`←`/`→`, `[`/`]` for demos, `<`/`>` for speed, `?` for the rest), sound and
+speed controls, Video and Bundle downloads, where it was recorded (branch, commit, Composer and EDGE environment,
+space template), the committed flow, and a prompt to copy to an agent that records it again. The spec is
+[FORMAT.md](FORMAT.md).
 
 ```bash
 node .agents/skills/autocue/scripts/pack.mjs --out /tmp/bundle --title "Sheets" \
-  --demo /tmp/demo --demo /tmp/demo-2 --zip --upload sheets
+  --demo /tmp/demo --demo /tmp/demo-2 --upload sheets
 ```
 
+- **Only committed flows are packed.** Record the take with `run` on the flow's own path
+  (`packages/<package>/autocue/<name>.mjs`), committed and unchanged; a take of `/tmp/demo/flow.mjs` is a rehearsal
+  and `pack.mjs` refuses it, since no one else can check it out. Push the branch before you share the link: the
+  prompt the page offers opens with `git checkout` of the recorded commit.
 - **The driver records the metadata on `stop`** (`recording` in `timeline.json`), reading the EDGE URL from the
   live app, so `stop` must run before the browser closes. The trimmer carries it into `<name>.autocue.json`, which
   is what `--demo` takes.
-- **Three targets from one folder.** `--upload` puts it in the `agent-artifacts` bucket and prints the player's
-  URL. `--zip` makes an archive that plays from disk. For a Claude Artifact, publish the `artifact.file_path` it
-  prints with `artifact.files` as `files`; each video must be under 15 MB, since an Artifact cannot load media from
-  another host.
+- **Share the dx.pub link.** `--upload` puts the bundle in the `agent-artifacts` bucket and prints
+  `https://dx.pub/demo/<date>-<slug>/`, or the r2.dev URL while that route is not live. `--zip` makes an archive that
+  plays from disk. For a Claude Artifact, publish the `artifact.file_path` it prints with `artifact.files` as
+  `files`; each video must be under 15 MB, since an Artifact cannot load media from another host.
+- **The player is code in `tools/autocue`** (`player/` and `src/player/`, storybook `tools/autocue/Player`).
+  `pack.mjs` rebuilds it when its sources change, in a few seconds; change it there, never in a bundle.
 
 ## 6. Watch the demo before shipping it
 

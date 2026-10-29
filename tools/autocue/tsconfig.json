@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/common/node-std"
+    },
+    {
       "path": "../../packages/ui/brand"
     },
     {
@@ -15,6 +18,9 @@
     },
     {
       "path": "../../packages/ui/ui-theme"
+    },
+    {
+      "path": "../vite-plugin-import-source"
     }
   ]
 }

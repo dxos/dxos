@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <title>{{TITLE}}</title>
+    <!-- Paints the theme's ground before the bundle runs, so a dark page does not flash white. -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #fafafa;
+      }
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme='light']),
+        html:not([data-theme='light']) body {
+          background: #0a0a0a;
+        }
+      }
+      html[data-theme='dark'],
+      html[data-theme='dark'] body {
+        background: #0a0a0a;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- pack.mjs replaces the placeholder with the bundle's manifest (autocue@1). -->
+    <script type="application/json" id="autocue-manifest">
+      {{MANIFEST}}
+    </script>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

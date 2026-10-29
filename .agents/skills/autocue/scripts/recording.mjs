@@ -154,7 +154,12 @@ export const recordingInfo = async ({ page, flowFile, appUrl, target }) => {
     recordedAt: new Date().toISOString(),
     target,
     git: { branch: repo.branch, commit: repo.commit, dirty: repo.dirty, remote: repo.remote },
-    flow: flowFile && repo.root ? path.relative(repo.root, flowFile) : flowFile,
+    // Repo-relative only when the flow is inside the checkout; `/tmp/demo/flow.mjs` stays absolute, and `pack.mjs`
+    // refuses it, since no one else can check it out.
+    flow:
+      flowFile && repo.root && !path.relative(repo.root, flowFile).startsWith('..')
+        ? path.relative(repo.root, flowFile)
+        : flowFile,
     composer: {
       url: composerUrl,
       environment: app.environment ?? environmentOf(composerUrl),

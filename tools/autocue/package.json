@@ -36,14 +36,19 @@
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
+    "@dxos/node-std": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "@phosphor-icons/core": "catalog:",
     "@remotion/bundler": "catalog:",
     "@remotion/player": "catalog:",
     "@remotion/renderer": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
-    "typescript": "catalog:"
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }
