@@ -50,4 +50,5 @@ Decided by the user (2026-10-28): the editor grows inside plugin-canvas; 3D edit
 move, rotate, scale, group, link), then extrude and join/subtract; existing canvases migrate to Scene/Element within
 stage 3; the work stays in dxos/dxos#14282.
 
-- [ ] **Write the stage 3 design** for review; build nothing until it is approved.
+- [x] **Write the stage 3 design** — draft at `agents/superpowers/specs/2026-10-28-scene-editor-design.md`, with four
+      open questions; build nothing until it is approved.
