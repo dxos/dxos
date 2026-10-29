@@ -75,4 +75,6 @@ stage 3; the work stays in dxos/dxos#14282.
         article's projection choice from `Canvas.settings.lattice` lands with Task 9.
   - [x] Task 7 — constrained and dynamic models kept in `layout.props` (`layoutModelAtom`), undo patches them;
         `CanvasSettings.projection` names the mode a canvas opens in.
+  - [x] Task 8 — scoring a View from the layout store equals scoring it from memory (the Scored story keeps its memory
+        store: react-ui-canvas cannot depend on plugin-canvas).
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.

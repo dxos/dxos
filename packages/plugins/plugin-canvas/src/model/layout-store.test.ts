@@ -2,16 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { Diagnostics, Dsl, Objective, Score } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { DEFAULT_LATTICE, cellBounds, createLatticeProjection, nodeBounds } from '@dxos/react-ui-canvas';
-import { type View, readPath, reduceIntent, storeVersions } from '@dxos/react-ui-canvas/headless';
-import { createLatticeTree } from '@dxos/react-ui-canvas/testing';
+import {
+  DEFAULT_LATTICE,
+  cellBounds,
+  createLatticeProjection,
+  defaultNodeRegistry,
+  nodeBounds,
+  toDiagramObjects,
+} from '@dxos/react-ui-canvas';
+import { type View, createMemoryStore, readPath, reduceIntent, storeVersions } from '@dxos/react-ui-canvas/headless';
+import {
+  createLatticeTree,
+  createModelViewTree,
+  createNestedViewTree,
+  createSquareTree,
+} from '@dxos/react-ui-canvas/testing';
 import { Scene, toEcho } from '@dxos/scene';
 
 import { writeViews } from './content.ts';
@@ -226,5 +239,36 @@ describe('lattice mode on Layout2D', () => {
     projection.apply({ kind: 'move', ids: ['e'], delta: { x: 0, y: -192 } });
     expect(JSON.stringify(layout.elements)).toBe(before);
     bound.dispose();
+  });
+});
+
+describe('scored mode on Layout2D', () => {
+  /** The scores the Scored story shows for a View: the default objective's scorers over its diagram objects. */
+  const scoresOf = (view: View) => {
+    const { objects } = toDiagramObjects(view, defaultNodeRegistry);
+    return Effect.runPromise(
+      Score.evaluate(Score.fromObjective(Objective.DEFAULT), { objects, report: Diagnostics.analyze(objects) }),
+    );
+  };
+
+  test('scoring the View a Layout2D store emits equals scoring the same View held in memory', async () => {
+    for (const tree of [createSquareTree(), createNestedViewTree(), createModelViewTree()]) {
+      const content: Record<string, unknown> = { canvas: { kind: 'canvas', root: tree.root } };
+      writeViews(content, Object.fromEntries(tree.views.map((view) => [view.id, view])));
+      const scene = toEcho(legacyDocument(content)).root;
+      if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+        throw new Error('A canvas sample opens a 2D scene.');
+      }
+      const registry = Registry.make();
+      const bound = bindLayoutStore(registry, scene);
+      const stored = registry.get(bound.store.view(bound.root));
+      const memory = createMemoryStore(tree.views, {}, { root: tree.root });
+      const held = registry.get(memory.view(tree.root));
+      if (!stored || !held) {
+        throw new Error('Both stores show the root View.');
+      }
+      expect(await scoresOf(stored)).toEqual(await scoresOf(held));
+      bound.dispose();
+    }
   });
 });
