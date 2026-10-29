@@ -63,7 +63,8 @@ export const usePlayback = (chapters: Chapter[], fallbackDuration = 0): Playback
   const [playing, setPlaying] = useState(false);
   const [rate, setRateState] = useState(() => stored.get('rate', 1));
   const [volume, setVolumeState] = useState(() => stored.get('volume', 1));
-  const [muted, setMuted] = useState(false);
+  // A stored volume of zero is the muted state `setVolume` left behind.
+  const [muted, setMuted] = useState(() => stored.get('volume', 1) === 0);
   const [flash, setFlash] = useState<string>();
   const flashTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -114,7 +115,8 @@ export const usePlayback = (chapters: Chapter[], fallbackDuration = 0): Playback
       video.playbackRate = video.defaultPlaybackRate;
       sync();
     };
-    const events = ['play', 'pause', 'ended', 'seeked', 'timeupdate', 'durationchange'];
+    // `emptied` fires when another demo's source loads, so the head and play state reset with it.
+    const events = ['play', 'pause', 'ended', 'seeked', 'timeupdate', 'durationchange', 'emptied'];
     events.forEach((event) => video.addEventListener(event, sync));
     video.addEventListener('loadedmetadata', loaded);
     return () => {

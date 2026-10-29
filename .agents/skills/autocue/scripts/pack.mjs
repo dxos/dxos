@@ -149,6 +149,9 @@ const committedFlow = (recording, sidecarFile) => {
   if (path.isAbsolute(flow) || flow.startsWith('..')) {
     fail(`the flow ${flow} is outside the repository`);
   }
+  if (!/^packages\/(?:[^/]+\/)+autocue\/[^/]+\.mjs$/.test(flow) || flow.split('/').includes('..')) {
+    fail(`the flow ${flow} is not in a package's autocue/ folder`);
+  }
   if (!commit || !recording.git?.branch) {
     fail('the recording names no branch and commit');
   }
@@ -412,7 +415,7 @@ const bundleSlug = slug(typeof options.upload === 'string' ? options.upload : bu
  */
 const HOSTS = {
   'dx.pub': 'https://dx.pub/demo',
-  'r2': 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/autocue',
+  'r2': `${process.env.R2_PUBLIC_BASE || 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev'}/autocue`,
 };
 const host = HOSTS[options.host ?? process.env.AUTOCUE_HOST ?? 'dx.pub'];
 if (!host) {
