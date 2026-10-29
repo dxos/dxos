@@ -8,6 +8,7 @@ import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { findSymbolLine } from '@dxos/deus/review';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -24,8 +25,6 @@ import {
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
-
-import { findSymbolLine } from './symbol.ts';
 
 /** Highlights the symbol's line and scrolls it to the top third of the view once the editor has laid out. */
 const revealLine = (line: number): Extension => [

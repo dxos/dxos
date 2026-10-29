@@ -977,20 +977,20 @@ verdict F-15.2: Ctrl/⌘-click and double-click import the other spec and open i
 ```mdl
 verdict F-15.3: CodeView shows a file at the symbol's line and offers "Open in VS Code" when the path is known.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/CodeView.tsx#CodeView, github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts#findSymbolLine]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/CodeView.tsx#CodeView, github:dxos/dxos/packages/reflect/deus/src/review/symbol.ts#findSymbolLine]
   tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/CodeView.stories.tsx]
   walkthrough:
     - CodeView shows the file at the symbol and links to VS Code when the local path is known. github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/CodeView.tsx#CodeView
-    - findSymbolLine finds the line where the symbol is declared. github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts#findSymbolLine
+    - findSymbolLine finds the line where the symbol is declared. github:dxos/dxos/packages/reflect/deus/src/review/symbol.ts#findSymbolLine
   note: Symbol lookup is tested and the CodeView Default story waits for the symbol line; the `vscode://` link is not tested.
 ```
 
 ```mdl
 verdict F-16.1: The review beside the spec is read from the checkout every 3 seconds.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/useSpecSources.ts#useLocalTexts, github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-key.ts#reviewKeyOf]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/useSpecSources.ts#useLocalTexts, github:dxos/dxos/packages/reflect/deus/src/review/source-key.ts#reviewKeyOf]
   walkthrough:
-    - reviewKeyOf gives the key of the review beside the spec. github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-key.ts#reviewKeyOf
+    - reviewKeyOf gives the key of the review beside the spec. github:dxos/dxos/packages/reflect/deus/src/review/source-key.ts#reviewKeyOf
     - useLocalTexts reads that file from the checkout and reads it again every 3 seconds. github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/useSpecSources.ts#useLocalTexts
   note: Only `reviewKeyOf` is tested; nothing tests the polling read.
 ```
@@ -1006,10 +1006,10 @@ verdict F-16.2: Reviewed lines get a coloured bar and a status chip; the chip op
 ```mdl
 verdict F-16.3: Graph cards get a status badge; a feature takes the worst of its requirements.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#statusOf, github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard]
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/review/review.ts#statusOf, github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard]
   tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
   walkthrough:
-    - statusOf gives an item its status, and a feature the worst status of its requirements. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#statusOf
+    - statusOf gives an item its status, and a feature the worst status of its requirements. github:dxos/dxos/packages/reflect/deus/src/review/review.ts#statusOf
     - DefinitionCard shows that status as a badge on the box. github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard
   note: `statusOf` is tested; the badge rendering is not.
 ```
@@ -1031,10 +1031,10 @@ verdict F-16.4: The Review view lists verdict cards worst first; a card menu sho
 ```mdl
 verdict F-16.5: Evidence keys become code chips in the item's chip row and dashed code boxes; both open the Code view.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#reviewAnnotations, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#buildDefinitionGraph, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter, github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewAnnotations, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#buildDefinitionGraph, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
   tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx]
   walkthrough:
-    - reviewAnnotations turns the evidence of each verdict into links from the item to its code. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#reviewAnnotations
+    - reviewAnnotations turns the evidence of each verdict into links from the item to its code. github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewAnnotations
     - reviewGutter shows those links as code chips in the chip row of the item. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter
     - buildDefinitionGraph draws them as dashed code boxes on the graph. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#buildDefinitionGraph
     - SpecArticle opens the Code view at the symbol when a chip is clicked or a box is double-clicked. github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle
@@ -1048,10 +1048,10 @@ verdict F-16.5: Evidence keys become code chips in the item's chip row and dashe
 ```mdl
 verdict F-16.6: Scenario and test lines show their test-file chips and tested, partly tested or not tested.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#reviewAnnotations]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter, github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewAnnotations]
   tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
   walkthrough:
-    - reviewAnnotations carries the `tests:` keys of each scenario and test. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#reviewAnnotations
+    - reviewAnnotations carries the `tests:` keys of each scenario and test. github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewAnnotations
     - reviewGutter shows a chip for each test file and tested, partly tested or not tested on the declaration line. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter
   note: |
     review.test.ts checks that `tests:` keys reach the annotations the chips are made from. No test asserts the
@@ -1062,14 +1062,14 @@ verdict F-16.6: Scenario and test lines show their test-file chips and tested, p
 ```mdl
 verdict F-16.7: Hovering a code or test chip shows the file name and the declaration, read from the checkout; a click still opens the code.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#citedFiles, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#HoverController, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#snippetCard, github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts#declarationSnippet]
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/review/review.ts#citedFiles, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#HoverController, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#snippetCard, github:dxos/dxos/packages/reflect/deus/src/review/symbol.ts#declarationSnippet]
   tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx]
   walkthrough:
-    - citedFiles lists every file the review cites, so the spec page loads their text from the checkout. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#citedFiles
+    - citedFiles lists every file the review cites, so the spec page loads their text from the checkout. github:dxos/dxos/packages/reflect/deus/src/review/review.ts#citedFiles
     - SpecArticle hands that text to the gutter as `read`, and a chip click still opens the Code view. github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle
     - HoverController opens one card for a chip and keeps it while the pointer is on the chip or the card. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#HoverController
     - snippetCard shows the file name, which opens the file, above the declaration. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#snippetCard
-    - declarationSnippet cuts the declaration from the symbol to where its brackets close, or the first lines when the key has no symbol. github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts#declarationSnippet
+    - declarationSnippet cuts the declaration from the symbol to where its brackets close, or the first lines when the key has no symbol. github:dxos/dxos/packages/reflect/deus/src/review/symbol.ts#declarationSnippet
   note: |
     review.test.ts checks `declarationSnippet` for a symbol, a member, a missing symbol and a file key; the SpecIde
     story hovers a plugin-code chip and waits for the card's snippet. No test hovers a test chip or clicks the file
@@ -1079,11 +1079,11 @@ verdict F-16.7: Hovering a code or test chip shows the file name and the declara
 ```mdl
 verdict F-16.8: An item with several keys or a `walkthrough:` shows up to five steps in its current Review card and on hover of its status chip.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#parseReview, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#walkthroughOf, github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/VerdictCard.tsx#VerdictCard, github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/Walkthrough.tsx#Walkthrough, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#walkthroughCard]
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/review/review.ts#parseReview, github:dxos/dxos/packages/reflect/deus/src/review/review.ts#walkthroughOf, github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/VerdictCard.tsx#VerdictCard, github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/Walkthrough.tsx#Walkthrough, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#walkthroughCard]
   tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/Walkthrough.stories.tsx]
   walkthrough:
-    - parseReview reads each walkthrough step as a sentence and the key after it. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#parseReview
-    - walkthroughOf takes the reviewer's steps, or one step per key when the evidence has several, up to five; one key gives none. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#walkthroughOf
+    - parseReview reads each walkthrough step as a sentence and the key after it. github:dxos/dxos/packages/reflect/deus/src/review/review.ts#parseReview
+    - walkthroughOf takes the reviewer's steps, or one step per key when the evidence has several, up to five; one key gives none. github:dxos/dxos/packages/reflect/deus/src/review/review.ts#walkthroughOf
     - VerdictCard expands the current card in the Review view to the walkthrough. github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/VerdictCard.tsx#VerdictCard
     - Walkthrough shows each sentence above its declaration, with the file name as a link to the code. github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/Walkthrough.tsx#Walkthrough
     - walkthroughCard shows the same steps in the hover card of the status chip. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#walkthroughCard
