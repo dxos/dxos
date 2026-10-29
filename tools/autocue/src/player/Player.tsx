@@ -5,7 +5,7 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Pane, type PaneTab } from '@dxos/plugin-deck/Pane';
+import * as Pane from '@dxos/plugin-deck/Pane';
 import { Attention, RootAttentionProvider } from '@dxos/react-ui-attention';
 import { ResizeHandle, resizeAttributes } from '@dxos/react-ui-dnd';
 import * as Button from '@dxos/react-ui/Button';
@@ -47,7 +47,7 @@ export type PlayerProps = {
 /** The player is one plank that always has the reader's attention, so its sigil, title and tabs read as current. */
 const ATTENDABLE_ID = 'autocue';
 
-const SIDE_TABS: (PaneTab & { id: PlayerView })[] = [
+const SIDE_TABS: (Pane.Tab & { id: PlayerView })[] = [
   { id: 'chapters', icon: 'ph--list-numbers--regular', label: 'Chapters' },
   { id: 'spec', icon: 'ph--file-code--regular', label: 'Spec' },
   { id: 'recording', icon: 'ph--info--regular', label: 'Recording' },
