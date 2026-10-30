@@ -133,7 +133,7 @@ export const SendMessage = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat).annotate({ description: 'The chat the message was recorded in.' })),
     reason: Schema.optional(Schema.String.annotate({ description: 'Why the message was not delivered.' })),
   }),
-}).pipe(AgentChannels.channelSend);
+}).pipe(AgentChannels.channelSend('chat'));
 
 /** Marks an agent's chat as its conversation with a person, so deliveries to them land there. */
 export const AssignChatParticipant = Operation.make({

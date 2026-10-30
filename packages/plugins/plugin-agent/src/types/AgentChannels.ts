@@ -83,22 +83,23 @@ export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel
 export const OUTBOUND_PROPERTY = 'outbound';
 
 /**
- * Marks an operation that speaks in a channel conversation (posts, mails or relays a message): a call that succeeds
- * is the agent's reply there, where its written text is sent nowhere.
+ * Marks an operation that speaks in a channel conversation (posts, mails or relays a message). Its value names the
+ * output field that says where the message went: a conversation's thread id, or a reference to the chat it was
+ * recorded in.
  */
 export const ChannelSendAnnotation = Annotation.make({
   id: 'org.dxos.annotation.agent.channelSend',
-  schema: Schema.Boolean,
+  schema: Schema.String,
 });
 
-/** Marks the operation as a {@link ChannelSendAnnotation channel send}. */
-export const channelSend = Operation.annotate(ChannelSendAnnotation, true);
+/** Marks the operation as a {@link ChannelSendAnnotation channel send} whose output `field` says where it posted. */
+export const channelSend = (field: string) => Operation.annotate(ChannelSendAnnotation, field);
 
-/** Whether the operation is a {@link ChannelSendAnnotation channel send}. */
-export const isChannelSend = (op: Operation.Definition.Any): boolean =>
+/** The output field that says where a {@link ChannelSendAnnotation channel send} posted; undefined for other operations. */
+export const channelSendField = (op: Operation.Definition.Any): string | undefined =>
   op.meta.annotations
-    ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, ChannelSendAnnotation), () => false)
-    : false;
+    ? Option.getOrUndefined(Annotation.getDictionary(op.meta.annotations, ChannelSendAnnotation))
+    : undefined;
 
 /** `Obj.Meta` key source of a chat that mirrors one conversation (a channel, or a thread inside one). */
 export const CHAT_SOURCE = 'org.dxos.agent/channel';

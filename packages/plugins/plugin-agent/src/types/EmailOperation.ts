@@ -36,4 +36,4 @@ export const Send = Operation.make({
     message: Schema.String.annotate({ description: 'The Message-ID of the email sent.' }),
     thread: Schema.String.annotate({ description: 'The thread token replies to it come back on.' }),
   }),
-}).pipe(AgentChannels.channelSend);
+}).pipe(AgentChannels.channelSend('thread'));

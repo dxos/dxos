@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Chat from '@dxos/assistant/Chat';
 import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Message } from '@dxos/types';
+import { safeParseJson } from '@dxos/util';
 
 import { ConversationSkill } from '#skills';
 import { AgentChannels } from '#types';
@@ -20,14 +22,15 @@ export const REMINDER =
   'or, to stay silent on purpose, finish without writing anything.';
 
 /**
- * Deterministic, with no model call: since the request's prompt the agent wrote text, and no call to a
- * {@link AgentChannels.isChannelSend channel send} succeeded.
+ * Deterministic, with no model call: since the request's prompt the agent wrote text, and no
+ * {@link AgentChannels.ChannelSendAnnotation channel send} reported posting in this conversation.
  */
 const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> = ConversationSkill.EnsureReplySent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const chat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
-      if (!chat || !AgentChannels.conversationOf(chat)) {
+      const conversation = chat && AgentChannels.conversationOf(chat);
+      if (!chat || !conversation) {
         return {};
       }
 
@@ -41,13 +44,16 @@ const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> =
 
       // Every plugin's operations: on EDGE the hook runs in operation-service, which has no handler provider.
       const handlers = OperationHandlerSet.merge(...(yield* Capability.getAll(Capabilities.OperationHandler)));
-      const sends = yield* Effect.forEach(succeededOperations(request), (key) =>
-        OperationHandlerSet.getHandlerByKey(handlers, key).pipe(
-          Effect.map(AgentChannels.isChannelSend),
+      const replies = yield* Effect.forEach(succeededCalls(request), ({ operationKey, output }) =>
+        OperationHandlerSet.getHandlerByKey(handlers, operationKey).pipe(
+          Effect.map((op) => {
+            const field = AgentChannels.channelSendField(op);
+            return field !== undefined && isConversation(output?.[field], chat, conversation.thread);
+          }),
           Effect.orElseSucceed(() => false),
         ),
       );
-      return sends.some(Boolean) ? {} : { followUp: REMINDER };
+      return replies.some(Boolean) ? {} : { followUp: REMINDER };
     }),
   ),
 );
@@ -57,16 +63,38 @@ export default handler;
 /** A prompt someone wrote, which starts a request; synthetic prompts (a hook's follow-up) continue one. */
 const isPrompt = (message: Message.Message): boolean => message.sender.role === 'user' && textOf(message).length > 0;
 
-/** Keys of the operations behind the request's tool calls that returned a result rather than an error. */
-const succeededOperations = (request: readonly Message.Message[]): string[] => {
+/** The request's tool calls that returned a result rather than an error, with their operation and decoded output. */
+const succeededCalls = (
+  request: readonly Message.Message[],
+): { operationKey: string; output: Record<string, unknown> | undefined }[] => {
   const blocks = request.flatMap((message) => message.blocks);
-  const succeeded = new Set(
-    blocks.flatMap((block) => (block._tag === 'toolResult' && block.error === undefined ? [block.toolCallId] : [])),
+  const outputs = new Map(
+    blocks.flatMap((block) =>
+      block._tag === 'toolResult' && block.error === undefined
+        ? [
+            [
+              block.toolCallId,
+              typeof block.result === 'string' ? safeParseJson<Record<string, unknown>>(block.result) : undefined,
+            ] as const,
+          ]
+        : [],
+    ),
   );
-  const keys = blocks.flatMap((block) =>
-    block._tag === 'toolCall' && block.operationKey && succeeded.has(block.toolCallId) ? [block.operationKey] : [],
+  return blocks.flatMap((block) =>
+    block._tag === 'toolCall' && block.operationKey && outputs.has(block.toolCallId)
+      ? [{ operationKey: block.operationKey, output: outputs.get(block.toolCallId) }]
+      : [],
   );
-  return [...new Set(keys)];
+};
+
+/** Whether a send's destination is this conversation: its thread id, or an encoded reference to its chat. */
+const isConversation = (destination: unknown, chat: Chat.Chat, thread: string | undefined): boolean => {
+  if (typeof destination === 'string') {
+    return destination === thread;
+  }
+  const target =
+    typeof destination === 'object' && destination !== null && '/' in destination ? destination['/'] : undefined;
+  return typeof target === 'string' && target.endsWith(chat.id);
 };
 
 /** The message's finished text: what its author wrote, or with `synthetic` what the system wrote. */

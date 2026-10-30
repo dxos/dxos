@@ -53,7 +53,7 @@ export const Reply = Operation.make({
     ),
   }),
   output: Posted,
-}).pipe(AgentChannels.channelSend);
+}).pipe(AgentChannels.channelSend('channel'));
 
 /** Sends a Discord direct message. */
 export const DirectMessage = Operation.make({
@@ -78,7 +78,7 @@ export const DirectMessage = Operation.make({
     ),
   }),
   output: Posted,
-}).pipe(AgentChannels.channelSend);
+}).pipe(AgentChannels.channelSend('channel'));
 
 /** Reacts to a Discord message. */
 export const React = Operation.make({

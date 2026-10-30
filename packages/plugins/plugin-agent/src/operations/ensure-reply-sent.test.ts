@@ -20,7 +20,7 @@ import { ContentBlock, Message } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { ConversationSkill } from '#skills';
-import { AgentChannels, EmailOperation, MemoryOperation } from '#types';
+import { AgentChannels, EmailOperation, MemoryOperation, RelayOperation } from '#types';
 
 import { REMINDER } from './ensure-reply-sent.ts';
 
@@ -47,7 +47,7 @@ describe('EnsureReplySent', () => {
       function* ({ expect }) {
         const conversation = yield* setupChat({
           channel: true,
-          messages: [
+          messages: () => [
             prompt('I work on the inbox.'),
             ...call(MemoryOperation.Remember, 'remember'),
             reply('Nice, good to know.'),
@@ -65,12 +65,16 @@ describe('EnsureReplySent', () => {
   );
 
   it.effect(
-    'is silent once a channel send succeeded',
+    'is silent once a send posted in this conversation',
     Effect.fnUntraced(
       function* ({ expect }) {
         const conversation = yield* setupChat({
           channel: true,
-          messages: [prompt('Hi'), ...call(EmailOperation.Send, 'send'), reply('Replied by email.')],
+          messages: () => [
+            prompt('Hi'),
+            ...call(EmailOperation.Send, 'send', { thread: 'thread' }),
+            reply('Replied by email.'),
+          ],
         });
         const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
           Effect.provide(conversation),
@@ -84,10 +88,60 @@ describe('EnsureReplySent', () => {
   );
 
   it.effect(
+    'is silent once a relay recorded its delivery in this chat',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const conversation = yield* setupChat({
+          channel: true,
+          messages: (chat) => [
+            prompt('Hi'),
+            ...call(RelayOperation.SendMessage, 'send', { delivered: true, via: 'channel', chat: Ref.make(chat) }),
+            reply('Sent.'),
+          ],
+        });
+        const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
+          Effect.provide(conversation),
+        );
+
+        expect(output).toEqual({});
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'still asks when the only send went elsewhere or was not delivered',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const conversation = yield* setupChat({
+          channel: true,
+          messages: () => [
+            prompt('Tell Bob I am late, and let me know.'),
+            ...call(EmailOperation.Send, 'email', { thread: 'bob' }),
+            ...call(RelayOperation.SendMessage, 'relay', { delivered: false }),
+            reply('Told Bob.'),
+          ],
+        });
+        const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
+          Effect.provide(conversation),
+        );
+
+        expect(output).toEqual({ followUp: REMINDER });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'is silent in a Composer chat, where the text is the reply',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const conversation = yield* setupChat({ channel: false, messages: [prompt('Hi'), reply('Nice to meet you.')] });
+        const conversation = yield* setupChat({
+          channel: false,
+          messages: () => [prompt('Hi'), reply('Nice to meet you.')],
+        });
         const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
           Effect.provide(conversation),
         );
@@ -105,7 +159,7 @@ describe('EnsureReplySent', () => {
       function* ({ expect }) {
         const conversation = yield* setupChat({
           channel: true,
-          messages: [prompt('Hi'), reply('Nice to meet you.'), followUp(REMINDER), reply('Nice to meet you.')],
+          messages: () => [prompt('Hi'), reply('Nice to meet you.'), followUp(REMINDER), reply('Nice to meet you.')],
         });
         const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
           Effect.provide(conversation),
@@ -119,22 +173,22 @@ describe('EnsureReplySent', () => {
   );
 });
 
-/** A chat whose feed holds `messages`; with `channel` it mirrors a channel conversation. */
+/** A chat whose feed holds `messages`; with `channel` it mirrors a channel conversation (thread `thread`). */
 const setupChat = Effect.fnUntraced(function* ({
   channel,
   messages,
 }: {
   channel: boolean;
-  messages: Message.Message[];
+  messages: (chat: Chat.Chat) => Message.Message[];
 }) {
   const feed = yield* Database.add(Feed.make());
-  yield* Database.add(
+  const chat = yield* Database.add(
     Chat.make({
       ...(channel ? { [Obj.Meta]: { keys: [AgentChannels.chatKey('channel', 'thread')] } } : {}),
       feed: Ref.make(feed),
     }),
   );
-  yield* Feed.append(feed, messages);
+  yield* Feed.append(feed, messages(chat));
   yield* Database.flush();
   return Operation.withInvocationOptions({ conversation: Obj.getURI(feed) });
 });
@@ -146,8 +200,8 @@ const followUp = (text: string) =>
 
 const reply = (text: string) => Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text }] });
 
-/** A tool call the agent made to `operation`, and its successful result. */
-const call = (operation: Operation.Definition.Any, toolCallId: string) => {
+/** A tool call the agent made to `operation`, and its successful result carrying `output`. */
+const call = (operation: Operation.Definition.Any, toolCallId: string, output: object = {}) => {
   const name = Operation.toolName(operation);
   return [
     Message.make({
@@ -165,7 +219,7 @@ const call = (operation: Operation.Definition.Any, toolCallId: string) => {
     }),
     Message.make({
       sender: { role: 'tool' },
-      blocks: [{ _tag: 'toolResult', toolCallId, name, result: '{}', providerExecuted: false }],
+      blocks: [{ _tag: 'toolResult', toolCallId, name, result: JSON.stringify(output), providerExecuted: false }],
     }),
   ];
 };
