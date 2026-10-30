@@ -5,12 +5,19 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { type Camera, Canvas, createCanvasAtoms } from '@dxos/react-ui-canvas';
+import {
+  type Camera,
+  Canvas,
+  type FreehandProjectionOptions,
+  type NodeRegistry,
+  type Projection,
+  createCanvasAtoms,
+} from '@dxos/react-ui-canvas';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { toCanvasViews } from '../../canvas/index.ts';
+import { latticesKey, layoutProjection, toCanvasViews } from '../../canvas/index.ts';
 import { type Theme3D, liftScene } from '../../three/index.ts';
 import { Scene3DView } from '../Scene3DView/index.ts';
 
@@ -28,6 +35,14 @@ export type Scene2DViewProps = Util.ThemedClassName<{
   camera3d?: Scene.Camera3D;
   /** With the `3d` renderer, its theme. */
   theme3d?: Theme3D;
+  /** The node types the `dom` renderer draws (a host's object frames among them); the default set when unset. */
+  nodes?: NodeRegistry;
+  /** The `dom` renderer's mode over its Views; when unset, each layout's own (its lattice). */
+  createProjection?: (options: FreehandProjectionOptions) => Projection;
+  /** The room a fit leaves around the drawing, as a fraction of the view; the canvas's default when unset. */
+  margin?: number;
+  /** Whether the `dom` renderer draws its grid and background grid; on when unset. */
+  grid?: boolean;
 }>;
 
 /** The canvas camera that puts `camera.center` at the middle of a viewport of `size`. */
@@ -53,7 +68,17 @@ export const Scene2DView = ({ renderer = 'dom', camera3d, theme3d, ...props }: S
   );
 };
 
-const CanvasView = ({ classNames, document, scene: sceneId, theme, camera = 'fit' }: Scene2DViewProps) => {
+const CanvasView = ({
+  classNames,
+  document,
+  scene: sceneId,
+  theme,
+  camera = 'fit',
+  nodes,
+  createProjection: projectionProp,
+  margin,
+  grid = true,
+}: Scene2DViewProps) => {
   const registry = useContext(RegistryContext);
   const scene = sceneId === undefined ? rootScene(document) : findScene(document, sceneId);
   // One store and one set of canvas atoms per root; later documents (an animation's samples) are written into them,
@@ -80,6 +105,15 @@ const CanvasView = ({ classNames, document, scene: sceneId, theme, camera = 'fit
     return () => observer.disconnect();
   }, []);
 
+  // A layout with a lattice puts its shapes on its cells and routes links along its gutters, as the editor draws it.
+  const latest = useRef(document);
+  latest.current = document;
+  const lattices = latticesKey(document);
+  const createProjection = useMemo(
+    () => projectionProp ?? layoutProjection(() => latest.current),
+    [projectionProp, lattices],
+  );
+
   const fit = camera === 'fit';
   useLayoutEffect(() => {
     if (camera !== 'fit' && size) {
@@ -94,9 +128,13 @@ const CanvasView = ({ classNames, document, scene: sceneId, theme, camera = 'fit
         store={store}
         root={rootId}
         atoms={atoms}
+        nodes={nodes}
+        createProjection={createProjection}
+        margin={margin}
         readonly
         theme={theme ?? scene?.theme}
-        initialDisplay={{ snap: true, guides: false, fit }}
+        initialDisplay={{ snap: grid, guides: false, fit }}
+        backgroundGrid={grid ? undefined : 'none'}
       >
         <Canvas.Viewport />
       </Canvas.Root>

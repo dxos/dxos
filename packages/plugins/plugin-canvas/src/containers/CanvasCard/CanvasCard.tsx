@@ -9,19 +9,19 @@ import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Canvas, type NodeRegistry, type ViewStore, createLatticeProjection } from '@dxos/react-ui-canvas/scene';
-import { Scene3DView } from '@dxos/react-ui-scene';
+import { Canvas, createLatticeProjection } from '@dxos/react-ui-canvas/scene';
+import { Scene2DView, Scene3DView } from '@dxos/react-ui-scene';
 import * as Card from '@dxos/react-ui/Card';
-import { Scene, type ViewId } from '@dxos/scene';
+import { Scene } from '@dxos/scene';
 
 import { canvasDimension, canvasRecordOf, openScene } from '#model';
 import { Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
-import { useBoundCanvasStore, useBoundLayoutStore, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
+import { useBoundCanvasStore, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
 
-// A card is a preview: only the drawing, fitted, with no grid or guides.
+// A legacy card is a preview: only the drawing, fitted, with no grid or guides.
 const CARD_DISPLAY = { snap: false, guides: false, fit: true };
 
 // The view's default fit margin (two major cells a side) would leave a card-sized view mostly empty.
@@ -63,56 +63,36 @@ const Scene3DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
   );
 };
 
+/** The open 2D scene, fitted: the canvas's node types, in the drawing's mode, inert so a press reaches the card. */
 const SceneCanvasCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
   const nodes = useCanvasNodes();
-  const bound = useBoundLayoutStore(canvas);
   const [snapshot] = useObject(canvas);
+  const scene = openScene(canvas);
+  const stored = Obj.instanceOf(Scene.Scene2D, scene) ? scene : undefined;
+  const document = useSceneDocument(stored);
+  const lattice = CanvasFormat.projectionOf(snapshot.settings) === 'lattice';
   return (
-    <CardView
-      db={Obj.getDatabase(canvas)}
-      bound={bound}
-      nodes={nodes}
-      lattice={CanvasFormat.projectionOf(snapshot.settings) === 'lattice'}
-      grid={snapshot.settings.grid}
-    />
+    <Card.Body>
+      <Card.Section classNames='aspect-square'>
+        {stored && document && (
+          <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
+            <Scene2DView
+              // Spans the card's rails as well as its content column.
+              classNames='col-[full] pointer-events-none'
+              document={document}
+              scene={stored.key}
+              theme={snapshot.settings.theme}
+              nodes={nodes}
+              createProjection={lattice ? createLatticeProjection : undefined}
+              margin={CARD_MARGIN}
+              grid={false}
+            />
+          </CanvasDatabaseContext.Provider>
+        )}
+      </Card.Section>
+    </Card.Body>
   );
 };
-
-type CardViewProps = {
-  db: ReturnType<typeof Obj.getDatabase>;
-  bound: { store: ViewStore; root: ViewId } | undefined;
-  nodes: NodeRegistry;
-  lattice: boolean;
-  grid: number | undefined;
-};
-
-const CardView = ({ db, bound, nodes, lattice, grid }: CardViewProps) => (
-  <Card.Body>
-    <Card.Section classNames='aspect-square'>
-      {bound && (
-        <CanvasDatabaseContext.Provider value={db}>
-          <Canvas.Root
-            key={bound.root}
-            // Spans the card's rails as well as its content column; inert, so a press or wheel reaches the card rather
-            // than panning the drawing.
-            classNames='col-[full] bg-transparent pointer-events-none'
-            store={bound.store}
-            root={bound.root}
-            nodes={nodes}
-            createProjection={lattice ? createLatticeProjection : undefined}
-            grid={grid}
-            margin={CARD_MARGIN}
-            readonly
-            initialDisplay={CARD_DISPLAY}
-            backgroundGrid='none'
-          >
-            <Canvas.Viewport liveDepth={0} />
-          </Canvas.Root>
-        </CanvasDatabaseContext.Provider>
-      )}
-    </Card.Section>
-  </Card.Body>
-);
 
 export type LegacyCanvasCardProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 

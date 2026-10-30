@@ -39,7 +39,7 @@ import {
   rootOf,
   sceneKey,
 } from './content.ts';
-import { plain } from './layout-writer.ts';
+import { plain } from './records.ts';
 
 /** The one model a migrated canvas's portals and instances place their objects from. */
 const MODEL_ID = 'model';

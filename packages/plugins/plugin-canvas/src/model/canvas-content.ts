@@ -30,7 +30,8 @@ import {
   writeViews,
 } from './content.ts';
 import { SceneHandler } from './handler.ts';
-import { type DecorateLayout, makeLayoutWriter, same } from './layout-writer.ts';
+import { type DecorateLayout, makeLayoutWriter } from './layout-writer.ts';
+import { same } from './records.ts';
 
 const CANVAS_KEY = 'canvas';
 

@@ -16,6 +16,8 @@ export * from './view-node.ts';
 export * from './image-node.ts';
 export * from './layout-store.ts';
 export * from './layout-writer.ts';
+export * from './named-styles.ts';
+export * from './records.ts';
 export * from './migrate-scenes.ts';
 export * from './projection-model.ts';
 export * from './store.ts';

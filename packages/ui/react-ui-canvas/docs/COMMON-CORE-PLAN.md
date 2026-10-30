@@ -91,6 +91,29 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   only when the edit moved, created or deleted a shape. plugin-canvas still keeps its engine projection as the mode
   switch (R-9). Cost if wrong: the patch shape is in the intent schema, so a rename touches stored-intent consumers
   (none persist intents today).
+- **R-16 (2026-10-30, agent, E.1, parity): `SceneView2D` and `SceneView3D` become one host.** plugin-canvas
+  `SceneArticle` renders the shared editor over `useSceneEditor(canvas, dim)` (layouts, history, intent and model
+  writes, layers, lock, dock, shots, made-on-demand layouts: the same code in both dimensions) and a per-dimension
+  `SceneDimension` (config, display, camera, Styles catalogs: `useDimension2D`, `useDimension3D`). The legacy engine
+  view (`CanvasEngineView`, a pre-scene canvas before it migrates, or in a section or slide) moves to `CanvasArticle/`
+  and keeps its View store until E.6. Cost if wrong: none; the host is a refactor of what both views did.
+- **R-17 (2026-10-30, agent, E.1): `canvas-content.ts` and `layout-writer.ts` stay, as the illustrator's command
+  bridge only.** `SceneHandler` applies `Scene.Command`s (kept by R-1) to content records, which are Views; the content
+  facade reads them from and writes them to `Layout2D` through `layout-writer`. A handler that writes `Layout2D`
+  directly is R-5's composite switch, which is its own task, not E.1/E.2's. Every other consumer moved off: the
+  Properties companion's named styles (`model/named-styles.ts`, over `Layout2D` with update intents), the card, the
+  `Apply`/`Patch`/`AddGenerator` operations and the tldraw import (E.2). The shared helpers (`plain`, `same`,
+  `canvasModel2D`, …) moved to `model/records.ts`. Cost if wrong: the handler rewrite, which R-5 already owes.
+- **R-18 (2026-10-30, agent, E.1): react-ui-scene `canvas/adapter.ts` stays until E.6.** The 2D viewport still wraps
+  react-ui-canvas's engine, which renders Views (R-8), and `Scene2DView`, the scene/2 migration and the clipboard read
+  through the same mapping. Cost if wrong: none; E.6 deletes it with the View model.
+- **R-19 (2026-10-30, agent, E.1): `layout-store.ts` goes with E.2,** when `Apply`/`Patch`, its last users, write
+  layouts through intents; until then it binds through `layout-writer` as before.
+- **R-20 (2026-10-30, agent, E.1, parity): the 2D card draws through react-ui-scene `Scene2DView`, as the 3D card
+  draws through `Scene3DView`.** `Scene2DView` gained the host's node types, a fit margin, a `grid` switch and the
+  per-layout lattice projection the 2D viewport uses (`layoutProjection`, shared). Rejected: `SceneArticle` in the
+  card role, which makes an editor store and history per card in a grid of cards. Cost if wrong: the card renders
+  `<SceneArticle role='card'>` instead.
 
 ## Global Constraints
 
@@ -720,6 +743,10 @@ intent: LayoutIntent): LayoutIntent | undefined`; config2d selects it when `layo
 Delete plugin-canvas `model/layout-writer.ts`, `canvas-content.ts`, `layout-store.ts`'s View binding,
 `SceneArticle/SceneView2D.tsx`, `SceneView3D.tsx`, react-ui-scene `canvas/adapter.ts` View mapping; move their still
 needed tests to the new modules. Commit `plugin-canvas: remove the View adapters`.
+
+- [x] `SceneView2D`/`SceneView3D` → one `SceneArticle` host (R-16); the 2D card on `Scene2DView` (R-20); named
+      styles over `Layout2D` (`named-styles.test.ts`). Kept: `canvas-content`/`layout-writer` (R-17), the adapter
+      (R-18); `layout-store` goes in E.2 (R-19).
 
 ### Task E.2: plugin-canvas operations, import and samples
 

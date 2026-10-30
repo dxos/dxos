@@ -9,6 +9,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Dsl } from '@dxos/diagram';
+import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -66,32 +67,26 @@ const legacyDrawing = () =>
     },
   });
 
-/** A 3D canvas over one cube, from `.dx`, as a card shows it. */
-const cubeDrawing = () =>
+/** A canvas over scenes written in `.dx`, as a card shows it. */
+const sceneDrawing = (text: string) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
-      const stored = toEcho(
-        Dsl.readScenes(trim`
-          scene cube dim=3d layout=cube name="Cube" {
-            camera target=0,1,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
-          }
-
-          layout cube dim=3d {
-            element box cube @ 0,1,0 scale=2 hue=blue surface=solid
-          }
-        `).document,
+      const stored = toEcho(Dsl.readScenes(text).document);
+      [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()].forEach((object) =>
+        space.db.add(object),
       );
-      [...stored.layouts.values(), ...stored.scenes.values()].forEach((object) => space.db.add(object));
+      const model = stored.models.values().next().value;
       const canvas = space.db.add(
         Obj.make(CanvasFormat.Canvas, {
           settings: {},
+          ...(model ? { model: Ref.make(model) } : {}),
           layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout)),
           scenes: [Ref.make(stored.root)],
         }),
       );
-      const drawing = space.db.add(Drawing.make({ name: '3D canvas', canvas }));
+      const drawing = space.db.add(Drawing.make({ name: 'Scene canvas', canvas }));
       await space.db.flush();
       return [[Cell.article(drawing, { component: DrawingCard })]];
     },
@@ -128,5 +123,18 @@ export const Test: Story = {
   },
 };
 
+/** A 2D canvas's card: its open scene (A → B → C) fitted, with no grid, panels or toolbars. */
+export const Scene2D: Story = { decorators: sceneDrawing(EXEMPLARS.links) };
+
 /** A 3D canvas's card: the cube from its authored camera, with no grid, panels or toolbars. */
-export const Scene3D: Story = { decorators: cubeDrawing() };
+export const Scene3D: Story = {
+  decorators: sceneDrawing(trim`
+    scene cube dim=3d layout=cube name="Cube" {
+      camera target=0,1,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
+    }
+
+    layout cube dim=3d {
+      element box cube @ 0,1,0 scale=2 hue=blue surface=solid
+    }
+  `),
+};

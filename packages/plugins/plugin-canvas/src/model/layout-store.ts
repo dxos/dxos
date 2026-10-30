@@ -26,7 +26,8 @@ import { type Scene, type ViewId, fromEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
-import { canvasModel2D, isLayout2D, isModel2D, makeLayoutWriter, plain, same } from './layout-writer.ts';
+import { makeLayoutWriter } from './layout-writer.ts';
+import { canvasModel2D, isLayout2D, isModel2D, plain, same } from './records.ts';
 
 export type BoundLayoutStore = {
   store: ViewStore;

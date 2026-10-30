@@ -16,7 +16,7 @@ import { canvasRecordOf, updateCanvasRecord } from '#model';
 import { Canvas as CanvasFormat } from '#types';
 
 import { SceneArticle } from '../SceneArticle/index.ts';
-import { CanvasEngineView } from '../SceneArticle/SceneView2D.tsx';
+import { CanvasEngineView } from './CanvasEngineView.tsx';
 import { useBoundCanvasStore, useMigratedCanvas } from './use-canvas-scene.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown>;

@@ -8,7 +8,7 @@ import { type ModelIntent, type Problem, Scene, applyModelIntent } from '@dxos/s
 import { type Canvas } from '#types';
 
 import { canvasDocument } from './canvas-document.ts';
-import { plain, same } from './layout-writer.ts';
+import { plain, same } from './records.ts';
 
 type StoredLayout = Scene.Layout2D | Scene.Layout3D;
 type StoredModel = Scene.Model2D | Scene.Model3D;

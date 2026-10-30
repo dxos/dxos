@@ -1,0 +1,207 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { useCallback, useEffect, useMemo } from 'react';
+
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { Entity, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import {
+  type Camera,
+  type CanvasServices,
+  type ConstrainedModel,
+  type EditorDisplay,
+  type FreehandProjectionOptions,
+  type GraphModel,
+  type Overlay,
+  type Projection,
+  createConstrainedProjection,
+  createDynamicProjection,
+  createLatticeProjection,
+  defaultNodeRegistry,
+  useRegistry,
+} from '@dxos/react-ui-canvas/scene';
+import { createConfig2D } from '@dxos/react-ui-scene';
+import { type Node, Scene, isViewNode } from '@dxos/scene';
+
+import {
+  generatorCompiler,
+  isCanvasDrawing,
+  isConstrainedModel,
+  isGraphModel,
+  isOverlay,
+  layoutModelAtom,
+  objectRef,
+  parseLinkedViewId,
+} from '#model';
+import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
+
+import { createGeneratorWorker, useCanvasGenerators, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
+import { type SceneDimension } from './dimension.ts';
+import { useCanvasProperties } from './use-canvas-properties.ts';
+import { canvasViewAspect } from './view-state.ts';
+
+/** The camera a 2D viewer's camera bar resets to: the scene's origin at 1:1. */
+const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
+
+/** The theme a canvas draws when neither it nor the app names one. */
+const FALLBACK_THEME = 'flat';
+
+const EMPTY_CONSTRAINED: ConstrainedModel = { nodes: [], constraints: [] };
+const EMPTY_GRAPH: GraphModel = { nodes: [], edges: [] };
+const EMPTY_OVERLAY: Overlay = { positions: {} };
+
+type CreateProjection = (options: FreehandProjectionOptions) => Projection;
+
+/**
+ * A 2D canvas's dimension: react-ui-canvas's engine as the viewport, in the mode the canvas's settings name, with the
+ * canvas's node types and generators; the look and grid are the drawing's, snapping, guides, axes and the camera this
+ * viewer's own.
+ */
+export const useDimension2D = (canvas: CanvasFormat.Canvas, layout: unknown): SceneDimension<Camera> => {
+  const registry = useRegistry();
+  const [snapshot] = useObject(canvas);
+  const settings = snapshot.settings;
+  const handleSettingsChange = useCallback(
+    (values: Partial<CanvasFormat.CanvasSettings>) =>
+      Obj.update(canvas, (canvas) => {
+        // ECHO stores no `undefined`, so an unset value removes its key.
+        canvas.settings = Object.fromEntries(
+          Object.entries({ ...canvas.settings, ...values }).filter(([, value]) => value !== undefined),
+        );
+      }),
+    [canvas],
+  );
+
+  const mode = CanvasFormat.projectionOf(settings);
+  // The projection's own model lives in the layout, so it persists with the arrangement; its atoms follow the layout
+  // until the mode or layout changes, then let it go.
+  const models = useMemo(() => {
+    if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+      return undefined;
+    }
+    if (mode === 'constrained') {
+      return {
+        mode,
+        model: layoutModelAtom(registry, layout, ['constrained'], isConstrainedModel, EMPTY_CONSTRAINED),
+      } as const;
+    }
+    if (mode === 'dynamic') {
+      return {
+        mode,
+        graph: layoutModelAtom(registry, layout, ['dynamic', 'graph'], isGraphModel, EMPTY_GRAPH),
+        overlay: layoutModelAtom(registry, layout, ['dynamic', 'overlay'], isOverlay, EMPTY_OVERLAY),
+      } as const;
+    }
+    return undefined;
+  }, [registry, mode, layout]);
+  useEffect(
+    () => () => {
+      if (models?.mode === 'constrained') {
+        models.model.dispose();
+      } else if (models?.mode === 'dynamic') {
+        models.graph.dispose();
+        models.overlay.dispose();
+      }
+    },
+    [models],
+  );
+  const createProjection = useMemo<CreateProjection | undefined>(() => {
+    if (mode === 'lattice') {
+      return createLatticeProjection;
+    }
+    if (models?.mode === 'constrained') {
+      return ({ registry }) =>
+        createConstrainedProjection({ registry, model: models.model.atom, options: { nodes: defaultNodeRegistry } });
+    }
+    if (models?.mode === 'dynamic') {
+      return ({ registry }) =>
+        createDynamicProjection({
+          registry,
+          graph: models.graph.atom,
+          overlay: models.overlay.atom,
+          options: { nodes: defaultNodeRegistry },
+        });
+    }
+    return undefined;
+  }, [mode, models]);
+
+  // A frame showing an object (not a canvas drawing) opens it in the app.
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const db = Obj.getDatabase(canvas);
+  const openObject = useCallback(
+    (node: Node) => {
+      const object = objectRef(node, db)?.target;
+      if (!object || !isViewNode(node) || parseLinkedViewId(node.scene) || isCanvasDrawing(object) !== false) {
+        return undefined;
+      }
+      return () => {
+        void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
+      };
+    },
+    [invokePromise, db],
+  );
+  const nodes = useCanvasNodes(openObject);
+  const generators = useCanvasGenerators(db);
+  const appSettings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
+  // The Properties form's host additions, over the views the 2D viewport's canvas holds.
+  const useProperties = useCallback(
+    (services: CanvasServices | undefined) =>
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useCanvasProperties(canvas, () => (services ? services.registry.get(services.store.views) : {})),
+    [canvas],
+  );
+  const config = useMemo(
+    () =>
+      createConfig2D({
+        useProperties,
+        nodes,
+        createProjection,
+        generators,
+        compileGenerator: generatorCompiler,
+        createGeneratorWorker,
+        liveDepth: appSettings.liveDepth,
+      }),
+    [useProperties, nodes, createProjection, generators, appSettings.liveDepth],
+  );
+
+  const contextId = Entity.getURI(canvas);
+  const { camera, grid: snap, guides, axes } = useViewState(canvasViewAspect, contextId);
+  const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
+  const onCameraChange = useCallback(
+    (next: Camera) => updateViewState((state) => ({ ...state, camera: next })),
+    [updateViewState],
+  );
+  const display = useMemo<EditorDisplay>(
+    () => ({
+      theme: settings?.theme ?? appSettings.theme ?? FALLBACK_THEME,
+      themeOverride: settings?.theme,
+      grid: (settings?.backgroundGrid ?? 'none') !== 'none',
+      snap: snap ?? true,
+      guides: guides ?? true,
+      axes: axes ?? false,
+    }),
+    [settings?.theme, settings?.backgroundGrid, appSettings.theme, snap, guides, axes],
+  );
+  const onDisplayChange = useCallback(
+    (next: Partial<EditorDisplay>) => {
+      'themeOverride' in next && handleSettingsChange({ theme: next.themeOverride });
+      next.grid !== undefined && handleSettingsChange({ backgroundGrid: next.grid ? 'lines' : 'none' });
+      (next.snap !== undefined || next.guides !== undefined || next.axes !== undefined) &&
+        updateViewState((state) => ({
+          ...state,
+          ...(next.snap !== undefined ? { grid: next.snap } : {}),
+          ...(next.guides !== undefined ? { guides: next.guides } : {}),
+          ...(next.axes !== undefined ? { axes: next.axes } : {}),
+        }));
+    },
+    [handleSettingsChange, updateViewState],
+  );
+
+  return { config, display, onDisplayChange, camera, authoredCamera: AUTHORED_CAMERA, onCameraChange };
+};

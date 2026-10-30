@@ -15,12 +15,12 @@ import { DEFAULT_GRID, type StyleClass } from '@dxos/scene';
 import {
   canvasModel2D,
   canvasRecordOf,
+  deleteNamedStyle,
   deleteStyleClass,
-  readCanvasContent,
+  namedStyleUses,
   readStyles,
   styleClassUses,
   updateCanvasRecord,
-  writeCanvasContent,
   writeStyles,
 } from '#model';
 import { Canvas, Settings } from '#types';
@@ -120,7 +120,7 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
   const styleModel = canvasModel2D(subject);
   const model = useObjectValue(styleModel);
   const classes = useMemo(() => Object.values(styleClasses(model?.styles)), [model]);
-  const uses = useMemo(() => styleClassUses(readCanvasContent(subject)), [canvas, subject]);
+  const uses = useMemo(() => namedStyleUses(subject), [canvas, subject]);
   const handleRename = useCallback(
     (id: string, name: string) => {
       const styles = styleClasses(styleModel?.styles);
@@ -133,21 +133,7 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
     },
     [styleModel],
   );
-  const handleDelete = useCallback(
-    (id: string) => {
-      const before = readCanvasContent(subject);
-      const content = structuredClone(before);
-      const styles: Record<string, unknown> = { ...styleClasses(styleModel?.styles) };
-      deleteStyleClass(content, styles, id);
-      writeCanvasContent(subject, content, before);
-      if (styleModel) {
-        Obj.update(styleModel, (styleModel) => {
-          styleModel.styles = namedStyles(readStyles(styles));
-        });
-      }
-    },
-    [subject, styleModel],
-  );
+  const handleDelete = useCallback((id: string) => deleteNamedStyle(subject, id), [subject]);
   return (
     <PropertiesView
       values={valuesOf(canvas.settings)}

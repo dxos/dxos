@@ -19,13 +19,11 @@ import {
   type ViewMap,
   type ViewportProps,
   createCanvasAtoms,
-  createFreehandProjection,
-  createLatticeProjection,
   createMemoryStore,
 } from '@dxos/react-ui-canvas';
 import { type Scene, applyIntent, findLayout, rootScene } from '@dxos/scene';
 
-import { styleClasses, toCanvasViews } from '../canvas/index.ts';
+import { latticesKey, layoutProjection, styleClasses, toCanvasViews } from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 import { type ViewWrite, applyViewWrites, viewWrites } from './view-writes.ts';
@@ -205,18 +203,9 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     useEffect(() => registry.set(atoms.guides, !!guides && !picture), [registry, atoms, guides, picture]);
 
     // A layout with a lattice snaps the drag itself, so the engine previews the cells it lands on and draws the guides.
-    const lattices = JSON.stringify(
-      document.layouts.map((layout) => (layout.dim === '2d' ? layout.lattice : undefined)),
-    );
+    const lattices = latticesKey(document);
     const createProjection = useMemo(
-      () =>
-        options.createProjection ??
-        ((projection: FreehandProjectionOptions) => {
-          const layout = findLayout(latest.current.document, projection.sceneId);
-          return layout?.dim === '2d' && layout.lattice
-            ? createLatticeProjection({ ...projection, spec: layout.lattice })
-            : createFreehandProjection(projection);
-        }),
+      () => options.createProjection ?? layoutProjection(() => latest.current.document),
       [lattices],
     );
 

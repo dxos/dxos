@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { type VersionedSource, readPath, sameValue, writePath } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, type LayoutPatch, Scene, applyIntent } from '@dxos/scene';
 
-import { plain } from './layout-writer.ts';
+import { plain } from './records.ts';
 import { writeFields } from './write-fields.ts';
 
 /** A 2D layout's own fields that a `layout` intent writes, as plain data. */

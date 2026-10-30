@@ -11,7 +11,7 @@ import { combinedSource, patchSource, recordChanges } from '@dxos/react-ui-canva
 import { Scene } from '@dxos/scene';
 
 import { applyLayoutIntent, layoutSource } from './layout-source.ts';
-import { plain } from './layout-writer.ts';
+import { plain } from './records.ts';
 
 describe('layoutSource', () => {
   let builder: EchoTestBuilder;

@@ -18,17 +18,14 @@ import {
   defaultNodeTypes,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
-import { type Node, Scene } from '@dxos/scene';
+import { type Node } from '@dxos/scene';
 
 import {
   type BoundCanvasStore,
-  type BoundLayoutStore,
   CanvasViewNode,
   ImageNode,
   bindCanvasStore,
-  bindLayoutStore,
   migrateSceneDrawing,
-  openScene,
   reconcileMigrations,
 } from '#model';
 import { Canvas, CanvasCapabilities, Generator } from '#types';
@@ -45,22 +42,6 @@ export const useBoundCanvasStore = (canvas: Drawing.Canvas): BoundCanvasStore | 
     setBound(next);
     return () => next.dispose();
   }, [registry, canvas]);
-  return bound;
-};
-
-/** The open scene's layout store (the one `key` names, else the canvas's first), bound for the canvas's lifetime in this view; a new canvas rebinds. */
-export const useBoundLayoutStore = (canvas: Canvas.Canvas, key?: string): BoundLayoutStore | undefined => {
-  const registry = useRegistry();
-  const [bound, setBound] = useState<BoundLayoutStore>();
-  const scene = openScene(canvas, key);
-  useEffect(() => {
-    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
-      return;
-    }
-    const next = bindLayoutStore(registry, scene, { canvas });
-    setBound(next);
-    return () => next.dispose();
-  }, [registry, canvas, scene]);
   return bound;
 };
 
