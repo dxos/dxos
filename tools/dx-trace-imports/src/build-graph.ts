@@ -50,6 +50,8 @@ export type ImportGraph = {
   /**
    * Files reached through an allowed specifier, or by relative or `#` import from such a file. They
    * are never terminals, so an allowed subpath of a banned package is checked for what it imports.
+   * Sharing the set across the graph cannot hide a banned path: a banned bare specifier ends at its
+   * own external node before it resolves to a file.
    */
   readonly allowed: Set<string>;
 };
