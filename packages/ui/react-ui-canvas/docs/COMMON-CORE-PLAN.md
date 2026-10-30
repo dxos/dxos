@@ -38,10 +38,181 @@ Manifold (solids), vitest, storybook (localhost:9009).
   `lsof -ti :9009 -sTCP:LISTEN`, `moon run storybook-react:serve-nodeps`) after deleting or renaming story files.
 - Never touch `tools/autocue/showcase/echo3d/*`.
 
+## Where the expectations don't hold
+
+What I checked: every schema in react-ui-canvas `src/model/types.ts`, the projection models in
+`src/engine/projections/{constrained,dynamic,lattice}.ts`, plugin-canvas `model/image-node.ts`, `@dxos/animation`
+`Timeline`, and every type and command in `@dxos/diagram` `src/scene.ts`, against `@dxos/scene` `Scene.ts`. Six
+places don't fit the expectations as stated.
+
+1. **Plugin-defined node kinds can't all be typed on `Element2D` (expectation 1, decision 7).** Built-in node types
+   are closed schemas, but plugins register their own: plugin-uml `ClassNode` (`plugins/plugin-uml/src/types/
+ClassNode.ts`), the compute shapes (`ui/react-ui-canvas-compute/src/shapes/*.tsx`), plugin-canvas `ImageNode`
+   (`plugins/plugin-canvas/src/model/image-node.ts:17`), and `GeneratorNode.params` is an open record
+   (`ui/react-ui-canvas/src/model/types.ts:397`). A static `Element2D` can't list fields it doesn't know.
+   Options: (a) built-in kinds typed on `Element2D`; plugin kinds carry a `kindProps` field whose schema the
+   `ElementKindRegistry` declares and validates (typed through the registry's generic); (b) plugins extend the
+   `Element2D` union by declaration merging; (c) move every plugin kind into `@dxos/scene`. Recommended: (a).
+2. **The constrained and dynamic models duplicate element data (expectation 1).** `ConstrainedModel = { nodes:
+ConstrainedNode[]; constraints }` with `ConstrainedNode = { id; label?; type?; style? }`
+   (`engine/projections/constrained.ts:36-44`) and `GraphModel = { nodes; edges }` + `Overlay.positions`
+   (`engine/projections/dynamic.ts:69-77`) restate labels, types, styles and edges that the layout's elements already
+   hold. Moving them as they are gives two sources of truth. Options: (a) normalise — `Layout2D.constraints:
+Constraint[]` referencing element ids; graph edges are the layout's link elements; overlay positions are element
+   centers; the projection derives its nodes from the elements (not mechanical; the engine changes); (b) store the
+   models verbatim on `Layout2D` (mechanical, duplicated). Recommended: (a).
+3. **Two timeline homes.** react-ui-canvas keeps a `Timeline` on the canvas (`model/timeline.ts`, `sampleView`,
+   `sampleCamera`; `@dxos/animation` `Timeline` at `common/animation/src/types.ts:62`), while plugin-animator's
+   `Animation`/`Shot` stages a `Scene` (D-28). Options: (a) `Layout2D.timeline` typed field (mechanical; two
+   animation systems remain); (b) the canvas timeline becomes an animator `Shot` over the scene (one system; not
+   mechanical). Recommended: (a) now, (b) as a follow-up.
+4. **Diagram objects have local frames; `Layout2D` is flat (expectation 2).** A `WorldObject` has `origin`, `scale`
+   ("canvas px per local unit"), `index` and `ref`, and its elements are in object-local units
+   (`common/diagram/src/scene.ts:289-307`); `MoveObject` moves the whole object (`:339`). `Layout2D` elements have no
+   parent transform (only composite parts, fitted at 80%). Options: (a) flatten at compile time — bake `origin`/`scale`
+   into each element, add a `group` element per object (members = its elements, `dsl.object` = object id), and map
+   `MoveObject` to a `move` of the group's members (output-stage only; the engines are unchanged); (b) objects become
+   composite model objects placed by `instance` elements with a scale (keeps local frames; changes how the SVG and the
+   canvas draw them). Recommended: (a). Caveat: `scale ≠ 1` also scales stroke and text in the SVG renderer — baking
+   it in needs the renderer to read stroke/text size from the element, which 0.3's metric gate checks.
+5. **The diagram and canvas style vocabularies differ (expectation 2).** Diagram: `Color` (13 names incl.
+   `light-violet`, `white`, `black`), `Fill` (`none|solid|pattern|tint`), `Stroke` (`sketchy|solid|dashed|dotted`),
+   `Weight` (`s|m|l|xl`) (`scene.ts:14-39`). Canvas: `StyleHue` (9 hues), `tone` 0–3, `fill`/`border` booleans,
+   `lineStyle` (`solid|dashed|dotted`), `fontSize` (`types.ts:91-168`). There's no lossless 1:1 map (no `sketchy`,
+   no `pattern`, no `white`/`black` hue, weight vs font size). Options: (a) `Style2D` carries both vocabularies as
+   typed fields (diagram fields used by the SVG renderer and canvas `diagram` nodes, canvas fields by canvas nodes) —
+   mechanical, two vocabularies; (b) one `Style2D` vocabulary with a documented lossy map (diagram output changes
+   visually; breaks the corpus metric gate for weights). Recommended: (a), unify later.
+6. **Diagram arcs and free curves have no canvas renderer.** `Arc` and free `Curve`/`Polyline` elements
+   (`scene.ts:97-136`) render only in the SVG renderer; react-ui-canvas's `DiagramShape` union covers `Box`, `Circle`,
+   `Text`, `Portal` only (`types.ts:375`), and its curve/spline types are links. As `Element2D` kinds the data maps
+   mechanically, but the 2D viewport needs new draw code for `arc`, `curve` and open `polyline` elements (Task C.1).
+
+Behaviours: nothing found that can't be shared. Projection-owned positions (lattice/constrained/dynamic rewrite or
+refuse a move) exist only in 2D today; the contract keeps them as an optional `config.constrain` hook so 3D can adopt
+one later.
+
+## Canvas data mapping
+
+Every react-ui-canvas record type and field → its typed home. **M** = mechanical (rename/move, same values); **N** =
+not mechanical (see "Where the expectations don't hold"). Round-trip tests: Task A.3, one test per row group.
+The data-mapping tasks (0.1, A.1–A.3) change no engine behaviour; engine changes are confined to Phases C and D.
+
+| Record                                       | Field                                                                                                                                     | New home                                                                                                      |                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **View** (`types.ts:678`)                    | `id`                                                                                                                                      | `Layout2D.key`                                                                                                | M                 |
+|                                              | `name`                                                                                                                                    | `Layout2D.name`                                                                                               | M                 |
+|                                              | `nodes`, `links`                                                                                                                          | `Layout2D.elements` (nodes and links are elements; links by `kind`)                                           | M                 |
+|                                              | `layers`                                                                                                                                  | `Layout2D.layers: Record<string, Layer>`                                                                      | M                 |
+|                                              | `kind: view\|composite`                                                                                                                   | `view` → a `Layout2D` a scene shows; `composite` → `Model2D.objects[id]` with `parts` = that layout           | M                 |
+|                                              | `anonymous`                                                                                                                               | `Object2D.anonymous`                                                                                          | M                 |
+| **Node base** (`types.ts:171`)               | `id`                                                                                                                                      | `BaseElement.id`                                                                                              | M                 |
+|                                              | `type`                                                                                                                                    | `BaseElement.kind`                                                                                            | M                 |
+|                                              | `z`                                                                                                                                       | `BaseElement.order`                                                                                           | M                 |
+|                                              | `locked`                                                                                                                                  | `BaseElement.locked`                                                                                          | M                 |
+|                                              | `center`, `size`, `rotation`                                                                                                              | `Element2D.center`, `.size`, `.rotation`                                                                      | M                 |
+|                                              | `ports: Port[]`                                                                                                                           | `Element2D.ports: Port[]` (`Port` `{id, side, offset, accepts}` moves to `@dxos/scene`)                       | M                 |
+|                                              | `portsPerSide`                                                                                                                            | `Element2D.portsPerSide`                                                                                      | M                 |
+|                                              | `layer`                                                                                                                                   | `BaseElement.layer`                                                                                           | M                 |
+|                                              | `class`                                                                                                                                   | `BaseElement.style` (named style id)                                                                          | M                 |
+|                                              | `style: NodeStyle`                                                                                                                        | `Element2D.overrides: Partial<Style2D>`                                                                       | M                 |
+|                                              | `exposed`                                                                                                                                 | `Element2D.exposed`                                                                                           | M                 |
+|                                              | `label` (`boxFields`)                                                                                                                     | `BaseElement.label`                                                                                           | M                 |
+| **NodeStyle** (`types.ts:140`)               | `hue`, `tone`, `opacity`, `lineStyle`, `rounded`, `fill`, `border`, `guide`, `fontFamily`, `fontSize`, `alignHorizontal`, `alignVertical` | `Style2D` same names                                                                                          | M                 |
+| **rect / ellipse**                           | (base fields only)                                                                                                                        | `kind: 'rect' \| 'ellipse'`                                                                                   | M                 |
+| **cloud**                                    | `params.bumps` (+`CloudParams`)                                                                                                           | `Element2D.cloud: CloudParams`                                                                                | M                 |
+| **polygon**                                  | `params.sides`, `params.fit`                                                                                                              | `Element2D.polygon: PolygonParams`                                                                            | M                 |
+| **polyline**                                 | `points`, `params.closed`                                                                                                                 | `Element2D.points: Vec2[]`, `Element2D.closed`                                                                | M                 |
+| **note**                                     | `text`, `contents`                                                                                                                        | `BaseElement.text`, `Element2D.contents`                                                                      | M                 |
+| **view** (portal)                            | `scene`, `link.contents`                                                                                                                  | `BaseElement.object` → composite whose `parts` = that layout; `Element2D.view: { link?: Ref; contents? }`     | M                 |
+| **instance**                                 | `composite`, `overrides`, `fit`                                                                                                           | `BaseElement.object`; `Element2D.overrides` (per-part: `Record<string, Partial<Element2D>>`), `Element2D.fit` | M                 |
+| **path**                                     | `d`, `viewBox`, `fill`                                                                                                                    | `Element2D.path: { d; viewBox }`, `Style2D.fillColor`                                                         | M                 |
+| **diagram** (`types.ts:383`)                 | `element` (`Box\|Circle\|Text\|Portal`), `heading`                                                                                        | flattened: the diagram element's kind and fields (see Diagram DSL mapping); `Element2D.heading`               | M (after Phase 0) |
+| **generator** (`types.ts:397`)               | `generator`, `params`, `seed`                                                                                                             | `Element2D.generator: { id; seed?; params }` — `params` typed by the generator's registered schema            | N (1)             |
+| **image** (plugin-canvas `image-node.ts:17`) | `src`, `alt`, `fit`                                                                                                                       | plugin kind: `kindProps` by registry schema                                                                   | N (1)             |
+| **plugin kinds** (UML class, compute shapes) | their fields                                                                                                                              | `kindProps` by registry schema                                                                                | N (1)             |
+| **Link base** (`types.ts:560`)               | `id`, `z`, `locked`, `layer`, `text`                                                                                                      | `BaseElement.id`, `.order`, `.locked`, `.layer`, `.label`                                                     | M                 |
+|                                              | `type: line\|curve\|spline\|smart`                                                                                                        | `kind: 'link'`, `Element2D.route: 'line'\|'curve'\|'spline'\|'smart'`                                         | M                 |
+|                                              | `source`/`target` `{node, port}`                                                                                                          | `BaseElement.from`/`to` `{ element, anchor: port }`                                                           | M                 |
+|                                              | `source`/`target` `{point}`                                                                                                               | `Element2D.fromPoint`/`toPoint: Vec2`                                                                         | M                 |
+|                                              | `ends {start, end}`                                                                                                                       | `Element2D.ends: LinkEnds`                                                                                    | M                 |
+|                                              | `class`, `style: LineStyle`                                                                                                               | `BaseElement.style`, `Element2D.overrides` (`Style2D` line fields)                                            | M                 |
+|                                              | `connector` (`DiagramConnector`)                                                                                                          | `Element2D.connector` (relation, head, tail, route, caption; colour/stroke → `Style2D`)                       | M                 |
+|                                              | spline `points`                                                                                                                           | `Element2D.points`                                                                                            | M                 |
+| **Layer** (`types.ts:625`)                   | `id`, `name`, `z`, `hidden`                                                                                                               | `Layout2D.layers[id] = { name; order; hidden }`                                                               | M                 |
+| **StyleClass** (`types.ts:525`)              | `id`, `name`, `style`                                                                                                                     | `Model2D.styles[id]: Style2D` (+`name`)                                                                       | M                 |
+| **Lattice** (`utils/lattice.ts:15`)          | `LatticeSpec {width, height, gutterX, gutterY}`                                                                                           | `Layout2D.lattice`                                                                                            | M                 |
+| **Constrained** (`constrained.ts:41`)        | `nodes`, `constraints`                                                                                                                    | `Layout2D.constraints: Constraint[]`; nodes derived from elements                                             | N (2)             |
+| **Dynamic** (`dynamic.ts:69`)                | `nodes`, `edges`, `Overlay.positions`                                                                                                     | edges = link elements; positions = element centers                                                            | N (2)             |
+| **Scored**                                   | (no stored model)                                                                                                                         | —                                                                                                             | M                 |
+| **Timeline** (`animation/types.ts:62`)       | `duration`, `loop`, `fps`, `tracks`                                                                                                       | `Layout2D.timeline: Timeline`                                                                                 | N (3)             |
+| **Canvas settings**                          | `projection`, `lattice`, `grid`, `theme`, `styleSet`, `background`, `readonly`, …                                                         | `Canvas.settings` (unchanged); `theme`/`styleSet` → default `StyleCatalog` choice                             | M                 |
+
+## Diagram DSL mapping
+
+Only the output target changes. Grammar changes: **none** — the `.dx` semantic statements and the scene statements are
+unchanged; `Dsl.compile`'s result type changes (`ParseResult.commands` → `{ document, layout, intents }`).
+
+| `@dxos/diagram` (`scene.ts`)                                                               | → `@dxos/scene`                                                                                                                                                     |                     |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `WorldObject {id, origin, scale, index, ref, elements}` (`:289`)                           | a `group` element (`members` = its elements, `dsl.object` = id, `order` = index); `origin`/`scale` baked into each member's geometry; `ref` → `Element2D.view.link` | N (4)               |
+| `Box {kind rect\|ellipse\|diamond\|triangle, x, y, w, h, rotation, text, corners}` (`:68`) | `kind: 'box'`, `Element2D.shape` = box kind, `center` = (x+w/2, y+h/2), `size` = (w, h), `rotation`, `label` = text, `Element2D.corners`                            | M                   |
+| `Circle {cx, cy, r, text}` (`:85`)                                                         | `kind: 'circle'`, `center` = (cx, cy), `size` = (2r, 2r), `label`                                                                                                   | M                   |
+| `Polyline {points, closed, guide}` (`:97`)                                                 | `kind: 'polyline'`, `points`, `closed`, `Style2D.guide`                                                                                                             | M (renderer: N (6)) |
+| `Curve {points}` (`:111`)                                                                  | `kind: 'curve'`, `points`                                                                                                                                           | M (renderer: N (6)) |
+| `Arc {cx, cy, r, startAngle, endAngle}` (`:124`)                                           | `kind: 'arc'`, `center`, `size`, `Element2D.arc: {start, end}`                                                                                                      | M (renderer: N (6)) |
+| `Text {x, y, w, text}` (`:137`)                                                            | `kind: 'text'`, `center`/`size` from (x, y, w), `BaseElement.text`                                                                                                  | M                   |
+| `Arrow {from, to (#port), start, end, text, head, tail, relation}` (`:208`)                | `kind: 'link'`, `from`/`to` `{element, anchor: port}` (ids `object/element`), `fromPoint`/`toPoint`, `label`, `Element2D.connector {head, tail, relation}`          | M                   |
+| `Portal {x, y, w, h, ref, text}` (`:267`)                                                  | `kind: 'portal'`, geometry as Box, `Element2D.view.link` = `ref` (DXN), `label`                                                                                     | M                   |
+| element `id`                                                                               | `BaseElement.dsl.element`; element id = `object/element`                                                                                                            | M                   |
+| `color`, `fill`, `stroke`, `weight`                                                        | `Style2D` diagram fields `color`, `fillMode`, `stroke`, `weight`                                                                                                    | N (5)               |
+| `UpsertObject` (`:317`)                                                                    | `create` (or `update` when present) for the group + its members, in one `batch`                                                                                     | M                   |
+| `UpsertElements` (`:322`)                                                                  | `create`/`update` per element                                                                                                                                       | M                   |
+| `RemoveElements` (`:328`)                                                                  | `delete` of those ids                                                                                                                                               | M                   |
+| `RemoveObject` (`:334`)                                                                    | `delete` of the group and its members                                                                                                                               | M                   |
+| `MoveObject {origin}` (`:339`)                                                             | `move` of the group's members by the origin delta                                                                                                                   | M (via (4))         |
+
+## Shared editor contract
+
+| Item                                                 | Shared / per-dimension                              | Why (per-dimension items only)                                                                                              |
+| ---------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Components**                                       |                                                     |                                                                                                                             |
+| `SceneEditor.Root` (store, roles, lock, keyboard)    | shared                                              |                                                                                                                             |
+| Viewport host (`SceneEditor.Viewport`)               | shared host; `config.viewport` per-dimension        | Drawing differs: SVG/DOM vs Babylon.                                                                                        |
+| Tool rail                                            | shared                                              |                                                                                                                             |
+| Actions bar                                          | shared                                              |                                                                                                                             |
+| Camera bar                                           | shared; `config.camera` per-dimension               | Pan/zoom vs orbit/zoom maths.                                                                                               |
+| Display panel                                        | shared; `config.display` per-dimension              | Grid kinds and guides differ (lattice guides are 2D-only).                                                                  |
+| Inspector panel (dock/float)                         | shared                                              |                                                                                                                             |
+| Properties section                                   | shared; `config.propertyForm` per-dimension         | Geometry fields differ (size vs scale; ° vs Vec3).                                                                          |
+| Views, Objects, Layers, Styles sections              | shared                                              |                                                                                                                             |
+| Context menu                                         | shared                                              |                                                                                                                             |
+| **Behaviours**                                       |                                                     |                                                                                                                             |
+| Selection (click, shift-click, marquee, drill-in)    | shared                                              |                                                                                                                             |
+| Cut / copy / paste / duplicate (`.dx`, lift/flatten) | shared                                              |                                                                                                                             |
+| Undo / redo (canvas-session, field-level inverses)   | shared                                              |                                                                                                                             |
+| Lock (read-only)                                     | shared                                              |                                                                                                                             |
+| Roles (card/section/slide)                           | shared                                              |                                                                                                                             |
+| Keymap, Cmd-drag hand                                | shared                                              |                                                                                                                             |
+| Create tools select on elements; drag-to-size        | shared rule; gesture per-dimension                  | 2D sweeps a box; 3D sweeps a base then a height.                                                                            |
+| Snap                                                 | shared toggle; `config.geometry.snap` per-dimension | Grid px vs world units/15°/0.1.                                                                                             |
+| Styles (`resolveStyle`, catalogs)                    | shared mechanism; `config.styles` per-dimension     | `Style2D` vs `Style3D` contents.                                                                                            |
+| **Pluggable (`DimensionConfig`)**                    |                                                     |                                                                                                                             |
+| `viewport`                                           | per-dimension                                       | Rendering and picking engines differ.                                                                                       |
+| `tools`                                              | per-dimension list, shared categories               | Each dimension has its own shapes (rect/ellipse vs cube/sphere) and dimension-only tools (polyline, text vs extrude, face). |
+| `geometry` (move/scale/rotate/snap/visible)          | per-dimension                                       | `Vec2` vs `Vec3` maths.                                                                                                     |
+| `camera`                                             | per-dimension                                       | Camera models differ (`Camera2D` vs `Camera3D`).                                                                            |
+| `display`                                            | per-dimension                                       | Grid kinds, guides.                                                                                                         |
+| `sections` (extra)                                   | per-dimension                                       | e.g. 3D face info; 2D none beyond shared.                                                                                   |
+| `propertyForm`                                       | per-dimension                                       | Geometry fields differ.                                                                                                     |
+| `styles`                                             | per-dimension                                       | `Style2D` vs `Style3D`.                                                                                                     |
+| `constrain` (optional)                               | per-dimension                                       | Only 2D's lattice/constrained/dynamic modes rewrite moves today.                                                            |
+| `commands` (extras)                                  | per-dimension                                       | 3D: join, subtract, import mesh, export STL; 2D: align/distribute.                                                          |
+
 ## Review Focus
 
-0. **Diagram output unchanged:** after Phase 0 the illustrator corpus renders the same (`corpus.test.ts` snapshot
-   metrics unchanged; `moon run plugin-illustrator:render-diagrams` output compared before/after). Pinned by Task 0.3.
+0. **Diagram output unchanged:** after Phase 0 the illustrator corpus has identical metrics (crossings, bends,
+   overlaps; `corpus.test.ts` snapshot unchanged; `moon run plugin-illustrator:render-diagrams` compared by metrics). Pinned by Task 0.3.
 
 1. **Round-trip parity:** every built-in 2D node and link type (rect, ellipse, cloud, polygon, polyline, note, view,
    instance, path, generator, diagram; line, curve, spline, smart) survives react-ui-canvas record → `Element2D` → render
@@ -119,7 +290,7 @@ The `.dx` semantic statements (`diagram`/`node`/`edge`/`group`) and the layout e
 **Files:**
 
 - Modify: `packages/common/diagram/src/svg-file.ts` (`resolveScene` → `resolveLayout`), `dx-svg.ts` (payload =
-  `{ format, document: SceneDocument, source }`; `extract` reads it; old payloads still import — see risk 6),
+  `{ format, document: SceneDocument, source }`; `extract` reads only the new payload),
   `svg-handler.ts`; `packages/plugins/plugin-illustrator/src/components/SceneSvg.tsx`
 - Test: `dx-svg.test.ts`, `svg-file.test.ts`, `packages/plugins/plugin-illustrator/src/model/corpus.test.ts`
 
@@ -136,7 +307,7 @@ The `.dx` semantic statements (`diagram`/`node`/`edge`/`group`) and the layout e
 - [ ] **Step 2: Failing test** `svg-file.test.ts`: `test('a Layout2D renders the same markup as the scene it
 replaces', …)`; `dx-svg.test.ts`: `test('a .dx.svg payload carries the SceneDocument and imports back', …)`.
 - [ ] **Step 3:** Implement. **Step 4:** PASS; `corpus.test.ts` passes with the snapshot unchanged; re-render and
-      diff against `temp/corpus-before/` (byte-identical SVG, or identical metrics where ids change — state which).
+      compare against `temp/corpus-before/` by **metrics** (crossings, bends, overlaps, the corpus snapshot) — identical metrics required; byte-identical SVG is not (element ids may change).
 - [ ] **Step 5:** Commit `diagram: SVG rendering and .dx.svg on Layout2D`.
 
 ### Task 0.4: Illustrator operations and the canvas builder use `Layout2D` directly
@@ -169,7 +340,7 @@ needed by renderers/scoring next to them; `aesthetics.ts`, `score.ts`, `appeal.t
 
 - [ ] **Gate:** `grep -rnE "Scene\.Command|UpsertElements|UpsertObject|RemoveElements|MoveObject" packages --include=*.ts --include=*.tsx`
       returns nothing; diagram, plugin-illustrator, plugin-canvas suites and `corpus.test.ts` pass with the snapshot
-      unchanged; render-diagrams output matches 0.3's before-image.
+      unchanged; render-diagrams metrics match 0.3's before-image.
 - [ ] Commit `diagram: retire the scene command model; diagrams are Layout2D`.
 
 ---
@@ -553,8 +724,7 @@ A fresh reviewer on the most capable model against this plan's Review Focus; one
 5. **Diagram corpus stability (Phase 0):** the illustrator corpus metrics and snapshots (`corpus.test.ts`) and the
    render-diagrams output must stay stable; only the output stage of the engines changes. Mitigation: 0.2's geometry
    equivalence test, 0.3's before/after renders, 0.5's gate.
-6. **Existing `.dx.svg` files:** files exported before Phase 0 carry the old payload; `extract` keeps reading it
-   (converting once to a `SceneDocument`) so imports into Composer still work.
+6. **Existing `.dx.svg` files:** files exported before Phase 0 are not imported as editable drawings (user, 2026-10-30); they still display as images.
 7. **Scope:** Phase E (especially compute) is large; the plan keeps every phase green so the PR is shippable at the
    end of each phase.
 
