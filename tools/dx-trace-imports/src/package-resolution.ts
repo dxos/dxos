@@ -7,7 +7,17 @@ import path from 'node:path';
 
 import { normalizeFsPath, packageNameFromSpecifier } from './matcher.ts';
 
-type ConditionalEntry = string | { readonly [condition: string]: ConditionalEntry };
+/** A target: a path, `null` (excluded for the condition), a fallback list, or a nested condition map. */
+type ConditionalEntry =
+  | string
+  | null
+  | readonly ConditionalEntry[]
+  | { readonly [condition: string]: ConditionalEntry };
+
+type ConditionalMap = { readonly [key: string]: ConditionalEntry };
+
+const isConditionalMap = (entry: ConditionalEntry | undefined): entry is ConditionalMap =>
+  typeof entry === 'object' && entry !== null && !Array.isArray(entry);
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs', '.cjs'] as const;
 
@@ -27,12 +37,25 @@ const readJsonFile = <T>(filePath: string): T | null => {
  * rank overlapping conditions (e.g. `node` before `default`).
  */
 const tryResolveConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null => {
-  if (typeof entry === 'string') {
+  if (entry === null || typeof entry === 'string') {
     return entry;
   }
+  if (!isConditionalMap(entry)) {
+    for (const target of entry) {
+      const resolved = tryResolveConditionalEntry(target, conditions);
+      if (resolved) {
+        return resolved;
+      }
+    }
+    return null;
+  }
+  // A matching key whose nested map matches nothing falls through to later keys, as in Node.
   for (const key of Object.keys(entry)) {
     if (key === 'default' || key === 'import' || conditions.includes(key)) {
-      return tryResolveConditionalEntry(entry[key], conditions);
+      const resolved = tryResolveConditionalEntry(entry[key], conditions);
+      if (resolved) {
+        return resolved;
+      }
     }
   }
   return null;
@@ -128,10 +151,7 @@ const splitPackageSpecifier = (specifier: string): { packageName: string; subpat
   };
 };
 
-const lookupConditionalMap = (
-  map: Record<string, ConditionalEntry> | undefined,
-  subpath: string,
-): ConditionalEntry | undefined => {
+const lookupConditionalMap = (map: ConditionalMap | undefined, subpath: string): ConditionalEntry | undefined => {
   if (!map) {
     return undefined;
   }
@@ -154,8 +174,8 @@ const resolveFromPackageRoot = (
   conditions: readonly string[],
 ): string | null => {
   const packageJson = readJsonFile<{
-    exports?: Record<string, ConditionalEntry>;
-    imports?: Record<string, ConditionalEntry>;
+    exports?: ConditionalEntry;
+    imports?: ConditionalMap;
     main?: string;
     module?: string;
   }>(path.join(packageRoot, 'package.json'));
@@ -169,10 +189,11 @@ const resolveFromPackageRoot = (
     field === 'exports' &&
     subpath === '.' &&
     map !== undefined &&
-    (typeof map === 'string' || !Object.keys(map).some((key) => key.startsWith('.')))
+    map !== null &&
+    (!isConditionalMap(map) || !Object.keys(map).some((key) => key.startsWith('.')))
       ? map
       : undefined;
-  const entry = rootEntry ?? lookupConditionalMap(map, subpath);
+  const entry = rootEntry ?? lookupConditionalMap(isConditionalMap(map) ? map : undefined, subpath);
   if (entry !== undefined) {
     const relativePath = tryResolveConditionalEntry(entry, conditions);
     if (!relativePath) {

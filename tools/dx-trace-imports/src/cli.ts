@@ -91,7 +91,8 @@ const conditionalExportSubpaths = (cwd: string, conditions: readonly string[]): 
   const declares = (entry: unknown): boolean =>
     typeof entry === 'object' &&
     entry !== null &&
-    Object.entries(entry).some(([key, value]) => conditions.includes(key) || declares(value));
+    // A `null` target excludes the subpath from that runtime, so there is nothing built to trace.
+    Object.entries(entry).some(([key, value]) => (conditions.includes(key) && value !== null) || declares(value));
   if (!isSubpathMap(exports)) {
     return declares(exports) ? ['.'] : [];
   }
