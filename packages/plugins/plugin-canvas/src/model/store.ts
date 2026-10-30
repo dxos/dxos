@@ -339,6 +339,10 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   }
 
   const unsubscribeCanvas = Obj.subscribe(canvas, refresh);
+  // Built before subscribing: an atom announces its first value when first read (in a render), and a subscriber would
+  // write that value straight back to the canvas, updating its readers mid-render.
+  registry.get(styles);
+  registry.get(store.views);
   const unsubscribeStyles = registry.subscribe(styles, (next) => {
     if (reading) {
       return;

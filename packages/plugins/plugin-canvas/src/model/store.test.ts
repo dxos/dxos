@@ -251,6 +251,26 @@ describe('bindCanvasStore', () => {
     bound.dispose();
   });
 
+  test("reading the store's atoms for the first time, as a render does, writes nothing to the canvas", async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const canvas = db.add(createCanvas());
+    await db.flush();
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    let writes = 0;
+    const unsubscribe = Obj.subscribe(canvas, () => writes++);
+    registry.get(bound.store.views);
+    if (bound.store.styles) {
+      registry.get(bound.store.styles);
+    }
+    expect(writes).toBe(0);
+    unsubscribe();
+    bound.dispose();
+  });
+
   test('binding a drawing removes the scenes nothing reaches from its root', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
