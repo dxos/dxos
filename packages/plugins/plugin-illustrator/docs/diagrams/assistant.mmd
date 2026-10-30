@@ -2,7 +2,7 @@
 flowchart TB
   subgraph UI [Composer plugin-assistant]
     ChatUi[Chat UI]
-    Processor[AiChatProcessor]
+    Processor[ChatModel]
     AgentSvc[AgentService]
   end
   subgraph Runtime [Agent runtime]
@@ -39,7 +39,7 @@ flowchart TB
   Request -->|trace blocks| Processor
   Feed -->|reactive query| ChatUi
   %% ref ChatUi packages/plugins/plugin-assistant/src/components/Chat
-  %% ref Processor packages/plugins/plugin-assistant/src/processor
+  %% ref Processor packages/plugins/plugin-assistant/src/chat-model
   %% ref AgentSvc packages/core/compute/agent-runtime/src/agent-service/AgentService.ts
   %% ref AgentProc packages/core/compute/agent-runtime/src/agent-service/agent-process.ts
   %% ref Session packages/core/compute/assistant/src/session/AiSession.ts

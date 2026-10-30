@@ -761,6 +761,15 @@ const setsOverlap = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean => {
   return false;
 };
 
+/** The id of the object that directly owns `item`: its parent, else the feed it was appended to. */
+const childOfOwnerId = (item: QueryItem): EntityId | undefined => {
+  const parent = QueryItem.getParent(item);
+  if (parent) {
+    return EID.getEntityId(parent);
+  }
+  return item.queueId ?? undefined;
+};
+
 /** The ids of the objects the relations in `items` connect, read from whichever form each item carries. */
 const relationEndpoints = (items: readonly QueryItem[]): Set<EntityId> => {
   const endpoints = new Set<EntityId>();
@@ -2055,7 +2064,7 @@ export class QueryExecutor extends Resource {
     filter: QueryAST.FilterChildOf,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
-    const parentObjectIds = new Set<string>();
+    const parentObjectIds = new Set<EntityId>();
     for (const parentDxnStr of filter.parents) {
       const echoUri = EID.tryParse(parentDxnStr);
       if (echoUri) {
@@ -2067,15 +2076,20 @@ export class QueryExecutor extends Resource {
     }
     const maxDepth = filter.transitive ? MAX_DEPTH_FOR_CHILD_OF_TRACING : 1;
 
-    const matches = await Promise.all(
-      workingSet.map(async (item) => this._isChildOfAny(item, parentObjectIds, maxDepth)),
-    );
-    const result = workingSet.filter((_item, index) => matches[index]);
+    const trace = ExecutionTrace.makeEmpty();
+    const beginIndexQuery = performance.now();
+    const ownerIds = await this._collectChildOfOwners(parentObjectIds, maxDepth, workingSet, trace);
+    trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+    const result = workingSet.filter((item) => {
+      const ownerId = childOfOwnerId(item);
+      return ownerId !== undefined && ownerIds.has(ownerId);
+    });
 
     return {
       workingSet: result,
       trace: {
-        ...ExecutionTrace.makeEmpty(),
+        ...trace,
         name: 'Filter(child-of)',
         details: JSON.stringify({ parents: filter.parents, transitive: filter.transitive }),
         objectCount: result.length,
@@ -2084,46 +2098,38 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * Checks if an item is a child of any of the given parent object IDs.
-   * Walks up the parent chain (and feed ownership for queue items) until a match is found or depth is exhausted.
+   * The ids an item's direct owner must be among to sit within `maxDepth` levels of a parent: the parents
+   * and their descendants down to `maxDepth - 1` levels, walked down the children index so that no
+   * ancestor document of any working-set item is loaded.
    */
-  private async _isChildOfAny(item: QueryItem, parentObjectIds: Set<string>, remainingDepth: number): Promise<boolean> {
-    if (remainingDepth <= 0) {
-      return false;
+  private async _collectChildOfOwners(
+    parentObjectIds: ReadonlySet<EntityId>,
+    maxDepth: number,
+    workingSet: readonly QueryItem[],
+    trace: ExecutionTrace,
+  ): Promise<Set<EntityId>> {
+    const ownerIds = new Set(parentObjectIds);
+    if (maxDepth <= 1 || ownerIds.size === 0 || workingSet.length === 0) {
+      return ownerIds;
     }
 
-    const parentRefs: { dxnStr: EID.EID; objectId: string }[] = [];
-
-    const directParent = QueryItem.getParent(item);
-    if (directParent) {
-      const objectId = EID.getEntityId(directParent);
-      if (objectId) {
-        parentRefs.push({ dxnStr: directParent, objectId });
+    const spaceIds = [...new Set(workingSet.map((item) => item.spaceId))];
+    let frontier = [...ownerIds];
+    for (let depth = 1; depth < maxDepth && frontier.length > 0; depth++) {
+      const children = await this._runInRuntime(
+        this._indexEngine.queryChildren({ spaceId: spaceIds, parentIds: frontier }),
+      );
+      trace.indexHits += children.length;
+      frontier = [];
+      for (const child of children) {
+        // Only a document owns further objects; a feed item is a leaf.
+        if (child.queueId === '' && !ownerIds.has(child.objectId)) {
+          ownerIds.add(child.objectId);
+          frontier.push(child.objectId);
+        }
       }
     }
-
-    if (item.queueId && !directParent) {
-      const queueEchoUri = EID.make({ spaceId: item.spaceId, entityId: item.queueId });
-      parentRefs.push({
-        dxnStr: queueEchoUri,
-        objectId: item.queueId,
-      });
-    }
-
-    for (const ref of parentRefs) {
-      if (parentObjectIds.has(ref.objectId)) {
-        return true;
-      }
-    }
-
-    for (const ref of parentRefs) {
-      const parentItem = await this._loadFromDXN(ref.dxnStr, { sourceSpaceId: item.spaceId });
-      if (parentItem && (await this._isChildOfAny(parentItem, parentObjectIds, remainingDepth - 1))) {
-        return true;
-      }
-    }
-
-    return false;
+    return ownerIds;
   }
 
   // TODO(dmaretskyi): This needs to be completed.

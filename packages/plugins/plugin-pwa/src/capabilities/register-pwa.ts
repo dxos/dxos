@@ -17,12 +17,42 @@ import { log } from '@dxos/log';
 
 import { PwaNamespace } from '../namespace.ts';
 import { UPDATE_CHECK_INTERVAL, isPrecacheProgress } from '../precache.ts';
+import { type PwaOptions } from '../settings-store.ts';
 import { makeUpdateManager, progressStatus } from './update-manager.ts';
+import { entryScript, makeVersionCheckManager } from './version-check.ts';
+
+const RELOADED_FOR_KEY = `${PwaNamespace.key}.reloaded-for`;
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ serviceWorker = true }: PwaOptions) {
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const atomRegistry = yield* Capabilities.AtomRegistry;
+
+    // No `registerSW`: in this build it registers the self-destroying worker, meant only for old installs.
+    if (!serviceWorker) {
+      const statusAtom = Atom.make<AppUpdate.Status>({ kind: 'idle' }).pipe(Atom.keepAlive);
+      return Capability.contribute(
+        AppCapabilities.UpdateManager,
+        makeVersionCheckManager({
+          status: statusAtom,
+          setStatus: (status) => atomRegistry.set(statusAtom, status),
+          dev: import.meta.env.DEV,
+          current: entryScript(document),
+          fetchLatest: async () => {
+            const response = await fetch(import.meta.env.BASE_URL, { cache: 'no-store' });
+            if (!response.ok) {
+              throw new Error(`index fetch failed: ${response.status}`);
+            }
+            return entryScript(new DOMParser().parseFromString(await response.text(), 'text/html'));
+          },
+          reloadedFor: {
+            get: () => sessionStorage.getItem(RELOADED_FOR_KEY) ?? undefined,
+            set: (build) => sessionStorage.setItem(RELOADED_FOR_KEY, build),
+          },
+          reload: () => window.location.reload(),
+        }),
+      );
+    }
 
     // No service workers at all on an insecure origin and in some embedded webviews. Under the vite dev
     // server the plugin still loads, but `virtual:pwa-register` is a stub that never registers.
