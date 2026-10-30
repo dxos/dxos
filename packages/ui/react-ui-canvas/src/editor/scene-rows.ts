@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ObjectEntry, type ViewTreeItem } from '@dxos/react-ui-canvas';
 import {
   type ElementEndpoint,
   type Layer,
@@ -13,8 +12,10 @@ import {
   sceneLayout,
 } from '@dxos/scene';
 
-// The 2D inspectors (Views, Objects, Layers) read their rows from these over a 3D document, so both dimensions share
-// one component each; the 2D side builds the same rows from its View store.
+import { type ObjectEntry } from '../components/index.ts';
+import { type ViewTreeItem } from '../utils/index.ts';
+
+// The shared inspectors (Views, Objects, Layers) read their rows from a scene document of either dimension.
 
 type LayoutLike = Pick<Scene.LayoutRecord, 'elements' | 'layers'>;
 
@@ -59,7 +60,7 @@ export const objectEntries = (doc: Scene.SceneDocument): ObjectEntry[] => {
  * The views tree over a document's scene: its layout as the root row, each element under it, and under an element
  * placing a composite object, that object's parts, read-only, as the 2D tree shows an instance's contents.
  */
-export const layoutTree3D = (doc: Scene.SceneDocument, scene = rootScene(doc)): ViewTreeItem => {
+export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): ViewTreeItem => {
   const root = sceneLayout(doc, scene);
   const rowsOf = (layout: Scene.LayoutRecord, path: string[], prefix: string, readonly: boolean, seen: Set<string>) => {
     const resolved = resolveLayout(doc, layout);

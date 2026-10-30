@@ -4,7 +4,7 @@
 
 import { type ComponentType, type ReactNode } from 'react';
 
-import { type Fragment, type LayoutIntent, type Scene } from '@dxos/scene';
+import { type Fragment, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
 import { type InspectorSectionDef } from '../components/index.ts';
 import { type BackgroundGrid } from '../model/index.ts';
@@ -100,7 +100,10 @@ export type ExtraCommandContext = {
   layout: string;
   selection: readonly string[];
   onIntent: (layout: string, intent: LayoutIntent) => void;
-  select: (ids: string[]) => void;
+  /** Writes a model edit as one undo step; returns its problems. */
+  onModelIntent: (intent: ModelIntent) => readonly string[];
+  select: (ids: readonly string[]) => void;
+  setTool: (tool: ActiveTool) => void;
   notify: (message: string | undefined) => void;
 };
 

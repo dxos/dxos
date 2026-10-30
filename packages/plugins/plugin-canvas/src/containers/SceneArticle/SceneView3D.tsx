@@ -29,10 +29,14 @@ import {
   copyFragment,
   createHistory,
   getSessionClipboard,
+  layersOf,
+  layoutTree,
+  objectEntries,
   pasteInto,
   propertiesShown,
   sessionHistory,
   setSessionClipboard,
+  withoutHidden,
 } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -84,7 +88,6 @@ import {
   elementFormIntents,
   elementFormValues,
 } from './element-form.ts';
-import { layersOf, layoutTree3D, objectEntries, withoutHidden } from './inspectors-3d.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
@@ -295,7 +298,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
 
   // The shared Views, Objects and Layers inspectors, read from the document as 2D reads them from its View store.
   const rootLayout = document?.scenes[0]?.layout;
-  const tree = useMemo(() => (document ? layoutTree3D(document) : undefined), [document]);
+  const tree = useMemo(() => (document ? layoutTree(document) : undefined), [document]);
   const entries = useMemo(() => (document ? objectEntries(document) : []), [document]);
   const shown = useMemo(() => (document ? withoutHidden(document) : undefined), [document]);
   const openLayout = useCallback(

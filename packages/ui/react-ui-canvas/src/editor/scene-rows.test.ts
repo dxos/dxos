@@ -7,14 +7,14 @@ import { describe, expect, test } from 'vitest';
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 
-import { hiddenElements, layersOf, layoutTree3D, objectEntries, withoutHidden } from './inspectors-3d.ts';
+import { hiddenElements, layersOf, layoutTree, objectEntries, withoutHidden } from './scene-rows.ts';
 
 const encapsulated = () => Dsl.readScenes(EXEMPLARS.encapsulated).document;
 
-describe('3D inspectors', () => {
+describe('scene rows', () => {
   test('the views tree is the scene layout, with a composite placing its parts read-only under it', () => {
     const doc = encapsulated();
-    const tree = layoutTree3D(doc);
+    const tree = layoutTree(doc);
     expect(tree.kind).toBe('view');
     const shell = tree.children.find((row) => row.kind === 'instance');
     expect(shell).toBeDefined();

@@ -77,6 +77,8 @@
     "@dxos/ui-theme": "workspace:*",
     "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/d3": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
