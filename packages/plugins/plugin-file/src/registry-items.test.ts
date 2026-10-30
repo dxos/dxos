@@ -2,13 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as RegistryDescriptor from '@dxos/app-toolkit/RegistryDescriptor';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, JsonSchema, Obj, Type } from '@dxos/echo';
 import { File } from '@dxos/types';
 
+import { FileOperationHandlerSet } from '#operations';
 import { FileSkill } from '#skills';
 import { FileOperation } from '#types';
 
@@ -56,32 +61,73 @@ describe('registry items as JSON', () => {
     }
   });
 
-  test('the plugin describes as a thin index plus one file per item', async ({ expect }) => {
-    const operations = [
-      FileOperation.Create,
-      FileOperation.CreateFromSource,
-      FileOperation.CreateFromUpload,
-      FileOperation.Read,
-      FileOperation.ResolveDownload,
-    ];
-    const { index, files } = await RegistryDescriptor.describe({
-      schemas: [File.File, Blob.Blob],
-      operations,
-      skills: [FileSkill],
-    });
+  test('the plugin describes from its module bodies as a thin index plus one file per item', async ({ expect }) => {
+    const { index, files, skipped } = await RegistryDescriptor.fromModules([
+      {
+        id: 'schema',
+        provides: [AppCapabilities.Schema.identifier],
+        body: (await import('./capabilities/schema.ts')).default,
+      },
+      {
+        id: 'SkillDefinition',
+        provides: [AppCapabilities.SkillDefinition.identifier],
+        body: (await import('./capabilities/skill-definition.ts')).default,
+      },
+      {
+        id: 'OperationHandler',
+        provides: [Capabilities.OperationHandler.identifier],
+        body: (await import('./capabilities/operation-handler.ts')).default,
+      },
+    ]);
+    expect(skipped).toEqual([]);
     expect(index.map(({ kind }) => kind)).toEqual([...Array(2).fill('type'), ...Array(5).fill('operation'), 'skill']);
     for (const entry of index) {
       expect(files[entry.path]).toBeDefined();
       expect(entry.path).toContain(entry.hash);
     }
-    const skill = index.find(({ kind }) => kind === 'skill');
-    expect(files[skill?.path ?? '']).toContain('You can read the contents of files');
-    const create = index.find(({ uri }) => uri === String(FileOperation.Create.meta.key));
-    expect(JSON.parse(files[create?.path ?? ''] ?? 'null')).toMatchObject({ opaqueInputs: ['file', 'db'] });
+    const descriptorOf = (uri: string) =>
+      JSON.parse(files[index.find((entry) => entry.uri === uri)?.path ?? ''] ?? 'null');
+    expect(descriptorOf('org.dxos.skill.file').objects[1].content).toContain('You can read the contents of files');
+    expect(descriptorOf(String(FileOperation.Create.meta.key))).toMatchObject({ opaqueInputs: ['file', 'db'] });
+    // Only the bytes field's encoding is lost; the `_tag` literal re-wrapped in `anyOf` is not counted.
+    expect(descriptorOf(String(Type.getURI(Blob.Blob))).lossy).toEqual([
+      '/properties/data/anyOf/0/properties/bytes/contentEncoding',
+    ]);
+    expect(descriptorOf(String(Type.getURI(File.File))).lossy).toEqual([]);
 
     // The index is what the manifest carries inline; it stays an order of magnitude below what it links to.
     const fileBytes = Object.values(files).reduce((total, source) => total + source.length, 0);
     expect(JSON.stringify(index).length * 5).toBeLessThan(fileBytes);
+  });
+
+  test('descriptors are deterministic and rehydrate as ECHO objects', async ({ expect }) => {
+    const items = { schemas: [File.File], operations: [FileOperation.Read], skills: [FileSkill] };
+    const first = await RegistryDescriptor.describe(items);
+    const second = await RegistryDescriptor.describe(items);
+    // Content addressing holds only if the random ids `Obj.make` mints are replaced.
+    expect(second).toEqual(first);
+
+    const operation = first.index.find(({ kind }) => kind === 'operation');
+    const { objects } = JSON.parse(first.files[operation?.path ?? ''] ?? 'null');
+    const record = await Obj.fromJSON(objects[0]);
+    expect(Obj.getMeta(record).key).toEqual(String(FileOperation.Read.meta.key));
+  });
+
+  test('an inline handler map, as a config holds it, describes with no second list of operations', async ({
+    expect,
+  }) => {
+    const inline = Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed(Capability.contribute(Capabilities.OperationHandler, FileOperationHandlerSet)),
+    );
+    const { index, skipped } = await RegistryDescriptor.fromModules([
+      { id: 'OperationHandler', provides: [Capabilities.OperationHandler.identifier], body: inline },
+    ]);
+    expect(skipped).toEqual([]);
+    expect(index.map(({ uri }) => uri).sort()).toEqual(
+      FileOperationHandlerSet.definitions()
+        .map((definition) => String(definition.meta.key))
+        .sort(),
+    );
   });
 
   test('a skill is a root object plus the text its instructions reference', ({ expect }) => {
