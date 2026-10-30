@@ -110,6 +110,8 @@ defineScenario({
     // Cold and warm, then a revisit once the worker has evicted the idle documents, as a day of switching does.
     for (const pass of ['cold', 'warm', 'revisit'].filter((pass) => PASSES.includes(pass))) {
       if (pass === 'revisit') {
+        // Off every space, so the one warmed last goes idle with the rest.
+        await switchTo('dxos:settings');
         const [before] = await readCounters(page, ['automerge.evictions']);
         await page.waitForTimeout(EVICTION_IDLE_MS);
         const [after] = await readCounters(page, ['automerge.evictions']);
