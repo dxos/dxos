@@ -12,6 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/Button.tsx';
 import * as Popover from '../Popover/Popover.tsx';
 import { Slider } from '../Slider/Slider.tsx';
@@ -64,6 +65,8 @@ export type NumberInputProps = ThemedClassName<
    * `align='end'`, `end` otherwise) in place of `stepper`'s placement; it keeps its place, so the number never moves.
    */
   'stepperOnHover'?: boolean;
+  /** Sizes just this input (`data-size` scopes `theme/size.css`'s metrics to it), whatever its enclosing scope. */
+  'size'?: Size;
   /** Aligns the number to the row's end, as figures in a column do. */
   'align'?: 'start' | 'end';
   /** Adds an end button that opens a slider over `min`..`max` (0..100 when unset). */
@@ -100,6 +103,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       stepper = true,
       stepperOnHover,
       align = 'start',
+      size,
       slider,
       incrementLabel,
       decrementLabel,
@@ -177,6 +181,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         <NumberInputPrimitive.Control
           data-testid={testId}
           data-align={align}
+          data-size={size}
           data-stepper={placement || undefined}
           className={mx(recipes.numberInput(), classNames)}
         >

@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
+
 import { NumberLayoutAnnotation } from '../../annotations.ts';
 import { numberLayoutOf } from './number-layout.ts';
 
@@ -16,5 +18,9 @@ describe('numberLayoutOf', () => {
 
   test('a plain number keeps the default layout', () => {
     expect(numberLayoutOf(Schema.Number.ast)).toEqual({});
+  });
+
+  test("a vector's axes are small inputs, so three fit a row", () => {
+    expect(VECTOR_AXIS_LAYOUT.size).toBe('sm');
   });
 });

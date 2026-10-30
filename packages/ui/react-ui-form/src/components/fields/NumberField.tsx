@@ -88,6 +88,7 @@ export const NumberField = ({
       placeholder={placeholder}
       align={layout.align}
       stepperOnHover={layout.stepperOnHover}
+      size={layout.size}
       min={min}
       max={max}
       step={step ?? defaultStep(committed, integer)}
