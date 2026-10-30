@@ -130,9 +130,9 @@ export conditions `vendor/` was built with.
 
 1. **Shared packages stay bare.** A plugin file imports every package in Composer's shared set
    (`DEFAULT_PACKAGES`) by its bare specifier and never bundles a copy.
-2. **`vendor/` holds what EDGE loads.** It holds each shared package that the entry or a body
-   running on `workerd` reaches, and every shared package those import; browser- and node-only
-   bodies need not resolve on EDGE.
+2. **`vendor/` holds what EDGE loads.** It holds each shared package that a body running on
+   `workerd` reaches, and every shared package those import; browser- and node-only bodies need not
+   resolve on EDGE.
 3. **Vendored packages import each other bare,** never a copy, so `vendor/manifest.json` is an
    import map. A `require` keeps its package inside the vendored file.
 4. **Self-contained.** Every bare import a `workerd` host can reach is in `vendor/manifest.json`, and
@@ -1022,6 +1022,7 @@ decision D-31: The CLI vendors `PluginHost` into a published bundle by naming it
   why: `dx registry publish` runs whatever build the plugin's `dx.config.ts` names, so the environment is the one channel into it, and the host is private to the monorepo, so a plugin cannot depend on it.
   rejected:
     - Add the host to `vendor/` after the build — a second vendor build would carry its own copies of the packages the plugin's `vendor/` already has.
+```
 
 ```mdl
 decision D-32: The spec states the plugin bundle format: its files, `manifest.json`, `vendor/manifest.json`, the rules a bundle meets and how each host loads it.
@@ -1039,7 +1040,6 @@ decision D-33: `vendor/` holds only what a `workerd` host can reach: the entry, 
   why: A plugin that bundles another plugin's definition (plugin-assistant through plugin-registry's operations) carries that plugin's node-only bodies, whose imports (Vite, the CLI) cannot build for workerd and never run there.
 ```
 
-
 ```mdl
 decision D-34: The spec states the interface between a built plugin and EDGE. The host is reached only through typed Workers RPC, `PluginProtocol.Entrypoint` in `@dxos/protocols`, which both repositories compile against; the functions fetch protocol is dropped, and `invoke` returns failures as data.
   date: 2026-10-30
@@ -1048,6 +1048,7 @@ decision D-34: The spec states the interface between a built plugin and EDGE. Th
   rejected:
     - Keep the functions `fetch` protocol beside RPC: a second, untyped way in that nothing on EDGE calls.
     - A copy of the types in each repository (edge-protocol's `PluginReleaseService.Entrypoint`): they drift.
+```
 
 ```mdl
 decision D-35: Every host builds a plugin from its `manifest.json` and imports each module body when the module activates; no host imports the bundle's `index.mjs` to get the plugin. Composer, the `dx` CLI and EDGE share `PluginManifest.toDefinition` and `Plugin.fromManifest`. A plugin built from `src/plugin.tsx`, whose manifest lists no modules, still loads through its entry. Fills in [D-32].
