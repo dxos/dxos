@@ -2,23 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { Annotation } from '@dxos/echo';
-import { Scene } from '@dxos/scene';
+import { RectNode, Scene } from '@dxos/scene';
+import { VectorAnnotationId } from '@dxos/ui-types';
 
 import { ElementForm } from './element-form.ts';
 
-/** The form layout a struct schema declares, unwrapping an optional field's union. */
-const layoutOf = (ast: SchemaAST.AST): string | undefined => {
+/** Whether a struct schema is marked as a vector, unwrapping an optional field's union. */
+const isVector = (ast: SchemaAST.AST): boolean => {
   const struct = SchemaAST.isUnion(ast) ? ast.types.find((type) => !SchemaAST.isUndefined(type)) : ast;
-  return (
-    struct &&
-    Option.getOrUndefined(Annotation.FormLayoutAnnotation.get(Schema.make(struct)))?.[Annotation.DEFAULT_LAYOUT_NAME]
-  );
+  return struct?.annotations?.[VectorAnnotationId] === true;
 };
 
 const field = (name: string) =>
@@ -27,15 +22,26 @@ const field = (name: string) =>
     : undefined;
 
 describe('vector fields', () => {
-  test('a 3D vector lays out X, Y and Z on one row', () => {
-    expect(layoutOf(Scene.Vec3.ast)).toContain('cols="3"');
+  test('every 3D vector is a stacked vector field', () => {
+    expect(isVector(Scene.Vec3.ast)).toBe(true);
     for (const name of ['center', 'rotation', 'scale']) {
       const ast = field(name);
-      expect(ast && layoutOf(ast)).toContain('cols="3"');
+      expect(ast && isVector(ast)).toBe(true);
     }
   });
 
-  test('a 2D vector lays out X and Y on one row', () => {
-    expect(layoutOf(Scene.Vec2.ast)).toContain('cols="2"');
+  test('2D vectors and sizes are stacked vector fields', () => {
+    expect(isVector(Scene.Vec2.ast)).toBe(true);
+    expect(isVector(Scene.Size2.ast)).toBe(true);
+    for (const name of ['center', 'size']) {
+      const signature = SchemaAST.isObjects(Scene.Element2D.ast)
+        ? Scene.Element2D.ast.propertySignatures.find((p) => p.name === name)?.type
+        : undefined;
+      expect(signature && isVector(signature)).toBe(true);
+      const node = SchemaAST.isObjects(RectNode.ast)
+        ? RectNode.ast.propertySignatures.find((p) => p.name === name)?.type
+        : undefined;
+      expect(node && isVector(node)).toBe(true);
+    }
   });
 });

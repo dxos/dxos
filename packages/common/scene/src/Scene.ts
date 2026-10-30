@@ -4,23 +4,24 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AnimatableAnnotation, Vec3 } from '@dxos/animation';
+import { AnimatableAnnotation, Vec3 as AnimationVec3 } from '@dxos/animation';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { VectorAnnotationId } from '@dxos/ui-types';
 
 import { ElementEndpoint, Layer } from './element.ts';
 import { NamedStyle2D, NamedStyle3D, Style2D, Style3D, StyleCatalog } from './style.ts';
 
-export { Vec3 };
+/** A 3D vector (a position, scale or rotation); a form stacks one number input per axis. */
+export const Vec3 = AnimationVec3.annotate({ [VectorAnnotationId]: true });
+export type Vec3 = Schema.Schema.Type<typeof Vec3>;
 
-/** A 2D vector; a form shows its axes side by side. */
-export const Vec2 = Schema.Struct({ x: Schema.Number, y: Schema.Number }).pipe(
-  Annotation.FormLayoutAnnotation.set({
-    [Annotation.DEFAULT_LAYOUT_NAME]: '<grid cols="2" fixed="true"><field name="x"/><field name="y"/></grid>',
-  }),
-);
+/** A 2D vector; a form stacks one number input per axis. */
+export const Vec2 = Schema.Struct({ x: Schema.Number, y: Schema.Number }).annotate({ [VectorAnnotationId]: true });
 export type Vec2 = Schema.Schema.Type<typeof Vec2>;
 
-export const Size2 = Schema.Struct({ width: Schema.Number, height: Schema.Number });
+export const Size2 = Schema.Struct({ width: Schema.Number, height: Schema.Number }).annotate({
+  [VectorAnnotationId]: true,
+});
 export type Size2 = Schema.Schema.Type<typeof Size2>;
 
 export const Dimension = Schema.Literals(['2d', '3d']);

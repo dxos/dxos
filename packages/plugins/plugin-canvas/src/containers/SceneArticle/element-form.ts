@@ -4,24 +4,18 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation } from '@dxos/echo';
 import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS } from '@dxos/react-ui-canvas';
 import { type FormFieldMap, type FormFieldOverride, NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { type LayoutIntent, Scene, Style3D, styleFields } from '@dxos/scene';
-import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
+import { VECTOR_AXIS_LAYOUT, VectorAnnotationId } from '@dxos/ui-types';
 
 /** An axis as the form edits it: clearable while typing, and stepped by `step` with the stepper. */
 const axis = (step: number) =>
   Schema.optional(Schema.Number.pipe(StepAnnotation.set(step), NumberLayoutAnnotation.set(VECTOR_AXIS_LAYOUT)));
 
-/** A vector as the form edits it, its axes on one row; a cleared axis takes the default's. */
+/** A vector as the form edits it, one stacked number input per axis; a cleared axis takes the default's. */
 const formVec3 = (step: number) =>
-  Schema.Struct({ x: axis(step), y: axis(step), z: axis(step) }).pipe(
-    Annotation.FormLayoutAnnotation.set({
-      [Annotation.DEFAULT_LAYOUT_NAME]:
-        '<grid cols="3" fixed="true"><field name="x"/><field name="y"/><field name="z"/></grid>',
-    }),
-  );
+  Schema.Struct({ x: axis(step), y: axis(step), z: axis(step) }).annotate({ [VectorAnnotationId]: true });
 
 /** A centre steps one unit of the ground grid's minor lines; a rotation 15 degrees; a scale a tenth. */
 const FormVec3 = formVec3(1);

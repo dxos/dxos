@@ -22,13 +22,8 @@ export const AnimatableAnnotation: Annotation.Annotation<AnimatableKind> = Annot
   schema: AnimatableKind,
 });
 
-/** A 3D vector: a position, a scale, or a rotation in Euler degrees; a form shows its axes side by side. */
-export const Vec3 = Schema.Struct({ x: Schema.Number, y: Schema.Number, z: Schema.Number }).pipe(
-  Annotation.FormLayoutAnnotation.set({
-    [Annotation.DEFAULT_LAYOUT_NAME]:
-      '<grid cols="3" fixed="true"><field name="x"/><field name="y"/><field name="z"/></grid>',
-  }),
-);
+/** A 3D vector: a position, a scale, or a rotation in Euler degrees. */
+export const Vec3 = Schema.Struct({ x: Schema.Number, y: Schema.Number, z: Schema.Number });
 export type Vec3 = Schema.Schema.Type<typeof Vec3>;
 
 /** How the span that ends at a key is shaped; the named curves are cubic, `bezier` a CSS cubic-bezier. */

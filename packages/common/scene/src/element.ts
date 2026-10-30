@@ -9,7 +9,13 @@ import * as Schema from 'effect/Schema';
 
 import { AnimatableAnnotation } from '@dxos/animation';
 import { Annotation } from '@dxos/echo';
-import { HueAnnotationId, NumberLayoutAnnotationId, StepAnnotationId, VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
+import {
+  HueAnnotationId,
+  NumberLayoutAnnotationId,
+  StepAnnotationId,
+  VECTOR_AXIS_LAYOUT,
+  VectorAnnotationId,
+} from '@dxos/ui-types';
 
 import * as Shape from './shape.ts';
 
@@ -36,12 +42,12 @@ const pairLayout = (first: string, second: string) =>
 const gridNumber = (title: string) =>
   Schema.Number.annotate({ title, [StepAnnotationId]: DEFAULT_GRID, [NumberLayoutAnnotationId]: VECTOR_AXIS_LAYOUT });
 
-/** `Point` and `Size` for a node's own frame, laid out as one row each in the properties form. */
+/** `Point` and `Size` for a node's own frame; a form stacks one number input per axis. */
 const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') })
-  .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }))
+  .annotate({ [VectorAnnotationId]: true })
   .pipe(AnimatableAnnotation.set('point'));
 const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') })
-  .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }))
+  .annotate({ [VectorAnnotationId]: true })
   .pipe(AnimatableAnnotation.set('size'));
 
 export const Bounds = Schema.Struct({
