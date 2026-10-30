@@ -51,10 +51,10 @@ export class DataServiceImpl implements DataService.Handlers {
 
   ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, BaseError> {
     // A passive add with heads holds the bytes a query row brought; a function is one call, so nothing it
-    // reads changes under it and fetching the document would undo the point of the row. One without heads
+    // reads changes under it and fetching the document would undo the point of the row. One with no heads
     // holds nothing (a space root waiting on the first send) and is fetched like any other: the full
     // document carries no `passive.json`, so the client loads it.
-    const addIds = (request.add ?? []).filter(({ passive, heads }) => !passive || !heads).map(({ id }) => id);
+    const addIds = (request.add ?? []).filter(({ passive, heads }) => !passive || !heads?.length).map(({ id }) => id);
     const self = this;
     return Effect.gen(function* () {
       const sub =

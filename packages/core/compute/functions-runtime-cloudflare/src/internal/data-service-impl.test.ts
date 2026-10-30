@@ -116,7 +116,11 @@ describe('DataServiceImpl', () => {
     await EffectEx.runPromise(
       impl['DataService.updateSubscription']({ subscriptionId, add: [{ id: 'root', passive: true }] }),
     );
-    expect(requested).toEqual([['root']]);
+    // Re-sent after a dropped subscription by a handle that took a send without JSON and has not loaded yet.
+    await EffectEx.runPromise(
+      impl['DataService.updateSubscription']({ subscriptionId, add: [{ id: 'root', heads: [], passive: true }] }),
+    );
+    expect(requested).toEqual([['root'], ['root']]);
   });
 
   test('a document created from bytes is created empty, then takes the bytes as its first change', async ({
