@@ -44,7 +44,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'MarkdownExtension',
       {
-        environments: ['browser', 'node', 'tauri'],
+        environments: ['browser', 'tauri'],
         // `State` is declared alongside the manager because the provider callbacks read it and it is
         // contributed by this plugin's own idle-gated module, which markdown start can otherwise precede.
         requires: [FileSystemCapabilities.FileSystemManager, FileSystemCapabilities.State],
@@ -72,7 +72,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'State',
       {
-        environments: ['browser', 'node', 'tauri'],
+        environments: ['browser', 'tauri'],
         requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
         provides: [FileSystemCapabilities.State, FileSystemCapabilities.FileSystemManager],
         activatesOn: FileSystemEvents.Start,

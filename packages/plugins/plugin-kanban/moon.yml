@@ -10,7 +10,6 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-  - headless-node
 tasks:
   test-browser:
     deps:

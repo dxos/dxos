@@ -7,7 +7,6 @@ tags:
   - ts-test-workerd
   - ts-test-storybook
   - storybook
-  - headless-node
 tasks:
   # EDGE's operation-service imports this handler set directly, and it declares no condition.
   check-module-structure:

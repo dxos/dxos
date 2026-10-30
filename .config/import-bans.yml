@@ -74,8 +74,7 @@ workerd:
     - '@lezer/common'
     - '@lezer/lr'
 
-# A node build keeps every module without an `environments` list, so only plugins whose node build is
-# meant to be headless (CLI, agents) check it: they opt in with the `headless-node` moon tag.
+# A plugin's node build serves the CLI and agents, so UI-only modules list `['browser', 'tauri']`.
 node:
   ban:
     - react

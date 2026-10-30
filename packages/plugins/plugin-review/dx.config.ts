@@ -101,7 +101,7 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
       // provider callbacks read it and it is contributed by this plugin's own idle-gated module, which
       // markdown start can otherwise precede.
       {
-        environments: ['browser', 'node', 'tauri'],
+        environments: ['browser', 'tauri'],
         requires: [CommentCapabilities.State],
         provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
         activatesOn: MarkdownEvents.Start,

@@ -7,7 +7,6 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-  - headless-node
 tasks:
   deploy-functions:
     command: $workspaceRoot/scripts/dxnext --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-chess/src/operations/commentary.ts

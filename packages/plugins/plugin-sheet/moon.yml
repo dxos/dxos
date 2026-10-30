@@ -9,7 +9,6 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-  - headless-node
 tasks:
   e2e:
     # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,

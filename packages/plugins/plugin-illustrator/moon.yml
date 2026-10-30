@@ -8,7 +8,6 @@ tags:
   - pack
   - storybook
   - ts-test-storybook
-  - headless-node
 
 tasks:
   test:

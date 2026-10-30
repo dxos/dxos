@@ -45,7 +45,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'MarkdownExtension',
       {
-        environments: ['browser', 'node', 'tauri'],
+        environments: ['browser', 'tauri'],
         provides: [MarkdownCapabilities.ExtensionProvider],
         activatesOn: MarkdownEvents.Start,
       },

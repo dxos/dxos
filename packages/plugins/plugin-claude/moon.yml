@@ -4,7 +4,6 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
-  - headless-node
 
 tasks:
   # The manual e2e suites read these, so a cached run with other values must not replay. Credentials

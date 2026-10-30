@@ -119,7 +119,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       Capability.lazyModule(
         'MarkdownExtension',
         {
-          environments: ['browser', 'node', 'tauri'],
+          environments: ['browser', 'tauri'],
           provides: [MarkdownCapabilities.ExtensionProvider],
           activatesOn: MarkdownEvents.Start,
         },

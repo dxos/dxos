@@ -30,7 +30,7 @@ const config: Plugin.PluginConfig<OnboardingOptions> = Plugin.config<OnboardingO
     Capability.lazyModule(
       'DefaultContent',
       {
-        environments: ['browser', 'node', 'tauri'],
+        environments: ['browser', 'tauri'],
         requires: [
           Capabilities.OperationInvoker,
           AppCapabilities.AppGraph,
@@ -64,7 +64,7 @@ const config: Plugin.PluginConfig<OnboardingOptions> = Plugin.config<OnboardingO
     Capability.lazyModule(
       'Onboarding',
       {
-        environments: ['browser', 'node', 'tauri'],
+        environments: ['browser', 'tauri'],
         requires: [
           AppCapabilities.AppGraph,
           Capabilities.OperationInvoker,

@@ -172,7 +172,7 @@ Phase 1, before the PR. The skeleton should include:
 
 1. `README.md` — brief description of the plugin's purpose, linking to `docs/DESIGN.md`.
 2. `package.json` — with `"private": true`, the `#meta` import alias and `./FooPlugin` export subpath (both point at `dx.config.ts`; see **package.json**), and minimal dependencies.
-3. `moon.yml` — tags, including `headless-node` when the plugin's node build must stay UI-free (`check-module-structure` itself is inherited).
+3. `moon.yml` — tags (`check-module-structure` itself is inherited).
 4. `src/namespace.ts` — `export const FooNamespace = Plugin.namespace('org.dxos.plugin.foo')`, a leaf both `dx.config.ts` and the capability tags derive from.
 5. `src/translations.ts` — initial translation resources.
 6. `dx.config.ts` — `Plugin.config({ plugin, modules })` with key, name, author, description, icon, a **quality tier tag** (see below), surface and translations modules, and `export const { meta, make } = config; export default config;` (see **Plugin Definition**).
@@ -653,8 +653,8 @@ A package that reads its own files at runtime needs a bundler-friendly entry too
 
 Every composer plugin inherits `check-module-structure` (`.moon/tasks/tag-composer-plugin.yml`), and CI
 runs `moon run :check-module-structure`. It traces every export that declares `workerd` against the `workerd`
-lists of `.config/import-bans.yml`; a plugin tagged `headless-node` also traces its `node` exports against the
-`node` lists (React and `@dxos/react-ui`). Diagnose a failure by printing the chain:
+lists of `.config/import-bans.yml`, and every export that declares `node` against the `node` lists (React and
+`@dxos/react-ui`). Diagnose a failure by printing the chain:
 
 ```bash
 pnpm exec dx-trace-imports --conditional-exports --bans ../../../.config/import-bans.yml \
@@ -723,8 +723,7 @@ See: `plugin-chess/package.json`
 
 Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args
 (vite-built plugins: a matching `entry` in `vite.config.ts`, including `capabilities/node`).
-A plugin whose node variant must stay UI-free carries the `headless-node` tag, which adds the node set to the
-inherited `check-module-structure` — see **Non-Browser Variants**. A subpath that declares no condition but is
+The inherited `check-module-structure` traces the workerd and node variants — see **Non-Browser Variants**. A subpath that declares no condition but is
 imported by a headless host is named with a local `args: [--export, <subpath>]` (`plugin-tasks/moon.yml`).
 
 See: `plugin-chess/moon.yml`

@@ -8,7 +8,6 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-  - headless-node
 
 tasks:
   # Scores the recorded walkthrough corpus. Local-only: it reads fixtures, not the build graph, and
