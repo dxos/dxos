@@ -18,17 +18,17 @@ import { composerPlugin } from './composer-plugin.ts';
 describe('Composer Plugin project template', () => {
   let builder: EchoTestBuilder;
 
-  test("does not share the id of plugin-projects' template, which a browser may offer beside it", ({ expect }) => {
-    expect(composerPlugin?.id).toBe('org.dxos.project.composerPluginDevServer');
-    expect(composerPlugin?.label).toBe('Composer Plugin (Dev Server)');
-  });
-
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
   });
 
   afterEach(async () => {
     await builder.close();
+  });
+
+  test("does not share the id of plugin-projects' template, which a browser may offer beside it", ({ expect }) => {
+    expect(composerPlugin?.id).toBe('org.dxos.project.composerPluginDevServer');
+    expect(composerPlugin?.label).toBe('Composer Plugin (Dev Server)');
   });
 
   test('one add persists a parent task over four chained subtasks', async ({ expect }) => {
