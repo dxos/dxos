@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install the moon remote-cache client certificate for this machine.
 #
-#   ./install-certs.sh --op [vault]     from 1Password (default vault: CI)
+#   ./install-certs.sh --op [vault]     from 1Password (default vault: eng-ops)
 #   ./install-certs.sh <source-dir>     from a directory holding ca.pem, client.pem, client.key
 #   ./install-certs.sh --worktree ...   into ./.moon/certs instead (see below)
 #
@@ -28,11 +28,11 @@ SRC="${1:?usage: install-certs.sh [--worktree] (--op [vault] | <source-dir>)}"
 mkdir -p "$CERT_HOME"
 
 if [ "$SRC" = "--op" ]; then
-  vault="${2:-CI}"
+  vault="${2:-eng-ops}"
   command -v op >/dev/null || { echo "1Password CLI (op) not installed: brew install 1password-cli"; exit 1; }
-  # One item, one field per file.
-  for file in ca.pem client.pem client.key; do
-    op read "op://$vault/moon-cache-certs/$file" --out-file "$CERT_HOME/$file" --force > /dev/null
+  # The client files are fields of the `dev.moonrepo` record's `ci` section, one per file.
+  for pair in ca.pem:CA_PEM client.pem:CLIENT_PEM client.key:CLIENT_KEY; do
+    op read "op://$vault/dev.moonrepo/ci/${pair#*:}" --out-file "$CERT_HOME/${pair%%:*}" --force > /dev/null
   done
 else
   for file in ca.pem client.pem client.key; do

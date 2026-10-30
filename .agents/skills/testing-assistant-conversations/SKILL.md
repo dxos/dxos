@@ -51,19 +51,19 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
 
 ### Requirements for regeneration
 
-1. **Credentials** — API keys must be in the environment. In this repo, load 1Password-injected env from the workspace root:
-   - **fish:** `eval (pnpm -ws 1p-credentials)`
-   - **bash/zsh:** `eval "$(pnpm -ws 1p-credentials)"`
+1. **Credentials** — API keys must be in the environment. In this repo, wrap the test command in `op run`, which resolves the reference into that one process and fails loudly when it cannot:
+   - `DX_ANTHROPIC_API_KEY=op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY op run -- <command>`
 
-   The script is the `1p-credentials` package script (runs `op inject` over inlined `op://` references — the Anthropic key is `op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY`; the full env template lives in the dxos/edge repo as `.env.tpl`). An agent runs it only when `OP_SERVICE_ACCOUNT_TOKEN` is set; in a local session it would pop a 1Password prompt, so ask the user to export the keys in their shell instead (see the `1password` skill).
+   Never `eval` the output of `op inject`: the shell would parse the secret values as code. An agent runs `op` only when `OP_SERVICE_ACCOUNT_TOKEN` is set; in a local session it would pop a 1Password prompt, so ask the user to export the keys in their shell instead (see the `1password` skill).
 
 2. **Run tests with generation:**
 
    ```bash
-   DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test
+   DX_ANTHROPIC_API_KEY=op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY DX_UPDATE_MODEL_FIXTURES=1 \
+     op run -- moon run assistant-toolkit:test
    ```
 
-   Or all memoized-LLM packages: `DX_UPDATE_MODEL_FIXTURES=1 moon run '#model-fixture:test'`.
+   Or all memoized-LLM packages: the same `op run` prefix with `moon run '#model-fixture:test'`.
 
 3. **Commit** updated `.store/conversations/**` files.
 
@@ -82,7 +82,7 @@ Effects that use memoization **must** end with **`TestHelpers.provideTestContext
 ### Real LLM calls and `DX_ANTHROPIC_API_KEY`
 
 The default `aiServicePreset: 'direct'` calls the Anthropic API directly. Set `DX_ANTHROPIC_API_KEY`
-(via `pnpm -ws 1p-credentials` or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
+(via the `op run` wrapper above or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
 memoized cache with `DX_UPDATE_MODEL_FIXTURES=1`. Use `DX_ANTHROPIC_API_KEY`, not `ANTHROPIC_API_KEY`
 (the latter breaks Claude Code). Normal cached runs need no key. Works for both direct operation
 invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/skills/skill-manager/skill.test.ts`.
@@ -121,5 +121,5 @@ Include every ECHO type instances may have: skill metadata types, domain objects
 
 - [ ] `AssistantTestLayer` (or WithTriggers) with correct `operationHandlers` and `types`.
 - [ ] `Effect.provide(TestLayer)` + `TestHelpers.provideTestContext` for memoized LLM tests.
-- [ ] New/changed prompts → regenerate with `DX_UPDATE_MODEL_FIXTURES=1` + `1p-credentials`, commit `.store/conversations/**`.
+- [ ] New/changed prompts → regenerate with `DX_UPDATE_MODEL_FIXTURES=1` under `op run`, commit `.store/conversations/**`.
 - [ ] Package has `model-fixture` tag if tests use memoization (for CI grouping).

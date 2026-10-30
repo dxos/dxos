@@ -47,9 +47,9 @@ const NPM_TRUST_MIN_VERSION = [11, 15, 0];
 
 // The npm-bot account (see the npm-publishing skill).
 const OP_NPM_BOT = {
-  username: 'op://CI/NPM bot/username',
-  password: 'op://CI/NPM bot/password',
-  otp: 'op://CI/NPM bot/one-time password?attribute=otp',
+  username: 'op://eng-ops/com.npmjs/BOT_USERNAME',
+  password: 'op://eng-ops/com.npmjs/BOT_PASSWORD',
+  otp: 'op://eng-ops/com.npmjs/BOT_TOTP?attribute=otp',
 };
 
 const USAGE =

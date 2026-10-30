@@ -251,9 +251,9 @@ the droplet and the CI secrets** — treat the CA key accordingly.
 `ca.key` signs new clients. It must never reach the droplet, the repository, or CI — only the
 operator's machine and whatever the team uses for shared secrets.
 
-All six files live in one 1Password item — `moon-cache-certs` in the `CI` vault, one concealed
-field per file. `install-certs.sh --op` reads the three client files from it; `ca.key` is stored
-there but never fetched by that path.
+All six files live in the `dev.moonrepo` record in the `eng-ops` vault, one concealed field per
+file: the three client files in its `ci` section (`CA_PEM`, `CLIENT_PEM`, `CLIENT_KEY`) and `CA_KEY`,
+`SERVER_PEM`, `SERVER_KEY` at the top level. `install-certs.sh --op` reads the three `ci` fields.
 
 CI reads three of them from repository secrets — `MOON_CACHE_CA_PEM`, `MOON_CACHE_CLIENT_PEM`,
 `MOON_CACHE_CLIENT_KEY`. Set them from files rather than pasting, so the trailing newline

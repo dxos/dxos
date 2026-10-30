@@ -37,22 +37,38 @@ because the token is present.
 
 - **Cloud sandbox:** `.config/claude-code-setup.sh` installs `op`, and the environment provides
   `OP_SERVICE_ACCOUNT_TOKEN`. The service account sees only the vaults it was granted,
-  currently **`CI`** and **`eng-dev`**; `eng-dev` holds the Anthropic key (`op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY`, read by `pnpm -ws 1p-credentials`) and the agents fixtures key (`private-fixtures` skill). If `op` is missing because setup did not run, rerun the step labelled
+  currently **`eng-dev`**. If `op` is missing because setup did not run, rerun the step labelled
   `# 2.` in that script.
 - **Local session (no token):** skip `op`. If the shell check above found nothing, use
   the `.secrets/` flow (`AGENTS.md` → "Handing an agent a credential"). If the user
   keeps the value in 1Password, name the `op://` reference and let them run `op` themselves.
 - **Token set but the item is unreachable:** say so once, then use the `.secrets/` flow.
 
+## Key layout
+
+Two vaults, split by trust, hold different environments:
+
+| Vault     | Holds                                                                        | Read by                       |
+| --------- | ---------------------------------------------------------------------------- | ----------------------------- |
+| `eng-dev` | `local` and `dev` values, developer and agent tools (`.env.tpl`)             | every engineer, the agents    |
+| `eng-ops` | `production`, `preview`, `staging`, `ci` values; deploy, release, infra keys | deployers, CI, infra accounts |
+
+A reference is `op://<vault>/<reverse-dns vendor>/[<env>/]<FIELD>`, for example
+`op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY`. The record is the vendor's domain in reverse
+order (`com.cloudflare`, `app.linear`); a field at the top level is shared by the vault's environments,
+and a field in an environment section belongs to that environment only. The legacy `CI` vault is being
+retired: never add a reference to it. The full layout is in dxos/edge
+`docs/audits/credentials/AUDIT.md`.
+
 ## Find the item
 
 Search by title only. `op item list` never prints secret values:
 
 ```bash
-op item list --vault CI --format json | python3 -c "import sys,json
+op item list --vault eng-dev --format json | python3 -c "import sys,json
 for i in json.load(sys.stdin): print(i['category'], '|', i['title'])"
-op item get '<title>' --vault CI --format json |
-  python3 -c "import sys,json; print([f['label'] for f in json.load(sys.stdin)['fields']])"
+op item get '<title>' --vault eng-dev --format json |
+  python3 -c "import sys,json; print([((f.get('section') or {}).get('label'), f['label']) for f in json.load(sys.stdin)['fields']])"
 ```
 
 A service account must pass `--vault` to every item command. Without it you get
@@ -65,10 +81,10 @@ Choose the narrowest form that works:
 
 | Need                          | Command                                                         |
 | ----------------------------- | --------------------------------------------------------------- |
-| Env vars for one command      | `FOO='op://CI/<item>/credential' op run -- <cmd>`               |
+| Env vars for one command      | `FOO='op://eng-dev/<record>/<FIELD>' op run -- <cmd>`           |
 | A whole `.env` of references  | `op run --env-file=.env.tpl -- <cmd>`                           |
 | Render a template to a file   | `op inject -i .env.tpl -o .env` (the output must be gitignored) |
-| One value in a shell variable | `X="$(op read -n 'op://CI/<item>/credential')"`                 |
+| One value in a shell variable | `X="$(op read -n 'op://eng-dev/<record>/<FIELD>')"`             |
 
 - `op run` replaces any secret it sees in the child's stdout/stderr with
   `<concealed by 1Password>`. That makes it the safest form, and the only one that protects a
