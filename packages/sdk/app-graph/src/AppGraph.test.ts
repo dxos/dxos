@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -283,6 +284,46 @@ describe('Graph', () => {
     });
     Graph.addNode(graph, Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }));
     expect(changes).toEqual(0);
+  });
+
+  test('an action copied from another node keeps its own forwarder', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    const action = (id: string, name: string) =>
+      Node.makeAction({ id, data: () => Effect.sync(() => invoked.push(name)), properties: {} });
+    Graph.addNode(graph, action(exampleId(1), 'a'));
+    const copied = Graph.getNode(graph, exampleId(1)).pipe(Option.getOrThrow);
+    Graph.addNode(graph, { ...copied, id: exampleId(2) });
+    Graph.addNode(graph, action(exampleId(2), 'b'));
+
+    for (const id of [exampleId(1), exampleId(2)]) {
+      const node = Graph.getNode(graph, id).pipe(Option.getOrThrow);
+      assert.ok(Node.isAction(node));
+      Effect.runSync(node.data());
+    }
+    expect(invoked).toEqual(['a', 'b']);
+  });
+
+  test('re-offering an action with a new context updates it', () => {
+    const graph = Graph.make();
+    const invoke = () => Effect.void;
+    const withContext = (context: Node.ActionContext) => {
+      const action = { ...Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }), _actionContext: context };
+      return action;
+    };
+    // Distinct contexts: `Context.empty()` is one shared instance, which would hide a stale context.
+    const Value = Context.Service<number>('app-graph/test/Value');
+    const second = Context.make(Value, 2);
+    Graph.addNode(graph, withContext(Context.make(Value, 1)));
+    Graph.addNode(graph, withContext(second));
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    expect(node._actionContext).toBe(second);
+  });
+
+  test('a constructor-seeded node without data keeps null data', () => {
+    const graph = Graph.make({ nodes: [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, properties: {} }] });
+    expect(Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow).data).toBeNull();
   });
 
   test('add edge', () => {

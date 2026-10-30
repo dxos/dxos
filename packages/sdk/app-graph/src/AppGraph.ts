@@ -214,8 +214,8 @@ export const getGraph = (node: Node.Node): Graph => {
   return graph as Graph;
 };
 
-/** The latest closure a node's stable `data` forwarder calls; see {@link stableData}. */
-type Forwarded = { target: (...args: unknown[]) => unknown };
+/** The latest closure a node's stable `data` forwarder calls, and the node it belongs to; see {@link stableData}. */
+type Forwarded = { target: (...args: unknown[]) => unknown; readonly owner: string };
 
 /**
  * The Graph represents the user interface information architecture of the application constructed via plugins.
@@ -378,7 +378,12 @@ export class GraphImpl implements WritableGraph {
     this._model.batch(() => {
       this._setNode(GraphNode.RootId, this._constructNode({ id: GraphNode.RootId, type: Node.RootType, data: null }));
       nodes?.forEach((node) =>
-        this._setNode(node.id, this._constructNode({ ...node, data: stableData(this, undefined, node.data) })),
+        this._setNode(
+          node.id,
+          this._constructNode(
+            typeof node.data === 'function' ? { ...node, data: stableData(this, node.id, undefined, node.data) } : node,
+          ),
+        ),
       );
       Object.entries(edges ?? {}).forEach(([source, relations]) => {
         Object.entries(relations).forEach(([relation, targets]) => {
@@ -845,17 +850,23 @@ export const addNodes = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<
  * forwarder per node whose target is swapped: a re-offer that changes nothing else emits nothing,
  * and invoking the node still runs the latest closure.
  */
-const stableData = (internal: GraphImpl, existing: unknown, data: any): any => {
-  // A forwarder read back from the graph is kept as is: retargeting a cell at its own forwarder would recurse.
-  if (typeof data !== 'function' || internal._forwarded.has(data)) {
+const stableData = (internal: GraphImpl, id: string, existing: unknown, data: any): any => {
+  if (typeof data !== 'function') {
     return data;
   }
+  const offered = internal._forwarded.get(data);
+  // A node's own forwarder read back and re-added is kept: retargeting it at itself would recurse.
+  if (offered?.owner === id) {
+    return data;
+  }
+  // Another node's forwarder is unwrapped, so retargeting this node never redirects that one.
+  const target = offered ? offered.target : data;
   const current = typeof existing === 'function' ? internal._forwarded.get(existing) : undefined;
-  if (current) {
-    current.target = data;
+  if (current?.owner === id) {
+    current.target = target;
     return existing;
   }
-  const cell: Forwarded = { target: data };
+  const cell: Forwarded = { target, owner: id };
   const forwarder = (...args: unknown[]) => cell.target(...args);
   internal._forwarded.set(forwarder, cell);
   return forwarder;
@@ -883,20 +894,23 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
-      const nextData = stableData(internal, existing.data, data);
+      const nextData = stableData(internal, id, existing.data, data);
       const dataChanged = !shallowEqual(existing.data, nextData);
       const propertiesChanged = Object.keys(properties).some(
         (key) => !Equal.equals(existing.properties[key], properties[key]),
       );
+      // The forwarder keeps `data` stable, so the context an action runs with is compared on its own.
+      const contextChanged = (Node.isAction(existing) ? existing._actionContext : undefined) !== rest._actionContext;
       // `changed` is on the visit log because counting `existing node` lines alone measures how often a
       // node was re-offered, not how often it actually changed — two very different costs.
-      const changed = typeChanged || dataChanged || propertiesChanged;
+      const changed = typeChanged || dataChanged || propertiesChanged || contextChanged;
       log('existing node', {
         id,
         changed,
         typeChanged,
         dataChanged,
         propertiesChanged,
+        contextChanged,
       });
       if (changed) {
         log('updating node', { id, type, data, properties });
@@ -919,7 +933,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
       const newNode = internal._constructNode({
         id,
         type,
-        data: stableData(internal, undefined, data),
+        data: stableData(internal, id, undefined, data),
         properties,
         ...rest,
       });
