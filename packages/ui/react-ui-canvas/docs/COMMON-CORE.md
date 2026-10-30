@@ -91,7 +91,8 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
    `useCanvasNavigation`, `useCanvasEditing`); panels and inspectors are composite parts reading those hooks; each
    dimension's `DimensionConfig` supplies its implementations behind the same hooks.
    0a. The work runs phases 0 → A → B → C (order kept) until both editors run on the shared core, delivering storybooks
-   for every panel and inspector with 2D and 3D variants, and storybooks for the 2D and 3D editors.
+   for every panel and inspector with 2D and 3D variants (including the new **Styles** inspector), storybooks for the
+   2D and 3D editors, and storybooks for 2D and 3D animations (the shared Timeline panel over animator shots).
 
 These are the acceptance criteria; any place the work would break one is raised with the user before it is built.
 
