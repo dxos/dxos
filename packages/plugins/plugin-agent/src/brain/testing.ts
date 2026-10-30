@@ -12,11 +12,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Agent from '@dxos/assistant/Agent';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Space } from '@dxos/halo';
 import { IdentityDid } from '@dxos/keys';
 
+import { BrainSkill } from '#skills';
 import { AgentOperation, BrainService } from '#types';
 
 import * as BrainMemory from './BrainMemory.ts';
@@ -34,11 +36,14 @@ export type TestBrainOptions = {
 
 /**
  * Creates an agent whose chats run in the test's runtime: an agent's chats default to EDGE, which a test
- * has none of, and its participant chats take the primary chat's location.
+ * has none of, and its participant chats take the primary chat's location. Its instructions, which every
+ * chat of the agent shares, turn the brain's hooks on.
  */
 export const createLocalAgent = Effect.fnUntraced(function* (name: string) {
   const created = yield* Operation.invoke(AgentOperation.CreateAgent, { name });
-  const chat = yield* Agent.loadChat(yield* Database.load(created.agent));
+  const agent = yield* Database.load(created.agent);
+  Hook.enable(yield* Database.load(agent.instructions), BrainSkill.hooks);
+  const chat = yield* Agent.loadChat(agent);
   if (chat) {
     Obj.update(chat, (chat) => {
       chat.remote = false;

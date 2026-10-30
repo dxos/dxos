@@ -15,6 +15,7 @@ import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Hook from '@dxos/compute/Hook';
+import type * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
@@ -42,6 +43,8 @@ export interface CreateSessionOptions {
   readonly location?: AgentService.AgentLocation;
   /** Admits the operations the agent invokes that declare requirements (see `AgentService.GetSessionOptions.guard`). */
   readonly guard?: Process.Guard;
+  /** Steers the session's chat; its hook settings apply to the session's requests. */
+  readonly instructions?: Instructions.Instructions;
 }
 
 /**
@@ -68,7 +71,11 @@ export const createSession: (
     // The agent process runs on a chat, so the conversation gets one even when the caller only
     // wanted a bare session; the model is the chat's own, which is where the process reads it from.
     const chat = yield* Database.add(
-      Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { session: { model: opts.model } } : {}) }),
+      Chat.make({
+        feed: Ref.make(feed),
+        ...(opts?.instructions ? { instructions: Ref.make(opts.instructions) } : {}),
+        ...(opts?.model ? { session: { model: opts.model } } : {}),
+      }),
     );
     return yield* AgentService.getSession(chat, {
       provider: opts?.provider,
@@ -120,7 +127,7 @@ export interface Options {
   resident?: boolean;
   /** The MCP server a connection exposes (see `AgentProcessOptions.mcpEndpoint`). */
   mcpEndpoint?: McpEndpointOf;
-  /** Lifecycle hooks the agent process runs (see `AgentProcessOptions.hooks`). */
+  /** Lifecycle hooks the agent process can run (see `AgentProcessOptions.hooks`). */
   hooks?: () => readonly Hook.Definition[];
 }
 

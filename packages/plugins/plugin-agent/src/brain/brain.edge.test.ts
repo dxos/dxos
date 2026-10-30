@@ -17,6 +17,7 @@ import { type Space } from '@dxos/client/echo';
 import { performInvitation } from '@dxos/client/testing';
 import { ProcessManager, RemoteTraceMonitor, UnifiedProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -183,6 +184,8 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
     const space = await alice.client.spaces.create();
     await replicate(space);
     alice.space = space;
+    // The space turns the brain's hooks on for every agent in it, on EDGE as locally.
+    Hook.enable(space.properties, BrainSkill.hooks);
     const agent = await run(alice, makeAgent);
     await space.internal.syncToEdge();
 

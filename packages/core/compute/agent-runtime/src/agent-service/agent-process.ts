@@ -36,7 +36,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Actor, ContentBlock, Message } from '@dxos/types';
@@ -98,13 +98,16 @@ export interface AgentProcessOptions {
   mcpEndpoint?: McpEndpointOf;
 
   /**
-   * Lifecycle hooks the host knows, read at each request's end. One scoped to a skill fires only while
-   * that skill is bound.
+   * The lifecycle hooks this host can run. Which of them a request runs is up to the space's and the
+   * instructions' {@link Hook.SettingsAnnotation}, resolved when the request begins.
    */
   hooks?: () => readonly Hook.Definition[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
+
+/** `SpaceProperties` (`@dxos/client-protocol`), by typename: the space's hook settings are on it. */
+const SPACE_PROPERTIES_TYPENAME = 'org.dxos.type.spaceProperties';
 
 const AgentPrompt = Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]);
 
@@ -330,14 +333,34 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           yield* ctx.setAlarm(0);
         });
 
-        // Fires the end-request hooks that apply to this conversation (e.g. the planning plan-reminder), each as a
-        // child operation with `conversation` set so it can read the conversation. Returns whether one queued a
-        // follow-up, which continues the request instead of ending it. A failing hook is logged and skipped,
-        // so it cannot abort the request or its sibling hooks.
+        // Snapshots the end-request hooks the settings turn on for the request now beginning, and records any
+        // enabled hook this host lacks or whose skill is not bound, so a hook that did not run is still on file.
+        const resolveRequestHooks = Effect.gen(function* () {
+          const [properties] = yield* Database.query(Filter.type(DXN.make(SPACE_PROPERTIES_TYPENAME))).run;
+          const resolution = Hook.resolve({
+            catalog: options.hooks?.() ?? [],
+            event: 'end-request',
+            space: properties && Annotation.get(properties, Hook.SettingsAnnotation).pipe(Option.getOrUndefined),
+            instructions:
+              instructions && Annotation.get(instructions, Hook.SettingsAnnotation).pipe(Option.getOrUndefined),
+            skillKeys: new Set(session.getSkills().flatMap((skill) => Obj.getMeta(skill).key ?? [])),
+          });
+          const run = resolution.run.map((hook) => hook.key);
+          if (run.length + resolution.inactive.length + resolution.missing.length > 0) {
+            yield* Trace.write(Trace.AgentHooksResolved, { ...resolution, run });
+          }
+          yield* RequestHooksCell.set(run);
+        });
+
+        // Fires the end-request hooks snapshotted when the request began, each as a child operation with
+        // `conversation` set so it can read the conversation. Returns whether one queued a follow-up, which
+        // continues the request instead of ending it. A failing hook is logged and skipped, so it cannot abort
+        // the request or its sibling hooks.
         const runEndRequestHooks = Effect.gen(function* () {
-          const skillKeys = new Set(session.getSkills().flatMap((skill) => Obj.getMeta(skill).key ?? []));
+          const catalog = options.hooks?.() ?? [];
+          const hooks = (yield* RequestHooksCell.get).flatMap((key) => catalog.filter((hook) => hook.key === key));
           let followedUp = false;
-          for (const hook of Hook.forEvent(options.hooks?.() ?? [], 'end-request', skillKeys)) {
+          for (const hook of hooks) {
             yield* Effect.gen(function* () {
               const handle = yield* Process.spawn(
                 OperationProcess.make(hook.operation),
@@ -650,6 +673,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('begin request', { prompt });
               log('trace agent request begin');
               yield* Trace.write(Trace.AgentRequestBegin, {});
+              yield* resolveRequestHooks;
               const mcpContext = yield* Effect.context<
                 Database.Service | Registry.Service | Credential.CredentialsService
               >();
@@ -884,6 +908,12 @@ type Delegation = Schema.Schema.Type<typeof Delegation>;
 const DelegationsCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
+).pipe(StorageService.withDefault(() => []));
+
+/** Keys of the end-request hooks the current request runs, snapshotted when it began. */
+const RequestHooksCell = StorageService.cell(
+  Schema.fromJsonString(Schema.Array(Schema.String).pipe(Schema.mutable)),
+  'requestHooks',
 ).pipe(StorageService.withDefault(() => []));
 
 /** Pids of background ({@link Hook.Definition.async}) end-request hooks the process is waiting on. */

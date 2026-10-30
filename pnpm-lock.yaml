@@ -4467,6 +4467,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../../sdk/client-protocol
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors

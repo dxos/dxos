@@ -17,9 +17,11 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Hook from '@dxos/compute/Hook';
+import * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
-import { Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import * as Observability from '@dxos/observability/Observability';
@@ -102,7 +104,7 @@ const setup = ({ reportStruggles, telemetry }: { reportStruggles: boolean; telem
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
-  types: [Chat.Chat, Feed.Feed, Message.Message, Skill.Skill],
+  types: [Chat.Chat, Feed.Feed, Instructions.Instructions, Message.Message, Skill.Skill],
   skills: [TurnReviewSkill.make()],
   agent: { hooks: () => TurnReviewSkill.hooks },
   // The reviewer gets the verdict; the conversational turn gets a plain reply.
@@ -120,7 +122,9 @@ const MODEL = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 
 /** Runs one turn with the turn-review skill bound and waits for the agent process, hooks included, to finish. */
 const runTurn = Effect.fnUntraced(function* () {
-  const session = yield* AgentService.createSession({ skills: [TurnReviewSkill.make()], model: MODEL });
+  const instructions = yield* Database.add(Instructions.make({}));
+  Hook.enable(instructions, TurnReviewSkill.hooks);
+  const session = yield* AgentService.createSession({ skills: [TurnReviewSkill.make()], model: MODEL, instructions });
   yield* session.submitPrompt('Find my notes.');
   yield* session.waitForCompletion();
   const processManager = yield* ProcessManager.ProcessManagerService;

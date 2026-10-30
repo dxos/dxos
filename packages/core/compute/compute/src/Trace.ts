@@ -677,6 +677,19 @@ export const AgentRequestEnd = EventType('assistant.agentRequestEnd', {
 });
 
 /**
+ * The end-request hooks a request's settings turn on, resolved when it begins (see `Hook.resolve`).
+ * Written only when a hook is enabled, so the record of a hook that could not run here outlives the run.
+ */
+export const AgentHooksResolved = EventType('assistant.agentHooksResolved', {
+  schema: Schema.Struct({
+    run: Schema.Array(Schema.String),
+    inactive: Schema.Array(Schema.String),
+    missing: Schema.Array(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Emitted by the supervisor when a delegated task is handed to a sub-agent process; the only durable
  * record of the task ↔ pid pairing, since nothing is stamped on the task itself.
  */

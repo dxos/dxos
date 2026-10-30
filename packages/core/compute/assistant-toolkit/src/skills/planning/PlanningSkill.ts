@@ -42,7 +42,9 @@ export const make = () =>
   });
 
 /** At the end of every request, reminds the agent to keep working while its plan has open tasks. */
-export const hooks: Hook.Definition[] = [{ event: 'end-request', skill: key, operation: PlanReminder }];
+export const hooks: Hook.Definition[] = [
+  { key: 'org.dxos.hook.planning.planReminder', event: 'end-request', skill: key, operation: PlanReminder },
+];
 
 export { PlanningHandlers as Handlers } from './operations/index.ts';
 export * as Operations from './operations/definitions.ts';

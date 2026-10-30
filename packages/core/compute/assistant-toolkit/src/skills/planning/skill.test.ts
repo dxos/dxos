@@ -11,6 +11,8 @@ import { LanguageModelFixture } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
+import { SpaceProperties } from '@dxos/client-protocol';
+import * as Hook from '@dxos/compute/Hook';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -38,6 +40,7 @@ const TestLayer = AssistantTestLayer({
     Feed.Feed,
     Message.Message,
     AiContext.Binding,
+    SpaceProperties,
   ],
   tracing: 'pretty',
 });
@@ -116,6 +119,7 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
  * author them keeps the two cases differing only in the prompt.
  */
 const setupChatWithChecklist = Effect.fnUntraced(function* () {
+  Hook.enable(yield* Database.add(Obj.make(SpaceProperties, {})), PlanningSkill.hooks);
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
   // The checklist goes on the session's own chat — the one the harness resolves for the
   // conversation. A second chat on the same feed would be invisible to the planning tools.
