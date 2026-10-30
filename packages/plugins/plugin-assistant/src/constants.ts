@@ -34,3 +34,9 @@ export const ASSISTANT_DIALOG = DXN.make(`${AssistantNamespace.key}.assistantDia
 
 /** Companion variant identifier for the assistant chat panel. */
 export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';
+
+/** Segment of the assistant panel within a space's settings section. */
+export const SPACE_SETTINGS_ID = 'assistant';
+
+/** Node type, and surface data, of the assistant panel within a space's settings section. */
+export const SPACE_SETTINGS_TYPE = `${AssistantNamespace.key}.space-settings`;
