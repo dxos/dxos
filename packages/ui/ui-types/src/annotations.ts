@@ -18,8 +18,8 @@ export type NumberLayout = {
 /** A number field's {@link NumberLayout}; a vector's axes declare it so their figures line up in columns. */
 export const NumberLayoutAnnotationId = '@dxos/schema/annotation/NumberLayout';
 
-/** A vector's axes, in 2D and 3D alike: small, figures aligned in columns, steppers out of the way until hovered. */
-export const VECTOR_AXIS_LAYOUT: NumberLayout = { align: 'end', stepperOnHover: true, size: 'sm' };
+/** A vector's axes, in 2D and 3D alike: figures aligned in columns, steppers out of the way until hovered. */
+export const VECTOR_AXIS_LAYOUT: NumberLayout = { align: 'end', stepperOnHover: true };
 
 /**
  * Marks a struct of numeric axes (`x`/`y`/`z`, `width`/`height`) as a vector, so a form stacks one labelled number input

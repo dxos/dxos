@@ -20,7 +20,7 @@ describe('numberLayoutOf', () => {
     expect(numberLayoutOf(Schema.Number.ast)).toEqual({});
   });
 
-  test("a vector's axes are small inputs, so three fit a row", () => {
-    expect(VECTOR_AXIS_LAYOUT.size).toBe('sm');
+  test("a vector's axes take the default input size, now that they stack one per row", () => {
+    expect(VECTOR_AXIS_LAYOUT.size).toBeUndefined();
   });
 });
