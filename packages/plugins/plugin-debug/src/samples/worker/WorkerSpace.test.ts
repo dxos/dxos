@@ -8,6 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Feature from '@dxos/plugin-projects/Feature';
+import * as FeatureEmbed from '@dxos/plugin-projects/FeatureEmbed';
 
 import { SPEC_PATH } from './spec.ts';
 import * as WorkerSpace from './WorkerSpace.ts';
@@ -30,6 +31,7 @@ type Archived = {
   'title'?: string;
   'status'?: string;
   'document'?: { '/': string };
+  'content'?: string | { '/': string };
   'spec'?: { '/': string };
   'features'?: Array<{ '/': string }>;
   '@relationSource'?: string;
@@ -129,6 +131,12 @@ describe('Worker template', () => {
       const document = ofType('type.specDocument:').find(({ id }) => map?.document?.['/'] === `echo:///${id}`);
       expect(document).toBeDefined();
       expect(document?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      // F-1 is embedded where its block stood, and F-2 to F-4, which have no block yet, after it.
+      const content = document?.content;
+      const text = typeof content === 'object' ? byRef(content)?.content : undefined;
+      expect(typeof text).toBe('string');
+      expect(FeatureEmbed.parse(String(text)).map(({ id }) => id)).toEqual(features.map(({ id }) => id));
+      expect(text).not.toMatch(/^feat F-/m);
       for (const feature of features) {
         expect(Feature.getSpecPath(sourcesOf(feature)[0] ?? '')).toBe(SPEC_PATH);
       }
