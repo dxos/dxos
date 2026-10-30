@@ -1,0 +1,133 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { createTimeline, setKey } from '@dxos/animation';
+import { Dsl } from '@dxos/diagram';
+import { type EditorShot } from '@dxos/react-ui-canvas';
+import { between } from '@dxos/react-ui-canvas/headless';
+import { type Layer, type Scene } from '@dxos/scene';
+
+const background: Layer = { id: 'background', name: 'Background', z: between() };
+const diagram: Layer = { id: 'diagram', name: 'Diagram', z: between(background.z) };
+const LAYERS = { background, diagram };
+
+/**
+ * Two layers, two named styles and the parts a story needs in each dimension: placed objects, a style reference and a
+ * link, so every inspector has rows and Properties has fields.
+ */
+const withExtras = (
+  document: Scene.SceneDocument,
+  styles: { layout: Readonly<Record<string, string>>; model: Readonly<Record<string, object>> },
+): Scene.SceneDocument => ({
+  ...document,
+  layouts: document.layouts.map((layout) =>
+    layout.dim === '2d'
+      ? {
+          ...layout,
+          layers: LAYERS,
+          elements: Object.fromEntries(
+            Object.entries(layout.elements).map(([id, element]) => [
+              id,
+              styles.layout[id] ? { ...element, style: styles.layout[id] } : element,
+            ]),
+          ),
+        }
+      : {
+          ...layout,
+          layers: LAYERS,
+          elements: Object.fromEntries(
+            Object.entries(layout.elements).map(([id, element]) => [
+              id,
+              styles.layout[id] ? { ...element, style: styles.layout[id] } : element,
+            ]),
+          ),
+        },
+  ),
+  models: document.models.map((model) => ({ ...model, styles: { ...model.styles, ...styles.model } })),
+});
+
+/** A 2D board: three shapes on the diagram layer, a note on the background, two links and two named styles. */
+export const DOCUMENT_2D: Scene.SceneDocument = withExtras(
+  Dsl.readScenes(`scene board dim=2d layout=board name="Board" theme=flat {
+  camera center=256,64 zoom=1
+}
+
+layout board dim=2d model=shapes {
+  element a box "A" @ 0,0 layer=diagram
+  element b box "B" @ 256,0 layer=diagram
+  element c box "C" @ 512,0 layer=diagram
+  element note rect "Note" @ 256,192 size=384x64 hue=neutral surface=tint layer=background
+  element ab link from=a to=b end=arrow
+  element bc link from=b to=c end=arrow
+}
+
+model shapes dim=2d {
+  object box rect size=128x128 surface=solid border=true rounded=true
+}
+`).document,
+  {
+    layout: { a: 'primary', b: 'accent', c: 'primary' },
+    model: {
+      primary: { name: 'Primary', hue: 'blue', surface: 'solid' },
+      accent: { name: 'Accent', hue: 'amber', surface: 'solid' },
+    },
+  },
+);
+
+/** A 3D cluster: a hub and four spokes placed from the model, linked, with two named materials. */
+export const DOCUMENT_3D: Scene.SceneDocument = withExtras(
+  Dsl.readScenes(`scene cluster dim=3d layout=cluster name="Cluster" theme=cad {
+  camera target=0,0,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
+}
+
+layout cluster dim=3d model=nodes {
+  element hub hub "Hub" @ 0,0.6,0 layer=diagram
+  element s1 spoke "S1" @ 3,0.3,0 layer=diagram
+  element s2 spoke "S2" @ 0,0.3,3 layer=diagram
+  element s3 spoke "S3" @ -3,0.3,0 layer=diagram
+  element base cube "Base" @ 0,-0.25,0 scale=8x0.5x8 layer=background
+  element l1 link from=hub to=s1
+  element l2 link from=hub to=s2
+  element l3 link from=hub to=s3
+}
+
+model nodes dim=3d {
+  object hub sphere scale=1.2 surface=solid
+  object spoke sphere scale=0.6 surface=solid
+}
+`).document,
+  {
+    layout: { hub: 'brass', s1: 'steel', s2: 'steel', s3: 'steel' },
+    model: {
+      brass: { name: 'Brass', hue: 'amber', surface: 'solid', metalness: 0.8, roughness: 0.3 },
+      steel: { name: 'Steel', hue: 'blue', surface: 'solid', metalness: 0.6, roughness: 0.4 },
+    },
+  },
+);
+
+/** One 4s shot moving A across the 2D board and back. */
+export const SHOTS_2D: readonly EditorShot[] = [
+  {
+    id: 'shot-1',
+    name: 'Slide',
+    timeline: [
+      { t: 0, value: { x: 0, y: 0 } },
+      { t: 2, value: { x: 0, y: -192 } },
+      { t: 4, value: { x: 0, y: 0 } },
+    ].reduce((timeline, key) => setKey(timeline, 'a', 'center', key), createTimeline(4)),
+  },
+];
+
+/** One 4s shot lifting the 3D hub and setting it down. */
+export const SHOTS_3D: readonly EditorShot[] = [
+  {
+    id: 'shot-1',
+    name: 'Lift',
+    timeline: [
+      { t: 0, value: { x: 0, y: 0.6, z: 0 } },
+      { t: 2, value: { x: 0, y: 3, z: 0 } },
+      { t: 4, value: { x: 0, y: 0.6, z: 0 } },
+    ].reduce((timeline, key) => setKey(timeline, 'hub', 'center', key), createTimeline(4)),
+  },
+];
