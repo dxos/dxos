@@ -90,6 +90,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "FileSystem": [
+        "dist/types/src/types/FileSystem.d.ts"
+      ],
       "FileSystemCapabilities": [
         "dist/types/src/types/FileSystemCapabilities.d.ts"
       ],
