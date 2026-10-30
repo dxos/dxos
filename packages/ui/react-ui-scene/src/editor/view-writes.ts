@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ViewMap } from '@dxos/react-ui-canvas';
+import { type ViewMap, type ViewportProps } from '@dxos/react-ui-canvas';
 import { type LayoutIntent, type Scene, findLayout, layoutChanges } from '@dxos/scene';
 
 import { fromCanvasView } from '../canvas/index.ts';
@@ -102,4 +102,29 @@ export const viewWrites = (document: Scene.SceneDocument, previous: ViewMap, nex
     }
   }
   return [...created, ...defines.values(), ...updated];
+};
+
+export type ApplyViewWritesOptions = Pick<ViewportProps, 'onIntent' | 'onModelIntent' | 'onTransaction'> & {
+  /** The root's model, which a new composite's object is defined in. */
+  model: string | undefined;
+};
+
+/**
+ * Sends one engine change's writes to the editor; a change that writes more than once (a new portal: its element, its
+ * scene and its object) goes as one transaction, so it undoes in one step, while a single write stays field-level.
+ */
+export const applyViewWrites = (
+  writes: readonly ViewWrite[],
+  { model, onIntent, onModelIntent, onTransaction }: ApplyViewWritesOptions,
+): void => {
+  const apply = () => {
+    for (const next of writes) {
+      if (next.kind === 'layout') {
+        onIntent(next.layout, next.intent);
+      } else if (model !== undefined) {
+        onModelIntent?.({ kind: 'define', model, object: next.object });
+      }
+    }
+  };
+  writes.length > 1 && onTransaction ? onTransaction(apply) : apply();
 };

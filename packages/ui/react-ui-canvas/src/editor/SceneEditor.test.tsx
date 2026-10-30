@@ -12,6 +12,7 @@ import { type Scene } from '@dxos/scene';
 
 import { type DimensionConfig, type ViewportProps } from './config.ts';
 import { type EditorDisplay } from './context.ts';
+import { type History } from './history.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 
 const TestViewport = ({ children, grid, snap }: ViewportProps<{ zoom: number }>) => (
@@ -134,5 +135,44 @@ describe('SceneEditor', () => {
       expect(onCameraChange).toHaveBeenLastCalledWith({ zoom: 7 });
       cleanup();
     }
+  });
+
+  test("a viewport's transaction records its layout and model writes as one undo step", async () => {
+    const record = vi.fn((change: () => void) => (change(), true));
+    const recordDocument = vi.fn();
+    const history: History = { canUndo: false, canRedo: false, record, recordDocument, undo: () => {}, redo: () => {} };
+    const write = vi.fn();
+    const writeModel = vi.fn(() => []);
+    const PortalViewport = ({ onIntent, onModelIntent, onTransaction }: ViewportProps<{ zoom: number }>) => (
+      <button
+        data-testid='portal'
+        onClick={() =>
+          onTransaction?.(() => {
+            onIntent('root', { kind: 'create', element: { id: 'p', object: 'o' } });
+            onIntent('inside', { kind: 'create', element: { id: 'q', type: 'rect' } });
+            onModelIntent?.({ kind: 'define', model: 'm', object: { id: 'o', type: 'view', parts: 'inside' } });
+          })
+        }
+      />
+    );
+    render(
+      <SceneEditor.Root
+        config={{ ...config('2d'), viewport: PortalViewport }}
+        document={DOCUMENT}
+        scene='s'
+        onIntent={write}
+        history={history}
+        onModelIntent={writeModel}
+        readDocument={() => ({ ...DOCUMENT })}
+        display={DISPLAY}
+      >
+        <SceneEditor.Viewport />
+      </SceneEditor.Root>,
+    );
+    await userEvent.click(screen.getByTestId('portal'));
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(writeModel).toHaveBeenCalledTimes(1);
+    expect(record).not.toHaveBeenCalled();
+    expect(recordDocument).toHaveBeenCalledTimes(1);
   });
 });

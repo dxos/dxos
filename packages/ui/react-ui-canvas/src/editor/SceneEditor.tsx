@@ -130,9 +130,11 @@ const SceneEditorRoot = <C,>({
   const registry = useContext(RegistryContext);
   const editing = editsInRole(role);
   const readonly = readonlyProp || !editing;
+  // Inside a transaction, writes go straight to the host and the transaction records them as one step.
+  const transacting = useRef(false);
   const onIntent = useCallback(
     (layout: string, intent: LayoutIntent) =>
-      history ? history.record(() => write(layout, intent)) : write(layout, intent),
+      history && !transacting.current ? history.record(() => write(layout, intent)) : write(layout, intent),
     [history, write],
   );
   const store = useMemo(() => createEditorStore(registry, { onIntent }), [registry, onIntent]);
@@ -167,11 +169,32 @@ const SceneEditorRoot = <C,>({
       }
       const before = readDocument?.();
       const problems = writeModel(intent);
-      problems.length === 0 && before && readDocument && history?.recordDocument(before, readDocument());
+      problems.length === 0 &&
+        before &&
+        readDocument &&
+        !transacting.current &&
+        history?.recordDocument(before, readDocument());
       store.setNotice(problems.length > 0 ? problems.join(' ') : undefined);
       return problems;
     },
     [writeModel, readDocument, history, store],
+  );
+  const onTransaction = useCallback(
+    (change: () => void) => {
+      const before = history && !transacting.current ? readDocument?.() : undefined;
+      if (!before || !readDocument) {
+        change();
+        return;
+      }
+      transacting.current = true;
+      try {
+        change();
+      } finally {
+        transacting.current = false;
+      }
+      history?.recordDocument(before, readDocument());
+    },
+    [history, readDocument],
   );
 
   // The clipboard: the selection as a fragment kept for this session, and as `.dx` text on the system clipboard.
@@ -371,6 +394,7 @@ const SceneEditorRoot = <C,>({
         onToolChange={store.setTool}
         onIntent={onIntent}
         onModelIntent={writeModel ? onModelIntent : undefined}
+        onTransaction={onTransaction}
         onPreview={store.preview}
         onEdit={(next) => store.open(next === undefined || next === rootLayout ? [] : [rootLayout ?? '', next])}
         onContextMenu={(at, kind) => store.setMenu({ at, kind })}
@@ -397,6 +421,7 @@ const SceneEditorRoot = <C,>({
       onIntent,
       writeModel,
       onModelIntent,
+      onTransaction,
       rootLayout,
       onCameraChange,
     ],

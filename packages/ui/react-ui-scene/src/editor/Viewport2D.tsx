@@ -25,7 +25,7 @@ import { type Scene, findLayout, rootScene } from '@dxos/scene';
 import { styleClasses, toCanvasViews } from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
-import { viewWrites } from './view-writes.ts';
+import { applyViewWrites, viewWrites } from './view-writes.ts';
 
 /** The shortcuts the shared editor's command table handles, which the 2D engine leaves to it. */
 const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
@@ -90,6 +90,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     onToolChange,
     onIntent,
     onModelIntent,
+    onTransaction,
     onEdit,
     onContextMenu,
     onCameraChange,
@@ -113,8 +114,8 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     const atoms = useMemo(() => createCanvasAtoms(root), [root]);
 
     // The latest props, read by the store's subscription, which outlives a render.
-    const latest = useRef({ document, onIntent, onModelIntent });
-    latest.current = { document, onIntent, onModelIntent };
+    const latest = useRef({ document, onIntent, onModelIntent, onTransaction });
+    latest.current = { document, onIntent, onModelIntent, onTransaction };
     const reading = useRef(false);
     const last = useRef<ViewMap>(registry.get(store.views));
 
@@ -138,17 +139,10 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
           if (reading.current) {
             return;
           }
-          const { document: doc, onIntent: write, onModelIntent: writeModel } = latest.current;
+          const { document: doc, ...handlers } = latest.current;
           const writes = viewWrites(doc, last.current, views);
           last.current = views;
-          const model = rootModel(doc);
-          for (const next of writes) {
-            if (next.kind === 'layout') {
-              write(next.layout, next.intent);
-            } else if (model !== undefined) {
-              writeModel?.({ kind: 'define', model, object: next.object });
-            }
-          }
+          applyViewWrites(writes, { model: rootModel(doc), ...handlers });
         }),
       [registry, store],
     );

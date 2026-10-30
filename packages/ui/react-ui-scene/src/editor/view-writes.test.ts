@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { type View, createNode } from '@dxos/react-ui-canvas';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
 import { toCanvasView } from '../canvas/index.ts';
-import { viewWrites } from './view-writes.ts';
+import { type ViewWrite, applyViewWrites, viewWrites } from './view-writes.ts';
 
 const rects = (count: number): Record<string, Scene.Element2D> =>
   Object.fromEntries(
@@ -110,5 +110,37 @@ describe('viewWrites', () => {
     expect(writes[0]).toMatchObject({ kind: 'layout', layout: 'inner', created: true });
     expect(writes[1]).toMatchObject({ kind: 'define', object: { id: 'view:inner', parts: 'inner' } });
     expect(writes[2]).toMatchObject({ kind: 'layout', layout: 'main', created: false });
+  });
+});
+
+describe('applyViewWrites', () => {
+  const portal: ViewWrite[] = [
+    { kind: 'layout', layout: 'root', intent: { kind: 'create', element: { id: 'p', object: 'o' } }, created: false },
+    { kind: 'layout', layout: 'inside', intent: { kind: 'create', element: { id: 'q', type: 'rect' } }, created: true },
+    { kind: 'define', object: { id: 'o', type: 'view', parts: 'inside' } },
+  ];
+
+  test('a change that writes more than once (a new portal) is one transaction, so it undoes in one step', () => {
+    const log: string[] = [];
+    const onTransaction = vi.fn((change: () => void) => {
+      log.push('begin');
+      change();
+      log.push('end');
+    });
+    applyViewWrites(portal, {
+      model: 'm',
+      onIntent: (layout) => log.push(layout),
+      onModelIntent: (intent) => (log.push(intent.kind), []),
+      onTransaction,
+    });
+    expect(log).toEqual(['begin', 'root', 'inside', 'define', 'end']);
+  });
+
+  test('a single write (a drag) is not wrapped, so it stays a field-level step', () => {
+    const onTransaction = vi.fn();
+    const onIntent = vi.fn();
+    applyViewWrites(portal.slice(0, 1), { model: 'm', onIntent, onTransaction });
+    expect(onTransaction).not.toHaveBeenCalled();
+    expect(onIntent).toHaveBeenCalledTimes(1);
   });
 });

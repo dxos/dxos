@@ -61,6 +61,8 @@ export type ViewportProps<C = unknown> = {
   onIntent: (layout: string, intent: LayoutIntent) => void;
   /** Writes a model edit (an object a new composite places); returns its problems. */
   onModelIntent?: (intent: ModelIntent) => readonly string[];
+  /** Runs `change`, recording the intents it writes as one undo step (a new portal: its element, scene and object). */
+  onTransaction?: (change: () => void) => void;
   onPreview: (layout: string | undefined, intent?: LayoutIntent) => void;
   /** Opens a layout (a double-clicked composite); undefined goes back to the scene's own. */
   onEdit: (layout: string | undefined) => void;
