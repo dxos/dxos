@@ -19,14 +19,15 @@ import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import * as Spec from '@dxos/compute/Spec';
+import { Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { Feature, ProjectOperation, Spec } from '#types';
+import { Feature, FeatureMap, ProjectOperation } from '#types';
 
 import { FEATURE_COMPANION } from '../constants.ts';
 import { ProjectsNamespace } from '../namespace.ts';
@@ -61,7 +62,7 @@ export default Capability.makeModule(
     });
 
     /**
-     * @deprecated Specs are reached through the project that owns them (its Spec tab), not a section of their own.
+     * @deprecated Specs are reached through the project that owns them (its Specs tab), not a section of their own.
      * Kept until a follow-up removes it with {@link createSpecBreakdownsExtension}.
      */
     const specSectionExtensions = yield* TypeSection.createTypeSectionExtension(Spec.Spec, {
@@ -95,15 +96,14 @@ export default Capability.makeModule(
       type: Spec.Spec,
       connector: () => Effect.succeed([makeFeatureCompanion()]),
     });
-    // The same companion beside a project, while it owns a spec: the project's Spec tab shows that spec's map.
+    // The same companion beside a project, while it owns a spec: the project's Specs tab shows a spec's map.
     const projectFeatureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
       id: 'projectFeatureCompanion',
       relation: AppNode.companion,
       type: Project.Project,
       connector: (project, get) => {
-        const specRef = get(Obj.atom(project)).spec;
-        const spec = specRef && get(Obj.atomReactive(specRef));
-        return Effect.succeed(Spec.instanceOf(spec) ? [makeFeatureCompanion()] : []);
+        const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
+        return Effect.succeed(specs.length > 0 ? [makeFeatureCompanion()] : []);
       },
     });
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
@@ -111,7 +111,7 @@ export default Capability.makeModule(
       ...specSectionExtensions,
       ...specBreakdownExtensions,
       ...actionExtensions,
-      // First of the project's branches: the spec is what its work delivers.
+      // First of the project's branches: the specs are what its work delivers.
       ...specExtensions,
       ...chatExtensions,
       ...chatChildrenExtensions,
@@ -139,7 +139,7 @@ const SPEC_URL: AppGraphBuilder.UrlBinding = {
  * The specs that break down a spec's features, as its children in the navtree, in the order of the features they
  * break down. Each child is itself a spec, so this extension matches it too and the tree nests to any depth.
  *
- * @deprecated Serves the top-level Specs section, which is going away; a project's Spec tab zooms into breakdowns.
+ * @deprecated Serves the top-level Specs section, which is going away; a project's Specs tab zooms into breakdowns.
  */
 export const createSpecBreakdownsExtension = () =>
   AppGraphBuilder.createExtension({
@@ -152,11 +152,11 @@ export const createSpecBreakdownsExtension = () =>
         return Effect.succeed([]);
       }
 
-      const order = get(Obj.atom(spec)).features.map(refId);
+      const order = Option.getOrElse(get(Annotation.atom(spec, FeatureMap.FeaturesAnnotation)), () => []).map(refId);
       const nested = get(db.query(Filter.type(Spec.Spec)).atom)
-        .map((child) => ({ child, owner: Spec.getOwner(child) }))
+        .map((child) => ({ child, owner: FeatureMap.getOwner(child) }))
         .flatMap(({ child, owner }) =>
-          owner && Spec.getContainer(owner)?.id === spec.id
+          owner && FeatureMap.getContainer(owner)?.id === spec.id
             ? [{ child, index: order.findIndex((id) => id === owner.id) }]
             : [],
         )
@@ -336,7 +336,7 @@ export const createProjectTasksExtension = () =>
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some(node.data)
-        : Option.flatMap(matchSpecLevel(node), ({ feature }) => Option.fromUndefinedOr(Spec.findProject(feature))),
+        : Option.flatMap(matchSpecLevel(node), ({ level }) => Option.fromUndefinedOr(getLevelProject(level))),
     connector: (project, get) => {
       const db = Obj.getDatabase(project);
       const taskSet = project.taskSet && get(project.taskSet.atom);
@@ -392,76 +392,90 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
-/** Node `type` of a project's Spec branch, which groups the levels and opens nothing itself. */
+/** Node `type` of a project's Specs branch, which groups the specs and opens nothing itself. */
 export const SPEC_BRANCH_TYPE = 'org.dxos.plugin.projects.spec-branch';
 
-/** Node `type` of a feature level beneath the Spec branch; the node's data is the feature. */
+/** Node `type` of a level beneath the Specs branch; the node's data is the spec or the feature itself. */
 export const SPEC_LEVEL_TYPE = 'org.dxos.plugin.projects.spec-level';
 
-/** Path segment (and node id) of the Spec branch under its project. */
-export const SPEC_SEGMENT = 'spec';
+/** Path segment (and node id) of the Specs branch under its project. */
+export const SPECS_SEGMENT = 'specs';
 
-const matchSpecLevel = (node: AppGraphNode.Node): Option.Option<{ feature: Feature.Feature; space: unknown }> =>
-  node.type === SPEC_LEVEL_TYPE && Feature.instanceOf(node.data)
-    ? Option.some({ feature: node.data, space: node.properties.space })
+/** A level of a project's specs: one of its specs, or a feature beneath one. */
+type Level = Spec.Spec | Feature.Feature;
+
+const matchSpecLevel = (node: AppGraphNode.Node): Option.Option<{ level: Level; space: unknown }> =>
+  node.type === SPEC_LEVEL_TYPE && (Spec.instanceOf(node.data) || Feature.instanceOf(node.data))
+    ? Option.some({ level: node.data, space: node.properties.space })
     : Option.none();
 
-/** The features on `spec`'s map as level nodes, in the map's order: by name. */
-const makeLevelNodes = (spec: Spec.Spec | undefined, space: unknown, get: Atom.AtomContext) =>
-  spec
-    ? get(Obj.atomReactive(get(Obj.atom(spec)).features))
-        .filter(Feature.instanceOf)
-        .map((feature) => ({ feature, name: get(Obj.atom(feature)).name }))
-        .sort((left, right) => left.name.localeCompare(right.name))
-        .map(({ feature, name }) =>
-          AppGraphNode.make({
-            id: feature.id,
-            type: SPEC_LEVEL_TYPE,
-            data: feature,
-            properties: {
-              label: name,
-              icon: 'ph--puzzle-piece--regular',
-              iconHue: 'amber',
-              role: 'branch',
-              draggable: false,
-              droppable: false,
-              space,
-              testId: 'projectsPlugin.specLevel',
-            },
-          }),
-        )
-    : [];
+/** The project a level lies in: the one owning its spec, or the top-level spec above its feature. */
+const getLevelProject = (level: Level): Project.Project | undefined =>
+  Spec.instanceOf(level) ? Project.getOwner(level) : FeatureMap.findProject(level);
 
-/** The spec breaking `feature` down, if it has one. */
-const getBreakdown = (feature: Feature.Feature, get: Atom.AtomContext): Spec.Spec | undefined => {
-  const specRef = get(Obj.atom(feature)).spec;
+/** The spec a level maps: the spec itself, or the one breaking the feature down. */
+const getLevelSpec = (level: Level, get: Atom.AtomContext): Spec.Spec | undefined => {
+  if (Spec.instanceOf(level)) {
+    return level;
+  }
+  const specRef = get(Obj.atom(level)).spec;
   const spec = specRef && get(Obj.atomReactive(specRef));
   return Spec.instanceOf(spec) ? spec : undefined;
 };
 
+const makeLevelNode = (level: Level, space: unknown, { label, icon }: { label: string; icon: string }) =>
+  AppGraphNode.make({
+    id: level.id,
+    type: SPEC_LEVEL_TYPE,
+    data: level,
+    properties: {
+      label,
+      icon,
+      iconHue: 'amber',
+      role: 'branch',
+      draggable: false,
+      droppable: false,
+      space,
+      testId: 'projectsPlugin.specLevel',
+    },
+  });
+
+/** The features on `spec`'s map as level nodes, in the map's order: by name. */
+const makeFeatureNodes = (spec: Spec.Spec | undefined, space: unknown, get: Atom.AtomContext) => {
+  if (!spec) {
+    return [];
+  }
+  const refs = Option.getOrElse(get(Annotation.atom(spec, FeatureMap.FeaturesAnnotation)), () => []);
+  return get(Obj.atomReactive(refs))
+    .filter(Feature.instanceOf)
+    .map((feature) => ({ feature, name: get(Obj.atom(feature)).name }))
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map(({ feature, name }) => makeLevelNode(feature, space, { label: name, icon: 'ph--puzzle-piece--regular' }));
+};
+
 /**
- * The project's spec as a Spec branch beside Sessions and Artifacts, its features nested beneath it to any depth. Every
- * feature is a level node holding the feature, so `…/project/<id>/spec/<feature>/<subfeature>` addresses one depth of
- * the project and the level gets the companions of any object.
+ * The project's specs under a Specs branch beside Sessions and Artifacts, each spec's features nested beneath it to any
+ * depth. Every spec and feature is a level node holding the object, so `…/project/<id>/specs/<spec>/<feature>/…`
+ * addresses one depth of the project, however many specs it has, and the level gets the companions of any object.
  */
 export const createProjectSpecExtension = () =>
   Effect.all([
     AppGraphBuilder.createExtension({
-      id: 'projectSpec',
+      id: 'projectSpecs',
       url: PROJECT_URL,
       match: (node) =>
         Obj.instanceOf(Project.Project, node.data)
           ? Option.some({ project: node.data, space: node.properties.space })
           : Option.none(),
       connector: ({ project, space }, get) => {
-        const specRef = get(Obj.atom(project)).spec;
-        const spec = specRef && get(Obj.atomReactive(specRef));
+        // One node per spec, in the project's order.
+        const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
         return Effect.succeed([
           AppGraphNode.make({
-            id: SPEC_SEGMENT,
+            id: SPECS_SEGMENT,
             type: SPEC_BRANCH_TYPE,
             properties: {
-              label: ['spec.label', { ns: ProjectsNamespace.key }],
+              label: ['specs.label', { ns: ProjectsNamespace.key }],
               icon: 'ph--blueprint--regular',
               iconHue: 'amber',
               role: 'branch',
@@ -471,23 +485,25 @@ export const createProjectSpecExtension = () =>
               space,
               testId: 'projectsPlugin.specBranch',
             },
-            nodes: makeLevelNodes(Spec.instanceOf(spec) ? spec : undefined, space, get),
+            nodes: specs.map((spec) =>
+              makeLevelNode(spec, space, { label: get(Obj.atom(spec)).name, icon: 'ph--blueprint--regular' }),
+            ),
           }),
         ]);
       },
     }),
     AppGraphBuilder.createExtension({
-      id: 'projectSpecFeatures',
+      id: 'projectSpecLevels',
       url: PROJECT_URL,
       match: matchSpecLevel,
-      connector: ({ feature, space }, get) => Effect.succeed(makeLevelNodes(getBreakdown(feature, get), space, get)),
+      connector: ({ level, space }, get) => Effect.succeed(makeFeatureNodes(getLevelSpec(level, get), space, get)),
     }),
     // The feature companion beside every level that has a map to select from.
     AppGraphBuilder.createExtension({
       id: 'specLevelFeatureCompanion',
       relation: AppNode.companion,
       match: matchSpecLevel,
-      connector: ({ feature }, get) => Effect.succeed(getBreakdown(feature, get) ? [makeFeatureCompanion()] : []),
+      connector: ({ level }, get) => Effect.succeed(getLevelSpec(level, get) ? [makeFeatureCompanion()] : []),
     }),
   ]).pipe(Effect.map((extensions) => extensions.flat()));
 

@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, URI } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { Outline, TaskSet } from '@dxos/types';
 
-import { Feature, Spec } from '#types';
+import { Feature } from '#types';
 
 import { attach } from '../operations/feature/util.ts';
 import { featureBindings } from './subject-context.ts';
@@ -84,7 +85,7 @@ const addProject = Effect.fn(function* (instructions: Ref.Ref<Instructions.Instr
   const root = yield* Database.add(Spec.make({ name: 'Inbox' }));
   Obj.update(project, (project) => {
     project.instructions = instructions;
-    project.spec = Ref.make(root);
+    project.specs.push(Ref.make(root));
   });
   return { project, root };
 });

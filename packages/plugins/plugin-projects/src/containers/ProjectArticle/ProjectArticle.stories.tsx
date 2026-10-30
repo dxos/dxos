@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -18,6 +19,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -29,7 +31,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { FeatureSeed } from '@dxos/plugin-projects/testing';
+import { FeatureSeed, VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -65,6 +67,16 @@ const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 const OTHER_PROJECT_NAME = 'Project 2';
 const SPEC_NAME = 'Inbox and agents';
+const TALK_SPEC_NAME = 'Launch talk';
+const NEW_SPEC_NAME = 'Launch video';
+const TALK_SPEC_CONTENT = [
+  'A ten-minute talk that introduces Composer to people who have not used it.',
+  '',
+  'It opens on a space someone already works in, then shows the same space on a second device.',
+  '',
+  'It ends by asking the audience to try it on their own notes.',
+].join('\n');
+const RENAMED_SPEC_NAME = 'Launch keynote';
 const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
@@ -171,8 +183,13 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  // The project's spec, which puts the Spec tab and the overview's summary line on the article.
-  FeatureSeed.seed(space.db, { name: SPEC_NAME, project });
+  // The project's specs, which put the Specs tab and the overview's summary lines on the article: a feature map, then a
+  // spec of prose alone.
+  FeatureSeed.seed(space.db, { name: SPEC_NAME, project, layout: FeatureSeed.INBOX_LAYOUT });
+  const talk = space.db.add(Spec.make({ name: TALK_SPEC_NAME, content: TALK_SPEC_CONTENT }));
+  Obj.update(project, (project) => {
+    project.specs.push(Ref.make(talk));
+  });
 
   // A second project, so a task row's `Move to…` has somewhere to go; it has no spec.
   const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
@@ -284,6 +301,24 @@ const MockDeckOperationsPlugin = Plugin.define(
   }),
 ).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
 
+/** Points at the empty cell left of the leftmost card, so its `+` shows, and returns that button. */
+const showAdd = async (container: HTMLElement) => {
+  const view = within(container).getByTestId('scene-view');
+  const card = within(container)
+    .getAllByTestId('feature-canvas-node')
+    .map((node) => node.getBoundingClientRect())
+    .reduce((left, rect) => (rect.left < left.left ? rect : left));
+  // A cell's pitch is its card's width and a quarter more for the gutter.
+  view.dispatchEvent(
+    new PointerEvent('pointermove', {
+      bubbles: true,
+      clientX: card.left + card.width / 2 - card.width * 1.25,
+      clientY: card.top + card.height / 2,
+    }),
+  );
+  return within(container).findByTestId('feature-canvas.add', undefined, { timeout: 5_000 });
+};
+
 const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
@@ -337,6 +372,8 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         MockDeckOperationsPlugin(),
+        // A second plugin's extension package, beside plugin-projects' Software one.
+        VideoPackagePlugin.make(),
       ],
       // Both start events at setup, so the markdown extensions and the link resolver are live before
       // the first render.
@@ -377,35 +414,61 @@ export const Default: Story = {
 };
 
 /**
- * A project with a spec: the overview counts the spec's features, and its Spec tab shows the spec, its document first.
- * The summary's name opens the tab, and the map's controls join the project's toolbar.
+ * A project with a spec: the overview lists its specs, each folded under its name, and its Spec tab shows the spec,
+ * its document first. The map's controls join the project's toolbar.
  */
 export const WithSpec: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    const summary = await canvas.findByTestId('projectsPlugin.specSummary', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(summary.textContent).toMatch(/\d+ features/), { timeout: 10_000 });
-    await userEvent.click(within(summary).getByRole('button', { name: SPEC_NAME }));
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    await waitFor(() => expect(within(specs).getAllByRole('option')).toHaveLength(2), { timeout: 10_000 });
+    const spec = await within(specs).findByRole('group', { name: SPEC_NAME }, { timeout: 10_000 });
+    await expect(within(spec).queryByRole('textbox', { name: 'Name' })).toBeNull();
+    await showTab(canvas, 'spec');
     await expect(canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
     await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
 
-    // The view modes sit on the toolbar; on a map, adding features is in its overflow, ahead of Create artifact.
+    // The toolbar holds the Specs tab's tools only: the views sit on it, and adding features is on the canvas.
+    await expect(canvas.queryByTestId('projectsPlugin.addArtifact')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.overflow')).toBeNull();
     await userEvent.click(canvas.getByTestId('projectsPlugin.featureMap.canvas'));
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await userEvent.click(canvas.getByTestId('projectsPlugin.overflow'));
+    await userEvent.click(await showAdd(canvasElement));
     const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
     const items = within(menu)
       .getAllByRole('menuitem')
       .map((item) => item.getAttribute('data-testid'));
-    await expect(items).toEqual(['feature-map.new-feature', 'feature-map.add-feature', 'projectsPlugin.addArtifact']);
-    await expect(within(menu).getAllByRole('separator')).toHaveLength(1);
+    await expect(items).toEqual(['feature-map.new-feature', 'feature-map.add-feature']);
   },
 };
 
-/** Add existing feature, in the overflow, moves a feature from elsewhere onto the level's map, picked in a dialog. */
+/** Each tab's tools follow the tabs: Create artifact on the Overview, the agent and the chart on the Tasks tab. */
+export const ToolbarByTab: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await expect(
+      canvas.findByTestId('projectsPlugin.addArtifact', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.createChat')).toBeNull();
+
+    await showTab(canvas, 'tasks');
+    await expect(
+      canvas.findByTestId('projectsPlugin.delegateTasks', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.getByTestId('projectsPlugin.pipeline')).toBeTruthy();
+    await expect(canvas.queryByTestId('projectsPlugin.addArtifact')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.specPicker')).toBeNull();
+  },
+};
+
+/** The `+` in an empty cell of the canvas moves a feature from elsewhere onto the level's map, picked in a dialog. */
 export const AddExistingFeature: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
@@ -416,7 +479,7 @@ export const AddExistingFeature: Story = {
       await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
     );
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await userEvent.click(canvas.getByTestId('projectsPlugin.overflow'));
+    await userEvent.click(await showAdd(canvasElement));
     await userEvent.click(await screen.findByTestId('feature-map.add-feature'));
     const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
     // The map's own features are not offered; a subfeature from beneath one is.
@@ -427,15 +490,175 @@ export const AddExistingFeature: Story = {
   },
 };
 
-/** The Spec tab opens on the spec's `.mdl` document, made with the spec and headed with its name. */
+/**
+ * The overview's specs list edits each spec in place, unfolded: a new name is the one the Specs tab shows. Its add
+ * creates a spec, open for its name.
+ */
+export const SpecForms: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    const talk = await within(specs).findByRole('group', { name: TALK_SPEC_NAME }, { timeout: 10_000 });
+    await userEvent.click(within(talk).getByRole('button', { name: TALK_SPEC_NAME }));
+    const name = await within(talk).findByRole('textbox', { name: 'Name' });
+    await userEvent.clear(name);
+    await userEvent.type(name, RENAMED_SPEC_NAME);
+    await expect(within(specs).findByRole('group', { name: RENAMED_SPEC_NAME })).resolves.toBeTruthy();
+
+    await userEvent.click(canvas.getByTestId('specs.add'));
+    const created = await within(specs).findByRole('group', { name: 'Untitled' }, { timeout: 10_000 });
+    await userEvent.type(within(created).getByRole('textbox', { name: 'Name' }), NEW_SPEC_NAME);
+    await expect(within(specs).findByRole('group', { name: NEW_SPEC_NAME })).resolves.toBeTruthy();
+
+    await showTab(canvas, 'spec');
+    await pickSpec(canvas, RENAMED_SPEC_NAME);
+    await pickSpec(canvas, NEW_SPEC_NAME);
+  },
+};
+
+/** The Spec tab opens on the spec's `.mdl` document, which holds its text and no front matter: the name is the spec's. */
 export const SpecDocument: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
     await showTab(canvas, 'spec');
-    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(document.textContent).toContain(`name: ${SPEC_NAME}`), { timeout: 10_000 });
+    await expectSpecShown(canvas, SPEC_NAME);
+    const document = canvas.getByTestId('feature-map.document');
+    await waitFor(() => expect(within(document).getAllByTestId('feature-embed').length).toBeGreaterThan(0), {
+      timeout: 10_000,
+    });
+    await expect(document.textContent).not.toContain('name:');
+  },
+};
+
+/** The Specs tab shows one spec at a time; the dropdown in its toolbar lists every spec, switches between them and adds one. */
+export const SpecPicker: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await expectSpecShown(canvas, SPEC_NAME);
+
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+    const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
+    await expect(within(menu).getByText(SPEC_NAME)).toBeTruthy();
+    await userEvent.click(within(menu).getByText(TALK_SPEC_NAME));
+    await expectSpecShown(canvas, TALK_SPEC_NAME);
+    // A spec of prose has only its text, so there is no view toggle.
+    await expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull();
+
+    // Add spec asks for a name, then shows the new spec.
+    await userEvent.click(canvas.getByTestId('projectsPlugin.specPicker'));
+    await userEvent.click(
+      within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText('Add spec'),
+    );
+    await userEvent.click(await screen.findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
+    await userEvent.paste(NEW_SPEC_NAME);
+    await userEvent.click(screen.getByTestId('save-button'));
+    await expectSpecShown(canvas, NEW_SPEC_NAME);
+  },
+};
+
+/** Waits for the Specs tab to show the spec named `name`: the picker names it and its document is drawn. */
+const expectSpecShown = async (canvas: ReturnType<typeof within>, name: string) => {
+  await waitFor(
+    () => {
+      canvas.getByTestId('feature-map.document');
+      return expect(canvas.getByTestId('projectsPlugin.specPicker').textContent).toContain(name);
+    },
+    { timeout: 10_000 },
+  );
+};
+
+/** Opens the spec picker and shows the spec named `name`. */
+const pickSpec = async (canvas: ReturnType<typeof within>, name: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+  await userEvent.click(within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(name));
+  await expectSpecShown(canvas, name);
+};
+
+/** Adds a spec named `name` from the picker, which then shows it. */
+const addSpec = async (canvas: ReturnType<typeof within>, name: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+  await userEvent.click(within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText('Add spec'));
+  const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+  await userEvent.click(await within(dialog).findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
+  await userEvent.paste(name);
+  await userEvent.click(screen.getByTestId('save-button'));
+  await expectSpecShown(canvas, name);
+};
+
+/** Opens the Extensions menu and returns the item of the package labelled `label`. */
+const findPackage = async (canvas: ReturnType<typeof within>, label: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specExtensions', undefined, { timeout: 10_000 }));
+  const item = within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(label);
+  return item.closest<HTMLElement>('[role="menuitemcheckbox"]') ?? item;
+};
+
+/** Checking the Software package in the Extensions menu gives a spec of prose the map's views. */
+export const SpecPackages: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await pickSpec(canvas, SPEC_NAME);
+    await expect((await findPackage(canvas, 'Software')).getAttribute('aria-checked')).toBe('true');
+    await userEvent.keyboard('{Escape}');
+
+    await pickSpec(canvas, TALK_SPEC_NAME);
+    await expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull();
+    const software = await findPackage(canvas, 'Software');
+    await expect(software.getAttribute('aria-checked')).toBe('false');
+    await userEvent.click(software);
+    await expect(
+      canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+  },
+};
+
+/** Another plugin's package adds no views, only its slash commands, which write its blocks' structure in place. */
+export const VideoPackage: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await addSpec(canvas, NEW_SPEC_NAME);
+    await userEvent.click(await findPackage(canvas, 'Video'));
+    // A multi-select stays open; closed, it hands focus back to its trigger, so the editor is focused after.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull(), { timeout: 5_000 });
+    await expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull();
+
+    const content = await waitFor(
+      () => {
+        const element = canvas.getByTestId('feature-map.document').querySelector<HTMLElement>('.cm-content');
+        if (!element) {
+          throw new Error('no editor content');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
+    const view = EditorView.findFromDOM(content);
+    if (!view) {
+      throw new Error('no editor');
+    }
+    view.focus();
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+    await userEvent.keyboard('{Enter}/scen');
+    await waitFor(() => expect(document.querySelector('.cm-tooltip-autocomplete')).not.toBeNull(), {
+      timeout: 5_000,
+    });
+    // Completion ignores an Enter that lands within its interaction delay of opening.
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(view.state.doc.toString()).toContain('scene SC-1: '), { timeout: 5_000 });
   },
 };
 
@@ -446,12 +669,12 @@ export const WithoutSpec: Story = {
     const canvas = within(canvasElement);
     await seedContent();
     await expect(canvas.findByDisplayValue(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.queryByTestId('projectsPlugin.specSummary')).toBeNull();
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    await expect(within(specs).queryAllByRole('option')).toHaveLength(0);
 
     await showTab(canvas, 'spec');
     await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));
-    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(document.textContent).toContain('name:'), { timeout: 10_000 });
+    await expectSpecShown(canvas, OTHER_PROJECT_NAME);
     await expect(canvas.queryByTestId('projectsPlugin.spec.empty')).toBeNull();
   },
 };

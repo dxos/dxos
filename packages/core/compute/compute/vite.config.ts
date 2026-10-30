@@ -30,6 +30,7 @@ export default defineConfig({
     'types/Routine': 'src/types/Routine.ts',
     'types/Script': 'src/types/Script.ts',
     'types/Skill': 'src/types/Skill.ts',
+    'types/Spec': 'src/types/Spec.ts',
     'types/Template': 'src/types/Template.ts',
     'types/Trigger': 'src/types/Trigger.ts',
     'types/TriggerEvent': 'src/types/TriggerEvent.ts',

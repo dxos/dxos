@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import * as Spec from '@dxos/compute/Spec';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { SpecDocument } from '@dxos/types';
 
 import { CodeProject } from '#types';
 
@@ -18,25 +18,10 @@ export default Capability.makeModule(
     return [
       Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
         {
-          id: Type.getTypename(SpecDocument.SpecDocument),
-          createObject: (props, options) =>
-            Effect.gen(function* () {
-              const object = SpecDocument.make(props);
-              return yield* Operation.invoke(
-                SpaceOperation.AddObject,
-                {
-                  object,
-                  target: options.target,
-                },
-                { spaceId: options.db.spaceId },
-              );
-            }),
-        },
-        {
           id: Type.getTypename(CodeProject.CodeProject),
           createObject: (props, options) =>
             Effect.gen(function* () {
-              const spec = SpecDocument.make();
+              const spec = Spec.make({ name: props?.name ?? '' });
               const project = CodeProject.make({ name: props?.name, spec });
               // Add the linked Spec to the space so the Ref resolves.
               yield* Operation.invoke(

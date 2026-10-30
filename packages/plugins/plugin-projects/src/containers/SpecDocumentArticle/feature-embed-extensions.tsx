@@ -5,10 +5,10 @@
 import { type Extension } from '@codemirror/state';
 import React from 'react';
 
+import type * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj } from '@dxos/echo';
-import { type SpecDocument } from '@dxos/types';
 
-import { Feature, Spec, SpecText } from '#types';
+import { Feature, SpecText } from '#types';
 
 import { featureEmbeds } from '../../components/SpecDocumentEditor/index.ts';
 import { type FeatureEmbedField, FeatureEmbedSection } from './FeatureEmbedSection.tsx';
@@ -20,19 +20,18 @@ export type FeatureEmbedExtensionsOptions = {
 };
 
 /**
- * The editor extensions for a spec's document: its embeds drawn as editable feature sections, edits synced to the
- * spec, a pasted embed copied and `/feature`, whose new section takes the cursor in the field left to fill in. None for a document no spec holds.
+ * The editor extensions for a spec's text: its embeds drawn as editable feature sections, edits synced to the spec, a
+ * pasted embed copied and `/feature`, whose new section takes the cursor in the field left to fill in. None for a spec
+ * not in a database.
  */
 export const featureEmbedExtensions = (
-  document: SpecDocument.SpecDocument,
+  spec: Spec.Spec,
   { attendableId, newName }: FeatureEmbedExtensionsOptions,
 ): Extension[] => {
-  const parent = Obj.getParent(document);
-  const db = Obj.getDatabase(document);
-  if (!Spec.instanceOf(parent) || !db) {
+  const db = Obj.getDatabase(spec);
+  if (!db) {
     return [];
   }
-  const spec = parent;
   // The feature `/feature` made last and the field to fill in next, until its section mounts and takes the cursor.
   let created: { id: string; field: FeatureEmbedField } | undefined;
   const claimFocus = (id: string): FeatureEmbedField | undefined => {

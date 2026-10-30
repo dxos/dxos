@@ -3,20 +3,33 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import type * as Project from '@dxos/compute/Project';
-import { Obj } from '@dxos/echo';
-import { useObject, useResolveRef } from '@dxos/echo-react';
+import * as Spec from '@dxos/compute/Spec';
+import { Annotation, Obj, type Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { useViewState } from '@dxos/react-ui-attention';
 
-import { Feature, Spec } from '#types';
+import { Feature, FeatureMap, ProjectView } from '#types';
 
-/** The spec the project owns, live: it follows `Project.spec` as it is set, changed or cleared. */
-export const useProjectSpec = (project: Project.Project): Spec.Spec | undefined => {
-  const [specRef] = useObject(project, 'spec');
-  const spec = useResolveRef(specRef);
-  return Spec.instanceOf(spec) ? spec : undefined;
+import { useRefTargets } from './useRefTargets.ts';
+
+/** The specs the project owns, live and in order: it follows `Project.specs` as specs are added, removed or loaded. */
+export const useProjectSpecs = (project: Project.Project): Spec.Spec[] => {
+  const [specs] = useObject(project, 'specs');
+  return useRefTargets(specs ?? EMPTY).filter(Spec.instanceOf);
+};
+
+const EMPTY: readonly Ref.Ref<Spec.Spec>[] = [];
+
+/** The spec the project's Specs tab shows: `spec` when the level names one, else the reader's pick, else the first. */
+export const useSelectedSpec = (project: Project.Project, spec?: Spec.Spec): Spec.Spec | undefined => {
+  const specs = useProjectSpecs(project);
+  const { spec: selectedId } = useViewState(ProjectView.aspect, project.id);
+  return spec ?? specs.find(({ id }) => id === selectedId) ?? specs[0];
 };
 
 /**
@@ -34,7 +47,8 @@ export const useSpecTreeIds = (spec: Spec.Spec | undefined): readonly string[] =
             return;
           }
           seen.add(level.id);
-          for (const member of get(Obj.atomReactive(get(Obj.atom(level)).features)).filter(Feature.instanceOf)) {
+          const features = Option.getOrElse(get(Annotation.atom(level, FeatureMap.FeaturesAnnotation)), () => []);
+          for (const member of get(Obj.atomReactive(features)).filter(Feature.instanceOf)) {
             ids.push(member.id);
             const { spec: breakdown } = get(Obj.atom(member));
             const nested = breakdown && get(Obj.atomReactive(breakdown));

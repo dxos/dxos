@@ -9,7 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
-import { SpecDocument, type Task } from '@dxos/types';
+import * as Spec from '@dxos/compute/Spec';
+import { type Task } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
 import {
@@ -27,14 +28,23 @@ import {
   ProjectFeatureCompanion,
   SpecArticle,
   SpecDocumentArticle,
+  SpecLevelArticle,
+  SpecLevelCompanion,
 } from '#containers';
-import { Feature, Spec } from '#types';
+import { Feature, FeatureMap } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 import { ADD_FEATURE_DIALOG, FEATURE_COMPANION, MOVE_TASK_DIALOG } from '../constants.ts';
 import { type AddFeatureDialogProps } from '../containers/AddFeatureDialog/index.ts';
 
-const isTracked = (feature: Feature.Feature) => Spec.findProject(feature) !== undefined;
+const isTracked = (feature: Feature.Feature) => FeatureMap.findProject(feature) !== undefined;
+
+/** A spec a project owns is a level of the project: the project article on that spec. */
+const isProjectSpec = (value: unknown): value is Spec.Spec =>
+  Spec.instanceOf(value) && Project.getOwner(value) !== undefined;
+
+const isFreeSpec = (value: unknown): value is Spec.Spec =>
+  Spec.instanceOf(value) && Project.getOwner(value) === undefined;
 
 /** React surfaces contributed by plugin-projects — articles and cards for projects, specs, features and showcases. */
 export default Capability.makeModule(() =>
@@ -48,7 +58,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spec.article',
-        filter: AppSurface.object(AppSurface.Article, Spec.Spec),
+        filter: AppSurface.object(AppSurface.Article, Spec.Spec, ({ subject }) => isFreeSpec(subject)),
         component: SpecArticle,
         props: ({ role, data }) => ({ role, ...data }),
       }),
@@ -63,12 +73,12 @@ export default Capability.makeModule(() =>
         id: 'feature.companion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, FEATURE_COMPANION),
-          AppSurface.companion(AppSurface.Article, Spec.Spec),
+          AppSurface.companion(AppSurface.Article, isFreeSpec),
         ),
         component: FeatureCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, spec: companionTo, attendableId }),
       }),
-      // The same companion beside a project, for the map on its Spec tab.
+      // The same companion beside a project, for the map on its Specs tab.
       Surface.create({
         id: 'project.feature.companion',
         filter: AppSurface.allOf(
@@ -78,7 +88,22 @@ export default Capability.makeModule(() =>
         component: ProjectFeatureCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
       }),
-      // A feature a project tracks is a level of the project's spec: the project article at that depth.
+      Surface.create({
+        id: 'spec.level',
+        filter: AppSurface.object(AppSurface.Article, Spec.Spec, ({ subject }) => isProjectSpec(subject)),
+        component: SpecLevelArticle,
+        props: ({ role, data }) => ({ role, ...data }),
+      }),
+      Surface.create({
+        id: 'spec.level.companion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, FEATURE_COMPANION),
+          AppSurface.companion(AppSurface.Article, isProjectSpec),
+        ),
+        component: SpecLevelCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, spec: companionTo, attendableId }),
+      }),
+      // A feature a project tracks is a level of the project's specs: the project article at that depth.
       Surface.create({
         id: 'feature.level',
         filter: AppSurface.object(AppSurface.Article, Feature.Feature, ({ subject }) => isTracked(subject)),
@@ -120,13 +145,10 @@ export default Capability.makeModule(() =>
         component: ProjectArtifactsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, project: subject.project, attendableId }),
       }),
-      // Last, so a plugin with a richer spec page (plugin-code) renders the opened document instead.
+      // The spec's text, which its Document view embeds; last, so a richer section can take its place.
       Surface.create({
-        id: 'specDocument',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, SpecDocument.SpecDocument),
-          AppSurface.object(AppSurface.Section, SpecDocument.SpecDocument),
-        ),
+        id: 'spec.section',
+        filter: AppSurface.object(AppSurface.Section, Spec.Spec),
         component: SpecDocumentArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
         position: Position.last,

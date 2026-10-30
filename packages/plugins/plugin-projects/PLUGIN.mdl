@@ -25,20 +25,20 @@ template, which builds with the dev shell of a vite server.
 
 ## Features
 
-A spec's document is the spec. It can be prose alone and take structure a piece at a time: a line becomes a feature,
+A spec's document is the spec, and its text is `Spec.content`. It can be prose alone and take structure a piece at a time: a line becomes a feature,
 the feature becomes an object the document embeds, and the canvas and the board are drawn from the features the
 document embeds. In a repository the same spec is a `.mdl` file in which each feature is a `feat` block.
 
 ```mdl
 feat F-1: A spec's document is the spec
   req F-1.1: The document's embeds of feature objects, `![name](echo:///<id>)`, say which features the spec holds and
-             in what order. `Spec.features` holds the same list as refs, which make the spec each feature's owner so
-             deleting the spec deletes them; only the sync and the feature operations write it.
+             in what order. The spec's features annotation holds the same list as refs, which make the spec each feature's
+             owner so deleting the spec deletes them; only the sync and the feature operations write it.
   req F-1.2: A feature object holds its name, description, status and requirements. The document holds no `feat`
              block for a feature it embeds.
   req F-1.3: No structure is required. A document may be prose alone, embeds may sit anywhere in it, and the prose
              around them is kept as written.
-  req F-1.4: A feature added from the canvas, the board or an operation is embedded at the end of the document's
+  req F-1.4: A feature added from the canvas or an operation is embedded at the end of the document's
              `## Features` section, or at the end of the document when it has none.
   req F-1.5: A feature the spec holds that its document has never embedded, such as one a seed or a migration added, is
              embedded when the spec is synced, never dropped.
@@ -70,7 +70,7 @@ feat F-2: Feature embeds in the editor
               requirements, a structured requirement with each field on a line of its own. It also lists the features
               the feature depends on, which it can add and remove.
   req F-2.8: org.dxos.plugin.code#SpecArticle draws the same sections, through
-             `ProjectCapabilities.SpecDocumentExtensions`, which this plugin contributes, so plugin-code imports none of
+             `ProjectCapabilities.SpecExtensions`, which this plugin contributes, so plugin-code imports none of
              its components.
   req F-2.9: A feature's `section` surface is that form, so any document embedding the feature can edit it in place. Its
              card is the read-only version, shown on the map, the board and in search.
@@ -93,10 +93,51 @@ feat F-3: A spec as a file
   req F-3.4: Written against the file text last synced, the block of a feature that has not changed is copied as it was,
              and a changed one has only its changed lines rewritten.
   req F-3.5: org.dxos.plugin.code#F-14 syncs a spec's document with its file through export and import, by
-             `ProjectCapabilities.SpecDocumentCodec`, so the file holds `feat` blocks and the document holds embeds.
+             `ProjectCapabilities.SpecCodec`, so the file holds `feat` blocks and the document holds embeds.
              org.dxos.plugin.github.file-sync#F-6 syncs a file in a GitHub repository the same way.
-  req F-3.6: A document no object owns becomes the document of a new spec, named after it, when a file read into it
-             through the codec holds a `feat` block; a file of prose alone leaves it as it is.
+  req F-3.6: The codec handles a spec whose document embeds a feature or whose file holds a `feat` block. A spec of
+             prose alone is synced as plain text.
+```
+
+```mdl
+feat F-4: A project's specs
+  req F-4.1: A project owns any number of top-level specs (`Project.specs`), and each spec has at most one owner. A
+             breakdown spec belongs to its feature, and only feature specs nest.
+  req F-4.2: A spec (`@dxos/compute`'s `Spec`) holds a name, a description, its dialects and its document. The document
+             is the spec; the canvas, the board and any other view are lenses over it. A spec is part of its project,
+             not a type of its own in a space, so Create object does not offer it. Its document holds no front
+             matter: the name is the spec's, edited in the nav tree or the overview.
+  req F-4.3: A spec's dialects name the dialect specs whose blocks its document uses, as data on the spec, not in its
+             text. A spec with none uses the core and changelog blocks only. A breakdown spec takes the dialects of
+             the spec its feature is on.
+  req F-4.4: What a dialect reads out of a document is kept as typed annotations on the spec: this plugin's features
+             (`org.dxos.projects.features`) and canvas layout (`org.dxos.projects.layout`).
+  req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
+             spec. It opens on the spec picked last, or the project's first.
+  req F-4.6: The nav tree lists each spec under the project's Specs branch, and each level beneath it at
+             `project/<id>/specs/<spec>/<feature>/…`, the same path however many specs the project has. A spec's node
+             holds the spec, and a spec a project owns opens as the project's article on that spec.
+  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: Create artifact on the
+             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Assign to agent and
+             the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
+             assistant companion's.
+  req F-4.8: A spec offers the views its extension packages give: its text always, and the canvas and the board when it
+             uses the software package. A package is a set of dialects a plugin contributes
+             (`ProjectCapabilities.SpecPackage`); the software package's are the features (`org.dxos.spec.features`),
+             app, plugin, QA and SQL dialects. The view toggle shows only when a spec has more than one view. The
+             Extensions menu lists the packages and checks each one whose dialects the spec all uses; checking one
+             adds its dialects and unchecking removes them. Adding a feature to a spec gives it the software package.
+  req F-4.9: The canvas shows a `+` in the empty cell under the pointer, anywhere on the grid, which adds a new feature
+             or an existing one in that cell, fixing the other cards where they are drawn. It has no up or home
+             button: a feature map does not nest scenes, and a double-click opens a feature's own level.
+  req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
+              block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
+              of its kind already in the text; text before the slash becomes the block's title. The software package
+              offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`, `/test` and `/table`,
+              which write text only.
+  req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
+              owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
+              and the list's `+` creates a spec, its row open for the name.
 ```
 
 ## QA
@@ -338,7 +379,7 @@ test QA-6: Walk a spec's feature map
       do: Double-click the "Provider sync" card.
       expect: the canvas shows its two subfeatures, and the trail reads All features › Provider sync
     - name: Add a subfeature
-      do: Click New feature.
+      do: Point at an empty cell, click the `+` that shows there, then New feature.
       expect: a third card appears on the nested spec and the companion shows "New feature"
     - name: Zoom back out
       do: Click "All features" in the trail.
@@ -389,6 +430,71 @@ test QA-7: Grow a spec from prose
     - name: Depend on another feature
       do: Click the "Instant inbox" section, click "Add dependency" in it and pick "Search".
       expect: the section lists "Search" under "Depends on"
+```
+
+```mdl
+test QA-8: Switch between a project's specs
+  desc: |
+    A project holds a feature map and a spec of prose side by side. Its Overview is one form in which each spec is a
+    folded row that unfolds to the spec's fields, and whose `+` adds a spec. Its Specs tab shows one spec at a time,
+    picked from a dropdown in the toolbar. The feature map's text mixes prose with its features, and `/feature` turns
+    a line of that prose into a feature. A new "Launch video" spec takes a package from another plugin, which adds
+    slash commands and no views. Walked by the autocue flow `project-specs` against the ProjectArticle story
+    "Default", whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
+  actors: human
+  covers: [F-4.1, F-4.2, F-4.4, F-4.5, F-4.7, F-4.8, F-4.9, F-4.10, F-4.11]
+  status: unverified
+  given:
+    - storybook serves plugin-projects
+    - the project "Project 1" owns the spec "Inbox and agents" and then the spec "Launch talk", whose document is
+      three paragraphs of prose
+    - the document of "Inbox and agents" opens with a paragraph and a list of goals, embeds its eight features under
+      the headings Accounts, Mail and Work with notes between them, and ends with two ideas under Ideas, the last
+      "A morning digest of what agents did overnight"
+    - a sample plugin contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`,
+      `/shot`, `/voiceover` and `/caption` write its blocks, and no views
+  steps:
+    - name: See the project's specs
+      do: Open the project "Project 1" on its Overview.
+      expect: the project's form lists its specs under Specs, "Inbox and agents" and then "Launch talk", each a row
+        folded under its name, with a `+` beside the label, and the toolbar offers Create artifact
+    - name: Unfold a spec
+      do: Unfold the row "Inbox and agents" and type a description.
+      expect: the row shows the spec's Name and Description fields nested in the project's form, and the description
+        is the spec's
+    - name: Add a spec
+      do: Click the `+` beside Specs and name the spec "Launch video".
+      expect: a third row opens, titled Untitled until its name is typed, then "Launch video"
+    - name: Open the Specs tab
+      do: Click the Specs tab and scroll through the document.
+      expect: the tab shows "Inbox and agents", its prose and goals with its features embedded under their headings,
+        and the toolbar holds the spec dropdown, the view toggle and Extensions instead of Create artifact
+    - name: Turn an idea into a feature
+      do: At the end of the line "A morning digest of what agents did overnight", type `/feature`, press Enter and
+        type a description.
+      expect: the line is now an embedded feature of that name, planned, whose description takes the typed text
+    - name: List the specs
+      do: Click the spec dropdown in the toolbar.
+      expect: the menu lists "Inbox and agents", checked, "Launch talk" and "Launch video", and ends in Add spec
+    - name: Pick the other spec
+      do: Click "Launch talk".
+      expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and no view toggle
+    - name: Give it the software package
+      do: Open Extensions and check Software.
+      expect: the menu lists Software and Video, and the view toggle appears, offering the spec's text, Canvas and
+        Kanban
+    - name: Give the new spec the video package
+      do: Pick "Launch video" from the dropdown, open Extensions and check Video.
+      expect: the document is empty, Video is checked and no view toggle appears
+    - name: Write a scene
+      do: At the end of the document, type `/scene` and press Enter.
+      expect: a fenced `scene SC-1:` block with empty `duration:` and `goal:` fields, the cursor at its title
+    - name: Go back to the feature map
+      do: Pick "Inbox and agents" from the dropdown, then click Canvas.
+      expect: the canvas shows nine feature cards, the morning digest among them, and no up or home button
+    - name: Add a feature on the canvas
+      do: Point at an empty cell, click the `+` that shows there, then New feature.
+      expect: a tenth card, "New feature", appears in that cell
 ```
 
 ## Changelog
@@ -747,4 +853,487 @@ decision D-41: `/feature` is offered only for a slash at the start of a line or 
   for: user:wittjosiah
   affects: [F-2.6]
   why: A slash inside a path such as `packages/` offered the completion, and Enter at the end of the line then accepted it, turning the paragraph into a feature.
+```
+
+```mdl
+decision D-42: A spec is one document. The canvas, the board and any other view are lenses over it, such as canvas positions or a kanban pivot, and the view toggle shows only when a spec has more than one view.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-43: Each dialect is one bundle, and the blocks it defines map to plugin capabilities when the text is synced. Composer's editor stays fully compatible with MDL as plain text.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+```
+
+```mdl
+decision D-44: What a dialect adds to a spec is kept as ECHO annotations on the spec, so it is strongly typed.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.4]
+```
+
+```mdl
+decision D-45: A spec declares its dialects as structured data, not in its text, and the sync to the text form uses them. A presentation dialect's blocks are inserted as templates by slash commands such as `/slide`, with no views of their own.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+  why: The dialects of coding and of presentation are not mixed in one spec.
+```
+
+```mdl
+decision D-46: A project has several top-level specs. The project article's Specs tab picks the current spec from a dropdown in its toolbar. Only feature specs nest, so a presentation spec is a top-level spec. Replaces the part of [D-9] where a project has at most one spec.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.1, F-4.5]
+  supersedes: D-9
+```
+
+```mdl
+decision D-47: `Spec` is generic, so it moves to `@dxos/compute`.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-48: A spec level's nav path is `project/<id>/specs/<spec>/<feature>/…`, the same however many specs the project has.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.6]
+```
+
+```mdl
+decision D-49: A spec that lists no dialects uses the core and changelog blocks only.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+```
+
+```mdl
+decision D-50: The spec document folds into the spec: a spec's text is its own `content`, and `SpecDocument` goes away. Replaces the part of [D-12] where a spec refers to a separate document.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-1, F-4.2]
+  supersedes: D-12
+```
+
+```mdl
+decision D-51: `Spec` 0.3.0 (`org.dxos.type.projects.spec`) holds `name`, `description`, `dialects` and `content`, a `Text` it owns. `Project` 0.7.0 holds `specs`, a list of refs, in place of `spec`. The migrations move a 0.6.0 project's spec into the list, move a 0.2.0 spec's document's `Text` and file links onto the spec and delete the document, and make a spec of each `SpecDocument` no spec held. A migrated spec lists no dialects. Fills in [D-46], [D-47] and [D-50].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-4.2]
+  why: Moving the `Text` rather than copying it keeps its id, its history and the cursors anchored in it. No dialect registry exists yet to say which dialects an old spec used, and none listed reads as core and changelog only ([D-49]).
+  rejected:
+    - Copying the document's text into a new `Text` on the spec.
+    - Listing the `feat` dialect on every migrated spec.
+```
+
+```mdl
+decision D-52: The spec's features are the `org.dxos.projects.features` annotation, a list of feature refs in the document's order, and its canvas layout is the `org.dxos.projects.layout` annotation. The refs keep the spec each feature's ECHO parent, so deleting the spec still deletes its features. Fills in [D-44]. Replaces the part of [D-17] where the features are a field of `Spec`.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.1, F-4.4]
+  supersedes: D-17
+  why: The ids carry this plugin's namespace, which owns them, and leave `Spec` free of anything a dialect adds.
+  rejected:
+    - A generic `Spec.items` field, which would type every dialect's objects the same.
+```
+
+```mdl
+decision D-53: A breakdown spec takes the dialects of the spec its feature is on, when made by `op:CreateSpec` or when a feature is first broken down. Fills in [D-45].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.3]
+  why: A feature's breakdown is written in the same language as the spec it came from.
+```
+
+```mdl
+decision D-54: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project that already has a spec; a spec given to a project joins the end of its specs. The Specs tab opens on the spec last picked, kept in the project's view state, or the project's first spec, and Add spec opens the spec form and selects the new spec. Fills in [D-46].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-4.5]
+  why: The pick is a reader's place, like the selected tab, so it lives with the view state and not on the project.
+```
+
+```mdl
+decision D-55: The codec takes a spec only when its document embeds a feature or the file holds a `feat` block, and otherwise leaves the spec to the plain text sync. `ProjectCapabilities.SpecDocumentCodec` and `SpecDocumentExtensions` are renamed `SpecCodec` and `SpecExtensions` and take a `Spec`. Fills in [D-50]. Replaces [D-29], since no document exists apart from a spec.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.8, F-3.5, F-3.6]
+  supersedes: D-29
+  why: Every synced spec now passes through the codec. Taking a prose spec would skip the plain three-way text merge it had before.
+```
+
+```mdl
+decision D-56: A spec's nav-tree node holds the spec itself, as a feature level holds its feature, so it gets every companion an object gets. A spec a project owns opens as that project's article on the spec, with the feature companion beside it; a spec no project owns keeps its own article. The Specs branch holds no object and opens nothing. Fills in [D-46] and [D-48], following [D-13].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6]
+  why: A spec is an object, like a feature, so its level should behave like one rather than wrap the project and the spec.
+  rejected:
+    - A spec node holding the project and the spec, which loses the companions an object gets.
+```
+
+```mdl
+decision D-57: A QA walk shows a project's several specs working, so the change can be seen in the app.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-58: QA-8 opens a project holding a feature map and a spec of prose, lists both on the Overview, switches between them from the Specs tab's dropdown, adds a third spec from it, and ends on the feature map's canvas. Fills in [D-57].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: A prose spec next to a feature map shows that a spec need not hold features, and the canvas at the end shows the features still read from the spec after they moved into an annotation.
+```
+
+```mdl
+decision D-59: Creating a spec asks for its name, which is required and heads the new spec's document. Fills in [D-54].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: The spec form opened by Add spec had no field to show, so the dialog stayed empty and no spec could be added.
+  rejected:
+    - Creating an unnamed spec at once, which leaves a picker entry with no label.
+```
+
+```mdl
+decision D-60: The project article's toolbar is contextual: the tabs stay on the left, and what follows them changes with the tab shown.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-61: The toolbar has no button to start a session: that is the assistant companion's, which already has a place.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-62: Assign to agent and the Gantt chart toggle are relevant only to the task list, so they show only on the Tasks tab.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-63: Create artifact is not in the overflow menu, and it shows only on the Overview.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-64: On the Specs tab the toolbar holds the dropdown that picks the spec, the toggle between the spec's views, and a multi-select menu of the extensions the spec has.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7, F-4.8]
+```
+
+```mdl
+decision D-65: Adding a feature is not a toolbar action: the canvas has a plus button in each of its cells that adds a feature there.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-66: A spec has only the views its extensions give. A spec without the features extension, such as "Launch talk", has no canvas or kanban view.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.8]
+```
+
+```mdl
+decision D-67: The feature map's canvas has no up or home button. Those belong to a diagram that nests scenes within one object.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-68: The extensions are the spec's dialects. Plugins contribute the dialects a spec can use as `ProjectCapabilities.SpecDialect`, and the Extensions menu lists them and checks the ones in `Spec.dialects`. This plugin contributes the features dialect, `org.dxos.spec.features`, from the module that contributes its editor extensions. Fills in [D-64] and [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The dialect is what a spec already records about the blocks its text uses, so the menu edits data the spec has rather than a new field.
+  rejected:
+    - A separate list of enabled views on the spec, which could disagree with the dialects its text uses.
+```
+
+```mdl
+decision D-69: A spec in the features dialect offers its text, the canvas and the board; any other spec offers its text alone, and the view toggle hides. Its editor draws feature embeds as sections and offers `/feature` only in the dialect. Fills in [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8, F-2.6]
+  why: Without the dialect the text holds no feature blocks, so neither the map's views nor `/feature` apply to it.
+```
+
+```mdl
+decision D-70: Adding a feature to a spec, from the canvas, `/feature`, an operation or a file read in, turns the features dialect on. `FeatureMap.make` makes a spec in the dialect, and the `Spec` 0.2.0 migration gives it to every spec it migrates, all of which were feature maps. Fills in [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: An agent adds features through the feature operations without knowing about dialects, and a spec holding features must keep its map.
+  rejected:
+    - Refusing to add a feature to a spec outside the dialect, which would make every agent check the dialect first.
+```
+
+```mdl
+decision D-71: The canvas's plus sits in each empty cell next to the cards, or in the centre cell of an empty map, faint until pointed at, and opens a menu of New feature and Add existing feature, which place the feature in that cell. Placing it first fixes every card where it is drawn, since a new card changes the automatic layout's extent and would shift the cards around that cell. The canvas shows even when the spec holds no features. Fills in [D-65].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.9]
+  why: Only the button takes the pointer, so the empty cells still pan and select; one button per cell with a menu keeps the grid quiet.
+  rejected:
+    - A plus shown only while the pointer is over a cell, which needs the cells to take the pointer and so stops panning from them.
+    - Two buttons per cell, which doubles the marks on the grid.
+```
+
+```mdl
+decision D-72: The board offers no way to add a feature: its empty state points to the canvas and the spec's text. Fills in [D-65].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.9]
+  why: Adding moved off the toolbar, and a new card's column is its status, which the companion sets once it is named.
+```
+
+```mdl
+decision D-73: The project tour drops its step on starting a session from the toolbar. Fills in [D-61].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The step pointed at the button D-61 removes.
+```
+
+```mdl
+decision D-74: QA-8 also checks each tab's tools, that "Launch talk" has no view toggle until Features is checked in Extensions, and that the canvas adds a feature in an empty cell and has no up or home button. Fills in [D-60] to [D-67].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 is the walk of a project's specs, so it carries the toolbar and the views those decisions change.
+```
+
+```mdl
+decision D-75: The extension is the Software package: a plugin contributes a package of extensions for the software dialect, and features are one part of that dialect, not the extension itself.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.8]
+```
+
+```mdl
+decision D-76: The canvas's plus is on every cell, not only the cells around the existing cards, and shows only on hover.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-77: A sample video dialect, with a "Launch video" spec, shows that specs are extensible, in place of the release notes spec. The video dialect has no other views for now, but has slash commands for its different parts.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8, F-4.10]
+```
+
+```mdl
+decision D-78: The software dialect offers a slash command not only for a feature but for its other pieces too. Those that create no objects insert the block's template structure inline.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.10]
+```
+
+```mdl
+decision D-79: Plugins contribute packages as `ProjectCapabilities.SpecPackage`, each an id, a label and its dialects, in place of `ProjectCapabilities.SpecDialect`. The software package holds the features, app, plugin, QA and SQL dialects (`FeatureMap.SOFTWARE_DIALECTS`). The Extensions menu checks a package when the spec uses all its dialects; checking adds the missing ones and unchecking removes them all. Fills in [D-75].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-68
+  affects: [F-4.8]
+  why: The spec still records its dialects, which say what its text uses, while a person turns a plugin's whole set on or off.
+  rejected:
+    - A menu entry per dialect, which leaves a person to know which dialects go together.
+    - A field on the spec naming its packages, which could disagree with its dialects.
+```
+
+```mdl
+decision D-80: Adding a feature to a spec, from the canvas, `/feature`, an operation or a file read in, gives it the whole software package. `FeatureMap.make` makes a spec with the package, and the `Spec` 0.2.0 migration gives it to every spec it migrates. Fills in [D-75].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-70
+  affects: [F-4.8]
+  why: Features are one part of the software dialect, so a spec holding them is a software spec, and the menu shows the package checked.
+  rejected:
+    - Adding the features dialect alone, which leaves the package unchecked in the menu.
+```
+
+```mdl
+decision D-81: A package's editor extensions contribute slash commands to the `slashCommand` facet, and one completion lists every contributed command. `blockTemplate` makes a command that writes a fenced `mdl` block with its fields empty, numbered after the blocks with its prefix, and text before the slash becomes its title. The software package adds `/type`, `/op`, `/scenario` (`T-n`), `/test` (`QA-n`) and `/table`. An editor rebuilds its extensions from the dialects it renders. Fills in [D-77] and [D-78].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.10, F-2.6]
+  why: One completion keeps every package's commands in one list, and numbering after the existing blocks keeps ids unique in the text.
+  rejected:
+    - A completion per package, which would show competing lists for one slash.
+```
+
+```mdl
+decision D-82: The plus shows in the empty cell under the pointer, anywhere on the grid, and stays while its menu is open. It opens a menu of New feature and Add existing feature, which place the feature in that cell, first fixing every card where it is drawn, since a new card changes the automatic layout's extent. The canvas shows even when the spec holds no features. Fills in [D-76].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-71
+  affects: [F-4.9]
+  why: The canvas reads the pointer from its scene view, so the cells never take the pointer and still pan and select.
+  rejected:
+    - A faint plus drawn in every cell at once, which fills an unbounded grid with marks.
+```
+
+```mdl
+decision D-83: The sample Video package is a testing plugin, `VideoPackagePlugin`, contributing the video dialect (`org.dxos.spec.video`) with `/scene` (`SC-n`), `/shot` (`SH-n`), `/voiceover` (`VO-n`) and `/caption` (`CA-n`) and no views. QA-8 checks Software on "Launch talk", adds "Launch video", checks Video on it and writes a scene with `/scene`. QA-6 and QA-8 point at an empty cell before clicking its plus. Fills in [D-75] to [D-78].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-74
+  affects: [QA-6, QA-8]
+  why: A package from a plugin other than this one shows that the menu and the slash commands are open to any plugin.
+  rejected:
+    - Contributing the video package from this plugin, which would ship a sample in the product.
+```
+
+```mdl
+decision D-84: Specs are a part of their project, not a separate top-level user type, so the Create object dialog does not offer Spec. Add spec opening the generic Create object form with the type set to Spec is fine.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-85: A spec in Composer has no front matter: what front matter holds goes into the object's structured data. Its name is the object's name, edited in the nav tree or the overview, and the rest of the front matter is editable from the overview. Text that already starts with front matter stays; newly created specs stop getting it.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2, F-4.11]
+```
+
+```mdl
+decision D-86: The project overview shows each spec as a nested form within the project's form, where its data is edited. The form edits the spec in place, and a button on it opens the spec on the Specs tab; there is no spec overview yet.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-87: `Spec` drops its user-type annotation, so neither Create object nor the nav tree's type sections list it; Add spec still opens the Spec form, which the dialog resolves from every create entry. `Spec.make` starts with empty text and `FeatureMap.make` with `## Features` and its embeds; `Spec.makeContent` goes. Fills in [D-84] and [D-85].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.2]
+  why: The annotation is what marks a type as one a person creates and browses on its own in a space.
+  rejected:
+    - Filtering Spec out of the dialog's list alone, which would leave it in the nav tree's type sections.
+    - Stripping front matter from existing texts, which [D-85] leaves as they are.
+```
+
+```mdl
+decision D-88: Each spec's form edits `name` and `description`, picked from the `Spec` schema, and reads them once per spec, as the project's form does. Below it are the feature counts and Open spec, which shows the spec on the Specs tab. Fills in [D-86].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.11]
+  why: A form per spec keeps the overview one form of forms, and a name and description are the fields a spec of any dialect has.
+  rejected:
+    - Keeping the name as a button that opens the spec, which leaves nowhere to edit it.
+```
+
+```mdl
+decision D-89: QA-8 expects a form per spec with Open spec on the Overview, and an empty document for a new spec. Fills in [D-85] and [D-86].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 walks the overview and Add spec, which those decisions change.
+  rejected:
+    - A separate test for the overview's forms, which would repeat QA-8's first step.
+```
+
+```mdl
+decision D-90: The project's overview is one form built from the form primitives off the schema, with nothing custom to specs: the specs nest within it inside a boundary, as nested forms do by default, and are a list whose items are collapsed and expand to show each spec's fields, using the forms' own handling of lists.
+  date: 2026-10-30
+  by: user:wittjosiah
+  supersedes: D-86
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-91: The spec shown for "Inbox and agents" mixes unstructured prose in with its structured features, rather than only inlining the features, and the demo shows the spec evolving from less structure to more, such as the `/feature` slash command.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-92: Add spec keeps its dialog only if it is the global Create object dialog and it works without Spec being a user type. Otherwise the dialog and the dropdown's Add spec go, and new specs are added only from the overview.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.5]
+```
+
+```mdl
+decision D-93: Both conditions of [D-92] hold, so Add spec stays: it opens the global Create object dialog, which pins to the top of the screen in the app and is centred only in storybook, and the dialog resolves the Spec form from every create entry, not only user types.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5]
+  why: `OpenObjectForm` opens the shared object form dialog with `blockAlign: 'start'`, and the SpecPicker story adds a spec through it with Spec not a user type.
+  rejected:
+    - Dropping the dropdown's Add spec as well, which [D-92] asks for only if a condition fails.
+```
+
+```mdl
+decision D-94: `Project.specs` carries `FormCreateAnnotation` for Spec in place of hiding it from forms, and `Spec` a `FactoryAnnotation` that makes its text. react-ui-form's array field again handles an owned array of refs: its `+` creates the target through the form's `onCreate`, and each row renders the target inline as a collapsible group named by the target's label ("Untitled" while empty), folded unless the row was just created. The overview's form is controlled by the project and writes back only the edited path. The feature counts and Open spec go. Fills in [D-90].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-88
+  affects: [F-4.11]
+  why: The owned-ref array is the form's own list for objects a parent owns; the Ark cutover dropped its add and inline rows, so restoring them serves any schema. A controlled form shows a spec added from the Specs tab, which a form read once would overwrite.
+  rejected:
+    - Re-annotating `specs` only in the overview's picked schema, a second schema for one form.
+    - Keeping the counts and Open spec beside each row, content the form primitives do not have.
+    - Deleting a spec when its row is removed; removing a row only drops the ref, as for any array.
+```
+
+```mdl
+decision D-95: The seeded "Inbox and agents" opens with a paragraph and a list of goals, embeds its features under Accounts, Mail and Work with notes between them, and ends with two ideas. QA-8 unfolds a spec and types its description, adds "Launch video" with the overview's `+`, and turns the idea "A morning digest of what agents did overnight" into a feature with `/feature`. Fills in [D-90] and [D-91].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-89
+  affects: [QA-8]
+  why: A phrase on a line of its own shows `/feature` naming a feature from prose, and the canvas then counts it.
+  rejected:
+    - Seeding the prose for every story that uses the sample features, which the other stories' checks do not need.
 ```

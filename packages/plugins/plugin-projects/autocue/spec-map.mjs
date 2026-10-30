@@ -34,6 +34,16 @@ const waitForCount = (page, count) =>
     { timeout: 15_000 },
   );
 
+/** Points at the empty cell left of the leftmost card, where the canvas then shows its `+`. */
+const showAdd = async (page) => {
+  const boxes = await page
+    .locator('[data-testid="feature-canvas-node"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON()));
+  const { x, y, width, height } = boxes.reduce((left, box) => (box.x < left.x ? box : left));
+  await page.mouse.move(x + width / 2 - width * 1.25, y + height / 2, { steps: 12 });
+  await page.getByTestId('feature-canvas.add').waitFor({ state: 'visible', timeout: 5_000 });
+};
+
 export const steps = [
   {
     name: 'Prep (off camera): warm the story',
@@ -76,7 +86,9 @@ export const steps = [
   {
     name: 'Add a subfeature',
     run: async ({ demo, page }) => {
-      await caption(demo, 4, 'Click New feature');
+      await caption(demo, 4, 'Point at an empty cell, click its +, then New feature');
+      await showAdd(page);
+      await demo.click({ selector: '[data-testid="feature-canvas.add"]', label: 'Add a feature here' });
       await demo.click({ selector: '[data-testid="feature-map.new-feature"]', label: 'New feature' });
       await waitForCount(page, 3);
       await demo.sleep({ ms: BEAT });

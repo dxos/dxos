@@ -6,12 +6,13 @@
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { type Database, DXN, Obj, Ref, Relation } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { File, Milestone, PullRequest, SpecDocument, Task } from '@dxos/types';
+import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
-import { Feature, Showcase, Spec } from '#types';
+import { Feature, FeatureEmbed, FeatureMap, Showcase } from '#types';
 
 import { type FeatureModel } from '../components/FeatureCard/feature.ts';
 import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
@@ -19,7 +20,6 @@ import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
 /** The types a database needs to hold a seeded spec. */
 export const types = [
   Spec.Spec,
-  SpecDocument.SpecDocument,
   Feature.Feature,
   Feature.DependsOn,
   Feature.Implements,
@@ -34,6 +34,37 @@ export const types = [
   PullRequest.PullRequest,
 ];
 
+/** Lays out a spec's text around its features' embeds, each looked up by its model's id. */
+export type Layout = (embed: (id: string) => string) => string;
+
+/**
+ * The sample features as a spec is first written: prose and goals, the features grouped under headings with notes
+ * between them, and ideas not yet made features.
+ */
+export const INBOX_LAYOUT: Layout = (embed) =>
+  [
+    'Inbox and agents puts mail, calendars and tasks in one place, with agents that take work off the list.',
+    '## Goals',
+    '- One inbox for every account a person has.\n- Nothing leaves the device unencrypted.\n- An agent can take any task a person could, and says what it did.',
+    '## Features',
+    '### Accounts',
+    'People sign in once per provider, and the app keeps the grants fresh.',
+    embed('accounts'),
+    embed('tokens'),
+    '### Mail',
+    embed('sync'),
+    embed('compose'),
+    embed('triage'),
+    'Triage should learn from what people archive without asking them. How much it may infer is still open.',
+    '### Work',
+    embed('tasks'),
+    embed('feature-map'),
+    embed('delegate'),
+    '## Ideas',
+    'People can snooze a thread until someone replies.',
+    'A morning digest of what agents did overnight',
+  ].join('\n\n') + '\n';
+
 /**
  * Writes card models into a database as the objects and relations they are derived from — features on one spec that
  * names one project (made unless given), each with its subfeatures on a spec it owns, `DependsOn`, tasks and
@@ -45,7 +76,8 @@ export const seed = (
     name = 'Inbox and agents',
     features = SAMPLE_FEATURES,
     project = db.add(Project.make({ name })),
-  }: { name?: string; features?: readonly FeatureModel[]; project?: Project.Project } = {},
+    layout,
+  }: { name?: string; features?: readonly FeatureModel[]; project?: Project.Project; layout?: Layout } = {},
 ): Spec.Spec => {
   const objects = new Map<string, Feature.Feature>();
   for (const model of features) {
@@ -61,9 +93,9 @@ export const seed = (
     Feature.setSources(feature, model.specs);
     if (model.subfeatures.length > 0) {
       const subfeatures = model.subfeatures.map((subfeature) =>
-        Ref.make(db.add(Feature.make({ name: subfeature.name, status: subfeature.status }))),
+        db.add(Feature.make({ name: subfeature.name, status: subfeature.status })),
       );
-      const breakdown = db.add(Spec.make({ name: model.name, features: subfeatures }));
+      const breakdown = db.add(FeatureMap.make({ name: model.name, features: subfeatures }));
       Obj.update(feature, (feature) => {
         feature.spec = Ref.make(breakdown);
       });
@@ -77,10 +109,14 @@ export const seed = (
     }
     objects.set(model.id, feature);
   }
-  // Made once its features exist, so its document embeds them.
-  const spec = db.add(Spec.make({ name, features: [...objects.values()].map((feature) => Ref.make(feature)) }));
+  // Made once its features exist, so its text embeds them.
+  const embed = (id: string) => {
+    const feature = objects.get(id);
+    return feature ? FeatureEmbed.make({ label: feature.name, uri: Obj.getURI(feature) }) : '';
+  };
+  const spec = db.add(FeatureMap.make({ name, features: [...objects.values()], content: layout?.(embed) }));
   Obj.update(project, (project) => {
-    project.spec = Ref.make(spec);
+    project.specs.push(Ref.make(spec));
   });
 
   const milestones = new Map<string, Milestone.Milestone>();

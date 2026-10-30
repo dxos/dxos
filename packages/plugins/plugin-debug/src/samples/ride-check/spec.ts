@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database, Obj, Ref } from '@dxos/echo';
+import * as Spec from '@dxos/compute/Spec';
+import { Database, Obj } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
 import { Text } from '@dxos/schema';
-import { SpecDocument } from '@dxos/types';
 
 import content from './SPEC.mdl?raw';
 
@@ -18,20 +18,18 @@ import content from './SPEC.mdl?raw';
  */
 export const SPEC_PATH = 'ride-check/SPEC.mdl';
 
-export type SpecResult = { spec: SpecDocument.SpecDocument };
+export type SpecResult = { spec: Spec.Spec };
 
 /** The Ride Check spec in Deus, as the reader would import a repo spec into the space. */
 export const SpecPartial: SampleSpace.Partial<SpecResult> = SampleSpace.partial('spec', {
-  schemas: [SpecDocument.SpecDocument, Text.Text],
+  schemas: [Spec.Spec, Text.Text],
   run: () =>
     Effect.gen(function* () {
-      const spec = yield* Database.add(
-        Obj.make(SpecDocument.SpecDocument, {
-          name: 'Ride Check',
-          content: Ref.make(Text.make({ content })),
-          [Obj.Meta]: { keys: [{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }] },
-        }),
-      );
+      const spec = Spec.make({ name: 'Ride Check', content });
+      Obj.update(spec, (spec) => {
+        Obj.getMeta(spec).keys.push({ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH });
+      });
+      yield* Database.add(spec);
       return { spec };
     }),
 });

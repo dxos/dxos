@@ -92,19 +92,19 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Eager, as the migrations are: a spec synced to its file before the codec arrives would take the file's `feat`
     // blocks in as text.
     Capability.lazyModule(
-      'SpecDocumentCodec',
-      { provides: [ProjectCapabilities.SpecDocumentCodec] },
-      () => import('./src/capabilities/spec-document-codec.ts', { with: { type: 'module-url' } }),
+      'SpecCodec',
+      { provides: [ProjectCapabilities.SpecCodec] },
+      () => import('./src/capabilities/spec-codec.ts', { with: { type: 'module-url' } }),
     ),
     // Off the boot path: an editor that opened before they arrive is rebuilt with the cards.
     Capability.lazyModule(
-      'SpecDocumentExtensions',
+      'SpecExtensions',
       {
-        provides: [ProjectCapabilities.SpecDocumentExtensions],
+        provides: [ProjectCapabilities.SpecExtensions, ProjectCapabilities.SpecPackage],
         activatesOn: ActivationEvents.Idle,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/spec-document-extensions.ts', { with: { type: 'module-url' } }),
+      () => import('./src/capabilities/spec-extensions.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'SubjectContext',

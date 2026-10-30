@@ -12,10 +12,11 @@ import {
   type FeatureCompanionProps,
   type FeatureLevelCompanionProps,
   type ProjectFeatureCompanionProps,
+  type SpecLevelCompanionProps,
 } from './FeatureCompanion/index.ts';
 import { type FeatureSectionProps } from './FeatureSection/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
-import { type FeatureLevelArticleProps } from './ProjectArticle/index.ts';
+import { type FeatureLevelArticleProps, type SpecLevelArticleProps } from './ProjectArticle/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
 import { type SpecDocumentArticleProps } from './SpecDocumentArticle/index.ts';
 import { type SpecArticleProps } from './SpecFeatures/index.ts';
@@ -60,6 +61,14 @@ export const SpecArticle: ComponentType<SpecArticleProps> = lazy(() =>
 // Lazy: the editor engine is large, and only an opened spec document needs it.
 export const SpecDocumentArticle: ComponentType<SpecDocumentArticleProps> = lazy(() =>
   import('./SpecDocumentArticle/index.ts').then((module) => ({ default: module.SpecDocumentArticle })),
+);
+
+export const SpecLevelArticle: ComponentType<SpecLevelArticleProps> = lazy(() =>
+  import('./ProjectArticle/index.ts').then((module) => ({ default: module.SpecLevelArticle })),
+);
+
+export const SpecLevelCompanion: ComponentType<SpecLevelCompanionProps> = lazy(() =>
+  import('./FeatureCompanion/index.ts').then((module) => ({ default: module.SpecLevelCompanion })),
 );
 
 export const ProjectArticle: ComponentType<any> = lazy(() =>

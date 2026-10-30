@@ -3,11 +3,12 @@
 //
 
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
-import { Feature, Spec } from '#types';
+import { Feature } from '#types';
 
 import { ProjectsNamespace } from './namespace.ts';
 
@@ -65,14 +66,13 @@ export const translations = [
         'milestones.label': 'Milestones',
         'views.label': 'Views',
         'overview.label': 'Overview',
-        'spec.label': 'Spec',
+        'specs.label': 'Specs',
         'add-spec.label': 'Add spec',
-        'spec.empty.message': 'No spec yet. A spec maps the features this work delivers.',
+        'spec-extensions.label': 'Extensions',
+        'software-package.label': 'Software',
+        'untitled-spec.label': 'Untitled spec',
+        'spec.empty.message': 'No spec yet. A spec describes what this work delivers.',
         'feature-spec.empty.message': 'This feature has no spec of its own. Add one to break it down.',
-        'spec-summary.features.label_one': '{{count}} feature',
-        'spec-summary.features.label_other': '{{count}} features',
-        'spec-summary.open-tasks.label_one': '{{count}} has open tasks',
-        'spec-summary.open-tasks.label_other': '{{count}} have open tasks',
         'tasks.label': 'Tasks',
         'view.label': 'View',
         'show-pipeline.label': 'Show pipeline',
@@ -142,10 +142,11 @@ export const translations = [
         'add-feature-dialog.empty.message': 'There are no other features in this space.',
         'feature-map.new-feature.label': 'Add new feature',
         'feature-map.new-feature.name': 'New feature',
+        'feature-canvas.add-feature.label': 'Add a feature here',
         'feature-map.root.label': 'All features',
         'feature-map.zoom-out.label': 'Zoom out',
         'feature-map.trail.label': 'Feature map level',
-        'feature-map.empty.message': 'No features yet. Add one from the menu.',
+        'feature-map.empty.message': 'No features yet. Add one on the canvas or in the spec text.',
         'feature-companion.label': 'Feature',
         'feature-companion.empty.message': 'Select a feature on the map to see its details.',
         'feature-article.zoom.label': 'Show subfeatures on the map',
@@ -161,7 +162,7 @@ export const translations = [
         'feature-map.mode.label': 'View',
         'feature-map.mode.canvas.label': 'Canvas',
         'feature-map.mode.kanban.label': 'Kanban',
-        'feature-map.mode.document.label': 'Spec document',
+        'feature-map.mode.document.label': 'Spec text',
       },
     },
   },

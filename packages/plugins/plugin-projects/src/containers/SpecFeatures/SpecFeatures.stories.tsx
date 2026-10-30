@@ -8,6 +8,7 @@ import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -23,7 +24,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
-import { Spec } from '#types';
+import { FeatureMap } from '#types';
 
 import { FeatureCompanion } from '../FeatureCompanion/index.ts';
 import { SpecFeatures } from './SpecFeatures.tsx';
@@ -33,7 +34,7 @@ type StoryArgs = { attendableId: string };
 const DefaultStory = ({ attendableId }: StoryArgs) => {
   const [space] = useSpaces();
   // The seeded spec is the project's; the subfeatures' specs are owned by their features.
-  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !Spec.getOwner(spec));
+  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !FeatureMap.getOwner(spec));
   if (!spec) {
     return <Loading data={{ db: !!space?.db, spec: !!spec }} />;
   }
@@ -108,6 +109,24 @@ const findKanbanColumn = (canvasElement: HTMLElement, status: string) => {
     throw new Error(`No column for ${status}`);
   }
   return column;
+};
+
+/** Points at the empty cell left of the leftmost card, so its `+` shows, and returns that button. */
+const showAdd = async (container: HTMLElement) => {
+  const view = within(container).getByTestId('scene-view');
+  const card = within(container)
+    .getAllByTestId('feature-canvas-node')
+    .map((node) => node.getBoundingClientRect())
+    .reduce((left, rect) => (rect.left < left.left ? rect : left));
+  // A cell's pitch is its card's width and a quarter more for the gutter.
+  view.dispatchEvent(
+    new PointerEvent('pointermove', {
+      bubbles: true,
+      clientX: card.left + card.width / 2 - card.width * 1.25,
+      clientY: card.top + card.height / 2,
+    }),
+  );
+  return within(container).findByTestId('feature-canvas.add', undefined, { timeout: 5_000 });
 };
 
 const meta = {
@@ -201,13 +220,13 @@ export const EditInCompanion: Story = {
   },
 };
 
-/** The overflow's Add new feature adds one to the level shown and selects it, so it is named in the companion. */
+/** A `+` in an empty cell adds a new feature there and selects it, so it is named in the companion. */
 export const NewFeature: Story = {
   play: async ({ canvasElement }) => {
     await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
-    await userEvent.click(canvas.getByTestId('feature-map.overflow'));
+    await userEvent.click(await showAdd(canvasElement));
     await userEvent.click(await screen.findByTestId('feature-map.new-feature'));
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(9), { timeout: 5_000 });
     const detail = await companion();

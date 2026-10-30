@@ -9,9 +9,10 @@ import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Translations from '@dxos/app-toolkit/Translations';
 import * as Project from '@dxos/compute/Project';
+import type * as Spec from '@dxos/compute/Spec';
 import type { Database, Obj } from '@dxos/echo';
-import type { SpecDocument } from '@dxos/types';
 
 import { ProjectsNamespace } from '../namespace.ts';
 
@@ -57,38 +58,47 @@ export const Settings = Capability.makeSingleton<Atom.Writable<import('./Setting
 );
 
 /**
- * How a spec's document is written to its file and read back, since the spec holds parts of it as objects. A file sync
- * uses the first codec that handles a document, and copies the text as it is when none does.
+ * How a spec's text is written to its file and read back, since the spec holds parts of it as objects. A file sync uses
+ * the first codec that handles a spec, and copies the text as it is when none does.
  */
-export type SpecDocumentCodec = {
+export type SpecCodec = {
   /**
-   * The file text for the document, written against `base`, the file text last synced, so what did not change keeps
-   * its form; undefined when the codec does not handle the document.
+   * The file text for the spec, written against `base`, the file text last synced, so what did not change keeps its
+   * form; undefined when the codec does not handle the spec.
    */
-  readonly write: (document: SpecDocument.SpecDocument, options: { base?: string }) => Promise<string | undefined>;
-  /** Takes the file's text into the document; false when the codec does not handle it. */
-  readonly read: (document: SpecDocument.SpecDocument, text: string, options: { path: string }) => Promise<boolean>;
+  readonly write: (spec: Spec.Spec, options: { base?: string }) => Promise<string | undefined>;
+  /** Takes the file's text into the spec; false when the codec does not handle it. */
+  readonly read: (spec: Spec.Spec, text: string, options: { path: string }) => Promise<boolean>;
 };
 
-export const SpecDocumentCodec = Capability.make<SpecDocumentCodec>()(
-  `${ProjectsNamespace.key}.capability.specDocumentCodec`,
-);
+export const SpecCodec = Capability.make<SpecCodec>()(`${ProjectsNamespace.key}.capability.specCodec`);
 
-export type SpecDocumentExtensionOptions = {
+export type SpecExtensionOptions = {
   attendableId?: string;
+  /** The spec's dialects as the editor renders them; read these, not the spec's, so the editor rebuilds on a change. */
+  dialects: readonly string[];
   /** Translates the contributor's own keys, named by its namespace. */
   t: (key: string, options: { ns: string }) => string;
 };
 
 /**
- * Extensions for any editor of a spec's document, such as cards for the objects the text embeds. An editor rebuilds
- * when the contributions change, so one may arrive after the editor opens.
+ * Extensions for any editor of a spec's text, such as cards for the objects the text embeds. An editor rebuilds when
+ * the contributions change, so one may arrive after the editor opens.
  */
-export type SpecDocumentExtensions = (
-  document: SpecDocument.SpecDocument,
-  options: SpecDocumentExtensionOptions,
-) => Extension[];
+export type SpecExtensions = (spec: Spec.Spec, options: SpecExtensionOptions) => Extension[];
 
-export const SpecDocumentExtensions = Capability.make<SpecDocumentExtensions>()(
-  `${ProjectsNamespace.key}.capability.specDocumentExtensions`,
-);
+export const SpecExtensions = Capability.make<SpecExtensions>()(`${ProjectsNamespace.key}.capability.specExtensions`);
+
+/**
+ * A package of extensions a plugin offers specs: dialects a spec takes or drops together, each a set of block kinds
+ * beyond the core and changelog ones. A spec lists the dialects it uses in `dialects`, and a dialect's views and
+ * editing show only for those specs.
+ */
+export type SpecPackage = {
+  id: string;
+  label: Translations.Label;
+  /** The ids a spec's `dialects` lists, as a `.mdl` file's front matter lists them in `extends`. */
+  dialects: readonly string[];
+};
+
+export const SpecPackage = Capability.make<SpecPackage>()(`${ProjectsNamespace.key}.capability.specPackage`);

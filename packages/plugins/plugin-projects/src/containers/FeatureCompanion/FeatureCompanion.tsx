@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import type * as Project from '@dxos/compute/Project';
+import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
@@ -14,9 +15,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Feature, FeatureMapView, Spec } from '#types';
+import { Feature, FeatureMap, FeatureMapView } from '#types';
 
-import { useOpenObject, useOpenSpecLevel, useProjectSpec } from '../../hooks/index.ts';
+import { useOpenObject, useOpenSpecLevel, useSelectedSpec } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { FeatureDetail } from '../FeatureArticle/index.ts';
 
@@ -117,20 +118,27 @@ export const FeatureCompanion = ({ role, spec, attendableId, onZoom }: FeatureCo
 };
 
 export type ProjectFeatureCompanionProps = Omit<FeatureCompanionProps, 'spec' | 'onZoom'> & {
-  /** The project whose Spec tab shows the map. */
+  /** The project whose Specs tab shows the map. */
   project: Project.Project;
-  /** The feature whose breakdown the plank shows; the project's own spec when absent. */
+  /** The spec the level lies in; the one the Specs tab has selected when absent. */
+  spec?: Spec.Spec;
+  /** The feature whose breakdown the plank shows; the spec itself when absent. */
   feature?: Feature.Feature;
 };
 
 /**
- * The feature companion beside one level of a project's spec: the map its Spec tab shows. Zooming opens the level
+ * The feature companion beside one level of a project's specs: the map its Specs tab shows. Zooming opens the level
  * breaking the selected feature down.
  */
-export const ProjectFeatureCompanion = ({ project, feature, ...props }: ProjectFeatureCompanionProps) => {
-  const projectSpec = useProjectSpec(project);
+export const ProjectFeatureCompanion = ({
+  project,
+  spec: levelSpec,
+  feature,
+  ...props
+}: ProjectFeatureCompanionProps) => {
+  const selected = useSelectedSpec(project, levelSpec);
   const breakdown = useResolveRef(useObject(feature, 'spec')[0]);
-  const spec = feature ? (Spec.instanceOf(breakdown) ? breakdown : undefined) : projectSpec;
+  const spec = feature ? (Spec.instanceOf(breakdown) ? breakdown : undefined) : selected;
   const openLevel = useOpenSpecLevel(project, props.attendableId);
   return spec ? <FeatureCompanion spec={spec} onZoom={(zoomed) => openLevel(zoomed)} {...props} /> : null;
 };
@@ -141,6 +149,18 @@ export type FeatureLevelCompanionProps = Omit<ProjectFeatureCompanionProps, 'pro
 
 /** The feature companion beside a feature's level of the project tracking it. */
 export const FeatureLevelCompanion = ({ feature, ...props }: FeatureLevelCompanionProps) => {
-  const project = Spec.findProject(feature);
-  return project ? <ProjectFeatureCompanion {...props} project={project} feature={feature} /> : null;
+  const project = FeatureMap.findProject(feature);
+  return project ? (
+    <ProjectFeatureCompanion {...props} project={project} spec={FeatureMap.findRoot(feature)} feature={feature} />
+  ) : null;
+};
+
+export type SpecLevelCompanionProps = Omit<ProjectFeatureCompanionProps, 'project' | 'spec' | 'feature'> & {
+  spec: Spec.Spec;
+};
+
+/** The feature companion beside a spec's level of the project owning it. */
+export const SpecLevelCompanion = ({ spec, ...props }: SpecLevelCompanionProps) => {
+  const project = Project.getOwner(spec);
+  return project ? <ProjectFeatureCompanion {...props} project={project} spec={spec} /> : null;
 };

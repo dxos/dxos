@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SpecDocument } from '@dxos/types';
+import * as Spec from '@dxos/compute/Spec';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { CodeProject } from '#types';
@@ -26,9 +26,10 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject } }) => ({ role, content: subject.content, sourceKey: subject.sourceKey }),
       }),
       Surface.create({
-        // Article only: a spec document embedded as a section (a spec's Document view) is plugin-projects' plain editor.
+        // A section, ahead of plugin-projects' plain editor: a spec's article is its feature map, and its text view
+        // embeds the spec as a section.
         id: 'specArticle',
-        filter: AppSurface.object(AppSurface.Article, SpecDocument.SpecDocument),
+        filter: AppSurface.object(AppSurface.Section, Spec.Spec),
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),

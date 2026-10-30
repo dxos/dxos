@@ -3,13 +3,16 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type Database, Obj } from '@dxos/echo';
+import * as Spec from '@dxos/compute/Spec';
+import { Annotation, type Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import {
   Attention,
   useSelection,
@@ -20,7 +23,7 @@ import {
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { Feature, FeatureMapView, type Spec } from '#types';
+import { Feature, FeatureMap, FeatureMapView } from '#types';
 
 import { ADD_FEATURE_DIALOG, FEATURE_COMPANION } from '../../constants.ts';
 import { useFeatureEditing } from '../../hooks/index.ts';
@@ -28,6 +31,8 @@ import { ProjectsNamespace } from '../../namespace.ts';
 import { type AddFeatureDialogProps } from '../AddFeatureDialog/index.ts';
 
 const NONE: readonly string[] = [];
+
+const DOCUMENT_ONLY: readonly FeatureMapView.Mode[] = ['document'];
 
 // The document first: it is the spec, and the map and board are views of the features drawn from it.
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
@@ -44,7 +49,8 @@ export const useLevelIds = (spec: Spec.Spec | undefined): readonly string[] => {
         if (!spec) {
           return '';
         }
-        return get(Obj.atomReactive(get(Obj.atom(spec)).features))
+        const refs = Option.getOrElse(get(Annotation.atom(spec, FeatureMap.FeaturesAnnotation)), () => []);
+        return get(Obj.atomReactive(refs))
           .filter(Feature.instanceOf)
           .map((member) => get(Obj.atom(member)))
           .sort((left, right) => left.name.localeCompare(right.name))
@@ -91,54 +97,34 @@ export const useSpecMapMode = (viewId: string) => {
   return { mode, setMode };
 };
 
+/** The views a spec offers: its text always, and the map's canvas and board when it uses the features dialect. */
+export const useSpecModes = (spec: Spec.Spec | undefined): readonly FeatureMapView.Mode[] => {
+  const [dialects] = useObject(spec, 'dialects');
+  const features = !!dialects && FeatureMap.usesDialect({ dialects });
+  return useMemo(() => (features ? MODES.map(({ mode }) => mode) : DOCUMENT_ONLY), [features]);
+};
+
 export type SpecMapActionsProps = {
-  db: Database.Database | undefined;
-  /** The map's spec: where a new feature goes unless `parentId` names the feature to break down instead. */
+  /** The map's spec, whose dialects decide which views it offers. */
   spec?: Spec.Spec;
-  parentId?: string;
   /** Keys the view mode, so levels sharing it keep the reader's choice. */
   viewId: string;
-  attendableId?: string;
-  /** Not offered when adding an existing feature, besides the map's own features: the features above it. */
-  exclude?: readonly string[];
 };
 
 /**
- * The map's actions for a host toolbar to place: `actions` switch the view mode, and `featureActions` (new feature,
- * add an existing one) belong in its overflow menu, since they are occasional next to reading the map.
+ * The map's view toggle for a host toolbar to place, offered only when the spec has more than one view. A mode the spec
+ * does not offer reads as its text.
  */
-export const useSpecMapActions = ({
-  db,
-  spec,
-  parentId,
-  viewId,
-  attendableId,
-  exclude = NONE,
-}: SpecMapActionsProps) => {
-  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
-  const { invokePromise } = Hooks.useOperationInvoker();
-  const { mode, setMode } = useSpecMapMode(viewId);
-  const editing = useFeatureEditing(db, spec);
-  const { select } = useFeatureSelection(attendableId);
-
-  // A new feature is named in the companion, where its other fields are too.
-  const handleNew = useCallback(
-    () => void editing.createFeature(t('feature-map.new-feature.name'), parentId).then((id) => id && select(id)),
-    [editing, parentId, select, t],
-  );
-  const handleAdd = useCallback(
-    () =>
-      spec &&
-      void invokePromise(LayoutOperation.UpdateDialog, {
-        subject: ADD_FEATURE_DIALOG,
-        blockAlign: 'start',
-        props: { spec, parentId, exclude } satisfies AddFeatureDialogProps,
-      }),
-    [invokePromise, spec, parentId, exclude],
-  );
+export const useSpecMapActions = ({ spec, viewId }: SpecMapActionsProps) => {
+  const { mode: chosen, setMode } = useSpecMapMode(viewId);
+  const modes = useSpecModes(spec);
+  const mode = modes.includes(chosen) ? chosen : 'document';
 
   const actions = useCallback<ActionGroupBuilderFn>(
-    (group) =>
+    (group) => {
+      if (modes.length < 2) {
+        return;
+      }
       group.group(
         'mode',
         {
@@ -148,7 +134,7 @@ export const useSpecMapActions = ({
           value: mode,
         },
         (modeGroup) =>
-          MODES.forEach(({ mode, icon }) =>
+          MODES.filter(({ mode }) => modes.includes(mode)).forEach(({ mode, icon }) =>
             modeGroup.action(
               mode,
               {
@@ -159,33 +145,53 @@ export const useSpecMapActions = ({
               () => setMode(mode),
             ),
           ),
-      ),
-    [mode, setMode],
+      );
+    },
+    [mode, modes, setMode],
   );
 
-  const featureActions = useCallback<ActionGroupBuilderFn>(
-    (group) =>
-      group
-        .action(
-          'new-feature',
-          {
-            label: ['feature-map.new-feature.label', { ns: ProjectsNamespace.key }],
-            icon: 'ph--plus--regular',
-            testId: 'feature-map.new-feature',
-          },
-          handleNew,
-        )
-        .action(
-          'add-feature',
-          {
-            label: ['feature-map.add-feature.label', { ns: ProjectsNamespace.key }],
-            icon: 'ph--list-plus--regular',
-            testId: 'feature-map.add-feature',
-          },
-          handleAdd,
-        ),
-    [handleNew, handleAdd],
+  return { mode, actions };
+};
+
+export type AddFeatureActionsProps = {
+  db: Database.Database | undefined;
+  /** The map's spec: where a new feature goes unless `parentId` names the feature to break down instead. */
+  spec?: Spec.Spec;
+  parentId?: string;
+  attendableId?: string;
+  /** Not offered when adding an existing feature, besides the map's own features: the features above it. */
+  exclude?: readonly string[];
+};
+
+/** Adding a feature to the map at a point on its canvas: a new one, named in the companion, or an existing one. */
+export const useAddFeature = ({ db, spec, parentId, attendableId, exclude = NONE }: AddFeatureActionsProps) => {
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const editing = useFeatureEditing(db, spec);
+  const { select } = useFeatureSelection(attendableId);
+
+  const createAt = useCallback(
+    async (position: FeatureMap.Position) => {
+      const id = await editing.createFeature(t('feature-map.new-feature.name'), parentId);
+      if (id && spec && !parentId) {
+        FeatureMap.setPosition(spec, id, position);
+      }
+      if (id) {
+        select(id);
+      }
+    },
+    [editing, spec, parentId, select, t],
+  );
+  const addAt = useCallback(
+    (position: FeatureMap.Position) =>
+      spec &&
+      void invokePromise(LayoutOperation.UpdateDialog, {
+        subject: ADD_FEATURE_DIALOG,
+        blockAlign: 'start',
+        props: { spec, parentId, exclude, position } satisfies AddFeatureDialogProps,
+      }),
+    [invokePromise, spec, parentId, exclude],
   );
 
-  return { mode, actions, featureActions: mode === 'document' ? undefined : featureActions };
+  return { createAt, addAt };
 };

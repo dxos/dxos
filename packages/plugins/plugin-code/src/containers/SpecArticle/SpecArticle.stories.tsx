@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as Spec from '@dxos/compute/Spec';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { SpecDocument } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -28,11 +28,11 @@ import { SpecArticle } from './SpecArticle.tsx';
 const DefaultStory = ({ content }: { content?: string }) => {
   const spaces = useSpaces();
   const space = spaces[0];
-  const [spec, setSpec] = useState<SpecDocument.SpecDocument | undefined>();
+  const [spec, setSpec] = useState<Spec.Spec | undefined>();
 
   useEffect(() => {
     if (space && !spec) {
-      setSpec(space.db.add(SpecDocument.make({ content })));
+      setSpec(space.db.add(Spec.make({ name: 'Example spec', content })));
     }
   }, [space, content, spec]);
 
@@ -56,7 +56,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [SpecDocument.SpecDocument],
+          types: [Spec.Spec],
           onClientInitialized: ({ client }) => initializeIdentity(client).pipe(Effect.asVoid),
         }),
       ],

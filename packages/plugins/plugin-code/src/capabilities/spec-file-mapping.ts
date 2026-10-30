@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Spec from '@dxos/compute/Spec';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
-import { SpecDocument } from '@dxos/types';
 
 import { CodeOperation } from '#types';
 
@@ -16,7 +16,7 @@ export default Capability.makeModule(
     return Capability.contribute(GitHubCapabilities.FileMapping, {
       id: 'org.dxos.plugin.code.spec',
       match: ['**/*.mdl'],
-      type: SpecDocument.SpecDocument,
+      type: Spec.Spec,
       import: CodeOperation.ImportSpecFile,
       export: CodeOperation.ExportSpecFile,
     });

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
 import { type Extension, Prec, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 import { type FunctionComponent } from 'react';
@@ -10,6 +9,8 @@ import { type FunctionComponent } from 'react';
 import { OBJECT_URL_SCHEMES, type ObjectLinkProps, linkWidgets, matchSchemes } from '@dxos/ui-editor';
 
 import { FeatureEmbed } from '#types';
+
+import { slashCommand, slashCommands } from './slash-commands.ts';
 
 export type FeatureEmbedsOptions = {
   /** The card an object embed is drawn as, in place of its source. */
@@ -85,41 +86,24 @@ export const featureEmbeds = ({
     return FeatureEmbed.apply(text, changes);
   });
 
-  const slash = (context: CompletionContext): CompletionResult | null => {
-    const word = context.matchBefore(/\/[\w-]*$/);
-    if (!onCreate || !word || (word.from === word.to && !context.explicit)) {
-      return null;
-    }
-    const line = context.state.doc.lineAt(context.pos);
-    // Only a slash that starts a word, so a path such as `packages/` offers nothing.
-    if (word.from > line.from && !/\s/.test(context.state.sliceDoc(word.from - 1, word.from))) {
-      return null;
-    }
-    const before = context.state.sliceDoc(line.from, word.from).trim();
-    return {
-      from: word.from,
-      filter: true,
-      options: [
-        {
-          label: '/feature',
-          detail: before ? `"${before}"` : undefined,
-          type: 'keyword',
-          apply: (view, _completion, from, to) => {
-            const embed = onCreate(before || undefined);
-            if (!embed) {
-              return;
-            }
-            // The line's text is the feature's, so the embed takes the whole line.
-            const start = before ? line.from : from;
-            view.dispatch({
-              changes: { from: start, to, insert: embed },
-              userEvent: 'input.complete',
-            });
-          },
+  const feature = onCreate
+    ? slashCommand.of({
+        name: 'feature',
+        detail: (before) => (before ? `"${before}"` : undefined),
+        apply: ({ view, from, to, line, before }) => {
+          const embed = onCreate(before || undefined);
+          if (!embed) {
+            return;
+          }
+          // The line's text is the feature's, so the embed takes the whole line.
+          const start = before ? line.from : from;
+          view.dispatch({
+            changes: { from: start, to, insert: embed },
+            userEvent: 'input.complete',
+          });
         },
-      ],
-    };
-  };
+      })
+    : [];
 
   // A spec opened after others wrote to it (an agent, a seed, a migration) is brought in line with its text.
   const open = ViewPlugin.define(() => {
@@ -141,6 +125,7 @@ export const featureEmbeds = ({
     listener,
     open,
     paste,
-    autocompletion({ override: [slash] }),
+    feature,
+    slashCommands,
   ];
 };

@@ -8,12 +8,12 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { SpecDocument } from '@dxos/types';
 
 import { SyncBases, getSpecKey, resolveRoots, syncSpec } from '#sync';
 import { CodeCapabilities } from '#types';
@@ -53,15 +53,15 @@ export default Capability.makeModule(
         return;
       }
       const roots = yield* resolveRoots(fs, registry.get(settings).repos);
-      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecDocumentCodec);
+      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecCodec);
       const specs: Record<string, CodeCapabilities.SpecSyncEntry> = {};
       for (const space of client.spaces.get()) {
         if (!space.isOpen) {
           continue;
         }
-        const linked = (yield* Effect.promise(() =>
-          space.db.query(Filter.type(SpecDocument.SpecDocument)).run(),
-        )).filter((spec) => getSpecKey(spec) !== undefined);
+        const linked = (yield* Effect.promise(() => space.db.query(Filter.type(Spec.Spec)).run())).filter(
+          (spec) => getSpecKey(spec) !== undefined,
+        );
         for (const spec of linked) {
           // Loads the text the first time a spec is synced; later passes find it resolved.
           yield* Effect.promise(() => spec.content.load());

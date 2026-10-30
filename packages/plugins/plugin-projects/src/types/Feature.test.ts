@@ -4,15 +4,16 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { File, PullRequest, SpecDocument, Task } from '@dxos/types';
+import { File, PullRequest, Task } from '@dxos/types';
 
 import * as Feature from './Feature.ts';
+import * as FeatureMap from './FeatureMap.ts';
 import * as Showcase from './Showcase.ts';
-import * as Spec from './Spec.ts';
 
 describe('Feature', () => {
   let builder: EchoTestBuilder;
@@ -29,7 +30,6 @@ describe('Feature', () => {
     builder.createDatabase({
       types: [
         Spec.Spec,
-        SpecDocument.SpecDocument,
         Feature.Feature,
         Feature.DependsOn,
         Feature.Implements,
@@ -53,19 +53,19 @@ describe('Feature', () => {
         requirements: [{ id: 'F-3.1', text: 'New mail shows within a minute.' }],
       }),
     );
-    const inbox = db.add(Spec.make({ name: 'Inbox', features: [Ref.make(sync)] }));
+    const inbox = db.add(FeatureMap.make({ name: 'Inbox', features: [sync] }));
     const gmail = db.add(Feature.make({ name: 'Gmail', status: 'operational' }));
     const imap = db.add(Feature.make({ name: 'IMAP', status: 'planned' }));
-    const breakdown = db.add(Spec.make({ name: 'Sync', features: [Ref.make(gmail), Ref.make(imap)] }));
+    const breakdown = db.add(FeatureMap.make({ name: 'Sync', features: [gmail, imap] }));
     Obj.update(sync, (sync) => {
       sync.spec = Ref.make(breakdown);
     });
     await db.flush();
-    expect(Spec.getContainer(sync)?.id).toBe(inbox.id);
-    expect(Spec.getContainer(gmail)?.id).toBe(breakdown.id);
-    expect(Spec.getOwner(breakdown)?.id).toBe(sync.id);
-    expect(Spec.isWithin(breakdown, sync)).toBe(true);
-    expect(Spec.isWithin(inbox, sync)).toBe(false);
+    expect(FeatureMap.getContainer(sync)?.id).toBe(inbox.id);
+    expect(FeatureMap.getContainer(gmail)?.id).toBe(breakdown.id);
+    expect(FeatureMap.getOwner(breakdown)?.id).toBe(sync.id);
+    expect(FeatureMap.isWithin(breakdown, sync)).toBe(true);
+    expect(FeatureMap.isWithin(inbox, sync)).toBe(false);
     // Only the top-level spec is a root, which is what the sidebar lists.
     const roots = await db.query(Filter.and(Filter.type(Spec.Spec), Filter.hasParent(false))).run();
     expect(roots.map(({ name }) => name)).toEqual(['Inbox']);

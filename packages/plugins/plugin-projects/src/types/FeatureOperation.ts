@@ -8,17 +8,17 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { SpecDocument, Task } from '@dxos/types';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
 import * as FeatureLink from './FeatureLink.ts';
 import * as Showcase from './Showcase.ts';
-import * as Spec from './Spec.ts';
 
 /**
  * Every type a spec's features touch. Declared on the operations (`types`) as well as in the plugin's schema
@@ -30,7 +30,6 @@ export const TYPES = [
   Feature.DependsOn,
   Feature.Implements,
   Spec.Spec,
-  SpecDocument.SpecDocument,
   Project.Project,
   Showcase.Demonstrates,
   Task.Task,
@@ -48,9 +47,6 @@ export class SpecCycleError extends BaseError.extend(
   'SpecCycleError',
   'A feature cannot move into its own spec or the spec of one of its subfeatures.',
 ) {}
-
-/** The project already owns another spec; the message names that spec. */
-export class ProjectHasSpecError extends BaseError.extend('ProjectHasSpecError', 'A project has at most one spec.') {}
 
 /** A feature owns the spec, so no project can. */
 export class BreakdownSpecError extends BaseError.extend(
@@ -80,8 +76,8 @@ export const Create = Operation.make({
       Creates a feature: a goal state the product should reach, such as "Compose & send works against Gmail".
       Pass a spec to list it on that spec's map, or a parent to make it a subfeature of another feature (it lands on
       the parent's own spec). Write the description as the ideal (what the feature does when complete, present tense),
-      never its current state. Give it requirements: one testable statement each. To build features from a spec
-      document, use the import-spec-features operation instead, which extracts them from its feat and req blocks.
+      never its current state. Give it requirements: one testable statement each. To build features from a spec's
+      text, use the import-spec-features operation instead, which extracts them from its feat and req blocks.
     `,
   },
   services: [Database.Service],
@@ -156,10 +152,10 @@ export const CreateSpec = Operation.make({
     name: 'Create spec',
     icon: 'ph--blueprint--regular',
     description: trim`
-      Creates a spec: a map of the features a product area should reach. Pass a feature to make the spec that breaks
-      that feature down (a feature has at most one; its existing one is returned). Or pass a project to make the spec
-      that project's own, its work tracked in the project's tasks; a project has at most one spec, so one that already
-      has a spec is refused, as is a project for a breakdown.
+      Creates a spec: .mdl text describing what a product area should reach. Pass a feature to make the spec that
+      breaks that feature down (a feature has at most one; its existing one is returned). Or pass a project to add the
+      spec to that project's specs, its work tracked in the project's tasks; a project for a breakdown is refused.
+      Pass the dialects whose blocks the text uses; none means the core and changelog blocks only.
     `,
   },
   services: [Database.Service],
@@ -167,6 +163,9 @@ export const CreateSpec = Operation.make({
   input: Schema.Struct({
     name: Schema.String,
     description: Schema.optional(Schema.String),
+    dialects: Schema.optional(
+      Schema.Array(Schema.String).annotate({ description: 'Ids of the dialect specs whose blocks the text uses.' }),
+    ),
     project: Schema.optional(Ref.Ref(Project.Project)),
     feature: Schema.optional(Ref.Ref(Feature.Feature).annotate({ description: 'The feature the spec breaks down.' })),
   }),
@@ -179,7 +178,7 @@ export const UpdateSpec = Operation.make({
     name: 'Update spec',
     icon: 'ph--pencil-simple--regular',
     description:
-      "Changes a spec's name, description or the project that owns it; fields left out are kept, and a null project releases it. A project has at most one spec, so one that already has another spec is refused, as is a breakdown spec, which belongs to its feature.",
+      "Changes a spec's name, description or the project that owns it; fields left out are kept, and a null project releases it. A breakdown spec is refused, since it belongs to its feature.",
   },
   services: [Database.Service],
   types: [Spec.Spec, Project.Project],
@@ -316,19 +315,18 @@ export const ImportSpec = Operation.make({
     name: 'Import features from a spec',
     icon: 'ph--file-arrow-down--regular',
     description: trim`
-      Imports the text of an .mdl spec into a spec: the text becomes the spec's document, and each feat block becomes a
+      Imports the text of an .mdl spec into a spec: the text becomes the spec's content, and each feat block becomes a
       feature named by its title, with the block's prose as its description, its status line as its status and its req
-      lines as its requirements. In the document each block is replaced by an embed of its feature, which holds the
+      lines as its requirements. In the content each block is replaced by an embed of its feature, which holds the
       content from then on; export-spec-features writes the blocks back out.
       Pass the repo path of the spec, which is recorded on each feature so importing again updates them rather than
       adding more. Pass a spec to import into it, a feature to import into the spec that breaks it down, or neither to
-      make a new spec (named by name, else the path); a project then owns the new spec, and is refused when it already
-      has one.
+      make a new spec (named by name, else the path), owned by the project when one is given.
       Review each description afterwards: it should state the ideal, not the current state.
     `,
   },
   services: [Database.Service],
-  types: [Spec.Spec, SpecDocument.SpecDocument, Feature.Feature, Project.Project, Text.Text],
+  types: [Spec.Spec, Feature.Feature, Project.Project, Text.Text],
   input: Schema.Struct({
     path: Schema.String.annotate({
       description: 'Repo path of the spec, e.g. packages/plugins/plugin-inbox/PLUGIN.mdl.',
@@ -352,14 +350,14 @@ export const ExportSpec = Operation.make({
     name: 'Export a spec as text',
     icon: 'ph--file-arrow-up--regular',
     description: trim`
-      Reads a spec's document as an .mdl file: its prose as written, with each feature it holds written out as a feat
+      Reads a spec's content as an .mdl file: its prose as written, with each feature it holds written out as a feat
       block (the feature's name, status, description and req lines). Read a spec through this operation rather than its
-      raw document, which holds embeds of the features rather than their text. A feature read in from a file keeps its
+      raw content, which holds embeds of the features rather than their text. A feature read in from a file keeps its
       block id; others are numbered after the highest F-n in the text.
     `,
   },
   services: [Database.Service],
-  types: [Spec.Spec, SpecDocument.SpecDocument, Feature.Feature, Text.Text],
+  types: [Spec.Spec, Feature.Feature, Text.Text],
   input: Schema.Struct({ spec: Ref.Ref(Spec.Spec) }),
   output: Schema.Struct({ text: Schema.String }),
 }).pipe(Operation.mutation('none'));

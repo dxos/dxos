@@ -10,7 +10,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import { isNonNullable } from '@dxos/util';
 
-import { Feature, Spec } from '#types';
+import { Feature, FeatureMap } from '#types';
 
 /**
  * The instructions travel by reference, so the chat follows later edits to the project's. Instructions that no longer
@@ -36,8 +36,8 @@ const projectBindings = Effect.fnUntraced(function* (
 export const featureBindings = Effect.fnUntraced(function* (
   feature: Feature.Feature,
 ): Effect.fn.Return<AssistantCapabilities.SubjectBindings> {
-  const spec = Spec.getContainer(feature);
-  const project = Spec.findProject(feature);
+  const spec = FeatureMap.getContainer(feature);
+  const project = FeatureMap.findProject(feature);
   const bindings: AssistantCapabilities.SubjectBindings = project ? yield* projectBindings(project) : {};
   const objects = [spec, project].filter(isNonNullable).map((object) => Ref.make(object));
   return { ...bindings, objects: [...(bindings.objects ?? []), ...objects] };
