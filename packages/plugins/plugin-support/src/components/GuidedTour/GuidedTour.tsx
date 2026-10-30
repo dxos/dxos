@@ -131,6 +131,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
 
   useEffect(() => {
     if (!running) {
+      resumeAt.current = undefined;
       skippedStepIds.current.clear();
     }
   }, [running]);

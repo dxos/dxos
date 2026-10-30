@@ -679,10 +679,10 @@ test QA-9: The guided tours
         Which control folds first is decided by a pixel budget the tour cannot see, so a tour that
         only works at one window size is passing by luck.
     - name: Leave a document mid-tour
-      do: Start a document's tour, then load the space's Home URL before finishing it.
+      do: Start a document's tour, load the space's Home URL before finishing it, then reopen the document.
       expect: |
-        the tour is gone and the global tour starts from Home; a tour left running floats its card in
-        the window's corner and its backdrop swallows every click
+        the tour stays gone on Home and on the reopened document, and the global tour starts from Home;
+        a tour left running floats its card in the window's corner and its backdrop swallows every click
       note: The backdrop blocks the sidebar, so a reader leaves mid-tour only by a load such as a boot onto Home.
 ```
 

@@ -65,7 +65,14 @@ test.describe('Tour tests', () => {
     await expect(Support.title(host.page)).toHaveText(DOCUMENT_TOUR[0]);
 
     // The tour's backdrop takes every click, so leave the way a boot onto Home does.
-    await host.page.goto(host.page.url().replace(/\/object\/.*$/, '/home'));
+    const documentUrl = host.page.url();
+    await host.page.goto(documentUrl.replace(/\/object\/.*$/, '/home'));
+    await expect(host.page.getByTestId('supportPlugin.startTour')).toBeVisible();
+
+    await host.page.goto(documentUrl);
+    await expect(host.page.getByTestId('editor.toolbar.strong')).toBeVisible();
+    await expect(Support.card(host.page)).not.toBeVisible();
+
     await Support.startGlobal(host.page);
     await expect(Support.title(host.page)).toHaveText(GLOBAL_TOUR[0]);
   });
