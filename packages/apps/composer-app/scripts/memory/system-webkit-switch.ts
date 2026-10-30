@@ -330,6 +330,8 @@ const main = async () => {
       // \`novt\` is a warm pass with the View Transitions API hidden; \`warm2\` repeats warm after it, to bound drift.
       for (const pass of ['cold', 'warm', 'novt', 'warm2', 'revisit'].filter((pass) => passes.includes(pass))) {
         if (pass === 'revisit') {
+          // Off every space, so the one warmed last goes idle with the rest.
+          await switchSettled('dxos:settings');
           await pause(EVICTION_IDLE_MS);
         }
         await host.evaluate(`globalThis.__setViewTransitions(${pass !== 'novt' && transitions}); return true;`);
