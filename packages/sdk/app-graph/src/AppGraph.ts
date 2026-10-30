@@ -21,7 +21,15 @@ import { type MakeOptional, shallowEqual } from '@dxos/util';
 import { scheduleTask } from '#scheduler';
 
 import * as Node from './AppGraphNode.ts';
-import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
+import {
+  normalizeRelation,
+  primaryKey,
+  primaryParts,
+  secondaryKey,
+  secondaryParts,
+  valueEqual,
+  withLabel,
+} from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module
@@ -832,6 +840,31 @@ export const addNodes = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<
   return graph;
 };
 
+type Forwarded = { target: (...args: unknown[]) => unknown };
+
+/** The live closure behind each forwarder {@link stableData} hands the graph. */
+const forwarded = new WeakMap<object, Forwarded>();
+
+/**
+ * Builders recreate an action's closure on every run, so a function `data` is held behind a stable
+ * forwarder per node whose target is swapped: a re-offer that changes nothing else emits nothing,
+ * and invoking the node still runs the latest closure.
+ */
+const stableData = (existing: unknown, data: any): any => {
+  if (typeof data !== 'function') {
+    return data;
+  }
+  const current = typeof existing === 'function' ? forwarded.get(existing) : undefined;
+  if (current) {
+    current.target = data;
+    return existing;
+  }
+  const cell: Forwarded = { target: data };
+  const forwarder = (...args: unknown[]) => cell.target(...args);
+  forwarded.set(forwarder, cell);
+  return forwarder;
+};
+
 /**
  * Add a node to the graph.
  */
@@ -854,8 +887,11 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
-      const dataChanged = !shallowEqual(existing.data, data);
-      const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
+      const nextData = stableData(existing.data, data);
+      const dataChanged = !shallowEqual(existing.data, nextData);
+      const propertiesChanged = Object.keys(properties).some(
+        (key) => !valueEqual(existing.properties[key], properties[key]),
+      );
       // `changed` is on the visit log because counting `existing node` lines alone measures how often a
       // node was re-offered, not how often it actually changed — two very different costs.
       const changed = typeChanged || dataChanged || propertiesChanged;
@@ -872,7 +908,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
           ...existing,
           ...rest,
           type,
-          data,
+          data: nextData,
           // Merged, not replaced, so several extensions can each contribute properties to one node —
           // which makes a key one generation sets and the next omits impossible to clear. A builder
           // that varies a property must emit it on every generation, `false`/`undefined` included.
@@ -884,7 +920,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
     },
     onNone: () => {
       log('new node', { id, type, data, properties });
-      const newNode = internal._constructNode({ id, type, data, properties, ...rest });
+      const newNode = internal._constructNode({ id, type, data: stableData(undefined, data), properties, ...rest });
       internal._setNode(id, newNode);
       graph.onNodeChanged.emit({ id, node: newNode });
 

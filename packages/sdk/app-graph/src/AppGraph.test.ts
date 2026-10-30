@@ -226,6 +226,33 @@ describe('Graph', () => {
     expect(node.pipe(Option.getOrNull)).toEqual(null);
   });
 
+  test('re-adding an action with a new closure and rebuilt label emits nothing and invokes the latest closure', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    const action = (name: string) =>
+      Node.makeAction({
+        id: EXAMPLE_ID,
+        data: () => Effect.sync(() => invoked.push(name)),
+        properties: { label: ['action.label', { ns: EXAMPLE_TYPE }] },
+      });
+
+    Graph.addNode(graph, action('first'));
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+    Graph.addNode(graph, action('second'));
+    expect(changes).toEqual(0);
+
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    Effect.runSync(node.data());
+    expect(invoked).toEqual(['second']);
+
+    Graph.addNode(graph, { ...action('third'), properties: { label: ['other.label', { ns: EXAMPLE_TYPE }] } });
+    expect(changes).toEqual(1);
+  });
+
   test('add edge', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });

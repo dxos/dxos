@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import * as Node from './AppGraphNode.ts';
-import { nodeArgsUnchanged } from './util.ts';
+import { nodeArgsUnchanged, valueEqual } from './util.ts';
 
 const node = (overrides: Partial<Node.NodeArg<unknown>> = {}): Node.NodeArg<unknown> => ({
   id: 'node',
@@ -66,5 +66,32 @@ describe('nodeArgsUnchanged', () => {
       node({ actions: [Node.makeAction({ id: 'delete', data: invoke, properties: { label: 'Delete' } })] }),
     ];
     expect(nodeArgsUnchanged(stable(), stable())).to.be.true;
+  });
+});
+
+describe('valueEqual', () => {
+  test('rebuilt label tuples and option bags compare equal', ({ expect }) => {
+    const label = () => ['delete-object.label', { ns: 'org.dxos.type.example', defaultValue: 'Delete' }];
+    expect(valueEqual(label(), label())).to.be.true;
+    expect(nodeArgsUnchanged([node({ properties: { label: label() } })], [node({ properties: { label: label() } })])).to
+      .be.true;
+  });
+
+  test('a differing nested value, length or key reads as changed', ({ expect }) => {
+    expect(valueEqual(['key', { ns: 'a' }], ['key', { ns: 'b' }])).to.be.false;
+    expect(valueEqual(['key'], ['key', {}])).to.be.false;
+    expect(valueEqual({ a: 1 }, { b: 1 })).to.be.false;
+    expect(valueEqual({ a: undefined }, {})).to.be.false;
+    expect(valueEqual([], {})).to.be.false;
+  });
+
+  test('class instances and functions compare by identity', ({ expect }) => {
+    expect(valueEqual(new Date(0), new Date(0))).to.be.false;
+    expect(
+      valueEqual(
+        () => 1,
+        () => 1,
+      ),
+    ).to.be.false;
   });
 });
