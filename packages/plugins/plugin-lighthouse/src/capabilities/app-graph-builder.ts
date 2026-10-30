@@ -17,7 +17,6 @@ import { Obj, Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { meta } from '#meta';
 import { Research } from '#types';
 
 import {
@@ -29,6 +28,7 @@ import {
 } from '../constants.ts';
 import { RESEARCH_KEY, newestFirst } from '../paths.ts';
 import { startNewResearch } from '../util/new-research.ts';
+import { LighthouseNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -54,7 +54,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: RESULT_COMPANION,
-              label: ['result.companion.label', { ns: meta.profile.key }],
+              label: ['result.companion.label', { ns: LighthouseNamespace.key }],
               icon: 'ph--binoculars--regular',
               data: RESULT_COMPANION_DATA,
             }),
@@ -73,7 +73,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: META_COMPANION,
-              label: ['meta.companion.label', { ns: meta.profile.key }],
+              label: ['meta.companion.label', { ns: LighthouseNamespace.key }],
               icon: 'ph--lighthouse--regular',
               data: META_COMPANION_DATA,
             }),

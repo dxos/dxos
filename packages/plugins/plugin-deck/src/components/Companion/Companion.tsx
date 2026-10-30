@@ -15,8 +15,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { DeckNamespace } from '../../namespace.ts';
 import { Pane, type PaneTab } from '../Pane/index.ts';
 
 //
@@ -54,7 +53,7 @@ export const Companion = ({
   controls,
   headless,
 }: CompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DeckNamespace.key);
   const companions = companionsProp ?? [];
   // A focus area of the shell after the plank it accompanies.
   const landmark = Main.useMainLandmark(1.5);

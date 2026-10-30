@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
+import { next as A, type Heads } from '@automerge/automerge';
 import {
   type AnyDocumentId,
   type AutomergeUrl,
@@ -30,6 +30,7 @@ import {
   SpaceDocVersion,
   type SpaceRoot,
   createIdFromSpaceKey,
+  directoryJson,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -56,13 +57,14 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { sameHeads } from '../query/object-state.ts';
 import { SLOW_WORK_MS } from '../util.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
-import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId } from './feed-data-source.ts';
+import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId, indexesAllBranches } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
 import { buildInlineObjectDocument, inlineObjectDocumentId, isUntouchedSinceCreation } from './inline-objects.ts';
@@ -316,6 +318,10 @@ export class EchoHost extends Resource {
     this._spaceStateManager = new SpaceStateManager({ runtime });
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
       isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
+      directories: {
+        isSpaceRoot: (documentId) => this._spaceStateManager.isSpaceRootDocument(documentId),
+        store: (documentId, snapshot) => this._spaceStateManager.writeDirectorySnapshot(documentId, snapshot),
+      },
     });
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
@@ -376,6 +382,7 @@ export class EchoHost extends Resource {
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
       indexStatus: this.indexStatus,
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
+      readDirectorySnapshot: (documentId) => this.readDirectorySnapshot(documentId),
     });
 
     trace.diagnostic<EchoStatsDiagnostic>({
@@ -875,14 +882,7 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const documentId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
     invariant(documentId, `Space root document not found for space: ${spaceId}`);
-    const url = `automerge:${documentId}` as AutomergeUrl;
-    const lease = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, url, {
-      fetchFromNetwork: true,
-    });
-    invariant(lease, 'Space root document must load before assignment.');
-
-    // The lease is handed over: the space's root stays resident for as long as the space is open.
-    return this._spaceStateManager.assignRootToSpace(spaceId, lease);
+    return this.#assignRoot(ctx, spaceId, `automerge:${documentId}` as AutomergeUrl);
   }
 
   async updateSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
@@ -891,13 +891,73 @@ export class EchoHost extends Resource {
     if (currentRoot && currentRoot.url === automergeUrl) {
       return currentRoot;
     }
-    const lease = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
+    return this.#assignRoot(ctx, spaceId, automergeUrl);
+  }
+
+  /**
+   * Assigns a space its root from the directory snapshot the index holds, when that is current, so a space nothing
+   * writes this session never loads its root; otherwise loads the root, which the space then keeps resident.
+   */
+  async #assignRoot(ctx: Context, spaceId: SpaceId, url: AutomergeUrl): Promise<DatabaseRoot> {
+    const documentId = interpretAsDocumentId(url);
+    const snapshot = this._spaceStateManager.getRootByDocumentId(documentId)
+      ? undefined
+      : await this.readDirectorySnapshot(documentId);
+    if (snapshot) {
+      const root = await this._spaceStateManager.assignRootToSpace(spaceId, {
+        documentId,
+        snapshot: { heads: snapshot.heads, json: JSON.parse(snapshot.json) },
+        load: async () => {
+          const lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, url, {
+            fetchFromNetwork: true,
+          });
+          invariant(lease, 'Space root document must load before it is written.');
+          return lease;
+        },
+        headsChanged: this._automergeHost.documentHeadsChanged,
+      });
+      // A save between reading the snapshot and the root's subscription would otherwise go unseen.
+      const [storedHeads] = await this._automergeHost.getStoredHeads([documentId]);
+      if (!storedHeads || !sameHeads(storedHeads, snapshot.heads)) {
+        await root.load();
+      }
+      return root;
+    }
+    const lease = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, url, {
       fetchFromNetwork: true,
     });
     invariant(lease, 'Space root document must load before assignment.');
-
+    // Written here as well as by the index: a root indexed before snapshots existed is never re-read by it.
+    await this.#writeDirectorySnapshot(documentId, lease.doc());
     // The lease is handed over: the space's root stays resident for as long as the space is open.
-    return this._spaceStateManager.assignRootToSpace(spaceId, lease);
+    return this._spaceStateManager.assignRootToSpace(spaceId, { lease });
+  }
+
+  /**
+   * The directory JSON the index holds for a space root, when it was read at the heads the root is stored at: what
+   * a client or this host can show the root from without loading it.
+   */
+  async readDirectorySnapshot(documentId: DocumentId): Promise<{ heads: Heads; json: string } | undefined> {
+    const [stored, [storedHeads]] = await Promise.all([
+      this._spaceStateManager.readDirectorySnapshot(documentId),
+      this._automergeHost.getStoredHeads([documentId]),
+    ]);
+    return stored && storedHeads && sameHeads(stored.heads, storedHeads)
+      ? { heads: storedHeads, json: stored.json }
+      : undefined;
+  }
+
+  /** Stores a loaded root's directory JSON, when the root is saved at the heads it is read at. */
+  async #writeDirectorySnapshot(documentId: DocumentId, doc: A.Doc<DatabaseDirectory>): Promise<void> {
+    const json = directoryJson(doc);
+    if (json === undefined) {
+      return;
+    }
+    const heads = A.getHeads(doc);
+    const [storedHeads] = await this._automergeHost.getStoredHeads([documentId]);
+    if (storedHeads && sameHeads(storedHeads, heads)) {
+      await this._spaceStateManager.writeDirectorySnapshot(documentId, { heads, json });
+    }
   }
 
   async closeSpace(spaceId: SpaceId): Promise<void> {
@@ -1042,6 +1102,7 @@ export class EchoHost extends Resource {
     if (links.length === 0) {
       return;
     }
+    await root.load();
     root.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
       for (const { objectId, url } of links) {
@@ -1190,13 +1251,13 @@ export class EchoHost extends Resource {
       return;
     }
     const root = this._spaceStateManager.getRootBySpaceId(spaceId);
-    const directory = root?.doc();
+    const directory = root?.directory();
     if (!root || !directory) {
       return;
     }
 
     await this.#wipeRetiredDocuments(spaceId, DatabaseDirectory.getRetiredDocuments(directory));
-    this.#restoreLostRetirements(spaceId, root);
+    await this.#restoreLostRetirements(spaceId, root);
 
     // Keyed by the id as it is spelled in a link, so the scan below compares strings: decoding every link
     // (a base58check checksum each) on every directory change saturated the worker on large spaces.
@@ -1238,14 +1299,15 @@ export class EchoHost extends Resource {
    * Writes back `retired` entries this host knows of but the directory lacks. Two peers that each create the
    * map concurrently leave only one of them in the merge, so an entry can vanish after it was written.
    */
-  #restoreLostRetirements(spaceId: SpaceId, root: DatabaseRoot): void {
-    const directory = root.doc();
+  async #restoreLostRetirements(spaceId: SpaceId, root: DatabaseRoot): Promise<void> {
+    const directory = root.directory();
     const lost = [...this.#knownRetirements.values()].filter(
       (retirement) => retirement.spaceId === spaceId && directory?.retired?.[retirement.documentId] === undefined,
     );
     if (lost.length === 0) {
       return;
     }
+    await root.load();
     root.change((draft) => {
       draft.retired ??= {};
       for (const { documentId, replacedBy, reason } of lost) {
@@ -1372,6 +1434,7 @@ export class EchoHost extends Resource {
             { preserveHistory: true, documentId: replacementId },
           );
     try {
+      await root.load();
       root.change((draft) => {
         draft.links ??= {};
         for (const objectId of objectIds) {
@@ -1455,7 +1518,7 @@ export class EchoHost extends Resource {
     }
     for (const [documentId, root] of this._spaceStateManager.roots) {
       referenced.add(documentId);
-      if (root.doc()) {
+      if (root.directory()) {
         urls.push(...root.getAllLinkedDocuments().map((url) => url.toString()));
       }
     }
@@ -1624,7 +1687,7 @@ export class EchoHost extends Resource {
 
   /** Enumerate the documents reachable from a space root (root + object links + branch members). */
   #collectSpaceDocuments(root: DatabaseRoot): SpaceDocumentSet {
-    const doc = root.doc();
+    const doc = root.directory();
     if (!doc) {
       return { rootDocumentId: root.documentId, linkedDocumentIds: [], branchDocumentIds: [] };
     }
@@ -1660,7 +1723,7 @@ export class EchoHost extends Resource {
       }
     };
 
-    const rootDoc = root.doc();
+    const rootDoc = root.directory();
     if (rootDoc) {
       addCounts(rootDoc);
     }
@@ -1690,7 +1753,7 @@ export class EchoHost extends Resource {
     spaceId: SpaceId,
     root: DatabaseRoot,
   ): Promise<{ unlinkedObjects: number; removedInlineObjects: { documentId: string; objectId: string }[] }> {
-    const rootDoc = root.doc();
+    const rootDoc = root.directory();
     if (!rootDoc) {
       return { unlinkedObjects: 0, removedInlineObjects: [] };
     }
@@ -1731,6 +1794,7 @@ export class EchoHost extends Resource {
       return { unlinkedObjects: 0, removedInlineObjects: [] };
     }
 
+    await root.load();
     root.change((draft: DatabaseDirectory) => {
       for (const id of deletedInlineIds) {
         if (draft.objects) {
@@ -1781,10 +1845,10 @@ export class EchoHost extends Resource {
     return wipedDocumentIds;
   }
 
-  /** Resolve the space root, opening (and loading) it if it is not already loaded on the host. */
+  /** Resolve the space root, opening it if this host does not hold it yet. */
   async #ensureSpaceRootLoaded(spaceId: SpaceId): Promise<DatabaseRoot> {
     const existing = this._spaceStateManager.getRootBySpaceId(spaceId);
-    if (existing?.isLoaded) {
+    if (existing?.isAvailable) {
       return existing;
     }
     return this.openSpaceRoot(this._ctx, spaceId);
@@ -1825,7 +1889,9 @@ export class EchoHost extends Resource {
    * Applies each pending feed-options intent to the feed store and clears it. The index side runs
    * before the store write, so a crash in between redoes it: a disable removes the feed's rows on
    * every apply, and a re-enable seeds the backfill while the store still holds the disabled options.
-   * A failed apply leaves its intent pending for the next pass.
+   * The index mode is handled the same way: widening to all branches seeds a backfill, and narrowing
+   * to the main branch removes the other branches' rows. A failed apply leaves its intent pending for
+   * the next pass.
    */
   #applyFeedOptionsIntents(changes: FeedChanges): Effect.Effect<void, never, SqlClient.SqlClient> {
     return Effect.gen({ self: this }, function* () {
@@ -1840,13 +1906,19 @@ export class EchoHost extends Resource {
               changes.spaceIds.add(spaceId);
               changes.queueIds.add(feedId);
             }
-          } else if (isIndexingDisabled(previous)) {
+          } else if (isIndexingDisabled(previous) || (indexesAllBranches(options) && !indexesAllBranches(previous))) {
             yield* this.indexEngine.seedCursor({
               sourceName: this._feedDataSource.sourceName,
               spaceId,
               resourceId: backfillResourceId(namespace, feedId),
               cursor: '',
             });
+          } else if (!indexesAllBranches(options) && indexesAllBranches(previous)) {
+            const deleted = yield* this.indexEngine.deleteFeedBranchObjects({ spaceId, queueId: feedId });
+            if (deleted > 0 && EntityId.isValid(feedId)) {
+              changes.spaceIds.add(spaceId);
+              changes.queueIds.add(feedId);
+            }
           }
           const { trim } = yield* this._feedStore.setFeedOptions({ ...feed, options });
           const now = yield* Clock.currentTimeMillis;

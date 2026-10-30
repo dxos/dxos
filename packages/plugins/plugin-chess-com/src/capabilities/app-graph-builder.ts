@@ -11,8 +11,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 
-import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';
+
+import { ChessComNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -25,7 +26,7 @@ export default Capability.makeModule(
             id: ChessComOperation.SyncGames.meta.key,
             data: () => Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) }),
             properties: {
-              label: ['sync-games.button', { ns: meta.profile.key }],
+              label: ['sync-games.button', { ns: ChessComNamespace.key }],
               icon: ChessComOperation.SyncGames.meta.icon,
               disposition: 'toolbar',
               testId: 'chessComPlugin.syncGames',
@@ -35,7 +36,7 @@ export default Capability.makeModule(
             id: ChessComOperation.ClearSyncedGames.meta.key,
             data: () => Operation.invoke(ChessComOperation.ClearSyncedGames, { account: Ref.make(account) }),
             properties: {
-              label: ['clear-synced-games.label', { ns: meta.profile.key }],
+              label: ['clear-synced-games.label', { ns: ChessComNamespace.key }],
               icon: ChessComOperation.ClearSyncedGames.meta.icon,
               disposition: 'list-item',
               testId: 'chessComPlugin.clearSyncedGames',

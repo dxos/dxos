@@ -16,7 +16,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { StudioPlugin } from '#plugin';
+import * as StudioPlugin from '#meta';
 import { translations } from '#translations';
 import { MediaArtifact, Variant } from '#types';
 
@@ -68,7 +68,7 @@ const meta_ = {
               });
             }),
         }),
-        StudioPlugin(),
+        StudioPlugin.make(),
         StubProjectsPlugin(),
         MockProviderPlugin(),
         StorybookPlugin.make({}),

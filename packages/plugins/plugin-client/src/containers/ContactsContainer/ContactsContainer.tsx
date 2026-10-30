@@ -15,10 +15,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import { ContactList, type ContactSpace } from '@dxos/shell/react';
 
-import { meta } from '#meta';
+import { ClientNamespace } from '../../namespace.ts';
 
 export const ContactsContainer = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ClientNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const contacts = useContacts();
   const spaces = useSpaces();

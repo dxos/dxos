@@ -7,17 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { FilePlugin } from '#plugin';
+import * as FilePlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+import { FileNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
+
+const moduleId = (name: string) => `${FileNamespace.key}.module.${name}`;
 
 describe('FilePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), FilePlugin()],
+      plugins: [ClientPlugin.make({}), FilePlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(

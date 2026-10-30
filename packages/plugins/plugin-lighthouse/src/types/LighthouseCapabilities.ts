@@ -7,7 +7,8 @@
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { type LighthouseClient, type LighthouseEndpoint } from '#client';
-import { meta } from '#meta';
+
+import { LighthouseNamespace } from '../namespace.ts';
 
 /**
  * Builds the client for a connection's endpoint. The plugin contributes the HTTP client; a host (a story, a test)
@@ -18,4 +19,4 @@ export type ClientFactory = {
   make: (endpoint: LighthouseEndpoint) => LighthouseClient;
 };
 
-export const ClientFactory = Capability.make<ClientFactory>()(`${meta.profile.key}.capability.clientFactory`);
+export const ClientFactory = Capability.make<ClientFactory>()(`${LighthouseNamespace.key}.capability.clientFactory`);

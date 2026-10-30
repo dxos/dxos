@@ -12,8 +12,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { NavTreeNode } from '#types';
+
+import { NavTreeNamespace } from '../../namespace.ts';
 
 const fallbackIcon = 'ph--circle-dashed--regular';
 
@@ -27,7 +28,7 @@ export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
 
 export const NavTreeItemActionDropdownMenu = Util.composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
   ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(NavTreeNamespace.key);
     const runAction = GraphHooks.useActionRunner();
     const handleAction = useCallback(
       (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps = {}) => runAction(action, { ...params, path }),
@@ -100,7 +101,7 @@ export const NavTreeItemAction = ({
   path,
   ...props
 }: NavTreeItemActionMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = Theme.toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);

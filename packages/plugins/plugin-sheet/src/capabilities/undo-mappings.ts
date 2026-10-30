@@ -8,8 +8,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 
-import { meta } from '#meta';
 import { SheetOperation } from '#types';
+
+import { SheetNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -25,7 +26,7 @@ export default Capability.makeModule(() =>
           axisMeta: output.axisMeta,
           values: output.values,
         }),
-        message: ['axis-dropped.label', { ns: meta.profile.key }],
+        message: ['axis-dropped.label', { ns: SheetNamespace.key }],
       }),
     ]),
   ),

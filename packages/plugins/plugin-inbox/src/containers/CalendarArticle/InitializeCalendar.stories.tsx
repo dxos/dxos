@@ -18,7 +18,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { InboxPlugin } from '#plugin';
+import * as InboxPlugin from '#meta';
 import { Calendar } from '#types';
 
 import { InitializeCalendar } from './InitializeCalendar.tsx';
@@ -64,7 +64,7 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
-        InboxPlugin(),
+        InboxPlugin.make(),
         PreviewPlugin.make(),
       ],
     })),

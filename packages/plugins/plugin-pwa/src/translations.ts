@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { PwaNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [PwaNamespace.key]: {
         'need-refresh.label': 'Refresh now to get app updates',
         'need-refresh.description': 'You’ll need these updates to continue without interruption.',
         'refresh.label': 'Refresh',
@@ -18,6 +18,8 @@ export const translations = [
         // 'offline ready label': '{{appName}} is ready to use offline.',
         'offline-ready.label': 'Ready to use offline.',
         'confirm.label': 'Okay',
+        'settings.auto-update.label': 'Update automatically',
+        'settings.auto-update.description': 'Download and apply a new version while Composer starts.',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',

@@ -22,7 +22,7 @@ import { IdentityServiceImpl } from './identity-service.ts';
 const STORAGE_TABLES = {
   automerge: ['automerge_chunks', 'automerge_heads'],
   hypercore: ['hypercore_files'],
-  feeds: ['feeds', 'blocks', 'subscriptions', 'cursor_tokens', 'sync_state'],
+  feeds: ['feeds', 'blocks', 'branches', 'subscriptions', 'cursor_tokens', 'sync_state'],
   indexer: ['indexCursor', 'objectMeta', 'reverseRef', 'ftsIndex', 'objectSnapshot'],
   keyring: ['keyring'],
   metadata: ['space_metadata', 'space_large'],

@@ -29,9 +29,9 @@ import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
 import { SPACE_STATS_QUERY, typeUrisWithObjects } from '#dashboard';
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../../namespace.ts';
 import { SpaceOperationError } from '../../../operations/errors.ts';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
 import { DATABASE_KEY } from '../../helpers.ts';
@@ -67,7 +67,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           AppNode.makeGroup({
             id: GraphPath.GroupSegments.system,
             type: GraphPath.GroupTypes.system,
-            label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
+            label: ['nav-tree-group-system.label', { ns: SpaceNamespace.key }],
             icon: 'ph--gear--regular',
             space,
             position: 900,
@@ -84,7 +84,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           AppNode.makeSection({
             id: GraphPath.Segments.database,
             type: DATABASE_SECTION_TYPE,
-            label: ['database-section.label', { ns: meta.profile.key }],
+            label: ['database-section.label', { ns: SpaceNamespace.key }],
             icon: 'ph--database--regular',
             space,
             testId: 'spacePlugin.databaseSection',
@@ -126,6 +126,14 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // Index-only per-type counts; the same query as the space dashboard, so both share one result.
         const withObjects = typeUrisWithObjects(get(space.db.query(SPACE_STATS_QUERY).atom));
 
+        // The registry keeps a disabled plugin's static types; those stay in the graph, so their objects' paths still
+        // resolve, but are hidden from the navtree.
+        const contributedTypeUris = new Set(
+          get(capabilities.atom(AppCapabilities.Schema))
+            .flat()
+            .map((schema) => Type.getURI(schema)),
+        );
+
         const visibleSchemas = userSchemas.filter((schema) => {
           if (Type.getDatabase(schema) != null) {
             return true;
@@ -152,7 +160,18 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed(
           visibleSchemas
-            .map((schema) => createSchemaNode({ schema, space, get }))
+            .map((schema) =>
+              createSchemaNode({
+                schema,
+                space,
+                get,
+                // A view over the type lives under this node, so the node stays visible while it has one.
+                hidden:
+                  Type.getDatabase(schema) == null &&
+                  !contributedTypeUris.has(Type.getURI(schema)) &&
+                  !viewIndex.typeUrisWithViews.has(Type.getURI(schema)),
+              }),
+            )
             .toSorted((nodeA, nodeB) => labelOf(nodeA).localeCompare(labelOf(nodeB))),
         );
       },
@@ -301,10 +320,12 @@ const createSchemaNode = ({
   schema,
   space,
   get,
+  hidden,
 }: {
   schema: Type.AnyEntity;
   space: Space;
   get: Atom.AtomContext;
+  hidden?: boolean;
 }): AppGraphNode.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
@@ -349,6 +370,7 @@ const createSchemaNode = ({
       // objects resolve on demand as hidden children. View objects are its only visible children, so
       // without a view the node is a leaf (no `role: 'branch'`).
       testId: `spacePlugin.schemaNode.${typename}`,
+      disposition: hidden ? 'hidden' : undefined,
       selectable: true,
       draggable: false,
       droppable: false,
@@ -418,7 +440,7 @@ const createSchemaActions = ({
               // database types have no such namespace, so fall back to the plugin's generic label.
               label: AppNode.getDynamicLabel(
                 'add-object.label',
-                Type.getDatabase(type) != null ? meta.profile.key : typename,
+                Type.getDatabase(type) != null ? SpaceNamespace.key : typename,
               ),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',

@@ -8,10 +8,10 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { NavTreeNamespace } from '../../namespace.ts';
 
 export const NavTreeDocumentTitle = ({ node }: { node?: AppGraphNode.Node }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   useEffect(() => {
     document.title = node
       ? Theme.toLocalizedString(node.properties.label, t)

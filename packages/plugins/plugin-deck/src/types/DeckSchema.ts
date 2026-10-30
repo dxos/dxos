@@ -10,8 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Translations from '@dxos/app-toolkit/Translations';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import { meta } from '#meta';
-
+import { DeckNamespace } from '../namespace.ts';
 import { isAnyCompanionOpen } from '../util/companion-anchor.ts';
 
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
@@ -247,13 +246,13 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.profile.key}.action.adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${DeckNamespace.key}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
   export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(
-    `${meta.profile.key}.action.update-plank-size`,
+    `${DeckNamespace.key}.action.update-plank-size`,
     {
       input: Schema.Struct({
         id: Schema.String,

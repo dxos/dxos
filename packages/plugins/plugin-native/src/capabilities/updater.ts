@@ -18,10 +18,10 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 import { NativeCapabilities, Update } from '#types';
 
 import { TAURI_LOCALHOST_PORTS } from '../constants.ts';
+import { NativeNamespace } from '../namespace.ts';
 import { saveBeforeLeaving, unsavedChangesToast } from '../unsaved-changes.ts';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
@@ -94,7 +94,7 @@ export default Capability.makeModule(
     let pendingUpdate: Updater.Update | null = null;
 
     // Core: check for an update and update the status atom. Returns the update if available.
-    const doCheck = async (): Promise<Updater.Update | null> => {
+    const runCheck = async (): Promise<Updater.Update | null> => {
       registry.set(statusAtom, { kind: 'checking' });
       log.info('checking for updates');
       const result = await safeCheck();
@@ -116,7 +116,7 @@ export default Capability.makeModule(
     };
 
     // Core: download + install the cached pending update, streaming progress to the status atom.
-    const doInstall = async (): Promise<boolean> => {
+    const runInstall = async (): Promise<boolean> => {
       const update = pendingUpdate;
       if (!update) {
         return false;
@@ -152,6 +152,17 @@ export default Capability.makeModule(
       registry.set(statusAtom, { kind: 'failed', error: result.error });
       return false;
     };
+
+    let checking: Promise<Updater.Update | null> | undefined;
+    let installing: Promise<boolean> | undefined;
+    const doCheck = () =>
+      (checking ??= runCheck().finally(() => {
+        checking = undefined;
+      }));
+    const doInstall = () =>
+      (installing ??= runInstall().finally(() => {
+        installing = undefined;
+      }));
 
     const manager: Update.Manager = {
       status: statusAtom,
@@ -191,12 +202,12 @@ export default Capability.makeModule(
         return true;
       }
       yield* invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.update-ready`,
-        title: ['update-ready.label', { ns: meta.profile.key }],
-        description: ['update-ready.description', { ns: meta.profile.key }],
+        id: `${NativeNamespace.key}.update-ready`,
+        title: ['update-ready.label', { ns: NativeNamespace.key }],
+        description: ['update-ready.description', { ns: NativeNamespace.key }],
         duration: Infinity,
-        actionLabel: ['update.label', { ns: meta.profile.key }],
-        actionAlt: ['update.alt', { ns: meta.profile.key }],
+        actionLabel: ['update.label', { ns: NativeNamespace.key }],
+        actionAlt: ['update.alt', { ns: NativeNamespace.key }],
         onAction: () => void relaunchSaved(),
       });
       return false;

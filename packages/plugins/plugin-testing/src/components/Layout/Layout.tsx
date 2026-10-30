@@ -32,15 +32,16 @@ import * as Toast from '@dxos/react-ui/Toast';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { StorybookCapabilities } from '#types';
+
+import { StorybookNamespace } from '../../namespace.ts';
 
 const debounce_delay = 100;
 
 type FocusOutsideEvent = Parameters<NonNullable<ComponentProps<typeof Popover.Root>['onFocusOutside']>>[0];
 
 const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(StorybookNamespace.key);
   return (
     <Toast.Root
       data-testid={toast.id}
@@ -79,7 +80,7 @@ const PortalProviders = ({ children }: PropsWithChildren<{}>) => (
 );
 
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(StorybookNamespace.key);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
   const stateAtom = Hooks.useCapability(StorybookCapabilities.LayoutState);
@@ -246,7 +247,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const ErrorFallback = ({ error }: { error?: Error }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(StorybookNamespace.key);
   const errorString = error?.toString() ?? '';
   return (
     <div

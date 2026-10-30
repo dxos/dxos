@@ -13,10 +13,10 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
 import { Feature, FeatureMapView, type Spec } from '#types';
 
 import { useOpenObject } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 import { FeatureDetail } from '../FeatureArticle/index.ts';
 
 const nothing = Query.select(Filter.nothing());
@@ -35,7 +35,7 @@ export type FeatureCompanionProps = {
  * zooms the map into this feature and selects it there, so the map and the companion keep showing the same place.
  */
 export const FeatureCompanion = ({ role, spec, attendableId }: FeatureCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const db = Obj.getDatabase(spec);
   const selectedId = useSelection(attendableId, 'single');
   const [selected] = useQuery(selectedId ? db : undefined, selectedId ? Query.select(Filter.id(selectedId)) : nothing);

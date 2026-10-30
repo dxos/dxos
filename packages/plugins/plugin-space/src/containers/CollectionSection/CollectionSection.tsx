@@ -9,12 +9,12 @@ import { type Collection } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
 export type CollectionSectionProps = AppSurface.ObjectSectionProps<Collection.Collection>;
 
 export const CollectionSection = ({ role, subject }: CollectionSectionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const [name] = useObject(subject, 'name');
 
   // TODO(wittjosiah): Better placeholder.

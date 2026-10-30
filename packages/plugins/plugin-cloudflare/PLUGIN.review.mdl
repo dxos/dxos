@@ -27,9 +27,9 @@ Of 4 items: 0 done, 1 untested, 2 partial, 0 diverged, 1 missing.
 ```mdl
 verdict CloudflareConnector: The connector entry, OAuth scopes, label hook and connection test are implemented; no test drives the hooks.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/index.ts#Connector, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/constants.ts#CLOUDFLARE_OAUTH_SCOPES, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchUser, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchAccounts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-cloudflare/dx.config.ts, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/constants.ts#CLOUDFLARE_OAUTH_SCOPES, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchUser, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchAccounts]
   walkthrough:
-    - The lazy module activates on ConnectorEvents.Start and provides the Connector capability. github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/index.ts#Connector
+    - The lazy module activates on ConnectorEvents.Start and provides the Connector capability. github:dxos/dxos/packages/plugins/plugin-cloudflare/dx.config.ts
     - The module contributes the entry with OAuth provider, scopes, onTokenCreated (email, username, then first account name, under orDie) and testConnection (GET /accounts mapped to ConnectionTestError). github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts
     - The scope ids are the GET /oauth/scopes names, without offline_access. github:dxos/dxos/packages/plugins/plugin-cloudflare/src/constants.ts#CLOUDFLARE_OAUTH_SCOPES
     - The v4 helpers send the bearer token, unwrap the envelope and retry 429/5xx. github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchUser

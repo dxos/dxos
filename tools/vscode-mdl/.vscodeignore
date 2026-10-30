@@ -1,5 +1,7 @@
 .vscode/**
 dist/**
+!dist/extension.cjs
+!dist/server.cjs
 node_modules/**
 scripts/**
 src/**

@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { ViewState } from '@dxos/react-ui-attention/types';
 
-/** Canvas lays the features out as a dependency graph; Kanban groups them by status. */
-export const Mode = Schema.Literals(['canvas', 'kanban']);
+/** Canvas lays the features out as a dependency graph, Kanban groups them by status, Document shows the spec's `.mdl` text. */
+export const Mode = Schema.Literals(['document', 'canvas', 'kanban']);
 export type Mode = Schema.Schema.Type<typeof Mode>;
 
 export const State = Schema.Struct({

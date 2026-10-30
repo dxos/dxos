@@ -9,7 +9,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { StudioNamespace } from '../../namespace.ts';
 
 export type FramePreviewProps = Util.ThemedClassName<{
   /** Zero-based position in the storyboard; shown one-based. */
@@ -26,7 +26,7 @@ export type FramePreviewProps = Util.ThemedClassName<{
  * nothing has been produced yet. Presentation-only — the source is already resolved.
  */
 export const FramePreview = ({ classNames, index, name, src, contentType }: FramePreviewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StudioNamespace.key);
   const isVideo = contentType?.startsWith('video/') ?? false;
   const label = t('frame-preview.label', { index: index + 1 });
 

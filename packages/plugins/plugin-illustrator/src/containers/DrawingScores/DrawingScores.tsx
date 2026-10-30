@@ -12,9 +12,10 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { type Drawing, IllustratorCapabilities } from '#types';
 import { findVariant, scoreScene } from '#util';
+
+import { IllustratorNamespace } from '../../namespace.ts';
 
 export type DrawingScoresProps = {
   role?: string;
@@ -31,7 +32,7 @@ const tone = (score: number) => (score >= 0.75 ? 'bg-emerald-500' : score >= 0.4
  * version seen so far — so an agent redrawing in a loop shows its progression beside the picture.
  */
 export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IllustratorNamespace.key);
   const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   const [snapshot] = useObject(ref);

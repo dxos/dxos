@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { ChessComAccount } from '#types';
+
+import { ChessComNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete Chess.com account',
         'object-deleted.label': 'Chess.com account deleted',
       },
-      [meta.profile.key]: {
+      [ChessComNamespace.key]: {
         'plugin.name': 'Chess.com',
         'sync-games.button': 'Sync games',
         'sync-games-error.title': 'Failed to sync Chess.com games',

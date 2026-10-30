@@ -16,8 +16,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
+import { SpaceNamespace } from '../../namespace.ts';
 import { ObjectMasonry } from './ObjectMasonry.tsx';
 import { type TileData } from './ObjectTile.tsx';
 
@@ -39,7 +38,7 @@ export type ObjectMasonryArticleProps = {
  * that set is presented, which is all this owns.
  */
 export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage }: ObjectMasonryArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   // Ordered by label: the query returns index order, which reads as arbitrary to someone scanning a

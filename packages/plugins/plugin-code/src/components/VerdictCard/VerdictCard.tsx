@@ -4,6 +4,14 @@
 
 import React from 'react';
 
+import {
+  type SourceKey,
+  type Verdict,
+  type VerdictStatus,
+  formatSourceKey,
+  parseSourceKey,
+  walkthroughOf,
+} from '@dxos/deus/review';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -12,11 +20,9 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-import { type SourceKey, formatSourceKey, parseSourceKey } from '#sync';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
-import { STATUS_STYLE, type Verdict, type VerdictStatus, walkthroughOf } from '../SpecModel/index.ts';
+import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { Walkthrough } from './Walkthrough.tsx';
 
 /** Status icon colours, matching the review chips in the editor's margin. */
@@ -47,7 +53,7 @@ export type VerdictCardProps = {
  */
 export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
   ({ verdict, onReveal, onOpenCode, current, read, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(CodeNamespace.key);
     const { id, status, summary, note, evidence } = verdict;
     const keys = evidence.map(parseSourceKey).filter((key) => key !== undefined);
     const style = STATUS_STYLE[status];

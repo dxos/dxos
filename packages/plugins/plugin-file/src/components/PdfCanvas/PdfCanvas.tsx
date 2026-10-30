@@ -15,8 +15,7 @@ import { log } from '@dxos/log';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { FileNamespace } from '../../namespace.ts';
 import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search.ts';
 
 /**
@@ -92,7 +91,7 @@ type PageRefs = {
  */
 export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
   ({ url, fit = 'width', onLoad, onStateChange, apiRef, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(FileNamespace.key);
     const containerRef = useRef<HTMLDivElement>(null);
     const refs = useRef<PageRefs[]>([]);
     const documentRef = useRef<PDFDocumentProxy | undefined>(undefined);

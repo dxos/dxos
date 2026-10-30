@@ -32,9 +32,10 @@ import {
   QuestionSurface,
   SpaceHomePrompt,
 } from '#containers';
-import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { ChatSurface } from '#types';
 
+import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG } from '../constants.ts';
+import { AssistantNamespace } from '../namespace.ts';
 import {
   AssistantSettingsSurface,
   InvocationsSurface,
@@ -51,7 +52,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, AssistantNamespace.key),
         component: AssistantSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),

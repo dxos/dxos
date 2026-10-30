@@ -22,8 +22,9 @@ import {
   TaskRow,
   TaskSetArticle,
 } from '#containers';
-import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal } from '#types';
+
+import { QUICK_ENTRY_DIALOG } from '../constants.ts';
 
 /**
  * The section role, typed for an embedded outline: same NSID (role identity is structural), plus the

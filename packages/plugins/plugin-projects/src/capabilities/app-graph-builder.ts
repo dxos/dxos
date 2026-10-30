@@ -25,9 +25,10 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { FEATURE_COMPANION, SPEC_DOCUMENT_COMPANION, meta } from '#meta';
 import { ProjectOperation, Spec } from '#types';
 
+import { FEATURE_COMPANION } from '../constants.ts';
+import { ProjectsNamespace } from '../namespace.ts';
 import { refId } from '../operations/feature/util.ts';
 import { inboxResearch } from '../templates/index.ts';
 
@@ -92,13 +93,12 @@ export default Capability.makeModule(
         Effect.succeed([
           AppNode.makeCompanion({
             variant: FEATURE_COMPANION,
-            label: ['feature-companion.label', { ns: meta.profile.key }],
+            label: ['feature-companion.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--puzzle-piece--regular',
             data: FEATURE_COMPANION,
           }),
         ]),
     });
-    const documentCompanionExtensions = yield* createSpecDocumentCompanionExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
       ...specSectionExtensions,
@@ -111,7 +111,6 @@ export default Capability.makeModule(
       ...taskExtensions,
       ...mailboxExtensions,
       ...featureCompanionExtensions,
-      ...documentCompanionExtensions,
     ]);
   }),
 );
@@ -166,35 +165,6 @@ export const createSpecBreakdownsExtension = () =>
  * dependency direction); injecting actions into another plugin's nodes is the established pattern
  * (e.g. plugin-brain's mailbox Analyze action).
  */
-/** The spec's `.mdl` document as a companion beside the spec plank; absent while the spec holds none. */
-export const createSpecDocumentCompanionExtension = () =>
-  AppGraphBuilder.createTypeExtension({
-    id: 'specDocumentCompanion',
-    relation: AppNode.companion,
-    type: Spec.Spec,
-    connector: (spec, get) => {
-      const ref = get(Obj.atom(spec)).document;
-      if (!ref) {
-        return Effect.succeed([]);
-      }
-      // Subscribed through the atom so the node re-runs once the document loads, then the live target is handed on.
-      get(Obj.atom(ref));
-      const document = ref.target;
-      return Effect.succeed(
-        document
-          ? [
-              AppNode.makeCompanion({
-                variant: SPEC_DOCUMENT_COMPANION,
-                label: ['spec-document-companion.label', { ns: meta.profile.key }],
-                icon: 'ph--file-text--regular',
-                data: document,
-              }),
-            ]
-          : [],
-      );
-    },
-  });
-
 export const createMailboxProjectExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',
@@ -219,7 +189,7 @@ export const createMailboxProjectExtension = () =>
               yield* Operation.invoke(LayoutOperation.Open, { subject: [...subject] });
             }),
           properties: {
-            label: ['setup-project.label', { ns: meta.profile.key }],
+            label: ['setup-project.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--stack-plus--regular',
             disposition: 'list-item',
             testId: 'projectsPlugin.setupProject',
@@ -285,7 +255,7 @@ export const createProjectChatsExtension = () =>
           type: CHATS_SECTION_TYPE,
           data: { branch: 'chats', project } satisfies ChatsBranch,
           properties: {
-            label: ['chats.label', { ns: meta.profile.key }],
+            label: ['chats.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--sparkle--regular',
             iconHue: 'amber',
             role: 'branch',
@@ -397,7 +367,7 @@ export const createProjectActionExtension = () =>
               yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
             }),
           properties: {
-            label: ['create-chat.label', { ns: meta.profile.key }],
+            label: ['create-chat.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--sparkle--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.createChat',
@@ -407,7 +377,9 @@ export const createProjectActionExtension = () =>
   });
 
 export const artifacts = (project: Project.Project): ContainerModel.Container =>
-  ContainerModel.make(project, 'artifacts', { removeLabel: ['remove-from-project.label', { ns: meta.profile.key }] });
+  ContainerModel.make(project, 'artifacts', {
+    removeLabel: ['remove-from-project.label', { ns: ProjectsNamespace.key }],
+  });
 
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
@@ -456,7 +428,7 @@ export const createProjectArtifactsExtension = () =>
           // matched only by {@link createProjectArtifactsActionExtension}.
           data: { branch: 'artifacts', project } satisfies ArtifactsBranch,
           properties: {
-            label: ['artifacts.label', { ns: meta.profile.key }],
+            label: ['artifacts.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--cube--regular',
             iconHue: 'amber',
             role: 'branch',
@@ -528,7 +500,7 @@ export const createProjectArtifactsActionExtension = () =>
               });
             }),
           properties: {
-            label: ['create-artifact.label', { ns: meta.profile.key }],
+            label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--plus--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.addArtifact',

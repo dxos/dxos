@@ -16,7 +16,8 @@ import '@dxos/react-ui-graph/styles/graph.css';
 
 import { Visualization } from '#components';
 import { DEFAULT_NEIGHBORHOOD_DEPTH, useNeighborhoodModel } from '#hooks';
-import { meta } from '#meta';
+
+import { ExplorerNamespace } from '../../namespace.ts';
 
 /** Selectable traversal depths offered in the companion toolbar. */
 const DEPTHS = [1, 2, 3] as const;
@@ -32,7 +33,7 @@ export type NeighborhoodCompanionProps = {
  * with the active node at the centre. Depth (number of hops traversed) is adjustable in the toolbar.
  */
 export const NeighborhoodCompanion = ({ role = 'article', subject }: NeighborhoodCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ExplorerNamespace.key);
   const [depth, setDepth] = useState<number>(DEFAULT_NEIGHBORHOOD_DEPTH);
   const model = useNeighborhoodModel(subject, depth);
 

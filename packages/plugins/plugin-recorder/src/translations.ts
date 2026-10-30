@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { RecorderNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [RecorderNamespace.key]: {
         'plugin.name': 'Recorder',
         'record.label': 'Record the voice-over of every slide (starts the presentation)',
         'record-slide.label': 'Record a new take of this slide',

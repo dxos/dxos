@@ -13,7 +13,7 @@ import * as Popover from '@dxos/react-ui/Popover';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
+import { GitHubNamespace } from '../../namespace.ts';
 
 export type CommentComposerProps = {
   value: string;
@@ -31,7 +31,7 @@ export type CommentComposerProps = {
  * about one line of a diff.
  */
 export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, onCancel }: CommentComposerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
 
   // Cmd/Ctrl+Enter submits, matching GitHub's own comment form.
   const handleKeyDown = useCallback(

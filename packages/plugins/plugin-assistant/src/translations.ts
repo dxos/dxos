@@ -16,7 +16,7 @@ import { translations as taskTranslations } from '@dxos/react-ui-task/translatio
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from './namespace.ts';
 
 export const translations: Theme.Resource[] = [
   ...assistantTranslations,
@@ -83,7 +83,7 @@ export const translations: Theme.Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.profile.key]: {
+      [AssistantNamespace.key]: {
         'delete-task.label': 'Delete task',
         'execute-task.label': 'Execute task',
         'execute-task.prompt': 'Implement task #{{ordinal}}',

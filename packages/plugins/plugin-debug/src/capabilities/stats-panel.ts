@@ -9,14 +9,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { meta } from '#meta';
+import { DebugNamespace } from '../namespace.ts';
+import { type DebugPluginOptions } from '../types/Debug.ts';
 
-type StatsPanelOptions = {
-  /** Persist the store to localStorage (hydrate on load, save on write). */
-  persist?: boolean;
-};
-
-const STORAGE_KEY = `${meta.profile.key}.statsPanel`;
+const STORAGE_KEY = `${DebugNamespace.key}.statsPanel`;
 
 /**
  * Contributes the {@link AppCapabilities.StatsPanel} store: a single reactive atom holding one
@@ -26,7 +22,8 @@ const STORAGE_KEY = `${meta.profile.key}.statsPanel`;
  * the store hydrates from and saves to localStorage so stats survive a reload.
  */
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ persist = true }: StatsPanelOptions = {}) {
+  Effect.fnUntraced(function* ({ persistStats }: DebugPluginOptions) {
+    const persist = persistStats ?? true;
     const registry = yield* Capabilities.AtomRegistry;
     const canPersist = persist && typeof localStorage !== 'undefined';
 

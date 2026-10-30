@@ -10,7 +10,8 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { MessengerCompanion } from '#containers';
-import { MESSENGER_COMPANION } from '#meta';
+
+import { MESSENGER_COMPANION } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
