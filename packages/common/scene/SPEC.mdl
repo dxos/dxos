@@ -826,3 +826,17 @@ decision D-87: A selected face is the element and the axis its picked normal sna
   for: user:richburdon
   why: Faces exist only in 3D, so the parity rule leaves 2D unchanged; snapping to the axis keeps a face stable on rounded and mesh surfaces.
 ```
+
+```mdl
+decision D-88: In 3D a create tool sizes a shape by a drag, as 2D does: a drag on empty ground sweeps the base, releasing fixes it, moving the pointer then sets the height, and a click fixes that and makes the shape; Escape cancels; a plain click places the default size.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-89: The base is swept with 2D's own `boundsFromPoints` over the ground's x and z, both corners snapped to the grid step (none with Alt or snapping off); the height is the pointer's rise over the screen length of one unit up at the base, snapped and at least one step; the shape stands on the ground at that height, previewed as it will land. A sphere takes the base's larger extent as its diameter and skips the height step. Fills in [D-88].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Sharing 2D's sweep keeps one rule for what a drag spans; a sphere's height is its diameter, so a second step would only contradict the base.
+```

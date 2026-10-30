@@ -17,11 +17,13 @@ import {
   SNAP,
   type Theme3D,
   type WorldTransform,
+  groundPoint,
   isTheme3D,
   project,
   renderList,
 } from '../../three/index.ts';
 import { DEFAULT_CAMERA, onScene, useManifoldGeometry, useOrbit, useSceneRenderer } from '../Scene3DView/index.ts';
+import { type GroundBase, createdElement, dragBase, dragHeight, sizesInOneStep } from './create.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
@@ -78,6 +80,9 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   /** A right-click, where it was and on what; an unselected element is selected first. */
   onContextMenu?: (at: { x: number; y: number }, kind: 'element' | 'canvas') => void;
 }>;
+
+/** A swept base's height before the pointer raises it, when snapping is off. */
+const FLAT = 0.1;
 
 /** How far a press may travel and still be a click rather than a drag. */
 const CLICK_SLOP = 4;
@@ -149,7 +154,23 @@ export const Scene3DEditor = ({
 
   // The edited layout's drawn items, by the frame that shows them (`''` at the top level) and then by element id. A
   // composite placed several times is edited through the frame last clicked, or else the first.
-  const list = useMemo(() => renderList(doc, scene), [doc, scene]);
+  // A shape being sized by a drag, drawn as it will land but not yet in the layout.
+  const [draft, setDraft] = useState<Scene.Element3D>();
+  const drawnDoc = useMemo(
+    () =>
+      draft === undefined
+        ? doc
+        : {
+            ...doc,
+            layouts: doc.layouts.map((record) =>
+              record.id === (editingProp ?? scene?.layout) && record.dim === '3d'
+                ? { ...record, elements: { ...record.elements, [draft.id]: draft } }
+                : record,
+            ),
+          },
+    [doc, draft, editingProp, scene],
+  );
+  const list = useMemo(() => renderList(drawnDoc, scene), [drawnDoc, scene]);
   const frames = useMemo(() => {
     const byFrame = new Map<string, Map<string, RenderItem>>();
     for (const item of list.items) {
@@ -399,6 +420,23 @@ export const Scene3DEditor = ({
   );
 
   const press = useRef<{ x: number; y: number }>(undefined);
+  // Drag to create: the base is swept on the ground, then (but for a sphere) the pointer sets the height until a
+  // click fixes it; a plain click places the default size instead.
+  const sizing = useRef<
+    | { phase: 'base'; kind: string; id: string; from: Scene.Vec3; base?: GroundBase }
+    | { phase: 'height'; kind: string; id: string; base: GroundBase; startY: number }
+  >(undefined);
+  const committed = useRef(false);
+  const step = snap && !alt ? SNAP.move : 0;
+  const cancelSizing = () => {
+    sizing.current = undefined;
+    setDraft(undefined);
+  };
+  const commitDraft = (element: Scene.Element3D) => {
+    cancelSizing();
+    onIntent(editing, { kind: 'create', element });
+    onSelect([element.id]);
+  };
   const local = (event: { clientX: number; clientY: number }) => {
     const rect = containerRef.current?.getBoundingClientRect();
     return { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) };
@@ -422,6 +460,25 @@ export const Scene3DEditor = ({
         }
         renderer?.takeDrag();
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
+        // The click that fixes a dragged shape's height commits it, and is no other click.
+        if (sizing.current?.phase === 'height' && event.button === 0) {
+          draft && commitDraft(draft);
+          committed.current = true;
+          return;
+        }
+        if (typeof tool === 'object' && 'create' in tool && event.button === 0 && !isHandDrag(event) && !unplaced) {
+          const screen = local(event);
+          const ground = clickCreates(tool, elementAt(screen).element) ? groundPoint(view, size, screen) : undefined;
+          if (ground) {
+            sizing.current = {
+              phase: 'base',
+              kind: tool.create,
+              id: freeId(layout, tool.create),
+              from: toLocal(transform, ground),
+            };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
+        }
         // With the command key held a left drag moves the camera, whatever the tool, so it starts no tool gesture.
         if (tool === 'extrude' && event.button === 0 && !isHandDrag(event)) {
           const screen = local(event);
@@ -441,7 +498,52 @@ export const Scene3DEditor = ({
           extruding.current && event.currentTarget.setPointerCapture(event.pointerId);
         }
       }}
+      onPointerMove={(event) => {
+        const current = sizing.current;
+        if (!current) {
+          return;
+        }
+        if (current.phase === 'base' && event.buttons & 1) {
+          const ground = groundPoint(view, size, local(event));
+          const base = ground && dragBase(current.from, toLocal(transform, ground), step);
+          sizing.current = { ...current, base: base ?? undefined };
+          setDraft(
+            base
+              ? createdElement(current.id, current.kind, base, sizesInOneStep(current.kind) ? undefined : step || FLAT)
+              : undefined,
+          );
+        } else if (current.phase === 'height') {
+          // The height is measured in the world, and the edited layout may be a composite's parts at another scale.
+          const height = dragHeight(current.base, (current.startY - event.clientY) / transform.scale, view, size, step);
+          setDraft(createdElement(current.id, current.kind, current.base, height));
+        }
+      }}
       onPointerUp={(event) => {
+        if (committed.current) {
+          committed.current = false;
+          press.current = undefined;
+          return;
+        }
+        const current = sizing.current;
+        if (current?.phase === 'base') {
+          if (current.base && draft) {
+            press.current = undefined;
+            if (sizesInOneStep(current.kind)) {
+              commitDraft(draft);
+            } else {
+              sizing.current = {
+                phase: 'height',
+                kind: current.kind,
+                id: current.id,
+                base: current.base,
+                startY: event.clientY,
+              };
+            }
+            return;
+          }
+          // Too short to sweep a base: a click, which places the default size.
+          cancelSizing();
+        }
         if (!onScene(event.nativeEvent)) {
           return;
         }
@@ -478,7 +580,9 @@ export const Scene3DEditor = ({
         if (event.target !== event.currentTarget) {
           return;
         }
-        if (event.key === 'Escape' && face) {
+        if (event.key === 'Escape' && sizing.current) {
+          cancelSizing();
+        } else if (event.key === 'Escape' && face) {
           onFaceChange?.(undefined);
         } else if (event.key === 'Escape' && drilled && scene) {
           onSelect([]);
