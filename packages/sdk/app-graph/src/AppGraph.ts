@@ -377,7 +377,9 @@ export class GraphImpl implements WritableGraph {
 
     this._model.batch(() => {
       this._setNode(GraphNode.RootId, this._constructNode({ id: GraphNode.RootId, type: Node.RootType, data: null }));
-      nodes?.forEach((node) => this._setNode(node.id, this._constructNode(node)));
+      nodes?.forEach((node) =>
+        this._setNode(node.id, this._constructNode({ ...node, data: stableData(this, undefined, node.data) })),
+      );
       Object.entries(edges ?? {}).forEach(([source, relations]) => {
         Object.entries(relations).forEach(([relation, targets]) => {
           targets.forEach((target) => this._setEdge(source, target, relation));
@@ -844,7 +846,8 @@ export const addNodes = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<
  * and invoking the node still runs the latest closure.
  */
 const stableData = (internal: GraphImpl, existing: unknown, data: any): any => {
-  if (typeof data !== 'function') {
+  // A forwarder read back from the graph is kept as is: retargeting a cell at its own forwarder would recurse.
+  if (typeof data !== 'function' || internal._forwarded.has(data)) {
     return data;
   }
   const current = typeof existing === 'function' ? internal._forwarded.get(existing) : undefined;

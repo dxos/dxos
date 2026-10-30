@@ -19,7 +19,7 @@ import * as Node from './AppGraphNode.ts';
 // anything the builder reads changes, with a new closure and a new label tuple per action, as the
 // Composer space plugin builds them. Each re-run should cost the diff and emit no node changes.
 //
-//   pnpm exec vitest bench --run src/AppGraph.bench.ts
+//   DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run --project node src/AppGraph.bench.ts
 //
 
 const ROOT = GraphNode.RootId;

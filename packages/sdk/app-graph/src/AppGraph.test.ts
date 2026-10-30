@@ -253,6 +253,38 @@ describe('Graph', () => {
     expect(changes).toEqual(1);
   });
 
+  test('re-adding an action read back from the graph keeps it invocable', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    Graph.addNode(
+      graph,
+      Node.makeAction({ id: EXAMPLE_ID, data: () => Effect.sync(() => invoked.push('first')), properties: {} }),
+    );
+    const read = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+
+    Graph.addNode(graph, read);
+    expect(changes).toEqual(0);
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    Effect.runSync(node.data());
+    expect(invoked).toEqual(['first']);
+  });
+
+  test('a constructor-seeded action re-offered with the same closure emits nothing', () => {
+    const invoke = () => Effect.void;
+    const graph = Graph.make({ nodes: [{ id: EXAMPLE_ID, type: Node.ActionType, data: invoke, properties: {} }] });
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+    Graph.addNode(graph, Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }));
+    expect(changes).toEqual(0);
+  });
+
   test('add edge', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
