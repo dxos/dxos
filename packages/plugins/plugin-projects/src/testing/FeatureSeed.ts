@@ -6,12 +6,13 @@
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { type Database, DXN, Obj, Ref, Relation } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { File, Milestone, PullRequest, SpecDocument, Task } from '@dxos/types';
+import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
-import { Feature, Showcase, Spec } from '#types';
+import { Feature, FeatureMap, Showcase } from '#types';
 
 import { type FeatureModel } from '../components/FeatureCard/feature.ts';
 import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
@@ -19,7 +20,6 @@ import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
 /** The types a database needs to hold a seeded spec. */
 export const types = [
   Spec.Spec,
-  SpecDocument.SpecDocument,
   Feature.Feature,
   Feature.DependsOn,
   Feature.Implements,
@@ -61,9 +61,9 @@ export const seed = (
     Feature.setSources(feature, model.specs);
     if (model.subfeatures.length > 0) {
       const subfeatures = model.subfeatures.map((subfeature) =>
-        Ref.make(db.add(Feature.make({ name: subfeature.name, status: subfeature.status }))),
+        db.add(Feature.make({ name: subfeature.name, status: subfeature.status })),
       );
-      const breakdown = db.add(Spec.make({ name: model.name, features: subfeatures }));
+      const breakdown = db.add(FeatureMap.make({ name: model.name, features: subfeatures }));
       Obj.update(feature, (feature) => {
         feature.spec = Ref.make(breakdown);
       });
@@ -77,10 +77,10 @@ export const seed = (
     }
     objects.set(model.id, feature);
   }
-  // Made once its features exist, so its document embeds them.
-  const spec = db.add(Spec.make({ name, features: [...objects.values()].map((feature) => Ref.make(feature)) }));
+  // Made once its features exist, so its text embeds them.
+  const spec = db.add(FeatureMap.make({ name, features: [...objects.values()] }));
   Obj.update(project, (project) => {
-    project.spec = Ref.make(spec);
+    project.specs.push(Ref.make(spec));
   });
 
   const milestones = new Map<string, Milestone.Milestone>();

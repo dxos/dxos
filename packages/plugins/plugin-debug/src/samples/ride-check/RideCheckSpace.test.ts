@@ -30,14 +30,20 @@ type Archived = {
   'name'?: string;
   'title'?: string;
   'status'?: string;
-  'document'?: { '/': string };
   'content'?: string | { '/': string };
   'spec'?: { '/': string };
-  'features'?: Array<{ '/': string }>;
+  'specs'?: Array<{ '/': string }>;
   '@relationSource'?: string;
   '@relationTarget'?: string;
-  '@meta'?: { keys?: Array<{ source: string; id: string }> };
+  '@meta'?: {
+    keys?: Array<{ source: string; id: string }>;
+    annotations?: { 'org.dxos.projects.features'?: Array<{ '/': string }> };
+  };
 };
+
+/** The refs to the features an archived spec holds, from its features annotation. */
+const featuresOf = (entity: Archived | undefined) =>
+  entity?.['@meta']?.annotations?.['org.dxos.projects.features'] ?? [];
 
 /** The spec blocks an archived feature was read in from, as its foreign keys. */
 const sourcesOf = (entity: Archived): string[] =>
@@ -74,9 +80,8 @@ describe('Ride Check template', () => {
       expect(countOf('type.task:')).toBe(3);
       // Four features, and the verdict's two subfeatures.
       expect(countOf('type.feature:')).toBe(6);
-      // The map, and the spec that breaks the verdict down; every spec holds its document.
+      // The map, and the spec that breaks the verdict down; each owns its text.
       expect(countOf('type.projects.spec:')).toBe(2);
-      expect(countOf('type.specDocument:')).toBe(2);
       // The URL and the diagram are what the run produces, so the space ships no documents.
       expect(countOf('type.document')).toBe(0);
     },
@@ -94,8 +99,8 @@ describe('Ride Check template', () => {
       const all = ofType('type.feature:');
       const byRef = (ref: { '/': string } | undefined) =>
         objects.find((object) => `echo:///${object.id}` === ref?.['/']);
-      const map = byRef(project.spec);
-      const features = (map?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
+      const map = byRef(project.specs?.[0]);
+      const features = featuresOf(map).flatMap((ref) => byRef(ref) ?? []);
       const tasks = ofType('type.task:');
 
       expect(features.map((feature) => feature.name)).toEqual([
@@ -106,7 +111,7 @@ describe('Ride Check template', () => {
       ]);
       expect(features.every((feature) => feature.status === 'planned')).toBe(true);
       // The verdict's parts are features of their own, on the spec that breaks it down.
-      const subfeatures = (byRef(features[0].spec)?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
+      const subfeatures = featuresOf(byRef(features[0].spec)).flatMap((ref) => byRef(ref) ?? []);
       expect(subfeatures.map((feature) => feature.name)).toEqual(['Rain rule', 'Wind rule']);
       expect(all).toHaveLength(features.length + subfeatures.length);
       expect(map?.['@type']).toContain('type.projects.spec:');
@@ -126,12 +131,10 @@ describe('Ride Check template', () => {
       const build = tasks.find((task) => task.title === 'Build and deploy the Worker');
       expect(implementsLinks).toEqual(features.map((feature) => [`echo:///${build?.id}`, `echo:///${feature.id}`]));
 
-      // The map's document is the space's copy of the path the features cite, so their cards open it instead of GitHub.
-      const document = ofType('type.specDocument:').find(({ id }) => map?.document?.['/'] === `echo:///${id}`);
-      expect(document).toBeDefined();
-      expect(document?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      // The map is the space's copy of the path the features cite, so their cards open it instead of GitHub.
+      expect(map?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
       // Each feature is embedded where its `feat` block stood in the file; no block is left as text.
-      const content = document?.content;
+      const content = map?.content;
       const text = typeof content === 'object' ? byRef(content)?.content : undefined;
       expect(typeof text).toBe('string');
       expect(FeatureEmbed.parse(String(text)).map(({ id }) => id)).toEqual(features.map(({ id }) => id));

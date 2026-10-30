@@ -7,11 +7,12 @@ import { useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Operation from '@dxos/compute/Operation';
+import * as Spec from '@dxos/compute/Spec';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Task } from '@dxos/types';
 
-import { Feature, FeatureOperation, Spec } from '#types';
+import { Feature, FeatureMap, FeatureOperation } from '#types';
 
 import { ProjectsNamespace } from '../namespace.ts';
 
@@ -89,7 +90,7 @@ export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec
         ),
       fileTask: async (featureId, title) => {
         const [feature] = db ? await db.query(Filter.id(featureId)).run() : [];
-        const project = Feature.instanceOf(feature) ? Spec.findProject(feature) : undefined;
+        const project = Feature.instanceOf(feature) ? FeatureMap.findProject(feature) : undefined;
         if (!project?.taskSet) {
           return false;
         }

@@ -4,16 +4,16 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Spec from '@dxos/compute/Spec';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
-import { SpecDocument } from '@dxos/types';
 
 import * as Feature from './Feature.ts';
 import * as FeatureEmbed from './FeatureEmbed.ts';
+import * as FeatureMap from './FeatureMap.ts';
 import * as FeatureSpec from './FeatureSpec.ts';
-import * as Spec from './Spec.ts';
 import * as SpecText from './SpecText.ts';
 
 describe('SpecText', () => {
@@ -23,7 +23,7 @@ describe('SpecText', () => {
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({
-      types: [Spec.Spec, SpecDocument.SpecDocument, Feature.Feature, Text.Text],
+      types: [Spec.Spec, Feature.Feature, Text.Text],
     }));
   });
 
@@ -32,14 +32,12 @@ describe('SpecText', () => {
   });
 
   const addFeature = (name: string) => db.add(Feature.make({ name, status: 'planned' }));
-  const addSpec = (name: string, features: Feature.Feature[] = []) =>
-    db.add(Spec.make({ name, features: features.map((feature) => Ref.make(feature)) }));
+  const addSpec = (name: string, features: Feature.Feature[] = []) => db.add(FeatureMap.make({ name, features }));
   const write = async (spec: Spec.Spec, content: string) => {
-    const document = await spec.document.load();
-    Doc.updateText(await document.content.load(), 'content', content);
+    Doc.updateText(await spec.content.load(), 'content', content);
   };
   const embedded = async (spec: Spec.Spec) => FeatureEmbed.parse(await SpecText.read(spec)).map(({ id }) => id);
-  const members = (spec: Spec.Spec) => spec.features.map((ref) => FeatureEmbed.entityId(ref.uri));
+  const members = (spec: Spec.Spec) => FeatureMap.getFeatures(spec).map((ref) => FeatureEmbed.entityId(ref.uri));
 
   test('the spec holds what its text embeds, in the order the text gives', async ({ expect }) => {
     const sync = addFeature('Sync');
@@ -74,7 +72,7 @@ describe('SpecText', () => {
     await write(inbox, text);
     expect((await SpecText.sync(inbox)).claimed).toEqual([sync.id]);
     expect(Obj.isDeleted(sync)).toBe(false);
-    expect(Spec.getContainer(sync)?.id).toBe(inbox.id);
+    expect(FeatureMap.getContainer(sync)?.id).toBe(inbox.id);
   });
 
   test('an embed cut from one document and pasted into another moves the feature, whichever syncs first', async ({
@@ -88,7 +86,7 @@ describe('SpecText', () => {
 
     await SpecText.sync(inbox, { removed: [sync.id] });
     expect(Obj.isDeleted(sync)).toBe(false);
-    expect(Spec.getContainer(sync)?.id).toBe(mail.id);
+    expect(FeatureMap.getContainer(sync)?.id).toBe(mail.id);
     await SpecText.sync(mail);
     expect(members(mail)).toEqual([sync.id]);
     expect(members(inbox)).toEqual([]);
@@ -100,7 +98,7 @@ describe('SpecText', () => {
     const mail = addSpec('Mail');
     await write(mail, SpecText.makeEmbed(sync));
     await SpecText.sync(mail);
-    expect(Spec.getContainer(sync)?.id).toBe(inbox.id);
+    expect(FeatureMap.getContainer(sync)?.id).toBe(inbox.id);
     expect(members(mail)).toEqual([]);
   });
 
@@ -164,7 +162,7 @@ describe('SpecText', () => {
     expect(FeatureSpec.parse(await SpecText.read(inbox))).toEqual([]);
     expect(await SpecText.expand(inbox, { base: file })).toBe(file);
 
-    const [, compose] = await Ref.loadAll(inbox.features);
+    const [, compose] = await Ref.loadAll(FeatureMap.getFeatures(inbox));
     Obj.update(compose, (compose) => {
       compose.status = 'operational';
     });
@@ -187,7 +185,7 @@ describe('SpecText', () => {
     ].join('\n');
     const map = addSpec('Ride Check');
     await SpecText.take(map, { path: 'SPEC.mdl', text: file });
-    const features = await Ref.loadAll(map.features);
+    const features = await Ref.loadAll(FeatureMap.getFeatures(map));
     expect(features.map(({ name, description, requirements }) => ({ name, description, requirements }))).toEqual([
       {
         name: 'Verdict',
@@ -199,18 +197,17 @@ describe('SpecText', () => {
     expect(await embedded(map)).toEqual(features.map(({ id }) => id));
   });
 
-  test('the codec makes a spec of a document no object owns, once its file holds a feat block', async ({ expect }) => {
-    const document = db.add(SpecDocument.make({ name: 'a/PLUGIN.mdl', content: '' }));
+  test('the codec leaves prose to the text merge, and takes a file of feat blocks in and back out', async ({
+    expect,
+  }) => {
+    const spec = addSpec('a/PLUGIN.mdl');
     const path = 'packages/a/PLUGIN.mdl';
-    expect(await SpecText.codec.read(document, 'Just prose.', { path })).toBe(false);
-    expect(Obj.getParent(document)).toBeUndefined();
-    expect(await SpecText.codec.write(document, {})).toBeUndefined();
+    expect(await SpecText.codec.read(spec, 'Just prose.', { path })).toBe(false);
+    expect(await SpecText.codec.write(spec, {})).toBeUndefined();
 
     const file = ['# A', '', '```mdl', 'feat F-1: Sync', '```', ''].join('\n');
-    expect(await SpecText.codec.read(document, file, { path })).toBe(true);
-    const spec = Obj.getParent(document);
-    expect(Spec.instanceOf(spec) && spec.name).toBe('a/PLUGIN.mdl');
-    expect(Spec.instanceOf(spec) && (await Ref.loadAll(spec.features)).map(({ name }) => name)).toEqual(['Sync']);
-    expect(await SpecText.codec.write(document, { base: file })).toBe(file);
+    expect(await SpecText.codec.read(spec, file, { path })).toBe(true);
+    expect((await Ref.loadAll(FeatureMap.getFeatures(spec))).map(({ name }) => name)).toEqual(['Sync']);
+    expect(await SpecText.codec.write(spec, { base: file })).toBe(file);
   });
 });

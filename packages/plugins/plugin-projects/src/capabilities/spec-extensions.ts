@@ -11,11 +11,11 @@ import { ProjectCapabilities } from '#types';
 import { featureEmbedExtensions } from '../containers/SpecDocumentArticle/feature-embed-extensions.tsx';
 import { ProjectsNamespace } from '../namespace.ts';
 
-/** A spec's document draws its feature embeds as cards in any editor of it, such as plugin-code's. */
+/** A spec's text draws its feature embeds as cards in any editor of it, such as plugin-code's. */
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contribute(ProjectCapabilities.SpecDocumentExtensions, (document, { attendableId, t }) =>
-      featureEmbedExtensions(document, {
+    Capability.contribute(ProjectCapabilities.SpecExtensions, (spec, { attendableId, t }) =>
+      featureEmbedExtensions(spec, {
         attendableId,
         newName: t('feature-map.new-feature.name', { ns: ProjectsNamespace.key }),
       }),

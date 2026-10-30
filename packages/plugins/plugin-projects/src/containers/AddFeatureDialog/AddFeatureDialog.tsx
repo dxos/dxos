@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -13,7 +14,7 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { Feature, type Spec } from '#types';
+import { Feature } from '#types';
 
 import { useFeatureEditing } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';

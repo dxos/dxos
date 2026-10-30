@@ -6,31 +6,31 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Spec from '@dxos/compute/Spec';
 import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { SpecDocument } from '@dxos/types';
 
 import * as Feature from './Feature.ts';
 import * as FeatureEmbed from './FeatureEmbed.ts';
+import * as FeatureMap from './FeatureMap.ts';
 import * as FeatureSpec from './FeatureSpec.ts';
 import type * as ProjectCapabilities from './ProjectCapabilities.ts';
-import * as Spec from './Spec.ts';
 
 /**
- * A spec's document is canonical for which features the spec holds and in what order: each is an embed of the feature
- * object. `Spec.features` is the same list held as refs, for queries, the canvas and ECHO ownership, and only
- * {@link sync} writes it from the text.
+ * A spec's text is canonical for which features the spec holds and in what order: each is an embed of the feature
+ * object. The spec's {@link FeatureMap.FeaturesAnnotation} is the same list held as refs, for queries, the canvas and
+ * ECHO ownership, and only {@link sync} writes it from the text.
  */
 
 const isId = Schema.is(Obj.ID);
 
-/** The text of the spec's document. */
+/** The spec's text. */
 export const read = async (spec: Spec.Spec): Promise<string> => {
   const content = await loadContent(spec);
   return content?.content ?? '';
 };
 
-/** Applies the changes `edit` computes from the spec document's current text, as a minimal delta. */
+/** Applies the changes `edit` computes from the spec's current text, as a minimal delta. */
 export const edit = async (spec: Spec.Spec, edit: (text: string) => readonly FeatureEmbed.Change[]): Promise<void> => {
   const content = await loadContent(spec);
   if (!content) {
@@ -43,11 +43,11 @@ export const edit = async (spec: Spec.Spec, edit: (text: string) => readonly Fea
   }
 };
 
-/** Whether the spec's document embeds the object. */
+/** Whether the spec's text embeds the object. */
 export const embeds = async (spec: Spec.Spec, id: string): Promise<boolean> =>
   FeatureEmbed.parse(await read(spec)).some((embed) => embed.id === id);
 
-/** Embeds the feature at the end of the spec's features, unless the document embeds it already. */
+/** Embeds the feature at the end of the spec's features, unless the text embeds it already. */
 export const embed = (spec: Spec.Spec, feature: Feature.Feature): Promise<void> =>
   edit(spec, (text) =>
     FeatureEmbed.parse(text).some((embed) => embed.id === feature.id)
@@ -55,7 +55,7 @@ export const embed = (spec: Spec.Spec, feature: Feature.Feature): Promise<void> 
       : [FeatureEmbed.append(text, makeEmbed(feature))],
   );
 
-/** Takes every embed of the feature out of the spec's document. */
+/** Takes every embed of the feature out of the spec's text. */
 export const unembed = (spec: Spec.Spec, id: string): Promise<void> =>
   edit(spec, (text) => FeatureEmbed.remove(text, id));
 
@@ -79,11 +79,11 @@ export const makeEmbed = (feature: Feature.Feature): string =>
   FeatureEmbed.make({ label: feature.name, uri: Obj.getURI(feature) });
 
 export type SyncResult = {
-  /** Features the document now holds that the spec did not: added, restored or moved in. */
+  /** Features the text now holds that the spec did not: added, restored or moved in. */
   claimed: string[];
-  /** Features the spec held that the document did not embed, embedded at the end of its features. */
+  /** Features the spec held that the text did not embed, embedded at the end of its features. */
   embedded: string[];
-  /** Features whose embeds were removed, deleted since no other spec's document embeds them either. */
+  /** Features whose embeds were removed, deleted since no other spec's text embeds them either. */
   deleted: string[];
 };
 
@@ -93,11 +93,11 @@ export type SyncOptions = {
 };
 
 /**
- * Makes `Spec.features` the features the document embeds, in its order. An embedded feature on no spec, deleted, or on
- * a spec whose document does not embed it is claimed, so cutting an embed from one document and pasting it into
- * another moves the feature; one its own spec's document embeds is a reference and stays there. A feature whose embed
+ * Makes the spec's features the ones its text embeds, in its order. An embedded feature on no spec, deleted, or on
+ * a spec whose document does not embed it is claimed, so cutting an embed from one text and pasting it into
+ * another moves the feature; one its own spec's text embeds is a reference and stays there. A feature whose embed
  * was seen to go (`removed`) moves to another spec whose document embeds it, or is deleted, which an undo or a paste
- * reverses. A feature the spec holds that the document has never embedded, as one added by a seed or a migration, is
+ * reverses. A feature the spec holds that the text has never embedded, as one added by a seed or a migration, is
  * embedded rather than dropped.
  */
 export const sync = async (spec: Spec.Spec, { removed = [] }: SyncOptions = {}): Promise<SyncResult> => {
@@ -115,7 +115,7 @@ export const sync = async (spec: Spec.Spec, { removed = [] }: SyncOptions = {}):
     if (!Feature.instanceOf(feature)) {
       continue;
     }
-    const container = Spec.getContainer(feature);
+    const container = FeatureMap.getContainer(feature);
     if (container?.id === spec.id && !Obj.isDeleted(feature)) {
       owned.push(feature);
       continue;
@@ -124,14 +124,14 @@ export const sync = async (spec: Spec.Spec, { removed = [] }: SyncOptions = {}):
       continue;
     }
     // A spec cannot hold the feature it breaks down, nor one above it.
-    if (Spec.isWithin(spec, feature)) {
+    if (FeatureMap.isWithin(spec, feature)) {
       continue;
     }
     if (Obj.isDeleted(feature)) {
       db.add(feature);
     }
     if (container && container.id !== spec.id) {
-      detach(container, feature.id);
+      FeatureMap.detach(container, feature.id);
     }
     owned.push(feature);
     result.claimed.push(id);
@@ -139,7 +139,7 @@ export const sync = async (spec: Spec.Spec, { removed = [] }: SyncOptions = {}):
 
   const kept = new Set(owned.map(({ id }) => id));
   const gone = new Set(removed);
-  for (const feature of await Ref.loadAll(spec.features)) {
+  for (const feature of await Ref.loadAll(FeatureMap.getFeatures(spec))) {
     if (kept.has(feature.id)) {
       continue;
     }
@@ -149,24 +149,17 @@ export const sync = async (spec: Spec.Spec, { removed = [] }: SyncOptions = {}):
       result.embedded.push(feature.id);
       continue;
     }
-    detach(spec, feature.id);
+    FeatureMap.detach(spec, feature.id);
     const other = await findEmbedder(db, spec, feature.id);
     if (other) {
-      Obj.update(other, (other) => {
-        other.features.push(Ref.make(feature));
-      });
+      FeatureMap.attach(other, feature);
     } else {
       db.remove(feature);
       result.deleted.push(feature.id);
     }
   }
 
-  const current = spec.features.map((ref) => FeatureEmbed.entityId(ref.uri));
-  if (current.length !== owned.length || owned.some((feature, index) => feature.id !== current[index])) {
-    Obj.update(spec, (spec) => {
-      spec.features.splice(0, spec.features.length, ...owned.map((feature) => Ref.make(feature)));
-    });
-  }
+  FeatureMap.setFeatures(spec, owned);
   return result;
 };
 
@@ -182,7 +175,7 @@ export type ExpandOptions = {
  */
 export const expand = async (spec: Spec.Spec, { base }: ExpandOptions = {}): Promise<string> => {
   const text = await read(spec);
-  const owned = new Map((await Ref.loadAll(spec.features)).map((feature) => [feature.id, feature]));
+  const owned = new Map((await Ref.loadAll(FeatureMap.getFeatures(spec))).map((feature) => [feature.id, feature]));
   // Split, so a block that shares a fence with others is updated in a fence of its own.
   const fenced = base === undefined ? undefined : FeatureSpec.split(base);
   const blocks = new Map(fenced === undefined ? [] : FeatureSpec.parse(fenced).map((block) => [block.id, block]));
@@ -218,9 +211,9 @@ export type TakeOptions = {
 export type TakeResult = { created: string[]; updated: string[] };
 
 /**
- * Takes a spec file's text into the spec's document. Each `feat` block becomes an embed of the feature it maps to,
+ * Takes a spec file's text into the spec. Each `feat` block becomes an embed of the feature it maps to,
  * found by the source it records wherever it has moved since, or made; the file states the feature's fields. A feature
- * the document embedded that came from no block of this file was added in the app and keeps its place at the end; one
+ * the text embedded that came from no block of this file was added in the app and keeps its place at the end; one
  * whose block the file dropped is deleted. A fence that holds several blocks becomes an embed per block.
  */
 export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): Promise<TakeResult> => {
@@ -251,14 +244,14 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
     const source = FeatureSpec.getSource(path, id);
     let feature = existing.get(source);
     if (feature) {
-      const container = Spec.getContainer(feature);
-      // The block's embed lands in this document, so the feature moves here, unless the spec lies beneath it.
-      if (container?.id !== spec.id && !Spec.isWithin(spec, feature)) {
+      const container = FeatureMap.getContainer(feature);
+      // The block's embed lands in this text, so the feature moves here, unless the spec lies beneath it.
+      if (container?.id !== spec.id && !FeatureMap.isWithin(spec, feature)) {
         if (container) {
           await unembed(container, feature.id);
-          detach(container, feature.id);
+          FeatureMap.detach(container, feature.id);
         }
-        attach(spec, feature);
+        FeatureMap.attach(spec, feature);
       }
       if (
         feature.name !== name ||
@@ -279,7 +272,7 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
     } else {
       feature = db.add(Feature.make({ name, description, requirements, status: status ?? FeatureSpec.DEFAULT_STATUS }));
       Feature.setSources(feature, [source]);
-      attach(spec, feature);
+      FeatureMap.attach(spec, feature);
       result.created.push(feature.id);
     }
     changes.push({ from, to, insert: makeEmbed(feature) });
@@ -290,7 +283,7 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
   const fromPath = (feature: Feature.Feature) =>
     Feature.getSources(feature).some((source) => Feature.getSpecPath(source) === Feature.getSpecPath(path));
   const removed: string[] = [];
-  for (const feature of await Ref.loadAll(spec.features)) {
+  for (const feature of await Ref.loadAll(FeatureMap.getFeatures(spec))) {
     if (previous.has(feature.id) && !placed.has(feature.id)) {
       if (fromPath(feature)) {
         removed.push(feature.id);
@@ -307,17 +300,13 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
 };
 
 /**
- * A spec's document written to its file with each feature as its `feat` block, and read back as embeds. A document no
- * object owns becomes the document of a new spec once its file holds a `feat` block.
+ * A spec's text written to its file with each feature as its `feat` block, and read back as embeds. A spec that holds
+ * no features, reading a file that declares none, is left to the plain text merge.
  */
-export const codec: ProjectCapabilities.SpecDocumentCodec = {
-  write: async (document, { base }) => {
-    const spec = Obj.getParent(document);
-    return Spec.instanceOf(spec) ? expand(spec, { base }) : undefined;
-  },
-  read: async (document, text, { path }) => {
-    const spec = adopt(document, { path, text });
-    if (!spec) {
+export const codec: ProjectCapabilities.SpecCodec = {
+  write: async (spec, { base }) => (FeatureMap.getFeatures(spec).length > 0 ? expand(spec, { base }) : undefined),
+  read: async (spec, text, { path }) => {
+    if (FeatureMap.getFeatures(spec).length === 0 && FeatureSpec.parse(FeatureSpec.split(text)).length === 0) {
       return false;
     }
     await take(spec, { path, text });
@@ -325,32 +314,14 @@ export const codec: ProjectCapabilities.SpecDocumentCodec = {
   },
 };
 
-const adopt = (document: SpecDocument.SpecDocument, { path, text }: TakeOptions): Spec.Spec | undefined => {
-  const parent = Obj.getParent(document);
-  if (Spec.instanceOf(parent)) {
-    return parent;
-  }
-  const db = Obj.getDatabase(document);
-  if (parent || !db || FeatureSpec.parse(FeatureSpec.split(text)).length === 0) {
-    return undefined;
-  }
-  return db.add(Spec.make({ name: document.name ?? path, document: Ref.make(document) }));
-};
-
-const loadContent = async (spec: Spec.Spec) => {
-  const document = await spec.document.tryLoad();
-  if (!SpecDocument.instanceOf(document)) {
-    return undefined;
-  }
-  return document.content.tryLoad();
-};
+const loadContent = (spec: Spec.Spec) => spec.content.tryLoad();
 
 const loadIncludingDeleted = async (db: Database.Database, ids: string[]): Promise<Map<string, Obj.Unknown>> => {
   const objects = await db.query(Query.select(Filter.id(...ids)).options({ deleted: 'include' })).run();
   return new Map(objects.map((object) => [object.id, object]));
 };
 
-/** Another spec whose document embeds the object, if any. */
+/** Another spec whose text embeds the object, if any. */
 const findEmbedder = async (db: Database.Database, spec: Spec.Spec, id: string): Promise<Spec.Spec | undefined> => {
   const specs = await db.query(Filter.type(Spec.Spec)).run();
   for (const other of specs) {
@@ -359,24 +330,4 @@ const findEmbedder = async (db: Database.Database, spec: Spec.Spec, id: string):
     }
   }
   return undefined;
-};
-
-const attach = (spec: Spec.Spec, feature: Feature.Feature): void => {
-  Obj.update(spec, (spec) => {
-    spec.features.push(Ref.make(feature));
-  });
-};
-
-const detach = (spec: Spec.Spec, id: string): void => {
-  const index = spec.features.findIndex((ref) => FeatureEmbed.entityId(ref.uri) === id);
-  if (index !== -1 || spec.layout?.positions[id]) {
-    Obj.update(spec, (spec) => {
-      if (index !== -1) {
-        spec.features.splice(index, 1);
-      }
-      if (spec.layout?.positions[id]) {
-        delete spec.layout.positions[id];
-      }
-    });
-  }
 };

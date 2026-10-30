@@ -11,11 +11,11 @@ import * as Schedule from 'effect/Schedule';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Spec from '@dxos/compute/Spec';
 import { type SourceKey, formatSourceKey, parseSourceKey } from '@dxos/deus/review';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { type SpecDocument } from '@dxos/types';
 
 import { resolvePath } from '#sync';
 import { CodeCapabilities } from '#types';
@@ -24,10 +24,10 @@ const UNAVAILABLE = Atom.make<CodeCapabilities.SpecSyncState>({ available: false
 
 /** The editor extensions contributed for a spec's document. */
 export const useContributedExtensions = (
-  document: SpecDocument.SpecDocument | undefined,
-  options: ProjectCapabilities.SpecDocumentExtensionOptions,
+  document: Spec.Spec | undefined,
+  options: ProjectCapabilities.SpecExtensionOptions,
 ): Extension[] => {
-  const factories = Hooks.useCapabilities(ProjectCapabilities.SpecDocumentExtensions);
+  const factories = Hooks.useCapabilities(ProjectCapabilities.SpecExtensions);
   const { attendableId, t } = options;
   return useMemo(
     () => (document ? factories.flatMap((factory) => factory(document, { attendableId, t })) : []),

@@ -73,6 +73,11 @@
       "types": "./dist/types/src/types/FeatureLink.d.ts",
       "import": "./dist/lib/FeatureLink.mjs"
     },
+    "./FeatureMap": {
+      "source": "./src/types/FeatureMap.ts",
+      "types": "./dist/types/src/types/FeatureMap.d.ts",
+      "import": "./dist/lib/FeatureMap.mjs"
+    },
     "./FeatureMapView": {
       "source": "./src/types/FeatureMapView.ts",
       "types": "./dist/types/src/types/FeatureMapView.d.ts",
@@ -154,11 +159,6 @@
       "source": "./src/types/Showcase.ts",
       "types": "./dist/types/src/types/Showcase.d.ts",
       "import": "./dist/lib/Showcase.mjs"
-    },
-    "./Spec": {
-      "source": "./src/types/Spec.ts",
-      "types": "./dist/types/src/types/Spec.d.ts",
-      "import": "./dist/lib/Spec.mjs"
     },
     "./SpecText": {
       "source": "./src/types/SpecText.ts",

@@ -10,8 +10,9 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/echo-react';
+import * as Spec from '@dxos/compute/Spec';
+import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-projects/testing';
@@ -22,17 +23,16 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { SpecDocument } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { FeatureEmbed, Spec } from '#types';
+import { FeatureEmbed, FeatureMap } from '#types';
 
 import { SpecDocumentArticle } from './SpecDocumentArticle.tsx';
 
 type StoryArgs = {
   attendableId: string;
-  /** Shows the spec whose document is prose alone, in place of the seeded one that holds eight features. */
+  /** Shows the spec whose text is prose alone, in place of the seeded one that holds eight features. */
   prose?: boolean;
 };
 
@@ -57,17 +57,16 @@ let shown: Spec.Spec | undefined;
 const DefaultStory = ({ attendableId, prose }: StoryArgs) => {
   const [space] = useSpaces();
   const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find(
-    (spec) => !Spec.getOwner(spec) && (spec.name === PROSE_NAME) === !!prose,
+    (spec) => !FeatureMap.getOwner(spec) && (spec.name === PROSE_NAME) === !!prose,
   );
-  const document = useResolveRef(spec?.document);
   shown = spec;
-  if (!spec || !document) {
-    return <Loading data={{ spec: !!spec, document: !!document }} />;
+  if (!spec) {
+    return <Loading data={{ spec: !!spec }} />;
   }
 
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <SpecDocumentArticle role='article' subject={document} attendableId={attendableId} />
+      <SpecDocumentArticle role='article' subject={spec} attendableId={attendableId} />
     </AttendableContainer>
   );
 };
@@ -105,12 +104,7 @@ const meta = {
               const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
                 FeatureSeed.seed(defaultSpace.db);
-                defaultSpace.db.add(
-                  Spec.make({
-                    name: PROSE_NAME,
-                    document: Ref.make(SpecDocument.make({ name: PROSE_NAME, content: PROSE })),
-                  }),
-                );
+                defaultSpace.db.add(Spec.make({ name: PROSE_NAME, content: PROSE }));
                 await defaultSpace.db.flush({ indexes: true });
               });
             }),
@@ -150,15 +144,20 @@ const placeCursor = async (view: EditorView, text: string) => {
   view.dispatch({ selection: EditorSelection.cursor(line.to) });
 };
 
-const names = () => shown?.features.map((ref) => ref.peek()?.name);
+/** The refs to the features the shown spec holds. */
+const held = () => (shown ? FeatureMap.getFeatures(shown) : []);
 
-/** Each feature the spec holds is embedded in its document as a section; once attended, its form edits the feature. */
+const names = () => held().map((ref) => ref.peek()?.name);
+
+/** Each feature the spec holds is embedded in its text as a section; once attended, its form edits the feature. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const view = await findView(canvasElement);
     await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
     const first = await waitFor(() => embeds(canvasElement)[0], { timeout: 10_000 });
-    const feature = shown?.features.find((ref) => ref.peek()?.id === first.dataset.feature)?.peek();
+    const feature = held()
+      .find((ref) => ref.peek()?.id === first.dataset.feature)
+      ?.peek();
     invariant(feature, 'Missing feature.');
 
     await userEvent.click(first);
@@ -195,7 +194,7 @@ export const SlashFeature: Story = {
       timeout: 5_000,
     });
     await expect(document.activeElement?.getAttribute('contenteditable')).toBe('true');
-    await waitFor(() => expect(shown?.features).toHaveLength(9), { timeout: 5_000 });
+    await waitFor(() => expect(held()).toHaveLength(9), { timeout: 5_000 });
     await expect(view.state.doc.toString()).not.toContain('/feat');
   },
 };
@@ -206,7 +205,9 @@ export const RemoveEmbed: Story = {
     const view = await findView(canvasElement);
     await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
     const [id] = embedded(view);
-    const feature = shown?.features.find((ref) => ref.peek()?.id === id)?.peek();
+    const feature = held()
+      .find((ref) => ref.peek()?.id === id)
+      ?.peek();
     invariant(feature, 'Missing feature.');
 
     await placeCursor(view, `${id})`);
@@ -215,7 +216,7 @@ export const RemoveEmbed: Story = {
     await waitFor(() => expect(embedded(view)).toHaveLength(7), { timeout: 5_000 });
     await expect(embedded(view)).not.toContain(id);
     await waitFor(() => expect(Obj.isDeleted(feature)).toBe(true), { timeout: 5_000 });
-    await expect(shown?.features).toHaveLength(7);
+    await expect(held()).toHaveLength(7);
   },
 };
 
@@ -248,9 +249,7 @@ export const FromProse: Story = {
     await makeFeature('Mail should feel instant.', 'Instant inbox');
     await makeFeature('Search finds any message', 'Search');
     await waitFor(() => expect(names()).toEqual(['Instant inbox', 'Search']), { timeout: 5_000 });
-    await expect(shown?.features[1].peek()?.description).toBe(
-      'Search finds any message by a word in it, attachments included.',
-    );
+    await expect(held()[1].peek()?.description).toBe('Search finds any message by a word in it, attachments included.');
 
     // Escape left the cursor on the Search embed's line; moving it up past the blank line and the other embed moves
     // the feature up.

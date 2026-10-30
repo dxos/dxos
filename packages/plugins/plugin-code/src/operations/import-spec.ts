@@ -8,10 +8,10 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import * as Spec from '@dxos/compute/Spec';
 import { formatSourceKey, isSpecKey, parseSourceKey } from '@dxos/deus/review';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-import { SpecDocument } from '@dxos/types';
 
 import { getSpecKey, resolvePath, resolveRoots, toMetaKey } from '#sync';
 import { CodeCapabilities, CodeOperation } from '#types';
@@ -34,12 +34,10 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpec> = CodeOper
       }
       const name = formatSourceKey(key, false);
 
-      const existing = (yield* Database.query(Filter.type(SpecDocument.SpecDocument)).run.pipe(Effect.orDie)).find(
-        (spec) => {
-          const linked = getSpecKey(spec);
-          return linked !== undefined && formatSourceKey(linked, false) === name;
-        },
-      );
+      const existing = (yield* Database.query(Filter.type(Spec.Spec)).run.pipe(Effect.orDie)).find((spec) => {
+        const linked = getSpecKey(spec);
+        return linked !== undefined && formatSourceKey(linked, false) === name;
+      });
       if (existing) {
         return { spec: Ref.make(existing), created: false };
       }
@@ -59,7 +57,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpec> = CodeOper
         return yield* Effect.fail(new CodeOperationError({ message: `File not found: ${path}` }));
       }
 
-      const spec = SpecDocument.make({ name: key.path, content });
+      const spec = Spec.make({ name: key.path, content });
       Obj.update(spec, (spec) => {
         Obj.getMeta(spec).keys.push(toMetaKey(key));
       });

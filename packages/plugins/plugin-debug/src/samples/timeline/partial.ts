@@ -8,13 +8,14 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
-import * as Spec from '@dxos/plugin-projects/Spec';
+import * as FeatureMap from '@dxos/plugin-projects/FeatureMap';
 import * as SpecText from '@dxos/plugin-projects/SpecText';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { Text } from '@dxos/schema';
-import { Outline, SpecDocument, Task, TaskSet } from '@dxos/types';
+import { Outline, Task, TaskSet } from '@dxos/types';
 
 import specContent from '../../../assets/timeline/SPEC.mdl?raw';
 import { makeEvents } from '../presenter/partial.ts';
@@ -167,13 +168,12 @@ const SEQUENCE = ['Complete the spec', 'Draw the proposed architecture', 'Implem
 
 export type Provides = {
   project: Project.Project;
-  /** The feature map: names the project and owns the spec document. */
+  /** The spec, which the project owns: its text and its feature map. */
   map: Spec.Spec;
   features: Feature.Feature[];
   tasks: Task.Task[];
   /** The events sheet the fixture task produced. */
   fixture: Sheet.Sheet;
-  spec: SpecDocument.SpecDocument;
 };
 
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timeline', {
@@ -191,19 +191,16 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
     Feature.Implements,
     Sheet.Sheet,
     Sheet.Chart,
-    SpecDocument.SpecDocument,
   ],
   run: () =>
     Effect.gen(function* () {
       const { sheet: events } = makeEvents();
       const fixture = yield* Database.add(events);
-      const spec = yield* Database.add(
-        Obj.make(SpecDocument.SpecDocument, {
-          name: 'Timeline',
-          content: Ref.make(Text.make({ content: specContent })),
-          [Obj.Meta]: { keys: [{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }] },
-        }),
-      );
+      const map = Spec.make({ name: 'Timeline', content: specContent });
+      Obj.update(map, (map) => {
+        Obj.getMeta(map).keys.push({ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH });
+      });
+      yield* Database.add(map);
 
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Timeline' }));
       const tasks = TASKS.map(({ title, description, fixture: isFixture }) =>
@@ -244,10 +241,9 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         }),
       );
 
-      // The spec document lives in the map, which the project that tracks its tasks owns.
-      const map = yield* Database.add(Spec.make({ name: 'Timeline', document: Ref.make(spec) }));
+      // The project that tracks the spec's tasks owns it.
       Obj.update(project, (project) => {
-        project.spec = Ref.make(map);
+        project.specs.push(Ref.make(map));
       });
       const byKey = new Map<string, Feature.Feature>();
       for (const seed of FEATURES) {
@@ -260,21 +256,19 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         );
         Feature.setSources(feature, [seed.spec]);
         if (seed.subfeatures) {
-          const parts: Ref.Ref<Feature.Feature>[] = [];
+          const parts: Feature.Feature[] = [];
           for (const subfeature of seed.subfeatures) {
-            parts.push(Ref.make(yield* Database.add(Feature.make({ ...subfeature }))));
+            parts.push(yield* Database.add(Feature.make({ ...subfeature })));
           }
-          const breakdown = yield* Database.add(Spec.make({ name: seed.name, features: parts }));
+          const breakdown = yield* Database.add(FeatureMap.make({ name: seed.name, features: parts }));
           Obj.update(feature, (feature) => {
             feature.spec = Ref.make(breakdown);
           });
         }
         byKey.set(seed.key, feature);
       }
-      Obj.update(map, (map) => {
-        map.features.push(...[...byKey.values()].map((feature) => Ref.make(feature)));
-      });
-      // Each `feat` block in the document becomes an embed of the feature seeded from it.
+      FeatureMap.setFeatures(map, [...byKey.values()]);
+      // Each `feat` block in the text becomes an embed of the feature seeded from it.
       yield* Effect.promise(() => SpecText.take(map, { path: SPEC_PATH, text: specContent }));
 
       const featureOf = (key: string): Feature.Feature => {
@@ -297,6 +291,6 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         );
       }
 
-      return { project, map, features: [...byKey.values()], tasks, fixture, spec };
+      return { project, map, features: [...byKey.values()], tasks, fixture };
     }),
 });

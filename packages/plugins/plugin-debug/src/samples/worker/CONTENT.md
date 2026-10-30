@@ -26,14 +26,14 @@ A reader with no Cloudflare account hands an agent a plan to finish: a spec of o
 
 ### Spec (`spec.ts`, `SPEC.mdl`)
 
-- 1 `SpecDocument.SpecDocument` "Hello Worker" whose content is `SPEC.mdl`, partly written: `type:Greeting`, `feat` F-1 in full, F-2 to F-4 named in prose only, `scenario` T-1, decisions D-1 and D-2. F-1's `feat` block becomes an embed of its feature (below) in the block's place; F-2 to F-4, which have no block, are embedded after the prose that names them.
+- 1 `Spec.Spec` "Hello Worker" (`@dxos/compute`) whose content is `SPEC.mdl`, partly written: `type:Greeting`, `feat` F-1 in full, F-2 to F-4 named in prose only, `scenario` T-1, decisions D-1 and D-2. F-1's `feat` block becomes an embed of its feature (below) in the block's place; F-2 to F-4, which have no block, are embedded after the prose that names them.
 - Foreign key `{ source: 'github.com/dxos/dxos', id: 'hello-worker/SPEC.mdl' }`, the path the features cite.
 
 ### Features (`features.ts`)
 
-- 1 `Spec.Spec` "Hello Worker", owned by the project (`Project.spec`), owning the spec document (`document`), and listing the four features below (`features`).
+- The spec above is the feature map: the project owns it (`Project.specs`), and it holds the four features below in its features annotation (`FeatureMap.FeaturesAnnotation`).
 - 4 `Feature.Feature`, all `planned`, each citing one spec block (`specs: ['hello-worker/SPEC.mdl#F-n']`):
-  - `greeting` "Greeting endpoint" (F-1), owning a `Spec.Spec` "Greeting endpoint" (`spec`), with a spec document of its own, that lists its subfeatures "JSON greeting" and "UTC time", both `planned`.
+  - `greeting` "Greeting endpoint" (F-1), owning a `Spec.Spec` "Greeting endpoint" (`spec`), with text of its own, that holds its subfeatures "JSON greeting" and "UTC time", both `planned`.
   - `deploy` "Deploy without an account" (F-2).
   - `verified` "Verified response" (F-3).
   - `claimed` "Claimed account" (F-4).
@@ -49,10 +49,10 @@ A reader with no Cloudflare account hands an agent a plan to finish: a spec of o
 
 ## Checks
 
-- Exactly 1 project, 1 instructions, 1 task set, 3 tasks, 6 features (4 and 2 subfeatures), 2 specs, 2 spec documents and no documents.
+- Exactly 1 project, 1 instructions, 1 task set, 3 tasks, 6 features (4 and 2 subfeatures), 2 specs and no documents.
 - Every persisted typename is declared by a partial.
 - Tasks are `todo`, in order, each depending on the one before it, and none is assigned.
 - Features are `planned`, sit on the spec the project owns, cite F-1 to F-4 in order, and each depends on the one before it.
 - The only `Implements` is the diagram task → "Greeting endpoint".
-- The spec document is the map's `document`, and its foreign key is the path the features cite.
-- The spec document embeds F-1 to F-4 in order and holds no `feat` block.
+- The spec is the map, and its foreign key is the path the features cite.
+- The spec's text embeds F-1 to F-4 in order and holds no `feat` block.

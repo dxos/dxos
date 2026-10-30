@@ -9,7 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
-import { SpecDocument, type Task } from '@dxos/types';
+import * as Spec from '@dxos/compute/Spec';
+import { type Task } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
 import {
@@ -26,7 +27,7 @@ import {
   SpecArticle,
   SpecDocumentArticle,
 } from '#containers';
-import { Feature, Spec } from '#types';
+import { Feature } from '#types';
 
 import { isArtifactsBranch, isChatsBranch, isSpecLevel } from '../capabilities/app-graph-builder.ts';
 import { ADD_FEATURE_DIALOG, FEATURE_COMPANION, MOVE_TASK_DIALOG } from '../constants.ts';
@@ -74,7 +75,7 @@ export default Capability.makeModule(() =>
         component: ProjectFeatureCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
       }),
-      // One level of a project's spec: the project article at that depth.
+      // One level of a project's specs: the project article at that depth.
       Surface.create({
         id: 'project.specLevel',
         filter: AppSurface.subject(AppSurface.Article, isSpecLevel),
@@ -82,6 +83,7 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({
           role,
           subject: subject.project,
+          spec: subject.spec,
           feature: subject.feature,
           attendableId,
         }),
@@ -96,6 +98,7 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { companionTo, attendableId } }) => ({
           role,
           project: companionTo.project,
+          spec: companionTo.spec,
           feature: companionTo.feature,
           attendableId,
         }),
@@ -126,13 +129,10 @@ export default Capability.makeModule(() =>
         component: ProjectArtifactsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, project: subject.project, attendableId }),
       }),
-      // Last, so a plugin with a richer spec page (plugin-code) renders the opened document instead.
+      // The spec's text, which its Document view embeds; last, so a richer section can take its place.
       Surface.create({
-        id: 'specDocument',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, SpecDocument.SpecDocument),
-          AppSurface.object(AppSurface.Section, SpecDocument.SpecDocument),
-        ),
+        id: 'spec.section',
+        filter: AppSurface.object(AppSurface.Section, Spec.Spec),
         component: SpecDocumentArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
         position: Position.last,

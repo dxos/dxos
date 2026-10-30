@@ -3,13 +3,15 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type Database, Obj } from '@dxos/echo';
+import * as Spec from '@dxos/compute/Spec';
+import { Annotation, type Database, Obj } from '@dxos/echo';
 import {
   Attention,
   useSelection,
@@ -20,7 +22,7 @@ import {
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { Feature, FeatureMapView, type Spec } from '#types';
+import { Feature, FeatureMap, FeatureMapView } from '#types';
 
 import { ADD_FEATURE_DIALOG, FEATURE_COMPANION } from '../../constants.ts';
 import { useFeatureEditing } from '../../hooks/index.ts';
@@ -44,7 +46,8 @@ export const useLevelIds = (spec: Spec.Spec | undefined): readonly string[] => {
         if (!spec) {
           return '';
         }
-        return get(Obj.atomReactive(get(Obj.atom(spec)).features))
+        const refs = Option.getOrElse(get(Annotation.atom(spec, FeatureMap.FeaturesAnnotation)), () => []);
+        return get(Obj.atomReactive(refs))
           .filter(Feature.instanceOf)
           .map((member) => get(Obj.atom(member)))
           .sort((left, right) => left.name.localeCompare(right.name))

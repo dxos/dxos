@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import type * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, EID, Obj, Ref, Relation } from '@dxos/echo';
 
-import { type Feature, FeatureOperation, Spec } from '#types';
+import { type Feature, FeatureMap, FeatureOperation } from '#types';
 
 /** Entity id of a ref or a relation endpoint; space-qualified and local URIs may name the same object. */
 export const entityId = (uri: string): string => {
@@ -23,41 +24,31 @@ export const endpoints = (relation: Relation.Unknown): readonly [string, string]
   entityId(Relation.getTargetURI(relation)),
 ];
 
-/** The spec the project owns, if any; a ref to a deleted or foreign object reads as none. */
-export const loadProjectSpec = Effect.fn(function* (project: Project.Project) {
-  const owned = yield* Effect.promise(async () => project.spec?.tryLoad());
-  return Spec.instanceOf(owned) ? owned : undefined;
-});
-
-/** Fails when the project owns a spec other than `spec`: a project has at most one. */
-export const ensureProjectFree = Effect.fn(function* (project: Project.Project, spec?: Spec.Spec) {
-  const existing = yield* loadProjectSpec(project);
-  if (existing && existing.id !== spec?.id) {
-    return yield* Effect.fail(
-      new FeatureOperation.ProjectHasSpecError({
-        message: `Project "${project.name ?? project.id}" already has a spec: "${existing.name}" (${existing.id}).`,
-      }),
-    );
-  }
+/** The specs the project owns, in order; refs to deleted or foreign objects are skipped. */
+export const loadProjectSpecs = Effect.fn(function* (project: Project.Project) {
+  const owned = yield* Effect.promise(async () => Ref.loadAll(project.specs ?? []));
+  return owned.filter(Spec.instanceOf);
 });
 
 /**
- * Makes the project own the spec, which makes it the spec's ECHO parent. Refused when the project owns another spec,
- * or when a feature owns this one: a breakdown's work is tracked in the project above it.
+ * Makes the project own the spec, which makes it the spec's ECHO parent. Refused when a feature owns the spec: a
+ * breakdown's work is tracked in the project above it.
  */
 export const setProject = Effect.fn(function* (spec: Spec.Spec, projectRef: Ref.Ref<Project.Project>) {
   const project = yield* Database.load(projectRef);
-  if (Spec.getOwner(spec)) {
+  if (FeatureMap.getOwner(spec)) {
     return yield* Effect.fail(
       new FeatureOperation.BreakdownSpecError({
         message: `"${spec.name}" breaks down a feature, so its work is tracked in the project above it.`,
       }),
     );
   }
-  yield* ensureProjectFree(project, spec);
+  if (Spec.getProject(spec)?.id === project.id) {
+    return;
+  }
   clearProject(spec);
   Obj.update(project, (project) => {
-    project.spec = Ref.make(spec);
+    project.specs.push(Ref.make(spec));
   });
 });
 
@@ -65,9 +56,12 @@ export const setProject = Effect.fn(function* (spec: Spec.Spec, projectRef: Ref.
 export const clearProject = (spec: Spec.Spec): void => {
   const project = Spec.getProject(spec);
   if (project) {
-    Obj.update(project, (project) => {
-      delete project.spec;
-    });
+    const index = project.specs.findIndex((ref) => refId(ref) === spec.id);
+    if (index !== -1) {
+      Obj.update(project, (project) => {
+        project.specs.splice(index, 1);
+      });
+    }
     Obj.setParent(spec, undefined);
   }
 };
@@ -77,9 +71,6 @@ export const addSpec = Effect.fn(function* ({
   project,
   ...props
 }: Spec.MakeProps & { project?: Ref.Ref<Project.Project> }) {
-  if (project) {
-    yield* ensureProjectFree(yield* Database.load(project));
-  }
   const spec = yield* Database.add(Spec.make(props));
   if (project) {
     yield* setProject(spec, project);
@@ -87,13 +78,14 @@ export const addSpec = Effect.fn(function* ({
   return spec;
 });
 
-/** The spec that breaks the feature down, made (named after it) when it has none. */
+/** The spec that breaks the feature down, made (named after it, in its spec's dialects) when it has none. */
 export const ensureBreakdown = Effect.fn(function* (feature: Feature.Feature) {
   const existing = feature.spec && (yield* Database.load(feature.spec));
   if (existing) {
     return existing;
   }
-  const spec = yield* Database.add(Spec.make({ name: feature.name }));
+  const dialects = [...(FeatureMap.getContainer(feature)?.dialects ?? [])];
+  const spec = yield* Database.add(Spec.make({ name: feature.name, dialects }));
   Obj.update(feature, (feature) => {
     feature.spec = Ref.make(spec);
   });
@@ -102,24 +94,11 @@ export const ensureBreakdown = Effect.fn(function* (feature: Feature.Feature) {
 
 /** Takes the feature off its spec's map and canvas, leaving the feature itself. */
 export const detach = (feature: Feature.Feature): void => {
-  const container = Spec.getContainer(feature);
-  if (!container) {
-    return;
+  const container = FeatureMap.getContainer(feature);
+  if (container) {
+    FeatureMap.detach(container, feature.id);
   }
-  Obj.update(container, (container) => {
-    const index = container.features.findIndex((ref) => refId(ref) === feature.id);
-    if (index !== -1) {
-      container.features.splice(index, 1);
-    }
-    if (container.layout?.positions[feature.id]) {
-      delete container.layout.positions[feature.id];
-    }
-  });
 };
 
 /** Lists the feature on the spec's map, which makes the spec its ECHO parent. */
-export const attach = (spec: Spec.Spec, feature: Feature.Feature): void => {
-  Obj.update(spec, (spec) => {
-    spec.features.push(Ref.make(feature));
-  });
-};
+export const attach = (spec: Spec.Spec, feature: Feature.Feature): void => FeatureMap.attach(spec, feature);

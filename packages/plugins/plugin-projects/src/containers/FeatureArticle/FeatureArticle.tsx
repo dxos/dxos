@@ -21,7 +21,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Task } from '@dxos/types';
 
-import { Feature, Spec } from '#types';
+import { Feature, FeatureMap } from '#types';
 
 import {
   FeatureCard,
@@ -124,7 +124,7 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
   const projectAtom = useMemo(
     () =>
       Atom.make((get) => {
-        const top = Spec.getAncestry(Spec.getContainer(subject)).at(-1);
+        const top = FeatureMap.getAncestry(FeatureMap.getContainer(subject)).at(-1);
         const parent = top && get(Obj.parentAtom(top));
         return Obj.instanceOf(Project.Project, parent) ? parent : undefined;
       }),

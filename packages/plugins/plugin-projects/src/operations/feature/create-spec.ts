@@ -13,7 +13,7 @@ import { addSpec, ensureBreakdown } from './util.ts';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.CreateSpec> = FeatureOperation.CreateSpec.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ name, description, project, feature: featureRef }) {
+    Effect.fn(function* ({ name, description, dialects, project, feature: featureRef }) {
       if (featureRef) {
         const feature = yield* Database.load(featureRef);
         if (project) {
@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.CreateSpec> = Featu
         yield* Database.flush();
         return { spec };
       }
-      const spec = yield* addSpec({ name, description, project });
+      const spec = yield* addSpec({ name, description, dialects, project });
       yield* Database.flush();
       return { spec };
     }),

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Feature, FeatureOperation, Spec, SpecText } from '#types';
+import { Feature, FeatureMap, FeatureOperation, SpecText } from '#types';
 
 import { attach, detach } from './util.ts';
 
@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
     Effect.fn(function* ({ feature: featureRef, key, name, description, requirements, status, specs, spec: specRef }) {
       const feature = yield* Database.load(featureRef);
       const target = specRef && (yield* Database.load(specRef));
-      if (target && Spec.isWithin(target, feature)) {
+      if (target && FeatureMap.isWithin(target, feature)) {
         return yield* Effect.fail(
           new FeatureOperation.SpecCycleError({
             message: `"${feature.name}" cannot move into a spec that breaks it down.`,
@@ -45,7 +45,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
       if (specs !== undefined) {
         Feature.setSources(feature, specs);
       }
-      const container = Spec.getContainer(feature);
+      const container = FeatureMap.getContainer(feature);
       // A position belongs to the canvas it was dragged on, so a move leaves it behind; the embed moves with it.
       if (target && container?.id !== target.id) {
         if (container) {

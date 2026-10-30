@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Text } from '@dxos/schema';
 
-import { Feature, LegacyFeature, LegacySpec, Showcase, Spec, SpecText } from '#types';
+import { Feature, FeatureMap, LegacyFeature, LegacySpec, Showcase, SpecText } from '#types';
 
 /**
  * `Feature` 0.1.0 → 0.2.0: `in-progress` leaves the status (work is read from linked tasks), and each subfeature record
@@ -48,7 +50,7 @@ type Placement = {
   project?: Project.Project;
   /** The feature it was a subfeature of, at whichever version it is when read. */
   parent?: LegacyFeature.FeatureV2 | Feature.Feature;
-  position?: Spec.Position;
+  position?: FeatureMap.Position;
 };
 
 /**
@@ -123,13 +125,13 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
     let spec = state.byProject.get(project.id);
     if (!spec) {
       // A spec made for this project by an earlier run is reused rather than duplicated.
-      const existing = await project.spec?.tryLoad();
+      const [existing] = await Ref.loadAll(project.specs ?? []);
       if (Spec.instanceOf(existing)) {
         spec = existing;
       } else {
         const made = db.add(Spec.make({ name: project.name ?? '' }));
         Obj.update(project, (project) => {
-          project.spec = Ref.make(made);
+          project.specs.push(Ref.make(made));
         });
         spec = made;
       }
@@ -151,9 +153,9 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
 };
 
 /**
- * `Feature` 0.2.0 → 0.4.0: features leave projects for specs. Each project's map becomes a spec that names the
- * project, each parent's subfeatures become the features of a spec the parent owns, and canvas positions move from the
- * feature onto its spec's layout. Its `specs` become foreign keys and its spec's document embeds it, as in
+ * `Feature` 0.2.0 → 0.4.0: features leave projects for specs. Each project's map becomes a spec the project owns, each
+ * parent's subfeatures become the features of a spec the parent owns, and canvas positions move from the feature onto
+ * its spec's layout. Its `specs` become foreign keys and its spec's document embeds it, as in
  * {@link featureSources}. The specs made so far are held per database in this migration's own closure.
  */
 export const makeFeatureSpecs = (): Migration.ObjectMigration => {
@@ -193,13 +195,10 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
       }
 
       const container = await getContainer(db, state, placement);
-      Obj.update(container, (container) => {
-        container.features.push(Ref.make(object));
-        if (placement.position) {
-          container.layout ??= { positions: {} };
-          container.layout.positions[object.id] = placement.position;
-        }
-      });
+      FeatureMap.attach(container, object);
+      if (placement.position) {
+        FeatureMap.setPosition(container, object.id, placement.position);
+      }
       await SpecText.embed(container, object);
     },
   });
@@ -222,7 +221,7 @@ export const featureSources = Migration.define({
   }),
   onMigration: async ({ before, object }) => {
     Feature.setSources(object, before.specs ?? []);
-    const container = Spec.getContainer(object);
+    const container = FeatureMap.getContainer(object);
     if (container) {
       await SpecText.replaceBlock(container, object, Feature.getBlockId(object));
     }
@@ -230,23 +229,42 @@ export const featureSources = Migration.define({
 });
 
 /**
- * `Spec` 0.1.0 → 0.2.0: the project owns its spec (`Project.spec`, which makes it the spec's ECHO parent) where the spec
- * used to name the project. A project that already owns a spec keeps it, and a breakdown keeps the feature that owns
- * it; either way the spec simply stops naming the project. A spec without a document is given one, since 0.2.0 always
- * holds one.
+ * `Project` 0.6.0 → 0.7.0: a project owns a list of specs (`specs`) where it owned at most one (`spec`). Runs first, so
+ * the migrations below find each project's specs where 0.7.0 keeps them.
+ */
+export const projectSpecs = Migration.define({
+  from: LegacySpec.ProjectV6,
+  to: Project.Project,
+  transform: async ({ spec, ...rest }) => ({
+    ...rest,
+    specs: spec ? [Ref.fromURI(spec.uri)] : [],
+  }),
+});
+
+/**
+ * `Spec` 0.1.0 → 0.2.0: the project owns its spec (`Project.specs`, which makes it the spec's ECHO parent) where the
+ * spec used to name the project. A spec a project already owns stays where it is, and a breakdown keeps the feature
+ * that owns it; either way the spec simply stops naming the project. A spec without a document is given one, since
+ * 0.2.0 always holds one.
  */
 export const makeSpecOwners = (): Migration.ObjectMigration => {
   // The project each spec named, read in the transform while its refs are still live.
   const owners = new Map<string, Project.Project>();
   return Migration.define({
     from: LegacySpec.Spec,
-    to: Spec.Spec,
+    to: LegacySpec.SpecV2,
     transform: async ({ id, project, name, description, features, layout, document }, { db }) => {
       const owner = await project?.tryLoad();
       if (Obj.instanceOf(Project.Project, owner)) {
         owners.set(id, owner);
       }
-      return { name, description, features, layout, document: document ?? Ref.make(db.add(Spec.makeDocument(name))) };
+      return {
+        name,
+        description,
+        features,
+        layout,
+        document: document ?? Ref.make(db.add(LegacySpec.makeDocument(name))),
+      };
     },
     onMigration: async ({ before, object }) => {
       // The migrated data is written in place, so a new document is made the spec's child here.
@@ -257,22 +275,97 @@ export const makeSpecOwners = (): Migration.ObjectMigration => {
 
       const owner = owners.get(object.id);
       owners.delete(object.id);
-      if (owner && !owner.spec && !Obj.getParent(object)) {
+      if (owner && !Obj.getParent(object) && !owner.specs.some((ref) => ref.uri === Obj.getURI(object))) {
+        // By URI: the spec is still at 0.2.0 here, and a later migration in the chain takes it to the current version.
         Obj.update(owner, (owner) => {
-          owner.spec = Ref.make(object);
+          owner.specs.push(Ref.fromURI(Obj.getURI(object)));
         });
       }
     },
   });
 };
 
+/** `org.dxos.type.spec` 0.1.0 → `org.dxos.type.specDocument` 0.1.0: the same fields under the new typename. */
+export const documentRename = Migration.define({
+  from: LegacySpec.PreRenameDocument,
+  to: LegacySpec.Document,
+  transform: async ({ name, content }) => ({ name, content }),
+});
+
+/**
+ * `Spec` 0.2.0 → 0.3.0: the spec owns its `Text` (`content`) where it held a document that owned it, and its features
+ * and canvas layout move from fields to annotations. The document's `Text` moves onto the spec rather than being
+ * copied, so it keeps its id, its history and the cursors anchored in it; the document's meta keys (its file links)
+ * move too, and the emptied document is deleted. Runs before {@link specDocuments}, so that one finds only the
+ * documents no spec held.
+ */
+export const makeSpecContent = (): Migration.ObjectMigration => {
+  // The document and the features each spec held, read in the transform while their refs are still live.
+  const documents = new Map<string, LegacySpec.Document>();
+  const members = new Map<string, Feature.Feature[]>();
+  return Migration.define({
+    from: LegacySpec.SpecV2,
+    to: Spec.Spec,
+    transform: async (from, { db }) => {
+      const { id, name, description, document, features } = from;
+      const held = await document.tryLoad();
+      if (held) {
+        documents.set(id, held);
+      }
+      members.set(id, (await Ref.loadAll(features)).filter(Feature.instanceOf));
+      const content = held?.content ?? Ref.make(db.add(Text.make({ content: Spec.makeContent(name) })));
+      const keys = [...Obj.getMeta(from).keys, ...(held ? Obj.getMeta(held).keys : [])]
+        .filter(
+          (key, index, all) => all.findIndex(({ source, id }) => source === key.source && id === key.id) === index,
+        )
+        .map(({ source, id }) => ({ source, id }));
+      return { name, description, dialects: [], content: Ref.fromURI(content.uri), [Obj.Meta]: { keys } };
+    },
+    onMigration: async ({ before, object, db }) => {
+      // The refs are written here rather than in the transform, which cannot carry refs in meta.
+      FeatureMap.setFeatures(object, members.get(object.id) ?? []);
+      members.delete(object.id);
+      for (const [featureId, position] of Object.entries(before.layout?.positions ?? {})) {
+        FeatureMap.setPosition(object, featureId, { x: position.x, y: position.y });
+      }
+
+      // Reparented before the document goes, since a child of a deleted object reads as deleted.
+      const text = await object.content.tryLoad();
+      if (text && Obj.getParent(text)?.id !== object.id) {
+        Obj.setParent(text, object);
+      }
+      const held = documents.get(object.id);
+      documents.delete(object.id);
+      if (held) {
+        db.remove(held);
+      }
+    },
+  });
+};
+
+/**
+ * A `SpecDocument` no spec held → `Spec` 0.3.0: it becomes a spec of its own with no features, keeping its id, its
+ * `Text` (already its child) and its meta keys.
+ */
+export const specDocuments = Migration.define({
+  from: LegacySpec.Document,
+  to: Spec.Spec,
+  transform: async ({ name, content }) => ({ name: name ?? '', dialects: [], content: Ref.fromURI(content.uri) }),
+});
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // In dependency order, so one pass takes a space from any earlier version to the current one.
     return Capability.contribute(ClientCapabilities.Migration, [
+      projectSpecs,
       featureSubfeatures,
       makeFeatureSpecs(),
+      documentRename,
       makeSpecOwners(),
-      // After the specs' own migration, so a feature's container reads as a current spec.
+      // Before the documents' own migration, so only the documents no spec held become specs.
+      makeSpecContent(),
+      specDocuments,
+      // After the specs' own migrations, so a feature's container reads as a current spec.
       featureSources,
       Showcase.demonstratesMigration,
     ]);

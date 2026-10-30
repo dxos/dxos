@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { Feature, FeatureOperation, Showcase, Spec } from '#types';
+import { Feature, FeatureMap, FeatureOperation, Showcase } from '#types';
 
 import { endpoints, refId } from './util.ts';
 
@@ -30,7 +31,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = Feat
             return;
           }
           seen.add(spec.id);
-          const features = (yield* Effect.forEach(spec.features, (ref) => loadOptional(ref))).filter(
+          const features = (yield* Effect.forEach(FeatureMap.getFeatures(spec), (ref) => loadOptional(ref))).filter(
             (feature): feature is Feature.Feature => Feature.instanceOf(feature),
           );
           for (const feature of features.sort((left, right) => left.name.localeCompare(right.name))) {

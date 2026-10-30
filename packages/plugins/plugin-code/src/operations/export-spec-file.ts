@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.ExportSpecFile> = Code
   Operation.withHandler(
     Effect.fn(function* ({ object, base }) {
       const { spec, text } = yield* loadSpecText(object);
-      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecDocumentCodec);
+      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecCodec);
       // Written against the file as GitHub holds it, so what did not change keeps its form.
       const written = yield* writeThrough(codecs, spec, base);
       if (written !== undefined) {

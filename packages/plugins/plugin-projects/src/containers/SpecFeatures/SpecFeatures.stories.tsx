@@ -8,6 +8,7 @@ import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -23,7 +24,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
-import { Spec } from '#types';
+import { FeatureMap } from '#types';
 
 import { FeatureCompanion } from '../FeatureCompanion/index.ts';
 import { SpecFeatures } from './SpecFeatures.tsx';
@@ -33,7 +34,7 @@ type StoryArgs = { attendableId: string };
 const DefaultStory = ({ attendableId }: StoryArgs) => {
   const [space] = useSpaces();
   // The seeded spec is the project's; the subfeatures' specs are owned by their features.
-  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !Spec.getOwner(spec));
+  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !FeatureMap.getOwner(spec));
   if (!spec) {
     return <Loading data={{ db: !!space?.db, spec: !!spec }} />;
   }

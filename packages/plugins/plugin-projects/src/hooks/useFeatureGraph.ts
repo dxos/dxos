@@ -3,14 +3,16 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
+import * as Spec from '@dxos/compute/Spec';
+import { Annotation, type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { SpecDocument, Task } from '@dxos/types';
+import { Task } from '@dxos/types';
 
-import { Feature, Showcase, Spec } from '#types';
+import { Feature, FeatureMap, Showcase } from '#types';
 
 import {
   type FeatureGraphInput,
@@ -104,7 +106,7 @@ export const useFeatureGraph = (
       specPaths
         ? Query.select(
             Filter.foreignKeys(
-              SpecDocument.SpecDocument,
+              Spec.Spec,
               specPaths.split('\n').map((id) => ({ source: Feature.SPEC_KEY_SOURCE, id })),
             ),
           )
@@ -134,8 +136,8 @@ export const useFeatureGraph = (
             const snapshot = get(Obj.atom(feature));
             const { id, name, description, requirements, status, code } = snapshot;
             // The feature this one breaks down: the owner of the spec that lists it.
-            const container = Spec.getContainer(feature);
-            const parent = container && Spec.getOwner(container);
+            const container = FeatureMap.getContainer(feature);
+            const parent = container && FeatureMap.getOwner(container);
             return {
               id,
               name,
@@ -157,7 +159,8 @@ export const useFeatureGraph = (
             if (!Spec.instanceOf(breakdown)) {
               return [];
             }
-            const members = get(Obj.atomReactive(get(Obj.atom(breakdown)).features));
+            const refs = Option.getOrElse(get(Annotation.atom(breakdown, FeatureMap.FeaturesAnnotation)), () => []);
+            const members = get(Obj.atomReactive(refs));
             return members.filter(Feature.instanceOf).map((member) => {
               const { id, name, status } = get(Obj.atom(member));
               return [{ id, name, status }, feature.id] as const;

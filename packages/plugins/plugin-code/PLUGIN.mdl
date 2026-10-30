@@ -11,12 +11,12 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
   modules:
     - AppGraphBuilder: graph nodes for specs and code projects
     - BuildRunState: the state of the running build agent, from CodeEvents.Start
-    - CreateObject: create entries for SpecDocument and CodeProject
+    - CreateObject: the create entry for CodeProject
     - NavigationTargetResolver: resolves a github: key to the spec or file it names
     - OperationHandler: the plugin's operations (importSpec, listLocalSpecs, the Coder tools)
     - PluginAsset: this document, served as the plugin's own spec
     - ReactSurface: the spec article surface, and the code project's article and section surfaces
-    - Schema: the SpecDocument and CodeProject types
+    - Schema: the Spec and CodeProject types
     - Settings: repos to sync and build settings
     - SkillDefinition: the Coder skill
     - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
@@ -88,24 +88,27 @@ Each extension is defined in the Appendix or resolved via its URI.
 ## Types
 
 ```mdl
-type SpecDocument
+type Spec
   desc: |
-    A DEUS spec document. Carries `.mdl` content and a human-readable name.
-    Typename `org.dxos.type.specDocument`; objects stored as `org.dxos.type.spec` migrate to it.
+    A DEUS spec, `@dxos/compute`'s `Spec`, typename `org.dxos.type.projects.spec`. This plugin
+    registers it and does not define it. Objects stored as `org.dxos.type.spec` or
+    `org.dxos.type.specDocument` migrate to it through plugin-projects.
   fields:
-    name?: string
+    name: string
+    description?: string
+    dialects: string[]          # dialect spec ids beyond core and changelog
     content: Ref<Text>          # mdl source
 ```
 
 ```mdl
 type CodeProject
   desc: |
-    A coding project. Pairs a name with a SpecDocument used to drive code generation
+    A coding project. Pairs a name with a Spec used to drive code generation
     and the set of TypeScript source files that compose the plugin.
     Typename `org.dxos.type.codeProject`.
   fields:
     name?: string
-    spec: Ref<SpecDocument>     # the DEUS spec authored for this project
+    spec: Ref<Spec>             # the DEUS spec authored for this project
     files?: Ref<SourceFile>[]   # source tree, hierarchy implicit in path
 ```
 
@@ -180,17 +183,17 @@ component FileTree
 ```mdl
 component SpecArticle
   desc: |
-    Article surface for a SpecDocument, laid out as an IDE page: the MDL editor beside a
+    Article and section surface for a Spec, laid out as an IDE page: the MDL editor beside a
     panel of views (definitions graph, review, code, decisions by person, decision graph,
     data model, API).
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
     reviewed item and links it to its code (F-16). Extensions plugin-projects
-    contributes (`ProjectCapabilities.SpecDocumentExtensions`), such as the
+    contributes (`ProjectCapabilities.SpecExtensions`), such as the
     editable section of each feature the text embeds, are added to the editor.
   props:
     role: string
-    subject?: SpecDocument
+    subject?: Spec
     content?: string            # static text, e.g. a bundled PLUGIN.mdl
     sourceKey?: string          # github: key of static content
     attendableId?: string
@@ -240,11 +243,11 @@ service Credentials
 service BuildAgent
   desc: |
     The remote EDGE service that runs the Claude Agent SDK to generate
-    Composer plugins from a SpecDocument. Out of scope for this PR — phase 1 only
+    Composer plugins from a Spec. Out of scope for this PR — phase 1 only
     declares the contract surface. Will live in `dxos/edge`.
   loading: lazy
   ops:
-    verify(spec: SpecDocument) → { ok: bool, messages: string[] }
+    verify(spec: Spec) → { ok: bool, messages: string[] }
     build(project: CodeProject) → { runId: string, status: string }
 ```
 
@@ -262,7 +265,7 @@ op verifySpec
     stub returns `{ ok: true, messages: [] }`. Will eventually delegate to
     BuildAgent.verify.
   input:
-    spec: Ref<SpecDocument>
+    spec: Ref<Spec>
   output: { ok: bool, messages: string[] }
   effects: [echo:read]
   requires: [Database]
@@ -427,11 +430,11 @@ op runBuild
 op importSpec
   key: org.dxos.operation.code.importSpec
   desc: |
-    Links a spec file in a local checkout to a SpecDocument, keyed by its source key;
-    returns the existing SpecDocument when one already carries the key (F-14.6).
+    Links a spec file in a local checkout to a Spec, keyed by its source key;
+    returns the existing Spec when one already carries the key (F-14.6).
   input:
     key: string                 # github:<owner>/<repo>/<path>.mdl
-  output: { spec: Ref<SpecDocument>, created: boolean }
+  output: { spec: Ref<Spec>, created: boolean }
   errors:
     - CodeOperationError: not a spec key, no checkout of the repository, or no such file
   effects: [fs, echo:write]
@@ -442,8 +445,8 @@ op importSpec
 op importSpecFile
   key: org.dxos.operation.code.importSpecFile
   desc: |
-    The import of the `.mdl` FileMapping: creates a SpecDocument for a new file, or applies the remote
-    change to SpecDocument.content with TextMerge.applyAt as of the heads of the last sync.
+    The import of the `.mdl` FileMapping: creates a Spec for a new file, or applies the remote
+    change to Spec.content with TextMerge.applyAt as of the heads of the last sync.
   input: FileImportInput        # org.dxos.plugin.github.file-sync#FileMapping
   output: FileImportOutput
   effects: [echo:read, echo:write]
@@ -452,7 +455,7 @@ op importSpecFile
 ```mdl
 op exportSpecFile
   key: org.dxos.operation.code.exportSpecFile
-  desc: The export of the `.mdl` FileMapping: SpecDocument.content as it stands, with the heads it was read at.
+  desc: The export of the `.mdl` FileMapping: Spec.content as it stands, with the heads it was read at.
   input: FileExportInput
   output: FileExportOutput
   effects: [echo:read]
@@ -507,18 +510,18 @@ feat F-1: Rename plugin-spec → plugin-code
   req F-1.2: Directory renamed `packages/plugins/plugin-spec` → `packages/plugins/plugin-code`.
   req F-1.3: Plugin id renamed `org.dxos.plugin.spec` → `org.dxos.plugin.code`.
   req F-1.4: SpecPlugin → CodePlugin; SpecArticle → CodeArticle.
-  req F-1.5: The spec document type keeps its data across renames: objects stored as `org.dxos.type.spec` migrate to
-    `org.dxos.type.specDocument`.
+  req F-1.5: A spec keeps its data across renames: objects stored as `org.dxos.type.spec` or
+    `org.dxos.type.specDocument` migrate to `org.dxos.type.projects.spec`.
   req F-1.6:
     when: composer-app loads after rename
-    then: existing spec documents continue to render
+    then: existing specs continue to render
 ```
 
 ```mdl
 feat F-2: CodeProject type
 
   req F-2.1: New ECHO type `CodeProject` with typename `org.dxos.type.codeProject`.
-  req F-2.2: Fields `name?: string`, `spec: Ref<SpecDocument>`; both reactive.
+  req F-2.2: Fields `name?: string`, `spec: Ref<Spec>`; both reactive.
   req F-2.3:
     when: user creates a CodeProject from the navtree
     then: an empty Spec is created and referenced by the new CodeProject
@@ -760,11 +763,9 @@ feat F-14: Two-way spec sync with a local checkout
               `DX_FS_ROOTS`) and writes only `.mdl` files.
   req F-14.6: op:importSpec links a file to a new Spec, or returns the Spec that
               already carries the key.
-  req F-14.7: A document a plugin-projects spec holds syncs through
-              `ProjectCapabilities.SpecDocumentCodec`: a push writes the codec's text for
-              it, made against the last synced text, and a pull offers the file to each
-              codec in turn, which can make a spec of a document no object owns. A file
-              no codec takes is copied as it is.
+  req F-14.7: A spec syncs through `ProjectCapabilities.SpecCodec`: a push writes the
+              codec's text for it, made against the last synced text, and a pull offers
+              the file to each codec in turn. A spec no codec takes is copied as it is.
 ```
 
 ```mdl
@@ -860,9 +861,9 @@ scenario T-1: Rename preserves Spec compatibility
   given: a space already containing a Spec object created by plugin-spec
   when: the renamed plugin-code is loaded
   then:
-    - the object is queryable as a SpecDocument
+    - the object is queryable as a Spec
     - opening it renders CodeArticle with the same content
-    - its typename is `org.dxos.type.specDocument`
+    - its typename is `org.dxos.type.projects.spec`
 ```
 
 ```mdl
@@ -1471,6 +1472,36 @@ decision D-41: A pull offers the file to every codec, not only to one that wrote
   supersedes: D-40
   affects: [F-14.7, exportSpecFile]
   why: plugin-github now passes the export the file as GitHub holds it, so plugin-code keeps no base of its own and any device can push.
+```
+
+```mdl
+decision D-42: The spec type is `@dxos/compute`'s `Spec`, typename `org.dxos.type.projects.spec`, which holds its `.mdl` text as `content`; `SpecDocument` goes away. Replaces [D-28].
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [Spec, F-1.5, T-1]
+  supersedes: D-28
+```
+
+```mdl
+decision D-43: This page renders a spec as a section as well as an article, ahead of plugin-projects' plain MDL editor, so a project's Document view shows a spec in this page's editor whenever this plugin is loaded. The renames from `org.dxos.type.spec` and `org.dxos.type.specDocument` are plugin-projects' migrations, and this plugin keeps none. Fills in [D-42]. Replaces the part of [D-35] where a spec embedded as a section is always plugin-projects' editor.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecArticle, F-1.5]
+  supersedes: D-35
+  why: The section's subject is now the spec itself rather than a document plugin-projects held, and this page is the richer editor of it. plugin-projects' editor still renders it when this plugin is not loaded, so the view depends on no other plugin.
+  rejected:
+    - Leaving the section to plugin-projects' plain editor, which shows a spec in a project without this page's margins and checks.
+```
+
+```mdl
+decision D-44: The sync takes a spec through `ProjectCapabilities.SpecCodec`, renamed from `SpecDocumentCodec`, and copies a spec of prose alone, which no codec takes, as text. A pull no longer makes a spec of a document no object owns, since every document is a spec. Fills in [D-42]. Replaces the part of [D-41] where a pull turns a document into a spec.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-14.7]
+  supersedes: D-41
+  why: Copying a prose spec keeps the plain three-way text merge it had before the codecs.
 ```
 
 ---

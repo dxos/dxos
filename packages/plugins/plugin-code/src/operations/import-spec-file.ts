@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Ref } from '@dxos/echo';
 import * as TextMerge from '@dxos/plugin-github/TextMerge';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { SpecDocument } from '@dxos/types';
 
 import { readThrough, writeThrough } from '#sync';
 import { CodeOperation } from '#types';
@@ -19,9 +19,9 @@ import { loadSpecText, specName } from './spec-file.ts';
 const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecFile> = CodeOperation.ImportSpecFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ path, content, base, object, heads }) {
-      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecDocumentCodec);
+      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecCodec);
       if (!object || !heads || base === undefined) {
-        const spec = yield* Database.add(SpecDocument.make({ name: specName(path), content }));
+        const spec = yield* Database.add(Spec.make({ name: specName(path), content }));
         yield* readThrough(codecs, spec, content, path);
         const { text } = yield* loadSpecText(Ref.make(spec));
         return { object: Ref.make(spec), heads: TextMerge.currentHeads(text) };

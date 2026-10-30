@@ -422,7 +422,7 @@ const readSurface = (call: CallExpression, pluginId: PluginId, file: SourceFile)
 };
 
 const readSchemas = (call: CallExpression, pluginId: PluginId, file: SourceFile, into: Schema[]): void => {
-  // `AppCapability.schema([SpecDocument.SpecDocument, CodeProject.CodeProject, ...])`
+  // `AppCapability.schema([Spec.Spec, CodeProject.CodeProject, ...])`
   const arg = call.getArguments()[0];
   if (!arg || arg.getKind() !== SyntaxKind.ArrayLiteralExpression) {
     return;

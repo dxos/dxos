@@ -25,15 +25,15 @@ template, which builds with the dev shell of a vite server.
 
 ## Features
 
-A spec's document is the spec. It can be prose alone and take structure a piece at a time: a line becomes a feature,
+A spec's document is the spec, and its text is `Spec.content`. It can be prose alone and take structure a piece at a time: a line becomes a feature,
 the feature becomes an object the document embeds, and the canvas and the board are drawn from the features the
 document embeds. In a repository the same spec is a `.mdl` file in which each feature is a `feat` block.
 
 ```mdl
 feat F-1: A spec's document is the spec
   req F-1.1: The document's embeds of feature objects, `![name](echo:///<id>)`, say which features the spec holds and
-             in what order. `Spec.features` holds the same list as refs, which make the spec each feature's owner so
-             deleting the spec deletes them; only the sync and the feature operations write it.
+             in what order. The spec's features annotation holds the same list as refs, which make the spec each feature's
+             owner so deleting the spec deletes them; only the sync and the feature operations write it.
   req F-1.2: A feature object holds its name, description, status and requirements. The document holds no `feat`
              block for a feature it embeds.
   req F-1.3: No structure is required. A document may be prose alone, embeds may sit anywhere in it, and the prose
@@ -65,7 +65,7 @@ feat F-2: Feature embeds in the editor
               requirements, a structured requirement with each field on a line of its own. It also lists the features
               the feature depends on, which it can add and remove.
   req F-2.8: org.dxos.plugin.code#SpecArticle draws the same sections, through
-             `ProjectCapabilities.SpecDocumentExtensions`, which this plugin contributes, so plugin-code imports none of
+             `ProjectCapabilities.SpecExtensions`, which this plugin contributes, so plugin-code imports none of
              its components.
   req F-2.9: A feature's `section` surface is that form, so any document embedding the feature can edit it in place. Its
              card is the read-only version, shown on the map, the board and in search.
@@ -87,10 +87,27 @@ feat F-3: A spec as a file
   req F-3.4: Written against the file text last synced, the block of a feature that has not changed is copied as it was,
              and a changed one has only its changed lines rewritten.
   req F-3.5: org.dxos.plugin.code#F-14 syncs a spec's document with its file through export and import, by
-             `ProjectCapabilities.SpecDocumentCodec`, so the file holds `feat` blocks and the document holds embeds.
+             `ProjectCapabilities.SpecCodec`, so the file holds `feat` blocks and the document holds embeds.
              org.dxos.plugin.github.file-sync#F-6 syncs a file in a GitHub repository the same way.
-  req F-3.6: A document no object owns becomes the document of a new spec, named after it, when a file read into it
-             through the codec holds a `feat` block; a file of prose alone leaves it as it is.
+  req F-3.6: The codec handles a spec whose document embeds a feature or whose file holds a `feat` block. A spec of
+             prose alone is synced as plain text.
+```
+
+```mdl
+feat F-4: A project's specs
+  req F-4.1: A project owns any number of top-level specs (`Project.specs`), and each spec has at most one owner. A
+             breakdown spec belongs to its feature, and only feature specs nest.
+  req F-4.2: A spec (`@dxos/compute`'s `Spec`) holds a name, a description, its dialects and its document. The document
+             is the spec; the canvas, the board and any other view are lenses over it.
+  req F-4.3: A spec's dialects name the dialect specs whose blocks its document uses, as data on the spec, not in its
+             text. A spec with none uses the core and changelog blocks only. A breakdown spec takes the dialects of
+             the spec its feature is on.
+  req F-4.4: What a dialect reads out of a document is kept as typed annotations on the spec: this plugin's features
+             (`org.dxos.projects.features`) and canvas layout (`org.dxos.projects.layout`).
+  req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
+             spec. It opens on the spec picked last, or the project's first.
+  req F-4.6: The nav tree lists each spec under the project's Specs branch, and each level beneath it at
+             `project/<id>/specs/<spec>/<feature>/…`, the same path however many specs the project has.
 ```
 
 ## QA
@@ -670,4 +687,122 @@ decision D-33: Approve [D-31]: a feature's dependencies stay in ECHO only. An em
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-2.10, F-3.3]
+```
+
+```mdl
+decision D-34: A spec is one document. The canvas, the board and any other view are lenses over it, such as canvas positions or a kanban pivot, and the view toggle shows only when a spec has more than one view.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-35: Each dialect is one bundle, and the blocks it defines map to plugin capabilities when the text is synced. Composer's editor stays fully compatible with MDL as plain text.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+```
+
+```mdl
+decision D-36: What a dialect adds to a spec is kept as ECHO annotations on the spec, so it is strongly typed.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.4]
+```
+
+```mdl
+decision D-37: A spec declares its dialects as structured data, not in its text, and the sync to the text form uses them. A presentation dialect's blocks are inserted as templates by slash commands such as `/slide`, with no views of their own.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+  why: The dialects of coding and of presentation are not mixed in one spec.
+```
+
+```mdl
+decision D-38: A project has several top-level specs. The project article's Specs tab picks the current spec from a dropdown in its toolbar. Only feature specs nest, so a presentation spec is a top-level spec. Replaces the part of [D-9] where a project has at most one spec.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.1, F-4.5]
+  supersedes: D-9
+```
+
+```mdl
+decision D-39: `Spec` is generic, so it moves to `@dxos/compute`.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-40: A spec level's nav path is `project/<id>/specs/<spec>/<feature>/…`, the same however many specs the project has.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.6]
+```
+
+```mdl
+decision D-41: A spec that lists no dialects uses the core and changelog blocks only.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+```
+
+```mdl
+decision D-42: The spec document folds into the spec: a spec's text is its own `content`, and `SpecDocument` goes away. Replaces the part of [D-12] where a spec refers to a separate document.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-1, F-4.2]
+  supersedes: D-12
+```
+
+```mdl
+decision D-43: `Spec` 0.3.0 (`org.dxos.type.projects.spec`) holds `name`, `description`, `dialects` and `content`, a `Text` it owns. `Project` 0.7.0 holds `specs`, a list of refs, in place of `spec`. The migrations move a 0.6.0 project's spec into the list, move a 0.2.0 spec's document's `Text` and file links onto the spec and delete the document, and make a spec of each `SpecDocument` no spec held. A migrated spec lists no dialects. Fills in [D-38], [D-39] and [D-42].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-4.2]
+  why: Moving the `Text` rather than copying it keeps its id, its history and the cursors anchored in it. No dialect registry exists yet to say which dialects an old spec used, and none listed reads as core and changelog only ([D-41]).
+  rejected:
+    - Copying the document's text into a new `Text` on the spec.
+    - Listing the `feat` dialect on every migrated spec.
+```
+
+```mdl
+decision D-44: The spec's features are the `org.dxos.projects.features` annotation, a list of feature refs in the document's order, and its canvas layout is the `org.dxos.projects.layout` annotation. The refs keep the spec each feature's ECHO parent, so deleting the spec still deletes its features. Fills in [D-36]. Replaces the part of [D-15] where the features are a field of `Spec`.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.1, F-4.4]
+  supersedes: D-15
+  why: The ids carry this plugin's namespace, which owns them, and leave `Spec` free of anything a dialect adds.
+  rejected:
+    - A generic `Spec.items` field, which would type every dialect's objects the same.
+```
+
+```mdl
+decision D-45: A breakdown spec takes the dialects of the spec its feature is on, when made by `op:CreateSpec` or when a feature is first broken down. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.3]
+  why: A feature's breakdown is written in the same language as the spec it came from.
+```
+
+```mdl
+decision D-46: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project that already has a spec; a spec given to a project joins the end of its specs. The Specs tab opens on the spec last picked, kept in the project's view state, or the project's first spec, and Add spec opens the spec form and selects the new spec. Fills in [D-38].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-4.5]
+  why: The pick is a reader's place, like the selected tab, so it lives with the view state and not on the project.
+```
+
+```mdl
+decision D-47: The codec takes a spec only when its document embeds a feature or the file holds a `feat` block, and otherwise leaves the spec to the plain text sync. `ProjectCapabilities.SpecDocumentCodec` and `SpecDocumentExtensions` are renamed `SpecCodec` and `SpecExtensions` and take a `Spec`. Fills in [D-42]. Replaces [D-27], since no document exists apart from a spec.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.8, F-3.5, F-3.6]
+  supersedes: D-27
+  why: Every synced spec now passes through the codec. Taking a prose spec would skip the plain three-way text merge it had before.
 ```

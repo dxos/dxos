@@ -8,13 +8,14 @@ import * as Exit from 'effect/Exit';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { File, Milestone, PullRequest, SpecDocument, Task } from '@dxos/types';
+import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
-import { Feature, FeatureEmbed, FeatureOperation, Showcase, Spec, SpecText } from '#types';
+import { Feature, FeatureEmbed, FeatureMap, FeatureOperation, Showcase, SpecText } from '#types';
 
 import addDependency from './add-dependency.ts';
 import createSpec from './create-spec.ts';
@@ -33,7 +34,6 @@ const testLayer = () =>
   TestDatabaseLayer({
     types: [
       Spec.Spec,
-      SpecDocument.SpecDocument,
       Feature.Feature,
       Feature.DependsOn,
       Feature.Implements,
@@ -53,9 +53,10 @@ const ref = Ref.make;
 
 const addSpec = (name = 'Inbox') => Database.add(Spec.make({ name }));
 
-const featureIds = (spec: Spec.Spec) => spec.features.map((feature) => feature.target?.id);
+const featureIds = (spec: Spec.Spec) =>
+  FeatureMap.getFeatures(spec).map((feature) => FeatureEmbed.entityId(feature.uri));
 
-/** The ids the spec's document embeds, in order. */
+/** The ids the spec's text embeds, in order. */
 const embedIds = (spec: Spec.Spec) =>
   Effect.promise(() => SpecText.read(spec)).pipe(Effect.map((text) => FeatureEmbed.parse(text).map(({ id }) => id)));
 
@@ -67,7 +68,7 @@ describe('FeatureOperation.Create', () => {
       expect(feature.status).toBe('planned');
       expect(featureIds(spec)).toEqual([feature.id]);
       expect(yield* embedIds(spec)).toEqual([feature.id]);
-      expect(Spec.getContainer(feature)?.id).toBe(spec.id);
+      expect(FeatureMap.getContainer(feature)?.id).toBe(spec.id);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -80,7 +81,7 @@ describe('FeatureOperation.Create', () => {
       const breakdown = sync.spec?.target;
       expect(breakdown?.name).toBe('Sync');
       expect(breakdown && featureIds(breakdown)).toEqual([gmail.id, imap.id]);
-      expect(breakdown && Spec.getOwner(breakdown)?.id).toBe(sync.id);
+      expect(breakdown && FeatureMap.getOwner(breakdown)?.id).toBe(sync.id);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -117,9 +118,7 @@ describe('FeatureOperation.Update', () => {
       const inbox = yield* addSpec('Inbox');
       const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(inbox) });
       const { feature: gmail } = yield* create.handler({ name: 'Gmail', spec: ref(inbox) });
-      Obj.update(inbox, (inbox) => {
-        inbox.layout = { positions: { [gmail.id]: { x: 1, y: 2 } } };
-      });
+      FeatureMap.setPosition(inbox, gmail.id, { x: 1, y: 2 });
       const { spec: breakdown } = yield* createSpec.handler({ name: 'Sync', feature: ref(sync) });
       yield* update.handler({ feature: ref(gmail), spec: ref(breakdown) });
       expect(featureIds(inbox)).toEqual([sync.id]);
@@ -127,57 +126,67 @@ describe('FeatureOperation.Update', () => {
       // The embed moves with the feature.
       expect(yield* embedIds(inbox)).toEqual([sync.id]);
       expect(yield* embedIds(breakdown)).toEqual([gmail.id]);
-      expect(Spec.getContainer(gmail)?.id).toBe(breakdown.id);
+      expect(FeatureMap.getContainer(gmail)?.id).toBe(breakdown.id);
       // A position belongs to the canvas it was dragged on, so it does not follow the feature.
-      expect(inbox.layout?.positions[gmail.id]).toBeUndefined();
+      expect(FeatureMap.getLayout(inbox)?.positions[gmail.id]).toBeUndefined();
 
       const exit = yield* Effect.exit(update.handler({ feature: ref(sync), spec: ref(breakdown) }));
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(Spec.getContainer(sync)?.id).toBe(inbox.id);
+      expect(FeatureMap.getContainer(sync)?.id).toBe(inbox.id);
     }).pipe(Effect.provide(testLayer())),
   );
 });
 
 describe('FeatureOperation.CreateSpec', () => {
-  it.effect('refuses a second spec for a project, naming the one it has, and writes nothing', () =>
+  it.effect('adds each spec to the project in order, and refuses a project for a breakdown', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: 'Mail' }));
       const { spec: inbox } = yield* createSpec.handler({ name: 'Inbox', project: ref(project) });
-      const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(inbox) });
+      const { spec: talk } = yield* createSpec.handler({
+        name: 'Talk',
+        dialects: ['org.dxos.dialect.presenter'],
+        project: ref(project),
+      });
+      expect(project.specs.map((spec) => spec.peek()?.id)).toEqual([inbox.id, talk.id]);
+      expect(talk.dialects).toEqual(['org.dxos.dialect.presenter']);
+      expect(Spec.getProject(talk)?.id).toBe(project.id);
 
-      const error = yield* Effect.flip(createSpec.handler({ name: 'Outbox', project: ref(project) }));
-      expect(error).toBeInstanceOf(FeatureOperation.ProjectHasSpecError);
-      expect(error.message).toContain('"Inbox"');
+      const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(inbox) });
       const breakdown = yield* Effect.flip(
         createSpec.handler({ name: 'Sync', feature: ref(sync), project: ref(project) }),
       );
       expect(breakdown).toBeInstanceOf(FeatureOperation.BreakdownSpecError);
       expect(sync.spec).toBeUndefined();
-      expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(1);
-      expect(Spec.getProject(inbox)?.id).toBe(project.id);
+      expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(2);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect("makes a feature's breakdown in its spec's dialects", () =>
+    Effect.gen(function* () {
+      const inbox = yield* Database.add(Spec.make({ name: 'Inbox', dialects: ['org.dxos.dialect.code'] }));
+      const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(inbox) });
+      const { spec: breakdown } = yield* createSpec.handler({ name: 'Sync', feature: ref(sync) });
+      expect(breakdown.dialects).toEqual(['org.dxos.dialect.code']);
     }).pipe(Effect.provide(testLayer())),
   );
 });
 
 describe('FeatureOperation.UpdateSpec', () => {
-  it.effect('moves a spec between projects, refuses a project that has one, and releases it on null', () =>
+  it.effect('moves a spec between projects, beside the specs a project has, and releases it on null', () =>
     Effect.gen(function* () {
       const mail = yield* Database.add(Project.make({ name: 'Mail' }));
       const chat = yield* Database.add(Project.make({ name: 'Chat' }));
       const { spec: inbox } = yield* createSpec.handler({ name: 'Inbox', project: ref(mail) });
-      const outbox = yield* addSpec('Outbox');
-
-      const error = yield* Effect.flip(updateSpec.handler({ spec: ref(outbox), project: ref(mail) }));
-      expect(error.message).toContain('"Inbox"');
-      expect(Spec.getProject(outbox)).toBeUndefined();
+      const { spec: talk } = yield* createSpec.handler({ name: 'Talk', project: ref(chat) });
 
       yield* updateSpec.handler({ spec: ref(inbox), project: ref(chat) });
       expect(Spec.getProject(inbox)?.id).toBe(chat.id);
-      expect(mail.spec).toBeUndefined();
+      expect(mail.specs).toEqual([]);
+      expect(chat.specs.map((spec) => spec.peek()?.id)).toEqual([talk.id, inbox.id]);
 
       yield* updateSpec.handler({ spec: ref(inbox), project: null });
       expect(Spec.getProject(inbox)).toBeUndefined();
-      expect(chat.spec).toBeUndefined();
+      expect(chat.specs.map((spec) => spec.peek()?.id)).toEqual([talk.id]);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -204,8 +213,7 @@ feat F-1: Sync
       const [target] = yield* Database.query(Filter.type(Spec.Spec)).run;
       expect(target).toMatchObject({ id: first.spec, name: 'Inbox' });
       expect(Spec.getProject(target)?.id).toBe(project.id);
-      const document = yield* Database.load(target.document);
-      expect(document.name).toBe('packages/a/PLUGIN.mdl');
+      expect(Obj.getMeta(target).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);
       const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
       expect(feature).toMatchObject({
         name: 'Sync',
@@ -215,11 +223,11 @@ feat F-1: Sync
       });
       expect(Feature.getSources(feature)).toEqual(['packages/a/PLUGIN.mdl#F-1']);
       expect(featureIds(target)).toEqual([feature.id]);
-      // The document holds an embed of the feature in place of its block.
-      const content = yield* Database.load(document.content);
+      // The text holds an embed of the feature in place of its block.
+      const content = yield* Database.load(target.content);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
 
-      // Without a target, the second import finds the spec by its document and rewrites the text in place.
+      // Without a target, the second import finds the spec by its key and rewrites the text in place.
       const second = yield* importSpec.handler({
         path: 'packages/a/PLUGIN.mdl',
         text: spec('New mail shows within ten seconds.'),
@@ -253,27 +261,24 @@ feat F-1: Sync
 \`\`\`
 `;
 
-  it.effect('takes the features its text declares and re-keys the document to the new path', () =>
+  it.effect('takes the features its text declares and re-keys the spec to the new path', () =>
     Effect.gen(function* () {
       const first = yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, name: 'A' });
       const target = yield* addSpec('B');
       yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, spec: ref(target) });
       const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
-      expect(Spec.getContainer(feature)?.id).toBe(target.id);
+      expect(FeatureMap.getContainer(feature)?.id).toBe(target.id);
       const [source] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter(({ id }) => id === first.spec);
-      expect(source?.features).toHaveLength(0);
-      // The path moves to the target's document, so the next import without a target finds the target.
+      expect(featureIds(source)).toHaveLength(0);
+      // The path moves to the target, so the next import without a target finds the target.
       const keyed = yield* Database.query(
-        Filter.foreignKeys(SpecDocument.SpecDocument, [
-          { source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' },
-        ]),
+        Filter.foreignKeys(Spec.Spec, [{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]),
       ).run;
-      expect(keyed.map((document) => Obj.getParent(document)?.id)).toEqual([target.id]);
-      expect(Obj.getMeta(yield* Database.load(source.document)).keys).toEqual([]);
+      expect(keyed.map(({ id }) => id)).toEqual([target.id]);
+      expect(Obj.getMeta(source).keys).toEqual([]);
 
       yield* importSpec.handler({ path: 'packages/b/PLUGIN.mdl', text, spec: ref(target) });
-      const document = yield* Database.load(target.document);
-      expect(Obj.getMeta(document).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/b/PLUGIN.mdl' }]);
+      expect(Obj.getMeta(target).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/b/PLUGIN.mdl' }]);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -284,13 +289,12 @@ feat F-1: Sync
       const { spec: target } = yield* createSpec.handler({ name: 'Sync', feature: ref(feature) });
       const changed = text.replace('within a minute', 'within ten seconds');
       yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text: changed, spec: ref(target) });
-      expect(Spec.getContainer(feature)?.id).toBe(first.spec);
-      expect(target.features).toHaveLength(0);
-      // The source keeps the path's document, updated, so deleting the feature cannot take it with the breakdown.
+      expect(FeatureMap.getContainer(feature)?.id).toBe(first.spec);
+      expect(featureIds(target)).toHaveLength(0);
+      // The source keeps the path and its text, updated, so deleting the feature cannot take it with the breakdown.
       const [source] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter(({ id }) => id === first.spec);
-      const document = yield* Database.load(source.document);
-      expect(Obj.getParent(document)?.id).toBe(first.spec);
-      const content = yield* Database.load(document.content);
+      expect(Obj.getMeta(source).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);
+      const content = yield* Database.load(source.content);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
       expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'Mail arrives within ten seconds.' }]);
     }).pipe(Effect.provide(testLayer())),

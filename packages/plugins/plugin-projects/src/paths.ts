@@ -6,7 +6,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 
-import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT, SPEC_SEGMENT } from './capabilities/app-graph-builder.ts';
+import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT, SPECS_SEGMENT } from './capabilities/app-graph-builder.ts';
 
 const PROJECT_TYPENAME = Type.getTypename(Project.Project)!;
 
@@ -27,8 +27,12 @@ export const getProjectArtifactPath = (spaceId: string, projectId: string, artif
   `${getProjectPath(spaceId, projectId)}/${ARTIFACTS_SEGMENT}/${artifactId}`;
 
 /**
- * Path to one level of a project's spec: the Spec branch, or the breakdown of the last of `lineage`, the features from
- * the top of the spec down (see `Spec.getLineage`).
+ * Path to one level of a project's specs: the Specs branch, a spec, or the breakdown of the last of `lineage`, the
+ * features from the top of that spec down (see `FeatureMap.getLineage`).
  */
-export const getSpecLevelPath = (spaceId: string, projectId: string, lineage: readonly string[] = []): string =>
-  [getProjectPath(spaceId, projectId), SPEC_SEGMENT, ...lineage].join('/');
+export const getSpecLevelPath = (
+  spaceId: string,
+  projectId: string,
+  specId?: string,
+  lineage: readonly string[] = [],
+): string => [getProjectPath(spaceId, projectId), SPECS_SEGMENT, ...(specId ? [specId, ...lineage] : [])].join('/');

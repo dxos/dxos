@@ -7,11 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
+import * as Spec from '@dxos/compute/Spec';
 import { Annotation, DXN, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Task } from '@dxos/types';
-
-import * as Spec from './Spec.ts';
 
 //
 // Status

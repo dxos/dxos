@@ -60,16 +60,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     icon: { key: 'ph--code--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
-    // Projects owns specs and the plain editor of their documents; this plugin's spec page builds on that.
+    // Projects owns specs and the plain editor of their text; this plugin's spec page builds on that.
     dependsOn: ['org.dxos.plugin.projects'],
   },
   modules: [
-    // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
-    Capability.lazyModule(
-      'CodeMigrations',
-      { provides: [ClientCapabilities.Migration] },
-      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
-    ),
     // Registered at startup so a GitHub file sync on EDGE, where no UI event fires, finds the mapping.
     Capability.lazyModule(
       'SpecFileMapping',

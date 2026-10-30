@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { FeatureOperation, Spec, SpecText } from '#types';
+import { FeatureMap, FeatureOperation, SpecText } from '#types';
 
 import { detach } from './util.ts';
 
@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Delete> = FeatureOp
   Operation.withHandler(
     Effect.fn(function* ({ feature: featureRef }) {
       const feature = yield* Database.load(featureRef);
-      const container = Spec.getContainer(feature);
+      const container = FeatureMap.getContainer(feature);
       if (container) {
         yield* Effect.promise(() => SpecText.unembed(container, feature.id));
       }

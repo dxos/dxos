@@ -14,6 +14,7 @@ import { Outline, Repo, TaskSet } from '@dxos/types';
 import * as Instructions from './Instructions.ts';
 import * as Routine from './Routine.ts';
 import * as Skill from './Skill.ts';
+import * as Spec from './Spec.ts';
 
 /** Work-stream lifecycle state; what done means lives on the task set's milestones. */
 export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
@@ -26,7 +27,7 @@ export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
  * Fields are the refs the project owns and orders; everything that merely accumulates around it is
  * a query — chats by the ECHO parent edge, agents via chats.
  */
-export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.6.0'))(
+export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.7.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Format.Text),
@@ -54,9 +55,10 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(Annotation.SetParent.set())),
 
-    /** Owned spec: the feature map the project's tasks deliver (typed loosely; the type lives in plugin-projects). */
-    spec: Schema.optional(
-      Ref.Ref(Obj.Unknown).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    /** Owned specs, in order: the normative text the project's tasks deliver. Suspended because Spec refers back. */
+    specs: Schema.Array(Schema.suspend((): Ref.RefSchema<Spec.Spec> => Ref.Ref(Spec.Spec))).pipe(
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
     ),
 
     /** Owned (or adopted synced) task container, holding the project's tasks and milestones. */
@@ -104,11 +106,17 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
  * and nothing to draft in. The parent edges follow from the fields' `SetParent` annotation.
  */
 export const make = (
-  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts' | 'routines'> & {
+  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts' | 'routines' | 'specs'> & {
     artifacts?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+    specs?: ReadonlyArray<Ref.Ref<Spec.Spec>>;
   } = {},
 ): Project => {
-  const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [], routines: [] });
+  const project = Obj.make(Project, {
+    ...props,
+    artifacts: props.artifacts ?? [],
+    routines: [],
+    specs: props.specs ?? [],
+  });
   if (!props.taskSet) {
     const taskSet = TaskSet.make();
     Obj.update(project, (project) => {

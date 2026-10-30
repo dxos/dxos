@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -14,7 +15,6 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { SpecDocument } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as CodePlugin from '#meta';
@@ -114,14 +114,14 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [SpecDocument.SpecDocument, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
+          types: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
 
-              const spec = space.db.add(SpecDocument.make());
+              const spec = space.db.add(Spec.make({ name: 'Example spec' }));
               const files = seed.map((entry) => space.db.add(SourceFile.make(entry)));
               space.db.add(CodeProject.make({ name, spec, files }));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));

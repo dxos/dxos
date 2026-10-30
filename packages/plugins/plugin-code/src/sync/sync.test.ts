@@ -5,17 +5,16 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Spec from '@dxos/compute/Spec';
 import { findSourceKeys, formatSourceKey, parseGitHubRemote, parseSourceKey, reviewKeyOf } from '@dxos/deus/review';
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { invariant } from '@dxos/invariant';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import * as Feature from '@dxos/plugin-projects/Feature';
-import * as Spec from '@dxos/plugin-projects/Spec';
+import * as FeatureMap from '@dxos/plugin-projects/FeatureMap';
 import * as SpecText from '@dxos/plugin-projects/SpecText';
 import { Text } from '@dxos/schema';
-import { SpecDocument } from '@dxos/types';
 
 import { detectRepo, parseGitConfigRemote, parseRepoEntry, resolvePath, resolveRoots } from './repo-roots.ts';
 import { fromMetaKey, keyFromTreeUrl, toMetaKey } from './spec-key.ts';
@@ -150,13 +149,13 @@ describe('syncSpec', () => {
     await builder.close();
   });
 
-  test('a file of feat blocks makes its document a spec of features, written back as blocks', async ({ expect }) => {
+  test("a file of feat blocks becomes the spec's features, written back as blocks", async ({ expect }) => {
     const { db } = await builder.createDatabase({
-      types: [Spec.Spec, SpecDocument.SpecDocument, Feature.Feature, Text.Text],
+      types: [Spec.Spec, Feature.Feature, Text.Text],
     });
-    const document = db.add(SpecDocument.make({ content: '' }));
-    Obj.update(document, (document) => {
-      Obj.getMeta(document).keys.push(toMetaKey({ owner: 'dxos', repo: 'dxos', path: 'a/SPEC.mdl' }));
+    const spec = db.add(Spec.make({ name: 'a/SPEC.mdl', content: '' }));
+    Obj.update(spec, (spec) => {
+      Obj.getMeta(spec).keys.push(toMetaKey({ owner: 'dxos', repo: 'dxos', path: 'a/SPEC.mdl' }));
     });
     const file = [
       '# A',
@@ -177,14 +176,12 @@ describe('syncSpec', () => {
       bases: new SyncBases(),
       codecs: [SpecText.codec],
     };
-    const sync = () => EffectEx.runPromise(syncSpec(document, context));
+    const sync = () => EffectEx.runPromise(syncSpec(spec, context));
 
     expect((await sync()).status).toBe('pulled');
-    const spec = Obj.getParent(document);
-    invariant(Spec.instanceOf(spec), 'Missing spec.');
-    const [feature] = await Ref.loadAll(spec.features);
+    const [feature] = await Ref.loadAll(FeatureMap.getFeatures(spec));
     expect(feature.name).toBe('Sync');
-    expect((await document.content.load()).content).not.toContain('feat F-1');
+    expect((await spec.content.load()).content).not.toContain('feat F-1');
 
     Obj.update(feature, (feature) => {
       feature.status = 'operational';

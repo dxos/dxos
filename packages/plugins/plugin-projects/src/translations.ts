@@ -3,11 +3,12 @@
 //
 
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
-import { Feature, Spec } from '#types';
+import { Feature } from '#types';
 
 import { ProjectsNamespace } from './namespace.ts';
 
@@ -65,9 +66,10 @@ export const translations = [
         'milestones.label': 'Milestones',
         'views.label': 'Views',
         'overview.label': 'Overview',
-        'spec.label': 'Spec',
+        'specs.label': 'Specs',
         'add-spec.label': 'Add spec',
-        'spec.empty.message': 'No spec yet. A spec maps the features this work delivers.',
+        'untitled-spec.label': 'Untitled spec',
+        'spec.empty.message': 'No spec yet. A spec describes what this work delivers.',
         'feature-spec.empty.message': 'This feature has no spec of its own. Add one to break it down.',
         'spec-summary.features.label_one': '{{count}} feature',
         'spec-summary.features.label_other': '{{count}} features',
@@ -161,7 +163,7 @@ export const translations = [
         'feature-map.mode.label': 'View',
         'feature-map.mode.canvas.label': 'Canvas',
         'feature-map.mode.kanban.label': 'Kanban',
-        'feature-map.mode.document.label': 'Spec document',
+        'feature-map.mode.document.label': 'Spec text',
       },
     },
   },

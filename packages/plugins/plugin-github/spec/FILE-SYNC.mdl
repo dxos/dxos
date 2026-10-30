@@ -458,7 +458,7 @@ feat F-6: Deus specs
 
   req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpecFile and ExportSpecFile.
 
-  req F-6.2: Spec.content is Text, so specs merge character by character. A spec document a `ProjectCapabilities.SpecDocumentCodec` writes merges as the file text the codec renders, which the codec reads back; the engine runs no `.mdl` parser itself.
+  req F-6.2: Spec.content is Text, so specs merge character by character. A spec a `ProjectCapabilities.SpecCodec` writes merges as the file text the codec renders, which the codec reads back; the engine runs no `.mdl` parser itself.
 ```
 
 ## Acceptance
@@ -686,4 +686,20 @@ decision D-19: The base is the blob in marker.pushed while that is set, else mar
   rejected:
     - Fetching the base on every pass, which costs one request per bound file and breaks T-1.
     - Keeping the base per device, where a push on a device that has not pulled the file waits for the next pull.
+```
+
+```mdl
+decision D-20: A spec's text is its own `content`; there is no separate spec document.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-6.2]
+```
+
+```mdl
+decision D-21: The codec is renamed `ProjectCapabilities.SpecCodec` and writes a spec. A spec no codec takes merges as plain text. Fills in [D-20].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.2]
+  why: The codec's subject is now the spec itself, and a prose spec keeps the character merge F-6.2 gives every spec.
 ```
