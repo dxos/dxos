@@ -201,6 +201,8 @@ jobs:
         continue-on-error: true
         env:
           ITERATIONS: ${{ inputs.scenario-iterations || '5' }}
+          # Switch time only: `revisit` and `reindex` time eviction and index catch-up, not a switch.
+          DX_PERF_SWITCH_PASSES: cold,warm
           DX_PWA: 'false'
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
