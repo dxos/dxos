@@ -475,29 +475,43 @@ SceneEditorRoot.displayName = 'SceneEditor.Root';
 const EditorShortcuts = () => {
   const { commands } = useSceneEditor('SceneEditor.Shortcuts');
   const [frame, setFrame] = useState<HTMLElement | null>(null);
+  // Outside the effect, which re-runs as every edit rebuilds the command table: a press's own drag must not forget it.
+  const inside = useRef(false);
+  const latest = useRef(commands);
+  latest.current = commands;
   useEffect(() => {
     const element = frame?.parentElement;
     if (!element) {
       return;
     }
-    let inside = false;
+    const typing = (target: EventTarget | null) =>
+      target instanceof HTMLElement &&
+      (target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+    // Focusable without joining the tab order, so a press on a viewport that takes no focus of its own still moves the
+    // keyboard here, in either dimension.
+    element.hasAttribute('tabindex') || element.setAttribute('tabindex', '-1');
     const onPointerDown = (event: PointerEvent) => {
-      inside = event.target instanceof Node && element.contains(event.target);
+      inside.current = event.target instanceof Node && element.contains(event.target);
+      const focus = globalThis.document.activeElement;
+      inside.current &&
+        !typing(event.target) &&
+        !(focus instanceof Node && element.contains(focus)) &&
+        element.focus({ preventScroll: true });
     };
     const onKeyDown = (event: KeyboardEvent) => {
       const focus = globalThis.document.activeElement;
-      const target = event.target;
-      const typing =
-        target instanceof HTMLElement &&
-        (target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
-      if (!inside || typing || !(focus === null || focus === globalThis.document.body || element.contains(focus))) {
+      if (
+        !inside.current ||
+        typing(event.target) ||
+        !(focus === null || focus === globalThis.document.body || element.contains(focus))
+      ) {
         return;
       }
       // Delete is the viewport's own (it knows a face from an element); the chorded commands are the table's.
       if (!(event.metaKey || event.ctrlKey)) {
         return;
       }
-      const command = commands.keyCommand(event);
+      const command = latest.current.keyCommand(event);
       if (command) {
         event.preventDefault();
         command.run();
@@ -509,7 +523,7 @@ const EditorShortcuts = () => {
       window.removeEventListener('pointerdown', onPointerDown, { capture: true });
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [frame, commands]);
+  }, [frame]);
   return <span ref={setFrame} hidden />;
 };
 

@@ -3,7 +3,7 @@
 //
 // @vitest-environment happy-dom
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -174,5 +174,44 @@ describe('SceneEditor', () => {
     expect(writeModel).toHaveBeenCalledTimes(1);
     expect(record).not.toHaveBeenCalled();
     expect(recordDocument).toHaveBeenCalledTimes(1);
+  });
+
+  test('a press into the editor takes focus, and Cmd+Z right after an edit made by that press undoes, in 2D and 3D', () => {
+    for (const dim of ['2d', '3d'] as const) {
+      const undo = vi.fn();
+      const history: History = {
+        canUndo: true,
+        canRedo: false,
+        record: (change) => (change(), true),
+        recordDocument: () => {},
+        undo,
+        redo: () => {},
+      };
+      const outside = globalThis.document.createElement('input');
+      globalThis.document.body.appendChild(outside);
+      outside.focus();
+      const view = (document: Scene.SceneDocument) => (
+        <SceneEditor.Root
+          config={config(dim)}
+          document={document}
+          scene='s'
+          onIntent={() => {}}
+          history={history}
+          display={DISPLAY}
+        >
+          <SceneEditor.Viewport />
+        </SceneEditor.Root>
+      );
+      const { rerender } = render(view(DOCUMENT));
+      const viewport = screen.getByTestId('viewport');
+      fireEvent.pointerDown(viewport);
+      expect(globalThis.document.activeElement).not.toBe(outside);
+      // The press's drag writes the document, which rebuilds the command table.
+      rerender(view({ ...DOCUMENT, layouts: [{ id: 'root', dim, elements: {} }] }));
+      fireEvent.keyDown(globalThis.document.activeElement ?? viewport, { key: 'z', metaKey: true });
+      expect(undo).toHaveBeenCalledTimes(1);
+      cleanup();
+      outside.remove();
+    }
   });
 });
