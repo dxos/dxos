@@ -5,9 +5,9 @@
 import { describe, expect, test } from 'vitest';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { LAYERS_INSPECTOR, OBJECTS_INSPECTOR, PROPERTIES_INSPECTOR, VIEWS_INSPECTOR } from '@dxos/react-ui-canvas';
+import { editsInRole } from '@dxos/react-ui-canvas';
 
-import { SECTIONS_3D, display2D, grid3D, sceneChrome } from './scene-chrome.ts';
+import { display2D, sceneChrome } from './scene-chrome.ts';
 
 describe('sceneChrome', () => {
   test('only an article edits and draws the grid and guides', () => {
@@ -32,21 +32,10 @@ describe('sceneChrome', () => {
     }
   });
 
-  test('3D: a card, section or slide draws no ground grid whatever the viewer set', () => {
-    expect(grid3D(AppSurface.Article.role, true)).toBe(true);
-    expect(grid3D(AppSurface.Article.role, false)).toBe(false);
+  test("the shared editor (3D) edits only in the article, as 2D's chrome does", () => {
+    expect(editsInRole(AppSurface.Article.role)).toBe(true);
     for (const role of [AppSurface.CardContent.role, AppSurface.Section.role, AppSurface.Slide.role]) {
-      expect(grid3D(role, true)).toBe(false);
+      expect(editsInRole(role)).toBe(false);
     }
-  });
-
-  test("3D's inspector sections are 2D's own: Properties first, then Views, Objects and Layers", () => {
-    expect(SECTIONS_3D).toEqual({
-      properties: PROPERTIES_INSPECTOR,
-      views: VIEWS_INSPECTOR,
-      objects: OBJECTS_INSPECTOR,
-      layers: LAYERS_INSPECTOR,
-    });
-    expect(SECTIONS_3D.properties).toMatchObject({ order: 0, pane: 'upper', defaultOpen: true });
   });
 });

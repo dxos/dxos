@@ -48,8 +48,12 @@ const CATEGORY_GROUPS: Readonly<Record<ToolCategory, string>> = {
 /** How far one camera-bar zoom step moves the camera, in both dimensions. */
 const ZOOM_STEP = 1.25;
 
-/** Whether a role edits the scene: only the article (or no role, in a story); a card, section or slide is a picture. */
-export const editsInRole = (role: string | undefined): boolean => role === undefined || role === 'article';
+/**
+ * Whether a role edits the scene: only the article (`article`, or a namespaced `….article`), or no role (a story); a
+ * card, section or slide is a picture.
+ */
+export const editsInRole = (role: string | undefined): boolean =>
+  role === undefined || role.split('.').at(-1) === 'article';
 
 export type SceneEditorRootProps<C> = PropsWithChildren<{
   config: DimensionConfig<C>;
@@ -178,7 +182,8 @@ const SceneEditorRoot = <C,>({
     [codec, layout, document, config.geometry, onIntent, store],
   );
 
-  const [, setHistoryVersion] = useState(0);
+  // Undo and redo change the history's stacks, which the command states read.
+  const [historyVersion, setHistoryVersion] = useState(0);
   const commands = useMemo(() => {
     const deleteSelection = () => {
       if (layout) {
@@ -272,6 +277,7 @@ const SceneEditorRoot = <C,>({
     readonly,
     selection,
     history,
+    historyVersion,
     selected,
     selectedType,
     layout,
@@ -316,6 +322,7 @@ const SceneEditorRoot = <C,>({
         selection={selection}
         tool={tool}
         readonly={readonly}
+        picture={!editing}
         grid={editing && display.grid}
         snap={editing && display.snap}
         theme={display.theme}
@@ -496,7 +503,7 @@ const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' 
   const shared = new Set<string>(SHARED_COMMANDS);
   const groups = [
     commands.commands.filter((command) => shared.has(command.id) && command.id !== 'undo' && command.id !== 'redo'),
-    commands.commands.filter((command) => !shared.has(command.id)),
+    commands.commands.filter((command) => !shared.has(command.id) && command.id !== 'import'),
     commands.commands.filter((command) => command.id === 'undo' || command.id === 'redo'),
   ].filter((group) => group.length > 0);
   return (

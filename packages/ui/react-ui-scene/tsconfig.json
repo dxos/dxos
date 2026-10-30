@@ -30,7 +30,13 @@
       "path": "../react-ui-canvas"
     },
     {
+      "path": "../react-ui-form"
+    },
+    {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

@@ -4,4 +4,5 @@
 
 export * from './canvas/index.ts';
 export * from './components/index.ts';
+export * from './editor/index.ts';
 export * from './three/index.ts';

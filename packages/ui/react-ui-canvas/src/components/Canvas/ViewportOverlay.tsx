@@ -8,9 +8,8 @@ import React, { useMemo } from 'react';
 import * as Menu from '@dxos/react-ui/Menu';
 import { MAJOR_GRID, isInstanceNode } from '@dxos/scene';
 
-import { sceneMenuItems } from '../../editor/index.ts';
 import { type Camera, type SceneLook } from '../../model/index.ts';
-import { isAnonymous } from '../../utils/index.ts';
+import { isAnonymous, sceneMenuItems } from '../../utils/index.ts';
 import { GrainOverlay } from '../Background/index.ts';
 import { SceneContextMenu } from '../SceneContextMenu/index.ts';
 import {

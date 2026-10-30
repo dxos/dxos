@@ -30,6 +30,8 @@ export type ViewportProps<C = unknown> = {
   selection: readonly string[];
   tool: ActiveTool;
   readonly: boolean;
+  /** Drawn as a picture (a card, section or slide): the authored view, no gestures, grid or chrome. */
+  picture?: boolean;
   /** The grid drawn, and snapping (both follow the display panel). */
   grid: boolean;
   snap: boolean;
@@ -87,6 +89,7 @@ export type SectionDef = { section: InspectorSectionDef; render: () => ReactNode
 
 /** A command only one dimension offers (2D align/distribute; 3D join, subtract, import mesh, export STL). */
 export type ExtraCommandDef = {
+  /** `import` is offered by the Objects section's import button rather than the actions bar. */
   id: string;
   label: string;
   icon: string;

@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo, useState } from 'react';
 
-import { type Layer, type NamedStyle, type Scene, findLayout } from '@dxos/scene';
+import { type Layer, type NamedStyle, type NamedStyle2D, type NamedStyle3D, type Scene, findLayout } from '@dxos/scene';
 
 import {
   InspectorSection,
@@ -38,7 +38,7 @@ export const STYLES_INSPECTOR: InspectorSectionDef = {
 export type EditorCatalog = {
   id: string;
   name: string;
-  styles: Readonly<Record<string, NamedStyle<{ hue?: string }>>>;
+  styles: Readonly<Record<string, NamedStyle2D | NamedStyle3D>>;
 };
 
 /** The open layout's record. */
@@ -211,13 +211,23 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
   const selected = record ? selection.flatMap((id) => record.elements[id] ?? []) : [];
   const styles = new Set(selected.map((element) => element.style));
   const current = styles.size === 1 ? [...styles][0] : undefined;
-  const apply = (id: string | undefined) =>
-    layout !== undefined &&
-    selected.length > 0 &&
+  const apply = (id: string | undefined) => {
+    if (layout === undefined || selected.length === 0) {
+      return;
+    }
+    // A catalog's style is adopted into the drawing as it is first used, so the drawing resolves it on its own.
+    const [catalogId, key] = id?.includes(':') ? id.split(':') : [];
+    const adopted = catalogs.find((catalog) => catalog.id === catalogId)?.styles[key ?? ''];
+    if (id !== undefined && adopted && model && modelStyles[id] === undefined) {
+      if (!onModelIntent || onModelIntent({ kind: 'style', model: model.id, id, style: adopted }).length > 0) {
+        return;
+      }
+    }
     onIntent(layout, {
       kind: 'batch',
       intents: selected.map((element) => ({ kind: 'update' as const, id: element.id, path: ['style'], value: id })),
     });
+  };
   return (
     <InspectorSection section={STYLES_INSPECTOR}>
       <StylesInspector

@@ -5,16 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { type KeyEventLike } from '../model/index.ts';
-import {
-  type CommandState,
-  type CommandTable,
-  type ExtraCommand,
-  type SceneMenuCommand,
-  type SceneMenuState,
-  SHARED_COMMANDS,
-  buildCommands,
-  sceneMenuItems,
-} from './commands.ts';
+import { type SceneMenuCommand, type SceneMenuState, sceneMenuItems } from '../utils/index.ts';
+import { type CommandState, type CommandTable, type ExtraCommand, SHARED_COMMANDS, buildCommands } from './commands.ts';
 
 const state: SceneMenuState = {
   kind: 'element',

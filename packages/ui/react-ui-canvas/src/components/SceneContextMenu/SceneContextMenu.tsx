@@ -8,7 +8,7 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type Point } from '@dxos/scene';
 
-import { type SceneMenuItem } from '../../editor/index.ts';
+import { type SceneMenuItem } from '../../utils/index.ts';
 
 export type SceneContextMenuProps = {
   /** Where it opened, relative to the view; closed when undefined. */

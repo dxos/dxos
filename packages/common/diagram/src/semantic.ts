@@ -11,7 +11,6 @@
 
 import { Shape } from '@dxos/scene';
 
-
 export type Range = { from: number; to: number };
 
 /** A problem the engine found in the intent, with the source range it belongs to. */

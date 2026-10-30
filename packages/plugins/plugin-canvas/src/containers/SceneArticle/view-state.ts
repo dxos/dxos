@@ -60,6 +60,8 @@ const Scene3DViewStateSchema = Schema.Struct({
   camera: Schema.optional(Camera3DSchema),
   /** Whether this viewer draws the ground grid; shown until turned off. */
   grid: Schema.optional(Schema.Boolean),
+  /** Whether gizmos and placing snap to the grid, apart from whether it is drawn; follows the grid until set. */
+  snap: Schema.optional(Schema.Boolean),
   /** The look this viewer picked over the scene's own (`cad` or `presentation`). */
   theme: Schema.optional(Schema.Literals(['cad', 'presentation'])),
 });

@@ -25606,9 +25606,15 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../react-ui-canvas
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../react-ui-form
       '@dxos/scene':
         specifier: workspace:*
         version: link:../../common/scene
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
