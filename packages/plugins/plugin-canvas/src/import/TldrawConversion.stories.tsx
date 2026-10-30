@@ -61,7 +61,7 @@ type Story = StoryObj<typeof meta>;
  * it still holds them; the shapes sit on the grid and stay on the drawing itself, so the arrow from outside stays bound.
  *
  * Test:
- * 1. The frame and the shapes inside it render as nodes of the one View.
+ * 1. The frame and the shapes inside it render as elements of the one layout.
  */
 export const FrameSnapToGrid: Story = {
   decorators: withConversion(frameWithChildren(), { snap: true }),

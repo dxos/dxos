@@ -241,6 +241,41 @@ intent, { snap })` is applied by `SceneEditor` to every write (gestures, command
   `samples/molecules/DataFlowView.tsx`: a sample drawing the engine over its own memory store. react-ui-canvas-compute
   `shapes/common/node-def.test.tsx`: the engine's `NodeViewProps.store` is a `ViewStore`. plugin-lighthouse
   `client/types.ts`: an unrelated `type Intent`. Cost if wrong: none.
+- **R-60 (2026-10-30, agent, E.6): the tldraw importer writes `Element2D`s directly.** It no longer maps to Views and
+  reads them back through the adapter (R-32); golden outputs pin the mapping. A link wholly inside a group no longer
+  stays on the page with dangling ends, and the converter's legacy-target branch creates a scene `Canvas` too. Cost if
+  wrong: none.
+- **R-61 (2026-10-30, agent, E.6): a legacy `Drawing.Canvas` is read only through the scene migration.** Its article
+  migrates it on open (`migrateSceneDrawing`, `useMigratedCanvas`); its section, slide and card draw `legacyDocument`
+  read-only through `Scene2DView` (`LegacyCanvasView`), and a canvas a newer plugin saved stays read-only under its
+  banner. The bound legacy store (`model/store.ts`), `CanvasEngineView`, its edit commands, clipboard text, tracker
+  history and `patch-store.ts` are deleted (plugin-canvas D-14). Rejected: a writable legacy engine view, which keeps the
+  View store alive for one dialect; migrating on every surface, which writes a document a slide only looks at. Cost if
+  wrong: a linked drawing's frame in a legacy section, slide or card draws without its live contents until the article
+  migrates it.
+- **R-62 (2026-10-30, agent, E.6): agent operations that write migrate a legacy drawing first.** `Apply` and
+  `AddGenerator` go through `sceneCanvasFor`/`sceneCanvasOf` (Apply provides `Database.layer` itself, as it declares no
+  `Database.Service`), so they edit the migrated `Canvas`; `InspectGenerator` reads `legacyDocument` without writing;
+  `Patch` refuses a legacy canvas with
+  `LegacyCanvasError`. Cost if wrong: a patch recorded on legacy records before E.6 no longer applies (as R-30 dropped
+  pre-E.2 patches).
+- **R-63 (2026-10-30, agent, E.6, parity): the legacy animator stage is read-only, as `SceneStage` 2D is.**
+  `CanvasStage` applies the sample to `legacyDocument` (`applySample`, `camera2DOf`) with shot node paths mapped to
+  element paths (`legacyStageSample`, `legacyElementPath`), so the stage no longer needs `sampleView`. 3D: no legacy
+  stage exists. Cost if wrong: an edit on a legacy stage, which the migrated stage does not offer either.
+- **R-64 (2026-10-30, agent, E.6): `Scene2DView` takes `transparent`,** which a legacy slide passes so the slide shows
+  through, as the scene article's picture viewport already does. 2D-only: no 3D picture view has a slide surface yet.
+  Cost if wrong: none.
+- **R-65 (2026-10-30, agent, E.6): the engine's View model, `Intent`, `ViewStore` and per-View timeline are NOT deleted;
+  E.6's gate is not met (open question).** Deleting them means the 2D engine drawing elements and emitting
+  `LayoutIntent`s itself, which is C.1/C.2 (both unchecked, size L): `SceneLayer`, the controller, projections, gesture
+  hooks, inspectors, the generator host and the animated projection all read `View`s from a `ViewStore`. Renaming the
+  store to pass the grep was rejected as hiding the model rather than retiring it. What the gate still finds outside
+  react-ui-canvas: react-ui-scene `canvas/adapter.ts`(+test) and `editor/Viewport2D.tsx` (the engine's draw form,
+  R-18); plugin-canvas `samples/molecules/DataFlowView.tsx` and `samples/endcard/EndCard.stories.tsx` (samples
+  driving the engine directly, the second on its timeline); react-ui-canvas-compute `node-def.test.tsx`
+  (`NodeViewProps.store`); plugin-lighthouse's unrelated `type Intent`. `layout-writer.test.ts` no longer uses
+  `reduceIntent`. Cost if wrong: none; the decision is the user's.
 
 ## Global Constraints
 
@@ -924,6 +959,8 @@ utilities.
       returns nothing outside migration code; every package's tsc/lint/tests pass (`MOON_CONCURRENCY=4 moon run
 :test -- --no-file-parallelism` in the background).
 - [ ] Commit `react-ui-canvas: retire the View model, Intent and ViewStore`.
+- [x] Legacy drawings read only through the migration (R-61, R-62, R-63, R-64); tldraw to `Element2D`s (R-60).
+- [ ] The View model, `Intent`, `ViewStore` and timeline: blocked on C.1/C.2 (R-65).
 
 ---
 

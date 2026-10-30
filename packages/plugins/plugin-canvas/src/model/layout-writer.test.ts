@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj } from '@dxos/echo';
-import { type View, type ViewMap, createNode, reduceIntent } from '@dxos/react-ui-canvas/headless';
+import { type View, type ViewMap, createNode } from '@dxos/react-ui-canvas/headless';
 import { toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { Scene, fromEcho, toEcho } from '@dxos/scene';
 
@@ -37,8 +37,10 @@ const sceneViews = (scene: Scene.Scene2D): { root: string; views: ViewMap } => {
   };
 };
 
-const moveNode = (view: View, id: string, center: { x: number; y: number }): View =>
-  reduceIntent(view, { kind: 'update', id, values: { center } });
+const moveNode = (view: View, id: string, center: { x: number; y: number }): View => ({
+  ...view,
+  nodes: { ...view.nodes, [id]: { ...view.nodes[id], center } },
+});
 
 describe('makeLayoutWriter', () => {
   test('an unchanged element is not rewritten when another moves', () => {

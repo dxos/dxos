@@ -327,7 +327,7 @@ decision D-13: `CanvasOperation.Apply` runs the shared editor's 2D mode rule (`c
 ```
 
 ```mdl
-decision D-14: A legacy scene canvas (a `Drawing.Canvas` in the `dxos.org/scene/2` format) is read only through the scene migration: its article migrates it onto a `Canvas` on open (`migrateSceneDrawing`), while its section, slide, card and animator stage draw `legacyDocument` read-only through the 2D scene view, and a canvas a newer plugin saved stays read-only under its banner. `CanvasOperation.Apply`, `AddGenerator` and `InspectGenerator` migrate a legacy drawing before acting, and `CanvasOperation.Patch` refuses a legacy canvas. Fills in [D-9].
+decision D-14: A legacy scene canvas (a `Drawing.Canvas` in the `dxos.org/scene/2` format) is read only through the scene migration: its article migrates it onto a `Canvas` on open (`migrateSceneDrawing`), while its section, slide, card and animator stage draw `legacyDocument` read-only through the 2D scene view, and a canvas a newer plugin saved stays read-only under its banner. `CanvasOperation.Apply` and `AddGenerator` migrate a legacy drawing before writing, `InspectGenerator` reads it as the migration does without writing, and `CanvasOperation.Patch` refuses a legacy canvas. Fills in [D-9].
   date: 2026-10-30
   by: agent:claude-code
   for: user:richburdon
