@@ -86,6 +86,13 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
 
 ## Expectations (user, 2026-10-30)
 
+0. The shared base editor has the same structure as today's `Canvas`: `SceneEditor.Root` provides one shared context
+   split by aspect, with a hook per aspect (as `Canvas` has `useCanvasDocument`, `useCanvasTools`, `useCanvasLook`,
+   `useCanvasNavigation`, `useCanvasEditing`); panels and inspectors are composite parts reading those hooks; each
+   dimension's `DimensionConfig` supplies its implementations behind the same hooks.
+   0a. The work runs phases 0 → A → B → C (order kept) until both editors run on the shared core, delivering storybooks
+   for every panel and inspector with 2D and 3D variants, and storybooks for the 2D and 3D editors.
+
 These are the acceptance criteria; any place the work would break one is raised with the user before it is built.
 
 1. The canvas data-structure changes are mechanical and map cleanly from the current records to the new types — a
