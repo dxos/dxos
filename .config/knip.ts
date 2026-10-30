@@ -60,6 +60,8 @@ const AUXILIARY_ENTRY = [
   // Solid and Lit storybooks use their own suffix so the react storybook does not pick them up.
   'src/**/*.{stories,solid-stories,lit-stories}.{ts,tsx}',
   'src/**/*.eval.{ts,tsx}',
+  // Run by path with `vitest bench`, imported by nothing.
+  'src/**/*.bench.{ts,tsx}',
   // `.js` too: a testing helper can be a plain script a package runs by path (`node
   // ./src/testing/build.js`), which nothing imports.
   'src/testing/**/*.{ts,tsx,js,mjs,cjs}',
