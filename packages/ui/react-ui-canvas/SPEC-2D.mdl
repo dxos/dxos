@@ -817,7 +817,9 @@ feat F-13: Diagrams on the canvas
     formats (SVG, tldraw, excalidraw).
   req F-13.2: A diagram drawn onto the canvas keeps the canvas's own link routing: a link element stores only its
     endpoints, so the diagram engine's routed bends are dropped; SVG, tldraw and excalidraw output keep them.
-  req F-13.3: Diagram objects are flattened into canvas elements, not placed as composites (see Open questions).
+  req F-13.3: Diagram objects are flattened into canvas elements until the diagram handler is rewritten on the scene
+    model; then (planned) each becomes a relative composite placed by an element, and a link end can name an element
+    inside a composite, so an arrow between two objects still attaches to the shape inside it.
 ```
 
 ```mdl
@@ -842,15 +844,13 @@ feat F-15: Modes
   req F-15.3: (planned) The viewport draws diagram `arc`, free `curve` and open `polyline` elements.
 ```
 
-## Open questions
+## Planned
 
-- **Diagram objects as relative composites.** Diagram objects are to become composites placed by elements once the
-  canvas renders instance scale, which it now does. It is not done: an arrow between two objects would then attach
-  to the composite's frame side rather than to the shape inside it.
-- **The engine's `class`/`style` rename.** The engine's own node fields are to take the scene model's names (`class`
-  to `style`, `style` to `overrides`), after which node fields can leave `props.canvas`. It is not done: the stored
-  View field names would need an ECHO migration, and the engine's `InstanceNode.overrides` and `fit` collide with the
-  element base's fields of those names.
+- **Diagram objects as relative composites** ([F-13.3]): done with the diagram handler's rewrite onto the scene
+  model, together with link ends that name an element inside a composite.
+- **The engine's `class`/`style` names** go with the View model they are stored in: they are retired when the engine
+  reads elements directly, and are never migrated. Until then node fields with no element slot stay under
+  `props.canvas`.
 
 ## Rules
 
@@ -1149,6 +1149,20 @@ decision D-15: The 2D rail is the engine's palette groups, a node tool dragging 
   for: user:richburdon
   affects: [F-11.1, F-11.4]
   why: The palette's grouping and drag-to-place were how 2D created shapes before the shared rail, and the canvas themes are 2D's looks.
+```
+
+```mdl
+decision D-16: Diagram objects become relative composites placed by elements, and a link end can name an element inside a composite, so an arrow between two objects attaches to the shape inside it rather than to the composite's frame; this is done with the diagram handler's rewrite onto the scene model.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-13.3]
+```
+
+```mdl
+decision D-17: The engine's `class`/`style` field names are not migrated: they are retired together with the View model that stores them, when the engine reads elements directly.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-14]
 ```
 
 ---

@@ -990,3 +990,10 @@ decision D-98: The types state the shared element base, the per-dimension styles
   rejected:
     - Restating the element base in the editor's spec, which would give the data two descriptions that drift apart.
 ```
+
+```mdl
+decision D-99: Approve the theme-independent `black` and `white` hues of [D-92].
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [Style2D]
+```

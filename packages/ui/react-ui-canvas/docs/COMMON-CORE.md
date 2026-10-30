@@ -81,7 +81,7 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     `pattern?: boolean` and `weight?: 's' | 'm' | 'l' | 'xl'` (scales stroke and text). Diagram styles map onto it (see
     the plan's DSL mapping); diagram `color`/`fill`/`stroke`/`weight` fields disappear from elements, so
     diagram-styled elements can take catalog styles. Supersedes decision 15's style approach.
-20. (2026-10-30, agent call for the user, pending override) Two theme-independent hues, `black` and `white`, are added
+20. (2026-10-30, agent call, approved by the user) Two theme-independent hues, `black` and `white`, are added
     to the hue list so diagram `black`/`white` map exactly and the corpus metric gate stays stable.
 
 ## Expectations (user, 2026-10-30)

@@ -36,6 +36,12 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   store only their endpoints, so the diagram engine's routed bends are dropped (app-framework: 19 → 0), as the legacy
   canvas did; SVG, tldraw and excalidraw output keep them. Rejected: an optional `route` on link elements drawn while
   both ends stay put, as `DiagramConnector` does. Cost if wrong: that field and its invalidation rule later.
+- **R-5 (2026-10-30, user): diagram objects become relative composites in E.2, not C.4.** A link end can name an
+  element inside a composite, so a cross-object arrow keeps attaching to the shape, not the composite's frame. C.4
+  delivered the instance scale only (9e5c3e81f44); the composite switch moves to E.2's diagram handler rewrite.
+- **R-6 (2026-10-30, user): the engine's `class`/`style` rename (C.5) folds into E.1.** The names are retired with
+  the View model that stores them; no ECHO migration.
+- **R-7 (2026-10-30, user): decision 20's `black`/`white` hues are approved.**
 
 ## Global Constraints
 
