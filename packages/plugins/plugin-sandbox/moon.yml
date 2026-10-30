@@ -9,23 +9,6 @@ tags:
   - storybook
 
 tasks:
-  check-module-structure:
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --export ./SandboxPlugin
-      --to "{react,react-dom}"
-      --conditions workerd,worker
-      --conditions node
-      --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
   # The local sandbox helper the desktop app bundles, compiled for the host platform. Not part of
   # `build`: only composer-app's Tauri build consumes it.
   compile-sidecar:

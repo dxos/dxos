@@ -172,7 +172,7 @@ Phase 1, before the PR. The skeleton should include:
 
 1. `README.md` — brief description of the plugin's purpose, linking to `docs/DESIGN.md`.
 2. `package.json` — with `"private": true`, the `#meta` import alias and `./FooPlugin` export subpath (both point at `dx.config.ts`; see **package.json**), and minimal dependencies.
-3. `moon.yml` — tags and a `check-module-structure` task when the plugin has a node/workerd variant.
+3. `moon.yml` — tags (`check-module-structure` itself is inherited).
 4. `src/namespace.ts` — `export const FooNamespace = Plugin.namespace('org.dxos.plugin.foo')`, a leaf both `dx.config.ts` and the capability tags derive from.
 5. `src/translations.ts` — initial translation resources.
 6. `dx.config.ts` — `Plugin.config({ plugin, modules })` with key, name, author, description, icon, a **quality tier tag** (see below), surface and translations modules, and `export const { meta, make } = config; export default config;` (see **Plugin Definition**).
@@ -651,13 +651,14 @@ A package that reads its own files at runtime needs a bundler-friendly entry too
 
 ### Guarding it
 
-`check-module-structure` traces the export and fails if React is reachable. Every plugin with a node
-variant has this task, and CI runs `moon run :check-module-structure`. Diagnose a failure by printing
-the chain:
+Every composer plugin inherits `check-module-structure` (`.moon/tasks/tag-composer-plugin.yml`), and CI
+runs `moon run :check-module-structure`. It traces every export that declares `workerd` against the `workerd`
+lists of `.config/import-bans.yml`, and every export that declares `node` against the `node` lists (React and
+`@dxos/react-ui`). Diagnose a failure by printing the chain:
 
 ```bash
-pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
-  --conditions workerd,worker,node --max-chains 2
+pnpm exec dx-trace-imports --conditional-exports --bans ../../../.config/import-bans.yml \
+  --conditions workerd,worker --max-chains 5
 ```
 
 See: `plugin-sheet/src/operations/node.ts`,
@@ -673,6 +674,11 @@ See: `plugin-sheet/src/operations/node.ts`,
 - A module that only works inside the Tauri shell is `['tauri']` (`LocalLauncher`).
 - A plugin loaded under a runtime needs that condition on its `./FooPlugin` export. A UI-only plugin has no
   `node` condition, so its plugin tests run in browser mode (`plugin-mermaid`).
+
+The `workerd` ban list covers CodeMirror, React and the design system, Lit, defuddle's DOM build and the local
+client stack and CLI. Fix a violation at its source: a module EDGE has no use for (editor extensions, CLI commands,
+local-client layer specs) lists `['browser', 'node', 'tauri']`; a UI-free subpath of a banned package (`/types`,
+`/translations`) goes in that file's `allow` list, and the tracer still walks into it.
 
 Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`, or `tauri dev`
 via `TAURI_ENV_PLATFORM`).
@@ -717,8 +723,8 @@ See: `plugin-chess/package.json`
 
 Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args
 (vite-built plugins: a matching `entry` in `vite.config.ts`, including `capabilities/node`).
-A plugin with a node variant also carries a `check-module-structure` task — see
-**Non-Browser Variants**.
+The inherited `check-module-structure` traces the workerd and node variants — see **Non-Browser Variants**. A subpath that declares no condition but is
+imported by a headless host is named with a local `args: [--export, <subpath>]` (`plugin-tasks/moon.yml`).
 
 See: `plugin-chess/moon.yml`
 

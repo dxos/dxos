@@ -55,7 +55,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     Capability.lazyModule(
       'setup-devtools',
-      { provides: [] },
+      { environments: ['browser', 'tauri'], provides: [] },
       () => import('./src/capabilities/setup-devtools.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),

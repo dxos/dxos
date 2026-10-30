@@ -88,6 +88,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
+      { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
+    ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
     }),

@@ -60,7 +60,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'MarkdownExtension',
-      { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
+      {
+        environments: ['browser', 'tauri'],
+        provides: [MarkdownCapabilities.ExtensionProvider],
+        activatesOn: MarkdownEvents.Start,
+      },
       () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
     // Migration providers stay eager: a migration missing when a space opens is a data hazard.

@@ -28,6 +28,15 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
+    "#defuddle": {
+      "source": {
+        "workerd": "./src/operations/extraction/defuddle.workerd.ts",
+        "default": "./src/operations/extraction/defuddle.ts"
+      },
+      "types": "./dist/types/src/operations/extraction/defuddle.d.ts",
+      "workerd": "./dist/lib/defuddle/workerd.mjs",
+      "default": "./dist/lib/defuddle.mjs"
+    },
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
