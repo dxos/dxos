@@ -233,7 +233,7 @@ describe('migrateSceneDrawing', () => {
     expect(elements.b.props?.dsl).toBeUndefined();
   });
 
-  test('named style classes and settings move onto the Canvas', async () => {
+  test('named style classes become the model styles and settings move onto the Canvas', async () => {
     const tree = createSquareTree();
     const warning: StyleClass = { id: 'warning', name: 'Warning', style: { hue: 'red' } };
     const drawing = legacyDrawing(tree.views, tree.root, { theme: 'paper', lattice: true });
@@ -249,7 +249,10 @@ describe('migrateSceneDrawing', () => {
     expect(await migrate(drawing)).toBe(true);
     const canvas = migratedCanvas(drawing);
     expect(canvas.settings).toEqual({ theme: 'paper', lattice: true, grid: 24 });
-    expect(canvas.styles).toEqual({ warning });
+    const model = canvas.model?.target;
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.styles).toEqual({
+      warning: { name: warning.name, ...warning.style },
+    });
   });
 
   test('an old client sees the migrated canvas as a type it cannot open', async () => {

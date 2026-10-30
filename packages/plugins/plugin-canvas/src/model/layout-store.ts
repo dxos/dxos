@@ -21,13 +21,12 @@ import {
   readPath,
   storeVersions,
 } from '@dxos/react-ui-canvas/headless';
-import { toCanvasView } from '@dxos/react-ui-scene/canvas';
+import { namedStyles, styleClasses, toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type Scene, type ViewId, fromEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
-import { readStyles } from './content.ts';
-import { isLayout2D, isModel2D, makeLayoutWriter, plain, same } from './layout-writer.ts';
+import { canvasModel2D, isLayout2D, isModel2D, makeLayoutWriter, plain, same } from './layout-writer.ts';
 
 export type BoundLayoutStore = {
   store: ViewStore;
@@ -100,6 +99,9 @@ export const bindLayoutStore = (
           dim: '2d',
           ...(past.name === undefined ? {} : { name: past.name }),
           ...(isModel2D(model) ? { model: model.key } : {}),
+          ...(past.layers === undefined ? {} : { layers: plain({ ...past.layers }) }),
+          ...(past.kind === undefined ? {} : { kind: past.kind }),
+          ...(past.anonymous === undefined ? {} : { anonymous: past.anonymous }),
           elements: plain({ ...past.elements }),
           ...(past.props === undefined ? {} : { props: plain({ ...past.props }) }),
         };
@@ -108,6 +110,7 @@ export const bindLayoutStore = (
       models: [...models.values()].map((model) => ({
         id: model.key,
         dim: '2d',
+        ...(at(model).styles === undefined ? {} : { styles: plain({ ...at(model).styles }) }),
         objects: Object.fromEntries(
           Object.entries(at(model).objects).map(([id, object]) => {
             const { parts, ...rest } = object;
@@ -122,7 +125,9 @@ export const bindLayoutStore = (
     );
   };
 
-  const memory = createMemoryStore(Object.values(read()), readStyles(canvas?.styles), { root });
+  // The style classes are the canvas model's named styles.
+  const styleModel = canvas && canvasModel2D(canvas);
+  const memory = createMemoryStore(Object.values(read()), styleClasses(styleModel?.styles), { root });
   const current = storeVersions(registry, memory);
   const headsOf = (object: Obj.Any): readonly string[] => [...(Obj.version(object).automergeHeads ?? [])];
   // Without a database the layouts have no history, so the atom's snapshots stand in, as for the memory store.
@@ -193,20 +198,20 @@ export const bindLayoutStore = (
 
   const camera = Atom.keepAlive(Atom.make<Scene.Camera2D>(plain(scene.camera)));
 
-  // The canvas's style classes, both ways; classes read from the canvas are not written back to it.
+  // The model's styles as the store's classes, both ways; classes read from the model are not written back to it.
   let readingStyles = false;
-  const unsubscribeStyles = canvas
+  const unsubscribeStyles = styleModel
     ? registry.subscribe(memory.styles, (next) => {
-        if (!readingStyles && !same(canvas.styles ?? {}, next)) {
-          Obj.update(canvas, (canvas) => {
-            canvas.styles = plain(next);
+        if (!readingStyles && !same(styleClasses(styleModel.styles), next)) {
+          Obj.update(styleModel, (styleModel) => {
+            styleModel.styles = namedStyles(next);
           });
         }
       })
     : undefined;
-  const unsubscribeCanvas = canvas
-    ? Obj.subscribe(canvas, () => {
-        const next = readStyles(canvas.styles);
+  const unsubscribeCanvas = styleModel
+    ? Obj.subscribe(styleModel, () => {
+        const next = styleClasses(styleModel.styles);
         if (!same(next, registry.get(memory.styles))) {
           readingStyles = true;
           try {

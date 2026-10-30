@@ -17,8 +17,8 @@ import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { CAMERA_TARGET, type View } from '@dxos/react-ui-canvas/headless';
-import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
-import { Scene, bounds2D, toEcho } from '@dxos/scene';
+import { fromCanvasView, namedStyles } from '@dxos/react-ui-scene/canvas';
+import { Scene, type StyleMap, bounds2D, toEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
 import { Canvas } from '#types';
@@ -85,7 +85,7 @@ const sceneOf = (layout: Scene.LayoutRecord2D): Scene.SceneRecord2D => {
  * A scene canvas's content as a scene document, read as the canvas store reads it (legacy root renamed, layers
  * placed, orphans pruned) without writing the canvas: the root View's scene first.
  */
-export const legacyDocument = (content: Drawing.Canvas['content']): Scene.SceneDocument => {
+export const legacyDocument = (content: Drawing.Canvas['content'], classes: StyleMap = {}): Scene.SceneDocument => {
   const copy = clone(content);
   migrateContent(copy);
   migrateLayers(copy);
@@ -109,12 +109,15 @@ export const legacyDocument = (content: Drawing.Canvas['content']): Scene.SceneD
       objects[id] = { id, type: 'rect', parts: layout.id };
     }
   }
-  const hasModel = Object.keys(objects).length > 0;
+  // The style classes become the model's named styles, so a canvas with classes has a model even with no objects.
+  const styles = namedStyles(classes);
+  const hasStyles = Object.keys(styles).length > 0;
+  const hasModel = Object.keys(objects).length > 0 || hasStyles;
   const withModel = layouts.map((layout) => (hasModel ? { ...layout, model: MODEL_ID } : layout));
   return {
     scenes: withModel.map(sceneOf),
     layouts: withModel,
-    models: hasModel ? [{ id: MODEL_ID, dim: '2d', objects }] : [],
+    models: hasModel ? [{ id: MODEL_ID, dim: '2d', objects, ...(hasStyles ? { styles } : {}) }] : [],
   };
 };
 
@@ -170,7 +173,7 @@ export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing
   if (!Drawing.isCanvas(legacy) || Canvas.sceneRevision(legacy.schema) !== Canvas.SCENE_REVISION) {
     return false;
   }
-  const stored = toEcho(legacyDocument(legacy.content));
+  const stored = toEcho(legacyDocument(legacy.content, readStyles(legacy.styles)));
   for (const object of [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()]) {
     yield* Database.add(object);
   }
@@ -179,12 +182,10 @@ export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing
     root: _root,
     ...settings
   } = clone(canvasRecordOf(legacy.content) ?? { kind: 'canvas', root: '' });
-  const styles = readStyles(legacy.styles);
   const model = stored.models.get(MODEL_ID);
   const canvas = yield* Database.add(
     Obj.make(Canvas.Canvas, {
       settings,
-      ...(Object.keys(styles).length > 0 ? { styles } : {}),
       ...(model ? { model: Ref.make(model) } : {}),
       layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout)),
       scenes: [...stored.scenes.values()].map((scene) => Ref.make(scene)),

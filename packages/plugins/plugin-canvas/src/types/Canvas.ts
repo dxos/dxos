@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { BackgroundGrid } from '@dxos/react-ui-canvas/headless';
-import { StyleClass } from '@dxos/scene';
 
 /** The scene revision this plugin reads and writes; a canvas at a later one was written by a newer plugin. */
 export const SCENE_REVISION = 2;
@@ -73,14 +72,13 @@ export const projectionOf = (settings: CanvasSettings): CanvasProjection =>
   settings.projection ?? (settings.lattice ? 'lattice' : 'freehand');
 
 /**
- * This plugin's canvas: the drawing's settings and named style classes, and its content as `@dxos/scene` objects — a
+ * This plugin's canvas: the drawing's settings, and its content as `@dxos/scene` objects — a
  * model of reusable objects, the layouts that place them, and the scenes that view a layout through a camera. The
  * first scene is the one a drawing opens at. A `Drawing.canvas` names it; it is never listed on its own.
  */
 export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canvas.canvas', '0.1.0'))(
   Schema.Struct({
     settings: CanvasSettings,
-    styles: Schema.optional(Schema.Record(Schema.String, StyleClass)),
     /** A `Model2D` or `Model3D`. */
     model: Schema.optional(Ref.Ref(Obj.Unknown)),
     /** `Layout2D` or `Layout3D` objects. */

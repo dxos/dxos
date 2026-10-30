@@ -19,6 +19,7 @@ import {
   type VerticalAlign,
   isEllipseNode,
   isViewNode,
+  resolveStyle as resolveSceneStyle,
   showsContents,
 } from '@dxos/scene';
 
@@ -132,34 +133,37 @@ export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TON
   return base;
 };
 
-/** `base` with every field `own` sets over it; an `undefined` field of `own` is unset, so it leaves the base's. */
-const overlay = <T extends object>(base: T | undefined, own: T | undefined): T | undefined => {
-  if (!base || !own) {
-    return own ?? base;
-  }
-  const merged = { ...base };
-  for (const [key, value] of Object.entries(own)) {
-    if (value !== undefined) {
-      Reflect.set(merged, key, value);
-    }
-  }
-  return merged;
-};
-
 /** A node as drawn: its class's style under its own (`StyleClass`). */
 export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
   const style = node.class ? styles?.[node.class]?.style : undefined;
-  return style ? { ...node, style: overlay(style, node.style) } : node;
+  return style && node.class
+    ? {
+        ...node,
+        style: resolveSceneStyle(
+          { style: node.class, overrides: node.style },
+          {},
+          { styles: { [node.class]: style } },
+          [],
+          {},
+        ),
+      }
+    : node;
 };
 
 /** A link as drawn: its class's colour, line style and caption size under its own. */
 export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
   const style = link.class ? styles?.[link.class]?.style : undefined;
   // A link draws only what `LineStyle` shares with its class's style; an edit of a classed link writes there.
-  return style
+  return style && link.class
     ? {
         ...link,
-        style: overlay({ hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize }, link.style),
+        style: resolveSceneStyle(
+          { style: link.class, overrides: link.style },
+          {},
+          { styles: { [link.class]: { hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize } } },
+          [],
+          {},
+        ),
       }
     : link;
 };

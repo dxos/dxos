@@ -21,7 +21,7 @@ import {
 } from '@dxos/react-ui-canvas/testing';
 import { MAJOR_GRID, type Node, type Scene, readDocument, toEcho } from '@dxos/scene';
 
-import { fromCanvasView, toCanvasView, toCanvasViews } from './adapter.ts';
+import { fromCanvasView, namedStyles, styleClasses, toCanvasView, toCanvasViews } from './adapter.ts';
 
 const views = (text: string) => toCanvasViews(Dsl.readScenes(text).document);
 
@@ -188,6 +188,19 @@ describe('fromCanvasView', () => {
     for (const view of sampleViews()) {
       expect(roundTrip(view)).toEqual(withLegacyView(view));
     }
+  });
+
+  test('style classes are the model styles, and a classed node reads back its own style, not the resolved look', () => {
+    const classes = { warning: { id: 'warning', name: 'Warning', style: { hue: 'red' as const, fill: true } } };
+    expect(styleClasses(namedStyles(classes))).toEqual(classes);
+    const { layout } = fromCanvasView(EVERY_TYPE);
+    const doc: Scene.SceneDocument = {
+      scenes: [],
+      layouts: [{ ...layout, model: 'm' }],
+      models: [{ id: 'm', dim: '2d', objects: {}, styles: namedStyles(classes) }],
+    };
+    const styled = toCanvasView(doc, { ...layout, model: 'm' }).nodes.styled;
+    expect(styled).toEqual(EVERY_TYPE.nodes.styled);
   });
 
   test('keeps a node field Element2D has no slot for under props.canvas', () => {

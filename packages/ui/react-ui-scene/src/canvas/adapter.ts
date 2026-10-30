@@ -16,6 +16,7 @@ import {
   type Endpoint,
   type Link,
   type LinkType,
+  type NamedStyle2D,
   type Node,
   type NodeStyle,
   type Resolved2D,
@@ -23,6 +24,7 @@ import {
   type Style2D,
   STYLE_HUES,
   type StyleHue,
+  type StyleMap,
   type ViewId,
   resolveLayout2D,
   rootScene,
@@ -48,6 +50,19 @@ const nodeStyle = (style: Style2D | undefined): NodeStyle | undefined => {
   const result: NodeStyle = { ...rest, ...(lineStyle !== undefined && lineStyle !== 'sketchy' ? { lineStyle } : {}) };
   return Object.keys(result).length > 0 ? result : undefined;
 };
+
+/** A model's named styles as the canvas's style classes. */
+export const styleClasses = (styles: Readonly<Record<string, NamedStyle2D>> | undefined): StyleMap =>
+  Object.fromEntries(
+    Object.entries(styles ?? {}).map(([id, { name, ...look }]) => {
+      const style = nodeStyle(look);
+      return [id, { id, name: name ?? id, ...(style ? { style } : {}) }];
+    }),
+  );
+
+/** The canvas's style classes as a model's named styles. */
+export const namedStyles = (classes: StyleMap): Record<string, NamedStyle2D> =>
+  Object.fromEntries(Object.values(classes).map(({ id, name, style }) => [id, { name, ...style }]));
 
 /** A composite element (its object has parts) is a `view` node over its parts layout's View. */
 const toNode = (element: Resolved2D, z: string): Node | undefined => {
@@ -305,6 +320,8 @@ export const toCanvasView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecor
     : toView(doc, layout);
 
 const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View => {
+  // A canvas node resolves its class itself, so it reads back its own overrides rather than the resolved look.
+  const own = (element: Resolved2D): Resolved2D => ({ ...element, overrides: layout.elements[element.id]?.overrides });
   const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
   // Elements a `.dx` document wrote have no canvas fields: they draw as `toView` draws them, among the rest.
   const native = elements.filter((element) => !isRecord(element.props?.canvas));
@@ -317,7 +334,7 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Vie
     if (!isRecord(stored) || element.type === 'link') {
       continue;
     }
-    const node = canvasNode(element, stored);
+    const node = canvasNode(own(element), stored);
     node && (nodes[node.id] = node);
   }
   for (const element of native) {
@@ -329,7 +346,7 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Vie
     if (element.type !== 'link') {
       continue;
     }
-    const link = isRecord(stored) ? canvasLink(element, stored) : toLink(element, keyOf(element), nodes);
+    const link = isRecord(stored) ? canvasLink(own(element), stored) : toLink(element, keyOf(element), nodes);
     link && (links[link.id] = link);
   }
   return {

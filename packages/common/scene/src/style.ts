@@ -45,6 +45,14 @@ export const Style3D = Schema.Struct({
 });
 export type Style3D = Schema.Schema.Type<typeof Style3D>;
 
+/** A model's named 2D style: the look, and the name a style picker shows. */
+export const NamedStyle2D = Schema.Struct({ name: Schema.optional(Schema.String), ...Style2D.fields });
+export type NamedStyle2D = Schema.Schema.Type<typeof NamedStyle2D>;
+
+/** A model's named 3D style. */
+export const NamedStyle3D = Schema.Struct({ name: Schema.optional(Schema.String), ...Style3D.fields });
+export type NamedStyle3D = Schema.Schema.Type<typeof NamedStyle3D>;
+
 /** A named style of either dimension, with a display name. */
 export type NamedStyle<S> = S & { readonly name?: string };
 
@@ -93,7 +101,16 @@ export const resolveStyle = <S extends object>(
     }
   }
   levels.push(element.overrides);
-  return Object.assign({}, ...levels.filter((level) => level !== undefined));
+  // A level sets only the fields it defines; a style's name is not part of the look.
+  const look: Partial<S> = {};
+  for (const level of levels) {
+    for (const [key, value] of Object.entries(level ?? {})) {
+      if (value !== undefined && key !== 'name') {
+        Reflect.set(look, key, value);
+      }
+    }
+  }
+  return look;
 };
 
 /** A 2D style as a 3D one: its fill becomes the surface (a light tone a tint); 2D-only fields are dropped. */

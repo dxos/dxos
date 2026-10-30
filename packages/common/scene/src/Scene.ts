@@ -8,7 +8,7 @@ import { AnimatableAnnotation, Vec3 } from '@dxos/animation';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
 import { ElementEndpoint, Layer } from './element.ts';
-import { Style2D, Style3D, StyleCatalog } from './style.ts';
+import { NamedStyle2D, NamedStyle3D, Style2D, Style3D, StyleCatalog } from './style.ts';
 
 export { Vec3 };
 
@@ -281,14 +281,14 @@ export type Scene<C, L = string> = {
 export const ModelRecord2D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('2d'),
-  ...makeModelSchema(Object2D, Style2D, Schema.String).fields,
+  ...makeModelSchema(Object2D, NamedStyle2D, Schema.String).fields,
 });
 export type ModelRecord2D = Schema.Schema.Type<typeof ModelRecord2D>;
 
 export const ModelRecord3D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('3d'),
-  ...makeModelSchema(Object3D, Style3D, Schema.String).fields,
+  ...makeModelSchema(Object3D, NamedStyle3D, Schema.String).fields,
 });
 export type ModelRecord3D = Schema.Schema.Type<typeof ModelRecord3D>;
 
@@ -340,7 +340,10 @@ export type SceneDocument = {
 
 /** A 2D model: its objects are records inside this one object (design D-6). */
 export class Model2D extends Type.makeObject<Model2D>(DXN.make('org.dxos.type.scene.model2d', '0.1.0'))(
-  Schema.Struct({ key: Schema.String, ...makeModelSchema(StoredObject2D, Style2D, Ref.Ref(StyleCatalog)).fields }).pipe(
+  Schema.Struct({
+    key: Schema.String,
+    ...makeModelSchema(StoredObject2D, NamedStyle2D, Ref.Ref(StyleCatalog)).fields,
+  }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'sky' }),
     Annotation.UserType.set(),
@@ -349,7 +352,10 @@ export class Model2D extends Type.makeObject<Model2D>(DXN.make('org.dxos.type.sc
 
 /** A 3D model, stored as Model2D is. */
 export class Model3D extends Type.makeObject<Model3D>(DXN.make('org.dxos.type.scene.model3d', '0.1.0'))(
-  Schema.Struct({ key: Schema.String, ...makeModelSchema(StoredObject3D, Style3D, Ref.Ref(StyleCatalog)).fields }).pipe(
+  Schema.Struct({
+    key: Schema.String,
+    ...makeModelSchema(StoredObject3D, NamedStyle3D, Ref.Ref(StyleCatalog)).fields,
+  }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'sky' }),
     Annotation.UserType.set(),

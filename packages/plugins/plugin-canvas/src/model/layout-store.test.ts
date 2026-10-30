@@ -394,7 +394,7 @@ describe('scored mode on Layout2D', () => {
 });
 
 describe('bindLayoutStore over a Canvas', () => {
-  test("the store's style classes are the canvas's, both ways", () => {
+  test("the store's style classes are the canvas model's named styles, both ways", () => {
     const { canvas, scene } = makeCanvas();
     if (!Obj.instanceOf(Scene.Scene2D, scene)) {
       throw new Error('A 2D canvas opens a 2D scene.');
@@ -407,9 +407,13 @@ describe('bindLayoutStore over a Canvas', () => {
     }
     const warning = { id: 'warning', name: 'Warning', style: { hue: 'red' as const } };
     registry.set(styles, { warning });
-    expect(canvas.styles).toEqual({ warning });
-    Obj.update(canvas, (canvas) => {
-      canvas.styles = { warning: { ...warning, name: 'Caution' } };
+    const model = canvas.model?.target;
+    if (!Obj.instanceOf(Scene.Model2D, model)) {
+      throw new Error('A canvas has a 2D model.');
+    }
+    expect(model.styles).toEqual({ warning: { name: 'Warning', hue: 'red' } });
+    Obj.update(model, (model) => {
+      model.styles = { warning: { name: 'Caution', hue: 'red' } };
     });
     expect(registry.get(styles).warning?.name).toBe('Caution');
     bound.dispose();

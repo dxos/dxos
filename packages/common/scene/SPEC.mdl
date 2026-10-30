@@ -882,3 +882,11 @@ decision D-94: A layout carries the canvas View's own fields as typed fields: `l
   for: user:richburdon
   why: Typed fields let both dimensions' inspectors read layers without knowing the 2D adapter's layout; keeping unknown fields lets a plugin define a kind without changing this package.
 ```
+
+```mdl
+decision D-95: A canvas's style classes are its 2D model's named styles (`NamedStyle2D`: a `Style2D` with a display name), not a field of the Canvas; the canvas store maps them to and from its classes, and the canvas engine's class resolution is `resolveStyle` over them. A canvas View read from its layout keeps each node's own overrides, since the engine applies the class itself. Migrating a scene/2 drawing writes its classes straight into the model. `resolveStyle` sets only defined fields and leaves a style's name out of the look. Fills in [D-92].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: One home for named styles in both dimensions lets catalogs and the editor core resolve every look the same way.
+```

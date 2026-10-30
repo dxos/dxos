@@ -6,12 +6,14 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useObjectValue } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
+import { namedStyles, styleClasses } from '@dxos/react-ui-scene/canvas';
 import { DEFAULT_GRID, type StyleClass } from '@dxos/scene';
 
 import {
+  canvasModel2D,
   canvasRecordOf,
   deleteStyleClass,
   readCanvasContent,
@@ -114,31 +116,37 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
       }),
     [subject],
   );
-  const classes = useMemo(() => Object.values(readStyles(canvas.styles)), [canvas]);
+  // The style classes are the canvas model's named styles.
+  const styleModel = canvasModel2D(subject);
+  const model = useObjectValue(styleModel);
+  const classes = useMemo(() => Object.values(styleClasses(model?.styles)), [model]);
   const uses = useMemo(() => styleClassUses(readCanvasContent(subject)), [canvas, subject]);
   const handleRename = useCallback(
-    (id: string, name: string) =>
-      Obj.update(subject, (subject) => {
-        const styles = readStyles(subject.styles);
-        const styleClass = styles[id];
-        if (styleClass && styleClass.name !== name) {
-          subject.styles = { ...styles, [id]: { ...styleClass, name } };
-        }
-      }),
-    [subject],
+    (id: string, name: string) => {
+      const styles = styleClasses(styleModel?.styles);
+      const styleClass = styles[id];
+      if (styleModel && styleClass && styleClass.name !== name) {
+        Obj.update(styleModel, (styleModel) => {
+          styleModel.styles = namedStyles({ ...styles, [id]: { ...styleClass, name } });
+        });
+      }
+    },
+    [styleModel],
   );
   const handleDelete = useCallback(
     (id: string) => {
       const before = readCanvasContent(subject);
       const content = structuredClone(before);
-      const styles: Record<string, unknown> = { ...readStyles(subject.styles) };
+      const styles: Record<string, unknown> = { ...styleClasses(styleModel?.styles) };
       deleteStyleClass(content, styles, id);
       writeCanvasContent(subject, content, before);
-      Obj.update(subject, (subject) => {
-        subject.styles = readStyles(styles);
-      });
+      if (styleModel) {
+        Obj.update(styleModel, (styleModel) => {
+          styleModel.styles = namedStyles(readStyles(styles));
+        });
+      }
     },
-    [subject],
+    [subject, styleModel],
   );
   return (
     <PropertiesView

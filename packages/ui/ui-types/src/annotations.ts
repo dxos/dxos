@@ -20,3 +20,9 @@ export const NumberLayoutAnnotationId = '@dxos/schema/annotation/NumberLayout';
 
 /** A vector's axes, in 2D and 3D alike: small, figures aligned in columns, steppers out of the way until hovered. */
 export const VECTOR_AXIS_LAYOUT: NumberLayout = { align: 'end', stepperOnHover: true, size: 'sm' };
+
+/**
+ * Marks a struct of numeric axes (`x`/`y`/`z`, `width`/`height`) as a vector, so a form stacks one labelled number input
+ * per axis rather than nesting a group. Here so a model schema can declare it without depending on React.
+ */
+export const VectorAnnotationId = '@dxos/schema/annotation/Vector';
