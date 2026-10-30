@@ -20,13 +20,12 @@ import {
   ObjectsInspector,
   PropertiesEmpty,
   ReadonlyToggle,
-  type SceneCommands,
   SceneContextMenu,
   type ToolGroup,
   ToolRail,
   ViewsInspector,
   between,
-  commandMenuItems,
+  buildCommands,
   propertiesShown,
 } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
@@ -183,7 +182,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
     }),
     [canvas],
   );
-  const [, setHistoryVersion] = useState(0);
+  const [historyVersion, setHistoryVersion] = useState(0);
 
   const handleIntent = useCallback(
     (layout: string, intent: LayoutIntent) => {
@@ -442,37 +441,48 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   }, [editingLayout, modelId, document, runModelIntent, selection]);
 
   // The one source of the scene's commands: the actions bar, the shortcuts, the app's edit commands and the menu.
-  const commands = useMemo<SceneCommands>(() => {
-    const editable = () => !readonly;
-    const some = () => editable() && selection.length > 0;
-    return {
-      'undo': { run: () => step('undo'), enabled: () => editable() && history.current.done.length > 0 },
-      'redo': { run: () => step('redo'), enabled: () => editable() && history.current.undone.length > 0 },
-      'cut': { run: cut, enabled: some },
-      'copy': { run: () => void copy(), enabled: () => selection.length > 0 },
-      'paste': { run: paste, enabled: editable },
-      'duplicate': { run: duplicate, enabled: some },
-      'delete': { run: deleteSelection, enabled: some },
-      'group': { run: group, enabled: () => editable() && selection.length > 1 },
-      'ungroup': { run: ungroup, enabled: () => editable() && resolved?.type === 'group' },
-      'make-object': { run: makeObject, enabled: () => some() && modelId !== undefined },
-    };
-  }, [
-    readonly,
-    selection,
-    step,
-    history,
-    cut,
-    copy,
-    paste,
-    duplicate,
-    deleteSelection,
-    group,
-    ungroup,
-    resolved,
-    makeObject,
-    modelId,
-  ]);
+  const commands = useMemo(
+    () =>
+      buildCommands({
+        state: {
+          readonly,
+          selection,
+          canUndo: history.current.done.length > 0,
+          canRedo: history.current.undone.length > 0,
+          canUngroup: resolved?.type === 'group',
+          canMakeObject: modelId !== undefined,
+        },
+        run: {
+          'undo': () => step('undo'),
+          'redo': () => step('redo'),
+          'cut': cut,
+          'copy': () => void copy(),
+          'paste': paste,
+          'duplicate': duplicate,
+          'delete': deleteSelection,
+          'group': group,
+          'ungroup': ungroup,
+          'make-object': makeObject,
+        },
+      }),
+    [
+      readonly,
+      selection,
+      step,
+      history,
+      historyVersion,
+      cut,
+      copy,
+      paste,
+      duplicate,
+      deleteSelection,
+      group,
+      ungroup,
+      resolved,
+      makeObject,
+      modelId,
+    ],
+  );
   const [menuAt, setMenuAt] = useState<{ at: { x: number; y: number }; kind: 'element' | 'canvas' }>();
 
   const menu = useMenuBuilder(() => {
@@ -484,7 +494,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('cut.label'),
           icon: 'ph--scissors--regular',
-          disabled: !commands.cut?.enabled(),
+          disabled: !commands.get('cut')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.cut',
         },
@@ -495,7 +505,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('copy.label'),
           icon: 'ph--copy--regular',
-          disabled: !commands.copy?.enabled(),
+          disabled: !commands.get('copy')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.copy',
         },
@@ -516,7 +526,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('duplicate.label'),
           icon: 'ph--copy-simple--regular',
-          disabled: !commands.duplicate?.enabled(),
+          disabled: !commands.get('duplicate')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.duplicate',
         },
@@ -528,7 +538,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('group.label'),
           icon: 'ph--selection-plus--regular',
-          disabled: !commands.group?.enabled(),
+          disabled: !commands.get('group')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.group',
         },
@@ -539,7 +549,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('ungroup.label'),
           icon: 'ph--selection-slash--regular',
-          disabled: !commands.ungroup?.enabled(),
+          disabled: !commands.get('ungroup')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.ungroup',
         },
@@ -550,7 +560,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('delete.label'),
           icon: 'ph--trash--regular',
-          disabled: !commands.delete?.enabled(),
+          disabled: !commands.get('delete')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.delete',
         },
@@ -608,7 +618,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('undo.label'),
           icon: 'ph--arrow-counter-clockwise--regular',
-          disabled: !commands.undo?.enabled(),
+          disabled: !commands.get('undo')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.undo',
         },
@@ -619,7 +629,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         {
           label: label('redo.label'),
           icon: 'ph--arrow-clockwise--regular',
-          disabled: !commands.redo?.enabled(),
+          disabled: !commands.get('redo')?.enabled,
           disposition: 'toolbar',
           testId: 'canvas3d.redo',
         },
@@ -682,8 +692,8 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       return;
     }
     const editCommand = (id: 'undo' | 'redo' | 'cut' | 'copy' | 'paste') => {
-      const command = commands[id];
-      return { run: () => command?.run(), enabled: () => command?.enabled() ?? false };
+      const command = commands.get(id);
+      return { run: () => command?.run(), enabled: () => command?.enabled ?? false };
     };
     const unregister = AppNode.registerEditCommands(element, {
       undo: editCommand('undo'),
@@ -700,23 +710,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       if (typing || !(event.metaKey || event.ctrlKey) || event.altKey) {
         return;
       }
-      const key = event.key.toLowerCase();
-      const id =
-        key === 'c'
-          ? 'copy'
-          : key === 'x'
-            ? 'cut'
-            : key === 'v'
-              ? 'paste'
-              : key === 'd'
-                ? 'duplicate'
-                : key === 'z'
-                  ? event.shiftKey
-                    ? 'redo'
-                    : 'undo'
-                  : undefined;
-      const entry = id === undefined ? undefined : commands[id];
-      const command = entry?.enabled() ? entry.run : undefined;
+      const command = commands.keyCommand(event)?.run;
       if (command) {
         event.preventDefault();
         command();
@@ -802,8 +796,8 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               )}
               <SceneContextMenu
                 at={menuAt?.at}
-                items={menuAt ? commandMenuItems(menuAt.kind, readonly, commands) : []}
-                onCommand={(id) => commands[id]?.run()}
+                items={menuAt ? commands.menuItems(menuAt.kind) : []}
+                onCommand={(id) => commands.get(id)?.run()}
                 onClose={() => setMenuAt(undefined)}
               />
               {cameraActions && current && authored && (
@@ -888,7 +882,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               readonly={readonly}
               onPlace={(id) => setTool({ place: id })}
               onMakeObject={makeObject}
-              canMakeObject={commands['make-object']?.enabled() ?? false}
+              canMakeObject={commands.get('make-object')?.enabled ?? false}
               onImport={
                 modelId === undefined
                   ? undefined

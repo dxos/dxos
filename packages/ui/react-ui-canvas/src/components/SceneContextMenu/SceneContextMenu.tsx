@@ -8,7 +8,7 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type Point } from '@dxos/scene';
 
-import { type SceneMenuCommand, type SceneMenuItem } from '../../utils/index.ts';
+import { type SceneMenuItem } from '../../editor/index.ts';
 
 export type SceneContextMenuProps = {
   /** Where it opened, relative to the view; closed when undefined. */
@@ -17,7 +17,7 @@ export type SceneContextMenuProps = {
   items: readonly SceneMenuItem[];
   /** Items only one view offers (a control point's, an instance's), after the shared ones. */
   extra?: ReactNode;
-  onCommand: (command: SceneMenuCommand) => void;
+  onCommand: (command: string) => void;
   onClose: () => void;
 };
 
