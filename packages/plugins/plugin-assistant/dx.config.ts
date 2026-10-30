@@ -118,7 +118,11 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       ),
       Capability.lazyModule(
         'MarkdownExtension',
-        { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
+        {
+          environments: ['browser', 'tauri'],
+          provides: [MarkdownCapabilities.ExtensionProvider],
+          activatesOn: MarkdownEvents.Start,
+        },
         () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
       ),
       // TODO(wittjosiah): Does not integrate with settings store.

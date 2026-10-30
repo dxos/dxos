@@ -82,7 +82,9 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
       ),
       // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
       // browser command set omits (`account`, `profile`).
-      AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
+      AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri'],
+      }),
       Capability.lazyModule(
         'HubHttpClient',
         {
@@ -119,6 +121,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         () => import('./src/capabilities/index-progress.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'module-url' } }), {
+        environments: ['browser', 'node', 'tauri'],
         name: 'LayerSpecs',
       }),
       Capability.lazyModule(
