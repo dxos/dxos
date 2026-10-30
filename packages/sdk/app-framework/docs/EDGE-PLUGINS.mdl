@@ -53,41 +53,106 @@ differently.
 The browser ignores `vendor/`; EDGE never loads a module whose `environments` exclude `workerd`, so
 browser-only modules and their stylesheets are in the bundle but are never read.
 
-## Bundle layout
+## Bundle format
 
-What the vite build of `plugin-markdown` emits, and what `dx registry publish` uploads as is:
+A plugin bundle is a directory of files that a host loads as is. `composerPlugin` writes it,
+`dx registry publish` uploads it, the browser and EDGE load it, and `check-bundle`
+(`@dxos/plugin-host-cloudflare`) checks it. This is what the vite build of `plugin-markdown`
+emits: 130 files at the root (0.7 MiB of code) and a 37 MiB `vendor/` of 282 modules for 155
+specifiers.
 
 ```
 dist/plugin/
-├── manifest.json          Plugin.Manifest: plugin metadata, the asset list, and per module its
-│                          chunk, environments, requires/provides and activatesOn
-├── index.mjs              entry: Plugin.fromManifest(manifest, loaders)
-├── schema-3fa9.mjs        module body, every runtime
-├── operations-91c2.mjs    module body, environments [node, workerd]
-├── surfaces-7b10.mjs      module body, environments [browser, tauri]
-├── chunk-0d44.mjs         code shared between module bodies
-├── assets/
-│   └── markdown-ab12.css  imported by a browser body only
-└── vendor/                EDGE only: what Composer's import map supplies in the browser
-    ├── manifest.json      specifier → file, e.g. "@dxos/echo/Obj" → "@dxos/echo/Obj.mjs"
-    ├── effect/
-    │   ├── index.mjs
-    │   └── Schema.mjs
-    ├── @dxos/
-    │   ├── echo/
-    │   │   ├── index.mjs
-    │   │   └── Obj.mjs
-    │   ├── app-framework/
-    │   │   └── Plugin.mjs
-    │   └── plugin-host-cloudflare/
-    │       └── index.mjs  the host, at the plugin's dxos version
-    └── chunk-5e21.mjs     code shared between vendored packages (never a shared package)
+├── manifest.json                      Plugin.Manifest (see below)
+├── index.mjs                          entry: Plugin.fromManifest({ plugin, modules }, loaders)
+├── operation-handler-varxbE3e.mjs     module body, environments [browser, node, tauri, workerd]
+├── schema-D3Oofm5R.mjs                module body, adapter @dxos/app-toolkit/SchemaAdapter
+├── react-surface-L_9dYgXp.mjs         module body, environments [browser, tauri]
+├── chunk-MarkdownOperation-Dw8KGlKE.mjs  code shared between bodies
+├── *.mjs.map                          source maps; never loaded, never in the manifest
+└── vendor/                            EDGE only
+    ├── manifest.json                  the import map: specifier → file, and the build conditions
+    ├── effect.mjs, effect/Schema.mjs, …
+    ├── @dxos/echo.mjs, @dxos/echo/Obj.mjs, …
+    ├── @dxos/plugin-host-cloudflare.mjs   PluginHost, when the build is given its entry
+    ├── chunk-22FD6CXA.mjs, …          code shared between vendored packages
+    └── asset-automerge_wasm_bg-X4OLCNJ7.wasm
 ```
 
-The plugin's own files sit at the bundle root and import each other relatively, so the browser
-loads them unchanged. A vendored package imports another shared package bare, never a copy of it,
-so the loader can resolve each specifier once for the whole isolate, across the bundle and the
-bundles of its `dependsOn` plugins, as the browser's import map does for the whole page.
+### Files
+
+1. **Flat root.** The plugin's own files sit at the bundle root as `<name>-<hash>.mjs`, ESM, and
+   import each other relatively (`./chunk-…mjs`). Nothing of the plugin lives in a subdirectory.
+2. **Entry.** `index.mjs` exports the plugin built by `Plugin.fromManifest`: the plugin metadata,
+   every module's spec, and one loader per module (`() => import('./<body>.mjs')`).
+3. **Module bodies.** Each `Plugin.config` module is its own chunk, named after its source file.
+   Code two bodies share goes to a `chunk-*` file. A body's `environments` say which hosts run it;
+   all bodies are in the one bundle.
+4. **CommonJS shim.** Every chunk starts with a banner that imports `react`, `react-dom` and
+   `react/jsx-runtime` and defines a module-local `require` for bundled CommonJS code.
+5. **Stylesheets and assets** sit beside the chunks that import them; only browser-only bodies may
+   reach them.
+
+### `manifest.json`
+
+The plugin's `Config2.Plugin` metadata flat at the top level (`key`, `name`, `description`,
+`author`, `source`, `icon`, `tags`, `screenshots`, `dependsOn`), plus:
+
+| Field          | Content                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `version`      | The package version.                                                                    |
+| `dependencies` | Resolved versions of the packages the plugin depends on.                                |
+| `assets`       | Every file of the bundle except source maps and `vendor/`, for the browser's offline cache. |
+| `modules`      | One `ManifestModule` per module, in `Plugin.config` order.                              |
+
+A `ManifestModule` is `{ id, url, requires, provides, activatesOn?, environments?, adapter? }`:
+`url` is the body's file (`./<name>-<hash>.mjs`); `requires` and `provides` are capability tags
+`{ identifier, arity }`; `activatesOn` is the activation event as data; an absent `environments`
+means every host; `adapter.url` is a bare specifier of a shared package
+(`@dxos/app-toolkit/SurfaceAdapter`) that turns the body's export into a module.
+
+### `vendor/manifest.json`
+
+```json
+{
+  "specifiers": { "effect": "effect.mjs", "@dxos/echo/Obj": "@dxos/echo/Obj.mjs" },
+  "conditions": ["workerd", "worker", "browser", "import", "module", "default"]
+}
+```
+
+`specifiers` maps a bare specifier to its file, relative to `vendor/`. `conditions` are the package
+export conditions `vendor/` was built with.
+
+### Rules
+
+1. **Shared packages stay bare.** A plugin file imports every package in Composer's shared set
+   (`DEFAULT_PACKAGES`) by its bare specifier and never bundles a copy.
+2. **`vendor/` holds what EDGE loads.** It holds each shared package that the entry or a body
+   running on `workerd` reaches, and every shared package those import; browser- and node-only
+   bodies need not resolve on EDGE.
+3. **Vendored packages import each other bare,** never a copy, so `vendor/manifest.json` is an
+   import map. A `require` keeps its package inside the vendored file.
+4. **Self-contained.** Every bare import a `workerd` host can reach is in `vendor/manifest.json`, and
+   every relative import and manifest URL names a file of the bundle. `vendor/` imports nothing
+   outside itself but `node:*` and `cloudflare:*`.
+5. **Environments hold statically.** A module that runs on `workerd` never imports a browser-only
+   body or a stylesheet statically.
+6. **Built once.** No per-runtime build: no `dx-env` entry and no `workerd`, `node`, `tauri` or
+   `browser` condition on a plugin's `dx.config.ts` export or on an import that picks a `workerd`
+   variant (pkg-lint `plugin-runtime-condition`). A runtime-specific body is its own module with
+   its `environments`.
+
+### Loading
+
+- **Browser.** Composer's import map supplies every bare specifier at the version Composer was
+  built with; `vendor/` is never read.
+- **EDGE.** PluginLoader puts the bundle and the bundles of its `dependsOn` closure (under
+  `deps/<n>/`) in one Worker Loader module map, joins their `vendor/manifest.json` maps into one
+  import map (the primary's entry wins), rewrites every bare import in every file to a relative path
+  by it, drops vendored files nothing reaches, and adds a main module that starts `PluginHost` from
+  `vendor/`. Worker Loader resolves a bare specifier against the importing file's directory, never a
+  package registry, which is why the rewrite is needed. The rewrite changes only specifiers; no
+  code is recompiled.
 
 ## Architecture
 
@@ -139,7 +204,7 @@ type PluginBundle
   desc: |
     One published version of one plugin: the output of its vite build, uploaded as is through
     `/upload` and stored in R2 under `modules/<slug>/<version>/`. Immutable once uploaded. The same
-    bundle is loaded by the browser and by EDGE; see the Bundle layout section.
+    bundle is loaded by the browser and by EDGE; see the Bundle format section.
   fields:
     pluginKey: NSID              # Config2.Plugin.key, e.g. org.dxos.plugin.markdown
     version: SemVer
@@ -894,3 +959,19 @@ decision D-31: The CLI vendors `PluginHost` into a published bundle by naming it
   why: `dx registry publish` runs whatever build the plugin's `dx.config.ts` names, so the environment is the one channel into it, and the host is private to the monorepo, so a plugin cannot depend on it.
   rejected:
     - Add the host to `vendor/` after the build — a second vendor build would carry its own copies of the packages the plugin's `vendor/` already has.
+
+```mdl
+decision D-32: The spec states the plugin bundle format: its files, `manifest.json`, `vendor/manifest.json`, the rules a bundle meets and how each host loads it.
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [PluginBundle, VendorMap, PluginBuilder, PluginLoader]
+```
+
+```mdl
+decision D-33: `vendor/` holds only what a `workerd` host can reach: the entry, the bodies of modules that run on `workerd`, and what they import. The bundle check reports an unresolved import only in those files. Fills in [D-30].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [VendorMap, PluginBuilder, F-1.4, F-12.1]
+  why: A plugin that bundles another plugin's definition (plugin-assistant through plugin-registry's operations) carries that plugin's node-only bodies, whose imports (Vite, the CLI) cannot build for workerd and never run there.
+```
