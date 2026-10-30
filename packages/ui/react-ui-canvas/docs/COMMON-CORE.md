@@ -26,6 +26,9 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
 9. (2026-10-30) Work stays in one PR: get the basics working, then focus on tests and storybooks to review each
    aspect.
 
+10. (2026-10-30) react-ui-canvas-compute (and plugin-conductor through it) moves onto the shared model and editor in
+    this work too: one data structure everywhere, no frozen copy of the old model.
+
 ## Why
 
 Stage 3 shared leaf components but not the editor. 2D still edits react-ui-canvas records and an adapter translates
