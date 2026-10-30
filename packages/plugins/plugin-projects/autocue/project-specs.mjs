@@ -5,7 +5,8 @@
 /**
  * A project owns several specs: a feature map and a spec of prose sit side by side, the Overview sums up each, and the
  * Specs tab shows one at a time, picked from a dropdown in its toolbar that also adds a spec. The toolbar follows the
- * tab, a spec offers the views its extensions give, and the feature map's canvas adds a feature in an empty cell.
+ * tab, a spec offers the views its packages give, another plugin's package adds slash commands that write its blocks,
+ * and the feature map's canvas adds a feature in the empty cell under the pointer.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-8
  * @app storybook-react, narrowed to plugin-projects, on :9009
@@ -29,13 +30,15 @@ const LOOK = 3_000;
 
 const MAP_SPEC = 'Inbox and agents';
 const TALK_SPEC = 'Launch talk';
-const NEW_SPEC = 'Release notes';
+const NEW_SPEC = 'Launch video';
+const SCENE_TITLE = 'Open on a shared space';
 
 const PICKER = '[data-testid="projectsPlugin.specPicker"]';
 const DOCUMENT = '[data-testid="feature-map.document"]';
 const ADD_ARTIFACT = '[data-testid="projectsPlugin.addArtifact"]';
 const CANVAS_TOGGLE = '[data-testid="projectsPlugin.featureMap.canvas"]';
-const EXTENSIONS = '[data-testid="projectsPlugin.specDialects"]';
+const EXTENSIONS = '[data-testid="projectsPlugin.specExtensions"]';
+const EDITOR = `${DOCUMENT} .cm-content`;
 
 const expectCount = async (page, selector, count, what) => {
   const seen = await page.locator(selector).count();
@@ -44,19 +47,23 @@ const expectCount = async (page, selector, count, what) => {
   }
 };
 
-/** The first canvas `+` the pointer can reach: the outer ring's can sit under the toolbar or past the viewport. */
-const reachableAdd = async (page) => {
-  const index = await page.evaluate(() =>
-    [...document.querySelectorAll('[data-testid="feature-canvas.add"]')].findIndex((button) => {
-      const { x, y, width, height } = button.getBoundingClientRect();
-      return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
-    }),
-  );
-  if (index === -1) {
-    throw new Error('no reachable add button');
-  }
-  return `[data-testid="feature-canvas.add"] >> nth=${index}`;
+/** Points at the empty cell left of the leftmost card, where the canvas then shows its `+`. */
+const showAdd = async (page) => {
+  const boxes = await page
+    .locator('[data-testid="feature-canvas-node"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON()));
+  const { x, y, width, height } = boxes.reduce((left, box) => (box.x < left.x ? box : left));
+  await page.mouse.move(x + width / 2 - width * 1.25, y + height / 2, { steps: 12 });
+  await page.getByTestId('feature-canvas.add').waitFor({ state: 'visible', timeout: 5_000 });
 };
+
+const openExtensions = async (demo, page) => {
+  await demo.click({ selector: EXTENSIONS, label: 'Extensions' });
+  await page.getByRole('menu').waitFor({ state: 'visible', timeout: 5_000 });
+};
+
+const checkPackage = (demo, label) =>
+  demo.click({ selector: `[role="menu"] >> [role="menuitemcheckbox"]:has-text("${label}")`, label });
 
 const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, hold: READ });
 
@@ -133,19 +140,16 @@ export const steps = [
     },
   },
   {
-    name: 'Give it the features extension',
+    name: 'Give it the software package',
     run: async ({ demo, page }) => {
-      await caption(demo, 5, 'Extensions lists what a spec can use');
-      await demo.click({ selector: EXTENSIONS, label: 'Extensions' });
-      await page.getByRole('menu').waitFor({ state: 'visible', timeout: 5_000 });
+      await caption(demo, 5, 'Extensions lists the packages of dialects plugins contribute');
+      await openExtensions(demo, page);
+      await expectCount(page, '[role="menu"] >> [role="menuitemcheckbox"]', 2, 'packages');
       await demo.sleep({ ms: 1_500 });
-      await demo.click({
-        selector: '[role="menu"] >> [role="menuitemcheckbox"]:has-text("Features")',
-        label: 'Features',
-      });
+      await checkPackage(demo, 'Software');
       await page.locator(CANVAS_TOGGLE).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.press({ key: 'Escape' });
-      await caption(demo, 5, 'With Features checked, the canvas and board views appear');
+      await caption(demo, 5, 'With Software checked, the canvas and board views appear');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -170,9 +174,42 @@ export const steps = [
     },
   },
   {
+    name: 'Give it the video package',
+    done: async ({ page }) => (await page.locator(`${EDITOR}:has-text("scene SC-1:")`).count()) > 0,
+    run: async ({ demo, page }) => {
+      await caption(demo, 7, "Video is another plugin's package: it adds no views");
+      await openExtensions(demo, page);
+      await checkPackage(demo, 'Video');
+      await demo.press({ key: 'Escape' });
+      await page.getByRole('menu').waitFor({ state: 'hidden', timeout: 5_000 });
+      await expectCount(page, CANVAS_TOGGLE, 0, 'view toggles');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Write a scene',
+    done: async ({ page }) => (await page.locator(`${EDITOR}:has-text("scene SC-1:")`).count()) > 0,
+    run: async ({ demo, page }) => {
+      await caption(demo, 8, 'Its slash commands write each block of a video script');
+      await demo.click({ selector: EDITOR, label: 'Document' });
+      await page.keyboard.press('ControlOrMeta+End');
+      await page.keyboard.press('Enter');
+      await demo.keys({ key: '/scene' });
+      await page.keyboard.type('/scene', { delay: 120 });
+      await page.locator('.cm-tooltip-autocomplete').waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.sleep({ ms: 1_500 });
+      await demo.press({ key: 'Enter' });
+      await page.locator(`${EDITOR}:has-text("scene SC-1:")`).waitFor({ timeout: 5_000 });
+      await demo.keys({ key: SCENE_TITLE });
+      await page.keyboard.type(SCENE_TITLE, { delay: 60 });
+      await caption(demo, 8, '/scene wrote a numbered scene, its fields ready to fill');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
     name: 'Go back to the feature map',
     run: async ({ demo, page }) => {
-      await caption(demo, 7, `Back on "${MAP_SPEC}", the canvas draws its features`);
+      await caption(demo, 9, `Back on "${MAP_SPEC}", the canvas draws its features`);
       await pickSpec(demo, page, MAP_SPEC);
       await demo.click({ selector: CANVAS_TOGGLE, label: 'Canvas' });
       await page.getByTestId('feature-card').nth(7).waitFor({ state: 'visible', timeout: 10_000 });
@@ -184,8 +221,9 @@ export const steps = [
     name: 'Add a feature on the canvas',
     done: async ({ page }) => (await page.getByTestId('feature-card').count()) > 8,
     run: async ({ demo, page }) => {
-      await caption(demo, 8, 'Each empty cell offers a + that adds a feature there');
-      await demo.click({ selector: await reachableAdd(page), label: 'Add a feature here' });
+      await caption(demo, 10, 'Pointing at an empty cell shows a + that adds a feature there');
+      await showAdd(page);
+      await demo.click({ selector: '[data-testid="feature-canvas.add"]', label: 'Add a feature here' });
       await demo.click({ selector: '[data-testid="feature-map.new-feature"]', label: 'New feature' });
       await page.getByTestId('feature-card').nth(8).waitFor({ state: 'visible', timeout: 10_000 });
       await demo.clearCaption();

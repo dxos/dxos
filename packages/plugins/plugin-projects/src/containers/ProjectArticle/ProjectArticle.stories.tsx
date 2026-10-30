@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -30,7 +31,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { FeatureSeed } from '@dxos/plugin-projects/testing';
+import { FeatureSeed, VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -67,7 +68,7 @@ const OUTLINE_ITEM = 'Draft the launch checklist';
 const OTHER_PROJECT_NAME = 'Project 2';
 const SPEC_NAME = 'Inbox and agents';
 const TALK_SPEC_NAME = 'Launch talk';
-const NEW_SPEC_NAME = 'Release notes';
+const NEW_SPEC_NAME = 'Launch video';
 const TALK_SPEC_CONTENT = [
   '---',
   `name: ${TALK_SPEC_NAME}`,
@@ -303,20 +304,24 @@ const MockDeckOperationsPlugin = Plugin.define(
   }),
 ).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
 
-/** A canvas cell's `+` the pointer can reach: the outer ring's can sit under the toolbar or past the viewport. */
-const findReachableAdd = (container: HTMLElement) =>
-  waitFor(() => {
-    const button = within(container)
-      .getAllByTestId('feature-canvas.add')
-      .find((button) => {
-        const { x, y, width, height } = button.getBoundingClientRect();
-        return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
-      });
-    if (!button) {
-      throw new Error('no reachable add button');
-    }
-    return button;
-  });
+/** Points at the empty cell left of the leftmost card, so its `+` shows, and returns that button. */
+const showAdd = async (container: HTMLElement) => {
+  const view = within(container).getByTestId('scene-view');
+  const card = within(container)
+    .getAllByTestId('feature-canvas-node')
+    .map((node) => node.getBoundingClientRect())
+    .reduce((left, rect) => (rect.left < left.left ? rect : left));
+  // A cell's pitch is its card's width and a quarter more for the gutter.
+  view.dispatchEvent(
+    new PointerEvent('pointermove', {
+      bubbles: true,
+      clientX: card.left + card.width / 2 - card.width * 1.25,
+      clientY: card.top + card.height / 2,
+    }),
+  );
+  return within(container).findByTestId('feature-canvas.add', undefined, { timeout: 5_000 });
+};
+
 const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
@@ -370,6 +375,8 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         MockDeckOperationsPlugin(),
+        // A second plugin's extension package, beside plugin-projects' Software one.
+        VideoPackagePlugin.make(),
       ],
       // Both start events at setup, so the markdown extensions and the link resolver are live before
       // the first render.
@@ -433,7 +440,7 @@ export const WithSpec: Story = {
     await expect(canvas.queryByTestId('projectsPlugin.overflow')).toBeNull();
     await userEvent.click(canvas.getByTestId('projectsPlugin.featureMap.canvas'));
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await userEvent.click(await findReachableAdd(canvasElement));
+    await userEvent.click(await showAdd(canvasElement));
     const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
     const items = within(menu)
       .getAllByRole('menuitem')
@@ -475,7 +482,7 @@ export const AddExistingFeature: Story = {
       await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
     );
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await userEvent.click(await findReachableAdd(canvasElement));
+    await userEvent.click(await showAdd(canvasElement));
     await userEvent.click(await screen.findByTestId('feature-map.add-feature'));
     const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
     // The map's own features are not offered; a subfeature from beneath one is.
@@ -534,29 +541,95 @@ export const SpecPicker: Story = {
   },
 };
 
-/** Checking the features dialect in the Extensions menu gives a spec of prose the map's views. */
-export const SpecDialects: Story = {
+/** Opens the spec picker and shows the spec named `name`. */
+const pickSpec = async (canvas: ReturnType<typeof within>, name: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+  await userEvent.click(within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(name));
+  await waitFor(() => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${name}`), {
+    timeout: 10_000,
+  });
+};
+
+/** Adds a spec named `name` from the picker, which then shows it. */
+const addSpec = async (canvas: ReturnType<typeof within>, name: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+  await userEvent.click(within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText('Add spec'));
+  const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+  await userEvent.click(await within(dialog).findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
+  await userEvent.paste(name);
+  await userEvent.click(screen.getByTestId('save-button'));
+  await waitFor(() => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${name}`), {
+    timeout: 10_000,
+  });
+};
+
+/** Opens the Extensions menu and returns the item of the package labelled `label`. */
+const findPackage = async (canvas: ReturnType<typeof within>, label: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specExtensions', undefined, { timeout: 10_000 }));
+  const item = within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(label);
+  return item.closest<HTMLElement>('[role="menuitemcheckbox"]') ?? item;
+};
+
+/** Checking the Software package in the Extensions menu gives a spec of prose the map's views. */
+export const SpecPackages: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
     await showTab(canvas, 'spec');
-    await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
-    await userEvent.click(
-      within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(TALK_SPEC_NAME),
-    );
-    await waitFor(() => expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull(), {
-      timeout: 10_000,
-    });
+    await pickSpec(canvas, SPEC_NAME);
+    await expect((await findPackage(canvas, 'Software')).getAttribute('aria-checked')).toBe('true');
+    await userEvent.keyboard('{Escape}');
 
-    await userEvent.click(await canvas.findByTestId('projectsPlugin.specDialects', undefined, { timeout: 10_000 }));
-    const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
-    const features = within(menu).getByText('Features');
-    await expect(features.closest('[role="menuitemcheckbox"]')?.getAttribute('aria-checked')).toBe('false');
-    await userEvent.click(features);
+    await pickSpec(canvas, TALK_SPEC_NAME);
+    await expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull();
+    const software = await findPackage(canvas, 'Software');
+    await expect(software.getAttribute('aria-checked')).toBe('false');
+    await userEvent.click(software);
     await expect(
       canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
+  },
+};
+
+/** Another plugin's package adds no views, only its slash commands, which write its blocks' structure in place. */
+export const VideoPackage: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await addSpec(canvas, NEW_SPEC_NAME);
+    await userEvent.click(await findPackage(canvas, 'Video'));
+    // A multi-select stays open; closed, it hands focus back to its trigger, so the editor is focused after.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull(), { timeout: 5_000 });
+    await expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull();
+
+    const content = await waitFor(
+      () => {
+        const element = canvas.getByTestId('feature-map.document').querySelector<HTMLElement>('.cm-content');
+        if (!element) {
+          throw new Error('no editor content');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
+    const view = EditorView.findFromDOM(content);
+    if (!view) {
+      throw new Error('no editor');
+    }
+    view.focus();
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+    await userEvent.keyboard('{Enter}/scen');
+    await waitFor(() => expect(document.querySelector('.cm-tooltip-autocomplete')).not.toBeNull(), {
+      timeout: 5_000,
+    });
+    // Completion ignores an Enter that lands within its interaction delay of opening.
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(view.state.doc.toString()).toContain('scene SC-1: '), { timeout: 5_000 });
   },
 };
 

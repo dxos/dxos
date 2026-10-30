@@ -256,7 +256,7 @@ describe('feature migrations', () => {
     await db.runMigrations([makeSpecContent()]);
 
     const [spec] = await db.query(Filter.type(Spec.Spec)).run();
-    expect(spec).toMatchObject({ id: legacy.id, name: 'Inbox', dialects: [FeatureMap.DIALECT] });
+    expect(spec).toMatchObject({ id: legacy.id, name: 'Inbox', dialects: [...FeatureMap.SOFTWARE_DIALECTS] });
     expect((await spec.content.load()).id).toBe(text.id);
     expect(Obj.getParent(text)?.id).toBe(spec.id);
     expect(Obj.getMeta(spec).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);

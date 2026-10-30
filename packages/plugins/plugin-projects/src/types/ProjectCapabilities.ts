@@ -75,6 +75,8 @@ export const SpecCodec = Capability.make<SpecCodec>()(`${ProjectsNamespace.key}.
 
 export type SpecExtensionOptions = {
   attendableId?: string;
+  /** The spec's dialects as the editor renders them; read these, not the spec's, so the editor rebuilds on a change. */
+  dialects: readonly string[];
   /** Translates the contributor's own keys, named by its namespace. */
   t: (key: string, options: { ns: string }) => string;
 };
@@ -88,13 +90,15 @@ export type SpecExtensions = (spec: Spec.Spec, options: SpecExtensionOptions) =>
 export const SpecExtensions = Capability.make<SpecExtensions>()(`${ProjectsNamespace.key}.capability.specExtensions`);
 
 /**
- * A dialect a spec can use: a set of block kinds beyond the core and changelog ones, offered by the plugin that reads
- * them. A spec lists the dialects it uses in `dialects`, and a dialect's views and editing show only for those specs.
+ * A package of extensions a plugin offers specs: dialects a spec takes or drops together, each a set of block kinds
+ * beyond the core and changelog ones. A spec lists the dialects it uses in `dialects`, and a dialect's views and
+ * editing show only for those specs.
  */
-export type SpecDialect = {
-  /** The id a spec's `dialects` lists, as a `.mdl` file's front matter lists it in `extends`. */
+export type SpecPackage = {
   id: string;
   label: Translations.Label;
+  /** The ids a spec's `dialects` lists, as a `.mdl` file's front matter lists them in `extends`. */
+  dialects: readonly string[];
 };
 
-export const SpecDialect = Capability.make<SpecDialect>()(`${ProjectsNamespace.key}.capability.specDialect`);
+export const SpecPackage = Capability.make<SpecPackage>()(`${ProjectsNamespace.key}.capability.specPackage`);

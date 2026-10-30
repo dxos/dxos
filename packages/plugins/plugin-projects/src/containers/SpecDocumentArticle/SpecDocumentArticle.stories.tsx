@@ -104,7 +104,9 @@ const meta = {
               const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
                 FeatureSeed.seed(defaultSpace.db);
-                defaultSpace.db.add(Spec.make({ name: PROSE_NAME, content: PROSE }));
+                defaultSpace.db.add(
+                  Spec.make({ name: PROSE_NAME, content: PROSE, dialects: FeatureMap.SOFTWARE_DIALECTS }),
+                );
                 await defaultSpace.db.flush({ indexes: true });
               });
             }),

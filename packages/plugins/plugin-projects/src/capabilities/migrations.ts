@@ -108,7 +108,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   if (parent) {
     let spec = await findNested(db, state, parent);
     if (!spec) {
-      spec = db.add(Spec.make({ name: parent.name, dialects: [FeatureMap.DIALECT] }));
+      spec = db.add(Spec.make({ name: parent.name, dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
       Obj.setParent(spec, parent);
       state.byParent.set(parent.id, spec);
     }
@@ -129,7 +129,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
       if (Spec.instanceOf(existing)) {
         spec = existing;
       } else {
-        const made = db.add(Spec.make({ name: project.name ?? '', dialects: [FeatureMap.DIALECT] }));
+        const made = db.add(Spec.make({ name: project.name ?? '', dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
         Obj.update(project, (project) => {
           project.specs.push(Ref.make(made));
         });
@@ -147,7 +147,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   const [existing] = await db
     .query(Filter.and(Filter.type(Spec.Spec, { name: UNPLACED_NAME }), Filter.hasParent(false)))
     .run();
-  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME, dialects: [FeatureMap.DIALECT] }));
+  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME, dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
   state.unplaced = unplaced;
   return unplaced;
 };
@@ -323,7 +323,7 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
       return {
         name,
         description,
-        dialects: [FeatureMap.DIALECT],
+        dialects: [...FeatureMap.SOFTWARE_DIALECTS],
         content: Ref.fromURI(content.uri),
         [Obj.Meta]: { keys },
       };

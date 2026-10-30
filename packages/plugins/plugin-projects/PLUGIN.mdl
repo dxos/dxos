@@ -119,14 +119,20 @@ feat F-4: A project's specs
              Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Assign to agent and
              the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
              assistant companion's.
-  req F-4.8: A spec offers the views its dialects give: its text always, and the canvas and the board when it uses the
-             features dialect (`org.dxos.spec.features`), whose feature embeds and `/feature` its text then also has.
-             The view toggle shows only when a spec has more than one view. The Extensions menu lists the dialects
-             plugins contribute (`ProjectCapabilities.SpecDialect`) and checks the ones the spec uses. Adding a
-             feature to a spec turns the features dialect on.
-  req F-4.9: The canvas offers a `+` in each empty cell next to its cards, or in the centre of an empty map, which adds
-             a new feature or an existing one in that cell, fixing the other cards where they are drawn. It has no up
-             or home button: a feature map does not nest scenes, and a double-click opens a feature's own level.
+  req F-4.8: A spec offers the views its extension packages give: its text always, and the canvas and the board when it
+             uses the software package. A package is a set of dialects a plugin contributes
+             (`ProjectCapabilities.SpecPackage`); the software package's are the features (`org.dxos.spec.features`),
+             app, plugin, QA and SQL dialects. The view toggle shows only when a spec has more than one view. The
+             Extensions menu lists the packages and checks each one whose dialects the spec all uses; checking one
+             adds its dialects and unchecking removes them. Adding a feature to a spec gives it the software package.
+  req F-4.9: The canvas shows a `+` in the empty cell under the pointer, anywhere on the grid, which adds a new feature
+             or an existing one in that cell, fixing the other cards where they are drawn. It has no up or home
+             button: a feature map does not nest scenes, and a double-click opens a feature's own level.
+  req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
+              block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
+              of its kind already in the text; text before the slash becomes the block's title. The software package
+              offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`, `/test` and `/table`,
+              which write text only.
 ```
 
 ## QA
@@ -368,7 +374,7 @@ test QA-6: Walk a spec's feature map
       do: Double-click the "Provider sync" card.
       expect: the canvas shows its two subfeatures, and the trail reads All features › Provider sync
     - name: Add a subfeature
-      do: Click the `+` in an empty cell, then New feature.
+      do: Point at an empty cell, click the `+` that shows there, then New feature.
       expect: a third card appears on the nested spec and the companion shows "New feature"
     - name: Zoom back out
       do: Click "All features" in the trail.
@@ -425,15 +431,18 @@ test QA-7: Grow a spec from prose
 test QA-8: Switch between a project's specs
   desc: |
     A project holds a feature map and a spec of prose side by side, and its Specs tab shows one at a time, picked from
-    a dropdown in the toolbar, which also adds a spec. Walked by the autocue flow `project-specs` against the ProjectArticle story "Default",
-    whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
+    a dropdown in the toolbar, which also adds a spec. A new "Launch video" spec takes a package from another plugin,
+    which adds slash commands and no views. Walked by the autocue flow `project-specs` against the ProjectArticle
+    story "Default", whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
   actors: human
-  covers: [F-4.1, F-4.4, F-4.5, F-4.7, F-4.8, F-4.9]
+  covers: [F-4.1, F-4.4, F-4.5, F-4.7, F-4.8, F-4.9, F-4.10]
   status: unverified
   given:
     - storybook serves plugin-projects
     - the project "Project 1" owns the spec "Inbox and agents", which holds eight features, and then the spec
       "Launch talk", whose document is three paragraphs of prose
+    - a sample plugin contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`,
+      `/shot`, `/voiceover` and `/caption` write its blocks, and no views
   steps:
     - name: See the project's specs
       do: Open the project "Project 1" on its Overview.
@@ -449,17 +458,24 @@ test QA-8: Switch between a project's specs
     - name: Pick the other spec
       do: Click "Launch talk".
       expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and no view toggle
-    - name: Give it the features extension
-      do: Open Extensions and check Features.
-      expect: the view toggle appears, offering the spec's text, Canvas and Kanban
+    - name: Give it the software package
+      do: Open Extensions and check Software.
+      expect: the menu lists Software and Video, and the view toggle appears, offering the spec's text, Canvas and
+        Kanban
     - name: Add a spec
-      do: Click Add spec in the dropdown, name the spec "Release notes" and click Create.
-      expect: the tab shows "Release notes", whose document is its front matter alone, and the dropdown lists it third
+      do: Click Add spec in the dropdown, name the spec "Launch video" and click Create.
+      expect: the tab shows "Launch video", whose document is its front matter alone, and the dropdown lists it third
+    - name: Give it the video package
+      do: Open Extensions and check Video.
+      expect: Video is checked and no view toggle appears
+    - name: Write a scene
+      do: At the end of the document, on a new line, type `/scene` and press Enter.
+      expect: a fenced `scene SC-1:` block with empty `duration:` and `goal:` fields, the cursor at its title
     - name: Go back to the feature map
       do: Pick "Inbox and agents" from the dropdown, then click Canvas.
       expect: the canvas shows the eight feature cards of "Inbox and agents", and no up or home button
     - name: Add a feature on the canvas
-      do: Click the `+` in an empty cell, then New feature.
+      do: Point at an empty cell, click the `+` that shows there, then New feature.
       expect: a ninth card, "New feature", appears in that cell
 ```
 
@@ -1100,4 +1116,92 @@ decision D-74: QA-8 also checks each tab's tools, that "Launch talk" has no view
   for: user:wittjosiah
   affects: [QA-8]
   why: QA-8 is the walk of a project's specs, so it carries the toolbar and the views those decisions change.
+```
+
+```mdl
+decision D-75: The extension is the Software package: a plugin contributes a package of extensions for the software dialect, and features are one part of that dialect, not the extension itself.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.8]
+```
+
+```mdl
+decision D-76: The canvas's plus is on every cell, not only the cells around the existing cards, and shows only on hover.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-77: A sample video dialect, with a "Launch video" spec, shows that specs are extensible, in place of the release notes spec. The video dialect has no other views for now, but has slash commands for its different parts.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8, F-4.10]
+```
+
+```mdl
+decision D-78: The software dialect offers a slash command not only for a feature but for its other pieces too. Those that create no objects insert the block's template structure inline.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.10]
+```
+
+```mdl
+decision D-79: Plugins contribute packages as `ProjectCapabilities.SpecPackage`, each an id, a label and its dialects, in place of `ProjectCapabilities.SpecDialect`. The software package holds the features, app, plugin, QA and SQL dialects (`FeatureMap.SOFTWARE_DIALECTS`). The Extensions menu checks a package when the spec uses all its dialects; checking adds the missing ones and unchecking removes them all. Fills in [D-75].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-68
+  affects: [F-4.8]
+  why: The spec still records its dialects, which say what its text uses, while a person turns a plugin's whole set on or off.
+  rejected:
+    - A menu entry per dialect, which leaves a person to know which dialects go together.
+    - A field on the spec naming its packages, which could disagree with its dialects.
+```
+
+```mdl
+decision D-80: Adding a feature to a spec, from the canvas, `/feature`, an operation or a file read in, gives it the whole software package. `FeatureMap.make` makes a spec with the package, and the `Spec` 0.2.0 migration gives it to every spec it migrates. Fills in [D-75].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-70
+  affects: [F-4.8]
+  why: Features are one part of the software dialect, so a spec holding them is a software spec, and the menu shows the package checked.
+  rejected:
+    - Adding the features dialect alone, which leaves the package unchecked in the menu.
+```
+
+```mdl
+decision D-81: A package's editor extensions contribute slash commands to the `slashCommand` facet, and one completion lists every contributed command. `blockTemplate` makes a command that writes a fenced `mdl` block with its fields empty, numbered after the blocks with its prefix, and text before the slash becomes its title. The software package adds `/type`, `/op`, `/scenario` (`T-n`), `/test` (`QA-n`) and `/table`. An editor rebuilds its extensions from the dialects it renders. Fills in [D-77] and [D-78].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.10, F-2.6]
+  why: One completion keeps every package's commands in one list, and numbering after the existing blocks keeps ids unique in the text.
+  rejected:
+    - A completion per package, which would show competing lists for one slash.
+```
+
+```mdl
+decision D-82: The plus shows in the empty cell under the pointer, anywhere on the grid, and stays while its menu is open. It opens a menu of New feature and Add existing feature, which place the feature in that cell, first fixing every card where it is drawn, since a new card changes the automatic layout's extent. The canvas shows even when the spec holds no features. Fills in [D-76].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-71
+  affects: [F-4.9]
+  why: The canvas reads the pointer from its scene view, so the cells never take the pointer and still pan and select.
+  rejected:
+    - A faint plus drawn in every cell at once, which fills an unbounded grid with marks.
+```
+
+```mdl
+decision D-83: The sample Video package is a testing plugin, `VideoPackagePlugin`, contributing the video dialect (`org.dxos.spec.video`) with `/scene` (`SC-n`), `/shot` (`SH-n`), `/voiceover` (`VO-n`) and `/caption` (`CA-n`) and no views. QA-8 checks Software on "Launch talk", adds "Launch video", checks Video on it and writes a scene with `/scene`. QA-6 and QA-8 point at an empty cell before clicking its plus. Fills in [D-75] to [D-78].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-74
+  affects: [QA-6, QA-8]
+  why: A package from a plugin other than this one shows that the menu and the slash commands are open to any plugin.
+  rejected:
+    - Contributing the video package from this plugin, which would ship a sample in the product.
 ```

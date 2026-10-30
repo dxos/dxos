@@ -111,20 +111,24 @@ const findKanbanColumn = (canvasElement: HTMLElement, status: string) => {
   return column;
 };
 
-/** A canvas cell's `+` the pointer can reach: the outer ring's can sit under the toolbar or past the viewport. */
-const findReachableAdd = (container: HTMLElement) =>
-  waitFor(() => {
-    const button = within(container)
-      .getAllByTestId('feature-canvas.add')
-      .find((button) => {
-        const { x, y, width, height } = button.getBoundingClientRect();
-        return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
-      });
-    if (!button) {
-      throw new Error('no reachable add button');
-    }
-    return button;
-  });
+/** Points at the empty cell left of the leftmost card, so its `+` shows, and returns that button. */
+const showAdd = async (container: HTMLElement) => {
+  const view = within(container).getByTestId('scene-view');
+  const card = within(container)
+    .getAllByTestId('feature-canvas-node')
+    .map((node) => node.getBoundingClientRect())
+    .reduce((left, rect) => (rect.left < left.left ? rect : left));
+  // A cell's pitch is its card's width and a quarter more for the gutter.
+  view.dispatchEvent(
+    new PointerEvent('pointermove', {
+      bubbles: true,
+      clientX: card.left + card.width / 2 - card.width * 1.25,
+      clientY: card.top + card.height / 2,
+    }),
+  );
+  return within(container).findByTestId('feature-canvas.add', undefined, { timeout: 5_000 });
+};
+
 const meta = {
   title: 'plugins/plugin-projects/containers/SpecFeatures',
   render: DefaultStory,
@@ -222,7 +226,7 @@ export const NewFeature: Story = {
     await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
-    await userEvent.click(await findReachableAdd(canvasElement));
+    await userEvent.click(await showAdd(canvasElement));
     await userEvent.click(await screen.findByTestId('feature-map.new-feature'));
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(9), { timeout: 5_000 });
     const detail = await companion();

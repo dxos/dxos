@@ -100,7 +100,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'SpecExtensions',
       {
-        provides: [ProjectCapabilities.SpecDialect, ProjectCapabilities.SpecExtensions],
+        provides: [ProjectCapabilities.SpecExtensions, ProjectCapabilities.SpecPackage],
         activatesOn: ActivationEvents.Idle,
         environments: ['browser', 'tauri'],
       },

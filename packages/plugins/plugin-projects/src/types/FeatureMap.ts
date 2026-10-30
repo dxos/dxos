@@ -23,6 +23,18 @@ import * as FeatureEmbed from './FeatureEmbed.ts';
 /** The dialect whose `feat` blocks a feature map's features are; a spec uses it to be drawn as a map. */
 export const DIALECT = 'org.dxos.spec.features';
 
+/**
+ * The software package's dialects, which a spec takes together: features, and the dialects a software project's specs
+ * extend for its app, plugins, QA and storage.
+ */
+export const SOFTWARE_DIALECTS: readonly string[] = [
+  DIALECT,
+  'org.dxos.spec.app',
+  'org.dxos.spec.plugin',
+  'org.dxos.spec.qa',
+  'org.dxos.spec.sql',
+];
+
 /** Whether the spec uses the features dialect, which its map views, its feature embeds and `/feature` need. */
 export const usesDialect = (spec: Pick<Spec.Spec, 'dialects'>): boolean => spec.dialects.includes(DIALECT);
 
@@ -57,11 +69,12 @@ export const getFeatures = (spec: Spec.Spec | Entity.Snapshot): readonly Ref.Ref
 export const getLayout = (spec: Spec.Spec | Entity.Snapshot): Layout | undefined =>
   Annotation.get(spec, LayoutAnnotation).pipe(Option.getOrUndefined);
 
-/** Turns the features dialect on for a spec about to hold features. */
+/** Gives a spec about to hold features the software package, whose features dialect they need. */
 const addDialect = (spec: Spec.Spec): void => {
-  if (!usesDialect(spec)) {
+  const missing = SOFTWARE_DIALECTS.filter((id) => !spec.dialects.includes(id));
+  if (missing.length > 0) {
     Obj.update(spec, (spec) => {
-      spec.dialects.push(DIALECT);
+      spec.dialects.push(...missing);
     });
   }
 };
@@ -144,8 +157,8 @@ export type MakeProps = Omit<Spec.MakeProps, 'content'> & {
   features?: readonly Feature.Feature[];
 };
 
-/** A spec in the features dialect holding `features`, its text headed with its name and embedding each of them. */
-export const make = ({ features = [], dialects = [DIALECT], ...props }: MakeProps): Spec.Spec => {
+/** A spec in the software package holding `features`, its text headed with its name and embedding each of them. */
+export const make = ({ features = [], dialects = SOFTWARE_DIALECTS, ...props }: MakeProps): Spec.Spec => {
   const spec = Spec.make({ ...props, dialects, content: makeContent(props.name, features) });
   if (features.length > 0) {
     setFeatures(spec, features);

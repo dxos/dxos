@@ -154,7 +154,7 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
   );
   const lineage = useMemo(() => (feature ? FeatureMap.getLineage(feature).map(({ id }) => id) : []), [feature]);
   const { mode, actions: specActions } = useSpecMapActions({ spec, viewId: subject.id });
-  const dialectActions = useSpecDialectActions(spec);
+  const dialectActions = useSpecPackageActions(spec);
   // A level's tasks are the ones working on its feature or any feature beneath it.
   const scope = useLevelTaskIds(feature, spec);
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
@@ -657,49 +657,53 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
   );
 };
 
-/** A multi-select of the dialects plugins offer, checking the ones the spec uses; a dialect's views show once checked. */
-const useSpecDialectActions = (spec: Spec.Spec | undefined) => {
-  const dialects = Hooks.useCapabilities(ProjectCapabilities.SpecDialect);
+/**
+ * A multi-select of the extension packages plugins offer, checking those whose dialects the spec all uses; checking one
+ * adds its dialects, whose views then show, and unchecking removes them.
+ */
+const useSpecPackageActions = (spec: Spec.Spec | undefined) => {
+  const packages = Hooks.useCapabilities(ProjectCapabilities.SpecPackage);
   const [used] = useObject(spec, 'dialects');
   const toggle = useCallback(
-    (id: string) =>
+    (dialects: readonly string[], checked: boolean) =>
       spec &&
       Obj.update(spec, (spec) => {
-        const index = spec.dialects.indexOf(id);
-        if (index === -1) {
-          spec.dialects.push(id);
-        } else {
-          spec.dialects.splice(index, 1);
+        for (const id of dialects) {
+          const index = spec.dialects.indexOf(id);
+          if (checked && index !== -1) {
+            spec.dialects.splice(index, 1);
+          } else if (!checked && index === -1) {
+            spec.dialects.push(id);
+          }
         }
       }),
     [spec],
   );
   return useCallback<ActionGroupBuilderFn>(
     (group) => {
-      if (!spec || dialects.length === 0) {
+      if (!spec || packages.length === 0) {
         return;
       }
+      const checked = packages.map(({ dialects }) => dialects.every((id) => used?.includes(id)));
       group.group(
-        'dialects',
+        'packages',
         {
           variant: 'dropdownMenu',
           selectCardinality: 'multiple',
-          value: [...(used ?? [])],
+          value: packages.filter((_, index) => checked[index]).map(({ id }) => id),
           icon: 'ph--puzzle-piece--regular',
-          label: ['spec-dialects.label', { ns: ProjectsNamespace.key }],
-          testId: 'projectsPlugin.specDialects',
+          label: ['spec-extensions.label', { ns: ProjectsNamespace.key }],
+          testId: 'projectsPlugin.specExtensions',
         },
         (group) =>
-          dialects.forEach(({ id, label }) =>
-            group.action(
-              id,
-              { label, checked: used?.includes(id) ?? false, testId: `projectsPlugin.specDialect.${id}` },
-              () => toggle(id),
+          packages.forEach(({ id, label, dialects }, index) =>
+            group.action(id, { label, checked: checked[index], testId: `projectsPlugin.specPackage.${id}` }, () =>
+              toggle(dialects, checked[index]),
             ),
           ),
       );
     },
-    [spec, dialects, used, toggle],
+    [spec, packages, used, toggle],
   );
 };
 
