@@ -11,7 +11,6 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
@@ -27,9 +26,11 @@ import { Task } from '@dxos/types';
 
 import { ProjectOperation, Spec } from '#types';
 
+import { artifacts } from '../artifacts.ts';
 import { FEATURE_COMPANION } from '../constants.ts';
 import { ProjectsNamespace } from '../namespace.ts';
 import { refId } from '../operations/feature/util.ts';
+import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from '../paths.ts';
 import { inboxResearch } from '../templates/index.ts';
 
 /**
@@ -202,9 +203,6 @@ export const createMailboxProjectExtension = () =>
 /** Node `type` of a project's virtual Chats branch; the child extension below matches on it. */
 export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 
-/** Path segment of the Chats branch. */
-export const SESSIONS_SEGMENT = 'sessions';
-
 /**
  * One URL binding for everything a project contains, shared with the type section that addresses the
  * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
@@ -376,16 +374,8 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
-export const artifacts = (project: Project.Project): ContainerModel.Container =>
-  ContainerModel.make(project, 'artifacts', {
-    removeLabel: ['remove-from-project.label', { ns: ProjectsNamespace.key }],
-  });
-
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
-
-/** Path segment (and node id) of that branch under its project. */
-export const ARTIFACTS_SEGMENT = 'artifacts';
 
 /** Data carried by the Artifacts branch node; tagged for the reason {@link ChatsBranch} is. */
 export type ArtifactsBranch = { branch: 'artifacts'; project: Project.Project };

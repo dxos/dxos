@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { type Plugin as VitePlugin, type Rollup } from 'vite';
 
 import { Plugin, PluginManifest } from '../../core/index.ts';
-import { findDxConfigFile, loadDxConfigWithVite } from '../load.ts';
+import { findDxConfigFile, loadDxConfig, loadDxConfigWithVite } from '../load.ts';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
 import { type LibraryModule, moduleBodyAttributePlugin, pluginConfigPlugin } from '../plugin-config/index.ts';
@@ -219,13 +219,16 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       ? Promise.resolve(options.meta)
       : Promise.resolve(options?.config ?? findDxConfigFile(projectRoot)).then((configFile) =>
           configFile
-            ? loadDxConfigWithVite(configFile, projectRoot).then((config) =>
-                toBuildMeta(
-                  Plugin.getMetaFromConfig(config),
-                  readPackageVersion(projectRoot),
-                  readResolvedDependencies(projectRoot),
-                ),
-              )
+            ? loadDxConfig(configFile)
+                // A config whose imports use non-erasable TypeScript or stylesheets loads only through Vite.
+                .catch(() => loadDxConfigWithVite(configFile, projectRoot))
+                .then((config) =>
+                  toBuildMeta(
+                    Plugin.getMetaFromConfig(config),
+                    readPackageVersion(projectRoot),
+                    readResolvedDependencies(projectRoot),
+                  ),
+                )
             : undefined,
         );
   let metaPromise: Promise<BuildMeta | undefined> | undefined;

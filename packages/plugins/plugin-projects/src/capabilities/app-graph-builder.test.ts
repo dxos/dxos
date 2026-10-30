@@ -21,9 +21,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Feature, Spec } from '#types';
 
 import { attach } from '../operations/feature/util.ts';
+import { ARTIFACTS_SEGMENT } from '../paths.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
-  ARTIFACTS_SEGMENT,
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
