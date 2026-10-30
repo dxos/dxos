@@ -374,3 +374,10 @@ decision D-12: Every spec holds its document: `Spec` 0.2.0 makes `document` requ
   by: user:wittjosiah
   why: The document is the spec; a spec without one has nothing to read, and the map and board are drawn from it.
 ```
+
+```mdl
+decision D-13: A feature level's nav-tree node holds the feature itself, so it gets every companion an object gets, such as the assistant, properties and debug. The project is found from the feature, through the specs above it. The article for a feature that a project tracks is that project's article narrowed to the feature; a feature no project tracks keeps its own article. The Spec branch holds no object, so it stays a group that opens nothing, and the deck leaves it out of a level's breadcrumbs. Refines [D-10] and [D-11].
+  date: 2026-10-30
+  by: user:wittjosiah
+  why: A feature is an object, so its level should behave like one; a level that wrapped the feature lost the assistant, properties and debug companions.
+```

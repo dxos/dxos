@@ -17,6 +17,8 @@ import {
   FeatureArticle,
   FeatureCardContent,
   FeatureCompanion,
+  FeatureLevelArticle,
+  FeatureLevelCompanion,
   MoveTaskDialog,
   ProjectArticle,
   ProjectArtifactsArticle,
@@ -27,9 +29,11 @@ import {
 } from '#containers';
 import { Feature, Spec } from '#types';
 
-import { isArtifactsBranch, isChatsBranch, isSpecLevel } from '../capabilities/app-graph-builder.ts';
+import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 import { ADD_FEATURE_DIALOG, FEATURE_COMPANION, MOVE_TASK_DIALOG } from '../constants.ts';
 import { type AddFeatureDialogProps } from '../containers/AddFeatureDialog/index.ts';
+
+const isTracked = (feature: Feature.Feature) => Spec.findProject(feature) !== undefined;
 
 /** React surfaces contributed by plugin-projects — articles and cards for projects, specs, features and showcases. */
 export default Capability.makeModule(() =>
@@ -49,7 +53,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'feature.article',
-        filter: AppSurface.object(AppSurface.Article, Feature.Feature),
+        filter: AppSurface.object(AppSurface.Article, Feature.Feature, ({ subject }) => !isTracked(subject)),
         component: FeatureArticle,
         props: ({ role, data }) => ({ role, ...data }),
       }),
@@ -73,31 +77,21 @@ export default Capability.makeModule(() =>
         component: ProjectFeatureCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
       }),
-      // One level of a project's spec: the project article at that depth.
+      // A feature a project tracks is a level of the project's spec: the project article at that depth.
       Surface.create({
-        id: 'project.specLevel',
-        filter: AppSurface.subject(AppSurface.Article, isSpecLevel),
-        component: ProjectArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({
-          role,
-          subject: subject.project,
-          feature: subject.feature,
-          attendableId,
-        }),
+        id: 'feature.level',
+        filter: AppSurface.object(AppSurface.Article, Feature.Feature, ({ subject }) => isTracked(subject)),
+        component: FeatureLevelArticle,
+        props: ({ role, data }) => ({ role, ...data }),
       }),
       Surface.create({
-        id: 'project.specLevel.companion',
+        id: 'feature.level.companion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, FEATURE_COMPANION),
-          AppSurface.companion(AppSurface.Article, isSpecLevel),
+          AppSurface.companion(AppSurface.Article, Feature.Feature),
         ),
-        component: ProjectFeatureCompanion,
-        props: ({ role, data: { companionTo, attendableId } }) => ({
-          role,
-          project: companionTo.project,
-          feature: companionTo.feature,
-          attendableId,
-        }),
+        component: FeatureLevelCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, feature: companionTo, attendableId }),
       }),
       Surface.create({
         id: 'feature.card',
