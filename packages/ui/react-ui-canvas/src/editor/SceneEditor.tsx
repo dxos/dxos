@@ -576,6 +576,7 @@ const SceneEditorTools = ({ classNames = 'top-2 bottom-14 left-2' }: { className
         icon: def.icon,
         label: def.label,
         ...(def.key ? { key: def.key } : {}),
+        ...(def.fold ? { fold: def.fold } : {}),
       })),
     }));
   }, [config.tools, readonly]);

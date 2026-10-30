@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { nodeDragType } from '@dxos/react-ui-canvas';
+import { LINK_FOLD, nodeDragType } from '@dxos/react-ui-canvas';
 
 import { toolDragData2D, tools2D } from './tools2d.ts';
 
@@ -17,5 +17,11 @@ describe('2D tools', () => {
     expect(select && toolDragData2D(select)).toBeUndefined();
     const link = tools.find((tool) => tool.id.startsWith('link:'));
     expect(link && toolDragData2D(link)).toBeUndefined();
+  });
+
+  test('the link tools share one flyout in the create group', () => {
+    const links = tools2D().filter((tool) => tool.id.startsWith('link:'));
+    expect(links.length).toBeGreaterThan(1);
+    expect(links.every((tool) => tool.fold === LINK_FOLD && tool.category === 'create')).toBe(true);
   });
 });

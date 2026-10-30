@@ -28,6 +28,8 @@ export type ToolDef = {
   kind?: string;
   key?: string;
   group?: string;
+  /** Adjacent tools of a group naming the same fold share one flyout button (e.g. the link types). */
+  fold?: string;
 };
 
 /**

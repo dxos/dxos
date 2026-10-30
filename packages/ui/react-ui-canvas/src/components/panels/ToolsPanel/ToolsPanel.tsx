@@ -27,6 +27,7 @@ import {
   type ToolEntry,
   type ToolGroup,
   TOOLS_GROUP,
+  foldRuns,
   nodeDragData,
   sameTool,
   toolGroups,
@@ -68,7 +69,10 @@ export type ToolsPanelProps = PanelProps & {
 
 /** The height the rail would take flat: each button, the gaps between them, and each group's padding and divider. */
 const flatHeight = <T,>(groups: readonly ToolGroup<T>[], button: number): number =>
-  groups.reduce((height, group) => height + (group.folded ? 1 : group.entries.length) * (button + 4) - 4 + 9, 0);
+  groups.reduce(
+    (height, group) => height + (group.folded ? 1 : foldRuns(group.entries).length) * (button + 4) - 4 + 9,
+    0,
+  );
 
 /**
  * Whether the rail folds its groups: always, never, or (`auto`) when the flat rail would overflow its parent, which the
@@ -132,9 +136,13 @@ export const ToolRail = <T,>({
           </Layout.Flex>
         ) : (
           <div key={group.name} className='flex flex-col gap-1 p-1'>
-            {group.entries.map((entry) => (
-              <ToolButton key={entry.label} entry={entry} active={same(tool, entry.tool)} {...button} />
-            ))}
+            {foldRuns(group.entries).map((run) =>
+              'fold' in run ? (
+                <ToolsFlyout key={run.fold.name} group={run.fold} tool={tool} layout={flyout} {...button} />
+              ) : (
+                <ToolButton key={run.entry.label} entry={run.entry} active={same(tool, run.entry.tool)} {...button} />
+              ),
+            )}
             {groupEnd?.[group.name]}
           </div>
         ),

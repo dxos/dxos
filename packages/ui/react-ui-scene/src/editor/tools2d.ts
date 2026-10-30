@@ -43,8 +43,8 @@ export const toTool2D = ({ id }: ActiveTool): Tool => {
 export const fromTool2D = (tool: Tool): ActiveTool => ({ id: toolId(tool) });
 
 /**
- * The 2D rail, as the canvas's palette groups it: select and pan, the create group (shapes, then the links), and any
- * further node groups by name.
+ * The 2D rail, as the canvas's palette groups it: select and pan, the create group (shapes, then the link types in one
+ * flyout), and any further node groups by name.
  */
 export const tools2D = (
   nodes: NodeRegistry = defaultNodeRegistry,
@@ -59,6 +59,7 @@ export const tools2D = (
       group: group.name,
       ...(entry.tool.kind === 'node' ? { kind: entry.tool.type } : {}),
       ...(entry.key ? { key: entry.key } : {}),
+      ...(entry.fold ? { fold: entry.fold } : {}),
     })),
   );
 
