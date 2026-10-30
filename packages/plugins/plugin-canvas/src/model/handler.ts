@@ -432,7 +432,7 @@ export const SceneHandler: ContentHandler = {
                 : {}),
             };
             const link: Link = {
-              ...createLink({ type: 'line', id, z: nextZ(), source: { node: from }, target: { node: to } }),
+              ...createLink({ type: 'smart', id, z: nextZ(), source: { node: from }, target: { node: to } }),
               ...(text ? { text } : {}),
               connector,
             };
@@ -445,7 +445,7 @@ export const SceneHandler: ContentHandler = {
           // attaches at its own ports, so a route through the layout's points would kink at each end.
           const link: Link = {
             ...createLink({
-              type: element.from ? 'line' : 'smart',
+              type: 'smart',
               id,
               z: nextZ(),
               source: { node: from },

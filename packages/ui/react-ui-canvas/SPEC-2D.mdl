@@ -210,8 +210,9 @@ type Link
     `spline` (the polyline through its control `points`, each interior point rounded by a quadratic that
     takes the point as its control, so a corner reads as a corner) or `smart` (routed rather than drawn:
     a stub leaves each port along its normal by half a major cell and one segment joins them, rounded the
-    same way — nothing stored, so the route follows the nodes). A link is NOT a node with a special
-    kind — node-only operations never have to filter links out (decision 9).
+    same way — nothing stored, so the route follows the nodes). A link that names no type is `smart`, and
+    fixtures and generated diagrams draw smart links. A link is NOT a node with a special kind — node-only
+    operations never have to filter links out (decision 9).
   fields:
     id: LinkId
     type: 'line' | 'curve' | 'spline' | 'smart'
@@ -1303,6 +1304,24 @@ decision D-29: The detent is per axis and 8 screen pixels wide, applied by the m
 decision D-30: Approve [D-29].
   date: 2026-10-30
   by: user:richburdon
+```
+
+```mdl
+decision D-31: Smart links are the default for every fixture and every generated diagram, the circuit fixtures included.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [Link]
+```
+
+```mdl
+decision D-32: A link that names no type reads as `smart` wherever a stored layout is drawn (a scene layout, a compute board, a dynamic layout), and the illustrator's DSL arrows are written as smart links whether or not they are bound. Fills in [D-31].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Link]
+  why: Generated diagrams and fixtures mostly store no link type, so changing the default reaches them all at once; a stored type still wins, so a link someone chose by hand keeps its shape.
+  rejected:
+    - Writing `smart` into each fixture and generator while the absent type still reads as a line, which leaves every existing generated document and any new generator on the old default.
 ```
 
 ---

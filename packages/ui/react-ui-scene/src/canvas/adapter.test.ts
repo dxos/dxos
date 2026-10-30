@@ -27,12 +27,12 @@ import { fromCanvasView, namedStyles, styleClasses, toCanvasView, toCanvasViews 
 const views = (text: string) => toCanvasViews(Dsl.readScenes(text).document);
 
 describe('toCanvasViews', () => {
-  test('maps a link to a line link between the bound nodes', () => {
+  test('maps a link naming no type to a smart link between the bound nodes', () => {
     const {
       views: [root],
     } = views(EXEMPLARS.links);
     expect(root.links.ab).toMatchObject({
-      type: 'line',
+      type: 'smart',
       source: { node: 'a' },
       target: { node: 'b' },
       ends: { end: 'arrow' },

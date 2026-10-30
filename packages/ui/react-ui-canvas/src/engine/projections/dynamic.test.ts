@@ -35,6 +35,7 @@ describe('dynamic projection', () => {
     expect(centerOf(scene, 'left').y).toBe(centerOf(scene, 'right').y);
     expect(centerOf(scene, 'left').x).not.toBe(centerOf(scene, 'right').x);
     expect(Object.keys(scene.links).length).toBe(3);
+    expect(Object.values(scene.links).every((link) => link.type === 'smart')).toBe(true);
   });
 
   test('a host declares layers, so a backdrop node paints under the links', ({ expect }) => {

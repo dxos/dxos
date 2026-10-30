@@ -40,7 +40,7 @@ const VIEW: View = (() => {
     ViewBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
     ViewBuilder.note('n', box(0, 200)).properties({ layer: 'notes' }),
     ViewBuilder.view('f').at(box(400, 200)).properties({ label: 'View', layer: 'diagram' }),
-    ViewBuilder.link('curve', 'a', 'b')
+    ViewBuilder.link('smart', 'a', 'b')
       .id('ab')
       .properties({ layer: 'diagram', style: { lineStyle: 'dashed' } }),
   ]).build();

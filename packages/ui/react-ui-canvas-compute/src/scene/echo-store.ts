@@ -36,8 +36,8 @@ export type BoardLayout = { nodes: BoardShape[]; edges: BoardConnection[] };
 /** An element of a 2D layout, with any fields its kind adds. */
 export type BoardElement = Scene.LayoutRecord2D['elements'][string];
 
-/** A connection naming no link type is drawn as a curve, which is what the editor drew. */
-const DEFAULT_LINK_TYPE = 'curve';
+/** A connection naming no link type is drawn as a smart link, the default for every generated diagram. */
+const DEFAULT_LINK_TYPE = 'smart';
 
 const isNodeStyle = Schema.is(NodeStyle);
 const isLayoutRecord = Schema.is(Scene.LayoutRecord2D);

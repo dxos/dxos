@@ -120,6 +120,9 @@ const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string, layer:
   };
 };
 
+/** A link naming no type routes at right angles around the shapes, which is what a generated diagram wants. */
+const DEFAULT_LINK_TYPE = 'smart';
+
 /** A scene endpoint as react-ui-canvas's: a node and port, or a free point. */
 const endpoint = ({ node, port, point }: ElementEndpoint): Endpoint | undefined =>
   node !== undefined ? (port === undefined ? { node } : { node, port }) : point ? { point } : undefined;
@@ -147,7 +150,7 @@ const toLink = (
   }
   const end = MARKERS.find((marker) => marker === element.props?.end);
   return {
-    type: 'line',
+    type: DEFAULT_LINK_TYPE,
     id: element.id,
     z,
     layer,
@@ -382,7 +385,8 @@ const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
     ...(element.style !== undefined ? { class: element.style } : {}),
     ...(Object.keys(style).length > 0 ? { style } : {}),
   };
-  const type = typeof storedType === 'string' ? (LINK_TYPES_BY_NAME[storedType] ?? 'line') : 'line';
+  const type =
+    typeof storedType === 'string' ? (LINK_TYPES_BY_NAME[storedType] ?? DEFAULT_LINK_TYPE) : DEFAULT_LINK_TYPE;
   return type === 'spline' ? { ...base, type, points: Array.isArray(points) ? points : [] } : { ...base, type };
 };
 

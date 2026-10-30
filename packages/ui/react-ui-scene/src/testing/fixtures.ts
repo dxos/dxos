@@ -114,13 +114,12 @@ const modeShape = (id: string, label: string, center: { x: number; y: number }):
   size: { width: 256, height: 128 },
 });
 
-/** A link between two shapes; a `smart` one routes along the lattice's gutters, which a canvas link type selects. */
-const modeLink = (id: string, from: string, to: string, smart = false): Scene.Element2D => ({
+/** A link between two shapes, which names no type and so draws smart (along the lattice's gutters on a lattice). */
+const modeLink = (id: string, from: string, to: string): Scene.Element2D => ({
   id,
   type: 'link',
   source: { node: from },
   target: { node: to },
-  ...(smart ? { z: 'a9', props: { canvas: { type: 'smart' } } } : {}),
 });
 
 /** A 2D layout in a mode of its own, as the root of a one-scene document. */
@@ -137,8 +136,8 @@ export const LATTICE_2D: Scene.SceneDocument = modeDocument({
     a: modeShape('a', 'A', { x: 0, y: 0 }),
     b: modeShape('b', 'B', { x: 384, y: 0 }),
     c: modeShape('c', 'C', { x: 0, y: 192 }),
-    ab: modeLink('ab', 'a', 'b', true),
-    ac: modeLink('ac', 'a', 'c', true),
+    ab: modeLink('ab', 'a', 'b'),
+    ac: modeLink('ac', 'a', 'c'),
   },
 });
 

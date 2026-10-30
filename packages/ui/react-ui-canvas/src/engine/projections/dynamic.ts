@@ -182,7 +182,7 @@ export const layoutGraph = (
   graph.edges.forEach((edge, index) => {
     if (known.has(edge.from) && known.has(edge.to)) {
       links[edge.id] = {
-        type: options.link?.type ?? 'curve',
+        type: options.link?.type ?? 'smart',
         id: edge.id,
         z: keys[index],
         source: { node: edge.from },

@@ -61,8 +61,8 @@ describe('echo store', () => {
       source: { node: 'a', port: 'output.result' },
       target: { node: 'b', port: 'input.input' },
     });
-    // The editor stored no link type; a curve with an arrow is what it drew.
-    expect(link.props?.canvas).toEqual({ type: 'curve', ends: { end: 'arrow' } });
+    // The editor stored no link type, so it draws the default: a smart link with an arrow.
+    expect(link.props?.canvas).toEqual({ type: 'smart', ends: { end: 'arrow' } });
   });
 
   test('a connection with no properties falls back to the default input and output', ({ expect }) => {

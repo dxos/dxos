@@ -53,6 +53,7 @@ describe('SceneHandler', () => {
     const eye = root.nodes[elementId('face', 'eye')];
     expect(isEllipseNode(eye) && [eye.center, eye.size.width]).toEqual([{ x: 128, y: 96 }, 32]);
     expect(root.links['face/look'].source).toEqual({ node: 'face/head' });
+    expect(root.links['face/look'].type).toBe('smart');
 
     const { scene, unmanaged } = SceneHandler.read(content);
     expect(unmanaged).toBe(0);
