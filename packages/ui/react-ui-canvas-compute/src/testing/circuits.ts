@@ -4,7 +4,7 @@
 
 import { createSystemPrompt } from '@dxos/assistant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
-import { type Point, type Size } from '@dxos/scene';
+import { MAJOR_GRID, type Point, type Size } from '@dxos/scene';
 
 import {
   type ComputeShape,
@@ -38,7 +38,7 @@ import { CanvasGraphModel, type NoteShape } from '../types/index.ts';
 // Circuits
 //
 // Every circuit is laid out around the origin: the extent of its node centres is centred on (0, 0) to
-// within half a cell, so a scene opens on its content rather than off to one side. `circuits.test.ts`
+// within half a major grid cell, so a scene opens on its content rather than off to one side. `circuits.test.ts`
 // holds the layouts to it.
 //
 
@@ -59,7 +59,7 @@ export const createBasicCircuit = () => {
     model.createEdge({ source: d.id, target: c.id });
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 export const createTransformCircuit = () => {
@@ -79,7 +79,7 @@ export const createTransformCircuit = () => {
     model.createEdge({ source: c.id, target: d.id });
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 export const createLogicCircuit = () => {
@@ -99,16 +99,16 @@ export const createLogicCircuit = () => {
     model.createEdge({ source: c1.id, target: d1.id });
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 export const createControlCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   {
     const s = model.createNode(createSwitch(position({ x: -10, y: 2 })));
-    const c1 = model.createNode(createConstant({ value: 'hello', ...position({ x: -11, y: -7 }) }));
+    const c1 = model.createNode(createConstant({ value: 'hello', ...position({ x: -11, y: -8 }) }));
     const c2 = model.createNode(createConstant({ value: 'world', ...position({ x: -11, y: -2 }) }));
-    const c3 = model.createNode(createConstant({ value: true, ...position({ x: -11, y: 6 }) }));
+    const c3 = model.createNode(createConstant({ value: true, ...position({ x: -11, y: 8 }) }));
     const if1 = model.createNode(createIf(position({ x: -1, y: 4 })));
     const if2 = model.createNode(createIfElse(position({ x: -1, y: -5 })));
     const b1 = model.createNode(createBeacon(position({ x: 8, y: 2 })));
@@ -125,7 +125,7 @@ export const createControlCircuit = () => {
     model.createEdge({ source: if2.id, target: j.id });
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 export const createTemplateCircuit = () => {
@@ -165,7 +165,7 @@ export const createTemplateCircuit = () => {
       createConstant({ value: 'Hello', ...position({ x: -13, y: 13, width: 8, height: 4 }) }),
     );
     const meta = model.createNode(
-      createConstant({ value: { location: 'Tokyo' }, ...position({ x: -13, y: 19, width: 8, height: 6 }) }),
+      createConstant({ value: { location: 'Tokyo' }, ...position({ x: -13, y: 21, width: 8, height: 6 }) }),
     );
     const template = model.createNode(
       createTemplate({
@@ -191,7 +191,7 @@ export const createTemplateCircuit = () => {
     model.createEdge({ source: template.id, target: view.id });
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 export const createArtifactCircuit = () => {
@@ -213,7 +213,7 @@ export const createArtifactCircuit = () => {
     model.createEdge({ source: gpt.id, target: surface.id, output: 'artifact' });
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 export const createGptCircuit = (options: {
@@ -281,13 +281,15 @@ export const createGptCircuit = (options: {
     }
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 export const createGPTRealtimeCircuit = () => {
-  return CanvasGraphModel.create<ComputeShape>({
-    nodes: [createGptRealtime(position({ x: 0, y: 0 }))],
-  });
+  return snapToGrid(
+    CanvasGraphModel.create<ComputeShape>({
+      nodes: [createGptRealtime(position({ x: 0, y: 0 }))],
+    }),
+  );
 };
 
 export const createAudioCircuit = () => {
@@ -298,7 +300,7 @@ export const createAudioCircuit = () => {
     model.createEdge({ source: a.id, target: b.id });
   }
 
-  return model;
+  return snapToGrid(model);
 };
 
 //
@@ -315,6 +317,32 @@ const createNote = ({
   size: { width: 256, height: 128 },
   ...rest,
 });
+
+/**
+ * Moves every node so its top-left sits on the major grid, where a move in the editor snaps it, then shifts the
+ * whole layout by whole cells back around the origin, since rounding each node pulls the layout to one side.
+ */
+const snapToGrid = (model: CanvasGraphModel<ComputeShape>): CanvasGraphModel<ComputeShape> => {
+  const snap = (value: number) => Math.round(value / MAJOR_GRID) * MAJOR_GRID;
+  for (const node of model.nodes) {
+    const { width, height } = node.size;
+    node.center = {
+      x: snap(node.center.x - width / 2) + width / 2,
+      y: snap(node.center.y - height / 2) + height / 2,
+    };
+  }
+
+  const offset = (axis: 'x' | 'y') => {
+    const values = model.nodes.map((node) => node.center[axis]);
+    return snap(-(Math.min(...values) + Math.max(...values)) / 2);
+  };
+  const dx = offset('x');
+  const dy = offset('y');
+  for (const node of model.nodes) {
+    node.center = { x: node.center.x + dx, y: node.center.y + dy };
+  }
+  return model;
+};
 
 /** A rectangle in grid cells scaled to pixels; the size is kept only when both extents are non-zero. */
 const position = (
