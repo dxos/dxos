@@ -91,7 +91,7 @@ the plugin's files are rewritten at load.
 
 | Component          | Lives in                             | Role                                                                          |
 | ------------------ | ------------------------------------ | ----------------------------------------------------------------------------- |
-| `PluginBuilder`    | dxos: app-framework (`composerPlugin`) | The plugin's vite build: bundle, manifest, catalog and `vendor/`.           |
+| `PluginBuilder`    | dxos: app-framework (`composerPlugin`) | The plugin's vite build: bundle, manifest and `vendor/`.                    |
 | `PluginStore`      | edge: registry-service               | The existing `/upload` store, plus an index of operation keys to versions.    |
 | `PluginRouter`     | edge: compute-service                | Resolves an operation key to the plugin version that implements it.          |
 | `PluginLoader`     | edge: compute-service                | Rewrites bare imports to `vendor/` and loads the bundle into a Dynamic Worker. |
@@ -162,9 +162,10 @@ type VendorMap
 ```mdl
 type PluginCatalog
   desc: |
-    What a bundle contributes on EDGE, extracted at build time by activating its workerd modules in a
-    headless host (the same activation `activateHeadlessPlugins` runs: Startup, Idle, AssistantStart).
-    Lets the registry, the router and MCP answer queries without starting an isolate.
+    What a bundle contributes on EDGE: what `describe()` returns after activating its workerd modules
+    (the same activation `activateHeadlessPlugins` runs: Startup, Idle, AssistantStart). Produced
+    during publish; TODO: written at build time. Lets the registry, the router and MCP answer queries
+    without starting an isolate.
   fields:
     operations: PersistentOperation[]   # key, name, description, inputSchema, outputSchema, services
     skills: SkillRecord[]               # key, name, description, instructions, tools
