@@ -204,6 +204,43 @@ intent, { snap })` is applied by `SceneEditor` to every write (gestures, command
   `KindRegistry` and an `Element3D`-based kind schema work the same way in 3D; only `kindNodeDef` and the viewport
   lowering are 2D, because the 2D viewport draws through the canvas engine. 3D has no plugin kinds today. Cost if wrong:
   none.
+- **R-50 (2026-10-30, agent, E.5): a generated graph is a dynamic `Layout2D` drawn by react-ui-scene `Graph2DView`.**
+  `graphLayout(graph, options, positions)` (react-ui-scene `canvas/graph.ts`) builds the record: one shape per graph node
+  at its `graphCenters` slot, a smart link per edge (D-31; `link.type` overrides), `lattice`, `arrange: { kind:
+'dynamic', params: { arrange } }`, and each placed position as a pinned shape. `Graph2DView` renders it in
+  `SceneEditor` with `createConfig2D({ nodes, capabilities })`, so `constrain2D` snaps a drag to the lattice and pins it
+  (D.1, D.2); the placed positions reported back are the pinned shapes' centres. The graph is the host's model:
+  `splitGraphEdit` hands deletes and drawn links to the host, and the view redraws as stored until the graph comes back
+  with them. The layout is in memory only and never stored. Users: plugin-code `LatticeGraph` (so `DefinitionGraph`
+  and `DataModelGraph`, built from `SpecModel`) and `ChangelogGraph`, plugin-code-graph `CodeGraphCanvas`,
+  plugin-projects `FeatureCanvas`. Rejected: `Scene2DView` (a read-only picture: no drag, open, link or delete); a
+  `SceneEditor` host per plugin (four copies of the same edit routing). Cost if wrong: the hosts set up their own
+  `SceneEditor`s.
+- **R-51 (2026-10-30, agent, E.5): a host type's own fields (a diagram frame's `element`, `heading`) go under
+  `props.canvas`,** where the 2D viewport reads a node's fields (R-18). The card types have no fields of their own, and
+  `diagram` is an engine type, not a kind, so R-42's lowering does not apply; the layout is never stored. Cost if wrong:
+  top-level fields and a `kinds` pass when E.6 drops the adapter.
+- **R-52 (2026-10-30, agent, E.5, parity): `Viewport2DOptions.capabilities` limits what a person may do, within what the
+  layout's mode allows** (each AND-ed over the projection's): a graph view moves shapes, and links or deletes only when
+  its host takes them. 3D has no gate but `readonly`, and graph views are 2D-only; a 3D graph would add the same option
+  to `Viewport3D`. Cost if wrong: that option in 3D.
+- **R-53 (2026-10-30, agent, E.5): plugin-projects `FeatureCanvas` moved too,** as `LatticeGraph` copies its pattern.
+  Deleting a feature now reports the feature alone, never the arrows that go with it (`splitGraphEdit`); an arrow
+  deleted on its own is still an unlink. Cost if wrong: none.
+- **R-54 (2026-10-30, agent, E.5): graph views keep no undo history.** The legacy canvas kept a local one; the hosts
+  store positions themselves, and the graph's edits are the host's. Cost if wrong: a `createHistory` over the view's
+  record.
+- **R-55 (2026-10-30, agent, E.5): plugin-debug, `Scene2DView` and tools/autocue are unchanged.** plugin-debug's compute
+  presets write a `CanvasBoard`'s stored graph (R-21) and its fieldstone drawings are legacy canvases (R-35); nothing in
+  it reads a View. `Scene2DView` reads through the adapter (R-18). autocue imports camera utilities only (`fitBounds`,
+  `interpolateCamera`, `useViewport`). Cost if wrong: none.
+- **R-56 (2026-10-30, agent, E.5): what E.6's gate still finds outside react-ui-canvas, and why.** react-ui-scene
+  `canvas/adapter.ts`(+test) and `editor/Viewport2D.tsx`: the 2D viewport wraps the engine, which renders Views from a
+  memory store (R-18). plugin-canvas `model/store.ts`, `CanvasArticle/CanvasEngineView.tsx`, `operations/patch-store.ts`,
+  `model/layout-writer.test.ts`, `import/tldraw.ts`: the legacy canvas and command bridge (R-16, R-17, R-31, R-32);
+  `samples/molecules/DataFlowView.tsx`: a sample drawing the engine over its own memory store. react-ui-canvas-compute
+  `shapes/common/node-def.test.tsx`: the engine's `NodeViewProps.store` is a `ViewStore`. plugin-lighthouse
+  `client/types.ts`: an unrelated `type Intent`. Cost if wrong: none.
 
 ## Global Constraints
 
@@ -871,6 +908,10 @@ failing test `ClassNode.test.ts` updated → PASS; story check; commit `plugin-u
 plugin-code graphs (`DefinitionGraph`, `ChangelogGraph`, `SpecModel`) build `Layout2D` with `lattice`; plugin-debug,
 plugin-code-graph, react-ui-scene `Scene2DView` updated; tools/autocue unchanged (utilities only). Tests per package
 → PASS; commit `plugins: code, debug and graph views on the shared model`.
+
+- [x] Graphs as dynamic `Layout2D`s on `Graph2DView` (R-50, R-51), with a capabilities gate on the 2D viewport (R-52);
+      `FeatureCanvas` too (R-53); no history (R-54); plugin-debug, `Scene2DView` and autocue unchanged (R-55); what the
+      gate still finds (R-56).
 
 ### Task E.6: Remove the old model
 

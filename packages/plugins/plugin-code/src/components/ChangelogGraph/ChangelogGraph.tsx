@@ -2,28 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 
 import {
-  Canvas,
   type CreateProps,
-  DYNAMIC_VIEW_ID,
-  type DynamicOptions,
-  type FreehandProjectionOptions,
   type GraphEdge,
   type GraphModel,
   type NodeViewProps,
-  type Overlay,
-  createCanvasAtoms,
-  createDynamicProjection,
-  createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
 } from '@dxos/react-ui-canvas/scene';
+import { Graph2DView, type GraphLayoutOptions } from '@dxos/react-ui-scene';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -273,13 +264,11 @@ const nodes = createNodeRegistry(
 
 const BLOCK_SIZE = { width: 144, height: 48 };
 
-const createLayout = (lookup: NodeLookup): DynamicOptions => ({
-  nodes,
+const createLayout = (lookup: NodeLookup): GraphLayoutOptions => ({
   // The same 288×256 cards on a 320×320 pitch, as a lattice so smart links route through the gutters around the cards.
   lattice: { width: 288, height: 256, gutterX: 32, gutterY: 64 },
-  createNode: (node, props) =>
-    lookup(node.id)?.kind === 'block' ? createBlockNode({ ...props, size: BLOCK_SIZE }) : createDecisionNode(props),
-  link: { type: 'smart' },
+  shape: (node) =>
+    lookup(node.id)?.kind === 'block' ? { type: BLOCK_NODE_TYPE, size: BLOCK_SIZE } : { type: DECISION_NODE_TYPE },
 });
 
 const toGraph = (model: ChangelogGraphModel, label: (kind: ChangelogEdgeKind) => string): GraphModel => ({
@@ -327,54 +316,20 @@ export type ChangelogGraphProps = {
  */
 export const ChangelogGraph = ({ content, affects = false, selected }: ChangelogGraphProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const atomRegistry = useContext(RegistryContext);
   const model = useMemo(() => buildChangelogGraph(content, { affects }), [content, affects]);
   const lookup = useMemo<NodeLookup>(() => {
     const byId = new Map(model.nodes.map((node) => [node.id, node]));
     return (id) => byId.get(id);
   }, [model]);
-  const graphModel = useMemo(() => toGraph(model, (kind) => t(`changelog-graph.edge.${kind}.label`)), [model, t]);
-
-  // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
-  const graph = useMemo(() => Atom.make<GraphModel>(graphModel), []);
-  const overlay = useMemo(() => Atom.make<Overlay>({ positions: {} }), []);
-  const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
-
-  useEffect(() => {
-    atomRegistry.set(graph, graphModel);
-  }, [atomRegistry, graph, graphModel]);
-
-  const createProjection = useCallback(
-    ({ registry, constrained }: FreehandProjectionOptions) =>
-      createDynamicProjection({
-        registry,
-        constrained,
-        graph,
-        overlay,
-        options: createLayout(lookup),
-        capabilities: { move: true },
-      }),
-    [graph, overlay, lookup],
-  );
+  const graph = useMemo(() => toGraph(model, (kind) => t(`changelog-graph.edge.${kind}.label`)), [model, t]);
+  const layout = useMemo(() => createLayout(lookup), [lookup]);
 
   return (
     <NodeLookupContext.Provider value={lookup}>
       <SelectedContext.Provider value={selected}>
-        {/* The positioning context the legend floats in over the canvas. */}
-        <div className='dx-fill relative'>
+        <Graph2DView graph={graph} layout={layout} nodes={nodes}>
           <Legend />
-          <Canvas.Root
-            store={store}
-            root={DYNAMIC_VIEW_ID}
-            atoms={atoms}
-            nodes={nodes}
-            createProjection={createProjection}
-          >
-            <Canvas.Viewport />
-            <Canvas.Navigation />
-          </Canvas.Root>
-        </div>
+        </Graph2DView>
       </SelectedContext.Provider>
     </NodeLookupContext.Provider>
   );

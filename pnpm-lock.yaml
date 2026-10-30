@@ -10314,6 +10314,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-scene':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-scene
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../ui/react-ui-task
@@ -10426,6 +10429,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-scene':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-scene
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -16091,6 +16097,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-scene':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-scene
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search

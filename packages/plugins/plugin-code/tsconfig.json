@@ -107,6 +107,9 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
+      "path": "../../ui/react-ui-scene"
+    },
+    {
       "path": "../../ui/react-ui-task"
     },
     {

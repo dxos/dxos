@@ -2,37 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, {
-  type PropsWithChildren,
-  type ReactNode,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-} from 'react';
+import React, { type PropsWithChildren, type ReactNode, createContext, useContext, useMemo } from 'react';
 
 import {
   type Arrangement,
-  Canvas,
   type CreateProps,
-  DYNAMIC_VIEW_ID,
-  type FreehandProjectionOptions,
   type GraphModel,
   type LatticeSpec,
   type NodeViewProps,
-  type Overlay,
   SCENE_OVERLAY_ATTRIBUTE,
-  createCanvasAtoms,
-  createDynamicProjection,
-  createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
 } from '@dxos/react-ui-canvas/scene';
+import { Graph2DView, type GraphLayoutOptions } from '@dxos/react-ui-scene';
 import * as Layout from '@dxos/react-ui/Layout';
 import { type Node, nodeBase } from '@dxos/scene';
 
@@ -94,67 +78,16 @@ export type LatticeGraphProps = PropsWithChildren<{
  * cell, with each arrow routed through the gutters so none crosses a card. Boxes can be dragged; children
  * float over the canvas (e.g. a legend).
  */
-export const LatticeGraph = ({
-  graph: graphModel,
-  renderNode,
-  lattice,
-  arrange = 'crossings',
-  children,
-}: LatticeGraphProps) => {
-  const atomRegistry = useContext(RegistryContext);
-
-  // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
-  const graph = useMemo(() => Atom.make<GraphModel>(graphModel), []);
-  const overlay = useMemo(() => Atom.make<Overlay>({ positions: {} }), []);
-  const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
-
-  useEffect(() => {
-    // The atoms start with the first model, so setting it again on mount would only lay out and route twice.
-    if (atomRegistry.get(graph) === graphModel) {
-      return;
-    }
-    atomRegistry.set(graph, graphModel);
-    atomRegistry.set(overlay, { positions: {} });
-  }, [atomRegistry, graph, overlay, graphModel]);
-
-  const createProjection = useCallback(
-    ({ registry, constrained }: FreehandProjectionOptions) =>
-      createDynamicProjection({
-        registry,
-        constrained,
-        graph,
-        overlay,
-        options: {
-          nodes,
-          lattice,
-          arrange,
-          createNode: (_node, props) => createLatticeNode(props),
-          link: { type: 'smart', ends: { end: 'arrow' } },
-        },
-        capabilities: { move: true },
-      }),
-    [graph, overlay, lattice, arrange],
+export const LatticeGraph = ({ graph, renderNode, lattice, arrange = 'crossings', children }: LatticeGraphProps) => {
+  const layout = useMemo<GraphLayoutOptions>(
+    () => ({ lattice, arrange, shape: () => ({ type: LATTICE_NODE_TYPE }), link: { ends: { end: 'arrow' } } }),
+    [lattice, arrange],
   );
-
   return (
     <RenderNodeContext.Provider value={renderNode}>
-      {/* The positioning context overlays float in over the canvas. */}
-      <div className='dx-fill relative'>
+      <Graph2DView graph={graph} layout={layout} nodes={nodes}>
         {children}
-        <Canvas.Root
-          store={store}
-          root={DYNAMIC_VIEW_ID}
-          atoms={atoms}
-          nodes={nodes}
-          createProjection={createProjection}
-          // The lattice guides are the board's structure; dots between them would only add noise.
-          backgroundGrid='none'
-        >
-          <Canvas.Viewport />
-          <Canvas.Navigation />
-        </Canvas.Root>
-      </div>
+      </Graph2DView>
     </RenderNodeContext.Provider>
   );
 };
