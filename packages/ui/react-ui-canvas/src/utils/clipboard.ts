@@ -4,8 +4,8 @@
 
 //
 // Cut, copy and paste as pure functions over the model (§8): the clipboard holds a fragment of nodes
-// and the links between them; a paste mints fresh ids, offsets the fragment and returns one `batch`
-// intent so the projection applies it atomically and undo takes it back in one step.
+// and the links between them; a paste mints fresh ids, offsets the fragment and returns one edit, so the
+// scene takes it atomically and undo takes it back in one step.
 //
 
 import {
@@ -20,8 +20,9 @@ import {
   isPointEndpoint,
 } from '@dxos/scene';
 
-import { type Intent, type View, type ViewMap, openedRecord } from '../model/index.ts';
+import { type View, type ViewMap, openedRecord } from '../model/index.ts';
 import { promotedBy } from './compose.ts';
+import { type SceneEdit, chainEdits, insertLink, insertNode } from './edits.ts';
 import { unionBounds } from './hit.ts';
 import { between, topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
@@ -101,9 +102,9 @@ export type PasteOptions = {
   layer?: LayerId;
 };
 
-export type Paste = { intent: Intent; ids: ElementId[] };
+export type Paste = { edit: SceneEdit; ids: ElementId[] };
 
-/** The batch that recreates the fragment with fresh ids at `offset`, and the ids it will create. */
+/** The edit that recreates the fragment with fresh ids at `offset`, and the ids it will create. */
 export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer }: PasteOptions): Paste => {
   const idMap = new Map<ElementId, ElementId>();
   const shift = (point: Point): Point => ({ x: point.x + offset.x, y: point.y + offset.y });
@@ -125,19 +126,13 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer
       : { ...link, ...onLayer, id, z: linkZ(index), ...ends };
   });
   return {
-    intent: {
-      kind: 'batch',
-      intents: [
-        ...nodes.map((node): Intent => ({ kind: 'create', node })),
-        ...links.map((link): Intent => ({ kind: 'link', link })),
-      ],
-    },
+    edit: chainEdits([...nodes.map(insertNode), ...links.map(insertLink)]),
     ids: [...nodes.map(({ id }) => id), ...links.map(({ id }) => id)],
   };
 };
 
 /**
- * The batch that copies the selected nodes (and the links between them) `offset` away, above everything
+ * The edit that copies the selected nodes (and the links between them) `offset` away, above everything
  * else, and the ids it creates; nothing when the selection holds no node.
  */
 export const duplicateSelection = (

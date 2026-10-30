@@ -5,8 +5,8 @@
 //
 // Root view of the scene engine (§6–§8): owns the camera, the scene path, selection and the pointer
 // state machine; renders the current scene through `SceneLayer` under one CSS transform and drills
-// in and out of portals with a camera transition then a root swap. Every model change goes through
-// the projection as an intent; the view never writes coordinates itself (decision 11).
+// in and out of portals with a camera transition then a root swap. Every change is an edit of the draw state, which
+// reaches the host as layout intents; the view never writes the document itself (decision 11).
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
@@ -75,7 +75,7 @@ CanvasNavigation.displayName = 'Canvas.Navigation';
 
 /** Everything that changes the view or the scene. */
 export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: CanvasBarProps) => {
-  const { projection, nodeRegistry, capabilities, readonly, document } = useCanvasDocument('Canvas.Actions');
+  const { draw, nodeRegistry, capabilities, readonly, document } = useCanvasDocument('Canvas.Actions');
   const tools = useCanvasTools('Canvas.Actions');
   const selection = useCanvasSelection('Canvas.Actions');
   const editing = useCanvasEditing('Canvas.Actions');
@@ -162,7 +162,7 @@ CanvasCamera.displayName = 'Canvas.Camera';
 export const CanvasDisplay = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
   const { look, themes, themeOverride, themeGrid, setTheme, setBackgroundGrid } = useCanvasLook('Canvas.Display');
   const { atoms, commands } = useCanvasTools('Canvas.Display');
-  const { projection, readonly } = useCanvasDocument('Canvas.Display');
+  const { draw, readonly } = useCanvasDocument('Canvas.Display');
   const guides = useAtomValue(atoms.guides);
   const axes = useAtomValue(atoms.axes);
   const snap = useAtomValue(atoms.snap);
@@ -178,13 +178,13 @@ export const CanvasDisplay = ({ classNames = 'bottom-2 right-2' }: CanvasBarProp
         onGridChange={setBackgroundGrid}
         guides={guides}
         // The guides are the lattice's cells, so only a lattice scene has any to show.
-        onGuidesToggle={projection.lattice ? commands.toggleGuides : undefined}
+        onGuidesToggle={draw.lattice ? commands.toggleGuides : undefined}
         axes={axes}
         onAxesToggle={commands.toggleAxes}
         // Snap applies to edits, so a read-only canvas offers none.
         snap={snap}
         onSnapToggle={readonly ? undefined : commands.toggleSnap}
-        lattice={projection.lattice !== undefined}
+        lattice={draw.lattice !== undefined}
       />
     </div>
   );

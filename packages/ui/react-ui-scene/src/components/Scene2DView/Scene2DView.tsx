@@ -10,7 +10,6 @@ import type * as Util from '@dxos/react-ui/Util';
 import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { latticesKey, layoutProjection } from '../../canvas/index.ts';
 import { type Theme3D, liftScene } from '../../three/index.ts';
 import { Scene3DView } from '../Scene3DView/index.ts';
 
@@ -94,12 +93,6 @@ const CanvasView = ({
     return () => observer.disconnect();
   }, []);
 
-  // A layout with a lattice puts its shapes on its cells and routes links along its gutters, as the editor draws it.
-  const latest = useRef(document);
-  latest.current = document;
-  const lattices = latticesKey(document);
-  const createProjection = useMemo(() => layoutProjection(() => latest.current), [lattices]);
-
   const fit = camera === 'fit';
   useLayoutEffect(() => {
     if (camera !== 'fit' && size) {
@@ -115,7 +108,6 @@ const CanvasView = ({
         scene={scene?.id}
         atoms={atoms}
         nodes={nodes}
-        createProjection={createProjection}
         margin={margin}
         readonly
         transparent={transparent}

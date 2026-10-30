@@ -10,8 +10,8 @@
 
 import { type LayoutIntent, type Scene, applyIntent, endpointNode } from '@dxos/scene';
 
-import { type GraphModel, type GraphPlacement, graphCenters } from '../engine/index.ts';
 import { type Arrangement } from '../utils/index.ts';
+import { type GraphModel, type GraphPlacement, graphCenters } from './graph.ts';
 
 type Element = Scene.Element2D;
 type Point = { x: number; y: number };

@@ -10,10 +10,10 @@ import { type Bounds, type Size, type ViewId } from '@dxos/scene';
 import {
   type CanvasAtoms,
   type CanvasController,
+  type DrawScene,
   type EditingCommands,
   type LookCommands,
   type NavigationCommands,
-  type Projection,
   type SelectionCommands,
   type ToolsCommands,
 } from '../../engine/index.ts';
@@ -50,7 +50,7 @@ export type CanvasServices = {
   store: ViewStore;
   /** The canvas's root View, which navigation starts from. */
   root: ViewId;
-  projection: Projection;
+  draw: DrawScene;
   capabilities: Capabilities;
   /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
   readonly: boolean;
@@ -75,12 +75,12 @@ export type CanvasAspect<Atoms, Commands> = { atoms: Atoms; commands: Commands }
 
 /** What the canvas shows, and the one write path. */
 export const useCanvasDocument = (consumer: string) => {
-  const { store, root, projection, capabilities, readonly, nodeRegistry, linkRegistry, document, controller } =
+  const { store, root, draw, capabilities, readonly, nodeRegistry, linkRegistry, document, controller } =
     useCanvasServices(consumer);
   return {
     store,
     root,
-    projection,
+    draw,
     capabilities,
     readonly,
     nodeRegistry,
@@ -162,7 +162,7 @@ export const [CanvasEditingProvider, useCanvasEditing] = createContext<CanvasEdi
 export type CanvasGesture = {
   /** The scene as drawn while a gesture is in flight. */
   displayScene: View;
-  /** The gesture in flight would be refused by the projection (e.g. an overlap on the lattice). */
+  /** The gesture in flight would be refused by the layout's mode (e.g. an overlap on the lattice). */
   blocked: boolean;
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */
   createFrame: Bounds | undefined;

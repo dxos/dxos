@@ -9,9 +9,9 @@ import { type ElementId } from '@dxos/scene';
 import {
   type CanvasAtoms,
   type CanvasHistory,
+  type DrawScene,
   type EditingCommands,
   type NavigationCommands,
-  type Projection,
   type SelectionCommands,
   type ToolsCommands,
 } from '../../engine/index.ts';
@@ -24,7 +24,7 @@ import {
   keyAction,
   nodeDef,
 } from '../../model/index.ts';
-import { toolForKey } from '../../utils/index.ts';
+import { moveNodes, toolForKey } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type EditMode } from './useEditMode.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
@@ -36,7 +36,7 @@ export type UseSceneKeysOptions = {
   scene: View;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
-  projection: Projection;
+  draw: DrawScene;
   capabilities: Capabilities;
   navigation: NavigationCommands;
   /** Minor grid spacing in scene px; an arrow nudges by it. */
@@ -69,7 +69,7 @@ export const useSceneKeys = ({
   scene,
   nodeRegistry,
   linkRegistry,
-  projection,
+  draw,
   capabilities,
   navigation,
   grid,
@@ -198,7 +198,7 @@ export const useSceneKeys = ({
             x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
             y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
           };
-          commit(() => projection.apply({ kind: 'move', ids: selectedNodes, delta }), {
+          commit(() => draw.apply(moveNodes(selectedNodes, delta)), {
             mergeKey: `nudge:${[...selectedNodes].sort().join(',')}`,
           });
           event.preventDefault();
@@ -276,7 +276,7 @@ export const useSceneKeys = ({
       select,
       navigation,
       capabilities,
-      projection,
+      draw,
       scene,
       nodeRegistry,
       linkRegistry,

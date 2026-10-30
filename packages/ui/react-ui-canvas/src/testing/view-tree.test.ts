@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { MAJOR_GRID, type Point } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
-import { layoutGraph, solve } from '../engine/index.ts';
 import { type View } from '../model/index.ts';
+import { layoutGraph, solve } from '../modes/index.ts';
 import { nodeBounds } from '../utils/index.ts';
 import { createModelViewTree, createViewTree } from './view-tree.ts';
 

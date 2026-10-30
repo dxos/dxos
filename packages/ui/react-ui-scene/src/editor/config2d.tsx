@@ -102,8 +102,7 @@ export const createConfig2D = ({
   ...options
 }: Viewport2DOptions & { useProperties?: UseProperties2D } = {}): DimensionConfig<Camera> => {
   const bridge = options.bridge ?? createCanvasBridge();
-  // A host's own projection owns the canvas's mode, so the layout's fields are not applied over it.
-  const constrain = options.createProjection ? undefined : constrain2D;
+  const constrain = options.constrain ?? constrain2D;
   return {
     dim: '2d',
     viewport: createViewport2D({ ...options, bridge, constrain }),

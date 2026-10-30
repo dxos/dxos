@@ -9,7 +9,8 @@
 
 import { type Element, type Layer, type LayerId, type Link, type Node, endpointNode } from '@dxos/scene';
 
-import { type Intent, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
+import { type SceneEdit, chainEdits, updateElement } from './edits.ts';
 import { between, sortByZ } from './order.ts';
 
 /** The layer of a scene that names none: every element is on it. */
@@ -92,33 +93,39 @@ export const pinLayers = (scene: View): View => {
     : { ...scene, layers: layerRecord(scene), nodes: nodes ?? scene.nodes, links: links ?? scene.links };
 };
 
-/** Applies a layer intent to the scene (`reduceIntent` delegates here). */
-export const reduceLayerIntent = (scene: View, intent: Extract<Intent, { kind: 'layer' | 'removeLayer' }>): View => {
-  if (intent.kind === 'layer') {
+/** Adds a layer, or replaces the one of its id (a rename, a visibility toggle, a move in the order). */
+export const putLayer =
+  (layer: Layer): SceneEdit =>
+  (scene) => {
     // Pinned first: an element without a layer is on the bottom one, so a layer added below would otherwise take it.
     const pinned = pinLayers(scene);
-    return { ...pinned, layers: { ...layerRecord(pinned), [intent.layer.id]: intent.layer } };
-  }
-  const layers = viewLayers(scene);
-  if (layers.length < 2 || !layers.some((layer) => layer.id === intent.id)) {
-    return scene;
-  }
-  const { [intent.id]: _, ...rest } = layerRecord(scene);
-  // The elements on the removed layer go with it; `elementLayer` is read against the layers before the removal.
-  const keep = (element: Element) => elementLayer(element, layers) !== intent.id;
-  const nodes = Object.fromEntries(Object.entries(scene.nodes).filter(([, node]) => keep(node)));
-  const links = Object.fromEntries(
-    Object.entries(scene.links).filter(
-      ([, link]) =>
-        keep(link) &&
-        [link.source, link.target].every((end) => {
-          const node = endpointNode(end);
-          return node === undefined || nodes[node] !== undefined;
-        }),
-    ),
-  );
-  return { ...scene, nodes, links, layers: rest };
-};
+    return { ...pinned, layers: { ...layerRecord(pinned), [layer.id]: layer } };
+  };
+
+/** Removes a layer and every element on it; the last layer of a scene stays. */
+export const removeLayer =
+  (id: LayerId): SceneEdit =>
+  (scene) => {
+    const layers = viewLayers(scene);
+    if (layers.length < 2 || !layers.some((layer) => layer.id === id)) {
+      return scene;
+    }
+    const { [id]: _, ...rest } = layerRecord(scene);
+    // The elements on the removed layer go with it; `elementLayer` is read against the layers before the removal.
+    const keep = (element: Element) => elementLayer(element, layers) !== id;
+    const nodes = Object.fromEntries(Object.entries(scene.nodes).filter(([, node]) => keep(node)));
+    const links = Object.fromEntries(
+      Object.entries(scene.links).filter(
+        ([, link]) =>
+          keep(link) &&
+          [link.source, link.target].every((end) => {
+            const node = endpointNode(end);
+            return node === undefined || nodes[node] !== undefined;
+          }),
+      ),
+    );
+    return { ...scene, nodes, links, layers: rest };
+  };
 
 /** A new layer below the others, so it ends the top-first list, named after the first `Layer <n>` not taken. */
 export const createLayer = (scene: View, id: LayerId): Layer => {
@@ -146,7 +153,7 @@ export const moveLayer = (scene: View, id: LayerId, index: number): Layer | unde
  * Merging layers into `into`, as one batch: the elements of every layer in `from` move onto `into`, keeping their own
  * order, and those layers are removed. None unless `into` and at least one other of `from` are layers of the scene.
  */
-export const mergeLayersIntent = (scene: View, from: readonly LayerId[], into: LayerId): Intent | undefined => {
+export const mergeLayers = (scene: View, from: readonly LayerId[], into: LayerId): SceneEdit | undefined => {
   const layers = viewLayers(scene);
   const ids = new Set(layers.map((layer) => layer.id));
   const merged = new Set(from.filter((id) => id !== into && ids.has(id)));
@@ -156,13 +163,10 @@ export const mergeLayersIntent = (scene: View, from: readonly LayerId[], into: L
   const moved = [...Object.values(scene.nodes), ...Object.values(scene.links)].filter((element) =>
     merged.has(elementLayer(element, layers)),
   );
-  return {
-    kind: 'batch',
-    intents: [
-      // The implicit layer is made real first, so the elements left on it keep it once the others are gone.
-      ...(scene.layers ? [] : layers.map((layer): Intent => ({ kind: 'layer', layer }))),
-      ...moved.map((element): Intent => ({ kind: 'update', id: element.id, values: { layer: into } })),
-      ...[...merged].map((id): Intent => ({ kind: 'removeLayer', id })),
-    ],
-  };
+  return chainEdits([
+    // The implicit layer is made real first, so the elements left on it keep it once the others are gone.
+    ...(scene.layers ? [] : layers.map(putLayer)),
+    ...moved.map((element) => updateElement(element.id, { layer: into })),
+    ...[...merged].map(removeLayer),
+  ]);
 };

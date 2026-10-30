@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './intent.ts';
 export * from './keys.ts';
 export * from './neu.ts';
 export * from './node-def.ts';

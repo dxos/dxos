@@ -5,26 +5,28 @@
 //
 // Root view of the scene engine (§6–§8): owns the camera, the scene path, selection and the pointer
 // state machine; renders the current scene through `SceneLayer` under one CSS transform and drills
-// in and out of portals with a camera transition then a root swap. Every model change goes through
-// the projection as an intent; the view never writes coordinates itself (decision 11).
+// in and out of portals with a camera transition then a root swap. Every change is an edit of the draw state, which
+// reaches the host as layout intents; the view never writes the document itself (decision 11).
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
-import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId } from '@dxos/scene';
+import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId, findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
   SceneLookContext,
+  type UseDrawSceneOptions,
   useCanvasController,
   useCanvasHistory,
   useCommandHeld,
   useDocumentCommands,
   useDocumentStore,
+  useDrawScene,
   useEditMode,
   useElementHandlers,
   useGeneratorFrames,
@@ -41,7 +43,6 @@ import {
   useSceneView,
   useSceneWheel,
   useViewport,
-  useViewProjection,
 } from '../../hooks/index.ts';
 import {
   type MemoryViewStore,
@@ -87,7 +88,11 @@ export const CanvasRoot = ({
   const registry = useRegistry();
   // Read when a write is checked, so the view's snap toggle reaches the mode without rebuilding the store.
   const snapRef = useRef<() => boolean>(() => true);
-  const { store, root } = useDocumentStore(registry, {
+  const {
+    store,
+    root,
+    constrain: preview,
+  } = useDocumentStore(registry, {
     document,
     scene,
     constrain,
@@ -96,7 +101,21 @@ export const CanvasRoot = ({
     onModelIntent,
     onTransaction,
   });
-  return <CanvasEngine key={root} {...props} store={store} root={root} snapRef={snapRef} />;
+  const lattice = (sceneId: ViewId) => {
+    const layout = findLayout(document, sceneId);
+    return layout?.dim === '2d' ? layout.lattice : undefined;
+  };
+  return (
+    <CanvasEngine
+      key={root}
+      {...props}
+      store={store}
+      root={root}
+      snapRef={snapRef}
+      preview={preview}
+      lattice={lattice}
+    />
+  );
 };
 
 CanvasRoot.displayName = 'Canvas.Root';
@@ -108,16 +127,18 @@ type CanvasEngineProps = Omit<
   store: MemoryViewStore;
   root: ViewId;
   snapRef: { current: () => boolean };
-};
+} & Pick<UseDrawSceneOptions, 'lattice'> & { preview: UseDrawSceneOptions['constrain'] };
 
 const CanvasEngine = ({
   classNames,
   store,
   root,
   snapRef,
+  preview,
+  lattice,
+  capabilities: capabilitiesProp,
   nodes: nodeRegistry = defaultNodeRegistry,
   links: linkRegistry = defaultLinkRegistry,
-  createProjection,
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
@@ -175,9 +196,15 @@ const CanvasEngine = ({
   const path = useAtomValue(atoms.path);
   snapRef.current = () => registry.get(atoms.snap);
   const history = useCanvasHistory({ registry, atoms, store });
-  const projection = useViewProjection({ store, atoms, createProjection, history });
-  history.view.projection = projection;
-  const scene = useAtomValue(projection.scene);
+  const draw = useDrawScene({
+    store,
+    atoms,
+    capabilities: capabilitiesProp,
+    constrain: preview,
+    lattice,
+    history,
+  });
+  const scene = useAtomValue(draw.scene);
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
     scene,
@@ -210,8 +237,8 @@ const CanvasEngine = ({
   }, [active, selection, registry, atoms.active]);
   const sceneId = path[path.length - 1];
 
-  // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
-  const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
+  // Every gesture, key and control is gated on these, so a read-only view is the scene with nothing allowed.
+  const capabilities = readonly ? readonlyCapabilities : draw.capabilities;
 
   const {
     setCamera,
@@ -260,7 +287,7 @@ const CanvasEngine = ({
     atoms,
     store,
     live: {
-      projection,
+      draw,
       nodeRegistry,
       readonly,
       grid: { major, snap },
@@ -319,7 +346,7 @@ const CanvasEngine = ({
     registry,
     atoms,
     store,
-    projection,
+    draw,
     commit: history.commit,
     select,
     navigation,
@@ -367,7 +394,7 @@ const CanvasEngine = ({
     // A hidden layer's elements are not hit: gestures see the scene as drawn.
     scene: visible,
     nodeRegistry,
-    projection,
+    draw,
     capabilities,
     camera,
     rootRef,
@@ -402,7 +429,7 @@ const CanvasEngine = ({
   const documentCommands = useDocumentCommands({
     registry,
     atoms,
-    projection,
+    draw,
     history,
     readonly,
     nodeRegistry,
@@ -420,7 +447,7 @@ const CanvasEngine = ({
     scene,
     nodeRegistry,
     linkRegistry,
-    projection,
+    draw,
     capabilities,
     navigation,
     grid,
@@ -480,7 +507,7 @@ const CanvasEngine = ({
   const { displayScene, blocked, landing, createFrame } = useGesturePreview({
     scene,
     drag,
-    projection,
+    draw,
     minor,
     detent,
     createdNode,
@@ -490,7 +517,7 @@ const CanvasEngine = ({
     registry,
     atoms,
     nodeRegistry,
-    projection,
+    draw,
     capabilities,
     navigation,
     scene,
@@ -532,7 +559,7 @@ const CanvasEngine = ({
       atoms={atoms}
       store={store}
       root={root}
-      projection={projection}
+      draw={draw}
       capabilities={capabilities}
       readonly={readonly}
       transparent={transparent}

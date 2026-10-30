@@ -12,7 +12,6 @@
 import * as Schema from 'effect/Schema';
 
 import {
-  Bounds,
   CloudNode,
   DiagramNode,
   type Element,
@@ -31,7 +30,6 @@ import {
   type NodeType,
   NoteNode,
   PathNode,
-  Point,
   PolygonNode,
   PolylineNode,
   RectNode,
@@ -115,31 +113,6 @@ export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [ke
 /** Per link type, so a spline's `points` are among the values an `update` may set. */
 type ValuesOf<T> = T extends unknown ? Partial<Omit<T, 'id' | 'type'>> : never;
 export type LinkValues = ValuesOf<Link>;
-
-/**
- * What the surface asks of a projection (§3). The surface never writes coordinates itself: a
- * projection may apply, rewrite or reject each intent and then re-emits the positioned scene.
- */
-export type Intent =
-  | { kind: 'move'; ids: NodeId[]; delta: Point }
-  | { kind: 'resize'; id: NodeId; bounds: Bounds }
-  | { kind: 'link'; link: Link }
-  | { kind: 'create'; node: Node }
-  | { kind: 'delete'; ids: ElementId[] }
-  | { kind: 'reorder'; id: ElementId; z: string }
-  /** Property edits (label, text, geometry, control points); `id` and `type` never change. */
-  | { kind: 'update'; id: ElementId; values: NodeValues | LinkValues }
-  /**
-   * Arrange the scene (or just `ids`, when the selection is what the user asked to tidy). An intent
-   * rather than a view action, so a projection that owns its own positions may rewrite or refuse it.
-   */
-  | { kind: 'layout'; ids?: ElementId[] }
-  /** Adds a layer, or replaces the one of its id (a rename, a visibility toggle, a move in the order). */
-  | { kind: 'layer'; layer: Layer }
-  /** Removes a layer and every element on it; the last layer of a scene stays. */
-  | { kind: 'removeLayer'; id: LayerId }
-  /** Several intents applied as one model change (one undo step), e.g. a paste. */
-  | { kind: 'batch'; intents: Intent[] };
 
 export type Capabilities = {
   move?: boolean;

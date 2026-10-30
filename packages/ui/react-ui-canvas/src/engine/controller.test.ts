@@ -12,8 +12,8 @@ import { defaultNodeRegistry } from '../components/index.ts';
 import { type BackgroundGrid, createMemoryStore, storeVersions } from '../model/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { type LookHandlers, createCanvasController } from './controller.ts';
-import { createLocalHistory, withHistory } from './history.ts';
-import { createFreehandProjection } from './projection.ts';
+import { createDrawScene, withHistory } from './draw.ts';
+import { createLocalHistory } from './history.ts';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
 
@@ -60,13 +60,13 @@ const setup = ({
     context: () => ({ path: registry.get(atoms.path), selection: [...registry.get(atoms.selection)] }),
     view: {},
   });
-  const projection = withHistory(createFreehandProjection({ registry, store, sceneId: tree.root }), history);
+  const draw = withHistory(createDrawScene({ registry, store, sceneId: tree.root }), history);
   let next = 0;
   const controller = createCanvasController({
     registry,
     atoms,
     store,
-    projection: () => projection,
+    draw: () => draw,
     nodeRegistry: () => defaultNodeRegistry,
     readonly: () => readonly,
     grid: () => ({ major: 64, snap: (value) => Math.round(value / 16) * 16 }),
@@ -78,7 +78,7 @@ const setup = ({
   });
   history.view.restore = ({ path, selection }) =>
     controller.navigation.openView(path, { animate: false, select: selection });
-  const scene = () => registry.get(projection.scene);
+  const scene = () => registry.get(draw.scene);
   const linkId = Object.keys(scene().links)[0];
   const views = () => registry.get(store.views);
   return {
@@ -89,7 +89,7 @@ const setup = ({
     scene,
     views,
     linkId,
-    projection,
+    draw,
     history,
     undoStep: history.undo,
     redoStep: history.redo,
@@ -216,18 +216,18 @@ describe('CanvasController', () => {
   });
 
   describe('document', () => {
-    test("restack moves an element among its siblings in the open View's order, as one intent", ({ expect }) => {
-      const { controller, scene, projection } = setup();
+    test("restack moves an element among its siblings in the open View's order, as one edit", ({ expect }) => {
+      const { controller, scene, draw } = setup();
       const order = () =>
         Object.values(scene().nodes)
           .sort((left, right) => (left.z < right.z ? -1 : 1))
           .map((node) => node.id);
       expect(order()).toEqual(['a', 'b']);
       let applied = 0;
-      const apply = projection.apply;
-      projection.apply = (intent) => {
+      const apply = draw.apply;
+      draw.apply = (edit) => {
         applied++;
-        apply(intent);
+        apply(edit);
       };
       expect(controller.document.restack('root', 'b', 'a', 'before')).toBe(true);
       expect(order()).toEqual(['b', 'a']);

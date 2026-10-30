@@ -5,7 +5,7 @@
 //
 // Composite objects (ANIMATION.md §4): a composite is a scene marked `kind: 'composite'`; an instance node draws it at
 // its own place and size. Grouping a selection as an object, ungrouping an instance and making one unique are pure
-// functions here that return the scenes and intents the view applies, so each is one undoable step.
+// functions here that return the scenes and edits the view applies, so each is one undoable step.
 //
 
 import {
@@ -27,7 +27,8 @@ import {
   nodeFrame,
 } from '@dxos/scene';
 
-import { type Intent, type View, type ViewMap, pruneOrphaned } from '../model/index.ts';
+import { type View, type ViewMap, pruneOrphaned } from '../model/index.ts';
+import { type SceneEdit, chainEdits, deleteElements, insertLink, insertNode, updateElement } from './edits.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
 import { topZ } from './order.ts';
@@ -59,7 +60,7 @@ export const promoted = (scene: View): View => {
 
 /**
  * The anonymous Objects that `nodes` place again, promoted (VIEWS.md §4.4): what a paste or a duplicate writes into
- * the store with its intent. Empty when none of them is an Instance of an anonymous Object in `scenes`.
+ * the store with its edit. Empty when none of them is an Instance of an anonymous Object in `scenes`.
  */
 export const promotedBy = (scenes: ViewMap, nodes: Iterable<Node>): Record<ViewId, View> => {
   const result: Record<ViewId, View> = {};
@@ -217,8 +218,8 @@ export type ComposeOptions = {
   anonymous?: boolean;
 };
 
-/** What grouping a selection as an object makes: the composite, and the intents that put an instance in its place. */
-export type Composition = { composite: View; intents: Intent[] };
+/** What grouping a selection as an object makes: the composite, and the edit that puts an instance in its place. */
+export type Composition = { composite: View; edit: SceneEdit };
 
 /**
  * Groups the selected nodes as an object (`compose`): they and the links wholly inside the selection move into a new
@@ -295,18 +296,19 @@ export const composeSelection = (
   };
   return {
     composite,
-    intents: [
-      { kind: 'create', node: instance },
+    edit: chainEdits([
+      insertNode(instance),
       // Re-attached before the nodes go, since deleting a node takes the links on it.
-      ...crossing.map((link): Intent => ({
-        kind: 'update',
-        id: link.id,
-        values: { source: reattach(link.source), target: reattach(link.target) },
-      })),
-      { kind: 'delete', ids: [...inside] },
-    ],
+      ...crossing.map((link) =>
+        updateElement(link.id, { source: reattach(link.source), target: reattach(link.target) }),
+      ),
+      deleteElements([...inside]),
+    ]),
   };
 };
+
+/** What ungrouping an instance makes: the edit that places its parts, and the ids of the nodes it creates. */
+export type Ungrouping = { edit: SceneEdit; created: NodeId[] };
 
 /**
  * Ungroups an instance: the composite's nodes and links, with the instance's overrides, are placed where the instance
@@ -318,7 +320,7 @@ export const ungroupInstance = (
   instance: InstanceNode,
   composite: View,
   createId: (prefix: string) => string,
-): Intent[] => {
+): Ungrouping => {
   const transform = instanceTransform(
     nodeBounds(instance),
     nodeFrame(instance) ?? compositeBounds(composite),
@@ -329,45 +331,43 @@ export const ungroupInstance = (
   const mapEnd = (end: Endpoint): Endpoint =>
     'point' in end ? { point: map(end.point) } : { ...end, node: ids.get(end.node) ?? end.node };
   let z = topZ(Object.values(scene.nodes));
-  const created: Intent[] = Object.values(composite.nodes).map((source) => {
+  const created: Node[] = Object.values(composite.nodes).map((source) => {
     const node = overriddenNode(instance, source);
     const { exposed: _, ...rest } = node;
     z = topZ([{ id: '', z }]);
     return {
-      kind: 'create',
-      node: {
-        ...rest,
-        id: ids.get(node.id) ?? node.id,
-        z,
-        center: map(node.center),
-        size: { width: node.size.width * transform.scale, height: node.size.height * transform.scale },
-        ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
-      },
+      ...rest,
+      id: ids.get(node.id) ?? node.id,
+      z,
+      center: map(node.center),
+      size: { width: node.size.width * transform.scale, height: node.size.height * transform.scale },
+      ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
     };
   });
-  const linked: Intent[] = Object.values(composite.links).map((source) => ({
-    kind: 'link',
-    link: {
-      ...source,
-      id: createId('link'),
-      source: mapEnd(source.source),
-      target: mapEnd(source.target),
-      ...(source.type === 'spline' ? { points: source.points.map(map) } : {}),
-      ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
-    },
+  const linked: Link[] = Object.values(composite.links).map((source) => ({
+    ...source,
+    id: createId('link'),
+    source: mapEnd(source.source),
+    target: mapEnd(source.target),
+    ...(source.type === 'spline' ? { points: source.points.map(map) } : {}),
+    ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
   }));
   const onInstance = (end: Endpoint): Endpoint =>
     'node' in end && end.node === instance.id
       ? { node: (end.port && ids.get(end.port)) ?? ids.values().next().value ?? end.node }
       : end;
-  const reattached: Intent[] = Object.values(scene.links)
+  const reattached = Object.values(scene.links)
     .filter((link) => endpointNode(link.source) === instance.id || endpointNode(link.target) === instance.id)
-    .map((link) => ({
-      kind: 'update',
-      id: link.id,
-      values: { source: onInstance(link.source), target: onInstance(link.target) },
-    }));
-  return [...created, ...linked, ...reattached, { kind: 'delete', ids: [instance.id] }];
+    .map((link) => updateElement(link.id, { source: onInstance(link.source), target: onInstance(link.target) }));
+  return {
+    edit: chainEdits([
+      ...created.map(insertNode),
+      ...linked.map(insertLink),
+      ...reattached,
+      deleteElements([instance.id]),
+    ]),
+    created: created.map(({ id }) => id),
+  };
 };
 
 const isPointValue = (value: unknown): value is Point =>
@@ -428,15 +428,11 @@ export const retargetInstance = (
 });
 
 /** The links in `scene` attached to an instance's ports, renamed after `copyComposite` renamed the ports. */
-export const renamePortLinks = (scene: View, before: InstanceNode, after: InstanceNode): Intent[] => {
+export const renamePortLinks = (scene: View, before: InstanceNode, after: InstanceNode): SceneEdit[] => {
   const names = new Map((before.ports ?? []).map((port, index) => [port.id, after.ports?.[index]?.id ?? port.id]));
   const rename = (end: Endpoint): Endpoint =>
     'node' in end && end.node === before.id && end.port ? { ...end, port: names.get(end.port) ?? end.port } : end;
   return Object.values(scene.links)
     .filter((link) => endpointNode(link.source) === before.id || endpointNode(link.target) === before.id)
-    .map((link) => ({
-      kind: 'update',
-      id: link.id,
-      values: { source: rename(link.source), target: rename(link.target) },
-    }));
+    .map((link) => updateElement(link.id, { source: rename(link.source), target: rename(link.target) }));
 };

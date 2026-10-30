@@ -16,7 +16,7 @@ import { type ElementId, type Layer } from '@dxos/scene';
 
 import { ViewBuilder } from '../../../builder/index.ts';
 import { createCanvasAtoms } from '../../../engine/index.ts';
-import { useCanvasHistory, useRegistry, useViewProjection } from '../../../hooks/index.ts';
+import { useCanvasHistory, useDrawScene, useRegistry } from '../../../hooks/index.ts';
 import { type View, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { InspectorFrame } from '../../panels/testing.ts';
@@ -58,19 +58,19 @@ const DefaultStory = ({ select }: StoryArgs) => {
   const store = useMemo(() => createMemoryStore([VIEW]), []);
   const atoms = useMemo(() => createCanvasAtoms(VIEW.id), []);
   const history = useCanvasHistory({ registry, atoms, store });
-  const projection = useViewProjection({ store, atoms, history });
+  const draw = useDrawScene({ store, atoms, history });
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select));
   }, [registry, atoms, select]);
   // The selection as the model holds it, beside the panel editing it, so every edit shows what it wrote.
-  const scene = useAtomValue(projection.scene);
+  const scene = useAtomValue(draw.scene);
   const styles = useAtomValue(store.styles);
   const selected = select.flatMap((id) => getElement(scene, id) ?? []);
   return (
     <Panel.Root>
       <Panel.Body classNames='grid grid-cols-[20rem_1fr] gap-3'>
         <InspectorFrame section={PROPERTIES}>
-          <PropertiesInspector projection={projection} atoms={atoms} styles={store.styles} />
+          <PropertiesInspector draw={draw} atoms={atoms} styles={store.styles} />
         </InspectorFrame>
         <JsonHighlighter data={{ selected, styles }} classNames='text-sm' />
       </Panel.Body>

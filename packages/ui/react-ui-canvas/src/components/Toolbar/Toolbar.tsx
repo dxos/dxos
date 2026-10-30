@@ -50,7 +50,7 @@ export type ToolbarActions = {
   delete: () => void;
   /** A new node of `type` at the centre of the view. */
   create: (type: NodeType) => void;
-  /** Auto layout; absent when the projection does not offer it (`Capabilities.layout`). */
+  /** Auto layout; absent when the layout does not offer it (`Capabilities.layout`). */
   layout?: () => void;
 };
 
@@ -236,7 +236,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         variant='ghost'
         iconOnly
         icon='ph--tree-structure--regular'
-        label={actions.layout ? 'Auto layout' : 'Auto layout (not offered by this projection)'}
+        label={actions.layout ? 'Auto layout' : 'Auto layout (not offered by this layout)'}
         disabled={!actions.layout}
         data-testid='toolbar-layout'
         onClick={actions.layout}

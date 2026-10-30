@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LayoutIntent, type Scene, findLayout, layoutChanges } from '@dxos/scene';
+import { type LayoutIntent, type Scene, type ViewId, applyIntent, findLayout, layoutChanges } from '@dxos/scene';
 
-import { type ViewportProps } from '../editor/index.ts';
-import { type RenderLists2D, fromRenderList2D } from './render-list.ts';
+import { type ConstrainContext, type ConstrainIntent, type ViewportProps } from '../editor/index.ts';
+import { type SceneEdit } from '../utils/index.ts';
+import { type RenderLists2D, fromRenderList2D, toRenderList2D } from './render-list.ts';
 
 /**
  * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a layout the document has
@@ -106,6 +107,41 @@ export const layoutWrites = (
     }
   }
   return [...created, ...defines.values(), ...updated];
+};
+
+/**
+ * What the layout's `mode` would store of `edit` to list `sceneId`: the edit as given when the mode leaves it be, the
+ * list as the mode rewrites it, or undefined when the mode refuses it. A list with no stored layout is left be.
+ */
+export const constrainEdit = (
+  document: Scene.SceneDocument,
+  lists: RenderLists2D,
+  sceneId: ViewId,
+  edit: SceneEdit,
+  mode: ConstrainIntent,
+  context: ConstrainContext,
+): SceneEdit | undefined => {
+  const shown = lists[sceneId];
+  const record = findLayout(document, sceneId);
+  if (!shown || record?.dim !== '2d') {
+    return edit;
+  }
+  const write = layoutWrites(document, lists, { ...lists, [sceneId]: edit(shown) }).find(
+    (next) => next.kind === 'layout' && next.layout === sceneId,
+  );
+  if (write?.kind !== 'layout') {
+    return edit;
+  }
+  const constrained = mode(record, write.intent, context);
+  if (constrained === undefined || constrained === write.intent) {
+    return constrained && edit;
+  }
+  const layout = applyIntent(record, constrained);
+  const drawn = toRenderList2D(
+    { ...document, layouts: document.layouts.map((next) => (next.id === sceneId ? layout : next)) },
+    layout,
+  );
+  return () => drawn;
 };
 
 export type ApplyLayoutWritesOptions = Pick<ViewportProps, 'onIntent' | 'onModelIntent' | 'onTransaction'> & {

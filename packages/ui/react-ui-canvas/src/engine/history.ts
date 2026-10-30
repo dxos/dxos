@@ -14,7 +14,6 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { type ElementId, type ViewId } from '@dxos/scene';
 
 import { type VersionChange, type VersionedSource, patchSource, recordChanges, unionPaths } from '../model/index.ts';
-import { type Projection } from './projection.ts';
 
 /** Where an edit happened: the View path it was made in (inside an isolated Object), and the selection before it. */
 export type HistoryContext = {
@@ -33,7 +32,7 @@ export type CommitOptions = {
 export type CanvasHistory = {
   /**
    * Runs `change` as one undo step and reports whether it changed anything; a commit inside another joins it, so a
-   * gesture of several intents undoes at once.
+   * gesture of several edits undoes at once.
    */
   commit: (change: () => void, options?: CommitOptions) => boolean;
   /** Undoes the latest step, reporting whether there was one; a host's history may finish it asynchronously. */
@@ -48,8 +47,6 @@ export type CanvasHistory = {
 
 /** The parts of a view a history reaches, which exist only once the view has rendered. */
 export type HistoryView = {
-  /** The open View's projection, whose own model (if any) is patched with the store. */
-  projection?: Projection;
   /** Returns the view to where an undone or redone edit happened. */
   restore?: (context: HistoryContext) => void;
 };
@@ -65,9 +62,8 @@ export type HistoryBinding = {
 
 export type CreateHistory = (binding: HistoryBinding) => CanvasHistory;
 
-/** The binding's view, after a patch: the projection catches up and the view returns to where the edit was. */
+/** The binding's view, after a patch: it returns to where the edit was. */
 export const afterPatch = (view: HistoryView, context: HistoryContext | undefined) => {
-  view.projection?.restored?.();
   if (context) {
     view.restore?.(context);
   }
@@ -81,46 +77,33 @@ export const isHistoryContext = (value: unknown): value is HistoryContext =>
   Array.isArray(value.path) &&
   Array.isArray(value.selection);
 
-/** One source's part in a commit. */
-export type SourceChange = { source: VersionedSource; change: VersionChange };
-
 /**
  * Runs commits for a history: nested commits join the outermost, which reports what it changed, and where the view
  * was when it began, to `record`.
  */
 export const createCommitter = (
-  binding: Pick<HistoryBinding, 'store' | 'context'> & { model: () => VersionedSource | undefined },
-  record: (changes: SourceChange[], context: HistoryContext, options: CommitOptions) => void,
+  binding: Pick<HistoryBinding, 'store' | 'context'>,
+  record: (change: VersionChange, context: HistoryContext, options: CommitOptions) => void,
 ): CanvasHistory['commit'] => {
   let depth = 0;
   return (change, options = {}) => {
-    const model = binding.model();
-    const sources = model ? [binding.store, model] : [binding.store];
     const context = depth === 0 ? binding.context() : undefined;
     depth++;
-    let changes: SourceChange[];
+    let recorded: VersionChange | undefined;
     try {
-      changes = recordChanges(sources, change).flatMap((entry, index) =>
-        entry ? [{ source: sources[index], change: entry }] : [],
-      );
+      [recorded] = recordChanges([binding.store], change);
     } finally {
       depth--;
     }
-    if (context && changes.length > 0) {
-      record(changes, context, options);
+    if (context && recorded) {
+      record(recorded, context, options);
     }
-    return changes.length > 0;
+    return recorded !== undefined;
   };
 };
 
-/** Which of a view's sources a change was to: its store, or its projection's own model. */
-type SourceRole = 'store' | 'model';
-
-/** A change by the role of its source, so a later binding of the same view (a remount) can patch it. */
-type RoleChange = { source: SourceRole; change: VersionChange };
-
 type LocalEntry = {
-  changes: RoleChange[];
+  change: VersionChange;
   context: HistoryContext;
   mergeKey?: string;
   updated: number;
@@ -142,15 +125,11 @@ export type LocalHistoryOptions = {
   stacks?: LocalHistoryStacks;
 };
 
-const fold = (earlier: RoleChange[], later: RoleChange[]): RoleChange[] => {
-  const folded = earlier.map(({ source, change }) => {
-    const next = later.find((entry) => entry.source === source)?.change;
-    return next
-      ? { source, change: { before: change.before, after: next.after, paths: unionPaths(change.paths, next.paths) } }
-      : { source, change };
-  });
-  return [...folded, ...later.filter(({ source }) => !earlier.some((entry) => entry.source === source))];
-};
+const fold = (earlier: VersionChange, later: VersionChange): VersionChange => ({
+  before: earlier.before,
+  after: later.after,
+  paths: unionPaths(earlier.paths, later.paths),
+});
 
 /** The history a canvas keeps for itself when its host has none: two stacks of patches in memory. */
 export const createLocalHistory =
@@ -164,43 +143,32 @@ export const createLocalHistory =
     // Kept stacks may already hold steps, which this view can undo.
     publish();
 
-    const commit = createCommitter(
-      { ...binding, model: () => binding.view.projection?.model },
-      (sourceChanges, context, { mergeKey }) => {
-        const changes = sourceChanges.map(({ source, change }): RoleChange => ({
-          source: source === binding.store ? 'store' : 'model',
-          change,
-        }));
-        const time = now();
-        const last = past.at(-1);
-        if (
-          mergeable &&
-          last &&
-          mergeKey !== undefined &&
-          last.mergeKey === mergeKey &&
-          time - last.updated <= mergeWindow
-        ) {
-          last.changes = fold(last.changes, changes);
-          last.updated = time;
-        } else {
-          past.push({ changes, context, mergeKey, updated: time });
-          past.splice(0, Math.max(0, past.length - limit));
-        }
-        future.length = 0;
-        mergeable = true;
-        publish();
-      },
-    );
-
-    /** Moves `entry` from one end of its changes to the other, its sources in reverse order on the way back. */
-    const step = (entry: LocalEntry, direction: 'undo' | 'redo') => {
-      const changes = direction === 'undo' ? [...entry.changes].reverse() : entry.changes;
-      for (const { source: role, change } of changes) {
-        const source = role === 'store' ? binding.store : binding.view.projection?.model;
-        const [from, to] = direction === 'undo' ? [change.after, change.before] : [change.before, change.after];
-        source && patchSource(source, { from, to, paths: change.paths });
+    const commit = createCommitter(binding, (change, context, { mergeKey }) => {
+      const time = now();
+      const last = past.at(-1);
+      if (
+        mergeable &&
+        last &&
+        mergeKey !== undefined &&
+        last.mergeKey === mergeKey &&
+        time - last.updated <= mergeWindow
+      ) {
+        last.change = fold(last.change, change);
+        last.updated = time;
+      } else {
+        past.push({ change, context, mergeKey, updated: time });
+        past.splice(0, Math.max(0, past.length - limit));
       }
-      afterPatch(binding.view, entry.context);
+      future.length = 0;
+      mergeable = true;
+      publish();
+    });
+
+    /** Moves the store from one end of `entry` to the other. */
+    const step = ({ change, context }: LocalEntry, direction: 'undo' | 'redo') => {
+      const [from, to] = direction === 'undo' ? [change.after, change.before] : [change.before, change.after];
+      patchSource(binding.store, { from, to, paths: change.paths });
+      afterPatch(binding.view, context);
     };
 
     return {
@@ -233,11 +201,11 @@ export const createLocalHistory =
     };
   };
 
-/** A history for a view that edits nothing it should undo (a host projection that owns its side effects). */
+/** A history for a view that edits nothing it should undo (a host that owns its side effects). */
 export const noHistory: CreateHistory = (binding) => {
   const state = Atom.keepAlive(Atom.make<HistoryState>({ canUndo: false, canRedo: false }));
   return {
-    commit: createCommitter({ ...binding, model: () => binding.view.projection?.model }, () => {}),
+    commit: createCommitter(binding, () => {}),
     undo: () => false,
     redo: () => false,
     state,
@@ -245,9 +213,3 @@ export const noHistory: CreateHistory = (binding) => {
     view: binding.view,
   };
 };
-
-/** The projection with every intent applied as a commit of `history`, so each one is an undo step. */
-export const withHistory = (projection: Projection, history: Pick<CanvasHistory, 'commit'>): Projection => ({
-  ...projection,
-  apply: (intent) => void history.commit(() => projection.apply(intent)),
-});

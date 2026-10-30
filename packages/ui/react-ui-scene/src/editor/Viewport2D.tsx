@@ -11,11 +11,9 @@ import {
   Canvas,
   type Capabilities,
   type ConstrainIntent,
-  type FreehandProjectionOptions,
   type GeneratorSource,
   type KeyAction,
   type NodeRegistry,
-  type Projection,
   type Tool,
   type ViewportProps,
   createCanvasAtoms,
@@ -23,7 +21,7 @@ import {
 } from '@dxos/react-ui-canvas';
 import { type LayoutIntent, findLayout } from '@dxos/scene';
 
-import { type Kinds, fromViewportIntent, latticesKey, layoutProjection, toViewportDocument } from '../canvas/index.ts';
+import { type Kinds, fromViewportIntent, toViewportDocument } from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 
@@ -45,8 +43,6 @@ export type Viewport2DOptions = {
   nodes?: NodeRegistry;
   /** The plugin element kinds among `nodes`, whose elements keep their own fields at their top (decision 13). */
   kinds?: Kinds;
-  /** The canvas's mode (lattice, constrained, dynamic) over its store; when unset, each layout's own (its lattice). */
-  createProjection?: (options: FreehandProjectionOptions) => Projection;
   /** The layout's mode, which the editor applies to every write; a refused or rewritten drag is redrawn as stored. */
   constrain?: ConstrainIntent;
   /** What a person may do, within what the mode allows (a generated graph moves its shapes only); all of it when unset. */
@@ -69,22 +65,6 @@ const sameCamera = (left: Camera | undefined, right: Camera | undefined): boolea
   left === right || (!!left && !!right && left.x === right.x && left.y === right.y && left.zoom === right.zoom);
 
 const sameTool = (left: Tool, right: Tool): boolean => JSON.stringify(left) === JSON.stringify(right);
-
-const CAPABILITIES = [
-  'move',
-  'resize',
-  'link',
-  'create',
-  'delete',
-  'update',
-  'layout',
-] as const satisfies readonly (keyof Capabilities)[];
-
-/** `projection` allowing only what `allowed` also allows. */
-const withCapabilities = (projection: Projection, allowed: Capabilities): Projection => ({
-  ...projection,
-  capabilities: Object.fromEntries(CAPABILITIES.map((key) => [key, !!projection.capabilities[key] && !!allowed[key]])),
-});
 
 /**
  * The 2D viewport the shared editor draws: react-ui-canvas's engine over the open scene's layouts, with its gestures,
@@ -121,9 +101,6 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     const registry = useContext(RegistryContext);
     const root = useMemo(() => rootLayoutOf(document, sceneId), [sceneId]);
     const atoms = useMemo(() => createCanvasAtoms(root), [root]);
-    // The document the projection reads, which outlives a render.
-    const latest = useRef(document);
-    latest.current = document;
 
     // The editor's state into the engine.
     useEffect(() => {
@@ -143,16 +120,6 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     useEffect(() => registry.set(atoms.snap, snap && !picture), [registry, atoms, snap, picture]);
     useEffect(() => registry.set(atoms.axes, !!axes && !picture), [registry, atoms, axes, picture]);
     useEffect(() => registry.set(atoms.guides, !!guides && !picture), [registry, atoms, guides, picture]);
-
-    // A layout with a lattice snaps the drag itself, so the engine previews the cells it lands on and draws the guides.
-    const lattices = latticesKey(document);
-    const createProjection = useMemo(() => {
-      const create = options.createProjection ?? layoutProjection(() => latest.current);
-      const allowed = options.capabilities;
-      return allowed
-        ? (projection: FreehandProjectionOptions) => withCapabilities(create(projection), allowed)
-        : create;
-    }, [lattices]);
 
     // The engine's own changes back to the editor.
     const handlers = useRef({ onSelect, onToolChange, onEdit, selection, tool, editing });
@@ -184,7 +151,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
         onTransaction={onTransaction}
         atoms={atoms}
         nodes={options.nodes}
-        createProjection={createProjection}
+        capabilities={options.capabilities}
         theme={theme}
         backgroundGrid={grid && !picture ? 'lines' : 'none'}
         readonly={readonly || !!picture}

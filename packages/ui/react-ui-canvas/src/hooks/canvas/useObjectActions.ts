@@ -6,13 +6,16 @@ import { useMemo, useRef } from 'react';
 
 import { type ElementId, type InstanceNode, type NodeId, type Size, type ViewId, isInstanceNode } from '@dxos/scene';
 
-import { type CanvasAtoms, type CanvasHistory, type NavigationCommands, type Projection } from '../../engine/index.ts';
-import { type Intent, type View, type ViewStore } from '../../model/index.ts';
+import { type CanvasAtoms, type CanvasHistory, type DrawScene, type NavigationCommands } from '../../engine/index.ts';
+import { type View, type ViewStore } from '../../model/index.ts';
 import {
+  type SceneEdit,
   activeLayer,
+  chainEdits,
   compositeBounds,
   copyComposite,
   createId,
+  insertNode,
   instancePorts,
   isAnonymous,
   promoted,
@@ -21,6 +24,7 @@ import {
   retargetInstance,
   screenToScene,
   topZ,
+  updateElement,
 } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 
@@ -37,7 +41,7 @@ export type UseObjectActionsOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
   store: ViewStore;
-  projection: Projection;
+  draw: DrawScene;
   /** Runs each action as one undo step. */
   commit: CanvasHistory['commit'];
   select: (ids: Iterable<ElementId>) => void;
@@ -50,7 +54,7 @@ export const useObjectActions = ({
   registry,
   atoms,
   store,
-  projection,
+  draw,
   commit: commitStep,
   select,
   navigation,
@@ -60,18 +64,18 @@ export const useObjectActions = ({
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
   return useMemo<ObjectActions>(() => {
-    /** Writes `scenes` into the store and applies `intents`, as one undo step. */
-    const commit = (scenes: Record<ViewId, View>, intents: Intent[]) =>
+    /** Writes `scenes` into the store and applies `edits`, as one undo step. */
+    const commit = (scenes: Record<ViewId, View>, edits: SceneEdit[]) =>
       commitStep(() => {
         registry.set(store.views, { ...registry.get(store.views), ...scenes });
-        if (intents.length > 0) {
-          projection.apply({ kind: 'batch', intents });
+        if (edits.length > 0) {
+          draw.apply(chainEdits(edits));
         }
       });
     return {
       /** Points an instance at a copy of its composite, so editing one no longer edits the other. */
       makeUnique: (id: NodeId) => {
-        const current = registry.get(projection.scene);
+        const current = registry.get(draw.scene);
         const instance = current.nodes[id];
         const composite =
           instance && isInstanceNode(instance) ? registry.get(store.views)[instance.composite] : undefined;
@@ -82,11 +86,7 @@ export const useObjectActions = ({
         const copy = copyComposite(composite, createId('object'), createId);
         const unique = retargetInstance(instance, copy.composite.id, copy.rename);
         commit({ [copy.composite.id]: copy.composite }, [
-          {
-            kind: 'update',
-            id,
-            values: { composite: unique.composite, overrides: unique.overrides, ports: unique.ports },
-          },
+          updateElement(id, { composite: unique.composite, overrides: unique.overrides, ports: unique.ports }),
           ...renamePortLinks(current, instance, unique),
         ]);
       },
@@ -115,7 +115,7 @@ export const useObjectActions = ({
           width: content.width,
           height: content.height,
         };
-        const current = registry.get(projection.scene);
+        const current = registry.get(draw.scene);
         const instance: InstanceNode = {
           type: 'instance',
           id: createId('instance'),
@@ -127,9 +127,9 @@ export const useObjectActions = ({
           layer: activeLayer(current, registry.get(atoms.layer)),
         };
         if (isAnonymous(definition)) {
-          commit({ [composite]: promoted(definition) }, [{ kind: 'create', node: instance }]);
+          commit({ [composite]: promoted(definition) }, [insertNode(instance)]);
         } else {
-          projection.apply({ kind: 'create', node: instance });
+          draw.apply(insertNode(instance));
         }
         select([instance.id]);
       },
@@ -155,5 +155,5 @@ export const useObjectActions = ({
         commitStep(() => registry.set(store.views, next));
       },
     };
-  }, [registry, atoms, store, projection, commitStep, select, navigation]);
+  }, [registry, atoms, store, draw, commitStep, select, navigation]);
 };

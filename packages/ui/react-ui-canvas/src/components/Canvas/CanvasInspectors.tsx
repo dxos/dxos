@@ -5,8 +5,8 @@
 //
 // Root view of the scene engine (§6–§8): owns the camera, the scene path, selection and the pointer
 // state machine; renders the current scene through `SceneLayer` under one CSS transform and drills
-// in and out of portals with a camera transition then a root swap. Every model change goes through
-// the projection as an intent; the view never writes coordinates itself (decision 11).
+// in and out of portals with a camera transition then a root swap. Every change is an edit of the draw state, which
+// reaches the host as layout intents; the view never writes the document itself (decision 11).
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
@@ -16,17 +16,20 @@ import * as Button from '@dxos/react-ui/Button';
 import { type ElementId, type Layer, type LayerId, type ViewId, isInstanceNode, isLink } from '@dxos/scene';
 
 import { type CanvasController } from '../../engine/index.ts';
-import { type Capabilities, type Intent, type View, type ViewStore, getElement } from '../../model/index.ts';
+import { type Capabilities, type View, type ViewStore, getElement } from '../../model/index.ts';
 import {
   activeLayer,
+  chainEdits,
   compositeBounds,
   compositeViews,
   createId,
   createLayer,
   instanceCounts,
   isAnonymous,
-  mergeLayersIntent,
+  mergeLayers,
   moveLayer,
+  putLayer,
+  removeLayer,
   viewLayers,
   viewOptions,
 } from '../../utils/index.ts';
@@ -69,13 +72,13 @@ export const CanvasPropertiesForm = ({
   onGroupsChange,
   sceneFilter,
 }: CanvasPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.PropertiesForm');
+  const { draw, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.PropertiesForm');
   const path = useAtomValue(useCanvasNavigation('Canvas.PropertiesForm').atoms.path);
   const scenes = useAtomValue(store.views);
   const options = useMemo(() => viewOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
   return (
     <PropertiesInspector
-      projection={projection}
+      draw={draw}
       atoms={atoms}
       nodes={nodeRegistry}
       fields={fields}
@@ -269,12 +272,12 @@ CanvasViews.displayName = 'Canvas.Views';
  * turns). Each edit is one intent, so one undo step.
  */
 export const CanvasLayers = () => {
-  const { registry, projection, atoms, capabilities } = useCanvasServices('Canvas.Layers');
-  const scene = useAtomValue(projection.scene);
+  const { registry, draw, atoms, capabilities } = useCanvasServices('Canvas.Layers');
+  const scene = useAtomValue(draw.scene);
   const active = useAtomValue(atoms.layer);
   const layers = useMemo(() => viewLayers(scene), [scene]);
   const readonly = !capabilities.update;
-  const setLayer = useCallback((layer: Layer) => projection.apply({ kind: 'layer', layer }), [projection]);
+  const setLayer = useCallback((layer: Layer) => draw.apply(putLayer(layer)), [draw]);
   const byId = useCallback((id: LayerId) => layers.find((layer) => layer.id === id), [layers]);
   // The layers picked in the panel; the active layer (the top-most of them) is the one new shapes go on.
   const [picked, setPicked] = useState<LayerId[]>([]);
@@ -319,15 +322,15 @@ export const CanvasLayers = () => {
         onDelete={
           capabilities.delete
             ? (ids) => {
-                projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
+                draw.apply(chainEdits(ids.map(removeLayer)));
                 setPicked([]);
               }
             : undefined
         }
         onMerge={(ids, into) => {
-          const merge = mergeLayersIntent(scene, ids, into);
+          const merge = mergeLayers(scene, ids, into);
           if (merge) {
-            projection.apply(merge);
+            draw.apply(merge);
             select([into]);
           }
         }}
@@ -368,13 +371,13 @@ const ObjectThumbnail = ({ id }: { id: ViewId }) => {
 
 /** The drawing's composite objects: a docked inspector beside the layers. */
 export const CanvasObjects = () => {
-  const { store, projection, capabilities } = useCanvasDocument('Canvas.Objects');
+  const { store, draw, capabilities } = useCanvasDocument('Canvas.Objects');
   const { objectActions } = useCanvasServices('Canvas.Objects');
   const navigation = useCanvasNavigation('Canvas.Objects');
   const selection = useAtomValue(useCanvasSelection('Canvas.Objects').atoms.selection);
   const isolation = useAtomValue(navigation.atoms.isolation);
   // The scene as stored rather than as a gesture draws it: a gesture never changes which object an instance shows.
-  const scene = useAtomValue(projection.scene);
+  const scene = useAtomValue(draw.scene);
   const scenes = useAtomValue(store.views);
   // The open composite, else the one an instance on the canvas draws.
   const selected = useMemo(() => {

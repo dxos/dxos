@@ -9,6 +9,7 @@ import {
   type Bounds,
   type ElementId,
   type Node,
+  type NodeId,
   type Point,
   type Size,
   type StyleClass,
@@ -22,7 +23,6 @@ import {
   type BackgroundGrid,
   type Camera,
   type Capabilities,
-  type Intent,
   type NodeRegistry,
   type Tool,
   type View,
@@ -37,8 +37,10 @@ import {
   DRILL_ANIMATION_MS,
   EMPTY_FRAME,
   NOMINAL_ZOOM,
+  type SceneEdit,
   activeLayer,
   between,
+  chainEdits,
   childFrame,
   classedLink,
   classedNode,
@@ -49,6 +51,7 @@ import {
   contentBounds,
   copySelection,
   createId,
+  deleteElements,
   duplicateSelection,
   enterPortal,
   exitPortal,
@@ -58,15 +61,17 @@ import {
   pastedRecords,
   pasteFragment,
   promotedBy,
+  reorderElement,
   restackZ,
   topZ,
   ungroupInstance,
   unionBounds,
+  updateElement,
   zoomAt,
 } from '../utils/index.ts';
 import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
+import { type DrawScene, readonlyCapabilities } from './draw.ts';
 import { type CanvasHistory, createCommitter } from './history.ts';
-import { type Projection, readonlyCapabilities, reduceIntent } from './projection.ts';
 
 /** The grid a paste steps along and snaps to, which depends on the zoom. */
 export type ControllerGrid = { major: number; snap: (value: number) => number };
@@ -99,8 +104,8 @@ export type CanvasControllerOptions = {
   registry: Registry.AtomRegistry;
   atoms: CanvasAtoms;
   store: ViewStore;
-  /** The open View's projection, read when a command runs: it changes as the View changes. */
-  projection: () => Projection;
+  /** The open View's draw scene, read when a command runs: it changes as the View changes. */
+  draw: () => DrawScene;
   /** The node types, for how a portal opens. */
   nodeRegistry: () => NodeRegistry;
   /** Read when a command runs: the host may toggle it. */
@@ -191,11 +196,11 @@ export type SelectionCommands = {
   classFrom: () => string | undefined;
 };
 
-/** The intent helpers on the open View's document (DESIGN.md §13.1, the Document aspect). */
-export type DocumentIntentCommands = {
+/** The edit helpers on the open View's document (DESIGN.md §13.1, the Document aspect). */
+export type DocumentEditCommands = {
   /**
    * Moves `element` just before or after its sibling `target` in the drawing order of `container`, which must be the
-   * open View, as one intent (one undo step); false when nothing moved.
+   * open View, as one edit (one undo step); false when nothing moved.
    */
   restack: (container: ViewId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
   /**
@@ -229,7 +234,7 @@ export type ToolsCommands = {
  * controller is created once per canvas and its identity never changes with the state (DESIGN.md §13).
  */
 export type CanvasController = {
-  document: DocumentIntentCommands;
+  document: DocumentEditCommands;
   navigation: NavigationCommands;
   look: LookCommands;
   selection: SelectionCommands;
@@ -241,7 +246,7 @@ export const createCanvasController = ({
   registry,
   atoms,
   store,
-  projection,
+  draw,
   nodeRegistry,
   readonly,
   grid,
@@ -257,16 +262,15 @@ export const createCanvasController = ({
   const unrecorded = createCommitter(
     {
       store: storeVersions(registry, store),
-      model: () => projection().model,
       context: () => ({ path: [], selection: [] }),
     },
     () => {},
   );
   const commit: CanvasHistory['commit'] = (change, options) =>
     (historyOption?.().commit ?? unrecorded)(change, options);
-  // A read-only canvas edits nothing whatever its projection allows, as `CanvasRoot` gates its own controls.
-  const capabilities = (): Capabilities => (readonly() ? readonlyCapabilities : projection().capabilities);
-  const currentScene = () => registry.get(projection().scene);
+  // A read-only canvas edits nothing whatever its layout allows, as `CanvasRoot` gates its own controls.
+  const capabilities = (): Capabilities => (readonly() ? readonlyCapabilities : draw().capabilities);
+  const currentScene = () => registry.get(draw().scene);
   const currentView = (): ViewId | undefined => registry.get(atoms.path).at(-1);
 
   const select = (ids: Iterable<ElementId>) => {
@@ -281,22 +285,22 @@ export const createCanvasController = ({
   };
 
   /**
-   * Applies `intent` through `target` with `edit`'s change to the store's records, then deletes the records it leaves
-   * nothing pointing at (VIEWS.md §7.4), all as one undo step; false when the projection refused the intent, which
-   * leaves the records as they were.
+   * Applies `edit` through `target` with `records`' change to the store's records, then deletes the records it leaves
+   * nothing pointing at (VIEWS.md §7.4), all as one undo step; false when the edit changed nothing, which leaves the
+   * records as they were.
    */
   const applyWithRecords = (
-    target: Projection,
-    intent: Intent,
-    edit: (views: ViewMap) => ViewMap = (views) => views,
+    target: DrawScene,
+    edit: SceneEdit,
+    records: (views: ViewMap) => ViewMap = (views) => views,
   ): boolean =>
     commit(() => {
       const before = registry.get(store.views);
-      if (!commit(() => target.apply(intent))) {
+      if (!commit(() => target.apply(edit))) {
         return;
       }
       const after = registry.get(store.views);
-      const edited = edit(after);
+      const edited = records(after);
       const next = pruneOrphaned(before, edited, roots(edited));
       if (next !== after) {
         registry.set(store.views, next);
@@ -311,7 +315,7 @@ export const createCanvasController = ({
       if (ids.length === 0 || !capabilities().delete) {
         return false;
       }
-      applyWithRecords(projection(), { kind: 'delete', ids });
+      applyWithRecords(draw(), deleteElements(ids));
       select([]);
       return true;
     },
@@ -319,7 +323,7 @@ export const createCanvasController = ({
       if (!capabilities().create || !capabilities().delete) {
         return undefined;
       }
-      const base = projection();
+      const base = draw();
       const current = registry.get(base.scene);
       const instanceId = newId('instance');
       const composition = composeSelection(current, registry.get(atoms.selection), {
@@ -332,9 +336,9 @@ export const createCanvasController = ({
       if (!composition) {
         return undefined;
       }
-      const { composite, intents } = composition;
-      applyWithRecords(base, { kind: 'batch', intents }, (views) => ({ ...views, [composite.id]: composite }));
-      // A projection may refuse the batch or drop the Instance, which leaves the definition an orphan, already gone.
+      const { composite, edit } = composition;
+      applyWithRecords(base, edit, (views) => ({ ...views, [composite.id]: composite }));
+      // The edit may drop the Instance, which leaves the definition an orphan, already gone.
       if (!registry.get(base.scene).nodes[instanceId]) {
         return undefined;
       }
@@ -345,24 +349,25 @@ export const createCanvasController = ({
       if (!capabilities().create || !capabilities().delete) {
         return [];
       }
-      const base = projection();
+      const base = draw();
       const views = registry.get(store.views);
       // Each Instance is exploded into the scene the ones before it left, so their new nodes stack in order.
       let scene = registry.get(base.scene);
-      const intents: Intent[] = [];
+      const edits: SceneEdit[] = [];
+      const created: NodeId[] = [];
       for (const id of registry.get(atoms.selection)) {
         const instance = scene.nodes[id];
         const composite = instance && isInstanceNode(instance) ? views[instance.composite] : undefined;
         if (instance && isInstanceNode(instance) && composite) {
           const exploded = ungroupInstance(scene, instance, composite, newId);
-          intents.push(...exploded);
-          scene = reduceIntent(scene, { kind: 'batch', intents: exploded });
+          edits.push(exploded.edit);
+          created.push(...exploded.created);
+          scene = exploded.edit(scene);
         }
       }
-      if (intents.length === 0 || !applyWithRecords(base, { kind: 'batch', intents })) {
+      if (edits.length === 0 || !applyWithRecords(base, chainEdits(edits))) {
         return [];
       }
-      const created = intents.flatMap((intent) => (intent.kind === 'create' ? [intent.node.id] : []));
       select(created);
       return created;
     },
@@ -378,7 +383,7 @@ export const createCanvasController = ({
       const style = isLink(element) ? classedLink(element, styleMap).style : classedNode(element, styleMap).style;
       const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
       registry.set(store.styles, { ...styleMap, [id]: styleClass });
-      projection().apply({ kind: 'update', id: element.id, values: { class: id, style: undefined } });
+      draw().apply(updateElement(element.id, { class: id, style: undefined }));
       return id;
     },
   };
@@ -397,7 +402,7 @@ export const createCanvasController = ({
       if (!capabilities().delete || !copy()) {
         return;
       }
-      applyWithRecords(projection(), { kind: 'delete', ids: [...registry.get(atoms.selection)] });
+      applyWithRecords(draw(), deleteElements([...registry.get(atoms.selection)]));
       select([]);
     },
     paste: (at) => {
@@ -412,7 +417,7 @@ export const createCanvasController = ({
       const offset = at && bounds ? { x: snap(at.x) - bounds.x, y: snap(at.y) - bounds.y } : { x: step, y: step };
       let nodeZ = topZ(Object.values(scene.nodes));
       let linkZ = topZ(Object.values(scene.links));
-      const { intent, ids } = pasteFragment({
+      const { edit, ids } = pasteFragment({
         clipboard: fragment,
         offset,
         createId: newId,
@@ -421,9 +426,7 @@ export const createCanvasController = ({
         layer: activeLayer(scene, registry.get(atoms.layer)),
       });
       const records = pastedRecords(registry.get(store.views), fragment);
-      applyWithRecords(projection(), intent, (views) =>
-        Object.keys(records).length > 0 ? { ...views, ...records } : views,
-      );
+      applyWithRecords(draw(), edit, (views) => (Object.keys(records).length > 0 ? { ...views, ...records } : views));
       registry.set(atoms.clipboard, { ...fragment, pasted: at ? fragment.pasted : fragment.pasted + 1 });
       select(ids);
     },
@@ -702,7 +705,7 @@ export const createCanvasController = ({
     setBackgroundGrid: (grid) => lookHandlers?.().onBackgroundGridChange?.(grid),
   };
 
-  const document: DocumentIntentCommands = {
+  const document: DocumentEditCommands = {
     restack: (container, element, target, position) => {
       if (!capabilities().update) {
         return false;
@@ -710,10 +713,10 @@ export const createCanvasController = ({
       const scene = currentScene();
       if (scene.id === container) {
         const z = restackZ(scene, element, target, position);
-        z !== undefined && projection().apply({ kind: 'reorder', id: element, z });
+        z !== undefined && draw().apply(reorderElement(element, z));
         return z !== undefined;
       }
-      // Another View, or an Object's definition: written to the store, as the open View's projection draws only its own.
+      // Another View, or an Object's definition: written to the store, as the open scene draws only its own.
       const views = registry.get(store.views);
       const host = views[container];
       const z = host && restackZ(host, element, target, position);
@@ -741,7 +744,7 @@ export const createCanvasController = ({
         registry.get(store.views),
         selected.flatMap((id) => scene.nodes[id] ?? []),
       );
-      applyWithRecords(projection(), copy.intent, (views) =>
+      applyWithRecords(draw(), copy.edit, (views) =>
         Object.keys(records).length > 0 ? { ...views, ...records } : views,
       );
       select(copy.ids);

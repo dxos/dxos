@@ -310,6 +310,22 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
   restarts their runs (a cost only for long generator films, of which there are none). **Parity:** 3D had no engine
   timeline; both dimensions key and play shots through `SceneEditor.Timeline` (decision 16). Cost if wrong: a host that
   keys in a bare `Canvas.Root` moves to `SceneEditor`.
+- **R-69 (2026-10-30, agent, C.2/E.6): the engine edits its draw state with scene edits; `Intent` and the projections
+  retire.** Deleted: `Intent`, `reduceIntent`, `isIntent`, `engine/projection.ts` and the freehand, lattice,
+  constrained and dynamic projections. An edit is a `SceneEdit`, `(scene) => scene` (`utils/edits.ts`: `moveNodes`,
+  `resizeTo`, `insertNode`, `insertLink`, `deleteElements`, `reorderElement`, `updateElement`, `arrangeScene`,
+  `chainEdits`; `putLayer`/`removeLayer`/`mergeLayers` in `utils/layers.ts`). `engine/draw.ts`'s `DrawScene` (`scene`,
+  `apply`, `capabilities`, `constrain`, `lattice`) replaces `Projection`, and `useDrawScene` replaces
+  `useViewProjection`. `Canvas.Root` drops `createProjection` for `capabilities`, intersected with what the layout
+  allows (a lattice layout allows no arrangement), and reads each layout's lattice from the document. A preview goes
+  through the host's mode: `constrainEdit` (`viewport2d/writes.ts`) turns the edit into the layout intent the release
+  would write, constrains it and draws the result, so a drag shows its landing, or its refusal, as the editor will store
+  it. The release writes freehand, and the mode decides what is stored (R-67). The history keeps only the store; a
+  projection's own model is gone. The graph and rank placements move to `modes/graph.ts` and `modes/ranks.ts`.
+  `useDocumentHost` takes a `constrain`, so the Canvas `Lattice` story keeps its mode. A drag-created spline still has
+  no control points (`createLink`, unchanged). This supersedes R-8's engine lattice projection. **Parity:** 3D has no
+  engine projection; its edits pass the same editor `constrain`, and 3D has no splines. Cost if wrong: a preview runs
+  the mode once per pointer move (a diff and a render-list read of the open layout).
 
 ## Global Constraints
 
@@ -889,7 +905,8 @@ point edit) and `engine/controller.ts` to call `onPreview`/`onIntent` with `Layo
 - [x] **Step 1: Failing test** `test('a drag of 200 elements writes once on release', …)` (Review Focus 2: count
       ECHO writes via a recording layout proxy); `test('resize emits a scale intent at release', …)`. (R-67:
       `hooks/canvas/useDocumentStore.test.tsx`; a resize writes `size`.)
-- [ ] **Steps 2–5:** FAIL → implement → PASS → commit `react-ui-canvas: 2D gestures commit intents on release`.
+- [x] **Steps 2–5:** FAIL → implement → PASS → commit `react-ui-canvas: 2D gestures commit intents on release`.
+      (R-67; the edits and previews through the mode, R-69.)
 
 ### Task C.3: 2D on `SceneEditor` in plugin-canvas
 
@@ -996,7 +1013,8 @@ utilities.
 - [ ] Commit `react-ui-canvas: retire the View model, Intent and ViewStore`.
 - [x] Legacy drawings read only through the migration (R-61, R-62, R-63, R-64); tldraw to `Element2D`s (R-60).
 - [x] The engine timeline retires; the end card plays a shot (R-68).
-- [ ] The View model, `Intent`, `ViewStore`: blocked on C.2 (R-65).
+- [x] `Intent`, `reduceIntent` and the engine projections (R-69).
+- [ ] The View model and `ViewStore`.
 
 ---
 

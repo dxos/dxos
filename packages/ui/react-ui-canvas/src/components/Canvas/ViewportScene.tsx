@@ -39,7 +39,7 @@ export type ViewportSceneProps = {
 
 /** The scene under the camera: the lattice, the layer and the control frame, sampled at the clock's time. */
 export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay }: ViewportSceneProps) => {
-  const { atoms, store, capabilities, readonly, projection, nodeRegistry, grid } = useCanvasServices('Canvas.Viewport');
+  const { atoms, store, capabilities, readonly, draw, nodeRegistry, grid } = useCanvasServices('Canvas.Viewport');
   const {
     displayScene,
     blocked,
@@ -86,8 +86,8 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
       data-frame-time={frameTimeAttribute(time)}
     >
       {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
-      {guides && !readonly && projection.lattice && (
-        <LatticeGrid spec={projection.lattice} bounds={latticeBounds} unit={frameUnit} />
+      {guides && !readonly && draw.lattice && (
+        <LatticeGrid spec={draw.lattice} bounds={latticeBounds} unit={frameUnit} />
       )}
       <div className='pointer-events-auto'>
         <SceneLayer
@@ -110,7 +110,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           debug={debug}
           handlers={handlers}
           // Routes follow the gutters in lattice mode, whether or not snap is on.
-          lattice={projection.lattice}
+          lattice={draw.lattice}
           cell={grid * MAJOR_GRID_RATIO}
           generated={generated}
         />
@@ -131,7 +131,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           createFrame={createFrame}
           landing={landing}
           blocked={blocked}
-          lattice={projection.lattice}
+          lattice={draw.lattice}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}

@@ -45,11 +45,12 @@ import {
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type CanvasAtoms, type Projection } from '../../../engine/index.ts';
+import { type CanvasAtoms, type DrawScene } from '../../../engine/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE, useRegistry } from '../../../hooks/index.ts';
 import { NO_STYLES, type NodeRegistry, getElement, nodeDef } from '../../../model/index.ts';
 import {
   type ViewOption,
+  chainEdits,
   classedLink,
   classedNode,
   commonSchema,
@@ -60,6 +61,7 @@ import {
   portsPerSideOf,
   resolveStyle,
   splitClassEdit,
+  updateElement,
   viewLayers,
 } from '../../../utils/index.ts';
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
@@ -199,7 +201,7 @@ const describeSelection = (elements: readonly Element[]) => {
 };
 
 export type PropertiesInspectorProps = InspectorProps & {
-  projection: Projection;
+  draw: DrawScene;
   atoms: CanvasAtoms;
   nodes?: NodeRegistry;
   fields?: FormFieldMap;
@@ -221,7 +223,7 @@ export type PropertiesInspectorProps = InspectorProps & {
 /** The selection's properties, as one form; read-only too where the projection cannot `update`. */
 export const PropertiesInspector = ({
   classNames,
-  projection,
+  draw,
   atoms,
   nodes = defaultNodeRegistry,
   fields,
@@ -235,10 +237,10 @@ export const PropertiesInspector = ({
   onGroupsChange,
 }: PropertiesInspectorProps) => {
   const registry = useRegistry();
-  const scene = useAtomValue(projection.scene);
+  const scene = useAtomValue(draw.scene);
   const selection = useAtomValue(atoms.selection);
   const elements = useMemo(() => [...selection].flatMap((id) => getElement(scene, id) ?? []), [scene, selection]);
-  const readonly = readonlyProp || !projection.capabilities.update;
+  const readonly = readonlyProp || !draw.capabilities.update;
   const styleMap = useAtomValue(styles ?? NO_STYLES);
   const layers = useMemo(() => viewLayers(scene), [scene]);
 
@@ -293,17 +295,17 @@ export const PropertiesInspector = ({
       const paths = Object.keys(changed).filter((path) => changed[path as keyof typeof changed]);
       // A classed element's look is its class's: an edit of it restyles the class, and so every element deriving it.
       const classes: Record<string, StyleClass> = {};
-      const intents = elements.map((element) => {
+      const edits = elements.map((element) => {
         const shown = formValues(nodes, element, styleMap, layers);
         // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
         const patch = patchValues({ ...shown, style: element.style }, values, paths);
         const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
         if (typeof patch.class === 'string') {
-          return { kind: 'update' as const, id: element.id, values: { ...patch, style: undefined } };
+          return updateElement(element.id, { ...patch, style: undefined });
         }
         if (!styleClass || !('style' in patch)) {
-          return { kind: 'update' as const, id: element.id, values: patch };
+          return updateElement(element.id, patch);
         }
         // A link's look is the common base of its class's style; a node's, the whole of it.
         const look = isLink(element)
@@ -311,26 +313,23 @@ export const PropertiesInspector = ({
           : resolveStyle(classedNode(element, styleMap).style);
         const split = splitClassEdit(look, patch.style, styleClass.style ?? {}, element.style);
         classes[styleClass.id] = { ...styleClass, style: split.classLook };
-        return { kind: 'update' as const, id: element.id, values: { ...patch, style: split.own } };
+        return updateElement(element.id, { ...patch, style: split.own });
       });
       if (styles && Object.keys(classes).length > 0) {
         registry.set(styles, { ...styleMap, ...classes });
       }
-      projection.apply({ kind: 'batch', intents });
+      draw.apply(chainEdits(edits));
     },
-    [projection, elements, nodes, styles, styleMap, layers, registry],
+    [draw, elements, nodes, styles, styleMap, layers, registry],
   );
 
   // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
   const links = useMemo(() => elements.filter(isLink), [elements]);
   const onFlip = useCallback(() => {
-    projection.apply({
-      kind: 'batch',
-      intents: links.map((link) => ({ kind: 'update' as const, id: link.id, values: flipLink(link) })),
-    });
+    draw.apply(chainEdits(links.map((link) => updateElement(link.id, flipLink(link)))));
     // A spline's control points run the other way after a flip, so a selected point's index names another one.
     registry.set(atoms.point, undefined);
-  }, [projection, links, registry, atoms.point]);
+  }, [draw, links, registry, atoms.point]);
   const flip = !readonly && links.length > 0 && links.length === elements.length ? onFlip : undefined;
 
   // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for

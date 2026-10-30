@@ -7,9 +7,9 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import { type NodeType, type Size } from '@dxos/scene';
 
-import { type CanvasAtoms, type CanvasHistory, type HistoryState, type Projection } from '../../engine/index.ts';
+import { type CanvasAtoms, type CanvasHistory, type DrawScene, type HistoryState } from '../../engine/index.ts';
 import { type Capabilities, type NodeRegistry } from '../../model/index.ts';
-import { createId, nominalSize, screenToScene } from '../../utils/index.ts';
+import { arrangeScene, createId, nominalSize, screenToScene } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 
@@ -28,7 +28,7 @@ export type DocumentCommands = {
 export type UseDocumentCommandsOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  projection: Projection;
+  draw: DrawScene;
   history: Pick<CanvasHistory, 'undo' | 'redo' | 'state'>;
   readonly: boolean;
   nodeRegistry: NodeRegistry;
@@ -43,7 +43,7 @@ export type UseDocumentCommandsOptions = {
 export const useDocumentCommands = ({
   registry,
   atoms,
-  projection,
+  draw,
   history,
   readonly,
   nodeRegistry,
@@ -74,8 +74,8 @@ export const useDocumentCommands = ({
   };
 
   // Read when a command runs, so the commands keep their identity while the view moves and the scene is edited.
-  const latestRef = useRef({ onUndo, onRedo, createAtCentre, projection });
-  latestRef.current = { onUndo, onRedo, createAtCentre, projection };
+  const latestRef = useRef({ onUndo, onRedo, createAtCentre, draw });
+  latestRef.current = { onUndo, onRedo, createAtCentre, draw };
   return useMemo<DocumentCommands>(
     () => ({
       undo: () => latestRef.current.onUndo(),
@@ -85,7 +85,7 @@ export const useDocumentCommands = ({
       // A selection of two or more is what the user asked to tidy; one node alone means the board.
       layout: () => {
         const selection = registry.get(atoms.selection);
-        latestRef.current.projection.apply({ kind: 'layout', ids: selection.size > 1 ? [...selection] : undefined });
+        latestRef.current.draw.apply(arrangeScene(selection.size > 1 ? [...selection] : undefined));
       },
     }),
     [registry, atoms.selection, history.state],

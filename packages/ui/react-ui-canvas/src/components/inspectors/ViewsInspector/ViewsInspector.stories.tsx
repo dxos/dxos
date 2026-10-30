@@ -11,10 +11,9 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type ElementId, type ViewId } from '@dxos/scene';
 
-import { reduceIntent } from '../../../engine/index.ts';
 import { type ViewMap } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
-import { type ViewPlace, type ViewRowSelection, restackZ } from '../../../utils/index.ts';
+import { type ViewPlace, type ViewRowSelection, reorderElement, restackZ } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
 import { ViewsInspector } from './ViewsInspector.tsx';
 
@@ -60,9 +59,7 @@ const DefaultStory = ({ fixture, onSelect, onOpen }: StoryArgs) => {
         setScenes((scenes) => {
           const scene = scenes[container];
           const z = scene && restackZ(scene, element, target, position);
-          return scene && z
-            ? { ...scenes, [container]: reduceIntent(scene, { kind: 'reorder', id: element, z }) }
-            : scenes;
+          return scene && z ? { ...scenes, [container]: reorderElement(element, z)(scene) } : scenes;
         })
       }
     />

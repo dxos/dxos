@@ -12,8 +12,8 @@ import {
   type CanvasController,
   type CanvasHistory,
   type ControllerGrid,
+  type DrawScene,
   type LookHandlers,
-  type Projection,
   type ViewFit,
   createCanvasController,
 } from '../../engine/index.ts';
@@ -22,7 +22,7 @@ import { type useRegistry } from '../useRegistry.ts';
 
 /** What the controller's commands read of the view when they run. */
 export type CanvasControllerLive = {
-  projection: Projection;
+  draw: DrawScene;
   nodeRegistry: NodeRegistry;
   readonly: boolean;
   grid: ControllerGrid;
@@ -53,7 +53,7 @@ export const useCanvasController = ({ registry, atoms, store, live }: UseCanvasC
         registry,
         atoms,
         store,
-        projection: () => liveRef.current.projection,
+        draw: () => liveRef.current.draw,
         nodeRegistry: () => liveRef.current.nodeRegistry,
         readonly: () => liveRef.current.readonly,
         grid: () => liveRef.current.grid,

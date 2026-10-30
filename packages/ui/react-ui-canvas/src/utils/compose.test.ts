@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import { type InstanceNode, type Node, isInstanceNode } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
-import { reduceIntent } from '../engine/index.ts';
 import { type View } from '../model/index.ts';
 import {
   composeSelection,
@@ -57,14 +56,14 @@ describe('composeSelection', () => {
     if (!composition) {
       throw new Error('no composition');
     }
-    const { composite, intents } = composition;
+    const { composite, edit } = composition;
     expect(composite.kind).toBe('composite');
     expect(Object.keys(composite.nodes)).toEqual(['a', 'b']);
     expect(Object.keys(composite.links)).toEqual(['ab']);
     // Re-centred on the bounds of the selection, which ran from x 0 to 300.
     expect(compositeBounds(composite)).toEqual({ x: -150, y: -25, width: 300, height: 50 });
 
-    const parent = reduceIntent(scene, { kind: 'batch', intents });
+    const parent = edit(scene);
     expect(Object.keys(parent.nodes).sort()).toEqual(['c', 'i']);
     const instance = instanceOf(parent, 'i');
     expect(nodeBounds(instance)).toEqual({ x: 0, y: 0, width: 300, height: 50 });
@@ -117,11 +116,8 @@ describe('compose and ungroup', () => {
     if (!composition) {
       throw new Error('no composition');
     }
-    const parent = reduceIntent(scene, { kind: 'batch', intents: composition.intents });
-    const restored = reduceIntent(parent, {
-      kind: 'batch',
-      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
-    });
+    const parent = composition.edit(scene);
+    const restored = ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()).edit(parent);
     const nodes = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x);
     expect(nodes.map(nodeBounds)).toEqual([box(0), box(200), box(400)]);
     expect(restored.nodes.i).toBeUndefined();
@@ -144,7 +140,7 @@ describe('compose and ungroup', () => {
     if (!composition) {
       throw new Error('no composition');
     }
-    const parent = reduceIntent(scene, { kind: 'batch', intents: composition.intents });
+    const parent = composition.edit(scene);
     const instance = { ...instanceOf(parent, 'i'), overrides: { a: { style: { opacity: 0.5 } } } };
     const { composite, rename } = copyComposite(composition.composite, 'obj2', counter());
     const unique = retargetInstance(instance, 'obj2', rename);
@@ -178,10 +174,7 @@ describe('anonymous Objects', () => {
     if (!group || !named) {
       return;
     }
-    const parent = reduceIntent(reduceIntent(scene, { kind: 'batch', intents: group.intents }), {
-      kind: 'batch',
-      intents: named.intents,
-    });
+    const parent = named.edit(group.edit(scene));
     const scenes = { s: parent, g: group.composite, n: named.composite };
     const placed = promotedBy(scenes, [instanceOf(parent, 'i'), instanceOf(parent, 'j'), parent.nodes.i]);
     expect(Object.keys(placed)).toEqual(['g']);

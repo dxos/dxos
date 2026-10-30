@@ -51,7 +51,7 @@ const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
 
 /**
  * Tool groups: the fixed tools, then the create group (the shapes and the link types), then the other node types by
- * group; a tool the projection cannot apply (`create`, `link`) is left out rather than offered and silently dropped.
+ * group; a tool the scene does not allow (`create`, `link`) is left out rather than offered and silently dropped.
  * Groups fold into a flyout when the rail runs out of room.
  */
 export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolGroup[] => {
@@ -100,7 +100,7 @@ export const pressSelects = (tool: Tool): boolean => tool.kind === 'select' || t
 export const sameTool = (left: Tool, right: Tool): boolean =>
   left.kind === right.kind && ('type' in left ? left.type === ('type' in right ? right.type : undefined) : true);
 
-/** The tool a key picks, among those the projection can apply. */
+/** The tool a key picks, among those the scene allows. */
 export const toolForKey = (
   nodes: NodeRegistry,
   links: LinkRegistry,

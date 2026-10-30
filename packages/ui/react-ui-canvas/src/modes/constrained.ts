@@ -10,8 +10,8 @@
 
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
-import { CONSTRAINED_GRID, solveRanks } from '../engine/index.ts';
 import { centeredOrigin } from '../utils/index.ts';
+import { CONSTRAINED_GRID, solveRanks } from './ranks.ts';
 
 type Element = Scene.Element2D;
 type Point = { x: number; y: number };

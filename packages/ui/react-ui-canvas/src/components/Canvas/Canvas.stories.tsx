@@ -12,8 +12,10 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Scene } from '@dxos/scene';
 
 import { type ViewTree } from '../../builder/index.ts';
-import { type InspectorMode, createLatticeProjection } from '../../engine/index.ts';
+import { type ConstrainIntent } from '../../editor/index.ts';
+import { type InspectorMode } from '../../engine/index.ts';
 import { type BackgroundGrid } from '../../model/index.ts';
+import { latticeConstrain } from '../../modes/index.ts';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -25,6 +27,7 @@ import {
   createViewTree,
   useDocumentHost,
 } from '../../testing/index.ts';
+import { DEFAULT_LATTICE } from '../../utils/index.ts';
 import { fromRenderLists2D } from '../../viewport2d/index.ts';
 import { Canvas } from './Canvas.tsx';
 
@@ -59,6 +62,16 @@ const FIXTURES = {
 
 type Fixture = keyof typeof FIXTURES;
 
+/** The lattice mode a lattice layout keeps, which the host applies to every write and the engine previews. */
+const LATTICE_MODE: ConstrainIntent = (layout, intent) =>
+  layout.dim === '2d' ? latticeConstrain(layout, intent) : intent;
+
+/** The drawing with every 2D layout on the default lattice. */
+const onLattice = (document: Scene.SceneDocument): Scene.SceneDocument => ({
+  ...document,
+  layouts: document.layouts.map((layout) => (layout.dim === '2d' ? { ...layout, lattice: DEFAULT_LATTICE } : layout)),
+});
+
 type StoryArgs = {
   depth: number;
   liveDepth: number;
@@ -87,7 +100,9 @@ const Editor = ({
   const [inspectors, setInspectors] = useState(initialInspectors);
   const [theme, setTheme] = useState<string>();
   const [backgroundGrid, setBackgroundGrid] = useState<BackgroundGrid>();
-  const { document, onIntent, onModelIntent } = useDocumentHost(initial);
+  const { document, onIntent, onModelIntent } = useDocumentHost(lattice ? () => onLattice(initial) : initial, {
+    constrain: lattice ? LATTICE_MODE : undefined,
+  });
   return (
     <Canvas.Root
       document={document}
@@ -101,7 +116,7 @@ const Editor = ({
       onThemeChange={setTheme}
       backgroundGrid={backgroundGrid}
       onBackgroundGridChange={setBackgroundGrid}
-      createProjection={lattice ? createLatticeProjection : undefined}
+      constrain={lattice ? LATTICE_MODE : undefined}
     >
       <Canvas.Viewport liveDepth={liveDepth} />
       <Canvas.Navigation />

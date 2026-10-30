@@ -9,17 +9,13 @@ import type * as Util from '@dxos/react-ui/Util';
 import { type Bounds, type Point, type Scene } from '@dxos/scene';
 
 import { type ConstrainIntent, type ViewportProps } from '../../editor/index.ts';
-import {
-  type CanvasAtoms,
-  type FreehandProjectionOptions,
-  type InspectorMode,
-  type Projection,
-} from '../../engine/index.ts';
+import { type CanvasAtoms, type InspectorMode } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import { type SceneDisplay } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
   type Camera,
+  type Capabilities,
   type KeyAction,
   type LinkRegistry,
   type NodeRegistry,
@@ -44,8 +40,11 @@ export type CanvasRootProps = Util.ThemedClassName<{
   constrain?: ConstrainIntent;
   nodes?: NodeRegistry;
   links?: LinkRegistry;
-  /** Projection per scene; freehand (identity) by default. */
-  createProjection?: (options: FreehandProjectionOptions) => Projection;
+  /**
+   * What a person may do, within what the layout allows (all of it, but an arrangement on a lattice); everything it
+   * allows when unset.
+   */
+  capabilities?: Capabilities;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: CanvasAtoms;
   /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */
@@ -67,7 +66,7 @@ export type CanvasRootProps = Util.ThemedClassName<{
   fitZoom?: number;
   /**
    * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
-   * whatever the projection would allow.
+   * whatever the layout would allow.
    */
   readonly?: boolean;
   /** Draws no surface under the scene, so what is behind the canvas (e.g. a slide) shows through. */

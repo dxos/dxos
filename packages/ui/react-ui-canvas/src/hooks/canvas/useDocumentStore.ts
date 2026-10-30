@@ -8,9 +8,11 @@ import { type Scene, type ViewId, applyIntent, findLayout, rootScene, sceneLayou
 
 import { type ConstrainIntent, type ViewportProps } from '../../editor/index.ts';
 import { type MemoryViewStore, type ViewMap, createMemoryStore } from '../../model/index.ts';
+import { type SceneEdit } from '../../utils/index.ts';
 import {
   type LayoutWrite,
   applyLayoutWrites,
+  constrainEdit,
   layoutWrites,
   styleClasses,
   toRenderLists2D,
@@ -51,10 +53,20 @@ const drawnDifferently = (left: Scene.LayoutRecord, right: Scene.LayoutRecord): 
  * release reaches the host as one intent per changed layout ({@link layoutWrites}), and a write the layout's mode
  * refuses or moves is drawn as stored until the document comes back with it.
  */
+export type DocumentStore = {
+  store: MemoryViewStore;
+  root: ViewId;
+  /**
+   * What the layout's mode would store of `edit` to scene `sceneId`: the edit, the scene as the mode would rewrite it,
+   * or undefined when the mode would refuse it; read by the previews of a gesture in flight.
+   */
+  constrain?: (sceneId: ViewId, edit: SceneEdit) => SceneEdit | undefined;
+};
+
 export const useDocumentStore = (
   registry: ReturnType<typeof useRegistry>,
   { document, scene, constrain, snap, onIntent, onModelIntent, onTransaction }: DocumentStoreOptions,
-): { store: MemoryViewStore; root: ViewId } => {
+): DocumentStore => {
   const sceneRecord =
     (scene === undefined ? undefined : document.scenes.find(({ id }) => id === scene)) ?? rootScene(document);
   const read = (doc: Scene.SceneDocument) => toRenderLists2D(doc, sceneRecord);
@@ -126,5 +138,14 @@ export const useDocumentStore = (
     [registry, store],
   );
 
-  return { store, root };
+  const preview = useMemo(
+    () =>
+      (sceneId: ViewId, edit: SceneEdit): SceneEdit | undefined => {
+        const { document: doc, constrain: mode, snap: snapping } = latest.current;
+        return mode ? constrainEdit(doc, registry.get(store.views), sceneId, edit, mode, { snap: snapping() }) : edit;
+      },
+    [registry, store],
+  );
+
+  return { store, root, constrain: constrain && preview };
 };

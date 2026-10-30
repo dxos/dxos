@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { MAJOR_GRID, type Node } from '@dxos/scene';
 
-import { reduceIntent } from '../engine/index.ts';
 import { type View } from '../model/index.ts';
+import { arrangeScene } from './edits.ts';
 import { layoutView } from './layout.ts';
 
 const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 64 }): Node => ({
@@ -88,7 +88,7 @@ describe('layout', () => {
 
   test('the layout intent reaches the reducer', ({ expect }) => {
     const base = fixture();
-    const scene = reduceIntent(base, { kind: 'layout' });
+    const scene = arrangeScene()(base);
     expect(scene).not.toBe(base);
     expect(rowOf(scene, 'a')).toBeLessThan(rowOf(scene, 'c'));
     // Links are untouched: only centres move.

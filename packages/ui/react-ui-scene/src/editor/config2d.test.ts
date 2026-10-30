@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import { atomSource, constrainedPlacement, createFreehandProjection, createHistory } from '@dxos/react-ui-canvas';
+import { type ConstrainIntent, atomSource, constrainedPlacement, createHistory } from '@dxos/react-ui-canvas';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
 import { createConfig2D } from './config2d.tsx';
@@ -51,8 +51,9 @@ describe('config2d', () => {
     // A layout with no lattice is free.
     const { lattice: _lattice, ...free } = lattice;
     expect(constrain?.(free, move, { snap: true })).toBe(move);
-    // A host's own projection owns the mode.
-    expect(createConfig2D({ createProjection: createFreehandProjection }).constrain).toBeUndefined();
+    // A host's own mode stands in for the layout's.
+    const own: ConstrainIntent = (_layout, intent) => intent;
+    expect(createConfig2D({ constrain: own }).constrain).toBe(own);
   });
   test('a dynamic layout pins a moved shape and re-places the rest when its graph changes', () => {
     const shape = (id: string): Scene.Element2D => ({

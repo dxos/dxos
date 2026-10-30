@@ -18,7 +18,7 @@ export type UseCanvasHistoryOptions = {
 
 /**
  * A view's undo history, made once per store and atoms. `Canvas.Root` makes its own unless given one; a host that
- * edits the view's model from outside it (its own panels over a shared projection) makes it here and passes it to both.
+ * edits the view's model from outside it (its own panels over a shared scene) makes it here and passes it to both.
  */
 export const useCanvasHistory = ({ registry, atoms, store, history: createHistory }: UseCanvasHistoryOptions) => {
   const history = useMemo<CanvasHistory>(
