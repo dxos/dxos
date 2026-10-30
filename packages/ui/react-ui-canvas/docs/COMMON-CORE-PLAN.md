@@ -32,6 +32,10 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
 - **R-3: diagram objects become relative composites (decision 18) once the canvas renders instance `scale` (C.1).**
   Until then canvas output stays flattened, so diagrams don't change appearance. The composite switch is a task at the
   end of C.
+- **R-4 (2026-10-30, user): a diagram drawn onto the 2D canvas keeps the canvas's own link routing.** Link elements
+  store only their endpoints, so the diagram engine's routed bends are dropped (app-framework: 19 → 0), as the legacy
+  canvas did; SVG, tldraw and excalidraw output keep them. Rejected: an optional `route` on link elements drawn while
+  both ends stay put, as `DiagramConnector` does. Cost if wrong: that field and its invalidation rule later.
 
 ## Global Constraints
 
