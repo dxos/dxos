@@ -3,6 +3,5 @@
 //
 
 export * as ChessPlugin from '#meta';
-export * from '#operations';
 export * from '#skills';
 export * from '#types';

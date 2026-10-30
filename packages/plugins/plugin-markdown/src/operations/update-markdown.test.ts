@@ -18,7 +18,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
-import { MarkdownOperationHandlerSet } from '#operations';
+import { operations as MarkdownOperations } from '#meta';
 import { OperationTestLayer } from '#testing';
 import { MarkdownOperation } from '#types';
 
@@ -34,7 +34,7 @@ class TestOutline extends Type.makeObject<TestOutline>(DXN.make('com.example.typ
 
 /** `OperationTestLayer` plus the outline-shaped type. */
 const OutlineTestLayer = AssistantTestLayer({
-  operationHandlers: MarkdownOperationHandlerSet.handlers,
+  operationHandlers: MarkdownOperations,
   types: [
     SpaceProperties,
     Collection.Collection,

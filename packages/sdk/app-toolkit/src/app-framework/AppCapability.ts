@@ -10,6 +10,7 @@ import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Type } from '@dxos/echo';
 
 import { type Translations } from '../app/index.ts';
@@ -97,11 +98,45 @@ export const mcpServer: Maker<typeof AppCapabilities.McpServer> = Capability$.mo
  * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
  * would leave the registry incomplete for exactly those boot-path invocations.
  */
-export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
+const operationHandlerMaker: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
   { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
+
+/**
+ * Module contributing operation handlers. Given a handler set authored literally in `dx.config.ts`
+ * (`OperationHandlerSet.lazy([...])` with `module-url` loaders), the build records each operation's
+ * key and emits each handler as its own chunk, so no hand-written module body is needed and the set
+ * is the single source of truth for what the plugin provides. Given a loader, it behaves as a plain
+ * module maker over a body that contributes the set itself.
+ */
+export const operationHandler = <
+  Props = void,
+  Options = Props,
+  const Requires extends readonly Capability$.AnyTag[] = readonly [],
+  const Extra extends readonly Capability$.AnyTag[] = readonly [],
+>(
+  source:
+    | OperationHandlerSet.OperationHandlerSet
+    | Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.OperationHandler, ...Extra]>,
+  options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
+): Capability$.Module<Options> => {
+  if (!OperationHandlerSet.isOperationHandlerSet(source)) {
+    return operationHandlerMaker(source, options);
+  }
+
+  const module = Capability$.inlineModule<readonly [typeof Capabilities.OperationHandler], readonly [], void, Options>(
+    options?.name ?? 'OperationHandler',
+    {
+      provides: [Capabilities.OperationHandler],
+      activatesOn: options?.activatesOn ?? ActivationEvents.Startup,
+      environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+    },
+    () => Effect.succeed(Capability$.contribute(Capabilities.OperationHandler, source)),
+  );
+  return Object.assign(module, { [Capability$.OperationsTag]: source });
+};
 
 /**
  * Module maker contributing a {@link Capabilities.LayerSpec}.

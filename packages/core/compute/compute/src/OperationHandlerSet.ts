@@ -21,8 +21,14 @@ import type * as Operation from './Operation.ts';
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;
 export type TypeId = typeof TypeId;
 
+/** Key under which a {@link lazy} set keeps its pairings, so build tools can locate each handler module. */
+export const LazyEntriesTag: unique symbol = Symbol.for('@dxos/compute/OperationHandlerSet/LazyEntries');
+
 export interface OperationHandlerSet {
   [TypeId]: TypeId;
+
+  /** The definition/loader pairings of a {@link lazy} set; absent on other sets. */
+  readonly [LazyEntriesTag]?: readonly Operation.LazyHandler[];
 
   readonly handlers: Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>;
 
@@ -44,6 +50,10 @@ export interface OperationHandlerSet {
  * or a full DXN string.
  */
 const normalizeKey = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
+
+/** The definition/loader pairings of a set made by {@link lazy}, or `undefined` for any other set. */
+export const getLazyEntries = (set: OperationHandlerSet): readonly Operation.LazyHandler[] | undefined =>
+  set[LazyEntriesTag];
 
 export const isOperationHandlerSet = (value: unknown): value is OperationHandlerSet => {
   return typeof value === 'object' && value !== null && TypeId in value;
@@ -211,6 +221,7 @@ export const lazy = (entries: readonly Operation.LazyHandler[]): OperationHandle
   const getHandlers = () => Promise.all(entries.map(loadEntry));
   return {
     [TypeId]: TypeId,
+    [LazyEntriesTag]: entries,
     definitions: () => entries.map(({ definition }) => definition),
     getHandlerFor: (key) => {
       const normalized = normalizeKey(key);

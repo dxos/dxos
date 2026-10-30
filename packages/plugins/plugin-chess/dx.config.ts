@@ -7,11 +7,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import * as GameEvents from '@dxos/plugin-game/GameEvents';
 import { trim } from '@dxos/util';
 
 import { ChessNamespace } from './src/namespace.ts';
+import * as ChessOperation from './src/types/ChessOperation.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -51,7 +54,22 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/game-variant.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      OperationHandlerSet.lazy([
+        ChessOperation.Move.pipe(
+          Operation.lazyHandler(() => import('./src/operations/move.ts', { with: { type: 'module-url' } })),
+        ),
+        ChessOperation.Play.pipe(
+          Operation.lazyHandler(() => import('./src/operations/play.ts', { with: { type: 'module-url' } })),
+        ),
+        ChessOperation.Print.pipe(
+          Operation.lazyHandler(() => import('./src/operations/print.ts', { with: { type: 'module-url' } })),
+        ),
+        ChessOperation.RebuildPositionIndex.pipe(
+          Operation.lazyHandler(
+            () => import('./src/operations/rebuild-position-index.ts', { with: { type: 'module-url' } }),
+          ),
+        ),
+      ]),
       { activatesOn: ActivationEvents.Idle },
     ),
     Capability.lazyModule(
@@ -71,6 +89,6 @@ const config: Plugin.PluginConfig = Plugin.config({
   ],
 });
 
-export const { meta, make } = config;
+export const { meta, make, operations } = config;
 
 export default config;

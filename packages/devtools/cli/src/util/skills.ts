@@ -19,7 +19,7 @@ import { Feed, Tag, type Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Chess from '@dxos/plugin-chess/Chess';
-import * as ChessOperationHandlerSet from '@dxos/plugin-chess/ChessOperationHandlerSet';
+import { operations as ChessOperations } from '@dxos/plugin-chess/ChessPlugin';
 import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
 import * as Game from '@dxos/plugin-game/Game';
 import * as GoogleOperationHandlerSet from '@dxos/plugin-google/GoogleOperationHandlerSet';
@@ -35,7 +35,7 @@ import * as KanbanSkill from '@dxos/plugin-kanban/KanbanSkill';
 import * as MapOperationHandlerSet from '@dxos/plugin-map/MapOperationHandlerSet';
 import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
+import { operations as MarkdownOperations } from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as CommentOperationHandlerSet from '@dxos/plugin-review/CommentOperationHandlerSet';
 import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
@@ -92,7 +92,7 @@ export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by skills above need to be added here.
   ChatContextSkill.Handlers,
   SpaceOperationHandlerSet.handlers,
-  ChessOperationHandlerSet.handlers,
+  ChessOperations,
   InboxOperationHandlerSet.handlers,
   // Mail-provider handlers: InboxSendSkill / CalendarSkill reference provider ops, and a missing
   // handler set surfaces only at runtime as "tool not found".
@@ -100,7 +100,7 @@ export const operationHandlers = OperationHandlerSet.merge(
   JmapOperationHandlerSet.handlers,
   KanbanOperationHandlerSet.handlers,
   MapOperationHandlerSet.handlers,
-  MarkdownOperationHandlerSet.handlers,
+  MarkdownOperations,
   ScriptOperationHandlerSet.handlers,
   TableOperationHandlerSet.handlers,
   CommentOperationHandlerSet.handlers,

@@ -13,7 +13,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import * as Game from '@dxos/plugin-game/Game';
 
-import { ChessOperationHandlerSet } from '#operations';
+import { operations as ChessOperations } from '#meta';
 import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '#types';
 
 import * as positionIndexInternal from '../internal/position-index.ts';
@@ -21,7 +21,7 @@ import * as positionIndexInternal from '../internal/position-index.ts';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: ChessOperationHandlerSet.handlers,
+  operationHandlers: ChessOperations,
   types: [Chess.State, Game.Game, PlayerReview.Review, ChessPositionIndex.PositionIndex],
   disableLlmMemoization: true,
 });

@@ -16,7 +16,7 @@ import { Collection, Feed } from '@dxos/echo';
 import { rootCollectionRule } from '@dxos/plugin-space/testing';
 import { HasSubject } from '@dxos/types';
 
-import { MarkdownOperationHandlerSet } from '#operations';
+import { operations as MarkdownOperations } from '#meta';
 import { Markdown } from '#types';
 
 export * as MarkdownPlugin from '#meta';
@@ -36,7 +36,7 @@ const makeCapabilities = () => {
  */
 export const OperationTestLayer = AssistantTestLayer({
   extraServices: Layer.succeed(Capability.Service, makeCapabilities()),
-  operationHandlers: MarkdownOperationHandlerSet.handlers,
+  operationHandlers: MarkdownOperations,
   types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
   disableLlmMemoization: true,
 });

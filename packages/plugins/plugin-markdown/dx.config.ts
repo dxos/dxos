@@ -6,6 +6,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
@@ -13,6 +16,7 @@ import { trim } from '@dxos/util';
 import { MarkdownNamespace } from './src/namespace.ts';
 import * as MarkdownCapabilities from './src/types/MarkdownCapabilities.ts';
 import * as MarkdownEvents from './src/types/MarkdownEvents.ts';
+import * as MarkdownOperation from './src/types/MarkdownOperation.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -86,7 +90,52 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      OperationHandlerSet.lazy([
+        CollaborationOperation.AcceptChange.pipe(
+          Operation.lazyHandler(() => import('./src/operations/accept-change.ts', { with: { type: 'module-url' } })),
+        ),
+        CollaborationOperation.RejectChange.pipe(
+          Operation.lazyHandler(() => import('./src/operations/reject-change.ts', { with: { type: 'module-url' } })),
+        ),
+        CollaborationOperation.RestoreText.pipe(
+          Operation.lazyHandler(() => import('./src/operations/restore-text.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.Create.pipe(
+          Operation.lazyHandler(() => import('./src/operations/create.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.CreateMarkdown.pipe(
+          Operation.lazyHandler(() => import('./src/operations/create-markdown.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.CreateBranch.pipe(
+          Operation.lazyHandler(() => import('./src/operations/create-branch.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.CreateCheckpoint.pipe(
+          Operation.lazyHandler(
+            () => import('./src/operations/create-checkpoint.ts', { with: { type: 'module-url' } }),
+          ),
+        ),
+        MarkdownOperation.GetHistory.pipe(
+          Operation.lazyHandler(() => import('./src/operations/get-history.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.GetSelection.pipe(
+          Operation.lazyHandler(() => import('./src/operations/get-selection.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.MergeBranch.pipe(
+          Operation.lazyHandler(() => import('./src/operations/merge-branch.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.Open.pipe(
+          Operation.lazyHandler(() => import('./src/operations/open.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.ScrollToAnchor.pipe(
+          Operation.lazyHandler(() => import('./src/operations/scroll-to-anchor.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.SuggestEdit.pipe(
+          Operation.lazyHandler(() => import('./src/operations/suggest-edit.ts', { with: { type: 'module-url' } })),
+        ),
+        MarkdownOperation.Update.pipe(
+          Operation.lazyHandler(() => import('./src/operations/update-markdown.ts', { with: { type: 'module-url' } })),
+        ),
+      ]),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
@@ -110,6 +159,6 @@ const config: Plugin.PluginConfig = Plugin.config({
   ],
 });
 
-export const { meta, make } = config;
+export const { meta, make, operations } = config;
 
 export default config;

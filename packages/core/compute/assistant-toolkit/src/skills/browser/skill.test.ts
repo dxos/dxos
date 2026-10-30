@@ -17,7 +17,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
+import { operations as MarkdownOperations } from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { Person } from '@dxos/types';
 
@@ -28,7 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(ChatContextSkill.Handlers, MarkdownOperationHandlerSet.handlers),
+  operationHandlers: OperationHandlerSet.merge(ChatContextSkill.Handlers, MarkdownOperations),
   types: [Skill.Skill, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection, Feed.Feed],
   skills: [BrowserSkill.make(), MarkdownSkill.make(), ChatContextSkill.make()],
   tracing: 'pretty',

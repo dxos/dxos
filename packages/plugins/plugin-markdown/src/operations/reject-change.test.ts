@@ -18,12 +18,12 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
-import { MarkdownOperationHandlerSet } from '#operations';
+import { operations as MarkdownOperations } from '#meta';
 import { Markdown, MarkdownOperation } from '#types';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: MarkdownOperationHandlerSet.handlers,
+  operationHandlers: MarkdownOperations,
   types: [SpaceProperties, Collection.Collection, Markdown.Document, Text.Text, HasSubject.HasSubject, Feed.Feed],
 });
 
