@@ -13,12 +13,13 @@ import { NodeBase } from '@dxos/scene';
 export type GeometryCompanion = { name: string; label: string; type: SchemaAST.AST };
 
 /**
- * Centre and a companion vector, rendered at `center`: the two stacked vector fields side by side, centre first (the
- * companion's own field is hidden). Shared by 2D (size) and 3D (scale). A form layout annotation cannot do this, since
- * a schema layout renders only the fields it names.
+ * A vector and an optional companion vector side by side in two columns, rendered at the first's path (the companion's
+ * own field is hidden). Without a companion the second column stays empty, so the vector lines up under the ones above.
+ * Shared by 2D (centre and size) and 3D (centre and scale; rotation alone). A form layout annotation cannot do this,
+ * since a schema layout renders only the fields it names.
  */
 export const makeGeometryField =
-  (companion: GeometryCompanion): FormFieldRenderer =>
+  (companion?: GeometryCompanion): FormFieldRenderer =>
   (props) => {
     const base = (props.jsonPath ?? 'center').split('.').slice(0, -1);
     return (
@@ -31,13 +32,15 @@ export const makeGeometryField =
         // The properties panel is narrow, and the two vectors fit side by side there, so the row never stacks.
         fixed
       >
-        <VectorField {...props} label='Center' />
-        <VectorField
-          {...props}
-          type={companion.type}
-          jsonPath={[...base, companion.name].join('.')}
-          label={companion.label}
-        />
+        <VectorField {...props} />
+        {companion && (
+          <VectorField
+            {...props}
+            type={companion.type}
+            jsonPath={[...base, companion.name].join('.')}
+            label={companion.label}
+          />
+        )}
       </Layout.Container>
     );
   };

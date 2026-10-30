@@ -85,6 +85,10 @@ describe('element form', () => {
     expect(ELEMENT_FORM_OVERRIDES.scale).toMatchObject({ hidden: true });
   });
 
+  test('rotation takes the first of two columns, so it lines up under the centre', () => {
+    expect(ELEMENT_FORM_FIELDS.rotation).toBeDefined();
+  });
+
   test("the style fields are the 2D canvas's: its colour grid at style.hue, the tone without a field of its own", () => {
     expect(ELEMENT_FORM_FIELDS['style.hue']).toBe(StyleGridField);
     expect(ELEMENT_FORM_OVERRIDES['style.tone']).toMatchObject({ hidden: true });

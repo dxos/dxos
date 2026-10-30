@@ -39,6 +39,8 @@ export const ELEMENT_FORM_FIELDS: FormFieldMap = {
   layer: LayerField,
   // Centre and scale side by side, as 2D draws centre and size.
   center: makeGeometryField({ name: 'scale', label: 'Scale', type: FormScale.ast }),
+  // Rotation alone in the first column, so it lines up under the centre.
+  rotation: makeGeometryField(),
 };
 
 /** How those fields present, as in 2D. */
