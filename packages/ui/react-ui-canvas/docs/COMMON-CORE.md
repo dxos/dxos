@@ -7,7 +7,7 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
 
 1. One data structure for 2D and 3D, with variance only where geometry and camera require it.
 2. One editor with common panels; each dimension configures it separately.
-3. The editor lives in react-ui-canvas, which is renamed to suit both dimensions.
+3. The editor lives in react-ui-canvas, under its current name ("canvas" is the surface in either dimension).
 4. 2D moves fully onto the shared model and edits (`LayoutIntent`, the shared store); react-ui-canvas's own
    `View`/`Node`/`Link` model, `Intent` and `ViewStore` are retired, and its lattice, constrained, dynamic and scored
    modes are ported.
@@ -136,19 +136,15 @@ core. A viewport never writes ECHO and never owns a command; it reports gestures
    `layout.props`, D-55/T7 precedent).
 5. **Retire the split.** Delete `SceneView2D`/`SceneView3D`, the layout-writer adapter and the content facade;
    `SceneArticle` renders `SceneEditor` with the canvas's dimension config.
-6. **Rename.** react-ui-canvas is renamed to suit both dimensions (name below), with every import updated and no
-   alias.
 
 Each step ends green (tests, typecheck, lint) and browser-checked in both `SceneArticle` stories and the
 react-ui-canvas stories; 2D behaviour stays at parity throughout.
 
 ## Open questions
 
-1. The package's new name: `@dxos/react-ui-scene-editor` (and react-ui-scene stays the 3D renderer), or
-   `@dxos/react-ui-scene` absorbs it and the Babylon renderer becomes `@dxos/react-ui-scene-3d`?
-2. Style classes: they live on `Canvas.styles` today. Move them to the shared data (on `Model` or `Layout`) so 3D
+1. Style classes: they live on `Canvas.styles` today. Move them to the shared data (on `Model` or `Layout`) so 3D
    elements can take a class too?
-3. The uncommitted display-panel edits left by the stopped frame agent (3D grid kinds, renderer, styles): keep them
+2. The uncommitted display-panel edits left by the stopped frame agent (3D grid kinds, renderer, styles): keep them
    as the start of step 2, or discard?
 
 ## Not in scope
