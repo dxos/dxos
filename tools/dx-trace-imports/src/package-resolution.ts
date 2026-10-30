@@ -39,7 +39,11 @@ const matchConditionalEntry = (entry: ConditionalEntry, conditions: readonly str
     return entry;
   }
   if (!isConditionalMap(entry)) {
-    // A fallback list: the first valid package-relative target wins; invalid ones are skipped.
+    // A fallback list: the first valid package-relative target wins; invalid ones are skipped, and an
+    // empty list excludes the entry like `null` does.
+    if (entry.length === 0) {
+      return null;
+    }
     for (const target of entry) {
       const matched = matchConditionalEntry(target, conditions);
       if (typeof matched === 'string' && matched.startsWith('./')) {
