@@ -22,7 +22,7 @@ describe('Timeline project template', () => {
       'Presenter space',
       'Timeline research skill',
     ]);
-    expect(map.project?.uri.endsWith(project.id)).toBe(true);
+    expect(project.spec?.uri.endsWith(map.id)).toBe(true);
     expect(map.features.map((ref, index) => ref.uri.endsWith(features[index].id))).toEqual(features.map(() => true));
     expect(tasks.map((task) => task.title)).toEqual([
       'Create a test fixture',

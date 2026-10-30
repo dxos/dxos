@@ -728,22 +728,26 @@ export class SqlPlanCompiler {
     }
     const maxDepth = filter.transitive ? MAX_DEPTH_FOR_CHILD_OF_TRACING : 1;
     const wsRef = this.#ref(ws);
-    // A feed item's parent is its feed when it carries no parent of its own.
-    const anc = this.#define(
-      'anc',
+    // Walked down from the parents, so the cost follows the subtree rather than the working set: the
+    // owners a row's direct owner must be among are the parents and their documents `maxDepth - 1` levels down.
+    const owners = this.#define(
+      'own',
       sql`
-      SELECT w.recordId, m.spaceId, COALESCE(m.parentId, CASE WHEN m.parentId IS NULL AND m.parent IS NULL AND m.queueId != '' THEN m.queueId END) AS ancestorId, 1 AS depth
-        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
+      SELECT s.spaceId, p.value AS ownerId, 1 AS depth
+        FROM (SELECT DISTINCT spaceId FROM ${wsRef}) s CROSS JOIN json_each(${JSON.stringify(parentIds)}) p
       UNION ALL
-      SELECT x.recordId, x.spaceId, p.parentId, x.depth + 1
-        FROM ${sql.literal(this.#peekName('anc'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.ancestorId
-        WHERE x.depth < ${maxDepth} AND p.parentId IS NOT NULL`,
+      SELECT o.spaceId, c.objectId, o.depth + 1
+        FROM ${sql.literal(this.#peekName('own'))} o
+        JOIN objectMeta c INDEXED BY ${sql.literal(INDEX_SPACE_PARENT)} ON c.spaceId = o.spaceId AND c.parentId = o.ownerId
+        WHERE o.depth < ${maxDepth} AND c.queueId = ''`,
     );
+    // A feed item's owner is its feed when it carries no parent of its own.
     return this.#define(
       'ws',
-      sql`SELECT w.* FROM ${wsRef} w WHERE EXISTS (
-        SELECT 1 FROM ${this.#ref(anc)} x WHERE x.recordId = w.recordId AND x.ancestorId IS NOT NULL
-          AND x.ancestorId IN (SELECT value FROM json_each(${JSON.stringify(parentIds)})))`,
+      sql`SELECT w.* FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
+        WHERE EXISTS (
+          SELECT 1 FROM ${this.#ref(owners)} o WHERE o.spaceId = m.spaceId
+            AND o.ownerId = COALESCE(m.parentId, CASE WHEN m.parent IS NULL AND m.queueId != '' THEN m.queueId END))`,
       ws.grouped,
     );
   }

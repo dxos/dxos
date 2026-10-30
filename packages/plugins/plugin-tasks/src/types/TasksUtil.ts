@@ -22,3 +22,5 @@ export const parseDateString = (str: string) => {
   const date = new Date(str);
   return new Date(date.getTime() + date.getTimezoneOffset() * 60_000);
 };
+
+export { withinScope } from '../util/task-filter.ts';
