@@ -10,6 +10,7 @@ import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { type View, createNode } from '@dxos/react-ui-canvas/headless';
@@ -118,6 +119,48 @@ describe('migrateSceneDrawing', () => {
       expect(Object.keys(after).sort(), name).toEqual(Object.keys(before).sort());
       expect(after, name).toEqual(Object.fromEntries(Object.keys(after).map((id) => [id, before[id]])));
     }
+  });
+
+  test('a canvas timeline migrates into a shot over the migrated scene with element paths', async () => {
+    const tree = createSquareTree();
+    const drawing = legacyDrawing(tree.views, tree.root);
+    const legacyCanvas = drawing.canvas.target;
+    if (!Drawing.isCanvas(legacyCanvas)) {
+      throw new Error('A legacy drawing has a base canvas.');
+    }
+    const [node] = Object.keys(tree.views[0].nodes);
+    const timeline = {
+      duration: 4,
+      tracks: {
+        [`${node}:style.opacity`]: {
+          target: node,
+          property: 'style.opacity',
+          keys: [
+            { t: 0, value: 0 },
+            { t: 2, value: 1, easing: 'ease-out' },
+          ],
+        },
+        [`${node}:center`]: { target: node, property: 'center', keys: [{ t: 1, value: { x: 10, y: 20 } }] },
+        'camera:zoom': { target: 'camera', property: 'zoom', keys: [{ t: 0, value: 2 }] },
+      },
+    };
+    Obj.update(legacyCanvas, (legacyCanvas) => {
+      Reflect.set(legacyCanvas.content[`scene:${tree.root}`], 'timeline', timeline);
+    });
+    expect(await migrate(drawing)).toBe(true);
+    const animations = await db.query(Filter.type(Animation.Animation)).run();
+    expect(animations).toHaveLength(1);
+    const [shot] = animations[0].shots;
+    expect(shot.stage.target).toBe(openScene(migratedCanvas(drawing)));
+    expect(shot.duration).toBe(4);
+    expect(Object.keys(shot.timeline.tracks).sort()).toEqual(
+      [`${node}:overrides.opacity`, `${node}:center`, 'camera:zoom'].sort(),
+    );
+    expect(shot.timeline.tracks[`${node}:overrides.opacity`]).toEqual({
+      ...timeline.tracks[`${node}:style.opacity`],
+      property: 'overrides.opacity',
+    });
+    expect(shot.timeline.tracks['camera:zoom']).toEqual(timeline.tracks['camera:zoom']);
   });
 
   test('running it twice changes nothing the second time', async () => {

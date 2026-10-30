@@ -10,10 +10,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
+import { Timeline, trackId } from '@dxos/animation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type View } from '@dxos/react-ui-canvas/headless';
+import { CAMERA_TARGET, type View } from '@dxos/react-ui-canvas/headless';
 import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
 import { Scene, bounds2D, toEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
@@ -22,6 +25,8 @@ import { Canvas } from '#types';
 
 import { canvasDocument, removeCanvas } from './canvas-document.ts';
 import {
+  LEGACY_ROOT_VIEW_ID,
+  ROOT_VIEW_ID,
   canvasRecordOf,
   clone,
   isLinkRecord,
@@ -32,6 +37,7 @@ import {
   readStyles,
   readViews,
   rootOf,
+  sceneKey,
 } from './content.ts';
 import { plain } from './layout-writer.ts';
 
@@ -112,6 +118,48 @@ export const legacyDocument = (content: Drawing.Canvas['content']): Scene.SceneD
   };
 };
 
+/** A canvas node's track property as the element path it keys: its inline style is the element's overrides. */
+const elementPath = (property: string): string =>
+  property.startsWith('style.')
+    ? `overrides.${property.slice('style.'.length)}`
+    : property === 'text'
+      ? 'label'
+      : property;
+
+/**
+ * A timeline a canvas View stored as a shot staging the View's migrated scene: the same duration and keys, each node
+ * track keying the element of the same id at its element path; the camera's tracks are the scene stage's as they are.
+ */
+export const migrateTimeline = (timeline: Timeline, stage: Ref.Ref<Obj.Unknown>): Animation.Shot => ({
+  ...Animation.makeShot(stage, timeline.duration),
+  timeline: {
+    ...timeline,
+    tracks: Object.fromEntries(
+      Object.values(timeline.tracks).map((track) => {
+        const property = track.target === CAMERA_TARGET ? track.property : elementPath(track.property);
+        return [trackId(track.target, property), { ...track, property }];
+      }),
+    ),
+  },
+});
+
+const isTimeline = Schema.is(Timeline);
+
+/** The shots the timelines of a legacy canvas's Views become, one per View with keyed tracks, over its scene. */
+const legacyShots = (
+  content: Drawing.Canvas['content'],
+  scenes: ReadonlyMap<string, Scene.Scene2D | Scene.Scene3D>,
+): Animation.Shot[] =>
+  [...scenes.values()].flatMap((scene) => {
+    // The legacy root View was renamed to the root on reading, so its record is still under the legacy id.
+    const record =
+      content[sceneKey(scene.key)] ?? (scene.key === ROOT_VIEW_ID ? content[sceneKey(LEGACY_ROOT_VIEW_ID)] : undefined);
+    const timeline = fieldsOf(record).timeline;
+    return isTimeline(timeline) && Object.keys(timeline.tracks).length > 0
+      ? [migrateTimeline(clone(timeline), Ref.make(scene))]
+      : [];
+  });
+
 /**
  * Migrates `drawing` when its canvas is a current-revision scene canvas, repointing it at a new `Canvas` in one
  * change; any other drawing (tldraw, excalidraw, one already migrated, one a newer plugin wrote) is left as it is.
@@ -151,6 +199,11 @@ export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing
       createdAt: new Date().toISOString(),
     }),
   );
+  // Canvas animation is the animator's (decision 16): the timelines Views stored become one animation's shots.
+  const shots = legacyShots(legacy.content, stored.scenes);
+  if (shots.length > 0) {
+    yield* Database.add(Obj.make(Animation.Animation, { name: drawing.name, fps: Animation.DEFAULT_FPS, shots }));
+  }
   Obj.update(drawing, (drawing) => {
     drawing.canvas = Ref.make(canvas);
   });

@@ -260,3 +260,11 @@ decision D-7: The plugin serves this document with a `PluginAsset` module, liste
   affects: [CanvasPlugin]
   why: The registry's open-spec action appears only when a plugin's asset module supplies the spec named by its profile.
 ```
+
+```mdl
+decision D-8: Migrating a scene drawing turns the timelines its Views stored into one animator `Animation`, a shot per View with keyed tracks, staging that View's migrated scene: the same duration and keys, node tracks keying the element of the same id at its element path (`style.*` becomes `overrides.*`, `text` becomes `label`), camera tracks unchanged. The plugin registers `Animation` and `StyleCatalog` so the migration and its models can store them. Fills in COMMON-CORE decision 16.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: Canvas animation moved to the animator and Views stopped storing timelines, so a drawing saved before that keeps its animation only if the migration carries it over.
+```

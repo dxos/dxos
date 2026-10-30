@@ -103,7 +103,7 @@ export type ElementRecord = Schema.Schema.Type<typeof ElementRecord>;
 export const ROOT_VIEW_ID = 'root';
 
 /** The root id drawings were saved with before it lost the `scene:` its key already adds. */
-const LEGACY_ROOT_VIEW_ID = 'scene:root';
+export const LEGACY_ROOT_VIEW_ID = 'scene:root';
 const CANVAS_KEY = 'canvas';
 
 export const sceneKey = (id: ViewId) => `scene:${id}`;
