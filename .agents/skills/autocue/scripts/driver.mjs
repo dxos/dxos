@@ -87,15 +87,19 @@ const parseArgs = () => {
     // `white-on-black` or `black-on-white` for the title and captions; unset, floating panels invert the page's theme.
     'caption-colors': undefined,
     'mode': 'record',
-    // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
-    // so the user's recording starts in a prepared app instead of onboarding.
-    'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
+    // The app's identity, spaces, dismissed first-run UI and signed-in accounts survive between sessions.
+    // Manual mode always uses one (defaulted below); a recording uses one only when `--profile` is passed.
+    'profile': undefined,
     // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
     'theme': 'dark',
     // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
     'action-timeout': 5_000,
     // Minimum gap between consecutive gestures, the pause a person takes to find the next control.
     'cadence': 600,
+    // Characters `type` shows at reading pace before cutting to the end of the string; enough to read as typing.
+    'type-lead': 30,
+    // Milliseconds typed text stays on screen before the next gesture, so the viewer sees it land.
+    'type-settle': 500,
     // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
     'log': undefined,
     // `browser` (Chromium through Playwright) or `tauri` (the native desktop app through WebDriver).
@@ -130,6 +134,9 @@ const parseArgs = () => {
   const narrate = options.mode === 'manual' ? 'off' : 'on';
   // The action feed reads as debug chrome in a demo; `--pills on` brings it back.
   options.pills ??= 'off';
+  if (options.mode === 'manual') {
+    options.profile ??= path.join(homedir(), '.local/state/dxos/autocue/profile');
+  }
   options.captions ??= narrate;
   // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
   options.pace ??= options.mode === 'manual' ? 800 : 0;
@@ -240,13 +247,27 @@ if (native) {
   }
 }
 
+const recordContextOptions = {
+  viewport,
+  deviceScaleFactor: scale,
+  colorScheme: options.theme,
+  recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+  // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
+  // trust; the proxy itself verifies the upstream certificate.
+  ignoreHTTPSErrors: Boolean(sandbox),
+};
+
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
-const browser = manual || tauri ? undefined : await chromium.launch(launchOptions);
+const persistent = !tauri && options.profile !== undefined;
+const browser = persistent || tauri ? undefined : await chromium.launch(launchOptions);
 const context = tauri
   ? undefined
-  : manual
+  : persistent
     ? await chromium
-        .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
+        .launchPersistentContext(options.profile, {
+          ...launchOptions,
+          ...(manual ? { viewport: null, colorScheme: options.theme } : recordContextOptions),
+        })
         .catch((error) => {
           // Chromium locks a profile to one process; the usual cause is the previous session's window.
           if (/already in use/.test(error.message)) {
@@ -255,15 +276,7 @@ const context = tauri
           }
           throw error;
         })
-    : await browser.newContext({
-        viewport,
-        deviceScaleFactor: scale,
-        colorScheme: options.theme,
-        recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-        // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
-        // trust; the proxy itself verifies the upstream certificate.
-        ignoreHTTPSErrors: Boolean(sandbox),
-      });
+    : await browser.newContext(recordContextOptions);
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));
 page.setDefaultTimeout(options['action-timeout']);
@@ -320,6 +333,8 @@ const recorder = !hires
  * navigable instead of living only in burned-in pixels.
  */
 let started = recorder?.started ?? Date.now();
+/** Milliseconds removed by `pause`/`resume`, so a step that pauses keeps its chapter where it began. */
+let skipped = 0;
 const timeline = [];
 
 /** Captions are re-injected per call because a navigation wipes the overlay. */
@@ -705,12 +720,24 @@ const runFlow = async (command) => {
       }
       // Every on-camera step is a chapter, and its `narration` (or name) the line a voice-over speaks; it is
       // committed only once the step succeeds, so a retried step does not leave a duplicate chapter.
+      // `narration: false` keeps a step silent (stage directions such as returning Home); `chapter: false`
+      // also keeps it out of the chapters.
       const at = Date.now();
-      const mark = { ms: at - started, text: step.name, narration: step.narration ?? step.name };
+      const skippedBefore = skipped;
+      const startedBefore = started;
+      // Where the step begins in the kept video: a step that starts inside a pause begins where the pause did.
+      const keptAt = (recorder?.pausedAt ?? at) - started;
+      const mark = {
+        ms: at - started,
+        text: step.name,
+        narration: step.narration === false ? null : (step.narration ?? step.name),
+      };
       await interruptible(step.run({ page, demo }));
-      if (!step.setup) {
-        // A boot cut inside the step (its `goto`) moves `started`; the chapter then opens at the cut.
-        mark.ms = Math.max(0, at - started);
+      if (!step.setup && step.chapter !== false) {
+        // A boot cut inside the step (its `goto`) moves `started` and the chapter then opens at the cut; a pause
+        // ending inside it moves `started` too, but by kept time removed, which the chapter's start must not lose.
+        const cutShift = started - startedBefore - (skipped - skippedBefore);
+        mark.ms = Math.max(0, keptAt - cutShift);
         timeline.push(mark);
       }
       results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
@@ -769,6 +796,22 @@ const handlers = {
     return result;
   },
   cut: () => cut(),
+  /** Starts a jump cut: nothing painted until `resume` is kept, nor the time it took (`recorder.pause`). */
+  pause: () => {
+    if (!recorder?.pause) {
+      return { paused: false };
+    }
+    return { paused: true, began: recorder.pause() };
+  },
+  resume: () => {
+    if (!recorder?.resume) {
+      return { resumed: false };
+    }
+    const before = started;
+    started = recorder.resume();
+    skipped += started - before;
+    return { resumed: true };
+  },
   click: async (command) => {
     const target = locator(command).first();
     await cadence(command);
@@ -785,11 +828,39 @@ const handlers = {
     gestured();
     return {};
   },
+  /**
+   * Types into `selector`, or into whatever has focus when there is none. Typing opens at a reading pace, the
+   * rest of a long string is cut (`type-lead`), and the next action waits until the text has been on screen a
+   * beat (`type-settle`).
+   */
   type: async (command) => {
-    const target = locator(command).first();
+    const hasTarget = command.selector !== undefined || command.text !== undefined;
+    const target = hasTarget ? locator(command).first() : undefined;
     await cadence(command);
-    await pointAt(target, command, 'type');
-    await target.pressSequentially(command.value, { delay: command.delay ?? 60 });
+    if (target) {
+      await pointAt(target, command, 'type');
+    }
+    const keys = (text, delay) =>
+      target ? target.pressSequentially(text, { delay }) : page.keyboard.type(text, { delay });
+    const delay = command.delay ?? 60;
+    const lead = options['type-lead'];
+    const trim = command.trim !== false && recorder?.pause && command.value.length > lead + 8;
+    if (trim) {
+      await keys(command.value.slice(0, lead), delay);
+      // Inside a pause the flow opened itself, the cut is already running and is the flow's to end.
+      const { began } = await handlers.pause();
+      try {
+        // Still per key, not `fill`: editors such as CodeMirror react to key events, and the speed is off camera.
+        await keys(command.value.slice(lead), 5);
+      } finally {
+        if (began) {
+          await handlers.resume();
+        }
+      }
+    } else {
+      await keys(command.value, delay);
+    }
+    await page.waitForTimeout(command.settle ?? options['type-settle']);
     gestured();
     return {};
   },
@@ -910,10 +981,12 @@ const handlers = {
         captionPosition: command.position,
       });
     }
+    // Inside a flow step the step's own `narration` is the voice; a caption there is on-screen text only.
     timeline.push({
       ms: Date.now() - started,
       text: command.value,
       subtitle: command.subtitle,
+      ...(flow.state === 'running' ? { narration: null } : {}),
       ...(command.hold ? { hold: command.hold } : {}),
     });
     if (command.hold) {
