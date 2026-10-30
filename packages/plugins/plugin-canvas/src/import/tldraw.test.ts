@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { sortByZ } from '@dxos/react-ui-canvas/headless';
-import { MAJOR_GRID } from '@dxos/scene';
+import { MAJOR_GRID, Scene } from '@dxos/scene';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
-import { nearestHue, tldrawToViews } from './tldraw.ts';
+import { nearestHue, tldrawToLayout, tldrawToViews } from './tldraw.ts';
 
 describe('tldrawToViews', () => {
   test('geo shapes map to rect and ellipse nodes, and a bound arrow to a link between them', ({ expect }) => {
@@ -217,5 +218,30 @@ describe('nearestHue', () => {
     }
     // Clear of the frame's corner, where its name is.
     expect(bounds('inner-a').top).toBeGreaterThan(frame.top);
+  });
+});
+
+describe('tldrawToLayout', () => {
+  test('a tldraw page maps to Element2Ds of one 2D layout, frames on their own layer under the content', ({
+    expect,
+  }) => {
+    const { layout, intents } = tldrawToLayout(frameWithChildren(), { root: 'page' });
+    expect(layout.id).toBe('page');
+    const shapes = Object.values(layout.elements).filter((element) => element.type !== 'link');
+    expect(shapes.map((element) => element.id).sort()).toEqual(['frame', 'inner-a', 'inner-b', 'outside']);
+    expect(Object.values(layout.elements).every(Schema.is(Scene.Element2D))).toBe(true);
+    expect(layout.elements.frame).toMatchObject({ type: 'rect', layer: 'frames' });
+    expect(Object.keys(layout.layers ?? {})).toContain('frames');
+    // One create per element, shapes before the links bound to them.
+    expect(intents.map((intent) => intent.kind === 'create' && intent.element.id).sort()).toEqual(
+      Object.keys(layout.elements).sort(),
+    );
+  });
+
+  test('a bound arrow becomes a link element after the shapes it binds', ({ expect }) => {
+    const { layout, intents } = tldrawToLayout(shapesAndArrow(), { snap: false });
+    expect(layout.elements.arrow).toMatchObject({ source: { node: 'box' }, target: { node: 'oval' }, label: 'calls' });
+    const order = intents.map((intent) => (intent.kind === 'create' ? intent.element.id : ''));
+    expect(order.indexOf('arrow')).toBeGreaterThan(Math.max(order.indexOf('box'), order.indexOf('oval')));
   });
 });

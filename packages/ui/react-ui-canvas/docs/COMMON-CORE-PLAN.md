@@ -144,6 +144,35 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
 - **R-29 (2026-10-30, agent, E.3, parity): no change to the shared editor contract; compute boards are 2D-only.**
   The compute config is config2d plus its own section and viewport wrapper; react-ui-canvas-compute gains a workspace
   dependency on react-ui-scene for `createConfig2D`. 3D: nothing to do. Cost if wrong: none.
+- **R-30 (2026-10-30, agent, E.2): `CanvasOperation.Apply` on a `Canvas` takes `LayoutIntent`s for one layout (`view`,
+  the open scene's by default), checked in that layout's dimension, and records over `canvasSource` (every layout the
+  canvas lists, keyed by layout key); `Patch` patches the same source.** A legacy `Drawing.Canvas` keeps the engine
+  path. The operation is freehand: the layout's mode (`constrain2D`) is the editor's, in react-ui-scene. Cost if
+  wrong: an agent's move on a lattice layout lands off its cells (apply `constrain2D` in the handler), and a patch
+  recorded before E.2 (heads `layout:<key>`) no longer applies (the tracker's log is per session).
+- **R-31 (2026-10-30, agent, E.2): `layout-store.ts` is deleted.** Its tests of the kept writer moved to
+  `layout-writer.test.ts`; store-only tests (View atom, camera, shared scenes, `layout:`/`model:` heads, lattice and
+  scored modes over the store) went with it, as `config2d.test.ts` covers the layout's modes. `migrate-scenes.test`
+  reads Views with `fromEcho` + `toCanvasView` and writes with `makeLayoutWriter`. Cost if wrong: none beyond those tests.
+- **R-32 (2026-10-30, agent, E.2): the tldraw importer still maps to Views, and `tldrawToLayout` reads each as the
+  layout the engine writes (`fromCanvasView`, R-18).** `importTldraw` writes the group layouts and model objects with
+  `writeDocument`, the page's layers, then its elements as create intents. A legacy canvas still takes the Views.
+  Rejected: a second 742-line mapper while legacy needs the first. Cost if wrong: map to `Element2D` directly in E.6.
+- **R-33 (2026-10-30, agent, E.2): `AddGenerator` on a `Canvas` is one create intent, its element the adapter's form of
+  the generator node; `InspectGenerator` reads Views with `canvasDocument` + `toCanvasView`; `loadScene` is
+  legacy-only.** Cost if wrong: none.
+- **R-34 (2026-10-30, agent, E.2): the mode is the layout's.** `Canvas.settings.lattice`/`projection` stay in the
+  schema, as stored canvases have them, and are read only to move the mode onto every 2D layout: the migration
+  (`withSettingsMode`) and the writable article on open (`adoptLayoutMode`) set `lattice` (`DEFAULT_LATTICE`),
+  `constraints` (from `props.constrained`) or `arrange: dynamic`, then drop the setting. The Properties Lattice toggle
+  writes every 2D layout. `projection-model.ts` is deleted; `useDimension2D` passes no projection, so `constrain2D`
+  applies. Cost if wrong: a canvas not opened since draws freehand in its card, and an older peer still reading the
+  setting sees it freehand after adoption.
+- **R-35 (2026-10-30, agent, E.2): the architecture samples are still built as legacy canvases through the illustrator
+  builder, and migrating one carries its lattice onto its layouts.** Rejected: porting the tone and drill passes to
+  `Canvas` now. Cost if wrong: the port, when legacy goes.
+- **R-36 (2026-10-30, agent, E.2, parity): `Apply` and `Patch` edit a 3D layout as they edit a 2D one (tested); 3D has
+  no mode to move.** `Scene2DView` lost its `createProjection` prop, which only the card passed. Cost if wrong: none.
 
 ## Global Constraints
 
@@ -783,6 +812,9 @@ needed tests to the new modules. Commit `plugin-canvas: remove the View adapters
 (The builder and handler moved in 0.4.) `operations/apply.ts`/`patch*.ts`, `import/tldraw*`, samples and stories
 build `Layout2D` + intents. Failing test per operation (`Apply` creates elements in the open layout; tldraw import produces
 `Element2D`s) → implement → PASS → commit `plugin-canvas: operations and conversion on Layout2D`.
+
+- [x] `Apply`/`Patch` on `LayoutIntent`s over every layout (R-30); `layout-store` gone (R-31); tldraw to `Element2D`s by
+      create intents (R-32); generators by intent (R-33); the mode from the layout via `constrain2D` (R-34).
 
 ### Task E.3: react-ui-canvas-compute and plugin-conductor (decision 10)
 

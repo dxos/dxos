@@ -5,8 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
-import { type VersionedSource, readPath, sameValue, writePath } from '@dxos/react-ui-canvas/headless';
+import { type VersionedSource, combinedSource, readPath, sameValue, writePath } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, type LayoutPatch, Scene, applyIntent } from '@dxos/scene';
+
+import { type Canvas } from '#types';
 
 import { plain } from './records.ts';
 import { writeFields } from './write-fields.ts';
@@ -155,3 +157,20 @@ export const applyLayoutIntent = (layout: Scene.Layout2D | Scene.Layout3D, inten
     }
   });
 };
+
+/** The layouts a canvas lists, of either dimension, by key. */
+export const canvasLayouts = (canvas: Canvas.Canvas): Map<string, Scene.Layout2D | Scene.Layout3D> =>
+  new Map(
+    canvas.layouts.flatMap((ref) =>
+      Obj.instanceOf(Scene.Layout2D, ref.target) || Obj.instanceOf(Scene.Layout3D, ref.target)
+        ? [[ref.target.key, ref.target] as const]
+        : [],
+    ),
+  );
+
+/**
+ * Every layout of a canvas as one versioned source, each under its key (paths `[key, 'elements', id, …]`, heads by
+ * key), so an edit to any of them is recorded and patched back as one.
+ */
+export const canvasSource = (canvas: Canvas.Canvas): VersionedSource =>
+  combinedSource(Object.fromEntries([...canvasLayouts(canvas)].map(([key, layout]) => [key, layoutSource(layout)])));

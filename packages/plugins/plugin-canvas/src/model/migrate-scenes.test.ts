@@ -13,7 +13,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { type View, createNode } from '@dxos/react-ui-canvas/headless';
+import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
+import { type View, type ViewMap, createNode } from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -25,7 +26,8 @@ import {
   createSquareTree,
   createViewTree,
 } from '@dxos/react-ui-canvas/testing';
-import { type Node, Scene, type StyleClass } from '@dxos/scene';
+import { toCanvasView } from '@dxos/react-ui-scene/canvas';
+import { type Node, Scene, type StyleClass, fromEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
 import { Canvas } from '#types';
@@ -34,7 +36,7 @@ import types from '../capabilities/schema.ts';
 import { CanvasBuilder } from './builder.ts';
 import { addScene, openScene } from './canvas-document.ts';
 import { updateCanvasRecord, writeStyles, writeViews } from './content.ts';
-import { bindLayoutStore } from './layout-store.ts';
+import { makeLayoutWriter } from './layout-writer.ts';
 import { legacyDocument, migrateSceneDrawing, reconcileMigrations } from './migrate-scenes.ts';
 import { bindCanvasStore, createCanvas } from './store.ts';
 
@@ -48,6 +50,17 @@ const SAMPLES = {
   objects: createObjectsTree,
   model: () => createModelViewTree(),
   tree: () => createViewTree(2),
+};
+
+/** A 2D scene's layouts read as the engine's Views, by layout key, with the scene's own layout as the root. */
+const sceneViews = (scene: Scene.Scene2D): { root: string; views: ViewMap } => {
+  const doc = fromEcho(scene);
+  return {
+    root: scene.layout.target?.key ?? scene.key,
+    views: Object.fromEntries(
+      doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toCanvasView(doc, layout)]] : [])),
+    ),
+  };
 };
 
 const LEGACY_VARIANT: IllustratorCapabilities.DrawingVariant = {
@@ -112,10 +125,8 @@ describe('migrateSceneDrawing', () => {
       if (!Obj.instanceOf(Scene.Scene2D, scene)) {
         throw new Error(`${name}: the migrated canvas opens a 2D scene.`);
       }
-      const bound = bindLayoutStore(registry, scene);
-      const after = registry.get(bound.store.views);
-      bound.dispose();
-      expect(bound.root, name).toBe(legacyRoot);
+      const { root, views: after } = sceneViews(scene);
+      expect(root, name).toBe(legacyRoot);
       expect(Object.keys(after).sort(), name).toEqual(Object.keys(before).sort());
       expect(after, name).toEqual(Object.fromEntries(Object.keys(after).map((id) => [id, before[id]])));
     }
@@ -207,10 +218,8 @@ describe('migrateSceneDrawing', () => {
     if (!Obj.instanceOf(Scene.Scene2D, scene)) {
       throw new Error('The migrated canvas opens a 2D scene.');
     }
-    const registry = Registry.make();
-    const bound = bindLayoutStore(registry, scene);
-    const node: unknown = registry.get(bound.store.views)[bound.root].nodes.portal;
-    bound.dispose();
+    const opened = sceneViews(scene);
+    const node: unknown = opened.views[opened.root].nodes.portal;
     expect(node).toMatchObject({ type: 'view', scene: 'other-drawing-view' });
     const link: unknown = isRecord(node) && isRecord(node.link) ? node.link.object : undefined;
     expect(Ref.isRef(link) ? link.uri.toString() : JSON.stringify(link)).toContain(other.id);
@@ -233,7 +242,7 @@ describe('migrateSceneDrawing', () => {
     expect(elements.b.dsl).toBeUndefined();
   });
 
-  test('named style classes become the model styles and settings move onto the Canvas', async () => {
+  test('named style classes become the model styles, settings move onto the Canvas and the lattice onto its layouts', async () => {
     const tree = createSquareTree();
     const warning: StyleClass = { id: 'warning', name: 'Warning', style: { hue: 'red' } };
     const drawing = legacyDrawing(tree.views, tree.root, { theme: 'paper', lattice: true });
@@ -248,7 +257,10 @@ describe('migrateSceneDrawing', () => {
     });
     expect(await migrate(drawing)).toBe(true);
     const canvas = migratedCanvas(drawing);
-    expect(canvas.settings).toEqual({ theme: 'paper', lattice: true, grid: 24 });
+    expect(canvas.settings).toEqual({ theme: 'paper', grid: 24 });
+    for (const ref of canvas.layouts) {
+      expect(Obj.instanceOf(Scene.Layout2D, ref.target) && ref.target.lattice).toEqual(DEFAULT_LATTICE);
+    }
     const model = canvas.model?.target;
     expect(Obj.instanceOf(Scene.Model2D, model) && model.styles).toEqual({
       warning: { name: warning.name, ...warning.style },
@@ -323,31 +335,31 @@ describe('migrateSceneDrawing', () => {
 
     test('a View only the losing peer made is adopted by the winner, with the object that places it', async () => {
       const { drawing, winner, loser } = await migratedTwice();
-      const registry = Registry.make();
       const scene = openScene(loser);
       if (!Obj.instanceOf(Scene.Scene2D, scene)) {
         throw new Error('A migrated canvas opens a 2D scene.');
       }
-      const bound = bindLayoutStore(registry, scene, { canvas: loser });
-      const views = registry.get(bound.store.views);
+      const { root, views } = sceneViews(scene);
       const size = { width: 128, height: 128 };
-      const rootView = views[bound.root];
-      registry.set(bound.store.views, {
-        ...views,
-        'peer-view': {
-          id: 'peer-view',
-          nodes: { x: createNode({ type: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
-          links: {},
-        },
-        [bound.root]: {
-          ...rootView,
-          nodes: {
-            ...rootView.nodes,
-            p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: 'peer-view' }),
+      const rootView = views[root];
+      makeLayoutWriter(scene, { canvas: loser }).write(
+        {
+          ...views,
+          'peer-view': {
+            id: 'peer-view',
+            nodes: { x: createNode({ type: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
+            links: {},
+          },
+          [root]: {
+            ...rootView,
+            nodes: {
+              ...rootView.nodes,
+              p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: 'peer-view' }),
+            },
           },
         },
-      });
-      bound.dispose();
+        views,
+      );
       expect(await reconcile(drawing)).toBe(true);
       const layout = winner.layouts
         .map((ref) => ref.target)
@@ -367,28 +379,28 @@ describe('migrateSceneDrawing', () => {
       }
       // The loser adds a second scene over its root layout, and a portal to that root View (whose layout both have).
       const extra = addScene(loser, scene, { center: { x: 0, y: 0 }, zoom: 2 });
-      const registry = Registry.make();
-      const bound = bindLayoutStore(registry, scene, { canvas: loser });
-      const views = registry.get(bound.store.views);
-      const rootView = views[bound.root];
+      const { root, views } = sceneViews(scene);
+      const rootView = views[root];
       const size = { width: 128, height: 128 };
-      registry.set(bound.store.views, {
-        ...views,
-        [bound.root]: {
-          ...rootView,
-          nodes: {
-            ...rootView.nodes,
-            p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: bound.root }),
+      makeLayoutWriter(scene, { canvas: loser }).write(
+        {
+          ...views,
+          [root]: {
+            ...rootView,
+            nodes: {
+              ...rootView.nodes,
+              p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: root }),
+            },
           },
         },
-      });
-      bound.dispose();
+        views,
+      );
       expect(await reconcile(drawing)).toBe(true);
       const winnerRoot = rootLayout(winner);
       const adopted = winner.scenes.map((ref) => ref.target).find((target) => target === extra);
       expect(Obj.instanceOf(Scene.Scene2D, adopted) && adopted.layout.target).toBe(winnerRoot);
       const model = winnerRoot.model?.target;
-      const object = Obj.instanceOf(Scene.Model2D, model) ? model.objects[`view:${bound.root}`] : undefined;
+      const object = Obj.instanceOf(Scene.Model2D, model) ? model.objects[`view:${root}`] : undefined;
       expect(object?.parts?.target).toBe(winnerRoot);
     });
 

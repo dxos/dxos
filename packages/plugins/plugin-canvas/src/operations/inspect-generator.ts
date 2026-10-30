@@ -8,10 +8,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type View, checkGenerator } from '@dxos/react-ui-canvas/headless';
+import { toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type GeneratorNode } from '@dxos/scene';
 
-import { CanvasOperation, Generator } from '#types';
+import { Canvas, CanvasOperation, Generator } from '#types';
 
+import { canvasDocument } from '../model/canvas-document.ts';
 import { generatorCompiler } from '../model/compiler.ts';
 import { loadScene } from './canvas.ts';
 
@@ -51,10 +53,18 @@ export default handler;
 const DEFAULT_TIMES = [0, 0.5, 1, 1.5, 2, 2.5, 3];
 const STANDALONE_NODE = 'generator';
 
-/** The scene of the drawing that holds `node`. */
-const sceneOf = Effect.fn(function* (drawing: Ref.Ref<Drawing.Drawing>, node: string) {
-  const { scenes } = yield* loadScene(drawing);
-  return Object.values(scenes).find((scene) => scene.nodes[node] !== undefined);
+/** The View of the drawing that holds `node`: a scene canvas's 2D layout read as one, or a legacy canvas's scene. */
+const sceneOf = Effect.fn(function* (drawingRef: Ref.Ref<Drawing.Drawing>, node: string) {
+  const drawing = yield* Database.load(drawingRef);
+  const canvas = yield* Database.load(drawing.canvas);
+  if (!Canvas.isCanvas(canvas)) {
+    const { scenes } = yield* loadScene(drawingRef);
+    return Object.values(scenes).find((scene) => scene.nodes[node] !== undefined);
+  }
+  const document = canvasDocument(canvas);
+  return document.layouts
+    .flatMap((layout) => (layout.dim === '2d' ? [toCanvasView(document, layout)] : []))
+    .find((scene) => scene.nodes[node] !== undefined);
 });
 
 /** A scene holding only the generator, for a check before it is placed. */

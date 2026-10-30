@@ -5,14 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  type Camera,
-  Canvas,
-  type FreehandProjectionOptions,
-  type NodeRegistry,
-  type Projection,
-  createCanvasAtoms,
-} from '@dxos/react-ui-canvas';
+import { type Camera, Canvas, type NodeRegistry, createCanvasAtoms } from '@dxos/react-ui-canvas';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -37,8 +30,6 @@ export type Scene2DViewProps = Util.ThemedClassName<{
   theme3d?: Theme3D;
   /** The node types the `dom` renderer draws (a host's object frames among them); the default set when unset. */
   nodes?: NodeRegistry;
-  /** The `dom` renderer's mode over its Views; when unset, each layout's own (its lattice). */
-  createProjection?: (options: FreehandProjectionOptions) => Projection;
   /** The room a fit leaves around the drawing, as a fraction of the view; the canvas's default when unset. */
   margin?: number;
   /** Whether the `dom` renderer draws its grid and background grid; on when unset. */
@@ -75,7 +66,6 @@ const CanvasView = ({
   theme,
   camera = 'fit',
   nodes,
-  createProjection: projectionProp,
   margin,
   grid = true,
 }: Scene2DViewProps) => {
@@ -109,10 +99,7 @@ const CanvasView = ({
   const latest = useRef(document);
   latest.current = document;
   const lattices = latticesKey(document);
-  const createProjection = useMemo(
-    () => projectionProp ?? layoutProjection(() => latest.current),
-    [projectionProp, lattices],
-  );
+  const createProjection = useMemo(() => layoutProjection(() => latest.current), [lattices]);
 
   const fit = camera === 'fit';
   useLayoutEffect(() => {

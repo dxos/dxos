@@ -24,6 +24,7 @@ import {
   type BoundCanvasStore,
   CanvasViewNode,
   ImageNode,
+  adoptLayoutMode,
   bindCanvasStore,
   migrateSceneDrawing,
   reconcileMigrations,
@@ -85,7 +86,8 @@ export const useMigratedCanvas = (
 
 /**
  * Folds into `canvas` what another peer's parallel migration of the same legacy drawing changed, and removes that
- * copy (`reconcileMigrations`); run once when the drawing opens for writing.
+ * copy (`reconcileMigrations`), and moves a mode its settings still name onto its layouts (`adoptLayoutMode`); run
+ * once when the drawing opens for writing.
  */
 export const useReconciledMigrations = (
   drawing: Obj.Snapshot<Drawing.Drawing> | Drawing.Drawing,
@@ -97,6 +99,7 @@ export const useReconciledMigrations = (
     if (!reconcile || !db) {
       return;
     }
+    adoptLayoutMode(canvas);
     // The surface may hand a snapshot, so the live drawing is read from the database.
     void EffectEx.runPromise(
       Effect.gen(function* () {

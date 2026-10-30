@@ -17,10 +17,13 @@ import {
   canvasRecordOf,
   deleteNamedStyle,
   deleteStyleClass,
+  layoutLattice,
   namedStyleUses,
   readStyles,
+  setLayoutLattice,
   styleClassUses,
   updateCanvasRecord,
+  withoutMode,
   writeStyles,
 } from '#model';
 import { Canvas, Settings } from '#types';
@@ -107,13 +110,18 @@ const settingsOf = (next: CanvasPropertiesValues): Partial<Canvas.CanvasSettings
 const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) => {
   const [canvas] = useObject(subject);
   const handleSave = useCallback(
-    (next: CanvasPropertiesValues) =>
+    (next: CanvasPropertiesValues) => {
+      // The lattice is each layout's own mode, so the toggle writes the layouts rather than the settings.
+      next.lattice !== layoutLattice(subject) && setLayoutLattice(subject, next.lattice === true);
       Obj.update(subject, (subject) => {
         // ECHO stores no `undefined`, so an unset value removes its key.
         subject.settings = Object.fromEntries(
-          Object.entries({ ...subject.settings, ...settingsOf(next) }).filter(([, value]) => value !== undefined),
+          Object.entries({ ...subject.settings, ...withoutMode(settingsOf(next)) }).filter(
+            ([, value]) => value !== undefined,
+          ),
         );
-      }),
+      });
+    },
     [subject],
   );
   // The style classes are the canvas model's named styles.
@@ -136,7 +144,7 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
   const handleDelete = useCallback((id: string) => deleteNamedStyle(subject, id), [subject]);
   return (
     <PropertiesView
-      values={valuesOf(canvas.settings)}
+      values={{ ...valuesOf(canvas.settings), lattice: layoutLattice(subject) || undefined }}
       onSave={handleSave}
       classes={classes}
       uses={uses}

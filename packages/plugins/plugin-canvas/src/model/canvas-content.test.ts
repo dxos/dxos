@@ -23,7 +23,7 @@ import { Canvas } from '#types';
 
 import types from '../capabilities/schema.ts';
 import { tldrawConverter } from '../import/converter.ts';
-import { frameWithChildren } from '../import/testing.ts';
+import { frameWithChildren, groupAndRotation } from '../import/testing.ts';
 import { CanvasBuilder } from './builder.ts';
 import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { addCanvas, openScene } from './canvas-document.ts';
@@ -158,6 +158,26 @@ describe('CanvasLayoutBuilder', () => {
     expect(Canvas.isCanvas(canvas)).toBe(true);
     const nodes = Object.values(layoutOf(canvas).elements).filter((element) => element.type !== 'link');
     expect(nodes.map((element) => element.id).sort()).toEqual([...upserted].sort());
+    // The frames sit on their own layer under the content, as the import maps them.
+    expect(layoutOf(canvas).layers?.frames).toBeDefined();
+  });
+
+  test('a tldraw group converts into a composite layout of the typed canvas, placed by an object of its model', async () => {
+    const source = db.add(Drawing.makeCanvas({ schema: Canvas.TLDRAW_SCHEMA, content: groupAndRotation() }));
+    const { canvas } = await run(tldrawConverter.convert(source, { from: tldraw, to: canvasVariant }));
+    if (!Canvas.isCanvas(canvas)) {
+      throw new Error('The converter writes a typed canvas.');
+    }
+    const parts = canvas.layouts
+      .map((ref) => ref.target)
+      .find((target) => Obj.instanceOf(Scene.Layout2D, target) && target.key === 'group-object');
+    expect(Obj.instanceOf(Scene.Layout2D, parts) && Object.keys(parts.elements).sort()).toEqual(
+      expect.arrayContaining(['member', 'partner', 'pair']),
+    );
+    const model = layoutOf(canvas).model?.target;
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['instance:group-object']?.parts?.target).toBe(parts);
+    expect(layoutOf(canvas).elements.group).toMatchObject({ object: 'instance:group-object' });
+    expect(layoutOf(canvas).elements.tie).toMatchObject({ target: { node: 'group' } });
   });
 
   test('a laid-out tldraw drawing converts to a canvas, and the canvas back to tldraw', async () => {

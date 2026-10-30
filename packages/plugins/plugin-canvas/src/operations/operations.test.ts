@@ -82,6 +82,44 @@ describe('canvas generator operations', () => {
     ),
     60_000,
   );
+  it.effect(
+    'a generator placed on a scene canvas is an element of the open layout, and checks there',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* addCanvas();
+        const drawing = yield* Database.add(Drawing.make({ name: 'Scene', canvas }));
+        yield* Database.flush();
+        const layout = openScene(canvas)?.layout.target;
+        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+          throw new Error('A scene canvas opens a 2D layout.');
+        }
+
+        const created = yield* Operation.invoke(CanvasOperation.CreateGenerator, { name: 'Orbit', source: SOURCE });
+        const { node } = yield* Operation.invoke(CanvasOperation.AddGenerator, {
+          drawing: Ref.make(drawing),
+          generator: created.generator,
+          bounds: { x: -100, y: -100, width: 200, height: 200 },
+          params: { count: 3 },
+        });
+        expect(layout.elements[node]).toMatchObject({
+          type: 'generator',
+          center: { x: 0, y: 0 },
+          size: { width: 200, height: 200 },
+        });
+
+        const report = yield* Operation.invoke(CanvasOperation.InspectGenerator, {
+          generator: created.generator,
+          drawing: Ref.make(drawing),
+          node,
+          times: [0, 1],
+        });
+        expect(report.frames).toEqual([0, 1].map((t) => ({ t, shapes: 3 })));
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    60_000,
+  );
 });
 
 describe('canvas edit operations', () => {
@@ -218,7 +256,7 @@ describe('scene revisions', () => {
   });
 
   it.effect(
-    'apply and patch edit a scene canvas through its layout',
+    'apply creates elements in the open layout from layout intents, and patch undoes them',
     Effect.fnUntraced(
       function* ({ expect }) {
         const canvas = yield* addCanvas();
@@ -228,21 +266,92 @@ describe('scene revisions', () => {
         if (!Obj.instanceOf(Scene.Layout2D, layout)) {
           throw new Error('A scene canvas opens a 2D layout.');
         }
-        const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
         const ref = Ref.make(canvas);
 
-        yield* Operation.invoke(CanvasOperation.Apply, { canvas: ref, intents: [{ kind: 'create', node }] });
+        const created = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'create', element }],
+        });
         expect(layout.elements.n).toMatchObject({ type: 'rect', center: { x: 0, y: 0 } });
+        expect(created.paths).toEqual([[layout.key, 'elements', 'n']]);
         const moved = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
           intents: [{ kind: 'move', ids: ['n'], delta: { x: 10, y: 0 } }],
         });
+        expect(moved.paths).toEqual([[layout.key, 'elements', 'n', 'center', 'x']]);
         expect(layout.elements.n.center?.x).toBe(10);
         yield* Database.flush();
 
         const undo = { canvas: ref, from: moved.after, to: moved.before, paths: moved.paths };
         expect(yield* Operation.invoke(CanvasOperation.Patch, undo)).toMatchObject({ written: 1, skipped: 0 });
         expect(layout.elements.n.center?.x).toBe(0);
+
+        // A layout intent writes the layout's own mode, undone the same way.
+        const lattice = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+        const moded = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'layout', patch: { lattice } }],
+        });
+        expect(layout.lattice).toEqual(lattice);
+        yield* Operation.invoke(CanvasOperation.Patch, {
+          canvas: ref,
+          from: moded.after,
+          to: moded.before,
+          paths: moded.paths,
+        });
+        expect(layout.lattice).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    "apply refuses an intent not of the layout's dimension and writes nothing",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* addCanvas();
+        yield* Database.add(Drawing.make({ name: 'Scene', canvas }));
+        yield* Database.flush();
+        const layout = openScene(canvas)?.layout.target;
+        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+          throw new Error('A scene canvas opens a 2D layout.');
+        }
+        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const exit = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(canvas),
+          intents: [
+            { kind: 'create', element },
+            { kind: 'move', ids: ['n'], delta: { x: 1, y: 2, z: 3 } },
+          ],
+        }).pipe(Effect.exit);
+        expect(exit._tag).toBe('Failure');
+        expect(String(exit)).toContain('Intent 1 is not a valid layout intent.');
+        expect(layout.elements.n).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'apply edits a 3D canvas through its layout, as 2D',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* addCanvas({ dimension: '3d' });
+        yield* Database.flush();
+        const layout = openScene(canvas)?.layout.target;
+        if (!Obj.instanceOf(Scene.Layout3D, layout)) {
+          throw new Error('A 3D canvas opens a 3D layout.');
+        }
+        const element = { id: 'cube', type: 'box', z: 'a0' };
+        const created = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(canvas),
+          intents: [{ kind: 'create', element }],
+        });
+        expect(layout.elements.cube).toMatchObject({ type: 'box' });
+        expect(created.paths).toEqual([[layout.key, 'elements', 'cube']]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

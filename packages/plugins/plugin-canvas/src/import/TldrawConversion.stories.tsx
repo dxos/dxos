@@ -5,21 +5,20 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import * as CanvasPlugin from '#meta';
-import { createCanvas, rootOf, writeViews } from '#model';
+import { makeCanvas } from '#model';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 
+import { importTldraw } from './converter.ts';
 import { frameWithChildren, shapesAndArrow, textNoteAndFreeArrow } from './testing.ts';
-import { tldrawToViews } from './tldraw.ts';
 
-// The tldraw drawing as plugin-tldraw draws it, beside the canvas it converts to.
+// The tldraw drawing as plugin-tldraw draws it, beside the `Canvas` it converts to, its shapes Element2Ds of its layout.
 const withConversion = (records: Record<string, unknown>, { snap }: { snap: boolean }) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas],
@@ -31,10 +30,9 @@ const withConversion = (records: Record<string, unknown>, { snap }: { snap: bool
           canvas: space.db.add(Drawing.makeCanvas({ schema: Canvas.TLDRAW_SCHEMA, content: records })),
         }),
       );
-      const canvas = space.db.add(createCanvas());
-      Obj.update(canvas, (canvas) => {
-        writeViews(canvas.content, tldrawToViews(records, { root: rootOf(canvas.content), snap }).views);
-      });
+      const { canvas, model, layout, scene } = makeCanvas();
+      [model, layout, scene, canvas].forEach((object) => space.db.add(object));
+      importTldraw(canvas, records, { snap });
       const converted = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
       await space.db.flush();
       return [[Cell.article(source)], [Cell.article(converted)]];

@@ -291,3 +291,12 @@ decision D-9: The plugin contributes a Canvas and a 3D Canvas variant over the s
   affects: [CanvasPlugin]
   why: The canvas engine is now the 2D viewport of a shared editor rather than the whole of a drawing's model, so the plugin builds on the editor, its two variants and the scene model.
 ```
+
+```mdl
+decision D-10: A Canvas's mode (lattice, constrained, dynamic) is each 2D layout's own field, which the shared editor applies; the canvas settings' `lattice` and `projection` are read only to move the mode onto the layouts, when a legacy drawing migrates or its article opens. `CanvasOperation.Apply` on a Canvas takes `LayoutIntent`s in its layout's dimension, recorded over every layout the canvas lists; the tldraw importer writes `Element2D`s through create intents. Fills in [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: A mode the settings named for every View cannot travel with a layout or differ between layouts, and agents, the importer and the editor then share one write path and one undo.
+```

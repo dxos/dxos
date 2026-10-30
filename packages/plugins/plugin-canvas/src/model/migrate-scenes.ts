@@ -39,6 +39,7 @@ import {
   rootOf,
   sceneKey,
 } from './content.ts';
+import { withoutMode, withSettingsMode } from './layout-mode.ts';
 import { plain } from './records.ts';
 
 /** The one model a migrated canvas's portals and instances place their objects from. */
@@ -95,10 +96,12 @@ export const legacyDocument = (content: Drawing.Canvas['content'], classes: Styl
     (left, right) => Number(right.id === root) - Number(left.id === root),
   );
   const objects: Record<string, Scene.Object2D> = {};
+  // The canvas's mode, named once for every View, becomes each layout's own.
+  const settings = canvasRecordOf(copy) ?? {};
   const layouts = views.map((view) => {
     const { layout, objects: placed } = fromCanvasView(view);
     placed.forEach((object) => (objects[object.id] = object));
-    return withIdentities(layout, copy);
+    return withSettingsMode(withIdentities(layout, copy), settings);
   });
   // A composite no node places yet (a library definition) is reached through an object of its own, or a canvas
   // opened at its root would never read it.
@@ -185,7 +188,8 @@ export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing
   const model = stored.models.get(MODEL_ID);
   const canvas = yield* Database.add(
     Obj.make(Canvas.Canvas, {
-      settings,
+      // The mode moved onto the layouts with them.
+      settings: withoutMode(settings),
       ...(model ? { model: Ref.make(model) } : {}),
       layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout)),
       scenes: [...stored.scenes.values()].map((scene) => Ref.make(scene)),
@@ -389,7 +393,7 @@ export const reconcileMigrations = Effect.fn(function* (drawing: Drawing.Drawing
       root: _root,
       ...settings
     } = clone(canvasRecordOf(legacy.content) ?? { kind: 'canvas', root: '' });
-    return settings;
+    return withoutMode(settings);
   })();
   const winnerLayouts = new Map(
     winner.layouts.flatMap((ref) => (Obj.instanceOf(Scene.Layout2D, ref.target) ? [[ref.target.key, ref.target]] : [])),

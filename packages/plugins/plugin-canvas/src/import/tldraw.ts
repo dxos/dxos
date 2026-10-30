@@ -3,8 +3,8 @@
 //
 
 //
-// Maps a tldraw document (the records plugin-tldraw keeps in `Drawing.Canvas.content`) to canvas Views. Pure and
-// React-free so it runs in an operation on any host. A group becomes what the canvas's Group command makes (an
+// Maps a tldraw document (the records plugin-tldraw keeps in `Drawing.Canvas.content`) to canvas Views, and those to
+// the 2D layouts and create intents a `Canvas` takes. Pure and React-free so it runs in an operation on any host. A group becomes what the canvas's Group command makes (an
 // anonymous Object and its Instance), so arrows bound into it stay attached through the Instance's ports.
 //
 
@@ -19,6 +19,7 @@ import {
   composeSelection,
   initialKeys,
 } from '@dxos/react-ui-canvas/headless';
+import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
 import {
   type BuiltinNode,
   type CloudNode,
@@ -26,6 +27,7 @@ import {
   Endpoint,
   type HorizontalAlign,
   type Layer,
+  type LayoutIntent,
   type LineStyle,
   type Link,
   type LinkEnds,
@@ -38,6 +40,7 @@ import {
   type Point,
   type PolygonNode,
   type RectNode,
+  type Scene,
   STYLE_HUES,
   type StyleHue,
   type ViewId,
@@ -110,6 +113,45 @@ export type TldrawImportOptions = {
    * cell moves and resizes snap to), so the shapes line up as ones drawn on the canvas do; on by default.
    */
   snap?: boolean;
+};
+
+/** A tldraw document as a `Canvas` takes it: its first page as a 2D layout of Element2Ds, created by intents. */
+export type TldrawLayout = Pick<TldrawImport, 'skipped' | 'approximated'> & {
+  /** The first page. */
+  layout: Scene.LayoutRecord2D;
+  /** The composite layouts its groups place, and the objects that place them. */
+  parts: Scene.LayoutRecord2D[];
+  objects: Scene.Object2D[];
+  /** One create per element of the page, the shapes before the links bound to them. */
+  intents: LayoutIntent[];
+};
+
+/**
+ * Maps a tldraw document to 2D layouts: the Views {@link tldrawToViews} makes, each read as the layout the canvas
+ * engine writes for it, so an imported shape is the element a drawn one would be.
+ */
+export const tldrawToLayout = (
+  content: Readonly<Record<string, unknown>>,
+  options: TldrawImportOptions = {},
+): TldrawLayout => {
+  const { root, views, skipped, approximated } = tldrawToViews(content, options);
+  const read = Object.values(views).map(fromCanvasView);
+  const layout = read.find((entry) => entry.layout.id === root)?.layout ?? { id: root, dim: '2d', elements: {} };
+  const objects = new Map(read.flatMap((entry) => entry.objects.map((object) => [object.id, object] as const)));
+  const elements = Object.values(layout.elements);
+  // A link is created after its ends, since a create bound to a missing element is refused.
+  const ordered = [
+    ...elements.filter((element) => element.type !== 'link'),
+    ...elements.filter((element) => element.type === 'link'),
+  ];
+  return {
+    layout,
+    parts: read.map((entry) => entry.layout).filter((entry) => entry.id !== root),
+    objects: [...objects.values()],
+    intents: ordered.map((element) => ({ kind: 'create', element })),
+    skipped,
+    approximated,
+  };
 };
 
 //

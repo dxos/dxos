@@ -63,14 +63,13 @@ const Scene3DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
   );
 };
 
-/** The open 2D scene, fitted: the canvas's node types, in the drawing's mode, inert so a press reaches the card. */
+/** The open 2D scene, fitted: the canvas's node types, each layout in its own mode, inert so a press reaches the card. */
 const SceneCanvasCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
   const nodes = useCanvasNodes();
   const [snapshot] = useObject(canvas);
   const scene = openScene(canvas);
   const stored = Obj.instanceOf(Scene.Scene2D, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
-  const lattice = CanvasFormat.projectionOf(snapshot.settings) === 'lattice';
   return (
     <Card.Body>
       <Card.Section classNames='aspect-square'>
@@ -83,7 +82,6 @@ const SceneCanvasCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
               scene={stored.key}
               theme={snapshot.settings.theme}
               nodes={nodes}
-              createProjection={lattice ? createLatticeProjection : undefined}
               margin={CARD_MARGIN}
               grid={false}
             />

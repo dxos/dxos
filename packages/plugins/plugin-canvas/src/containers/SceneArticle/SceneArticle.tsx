@@ -50,8 +50,7 @@ type DimensionArticleProps = { canvas: Canvas.Canvas; role?: string };
 
 const SceneArticle2D = ({ canvas, role }: DimensionArticleProps) => {
   const host = useSceneEditor(canvas, '2d');
-  const layout = Obj.instanceOf(Scene.Scene2D, host.stored) ? host.stored.layout.target : undefined;
-  const dimension = useDimension2D(canvas, layout);
+  const dimension = useDimension2D(canvas);
   return <SceneEditorArticle canvas={canvas} role={role} host={host} dimension={dimension} />;
 };
 

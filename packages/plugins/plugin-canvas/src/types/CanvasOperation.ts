@@ -127,14 +127,16 @@ export const AddGenerator = Operation.make({
   services: [Database.Service],
 });
 
-/** Each bound drawing's Automerge heads, keyed by its URI (the drawing's own under `''`). */
+/** Automerge heads by key: a scene canvas's layouts by layout key; a legacy canvas's drawings by URI. */
 const Heads = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({
-  description: "Each drawing's Automerge heads, keyed by its URI; the canvas's own drawing under the empty key.",
+  description:
+    "Automerge heads by key: each layout's by its key on a scene canvas; each drawing's by its URI on a legacy one (its own under the empty key).",
 });
 
-/** Leaf paths into the canvas's Views, as `[viewId, 'nodes', nodeId, 'center', 'x']`. */
+/** Leaf paths: `[layoutKey, 'elements', id, …]` on a scene canvas, `[viewId, 'nodes', id, …]` on a legacy one. */
 const Paths = Schema.Array(Schema.Array(Schema.String)).annotate({
-  description: "Leaf paths into the canvas's Views, e.g. [viewId, 'nodes', nodeId, 'center', 'x'].",
+  description:
+    "Leaf paths written: [layoutKey, 'elements', elementId, 'center', 'x'] on a scene canvas; [viewId, 'nodes', nodeId, 'center', 'x'] on a legacy one.",
 });
 
 export const Apply = Operation.make({
@@ -142,13 +144,19 @@ export const Apply = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.apply'),
     name: 'Apply canvas intents',
     description:
-      'Applies canvas intents (move, resize, link, create, delete, reorder, update, layout, layer, removeLayer, batch) to a View of a canvas, freehand; returns the heads before and after and the paths written, which undo patches back.',
+      "Applies intents to a canvas, freehand, and returns the heads before and after and the paths written, which undo patches back. A scene canvas takes layout intents (create, delete, update, reorder, bind, move, rotate, scale, layout, batch; 3D also extrude, join, subtract) in its layout's dimension; a legacy canvas the engine's View intents.",
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
     canvas: Ref.Ref(Obj.Unknown).annotate({ description: "The drawing's canvas: a scene canvas, or a legacy one." }),
-    view: Schema.optional(Schema.String.annotate({ description: 'View id; the root View by default.' })),
-    intents: Schema.Array(Schema.Any).annotate({ description: "Intents of the canvas's `Intent` union." }),
+    view: Schema.optional(
+      Schema.String.annotate({
+        description: "Layout key (a View id on a legacy canvas); the open scene's layout (the root View) by default.",
+      }),
+    ),
+    intents: Schema.Array(Schema.Any).annotate({
+      description: "`LayoutIntent`s on a scene canvas; the engine's `Intent`s on a legacy one.",
+    }),
   }),
   output: Schema.Struct({
     canvas: Schema.String.annotate({ description: "The canvas object's id: the undo scope." }),
