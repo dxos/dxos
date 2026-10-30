@@ -80,14 +80,9 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         },
         () => import('./src/capabilities/client-services.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
-        environments: ['browser', 'tauri', 'workerd'],
-      }),
-      // A node host has the OAuth callback server and filesystem the other command set omits (`account`, `profile`).
-      AppCapability.commands(() => import('./src/capabilities/commands.node.ts', { with: { type: 'module-url' } }), {
-        name: 'cli-commands-node',
-        environments: ['node'],
-      }),
+      // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
+      // browser command set omits (`account`, `profile`).
+      AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'HubHttpClient',
         {

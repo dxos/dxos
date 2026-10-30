@@ -10,6 +10,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'Binding': 'src/Binding.ts',
     'ConnectorAuth': 'src/ConnectorAuth.ts',
+    'SyncTemplate': 'src/SyncTemplate.ts',
     'create-panel': 'src/capabilities/create-panel.ts',
     'create-panel.browser': 'src/capabilities/create-panel.browser.ts',
     'components': 'src/components/index.ts',

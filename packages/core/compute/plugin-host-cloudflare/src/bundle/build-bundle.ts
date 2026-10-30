@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { existsSync } from 'node:fs';
 import { readFile, realpath } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,50 +52,67 @@ export const buildBundle = async (packageDir: string): Promise<string> => {
 const readPackage = async (dir: string): Promise<{ dependencies?: Record<string, string> }> =>
   JSON.parse(await readFile(join(dir, 'package.json'), 'utf8'));
 
-const pluginKeyOf = async (bundleDir: string): Promise<{ key: string; dependsOn: readonly string[] }> => {
-  const manifest: { key: string; dependsOn?: string[] } = JSON.parse(
-    await readFile(join(bundleDir, PluginBundle.MANIFEST_FILE), 'utf8'),
-  );
-  return { key: manifest.key, dependsOn: manifest.dependsOn ?? [] };
+const manifestOf = async (bundleDir: string): Promise<{ dependsOn?: string[] }> =>
+  JSON.parse(await readFile(join(bundleDir, PluginBundle.MANIFEST_FILE), 'utf8'));
+
+/** Every `@dxos/plugin-*` package with a `dx.config.ts` reachable through a package's dependencies. */
+const pluginPackages = async (packageDir: string): Promise<string[]> => {
+  const visited = new Set([await realpath(packageDir)]);
+  const plugins: string[] = [];
+  const queue = [packageDir];
+  for (let dir = queue.shift(); dir !== undefined; dir = queue.shift()) {
+    const names = Object.keys((await readPackage(dir)).dependencies ?? {}).filter((name) =>
+      name.startsWith('@dxos/plugin-'),
+    );
+    for (const name of names) {
+      // Through `node_modules` rather than `require.resolve`: plugin packages do not export `./package.json`.
+      const dependencyDir = await realpath(join(dir, 'node_modules', name));
+      if (!visited.has(dependencyDir)) {
+        visited.add(dependencyDir);
+        queue.push(dependencyDir);
+        if (existsSync(join(dependencyDir, 'dx.config.ts'))) {
+          plugins.push(dependencyDir);
+        }
+      }
+    }
+  }
+  return plugins;
 };
 
 /**
  * Builds the bundles of the plugins in a plugin package's `dependsOn` closure, found among its `@dxos/plugin-*`
  * dependencies (transitively), and returns their directories. A plugin activates only with its dependencies, and on
- * EDGE they are separate bundles the loader places beside it.
+ * EDGE they are separate bundles the loader places beside it. Only the closure is built; other packages are read for
+ * their key alone.
  */
 export const buildDependencyBundles = async (packageDir: string, primaryBundle: string): Promise<string[]> => {
-  const needed = new Set((await pluginKeyOf(primaryBundle)).dependsOn);
-  const visited = new Set([await realpath(packageDir)]);
-  const queue = [packageDir];
-  const bundles: string[] = [];
-  for (let dir = queue.shift(); needed.size > 0 && dir !== undefined; dir = queue.shift()) {
-    for (const name of Object.keys((await readPackage(dir)).dependencies ?? {}).filter((name) =>
-      name.startsWith('@dxos/plugin-'),
-    )) {
-      // Through `node_modules` rather than `require.resolve`: plugin packages do not export `./package.json`.
-      const dependencyDir = await realpath(join(dir, 'node_modules', name));
-      if (visited.has(dependencyDir)) {
-        continue;
-      }
-      visited.add(dependencyDir);
-      queue.push(dependencyDir);
-      try {
-        await readFile(join(dependencyDir, 'dx.config.ts'));
-      } catch {
-        continue;
-      }
-      const bundle = await buildBundle(dependencyDir);
-      const { key, dependsOn } = await pluginKeyOf(bundle);
-      if (needed.has(key)) {
-        needed.delete(key);
-        dependsOn.forEach((dependency) => needed.add(dependency));
-        bundles.push(bundle);
+  const { loadDxConfigWithVite } = await import('@dxos/app-framework/vite-plugin');
+  const candidates = await pluginPackages(packageDir);
+  const keys = new Map<string, string>();
+  const keyOf = async (dir: string) => {
+    const key = keys.get(dir) ?? (await loadDxConfigWithVite(join(dir, 'dx.config.ts'), dir)).plugin.key;
+    keys.set(dir, key);
+    return key;
+  };
+  const pending = [...((await manifestOf(primaryBundle)).dependsOn ?? [])];
+  const built = new Map<string, string>();
+  for (let key = pending.shift(); key !== undefined; key = pending.shift()) {
+    if (built.has(key)) {
+      continue;
+    }
+    let dir: string | undefined;
+    for (const candidate of candidates) {
+      if ((await keyOf(candidate)) === key) {
+        dir = candidate;
+        break;
       }
     }
+    if (dir === undefined) {
+      throw new Error(`No @dxos/plugin-* dependency of ${packageDir} provides ${key}.`);
+    }
+    const bundle = await buildBundle(dir);
+    built.set(key, bundle);
+    pending.push(...((await manifestOf(bundle)).dependsOn ?? []));
   }
-  if (needed.size > 0) {
-    throw new Error(`No @dxos/plugin-* dependency of ${packageDir} provides ${[...needed].join(', ')}.`);
-  }
-  return bundles;
+  return [...built.values()];
 };

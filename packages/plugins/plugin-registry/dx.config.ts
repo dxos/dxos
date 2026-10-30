@@ -31,9 +31,7 @@ const config: Plugin.PluginConfig<RegistryPluginOptions> = Plugin.config<Registr
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
-      environments: ['node'],
-    }),
+    AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'DevPluginLoader',
       {

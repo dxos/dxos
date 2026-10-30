@@ -69,10 +69,9 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
       () => import('./src/capabilities/connectors.ts', { with: { type: 'module-url' } }),
     ),
-    // `connector oauth` needs a Bun callback server, so only the CLI gets the command graph.
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
-      environments: ['node'],
-    }),
+    // `#commands` resolves to `commands.browser.ts` under the browser: `connector oauth` needs a Bun
+    // callback server, so only headless runtimes get the real command graph.
+    AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
     // Coordination drives an interactive OAuth flow through the shell, as does `OAuthRedirect`, which
     // requires it.
     Capability.lazyModule(

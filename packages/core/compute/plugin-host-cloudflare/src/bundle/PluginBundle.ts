@@ -200,7 +200,8 @@ export type CheckResult = {
 
 /**
  * Checks that a built plugin bundle loads on EDGE as is: the manifest and `vendor/manifest.json` are well formed, every
- * module parses, every relative import and manifest URL names a file in the bundle, every bare import is vendored,
+ * module parses, every relative import and manifest URL names a file in the bundle, every bare import a workerd host can
+ * load is vendored,
  * `vendor/` imports nothing outside itself, and nothing a workerd module imports statically is a
  * stylesheet, another asset, or a browser-only module body.
  */
@@ -212,6 +213,8 @@ export const check = (files: Files): CheckResult => {
     parseJson(files, CATALOG_FILE, problems);
   }
 
+  // Imports EDGE could not resolve, reported only where it loads the file (see `loaded` below).
+  const unvendored: Problem[] = [];
   // Every module's own imports, resolved to bundle paths; `undefined` marks a bare or unresolvable one.
   const graph = new Map<string, { path: string | undefined; specifier: string; dynamic: boolean }[]>();
   // Sorted, so the report reads the same whatever order the files were read in.
@@ -225,7 +228,7 @@ export const check = (files: Files): CheckResult => {
       if (specifier === undefined) {
         // Vendored framework code loads module bodies by URL (`Plugin.fromManifest`); the plugin's own files never should.
         if (!isVendored(path)) {
-          problems.push({ path, message: 'imports a computed specifier, which cannot be checked or vendored' });
+          unvendored.push({ path, message: 'imports a computed specifier, which cannot be checked or vendored' });
         }
         continue;
       }
@@ -234,7 +237,7 @@ export const check = (files: Files): CheckResult => {
       }
       if (isBare(specifier)) {
         if (!vendor?.specifiers[specifier]) {
-          problems.push({ path, message: `imports ${specifier}, which vendor/ does not provide` });
+          unvendored.push({ path, message: `imports ${specifier}, which vendor/ does not provide` });
         }
         edges.push({ path: vendor?.specifiers[specifier], specifier, dynamic });
         continue;
@@ -302,6 +305,24 @@ export const check = (files: Files): CheckResult => {
     }
   };
   roots.forEach((root) => visit(root, []));
+
+  // What a workerd host can load, lazily included: the entry's dynamic imports are its module loaders, so they are
+  // followed only into bodies that run here. A browser or node body need not resolve on EDGE.
+  const loaded = new Set<string>();
+  const load = (path: string, followDynamic: boolean) => {
+    const body = bodies.get(path);
+    if (loaded.has(path) || (body && !runsHere(body))) {
+      return;
+    }
+    loaded.add(path);
+    for (const edge of graph.get(path) ?? []) {
+      if (edge.path !== undefined && (followDynamic || !edge.dynamic)) {
+        load(edge.path, true);
+      }
+    }
+  };
+  roots.forEach((root) => load(root, root !== ENTRY_FILE));
+  problems.push(...unvendored.filter(({ path }) => loaded.has(path) || isVendored(path)));
 
   return { problems, roots, vendor };
 };

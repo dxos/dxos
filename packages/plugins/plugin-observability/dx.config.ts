@@ -48,10 +48,8 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
         },
         () => import('./src/capabilities/client-ready.ts', { with: { type: 'module-url' } }),
       ),
-      // Only a host with a CLI has anywhere to put them.
-      AppCapability.commands(() => import('./src/capabilities/commands.node.ts', { with: { type: 'module-url' } }), {
-        environments: ['node'],
-      }),
+      // `#commands` resolves per condition: only a host with a CLI has anywhere to put them.
+      AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'InvocationListener',
         {
@@ -105,13 +103,12 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
       Capability.lazyModule(
         'PrivacyBanner',
         {
-          // A terminal banner; the browser shows PrivacyNotice instead.
-          environments: ['node'],
+          environments: ['browser', 'node', 'tauri'],
           requires: [ObservabilityCapabilities.Namespace],
           provides: [],
           activatesOn: ObservabilityEvents.IdentityCreatedEvent,
         },
-        () => import('./src/capabilities/privacy-banner.ts', { with: { type: 'module-url' } }),
+        () => import('#privacy-banner', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'PrivacyNotice',

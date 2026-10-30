@@ -110,14 +110,19 @@ describe('PluginBundle', () => {
       ),
     ).toEqual([
       'vendor/manifest.json: effect: no file effect/missing.mjs in vendor/',
-      'index.mjs: imports @dxos/app-framework/Plugin, which vendor/ does not provide',
-      'operations.mjs: imports effect, which vendor/ does not provide',
       'schema.mjs: imports ../outside.mjs, which is not in the bundle',
       'schema.mjs: imports ./missing.mjs, which is not in the bundle',
-      'surfaces.mjs: imports effect, which vendor/ does not provide',
+      'index.mjs: imports @dxos/app-framework/Plugin, which vendor/ does not provide',
+      'operations.mjs: imports effect, which vendor/ does not provide',
       'vendor/@dxos/app-framework/Plugin.mjs: imports effect, which vendor/ does not provide',
       'vendor/@dxos/app-framework/Plugin.mjs: imports effect, which vendor/ does not provide',
     ]);
+  });
+
+  test('a body that never runs on workerd may import what vendor/ does not provide', ({ expect }) => {
+    expect(
+      messages(makeBundle({ 'surfaces.mjs': "import { render } from 'react-dom'; export default () => render;" })),
+    ).toEqual([]);
   });
 
   test('a malformed manifest, a module that does not parse and a missing body are reported', ({ expect }) => {

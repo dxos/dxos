@@ -33,6 +33,8 @@ const THIRD_PARTY_SHARED_PACKAGES = [
   '@automerge/automerge',
   '@effect/atom-react',
   '@effect/platform',
+  // Its `browser` build decodes through the DOM; on EDGE the `worker` build, which does not.
+  'decode-named-character-reference',
   'effect',
   'lit',
   'react',

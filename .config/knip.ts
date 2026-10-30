@@ -437,6 +437,7 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@dxos/graph',
     '@dxos/react-ui-attention',
     '@dxos/react-ui-geo',
+    'decode-named-character-reference',
   ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its

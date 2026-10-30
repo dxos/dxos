@@ -13,6 +13,15 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
+    "#commands": {
+      "source": {
+        "node": "./src/capabilities/commands.ts",
+        "default": "./src/capabilities/commands.browser.ts"
+      },
+      "types": "./dist/types/src/capabilities/commands.d.ts",
+      "node": "./dist/lib/commands.mjs",
+      "default": "./dist/lib/commands.browser.mjs"
+    },
     "#create-panel": {
       "source": {
         "node": "./src/capabilities/create-panel.ts",

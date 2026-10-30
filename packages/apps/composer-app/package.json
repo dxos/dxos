@@ -205,6 +205,7 @@
     "@xstate/react": "catalog:",
     "codemirror": "catalog:",
     "crc-32": "catalog:",
+    "decode-named-character-reference": "catalog:",
     "effect": "catalog:",
     "isomorphic-fetch": "catalog:",
     "react": "catalog:",
