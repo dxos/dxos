@@ -142,7 +142,7 @@ export const steps = [
       await demo.press({ key: 'Alt+ArrowDown' });
       await waitForNames(page, ['Search', 'Instant inbox']);
       await waitForBlockIds(page, ['F-1', 'F-2']);
-      await caption(demo, 5, "Features follow the text; each keeps its id");
+      await caption(demo, 5, 'Features follow the text; each keeps its id');
       await demo.sleep({ ms: LOOK });
     },
   },
