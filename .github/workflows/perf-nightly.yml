@@ -24,7 +24,7 @@ on:
         default: '10'
       scenario-iterations:
         type: string
-        description: 'Repeats of each scenario (DX_PERF_ITERATIONS for the scenarios job)'
+        description: 'Repeats of each scenario (DX_PERF_ITERATIONS for the scenarios step)'
         default: '5'
 
 permissions:
@@ -95,6 +95,24 @@ jobs:
           # The modes run serially inside one invocation — two flows measured at once contend for
           # the same cores and measure each other.
           DX_PERF_MODES="$MODES" DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf
+
+      # The scenarios that reproduce field reports (`packages/apps/composer-app/src/playwright/scenarios/`), named
+      # one by one: `DX_PERF_SCENARIOS` alone runs the whole folder. Each seeds its own spaces before the measured
+      # browser boots. After the flows, on the same runner and bundle, and into the same `test-results/perf`;
+      # unscored, since the scorer reads only the flows' rows and a scenario has no budgets yet.
+      - name: Run the scenarios
+        id: scenarios
+        continue-on-error: true
+        env:
+          ITERATIONS: ${{ inputs.scenario-iterations || '5' }}
+          # Switch time only: `revisit` and `reindex` time eviction and index catch-up, not a switch.
+          DX_PERF_SWITCH_PASSES: cold,warm
+          DX_PWA: 'false'
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          set -o pipefail
+          DX_PERF_SCENARIOS=1 DX_PERF_MODES=measure DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf -- \
+            src/playwright/scenarios/perf-space-switch.spec.ts src/playwright/scenarios/perf-object-open.spec.ts
 
       - name: Summarize
         if: always()
@@ -170,86 +188,9 @@ jobs:
           retention-days: 14
 
       - name: Fail on an incomplete run
-        if: always() && steps.flows.outcome != 'success'
+        if: always() && (steps.flows.outcome != 'success' || steps.scenarios.outcome != 'success')
         run: |
-          echo "::error::A flow did not complete; see the summary and the perf-nightly artifact."
-          exit 1
-
-  # The scenarios that reproduce field reports (`packages/apps/composer-app/src/playwright/scenarios/`), each on
-  # spaces it seeds in a browser of its own before the measured one boots. Its own runner of the same fixed size, for
-  # the reason `echo-bench` has one. Rows are published per iteration, like the flows'; none is scored yet, since a
-  # scenario has no budgets until a few weeks of nights calibrate them.
-  scenarios:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 180
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          filter: blob:none
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install chromium
-
-      - name: Run the scenarios
-        id: scenarios
-        continue-on-error: true
-        env:
-          ITERATIONS: ${{ inputs.scenario-iterations || '5' }}
-          # Switch time only: `revisit` and `reindex` time eviction and index catch-up, not a switch.
-          DX_PERF_SWITCH_PASSES: cold,warm
-          DX_PWA: 'false'
-          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
-        run: |
-          set -o pipefail
-          rm -rf test-results/perf
-          DX_PERF_SCENARIOS=1 DX_PERF_MODES=measure DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf -- \
-            src/playwright/scenarios/perf-space-switch.spec.ts src/playwright/scenarios/perf-object-open.spec.ts
-
-      - name: Summarize
-        if: always()
-        run: |
-          if [ ! -d test-results/perf ]; then
-            echo "::warning::No rows were written; the run did not reach a stage."
-            exit 0
-          fi
-          {
-            echo '### Performance scenarios'
-            echo
-            echo '| flow | scale | iteration | stage | wall ms | cpu ms | lag max ms |'
-            echo '| --- | --- | --- | --- | --- | --- | --- |'
-            cat test-results/perf/*.rows.ndjson 2>/dev/null | node -e '
-              let input = "";
-              process.stdin.on("data", (chunk) => (input += chunk));
-              process.stdin.on("end", () => {
-                for (const line of input.split("\n").filter(Boolean)) {
-                  const row = JSON.parse(line);
-                  console.log(
-                    `| ${row.flow} | ${row.scale} | ${row.iteration} | ${row.stage} | ${row.wallMs} | ` +
-                      `${row.cpuMsTotal} | ${row.responsiveness.lagMaxMs} |`,
-                  );
-                }
-              });
-            '
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: perf-scenarios
-          path: test-results/perf
-          retention-days: 14
-
-      - name: Fail on an incomplete run
-        if: always() && steps.scenarios.outcome != 'success'
-        run: |
-          echo "::error::A scenario did not complete; see the summary and the perf-scenarios artifact."
+          echo "::error::A flow or scenario did not complete; see the summary and the perf-nightly artifact."
           exit 1
 
   # The ECHO benchmarks (`packages/core/echo/echo-client-e2e/src/*.bench.ts`), scored against
