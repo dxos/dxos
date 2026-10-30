@@ -6,3 +6,8 @@ export * from './config3d.tsx';
 export * from './element-form.ts';
 export * from './tools3d.ts';
 export * from './Viewport3D.tsx';
+export * from './config2d.tsx';
+export * from './element-form2d.ts';
+export * from './tools2d.ts';
+export * from './view-writes.ts';
+export * from './Viewport2D.tsx';

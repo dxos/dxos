@@ -103,6 +103,8 @@ export const CanvasRoot = ({
   generators = NO_GENERATORS,
   compileGenerator,
   createGeneratorWorker,
+  hostKeys,
+  onContextMenu: onHostContextMenu,
   children,
 }: CanvasRootProps) => {
   const { look, themeGrid } = useResolvedLook(themes, { theme, defaultTheme, styleSet, background, backgroundGrid });
@@ -441,6 +443,10 @@ export const CanvasRoot = ({
   // panel, a toolbar) bubble here too, and must not toggle debug or delete the selection.
   const onKeyDown = useCallback<typeof onSceneKey>(
     (event) => {
+      const action = keyAction(event);
+      if (action !== undefined && hostKeys?.has(action)) {
+        return;
+      }
       if (event.target === event.currentTarget) {
         onSceneKey(event);
       } else if (keyAction(event) === 'cancel' && registry.get(atoms.active) !== undefined) {
@@ -449,8 +455,17 @@ export const CanvasRoot = ({
         rootRef.current?.focus();
       }
     },
-    [onSceneKey, registry, atoms.active],
+    [onSceneKey, registry, atoms.active, hostKeys],
   );
+
+  // A host with its own context menu opens it where the view's would have, after the view picked what lies under the
+  // pointer; the view's menu never shows.
+  useLayoutEffect(() => {
+    if (menu && onHostContextMenu) {
+      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element');
+      closeMenu();
+    }
+  }, [menu, onHostContextMenu, closeMenu]);
 
   const { displayScene, blocked, landing, createFrame } = useGesturePreview({
     scene,

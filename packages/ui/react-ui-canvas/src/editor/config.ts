@@ -16,8 +16,19 @@ type Point = { x: number; y: number };
 /** What a tool does, which decides its rail group and whether a locked editor keeps it. */
 export type ToolCategory = 'select' | 'transform' | 'create';
 
-/** A tool on the rail. `kind` is the element type a create tool makes; `key` the shortcut that picks it. */
-export type ToolDef = { id: string; icon: string; label: string; category: ToolCategory; kind?: string; key?: string };
+/**
+ * A tool on the rail. `kind` is the element type a create tool makes; `key` the shortcut that picks it; `group` names
+ * its rail group when the category's own does not (2D's further node groups).
+ */
+export type ToolDef = {
+  id: string;
+  icon: string;
+  label: string;
+  category: ToolCategory;
+  kind?: string;
+  key?: string;
+  group?: string;
+};
 
 /**
  * What the dimension's viewport draws and how it reports gestures: every edit is an intent (a drag's in-flight state a
@@ -38,12 +49,18 @@ export type ViewportProps<C = unknown> = {
   snap: boolean;
   /** The axes through the origin drawn. */
   axes?: boolean;
+  /** 2D's guides: on a lattice, its cells. */
+  guides?: boolean;
   /** The look's id (a default style catalog). */
   theme: string;
   face?: FaceSelection;
   camera?: C;
   onSelect: (ids: string[]) => void;
+  /** The viewport changed the tool itself (a create tool giving way to select once it has made its element). */
+  onToolChange?: (tool: ActiveTool) => void;
   onIntent: (layout: string, intent: LayoutIntent) => void;
+  /** Writes a model edit (an object a new composite places); returns its problems. */
+  onModelIntent?: (intent: ModelIntent) => readonly string[];
   onPreview: (layout: string | undefined, intent?: LayoutIntent) => void;
   /** Opens a layout (a double-clicked composite); undefined goes back to the scene's own. */
   onEdit: (layout: string | undefined) => void;

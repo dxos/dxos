@@ -21,6 +21,7 @@ import { type SceneDisplay } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
   type Camera,
+  type KeyAction,
   type LinkRegistry,
   type NodeRegistry,
   type ThemeRegistry,
@@ -68,6 +69,13 @@ export type CanvasRootProps = Util.ThemedClassName<{
   readonly?: boolean;
   /** Draws no surface under the scene, so what is behind the canvas (e.g. a slide) shows through. */
   transparent?: boolean;
+  /**
+   * Shortcuts the host handles itself (e.g. a shared editor's undo and clipboard): the view leaves their keys to it
+   * rather than acting on its own store.
+   */
+  hostKeys?: ReadonlySet<KeyAction>;
+  /** Opens the host's context menu in place of the view's own, at a point in the view, over an element or the canvas. */
+  onContextMenu?: (at: Point, kind: 'element' | 'canvas') => void;
   /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
   onReadonlyChange?: (readonly: boolean) => void;
   /** Where the inspectors (properties, layers, about) sit: floating over the canvas (the default), or docked in a column beside it. */

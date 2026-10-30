@@ -928,7 +928,7 @@ export const usePointerMachine = ({
       if (!drag.dropped && (drawn.width === 0 || drawn.height === 0)) {
         return undefined;
       }
-      const size = drag.dropped ? nominalSize(def.defaultSize, cell) : { ...drawn };
+      const size = drag.dropped ? nominalSize(def.defaultSize, cell) : { width: drawn.width, height: drawn.height };
       const center = drag.dropped
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };

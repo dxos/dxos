@@ -348,11 +348,14 @@ const SceneEditorRoot = <C,>({
         grid={editing && display.grid}
         snap={editing && display.snap}
         axes={editing && (display.axes ?? false)}
+        guides={editing && (display.guides ?? false)}
         theme={display.theme}
         face={face}
         camera={viewerCamera}
         onSelect={store.select}
+        onToolChange={store.setTool}
         onIntent={onIntent}
+        onModelIntent={writeModel ? onModelIntent : undefined}
         onPreview={store.preview}
         onEdit={(next) => store.open(next === undefined || next === rootLayout ? [] : [rootLayout ?? '', next])}
         onContextMenu={(at, kind) => store.setMenu({ at, kind })}
@@ -377,6 +380,8 @@ const SceneEditorRoot = <C,>({
       viewerCamera,
       store,
       onIntent,
+      writeModel,
+      onModelIntent,
       rootLayout,
       onCameraChange,
     ],
@@ -483,13 +488,17 @@ const SceneEditorTools = ({ classNames = 'top-2 bottom-14 left-2' }: { className
   const { config, store, readonly, onReadonlyChange } = useSceneEditor('SceneEditor.Tools');
   const tool = useAtomValue(store.atoms.tool);
   const groups = useMemo<ToolGroup<ActiveTool>[]>(() => {
-    const byCategory = new Map<ToolCategory, ToolDef[]>();
+    // By rail group, in the order the tools first name them.
+    const byGroup = new Map<string, { category: ToolCategory; defs: ToolDef[] }>();
     for (const def of config.tools) {
-      (!readonly || def.category === 'select') &&
-        byCategory.set(def.category, [...(byCategory.get(def.category) ?? []), def]);
+      const name = def.group ?? CATEGORY_GROUPS[def.category];
+      if (!readonly || def.category === 'select') {
+        const group = byGroup.get(name) ?? { category: def.category, defs: [] };
+        byGroup.set(name, { ...group, defs: [...group.defs, def] });
+      }
     }
-    return [...byCategory.entries()].map(([category, defs]) => ({
-      name: CATEGORY_GROUPS[category],
+    return [...byGroup.entries()].map(([name, { category, defs }]) => ({
+      name,
       collapsible: category === 'create',
       entries: defs.map((def) => ({
         tool: { id: def.id },
