@@ -26,3 +26,10 @@ export const Default: Story = {
     typename: 'org.dxos.type.board',
   },
 };
+
+export const WithRegistry: Story = {
+  args: {
+    typename: 'org.dxos.type.kanban',
+    onFindPlugin: () => {},
+  },
+};

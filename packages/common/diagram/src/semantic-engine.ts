@@ -115,21 +115,46 @@ const relationsOf = (diagram: Semantic.Diagram) => ({
   ),
 });
 
+/**
+ * Trunks that feed the same spokes as an earlier trunk and whose hub nothing else feeds: placed on
+ * the far side of the spokes, each trunk gets a gutter of its own instead of looping around the other.
+ */
+const mirroredTrunks = (diagram: Semantic.Diagram, trunks: readonly Semantic.Bus[]): Semantic.Bus[] => {
+  const spokesOf = (bus: Semantic.Bus) =>
+    bus.edges
+      .map((edge) => (bus.direction === 'out' ? edge.to.node : edge.from.node))
+      .sort()
+      .join('|');
+  const isRoot = (bus: Semantic.Bus) =>
+    !diagram.edges.some((edge) =>
+      bus.direction === 'out' ? edge.to.node === bus.hub.node : edge.from.node === bus.hub.node,
+    );
+  const sets = new Map<string, Semantic.Bus[]>();
+  for (const bus of trunks) {
+    const key = `${bus.direction}:${spokesOf(bus)}`;
+    sets.set(key, [...(sets.get(key) ?? []), bus]);
+  }
+  // The far side has room for one trunk: the last root after the first, else the first if it is a root.
+  return [...sets.values()].flatMap((family) => {
+    if (family.length < 2) {
+      return [];
+    }
+    const root = family.slice(1).findLast(isRoot) ?? (isRoot(family[0]) ? family[0] : undefined);
+    return root ? [root] : [];
+  });
+};
+
 /** Outweighs the bends a trunk costs each subtype in the placer, which routes edges one by one. */
 const SIBLING_WEIGHT = 40;
 
 /**
  * Soft relations that line up the spokes of one trunk across the flow — the subtypes of one
- * abstraction, or the far ends of a `bus` — so the trunk can gather them from one side.
+ * abstraction, the far ends of a `bus` or of one property — so the trunk can gather them from one side.
  */
 const siblingRelations = (diagram: Semantic.Diagram): Place.PlaceRelation[] => {
   const kind = diagram.flow === 'down' || diagram.flow === 'up' ? 'same-row' : 'same-col';
   const families = new Map<string, string[]>();
-  for (const edge of diagram.edges) {
-    const key = edge.bus ?? Semantic.inheritanceKey(edge);
-    if (key === undefined) {
-      continue;
-    }
+  for (const [edge, key] of Semantic.busKeys(diagram)) {
     const spoke = key.endsWith('|in') ? edge.from.node : edge.to.node;
     const family = families.get(key) ?? [];
     if (!family.includes(spoke)) {
@@ -310,6 +335,9 @@ const geometry = (
 
 const OPPOSITE: Record<Semantic.Side, Semantic.Side> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
 
+const mapEnd = (end: Route.End | undefined, map: (end: Route.End) => Route.End): Route.End | undefined =>
+  end && map(end);
+
 /** The side of the hub every spoke lies wholly beyond, if there is one. */
 const facingSide = (hub: Rect | undefined, spokes: readonly (Rect | undefined)[]): Semantic.Side | undefined => {
   if (!hub) {
@@ -353,12 +381,17 @@ const draw = (
   const grouped = Semantic.buses(diagram);
   const facing = new Map(
     grouped.buses.flatMap((bus) => {
-      const side = bus.implicit
-        ? facingSide(
+      const spokeOf = (edge: Semantic.Edge) => (bus.direction === 'out' ? edge.to : edge.from);
+      // A side the author pinned is the router's to honour; otherwise the trunk leaves toward its spokes.
+      const pinned =
+        (bus.hub.sides !== undefined && !bus.hub.soft) ||
+        bus.edges.some((edge) => spokeOf(edge).sides !== undefined && !spokeOf(edge).soft);
+      const side = pinned
+        ? undefined
+        : facingSide(
             rects.get(bus.hub.node),
-            bus.edges.map((edge) => rects.get(edge.from.node)),
-          )
-        : undefined;
+            bus.edges.map((edge) => rects.get(spokeOf(edge).node)),
+          );
       return side ? [[bus, side] as const] : [];
     }),
   );
@@ -404,7 +437,12 @@ const draw = (
     const side = facing.get(bus);
     const hub = endOf(bus.hub, side && [side]);
     const spokes = bus.edges.flatMap((edge) => {
-      const end = endOf(bus.direction === 'out' ? edge.to : edge.from, side && [OPPOSITE[side]]);
+      const spoke = bus.direction === 'out' ? edge.to : edge.from;
+      // A subtype's triangle must meet the bus head-on; any other spoke may turn in from the side to avoid a detour.
+      const end =
+        side && !bus.implicit
+          ? mapEnd(endOf(spoke), (found) => ({ ...found, sides: Semantic.SIDES, preferred: [OPPOSITE[side]] }))
+          : endOf(spoke, side && [OPPOSITE[side]]);
       return end ? [{ id: edge.id, end }] : [];
     });
     const significance = Math.max(...bus.edges.map((edge) => Semantic.significance(edge.relation, edge.stroke)));
@@ -508,7 +546,14 @@ const draw = (
     } else {
       elements.push(...SvgFile.connectorElements(id, points, style ?? {}));
     }
-    const text = bus ? (part === 'trunk' ? bus.label : edge?.label) : (edge?.label ?? orphaned.get(part));
+    // A spoke repeats no text its trunk already carries.
+    const text = bus
+      ? part === 'trunk'
+        ? bus.label
+        : edge?.label === bus.label
+          ? undefined
+          : edge?.label
+      : (edge?.label ?? orphaned.get(part));
     if (text) {
       // A spoke's label falls back to the trunk it shares only when its own runs have no room.
       const trunk =
@@ -644,6 +689,17 @@ const prepare = (source: Semantic.Diagram): Prepared => {
   const pins = checkPins(source, pitch, issues);
   const diagram = checkRelations(source, pins, issues);
   const { relations, groupRelations } = relationsOf(diagram);
+  const trunks = Semantic.buses(diagram).buses.filter((bus) => !bus.implicit);
+  const spokes = new Set(trunks.flatMap((bus) => bus.edges));
+  const mirrored = new Set(mirroredTrunks(diagram, trunks).flatMap((bus) => bus.edges));
+  const families = trunks.map((bus): Place.PlaceFamily => {
+    const members = bus.edges.map((edge) => (bus.direction === 'out' ? edge.to.node : edge.from.node));
+    // A spoke with edges beyond its trunk leads somewhere else, so it reads best at the end of the set.
+    const branching = members.filter((member) =>
+      diagram.edges.some((edge) => !bus.edges.includes(edge) && (edge.from.node === member || edge.to.node === member)),
+    );
+    return { members, branching };
+  });
   const input: Place.PlaceInput = {
     nodes: diagram.nodes.map((node) => ({ id: node.id, group: node.group, pin: pins.get(node.id) })),
     groups: diagram.groups.map((group) => group.id),
@@ -653,10 +709,12 @@ const prepare = (source: Semantic.Diagram): Prepared => {
     edges: diagram.edges.map((edge) => ({
       from: edge.from.node,
       to: edge.to.node,
-      upward: Semantic.pointsUp(edge.relation),
+      upward: Semantic.pointsUp(edge.relation) !== mirrored.has(edge),
+      ...(spokes.has(edge) ? { spoke: true } : {}),
       // Preferred sides are the router's to weigh; the placement keeps every side open.
       sides: { start: edge.from.soft ? undefined : edge.from.sides, end: edge.to.soft ? undefined : edge.to.sides },
     })),
+    families,
     flow: diagram.flow,
     box: { x: box.w / pitch.w / 2, y: box.h / pitch.h / 2 },
     shapes: new Map(diagram.groups.map((group) => [group.id, { maxWidth: group.maxWidth, compact: group.compact }])),
@@ -873,9 +931,11 @@ export const compile = async (source: Semantic.Diagram, options: SolveOptions = 
   }
   const ids = new Set(source.nodes.map((node) => node.id));
   const seeds = result.ranked.slice(0, 4).map((entry) => cellsOf(entry.candidate.commands, ids));
+  // The mermaid engine draws no trunks, so its own layout would undo the buses the diagram asks for.
+  const bused = Semantic.buses(source).buses.some((bus) => !bus.implicit);
   return solve(source, {
     ...options,
     seeds: [...(options.seeds ?? []), ...seeds],
-    alternatives: [...(options.alternatives ?? []), restyle(source, result.commands)],
+    alternatives: [...(options.alternatives ?? []), ...(bused ? [] : [restyle(source, result.commands)])],
   });
 };

@@ -258,6 +258,19 @@ export interface Database extends Queryable {
   appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[], opts?: WriteOptions): Promise<void>;
 
   /**
+   * Appends `base` as the base block of a new branch of the feed, with the fork point `at` (an item,
+   * at the block it was read from, or a block id) as its predecessor. Resolves to the id of the new
+   * branch, the block id of the base, once the base is written.
+   *
+   * @performance Async; one append of one entity.
+   */
+  forkFeed(
+    feed: Feed.Feed,
+    base: Entity.Unknown,
+    opts: { at: Entity.Unknown | Entity.Snapshot | Feed.BlockId },
+  ): Promise<Feed.BranchId>;
+
+  /**
    * Removes entities from a feed.
    *
    * @performance Async; O(n) in entities, deleted by id in one batch.
@@ -373,11 +386,16 @@ export interface Database extends Queryable {
   branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>>;
 
   /**
-   * Removes feed items by ID.
+   * Removes feed items by ID. `branches` names the branch of each item by index (`null` for the root),
+   * for an item this client holds no live copy of; without it such an item is removed from the root branch.
    *
    * @performance Async; O(n) in ids, deleted in one batch.
    */
-  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+  removeFeedItemsByIds(
+    feed: Feed.Feed,
+    ids: string[],
+    options?: { branches?: ReadonlyArray<string | null> },
+  ): Promise<void>;
 
   /**
    * Syncs a feed with the server.
