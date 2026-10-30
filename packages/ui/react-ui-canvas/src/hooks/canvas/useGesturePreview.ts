@@ -151,7 +151,6 @@ export const useGesturePreview = ({
         z: topZ(Object.values(scene.links)),
         source: drag.source,
         target: drag.target ?? { point: drag.to },
-        midpoint: { x: (drag.from.x + drag.to.x) / 2, y: (drag.from.y + drag.to.y) / 2 },
       });
       return { displayScene: reduceIntent(scene, { kind: 'link', link }), blocked: false };
     }

@@ -1077,7 +1077,6 @@ export const usePointerMachine = ({
               z: topZ(Object.values(scene.links)),
               source: current.source,
               target,
-              midpoint: { x: snap((current.from.x + current.to.x) / 2), y: snap((current.from.y + current.to.y) / 2) },
               // A link between ports that declare a direction is drawn with one.
               ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
             });
