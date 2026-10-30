@@ -57,6 +57,22 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   the engine only (a paste or a Properties edit is not snapped) until E.2 moves the switch onto the layout.
 - **R-10 (2026-10-30, agent, D.1, parity): 3D gets no lattice.** `lattice` is a 2D-only layout field (A.1); the
   `constrain` hook is shared, so a 3D mode would plug in the same way.
+- **R-11 (2026-10-30, agent, D.2): a layout is dynamic when its `arrange` is `{ kind: 'dynamic' }`.** The plan names a
+  `graph` field A.1 never added; `arrange` is the existing typed field for "how the layout places elements with no
+  position", and `applyIntent` already pins an element a person moves in an arranged layout, which is exactly the
+  overlay. The graph is the layout's shapes (nodes) and links (edges); the overlay is the pinned shapes' centres;
+  `arrange.params.arrange` picks the engine's arrangement. `dynamicConstrain` pins a shape whose centre an edit
+  changes (the engine writes a drag as the whole element, not a `move`) and, when the graph changes, re-places every
+  unpinned shape. Cost if wrong: a dedicated field later and a rewrite of `arrange.kind` in stored layouts.
+- **R-12 (2026-10-30, agent, D.2): constrained mode is ported but not wired — blocked on a write path.**
+  `constrainedConstrain(layout, intent)` returns the rewritten intent and the layout's new `constraints`, but the
+  shared write path (`LayoutIntent`, plugin-canvas `applyLayoutIntent`, the `layoutSource` history) reaches only
+  elements, so nothing can write `Layout2D.constraints` as one undoable step with the positions. Needs a user ruling:
+  (1) a `LayoutIntent` kind for layout fields, written and undone with the elements; (2) constraints stored on their
+  subject element; (3) a host callback like `onLayersChange` (not undoable). Until then plugin-canvas's constrained
+  canvases keep the engine projection over `layout.props.constrained`. Cost if wrong: none yet; the rule is pure.
+- **R-13 (2026-10-30, agent, D.2, parity): 3D gets neither dynamic nor constrained mode in this phase.** Both are
+  2D-only today (the engine's projections); the shared `constrain` hook is where a 3D arrangement would plug in.
 
 ## Global Constraints
 
@@ -667,6 +683,7 @@ intent: LayoutIntent): LayoutIntent | undefined`; config2d selects it when `layo
 
 - [ ] Failing tests ported from `constrained.test.ts`/`dynamic.test.ts` (solver re-places after a move; renaming the
       layout keeps the model) → implement → PASS → commit `react-ui-canvas: constrained and dynamic modes on Layout2D`.
+      Dynamic done (R-11); constrained's rule ported, its wiring blocked on a write path for `Layout2D.constraints` (R-12).
 
 ### Task D.3: Scored
 

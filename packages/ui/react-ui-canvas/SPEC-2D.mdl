@@ -838,9 +838,12 @@ feat F-14: 2D styles and composites
 feat F-15: Modes
   req F-15.1: The host's mode is the engine's projection over the Views (freehand when unset; lattice, constrained,
     dynamic and scored as the host passes them), with its generators.
-  req F-15.2: (planned) Constrained and dynamic models live on the layout's elements: constraints name element ids,
-    a graph's edges are link elements and overlay positions are element centres; the lattice is the layout's
-    `lattice`.
+  req F-15.2: A dynamic layout (`arrange` of kind `dynamic`) is its own graph: its shapes are the nodes and its links
+    the edges. A shape a person moves is pinned where it lands, and an edit that adds or removes a shape or link
+    re-places every unpinned shape by the layout engine, on the layout's lattice when it has one. The lattice is the
+    layout's `lattice`.
+  req F-15.5: (planned) A constrained layout's constraints are its `constraints`, naming element ids: a dropped shape
+    is re-related to its nearest neighbour and the solver re-places every shape.
   req F-15.3: (planned) The viewport draws diagram `arc`, free `curve` and open `polyline` elements.
   req F-15.4: A layout's mode is a rule between an edit and its write, which the editor applies to every write (a
     drag, a command, a paste, the Properties form). A layout with a `lattice` snaps every frame onto whole cells
@@ -1177,6 +1180,16 @@ decision D-18: A layout's mode is a rule the editor applies between every edit a
   affects: [F-15.4]
   why: Applying the rule at the write, not only in the engine's drag, holds commands, pastes and form edits to the lattice too, and reading it from the layout lets it travel with the drawing.
   rejected: A rule inside the 2D viewport only, which a paste or a Properties edit would bypass.
+```
+
+```mdl
+decision D-19: A 2D layout is dynamic when its `arrange` is of kind `dynamic`: its shapes and links are the graph, a moved shape is pinned (its centre is the overlay), and a change to the graph re-places the unpinned shapes. Constrained mode keeps its constraints in the layout's `constraints` and is planned until a layout field can be written as one undoable step with the positions. Fills in [D-4].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.2, F-15.5]
+  why: `arrange` already says how a layout places elements with no position, and a person's move already pins an element of an arranged layout, so the graph needs no second copy of the elements.
+  rejected: A separate `graph` field on the layout, which would duplicate the links and centres the elements hold.
 ```
 
 ---

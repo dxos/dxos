@@ -51,7 +51,7 @@ export type ConstrainedOptions = {
 };
 
 /** Multiples of the major grid, so a solved layout is already snapped. */
-const DEFAULTS: Required<Omit<ConstrainedOptions, 'origin' | 'nodes'>> = {
+export const CONSTRAINED_GRID: Required<Omit<ConstrainedOptions, 'origin' | 'nodes'>> = {
   pitch: { width: 256, height: 192 },
   size: { width: 192, height: 128 },
 };
@@ -177,7 +177,7 @@ export const solveRanks = (model: ConstrainedModel): Solution => {
 
 /** Solve the model to a positioned scene. */
 export const solve = (model: ConstrainedModel, options: ConstrainedOptions): View => {
-  const { pitch, size } = { ...DEFAULTS, ...options };
+  const { pitch, size } = { ...CONSTRAINED_GRID, ...options };
   const { rows, columns } = solveRanks(model);
   const extent = {
     columns: Math.max(...columns.values(), 0) + 1,

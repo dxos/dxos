@@ -52,4 +52,29 @@ describe('config2d', () => {
     // A host's own projection owns the mode.
     expect(createConfig2D({ createProjection: createFreehandProjection }).constrain).toBeUndefined();
   });
+  test('a dynamic layout pins a moved shape and re-places the rest when its graph changes', () => {
+    const shape = (id: string): Scene.Element2D => ({
+      id,
+      type: 'rect',
+      center: { x: 0, y: 0 },
+      size: { width: 192, height: 128 },
+    });
+    const dynamic: Scene.LayoutRecord2D = {
+      id: 'graph',
+      dim: '2d',
+      arrange: { kind: 'dynamic' },
+      elements: { a: shape('a'), b: shape('b') },
+    };
+    const { constrain } = createConfig2D();
+    const bind: LayoutIntent = {
+      kind: 'bind',
+      link: { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
+    };
+    const linked = constrain?.(dynamic, bind, { snap: true });
+    const placed = linked && applyIntent(dynamic, linked);
+    expect(placed?.elements.b.center?.y).toBeGreaterThan(placed?.elements.a.center?.y ?? Infinity);
+    const move: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: 10, y: 0 } };
+    const moved = constrain?.(dynamic, move, { snap: false });
+    expect(moved && applyIntent(dynamic, moved).elements.a.pinned).toBe(true);
+  });
 });

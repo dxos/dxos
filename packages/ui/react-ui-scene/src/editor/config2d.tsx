@@ -17,6 +17,7 @@ import {
   type PropertyFormProps,
   createPropertyForm,
   defaultThemeRegistry,
+  dynamicConstrain,
   fitBounds,
   latticeConstrain,
   zoomAt,
@@ -94,9 +95,17 @@ const layoutBounds = (document: Scene.SceneDocument, layout: string) => {
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
-/** A 2D layout's mode, from its own fields: a lattice snaps every frame onto its cells while snapping is on. */
-export const constrain2D: ConstrainIntent = (layout, intent, { snap }) =>
-  layout.dim === '2d' && layout.lattice && snap ? latticeConstrain(layout, intent) : intent;
+/**
+ * A 2D layout's mode, from its own fields: a lattice snaps every frame onto its cells while snapping is on, and a
+ * dynamic layout (`arrange: dynamic`) pins what is moved and re-places the rest when its graph changes.
+ */
+export const constrain2D: ConstrainIntent = (layout, intent, { snap }) => {
+  if (layout.dim !== '2d') {
+    return intent;
+  }
+  const snapped = layout.lattice && snap ? latticeConstrain(layout, intent) : intent;
+  return snapped && dynamicConstrain(layout, snapped);
+};
 
 /**
  * The 2D editor's config: react-ui-canvas's engine as the viewport, the canvas palette's tools, steps on the grid, the

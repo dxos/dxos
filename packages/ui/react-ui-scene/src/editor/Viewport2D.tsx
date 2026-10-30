@@ -23,7 +23,7 @@ import {
   createLatticeProjection,
   createMemoryStore,
 } from '@dxos/react-ui-canvas';
-import { type Scene, findLayout, rootScene } from '@dxos/scene';
+import { type Scene, applyIntent, findLayout, rootScene } from '@dxos/scene';
 
 import { styleClasses, toCanvasViews } from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
@@ -69,6 +69,16 @@ const sameCamera = (left: Camera | undefined, right: Camera | undefined): boolea
 
 const sameTool = (left: Tool, right: Tool): boolean => JSON.stringify(left) === JSON.stringify(right);
 
+/** Whether two versions of a layout draw any element in a different place or size (a pin alone draws the same). */
+const drawnDifferently = (left: Scene.LayoutRecord, right: Scene.LayoutRecord): boolean => {
+  const frame = (layout: Scene.LayoutRecord, id: string) => {
+    const element = layout.elements[id];
+    return JSON.stringify(element && [element.center, 'size' in element ? element.size : undefined]);
+  };
+  const ids = new Set([...Object.keys(left.elements), ...Object.keys(right.elements)]);
+  return [...ids].some((id) => frame(left, id) !== frame(right, id));
+};
+
 /**
  * The 2D viewport the shared editor draws: react-ui-canvas's engine over the open scene's layouts as Views, with its
  * gestures, handles, links and portals. The engine keeps a drag's in-flight state in memory and writes its store once on
@@ -84,7 +94,9 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
       return false;
     }
     const constrained = options.constrain(record, next.intent, { snap });
-    return constrained === undefined || JSON.stringify(constrained) !== JSON.stringify(next.intent);
+    return (
+      constrained === undefined || drawnDifferently(applyIntent(record, constrained), applyIntent(record, next.intent))
+    );
   };
 
   const Viewport2D = ({

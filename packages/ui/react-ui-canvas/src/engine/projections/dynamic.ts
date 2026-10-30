@@ -121,16 +121,21 @@ const DEFAULTS: Required<Pick<DynamicOptions, 'pitch' | 'size'>> = {
 
 export const DYNAMIC_VIEW_ID = 'dynamic';
 
-/** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
-export const layoutGraph = (
+/** What placing a graph needs; only the routed arrangement reads the node types, to route edges as they draw. */
+export type GraphPlacement = Omit<DynamicOptions, 'nodes'> & { nodes?: NodeRegistry };
+
+/**
+ * Each graph node's centre: its override, or its slot, with rows ranked top-down along the edges and columns the order
+ * within a row, on the grid (or the lattice's cells).
+ */
+export const graphCenters = (
   graph: GraphModel,
   overlay: Overlay,
-  options: DynamicOptions,
+  options: GraphPlacement,
   /** Slots already arranged for `options`, reused for a graph seen before. */
   slotsCache?: SlotsCache,
-): View => {
+): Map<string, Point> => {
   const { pitch, size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
-  const known = new Set(graph.nodes.map(({ id }) => id));
   const slots = slotsOf(graph, options, slotsCache);
 
   // Taken from the slots rather than from the placed nodes, so dragging a node (which only writes an
@@ -141,15 +146,33 @@ export const layoutGraph = (
   };
   const origin =
     options.origin ?? (options.lattice ? latticeOrigin(extent, pitch) : centeredOrigin(extent, pitch, size));
+  return new Map(
+    graph.nodes.map(({ id }) => [
+      id,
+      overlay.positions[id] ?? {
+        x: origin.x + (slots.get(id)?.column ?? 0) * pitch.width,
+        y: origin.y + (slots.get(id)?.row ?? 0) * pitch.height,
+      },
+    ]),
+  );
+};
+
+/** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
+export const layoutGraph = (
+  graph: GraphModel,
+  overlay: Overlay,
+  options: DynamicOptions,
+  /** Slots already arranged for `options`, reused for a graph seen before. */
+  slotsCache?: SlotsCache,
+): View => {
+  const { size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
+  const known = new Set(graph.nodes.map(({ id }) => id));
+  const centers = graphCenters(graph, overlay, options, slotsCache);
 
   const keys = initialKeys(graph.nodes.length + graph.edges.length);
   const nodes: Record<string, Node> = {};
   graph.nodes.forEach((node, index) => {
-    const override = overlay.positions[node.id];
-    const center = override ?? {
-      x: origin.x + (slots.get(node.id)?.column ?? 0) * pitch.width,
-      y: origin.y + (slots.get(node.id)?.row ?? 0) * pitch.height,
-    };
+    const center = centers.get(node.id) ?? { x: 0, y: 0 };
     const props = { id: node.id, z: keys[graph.edges.length + index], center, size };
     nodes[node.id] = options.createNode
       ? options.createNode(node, props)
@@ -186,7 +209,7 @@ export const layoutGraph = (
  */
 export type SlotsCache = WeakMap<GraphModel, Map<string, Slot>>;
 
-const slotsOf = (graph: GraphModel, options: DynamicOptions, cache?: SlotsCache): Map<string, Slot> => {
+const slotsOf = (graph: GraphModel, options: GraphPlacement, cache?: SlotsCache): Map<string, Slot> => {
   const cached = cache?.get(graph);
   if (cached) {
     return cached;
@@ -196,8 +219,11 @@ const slotsOf = (graph: GraphModel, options: DynamicOptions, cache?: SlotsCache)
   const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
   const ranks = Layout.rank(ids, edges);
   const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
+  const { nodes, lattice } = options;
   const slots =
-    options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
+    options.arrange === 'routed' && lattice && nodes
+      ? routedSlots(graph, edges, seed, { ...options, nodes }, lattice)
+      : seed;
   cache?.set(graph, slots);
   return slots;
 };
