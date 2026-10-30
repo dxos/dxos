@@ -106,6 +106,53 @@ model nodes dim=3d {
   },
 );
 
+const modeShape = (id: string, label: string, center: { x: number; y: number }): Scene.Element2D => ({
+  id,
+  type: 'rect',
+  label,
+  center,
+  size: { width: 256, height: 128 },
+});
+
+const modeLink = (id: string, from: string, to: string): Scene.Element2D => ({
+  id,
+  type: 'link',
+  source: { node: from },
+  target: { node: to },
+});
+
+/** A 2D layout in a mode of its own, as the root of a one-scene document. */
+const modeDocument = (layout: Omit<Scene.LayoutRecord2D, 'id' | 'dim'>): Scene.SceneDocument => ({
+  scenes: [{ id: 'mode', dim: '2d', layout: 'mode', theme: 'flat', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+  layouts: [{ id: 'mode', dim: '2d', ...layout }],
+  models: [],
+});
+
+/** Lattice mode: three shapes on whole cells of a 256x128 lattice with 128x64 gutters, two linked. */
+export const LATTICE_2D: Scene.SceneDocument = modeDocument({
+  lattice: { width: 256, height: 128, gutterX: 128, gutterY: 64 },
+  elements: {
+    a: modeShape('a', 'A', { x: 0, y: 0 }),
+    b: modeShape('b', 'B', { x: 384, y: 0 }),
+    c: modeShape('c', 'C', { x: 0, y: 192 }),
+    ab: modeLink('ab', 'a', 'b'),
+  },
+});
+
+/** Dynamic mode: a small tree whose shapes the layout engine places in rows along its links. */
+export const DYNAMIC_2D: Scene.SceneDocument = modeDocument({
+  arrange: { kind: 'dynamic' },
+  elements: {
+    root: modeShape('root', 'Root', { x: 0, y: 0 }),
+    left: modeShape('left', 'Left', { x: -256, y: 192 }),
+    right: modeShape('right', 'Right', { x: 256, y: 192 }),
+    leaf: modeShape('leaf', 'Leaf', { x: -256, y: 384 }),
+    e1: modeLink('e1', 'root', 'left'),
+    e2: modeLink('e2', 'root', 'right'),
+    e3: modeLink('e3', 'left', 'leaf'),
+  },
+});
+
 /** One 4s shot moving A across the 2D board and back. */
 export const SHOTS_2D: readonly EditorShot[] = [
   {

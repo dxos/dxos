@@ -10,17 +10,22 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Scene } from '@dxos/scene';
 
-import { DOCUMENT_2D, DOCUMENT_3D, FullEditor, SceneEditorStory } from '../testing/index.ts';
+import { DOCUMENT_2D, DOCUMENT_3D, DYNAMIC_2D, FullEditor, LATTICE_2D, SceneEditorStory } from '../testing/index.ts';
 
 type StoryProps = {
   dim: Scene.Dimension;
   /** Only an article edits; a card draws the picture. */
   role?: 'article' | 'card';
   docked?: boolean;
+  /** A 2D layout in a mode of its own. */
+  mode?: 'lattice' | 'dynamic';
 };
 
-const DefaultStory = ({ dim, role = 'article', docked = true }: StoryProps) => (
-  <SceneEditorStory document={dim === '3d' ? DOCUMENT_3D : DOCUMENT_2D} role={role} docked={docked}>
+const documentOf = (dim: Scene.Dimension, mode: StoryProps['mode']) =>
+  dim === '3d' ? DOCUMENT_3D : mode === 'lattice' ? LATTICE_2D : mode === 'dynamic' ? DYNAMIC_2D : DOCUMENT_2D;
+
+const DefaultStory = ({ dim, role = 'article', docked = true, mode }: StoryProps) => (
+  <SceneEditorStory document={documentOf(dim, mode)} role={role} docked={docked}>
     <FullEditor dim={dim} />
   </SceneEditorStory>
 );
@@ -50,3 +55,18 @@ export const Editor3D: Story = { args: { dim: '3d' } };
 export const Card2D: Story = { args: { dim: '2d', role: 'card' } };
 
 export const Card3D: Story = { args: { dim: '3d', role: 'card' } };
+
+/**
+ * Test:
+ * 1. Drag A part of a cell: it lands on whole cells when released; the guides show the cells.
+ * 2. Drag A onto B: the move is refused and A is drawn back where it was.
+ * 3. Turn snapping off in the display panel: shapes move freely; back on, the next move snaps.
+ */
+export const Lattice2D: Story = { args: { dim: '2d', mode: 'lattice' } };
+
+/**
+ * Test:
+ * 1. Drag Leaf anywhere: it stays where it is dropped (pinned).
+ * 2. Delete Right: the unpinned shapes are re-placed in rows along the links; Leaf stays put.
+ */
+export const Dynamic2D: Story = { args: { dim: '2d', mode: 'dynamic' } };
