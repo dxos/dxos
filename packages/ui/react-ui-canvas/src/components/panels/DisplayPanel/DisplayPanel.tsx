@@ -9,6 +9,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
+import { type Scene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -119,6 +120,8 @@ export type DisplayPanelProps = PanelProps & {
   /** Whether the axes are drawn (3D's in red, green and blue, 2D's in a stronger grid colour); with `onAxesToggle`, a toggle. */
   axes?: boolean;
   onAxesToggle?: () => void;
+  /** The scene's dimension, which picks the axes icon; 2D by default. */
+  dim?: Scene.Dimension;
   /** Whether moves, resizes and new nodes snap to the grid; with `onSnapToggle`, a toggle leads the grid controls. */
   snap?: boolean;
   onSnapToggle?: () => void;
@@ -146,6 +149,7 @@ export const DisplayPanel = ({
   onGuidesToggle,
   axes,
   onAxesToggle,
+  dim = '2d',
   snap,
   onSnapToggle,
   lattice,
@@ -184,7 +188,7 @@ export const DisplayPanel = ({
       <Button.Toggle
         variant='ghost'
         iconOnly
-        icon='ph--crosshair-simple--regular'
+        icon={dim === '3d' ? 'ph--vector-three--regular' : 'ph--vector-two--regular'}
         label='Axes: show the axes through the origin'
         disabled={readonly}
         pressed={axes === true}
