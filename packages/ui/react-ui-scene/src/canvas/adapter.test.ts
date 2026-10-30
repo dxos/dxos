@@ -21,6 +21,7 @@ import {
 } from '@dxos/react-ui-canvas/testing';
 import { MAJOR_GRID, type Node, type Scene, readDocument, toEcho } from '@dxos/scene';
 
+import { DOCUMENT_2D } from '../testing/index.ts';
 import { fromCanvasView, namedStyles, styleClasses, toCanvasView, toCanvasViews } from './adapter.ts';
 
 const views = (text: string) => toCanvasViews(Dsl.readScenes(text).document);
@@ -89,6 +90,24 @@ describe('toCanvasViews', () => {
       views: [root],
     } = views(EXEMPLARS.links);
     expect(root.nodes.b).toMatchObject({ type: 'rect', size: { width: 128, height: 128 }, style: { hue: 'green' } });
+  });
+
+  test('a .dx element keeps its layer and named style when its layout declares the layers', () => {
+    const [root] = toCanvasViews(DOCUMENT_2D).views;
+    expect(root.nodes.a).toMatchObject({ layer: 'diagram', class: 'primary' });
+    expect(root.nodes.b).toMatchObject({ layer: 'diagram', class: 'accent' });
+    expect(root.nodes.note).toMatchObject({ layer: 'background' });
+    expect(Object.keys(root.layers ?? {})).toEqual(expect.arrayContaining(['background', 'diagram']));
+  });
+
+  test('an element on a layer its layout does not declare falls back to the default layer', () => {
+    const {
+      views: [root],
+    } = views(EXEMPLARS.links);
+    const layers = Object.keys(root.layers ?? {});
+    for (const node of Object.values(root.nodes)) {
+      expect(layers).toContain(node.layer);
+    }
   });
 
   test('skips a link whose binding is missing', () => {

@@ -95,7 +95,7 @@ const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame
 };
 
 /** A composite element (its object has parts) is a `view` node over its parts layout's View. */
-const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string): Node | undefined => {
+const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string, layer: string): Node | undefined => {
   const type = element.parts !== undefined ? 'view' : NODE_TYPES[element.type];
   if (!type || !element.center) {
     return undefined;
@@ -112,7 +112,8 @@ const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string): Node 
       scene: element.parts,
     }),
     ...(scaled ? { frame: scaled.frame } : {}),
-    layer: DEFAULT_LAYER.id,
+    layer,
+    ...(element.style !== undefined ? { class: element.style } : {}),
     ...(element.label !== undefined ? { label: element.label } : {}),
     ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
     ...(style ? { style } : {}),
@@ -132,7 +133,12 @@ const elementEndpoint = (end: Endpoint): ElementEndpoint =>
     : { point: end.point };
 
 /** A link both of whose ends are in the scene; a link to a missing element is not drawn (Review Focus 1). */
-const toLink = (element: Resolved2D, z: string, nodes: Readonly<Record<string, Node>>): Link | undefined => {
+const toLink = (
+  element: Resolved2D,
+  z: string,
+  layer: string,
+  nodes: Readonly<Record<string, Node>>,
+): Link | undefined => {
   const source = element.source && endpoint(element.source);
   const target = element.target && endpoint(element.target);
   const present = (end: Endpoint) => !('node' in end) || nodes[end.node] !== undefined;
@@ -144,7 +150,8 @@ const toLink = (element: Resolved2D, z: string, nodes: Readonly<Record<string, N
     type: 'line',
     id: element.id,
     z,
-    layer: DEFAULT_LAYER.id,
+    layer,
+    ...(element.style !== undefined ? { class: element.style } : {}),
     source,
     target,
     ...(end ? { ends: { end } } : {}),
@@ -390,6 +397,10 @@ export const toCanvasView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecor
     ? storedView(doc, layout)
     : toView(doc, layout);
 
+/** An element's layer when its layout declares it; otherwise the default layer, which the View then declares. */
+const layerOf = (layout: Scene.LayoutRecord2D, element: Resolved2D): string =>
+  element.layer !== undefined && layout.layers?.[element.layer] !== undefined ? element.layer : DEFAULT_LAYER.id;
+
 const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View => {
   // A canvas node resolves its class itself, so it reads back its own overrides rather than the resolved look.
   const own = (element: Resolved2D): Resolved2D => ({ ...element, overrides: layout.elements[element.id]?.overrides });
@@ -409,7 +420,7 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Vie
     node && (nodes[node.id] = node);
   }
   for (const element of native) {
-    const node = toNode(doc, element, keyOf(element));
+    const node = toNode(doc, element, keyOf(element), layerOf(layout, element));
     node && (nodes[node.id] = node);
   }
   for (const element of elements) {
@@ -417,12 +428,19 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Vie
     if (element.type !== 'link') {
       continue;
     }
-    const link = isRecord(stored) ? canvasLink(own(element), stored) : toLink(element, keyOf(element), nodes);
+    const link = isRecord(stored)
+      ? canvasLink(own(element), stored)
+      : toLink(element, keyOf(element), layerOf(layout, element), nodes);
     link && (links[link.id] = link);
   }
+  // The default layer is declared only when an element falls back to it; the layout's own layers are kept as they are.
+  const fallback = native.some((element) => layerOf(layout, element) === DEFAULT_LAYER.id);
+  const layers = {
+    ...(fallback ? { [DEFAULT_LAYER.id]: DEFAULT_LAYER } : {}),
+    ...layout.layers,
+  };
   return {
-    ...(native.length > 0 ? { layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } } : {}),
-    ...(layout.layers !== undefined ? { layers: layout.layers } : {}),
+    ...(Object.keys(layers).length > 0 ? { layers } : {}),
     ...(layout.kind !== undefined ? { kind: layout.kind } : {}),
     ...(layout.anonymous !== undefined ? { anonymous: layout.anonymous } : {}),
     id: layout.id,
@@ -437,12 +455,12 @@ const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View =>
   const keys = initialKeys(elements.length);
   const nodes: Record<string, Node> = {};
   elements.forEach((element, index) => {
-    const node = toNode(doc, element, element.z ?? keys[index]);
+    const node = toNode(doc, element, element.z ?? keys[index], DEFAULT_LAYER.id);
     node && (nodes[node.id] = node);
   });
   const links: Record<string, Link> = {};
   elements.forEach((element, index) => {
-    const link = toLink(element, element.z ?? keys[index], nodes);
+    const link = toLink(element, element.z ?? keys[index], DEFAULT_LAYER.id, nodes);
     link && (links[link.id] = link);
   });
   return { id: layout.id, name: layout.name, nodes, links, layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } };
