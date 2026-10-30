@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { Aggregate, Filter, Order, Query } from '@dxos/echo';
+import { Aggregate, Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
@@ -147,6 +147,69 @@ const run = (fixture: Fixture, query: Query.Any) =>
 
 const names = (fixture: Fixture, ids: readonly string[]) =>
   ids.map((id) => Object.entries(fixture.ids).find(([, value]) => value === id)?.[0] ?? id);
+
+/**
+ * A project holding a task directly, a task set holding a task, and a feed holding a task; a second
+ * project with its own task; and a chain twelve levels deep under a root, past the executor depth.
+ */
+const seedHierarchy = Effect.gen(function* () {
+  const sqlClient = yield* SqlClient.SqlClient;
+  const meta = new EntityMetaIndex(sqlClient);
+  const bodies = new ObjectSnapshotIndex(sqlClient);
+  yield* meta.migrate();
+  yield* bodies.migrate();
+
+  const spaceId = SpaceId.random();
+  const ids = Object.fromEntries(
+    [
+      'project',
+      'taskSet',
+      'feed',
+      'directTask',
+      'nestedTask',
+      'feedTask',
+      'otherProject',
+      'otherTask',
+      'orphanTask',
+      'root',
+    ].map((name) => [name, EntityId.random()]),
+  );
+  const chain = Array.from({ length: 12 }, () => EntityId.random());
+  const row = (id: EntityId, type: URI.URI, parent?: EntityId, queueId?: EntityId): IndexerObject => ({
+    spaceId,
+    documentId: queueId ? null : `doc-${id}`,
+    queueId: queueId ?? null,
+    queueNamespace: queueId ? 'data' : null,
+    queuePosition: null,
+    recordId: null,
+    createdAt: 1000,
+    updatedAt: 2000,
+    data: {
+      id,
+      [ATTR_TYPE]: type,
+      [ATTR_DELETED]: false,
+      ...(parent ? { [ATTR_PARENT]: EID.make({ entityId: parent }) } : {}),
+    },
+    ...(queueId ? {} : { heads: [`heads-${id}`] }),
+  });
+  const objects: IndexerObject[] = [
+    row(ids.project, PROJECT),
+    row(ids.taskSet, PROJECT, ids.project),
+    row(ids.feed, PROJECT, ids.taskSet),
+    row(ids.directTask, TASK, ids.project),
+    row(ids.nestedTask, TASK, ids.taskSet),
+    row(ids.feedTask, TASK, undefined, ids.feed),
+    row(ids.otherProject, PROJECT),
+    row(ids.otherTask, TASK, ids.otherProject),
+    row(ids.orphanTask, TASK),
+    row(ids.root, PROJECT),
+    ...chain.map((id, index) => row(id, PROJECT, index === 0 ? ids.root : chain[index - 1])),
+  ];
+  yield* meta.update(objects);
+  yield* meta.lookupRecordIds(objects);
+  yield* bodies.update(objects);
+  return { spaceId, ids, chain };
+});
 
 const TAG = DXN.make('org.dxos.type.tag', '0.1.0');
 
@@ -547,6 +610,43 @@ describe('SqlPlanCompiler', () => {
           children.rows.map((row) => row.objectId),
         ),
       ).toEqual(['t1']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('childOf matches the subtree under its parents, to the executor depth', () =>
+    Effect.gen(function* () {
+      const { spaceId, ids, chain } = yield* seedHierarchy;
+      const scope = [{ _tag: 'space' as const, spaceId }];
+      const feedScope = [{ _tag: 'space' as const, spaceId, includeAllFeeds: true }];
+      const parentRef = (id: EntityId) => Ref.fromURI(EID.make({ spaceId, entityId: id }));
+      const run = (query: Query.Any) =>
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          const rows = yield* compilePlan(sql, new QueryPlanner().createPlan(query.ast), planSubquery).statement;
+          return rows.map((row) => row.objectId);
+        });
+      const nameOf = (id: string) =>
+        Object.entries(ids).find(([, value]) => value === id)?.[0] ?? `level${chain.indexOf(EntityId.make(id)) + 1}`;
+
+      const nested = yield* run(
+        Query.select(Filter.and(Filter.type(TASK), Filter.childOf(parentRef(ids.project)))).from(scope),
+      );
+      expect(nested.map(nameOf).sort()).toEqual(['directTask', 'nestedTask']);
+
+      const direct = yield* run(
+        Query.select(Filter.and(Filter.type(TASK), Filter.childOf(parentRef(ids.project), { transitive: false }))).from(
+          scope,
+        ),
+      );
+      expect(direct.map(nameOf)).toEqual(['directTask']);
+
+      const throughFeed = yield* run(
+        Query.select(Filter.and(Filter.type(TASK), Filter.childOf(parentRef(ids.project)))).from(feedScope),
+      );
+      expect(throughFeed.map(nameOf).sort()).toEqual(['directTask', 'feedTask', 'nestedTask']);
+
+      const deep = yield* run(Query.select(Filter.childOf(parentRef(ids.root))).from(scope));
+      expect(deep.map(nameOf).sort()).toEqual(Array.from({ length: 10 }, (_, index) => `level${index + 1}`).sort());
     }).pipe(Effect.provide(TestLayer)),
   );
 
