@@ -185,7 +185,7 @@ const createProject = (space: Space, storyGeneration: number) => {
 
   // The project's specs, which put the Specs tab and the overview's summary lines on the article: a feature map, then a
   // spec of prose alone.
-  FeatureSeed.seed(space.db, { name: SPEC_NAME, project });
+  FeatureSeed.seed(space.db, { name: SPEC_NAME, project, layout: FeatureSeed.INBOX_LAYOUT });
   const talk = space.db.add(Spec.make({ name: TALK_SPEC_NAME, content: TALK_SPEC_CONTENT }));
   Obj.update(project, (project) => {
     project.specs.push(Ref.make(talk));
@@ -414,20 +414,19 @@ export const Default: Story = {
 };
 
 /**
- * A project with a spec: the overview shows the spec's form and counts its features, and its Spec tab shows the spec,
- * its document first. The form's Open spec opens the tab, and the map's controls join the project's toolbar.
+ * A project with a spec: the overview lists its specs, each folded under its name, and its Spec tab shows the spec,
+ * its document first. The map's controls join the project's toolbar.
  */
 export const WithSpec: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    const summaries = await canvas.findAllByTestId('projectsPlugin.specSummary', undefined, { timeout: 10_000 });
-    await expect(summaries).toHaveLength(2);
-    const [summary] = summaries;
-    await waitFor(() => expect(summary.textContent).toMatch(/\d+ features/), { timeout: 10_000 });
-    await expect(within(summary).getByDisplayValue(SPEC_NAME)).toBeTruthy();
-    await userEvent.click(within(summary).getByTestId('projectsPlugin.openSpec'));
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    await waitFor(() => expect(within(specs).getAllByRole('option')).toHaveLength(2), { timeout: 10_000 });
+    const spec = await within(specs).findByRole('group', { name: SPEC_NAME }, { timeout: 10_000 });
+    await expect(within(spec).queryByRole('textbox', { name: 'Name' })).toBeNull();
+    await showTab(canvas, 'spec');
     await expect(canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
     await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
@@ -491,21 +490,31 @@ export const AddExistingFeature: Story = {
   },
 };
 
-/** A spec's form in the overview edits the spec: a new name is the one the Specs tab shows. */
+/**
+ * The overview's specs list edits each spec in place, unfolded: a new name is the one the Specs tab shows. Its add
+ * creates a spec, open for its name.
+ */
 export const SpecForms: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    const name = await canvas.findByDisplayValue(TALK_SPEC_NAME, undefined, { timeout: 10_000 });
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    const talk = await within(specs).findByRole('group', { name: TALK_SPEC_NAME }, { timeout: 10_000 });
+    await userEvent.click(within(talk).getByRole('button', { name: TALK_SPEC_NAME }));
+    const name = await within(talk).findByRole('textbox', { name: 'Name' });
     await userEvent.clear(name);
     await userEvent.type(name, RENAMED_SPEC_NAME);
-    const summary = name.closest<HTMLElement>('[data-testid="projectsPlugin.specSummary"]');
-    if (!summary) {
-      throw new Error('no spec form');
-    }
-    await userEvent.click(within(summary).getByTestId('projectsPlugin.openSpec'));
-    await expectSpecShown(canvas, RENAMED_SPEC_NAME);
+    await expect(within(specs).findByRole('group', { name: RENAMED_SPEC_NAME })).resolves.toBeTruthy();
+
+    await userEvent.click(canvas.getByTestId('specs.add'));
+    const created = await within(specs).findByRole('group', { name: 'Untitled' }, { timeout: 10_000 });
+    await userEvent.type(within(created).getByRole('textbox', { name: 'Name' }), NEW_SPEC_NAME);
+    await expect(within(specs).findByRole('group', { name: NEW_SPEC_NAME })).resolves.toBeTruthy();
+
+    await showTab(canvas, 'spec');
+    await pickSpec(canvas, RENAMED_SPEC_NAME);
+    await pickSpec(canvas, NEW_SPEC_NAME);
   },
 };
 
@@ -660,7 +669,8 @@ export const WithoutSpec: Story = {
     const canvas = within(canvasElement);
     await seedContent();
     await expect(canvas.findByDisplayValue(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.queryByTestId('projectsPlugin.specSummary')).toBeNull();
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    await expect(within(specs).queryAllByRole('option')).toHaveLength(0);
 
     await showTab(canvas, 'spec');
     await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));

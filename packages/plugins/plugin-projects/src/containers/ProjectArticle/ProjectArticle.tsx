@@ -22,12 +22,13 @@ import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as TasksUtil from '@dxos/plugin-tasks/TasksUtil';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
 import {
   type ActionGraphProps,
   type ActionGroupBuilderFn,
@@ -64,17 +65,10 @@ import { useSpecMapActions } from '../SpecFeatures/spec-map-actions.ts';
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
-type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'repositories'>;
+type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'repositories' | 'specs'>;
 
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
-  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories']),
-);
-
-// A spec's editable fields, picked the same way.
-type SpecValues = Pick<Spec.Spec, 'name' | 'description'>;
-
-const SpecValues = Schema.make<Schema.Codec<SpecValues, any>>(
-  SchemaAST.pick(Type.getSchema(Spec.Spec).ast, ['name', 'description']),
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories', 'specs']),
 );
 
 // Lazy: the canvas engine is large, and only the Specs tab needs it.
@@ -322,11 +316,17 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
     [invokePromise, db, subject.id, attendableId],
   );
 
-  // Read once per project identity; the uncontrolled form owns edits after mount.
-  const defaultValues = useMemo<Partial<HeaderValues>>(
-    () => ({ name: project.name, description: project.description, repositories: project.repositories }),
-    [subject],
+  // Controlled, so the form shows what changes elsewhere, such as a spec added from the Specs tab.
+  const values = useMemo<Partial<HeaderValues>>(
+    () => ({
+      name: project.name,
+      description: project.description,
+      repositories: project.repositories,
+      specs: project.specs,
+    }),
+    [project],
   );
+  const handleCreate = useCreateObject(db);
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
@@ -371,12 +371,16 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
     });
   }, [db, subject, attendableId, invokePromise, updateProject]);
 
+  // Only the edited path is written, so typing a name does not rewrite the specs.
   const handleValuesChanged = useCallback(
-    (values: Partial<HeaderValues>) => {
+    (values: Partial<HeaderValues>, { changed }: FormUpdateMeta<HeaderValues>) => {
+      const paths = Object.keys(changed)
+        .filter(SchemaEx.isJsonPath)
+        .filter((path) => changed[path]);
       updateProject((project) => {
-        project.name = values.name;
-        project.description = values.description;
-        project.repositories = values.repositories && [...values.repositories];
+        for (const path of paths) {
+          Obj.setValue(project, SchemaEx.splitJsonPath(path), SchemaEx.getValue(values, path));
+        }
       });
     },
     [updateProject],
@@ -415,20 +419,13 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
             <Form.Root
               db={db}
               schema={HeaderValues}
-              defaultValues={defaultValues}
+              values={values}
               onValuesChanged={handleValuesChanged}
+              onCreate={handleCreate}
             >
               <Form.Viewport scroll>
                 <Form.Content>
                   <Form.Fields />
-
-                  {specs.length > 0 && (
-                    <Form.FieldSet label={t('specs.label')} data-testid='projectsPlugin.spec'>
-                      {specs.map((spec) => (
-                        <SpecForm key={spec.id} spec={spec} onOpen={() => selectSpec(spec)} />
-                      ))}
-                    </Form.FieldSet>
-                  )}
 
                   {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
 
@@ -547,61 +544,6 @@ const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milesto
     ))}
   </Layout.Container>
 );
-
-/**
- * One of the project's specs as a form of its own within the project's: its name and description, then a count of
- * every feature on its map and the maps nested beneath it, by status and by open implementing task, and a button that
- * opens it on the Specs tab.
- */
-const SpecForm = ({ spec, onOpen }: { spec: Spec.Spec; onOpen: () => void }) => {
-  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
-  const ids = useSpecTreeIds(spec);
-  const { features } = useFeatureGraph(Obj.getDatabase(spec), ids);
-  const counts = Feature.Status.literals.flatMap((status) => {
-    const count = features.filter((feature) => feature.status === status).length;
-    return count > 0
-      ? [t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })]
-      : [];
-  });
-  const open = features.filter((feature) => feature.tasks.some((task) => !task.done)).length;
-
-  // Read once per spec; the uncontrolled form owns edits after mount.
-  const defaultValues = useMemo<Partial<SpecValues>>(
-    () => ({ name: spec.name, description: spec.description }),
-    [spec],
-  );
-  const handleValuesChanged = useCallback(
-    (values: Partial<SpecValues>) => {
-      Obj.update(spec, (spec) => {
-        spec.name = values.name ?? '';
-        spec.description = values.description;
-      });
-    },
-    [spec],
-  );
-
-  return (
-    <Layout.Flex column classNames='min-w-0 pb-form-padding' data-testid='projectsPlugin.specSummary'>
-      <Form.Root schema={SpecValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
-        <Form.Fields />
-      </Form.Root>
-      <Layout.Flex gap='sm' align='center' classNames='min-w-0 flex-wrap'>
-        <span className='text-fg-subtle'>
-          {[t('spec-summary.features.label', { count: features.length }), ...counts].join(' · ')}
-        </span>
-        {open > 0 && <span className='text-fg-subtle'>{t('spec-summary.open-tasks.label', { count: open })}</span>}
-        <Button.Root
-          variant='ghost'
-          icon='ph--arrow-right--regular'
-          label={t('open-spec.label')}
-          classNames='ms-auto'
-          data-testid='projectsPlugin.openSpec'
-          onClick={onOpen}
-        />
-      </Layout.Flex>
-    </Layout.Flex>
-  );
-};
 
 /** The Specs tab of a level without a spec: the offer to add one, owned by the project or breaking the feature down. */
 const AddSpec = ({ project, feature }: { project: Project.Project; feature?: Feature.Feature }) => {

@@ -55,10 +55,13 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline).pipe(Annotation.SetParent.set())),
 
-    /** Owned specs, in order: the normative text the project's tasks deliver. Suspended because Spec refers back. */
+    /**
+     * Owned specs, in order: the normative text the project's tasks deliver. A form creates each and edits it inline.
+     * Suspended because Spec refers back.
+     */
     specs: Schema.Array(Schema.suspend((): Ref.RefSchema<Spec.Spec> => Ref.Ref(Spec.Spec))).pipe(
       Annotation.SetParent.set(),
-      Annotation.FormInputAnnotation.set(false),
+      Annotation.FormCreateAnnotation.set(Type.getTypename(Spec.Spec)),
     ),
 
     /** Owned (or adopted synced) task container, holding the project's tasks and milestones. */

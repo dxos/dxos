@@ -151,14 +151,14 @@ export const setPosition = (spec: Spec.Spec, id: string, position: Position): vo
   }
 };
 
-export type MakeProps = Omit<Spec.MakeProps, 'content'> & {
-  /** The features the spec holds; its text embeds each under `## Features`. */
+export type MakeProps = Spec.MakeProps & {
+  /** The features the spec holds; unless `content` is given, its text embeds each under `## Features`. */
   features?: readonly Feature.Feature[];
 };
 
 /** A spec in the software package holding `features`, its text embedding each of them. */
-export const make = ({ features = [], dialects = SOFTWARE_DIALECTS, ...props }: MakeProps): Spec.Spec => {
-  const spec = Spec.make({ ...props, dialects, content: makeContent(features) });
+export const make = ({ features = [], dialects = SOFTWARE_DIALECTS, content, ...props }: MakeProps): Spec.Spec => {
+  const spec = Spec.make({ ...props, dialects, content: content ?? makeContent(features) });
   if (features.length > 0) {
     setFeatures(spec, features);
   }

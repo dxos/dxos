@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { Text } from '@dxos/schema';
+import { FactoryAnnotation, Text } from '@dxos/schema';
 
 /**
  * A spec: normative `.mdl` text that its project's work delivers. Its dialects say which block kinds beyond the core
@@ -41,6 +41,8 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'violet' }),
+    // A form's create needs the backing text, which `Obj.make` alone leaves out.
+    FactoryAnnotation.set((values): unknown => make({ name: '', ...values })),
   ),
 ) {}
 

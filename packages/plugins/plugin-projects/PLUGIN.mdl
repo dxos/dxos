@@ -135,8 +135,9 @@ feat F-4: A project's specs
               of its kind already in the text; text before the slash becomes the block's title. The software package
               offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`, `/test` and `/table`,
               which write text only.
-  req F-4.11: The project's overview shows each spec as a form of its own within the project's, editing its name and
-              description, with a count of its features and a button that opens it on the Specs tab.
+  req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
+              owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
+              and the list's `+` creates a spec, its row open for the name.
 ```
 
 ## QA
@@ -434,31 +435,47 @@ test QA-7: Grow a spec from prose
 ```mdl
 test QA-8: Switch between a project's specs
   desc: |
-    A project holds a feature map and a spec of prose side by side, and its Specs tab shows one at a time, picked from
-    a dropdown in the toolbar, which also adds a spec. A new "Launch video" spec takes a package from another plugin,
-    which adds slash commands and no views. Walked by the autocue flow `project-specs` against the ProjectArticle
-    story "Default", whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
+    A project holds a feature map and a spec of prose side by side. Its Overview is one form in which each spec is a
+    folded row that unfolds to the spec's fields, and whose `+` adds a spec. Its Specs tab shows one spec at a time,
+    picked from a dropdown in the toolbar. The feature map's text mixes prose with its features, and `/feature` turns
+    a line of that prose into a feature. A new "Launch video" spec takes a package from another plugin, which adds
+    slash commands and no views. Walked by the autocue flow `project-specs` against the ProjectArticle story
+    "Default", whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
   actors: human
   covers: [F-4.1, F-4.2, F-4.4, F-4.5, F-4.7, F-4.8, F-4.9, F-4.10, F-4.11]
   status: unverified
   given:
     - storybook serves plugin-projects
-    - the project "Project 1" owns the spec "Inbox and agents", which holds eight features, and then the spec
-      "Launch talk", whose document is three paragraphs of prose
+    - the project "Project 1" owns the spec "Inbox and agents" and then the spec "Launch talk", whose document is
+      three paragraphs of prose
+    - the document of "Inbox and agents" opens with a paragraph and a list of goals, embeds its eight features under
+      the headings Accounts, Mail and Work with notes between them, and ends with two ideas under Ideas, the last
+      "A morning digest of what agents did overnight"
     - a sample plugin contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`,
       `/shot`, `/voiceover` and `/caption` write its blocks, and no views
   steps:
     - name: See the project's specs
       do: Open the project "Project 1" on its Overview.
-      expect: one form per spec, "Inbox and agents" with its name, description and feature counts and then "Launch
-        talk", each with Open spec, and the toolbar offers Create artifact
+      expect: the project's form lists its specs under Specs, "Inbox and agents" and then "Launch talk", each a row
+        folded under its name, with a `+` beside the label, and the toolbar offers Create artifact
+    - name: Unfold a spec
+      do: Unfold the row "Inbox and agents" and type a description.
+      expect: the row shows the spec's Name and Description fields nested in the project's form, and the description
+        is the spec's
+    - name: Add a spec
+      do: Click the `+` beside Specs and name the spec "Launch video".
+      expect: a third row opens, titled Untitled until its name is typed, then "Launch video"
     - name: Open the Specs tab
-      do: Click the Specs tab.
-      expect: the tab shows "Inbox and agents", whose document embeds each of its features as a section, and the
-        toolbar holds the spec dropdown, the view toggle and Extensions instead of Create artifact
+      do: Click the Specs tab and scroll through the document.
+      expect: the tab shows "Inbox and agents", its prose and goals with its features embedded under their headings,
+        and the toolbar holds the spec dropdown, the view toggle and Extensions instead of Create artifact
+    - name: Turn an idea into a feature
+      do: At the end of the line "A morning digest of what agents did overnight", type `/feature`, press Enter and
+        type a description.
+      expect: the line is now an embedded feature of that name, planned, whose description takes the typed text
     - name: List the specs
       do: Click the spec dropdown in the toolbar.
-      expect: the menu lists "Inbox and agents", checked, and "Launch talk", and ends in Add spec
+      expect: the menu lists "Inbox and agents", checked, "Launch talk" and "Launch video", and ends in Add spec
     - name: Pick the other spec
       do: Click "Launch talk".
       expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and no view toggle
@@ -466,21 +483,18 @@ test QA-8: Switch between a project's specs
       do: Open Extensions and check Software.
       expect: the menu lists Software and Video, and the view toggle appears, offering the spec's text, Canvas and
         Kanban
-    - name: Add a spec
-      do: Click Add spec in the dropdown, name the spec "Launch video" and click Create.
-      expect: the tab shows "Launch video", whose document is empty, and the dropdown lists it third
-    - name: Give it the video package
-      do: Open Extensions and check Video.
-      expect: Video is checked and no view toggle appears
+    - name: Give the new spec the video package
+      do: Pick "Launch video" from the dropdown, open Extensions and check Video.
+      expect: the document is empty, Video is checked and no view toggle appears
     - name: Write a scene
-      do: At the end of the document, on a new line, type `/scene` and press Enter.
+      do: At the end of the document, type `/scene` and press Enter.
       expect: a fenced `scene SC-1:` block with empty `duration:` and `goal:` fields, the cursor at its title
     - name: Go back to the feature map
       do: Pick "Inbox and agents" from the dropdown, then click Canvas.
-      expect: the canvas shows the eight feature cards of "Inbox and agents", and no up or home button
+      expect: the canvas shows nine feature cards, the morning digest among them, and no up or home button
     - name: Add a feature on the canvas
       do: Point at an empty cell, click the `+` that shows there, then New feature.
-      expect: a ninth card, "New feature", appears in that cell
+      expect: a tenth card, "New feature", appears in that cell
 ```
 
 ## Changelog
@@ -1263,4 +1277,63 @@ decision D-89: QA-8 expects a form per spec with Open spec on the Overview, and 
   why: QA-8 walks the overview and Add spec, which those decisions change.
   rejected:
     - A separate test for the overview's forms, which would repeat QA-8's first step.
+```
+
+```mdl
+decision D-90: The project's overview is one form built from the form primitives off the schema, with nothing custom to specs: the specs nest within it inside a boundary, as nested forms do by default, and are a list whose items are collapsed and expand to show each spec's fields, using the forms' own handling of lists.
+  date: 2026-10-30
+  by: user:wittjosiah
+  supersedes: D-86
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-91: The spec shown for "Inbox and agents" mixes unstructured prose in with its structured features, rather than only inlining the features, and the demo shows the spec evolving from less structure to more, such as the `/feature` slash command.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-92: Add spec keeps its dialog only if it is the global Create object dialog and it works without Spec being a user type. Otherwise the dialog and the dropdown's Add spec go, and new specs are added only from the overview.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.5]
+```
+
+```mdl
+decision D-93: Both conditions of [D-92] hold, so Add spec stays: it opens the global Create object dialog, which pins to the top of the screen in the app and is centred only in storybook, and the dialog resolves the Spec form from every create entry, not only user types.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5]
+  why: `OpenObjectForm` opens the shared object form dialog with `blockAlign: 'start'`, and the SpecPicker story adds a spec through it with Spec not a user type.
+  rejected:
+    - Dropping the dropdown's Add spec as well, which [D-92] asks for only if a condition fails.
+```
+
+```mdl
+decision D-94: `Project.specs` carries `FormCreateAnnotation` for Spec in place of hiding it from forms, and `Spec` a `FactoryAnnotation` that makes its text. react-ui-form's array field again handles an owned array of refs: its `+` creates the target through the form's `onCreate`, and each row renders the target inline as a collapsible group named by the target's label ("Untitled" while empty), folded unless the row was just created. The overview's form is controlled by the project and writes back only the edited path. The feature counts and Open spec go. Fills in [D-90].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-88
+  affects: [F-4.11]
+  why: The owned-ref array is the form's own list for objects a parent owns; the Ark cutover dropped its add and inline rows, so restoring them serves any schema. A controlled form shows a spec added from the Specs tab, which a form read once would overwrite.
+  rejected:
+    - Re-annotating `specs` only in the overview's picked schema, a second schema for one form.
+    - Keeping the counts and Open spec beside each row, content the form primitives do not have.
+    - Deleting a spec when its row is removed; removing a row only drops the ref, as for any array.
+```
+
+```mdl
+decision D-95: The seeded "Inbox and agents" opens with a paragraph and a list of goals, embeds its features under Accounts, Mail and Work with notes between them, and ends with two ideas. QA-8 unfolds a spec and types its description, adds "Launch video" with the overview's `+`, and turns the idea "A morning digest of what agents did overnight" into a feature with `/feature`. Fills in [D-90] and [D-91].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-89
+  affects: [QA-8]
+  why: A phrase on a line of its own shows `/feature` naming a feature from prose, and the canvas then counts it.
+  rejected:
+    - Seeding the prose for every story that uses the sample features, which the other stories' checks do not need.
 ```
