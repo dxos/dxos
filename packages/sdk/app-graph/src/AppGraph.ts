@@ -214,8 +214,15 @@ export const getGraph = (node: Node.Node): Graph => {
   return graph as Graph;
 };
 
-/** The latest closure a node's stable `data` forwarder calls, and the node it belongs to; see {@link stableData}. */
-type Forwarded = { target: (...args: unknown[]) => unknown; readonly owner: string };
+/** Carried by each forwarder {@link stableData} makes, so any graph recognizes one without a lookup table. */
+const ForwardedKey = Symbol('app-graph/forwarded');
+
+/** The closure a forwarder calls, never itself a forwarder, and the graph node it belongs to. */
+type Forwarded = { target: (...args: unknown[]) => unknown; readonly graph: object; readonly id: string };
+
+type Forwarder = ((...args: unknown[]) => unknown) & { readonly [ForwardedKey]: Forwarded };
+
+const isForwarder = (value: unknown): value is Forwarder => typeof value === 'function' && ForwardedKey in value;
 
 /**
  * The Graph represents the user interface information architecture of the application constructed via plugins.
@@ -250,8 +257,6 @@ export class GraphImpl implements WritableGraph {
   /** Relation keys a node has held, so an emptied relation still reports an empty list. */
   readonly _relations = new Map<string, Set<string>>();
   readonly _pendingExpands = new Set<string>();
-  /** The live closure behind each forwarder {@link stableData} gave this graph's nodes. */
-  readonly _forwarded = new WeakMap<object, Forwarded>();
 
   /**
    * Canonical store. Nodes an edge references before they are contributed sit in it as
@@ -850,25 +855,23 @@ export const addNodes = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<
  * forwarder per node whose target is swapped: a re-offer that changes nothing else emits nothing,
  * and invoking the node still runs the latest closure.
  */
-const stableData = (internal: GraphImpl, id: string, existing: unknown, data: any): any => {
+const stableData = (graph: GraphImpl, id: string, existing: unknown, data: any): any => {
   if (typeof data !== 'function') {
     return data;
   }
-  const offered = internal._forwarded.get(data);
-  // A node's own forwarder read back and re-added is kept: retargeting it at itself would recurse.
-  if (offered?.owner === id) {
+  const owned = (forwarder: Forwarder) => forwarder[ForwardedKey].graph === graph && forwarder[ForwardedKey].id === id;
+  // This node's own forwarder read back and re-added is kept: retargeting it at itself would recurse.
+  if (isForwarder(data) && owned(data)) {
     return data;
   }
-  // Another node's forwarder is unwrapped, so retargeting this node never redirects that one.
-  const target = offered ? offered.target : data;
-  const current = typeof existing === 'function' ? internal._forwarded.get(existing) : undefined;
-  if (current?.owner === id) {
-    current.target = target;
+  // Any other forwarder, from another node or graph, is unwrapped: a target is never a forwarder, so none can cycle.
+  const target = isForwarder(data) ? data[ForwardedKey].target : data;
+  if (isForwarder(existing) && owned(existing)) {
+    existing[ForwardedKey].target = target;
     return existing;
   }
-  const cell: Forwarded = { target, owner: id };
-  const forwarder = (...args: unknown[]) => cell.target(...args);
-  internal._forwarded.set(forwarder, cell);
+  const cell: Forwarded = { target, graph, id };
+  const forwarder: Forwarder = Object.assign((...args: unknown[]) => cell.target(...args), { [ForwardedKey]: cell });
   return forwarder;
 };
 
@@ -899,8 +902,11 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
       const propertiesChanged = Object.keys(properties).some(
         (key) => !Equal.equals(existing.properties[key], properties[key]),
       );
-      // The forwarder keeps `data` stable, so the context an action runs with is compared on its own.
-      const contextChanged = (Node.isAction(existing) ? existing._actionContext : undefined) !== rest._actionContext;
+      // The forwarder keeps `data` stable, so the context an action runs with is compared on its own; an
+      // offer without one keeps the stored context, since the update spreads the existing node.
+      const contextChanged =
+        rest._actionContext !== undefined &&
+        (Node.isAction(existing) ? existing._actionContext : undefined) !== rest._actionContext;
       // `changed` is on the visit log because counting `existing node` lines alone measures how often a
       // node was re-offered, not how often it actually changed — two very different costs.
       const changed = typeChanged || dataChanged || propertiesChanged || contextChanged;

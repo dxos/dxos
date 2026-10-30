@@ -326,6 +326,47 @@ describe('Graph', () => {
     expect(Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow).data).toBeNull();
   });
 
+  test('an action copied between graphs and back stays invocable', () => {
+    const first = Graph.make();
+    const second = Graph.make();
+    const invoked: string[] = [];
+    Graph.addNode(
+      first,
+      Node.makeAction({ id: EXAMPLE_ID, data: () => Effect.sync(() => invoked.push('a')), properties: {} }),
+    );
+    Graph.addNode(second, Graph.getNode(first, EXAMPLE_ID).pipe(Option.getOrThrow));
+    Graph.addNode(first, Graph.getNode(second, EXAMPLE_ID).pipe(Option.getOrThrow));
+
+    for (const graph of [first, second]) {
+      const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+      assert.ok(Node.isAction(node));
+      Effect.runSync(node.data());
+    }
+    expect(invoked).toEqual(['a', 'a']);
+  });
+
+  test('re-offering an action without its context keeps the stored one and emits nothing', () => {
+    const graph = Graph.make();
+    const invoke = () => Effect.void;
+    const Value = Context.Service<number>('app-graph/test/Value');
+    const context = Context.make(Value, 1);
+    const withContext = {
+      ...Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }),
+      _actionContext: context,
+    };
+    Graph.addNode(graph, withContext);
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+    Graph.addNode(graph, Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }));
+    Graph.addNode(graph, Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }));
+    expect(changes).toEqual(0);
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    expect(node._actionContext).toBe(context);
+  });
+
   test('add edge', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
