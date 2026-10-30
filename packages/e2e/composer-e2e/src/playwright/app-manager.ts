@@ -201,19 +201,19 @@ export class AppManager {
 
   /** Waits until boot has navigated to the default space's Home and stopped navigating. */
   async waitForDefaultWorkspace(): Promise<void> {
-    await this.#waitForBoot(DEFAULT_WORKSPACE_URL);
+    await this.waitForBoot(DEFAULT_WORKSPACE_URL);
   }
 
   /** The same, for a device that has just joined an existing identity. */
   async waitForJoinedWorkspace(): Promise<void> {
-    await this.#waitForBoot(JOINED_WORKSPACE_URL);
+    await this.waitForBoot(JOINED_WORKSPACE_URL);
   }
 
   /**
    * Arrive at `url`, then wait for boot to stop navigating away from it. Boot navigates more than
    * once, so the test waits for the URL to stop moving rather than for its first arrival.
    */
-  async #waitForBoot(url: RegExp): Promise<void> {
+  async waitForBoot(url: RegExp): Promise<void> {
     let lastNavigation = Date.now();
     const onNavigated = (frame: Frame) => {
       if (frame === this.page.mainFrame()) {
