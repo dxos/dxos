@@ -8,9 +8,14 @@ import { lazy } from 'react';
 import { type AddFeatureDialogProps } from './AddFeatureDialog/index.ts';
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
-import { type FeatureCompanionProps, type ProjectFeatureCompanionProps } from './FeatureCompanion/index.ts';
+import {
+  type FeatureCompanionProps,
+  type FeatureLevelCompanionProps,
+  type ProjectFeatureCompanionProps,
+} from './FeatureCompanion/index.ts';
 import { type FeatureSectionProps } from './FeatureSection/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
+import { type FeatureLevelArticleProps } from './ProjectArticle/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
 import { type SpecDocumentArticleProps } from './SpecDocumentArticle/index.ts';
 import { type SpecArticleProps } from './SpecFeatures/index.ts';
@@ -29,6 +34,14 @@ export const FeatureCardContent: ComponentType<FeatureCardContentProps> = lazy((
 
 export const FeatureCompanion: ComponentType<FeatureCompanionProps> = lazy(() =>
   import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureCompanion })),
+);
+
+export const FeatureLevelArticle: ComponentType<FeatureLevelArticleProps> = lazy(() =>
+  import('./ProjectArticle/index.ts').then((module) => ({ default: module.FeatureLevelArticle })),
+);
+
+export const FeatureLevelCompanion: ComponentType<FeatureLevelCompanionProps> = lazy(() =>
+  import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureLevelCompanion })),
 );
 
 export const FeatureSection: ComponentType<FeatureSectionProps> = lazy(() =>

@@ -1814,6 +1814,23 @@ describe('annotations', () => {
 });
 
 // Minimal layer for durability tests: no auto-created ProcessManager; supplies raw deps.
+/** A resumable process that does nothing until terminated. */
+const IdleParent = Operation.makeDurable({
+  key: 'test.idle-parent',
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [],
+}).pipe(
+  Operation.withDurableHandler(() =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () => Effect.void,
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  ),
+);
+
 const DurabilityTestLayer = Layer.mergeAll(
   Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty),
   KeyValueStore.layerMemory,
@@ -2402,12 +2419,37 @@ describe('durability', () => {
   );
 
   it.effect(
-    'fails a non-idempotent operation whose handler was interrupted before hydrate',
+    'keeps a non-idempotent operation and its children out of the store',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
       const resolver = yield* ServiceResolver.ServiceResolver;
-      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const Blocked = Operation.make({
+        meta: { key: DXN.make('com.example.operation.test.blockedNonIdempotent'), name: 'BlockedNonIdempotent' },
+        input: Schema.Void,
+        output: Schema.Void,
+      });
+      const opHandlers = OperationHandlerSet.make(Blocked.pipe(Operation.withHandler(() => Effect.never)));
+      const manager = mkManager({ kv, registry, resolver, handlerSet: opHandlers, traceSink });
+      const handle = yield* manager.spawn(OperationProcess.make(Blocked));
+      yield* handle.submitInput(undefined);
+      // Resumable on its own, but its parent cannot resume to hear from it.
+      const child = yield* manager.spawn(IdleParent, { parentProcessId: handle.pid });
+
+      expect(yield* new ProcessStore(kv).listProcessIds()).toEqual([]);
+      yield* handle.terminate();
+      expect(child.status.state).toEqual(Process.State.TERMINATED);
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'fails a non-idempotent child of a persisted parent whose handler was interrupted before hydrate',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
       const traceSink = yield* Trace.TraceSink;
 
       let gate = true;
@@ -2430,7 +2472,9 @@ describe('durability', () => {
       );
       const opProcess = OperationProcess.make(SlowOp);
       const managerA = mkManager({ kv, registry, resolver, handlerSet: opHandlers, traceSink });
-      const handle = yield* managerA.spawn(opProcess);
+      // The persisted parent is what keeps the operation in the store.
+      const parent = yield* managerA.spawn(IdleParent);
+      const handle = yield* managerA.spawn(opProcess, { parentProcessId: parent.pid });
       // `submitInput` returns once the input and the operation's durable "started" marker are
       // persisted, without waiting on the handler, so awaiting it already captures both before shutdown.
       yield* handle.submitInput({ value: 1 });

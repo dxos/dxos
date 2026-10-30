@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Hook from '@dxos/compute/Hook';
 
 import {
   BrainSkill,
@@ -19,6 +20,8 @@ import {
   SupportSkill,
 } from '#skills';
 
+import { AgentNamespace } from '../namespace.ts';
+
 export default () =>
   Effect.succeed([
     Capability.contribute(AppCapabilities.SkillDefinition, ConversationSkill),
@@ -30,4 +33,5 @@ export default () =>
     Capability.contribute(AppCapabilities.SkillDefinition, NoteTakerSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, SupportSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, EmailSkill),
+    Capability.contributeAll(AppCapabilities.HookDefinition, Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks)),
   ]);

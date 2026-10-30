@@ -134,3 +134,13 @@ export const ProjectFeatureCompanion = ({ project, feature, ...props }: ProjectF
   const openLevel = useOpenSpecLevel(project, props.attendableId);
   return spec ? <FeatureCompanion spec={spec} onZoom={(zoomed) => openLevel(zoomed)} {...props} /> : null;
 };
+
+export type FeatureLevelCompanionProps = Omit<ProjectFeatureCompanionProps, 'project' | 'feature'> & {
+  feature: Feature.Feature;
+};
+
+/** The feature companion beside a feature's level of the project tracking it. */
+export const FeatureLevelCompanion = ({ feature, ...props }: FeatureLevelCompanionProps) => {
+  const project = Spec.findProject(feature);
+  return project ? <ProjectFeatureCompanion {...props} project={project} feature={feature} /> : null;
+};

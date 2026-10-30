@@ -26,6 +26,7 @@ import { attach } from '../operations/feature/util.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
   ARTIFACTS_SEGMENT,
+  SPEC_BRANCH_TYPE,
   SPEC_LEVEL_TYPE,
   SPEC_SEGMENT,
   createProjectActionExtension,
@@ -157,21 +158,17 @@ describe('project app graph builder', () => {
           return context.registry.get(context.graph.connections(id, 'child'));
         };
 
-        // The branch carries the project, wrapped so the Project-matching extensions leave it alone.
+        // The branch only groups the levels: it stands for no object, and the project's own spec is its Spec tab.
         const [branch] = yield* Effect.promise(() => children());
         expect(branch.id).toEqual(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPEC_SEGMENT));
-        expect(branch.type).toEqual(SPEC_LEVEL_TYPE);
-        expect(branch.data).toEqual({ branch: 'spec', project });
-        // The branch only groups the levels; the project's own spec is the project node's Spec tab.
+        expect(branch.type).toEqual(SPEC_BRANCH_TYPE);
+        expect(branch.data).toBeNull();
         expect(branch.properties.selectable).toBe(false);
 
-        // A level per feature, by name, addressed by the lineage of features above it.
+        // A level per feature, by name, holding the feature, addressed by the lineage of features above it.
         const levels = yield* Effect.promise(() => children(SPEC_SEGMENT));
-        expect(levels.map((node) => node.data)).toEqual([
-          { branch: 'spec', project, feature: compose },
-          { branch: 'spec', project, feature: sync },
-        ]);
-        expect(levels.map((node) => node.properties.selectable)).toEqual([true, true]);
+        expect(levels.map((node) => node.data)).toEqual([compose, sync]);
+        expect(levels.map((node) => node.type)).toEqual([SPEC_LEVEL_TYPE, SPEC_LEVEL_TYPE]);
         const nested = yield* Effect.promise(() => children(SPEC_SEGMENT, sync.id));
         expect(nested.map((node) => node.id)).toEqual([
           GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPEC_SEGMENT, sync.id, gmail.id),

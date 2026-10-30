@@ -14,14 +14,18 @@ import { DeckCapabilities } from '#types';
 import { Deck } from '../Deck/index.ts';
 import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '../Overlays/index.ts';
 import { ActiveNode } from './ActiveNode.tsx';
+import { useWorkspaceTransition } from './useWorkspaceTransition.ts';
+import { WorkspaceLayer } from './WorkspaceLayer.tsx';
 
 export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const settings = Hooks.useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = PluginManagerProvider.usePluginManager();
-  const { deck, state, updateState } = useDeckState();
+  const live = useDeckState();
+  const { deck, state, updateState } = live;
   const { toasts } = state;
+  const layers = useWorkspaceTransition(live);
 
   return (
     <Dnd.Root>
@@ -35,7 +39,16 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           updateState={updateState}
         >
           <Deck.Content>
-            <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
+            {layers.map(({ id, shown, live, ref }) => (
+              <WorkspaceLayer
+                key={id}
+                ref={ref}
+                shown={shown}
+                live={live}
+                settings={settings}
+                pluginManager={pluginManager}
+              />
+            ))}
           </Deck.Content>
         </Deck.Root>
         <PopoverContent />

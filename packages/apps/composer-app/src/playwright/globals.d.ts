@@ -29,6 +29,8 @@ declare global {
   /** A space, narrowed to the database members the perf specs use. */
   type DebugSpace = {
     id: string;
+    /** `SpaceState`; `3` is `SPACE_READY`. */
+    state: { get: () => number };
     db: {
       /**
        * A HYDRATED reference to an object by URI (`echo:///<objectId>`).

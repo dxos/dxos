@@ -487,7 +487,19 @@ decision D-12: Every spec holds its document: `Spec` 0.2.0 makes `document` requ
 ```
 
 ```mdl
-decision D-13: A spec's document is where its features are kept. In ECHO the document holds an embed of each feature object, never a `feat` block, and the objects hold what each feature says. Importing a file maps each `feat` block into a feature object and puts the object's embed in place of the block. An embed is a block the editor does not let the reader enter, so its id cannot be corrupted, but it can be moved, reordered, copied and pasted. Features are added from the canvas or the board, or with a `/feature` command in the editor.
+decision D-13: A feature level's nav-tree node holds the feature itself, so it gets every companion an object gets, such as the assistant, properties and debug. The project is found from the feature, through the specs above it. The article for a feature that a project tracks is that project's article narrowed to the feature; a feature no project tracks keeps its own article. The Spec branch holds no object, so it stays a group that opens nothing, and the deck leaves it out of a level's breadcrumbs. Refines [D-10] and [D-11].
+  date: 2026-10-30
+  by: user:wittjosiah
+  why: A feature is an object, so its level should behave like one; a level that wrapped the feature lost the assistant, properties and debug companions.
+
+decision D-14: A feature's assistant chat runs in its project's context. The chat binds the spec that lists the feature and the project that tracks it, along with the project's skills, context objects and instructions. A feature no project tracks binds only its spec.
+  date: 2026-10-30
+  by: user:wittjosiah
+  why: A question about a feature is usually a question about its spec and project, so the assistant should not have to be told where the feature lives.
+```
+
+```mdl
+decision D-15: A spec's document is where its features are kept. In ECHO the document holds an embed of each feature object, never a `feat` block, and the objects hold what each feature says. Importing a file maps each `feat` block into a feature object and puts the object's embed in place of the block. An embed is a block the editor does not let the reader enter, so its id cannot be corrupted, but it can be moved, reordered, copied and pasted. Features are added from the canvas or the board, or with a `/feature` command in the editor.
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-1, F-2, F-3]
@@ -497,35 +509,35 @@ decision D-13: A spec's document is where its features are kept. In ECHO the doc
 ```
 
 ```mdl
-decision D-14: A spec's document enforces no structure. A spec may start as a wall of prose and gain structure over time; helpers such as slash commands, and later an auto-format, offer structure without requiring it. Refines [D-13].
+decision D-16: A spec's document enforces no structure. A spec may start as a wall of prose and gain structure over time; helpers such as slash commands, and later an auto-format, offer structure without requiring it. Refines [D-15].
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-1.3, F-2.6, QA-7]
 ```
 
 ```mdl
-decision D-15: `Spec.features` stays. The spec is each feature's ECHO parent, so deleting a spec deletes its features, and a parent needs a ref; the text could count as one in principle, but it is too loose. Refines [D-13].
+decision D-17: `Spec.features` stays. The spec is each feature's ECHO parent, so deleting a spec deletes its features, and a parent needs a ref; the text could count as one in principle, but it is too loose. Refines [D-15].
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-1.1]
 ```
 
 ```mdl
-decision D-16: An exported `feat` block states the feature's status in a `status:` line. Deleting a feature's embed deletes the feature, and undo restores it. `DependsOn` stays an ECHO relation for now. Refines [D-13].
+decision D-18: An exported `feat` block states the feature's status in a `status:` line. Deleting a feature's embed deletes the feature, and undo restores it. `DependsOn` stays an ECHO relation for now. Refines [D-15].
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-2.3, F-3.3]
 ```
 
 ```mdl
-decision D-17: plugin-code's two-way file sync writes a spec's document through export and reads its file through import, so the file in the repository keeps its `feat` blocks. plugin-code's spec article draws the feature cards as well, through a capability this plugin contributes. Refines [D-13].
+decision D-19: plugin-code's two-way file sync writes a spec's document through export and reads its file through import, so the file in the repository keeps its `feat` blocks. plugin-code's spec article draws the feature cards as well, through a capability this plugin contributes. Refines [D-15].
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-2.8, F-3.5]
 ```
 
 ```mdl
-decision D-18: The document's embeds decide the spec's features. An embedded feature on no spec, deleted, or on a spec whose document no longer embeds it is claimed; one whose own spec's document still embeds it is a reference. A feature whose embed an edit took out moves to another spec whose document embeds it, or is deleted. A pasted embed of a feature the document already embeds becomes a copy. A feature the spec holds that its document never embedded is embedded at the end of its `## Features` section, or of the document. Fills in [D-13] and [D-15].
+decision D-20: The document's embeds decide the spec's features. An embedded feature on no spec, deleted, or on a spec whose document no longer embeds it is claimed; one whose own spec's document still embeds it is a reference. A feature whose embed an edit took out moves to another spec whose document embeds it, or is deleted. A pasted embed of a feature the document already embeds becomes a copy. A feature the spec holds that its document never embedded is embedded at the end of its `## Features` section, or of the document. Fills in [D-15] and [D-17].
   date: 2026-10-29
   by: agent:claude-code
   for: user:wittjosiah
@@ -536,7 +548,7 @@ decision D-18: The document's embeds decide the spec's features. An embedded fea
 ```
 
 ```mdl
-decision D-19: Importing a file takes a feature's name and description from it, as well as its requirements and status. Exporting writes against the file text last synced: the block of a feature that has not changed is copied as it was, a changed one has only its changed lines rewritten, and a block with no `status:` line reads as planned. Fills in [D-17].
+decision D-21: Importing a file takes a feature's name and description from it, as well as its requirements and status. Exporting writes against the file text last synced: the block of a feature that has not changed is copied as it was, a changed one has only its changed lines rewritten, and a block with no `status:` line reads as planned. Fills in [D-19].
   date: 2026-10-29
   by: agent:claude-code
   for: user:wittjosiah
@@ -547,7 +559,7 @@ decision D-19: Importing a file takes a feature's name and description from it, 
 ```
 
 ```mdl
-decision D-20: `Feature` 0.4.0 records where a feature was read in from as foreign keys, source `github.com/dxos/dxos` and id `path#F-n`, in place of its `specs` field. The migrations from 0.2.0 and 0.3.0 move the field and put the feature's embed in place of its `feat` block, or at the end of its spec's document when the block is gone. Fills in [D-13].
+decision D-22: `Feature` 0.4.0 records where a feature was read in from as foreign keys, source `github.com/dxos/dxos` and id `path#F-n`, in place of its `specs` field. The migrations from 0.2.0 and 0.3.0 move the field and put the feature's embed in place of its `feat` block, or at the end of its spec's document when the block is gone. Fills in [D-15].
   date: 2026-10-29
   by: agent:claude-code
   for: user:wittjosiah
@@ -556,7 +568,7 @@ decision D-20: `Feature` 0.4.0 records where a feature was read in from as forei
 ```
 
 ```mdl
-decision D-21: This plugin defines and contributes `ProjectCapabilities.SpecDocumentCodec`, at startup, and `ProjectCapabilities.SpecDocumentExtensions`, a factory of editor extensions rather than a hook, once the app is idle; plugin-code consumes both. Fills in [D-17].
+decision D-23: This plugin defines and contributes `ProjectCapabilities.SpecDocumentCodec`, at startup, and `ProjectCapabilities.SpecDocumentExtensions`, a factory of editor extensions rather than a hook, once the app is idle; plugin-code consumes both. Fills in [D-19].
   date: 2026-10-29
   by: agent:claude-code
   for: user:wittjosiah
@@ -565,21 +577,21 @@ decision D-21: This plugin defines and contributes `ProjectCapabilities.SpecDocu
 ```
 
 ```mdl
-decision D-22: A feature embedded in a spec's document is drawn as an editable section of the feature, and its card is the read-only version. The section shows the feature's form, so it can be edited in place, as if the document were all Markdown. An embed is deleted the way other embeds are: Backspace with the cursor after it. Refines [D-13] and [D-17].
+decision D-24: A feature embedded in a spec's document is drawn as an editable section of the feature, and its card is the read-only version. The section shows the feature's form, so it can be edited in place, as if the document were all Markdown. An embed is deleted the way other embeds are: Backspace with the cursor after it. Refines [D-15] and [D-19].
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-2.1, F-2.3, F-2.7, F-2.9]
 ```
 
 ```mdl
-decision D-23: The section holds the feature's core fields: name, description, requirements and status; subfeatures, dependencies and tasks stay in the companion. It is inert until it has attention, like other section embeds. After `/feature` the new section takes the cursor so it can be filled in place, and the companion does not open. Fills in [D-22].
+decision D-25: The section holds the feature's core fields: name, description, requirements and status; subfeatures, dependencies and tasks stay in the companion. It is inert until it has attention, like other section embeds. After `/feature` the new section takes the cursor so it can be filled in place, and the companion does not open. Fills in [D-24].
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-2.6, F-2.7]
 ```
 
 ```mdl
-decision D-24: `/feature` after a sentence (text ending in `.`, `!` or `?`) makes the sentence the new feature's description and puts the cursor in its name; after a phrase, the phrase is the name and the cursor goes to the description. Fills in [D-23].
+decision D-26: `/feature` after a sentence (text ending in `.`, `!` or `?`) makes the sentence the new feature's description and puts the cursor in its name; after a phrase, the phrase is the name and the cursor goes to the description. Fills in [D-25].
   date: 2026-10-29
   by: agent:claude-code
   for: user:wittjosiah
@@ -590,7 +602,7 @@ decision D-24: `/feature` after a sentence (text ending in `.`, `!` or `?`) make
 ```
 
 ```mdl
-decision D-25: A feature contributes a `section` surface holding its form, and embeds in a spec's document draw it inside the same inert-until-attended frame as other section embeds, with Escape returning the cursor to the text. Fills in [D-22] and [D-23].
+decision D-27: A feature contributes a `section` surface holding its form, and embeds in a spec's document draw it inside the same inert-until-attended frame as other section embeds, with Escape returning the cursor to the text. Fills in [D-24] and [D-25].
   date: 2026-10-29
   by: agent:claude-code
   for: user:wittjosiah
@@ -599,14 +611,14 @@ decision D-25: A feature contributes a `section` surface holding its form, and e
 ```
 
 ```mdl
-decision D-26: A spec file synced from a GitHub repository is read into features embedded in its document, as a file synced from a local checkout is. Refines [D-17].
+decision D-28: A spec file synced from a GitHub repository is read into features embedded in its document, as a file synced from a local checkout is. Refines [D-19].
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-3.5]
 ```
 
 ```mdl
-decision D-27: The codec makes a new spec of a document no object owns when a file read into it holds a `feat` block, and leaves a document of prose alone. The codec is `SpecText.codec`, which the capability contributes. Fills in [D-26].
+decision D-29: The codec makes a new spec of a document no object owns when a file read into it holds a `feat` block, and leaves a document of prose alone. The codec is `SpecText.codec`, which the capability contributes. Fills in [D-28].
   date: 2026-10-29
   by: agent:claude-code
   for: user:wittjosiah
@@ -617,14 +629,14 @@ decision D-27: The codec makes a new spec of a document no object owns when a fi
 ```
 
 ```mdl
-decision D-28: A feature's section shows everything the feature's spec block would show if it were written in the document, including the features it depends on.
+decision D-30: A feature's section shows everything the feature's spec block would show if it were written in the document, including the features it depends on.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-2.10]
 ```
 
 ```mdl
-decision D-29: The section shows the block id above the form, and lists the features the feature depends on with the same add and remove actions as its article. Dependents, tasks and showcases stay in the article and the companion. Fills in [D-28].
+decision D-31: The section shows the block id above the form, and lists the features the feature depends on with the same add and remove actions as its article. Dependents, tasks and showcases stay in the article and the companion. Fills in [D-30].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -635,7 +647,7 @@ decision D-29: The section shows the block id above the form, and lists the feat
 ```
 
 ```mdl
-decision D-30: Import reads a `desc:` field as the description and keeps each field of a structured requirement (`when:`, `then:`, `errors:`) on a line of its own; export writes the description as a `desc:` field. A fence that holds several `feat` blocks is split into one fence per block. Fills in [D-28].
+decision D-32: Import reads a `desc:` field as the description and keeps each field of a structured requirement (`when:`, `then:`, `errors:`) on a line of its own; export writes the description as a `desc:` field. A fence that holds several `feat` blocks is split into one fence per block. Fills in [D-30].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -646,7 +658,7 @@ decision D-30: Import reads a `desc:` field as the description and keeps each fi
 ```
 
 ```mdl
-decision D-31: The features a feature depends on stay `DependsOn` relations and are not written into its `feat` block, which has no field for them. Fills in [D-28].
+decision D-33: The features a feature depends on stay `DependsOn` relations and are not written into its `feat` block, which has no field for them. Fills in [D-30].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -657,7 +669,7 @@ decision D-31: The features a feature depends on stay `DependsOn` relations and 
 ```
 
 ```mdl
-decision D-32: QA-7 ends by making "Instant inbox" depend on "Search" from its section. Fills in [D-29].
+decision D-34: QA-7 ends by making "Instant inbox" depend on "Search" from its section. Fills in [D-31].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -666,7 +678,7 @@ decision D-32: QA-7 ends by making "Instant inbox" depend on "Search" from its s
 ```
 
 ```mdl
-decision D-33: Approve [D-31]: a feature's dependencies stay in ECHO only. An embed puts the structured ECHO object in the text in place of its fields as unstructured text, so the text duplicates none of its data.
+decision D-35: Approve [D-33]: a feature's dependencies stay in ECHO only. An embed puts the structured ECHO object in the text in place of its fields as unstructured text, so the text duplicates none of its data.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-2.10, F-3.3]

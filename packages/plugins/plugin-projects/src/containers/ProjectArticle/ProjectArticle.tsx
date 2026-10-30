@@ -629,6 +629,14 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
   return { tasks, checkedTasks, delegatableTasks, uncheck };
 };
 
+export type FeatureLevelArticleProps = AppSurface.ObjectArticleProps<Feature.Feature>;
+
+/** A feature's level of the project tracking it: the project article narrowed to the feature. */
+export const FeatureLevelArticle = ({ subject, ...props }: FeatureLevelArticleProps) => {
+  const project = Spec.findProject(subject);
+  return project ? <ProjectArticle {...props} subject={project} feature={subject} /> : null;
+};
+
 export type ToolbarActionsProps = {
   project: Project.Project;
   /** The view tabs, rendered as the bar's leading item. */
