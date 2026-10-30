@@ -69,6 +69,7 @@ import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField, FontSizeField } from './FontField.tsx';
 import { FrameField } from './FrameField.tsx';
+import { GeometryField } from './GeometryField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { FlipLinksContext, MarkerField } from './MarkerField.tsx';
@@ -128,6 +129,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.lineStyle': LineStyleField,
   'ends.start': MarkerField,
   'ends.end': MarkerField,
+  'center': GeometryField,
   'rotation': FrameField,
   'params.fit': PolygonFitField,
   'scene': ViewField,
@@ -180,8 +182,9 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   ...STYLE_FIELD_OVERRIDES,
   'style.alignVertical': { hidden: true },
   'style.fontSize': { hidden: true },
-  // Drawn beside the rotation by `FrameField`.
+  // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
+  'size': { hidden: true },
   'scene': { label: 'View' },
   'layer': { label: 'Layer' },
 };
