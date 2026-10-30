@@ -18,7 +18,8 @@ import {
   defaultNodeTypes,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
-import { type Node } from '@dxos/scene';
+import { kindNodeDef, kindRegistry } from '@dxos/react-ui-scene/canvas';
+import { type KindRegistry, type Node } from '@dxos/scene';
 
 import {
   type BoundCanvasStore,
@@ -144,11 +145,20 @@ export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefin
             // The picture is the shape: no fill or border unless the style asks for them.
             bare: true,
           },
-          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),
+          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, kindNodeDef(type, spec)])),
         },
         defaultNodePrototypes,
       ),
     [contributed, hostOpen],
+  );
+};
+
+/** The element kinds other plugins contribute, whose elements keep their own fields at their top (decision 13). */
+export const useCanvasKinds = (): KindRegistry => {
+  const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
+  return useMemo(
+    () => kindRegistry(Object.fromEntries(contributed.map(({ type, spec }) => [type, spec]))),
+    [contributed],
   );
 };
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { Canvas, createLatticeProjection } from '@dxos/react-ui-canvas/scene';
-import { Scene2DView, Scene3DView } from '@dxos/react-ui-scene';
+import { Scene2DView, Scene3DView, toViewportDocument } from '@dxos/react-ui-scene';
 import * as Card from '@dxos/react-ui/Card';
 import { Scene } from '@dxos/scene';
 
@@ -18,7 +18,7 @@ import { canvasDimension, canvasRecordOf, openScene } from '#model';
 import { Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
-import { useBoundCanvasStore, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
+import { useBoundCanvasStore, useCanvasKinds, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
 
 // A legacy card is a preview: only the drawing, fitted, with no grid or guides.
@@ -66,19 +66,22 @@ const Scene3DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
 /** The open 2D scene, fitted: the canvas's node types, each layout in its own mode, inert so a press reaches the card. */
 const SceneCanvasCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
   const nodes = useCanvasNodes();
+  const kinds = useCanvasKinds();
   const [snapshot] = useObject(canvas);
   const scene = openScene(canvas);
   const stored = Obj.instanceOf(Scene.Scene2D, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
+  // The view draws a kind's element from its canvas fields, as the article's viewport does.
+  const drawn = useMemo(() => document && toViewportDocument(document, kinds), [document, kinds]);
   return (
     <Card.Body>
       <Card.Section classNames='aspect-square'>
-        {stored && document && (
+        {stored && drawn && (
           <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
             <Scene2DView
               // Spans the card's rails as well as its content column.
               classNames='col-[full] pointer-events-none'
-              document={document}
+              document={drawn}
               scene={stored.key}
               theme={snapshot.settings.theme}
               nodes={nodes}

@@ -14,7 +14,7 @@ import {
   type ViewportProps,
   useSceneEditor,
 } from '@dxos/react-ui-canvas';
-import { createConfig2D } from '@dxos/react-ui-scene';
+import { createConfig2D, fromViewportIntent, toViewportLayout } from '@dxos/react-ui-scene';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { type LayoutIntent, type Port, type Scene, findLayout } from '@dxos/scene';
 
@@ -22,7 +22,6 @@ import { type ComputeGraphController } from '../graph/index.ts';
 import { computeKinds, computeNodeRegistry } from '../registry.ts';
 import { createFunctionPorts } from '../shapes/index.ts';
 import { type BoardElement } from './echo-store.ts';
-import { fromViewportIntent, toViewportLayout } from './viewport-form.ts';
 
 /** Re-renders the caller on every controller update, returning a count that changes with each. */
 const useControllerVersion = (controller: ComputeGraphController): number => {
@@ -45,6 +44,9 @@ const runtimePorts = (controller: ComputeGraphController, element: BoardElement)
     computeNode.outputSchema ? JsonSchema.toEffectSchema(computeNode.outputSchema) : DefaultOutput,
   );
 };
+
+/** The fields the viewport draws that the runtime derives, never stored. */
+const RUNTIME = ['ports'];
 
 /**
  * The 2D viewport over the board's compute kinds: each compute element drawn with its kind's fields and runtime ports
@@ -85,7 +87,7 @@ const createComputeViewport = (
     const handleIntent = useCallback(
       (layout: string, intent: LayoutIntent) => {
         const record = findLayout(latest.current, layout);
-        onIntent(layout, record?.dim === '2d' ? fromViewportIntent(intent, record, computeKinds) : intent);
+        onIntent(layout, record?.dim === '2d' ? fromViewportIntent(intent, record, computeKinds, RUNTIME) : intent);
       },
       [onIntent],
     );

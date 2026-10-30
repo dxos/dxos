@@ -19885,6 +19885,9 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas
+      '@dxos/react-ui-scene':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-scene
       '@dxos/scene':
         specifier: workspace:*
         version: link:../../common/scene

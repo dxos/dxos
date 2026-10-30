@@ -4,13 +4,13 @@
 
 import { describe, test } from 'vitest';
 
+import { fromViewportIntent, toViewportLayout } from '@dxos/react-ui-scene';
 import { type LayoutIntent } from '@dxos/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';
 import { computeKinds } from '../registry.ts';
 import { createTemplateCircuit } from '../testing/index.ts';
 import { type BoardElement, boardLayout } from './echo-store.ts';
-import { fromViewportIntent, toViewportLayout } from './viewport-form.ts';
 
 // One circuit for the file, since its ids are random; building its compute graph gives each shape its `node`.
 const template = createTemplateCircuit();
@@ -41,7 +41,9 @@ describe('viewport form', () => {
     const drawn = toViewportLayout(layout(), computeKinds, (element) => (element.id === gpt.id ? ports : undefined));
     expect(drawn.elements[gpt.id].props?.canvas).toMatchObject({ ports });
     const moved = { ...drawn.elements[gpt.id], center: { x: 1, y: 2 } };
-    const intent = fromViewportIntent({ kind: 'update', id: gpt.id, path: [], value: moved }, layout(), computeKinds);
+    const intent = fromViewportIntent({ kind: 'update', id: gpt.id, path: [], value: moved }, layout(), computeKinds, [
+      'ports',
+    ]);
     expect(intent).toEqual<LayoutIntent>({
       kind: 'update',
       id: gpt.id,

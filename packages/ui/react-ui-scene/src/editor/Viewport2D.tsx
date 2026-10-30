@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useContext, useEffect, useMemo, useRef } from 'react';
+import React, { type ComponentType, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { type ModuleCompiler } from '@dxos/animation';
 import {
@@ -21,9 +21,17 @@ import {
   createCanvasAtoms,
   createMemoryStore,
 } from '@dxos/react-ui-canvas';
-import { type Scene, applyIntent, findLayout, rootScene } from '@dxos/scene';
+import { type LayoutIntent, type Scene, applyIntent, findLayout, rootScene } from '@dxos/scene';
 
-import { latticesKey, layoutProjection, styleClasses, toCanvasViews } from '../canvas/index.ts';
+import {
+  type Kinds,
+  fromViewportIntent,
+  latticesKey,
+  layoutProjection,
+  styleClasses,
+  toCanvasViews,
+  toViewportDocument,
+} from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 import { type ViewWrite, applyViewWrites, viewWrites } from './view-writes.ts';
@@ -44,6 +52,8 @@ const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
 export type Viewport2DOptions = {
   /** The node types the canvas draws (a host's object frames among them); the default set when unset. */
   nodes?: NodeRegistry;
+  /** The plugin element kinds among `nodes`, whose elements keep their own fields at their top (decision 13). */
+  kinds?: Kinds;
   /** The canvas's mode (lattice, constrained, dynamic) over its store; when unset, each layout's own (its lattice). */
   createProjection?: (options: FreehandProjectionOptions) => Projection;
   /** The layout's mode, which the editor applies to every write; a refused or rewritten drag is redrawn as stored. */
@@ -260,5 +270,26 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     );
   };
   Viewport2D.displayName = 'Viewport2D';
-  return Viewport2D;
+  return options.kinds ? withKinds(Viewport2D, options.kinds) : Viewport2D;
+};
+
+/** The viewport over `kinds`: each kind's element drawn with its fields where the engine reads them, and lifted back. */
+const withKinds = (Base: ComponentType<ViewportProps<Camera>>, kinds: Kinds): ComponentType<ViewportProps<Camera>> => {
+  const KindsViewport2D = (props: ViewportProps<Camera>) => {
+    const { document, onIntent } = props;
+    const drawn = useMemo(() => toViewportDocument(document, kinds), [document]);
+    const latest = useRef(document);
+    latest.current = document;
+    const handleIntent = useCallback(
+      (layout: string, intent: LayoutIntent) => {
+        // A layout the write creates (a new portal's scene) has no stored elements to keep values from.
+        const record = findLayout(latest.current, layout) ?? { id: layout, dim: '2d', elements: {} };
+        onIntent(layout, record.dim === '2d' ? fromViewportIntent(intent, record, kinds) : intent);
+      },
+      [onIntent],
+    );
+    return <Base {...props} document={drawn} onIntent={handleIntent} />;
+  };
+  KindsViewport2D.displayName = 'KindsViewport2D';
+  return KindsViewport2D;
 };

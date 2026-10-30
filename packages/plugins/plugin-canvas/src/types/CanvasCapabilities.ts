@@ -6,7 +6,7 @@
 
 import type * as Atom from 'effect/reactivity/Atom';
 
-import type { NodeDefSpec } from '@dxos/react-ui-canvas/scene';
+import type { ElementKindSpec } from '@dxos/react-ui-scene/canvas';
 import { type NodeType as SceneNodeType } from '@dxos/scene';
 
 import { CanvasNamespace } from '../namespace.ts';
@@ -15,8 +15,8 @@ import { CanvasNamespace } from '../namespace.ts';
 // `Settings` capability export below.
 export const Settings = CanvasNamespace.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()('settings');
 
-/** A node type another plugin adds to the canvas: its name and its definition (optionally on a prototype). */
-export type NodeTypeContribution = { type: SceneNodeType; spec: NodeDefSpec };
+/** An element kind another plugin adds to the canvas: its type and its definition (decision 13). */
+export type NodeTypeContribution = { type: SceneNodeType; spec: ElementKindSpec };
 
 /** Node types contributed to the canvas's palette, properties and content schema; the built-ins are always there. */
 export const NodeType = CanvasNamespace.make<NodeTypeContribution>()('nodeType');

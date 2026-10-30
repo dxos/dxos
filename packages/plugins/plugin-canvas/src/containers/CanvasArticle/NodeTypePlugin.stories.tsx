@@ -14,9 +14,10 @@ import { DXN, Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { type NodeDefSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, TextPart } from '@dxos/react-ui-canvas/scene';
+import { type ElementKindSpec } from '@dxos/react-ui-scene/canvas';
 import * as Icon from '@dxos/react-ui/Icon';
-import { nodeBase } from '@dxos/scene';
+import { Scene } from '@dxos/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -31,16 +32,17 @@ import { CanvasCapabilities } from '#types';
 // drawing shows its task as the core base, a box with the task's label.
 //
 
-const TaskNode = Schema.Struct({
-  type: Schema.Literal('task'),
-  ...nodeBase,
+const taskFields = {
   /** The task's title, in the core base's `label`, so it still reads where the type is unknown. */
   label: Schema.String,
   done: Schema.optional(Schema.Boolean.annotate({ title: 'Done' })),
-});
-type TaskNode = Schema.Schema.Type<typeof TaskNode>;
+};
 
-const isTaskNode = (node: NodeViewProps['node']): node is TaskNode => node.type === 'task';
+const TaskNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('task'), ...taskFields });
+
+const isTaskNode = (
+  node: NodeViewProps['node'],
+): node is NodeViewProps['node'] & Schema.Struct.Type<typeof taskFields> => node.type === 'task';
 
 const TaskNodeView = ({ node, editing }: NodeViewProps) => {
   if (!isTaskNode(node)) {
@@ -56,7 +58,7 @@ const TaskNodeView = ({ node, editing }: NodeViewProps) => {
   );
 };
 
-const taskSpec: NodeDefSpec = {
+const taskSpec: ElementKindSpec = {
   name: 'Task',
   icon: 'ph--check-square--regular',
   key: 'K',

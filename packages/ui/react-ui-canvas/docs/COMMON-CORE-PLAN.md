@@ -177,6 +177,33 @@ intent, { snap })` is applied by `SceneEditor` to every write (gestures, command
   `Canvas` now. Cost if wrong: the port, when legacy goes.
 - **R-36 (2026-10-30, agent, E.2, parity): `Apply` and `Patch` edit a 3D layout as they edit a 2D one (tested); 3D has
   no mode to move.** `Scene2DView` lost its `createProjection` prop, which only the card passed. Cost if wrong: none.
+- **R-40 (2026-10-30, agent, E.4): a UML class is an element kind stored in its final form.** `ClassNode` is
+  `Schema.Struct({ ...Scene.Element2D.fields, type: 'class', label, attributes, methods })`, its own fields at the
+  element's top (decision 13), checked by `ClassNode.kinds` (a `KindRegistry`). A class stored before E.4 (members under
+  `props.canvas`, as the adapter wrote every node's own fields) draws as before and moves up on its next write; no ECHO
+  migration. Cost if wrong: a migration of the classes written since, if kinds were to stay under `props.canvas`.
+- **R-41 (2026-10-30, agent, E.4): `ElementKindSpec` lives in react-ui-scene `canvas/kinds.ts`, beside the View
+  adapter, and replaces `NodeDefSpec` for plugin kinds only.** It is `NodeDefSpec` with the kind's element schema and an
+  element-making `create`; `kindNodeDef(type, spec)` derives the canvas engine's node type (node base + the kind's own
+  fields + `label`), and `kindRegistry(specs)` the `KindRegistry`. `CanvasCapabilities.NodeTypeContribution.spec` is an
+  `ElementKindSpec` (plugin-uml, the plugin-canvas NodeTypePlugin story); react-ui-canvas's built-in types keep
+  `NodeDefSpec` until E.6, which removes the engine form. Rejected: renaming `NodeDefSpec` across react-ui-canvas now
+  (its built-ins are View nodes until E.6). Cost if wrong: a move of `ElementKindSpec` into react-ui-canvas when the
+  engine reads elements.
+- **R-42 (2026-10-30, agent, E.4): the 2D viewport takes `kinds` and moves kind fields itself.** R-23's
+  `toViewportLayout`/`fromViewportIntent` moved from react-ui-canvas-compute into react-ui-scene `canvas/kinds.ts`
+  (shared; `derived` names fields drawn but never stored, compute's runtime `ports`); `createConfig2D({ kinds })` wraps
+  the viewport to lower each kind's fields into `props.canvas` and lift every intent back. plugin-canvas passes its
+  contributed kinds (`useCanvasKinds`) to the article and lowers the card's document (`toViewportDocument`). A created
+  kind element now drops the drawn `props.canvas` (compute's copy kept it). Compute keeps its own wrapper, as its ports
+  come from the controller. Cost if wrong: none beyond a pass per render; E.6 deletes it with the adapter.
+- **R-43 (2026-10-30, agent, E.4): the plugin-uml story renders `SceneEditor` with `createConfig2D({ nodes, kinds })`
+  over an in-memory `SceneDocument`** (applyIntent on each write, no history), as E.3's stories host the shared editor.
+  Cost if wrong: none.
+- **R-44 (2026-10-30, agent, E.4, parity): UML is 2D-only; element kinds are shared, their drawing is not.** The
+  `KindRegistry` and an `Element3D`-based kind schema work the same way in 3D; only `kindNodeDef` and the viewport
+  lowering are 2D, because the 2D viewport draws through the canvas engine. 3D has no plugin kinds today. Cost if wrong:
+  none.
 
 ## Global Constraints
 
@@ -835,6 +862,9 @@ shared model`.
 
 `ClassNode` becomes an element kind (`ElementKindSpec` replaces `NodeDefSpec`; `nodeBase` fields → `Element2D`);
 failing test `ClassNode.test.ts` updated → PASS; story check; commit `plugin-uml: class shapes as element kinds`.
+
+- [x] `ClassNode` over `Element2D` in `ClassNode.kinds` (R-40); `ElementKindSpec` + `kindNodeDef` for plugin kinds
+      (R-41); the 2D viewport lowers and lifts kind fields (R-42); the story on `SceneEditor` (R-43); 2D-only (R-44).
 
 ### Task E.5: plugin-code and small consumers
 
