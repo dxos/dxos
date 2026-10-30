@@ -126,11 +126,21 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // Index-only per-type counts; the same query as the space dashboard, so both share one result.
         const withObjects = typeUrisWithObjects(get(space.db.query(SPACE_STATS_QUERY).atom));
 
+        // The registry keeps a disabled plugin's static types, so only list those an enabled plugin still contributes.
+        const contributedTypeUris = new Set(
+          get(capabilities.atom(AppCapabilities.Schema))
+            .flat()
+            .map((schema) => Type.getURI(schema)),
+        );
+
         const visibleSchemas = userSchemas.filter((schema) => {
           if (Type.getDatabase(schema) != null) {
             return true;
           }
           const typeUri = Type.getURI(schema);
+          if (!contributedTypeUris.has(typeUri)) {
+            return false;
+          }
           if (ViewAnnotation.has(schema)) {
             return viewIndex.typeUrisWithNonViewObjects.has(typeUri);
           }
