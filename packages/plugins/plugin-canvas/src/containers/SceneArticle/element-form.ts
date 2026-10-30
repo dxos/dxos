@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS } from '@dxos/react-ui-canvas';
+import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS, makeGeometryField } from '@dxos/react-ui-canvas';
 import { type FormFieldMap, type FormFieldOverride, NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { type LayoutIntent, Scene, Style3D, styleFields } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT, VectorAnnotationId } from '@dxos/ui-types';
@@ -19,6 +19,7 @@ const formVec3 = (step: number) =>
 
 /** A centre steps one unit of the ground grid's minor lines; a rotation 15 degrees; a scale a tenth. */
 const FormVec3 = formVec3(1);
+const FormScale = formVec3(0.1);
 type FormVec3 = Schema.Schema.Type<typeof FormVec3>;
 
 /** The fields a person edits in the 3D Properties form; bindings and parts are the tools' and the Library's. */
@@ -28,15 +29,23 @@ export const ElementForm = Schema.Struct({
   style: Schema.optional(Schema.Struct({ ...Style3D.fields, opacity: styleFields.opacity })),
   center: Schema.optional(formVec3(1)),
   rotation: Schema.optional(formVec3(15)),
-  scale: Schema.optional(formVec3(0.1)),
+  scale: Schema.optional(FormScale),
 });
 export type ElementForm = Schema.Schema.Type<typeof ElementForm>;
 
 /** The 2D canvas's style fields (its colour grid at `style.hue`, which sets the tone too) and its layer field. */
-export const ELEMENT_FORM_FIELDS: FormFieldMap = { ...STYLE_FIELDS, layer: LayerField };
+export const ELEMENT_FORM_FIELDS: FormFieldMap = {
+  ...STYLE_FIELDS,
+  layer: LayerField,
+  // Centre and scale side by side, as 2D draws centre and size.
+  center: makeGeometryField({ name: 'scale', label: 'Scale', type: FormScale.ast }),
+};
 
 /** How those fields present, as in 2D. */
-export const ELEMENT_FORM_OVERRIDES: Record<string, FormFieldOverride> = STYLE_FIELD_OVERRIDES;
+export const ELEMENT_FORM_OVERRIDES: Record<string, FormFieldOverride> = {
+  ...STYLE_FIELD_OVERRIDES,
+  scale: { hidden: true },
+};
 
 type Vec3 = { x: number; y: number; z: number };
 

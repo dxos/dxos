@@ -4,3 +4,4 @@
 
 export { LayerField, LayersContext } from './LayerField.tsx';
 export * from './PropertiesInspector.tsx';
+export * from './GeometryField.tsx';

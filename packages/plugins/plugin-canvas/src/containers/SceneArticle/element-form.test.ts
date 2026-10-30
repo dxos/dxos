@@ -80,6 +80,11 @@ describe('element form', () => {
     }
   });
 
+  test('centre and scale share one row, as 2D centre and size do', () => {
+    expect(ELEMENT_FORM_FIELDS.center).toBeDefined();
+    expect(ELEMENT_FORM_OVERRIDES.scale).toMatchObject({ hidden: true });
+  });
+
   test("the style fields are the 2D canvas's: its colour grid at style.hue, the tone without a field of its own", () => {
     expect(ELEMENT_FORM_FIELDS['style.hue']).toBe(StyleGridField);
     expect(ELEMENT_FORM_OVERRIDES['style.tone']).toMatchObject({ hidden: true });
