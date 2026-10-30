@@ -11,7 +11,7 @@ import { Database, Ref } from '@dxos/echo';
 import * as TextMerge from '@dxos/plugin-github/TextMerge';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
-import { readThrough, writeThrough } from '#sync';
+import { FrontMatter, readThrough, writeThrough } from '#sync';
 import { CodeOperation } from '#types';
 
 import { loadSpecText, specName } from './spec-file.ts';
@@ -21,23 +21,28 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecFile> = Code
     Effect.fn(function* ({ path, content, base, object, heads }) {
       const codecs = yield* Capability.getAll(ProjectCapabilities.SpecCodec);
       if (!object || !heads || base === undefined) {
-        const spec = yield* Database.add(Spec.make({ name: specName(path), content }));
-        yield* readThrough(codecs, spec, content, path);
+        const spec = yield* Database.add(Spec.make({ name: specName(path), content: FrontMatter.body(content) }));
+        const body = FrontMatter.read(spec, content);
+        yield* readThrough(codecs, spec, body, path);
         const { text } = yield* loadSpecText(Ref.make(spec));
         return { object: Ref.make(spec), heads: TextMerge.currentHeads(text) };
       }
 
       const { spec, text } = yield* loadSpecText(object);
+      // The file's front matter is the spec's fields, so only what follows it merges into the text.
+      const form = FrontMatter.fileForm(text.content);
+      const baseText = form.body(base);
+      const nextText = form.read(spec, content);
       // A document a codec writes holds its file in another form, so the change merges in the file's form (F-6.2).
-      const local = yield* writeThrough(codecs, spec, base);
+      const local = yield* writeThrough(codecs, spec, baseText);
       if (local !== undefined) {
-        const merged = TextMerge.merge({ base, local, next: content });
+        const merged = TextMerge.merge({ base: baseText, local, next: nextText });
         yield* readThrough(codecs, spec, merged, path);
         return { object, heads: TextMerge.currentHeads(text) };
       }
 
       // Spec.content is Text, so the remote change merges with local edits character by character (F-6.2).
-      const next = yield* TextMerge.applyAt(text, { base, next: content, heads });
+      const next = yield* TextMerge.applyAt(text, { base: baseText, next: nextText, heads });
       // A change that brings the file its first `feat` block can make the document a codec's.
       if (yield* readThrough(codecs, spec, text.content, path)) {
         return { object, heads: TextMerge.currentHeads(text) };

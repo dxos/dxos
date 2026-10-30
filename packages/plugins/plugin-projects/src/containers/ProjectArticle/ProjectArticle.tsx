@@ -70,6 +70,13 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
   SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories']),
 );
 
+// A spec's editable fields, picked the same way.
+type SpecValues = Pick<Spec.Spec, 'name' | 'description'>;
+
+const SpecValues = Schema.make<Schema.Codec<SpecValues, any>>(
+  SchemaAST.pick(Type.getSchema(Spec.Spec).ast, ['name', 'description']),
+);
+
 // Lazy: the canvas engine is large, and only the Specs tab needs it.
 const SpecMap = lazy(() => import('../SpecFeatures/index.ts').then((module) => ({ default: module.SpecMap })));
 
@@ -418,7 +425,7 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
                   {specs.length > 0 && (
                     <Form.FieldSet label={t('specs.label')} data-testid='projectsPlugin.spec'>
                       {specs.map((spec) => (
-                        <SpecSummary key={spec.id} spec={spec} onOpen={() => selectSpec(spec)} />
+                        <SpecForm key={spec.id} spec={spec} onOpen={() => selectSpec(spec)} />
                       ))}
                     </Form.FieldSet>
                   )}
@@ -542,12 +549,12 @@ const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milesto
 );
 
 /**
- * One line over one of the project's specs, counting every feature on its map and the maps nested beneath it: how many
- * there are by status, and how many have an implementing task still open. The spec's name opens it on the Specs tab.
+ * One of the project's specs as a form of its own within the project's: its name and description, then a count of
+ * every feature on its map and the maps nested beneath it, by status and by open implementing task, and a button that
+ * opens it on the Specs tab.
  */
-const SpecSummary = ({ spec, onOpen }: { spec: Spec.Spec; onOpen: () => void }) => {
+const SpecForm = ({ spec, onOpen }: { spec: Spec.Spec; onOpen: () => void }) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
-  const [name] = useObject(spec, 'name');
   const ids = useSpecTreeIds(spec);
   const { features } = useFeatureGraph(Obj.getDatabase(spec), ids);
   const counts = Feature.Status.literals.flatMap((status) => {
@@ -558,13 +565,40 @@ const SpecSummary = ({ spec, onOpen }: { spec: Spec.Spec; onOpen: () => void }) 
   });
   const open = features.filter((feature) => feature.tasks.some((task) => !task.done)).length;
 
+  // Read once per spec; the uncontrolled form owns edits after mount.
+  const defaultValues = useMemo<Partial<SpecValues>>(
+    () => ({ name: spec.name, description: spec.description }),
+    [spec],
+  );
+  const handleValuesChanged = useCallback(
+    (values: Partial<SpecValues>) => {
+      Obj.update(spec, (spec) => {
+        spec.name = values.name ?? '';
+        spec.description = values.description;
+      });
+    },
+    [spec],
+  );
+
   return (
-    <Layout.Flex gap='sm' align='center' classNames='min-w-0 flex-wrap' data-testid='projectsPlugin.specSummary'>
-      <Button.Root variant='ghost' icon='ph--blueprint--regular' label={name} onClick={onOpen} />
-      <span className='text-fg-subtle'>
-        {[t('spec-summary.features.label', { count: features.length }), ...counts].join(' · ')}
-      </span>
-      {open > 0 && <span className='text-fg-subtle'>{t('spec-summary.open-tasks.label', { count: open })}</span>}
+    <Layout.Flex column classNames='min-w-0 pb-form-padding' data-testid='projectsPlugin.specSummary'>
+      <Form.Root schema={SpecValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+        <Form.Fields />
+      </Form.Root>
+      <Layout.Flex gap='sm' align='center' classNames='min-w-0 flex-wrap'>
+        <span className='text-fg-subtle'>
+          {[t('spec-summary.features.label', { count: features.length }), ...counts].join(' · ')}
+        </span>
+        {open > 0 && <span className='text-fg-subtle'>{t('spec-summary.open-tasks.label', { count: open })}</span>}
+        <Button.Root
+          variant='ghost'
+          icon='ph--arrow-right--regular'
+          label={t('open-spec.label')}
+          classNames='ms-auto'
+          data-testid='projectsPlugin.openSpec'
+          onClick={onOpen}
+        />
+      </Layout.Flex>
     </Layout.Flex>
   );
 };

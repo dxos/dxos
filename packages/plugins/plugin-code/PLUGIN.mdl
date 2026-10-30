@@ -766,6 +766,12 @@ feat F-14: Two-way spec sync with a local checkout
   req F-14.7: A spec syncs through `ProjectCapabilities.SpecCodec`: a push writes the
               codec's text for it, made against the last synced text, and a pull offers
               the file to each codec in turn. A spec no codec takes is copied as it is.
+  req F-14.8: A file's front matter is the spec's fields, not its text: `name` is its name,
+              and `id` and `version` are its meta's `key` and `version`. The text and the
+              codecs hold what follows the front matter. A push writes the front matter
+              against the last synced file, rewriting only the keys it has; a file synced
+              without front matter stays without it. A spec whose text still starts with
+              front matter syncs as it is.
 ```
 
 ```mdl
@@ -1502,6 +1508,25 @@ decision D-44: The sync takes a spec through `ProjectCapabilities.SpecCodec`, re
   affects: [F-14.7]
   supersedes: D-41
   why: Copying a prose spec keeps the plain three-way text merge it had before the codecs.
+```
+
+```mdl
+decision D-45: A spec in Composer has no front matter; what a file's front matter holds goes into the object's structured data. Its key and version go in the object's meta, as they do for types: they matter for published specs, so for now only syncing a file fills them. Text that already starts with front matter stays as it is.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-14.8]
+```
+
+```mdl
+decision D-46: The sync maps front matter in plugin-code's `FrontMatter`, around the codecs: a pull sets the spec's name and meta from the file and passes on what follows, and a push writes the front matter back against the last synced file, rewriting only the keys it has. A new file gets every key the spec has, and a spec whose text starts with front matter keeps the file as it is. ImportSpecFile and ExportSpecFile map it the same way. Fills in [D-45].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-14.8, F-14.6]
+  why: Rewriting only the keys the file has keeps a file's other keys and layout, and a spec name made from a path never lands in a file that had none.
+  rejected:
+    - Giving every codec the front matter to handle, which each would have to repeat.
+    - Writing every key on each push, which adds a `name` made from the path to files that had none.
 ```
 
 ---

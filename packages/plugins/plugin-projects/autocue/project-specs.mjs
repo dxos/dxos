@@ -3,7 +3,7 @@
 //
 
 /**
- * A project owns several specs: a feature map and a spec of prose sit side by side, the Overview sums up each, and the
+ * A project owns several specs: a feature map and a spec of prose sit side by side, the Overview has a form for each, and the
  * Specs tab shows one at a time, picked from a dropdown in its toolbar that also adds a spec. The toolbar follows the
  * tab, a spec offers the views its packages give, another plugin's package adds slash commands that write its blocks,
  * and the feature map's canvas adds a feature in the empty cell under the pointer.
@@ -67,10 +67,12 @@ const checkPackage = (demo, label) =>
 
 const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, hold: READ });
 
+/** Waits for the Specs tab to show the spec named `name`: the picker names it and its document is drawn. */
 const waitForDocument = (page, name) =>
   page.waitForFunction(
-    ([selector, name]) => document.querySelector(selector)?.textContent.includes(`name: ${name}`),
-    [DOCUMENT, name],
+    ([picker, editor, name]) =>
+      document.querySelector(editor) !== null && document.querySelector(picker)?.textContent.includes(name),
+    [PICKER, DOCUMENT, name],
     { timeout: 10_000 },
   );
 
@@ -98,8 +100,8 @@ export const steps = [
     name: "See the project's specs",
     run: async ({ demo, page }) => {
       await demo.title({ value: 'Specs', subtitle: 'A project owns several specs' });
-      await caption(demo, 1, 'The Overview sums up each spec the project owns');
-      await expectCount(page, '[data-testid="projectsPlugin.specSummary"]', 2, 'spec summaries');
+      await caption(demo, 1, 'The Overview has a form for each spec the project owns');
+      await expectCount(page, '[data-testid="projectsPlugin.specSummary"]', 2, 'spec forms');
       await expectCount(page, ADD_ARTIFACT, 1, 'Create artifact buttons');
       await demo.hover({ selector: '[data-testid="projectsPlugin.specSummary"] >> nth=0', label: MAP_SPEC });
       await demo.sleep({ ms: 1_500 });
@@ -167,7 +169,7 @@ export const steps = [
       await page.keyboard.type(NEW_SPEC, { delay: 120 });
       await demo.click({ selector: '[data-testid="save-button"]', label: 'Create' });
       await waitForDocument(page, NEW_SPEC);
-      await caption(demo, 6, `"${NEW_SPEC}" starts as its name alone`);
+      await caption(demo, 6, `"${NEW_SPEC}" starts empty, its name the spec's own`);
       await openPicker(demo, page);
       await demo.sleep({ ms: LOOK });
       await demo.press({ key: 'Escape' });

@@ -104,7 +104,9 @@ feat F-4: A project's specs
   req F-4.1: A project owns any number of top-level specs (`Project.specs`), and each spec has at most one owner. A
              breakdown spec belongs to its feature, and only feature specs nest.
   req F-4.2: A spec (`@dxos/compute`'s `Spec`) holds a name, a description, its dialects and its document. The document
-             is the spec; the canvas, the board and any other view are lenses over it.
+             is the spec; the canvas, the board and any other view are lenses over it. A spec is part of its project,
+             not a type of its own in a space, so Create object does not offer it. Its document holds no front
+             matter: the name is the spec's, edited in the nav tree or the overview.
   req F-4.3: A spec's dialects name the dialect specs whose blocks its document uses, as data on the spec, not in its
              text. A spec with none uses the core and changelog blocks only. A breakdown spec takes the dialects of
              the spec its feature is on.
@@ -133,6 +135,8 @@ feat F-4: A project's specs
               of its kind already in the text; text before the slash becomes the block's title. The software package
               offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`, `/test` and `/table`,
               which write text only.
+  req F-4.11: The project's overview shows each spec as a form of its own within the project's, editing its name and
+              description, with a count of its features and a button that opens it on the Specs tab.
 ```
 
 ## QA
@@ -435,7 +439,7 @@ test QA-8: Switch between a project's specs
     which adds slash commands and no views. Walked by the autocue flow `project-specs` against the ProjectArticle
     story "Default", whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
   actors: human
-  covers: [F-4.1, F-4.4, F-4.5, F-4.7, F-4.8, F-4.9, F-4.10]
+  covers: [F-4.1, F-4.2, F-4.4, F-4.5, F-4.7, F-4.8, F-4.9, F-4.10, F-4.11]
   status: unverified
   given:
     - storybook serves plugin-projects
@@ -446,8 +450,8 @@ test QA-8: Switch between a project's specs
   steps:
     - name: See the project's specs
       do: Open the project "Project 1" on its Overview.
-      expect: one summary line per spec, "Inbox and agents" counting its features and then "Launch talk", and the
-        toolbar offers Create artifact
+      expect: one form per spec, "Inbox and agents" with its name, description and feature counts and then "Launch
+        talk", each with Open spec, and the toolbar offers Create artifact
     - name: Open the Specs tab
       do: Click the Specs tab.
       expect: the tab shows "Inbox and agents", whose document embeds each of its features as a section, and the
@@ -464,7 +468,7 @@ test QA-8: Switch between a project's specs
         Kanban
     - name: Add a spec
       do: Click Add spec in the dropdown, name the spec "Launch video" and click Create.
-      expect: the tab shows "Launch video", whose document is its front matter alone, and the dropdown lists it third
+      expect: the tab shows "Launch video", whose document is empty, and the dropdown lists it third
     - name: Give it the video package
       do: Open Extensions and check Video.
       expect: Video is checked and no view toggle appears
@@ -1204,4 +1208,59 @@ decision D-83: The sample Video package is a testing plugin, `VideoPackagePlugin
   why: A package from a plugin other than this one shows that the menu and the slash commands are open to any plugin.
   rejected:
     - Contributing the video package from this plugin, which would ship a sample in the product.
+```
+
+```mdl
+decision D-84: Specs are a part of their project, not a separate top-level user type, so the Create object dialog does not offer Spec. Add spec opening the generic Create object form with the type set to Spec is fine.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-85: A spec in Composer has no front matter: what front matter holds goes into the object's structured data. Its name is the object's name, edited in the nav tree or the overview, and the rest of the front matter is editable from the overview. Text that already starts with front matter stays; newly created specs stop getting it.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2, F-4.11]
+```
+
+```mdl
+decision D-86: The project overview shows each spec as a nested form within the project's form, where its data is edited. The form edits the spec in place, and a button on it opens the spec on the Specs tab; there is no spec overview yet.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-87: `Spec` drops its user-type annotation, so neither Create object nor the nav tree's type sections list it; Add spec still opens the Spec form, which the dialog resolves from every create entry. `Spec.make` starts with empty text and `FeatureMap.make` with `## Features` and its embeds; `Spec.makeContent` goes. Fills in [D-84] and [D-85].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.2]
+  why: The annotation is what marks a type as one a person creates and browses on its own in a space.
+  rejected:
+    - Filtering Spec out of the dialog's list alone, which would leave it in the nav tree's type sections.
+    - Stripping front matter from existing texts, which [D-85] leaves as they are.
+```
+
+```mdl
+decision D-88: Each spec's form edits `name` and `description`, picked from the `Spec` schema, and reads them once per spec, as the project's form does. Below it are the feature counts and Open spec, which shows the spec on the Specs tab. Fills in [D-86].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.11]
+  why: A form per spec keeps the overview one form of forms, and a name and description are the fields a spec of any dialect has.
+  rejected:
+    - Keeping the name as a button that opens the spec, which leaves nowhere to edit it.
+```
+
+```mdl
+decision D-89: QA-8 expects a form per spec with Open spec on the Overview, and an empty document for a new spec. Fills in [D-85] and [D-86].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 walks the overview and Add spec, which those decisions change.
+  rejected:
+    - A separate test for the overview's forms, which would repeat QA-8's first step.
 ```

@@ -313,7 +313,7 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
         documents.set(id, held);
       }
       members.set(id, (await Ref.loadAll(features)).filter(Feature.instanceOf));
-      const content = held?.content ?? Ref.make(db.add(Text.make({ content: Spec.makeContent(name) })));
+      const content = held?.content ?? Ref.make(db.add(Text.make({ content: '' })));
       const keys = [...Obj.getMeta(from).keys, ...(held ? Obj.getMeta(held).keys : [])]
         .filter(
           (key, index, all) => all.findIndex(({ source, id }) => source === key.source && id === key.id) === index,

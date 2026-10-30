@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Annotation, type Entity, Obj, Ref } from '@dxos/echo';
-import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
 import * as FeatureEmbed from './FeatureEmbed.ts';
@@ -157,24 +156,19 @@ export type MakeProps = Omit<Spec.MakeProps, 'content'> & {
   features?: readonly Feature.Feature[];
 };
 
-/** A spec in the software package holding `features`, its text headed with its name and embedding each of them. */
+/** A spec in the software package holding `features`, its text embedding each of them. */
 export const make = ({ features = [], dialects = SOFTWARE_DIALECTS, ...props }: MakeProps): Spec.Spec => {
-  const spec = Spec.make({ ...props, dialects, content: makeContent(props.name, features) });
+  const spec = Spec.make({ ...props, dialects, content: makeContent(features) });
   if (features.length > 0) {
     setFeatures(spec, features);
   }
   return spec;
 };
 
-/** A spec's starting text: front matter naming it, then an embed of each feature, under `## Features`. */
-export const makeContent = (name: string, features: readonly Feature.Feature[] = []): string => {
-  const header = trim`
-    ---
-    name: ${name}
-    ---
-  `;
+/** A spec's starting text: an embed of each feature under `## Features`, or nothing for none. */
+export const makeContent = (features: readonly Feature.Feature[] = []): string => {
   const embeds = features.map((feature) => FeatureEmbed.make({ label: feature.name, uri: Obj.getURI(feature) }));
-  return embeds.length > 0 ? `${header}\n\n## Features\n\n${embeds.join('\n\n')}\n` : header;
+  return embeds.length > 0 ? `## Features\n\n${embeds.join('\n\n')}\n` : '';
 };
 
 /** The spec whose map lists the feature: its ECHO parent. */

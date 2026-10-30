@@ -25,7 +25,8 @@ import exportSpecFile from './export-spec-file.ts';
 import importSpecFile from './import-spec-file.ts';
 import { loadSpecText } from './spec-file.ts';
 
-const SPEC = ['---', 'id: org.example', '---', '', 'F-1: one', 'F-2: two', 'F-3: three', ''].join('\n');
+const BODY = ['F-1: one', 'F-2: two', 'F-3: three', ''].join('\n');
+const SPEC = ['---', 'id: org.example', '---', '', BODY].join('\n');
 
 const FEATURES = ['# Mail', '', '```mdl', 'feat F-1: Sync', '```', '', '```mdl', 'feat F-2: Compose', '```', ''].join(
   '\n',
@@ -76,9 +77,12 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
       }),
     );
     const spec = await run(Database.load(created.object));
-    expect(Obj.instanceOf(Spec.Spec, spec) && spec.name).toBe('plugin-code/PLUGIN.mdl');
+    invariant(Spec.instanceOf(spec), 'Missing spec.');
+    expect(spec.name).toBe('plugin-code/PLUGIN.mdl');
+    // The front matter is the spec's meta, and the text holds what follows it.
+    expect(Obj.getMeta(spec).key).toBe('org.example');
     const { text } = await run(loadSpecText(created.object));
-    expect(text.content).toBe(SPEC);
+    expect(text.content).toBe(BODY);
 
     // A Composer user edits F-1; meanwhile the file's F-3 changed on GitHub.
     Doc.updateText(text, 'content', text.content.replace('F-1: one', 'F-1: one, local'));
@@ -94,9 +98,10 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
       }),
     );
 
-    expect(text.content).toBe(SPEC.replace('F-1: one', 'F-1: one, local').replace('F-3: three', 'F-3: three, remote'));
-    const exported = await run(exportSpecFile.handler({ object: merged.object, path: 'PLUGIN.mdl' }));
-    expect(exported.content).toBe(text.content);
+    const file = SPEC.replace('F-1: one', 'F-1: one, local').replace('F-3: three', 'F-3: three, remote');
+    expect(text.content).toBe(BODY.replace('F-1: one', 'F-1: one, local').replace('F-3: three', 'F-3: three, remote'));
+    const exported = await run(exportSpecFile.handler({ object: merged.object, path: 'PLUGIN.mdl', base: remote }));
+    expect(exported.content).toBe(file);
   });
 
   test('a file of feat blocks becomes a spec of features, and a remote change merges with a local edit', async ({

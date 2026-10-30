@@ -73,6 +73,7 @@ export const translations = [
         'untitled-spec.label': 'Untitled spec',
         'spec.empty.message': 'No spec yet. A spec describes what this work delivers.',
         'feature-spec.empty.message': 'This feature has no spec of its own. Add one to break it down.',
+        'open-spec.label': 'Open spec',
         'spec-summary.features.label_one': '{{count}} feature',
         'spec-summary.features.label_other': '{{count}} features',
         'spec-summary.open-tasks.label_one': '{{count}} has open tasks',

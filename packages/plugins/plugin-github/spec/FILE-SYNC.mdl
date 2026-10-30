@@ -458,7 +458,7 @@ feat F-6: Deus specs
 
   req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpecFile and ExportSpecFile.
 
-  req F-6.2: Spec.content is Text, so specs merge character by character. A spec a `ProjectCapabilities.SpecCodec` writes merges as the file text the codec renders, which the codec reads back; the engine runs no `.mdl` parser itself.
+  req F-6.2: Spec.content is Text, so specs merge character by character. A spec a `ProjectCapabilities.SpecCodec` writes merges as the file text the codec renders, which the codec reads back; the engine runs no `.mdl` parser itself. A file's front matter is the spec's name and meta rather than its text, so only what follows it merges into the text.
 ```
 
 ## Acceptance
@@ -711,4 +711,22 @@ decision D-22: The codec is renamed `ProjectCapabilities.SpecCodec` and writes a
   for: user:wittjosiah
   affects: [F-6.2]
   why: The codec's subject is now the spec itself, and a prose spec keeps the character merge F-6.2 gives every spec.
+```
+
+```mdl
+decision D-23: A spec in Composer has no front matter: a file's front matter goes into the spec's structured data and meta.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-6.2]
+```
+
+```mdl
+decision D-24: ImportSpecFile and ExportSpecFile merge only the text after a file's front matter, and plugin-code maps the front matter to the spec's name and meta. Fills in [D-23].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.2]
+  why: The text holds what follows the front matter, so the merge runs on that part of each version of the file.
+  rejected:
+    - Merging whole files and stripping the front matter afterwards, which would merge front matter the text never holds.
 ```

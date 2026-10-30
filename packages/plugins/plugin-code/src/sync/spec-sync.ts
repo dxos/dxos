@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
+import * as FrontMatter from './front-matter.ts';
 import { resolvePath } from './repo-roots.ts';
 import { fromMetaKey } from './spec-key.ts';
 
@@ -149,11 +150,18 @@ export const syncSpec = Effect.fnUntraced(
     }
 
     const base = yield* bases.get(spec.id);
-    const local = (yield* writeThrough(codecs, spec, base)) ?? text.content;
+    // The file's front matter is the spec's fields, so codecs and the text see only what follows it.
+    const form = FrontMatter.fileForm(text.content);
+    const local = form.write(
+      spec,
+      (yield* writeThrough(codecs, spec, base === undefined ? undefined : form.body(base))) ?? text.content,
+      base,
+    );
     const { action, status } = reconcile({ local, disk, base });
     if (action === 'pull') {
-      if (!(yield* readThrough(codecs, spec, disk, key.path))) {
-        Doc.updateText(text, ['content'], disk);
+      const next = form.read(spec, disk);
+      if (!(yield* readThrough(codecs, spec, next, key.path))) {
+        Doc.updateText(text, ['content'], next);
       }
     } else if (action === 'push') {
       yield* fs.write(path, local);

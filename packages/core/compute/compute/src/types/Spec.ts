@@ -12,7 +12,9 @@ import { Text } from '@dxos/schema';
 /**
  * A spec: normative `.mdl` text that its project's work delivers. Its dialects say which block kinds beyond the core
  * and changelog ones the text uses, which a plugin then extracts into objects of its own and keeps as annotations on
- * the spec. A project owns its specs (`Project.specs`).
+ * the spec. A project owns its specs (`Project.specs`), so a spec is not a type of its own in a space. A `.mdl` file's
+ * front matter is the spec's fields and meta rather than its text: `name` is `name`, `id` and `version` are the
+ * meta's `key` and `version`.
  */
 export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.3.0'))(
   Schema.Struct({
@@ -39,13 +41,12 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'violet' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
 export type MakeProps = Omit<Obj.MakeProps<typeof Spec>, 'dialects' | 'content'> &
   Partial<Pick<Obj.MakeProps<typeof Spec>, 'dialects'>> & {
-    /** The `.mdl` text; defaults to {@link makeContent}. */
+    /** The `.mdl` text, without front matter; empty by default. */
     content?: string;
   };
 
@@ -54,10 +55,7 @@ export const make = ({ content, dialects = [], ...props }: MakeProps): Spec =>
   Obj.make(Spec, {
     ...props,
     dialects: [...dialects],
-    content: Ref.make(Text.make({ content: content ?? makeContent(props.name) })),
+    content: Ref.make(Text.make({ content: content ?? '' })),
   });
-
-/** A spec's starting text: front matter naming it. */
-export const makeContent = (name: string): string => ['---', `name: ${name}`, '---'].join('\n');
 
 export const instanceOf = (value: unknown): value is Spec => Obj.instanceOf(Spec, value);

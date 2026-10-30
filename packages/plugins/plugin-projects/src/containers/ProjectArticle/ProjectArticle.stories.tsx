@@ -70,16 +70,13 @@ const SPEC_NAME = 'Inbox and agents';
 const TALK_SPEC_NAME = 'Launch talk';
 const NEW_SPEC_NAME = 'Launch video';
 const TALK_SPEC_CONTENT = [
-  '---',
-  `name: ${TALK_SPEC_NAME}`,
-  '---',
-  '',
   'A ten-minute talk that introduces Composer to people who have not used it.',
   '',
   'It opens on a space someone already works in, then shows the same space on a second device.',
   '',
   'It ends by asking the audience to try it on their own notes.',
 ].join('\n');
+const RENAMED_SPEC_NAME = 'Launch keynote';
 const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
@@ -417,8 +414,8 @@ export const Default: Story = {
 };
 
 /**
- * A project with a spec: the overview counts the spec's features, and its Spec tab shows the spec, its document first.
- * The summary's name opens the tab, and the map's controls join the project's toolbar.
+ * A project with a spec: the overview shows the spec's form and counts its features, and its Spec tab shows the spec,
+ * its document first. The form's Open spec opens the tab, and the map's controls join the project's toolbar.
  */
 export const WithSpec: Story = {
   ...Default,
@@ -429,7 +426,8 @@ export const WithSpec: Story = {
     await expect(summaries).toHaveLength(2);
     const [summary] = summaries;
     await waitFor(() => expect(summary.textContent).toMatch(/\d+ features/), { timeout: 10_000 });
-    await userEvent.click(within(summary).getByRole('button', { name: SPEC_NAME }));
+    await expect(within(summary).getByDisplayValue(SPEC_NAME)).toBeTruthy();
+    await userEvent.click(within(summary).getByTestId('projectsPlugin.openSpec'));
     await expect(canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
     await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
@@ -493,15 +491,37 @@ export const AddExistingFeature: Story = {
   },
 };
 
-/** The Spec tab opens on the spec's `.mdl` document, made with the spec and headed with its name. */
+/** A spec's form in the overview edits the spec: a new name is the one the Specs tab shows. */
+export const SpecForms: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    const name = await canvas.findByDisplayValue(TALK_SPEC_NAME, undefined, { timeout: 10_000 });
+    await userEvent.clear(name);
+    await userEvent.type(name, RENAMED_SPEC_NAME);
+    const summary = name.closest<HTMLElement>('[data-testid="projectsPlugin.specSummary"]');
+    if (!summary) {
+      throw new Error('no spec form');
+    }
+    await userEvent.click(within(summary).getByTestId('projectsPlugin.openSpec'));
+    await expectSpecShown(canvas, RENAMED_SPEC_NAME);
+  },
+};
+
+/** The Spec tab opens on the spec's `.mdl` document, which holds its text and no front matter: the name is the spec's. */
 export const SpecDocument: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
     await showTab(canvas, 'spec');
-    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(document.textContent).toContain(`name: ${SPEC_NAME}`), { timeout: 10_000 });
+    await expectSpecShown(canvas, SPEC_NAME);
+    const document = canvas.getByTestId('feature-map.document');
+    await waitFor(() => expect(within(document).getAllByTestId('feature-embed').length).toBeGreaterThan(0), {
+      timeout: 10_000,
+    });
+    await expect(document.textContent).not.toContain('name:');
   },
 };
 
@@ -512,17 +532,13 @@ export const SpecPicker: Story = {
     const canvas = within(canvasElement);
     await seedContent();
     await showTab(canvas, 'spec');
-    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(document.textContent).toContain(`name: ${SPEC_NAME}`), { timeout: 10_000 });
+    await expectSpecShown(canvas, SPEC_NAME);
 
     await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
     const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
     await expect(within(menu).getByText(SPEC_NAME)).toBeTruthy();
     await userEvent.click(within(menu).getByText(TALK_SPEC_NAME));
-    await waitFor(
-      () => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${TALK_SPEC_NAME}`),
-      { timeout: 10_000 },
-    );
+    await expectSpecShown(canvas, TALK_SPEC_NAME);
     // A spec of prose has only its text, so there is no view toggle.
     await expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull();
 
@@ -534,20 +550,26 @@ export const SpecPicker: Story = {
     await userEvent.click(await screen.findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
     await userEvent.paste(NEW_SPEC_NAME);
     await userEvent.click(screen.getByTestId('save-button'));
-    await waitFor(
-      () => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${NEW_SPEC_NAME}`),
-      { timeout: 10_000 },
-    );
+    await expectSpecShown(canvas, NEW_SPEC_NAME);
   },
+};
+
+/** Waits for the Specs tab to show the spec named `name`: the picker names it and its document is drawn. */
+const expectSpecShown = async (canvas: ReturnType<typeof within>, name: string) => {
+  await waitFor(
+    () => {
+      canvas.getByTestId('feature-map.document');
+      return expect(canvas.getByTestId('projectsPlugin.specPicker').textContent).toContain(name);
+    },
+    { timeout: 10_000 },
+  );
 };
 
 /** Opens the spec picker and shows the spec named `name`. */
 const pickSpec = async (canvas: ReturnType<typeof within>, name: string) => {
   await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
   await userEvent.click(within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(name));
-  await waitFor(() => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${name}`), {
-    timeout: 10_000,
-  });
+  await expectSpecShown(canvas, name);
 };
 
 /** Adds a spec named `name` from the picker, which then shows it. */
@@ -558,9 +580,7 @@ const addSpec = async (canvas: ReturnType<typeof within>, name: string) => {
   await userEvent.click(await within(dialog).findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
   await userEvent.paste(name);
   await userEvent.click(screen.getByTestId('save-button'));
-  await waitFor(() => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${name}`), {
-    timeout: 10_000,
-  });
+  await expectSpecShown(canvas, name);
 };
 
 /** Opens the Extensions menu and returns the item of the package labelled `label`. */
@@ -644,8 +664,7 @@ export const WithoutSpec: Story = {
 
     await showTab(canvas, 'spec');
     await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));
-    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(document.textContent).toContain('name:'), { timeout: 10_000 });
+    await expectSpecShown(canvas, OTHER_PROJECT_NAME);
     await expect(canvas.queryByTestId('projectsPlugin.spec.empty')).toBeNull();
   },
 };

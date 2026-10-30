@@ -16,6 +16,7 @@ import * as FeatureMap from '@dxos/plugin-projects/FeatureMap';
 import * as SpecText from '@dxos/plugin-projects/SpecText';
 import { Text } from '@dxos/schema';
 
+import * as FrontMatter from './front-matter.ts';
 import { detectRepo, parseGitConfigRemote, parseRepoEntry, resolvePath, resolveRoots } from './repo-roots.ts';
 import { fromMetaKey, keyFromTreeUrl, toMetaKey } from './spec-key.ts';
 import { SyncBases, reconcile, syncSpec } from './spec-sync.ts';
@@ -74,6 +75,24 @@ describe('source keys', () => {
         path: 'packages/plugins/plugin-code/PLUGIN.mdl',
       },
     );
+  });
+});
+
+describe('front matter', () => {
+  test("a file's front matter becomes the spec's name and meta, and its text what follows", ({ expect }) => {
+    const spec = Spec.make({ name: 'PLUGIN.mdl' });
+    const text = FrontMatter.read(spec, '---\nid: org.example\nname: Example\nversion: 0.1.0\n---\n\nBody\n');
+    expect(text).toBe('Body\n');
+    expect(spec.name).toBe('Example');
+    expect(Obj.getMeta(spec)).toMatchObject({ key: 'org.example', version: '0.1.0' });
+  });
+
+  test('writing rewrites only the keys the file has, keeping its other lines', ({ expect }) => {
+    const spec = Spec.make({ name: 'Renamed' });
+    const base = '---\nname: Example\nstatus: draft\n---\nOld\n';
+    expect(FrontMatter.write(spec, 'New\n', base)).toBe('---\nname: Renamed\nstatus: draft\n---\nNew\n');
+    expect(FrontMatter.write(spec, 'New\n', 'Old\n')).toBe('New\n');
+    expect(FrontMatter.write(spec, 'New\n')).toBe('---\nname: Renamed\n---\n\nNew\n');
   });
 });
 
