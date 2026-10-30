@@ -3,7 +3,7 @@
 //
 
 import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
-import { type Extension, Transaction } from '@codemirror/state';
+import { type Extension, Prec, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 import { type FunctionComponent } from 'react';
 
@@ -123,7 +123,12 @@ export const featureEmbeds = ({
     return {};
   });
 
+  // The editor keeps the scroll position itself. The browser's own anchoring prefers the focused element, so a focused
+  // embed scrolled out of the rendered range pulls the view back toward it.
+  const anchoring = Prec.high(EditorView.theme({ '.cm-scroller': { overflowAnchor: 'none' } }));
+
   return [
+    anchoring,
     linkWidgets<ObjectLinkProps>({
       match: matchSchemes(OBJECT_URL_SCHEMES),
       image: { Component, keepAlive: true },
