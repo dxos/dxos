@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { MermaidEngine } from '@dxos/diagram';
+import { Dsl, MermaidEngine } from '@dxos/diagram';
 import { Database, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -118,6 +118,29 @@ describe('CanvasLayoutBuilder', () => {
     makeLayoutWriter(opened).write({ ...views, [view.id]: moved }, views);
     expect(layout.elements[id].center?.x).toBe(node.center.x + 64);
     expect({ ...layout.elements[id].dsl }).toEqual(identity);
+  });
+
+  test("the Draw path: semantic .dx compiles onto the canvas's Layout2D, and recompiling an edit updates those elements", async () => {
+    const source = 'diagram flow=right\nnode A "Alpha"\nnode B "Beta"\nedge A -> B "calls"';
+    const first = await EffectEx.runPromise(Dsl.compile(source));
+    expect(first.problems.filter(({ severity }) => severity === 'error')).toEqual([]);
+    const canvas = await run(addCanvas());
+    CanvasLayoutBuilder.apply(canvas, first.commands);
+    const layout = layoutOf(canvas);
+    const managed = () => Object.values(layout.elements).filter((element) => element.dsl !== undefined);
+    const ids = managed()
+      .map((element) => element.id)
+      .sort();
+    expect(managed().map((element) => element.dsl?.object)).toEqual(expect.arrayContaining(['A', 'B']));
+    const second = await EffectEx.runPromise(Dsl.compile(source.replace('"Beta"', '"Gamma"')));
+    CanvasLayoutBuilder.apply(canvas, second.commands);
+    expect(
+      managed()
+        .map((element) => element.id)
+        .sort(),
+    ).toEqual(ids);
+    expect(Object.values(layout.elements).some((element) => element.label === 'Gamma')).toBe(true);
+    expect(Object.values(layout.elements).some((element) => element.label === 'Beta')).toBe(false);
   });
 
   test('a second apply updates the elements it manages rather than adding more', async () => {
