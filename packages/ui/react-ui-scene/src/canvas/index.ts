@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './adapter.ts';
 export * from './graph.ts';
 export * from './kinds.ts';
 export * from './mode.ts';

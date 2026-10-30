@@ -12,8 +12,8 @@
 import { type ContentMap, applyCommands } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import type * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
+import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type View, type ViewMap } from '@dxos/react-ui-canvas/headless';
-import { toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { Scene, fromEcho } from '@dxos/scene';
 
 import { Canvas } from '#types';
@@ -57,7 +57,7 @@ export const readCanvasContent = (canvas: Canvas.Canvas): ContentMap => {
   const root = scene.layout.target?.key ?? scene.key;
   content[CANVAS_KEY] = { kind: 'canvas', root, ...clone(canvas.settings) };
   const views: ViewMap = Object.fromEntries(
-    doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toCanvasView(doc, layout)]] : [])),
+    doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toRenderList2D(doc, layout)]] : [])),
   );
   writeViews(content, views);
   for (const layout of doc.layouts) {

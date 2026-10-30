@@ -5,12 +5,13 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { type Camera, Canvas, type NodeRegistry, createCanvasAtoms } from '@dxos/react-ui-canvas';
+import { type Camera, Canvas, type NodeRegistry, createCanvasAtoms, createMemoryStore } from '@dxos/react-ui-canvas';
+import { toRenderLists2D } from '@dxos/react-ui-canvas/headless';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { latticesKey, layoutProjection, toCanvasViews } from '../../canvas/index.ts';
+import { latticesKey, layoutProjection } from '../../canvas/index.ts';
 import { type Theme3D, liftScene } from '../../three/index.ts';
 import { Scene3DView } from '../Scene3DView/index.ts';
 
@@ -77,11 +78,14 @@ const CanvasView = ({
   // One store and one set of canvas atoms per root; later documents (an animation's samples) are written into them,
   // so the canvas updates in place rather than remounting each frame.
   const [{ store, atoms, rootId }] = useState(() => {
-    const { store, root } = toCanvasViews(document, scene);
-    return { store, atoms: createCanvasAtoms(root), rootId: root };
+    const { lists, root } = toRenderLists2D(document, scene);
+    return { store: createMemoryStore(lists, {}, { root }), atoms: createCanvasAtoms(root), rootId: root };
   });
   useLayoutEffect(() => {
-    registry.set(store.views, Object.fromEntries(toCanvasViews(document, scene).views.map((view) => [view.id, view])));
+    registry.set(
+      store.views,
+      Object.fromEntries(toRenderLists2D(document, scene).lists.map((list) => [list.id, list])),
+    );
   }, [registry, store, document, scene]);
 
   const containerRef = useRef<HTMLDivElement>(null);

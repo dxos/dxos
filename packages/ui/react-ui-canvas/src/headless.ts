@@ -21,3 +21,4 @@ export * from './utils/layers.ts';
 export * from './utils/order.ts';
 export * from './utils/shapes.ts';
 export * from './utils/wheel.ts';
+export * from './viewport2d/render-list.ts';

@@ -276,6 +276,14 @@ intent, { snap })` is applied by `SceneEditor` to every write (gestures, command
   driving the engine directly, the second on its timeline); react-ui-canvas-compute `node-def.test.tsx`
   (`NodeViewProps.store`); plugin-lighthouse's unrelated `type Intent`. `layout-writer.test.ts` no longer uses
   `reduceIntent`. Cost if wrong: none; the decision is the user's.
+- **R-66 (2026-10-30, agent, C.1): the render list is the View adapter moved into react-ui-canvas.** `RenderList2D` (in
+  `viewport2d/render-list.ts`) is a layout's elements resolved against the document's objects and named styles into the
+  engine's node and link shapes (the `@dxos/scene` shape catalog), with the layout's layers; `toRenderList2D(doc,
+layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layout, the scene's first;
+  `fromRenderList2D` is the write side, `styleClasses`/`namedStyles` the style mapping. `SceneLayer` draws a
+  `RenderList2D`. Kind fields stay lowered by react-ui-scene's viewport (R-42), so no registry parameter. Rejected: a
+  `RenderItem2D` of `Element2D` plus resolved `Style2D`, which would retype every node view (react-ui-canvas, compute,
+  UML, plugin-canvas) for no change in what is drawn. Cost if wrong: node views retyped to elements later.
 
 ## Global Constraints
 
@@ -836,8 +844,8 @@ from `RenderItem2D` (resolved element + resolved `Style2D`) instead of `View` no
   (`kind → { name, icon, schema, render, fields, animatable }`).
 - **Parity:** 2D-only render list; 3D already has `renderList`. Shared: object/style resolution.
 
-- [ ] **Steps:** failing test `test('the corpus renders every node and link type', …)` (count and kinds) → implement
-      → PASS → commit `react-ui-canvas: 2D render list over Layout2D`.
+- [x] **Steps:** failing test `test('the corpus renders every node and link type', …)` (count and kinds) → implement
+      → PASS → commit `react-ui-canvas: 2D render list over Layout2D`. (R-66)
 
 ### Task C.2: 2D gestures emit intents; previews in memory
 

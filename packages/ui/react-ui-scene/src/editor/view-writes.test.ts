@@ -5,9 +5,9 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import { type View, createNode } from '@dxos/react-ui-canvas';
+import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
-import { toCanvasView } from '../canvas/index.ts';
 import { type ViewWrite, applyViewWrites, viewWrites } from './view-writes.ts';
 
 const rects = (count: number): Record<string, Scene.Element2D> =>
@@ -48,7 +48,7 @@ const flat = (intent: LayoutIntent): LayoutIntent[] =>
 describe('viewWrites', () => {
   test('a drag of 200 elements writes once, to the layout that owns them', () => {
     const doc = document(rects(200));
-    const view = toCanvasView(doc, layoutOf(doc));
+    const view = toRenderList2D(doc, layoutOf(doc));
     const writes = viewWrites(doc, { main: view }, { main: moved(view, 10) });
     expect(writes).toHaveLength(1);
     const [write] = writes;
@@ -59,13 +59,13 @@ describe('viewWrites', () => {
 
   test('a View that did not change writes nothing', () => {
     const doc = document(rects(3));
-    const view = toCanvasView(doc, layoutOf(doc));
+    const view = toRenderList2D(doc, layoutOf(doc));
     expect(viewWrites(doc, { main: view }, { main: view })).toEqual([]);
   });
 
   test('a moved element keeps the fields other writers own (its DSL identity)', () => {
     const doc = document({ a: { ...rects(1).r0, id: 'a', dsl: { object: 'A', element: 'a' } } });
-    const view = toCanvasView(doc, layoutOf(doc));
+    const view = toRenderList2D(doc, layoutOf(doc));
     const [write] = viewWrites(doc, { main: view }, { main: moved(view, 10) });
     const [update] = write.kind === 'layout' ? flat(write.intent) : [];
     expect(update).toMatchObject({
@@ -78,7 +78,7 @@ describe('viewWrites', () => {
   test('a node the engine creates is written as an element the layout accepts', () => {
     const doc = document(rects(1));
     const layout = layoutOf(doc);
-    const view = toCanvasView(doc, layout);
+    const view = toRenderList2D(doc, layout);
     const node = {
       ...createNode({ type: 'rect', id: 'n', z: 'b0', center: { x: 64, y: 64 }, size: { width: 64, height: 64 } }),
       layer: 'default',
@@ -92,7 +92,7 @@ describe('viewWrites', () => {
 
   test("a new portal writes its scene's layout, then the object it places, then the element placing it", () => {
     const doc = document({});
-    const view = toCanvasView(doc, layoutOf(doc));
+    const view = toRenderList2D(doc, layoutOf(doc));
     const portal = {
       type: 'view' as const,
       id: 'p',

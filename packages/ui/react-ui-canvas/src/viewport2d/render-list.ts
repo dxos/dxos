@@ -3,18 +3,11 @@
 //
 
 import {
-  DEFAULT_LAYER,
-  type MemoryViewStore,
-  type View,
-  createMemoryStore,
-  createNode,
-  initialKeys,
-} from '@dxos/react-ui-canvas/headless';
-import {
   type Bounds,
   type BuiltinNodeType,
   type ElementEndpoint,
   type Endpoint,
+  type Layer,
   type Link,
   type LinkType,
   type NamedStyle2D,
@@ -33,6 +26,23 @@ import {
   rootScene,
   sceneLayout,
 } from '@dxos/scene';
+
+import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
+
+/**
+ * What the 2D engine draws for one layout (COMMON-CORE C.1): its elements resolved against the document's objects and
+ * styles into the engine's node and link shapes, with the layout's layers. Derived from the layout on every change and
+ * never stored or edited: the engine's edits reach the document as `LayoutIntent`s.
+ */
+export type RenderList2D = {
+  readonly id: ViewId;
+  readonly name?: string;
+  readonly nodes: Readonly<Record<string, Node>>;
+  readonly links: Readonly<Record<string, Link>>;
+  readonly layers?: Readonly<Record<string, Layer>>;
+  readonly kind?: Scene.LayoutKind;
+  readonly anonymous?: boolean;
+};
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {
@@ -94,7 +104,7 @@ const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame
   };
 };
 
-/** A composite element (its object has parts) is a `view` node over its parts layout's View. */
+/** A composite element (its object has parts) is a `view` node over its parts layout's render list. */
 const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string, layer: string): Node | undefined => {
   const type = element.parts !== undefined ? 'view' : NODE_TYPES[element.type];
   if (!type || !element.center) {
@@ -164,8 +174,8 @@ const toLink = (
 };
 
 //
-// Canvas Views written as layouts: every field the scene model has no slot for is kept under `props.canvas`, so a
-// View read back from its layout is the View that was written.
+// Render lists written as layouts: every field the scene model has no slot for is kept under `props.canvas`, so a
+// render list read back from its layout is the one that was written.
 //
 
 type Fields = Record<string, unknown>;
@@ -219,7 +229,7 @@ const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.El
   const fields: Fields = { ...node };
   const extra = canvasExtra(fields, NODE_SLOTS);
   let placed: { object: string } | { type: string };
-  // The node type and its scene or composite are kept too: a portal to a View outside the drawing places an object
+  // The node type and its scene or composite are kept too: a portal to a layout outside the drawing places an object
   // whose parts resolve to no layout, and must still read back as that portal.
   if (node.type === 'view' && typeof fields.scene === 'string') {
     const object = { id: `${VIEW_PREFIX}${fields.scene}`, type: 'rect', parts: fields.scene };
@@ -267,11 +277,11 @@ const linkElement = (link: Link): Scene.Element2D => {
 };
 
 /**
- * A react-ui-canvas View as a 2D layout and the objects its portals and instances place: a `view` node places the
- * composite object `view:<scene>`, an `instance` node the object `instance:<composite>`, each with the inner View as
- * its parts. {@link toCanvasView} reads the View back unchanged.
+ * A render list as a 2D layout and the objects its portals and instances place: a `view` node places the composite
+ * object `view:<scene>`, an `instance` node the object `instance:<composite>`, each with the inner layout as its parts.
+ * {@link toRenderList2D} reads the list back unchanged.
  */
-export const fromCanvasView = (view: View): { layout: Scene.LayoutRecord2D; objects: Scene.Object2D[] } => {
+export const fromRenderList2D = (view: RenderList2D): { layout: Scene.LayoutRecord2D; objects: Scene.Object2D[] } => {
   const objects = new Map<string, Scene.Object2D>();
   const elements: Record<string, Scene.Element2D> = {};
   for (const node of Object.values(view.nodes)) {
@@ -300,7 +310,7 @@ const canvasStyle = (style: Style2D | undefined, extra: unknown): Fields | undef
   return nonEmpty(merged);
 };
 
-/** An element written by {@link fromCanvasView} as the node it was. */
+/** An element written by {@link fromRenderList2D} as the node it was. */
 const canvasNode = (doc: Scene.SceneDocument, element: Resolved2D, canvas: Fields): Node | undefined => {
   const scaled = scaledFrame(doc, element);
   const center = scaled?.center ?? element.center;
@@ -356,7 +366,7 @@ const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = {
 
 const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
 
-/** A link element written by {@link fromCanvasView} as the link it was. */
+/** A link element written by {@link fromRenderList2D} as the link it was. */
 const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
   const { style: extraStyle, type: storedType, source, target, points, ...extra } = canvas;
   const sourceEnd = toEndpoint(element.source, source);
@@ -391,21 +401,21 @@ const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
 };
 
 /**
- * A 2D layout as a react-ui-canvas View. A layout {@link fromCanvasView} wrote reads back as the View it was; any
+ * A 2D layout as the engine's render list. A layout {@link fromRenderList2D} wrote reads back as the list it was; any
  * other (a `.dx` document's) is drawn with the default layer and the scene kinds react-ui-canvas has nodes for.
  */
-export const toCanvasView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View =>
+export const toRenderList2D = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D =>
   layout.layers !== undefined ||
   layout.kind !== undefined ||
   Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
     ? storedView(doc, layout)
     : toView(doc, layout);
 
-/** An element's layer when its layout declares it; otherwise the default layer, which the View then declares. */
+/** An element's layer when its layout declares it; otherwise the default layer, which the list then declares. */
 const layerOf = (layout: Scene.LayoutRecord2D, element: Resolved2D): string =>
   element.layer !== undefined && layout.layers?.[element.layer] !== undefined ? element.layer : DEFAULT_LAYER.id;
 
-const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View => {
+const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D => {
   // A canvas node resolves its class itself, so it reads back its own overrides rather than the resolved look.
   const own = (element: Resolved2D): Resolved2D => ({ ...element, overrides: layout.elements[element.id]?.overrides });
   const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
@@ -454,7 +464,7 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Vie
   };
 };
 
-const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View => {
+const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D => {
   const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
   const keys = initialKeys(elements.length);
   const nodes: Record<string, Node> = {};
@@ -471,18 +481,16 @@ const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View =>
 };
 
 /**
- * A document's 2D layouts as react-ui-canvas Views, one per layout, in a store the canvas reads; the scene's layout is
- * the root and comes first, and a composite element is a `view` node over its parts layout's View. 3D layouts are
- * left out.
+ * A document's 2D layouts as render lists, one per layout; the scene's layout is the root and comes first, and a
+ * composite element is a `view` node over its parts layout's list. 3D layouts are left out.
  */
-export const toCanvasViews = (
+export const toRenderLists2D = (
   doc: Scene.SceneDocument,
   scene: Scene.SceneRecord | undefined = rootScene(doc),
-): { views: View[]; store: MemoryViewStore; root: ViewId } => {
+): { lists: RenderList2D[]; root: ViewId } => {
   const rootLayout = sceneLayout(doc, scene)?.id;
-  const views = doc.layouts
-    .flatMap((layout) => (layout.dim === '2d' ? [toCanvasView(doc, layout)] : []))
+  const lists = doc.layouts
+    .flatMap((layout) => (layout.dim === '2d' ? [toRenderList2D(doc, layout)] : []))
     .sort((left, right) => Number(right.id === rootLayout) - Number(left.id === rootLayout));
-  const root = views[0]?.id ?? '';
-  return { views, store: createMemoryStore(views, {}, { root }), root };
+  return { lists, root: lists[0]?.id ?? '' };
 };

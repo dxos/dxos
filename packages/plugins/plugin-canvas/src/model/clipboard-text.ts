@@ -3,8 +3,9 @@
 //
 
 import { Dsl } from '@dxos/diagram';
+import { fromRenderList2D, toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type ClipboardCodec } from '@dxos/react-ui-canvas/scene';
-import { flattenLayout, fromCanvasView, liftLayout, toCanvasView } from '@dxos/react-ui-scene/canvas';
+import { flattenLayout, liftLayout } from '@dxos/react-ui-scene/canvas';
 import { type Fragment, type Link, type Node, Scene, resolveLayout2D, resolveLayout3D } from '@dxos/scene';
 
 type SceneDocument = Scene.SceneDocument;
@@ -63,7 +64,7 @@ const byId = <T extends { id: string }>(items: readonly T[]): Record<string, T> 
 
 /** The 2D canvas's clipboard as `.dx` text, its composite objects folded in. */
 export const canvasClipboardText = ({ nodes, links }: CanvasClipboard): string => {
-  const { layout, objects } = fromCanvasView({ id: 'clipboard', nodes: byId(nodes), links: byId(links) });
+  const { layout, objects } = fromRenderList2D({ id: 'clipboard', nodes: byId(nodes), links: byId(links) });
   const models: Scene.ModelRecord2D[] =
     layout.model === undefined ? [] : [{ id: layout.model, dim: '2d', objects: byId(objects) }];
   return fragmentText({ scenes: [], layouts: [layout], models }, layout, layout);
@@ -75,6 +76,6 @@ export const canvasClipboardFrom = (text: string): CanvasClipboard | undefined =
   if (!fragment || fragment.dim !== '2d') {
     return undefined;
   }
-  const view = toCanvasView({ scenes: [], layouts: [fragment], models: [] }, fragment);
+  const view = toRenderList2D({ scenes: [], layouts: [fragment], models: [] }, fragment);
   return { nodes: Object.values(view.nodes), links: Object.values(view.links) };
 };

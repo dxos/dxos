@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { topZ } from '@dxos/react-ui-canvas/headless';
-import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type GeneratorNode, Scene } from '@dxos/scene';
 
 import { CanvasOperation, Generator } from '#types';
@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = Canv
         topZ(Object.values(layout.elements).flatMap(({ id, z }) => (z === undefined ? [] : [{ id, z }]))),
       );
       // The node's element as the engine writes one, so the canvas reads it back as the same generator node.
-      const element = fromCanvasView({ id: layout.key, nodes: { [placed.id]: placed }, links: {} }).layout.elements[
+      const element = fromRenderList2D({ id: layout.key, nodes: { [placed.id]: placed }, links: {} }).layout.elements[
         placed.id
       ];
       applyLayoutIntent(layout, { kind: 'create', element });

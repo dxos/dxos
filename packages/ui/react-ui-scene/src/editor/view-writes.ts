@@ -3,9 +3,8 @@
 //
 
 import { type ViewMap, type ViewportProps } from '@dxos/react-ui-canvas';
+import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, type Scene, findLayout, layoutChanges } from '@dxos/scene';
-
-import { fromCanvasView } from '../canvas/index.ts';
 
 /**
  * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a View the document has
@@ -77,8 +76,8 @@ export const viewWrites = (document: Scene.SceneDocument, previous: ViewMap, nex
     }
     const stored = findLayout(document, view.id);
     const layout = stored?.dim === '2d' ? stored : undefined;
-    const { layout: record, objects } = fromCanvasView(view);
-    const shown = before ? fromCanvasView(before).layout.elements : undefined;
+    const { layout: record, objects } = fromRenderList2D(view);
+    const shown = before ? fromRenderList2D(before).layout.elements : undefined;
     const current: Record<string, Element> = { ...layout?.elements };
     const model = layout?.model === undefined ? undefined : models.get(layout.model);
     const objectOf = (id: string) => model?.objects[id];

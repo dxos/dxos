@@ -12,8 +12,8 @@
 import type * as Types from 'effect/Types';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
+import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type View, type ViewMap } from '@dxos/react-ui-canvas/headless';
-import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
 import { Scene, type ViewId, layoutChanges, reachedObjects } from '@dxos/scene';
 
 import { type Canvas } from '#types';
@@ -205,7 +205,7 @@ export const makeLayoutWriter = (scene: Scene.Scene2D, { canvas }: LayoutWriterO
       if (previous[view.id] === view) {
         continue;
       }
-      const { layout: record, objects } = fromCanvasView(view);
+      const { layout: record, objects } = fromRenderList2D(view);
       placed.push(...objects);
       written.push({ layout: layoutFor(view), view, record: decorate(record) });
     }

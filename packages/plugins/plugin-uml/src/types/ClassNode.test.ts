@@ -12,13 +12,8 @@ import {
   nodeTitle,
   partValues,
 } from '@dxos/react-ui-canvas';
-import {
-  fromCanvasView,
-  fromViewportIntent,
-  kindNodeDef,
-  toCanvasView,
-  toViewportLayout,
-} from '@dxos/react-ui-scene/canvas';
+import { fromRenderList2D, toRenderList2D } from '@dxos/react-ui-canvas/headless';
+import { fromViewportIntent, kindNodeDef, toViewportLayout } from '@dxos/react-ui-scene/canvas';
 import { Scene } from '@dxos/scene';
 
 import * as ClassNode from './ClassNode.ts';
@@ -75,7 +70,7 @@ describe('ClassNode', () => {
       attributes: ['name: string'],
     });
     const drawn = toViewportLayout(layout, ClassNode.kinds);
-    const node = toCanvasView({ ...document, layouts: [drawn] }, drawn).nodes.c;
+    const node = toRenderList2D({ ...document, layouts: [drawn] }, drawn).nodes.c;
     expect(ClassNode.isClassNode(node) && [node.label, node.attributes, node.methods]).toEqual([
       'Person',
       ['name: string'],
@@ -84,7 +79,7 @@ describe('ClassNode', () => {
 
     // The engine moves the class and edits a member; the write lands as the kind's element.
     const moved = { ...node, center: { x: 64, y: 0 }, methods: ['greet()'] };
-    const written = fromCanvasView({ id: 'main', nodes: { c: moved }, links: {} }).layout.elements.c;
+    const written = fromRenderList2D({ id: 'main', nodes: { c: moved }, links: {} }).layout.elements.c;
     const intent = fromViewportIntent({ kind: 'update', id: 'c', path: [], value: written }, layout, ClassNode.kinds);
     const value = intent.kind === 'update' ? intent.value : undefined;
     expect(value).toMatchObject({ center: { x: 64, y: 0 }, attributes: ['name: string'], methods: ['greet()'] });
@@ -96,7 +91,7 @@ describe('ClassNode', () => {
     const { label, attributes, methods, ...base } = ClassNode.make(frame);
     const { layout, document } = documentOf({ ...base, label, props: { canvas: { attributes, methods } } });
     const drawn = toViewportLayout(layout, ClassNode.kinds);
-    const node = toCanvasView({ ...document, layouts: [drawn] }, drawn).nodes.c;
+    const node = toRenderList2D({ ...document, layouts: [drawn] }, drawn).nodes.c;
     expect(ClassNode.isClassNode(node) && node.methods).toEqual(['save(): void']);
   });
 });

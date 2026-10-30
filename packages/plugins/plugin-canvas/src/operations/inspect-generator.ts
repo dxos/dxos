@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type View, checkGenerator } from '@dxos/react-ui-canvas/headless';
-import { toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type GeneratorNode } from '@dxos/scene';
 
 import { Canvas, CanvasOperation, Generator } from '#types';
@@ -72,7 +72,7 @@ const sceneOf = Effect.fn(function* (drawingRef: Ref.Ref<Drawing.Drawing>, node:
     return yield* Effect.fail(new DrawingDialectError({ message: 'The drawing is not a scene canvas.' }));
   }
   return document.layouts
-    .flatMap((layout) => (layout.dim === '2d' ? [toCanvasView(document, layout)] : []))
+    .flatMap((layout) => (layout.dim === '2d' ? [toRenderList2D(document, layout)] : []))
     .find((scene) => scene.nodes[node] !== undefined);
 });
 

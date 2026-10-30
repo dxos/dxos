@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLAR_NAMES, EXEMPLARS } from '@dxos/diagram/testing';
-import { type View, withLegacyView } from '@dxos/react-ui-canvas';
+import { LINK_TYPES, MAJOR_GRID, type Node, NODE_TYPES, type Scene, readDocument, toEcho } from '@dxos/scene';
+
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -18,18 +18,62 @@ import {
   createObjectsTree,
   createSquareTree,
   createViewTree,
-} from '@dxos/react-ui-canvas/testing';
-import { MAJOR_GRID, type Node, type Scene, readDocument, toEcho } from '@dxos/scene';
+} from '../testing/index.ts';
+import { between } from '../utils/index.ts';
+import {
+  type RenderList2D,
+  fromRenderList2D,
+  namedStyles,
+  styleClasses,
+  toRenderList2D,
+  toRenderLists2D,
+} from './render-list.ts';
 
-import { DOCUMENT_2D } from '../testing/index.ts';
-import { fromCanvasView, namedStyles, styleClasses, toCanvasView, toCanvasViews } from './adapter.ts';
+/** A board whose layout declares two layers and names a style on two elements. */
+const DOCUMENT_2D: Scene.SceneDocument = (() => {
+  const { document } = Dsl.readScenes(`scene board dim=2d layout=board {
+  camera center=0,0 zoom=1
+}
 
-const views = (text: string) => toCanvasViews(Dsl.readScenes(text).document);
+layout board dim=2d model=shapes {
+  element a box "A" @ 0,0 layer=diagram
+  element b box "B" @ 256,0 layer=diagram
+  element note rect "Note" @ 256,192 size=384x64 layer=background
+  element ab link from=a to=b end=arrow
+}
 
-describe('toCanvasViews', () => {
+model shapes dim=2d {
+  object box rect size=128x128
+}
+`);
+  const background = { id: 'background', name: 'Background', z: between() };
+  const diagram = { id: 'diagram', name: 'Diagram', z: between(background.z) };
+  const styles: Readonly<Record<string, string>> = { a: 'primary', b: 'accent' };
+  return {
+    ...document,
+    layouts: document.layouts.map((layout) =>
+      layout.dim === '2d'
+        ? {
+            ...layout,
+            layers: { background, diagram },
+            elements: Object.fromEntries(
+              Object.entries(layout.elements).map(([id, element]) => [
+                id,
+                styles[id] ? { ...element, style: styles[id] } : element,
+              ]),
+            ),
+          }
+        : layout,
+    ),
+  };
+})();
+
+const views = (text: string) => toRenderLists2D(Dsl.readScenes(text).document);
+
+describe('toRenderLists2D', () => {
   test('maps a link naming no type to a smart link between the bound nodes', () => {
     const {
-      views: [root],
+      lists: [root],
     } = views(EXEMPLARS.links);
     expect(root.links.ab).toMatchObject({
       type: 'smart',
@@ -41,7 +85,7 @@ describe('toCanvasViews', () => {
   });
 
   test("maps a composite element to a view node over its parts layout's view", () => {
-    const { views: all, root } = views(EXEMPLARS.subscene);
+    const { lists: all, root } = views(EXEMPLARS.subscene);
     expect(root).toBe('main');
     expect(all.find((view) => view.id === 'main')?.nodes.b).toMatchObject({ type: 'view', scene: 'b-detail' });
     expect(all.map((view) => view.id)).toContain('b-detail');
@@ -65,7 +109,7 @@ describe('toCanvasViews', () => {
       ],
       models: [{ id: 'm', dim: '2d', objects: { box: { id: 'box', type: 'rect', parts: 'inside' } } }],
     };
-    const root = toCanvasViews(document).views.find((view) => view.id === 'root');
+    const root = toRenderLists2D(document).lists.find((view) => view.id === 'root');
     // The parts span x 0..20, y -10..10; at scale 2 about the origin (100, 0) that is x 100..140, y -20..20.
     expect(root?.nodes.o).toMatchObject({
       type: 'view',
@@ -77,9 +121,9 @@ describe('toCanvasViews', () => {
 
     // Moved on the canvas, it writes its origin and keeps its scale; the box and region are read from the parts.
     const node = root?.nodes.o;
-    const moved: View | undefined =
+    const moved: RenderList2D | undefined =
       root && node ? { ...root, nodes: { ...root.nodes, o: { ...node, center: { x: 130, y: 0 } } } } : undefined;
-    const written = moved && fromCanvasView(moved).layout.elements.o;
+    const written = moved && fromRenderList2D(moved).layout.elements.o;
     expect(written).toMatchObject({ center: { x: 110, y: 0 }, scale: { x: 2, y: 2 } });
     expect(written?.size).toBeUndefined();
     expect(written?.props?.canvas).not.toHaveProperty('frame');
@@ -87,13 +131,13 @@ describe('toCanvasViews', () => {
 
   test("an element placing an object draws with the object's kind and size", () => {
     const {
-      views: [root],
+      lists: [root],
     } = views(EXEMPLARS.links);
     expect(root.nodes.b).toMatchObject({ type: 'rect', size: { width: 128, height: 128 }, style: { hue: 'green' } });
   });
 
   test('a .dx element keeps its layer and named style when its layout declares the layers', () => {
-    const [root] = toCanvasViews(DOCUMENT_2D).views;
+    const [root] = toRenderLists2D(DOCUMENT_2D).lists;
     expect(root.nodes.a).toMatchObject({ layer: 'diagram', class: 'primary' });
     expect(root.nodes.b).toMatchObject({ layer: 'diagram', class: 'accent' });
     expect(root.nodes.note).toMatchObject({ layer: 'background' });
@@ -102,7 +146,7 @@ describe('toCanvasViews', () => {
 
   test('an element on a layer its layout does not declare falls back to the default layer', () => {
     const {
-      views: [root],
+      lists: [root],
     } = views(EXEMPLARS.links);
     const layers = Object.keys(root.layers ?? {});
     for (const node of Object.values(root.nodes)) {
@@ -112,8 +156,8 @@ describe('toCanvasViews', () => {
 
   test('skips a link whose binding is missing', () => {
     const {
-      views: [root],
-    } = toCanvasViews({
+      lists: [root],
+    } = toRenderLists2D({
       scenes: [{ id: 's', dim: '2d', layout: 'l', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
       layouts: [
         {
@@ -127,15 +171,10 @@ describe('toCanvasViews', () => {
     expect(root.links).toEqual({});
   });
 
-  test('makes a store the canvas reads', () => {
-    const { store, root } = views(EXEMPLARS.links);
-    expect(Registry.make().get(store.view(root))?.nodes.c).toBeDefined();
-  });
-
   test('puts every edge of every 2D exemplar node on a major grid line', () => {
     const offGrid = EXEMPLAR_NAMES.flatMap((name) =>
-      toCanvasViews(Dsl.readScenes(EXEMPLARS[name]).document)
-        .views.flatMap((view) => Object.values(view.nodes))
+      toRenderLists2D(Dsl.readScenes(EXEMPLARS[name]).document)
+        .lists.flatMap((view) => Object.values(view.nodes))
         .filter((node) =>
           [
             node.center.x - node.size.width / 2,
@@ -157,7 +196,7 @@ const node = (fields: Node & Record<string, unknown>): Node => fields;
 const box = { width: 128, height: 64 };
 
 /** Every built-in node type and link shape, with the fields the sample trees leave out. */
-const EVERY_TYPE: View = {
+const EVERY_TYPE: RenderList2D = {
   id: 'every',
   name: 'Every type',
   layers: { base: { id: 'base', name: 'Base', z: 'a0' }, top: { id: 'top', name: 'Top', z: 'a1', hidden: true } },
@@ -177,6 +216,8 @@ const EVERY_TYPE: View = {
       d: 'M0 0L1 1',
       viewBox: { x: 0, y: 0, ...box },
     }),
+    generator: node({ type: 'generator', id: 'generator', z: 'a8', center: at, size: box, generator: 'g', seed: 3 }),
+    diagram: node({ type: 'diagram', id: 'diagram', z: 'a9', center: at, size: box, label: 'D', element: 'process' }),
     styled: node({
       type: 'rect',
       id: 'styled',
@@ -212,8 +253,8 @@ const EVERY_TYPE: View = {
   },
 };
 
-/** Every View of the react-ui-canvas sample trees, and one of every node type and link shape. */
-const sampleViews = (): View[] => [
+/** Every render list of the react-ui-canvas sample trees, and one of every node type and link shape. */
+const sampleViews = (): RenderList2D[] => [
   ...[
     createSquareTree(),
     createLatticeTree(),
@@ -230,45 +271,58 @@ const sampleViews = (): View[] => [
 
 const keyed = (objects: readonly Scene.Object2D[]) => Object.fromEntries(objects.map((object) => [object.id, object]));
 
-const roundTrip = (view: View): View => {
-  const { layout, objects } = fromCanvasView(view);
+const roundTrip = (view: RenderList2D): RenderList2D => {
+  const { layout, objects } = fromRenderList2D(view);
   const doc: Scene.SceneDocument = {
     scenes: [],
     layouts: [{ ...layout, model: 'm' }],
     models: [{ id: 'm', dim: '2d', objects: keyed(objects) }],
   };
-  return toCanvasView(doc, { ...layout, model: 'm' });
+  return toRenderList2D(doc, { ...layout, model: 'm' });
 };
 
-describe('fromCanvasView', () => {
+describe('toRenderList2D', () => {
+  test('the corpus renders every node and link type', () => {
+    const drawn = sampleViews().map(roundTrip);
+    const nodeTypes = new Set(drawn.flatMap((list) => Object.values(list.nodes).map((node) => node.type)));
+    const linkTypes = new Set(drawn.flatMap((list) => Object.values(list.links).map((link) => link.type)));
+    expect([...nodeTypes].sort()).toEqual([...NODE_TYPES].sort());
+    expect([...linkTypes].sort()).toEqual([...LINK_TYPES].sort());
+    const every = roundTrip(EVERY_TYPE);
+    expect(Object.keys(every.nodes).length).toBe(Object.keys(EVERY_TYPE.nodes).length);
+    expect(Object.keys(every.links).length).toBe(Object.keys(EVERY_TYPE.links).length);
+  });
+});
+
+describe('fromRenderList2D', () => {
   test('round-trips every node type and link shape in the canvas samples', () => {
     for (const view of sampleViews()) {
-      expect(roundTrip(view)).toEqual(withLegacyView(view));
+      expect(roundTrip(view)).toEqual(view);
     }
   });
 
   test('style classes are the model styles, and a classed node reads back its own style, not the resolved look', () => {
     const classes = { warning: { id: 'warning', name: 'Warning', style: { hue: 'red' as const, fill: true } } };
     expect(styleClasses(namedStyles(classes))).toEqual(classes);
-    const { layout } = fromCanvasView(EVERY_TYPE);
+    const { layout } = fromRenderList2D(EVERY_TYPE);
     const doc: Scene.SceneDocument = {
       scenes: [],
       layouts: [{ ...layout, model: 'm' }],
       models: [{ id: 'm', dim: '2d', objects: {}, styles: namedStyles(classes) }],
     };
-    const styled = toCanvasView(doc, { ...layout, model: 'm' }).nodes.styled;
+    const styled = toRenderList2D(doc, { ...layout, model: 'm' }).nodes.styled;
     expect(styled).toEqual(EVERY_TYPE.nodes.styled);
   });
 
   test('keeps a node field Element2D has no slot for under props.canvas', () => {
-    const { layout } = fromCanvasView(EVERY_TYPE);
+    const { layout } = fromRenderList2D(EVERY_TYPE);
     expect(layout.elements.note.props?.canvas).toMatchObject({ text: 'Note' });
     expect(layout.elements.styled.style).toBe('warning');
     expect(layout.elements.styled.overrides).toMatchObject({ guide: true });
   });
 
   test('keeps z and the link endpoints', () => {
-    const { layout } = fromCanvasView(EVERY_TYPE);
+    const { layout } = fromRenderList2D(EVERY_TYPE);
     expect(layout.elements.rect.z).toBe('a0');
     expect(layout.elements.line).toMatchObject({ type: 'link', source: { node: 'rect', port: 'e' } });
     expect(layout.elements.line.target).toEqual({ node: 'ellipse' });
@@ -279,7 +333,7 @@ describe('fromCanvasView', () => {
     const view = createNestedSimpleTree().views[0];
     const portal = Object.values(view.nodes).find((node) => node.type === 'view');
     expect(portal).toBeDefined();
-    const { layout, objects } = fromCanvasView(view);
+    const { layout, objects } = fromRenderList2D(view);
     const scene = portal && 'scene' in portal ? String(portal.scene) : '';
     expect(objects).toContainEqual({ id: `view:${scene}`, type: 'rect', parts: scene });
     expect(portal && layout.elements[portal.id].object).toBe(`view:${scene}`);
@@ -287,12 +341,12 @@ describe('fromCanvasView', () => {
 
   test('two instance nodes of one composite place the same object', () => {
     const root = createObjectsTree().views.find((view) => view.id === 'scene:root');
-    const { layout, objects } = fromCanvasView(root ?? EVERY_TYPE);
+    const { layout, objects } = fromRenderList2D(root ?? EVERY_TYPE);
     expect(layout.elements['logo-1'].object).toBe('instance:logo');
     expect(objects.filter((object) => object.id === 'instance:logo')).toHaveLength(1);
   });
 
-  test('a portal to a View outside the drawing stays a portal, with its scene and link, through ECHO', () => {
+  test('a portal to a layout outside the drawing stays a portal, with its scene and link, through ECHO', () => {
     const portal = {
       type: 'view',
       id: 'p',
@@ -302,26 +356,26 @@ describe('fromCanvasView', () => {
       scene: 'other-drawing-view',
       link: { object: 'dxn:echo:@:other' },
     };
-    const view: View = { id: 'root', nodes: { p: portal }, links: {} };
-    const { layout, objects } = fromCanvasView(view);
+    const view: RenderList2D = { id: 'root', nodes: { p: portal }, links: {} };
+    const { layout, objects } = fromRenderList2D(view);
     const rootLayout: Scene.LayoutRecord2D = { ...layout, model: 'model' };
     const doc: Scene.SceneDocument = {
       scenes: [{ id: 'root', dim: '2d', layout: 'root', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
       layouts: [rootLayout],
       models: [{ id: 'model', dim: '2d', objects: Object.fromEntries(objects.map((object) => [object.id, object])) }],
     };
-    expect(toCanvasView(doc, rootLayout).nodes.p).toEqual(portal);
+    expect(toRenderList2D(doc, rootLayout).nodes.p).toEqual(portal);
     const stored = toEcho(doc);
     const back = readDocument({ scenes: [stored.root] });
     const backLayout = back.layouts[0];
     if (backLayout.dim !== '2d') {
       throw new Error('The layout read back is 2D.');
     }
-    expect(toCanvasView(back, backLayout).nodes.p).toEqual(portal);
+    expect(toRenderList2D(back, backLayout).nodes.p).toEqual(portal);
   });
 
   test('a link whose stored hue is not a canvas hue reads back without one', () => {
-    const { layout } = fromCanvasView({
+    const { layout } = fromRenderList2D({
       id: 'root',
       nodes: {
         a: { type: 'rect', id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
@@ -334,7 +388,7 @@ describe('fromCanvasView', () => {
       elements: { ...layout.elements, ab: { ...layout.elements.ab, overrides: { hue: 'bogus' } } },
     };
     const doc: Scene.SceneDocument = { scenes: [], layouts: [bogus], models: [] };
-    expect(toCanvasView(doc, bogus).links.ab.style?.hue).toBeUndefined();
+    expect(toRenderList2D(doc, bogus).links.ab.style?.hue).toBeUndefined();
   });
 
   test('a .dx layout with one canvas-written element shows every element, hidden ones left out', () => {
@@ -343,8 +397,8 @@ describe('fromCanvasView', () => {
     if (layout.dim !== '2d') {
       throw new Error('links is a 2D exemplar.');
     }
-    const written = toCanvasView(document, layout);
-    const { layout: rewritten } = fromCanvasView(written);
+    const written = toRenderList2D(document, layout);
+    const { layout: rewritten } = fromRenderList2D(written);
     const mixed: Scene.LayoutRecord2D = {
       ...layout,
       elements: {
@@ -353,7 +407,7 @@ describe('fromCanvasView', () => {
         c: { ...layout.elements.c, hidden: true },
       },
     };
-    const view = toCanvasView({ ...document, layouts: [mixed] }, mixed);
+    const view = toRenderList2D({ ...document, layouts: [mixed] }, mixed);
     expect(Object.keys(view.nodes).sort()).toEqual(['a', 'b']);
     expect(Object.keys(view.links).sort()).toEqual(['ab']);
     expect(view.nodes.b.type).toBe('rect');

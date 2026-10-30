@@ -16,8 +16,8 @@ import { SCRIPT_CAMERA_TARGET, Timeline, trackId } from '@dxos/animation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { fromRenderList2D, namedStyles } from '@dxos/react-ui-canvas/headless';
 import { type View } from '@dxos/react-ui-canvas/headless';
-import { fromCanvasView, namedStyles } from '@dxos/react-ui-scene/canvas';
 import { Scene, type StyleMap, bounds2D, toEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
@@ -99,7 +99,7 @@ export const legacyDocument = (content: Drawing.Canvas['content'], classes: Styl
   // The canvas's mode, named once for every View, becomes each layout's own.
   const settings = canvasRecordOf(copy) ?? {};
   const layouts = views.map((view) => {
-    const { layout, objects: placed } = fromCanvasView(view);
+    const { layout, objects: placed } = fromRenderList2D(view);
     placed.forEach((object) => (objects[object.id] = object));
     return withSettingsMode(withIdentities(layout, copy), settings);
   });

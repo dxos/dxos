@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Diagnostics, Objective, Score } from '@dxos/diagram';
 import { type DiagramObjects, type NodeRegistry, toDiagramObjects } from '@dxos/react-ui-canvas';
+import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type Scene, findLayout } from '@dxos/scene';
-
-import { toCanvasView } from './adapter.ts';
 
 /**
  * A 2D layout as `@dxos/diagram` objects, read through the 2D viewport's model (each element as the canvas draws it,
@@ -21,7 +20,7 @@ export const layoutDiagramObjects = (
   registry: NodeRegistry,
 ): DiagramObjects | undefined => {
   const record = findLayout(document, layout);
-  return record?.dim === '2d' ? toDiagramObjects(toCanvasView(document, record), registry) : undefined;
+  return record?.dim === '2d' ? toDiagramObjects(toRenderList2D(document, record), registry) : undefined;
 };
 
 /** Scored mode over a 2D layout: the objective's scorers (the default one unless given), none for no such layout. */

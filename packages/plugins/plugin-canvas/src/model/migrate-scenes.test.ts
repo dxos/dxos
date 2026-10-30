@@ -13,6 +13,7 @@ import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
+import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type View, type ViewMap, createNode } from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
@@ -25,7 +26,6 @@ import {
   createSquareTree,
   createViewTree,
 } from '@dxos/react-ui-canvas/testing';
-import { toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type Node, Scene, type StyleClass, fromEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
@@ -76,7 +76,7 @@ const sceneViews = (scene: Scene.Scene2D): { root: string; views: ViewMap } => {
   return {
     root: scene.layout.target?.key ?? scene.key,
     views: Object.fromEntries(
-      doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toCanvasView(doc, layout)]] : [])),
+      doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toRenderList2D(doc, layout)]] : [])),
     ),
   };
 };

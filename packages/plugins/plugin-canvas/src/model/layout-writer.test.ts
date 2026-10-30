@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj } from '@dxos/echo';
+import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type View, type ViewMap, createNode } from '@dxos/react-ui-canvas/headless';
-import { toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { Scene, fromEcho, toEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';
@@ -32,7 +32,7 @@ const sceneViews = (scene: Scene.Scene2D): { root: string; views: ViewMap } => {
   return {
     root: scene.layout.target?.key ?? scene.key,
     views: Object.fromEntries(
-      doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toCanvasView(doc, layout)]] : [])),
+      doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toRenderList2D(doc, layout)]] : [])),
     ),
   };
 };

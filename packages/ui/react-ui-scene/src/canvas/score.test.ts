@@ -7,15 +7,15 @@ import { describe, expect, test } from 'vitest';
 
 import { Diagnostics, Objective, Score } from '@dxos/diagram';
 import { type View, defaultNodeRegistry, toDiagramObjects } from '@dxos/react-ui-canvas';
+import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { createModelViewTree, createNestedViewTree, createSquareTree } from '@dxos/react-ui-canvas/testing';
 import { type Scene } from '@dxos/scene';
 
-import { fromCanvasView } from './adapter.ts';
 import { scoreLayout2D } from './score.ts';
 
 /** A canvas sample's Views as the scene document the editor holds. */
 const documentOf = (views: readonly View[], root: string): Scene.SceneDocument => {
-  const read = views.map(fromCanvasView);
+  const read = views.map(fromRenderList2D);
   const objects = Object.fromEntries(read.flatMap(({ objects }) => objects.map((object) => [object.id, object])));
   return {
     scenes: [{ id: 'scene', dim: '2d', layout: root, camera: { center: { x: 0, y: 0 }, zoom: 1 } }],

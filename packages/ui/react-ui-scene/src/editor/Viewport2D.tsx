@@ -22,17 +22,10 @@ import {
   createCanvasAtoms,
   createMemoryStore,
 } from '@dxos/react-ui-canvas';
+import { styleClasses, toRenderLists2D } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, type Scene, applyIntent, findLayout, rootScene } from '@dxos/scene';
 
-import {
-  type Kinds,
-  fromViewportIntent,
-  latticesKey,
-  layoutProjection,
-  styleClasses,
-  toCanvasViews,
-  toViewportDocument,
-} from '../canvas/index.ts';
+import { type Kinds, fromViewportIntent, latticesKey, layoutProjection, toViewportDocument } from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 import { type ViewWrite, applyViewWrites, viewWrites } from './view-writes.ts';
@@ -153,7 +146,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
   }: ViewportProps<Camera>) => {
     const registry = useContext(RegistryContext);
     const sceneRecord = document.scenes.find((record) => record.id === sceneId) ?? rootScene(document);
-    const read = (doc: Scene.SceneDocument) => toCanvasViews(doc, sceneRecord);
+    const read = (doc: Scene.SceneDocument) => toRenderLists2D(doc, sceneRecord);
     const initial = useMemo(() => read(document), [sceneId]);
     const root = initial.root;
     const rootModel = (doc: Scene.SceneDocument) => {
@@ -164,7 +157,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
       const model = doc.models.find((model) => model.id === rootModel(doc));
       return styleClasses(model?.dim === '2d' ? model.styles : undefined);
     };
-    const store = useMemo(() => createMemoryStore(initial.views, stylesOf(document), { root }), [initial]);
+    const store = useMemo(() => createMemoryStore(initial.lists, stylesOf(document), { root }), [initial]);
     const atoms = useMemo(() => createCanvasAtoms(root), [root]);
 
     // The latest props, read by the store's subscription, which outlives a render.
@@ -177,7 +170,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     useEffect(() => {
       reading.current = true;
       try {
-        const views: ViewMap = Object.fromEntries(read(document).views.map((view) => [view.id, view]));
+        const views: ViewMap = Object.fromEntries(read(document).lists.map((list) => [list.id, list]));
         registry.set(store.views, views);
         registry.set(store.styles, stylesOf(document));
         last.current = views;

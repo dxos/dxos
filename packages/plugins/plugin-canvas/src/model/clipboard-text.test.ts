@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
+import { toRenderLists2D } from '@dxos/react-ui-canvas/headless';
 import { nextPaste } from '@dxos/react-ui-canvas/scene';
-import { toCanvasViews } from '@dxos/react-ui-scene/canvas';
 import { type Scene, copyElements } from '@dxos/scene';
 
 import {
@@ -56,7 +56,7 @@ describe('clipboard text', () => {
   });
 
   test("the 2D canvas's clipboard prints as .dx text and reads back as the same nodes and links", () => {
-    const [view] = toCanvasViews(linksDoc()).views;
+    const [view] = toRenderLists2D(linksDoc()).lists;
     const text = canvasClipboardText({ nodes: Object.values(view.nodes), links: Object.values(view.links) });
     const back = canvasClipboardFrom(text);
     expect(back?.nodes.map((node) => node.id).sort()).toEqual(Object.keys(view.nodes).sort());

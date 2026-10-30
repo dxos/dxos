@@ -61,7 +61,6 @@ import {
   type NodeRegistry,
   type NodeViewProps,
   RADIUS_PX,
-  type View,
   type ViewStore,
   nodeDef,
   styleVariant,
@@ -107,6 +106,7 @@ import {
   viewLinkGeometry,
   visibleView,
 } from '../../utils/index.ts';
+import { type RenderList2D } from '../../viewport2d/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
 import { renderMarkup } from './markup.ts';
 
@@ -132,7 +132,8 @@ export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: numb
 
 export type SceneLayerProps = {
   store: ViewStore;
-  scene: View;
+  /** The layout to draw, as the engine's render list. */
+  scene: RenderList2D;
   registry: NodeRegistry;
   /** Effective screen zoom of this layer (camera zoom × portal scales). */
   zoom: number;

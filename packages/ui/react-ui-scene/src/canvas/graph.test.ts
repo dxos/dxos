@@ -5,9 +5,9 @@
 import { describe, expect, test } from 'vitest';
 
 import { type GraphModel, dynamicConstrain } from '@dxos/react-ui-canvas';
+import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { applyIntent } from '@dxos/scene';
 
-import { toCanvasView } from './adapter.ts';
 import { graphDocument, graphLayout, graphPositions, splitGraphEdit } from './graph.ts';
 
 const GRAPH: GraphModel = {
@@ -52,7 +52,7 @@ describe('graphLayout', () => {
 
   test('the 2D viewport draws the host type and smart links', ({ expect }) => {
     const layout = graphLayout(GRAPH, { lattice: LATTICE, shape: () => ({ type: 'card' }) });
-    const view = toCanvasView(graphDocument(layout), layout);
+    const view = toRenderList2D(graphDocument(layout), layout);
     expect(Object.values(view.nodes).map(({ type }) => type)).toEqual(['card', 'card', 'card', 'card']);
     expect(Object.values(view.links).map(({ type }) => type)).toEqual(['smart', 'smart', 'smart', 'smart']);
   });
@@ -70,7 +70,7 @@ describe('graphLayout', () => {
           : { type: 'card', layer: 'graph' },
       link: { type: 'curve', layer: 'graph' },
     });
-    const view = toCanvasView(graphDocument(layout), layout);
+    const view = toRenderList2D(graphDocument(layout), layout);
     expect(view.nodes.app).toMatchObject({
       type: 'diagram',
       layer: 'backdrop',
