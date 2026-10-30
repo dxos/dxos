@@ -105,14 +105,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isLayout3D = (layout: Scene.Layout2D | Scene.Layout3D): layout is Scene.Layout3D =>
   Obj.instanceOf(Scene.Layout3D, layout);
 
-/**
- * Applies `intent` to a stored layout of either dimension, writing only the elements it changed, field by field, and a
- * 2D layout's own fields it changed, in one change: the one write path for layouts, so 2D and 3D edits go through the
- * same intent vocabulary and a mode's model is written (and undone) with the elements it places.
- */
-export const applyLayoutIntent = (layout: Scene.Layout2D | Scene.Layout3D, intent: LayoutIntent): void => {
+/** A stored layout of either dimension as the plain record intents and modes read. */
+export const layoutRecord = (layout: Scene.Layout2D | Scene.Layout3D): Scene.LayoutRecord => {
   const arrange = layout.arrange && plain(layout.arrange);
-  const before: Scene.LayoutRecord = isLayout3D(layout)
+  return isLayout3D(layout)
     ? { id: layout.key, dim: '3d', elements: plain(layout.elements), ...(arrange ? { arrange } : {}) }
     : {
         id: layout.key,
@@ -121,6 +117,15 @@ export const applyLayoutIntent = (layout: Scene.Layout2D | Scene.Layout3D, inten
         ...(arrange ? { arrange } : {}),
         ...layoutFields(layout),
       };
+};
+
+/**
+ * Applies `intent` to a stored layout of either dimension, writing only the elements it changed, field by field, and a
+ * 2D layout's own fields it changed, in one change: the one write path for layouts, so 2D and 3D edits go through the
+ * same intent vocabulary and a mode's model is written (and undone) with the elements it places.
+ */
+export const applyLayoutIntent = (layout: Scene.Layout2D | Scene.Layout3D, intent: LayoutIntent): void => {
+  const before = layoutRecord(layout);
   const after = applyIntent(before, intent);
   if (after === before) {
     return;

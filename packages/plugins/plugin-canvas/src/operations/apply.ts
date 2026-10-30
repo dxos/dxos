@@ -13,19 +13,21 @@ import {
   pruneOrphaned,
   recordChanges,
 } from '@dxos/react-ui-canvas/headless';
+import { constrain2D } from '@dxos/react-ui-scene/canvas';
 import { type LayoutIntent, Scene, isLayoutIntent } from '@dxos/scene';
 
 import { Canvas, CanvasOperation } from '#types';
 
 import { openScene } from '../model/canvas-document.ts';
-import { applyLayoutIntent, canvasLayouts, canvasSource } from '../model/layout-source.ts';
+import { applyLayoutIntent, canvasLayouts, canvasSource, layoutRecord } from '../model/layout-source.ts';
 import { isCanvasHeads } from '../model/store.ts';
 import { CanvasElementNotFoundError, InvalidIntentError, NewerCanvasError, UnversionedCanvasError } from './canvas.ts';
 import { withCanvasStore } from './patch-store.ts';
 
 /**
- * Applies layout intents to a scene canvas's layout `view` (the open scene's by default), in that layout's dimension,
- * recorded over every layout the canvas lists so the patch it returns undoes it.
+ * Applies layout intents to a scene canvas's layout `view` (the open scene's by default), in that layout's dimension
+ * and kept to its mode (snapped onto its lattice, re-placed by its constraints), recorded over every layout the canvas
+ * lists so the patch it returns undoes it.
  */
 const applyToLayout = Effect.fn(function* (
   canvas: Canvas.Canvas,
@@ -49,9 +51,14 @@ const applyToLayout = Effect.fn(function* (
   if (Obj.version(layout).automergeHeads === undefined) {
     return yield* Effect.fail(new UnversionedCanvasError({ message: `Canvas ${canvas.id} has no version history.` }));
   }
-  const [change] = recordChanges([canvasSource(canvas)], () =>
-    applyLayoutIntent(layout, { kind: 'batch', intents: valid }),
-  );
+  // An agent's edit keeps the layout's mode, as a person's drag with snapping on does.
+  const constrained = constrain2D(layoutRecord(layout), { kind: 'batch', intents: valid }, { snap: true });
+  if (constrained === undefined) {
+    return yield* Effect.fail(
+      new InvalidIntentError({ message: `The intents break the mode of layout ${layout.key}; nothing was written.` }),
+    );
+  }
+  const [change] = recordChanges([canvasSource(canvas)], () => applyLayoutIntent(layout, constrained));
   return applied(canvas.id, change);
 });
 

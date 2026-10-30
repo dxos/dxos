@@ -11,6 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
 import { Scene, isGeneratorNode } from '@dxos/scene';
 
 import { addCanvas, createCanvas, openScene, readViews, rootOf } from '#model';
@@ -237,6 +238,81 @@ describe('canvas edit operations', () => {
         expect(exit._tag).toBe('Failure');
         expect(String(exit)).toContain('update the Canvas plugin');
         expect(readViews(canvas.content)[root].nodes.n).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    60_000,
+  );
+
+  it.effect(
+    "apply snaps a scene canvas's edits to its layout's lattice, and refuses one onto occupied cells",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* addCanvas();
+        const layout = openScene(canvas)?.layout.target;
+        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+          throw new Error('A scene canvas opens a 2D layout.');
+        }
+        Obj.update(layout, (layout) => {
+          layout.lattice = { ...DEFAULT_LATTICE };
+        });
+        yield* Database.flush();
+        const ref = Ref.make(canvas);
+        const size = { width: DEFAULT_LATTICE.width, height: DEFAULT_LATTICE.height };
+        const pitch = DEFAULT_LATTICE.width + DEFAULT_LATTICE.gutterX;
+
+        yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'create', element: { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size } }],
+        });
+        // A copy, since the stored centre is live and the move below rewrites it.
+        const start = { x: layout.elements.n.center?.x ?? 0, y: layout.elements.n.center?.y ?? 0 };
+        yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'move', ids: ['n'], delta: { x: 370, y: 10 } }],
+        });
+        expect(layout.elements.n.center).toEqual({ x: start.x + pitch, y: start.y });
+
+        // A second shape on the first cell: moving `n` back onto it would overlap, so the mode refuses it.
+        yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'create', element: { id: 'm', type: 'rect', z: 'a1', center: start, size } }],
+        });
+        const exit = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'move', ids: ['n'], delta: { x: -pitch, y: 0 } }],
+        }).pipe(Effect.exit);
+        expect(exit._tag).toBe('Failure');
+        expect(layout.elements.n.center).toEqual({ x: start.x + pitch, y: start.y });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    60_000,
+  );
+
+  it.effect(
+    'apply moves a shape exactly on a scene canvas whose layout has no lattice',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* addCanvas();
+        yield* Database.flush();
+        const layout = openScene(canvas)?.layout.target;
+        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+          throw new Error('A scene canvas opens a 2D layout.');
+        }
+        const ref = Ref.make(canvas);
+        const size = { width: DEFAULT_LATTICE.width, height: DEFAULT_LATTICE.height };
+        yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'create', element: { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size } }],
+        });
+        yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'move', ids: ['n'], delta: { x: 370, y: 10 } }],
+        });
+        expect(layout.elements.n.center).toEqual({ x: 370, y: 10 });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

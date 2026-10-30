@@ -300,3 +300,28 @@ decision D-10: A Canvas's mode (lattice, constrained, dynamic) is each 2D layout
   affects: [CanvasPlugin]
   why: A mode the settings named for every View cannot travel with a layout or differ between layouts, and agents, the importer and the editor then share one write path and one undo.
 ```
+
+```mdl
+decision D-11: Approve [D-10].
+  date: 2026-10-30
+  by: user:richburdon
+```
+
+```mdl
+decision D-12: CanvasOperation.Apply on a Canvas snaps an agent's edits to its layout's mode, and an undo patch recorded before layouts held the mode is dropped rather than migrated.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-13: `CanvasOperation.Apply` runs the shared editor's 2D mode rule (`constrain2D`) with snapping on over the whole batch of intents, and fails with `InvalidIntentError`, writing nothing, when the mode refuses it; the rule lives in react-ui-scene's `canvas` entry, which the plugin's operations already load. Fills in [D-12].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: One rule keeps an agent's edit and a person's drag on the same cells, and checking the batch whole matches how the editor refuses a drag; the `canvas` entry keeps the editor and the 3D renderer out of the operation handlers.
+  rejected:
+    - Importing `constrain2D` from react-ui-scene's root, which would load the editor's React components and the 3D renderer into every operation handler.
+    - Dropping only the refused intents, which would apply part of a batch the agent meant as one edit.
+```

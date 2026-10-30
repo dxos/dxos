@@ -45,7 +45,7 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
 - **R-8 (2026-10-30, agent, D.1): a mode is a rule between an edit and its write, over the document's
   `Scene.LayoutRecord2D`.** `latticeConstrain(layout: Scene.LayoutRecord2D, intent: LayoutIntent)` lives in
   react-ui-canvas `src/modes/` (the editor holds records, not the ECHO `Layout2D` class). `DimensionConfig.constrain(layout,
-  intent, { snap })` is applied by `SceneEditor` to every write (gestures, commands, paste, the Properties form);
+intent, { snap })` is applied by `SceneEditor` to every write (gestures, commands, paste, the Properties form);
   config2d selects the lattice when `layout.lattice` is set and snapping is on. The 2D viewport still wraps the canvas
   engine (C.1's `RenderList2D` was not built), so it also drives the engine with a lattice projection from
   `layout.lattice` for the drag preview and guides, and redraws a drag the mode refuses or rewrites as stored. The
@@ -138,7 +138,7 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   because the 2D viewport has no overlay slot and E.1/E.2 are editing it. Cost if wrong: a move into an overlay slot.
 - **R-27 (2026-10-30, agent, E.3): plugin-conductor's board edits only in its article role,** by the shared editor's
   role rule (`editsInRole`); a section draws it as a picture. Before, the section edited too. Cost if wrong: pass
-  `role` as `undefined` from the section surface.
+  `role` as `undefined` from the section surface. Approved by user:richburdon, 2026-10-30.
 - **R-28 (2026-10-30, agent, E.3): the compute stories' debug sidebar became the `Compute` inspector section**
   (the selected node's type, id and ports, else the graph's diagnostics). Cost if wrong: a story-only panel again.
 - **R-29 (2026-10-30, agent, E.3, parity): no change to the shared editor contract; compute boards are 2D-only.**
@@ -149,7 +149,11 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   canvas lists, keyed by layout key); `Patch` patches the same source.** A legacy `Drawing.Canvas` keeps the engine
   path. The operation is freehand: the layout's mode (`constrain2D`) is the editor's, in react-ui-scene. Cost if
   wrong: an agent's move on a lattice layout lands off its cells (apply `constrain2D` in the handler), and a patch
-  recorded before E.2 (heads `layout:<key>`) no longer applies (the tracker's log is per session).
+  recorded before E.2 (heads `layout:<key>`) no longer applies (the tracker's log is per session). The user chose
+  (2026-10-30) to snap in the handler and to drop pre-E.2 patches rather than migrate them: `Apply` now runs
+  `constrain2D` with `snap: true` over the layout's record and refuses an edit the mode refuses with
+  `InvalidIntentError`. `constrain2D` moved to `@dxos/react-ui-scene/canvas`, the subpath operations already load, so
+  the handler does not pull in the editor or the 3D renderer.
 - **R-31 (2026-10-30, agent, E.2): `layout-store.ts` is deleted.** Its tests of the kept writer moved to
   `layout-writer.test.ts`; store-only tests (View atom, camera, shared scenes, `layout:`/`model:` heads, lattice and
   scored modes over the store) went with it, as `config2d.test.ts` covers the layout's modes. `migrate-scenes.test`
