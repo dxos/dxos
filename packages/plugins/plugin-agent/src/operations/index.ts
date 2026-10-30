@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { BrainSkill } from '#skills';
+import { BrainSkill, ConversationSkill } from '#skills';
 import {
   AgentOperation,
   EmailOperation,
@@ -51,5 +51,6 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.InspectBrain.pipe(Operation.lazyHandler(() => import('./inspect-brain.ts'))),
   TriggerOperation.ResetBrain.pipe(Operation.lazyHandler(() => import('./reset-brain.ts'))),
   BrainSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
+  ConversationSkill.EnsureReplySent.pipe(Operation.lazyHandler(() => import('./ensure-reply-sent.ts'))),
   EmailOperation.Send.pipe(Operation.lazyHandler(() => import('./send-email.ts'))),
 ]);

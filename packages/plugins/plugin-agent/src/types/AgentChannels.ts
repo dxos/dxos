@@ -5,10 +5,12 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
@@ -79,6 +81,25 @@ export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel
  * posts only these: the agent's own text in a channel conversation is not sent, it speaks through its channel skills.
  */
 export const OUTBOUND_PROPERTY = 'outbound';
+
+/**
+ * Marks an operation that speaks in a channel conversation (posts, mails or relays a message). Its value names the
+ * output field that says where the message went: a conversation's thread id, or a reference to the chat it was
+ * recorded in.
+ */
+export const ChannelSendAnnotation = Annotation.make({
+  id: 'org.dxos.annotation.agent.channelSend',
+  schema: Schema.String,
+});
+
+/** Marks the operation as a {@link ChannelSendAnnotation channel send} whose output `field` says where it posted. */
+export const channelSend = (field: string) => Operation.annotate(ChannelSendAnnotation, field);
+
+/** The output field that says where a {@link ChannelSendAnnotation channel send} posted; undefined for other operations. */
+export const channelSendField = (op: Operation.Definition.Any): string | undefined =>
+  op.meta.annotations
+    ? Option.getOrUndefined(Annotation.getDictionary(op.meta.annotations, ChannelSendAnnotation))
+    : undefined;
 
 /** `Obj.Meta` key source of a chat that mirrors one conversation (a channel, or a thread inside one). */
 export const CHAT_SOURCE = 'org.dxos.agent/channel';
