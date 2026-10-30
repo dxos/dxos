@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-file-system",
   "version": "0.16.0",
-  "private": true,
   "description": "Composer plugin for native filesystem access via Tauri.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -91,6 +90,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "FileSystem": [
+        "dist/types/src/types/FileSystem.d.ts"
+      ],
       "FileSystemCapabilities": [
         "dist/types/src/types/FileSystemCapabilities.d.ts"
       ],
@@ -150,5 +152,8 @@
     "@dxos/react-ui": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

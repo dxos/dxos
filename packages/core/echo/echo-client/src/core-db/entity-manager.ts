@@ -1069,7 +1069,11 @@ export class EntityManager implements IDatabaseBinding {
       if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
-        result[i] = undefined;
+        if (this._areDepsResolved(core)) {
+          result[i] = undefined;
+        } else {
+          objectsToLoad.push({ id: objectId, resultIndex: i });
+        }
       } else if (core != null) {
         result[i] = core;
       } else {
@@ -1108,18 +1112,22 @@ export class EntityManager implements IDatabaseBinding {
             if (updatedIds.includes(objectToLoad.id)) {
               clearTimeout(inactivityTimeoutTimer);
 
-              const isDeleted = this._objects.get(objectToLoad.id)?.isDeleted();
-              const depsUnsatisfied =
-                this._objects.get(objectToLoad.id) && !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!);
-
-              if (!returnDeleted && isDeleted) {
+              // Rehydrated if collected: the wait can outlast the core's pin, and every check below reads it.
+              const core = this.getObjectCoreById(objectToLoad.id, { load: false });
+              if (!returnDeleted && core?.isDeleted()) {
                 diagnostics.push('object-deleted');
                 result[objectToLoad.resultIndex] = undefined;
-              } else if (!returnWithUnsatisfiedDeps && depsUnsatisfied) {
+              } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
+                // The body lands before its strong dependencies can be discovered, so a closure still
+                // loading is waited on; only one settled unreachable answers the id with nothing.
+                if (!this._areDepsResolved(core)) {
+                  scheduleInactivityTimeout();
+                  continue;
+                }
                 diagnostics.push('deps-unsatisfied');
                 result[objectToLoad.resultIndex] = undefined;
               } else {
-                result[objectToLoad.resultIndex] = this.getObjectCoreById(objectToLoad.id)!;
+                result[objectToLoad.resultIndex] = core;
               }
 
               objectsToLoad.splice(i, 1);

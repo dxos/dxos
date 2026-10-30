@@ -12,9 +12,10 @@ import * as AppRole from '@dxos/app-toolkit/AppRole';
 import { trim } from '@dxos/util';
 
 import { PwaNamespace } from './src/namespace.ts';
+import { type PwaOptions } from './src/settings-store.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig = Plugin.config({
+const config: Plugin.PluginConfig<PwaOptions> = Plugin.config<PwaOptions>({
   plugin: {
     key: PwaNamespace.key,
     name: 'PWA',
@@ -33,8 +34,19 @@ const config: Plugin.PluginConfig = Plugin.config({
       roles: [AppRole.Article],
     }),
     Capability.lazyModule(
+      'BootGate',
+      {
+        activatesOn: ActivationEvents.Startup,
+        requires: [Capabilities.AtomRegistry, AppCapabilities.UpdateManager],
+        provides: [Capabilities.BootGate],
+      },
+      () => import('./src/capabilities/boot-gate.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
       'RegisterPwa',
       {
+        // Startup: `BootGate` requires this, and the startup pass activates only startup modules.
+        activatesOn: ActivationEvents.Startup,
         requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry],
         provides: [AppCapabilities.UpdateManager],
       },

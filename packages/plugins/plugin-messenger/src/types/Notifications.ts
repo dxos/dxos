@@ -178,7 +178,8 @@ export const remove = Effect.fn('Notifications.remove')(function* (
   const keys = new Set(messages.map(messageKey));
   for (const container of containers) {
     const feed = yield* Database.load(container.feed);
-    const stored = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    // Every branch, since a copy on any of them must go.
+    const stored = yield* Feed.query(feed, Filter.type(Message.Message), { branches: 'all' }).run;
     const removed = stored.filter((message) => keys.has(messageKey(message)));
     if (removed.length > 0) {
       yield* Feed.remove(feed, removed);
@@ -187,8 +188,11 @@ export const remove = Effect.fn('Notifications.remove')(function* (
   removeReadKeys(containers, keys);
 });
 
-/** Feed bookkeeping a copy must not inherit, since it is positioned afresh in the target feed. */
-const FEED_KEY_SOURCES = new Set([Feed.POSITION_KEY, Feed.PARENT_KEY]);
+/**
+ * Feed bookkeeping a copy must not inherit: it is positioned afresh in the target feed, and a branch of the
+ * source feed does not exist there.
+ */
+const FEED_KEY_SOURCES = new Set([Feed.POSITION_KEY, Feed.PARENT_KEY, ...Feed.BLOCK_KEYS]);
 
 const copyMessage = (message: Message.Message): Message.Message => {
   const { id: _id, ...data } = message;
@@ -233,7 +237,8 @@ export const converge = Effect.fn('Notifications.converge')(function* () {
 
   for (const other of all.filter((container) => container !== target)) {
     const feed = yield* Database.load(other.feed, { deleted: 'include' });
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    // Every branch, since the container is deleted after its messages move.
+    const messages = yield* Feed.query(feed, Filter.type(Message.Message), { branches: 'all' }).run;
     const copies = messages.filter((message) => !present.has(messageKey(message))).map(copyMessage);
     copies.forEach((copy) => present.add(messageKey(copy)));
     if (copies.length > 0) {

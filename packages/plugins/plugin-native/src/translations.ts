@@ -21,6 +21,8 @@ export const translations = [
         'quit-anyway.alt': 'Quit and lose the unsaved changes',
         'restart-anyway.label': 'Restart anyway',
         'restart-anyway.alt': 'Restart and lose the unsaved changes',
+        'settings.auto-update.label': 'Update automatically',
+        'settings.auto-update.description': 'Download and install a new version while Composer starts.',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',
