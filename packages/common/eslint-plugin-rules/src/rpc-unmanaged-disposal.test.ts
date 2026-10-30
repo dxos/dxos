@@ -26,6 +26,9 @@ describe('rpc-unmanaged-disposal', () => {
         "new RpcStubCache('router-sink', async (id) => B.getUnmanaged().getRouterSink(ctx, id));",
         "new RpcStubCache('s', async (id) => { return B.getUnmanaged().getRouterSink(ctx, id); });",
         'async () => { using sink = await NS.getUnmanaged().getByName(id).getRouterSink(); };',
+        // Type assertions do not change who owns the value.
+        "new RpcStubCache('s', (id) => B.getUnmanaged().getSink(ctx, id) as any);",
+        "new RpcStubCache('s', (id) => B.getUnmanaged()!.getSink(ctx, id) satisfies Sink);",
         // A managed call is disposed by the binding.
         'async () => { await B.get().sendMessage(ctx, msg); };',
         {
@@ -40,6 +43,10 @@ describe('rpc-unmanaged-disposal', () => {
         { code: 'async () => { this._sink = await B.getUnmanaged().getRouterSink(ctx, id); };', errors: undisposed },
         { code: "new Map([['k', B.getUnmanaged()]]);", errors: undisposed },
         { code: 'const f = async () => B.getUnmanaged().getRouterSink(ctx, id);', errors: undisposed },
+        {
+          code: 'async () => { const sink = (await B.getUnmanaged().getSink(ctx, id)) as Sink; };',
+          errors: undisposed,
+        },
         // Only the configured owners take ownership.
         { code: "new SinkPool('s', async (id) => B.getUnmanaged().getRouterSink(ctx, id));", errors: undisposed },
       ],

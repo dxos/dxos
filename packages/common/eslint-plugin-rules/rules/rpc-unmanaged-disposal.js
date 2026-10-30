@@ -8,6 +8,17 @@ const DEFAULT_OWNERS = ['RpcStubCache'];
 
 const FUNCTION_TYPES = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration']);
 
+/** Wrappers that change a value's static type or syntax but not who owns it. */
+const TRANSPARENT_TYPES = new Set([
+  'AwaitExpression',
+  'ChainExpression',
+  'ParenthesizedExpression',
+  'TSAsExpression',
+  'TSNonNullExpression',
+  'TSSatisfiesExpression',
+  'TSTypeAssertion',
+]);
+
 /**
  * A value reached through a service binding's `getUnmanaged()` carries stubs the caller owns: the binding does not
  * dispose it, so an undisposed one holds its RPC session (and, across processes, a TCP connection) until GC.
@@ -43,7 +54,7 @@ export default {
   create(context) {
     const owners = context.options[0]?.owners ?? DEFAULT_OWNERS;
 
-    /** Climbs `x.getUnmanaged().getByName(id).getRouterSink(…)`, `await` and optional chains to the outermost node. */
+    /** Climbs `x.getUnmanaged().getByName(id).getRouterSink(…)`, `await`, optional chains and type assertions. */
     const outermost = (node) => {
       let expr = node;
       for (;;) {
@@ -55,7 +66,7 @@ export default {
           parent.parent.callee === parent
         ) {
           expr = parent.parent;
-        } else if (parent.type === 'AwaitExpression' || parent.type === 'ChainExpression') {
+        } else if (TRANSPARENT_TYPES.has(parent.type) && (parent.expression ?? parent.argument) === expr) {
           expr = parent;
         } else {
           return expr;
