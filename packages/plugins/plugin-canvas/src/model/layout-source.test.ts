@@ -11,6 +11,7 @@ import { combinedSource, patchSource, recordChanges } from '@dxos/react-ui-canva
 import { Scene } from '@dxos/scene';
 
 import { applyLayoutIntent, layoutSource } from './layout-source.ts';
+import { plain } from './layout-writer.ts';
 
 describe('layoutSource', () => {
   let builder: EchoTestBuilder;
@@ -69,6 +70,51 @@ describe('layoutSource', () => {
     expect(root.elements.r).toBeUndefined();
     patchSource(source, { from: change.before, to: change.after, paths: change.paths });
     expect(root.elements.r?.size).toEqual({ width: 64, height: 64 });
+  });
+
+  test('a layout intent writes the constraints with the elements, and undo and redo restore both', () => {
+    const before: Scene.Constraint[] = [{ subject: 'b', relation: 'east', object: 'a' }];
+    const after: Scene.Constraint[] = [{ subject: 'b', relation: 'south', object: 'a' }];
+    const shape = (id: string, x: number) => ({
+      id,
+      type: 'rect',
+      center: { x, y: 0 },
+      size: { width: 64, height: 64 },
+    });
+    const root = db.add(
+      Obj.make(Scene.Layout2D, {
+        key: 'root',
+        elements: { a: shape('a', 0), b: shape('b', 128) },
+        constraints: before,
+      }),
+    );
+    const source = layoutSource(root);
+    const [change] = recordChanges([source], () =>
+      applyLayoutIntent(root, {
+        kind: 'batch',
+        intents: [
+          { kind: 'update', id: 'b', path: ['center'], value: { x: 0, y: 128 } },
+          {
+            kind: 'layout',
+            patch: { constraints: after, lattice: { width: 64, height: 64, gutterX: 32, gutterY: 32 } },
+          },
+        ],
+      }),
+    );
+    expect(plain(root.constraints)).toEqual(after);
+    expect(root.lattice?.width).toBe(64);
+    expect(root.elements.b.center).toEqual({ x: 0, y: 128 });
+    if (!change) {
+      throw new Error('The change was recorded.');
+    }
+    patchSource(source, { from: change.after, to: change.before, paths: change.paths });
+    expect(plain(root.constraints)).toEqual(before);
+    expect(root.lattice).toBeUndefined();
+    expect(root.elements.b.center).toEqual({ x: 128, y: 0 });
+    patchSource(source, { from: change.before, to: change.after, paths: change.paths });
+    expect(plain(root.constraints)).toEqual(after);
+    expect(root.lattice?.width).toBe(64);
+    expect(root.elements.b.center).toEqual({ x: 0, y: 128 });
   });
 
   test('undo skips an element someone else changed since', () => {
