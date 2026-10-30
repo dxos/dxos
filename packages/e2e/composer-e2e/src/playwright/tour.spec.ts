@@ -56,4 +56,17 @@ test.describe('Tour tests', () => {
     await Support.startGlobal(host.page);
     await Support.walk(host.page, GLOBAL_TOUR);
   });
+
+  test('leaving a document ends its tour', { tag: ['@QA-9'] }, async () => {
+    await host.createSpace();
+    await host.createObject({ type: 'Document' });
+
+    await Support.startFromCompanion(host.page);
+    await expect(Support.title(host.page)).toHaveText(DOCUMENT_TOUR[0]);
+
+    // The tour's backdrop takes every click, so leave the way a boot onto Home does.
+    await host.page.goto(host.page.url().replace(/\/object\/.*$/, '/home'));
+    await Support.startGlobal(host.page);
+    await expect(Support.title(host.page)).toHaveText(GLOBAL_TOUR[0]);
+  });
 });

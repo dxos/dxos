@@ -73,7 +73,8 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   };
 
   const resumeAt = useRef<string | undefined>(undefined);
-  const pausing = useRef(false);
+  // Why the effect below closed the card: a pause keeps the tour, a stop ends it even if its target is gone.
+  const closing = useRef<'pause' | 'stop' | undefined>(undefined);
   const lastStepId = useRef<string | undefined>(undefined);
   const skippedStepIds = useRef(new Set<string>());
   const resumePastUnreachableStep = (index: number, stepId: string): boolean => {
@@ -98,14 +99,15 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
       if (status === 'started') {
         return;
       }
-      if (pausing.current) {
-        pausing.current = false;
+      const reason = closing.current;
+      closing.current = undefined;
+      if (reason === 'pause') {
         return;
       }
 
       const index = steps.findIndex((step, position) => (step.id ?? String(position + 1)) === lastStepId.current);
       const ended = index < 0 ? undefined : steps[index];
-      if (ended && !resolveTarget(ended.target)()) {
+      if (reason !== 'stop' && ended && !resolveTarget(ended.target)()) {
         const stepId = lastStepId.current!;
         if (resumePastUnreachableStep(index, stepId)) {
           return;
@@ -140,7 +142,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
     if (shouldRun && !tour.open) {
       tour.start(resumeAt.current);
     } else if (!shouldRun && tour.open) {
-      pausing.current = paused;
+      closing.current = running ? 'pause' : 'stop';
       closeRef.current?.click();
     }
   }, [shouldRun, tour.open]);
