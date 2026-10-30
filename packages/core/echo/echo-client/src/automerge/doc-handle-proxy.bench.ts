@@ -12,7 +12,7 @@ import { DocHandleProxy } from './doc-handle-proxy.ts';
 // sends, and acknowledging a local write. Both record which heads the host holds, so both price that
 // bookkeeping against a document with a long history and, for host changes, one head per peer.
 //
-//   pnpm exec vitest bench --run src/automerge/doc-handle-proxy.bench.ts
+//   DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run --project node src/automerge/doc-handle-proxy.bench.ts
 //
 
 type Counter = { count: number; items: Record<string, string> };
@@ -22,6 +22,8 @@ const HISTORY = 2_000;
 /** Measured updates per bench, each a fresh change, so the pool is built before timing starts. */
 const UPDATES = 1_000;
 const WARMUP = 50;
+/** tinybench calls the function once more before warmup and once before measuring, to detect async. */
+const DETECTION_CALLS = 2;
 const BENCH_OPTIONS = { time: 0, iterations: UPDATES, warmupTime: 0, warmupIterations: WARMUP };
 
 const withHistory = (): A.Doc<Counter> => {
@@ -51,7 +53,7 @@ const PEERS = 8;
  */
 const hostMutations = (history: A.Doc<Counter>): Uint8Array[] => {
   const peers = Array.from({ length: PEERS }, () => A.clone(history));
-  return Array.from({ length: UPDATES + WARMUP }, (unusedValue, index) => {
+  return Array.from({ length: UPDATES + WARMUP + DETECTION_CALLS }, (unusedValue, index) => {
     const peer = index % PEERS;
     const heads = A.getHeads(peers[peer]);
     peers[peer] = A.change(peers[peer], (draft) => {
@@ -70,7 +72,11 @@ describe('DocHandleProxy', { tags: ['manual'], timeout: 120_000 }, () => {
   bench(
     `integrate a host change (${HISTORY} changes of history, ${PEERS} concurrent peers)`,
     () => {
-      integrating._integrateHostUpdate(mutations[next++]);
+      const mutation = mutations[next++];
+      if (!mutation) {
+        throw new Error('host mutation pool exhausted');
+      }
+      integrating._integrateHostUpdate(mutation);
     },
     BENCH_OPTIONS,
   );
