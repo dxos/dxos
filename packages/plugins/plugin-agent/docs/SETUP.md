@@ -113,7 +113,8 @@ newer local builds and fails to bundle.
    node scripts/link-packages.mjs <dxos> --all --install
    ```
 
-Never commit the `file:` overrides; undo them with `git checkout -- package.json pnpm-lock.yaml && pnpm install`.
+Never commit the `file:` overrides. To undo them, check `git diff -- package.json pnpm-lock.yaml`, revert the
+`file:` entries (or the whole files, if the link made the only changes), then run `pnpm install`.
 
 ## Composer
 
@@ -139,6 +140,9 @@ Then serve:
 ```bash
 HTTPS=true DX_EDGE_BASE_URL=https://dev.dxos.network/ DX_HUB_URL=https://dev.dxos.network/hub/ DX_AUTH_URL=https://account.dev.composer.space moon run composer-app:serve -- --port 443 --strictPort
 ```
+
+macOS lets an unprivileged user bind port 443; on Linux, grant the permission to bind it or forward 443 to another
+port first.
 
 Open `https://local.composer.space`, sign up and create a passkey. The dev MCP server is
 `https://mcp.dev.dxos.network/mcp`.
