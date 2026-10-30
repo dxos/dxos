@@ -19,6 +19,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./bundle": {
+      "source": "./src/bundle/index.ts",
+      "types": "./dist/types/src/bundle/index.d.ts",
+      "import": "./dist/lib/bundle.mjs"
+    },
     "./bundler": {
       "source": "./src/bundler/index.ts",
       "types": "./dist/types/src/bundler/index.d.ts",
@@ -64,7 +69,8 @@
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "esbuild": "catalog:",
-    "miniflare": "catalog:"
+    "miniflare": "catalog:",
+    "oxc-parser": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",

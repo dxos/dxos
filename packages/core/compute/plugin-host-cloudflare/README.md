@@ -36,3 +36,21 @@ node dist/lib/bin/check-release.mjs \
   --dependency src/testing/test-base-plugin-entry.ts \
   --release-dir /tmp/edge-releases
 ```
+
+## Checking a plugin bundle
+
+`check-bundle` checks a built plugin bundle, laid out as the EDGE plugins spec describes (plugin files at the root,
+shared packages in `vendor/`), before it is published:
+
+```bash
+node dist/lib/bin/check-bundle.mjs <bundle dir> [--no-import]
+```
+
+It fails when:
+- the manifest or `vendor/manifest.json` is malformed;
+- a module does not parse;
+- an import or manifest URL names no file in the bundle;
+- a bare import of the plugin is not vendored;
+- a workerd module reaches a stylesheet or a browser-only body.
+
+Unless `--no-import` is given, it then rewrites the bundle's bare imports to `vendor/`, as EDGE's loader does, and imports each workerd module in workerd through Worker Loader. `@dxos/plugin-host-cloudflare/bundle` exports the same checks as `PluginBundle.check` and `PluginBundle.rewriteImports`.

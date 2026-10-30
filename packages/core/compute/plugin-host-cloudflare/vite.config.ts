@@ -6,7 +6,9 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'bin/check-bundle': 'src/bin/check-bundle.ts',
     'bin/check-release': 'src/bin/check-release.ts',
+    'bundle': 'src/bundle/index.ts',
     'bundler': 'src/bundler/index.ts',
     'index': 'src/index.ts',
     'testing': 'src/testing/index.ts',
