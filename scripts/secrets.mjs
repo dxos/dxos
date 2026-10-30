@@ -9,17 +9,19 @@
 // a 1Password item, for either local dev (`.dev.vars`, read by `wrangler dev`) or deployed Worker(s)
 // (`wrangler secret put`).
 //
-// The 1Password item's fields are matched by section label: a field in a section named "shared" applies to
-// every target; a field in a section matching the raw Cloudflare Worker name (e.g. "composer-preview", from
-// wrangler.jsonc's `env.<env>.name`) applies only there. Only CONCEALED fields are read.
+// Each app reads its own item, `network.dxos.<app>` (e.g. `network.dxos.docs`): from `eng-ops` for a deployed
+// environment, from `eng-dev` for `.dev.vars`, so no production value reaches a developer machine. A top-level field
+// applies to every environment; a field in a section named after the environment (`production`, `staging`,
+// `preview`; `local` for `.dev.vars`) overrides it there. Only CONCEALED fields are read, each pushed under its own
+// label, so the label is the Worker's binding name (`DX_POSTHOG_API_KEY`). An app with no item has no secrets.
 //
 // Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses) — the account associated
 // with this token has more than one account, so wrangler can't disambiguate non-interactively without it.
 //
 // Usage:
-//   secrets.mjs dev    <app>           [--item <1password-item-or-uuid>]
-//   secrets.mjs remote <env> [app|all] [--item <1password-item-or-uuid>] [--dry-run]
-//   secrets.mjs <dev|remote> [<env>] --config <wrangler.jsonc> [--item <1password-item-or-uuid>]
+//   secrets.mjs dev    <app>
+//   secrets.mjs remote <env> [app|all] [--dry-run]
+//   secrets.mjs <dev|remote> [<env>] --config <wrangler.jsonc>
 //
 // <app> (dev, required) / [app|all] (remote, defaults to `all` — the whole environment) names an app from
 // apps.mjs's APP_DIRS by its wrangler.jsonc `name` (the bare production Worker name, e.g. `composer`,
@@ -29,9 +31,6 @@
 // `--config` is an escape hatch for a wrangler.jsonc NOT in apps.mjs's APP_DIRS (e.g. discord-worker, edge
 // — deliberately excluded from the deploy pipeline); it targets that single config directly instead of
 // resolving apps.mjs.
-//
-// `--item` defaults to the "dxos app worker secrets" item's UUID — pinned rather than its display name,
-// since the name can be renamed/retitled in 1Password but the UUID never changes.
 //
 // Examples:
 //   node scripts/secrets.mjs dev composer          # `dev` the MODE — writes .dev.vars for `wrangler dev`.
@@ -45,9 +44,6 @@ import { join } from 'node:path';
 
 import { resolveApps } from '../.github/workflows/scripts/apps.mjs';
 
-// 1Password item "dxos app worker secrets" — referenced by UUID (stable) rather than name (renamable).
-const DEFAULT_ITEM = 'x5yuqygiiomwsd2fikbzvwpd6i';
-
 const args = process.argv.slice(2);
 const mode = args[0];
 if (mode !== 'dev' && mode !== 'remote') {
@@ -60,7 +56,6 @@ const flagValue = (name) => {
   return i === -1 ? undefined : args[i + 1];
 };
 
-const item = flagValue('item') ?? DEFAULT_ITEM;
 const explicitConfig = flagValue('config');
 const dryRun = args.includes('--dry-run');
 const root = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
@@ -91,14 +86,14 @@ let environment; // remote only
 if (explicitConfig) {
   environment = mode === 'remote' ? positionals[0] : undefined;
   if (mode === 'remote' && !environment) {
-    console.error('usage: secrets.mjs remote <env> --config <wrangler.jsonc> [--item <1password-item>]');
+    console.error('usage: secrets.mjs remote <env> --config <wrangler.jsonc>');
     process.exit(1);
   }
   targets = [{ name: null, wranglerConfig: explicitConfig }];
 } else if (mode === 'dev') {
   const appName = positionals[0];
   if (!appName) {
-    console.error('usage: secrets.mjs dev <app> [--item <1password-item>]');
+    console.error('usage: secrets.mjs dev <app>');
     console.error(`  <app> must be one of: ${allAppNames()}`);
     process.exit(1);
   }
@@ -112,7 +107,7 @@ if (explicitConfig) {
   environment = positionals[0];
   const only = positionals[1] ?? 'all';
   if (!environment) {
-    console.error('usage: secrets.mjs remote <env> [app|all] [--item <1password-item>] [--dry-run]');
+    console.error('usage: secrets.mjs remote <env> [app|all] [--dry-run]');
     process.exit(1);
   }
   const apps = resolveApps(root, { environment, only });
@@ -127,14 +122,43 @@ if (explicitConfig) {
   targets = apps;
 }
 
-console.log(`Fetching secrets from 1Password item "${item}"`);
-let itemJson;
-try {
-  itemJson = JSON.parse(execFileSync('op', ['item', 'get', item, '--format', 'json'], { encoding: 'utf8' }));
-} catch (err) {
-  console.error(`Failed to read 1Password item "${item}": ${err.stderr?.toString().trim() || err.message}`);
-  process.exit(1);
-}
+// Deployed environments read the restricted vault; `.dev.vars` reads the development one.
+const vault = mode === 'remote' ? 'eng-ops' : 'eng-dev';
+const section = mode === 'remote' ? environment : 'local';
+
+/** The app's `network.dxos.<app>` item in `vault`, or `undefined` when the app has none. */
+const readItem = (app) => {
+  const name = `network.dxos.${app}`;
+  console.log(`Fetching secrets from 1Password item "${vault}/${name}"`);
+  try {
+    return JSON.parse(
+      execFileSync('op', ['item', 'get', name, '--vault', vault, '--format', 'json', '--reveal'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    );
+  } catch (err) {
+    const stderr = err.stderr?.toString() ?? '';
+    if (/isn't an item/i.test(stderr)) {
+      return undefined;
+    }
+    console.error(`Failed to read 1Password item "${vault}/${name}": ${stderr.trim() || err.message}`);
+    process.exit(1);
+  }
+};
+
+/** CONCEALED fields at the top level, overridden by the same label in `section`. */
+const fieldsFor = (item) => {
+  const byLabel = new Map();
+  const concealed = item.fields.filter((field) => field.type === 'CONCEALED' && field.value !== undefined);
+  for (const field of concealed.filter((field) => !field.section?.label)) {
+    byLabel.set(field.label, field);
+  }
+  for (const field of concealed.filter((field) => field.section?.label === section)) {
+    byLabel.set(field.label, field);
+  }
+  return [...byLabel.values()];
+};
 
 /**
  * `wrangler secret put` creates a new version AND deploys it, so it refuses when the Worker's latest
@@ -184,9 +208,6 @@ for (const target of targets) {
   }
   const wranglerConf = JSON5.parse(readFileSync(absConfigPath, 'utf8'));
 
-  // The 1Password section label is matched against the raw Cloudflare Worker name (production's is
-  // currently the bare app name — the legacy Pages-era name, retired once that project goes away — so it
-  // won't match a "<app>-production" section until then; every other env's name already matches exactly).
   let workerName;
   if (mode === 'remote') {
     workerName = wranglerConf.env?.[environment]?.name;
@@ -200,16 +221,14 @@ for (const target of targets) {
     workerName = wranglerConf.name;
   }
 
-  console.log(`\n--- ${workerName} (section: "shared" or "${workerName}") ---`);
-  const secrets = itemJson.fields.filter(
-    (field) =>
-      field.type === 'CONCEALED' &&
-      field.value !== undefined &&
-      (field.section?.label === 'shared' || field.section?.label === workerName),
-  );
+  console.log(`\n--- ${workerName} (top level, or section "${section}") ---`);
+  const item = readItem(wranglerConf.name);
+  const secrets = item ? fieldsFor(item) : [];
 
   if (secrets.length === 0) {
-    console.log(`No matching CONCEALED fields — nothing to do.`);
+    console.log(
+      `No ${item ? 'matching CONCEALED fields' : `network.dxos.${wranglerConf.name} item in ${vault}`} — nothing to do.`,
+    );
     continue;
   }
 

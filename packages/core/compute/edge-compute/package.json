@@ -59,8 +59,7 @@
     "src"
   ],
   "scripts": {
-    "publish-runtime": "pnpm run secrets && node ./scripts/build-modules.mjs && node --env-file=.env ./scripts/upload-modules.mjs --env dev",
-    "secrets": "node ./scripts/secrets.mjs"
+    "publish-runtime": "node ./scripts/build-modules.mjs && R2_ACCESS_KEY_ID=op://eng-ops/com.cloudflare/SCRIPT_VENDOR_R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY=op://eng-ops/com.cloudflare/SCRIPT_VENDOR_R2_SECRET_ACCESS_KEY op run -- node ./scripts/upload-modules.mjs --env dev"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
