@@ -217,8 +217,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* A square cell the height of the control, so the letter is centred in it whatever its width. */
-    width: var(--dx-control-size);
+    /* A narrow cell, one icon wide, so the letter is centred in it whatever its width. */
+    width: var(--dx-control-icon);
     font-size: var(--dx-label-font-size);
     user-select: none;
   }
