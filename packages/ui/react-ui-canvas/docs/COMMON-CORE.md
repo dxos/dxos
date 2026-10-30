@@ -13,6 +13,10 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
    modes are ported.
 5. Standing rule: every feature is designed for both dimensions first — shared behaviour and shared implementation;
    only the viewport and dimension-specific geometry differ.
+6. Styles: one term, **Style**, with typed variants `Style2D` (CSS-like) and `Style3D` (material-like) — the two are
+   not conflated. One mechanism: named styles defined in the model, overridden by layouts, referenced by elements by
+   id with per-element overrides, and resolved through shared **style catalogs** (custom catalogs as ECHO objects;
+   themes as the default catalogs).
 
 ## Why
 
@@ -32,21 +36,44 @@ SceneEditor (react-ui-canvas) Root: store (selection, tool, drill path, history,
 DimensionConfig               2D: SVG/DOM viewport, Vec2 geometry   ·   3D: Babylon viewport, Vec3 geometry
 ```
 
-### Data (unchanged in shape; now the only model)
+### Data (now the only model)
 
 ```ts
-type Model<O>  = { name?; objects: Record<string, O> }           // O = Object2D | Object3D
-type Layout<E> = { name?; model?; elements: Record<string, E>; props? }
-type Scene<C>  = { name?; theme?; layout; camera: C }             // camera = authored view only (D-47)
-BaseElement    = { id; object?; kind?; style?; label?; layer?; from?; to?; members?; arrange?; props? }
-Element2D      = BaseElement & { center?: Vec2; size?: Size2; rotation?: number }
-Element3D      = BaseElement & { center?: Vec3; scale?: Vec3; rotation?: Vec3 }
-LayoutIntent | ModelIntent                                         // the one edit vocabulary
+type Model<O, S>  = { name?; objects: Record<string, O>; styles: Record<string, S>; catalogs?: Ref<StyleCatalog>[] }
+type Layout<E, S> = { name?; model?; elements: Record<string, E>; styles?: Record<string, Partial<S>>; props? }
+type Scene<C>     = { name?; theme?; layout; camera: C }          // camera = authored view only (D-47)
+BaseElement       = { id; object?; kind?; style?: string; label?; layer?; from?; to?; members?; arrange?; props? }
+Element2D         = BaseElement & { center?: Vec2; size?: Size2; rotation?: number; overrides?: Partial<Style2D> }
+Element3D         = BaseElement & { center?: Vec3; scale?: Vec3; rotation?: Vec3; overrides?: Partial<Style3D> }
+LayoutIntent | ModelIntent                                        // the one edit vocabulary
 ```
 
 2D-only data that today lives in react-ui-canvas records (ports, path points, view/portal links, lattice and
-constraint models, style classes) moves into `props` under documented keys or into typed fields on `BaseElement`
-where both dimensions need it. Deciding each is part of step 1 below.
+constraint models) moves into `props` under documented keys or into typed fields on `BaseElement` where both
+dimensions need it. Deciding each is part of step 1 below.
+
+### Styles
+
+```ts
+Style2D = { name?; fill?; stroke?; lineStyle?; fontFamily?; fontSize?; opacity?; … }       // CSS-like
+Style3D = { name?; color?; metalness?; roughness?; opacity?; glass?; emissive?; … }         // material-like
+class StyleCatalog /* ECHO */ { name; dim: '2d' | '3d'; styles: Record<string, Style2D | Style3D> }
+
+// One shared resolver; nearest wins.
+resolveStyle<S>(element, layout, model, catalogs, defaults): S
+//   element.overrides → layout.styles[id] → model.styles[id] → model.catalogs (in order) → default catalog (theme)
+```
+
+- `element.style` names a style in either dimension; only what a style contains differs.
+- A catalog entry is addressed by catalog and key (`brand:warning`), so equal keys in different catalogs don't
+  collide.
+- Themes are default catalogs: 2D's theme registry and 3D's CAD/Presentation looks are each a default
+  `StyleCatalog`, and the Display panel's theme picker chooses the default catalog in both dimensions.
+- The inspector gains a **Styles** section (shared): the drawing's styles, then its catalogs; "New style from
+  selection" (today's 2D "new class") works in both dimensions.
+- Migration: `@dxos/scene`'s shared `Style` tokens are replaced by `Style2D`/`Style3D` (supersedes D-14);
+  react-ui-canvas's `StyleClass` and `Canvas.styles` become `Style2D` entries in `Model.styles`, a node's `class`
+  becomes `style`, and its own style fields become `overrides`; 3D's look tokens become `Style3D`.
 
 ### Editor
 
@@ -142,9 +169,7 @@ react-ui-canvas stories; 2D behaviour stays at parity throughout.
 
 ## Open questions
 
-1. Style classes: they live on `Canvas.styles` today. Move them to the shared data (on `Model` or `Layout`) so 3D
-   elements can take a class too?
-2. The uncommitted display-panel edits left by the stopped frame agent (3D grid kinds, renderer, styles): keep them
+1. The uncommitted display-panel edits left by the stopped frame agent (3D grid kinds, renderer, styles): keep them
    as the start of step 2, or discard?
 
 ## Not in scope
