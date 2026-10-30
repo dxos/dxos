@@ -18,7 +18,6 @@ import { sleep } from '@dxos/async';
 //
 // USAGE:
 // R2_ACCESS_KEY_ID=<key> R2_SECRET_ACCESS_KEY=<secret> ./upload-modules.mjs --env <env>
-// `pnpm publish-runtime` resolves both from `eng-ops/com.cloudflare/SCRIPT_VENDOR_R2_*` with `op run`.
 //
 // This script uploads vendored packages to Cloudflare R2 bucket using S3 API calls.
 // Files are uploaded to <bucket>/<env>/ prefix with 10 concurrent threads.
