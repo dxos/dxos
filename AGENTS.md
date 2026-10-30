@@ -58,6 +58,12 @@ a large skill loads mid-session (see `.claude/README.md` §A).
   a-or-b, never a bare open question.
 - **Lead with the answer.** No preamble, no restatement of the request, no
   narration of what you are about to do.
+- **End with self-contained next steps.** When a reply closes with instructions
+  for the user (commands to run, files to open, choices to make), state them
+  directly and concisely with every value inlined — paths, commands, URLs, IDs.
+  Never point back into the body ("with the settings above", "the file I
+  mentioned"); a long reply's closing steps must work if they are the only part
+  the user reads.
 - **Verbosity is a mode.** `terse` answers in 1–2 sentences, with follow-ups as a
   short flat numbered list; `normal` (the default) sets no budget but keeps
   length proportionate — length is earned by content, never by restating. Set it

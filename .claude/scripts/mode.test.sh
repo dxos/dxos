@@ -129,6 +129,7 @@ mkdir "$focus"
 out=$(run "$(payload 'status?')" 2> /dev/null)
 check '8a no FOCUS emitted' '0' "$(printf '%s' "$out" | grep -c '^- FOCUS:')"
 check '8b rules still emitted' '1' "$(printf '%s' "$out" | grep -c 'RESPONSE RULES')"
+check '8c closing-steps rule emitted' '1' "$(printf '%s' "$out" | grep -c 'context-free next steps')"
 rmdir "$focus"
 
 echo '=== 9. an over-long pin is truncated'
