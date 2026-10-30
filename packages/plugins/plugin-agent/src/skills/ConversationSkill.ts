@@ -4,9 +4,14 @@
 
 // @import-as-namespace
 
+import * as Schema from 'effect/Schema';
+
+import * as Harness from '@dxos/assistant/Harness';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
+import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { AgentOperation, MemoryOperation } from '#types';
@@ -20,6 +25,23 @@ const operations = [
   MemoryOperation.Remember,
   MemoryOperation.Recall,
 ];
+
+/**
+ * The skill's end-request hook: re-prompts an agent that ended a channel conversation's request with text it never
+ * sent. Defined beside the skill rather than in `#types` because the harness service it needs carries the session
+ * runtime, which the UI must not load.
+ */
+export const EnsureReplySent = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.ensureReplySent'),
+    name: 'Ensure reply sent',
+    description: 'Reminds the agent to send its reply when it answered a channel conversation in plain text.',
+    icon: 'ph--paper-plane-tilt--regular',
+  },
+  services: [Harness.HarnessService],
+  input: Schema.Struct({}),
+  output: Hook.Output,
+});
 
 const tool = Operation.toolName;
 
@@ -50,3 +72,7 @@ export const make = (): Skill.Skill =>
       `,
     }),
   });
+
+export const hooks: Hook.Declaration[] = [
+  { key: 'org.dxos.hook.agent.ensureReplySent', event: 'end-request', skill: key, operation: EnsureReplySent },
+];
