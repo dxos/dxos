@@ -21,7 +21,7 @@ import { ClientCapabilities } from '#types';
  * Builds the swarm broadcast subscription request. The peer must be a buf message: the RPC encoder
  * rejects a plain `{ peerKey }`, and the failed subscription would leave every remote meter silent.
  */
-export const createSubscribeRequest = (peerKey: string, tags: string[]): NetworkService.SubscribeMessagesRequest => ({
+const createSubscribeRequest = (peerKey: string, tags: string[]): NetworkService.SubscribeMessagesRequest => ({
   peer: createBuf(PeerSchema, { peerKey }),
   tags,
 });
