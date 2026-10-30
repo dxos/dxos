@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import React, { Fragment, useCallback, useEffect, useMemo } from 'react';
+import React, { Fragment, useEffect, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -20,32 +20,18 @@ import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
-  Bullets,
   type CanvasBoard,
-  ComputeContext,
+  ComputeBoard,
   ComputeGraphController,
   type ComputeServices,
-  boardViewId,
-  computeNodeRegistry,
-  createComputeProjection,
-  createEchoStore,
 } from '@dxos/react-ui-canvas-compute';
-import {
-  Canvas,
-  type FreehandProjectionOptions,
-  createCanvasAtoms,
-  useCanvasHistory,
-  useRegistry,
-  useViewProjection,
-} from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
 
 export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
 /**
- * The board on the scene engine (MIGRATION.md M4): `Canvas` over an ECHO store of the board's own
- * layout, with the compute projection keeping the compute graph in step. The editor's own canvas,
- * graph model and monitor are gone — the store is the persistence and the projection is the mirror.
+ * The board in the shared scene editor: its graph read as a 2D layout, every edit a `LayoutIntent` written to the board
+ * and mirrored into its compute graph.
  */
 export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: CanvasArticleProps) => {
   const controller = useGraphController(subject);
@@ -53,65 +39,16 @@ export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: Ca
     return null;
   }
 
-  // The scene is everything below: a board without its compute graph has no projection to render through.
-  return <CanvasScene role={role} subject={subject} controller={controller} />;
+  // A board without its compute graph has nothing to run, so it is not drawn.
+  const Root = role === AppSurface.Section.role ? Container : Fragment;
+  return (
+    <Root>
+      <ComputeBoard board={subject} controller={controller} role={role} />
+    </Root>
+  );
 };
 
 CanvasArticle.displayName = 'CanvasArticle';
-
-type CanvasSceneProps = Pick<CanvasArticleProps, 'role' | 'subject'> & { controller: ComputeGraphController };
-
-const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
-  const registry = useRegistry();
-  const store = useMemo(() => createEchoStore(subject), [subject]);
-  const sceneId = useMemo(() => boardViewId(subject), [subject]);
-  const atoms = useMemo(() => createCanvasAtoms(sceneId), [sceneId]);
-  const createProjection = useCallback(
-    (options: FreehandProjectionOptions) => createComputeProjection({ ...options, controller }),
-    [controller],
-  );
-  // Shared with the canvas, so its edits through this projection undo there.
-  const history = useCanvasHistory({ registry, atoms, store });
-  const projection = useViewProjection({ store, atoms, createProjection, history });
-
-  // A function body opening grows its node through the model, so its links re-route with it.
-  const resize = useCallback(
-    (nodeId: string, delta: number) => {
-      const node = registry.get(projection.scene).nodes[nodeId];
-      if (node) {
-        projection.apply({
-          kind: 'update',
-          id: nodeId,
-          values: { size: { width: node.size.width, height: node.size.height + delta } },
-        });
-      }
-    },
-    [registry, projection],
-  );
-
-  const Root = role === AppSurface.Section.role ? Container : Fragment;
-
-  return (
-    <ComputeContext.Provider value={{ controller, resize }}>
-      <Root>
-        <Canvas.Root
-          store={store}
-          root={sceneId}
-          atoms={atoms}
-          nodes={computeNodeRegistry}
-          projection={projection}
-          history={history}
-        >
-          <Canvas.Viewport overlay={<Bullets controller={controller} projection={projection} />} />
-          <Canvas.Navigation />
-          <Canvas.Actions />
-          <Canvas.Camera />
-          <Canvas.Tools />
-        </Canvas.Root>
-      </Root>
-    </ComputeContext.Provider>
-  );
-};
 
 const Container = (props: Layout.FlexProps) => (
   <Layout.Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />

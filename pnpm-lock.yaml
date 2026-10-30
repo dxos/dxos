@@ -23804,6 +23804,9 @@ importers:
       '@dxos/react-ui-experimental':
         specifier: workspace:*
         version: link:../react-ui-experimental
+      '@dxos/react-ui-scene':
+        specifier: workspace:*
+        version: link:../react-ui-scene
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter

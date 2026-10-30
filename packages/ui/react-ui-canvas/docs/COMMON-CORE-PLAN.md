@@ -114,6 +114,36 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   per-layout lattice projection the 2D viewport uses (`layoutProjection`, shared). Rejected: `SceneArticle` in the
   card role, which makes an editor store and history per card in a grid of cards. Cost if wrong: the card renders
   `<SceneArticle role='card'>` instead.
+- **R-21 (2026-10-30, agent, E.3): a `CanvasBoard` keeps its stored graph (`layout: { nodes, edges }`), read and
+  written as a `Scene.LayoutRecord2D`.** react-ui-canvas-compute `createBoardStore` reads the board as one layout
+  (shapes, then links, on one z sequence) and writes every edit as a `LayoutIntent` reconciled back in place, so
+  persisted boards and the compute graph's node ids stay valid with no migration (`canvas-board.test.ts` pins a
+  persisted board). Rejected: a `Layout2D` Ref on the board with an ECHO migration. Cost if wrong: that migration later.
+- **R-22 (2026-10-30, agent, E.3): no `ElementKindRegistry` exists yet, so compute kinds are its NodeDefs registered by
+  schema in @dxos/scene `KindRegistry` (`computeKinds`).** The NodeRegistry rename is E.4's (`ElementKindSpec`). Cost
+  if wrong: a rename of `computeKinds`' source when E.4 lands.
+- **R-23 (2026-10-30, agent, E.3): compute's viewport lowers kind fields into `props.canvas` and lifts its writes
+  back.** Kind fields sit on the element (decision 13), but the 2D viewport's adapter carries a node's own fields only
+  in `props.canvas` (R-18), and E.1/E.2 own that adapter. `createComputeViewport` (`scene/config.tsx`, over
+  `scene/viewport-form.ts`) wraps config2d's viewport: draws the lowered form, lifts create/update/batch intents, and
+  keeps a stored value (a Ref) its write left equal. Link canvas fields (`type`, `ends`) stay in `props.canvas`, as
+  every 2D link does. Cost if wrong: none beyond the pass per render; delete it when the viewport draws kind fields (E.6).
+- **R-24 (2026-10-30, agent, E.3): the compute graph mirrors the board by diffing the layout before and after each
+  write.** `createComputeProjection` removes and adds compute nodes and edges for changed shapes and links; it refuses
+  self-links (`applyIntent` accepts them), gives a created compute shape a new node id when its own is missing or
+  claimed (a paste), and deletes trigger objects only on a direct delete, never on undo/redo (`restored`, called by the
+  board's `VersionedSource`). Cost if wrong: one diff per write, linear in the board.
+- **R-25 (2026-10-30, agent, E.3): runtime ports (a function's schema) are drawn, never stored.** Cost if wrong: none.
+- **R-26 (2026-10-30, agent, E.3): output bullets are drawn beside each link's path, not in a viewport layer,**
+  because the 2D viewport has no overlay slot and E.1/E.2 are editing it. Cost if wrong: a move into an overlay slot.
+- **R-27 (2026-10-30, agent, E.3): plugin-conductor's board edits only in its article role,** by the shared editor's
+  role rule (`editsInRole`); a section draws it as a picture. Before, the section edited too. Cost if wrong: pass
+  `role` as `undefined` from the section surface.
+- **R-28 (2026-10-30, agent, E.3): the compute stories' debug sidebar became the `Compute` inspector section**
+  (the selected node's type, id and ports, else the graph's diagnostics). Cost if wrong: a story-only panel again.
+- **R-29 (2026-10-30, agent, E.3, parity): no change to the shared editor contract; compute boards are 2D-only.**
+  The compute config is config2d plus its own section and viewport wrapper; react-ui-canvas-compute gains a workspace
+  dependency on react-ui-scene for `createConfig2D`. 3D: nothing to do. Cost if wrong: none.
 
 ## Global Constraints
 
@@ -761,6 +791,9 @@ use `Layout2D` + intents; `CanvasBoard` renders `SceneEditor` with a compute con
 Failing tests ported from `scene.test.ts`, `echo-store.test.ts`, `createComputeGraph.test.ts` → implement → PASS;
 browser-check the compute stories and plugin-conductor's board; commit `react-ui-canvas-compute: compute board on the
 shared model`.
+
+- [x] Board read and written as a `LayoutRecord2D` (R-21); compute kinds in `KindRegistry` (R-22); `ComputeBoard` on
+      `SceneEditor` with the compute config (R-23, R-28) in the stories and plugin-conductor (R-27).
 
 ### Task E.4: plugin-uml
 

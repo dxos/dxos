@@ -3,6 +3,7 @@
 //
 
 export * from './Bullets.tsx';
+export * from './config.tsx';
 export * from './echo-store.ts';
 export * from './projection.ts';
-export * from './scene.ts';
+export * from './viewport-form.ts';

@@ -3,14 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { createEchoStore } from '../scene/index.ts';
+import { createBoardStore } from '../scene/index.ts';
 import { CanvasBoard } from './index.ts';
 
 /**
@@ -69,37 +68,36 @@ describe('CanvasBoard', () => {
     expect(json).toEqual(persistedBoard);
   });
 
-  test('the echo store reads the persisted layout as a scene', async ({ expect }) => {
+  test('the board store reads the persisted layout as a 2D layout', async ({ expect }) => {
     const [board] = await EffectEx.runPromise(loadBoard);
-    const store = createEchoStore(board);
-    const scene = Registry.make().get(store.view(board.id));
-    expect(scene?.name).toBe('Circuit');
-    expect(Object.keys(scene?.nodes ?? {})).toEqual(['switch-1', 'note-1']);
-    expect(scene?.nodes['note-1']).toMatchObject({ type: 'note', text: 'Hello', center: { x: 0, y: -128 } });
-    expect(scene?.links['edge-1']).toMatchObject({
+    const layout = createBoardStore(board).read();
+    expect(layout).toMatchObject({ id: board.id, dim: '2d', name: 'Circuit' });
+    expect(Object.keys(layout.elements)).toEqual(['switch-1', 'note-1', 'edge-1']);
+    expect(layout.elements['note-1']).toMatchObject({ type: 'note', text: 'Hello', center: { x: 0, y: -128 } });
+    expect(layout.elements['switch-1']).toMatchObject({ type: 'switch', node: 'compute-1' });
+    expect(layout.elements['edge-1']).toMatchObject({
       source: { node: 'switch-1', port: 'output.value' },
       target: { node: 'note-1', port: 'input.input' },
     });
   });
 
-  test('a shape added through the echo store is written to the stored board', async ({ expect }) => {
+  test('a shape created through the board store is written to the stored board', async ({ expect }) => {
     const [board] = await EffectEx.runPromise(loadBoard);
-    const store = createEchoStore(board);
-    const registry = Registry.make();
-    const scene = registry.get(store.view(board.id));
-    if (!scene) {
-      throw new Error('The board has no scene.');
-    }
-    const rect = {
-      id: 'rect-1',
-      type: 'rect',
-      z: 'z',
-      center: { x: 256, y: 0 },
-      size: { width: 128, height: 64 },
-      label: 'Added',
-    };
-    registry.set(store.views, { [board.id]: { ...scene, nodes: { ...scene.nodes, [rect.id]: rect } } });
+    const store = createBoardStore(board);
+    store.write({
+      kind: 'create',
+      element: {
+        id: 'rect-1',
+        type: 'rect',
+        z: 'z',
+        center: { x: 256, y: 0 },
+        size: { width: 128, height: 64 },
+        label: 'Added',
+      },
+    });
     expect(board.layout.nodes.map((node) => node.id)).toEqual(['switch-1', 'note-1', 'rect-1']);
-    expect(board.layout.nodes[2]).toMatchObject({ type: 'rect', size: { width: 128, height: 64 } });
+    expect(board.layout.nodes[2]).toMatchObject({ type: 'rect', size: { width: 128, height: 64 }, label: 'Added' });
+    // The stored connection is untouched by a write that does not change it.
+    expect(board.layout.edges[0]).toEqual(persistedBoard.layout.edges[0]);
   });
 });

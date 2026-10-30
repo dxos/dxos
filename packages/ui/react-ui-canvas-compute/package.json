@@ -53,6 +53,7 @@
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-experimental": "workspace:*",
+    "@dxos/react-ui-scene": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/types": "workspace:*",

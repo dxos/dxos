@@ -99,6 +99,9 @@
       "path": "../react-ui-experimental"
     },
     {
+      "path": "../react-ui-scene"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {

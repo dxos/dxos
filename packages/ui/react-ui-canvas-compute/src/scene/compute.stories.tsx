@@ -2,33 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { type GraphDiagnostic } from '@dxos/conductor';
+import { Ref } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import {
-  Canvas,
-  type FreehandProjectionOptions,
-  createCanvasAtoms,
-  createMemoryStore,
-  useCanvasHistory,
-  useRegistry,
-  useViewProjection,
-} from '@dxos/react-ui-canvas/scene';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { DiagnosticOverlay } from '../components/index.ts';
+import { ComputeBoard } from '../components/index.ts';
 import { type ComputeGraphController, createComputeGraphController } from '../graph/index.ts';
-import { ComputeContext } from '../hooks/index.ts';
-import { computeNodeRegistry } from '../registry.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -42,51 +28,19 @@ import {
   createTransformCircuit,
 } from '../testing/index.ts';
 import { createStoryRuntime } from '../testing/services.ts';
-import { Bullets } from './Bullets.tsx';
-import { createComputeProjection } from './projection.ts';
-import { viewFromCircuit } from './scene.ts';
+import { CanvasBoard } from '../types/index.ts';
 
 //
-// The compute circuits on the scene engine (MIGRATION.md M3): the same controller, shapes and circuits
-// as the `compute` stories, rendered by `Canvas` through the compute projection.
+// The compute circuits on the shared scene editor: each circuit as a board, edited through `LayoutIntent`s that the
+// compute projection mirrors into the controller's graph.
 //
-
-const sidebarTypes = ['scene', 'compute', 'controller', 'selected'] as const;
-type Sidebar = (typeof sidebarTypes)[number];
 
 type StoryProps = {
   controller: ComputeGraphController;
-  circuit: ReturnType<typeof createEmptyCircuit>;
-  sidebar?: Sidebar;
+  board: CanvasBoard.CanvasBoard;
 };
 
-const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps) => {
-  const registry = useRegistry();
-  const scene = useMemo(() => viewFromCircuit(circuit), [circuit]);
-  const store = useMemo(() => createMemoryStore([scene]), [scene]);
-  const atoms = useMemo(() => createCanvasAtoms(scene.id), [scene.id]);
-  const createProjection = useCallback(
-    (options: FreehandProjectionOptions) => createComputeProjection({ ...options, controller }),
-    [controller],
-  );
-  // Shared with the canvas, so its edits through this projection undo there.
-  const history = useCanvasHistory({ registry, atoms, store });
-  const projection = useViewProjection({ store, atoms, createProjection, history });
-  // A function body opening grows its node through the model, so links re-route with it.
-  const resize = useCallback(
-    (id: string, delta: number) => {
-      const node = registry.get(projection.scene).nodes[id];
-      if (node) {
-        projection.apply({
-          kind: 'update',
-          id,
-          values: { size: { width: node.size.width, height: node.size.height + delta } },
-        });
-      }
-    },
-    [registry, projection],
-  );
-
+const DefaultStory = ({ controller, board }: StoryProps) => {
   useEffect(() => {
     void controller.open();
     return () => {
@@ -94,98 +48,7 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
     };
   }, [controller]);
 
-  const [diagnostics, setDiagnostics] = useState<GraphDiagnostic[]>([]);
-  useEffect(() => {
-    void controller.checkGraph().then(() => setDiagnostics(controller.diagnostics));
-  }, [controller]);
-
-  const [sidebar, setSidebar] = useState<Sidebar | undefined>(sidebarProp);
-
-  return (
-    <div className='grid grid-cols-[1fr_360px] dx-fill'>
-      <ComputeContext.Provider value={{ controller, resize }}>
-        <div className={sidebar ? 'relative flex overflow-hidden' : 'relative flex overflow-hidden col-span-2'}>
-          <Canvas.Root
-            store={store}
-            root={scene.id}
-            atoms={atoms}
-            nodes={computeNodeRegistry}
-            projection={projection}
-            history={history}
-          >
-            <Canvas.Viewport overlay={<Bullets controller={controller} projection={projection} />} />
-            <Canvas.Navigation />
-            <Canvas.Actions />
-            <Canvas.Camera />
-            <Canvas.Tools />
-          </Canvas.Root>
-          <DiagnosticOverlay diagnostics={diagnostics} />
-        </div>
-      </ComputeContext.Provider>
-      {sidebar && (
-        <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
-          <Toolbar.Root>
-            <Select.Root
-              value={[sidebar]}
-              onValueChange={({ value: [value] }) => setSidebar(value as Sidebar)}
-              items={sidebarTypes.map((type) => ({ value: type, label: type }))}
-            >
-              <Select.Trigger classNames='w-full' />
-              <Select.Content>
-                {sidebarTypes.map((type) => (
-                  <Select.Item key={type} item={{ value: type, label: type }} />
-                ))}
-              </Select.Content>
-            </Select.Root>
-          </Toolbar.Root>
-          <SidebarJson sidebar={sidebar} controller={controller} projection={projection} atoms={atoms} />
-        </div>
-      )}
-    </div>
-  );
-};
-
-const SidebarJson = ({
-  sidebar,
-  controller,
-  projection,
-  atoms,
-}: {
-  sidebar: Sidebar;
-  controller: ComputeGraphController;
-  projection: ReturnType<typeof useViewProjection>;
-  atoms: ReturnType<typeof createCanvasAtoms>;
-}) => {
-  const scene = useAtomValue(projection.scene);
-  const selection = useAtomValue(atoms.selection);
-  const [selected] = [...selection];
-  const node = selected ? scene.nodes[selected] : undefined;
-  const json = useMemo(() => {
-    switch (sidebar) {
-      case 'scene':
-        return { scene };
-      case 'compute':
-        return { graph: controller.graph };
-      case 'controller':
-        return { state: controller.state };
-      case 'selected':
-        return {
-          node,
-          compute:
-            node && 'node' in node && typeof node.node === 'string' ? controller.graph.getNode(node.node) : undefined,
-        };
-    }
-  }, [sidebar, scene, controller, node]);
-  return (
-    <Syntax.Root data={json}>
-      <Syntax.Content>
-        <Syntax.Filter />
-        <Syntax.Viewport>
-          <Syntax.Code />
-        </Syntax.Viewport>
-      </Syntax.Content>
-    </Syntax.Root>
-  );
+  return <ComputeBoard board={board} controller={controller} />;
 };
 
 const meta = {
@@ -199,11 +62,10 @@ const meta = {
     withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ capabilities }),
   ],
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', translations: uiTranslations },
   argTypes: {
     controller: { table: { disable: true } },
-    circuit: { table: { disable: true } },
-    sidebar: { control: 'select', options: [...sidebarTypes, undefined] },
+    board: { table: { disable: true } },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -211,10 +73,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The controller over the circuit; `createComputeGraph` writes each shape's compute node id first. */
+/** The controller over the circuit (`createComputeGraph` writes each shape's compute node id first) and its board. */
 const circuitArgs = (build: () => ReturnType<typeof createEmptyCircuit>): StoryProps => {
   const { controller, graph } = createComputeGraphController(build(), createStoryRuntime());
-  return { controller, circuit: graph };
+  const board = CanvasBoard.make({
+    name: 'Circuit',
+    layout: { nodes: [...graph.nodes], edges: [...graph.edges] },
+    computeGraph: Ref.make(controller.graph.root),
+  });
+  return { controller, board };
 };
 
 export const Default: Story = { args: circuitArgs(createEmptyCircuit) };

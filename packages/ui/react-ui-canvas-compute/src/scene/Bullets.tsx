@@ -3,17 +3,16 @@
 //
 
 //
-// The editor's bullets over the scene engine: a dot runs along a link's path when the compute node at
-// its source emits the property the link carries. Drawn as an overlay in scene coordinates; the paths
-// are found by the link id the layer stamps on them.
+// The editor's bullets over the shared editor: a dot runs along a link's path when the compute node at its source emits
+// the property the link carries. Each dot is drawn beside the path it follows, in the path's own coordinates; the paths
+// are found by the link id the 2D viewport stamps on them.
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useEffect, useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type Projection, type View } from '@dxos/react-ui-canvas/scene';
-import { endpointNode } from '@dxos/scene';
+import { useSceneEditor } from '@dxos/react-ui-canvas';
+import { type Scene, findLayout } from '@dxos/scene';
 
 import { type ComputeGraphController } from '../graph/index.ts';
 import { parseAnchorId } from '../shapes/index.ts';
@@ -21,61 +20,70 @@ import { parseAnchorId } from '../shapes/index.ts';
 const RADIUS = 3;
 const DURATION_MS = 500;
 const MAX_BULLETS = 32;
+const BULLET_CLASS = 'fill-orange-500';
 
 export type BulletsProps = {
   controller: ComputeGraphController;
-  projection: Projection;
 };
 
-/** Links leaving the compute node `nodeId` through `property`. */
-const outgoing = (scene: View, nodeId: string, property: string) =>
-  Object.values(scene.links).filter((link) => {
-    const source = endpointNode(link.source);
-    const node = source ? scene.nodes[source] : undefined;
-    if (!node || !('node' in node) || node.node !== nodeId) {
-      return false;
-    }
-    const port = 'port' in link.source ? link.source.port : undefined;
-    return (port ? parseAnchorId(port)[1] : DEFAULT_OUTPUT) === property;
-  });
+/** The ids of the links leaving the compute node `nodeId` through `property`. */
+const outgoing = (layout: Scene.LayoutRecord | undefined, nodeId: string, property: string): string[] =>
+  layout?.dim !== '2d'
+    ? []
+    : Object.values(layout.elements).flatMap(({ id, type, source }) => {
+        const node = layout.elements[source?.node ?? ''];
+        const port = source?.port;
+        return type === 'link' && node?.node === nodeId && (port ? parseAnchorId(port)[1] : DEFAULT_OUTPUT) === property
+          ? [id]
+          : [];
+      });
 
-export const Bullets = ({ controller, projection }: BulletsProps) => {
-  const scene = useAtomValue(projection.scene);
-  const sceneRef = useRef(scene);
-  sceneRef.current = scene;
-  const layerRef = useRef<SVGGElement>(null);
+/** Renders nothing itself: it marks where in the page the editor's viewport is. */
+export const Bullets = ({ controller }: BulletsProps) => {
+  const { document, layout } = useSceneEditor('Bullets');
+  const latest = useRef({ document, layout });
+  latest.current = { document, layout };
+  const markerRef = useRef<HTMLSpanElement>(null);
 
   useEffect(
     () =>
       controller.output.on(({ nodeId, property, value }) => {
-        const layer = layerRef.current;
-        const root = layer?.closest('[data-testid="scene-view"]');
-        if (!layer || !root || value.type === 'not-executed') {
+        const root = viewportOf(markerRef.current);
+        if (!root || value.type === 'not-executed') {
           return;
         }
-        for (const link of outgoing(sceneRef.current, nodeId, property)) {
-          const path = root.querySelector(`path[data-link-id="${link.id}"]`);
-          if (path instanceof SVGPathElement && layer.childElementCount < MAX_BULLETS) {
-            fireBullet(layer, path);
+        const { document, layout } = latest.current;
+        const record = layout === undefined ? undefined : findLayout(document, layout);
+        for (const id of outgoing(record, nodeId, property)) {
+          const path = root.querySelector(`path[data-link-id="${id}"]`);
+          if (path instanceof SVGPathElement && root.querySelectorAll(`circle.${BULLET_CLASS}`).length < MAX_BULLETS) {
+            fireBullet(path);
           }
         }
       }),
     [controller],
   );
 
-  return (
-    <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
-      <g ref={layerRef} />
-    </svg>
-  );
+  return <span ref={markerRef} hidden />;
+};
+
+/** The nearest element around `marker` that holds the scene view. */
+const viewportOf = (marker: Element | null): Element | undefined => {
+  for (let element = marker?.parentElement; element; element = element.parentElement) {
+    if (element.querySelector('[data-testid="scene-view"]')) {
+      return element;
+    }
+  }
+  return undefined;
 };
 
 /** One dot from the path's start to its end, removed when it arrives. */
-const fireBullet = (layer: SVGGElement, path: SVGPathElement) => {
+const fireBullet = (path: SVGPathElement) => {
   const bullet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   bullet.setAttribute('r', String(RADIUS));
-  bullet.setAttribute('class', 'fill-orange-500');
-  layer.append(bullet);
+  bullet.setAttribute('class', BULLET_CLASS);
+  bullet.setAttribute('pointer-events', 'none');
+  path.after(bullet);
   const length = path.getTotalLength();
   const started = performance.now();
   const step = (now: number) => {

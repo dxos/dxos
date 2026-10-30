@@ -3,62 +3,67 @@
 //
 
 //
-// The compute projection (MIGRATION.md M3, DESIGN.md §3): freehand semantics over the scene store, and
-// every structural intent mirrored into the compute graph, which is what the editor's `GraphMonitor`
-// did from the outside. The positioned scene it emits carries each node's runtime ports: a node whose
-// compute node declares input / output schemas gets one port per property.
+// The compute projection (DESIGN.md §3) over the shared model: every `LayoutIntent` written to a board is mirrored into
+// its compute graph, so a compute shape has one compute node and a link between two of them one compute edge.
 //
 
-import * as Atom from 'effect/reactivity/Atom';
+import * as Schema from 'effect/Schema';
 
-import { DefaultInput, DefaultOutput } from '@dxos/conductor';
-import * as JsonSchema from '@dxos/echo/JsonSchema';
-import {
-  type FreehandProjectionOptions,
-  type Intent,
-  type Projection,
-  type View,
-  createFreehandProjection,
-  reduceIntent,
-} from '@dxos/react-ui-canvas/scene';
-import { type Link, type Node, endpointNode } from '@dxos/scene';
+import { Obj } from '@dxos/echo';
+import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
 import {
   type ComputeGraphController,
   type ComputeLink,
   deleteTriggerObjects,
-  findEdge,
+  findEdges,
+  isValidComputeNode,
   syncCreate,
-  syncDelete,
   syncLink,
 } from '../graph/index.ts';
-import { type ComputeShape, createFunctionPorts, parseAnchorId } from '../shapes/index.ts';
+import { ComputeShape, parseAnchorId } from '../shapes/index.ts';
+import { type BoardElement, shapeFromElement } from './echo-store.ts';
 
-/** What the projection needs of the controller: the graph it mirrors into and the runtime's change event. */
-export type ComputeGraphSource = Pick<ComputeGraphController, 'graph' | 'update'>;
+/** What the projection needs of the controller: the compute graph it mirrors into. */
+export type ComputeGraphSource = Pick<ComputeGraphController, 'graph'>;
 
-export type ComputeProjectionOptions = FreehandProjectionOptions & {
+export type ComputeProjectionOptions = {
   controller: ComputeGraphSource;
 };
 
-/** The compute node id a scene node carries, when it is a compute shape. */
-const computeId = (node: Node | undefined): string | undefined =>
-  node && 'node' in node && typeof node.node === 'string' ? node.node : undefined;
+export type ComputeProjection = {
+  /**
+   * The layout with `intent` applied and the compute graph brought along: a new compute shape (or a pasted copy) gets a
+   * compute node of its own, a link adds its edge, a deleted shape or link takes its node or edge with it, and an end
+   * moved to another port moves the edge. A link from a shape to itself is not written.
+   */
+  apply: (layout: Scene.LayoutRecord2D, intent: LayoutIntent) => Scene.LayoutRecord2D;
+  /** The compute graph brought in line with a layout written another way (undo, redo), which wrote `after`. */
+  restored: (before: Scene.LayoutRecord2D, after: Scene.LayoutRecord2D) => void;
+};
 
-/** The compute edge a link stands for: both ends on compute nodes, the ports naming the properties. */
-const computeLink = (scene: View, link: Link | undefined): ComputeLink | undefined => {
-  if (!link) {
+const isComputeShape = Schema.is(ComputeShape);
+
+const text = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
+/** The compute node id an element carries, when it is a compute shape. */
+const computeId = (element: BoardElement | undefined): string | undefined =>
+  element && element.type !== undefined && isValidComputeNode(element.type) ? text(element.node) : undefined;
+
+type Ends = { readonly source?: { readonly node?: string }; readonly target?: { readonly node?: string } };
+
+const isSelfLink = (element: Ends): boolean =>
+  element.source?.node !== undefined && element.source.node === element.target?.node;
+
+/** The compute edge a link stands for: both ends on compute shapes, the ports naming the properties. */
+const computeLink = (layout: Scene.LayoutRecord2D, link: BoardElement): ComputeLink | undefined => {
+  const source = computeId(layout.elements[link.source?.node ?? '']);
+  const target = computeId(layout.elements[link.target?.node ?? '']);
+  if (link.type !== 'link' || !source || !target) {
     return undefined;
   }
-  const sourceNode = endpointNode(link.source);
-  const targetNode = endpointNode(link.target);
-  const source = computeId(sourceNode ? scene.nodes[sourceNode] : undefined);
-  const target = computeId(targetNode ? scene.nodes[targetNode] : undefined);
-  if (!source || !target) {
-    return undefined;
-  }
-  const output = 'port' in link.source ? parseAnchorId(link.source.port ?? '')[1] : undefined;
-  const input = 'port' in link.target ? parseAnchorId(link.target.port ?? '')[1] : undefined;
+  const output = link.source?.port === undefined ? undefined : parseAnchorId(link.source.port)[1];
+  const input = link.target?.port === undefined ? undefined : parseAnchorId(link.target.port)[1];
   return { source, target, ...(output ? { output } : {}), ...(input ? { input } : {}) };
 };
 
@@ -68,169 +73,103 @@ const sameLink = (left: ComputeLink | undefined, right: ComputeLink | undefined)
   left?.output === right?.output &&
   left?.input === right?.input;
 
-/**
- * Freehand over the store plus the compute graph kept in step: `create` makes the compute node and writes
- * its id into the shape, `link` adds the edge, `delete` removes both, an end dragged to another node moves
- * the edge, and a restored scene (undo / redo) gets its nodes and edges back. The scene atom re-emits on
- * every controller update so runtime ports (and the components reading runtime state) follow.
- */
-export const createComputeProjection = ({
-  registry,
-  store,
-  sceneId,
-  controller,
-}: ComputeProjectionOptions): Projection => {
-  const freehand = createFreehandProjection({ registry, store, sceneId });
-  const model = controller.graph;
-  // Compute nodes this projection made or removed: the ones a restore may take away again.
-  const mirrored = new Set<string>();
-
-  // The compute graph is not an atom: the scene re-derives on every controller update instead.
-  const scene = Atom.keepAlive(
-    Atom.make((get) => {
-      const current = get(freehand.scene);
-      const nodes = Object.fromEntries(
-        Object.values(current.nodes).map((node) => [node.id, withRuntimePorts(controller, node)]),
-      );
-      return { ...current, nodes };
+const computeShapes = (layout: Scene.LayoutRecord2D): Map<string, BoardElement> =>
+  new Map(
+    Object.values(layout.elements).flatMap((element) => {
+      const id = computeId(element);
+      return id ? [[id, element] as const] : [];
     }),
   );
-  controller.update.on(() => registry.refresh(scene));
 
-  const apply = (intent: Intent): void => {
+const computeLinks = (layout: Scene.LayoutRecord2D): Map<string, ComputeLink> =>
+  new Map(
+    Object.values(layout.elements).flatMap((element) => {
+      const link = computeLink(layout, element);
+      return link ? [[element.id, link] as const] : [];
+    }),
+  );
+
+export const createComputeProjection = ({ controller }: ComputeProjectionOptions): ComputeProjection => {
+  /**
+   * The intent with every new compute shape given a compute node id of its own (a pasted copy names its original's)
+   * and every self-link dropped; the node itself is made by `sync`, as an undone delete's is.
+   */
+  const prepare = (
+    layout: Scene.LayoutRecord2D,
+    intent: LayoutIntent,
+    claimed: Set<string>,
+  ): LayoutIntent | undefined => {
     switch (intent.kind) {
       case 'create': {
-        const computeNode = syncCreate(model, intent.node);
-        if (computeNode) {
-          mirrored.add(computeNode.id);
+        const { element } = intent;
+        if (isSelfLink(element)) {
+          return undefined;
         }
-        const node = computeNode ? { ...intent.node, node: computeNode.id } : intent.node;
-        freehand.apply({ kind: 'create', node });
-        break;
-      }
-      case 'link': {
-        const current = registry.get(freehand.scene);
-        // The reducer decides first, so a link the scene refuses (a self-link, a missing end) has no edge.
-        if (reduceIntent(current, intent) === current) {
-          break;
+        if (element.type === undefined || !isValidComputeNode(element.type)) {
+          return intent;
         }
-        const edge = computeLink(current, intent.link);
-        if (edge) {
-          syncLink(model, edge);
+        const node = text(Reflect.get(element, 'node'));
+        if (node !== undefined && !claimed.has(node)) {
+          claimed.add(node);
+          return intent;
         }
-        freehand.apply(intent);
-        break;
+        const copy = { ...element, node: Obj.ID.random() };
+        return { kind: 'create', element: copy };
       }
-      case 'update': {
-        const current = registry.get(freehand.scene);
-        const link = current.links[intent.id];
-        if (link && ('source' in intent.values || 'target' in intent.values)) {
-          const after = reduceIntent(current, intent);
-          const before = computeLink(current, link);
-          const next = computeLink(after, after.links[intent.id]);
-          if (!sameLink(before, next)) {
-            if (before) {
-              syncDelete(model, [], [before]);
-            }
-            if (next) {
-              syncLink(model, next);
-            }
-          }
-        }
-        freehand.apply(intent);
-        break;
+      case 'bind':
+        return isSelfLink(intent.link) ? undefined : intent;
+      case 'batch': {
+        const intents = intent.intents.flatMap((inner) => prepare(layout, inner, claimed) ?? []);
+        return intents.length > 0 ? { kind: 'batch', intents } : undefined;
       }
-      case 'delete': {
-        const current = registry.get(freehand.scene);
-        const after = reduceIntent(current, intent);
-        const nodes = Object.values(current.nodes).filter((node) => after.nodes[node.id] === undefined);
-        const links = Object.values(current.links).filter((link) => after.links[link.id] === undefined);
-        const nodeIds = nodes.map(computeId).filter((id): id is string => id !== undefined);
-        const edges = links.map((link) => computeLink(current, link)).filter((edge) => edge !== undefined);
-        nodeIds.forEach((id) => mirrored.add(id));
-        syncDelete(model, nodeIds, edges);
-        deleteTriggerObjects(model, nodes.filter(isComputeShape));
-        freehand.apply(intent);
-        break;
-      }
-      case 'batch':
-        // Applied one by one so each create / link / delete reaches the compute graph.
-        intent.intents.forEach(apply);
-        break;
       default:
-        freehand.apply(intent);
+        return intent;
     }
   };
 
-  /**
-   * The compute graph brought in line with the patched scene: a shape whose node is gone gets it back
-   * under the same id, a node this projection mirrored whose shape is gone goes, and the edges between
-   * shape-backed nodes are exactly the scene's links.
-   */
-  const reconcile = (restored: View): void => {
-    const shapes = new Map<string, Node>();
-    for (const node of Object.values(restored.nodes)) {
-      const id = computeId(node);
-      if (id) {
-        shapes.set(id, node);
-      }
+  const sync = (before: Scene.LayoutRecord2D, after: Scene.LayoutRecord2D, removeTriggers: boolean): void => {
+    const model = controller.graph;
+    const shapesBefore = computeShapes(before);
+    const shapesAfter = computeShapes(after);
+    const removed = [...shapesBefore].filter(([id]) => !shapesAfter.has(id));
+    const linksBefore = computeLinks(before);
+    const linksAfter = computeLinks(after);
+    const unlinked = [...linksBefore].filter(([id, link]) => !sameLink(link, linksAfter.get(id)));
+    const linked = [...linksAfter].filter(([id, link]) => !sameLink(link, linksBefore.get(id)));
+
+    // The edges are found before the nodes go, since removing a node may take its edges with it.
+    const edges = findEdges(
+      model,
+      unlinked.map(([, link]) => link),
+    );
+    // `findNode`: a peer's delete may have removed the compute node before the shape.
+    model.removeNodes(removed.flatMap(([id]) => (model.findNode(id) ? [id] : [])));
+    model.removeEdges(edges.filter((id) => model.edges.some((edge) => edge.id === id)));
+    if (removeTriggers) {
+      deleteTriggerObjects(model, removed.map(([, element]) => shapeFromElement(element)).filter(isComputeShape));
     }
-    model.removeNodes(model.nodes.filter((node) => mirrored.has(node.id) && !shapes.has(node.id)).map(({ id }) => id));
-    for (const [id, shape] of shapes) {
-      if (!model.findNode(id) && isComputeShape(shape)) {
+    for (const [id, element] of shapesAfter) {
+      const shape = shapeFromElement(element);
+      if (before.elements[element.id] === undefined && !model.findNode(id) && isComputeShape(shape)) {
         syncCreate(model, shape, id);
       }
     }
-    const claimed = new Set<string>();
-    const missing: ComputeLink[] = [];
-    for (const link of Object.values(restored.links)) {
-      const wanted = computeLink(restored, link);
-      if (!wanted) {
-        continue;
-      }
-      const edge = findEdge(model, wanted, claimed);
-      if (edge) {
-        claimed.add(edge.id);
-      } else {
-        missing.push(wanted);
-      }
+    for (const [, link] of linked) {
+      model.findNode(link.source) && model.findNode(link.target) && syncLink(model, link);
     }
-    model.removeEdges(
-      model.edges
-        .filter((edge) => !claimed.has(edge.id) && shapes.has(edge.source) && shapes.has(edge.target))
-        .map(({ id }) => id),
-    );
-    missing.forEach((link) => syncLink(model, link));
   };
 
   return {
-    scene,
-    apply,
-    capabilities: freehand.capabilities,
-    // Undo patches the store; the compute graph is then brought in line with the scene it left.
-    restored: () => reconcile(registry.get(freehand.scene)),
+    apply: (layout, intent) => {
+      const prepared = prepare(
+        layout,
+        intent,
+        new Set(Object.values(layout.elements).flatMap((element) => computeId(element) ?? [])),
+      );
+      const after = prepared ? applyIntent(layout, prepared) : layout;
+      after !== layout && sync(layout, after, true);
+      return after;
+    },
+    restored: (before, after) => sync(before, after, false),
   };
 };
-
-const isComputeShape = (node: Node): node is Node & ComputeShape => typeof node.type === 'string';
-
-/**
- * The node with the ports its compute node's runtime schemas define, one per property; a node without
- * schemas keeps its definition's ports (the registry supplies them when `ports` is absent).
- */
-const withRuntimePorts = (controller: ComputeGraphSource, node: Node): Node => {
-  const id = computeId(node);
-  if (!id) {
-    return node;
-  }
-  // `findNode`, not `getNode`: a delete removes the compute node before the shape, and a peer's may land first.
-  const computeNode = model(controller).findNode(id);
-  if (!computeNode?.inputSchema && !computeNode?.outputSchema) {
-    return node;
-  }
-  const inputSchema = computeNode.inputSchema ? JsonSchema.toEffectSchema(computeNode.inputSchema) : DefaultInput;
-  const outputSchema = computeNode.outputSchema ? JsonSchema.toEffectSchema(computeNode.outputSchema) : DefaultOutput;
-  return { ...node, ports: createFunctionPorts(node.size, inputSchema, outputSchema) };
-};
-
-const model = (controller: ComputeGraphSource) => controller.graph;
