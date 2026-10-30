@@ -6,9 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { endpointNode } from './element.ts';
 import {
+  Constraint,
   type Dimension,
   Element2D,
   Element3D,
+  Lattice,
   type LayoutRecord,
   type LayoutRecord2D,
   type LayoutRecord3D,
@@ -19,7 +21,24 @@ import {
 
 type Element = Element2D | Element3D;
 
-/** One edit to a layout's elements; geometric intents carry the values of the layout's dimension. */
+/**
+ * The 2D layout fields a `layout` intent writes (the modes that place its elements): a key set to a value sets the
+ * field, a key set to `undefined` unsets it, and an absent key leaves it.
+ */
+export type LayoutPatch = {
+  readonly lattice?: Lattice;
+  readonly constraints?: readonly Constraint[];
+};
+
+export const LayoutPatch: Schema.Codec<LayoutPatch> = Schema.Struct({
+  lattice: Schema.optional(Lattice),
+  constraints: Schema.optional(Schema.Array(Constraint)),
+});
+
+/**
+ * One edit to a layout: to its elements (geometric intents carry the values of the layout's dimension) or, with
+ * `layout`, to its own fields, so a mode's model is written and undone in the same batch as the elements it places.
+ */
 export type LayoutIntent =
   | { readonly kind: 'create'; readonly element: Element }
   | { readonly kind: 'delete'; readonly ids: readonly string[] }
@@ -38,6 +57,7 @@ export type LayoutIntent =
     }
   | { readonly kind: 'join'; readonly id: string; readonly operands: readonly string[] }
   | { readonly kind: 'subtract'; readonly id: string; readonly base: string; readonly tool: string }
+  | { readonly kind: 'layout'; readonly patch: LayoutPatch }
   | { readonly kind: 'batch'; readonly intents: readonly LayoutIntent[] };
 
 const ElementSchema = Schema.Union([Element3D, Element2D]);
@@ -66,6 +86,7 @@ export const LayoutIntent: Schema.Codec<LayoutIntent> = Schema.Union([
   }),
   Schema.Struct({ kind: Schema.Literal('join'), id: Schema.String, operands: ids }),
   Schema.Struct({ kind: Schema.Literal('subtract'), id: Schema.String, base: Schema.String, tool: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal('layout'), patch: LayoutPatch }),
   Schema.Struct({
     kind: Schema.Literal('batch'),
     intents: Schema.Array(Schema.suspend((): Schema.Codec<LayoutIntent> => LayoutIntent)),
@@ -93,6 +114,8 @@ const fitsDimension = (intent: LayoutIntent, dim: Dimension): boolean => {
     case 'join':
     case 'subtract':
       return dim === '3d';
+    case 'layout':
+      return dim === '2d';
     case 'batch':
       return intent.intents.every((inner) => fitsDimension(inner, dim));
     default:
@@ -247,6 +270,8 @@ const reduce = <E extends Element>(
         ),
       };
     }
+    case 'layout':
+      return undefined;
     case 'batch': {
       let current = elements;
       for (const inner of intent.intents) {
@@ -313,9 +338,38 @@ const geometry3D = (element: Element3D, intent: LayoutIntent): Element3D | undef
   return undefined;
 };
 
+/** The layout fields `intent` writes, its batches' patches merged in order; undefined when it writes none. */
+const patchOf = (intent: LayoutIntent): LayoutPatch | undefined => {
+  switch (intent.kind) {
+    case 'layout':
+      return intent.patch;
+    case 'batch':
+      return intent.intents.reduce<LayoutPatch | undefined>((merged, inner) => {
+        const patch = patchOf(inner);
+        return patch ? { ...merged, ...patch } : merged;
+      }, undefined);
+    default:
+      return undefined;
+  }
+};
+
+/** `layout` with `patch`'s fields written; the same layout when every value is already there. */
+const patchLayout = (layout: LayoutRecord2D, patch: LayoutPatch | undefined): LayoutRecord2D => {
+  let next = layout;
+  if (patch && 'lattice' in patch && !sameElement(next.lattice, patch.lattice)) {
+    const { lattice: _lattice, ...rest } = next;
+    next = patch.lattice === undefined ? rest : { ...rest, lattice: patch.lattice };
+  }
+  if (patch && 'constraints' in patch && !sameElement(next.constraints, patch.constraints)) {
+    const { constraints: _constraints, ...rest } = next;
+    next = patch.constraints === undefined ? rest : { ...rest, constraints: patch.constraints };
+  }
+  return next;
+};
+
 /**
  * The layout with `intent` applied; the same layout when it changes nothing (an id that is missing, geometry of the
- * other dimension). Pure: the caller writes the result.
+ * other dimension, layout fields 3D does not have). Pure: the caller writes the result.
  */
 export function applyIntent(layout: LayoutRecord2D, intent: LayoutIntent): LayoutRecord2D;
 export function applyIntent(layout: LayoutRecord3D, intent: LayoutIntent): LayoutRecord3D;
@@ -323,7 +377,7 @@ export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutR
 export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutRecord {
   if (layout.dim === '2d') {
     const elements = reduce(layout.elements, intent, isElement2D, geometry2D, () => undefined, !!layout.arrange);
-    return elements ? { ...layout, elements } : layout;
+    return patchLayout(elements ? { ...layout, elements } : layout, patchOf(intent));
   }
   const elements = reduce(layout.elements, intent, isElement3D, geometry3D, solid3D, !!layout.arrange);
   return elements ? { ...layout, elements } : layout;

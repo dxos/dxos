@@ -224,7 +224,7 @@ feat F-1: One model for 2D and 3D
   req F-1.4: A composite object's parts are a nested layout in its own local units; the element that places it carries the transform (centre, scale, rotation, and `fit: frame` to fill its frame instead), and parts draw through it with strokes and text scaled too.
   req F-1.5: A group is a composite placed by an instance: its members live in an anonymous composite layout placed with fit `none`, so they keep their places; a layout's arrangement places its unplaced elements and can be re-run, and a pinned element is not moved.
   req F-1.6: A solid is an operation tree (union, difference, extrude) over operand elements, recomputed when drawn.
-  req F-1.7: A layout changes only through `LayoutIntent`s, applied by one pure reducer, and a model only through `ModelIntent`s, which refuse an intent with its problems and leave the document unchanged.
+  req F-1.7: A layout (its elements and its own fields) changes only through `LayoutIntent`s, applied by one pure reducer, and a model only through `ModelIntent`s, which refuse an intent with its problems and leave the document unchanged. A `layout` intent writes a 2D layout's `lattice` and `constraints` in the same batch as the elements they place.
 ```
 
 ```mdl
@@ -997,3 +997,21 @@ decision D-99: Approve the theme-independent `black` and `white` hues of [D-92].
   by: user:richburdon
   affects: [Style2D]
 ```
+
+```mdl
+decision D-100: A layout's own fields are written through a layout-field intent, undone together with the elements, starting with a 2D layout's constraints (R-12 option 1).
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-1.7]
+```
+
+```mdl
+decision D-101: The layout-field intent is `{ kind: 'layout', patch: LayoutPatch }`, where `LayoutPatch` holds the 2D fields `lattice` and `constraints`: a key with a value sets the field, a key set to `undefined` unsets it, an absent key leaves it, and a batch's patches merge in order. `applyIntent` applies it with the element intents; a 3D layout has neither field, so it ignores the intent and `isLayoutIntent` refuses it for 3D. Fills in [D-100] and [D-45].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.7]
+  why: One patch over named fields gives every layout field one write path, typed by its own schema, and leaves room for `layers` without another intent kind.
+  rejected:
+    - A path-and-value update on the layout, which loses the field types.
+    - One intent kind per field, which grows the vocabulary with every mode.

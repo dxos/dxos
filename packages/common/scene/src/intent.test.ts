@@ -198,6 +198,36 @@ describe('solid intents', () => {
     expect(isLayoutIntent({ kind: 'join', id: 'u', operands: ['r'] }, '2d')).toBe(false);
     expect(applyIntent(flat, { kind: 'join', id: 'u', operands: ['r'] })).toBe(flat);
   });
+
+  test('a layout intent writes 2D layout fields in the same batch as the elements, and unsets one with undefined', () => {
+    const layout = layout2D('l', [{ id: 'a', type: 'rect', center: { x: 0, y: 0 } }]);
+    const constraints: Scene.Constraint[] = [{ subject: 'a', relation: 'east', object: 'b' }];
+    const lattice = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+    const after = applyIntent(layout, {
+      kind: 'batch',
+      intents: [
+        { kind: 'move', ids: ['a'], delta: { x: 10, y: 0 } },
+        { kind: 'layout', patch: { constraints } },
+        { kind: 'layout', patch: { lattice } },
+      ],
+    });
+    expect(after.elements.a.center).toEqual({ x: 10, y: 0 });
+    expect(after.constraints).toEqual(constraints);
+    expect(after.lattice).toEqual(lattice);
+    const unset = applyIntent(after, { kind: 'layout', patch: { lattice: undefined } });
+    expect('lattice' in unset).toBe(false);
+    expect(unset.constraints).toEqual(constraints);
+    // A patch to the values already there changes nothing.
+    expect(applyIntent(after, { kind: 'layout', patch: { constraints: [...constraints] } })).toBe(after);
+  });
+
+  test('layout intents carry 2D fields only', () => {
+    const patch = { kind: 'layout', patch: { constraints: [] } };
+    expect(isLayoutIntent(patch, '2d')).toBe(true);
+    expect(isLayoutIntent(patch, '3d')).toBe(false);
+    const solid = layout3D('l', [cube('a')]);
+    expect(applyIntent(solid, { kind: 'layout', patch: { constraints: [] } })).toBe(solid);
+  });
 });
 
 describe('layoutChanges', () => {
