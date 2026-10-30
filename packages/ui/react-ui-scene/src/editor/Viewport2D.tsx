@@ -23,6 +23,7 @@ import {
 import { type Scene, findLayout, rootScene } from '@dxos/scene';
 
 import { styleClasses, toCanvasViews } from '../canvas/index.ts';
+import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 import { viewWrites } from './view-writes.ts';
 
@@ -49,6 +50,8 @@ export type Viewport2DOptions = {
   createGeneratorWorker?: () => Worker;
   /** How deep frames draw their live contents. */
   liveDepth?: number;
+  /** Where the viewport publishes its canvas, for the Properties form beside it. */
+  bridge?: CanvasBridge;
 };
 
 const sameIds = (left: Iterable<string>, right: readonly string[]): boolean => {
@@ -214,6 +217,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
         createGeneratorWorker={options.createGeneratorWorker}
       >
         <Canvas.Viewport liveDepth={options.liveDepth} />
+        {options.bridge && <CanvasBridgeCapture bridge={options.bridge} />}
         {children}
       </Canvas.Root>
     );

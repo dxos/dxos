@@ -5,7 +5,15 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo, useState } from 'react';
 
-import { type Layer, type NamedStyle, type NamedStyle2D, type NamedStyle3D, type Scene, findLayout } from '@dxos/scene';
+import {
+  type Layer,
+  type NamedStyle,
+  type NamedStyle2D,
+  type NamedStyle3D,
+  type Scene,
+  findLayout,
+  resolveLayout,
+} from '@dxos/scene';
 
 import {
   InspectorSection,
@@ -47,13 +55,22 @@ const useOpenLayout = (consumer: string): Scene.LayoutRecord | undefined => {
   return layout === undefined ? undefined : findLayout(document, layout);
 };
 
-/** Properties: the config's form over the one selected element, with the dimension's line above it (3D: the face). */
+/**
+ * Properties: the config's form over the one selected element, with the dimension's line above it (3D: the face). The
+ * form shows the element as drawn, its object's size, type and look applied, so a field it inherits is not blank.
+ */
 export const PropertiesSection = () => {
-  const { config, store, readonly, docked, layout, onIntent } = useSceneEditor('SceneEditor.Properties');
+  const { config, document, store, readonly, docked, layout, onIntent } = useSceneEditor('SceneEditor.Properties');
   const selection = useAtomValue(store.atoms.selection);
   const face = useAtomValue(store.atoms.face);
   const record = useOpenLayout('SceneEditor.Properties');
-  const element = selection.length === 1 ? record?.elements[selection[0]] : undefined;
+  // A form over a whole selection is given the first element; any other shows only for one.
+  const id =
+    selection.length === 1 || (config.propertyFormSelection && selection.length > 0) ? selection[0] : undefined;
+  const element = useMemo(
+    () => (record && id !== undefined && record.elements[id] ? resolveLayout(document, record)[id] : undefined),
+    [document, record, id],
+  );
   const layers = useMemo(() => (record ? layersOf(record) : []), [record]);
   const Form = config.propertyForm;
   if (!element || layout === undefined) {

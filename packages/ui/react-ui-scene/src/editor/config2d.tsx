@@ -3,10 +3,16 @@
 //
 
 import * as Schema from 'effect/Schema';
+import React, { type ComponentType } from 'react';
 
 import {
   type Camera,
+  type CanvasPropertiesProps,
+  CanvasPropertiesForm,
+  type CanvasServices,
+  CanvasServicesProvider,
   type DimensionConfig,
+  type PropertyFormProps,
   MAX_ZOOM,
   createPropertyForm,
   defaultThemeRegistry,
@@ -15,6 +21,7 @@ import {
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID, Scene, findLayout, resolveLayout2D } from '@dxos/scene';
 
+import { type CanvasBridge, createCanvasBridge, useBridgedCanvas } from './canvas-bridge.tsx';
 import {
   ELEMENT_FORM_2D_FIELDS,
   ELEMENT_FORM_2D_OVERRIDES,
@@ -36,6 +43,32 @@ const PropertyForm2D = createPropertyForm({
   values: elementForm2DValues,
   intents: elementForm2DIntents,
 });
+
+/** What the host adds to the 2D Properties form (its database, reference options, per-selection overrides). */
+export type UseProperties2D = (canvas: CanvasServices | undefined) => CanvasPropertiesProps;
+
+/**
+ * The 2D Properties form: the canvas's own form over the selection's types (ports, link ends, line type, a frame's
+ * object and role, …) while the viewport is mounted; the centre/size form until it is.
+ */
+const createPropertyForm2D = (
+  bridge: CanvasBridge,
+  useProperties?: UseProperties2D,
+): ComponentType<PropertyFormProps> => {
+  const Properties2D = (props: PropertyFormProps) => {
+    const canvas = useBridgedCanvas(bridge);
+    const host = useProperties?.(canvas) ?? {};
+    return canvas ? (
+      <CanvasServicesProvider {...canvas}>
+        <CanvasPropertiesForm {...host} />
+      </CanvasServicesProvider>
+    ) : (
+      <PropertyForm2D {...props} />
+    );
+  };
+  Properties2D.displayName = 'Properties2D';
+  return Properties2D;
+};
 
 /** A fit leaves this much room around the drawing, in scene px. */
 const FIT_INSET = MAJOR_GRID;
@@ -63,31 +96,38 @@ const layoutBounds = (document: Scene.SceneDocument, layout: string) => {
  * The 2D editor's config: react-ui-canvas's engine as the viewport, the canvas palette's tools, steps on the grid, the
  * canvas themes as looks and a centre/size/rotation form. A host passes its node types, mode and generators.
  */
-export const createConfig2D = (options: Viewport2DOptions = {}): DimensionConfig<Camera> => ({
-  dim: '2d',
-  viewport: createViewport2D(options),
-  tools: tools2D(options.nodes),
-  geometry: {
-    // One major cell aside per paste, as the canvas has always offset a duplicate.
-    pasteOffset: (pasted) => ({ x: pasted * MAJOR_GRID, y: pasted * MAJOR_GRID }),
-    snap: { move: DEFAULT_GRID, rotate: 15 },
-  },
-  camera: {
-    fit: (camera, document, layout, size) => {
-      const bounds = layoutBounds(document, layout);
-      return bounds && size.width > 0 ? fitBounds(bounds, size, FIT_INSET, 1) : camera;
+export const createConfig2D = ({
+  useProperties,
+  ...options
+}: Viewport2DOptions & { useProperties?: UseProperties2D } = {}): DimensionConfig<Camera> => {
+  const bridge = options.bridge ?? createCanvasBridge();
+  return {
+    dim: '2d',
+    viewport: createViewport2D({ ...options, bridge }),
+    tools: tools2D(options.nodes),
+    geometry: {
+      // One major cell aside per paste, as the canvas has always offset a duplicate.
+      pasteOffset: (pasted) => ({ x: pasted * MAJOR_GRID, y: pasted * MAJOR_GRID }),
+      snap: { move: DEFAULT_GRID, rotate: 15 },
     },
-    // About the view's centre, as the camera bar's buttons zoom.
-    zoom: (camera, factor) => zoomAt(camera, { x: 0, y: 0 }, Math.min(MAX_ZOOM, camera.zoom / factor)),
-    percent: (camera, authored) => Math.round((camera.zoom / authored.zoom) * 100),
-  },
-  display: {
-    themes: Object.values(defaultThemeRegistry.themes).map(({ id, name }) => ({ id, label: name })),
-    grids: ['lines'],
-    guides: true,
-  },
-  propertyForm: PropertyForm2D,
-});
+    camera: {
+      fit: (camera, document, layout, size) => {
+        const bounds = layoutBounds(document, layout);
+        return bounds && size.width > 0 ? fitBounds(bounds, size, FIT_INSET, 1) : camera;
+      },
+      // About the view's centre, as the camera bar's buttons zoom.
+      zoom: (camera, factor) => zoomAt(camera, { x: 0, y: 0 }, Math.min(MAX_ZOOM, camera.zoom / factor)),
+      percent: (camera, authored) => Math.round((camera.zoom / authored.zoom) * 100),
+    },
+    display: {
+      themes: Object.values(defaultThemeRegistry.themes).map(({ id, name }) => ({ id, label: name })),
+      grids: ['lines'],
+      guides: true,
+    },
+    propertyForm: createPropertyForm2D(bridge, useProperties),
+    propertyFormSelection: true,
+  };
+};
 
 /** The 2D config with the default node types. */
 export const config2d = createConfig2D();

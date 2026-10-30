@@ -56,8 +56,12 @@ export type CanvasPropertiesProps = Pick<
   sceneFilter?: (id: ViewId) => boolean;
 };
 
-/** The selected element's properties: shown while something is selected. */
-export const CanvasProperties = ({
+/**
+ * The selection's properties form, without its section: the schema-driven form over each selected element's type
+ * (ports, link ends, line type, a frame's object, role and the rest), read from the canvas it sits in. The shared scene
+ * editor's 2D Properties section draws it too.
+ */
+export const CanvasPropertiesForm = ({
   fields,
   db,
   getOptions,
@@ -66,32 +70,40 @@ export const CanvasProperties = ({
   onGroupsChange,
   sceneFilter,
 }: CanvasPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.Properties');
-  const selection = useAtomValue(useCanvasSelection('Canvas.Properties').atoms.selection);
-  const path = useAtomValue(useCanvasNavigation('Canvas.Properties').atoms.path);
+  const { projection, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.PropertiesForm');
+  const path = useAtomValue(useCanvasNavigation('Canvas.PropertiesForm').atoms.path);
   const scenes = useAtomValue(store.views);
   const options = useMemo(() => viewOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
+  return (
+    <PropertiesInspector
+      projection={projection}
+      atoms={atoms}
+      nodes={nodeRegistry}
+      fields={fields}
+      db={db}
+      getOptions={getOptions}
+      overrides={overrides}
+      viewOptions={options}
+      styles={store.styles}
+      groups={groups}
+      onGroupsChange={onGroupsChange}
+      readonly={!capabilities.update}
+    />
+  );
+};
 
+CanvasPropertiesForm.displayName = 'Canvas.PropertiesForm';
+
+/** The selected element's properties: shown while something is selected. */
+export const CanvasProperties = (props: CanvasPropertiesProps) => {
+  const selection = useAtomValue(useCanvasSelection('Canvas.Properties').atoms.selection);
   const shown = propertiesShown({ docked: InspectorPanel.useDocked(), selected: selection.size > 0 });
   if (shown !== 'form') {
     return shown === 'empty' ? <PropertiesEmpty /> : null;
   }
   return (
     <InspectorSection section={PROPERTIES_INSPECTOR}>
-      <PropertiesInspector
-        projection={projection}
-        atoms={atoms}
-        nodes={nodeRegistry}
-        fields={fields}
-        db={db}
-        getOptions={getOptions}
-        overrides={overrides}
-        viewOptions={options}
-        styles={store.styles}
-        groups={groups}
-        onGroupsChange={onGroupsChange}
-        readonly={!capabilities.update}
-      />
+      <CanvasPropertiesForm {...props} />
     </InspectorSection>
   );
 };

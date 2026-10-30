@@ -12,10 +12,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type VersionedSource, combinedSource } from '@dxos/react-ui-canvas/headless';
@@ -23,7 +21,7 @@ import {
   type BackgroundGrid,
   type Camera,
   Canvas,
-  type CanvasPropertiesProps,
+  type CanvasServices,
   type ConstrainedModel,
   type EditorDisplay,
   type FreehandProjectionOptions,
@@ -50,14 +48,12 @@ import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import {
-  type Element,
   type Layer,
   type LayoutIntent,
   type ModelIntent,
   type Node,
   Scene,
   type ViewId,
-  isLink,
   isViewNode,
   reachedObjects,
 } from '@dxos/scene';
@@ -74,7 +70,6 @@ import {
   layoutModelAtom,
   layoutSource,
   objectRef,
-  objectUri,
   openScene,
   parseLinkedViewId,
   resolveDrawingLook,
@@ -99,6 +94,7 @@ import { useSceneDocument } from '../SceneStage/index.ts';
 import { CanvasClipboardText } from './CanvasClipboardText.tsx';
 import { display2D, sceneChrome } from './scene-chrome.ts';
 import { SceneEditCommands } from './SceneEditCommands.tsx';
+import { useCanvasProperties } from './use-canvas-properties.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
 import { useSceneShots } from './use-scene-shots.ts';
@@ -225,9 +221,17 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
   const nodes = useCanvasNodes(openObject);
   const generators = useCanvasGenerators(db);
   const appSettings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
+  // The Properties form's host additions, over the views the 2D viewport's canvas holds.
+  const useProperties = useCallback(
+    (services: CanvasServices | undefined) =>
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useCanvasProperties(canvas, () => (services ? services.registry.get(services.store.views) : {})),
+    [canvas],
+  );
   const config = useMemo(
     () =>
       createConfig2D({
+        useProperties,
         nodes,
         createProjection,
         generators,
@@ -235,7 +239,7 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
         createGeneratorWorker,
         liveDepth: appSettings.liveDepth,
       }),
-    [nodes, createProjection, generators, appSettings.liveDepth],
+    [useProperties, nodes, createProjection, generators, appSettings.liveDepth],
   );
 
   // Every 2D layout the scene reaches, by key, as the objects edits are written to.
@@ -478,7 +482,6 @@ export const CanvasEngineView = ({
     grid: snap,
     guides,
     fit,
-    groups,
   } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
@@ -496,10 +499,6 @@ export const CanvasEngineView = ({
     (readonly: boolean) => updateViewState((state) => ({ ...state, readonly })),
     [updateViewState],
   );
-  const handleGroupsChange = useCallback(
-    (groups: Record<string, boolean>) => updateViewState((state) => ({ ...state, groups })),
-    [updateViewState],
-  );
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
     [updateViewState],
@@ -510,49 +509,8 @@ export const CanvasEngineView = ({
     [updateViewState],
   );
 
-  // A shape opens a scene of this drawing, never one bound from a linked drawing.
-  const isLocalScene = useCallback((id: ViewId) => !parseLinkedViewId(id), []);
-
-  // A frame may show any object listed in the navigator but this drawing itself.
-  const { t } = UiHooks.useTranslation();
-  const getOptions = useCallback<NonNullable<CanvasPropertiesProps['getOptions']>>(
-    (results) =>
-      ObjectCombobox.toOptions(results, {
-        t,
-        filter: (object) => !(Obj.instanceOf(Drawing.Drawing, object) && object.canvas.target === canvas),
-      }),
-    [canvas, t],
-  );
-
-  // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is
-  // empty, so linking never hides what was drawn there.
-  const overrides = useCallback(
-    (elements: readonly Element[]): ReturnType<NonNullable<CanvasPropertiesProps['overrides']>> => {
-      const scenes = bound ? registry.get(bound.store.views) : {};
-      const locked = elements.some((element) => {
-        if (isLink(element) || !isViewNode(element) || objectUri(element) || parseLinkedViewId(element.scene)) {
-          return false;
-        }
-        const child = scenes[element.scene];
-        return child !== undefined && Object.keys(child.nodes).length > 0;
-      });
-      // A frame showing an object opens the object (or a canvas drawing's root), not a scene of this one.
-      const linked = elements.some((element) => !isLink(element) && objectUri(element));
-      // The role applies only to an object shown as a surface, not to a canvas drawing shown as a scene; an object
-      // still loading is offered one, so the field appears as soon as the object is picked.
-      const surfaced = elements.some(
-        (element) =>
-          !isLink(element) && objectUri(element) && isCanvasDrawing(objectRef(element, db)?.target) === false,
-      );
-      return {
-        ...(locked ? { 'link.object': { readonly: true } } : {}),
-        ...(linked ? { scene: { hidden: true } } : {}),
-        ...(surfaced ? {} : { 'link.role': { hidden: true } }),
-      };
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [registry, bound, db],
-  );
+  const readViews = useCallback(() => (bound ? registry.get(bound.store.views) : {}), [registry, bound]);
+  const properties = useCanvasProperties(canvas, readViews);
 
   return (
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
@@ -623,14 +581,7 @@ export const CanvasEngineView = ({
               {!embedded && (
                 <>
                   {(settings.showPalette ?? true) && <Canvas.Tools />}
-                  <Canvas.Properties
-                    db={db}
-                    getOptions={getOptions}
-                    overrides={overrides}
-                    groups={groups}
-                    onGroupsChange={handleGroupsChange}
-                    sceneFilter={isLocalScene}
-                  />
+                  <Canvas.Properties {...properties} />
                   <Canvas.Views sceneChoice={sceneChoice} />
                   <Canvas.Layers />
                   <Canvas.Objects />

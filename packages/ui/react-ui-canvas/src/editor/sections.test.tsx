@@ -35,7 +35,11 @@ const CONFIG: DimensionConfig = {
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: { move: 1 } },
   camera: { fit: (camera) => camera, zoom: (camera) => camera, percent: () => 100 },
   display: { themes: [{ id: 'cad', label: 'CAD' }], grids: ['lines'], guides: false },
-  propertyForm: ({ element }) => <p data-testid='property-form'>{element.id}</p>,
+  propertyForm: ({ element }) => (
+    <p data-testid='property-form' data-type={element.type ?? ''}>
+      {element.id}
+    </p>
+  ),
 };
 
 const document = (hidden = false): Scene.SceneDocument => ({
@@ -152,5 +156,11 @@ describe('SceneEditor sections', () => {
   test('Properties shows the config form for the one selected element', async () => {
     render(<Editor select={['a']} />);
     expect((await screen.findByTestId('property-form')).textContent).toBe('a');
+  });
+
+  test('Properties shows the element as drawn: the fields its object gives it apply', async () => {
+    // `c` stores no type of its own; it places the `gear` object, whose type it draws as.
+    render(<Editor select={['c']} />);
+    expect((await screen.findByTestId('property-form')).dataset.type).toBe('composite');
   });
 });

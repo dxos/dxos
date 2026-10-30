@@ -149,6 +149,8 @@ export type DimensionConfig<C = unknown> = {
   display: DisplayOptions;
   /** The form over one selected element; `createPropertyForm` builds it from a schema. */
   propertyForm: ComponentType<PropertyFormProps>;
+  /** The form edits a whole selection (values the elements share, mixed where they differ), not only one element. */
+  propertyFormSelection?: boolean;
   /** A line over the properties form (3D: the selected face). */
   propertyInfo?: (state: { face?: FaceSelection }) => ReactNode;
   sections?: readonly SectionDef[];

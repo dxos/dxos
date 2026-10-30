@@ -37,24 +37,30 @@ export const ELEMENT_FORM_2D_OVERRIDES: Record<string, FormFieldOverride> = {
 
 const FIELDS = ['center', 'size', 'rotation', 'label', 'layer'] as const;
 
-/** The form's values for an element. */
+/** The form's values for an element: an unset rotation shows as none, rather than as an empty field. */
 export const elementForm2DValues = (element: Scene.Element2D): ElementForm2D => ({
   center: element.center,
   size: element.size,
-  rotation: element.rotation,
+  rotation: element.rotation ?? 0,
   label: element.label,
   layer: element.layer,
   style: element.overrides,
 });
 
-/** The updates a save makes: only the fields that changed; the form's style is the element's own overrides. */
-export const elementForm2DIntents = (element: Scene.Element2D, values: ElementForm2D): LayoutIntent[] => [
-  ...FIELDS.flatMap((field): LayoutIntent[] =>
-    JSON.stringify(values[field]) === JSON.stringify(element[field])
+/**
+ * The updates a save makes: only the fields that changed from what the form showed (so a default it shows is not
+ * written); the form's style is the element's own overrides.
+ */
+export const elementForm2DIntents = (element: Scene.Element2D, values: ElementForm2D): LayoutIntent[] => {
+  const shown = elementForm2DValues(element);
+  return [
+    ...FIELDS.flatMap((field): LayoutIntent[] =>
+      JSON.stringify(values[field]) === JSON.stringify(shown[field])
+        ? []
+        : [{ kind: 'update', id: element.id, path: [field], value: values[field] }],
+    ),
+    ...(JSON.stringify(values.style) === JSON.stringify(element.overrides)
       ? []
-      : [{ kind: 'update', id: element.id, path: [field], value: values[field] }],
-  ),
-  ...(JSON.stringify(values.style) === JSON.stringify(element.overrides)
-    ? []
-    : [{ kind: 'update' as const, id: element.id, path: ['overrides'], value: values.style }]),
-];
+      : [{ kind: 'update' as const, id: element.id, path: ['overrides'], value: values.style }]),
+  ];
+};
