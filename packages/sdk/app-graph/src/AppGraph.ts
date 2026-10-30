@@ -221,6 +221,9 @@ export const getGraph = (node: Node.Node): Graph => {
   return graph as Graph;
 };
 
+/** The latest closure a node's stable `data` forwarder calls; see {@link stableData}. */
+type Forwarded = { target: (...args: unknown[]) => unknown };
+
 /**
  * The Graph represents the user interface information architecture of the application constructed via plugins.
  * @internal
@@ -254,6 +257,8 @@ export class GraphImpl implements WritableGraph {
   /** Relation keys a node has held, so an emptied relation still reports an empty list. */
   readonly _relations = new Map<string, Set<string>>();
   readonly _pendingExpands = new Set<string>();
+  /** The live closure behind each forwarder {@link stableData} gave this graph's nodes. */
+  readonly _forwarded = new WeakMap<object, Forwarded>();
 
   /**
    * Canonical store. Nodes an edge references before they are contributed sit in it as
@@ -840,28 +845,23 @@ export const addNodes = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<
   return graph;
 };
 
-type Forwarded = { target: (...args: unknown[]) => unknown };
-
-/** The live closure behind each forwarder {@link stableData} hands the graph. */
-const forwarded = new WeakMap<object, Forwarded>();
-
 /**
  * Builders recreate an action's closure on every run, so a function `data` is held behind a stable
  * forwarder per node whose target is swapped: a re-offer that changes nothing else emits nothing,
  * and invoking the node still runs the latest closure.
  */
-const stableData = (existing: unknown, data: any): any => {
+const stableData = (internal: GraphImpl, existing: unknown, data: any): any => {
   if (typeof data !== 'function') {
     return data;
   }
-  const current = typeof existing === 'function' ? forwarded.get(existing) : undefined;
+  const current = typeof existing === 'function' ? internal._forwarded.get(existing) : undefined;
   if (current) {
     current.target = data;
     return existing;
   }
   const cell: Forwarded = { target: data };
   const forwarder = (...args: unknown[]) => cell.target(...args);
-  forwarded.set(forwarder, cell);
+  internal._forwarded.set(forwarder, cell);
   return forwarder;
 };
 
@@ -887,7 +887,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
-      const nextData = stableData(existing.data, data);
+      const nextData = stableData(internal, existing.data, data);
       const dataChanged = !shallowEqual(existing.data, nextData);
       const propertiesChanged = Object.keys(properties).some(
         (key) => !valueEqual(existing.properties[key], properties[key]),
@@ -920,7 +920,13 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
     },
     onNone: () => {
       log('new node', { id, type, data, properties });
-      const newNode = internal._constructNode({ id, type, data: stableData(undefined, data), properties, ...rest });
+      const newNode = internal._constructNode({
+        id,
+        type,
+        data: stableData(internal, undefined, data),
+        properties,
+        ...rest,
+      });
       internal._setNode(id, newNode);
       graph.onNodeChanged.emit({ id, node: newNode });
 
