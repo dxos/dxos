@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
-import { type Database, Filter, Query } from '@dxos/echo';
+import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -14,6 +15,8 @@ import { Feature, FeatureEmbed } from '#types';
 
 import { ProjectsNamespace } from '../../namespace.ts';
 import { FeatureSection } from '../FeatureSection/index.ts';
+
+const isId = Schema.is(Obj.ID);
 
 /** The field of a new feature's section the cursor goes to. */
 export type FeatureEmbedField = 'name' | 'description';
@@ -33,7 +36,8 @@ export type FeatureEmbedSectionProps = ObjectLinkProps & {
 export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimFocus }: FeatureEmbedSectionProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const id = FeatureEmbed.entityId(eid);
-  const [object] = useQuery(db, Query.select(Filter.id(id)));
+  // Any object link in the document draws here, including one whose URI names no valid id.
+  const [object] = useQuery(db, Query.select(isId(id) ? Filter.id(id) : Filter.nothing()));
   const feature = Feature.instanceOf(object) ? object : undefined;
 
   const embedId = attendableId ? `${attendableId}/${id}` : id;

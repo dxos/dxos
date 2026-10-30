@@ -200,7 +200,7 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
           container.layout.positions[object.id] = placement.position;
         }
       });
-      await SpecText.embed(container, object);
+      await SpecText.replaceBlock(container, object, Feature.getBlockId(object));
     },
   });
 };

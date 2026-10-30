@@ -59,10 +59,10 @@ feat F-2: Feature embeds in the editor
   req F-2.4: An embed cut from one spec's document and pasted into another moves the feature to that spec. An embed of
              a feature whose own spec's document still embeds it is a reference and moves nothing.
   req F-2.5: Pasting an embed into a document that already embeds it embeds a copy of the feature.
-  req F-2.6: `/feature` puts a new feature's embed in place of its line, and the cursor in its section. A phrase before it
-             names the feature, and the cursor goes to its description. A sentence before it (ending in `.`, `!` or
-             `?`) becomes its description, and the cursor goes to its name, "New feature" until changed, as on an empty
-             line.
+  req F-2.6: `/feature`, at the start of a line or after a space, puts a new feature's embed in place of its line, and
+             the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
+             sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
+             "New feature" until changed, as on an empty line.
   req F-2.7: A section is inert until it has attention, so the cursor and scrolling pass through it. A click gives it
              attention, its form then edits the feature's name, description, requirements and status in place, and
              Escape returns the cursor to the text.
@@ -80,9 +80,10 @@ feat F-2: Feature embeds in the editor
 feat F-3: A spec as a file
   req F-3.1: Importing a file (`op:ImportSpec`) maps each `feat` block to the feature read in from it before, found by
              its source `path#F-n` wherever it has moved since, to the feature the spec numbered `F-n` before any file
-             held its block, or to a new one, and puts the feature's embed in place of the block. The file states the feature's name, description, requirements and, when it has a
-             `status:` line, its status. The description is the block's `desc:` field, or its bare prose before the
-             first `req`.
+             held its block, or to a new one, and puts the feature's embed in place of the block. The file states the
+             feature's name, description, requirements and status, planned when the block has no `status:` line. The
+             description is the block's `desc:` field, the prose alone when it is a block scalar (`desc: |` or
+             `desc: >`), or its bare prose before the first `req`.
   req F-3.7: A fence that holds several `feat` blocks, or other blocks before one, is split so each `feat` block is a
              fence of its own, which its embed replaces on import and an export writes back.
   req F-3.2: A feature the document embedded that no block of the file names is kept at the end when it was added in
@@ -717,4 +718,33 @@ decision D-38: An id the app gives a feature names no file until import reads it
   for: user:wittjosiah
   affects: [F-3.1, F-3.2]
   why: An id recorded with the file's path would mark the feature as read in from the file, so importing the file before its block was written out would delete a feature added in the app. An id never written back left a file pulled after an export with a block no feature matched, which import then made a second feature of.
+```
+
+```mdl
+decision D-39: Import reads a block without a `status:` line as planned, as export does, so a file that drops the line sets the feature to planned. Supersedes the import half of [D-21].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Import kept the feature's status when the line was gone, and export, reading the missing line as planned, then wrote the old status back, so the file and the feature never agreed.
+  rejected:
+    - Export omitting `status:` only for planned features while import keeps the old status, which leaves the same loop.
+```
+
+```mdl
+decision D-40: A `desc:` block scalar (`desc: |` or `desc: >`) is read as its prose, without the indicator. Fills in [D-21].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Repository specs such as org.dxos.plugin.code's F-14 write long descriptions as block scalars, and the indicator was read in as the first character of the description.
+```
+
+```mdl
+decision D-41: `/feature` is offered only for a slash at the start of a line or after a space. Fills in [D-25].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.6]
+  why: A slash inside a path such as `packages/` offered the completion, and Enter at the end of the line then accepted it, turning the paragraph into a feature.
 ```

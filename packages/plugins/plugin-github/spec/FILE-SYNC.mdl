@@ -142,7 +142,7 @@ service FileMapping
   desc: Capability contributed by a plugin that owns a file format. plugin-github calls its operations; it never calls GitHub.
   ops:
     import(repository: Ref<Repo>, path: string, content: string, base?: string, object?: Ref<Obj>, heads?: string[]) → { object: Ref<Obj>, heads: string[] }
-    export(object: Ref<Obj>, path: string) → { content: string, heads: string[] }
+    export(object: Ref<Obj>, path: string, base?: string) → { content: string, heads: string[] }
   errors:
     MappingParseError: the file does not parse as the mapping's format; the file is skipped and reported, the object is untouched
 ```
@@ -686,4 +686,13 @@ decision D-19: The base is the blob in marker.pushed while that is set, else mar
   rejected:
     - Fetching the base on every pass, which costs one request per bound file and breaks T-1.
     - Keeping the base per device, where a push on a device that has not pulled the file waits for the next pull.
+```
+
+```mdl
+decision D-20: The FileMapping service's `export` takes `base`, as FileExportInput does. Fills in [D-18].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [FileMapping]
+  why: D-18 added `base` to FileExportInput and F-4.7 has the engine pass it, but the service block still declared export without it.
 ```

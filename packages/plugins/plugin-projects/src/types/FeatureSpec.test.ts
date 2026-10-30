@@ -87,6 +87,13 @@ describe('FeatureSpec', () => {
     );
   });
 
+  test('parse reads a desc block scalar as its prose, without the indicator', ({ expect }) => {
+    const text = ['```mdl', 'feat F-14: Sync', '  desc: |', '    A Spec can be linked', '    to a file.', '```'].join(
+      '\n',
+    );
+    expect(FeatureSpec.parse(text)[0].description).toBe('A Spec can be linked to a file.');
+  });
+
   test('split gives every feat block a fence of its own, so none is read as part of another', ({ expect }) => {
     const text = [
       '```mdl',

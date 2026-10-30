@@ -69,10 +69,15 @@ export const replaceBlock = (spec: Spec.Spec, feature: Feature.Feature, block: s
     if (FeatureEmbed.parse(text).some((embed) => embed.id === feature.id)) {
       return [];
     }
-    const found = block === undefined ? undefined : FeatureSpec.parse(text).find(({ id }) => id === block);
-    return found
-      ? [{ from: found.from, to: found.to, insert: makeEmbed(feature) }]
-      : [FeatureEmbed.append(text, makeEmbed(feature))];
+    // Older documents may group blocks in one fence, which parse reads only when each has its own.
+    const split = FeatureSpec.split(text);
+    const found = block === undefined ? undefined : FeatureSpec.parse(split).find(({ id }) => id === block);
+    const next = FeatureEmbed.apply(split, [
+      found
+        ? { from: found.from, to: found.to, insert: makeEmbed(feature) }
+        : FeatureEmbed.append(split, makeEmbed(feature)),
+    ]);
+    return [{ from: 0, to: text.length, insert: next }];
   });
 
 export const makeEmbed = (feature: Feature.Feature): string =>
@@ -311,15 +316,14 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
         feature.name !== name ||
         (feature.description ?? '') !== (description ?? '') ||
         JSON.stringify(feature.requirements ?? []) !== JSON.stringify(requirements) ||
-        (status !== undefined && status !== feature.status)
+        (status ?? FeatureSpec.DEFAULT_STATUS) !== feature.status
       ) {
         Obj.update(feature, (feature) => {
           feature.name = name;
           feature.description = description;
           feature.requirements = requirements;
-          if (status !== undefined) {
-            feature.status = status;
-          }
+          // A block without a `status:` line is planned, as export reads it.
+          feature.status = status ?? FeatureSpec.DEFAULT_STATUS;
         });
         result.updated.push(feature.id);
       }
