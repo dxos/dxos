@@ -11,6 +11,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
   DEFAULT_LAYER,
   type View,
@@ -594,4 +595,12 @@ export const sceneRecordOf = (content: ContentMap, id: ViewId): SceneRecord | un
 /** Writes a node record into scene `scene`, in place; the node goes on the scene's bottom layer unless it names one. */
 export const putNodeRecord = (content: ContentMap, scene: ViewId, node: Node): void => {
   content[nodeKey(node.id)] = { kind: 'node', scene, node: clone(node) } satisfies NodeRecord;
+};
+
+/** A fresh legacy scene canvas: the root scene with the drawing's `settings`, as drawings were made before `Canvas`. */
+export const createCanvas = (settings: Partial<Omit<CanvasRecord, 'kind' | 'root'>> = {}): Drawing.Canvas => {
+  const content = {};
+  seedContent(content);
+  updateCanvasRecord(content, settings);
+  return Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content });
 };

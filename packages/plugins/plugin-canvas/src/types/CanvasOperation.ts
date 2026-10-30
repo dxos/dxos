@@ -127,16 +127,14 @@ export const AddGenerator = Operation.make({
   services: [Database.Service],
 });
 
-/** Automerge heads by key: a scene canvas's layouts by layout key; a legacy canvas's drawings by URI. */
+/** Automerge heads by key: a scene canvas's layouts by layout key. */
 const Heads = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({
-  description:
-    "Automerge heads by key: each layout's by its key on a scene canvas; each drawing's by its URI on a legacy one (its own under the empty key).",
+  description: "Automerge heads by key: each layout's by its key.",
 });
 
-/** Leaf paths: `[layoutKey, 'elements', id, …]` on a scene canvas, `[viewId, 'nodes', id, …]` on a legacy one. */
+/** Leaf paths: `[layoutKey, 'elements', id, …]`. */
 const Paths = Schema.Array(Schema.Array(Schema.String)).annotate({
-  description:
-    "Leaf paths written: [layoutKey, 'elements', elementId, 'center', 'x'] on a scene canvas; [viewId, 'nodes', nodeId, 'center', 'x'] on a legacy one.",
+  description: "Leaf paths written, e.g. [layoutKey, 'elements', elementId, 'center', 'x'].",
 });
 
 export const Apply = Operation.make({
@@ -144,19 +142,15 @@ export const Apply = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.apply'),
     name: 'Apply canvas intents',
     description:
-      "Applies intents to a canvas, freehand, and returns the heads before and after and the paths written, which undo patches back. A scene canvas takes layout intents (create, delete, update, reorder, bind, move, rotate, scale, layout, batch; 3D also extrude, join, subtract) in its layout's dimension; a legacy canvas the engine's View intents.",
+      "Applies intents to a canvas, freehand, and returns the heads before and after and the paths written, which undo patches back. It takes layout intents (create, delete, update, reorder, bind, move, rotate, scale, layout, batch; 3D also extrude, join, subtract) in its layout's dimension; a legacy scene canvas is first moved onto the scene canvas its drawing opens as.",
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
-    canvas: Ref.Ref(Obj.Unknown).annotate({ description: "The drawing's canvas: a scene canvas, or a legacy one." }),
-    view: Schema.optional(
-      Schema.String.annotate({
-        description: "Layout key (a View id on a legacy canvas); the open scene's layout (the root View) by default.",
-      }),
-    ),
-    intents: Schema.Array(Schema.Any).annotate({
-      description: "`LayoutIntent`s on a scene canvas; the engine's `Intent`s on a legacy one.",
+    canvas: Ref.Ref(Obj.Unknown).annotate({
+      description: "The drawing's canvas: a scene canvas, or a legacy one, which is migrated first.",
     }),
+    view: Schema.optional(Schema.String.annotate({ description: "Layout key; the open scene's layout by default." })),
+    intents: Schema.Array(Schema.Any).annotate({ description: "`LayoutIntent`s in the layout's dimension." }),
   }),
   output: Schema.Struct({
     canvas: Schema.String.annotate({ description: "The canvas object's id: the undo scope." }),
@@ -175,12 +169,12 @@ export const Patch = Operation.make({
     icon: 'ph--arrow-u-up-left--regular',
   },
   input: Schema.Struct({
-    canvas: Ref.Ref(Obj.Unknown).annotate({ description: "The drawing's canvas: a scene canvas, or a legacy one." }),
+    canvas: Ref.Ref(Obj.Unknown).annotate({ description: "The drawing's scene canvas." }),
     from: Heads,
     to: Heads,
     paths: Paths,
     context: Schema.optional(
-      Schema.Any.annotate({ description: 'The View path and selection the canvas returns to on undo and redo.' }),
+      Schema.Any.annotate({ description: 'The layout path and selection the canvas returns to on undo and redo.' }),
     ),
     mergeKey: Schema.optional(
       Schema.String.annotate({ description: 'Consecutive patches with one key fold into one undo step.' }),

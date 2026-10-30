@@ -15,7 +15,10 @@ import { Canvas, CanvasOperation, Generator } from '#types';
 
 import { canvasDocument } from '../model/canvas-document.ts';
 import { generatorCompiler } from '../model/compiler.ts';
-import { loadScene } from './canvas.ts';
+import { readStyles } from '../model/content.ts';
+import { legacyDocument } from '../model/migrate-scenes.ts';
+import { isSceneCanvas } from '../model/view-node.ts';
+import { DrawingDialectError } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.InspectGenerator> = CanvasOperation.InspectGenerator.pipe(
   Operation.withHandler(
@@ -53,15 +56,21 @@ export default handler;
 const DEFAULT_TIMES = [0, 0.5, 1, 1.5, 2, 2.5, 3];
 const STANDALONE_NODE = 'generator';
 
-/** The View of the drawing that holds `node`: a scene canvas's 2D layout read as one, or a legacy canvas's scene. */
+/**
+ * The View of the drawing that holds `node`: a scene canvas's 2D layout read as one; a legacy scene canvas is read as the
+ * scene migration reads it, without writing it, since an inspection changes nothing.
+ */
 const sceneOf = Effect.fn(function* (drawingRef: Ref.Ref<Drawing.Drawing>, node: string) {
   const drawing = yield* Database.load(drawingRef);
   const canvas = yield* Database.load(drawing.canvas);
-  if (!Canvas.isCanvas(canvas)) {
-    const { scenes } = yield* loadScene(drawingRef);
-    return Object.values(scenes).find((scene) => scene.nodes[node] !== undefined);
+  const document = Canvas.isCanvas(canvas)
+    ? canvasDocument(canvas)
+    : isSceneCanvas(canvas)
+      ? legacyDocument(canvas.content, readStyles(canvas.styles))
+      : undefined;
+  if (!document) {
+    return yield* Effect.fail(new DrawingDialectError({ message: 'The drawing is not a scene canvas.' }));
   }
-  const document = canvasDocument(canvas);
   return document.layouts
     .flatMap((layout) => (layout.dim === '2d' ? [toCanvasView(document, layout)] : []))
     .find((scene) => scene.nodes[node] !== undefined);

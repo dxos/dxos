@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
@@ -35,10 +34,29 @@ import { Canvas } from '#types';
 import types from '../capabilities/schema.ts';
 import { CanvasBuilder } from './builder.ts';
 import { addScene, openScene } from './canvas-document.ts';
-import { updateCanvasRecord, writeStyles, writeViews } from './content.ts';
+import {
+  clone,
+  createCanvas,
+  migrateContent,
+  migrateLayers,
+  pruneOrphanedViews,
+  readViews,
+  rootOf,
+  updateCanvasRecord,
+  writeStyles,
+  writeViews,
+} from './content.ts';
 import { makeLayoutWriter } from './layout-writer.ts';
 import { legacyDocument, migrateSceneDrawing, reconcileMigrations } from './migrate-scenes.ts';
-import { bindCanvasStore, createCanvas } from './store.ts';
+
+/** A legacy canvas's Views as its records read once their content migrations ran. */
+const legacyViews = (canvas: Drawing.Canvas) => {
+  const content = clone(canvas.content);
+  migrateContent(content);
+  migrateLayers(content);
+  pruneOrphanedViews(content);
+  return { views: readViews(content), root: rootOf(content) };
+};
 
 const SAMPLES = {
   square: createSquareTree,
@@ -114,11 +132,7 @@ describe('migrateSceneDrawing', () => {
       if (!Drawing.isCanvas(legacyCanvas)) {
         throw new Error('A legacy drawing has a base canvas.');
       }
-      const registry = Registry.make();
-      const legacy = bindCanvasStore(registry, legacyCanvas);
-      const before = registry.get(legacy.store.views);
-      const legacyRoot = legacy.root;
-      legacy.dispose();
+      const { views: before, root: legacyRoot } = legacyViews(legacyCanvas);
 
       expect(await migrate(drawing)).toBe(true);
       const scene = openScene(migratedCanvas(drawing));

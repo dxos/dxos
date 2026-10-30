@@ -12,7 +12,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
-import { Scene, isGeneratorNode } from '@dxos/scene';
+import { Scene } from '@dxos/scene';
 
 import { addCanvas, createCanvas, openScene, readViews, rootOf } from '#model';
 import { CanvasOperationHandlerSet } from '#operations';
@@ -40,7 +40,7 @@ const SOURCE = `
 
 describe('canvas generator operations', () => {
   it.effect(
-    'create, place and check a generator',
+    'create, place and check a generator; a legacy canvas is migrated before the generator is placed',
     Effect.fnUntraced(
       function* ({ expect }) {
         const canvas = yield* Database.add(createCanvas());
@@ -57,9 +57,13 @@ describe('canvas generator operations', () => {
           bounds: { x: -100, y: -100, width: 200, height: 200 },
           params: { count: 3 },
         });
-        const root = rootOf(canvas.content) ?? '';
-        const scene = readViews(canvas.content)[root];
-        expect(Object.values(scene.nodes).filter(isGeneratorNode)).toHaveLength(1);
+        const migrated = drawing.canvas.target;
+        const layout = Canvas.isCanvas(migrated) ? openScene(migrated)?.layout.target : undefined;
+        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+          throw new Error('The legacy drawing was migrated onto a scene canvas.');
+        }
+        expect(layout.elements[node]).toMatchObject({ type: 'generator' });
+        expect(readViews(canvas.content)[rootOf(canvas.content) ?? ''].nodes[node]).toBeUndefined();
 
         const report = yield* Operation.invoke(CanvasOperation.InspectGenerator, {
           generator: created.generator,
@@ -83,6 +87,7 @@ describe('canvas generator operations', () => {
     ),
     60_000,
   );
+
   it.effect(
     'a generator placed on a scene canvas is an element of the open layout, and checks there',
     Effect.fnUntraced(
@@ -125,93 +130,37 @@ describe('canvas generator operations', () => {
 
 describe('canvas edit operations', () => {
   it.effect(
-    'apply edits a View and returns the patch that undoes it; the patch skips what changed since',
+    'apply on a legacy canvas migrates its drawing and edits the scene canvas, whose patch undoes it',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const canvas = yield* Database.add(createCanvas());
-        yield* Database.add(Drawing.make({ name: 'Test', canvas }));
+        const legacy = yield* Database.add(createCanvas());
+        const drawing = yield* Database.add(Drawing.make({ name: 'Test', canvas: legacy }));
         yield* Database.flush();
-        const root = rootOf(canvas.content) ?? '';
-        const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
-        const ref = Ref.make(canvas);
-        const at = () => readViews(canvas.content)[root].nodes.n;
+        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
 
         const created = yield* Operation.invoke(CanvasOperation.Apply, {
-          canvas: ref,
-          intents: [{ kind: 'create', node }],
+          canvas: Ref.make(legacy),
+          intents: [{ kind: 'create', element }],
         });
+        const canvas = drawing.canvas.target;
+        if (!Canvas.isCanvas(canvas)) {
+          throw new Error('The legacy drawing was migrated onto a scene canvas.');
+        }
         expect(created.canvas).toBe(canvas.id);
-        expect(created.paths).toEqual([[root, 'nodes', 'n']]);
-        const moved = yield* Operation.invoke(CanvasOperation.Apply, {
-          canvas: ref,
-          intents: [{ kind: 'move', ids: ['n'], delta: { x: 10, y: 0 } }],
-        });
-        expect(moved.paths).toEqual([[root, 'nodes', 'n', 'center', 'x']]);
-        expect(at()?.center.x).toBe(10);
+        const layout = openScene(canvas)?.layout.target;
+        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+          throw new Error('A scene canvas opens a 2D layout.');
+        }
+        expect(layout.elements.n?.center).toEqual({ x: 0, y: 0 });
 
-        // Undo the move, then redo it: the same patch read the other way.
-        const undo = { canvas: ref, from: moved.after, to: moved.before, paths: moved.paths };
-        expect(yield* Operation.invoke(CanvasOperation.Patch, undo)).toMatchObject({ written: 1, skipped: 0 });
-        expect(at()?.center.x).toBe(0);
-        yield* Operation.invoke(CanvasOperation.Patch, { ...undo, from: moved.before, to: moved.after });
-        expect(at()?.center.x).toBe(10);
-
-        // Someone moves the node again: undoing the first move would overwrite that, so it is skipped.
-        yield* Operation.invoke(CanvasOperation.Apply, {
-          canvas: ref,
-          intents: [{ kind: 'move', ids: ['n'], delta: { x: 5, y: 0 } }],
-        });
-        expect(yield* Operation.invoke(CanvasOperation.Patch, undo)).toMatchObject({ written: 0, skipped: 1 });
-        expect(at()?.center.x).toBe(15);
-
-        // A create wrote the whole record, so once the node has moved since, undoing the create leaves it.
-        yield* Operation.invoke(CanvasOperation.Patch, {
-          canvas: ref,
-          from: created.after,
-          to: created.before,
-          paths: created.paths,
-        });
-        expect(at()?.center.x).toBe(15);
-        expect(yield* Operation.invoke(CanvasOperation.Apply, { canvas: ref, intents: [] })).toMatchObject({
-          paths: [],
-        });
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    60_000,
-  );
-
-  it.effect(
-    'apply refuses a malformed intent and writes nothing',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const canvas = yield* Database.add(createCanvas());
-        yield* Database.add(Drawing.make({ name: 'Test', canvas }));
-        yield* Database.flush();
-        const root = rootOf(canvas.content) ?? '';
-        const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
-        const exit = yield* Operation.invoke(CanvasOperation.Apply, {
-          canvas: Ref.make(canvas),
-          intents: [
-            { kind: 'create', node },
-            { kind: 'move', ids: ['n'] },
-          ],
-        }).pipe(Effect.exit);
-        expect(exit._tag).toBe('Failure');
-        expect(String(exit)).toContain('Intent 1 is not a valid canvas intent.');
-        expect(readViews(canvas.content)[root].nodes.n).toBeUndefined();
-
-        yield* Operation.invoke(CanvasOperation.Apply, {
-          canvas: Ref.make(canvas),
-          intents: [{ kind: 'create', node }],
-        });
-        const update = yield* Operation.invoke(CanvasOperation.Apply, {
-          canvas: Ref.make(canvas),
-          intents: [{ kind: 'update', id: 'n', values: { center: 'abc' } }],
-        }).pipe(Effect.exit);
-        expect(update._tag).toBe('Failure');
-        expect(readViews(canvas.content)[root].nodes.n?.center).toEqual({ x: 0, y: 0 });
+        // Undo names the scene canvas the edit was made on; the legacy one takes no patch.
+        const undo = { from: created.after, to: created.before, paths: created.paths };
+        const refused = yield* Operation.invoke(CanvasOperation.Patch, { canvas: Ref.make(legacy), ...undo }).pipe(
+          Effect.exit,
+        );
+        expect(refused._tag).toBe('Failure');
+        yield* Operation.invoke(CanvasOperation.Patch, { canvas: Ref.make(canvas), ...undo });
+        expect(layout.elements.n).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

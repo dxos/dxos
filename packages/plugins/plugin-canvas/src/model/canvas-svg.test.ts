@@ -22,7 +22,7 @@ import { CanvasBuilder } from './builder.ts';
 import { CanvasLayoutBuilder } from './canvas-content.ts';
 import { addCanvas } from './canvas-document.ts';
 import { canvasSvg, canvasWorld } from './canvas-svg.ts';
-import { createCanvas } from './store.ts';
+import { createCanvas } from './content.ts';
 
 const FLOW = 'flowchart LR\n  A[Client] --> B[Server]\n  B --> C[(Store)]';
 const DIAGRAMS = join(__dirname, '../../../plugin-illustrator/docs/diagrams');

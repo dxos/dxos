@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
@@ -11,7 +10,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_LATTICE, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
 import { isViewNode } from '@dxos/scene';
 
-import { bindCanvasStore, elementId, isNodeRecord, nodeKey, parseLinkedViewId } from '#model';
+import { elementId, isNodeRecord, nodeKey, objectUri, readViews, rootOf } from '#model';
 
 import { DIAGRAM_COMMANDS as files } from './compiled.ts';
 import { DIAGRAM_BOX_TONE, DIAGRAM_GROUP_TONE, loadDiagramDrawings, loadDiagramSet } from './diagrams.ts';
@@ -48,18 +47,17 @@ describe('loadDiagramSet', () => {
     if (!Drawing.isCanvas(canvas)) {
       throw new Error('The root drawing has no canvas.');
     }
-    const registry = Registry.make();
-    const bound = bindCanvasStore(registry, canvas);
+    const rootNodes = () => readViews(canvas.content)[rootOf(canvas.content) ?? '']?.nodes ?? {};
     const drills = Object.keys(set.drills[set.root]).map((box) => elementId(box, 'box'));
     const linked = () =>
       drills.filter((id) => {
-        const node = registry.get(bound.store.views)[bound.root].nodes[id];
-        return isViewNode(node) && parseLinkedViewId(node.scene) !== undefined;
+        const node = rootNodes()[id];
+        return isViewNode(node) && objectUri(node) !== undefined;
       });
     await expect.poll(linked).toEqual(drills);
 
     // The layout lands every box on a lattice cell, so links route along the gutters; group frames stay off it.
-    const nodes = Object.values(registry.get(bound.store.views)[bound.root].nodes);
+    const nodes = Object.values(rootNodes());
     const offLattice = nodes
       .filter((node) => onLattice(node))
       .filter((node) => {
@@ -68,7 +66,6 @@ describe('loadDiagramSet', () => {
       })
       .map((node) => node.id);
     expect(offLattice).toEqual([]);
-    bound.dispose();
   });
 
   test('every level of the combined set opens the diagram its boxes name', async () => {

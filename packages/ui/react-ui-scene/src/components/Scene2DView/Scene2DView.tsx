@@ -34,6 +34,8 @@ export type Scene2DViewProps = Util.ThemedClassName<{
   margin?: number;
   /** Whether the `dom` renderer draws its grid and background grid; on when unset. */
   grid?: boolean;
+  /** Draws no surface under the scene, so what is behind it (a slide) shows through. */
+  transparent?: boolean;
 }>;
 
 /** The canvas camera that puts `camera.center` at the middle of a viewport of `size`. */
@@ -68,6 +70,7 @@ const CanvasView = ({
   nodes,
   margin,
   grid = true,
+  transparent,
 }: Scene2DViewProps) => {
   const registry = useContext(RegistryContext);
   const scene = sceneId === undefined ? rootScene(document) : findScene(document, sceneId);
@@ -119,6 +122,7 @@ const CanvasView = ({
         createProjection={createProjection}
         margin={margin}
         readonly
+        transparent={transparent}
         theme={theme ?? scene?.theme}
         initialDisplay={{ snap: grid, guides: false, fit }}
         backgroundGrid={grid ? undefined : 'none'}

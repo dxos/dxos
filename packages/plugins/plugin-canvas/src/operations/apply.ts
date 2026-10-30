@@ -5,14 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, type Ref } from '@dxos/echo';
-import {
-  type VersionChange,
-  createFreehandProjection,
-  isIntent,
-  pruneOrphaned,
-  recordChanges,
-} from '@dxos/react-ui-canvas/headless';
+import { Database, Obj } from '@dxos/echo';
+import { type VersionChange, recordChanges } from '@dxos/react-ui-canvas/headless';
 import { constrain2D } from '@dxos/react-ui-scene/canvas';
 import { type LayoutIntent, Scene, isLayoutIntent } from '@dxos/scene';
 
@@ -20,9 +14,7 @@ import { Canvas, CanvasOperation } from '#types';
 
 import { openScene } from '../model/canvas-document.ts';
 import { applyLayoutIntent, canvasLayouts, canvasSource, layoutRecord } from '../model/layout-source.ts';
-import { isCanvasHeads } from '../model/store.ts';
-import { CanvasElementNotFoundError, InvalidIntentError, NewerCanvasError, UnversionedCanvasError } from './canvas.ts';
-import { withCanvasStore } from './patch-store.ts';
+import { CanvasElementNotFoundError, InvalidIntentError, UnversionedCanvasError, sceneCanvasFor } from './canvas.ts';
 
 /**
  * Applies layout intents to a scene canvas's layout `view` (the open scene's by default), in that layout's dimension
@@ -62,45 +54,13 @@ const applyToLayout = Effect.fn(function* (
   return applied(canvas.id, change);
 });
 
-/** Applies the engine's intents to a View of a legacy canvas, through its bound store. */
-const applyToLegacy = Effect.fn(function* (
-  ref: Ref.Ref<Obj.Unknown>,
-  view: string | undefined,
-  intents: readonly unknown[],
-) {
-  if (!intents.every(isIntent)) {
-    const invalid = intents.findIndex((intent) => !isIntent(intent));
-    return yield* Effect.fail(new InvalidIntentError({ message: `Intent ${invalid} is not a valid canvas intent.` }));
-  }
-  return yield* withCanvasStore(ref, ({ registry, bound, canvas, versions }) => {
-    // A newer plugin's format may hold fields this one would drop; without heads the edit could not be undone.
-    const refusal = Canvas.isNewerScene(canvas.schema)
-      ? new NewerCanvasError({
-          message: `Canvas ${canvas.id} is at ${canvas.schema}; update the Canvas plugin to edit it.`,
-        })
-      : !isCanvasHeads(versions.heads())
-        ? new UnversionedCanvasError({ message: `Canvas ${canvas.id} has no version history.` })
-        : undefined;
-    if (refusal) {
-      return Effect.fail(refusal);
-    }
+/** Each written object's Automerge heads, keyed by layout. */
+type CanvasHeads = Readonly<Record<string, readonly string[]>>;
 
-    const projection = createFreehandProjection({ registry, store: bound.store, sceneId: view ?? bound.root });
-    const isRoot = 'isRoot' in bound.store ? bound.store.isRoot : undefined;
-    const [change] = recordChanges([versions], () => {
-      const before = registry.get(bound.store.views);
-      intents.forEach((intent) => projection.apply(intent));
-      // A deleted View node takes the records nothing else opens with it (VIEWS.md §7.4), in the same undo step.
-      const after = registry.get(bound.store.views);
-      const roots = [bound.root, ...Object.keys(after).filter((id) => isRoot?.(id))];
-      const pruned = pruneOrphaned(before, after, roots);
-      if (pruned !== after) {
-        registry.set(bound.store.views, pruned);
-      }
-    });
-    return Effect.succeed(applied(canvas.id, change));
-  }).pipe(Effect.flatten);
-});
+const isCanvasHeads = (value: unknown): value is CanvasHeads =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.values(value).every((heads) => Array.isArray(heads) && heads.every((head) => typeof head === 'string'));
 
 /** What an edit did, as the operation returns it: no heads and no paths when it wrote nothing. */
 const applied = (canvas: string, change: VersionChange | undefined) =>
@@ -111,10 +71,9 @@ const applied = (canvas: string, change: VersionChange | undefined) =>
 const handler: Operation.WithHandler<typeof CanvasOperation.Apply> = CanvasOperation.Apply.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ canvas: ref, view, intents }) {
-      const canvas = yield* Database.load(ref);
-      return Canvas.isCanvas(canvas)
-        ? yield* applyToLayout(canvas, view, intents)
-        : yield* applyToLegacy(ref, view, intents);
+      // A legacy scene canvas is edited on the scene canvas it migrates onto, as opening it would.
+      const canvas = yield* sceneCanvasFor(yield* Database.load(ref));
+      return yield* applyToLayout(canvas, view, intents);
     }),
   ),
 );

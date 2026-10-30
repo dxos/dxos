@@ -3,28 +3,20 @@
 //
 
 //
-// The canvas as an animator stage (plugin-animator F-4.2): what a canvas offers to be keyed, and the translation
-// between the animator's `Sample` and the timeline the scene engine's animated projection reads. The animator owns
-// the timeline; the canvas only ever sees a sample of it, encoded as held keys.
+// A legacy scene canvas as an animator stage (plugin-animator F-4.2): what it offers to be keyed, as its node records
+// name it, and how a sample of a shot draws, through the scene migration's reading of it (`legacyDocument`). The
+// animator owns the timeline; the canvas only ever sees a sample of it.
 //
 
-import {
-  type AnimatableKind,
-  type Arranger,
-  type ScriptProperties,
-  type Timeline,
-  type Track,
-  createTimeline,
-  getPath,
-  trackId,
-  trackValue,
-} from '@dxos/animation';
+import { type AnimatableKind, type Arranger, type ScriptProperties, getPath } from '@dxos/animation';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { CAMERA_TARGET, OPACITY_PATH, sampleView } from '@dxos/react-ui-canvas/headless';
-import { type Node, type Point, endpointNode } from '@dxos/scene';
+import { OPACITY_PATH } from '@dxos/react-ui-canvas/headless';
+import { type Node, type Point, type Scene } from '@dxos/scene';
 
-import { readViews, rootOf } from './content.ts';
+import { readStyles, readViews, rootOf } from './content.ts';
+import { legacyDocument, legacyElementPath } from './migrate-scenes.ts';
+import { sceneBinding } from './scene-stage.ts';
 import { isSceneCanvas } from './view-node.ts';
 
 /** What a script's show, hide and layout write on a canvas node: its centre, its size, and its opacity. */
@@ -110,79 +102,29 @@ const ring: Arranger = ({ targets, params, values }) => {
 /** The layouts a canvas shot's script may name. */
 export const CANVAS_LAYOUTS: Readonly<Record<string, Arranger>> = { row, ring };
 
-/**
- * A sample as a timeline the animated projection can read: one held key per sampled value, so it draws the sample at
- * any time. Camera values go on the camera's tracks (`x`, `y`, `zoom`).
- */
-export const sampleToTimeline = (sample: AnimatorCapabilities.Sample): Timeline => {
-  const tracks: Record<string, Track> = {};
-  for (const [target, values] of Object.entries(sample.values)) {
-    for (const [property, value] of Object.entries(values)) {
-      tracks[trackId(target, property)] = { target, property, keys: [{ t: 0, value }] };
-    }
-  }
-  for (const [property, value] of Object.entries(sample.camera ?? {})) {
-    tracks[trackId(CAMERA_TARGET, property)] = { target: CAMERA_TARGET, property, keys: [{ t: 0, value }] };
-  }
-  return { ...createTimeline(0), tracks };
-};
+/** A legacy canvas as the scene migration reads it, without writing it; undefined for another renderer's canvas. */
+export const legacyStageDocument = (canvas: Drawing.Canvas): Scene.SceneDocument | undefined =>
+  isSceneCanvas(canvas) ? legacyDocument(canvas.content, readStyles(canvas.styles)) : undefined;
+
+/** A sample keyed by node paths (`style.opacity`, `text`) as the element paths of the migrated scene. */
+export const legacyStageSample = (sample: AnimatorCapabilities.Sample): AnimatorCapabilities.Sample => ({
+  ...sample,
+  values: Object.fromEntries(
+    Object.entries(sample.values).map(([target, values]) => [
+      target,
+      Object.fromEntries(Object.entries(values).map(([path, value]) => [legacyElementPath(path), value])),
+    ]),
+  ),
+});
 
 /**
- * What an edit at `t` changed, as stage edits: every node property whose value at `t` differs between the timeline
- * before and after, grouped by node. The camera is left out, since the canvas does not key it from a gesture.
- */
-export const stageEdits = (before: Timeline, after: Timeline, t: number): AnimatorCapabilities.StageEdit[] => {
-  const edits = new Map<string, Record<string, unknown>>();
-  for (const [id, track] of Object.entries(after.tracks)) {
-    if (track.target === CAMERA_TARGET) {
-      continue;
-    }
-    const previous = before.tracks[id];
-    const value = trackValue(track, t);
-    if (previous && JSON.stringify(trackValue(previous, t)) === JSON.stringify(value)) {
-      continue;
-    }
-    edits.set(track.target, { ...edits.get(track.target), [track.property]: value });
-  }
-  return [...edits].map(([target, values]) => ({ target, values }));
-};
-
-/**
- * The canvas's root-scene nodes and links at a sample, in scene coordinates, for effects to bind to (plugin-animator
- * DESIGN.md §6): a node's radius is half its shorter side, and a link runs straight between the centres of the nodes
- * it joins, so the binding needs no link router and stays React-free.
+ * The canvas's root-scene elements and links at a sample, in scene coordinates, for effects to bind to (plugin-animator
+ * DESIGN.md §6), as a migrated scene binds them.
  */
 export const canvasStageBinding = (
   canvas: Drawing.Canvas,
   sample: AnimatorCapabilities.Sample,
 ): AnimatorCapabilities.StageBinding => {
-  if (!isSceneCanvas(canvas)) {
-    return { objects: {}, links: [] };
-  }
-  const root = rootOf(canvas.content);
-  const stored = root === undefined ? undefined : readViews(canvas.content)[root];
-  if (!stored) {
-    return { objects: {}, links: [] };
-  }
-  const scene = sampleView(stored, sampleToTimeline(sample), sample.t);
-  const objects: Record<string, AnimatorCapabilities.BoundObject> = {};
-  for (const node of Object.values(scene.nodes)) {
-    const opacity = restingValue(node, OPACITY_PATH);
-    objects[node.id] = {
-      id: node.id,
-      position: { x: node.center.x, y: node.center.y, z: 0 },
-      radius: Math.min(node.size.width, node.size.height) / 2,
-      opacity: typeof opacity === 'number' ? opacity : 1,
-    };
-  }
-  const links = Object.values(scene.links).flatMap((link) => {
-    const from = endpointNode(link.source);
-    const to = endpointNode(link.target);
-    const start = from === undefined ? undefined : objects[from];
-    const end = to === undefined ? undefined : objects[to];
-    return from !== undefined && to !== undefined && start && end
-      ? [{ id: link.id, from, to, points: [start.position, end.position] }]
-      : [];
-  });
-  return { objects, links };
+  const document = legacyStageDocument(canvas);
+  return document ? sceneBinding(document, legacyStageSample(sample)) : { objects: {}, links: [] };
 };

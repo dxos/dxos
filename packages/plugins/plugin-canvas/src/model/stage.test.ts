@@ -4,21 +4,20 @@
 
 import { describe, test } from 'vitest';
 
-import { compileScript, setKey, trackValue } from '@dxos/animation';
+import { compileScript, trackValue } from '@dxos/animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { BASE_ANIMATABLE, sampleCamera, sampleView } from '@dxos/react-ui-canvas/headless';
+import { BASE_ANIMATABLE } from '@dxos/react-ui-canvas/headless';
 import { type RectNode } from '@dxos/scene';
 
 import { Canvas } from '#types';
 
-import { readViews, rootOf, seedContent, writeViews } from './content.ts';
+import { seedContent, writeViews } from './content.ts';
 import {
   CANVAS_LAYOUTS,
   CANVAS_SCRIPT_PROPERTIES,
   canvasStageBinding,
   canvasStageTargets,
-  sampleToTimeline,
-  stageEdits,
+  legacyStageSample,
 } from './stage.ts';
 
 const box = (x: number) => ({ z: 'a0', center: { x, y: 0 }, size: { width: 100, height: 50 } });
@@ -45,10 +44,15 @@ describe('canvas stage', () => {
     expect(targets[1].values['style.opacity']).toBe(0.5);
   });
 
-  test('effects bind to the sampled nodes and the links between them', ({ expect }) => {
-    const binding = canvasStageBinding(makeCanvas(), { t: 1, values: { a: { center: { x: 40, y: 10 } } } });
-    expect(binding.objects.a).toEqual({ id: 'a', position: { x: 40, y: 10, z: 0 }, radius: 25, opacity: 1 });
-    expect(binding.objects.b.opacity).toBe(0.5);
+  test('effects bind to the sampled nodes and the links between them, as the migrated scene binds them', ({
+    expect,
+  }) => {
+    const binding = canvasStageBinding(makeCanvas(), {
+      t: 1,
+      values: { a: { center: { x: 40, y: 10 } }, b: { 'style.opacity': 0.25 } },
+    });
+    expect(binding.objects.a).toEqual({ id: 'a', position: { x: 40, y: 10, z: 0 }, radius: 50, opacity: 1 });
+    expect(binding.objects.b.opacity).toBe(0.25);
     expect(binding.links).toEqual([
       { id: 'ab', from: 'a', to: 'b', points: [binding.objects.a.position, binding.objects.b.position] },
     ]);
@@ -58,31 +62,11 @@ describe('canvas stage', () => {
     expect(canvasStageTargets(Drawing.makeCanvas({ schema: 'tldraw.com/2' }), () => BASE_ANIMATABLE)).toEqual([]);
   });
 
-  test('a sample draws as held keys on the nodes and the camera, at any time', ({ expect }) => {
-    const canvas = makeCanvas();
-    const scene = readViews(canvas.content)[rootOf(canvas.content) ?? ''];
-    const timeline = sampleToTimeline({
-      t: 2,
-      values: { a: { center: { x: 40, y: 10 } }, missing: { center: { x: 0, y: 0 } } },
-      camera: { zoom: 2 },
+  test('a sample keyed by node paths keys the migrated elements', ({ expect }) => {
+    const sample = { t: 2, values: { a: { 'center': { x: 1, y: 2 }, 'style.opacity': 0.5, 'text': 'T' } } };
+    expect(legacyStageSample(sample).values).toEqual({
+      a: { 'center': { x: 1, y: 2 }, 'overrides.opacity': 0.5, 'label': 'T' },
     });
-    expect(sampleView(scene, timeline, 0).nodes.a.center).toEqual({ x: 40, y: 10 });
-    expect(sampleView(scene, timeline, 9).nodes.a.center).toEqual({ x: 40, y: 10 });
-    expect(sampleView(scene, timeline, 9).nodes.b).toBe(scene.nodes.b);
-    expect(sampleCamera(timeline, 5)).toEqual({ zoom: 2 });
-  });
-
-  test('an edit at a time comes back as the properties it changed', ({ expect }) => {
-    const before = sampleToTimeline({ t: 1, values: { a: { center: { x: 0, y: 0 }, size: { width: 1, height: 1 } } } });
-    const after = setKey(setKey(before, 'a', 'center', { t: 1, value: { x: 5, y: 0 } }), 'b', 'style.opacity', {
-      t: 1,
-      value: 0.25,
-    });
-    expect(stageEdits(before, after, 1)).toEqual([
-      { target: 'a', values: { center: { x: 5, y: 0 } } },
-      { target: 'b', values: { 'style.opacity': 0.25 } },
-    ]);
-    expect(stageEdits(before, before, 1)).toEqual([]);
   });
 
   test('a script compiles against the canvas: show writes size and opacity, ring places centres', ({ expect }) => {

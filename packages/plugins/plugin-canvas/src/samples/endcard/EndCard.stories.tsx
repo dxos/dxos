@@ -11,7 +11,7 @@ import { type Database, Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Canvas, createCanvasAtoms, useRegistry } from '@dxos/react-ui-canvas/scene';
+import { Canvas, createCanvasAtoms, createMemoryStore, useRegistry } from '@dxos/react-ui-canvas/scene';
 import { Loading } from '@dxos/react-ui/testing';
 import { createStoryDecorators } from '@dxos/storybook-testing';
 
@@ -22,7 +22,6 @@ import { Canvas as CanvasType, Generator } from '#types';
 
 import {
   createGeneratorWorker,
-  useBoundCanvasStore,
   useCanvasGenerators,
   useCanvasNodes,
 } from '../../containers/CanvasArticle/use-canvas-scene.ts';
@@ -81,7 +80,11 @@ type FilmViewProps = FilmProps & { db: Database.Database; canvas: Drawing.Canvas
 
 const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
   const registry = useRegistry();
-  const bound = useBoundCanvasStore(canvas);
+  // A film is only played, so it draws the end card's Views from memory rather than binding the drawing.
+  const bound = useMemo(
+    () => ({ store: createMemoryStore([rootScene(), logoComposite()], {}, { root: ROOT }), root: ROOT }),
+    [canvas],
+  );
   const nodes = useCanvasNodes();
   const generators = useCanvasGenerators(db);
   const atoms = useMemo(() => (bound ? createCanvasAtoms(bound.root) : undefined), [bound]);

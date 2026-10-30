@@ -16,36 +16,15 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import { kindNodeDef, kindRegistry } from '@dxos/react-ui-scene/canvas';
 import { type KindRegistry, type Node } from '@dxos/scene';
 
-import {
-  type BoundCanvasStore,
-  CanvasViewNode,
-  ImageNode,
-  adoptLayoutMode,
-  bindCanvasStore,
-  migrateSceneDrawing,
-  reconcileMigrations,
-} from '#model';
+import { CanvasViewNode, ImageNode, adoptLayoutMode, migrateSceneDrawing, reconcileMigrations } from '#model';
 import { Canvas, CanvasCapabilities, Generator } from '#types';
 
 import { CanvasViewNodeView, CanvasViewToolbar } from './CanvasViewNodeView.tsx';
 import { ImageNodeView } from './ImageNodeView.tsx';
-
-/** The canvas's scene store, bound for the canvas's lifetime in this view; a new canvas rebinds. */
-export const useBoundCanvasStore = (canvas: Drawing.Canvas): BoundCanvasStore | undefined => {
-  const registry = useRegistry();
-  const [bound, setBound] = useState<BoundCanvasStore>();
-  useEffect(() => {
-    const next = bindCanvasStore(registry, canvas);
-    setBound(next);
-    return () => next.dispose();
-  }, [registry, canvas]);
-  return bound;
-};
 
 /**
  * A legacy scene drawing's `Canvas`, once `migrate` has moved it onto one (the article opening it for writing); until

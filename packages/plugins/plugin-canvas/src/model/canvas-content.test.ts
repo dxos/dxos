@@ -28,8 +28,8 @@ import { CanvasBuilder } from './builder.ts';
 import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { addCanvas, openScene } from './canvas-document.ts';
 import { readViews } from './content.ts';
+import { createCanvas } from './content.ts';
 import { makeLayoutWriter } from './layout-writer.ts';
-import { createCanvas } from './store.ts';
 
 const FLOW = 'flowchart LR\n  A[Client] --> B[Server]';
 

@@ -12,11 +12,11 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Timeline, trackId } from '@dxos/animation';
+import { SCRIPT_CAMERA_TARGET, Timeline, trackId } from '@dxos/animation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { CAMERA_TARGET, type View } from '@dxos/react-ui-canvas/headless';
+import { type View } from '@dxos/react-ui-canvas/headless';
 import { fromCanvasView, namedStyles } from '@dxos/react-ui-scene/canvas';
 import { Scene, type StyleMap, bounds2D, toEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
@@ -125,7 +125,7 @@ export const legacyDocument = (content: Drawing.Canvas['content'], classes: Styl
 };
 
 /** A canvas node's track property as the element path it keys: its inline style is the element's overrides. */
-const elementPath = (property: string): string =>
+export const legacyElementPath = (property: string): string =>
   property.startsWith('style.')
     ? `overrides.${property.slice('style.'.length)}`
     : property === 'text'
@@ -142,7 +142,7 @@ export const migrateTimeline = (timeline: Timeline, stage: Ref.Ref<Obj.Unknown>)
     ...timeline,
     tracks: Object.fromEntries(
       Object.values(timeline.tracks).map((track) => {
-        const property = track.target === CAMERA_TARGET ? track.property : elementPath(track.property);
+        const property = track.target === SCRIPT_CAMERA_TARGET ? track.property : legacyElementPath(track.property);
         return [trackId(track.target, property), { ...track, property }];
       }),
     ),

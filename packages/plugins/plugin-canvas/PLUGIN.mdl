@@ -27,8 +27,8 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
 plugin as two drawing variants, Canvas and 3D Canvas (`dxos.org/scene/2`). A drawing is a `Canvas` over the scene
 model's ECHO objects (a model, layouts and scenes); its article and card render the shared scene editor with the
-dimension config its scene asks for. A drawing saved before `Canvas` keeps a hidden legacy variant, which renders the
-2D engine on its own until its article migrates it.
+dimension config its scene asks for. A drawing saved before `Canvas` keeps a hidden legacy variant: its article migrates
+it onto a `Canvas`, and every other surface draws it read-only as the migration reads it, without writing it.
 
 This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
 `Drawing` type, the variant contract and the converters this plugin registers with, and the scene editor
@@ -41,7 +41,7 @@ uses org.dxos.ui.react-ui-canvas: The shared scene editor the article renders �
 ```
 
 ```mdl
-uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's Views, links, portals and modes — which a 2D drawing and a legacy canvas show.
+uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's links, portals and modes — which a 2D drawing shows, and which draws a legacy canvas read-only.
 ```
 
 ```mdl
@@ -324,4 +324,16 @@ decision D-13: `CanvasOperation.Apply` runs the shared editor's 2D mode rule (`c
   rejected:
     - Importing `constrain2D` from react-ui-scene's root, which would load the editor's React components and the 3D renderer into every operation handler.
     - Dropping only the refused intents, which would apply part of a batch the agent meant as one edit.
+```
+
+```mdl
+decision D-14: A legacy scene canvas (a `Drawing.Canvas` in the `dxos.org/scene/2` format) is read only through the scene migration: its article migrates it onto a `Canvas` on open (`migrateSceneDrawing`), while its section, slide, card and animator stage draw `legacyDocument` read-only through the 2D scene view, and a canvas a newer plugin saved stays read-only under its banner. `CanvasOperation.Apply`, `AddGenerator` and `InspectGenerator` migrate a legacy drawing before acting, and `CanvasOperation.Patch` refuses a legacy canvas. Fills in [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The canvas engine's View model, intents and store are being retired (COMMON-CORE E.6), so one migration path must be the only reader of legacy records.
+  rejected:
+    - Keeping a writable legacy engine view, which would keep the View model and its store alive for one dialect.
+    - Migrating on any surface, which would write a document a slide or card only looks at.
 ```

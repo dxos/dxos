@@ -10,12 +10,11 @@ import { topZ } from '@dxos/react-ui-canvas/headless';
 import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type GeneratorNode, Scene } from '@dxos/scene';
 
-import { Canvas, CanvasOperation, Generator } from '#types';
+import { CanvasOperation, Generator } from '#types';
 
 import { openScene } from '../model/canvas-document.ts';
-import { putNodeRecord } from '../model/content.ts';
 import { applyLayoutIntent, canvasLayouts } from '../model/layout-source.ts';
-import { CanvasElementNotFoundError, loadScene } from './canvas.ts';
+import { CanvasElementNotFoundError, sceneCanvasOf } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = CanvasOperation.AddGenerator.pipe(
   Operation.withHandler(
@@ -33,29 +32,22 @@ const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = Canv
         ...(layer !== undefined ? { layer } : {}),
       });
 
-      const drawing = yield* Database.load(drawingRef);
-      const canvas = yield* Database.load(drawing.canvas);
-      if (Canvas.isCanvas(canvas)) {
-        const layout = scene === undefined ? openScene(canvas)?.layout.target : canvasLayouts(canvas).get(scene);
-        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
-          return yield* Effect.fail(
-            new CanvasElementNotFoundError({ message: `Canvas ${canvas.id} has no 2D layout ${scene ?? 'open'}.` }),
-          );
-        }
-        const placed = node(
-          topZ(Object.values(layout.elements).flatMap(({ id, z }) => (z === undefined ? [] : [{ id, z }]))),
+      // A legacy scene canvas is moved onto a scene canvas first, as opening it would.
+      const canvas = yield* sceneCanvasOf(yield* Database.load(drawingRef));
+      const layout = scene === undefined ? openScene(canvas)?.layout.target : canvasLayouts(canvas).get(scene);
+      if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+        return yield* Effect.fail(
+          new CanvasElementNotFoundError({ message: `Canvas ${canvas.id} has no 2D layout ${scene ?? 'open'}.` }),
         );
-        // The node's element as the engine writes one, so the canvas reads it back as the same generator node.
-        const element = fromCanvasView({ id: layout.key, nodes: { [placed.id]: placed }, links: {} }).layout.elements[
-          placed.id
-        ];
-        applyLayoutIntent(layout, { kind: 'create', element });
-        return { node: placed.id };
       }
-
-      const { id: sceneId, scenes, edit } = yield* loadScene(drawingRef, scene);
-      const placed = node(topZ(Object.values(scenes[sceneId]?.nodes ?? {})));
-      edit((content) => putNodeRecord(content, sceneId, placed));
+      const placed = node(
+        topZ(Object.values(layout.elements).flatMap(({ id, z }) => (z === undefined ? [] : [{ id, z }]))),
+      );
+      // The node's element as the engine writes one, so the canvas reads it back as the same generator node.
+      const element = fromCanvasView({ id: layout.key, nodes: { [placed.id]: placed }, links: {} }).layout.elements[
+        placed.id
+      ];
+      applyLayoutIntent(layout, { kind: 'create', element });
       return { node: placed.id };
     }),
   ),

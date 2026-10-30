@@ -19,6 +19,5 @@ export * from './layout-writer.ts';
 export * from './named-styles.ts';
 export * from './records.ts';
 export * from './migrate-scenes.ts';
-export * from './store.ts';
 export * from './migrations.ts';
 export * from './stage.ts';
