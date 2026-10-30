@@ -664,3 +664,10 @@ decision D-32: QA-7 ends by making "Instant inbox" depend on "Search" from its s
   affects: [QA-7, F-2.10]
   why: The walk already has two features in one document, so a dependency between them is one more step, and it is the part of the section the earlier steps never reach.
 ```
+
+```mdl
+decision D-33: Approve [D-31]: a feature's dependencies stay in ECHO only. An embed puts the structured ECHO object in the text in place of its fields as unstructured text, so the text duplicates none of its data.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-2.10, F-3.3]
+```
