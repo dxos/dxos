@@ -34,7 +34,7 @@ export const VectorField: FormFieldRenderer = ({ type, jsonPath, label, readonly
   return (
     <Fieldset.Root data-testid={jsonPath === undefined ? undefined : `vector.${jsonPath}`}>
       {showLabel && label && <Fieldset.Legend>{label}</Fieldset.Legend>}
-      <Layout.Container layout='stack' gutter='inherit' gap='sm'>
+      <Layout.Container layout='stack' gutter='inherit' gap='none'>
         {axes.map((axis) => (
           <VectorAxisRow
             key={axis.name}
