@@ -126,7 +126,7 @@ const ThemeView = ({ theme: initialTheme, defaultTheme, sample = 'elements' }: S
  * A theme pairs a style set with a background, and may hold the canvas in light or dark whatever the app's mode.
  *
  * Test:
- * 1. Each story draws the same scene (SoftTones its own): rectangles at several tones, an ellipse, a note, a frame and
+ * 1. Each story draws the same scene (NeuTones its own): rectangles at several tones, an ellipse, a note, a frame and
  *    links.
  * 2. The bar at the bottom right opens the theme list: each theme with a swatch, and a sun or moon when it has a mode;
  *    picking one restyles every element and the background; Default takes `defaultTheme`.
@@ -160,15 +160,15 @@ export const Flat: Story = { args: { theme: 'flat' } };
 
 export const Outline: Story = { args: { theme: 'outline' } };
 
-/** Neumorphism: shapes raised from a ground of their own tone, links as grooves; light or dark with the app. */
-export const Soft: Story = { args: { theme: 'soft' } };
+/** Neumorphism: shapes raised from a ground of their own tone, links as grooves; always light, whatever the app's mode. */
+export const NeuLight: Story = { args: { theme: 'neu-light' } };
 
-/** Soft held light whatever the app's mode. */
-export const SoftLight: Story = { args: { theme: 'soft-light' } };
+/** The Neu look always dark, whatever the app's mode. */
+export const NeuDark: Story = { args: { theme: 'neu-dark' } };
 
 /**
- * The soft tones side by side, as boxes and as outline shapes: inset, flat and raised, raised the default. Links end in
+ * The Neu tones side by side, as boxes and as outline shapes: inset, flat and raised, raised the default. Links end in
  * an arrow, a triangle and a circle, each a head of the same groove as its track. Selecting a shape outlines it and
  * leaves its relief alone.
  */
-export const SoftTones: Story = { args: { theme: 'soft', sample: 'tones' } };
+export const NeuTones: Story = { args: { theme: 'neu-dark', sample: 'tones' } };

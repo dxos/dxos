@@ -18,9 +18,9 @@ import {
   type Theme3D,
   type WorldTransform,
   groundPoint,
-  isTheme3D,
   project,
   renderList,
+  toTheme3D,
 } from '../../three/index.ts';
 import { DEFAULT_CAMERA, onScene, useManifoldGeometry, useOrbit, useSceneRenderer } from '../Scene3DView/index.ts';
 import { type GroundBase, createdElement, dragBase, dragHeight, sizesInOneStep } from './create.ts';
@@ -143,7 +143,7 @@ export const Scene3DEditor = ({
   const editing = editingProp ?? scene?.layout ?? '';
   const layout = findLayout(doc, editing);
   const geometry = useManifoldGeometry(doc, givenGeometry);
-  const look: Theme3D = theme ?? (isTheme3D(scene?.theme) ? scene.theme : 'cad');
+  const look: Theme3D = theme ?? toTheme3D(scene?.theme) ?? 'cad';
   const given = camera ?? (scene?.dim === '3d' ? scene.camera : DEFAULT_CAMERA);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

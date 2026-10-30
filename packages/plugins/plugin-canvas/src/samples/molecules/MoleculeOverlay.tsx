@@ -104,7 +104,7 @@ const DepthDefs = ({ raised, inset }: { raised: string; inset: string }) => (
 /**
  * How containers, channels and app content are drawn: one of the canvas's built-in style sets, so the sample and the
  * canvas name their looks alike. `flat`, cards with hairline borders and solid channels; `outline`, line art with no fills and channels as rails;
- * `glass`, translucent frosted cards and channels; `soft`, flat's cards raised by the wash with their wells inset.
+ * `glass`, translucent frosted cards and channels; `neu`, flat's cards raised by the wash with their wells inset.
  */
 export type Look = (typeof STYLE_SET_IDS)[number];
 
@@ -158,7 +158,7 @@ const DARK_FLAT: Palette = {
 
 const DARK_PALETTES: Record<Look, Palette> = {
   flat: DARK_FLAT,
-  soft: { ...DARK_FLAT, raised: true, inset: true },
+  neu: { ...DARK_FLAT, raised: true, inset: true },
   outline: {
     frame: 'fill-none',
     frameStroke: 'stroke-neutral-500',
@@ -219,7 +219,7 @@ const LIGHT_FLAT: Palette = {
 
 const LIGHT_PALETTES: Record<Look, Palette> = {
   flat: LIGHT_FLAT,
-  soft: { ...LIGHT_FLAT, raised: true, inset: true },
+  neu: { ...LIGHT_FLAT, raised: true, inset: true },
   outline: {
     frame: 'fill-none',
     frameStroke: 'stroke-neutral-500',

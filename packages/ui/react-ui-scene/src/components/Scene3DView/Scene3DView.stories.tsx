@@ -13,7 +13,7 @@ import { type Scene } from '@dxos/scene';
 import { Scene3DView } from './Scene3DView.tsx';
 
 const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] as const;
-const THEMES = ['cad', 'presentation', 'clay', 'clay-light'] as const;
+const THEMES = ['cad', 'presentation', 'neu-light', 'neu-dark'] as const;
 const CAMERAS = ['iso', 'front', 'close', 'wide'] as const;
 
 type StoryProps = {
@@ -62,8 +62,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Matte solids in the soft ground's tone on a ground of the same tone, edged in their hue; light or dark with the app. */
-export const Clay: Story = { args: { theme: 'clay' } };
+/** Matte solids in the Neu ground's tone on a ground of the same tone, edged in their hue; always light. */
+export const NeuLight: Story = { args: { theme: 'neu-light' } };
 
-/** Clay held light whatever the app's mode, as 2D's Soft Light is. */
-export const ClayLight: Story = { args: { theme: 'clay-light' } };
+/** The Neu look always dark, whatever the app's mode, as 2D's Neu Dark is. */
+export const NeuDark: Story = { args: { theme: 'neu-dark' } };

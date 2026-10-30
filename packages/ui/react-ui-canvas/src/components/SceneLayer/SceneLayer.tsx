@@ -52,15 +52,15 @@ import { type GeneratorFrames, type Shape } from '../../generator/index.ts';
 import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
   type LinkKind,
+  NEU_GROOVE_LIP,
+  NEU_RELIEF,
+  NEU_VARS,
+  type NeuRelief,
   NO_STYLES,
   type NodeDef,
   type NodeRegistry,
   type NodeViewProps,
   RADIUS_PX,
-  SOFT_GROOVE_LIP,
-  SOFT_RELIEF,
-  SOFT_VARS,
-  type SoftRelief,
   type View,
   type ViewStore,
   nodeDef,
@@ -73,9 +73,9 @@ import {
   GROOVE_CLASSES,
   type LatticeSpec,
   type MarkerFrame,
+  NEU_CANVAS_FILL,
   type PartEditing,
   type PartKey,
-  SOFT_CANVAS_FILL,
   alignClasses,
   canvasFillClass,
   classedLink,
@@ -701,7 +701,7 @@ type LinkStrokeProps = {
 
 /**
  * A link's visible stroke as its style set draws it: a line; a tube, its hue lit along the middle; rails, two edges over
- * a faint strip; glass, a translucent strip with fine edges; or a groove, a channel pressed into the soft ground. The
+ * a faint strip; glass, a translucent strip with fine edges; or a groove, a channel pressed into the Neu ground. The
  * line stops under each end, so it never shows past or through an end's point.
  */
 const LinkStroke = ({
@@ -795,13 +795,13 @@ type GrooveStrokeProps = Pick<LinkStrokeProps, 'path' | 'stroke' | 'emphasis' | 
 };
 
 /**
- * A channel pressed into the soft ground, its ends heads of the same channel: every lip is drawn before any floor, so
+ * A channel pressed into the Neu ground, its ends heads of the same channel: every lip is drawn before any floor, so
  * the track and its heads read as one cut. The lips are copies nudged down-right in light and up-left in shade, as an
  * SVG stroke cannot be offset or inset-shadowed and a filter per link would be far dearer to draw. The track stops
  * under each head, whose mitred point is the end.
  */
 const GrooveStroke = ({ path, heads, stroke, emphasis, width, dash, linkId }: GrooveStrokeProps) => {
-  const lip = Math.max(0.75, width * SOFT_GROOVE_LIP);
+  const lip = Math.max(0.75, width * NEU_GROOVE_LIP);
   const floor = emphasis ? stroke : GROOVE_CLASSES.floor;
   const layer = (className: string, offset: number, opacity?: number) => {
     const transform = offset ? `translate(${offset} ${offset})` : undefined;
@@ -1238,17 +1238,17 @@ type SilhouetteReliefProps = {
   node: Node;
   border: number;
   radius: number;
-  relief: SoftRelief;
+  relief: NeuRelief;
   className?: string;
   /** Position, rotation and fade, as the frame's. */
   style: CSSProperties;
 };
 
-const SHADE_FLOOD: CSSProperties = { floodColor: `var(${SOFT_VARS.shade})` };
-const HIGHLIGHT_FLOOD: CSSProperties = { floodColor: `var(${SOFT_VARS.highlight})` };
+const SHADE_FLOOD: CSSProperties = { floodColor: `var(${NEU_VARS.shade})` };
+const HIGHLIGHT_FLOOD: CSSProperties = { floodColor: `var(${NEU_VARS.highlight})` };
 
 /**
- * A silhouette's soft relief, which its masked layers cannot cast: the outline in the ground colour under one filter of
+ * A silhouette's Neu relief, which its masked layers cannot cast: the outline in the ground colour under one filter of
  * two blurred, offset copies of its alpha, as the box-shadow a box draws with. Raised, the copies fall outside the shape
  * behind the frame; inset, they fall inside it over this layer's own fill.
  */
@@ -1256,7 +1256,7 @@ const SilhouetteRelief = ({ outline, node, border, radius, relief, className, st
   const id = useId();
   const { width, height } = node.size;
   const path = useMemo(() => outline(node, border / 2, radius), [outline, node, border, radius]);
-  const { offset, blur } = SOFT_RELIEF[relief];
+  const { offset, blur } = NEU_RELIEF[relief];
   // Box-shadow blur is twice the Gaussian deviation.
   const deviation = blur / 2;
   const pad = offset + blur * 2;
@@ -1316,7 +1316,7 @@ const SilhouetteRelief = ({ outline, node, border, radius, relief, className, st
           </feMerge>
         </filter>
       </defs>
-      <path d={path} className={SOFT_CANVAS_FILL} filter={`url(#${id})`} />
+      <path d={path} className={NEU_CANVAS_FILL} filter={`url(#${id})`} />
     </svg>
   );
 };

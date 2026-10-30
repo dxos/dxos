@@ -26,13 +26,13 @@ import {
 import { TOOLS_3D } from './tools3d.ts';
 import { Viewport3D } from './Viewport3D.tsx';
 
-const CLAY_STYLES = {
+const NEU_STYLES = {
   body: { name: 'Body', hue: 'neutral' } satisfies NamedStyle3D,
   accent: { name: 'Accent', hue: 'blue' } satisfies NamedStyle3D,
   ghost: { name: 'Ghost', hue: 'violet', surface: 'tint' } satisfies NamedStyle3D,
 };
 
-/** The 3D looks, each a default style catalog: CAD's flat parts, Presentation's lit materials, Clay's matte solids. */
+/** The 3D looks, each a default style catalog: CAD's flat parts, Presentation's lit materials, Neu's matte solids. */
 export const CATALOGS_3D: readonly EditorCatalog[] = [
   {
     id: 'cad',
@@ -52,16 +52,16 @@ export const CATALOGS_3D: readonly EditorCatalog[] = [
       glow: { name: 'Glow', hue: 'amber', emissive: 0.8 } satisfies NamedStyle3D,
     },
   },
+  // Each Neu look is held in its mode whatever the app's, as 2D's are.
   {
-    id: 'clay',
-    name: 'Clay',
-    styles: CLAY_STYLES,
+    id: 'neu-light',
+    name: 'Neu Light',
+    styles: NEU_STYLES,
   },
-  // Clay held light whatever the app's mode, as 2D's Soft Light is.
   {
-    id: 'clay-light',
-    name: 'Clay Light',
-    styles: CLAY_STYLES,
+    id: 'neu-dark',
+    name: 'Neu Dark',
+    styles: NEU_STYLES,
   },
 ];
 

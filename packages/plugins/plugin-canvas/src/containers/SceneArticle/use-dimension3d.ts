@@ -5,7 +5,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { type EditorDisplay } from '@dxos/react-ui-canvas/scene';
-import { CATALOGS_3D, config3d, isTheme3D } from '@dxos/react-ui-scene';
+import { CATALOGS_3D, config3d, toTheme3D } from '@dxos/react-ui-scene';
 import { type Scene } from '@dxos/scene';
 
 import { type Canvas } from '#types';
@@ -25,7 +25,7 @@ export const useDimension3D = (
   const view = useScene3DView(canvas);
   const display = useMemo<EditorDisplay>(
     () => ({
-      theme: view.theme ?? (isTheme3D(authoredTheme) ? authoredTheme : 'cad'),
+      theme: view.theme ?? toTheme3D(authoredTheme) ?? 'cad',
       themeOverride: view.theme,
       grid: view.grid,
       snap: view.snap,
@@ -35,7 +35,7 @@ export const useDimension3D = (
   );
   const onDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => {
-      'themeOverride' in next && view.onThemeChange(isTheme3D(next.themeOverride) ? next.themeOverride : undefined);
+      'themeOverride' in next && view.onThemeChange(toTheme3D(next.themeOverride));
       next.grid !== undefined && view.onGridChange(next.grid);
       next.snap !== undefined && view.onSnapChange(next.snap);
       next.axes !== undefined && view.onAxesChange(next.axes);

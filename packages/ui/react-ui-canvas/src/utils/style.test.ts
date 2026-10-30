@@ -131,44 +131,53 @@ describe('style sets', () => {
     expect(frameClasses(nodes.blue, true, false, false, glass)[2]).toBe('border-focus');
   });
 
-  test('soft shapes are the ground colour, hue only accents them, and selection leaves the surface alone', ({
+  test('Neu shapes are the ground colour, hue only accents them, and selection leaves the surface alone', ({
     expect,
   }) => {
-    const soft = resolveLook(defaultThemeRegistry, { theme: 'soft' });
-    const [surface, text, border] = frameClasses(nodes.blue, false, false, false, soft);
-    expect(surface).toBe('bg-(--dx-soft-ground) shadow-(--dx-soft-raised)');
-    expect(text).toBe('text-blue-700 dark:text-blue-300');
-    expect(border).toBe('border-blue-500/45 dark:border-blue-400/45');
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    const [surface, text, border] = frameClasses(nodes.blue, false, false, false, neu);
+    expect(surface).toBe('bg-(--dx-neu-ground) shadow-(--dx-neu-raised)');
+    expect(text).toBe('text-blue-300');
+    expect(border).toBe('border-blue-400/45');
+    // Neu Light takes the light accents over the same ground.
+    const light = frameClasses(
+      nodes.blue,
+      false,
+      false,
+      false,
+      resolveLook(defaultThemeRegistry, { theme: 'neu-light' }),
+    );
+    expect(light.slice(0, 3)).toEqual([surface, 'text-blue-700', 'border-blue-500/45']);
     // A shape with no hue is pure relief: no edge of its own.
-    expect(frameClasses(nodes.plain, false, false, false, soft)[2]).toBe('border-transparent');
+    expect(frameClasses(nodes.plain, false, false, false, neu)[2]).toBe('border-transparent');
     // Selected: still raised; only the outline shows it.
-    const selected = frameClasses(nodes.blue, true, false, false, soft);
+    const selected = frameClasses(nodes.blue, true, false, false, neu);
     expect(selected[0]).toBe(surface);
     expect(selected[2]).toBe('border-focus');
     // The tone carries indentation: tone 0 is cut in, 1 is level, 2 stands out.
     const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
-    expect(frameClasses(toned(0), false, false, false, soft)[0]).toBe('bg-(--dx-soft-ground) shadow-(--dx-soft-inset)');
-    expect(frameClasses(toned(1), false, false, false, soft)[0]).toBe('bg-(--dx-soft-ground)');
-    expect(frameClasses(toned(2), true, false, false, soft)[0]).toBe(surface);
+    expect(frameClasses(toned(0), false, false, false, neu)[0]).toBe('bg-(--dx-neu-ground) shadow-(--dx-neu-inset)');
+    expect(frameClasses(toned(1), false, false, false, neu)[0]).toBe('bg-(--dx-neu-ground)');
+    expect(frameClasses(toned(2), true, false, false, neu)[0]).toBe(surface);
     const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
     expect(frameClasses(nodes.blue, true, false, false, glass)[0]).toBe('bg-white/55');
   });
 
   test('a silhouette takes its relief from the tone, never from selection', ({ expect }) => {
-    const soft = resolveLook(defaultThemeRegistry, { theme: 'soft' });
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
     const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
-    expect(nodeRelief(nodes.blue, soft)).toBe('raised');
-    expect(nodeRelief(toned(0), soft)).toBe('inset');
-    expect(nodeRelief(toned(1), soft)).toBeUndefined();
+    expect(nodeRelief(nodes.blue, neu)).toBe('raised');
+    expect(nodeRelief(toned(0), neu)).toBe('inset');
+    expect(nodeRelief(toned(1), neu)).toBeUndefined();
     // Unfilled shapes and other sets draw no relief.
-    expect(nodeRelief(nodes.bare, soft)).toBeUndefined();
-    expect(nodeRelief(nodes.guide, soft)).toBeUndefined();
+    expect(nodeRelief(nodes.bare, neu)).toBeUndefined();
+    expect(nodeRelief(nodes.guide, neu)).toBeUndefined();
     expect(nodeRelief(nodes.blue, resolveLook(defaultThemeRegistry, { theme: 'paper' }))).toBeUndefined();
   });
 
-  test('the canvas fill under captions and hollow markers is the soft ground on a soft background', ({ expect }) => {
-    const soft = resolveLook(defaultThemeRegistry, { theme: 'soft' });
-    expect(canvasFillClass(soft, 'opaque')).toBe('fill-(--dx-soft-ground)');
+  test('the canvas fill under captions and hollow markers is the Neu ground on a Neu background', ({ expect }) => {
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    expect(canvasFillClass(neu, 'opaque')).toBe('fill-(--dx-neu-ground)');
     const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
     expect(canvasFillClass(glass, 'opaque')).toBe('fill-white');
   });

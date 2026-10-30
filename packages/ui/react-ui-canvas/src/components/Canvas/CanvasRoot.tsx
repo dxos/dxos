@@ -49,8 +49,8 @@ import {
   chooseTheme,
   defaultThemeRegistry,
   keyAction,
+  neuVars,
   nodeAnimatable,
-  softVars,
 } from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
@@ -66,8 +66,8 @@ import { useSelectionActions } from './CanvasInspectors.tsx';
 import { type CanvasRootProps } from './CanvasRootProps.ts';
 import { DEFAULT_MARGIN, LIGHT_MODE } from './constants.ts';
 
-/** The soft tokens, for whichever look draws with them: a few inherited variables cost nothing to a look that does not. */
-const SOFT_STYLE = softVars();
+/** The Neu tokens, for whichever look draws with them: a few inherited variables cost nothing to a look that does not. */
+const NEU_STYLE = neuVars();
 
 /** No generators: what a view given none reads. */
 const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
@@ -622,8 +622,8 @@ export const CanvasRoot = ({
                       )}
                       style={
                         look.tone === 'light'
-                          ? { ...LIGHT_MODE, ...SOFT_STYLE, contain: 'strict' }
-                          : { ...SOFT_STYLE, contain: 'strict' }
+                          ? { ...LIGHT_MODE, ...NEU_STYLE, contain: 'strict' }
+                          : { ...NEU_STYLE, contain: 'strict' }
                       }
                       data-testid='scene-view'
                       data-mode={look.tone === 'theme' ? undefined : look.tone}

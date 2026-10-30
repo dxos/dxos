@@ -9,13 +9,14 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
-import { ViewState, ViewStateProvider, createDefaultBackends } from '@dxos/react-ui-attention';
+import { Entity, Obj } from '@dxos/echo';
+import { ViewState, ViewStateProvider, createDefaultBackends, useViewStateActions } from '@dxos/react-ui-attention';
 import { Scene } from '@dxos/scene';
 
 import { makeCanvas } from '#model';
 
 import { useScene3DView } from './use-scene3d-view.ts';
+import { scene3dViewAspect } from './view-state.ts';
 
 /** One viewer: its own registry and view-state manager. */
 const viewer = () => {
@@ -93,5 +94,18 @@ describe('useScene3DView', () => {
     expect(again.result.current.snap).toBe(false);
     expect(again.result.current.axes).toBe(true);
     expect(again.result.current.grid).toBe(true);
+  });
+
+  test('a look stored under its old id resolves to the renamed look', () => {
+    const { canvas } = makeCanvas({ dimension: '3d' });
+    const contextId = Entity.getURI(canvas);
+    const { result } = renderHook(
+      () => ({ view: useScene3DView(canvas), actions: useViewStateActions(scene3dViewAspect, contextId) }),
+      { wrapper: viewer() },
+    );
+    act(() => result.current.actions.update((state) => ({ ...state, theme: 'clay' })));
+    expect(result.current.view.theme).toBe('neu-dark');
+    act(() => result.current.actions.update((state) => ({ ...state, theme: 'clay-light' })));
+    expect(result.current.view.theme).toBe('neu-light');
   });
 });

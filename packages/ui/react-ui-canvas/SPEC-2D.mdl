@@ -865,22 +865,24 @@ feat F-15: Modes
 ```
 
 ```mdl
-feat F-16: The Soft theme
-  req F-16.1: The Soft theme (neumorphism) follows the app's light or dark mode. Every soft shape is the ground colour,
-    and its hue colours only its border and label; a shape with no hue has no border of its own.
-  req F-16.2: A soft shape's tone is its height: Inset (cut into the ground, tone 0), Flat (flush with it, tone 1) or
+feat F-16: The Neu themes
+  req F-16.1: The Neu themes (neumorphism) are Neu Light, always light, and Neu Dark, always dark, whatever the app's
+    mode. Every Neu shape is the ground colour, and its hue colours only its border and label; a shape with no hue has
+    no border of its own.
+  req F-16.2: A Neu shape's tone is its height: Inset (cut into the ground, tone 0), Flat (flush with it, tone 1) or
     Raised (tone 2, the default), a raised shape casting a light shadow up and to the left and a dark one down and to
     the right, an inset one the same shadows inside it. Shapes drawn as outlines (polygons, clouds, closed polylines)
     take the same relief as boxes.
-  req F-16.3: Selection never changes a soft shape's relief: a selected shape keeps its tone's surface and shows the
+  req F-16.3: Selection never changes a Neu shape's relief: a selected shape keeps its tone's surface and shows the
     selection outline and handles.
-  req F-16.4: A soft link is a groove: a channel pressed into the ground, in shade on its upper wall and in light on its
+  req F-16.4: A Neu link is a groove: a channel pressed into the ground, in shade on its upper wall and in light on its
     lower, and its ends are heads of the same channel (an open chevron, a hollow triangle, a ring); a selected or
     hovered groove and its heads are floored in the focus colour.
-  req F-16.5: The soft background is the ground alone, with no grid, and a link caption's backdrop is the ground.
-  req F-16.6: The ground and shadow tones are one set of tokens per mode (`SOFT_PALETTE`), shared with the 3D Clay
-    look so both dimensions sit on the same ground.
-  req F-16.7: Soft Light is the Soft theme held light whatever the app's mode.
+  req F-16.5: The Neu background is the ground alone, with no grid, and a link caption's backdrop is the ground.
+  req F-16.6: The ground and shadow tones are one set of tokens per mode (`NEU_PALETTE`), shared with the 3D Neu
+    looks so both dimensions sit on the same ground.
+  req F-16.7: A drawing or view that stored a theme, style set or background under its earlier id (`soft`,
+    `soft-light`) still draws, as the Neu theme or part that id was renamed to.
 ```
 
 ```mdl
@@ -1549,6 +1551,38 @@ decision D-53: A pointed end is stroked with a mitred join and placed so the mit
   rejected:
     - Filled arrowheads, which would hide the line but change the open arrow's look in every theme.
     - Drawing the line to the connection point under an opaque end, which an open arrow cannot cover.
+```
+
+```mdl
+decision D-54: The neumorphism themes are named Neu Light and Neu Dark, each always in its mode, in 2D and 3D.
+  date: 2026-10-30
+  by: user:richburdon
+  supersedes: D-46
+  affects: [F-16.1, F-16.6]
+```
+
+```mdl
+decision D-55: The ids follow the names: themes `neu-light` and `neu-dark` (Light listed first), style set and background `neu` named Neu, surfaces `neu-inset`, `neu-flat` and `neu-raised`, CSS variables `--dx-neu-*`, and the tokens `NEU_PALETTE`, `NEU_RELIEF` and `neuVars` in `model/neu.ts`; no follows-the-app Neu theme remains. Fills in [D-54].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-47
+  affects: [F-16.1, F-16.6]
+  why: Code, stored ids and the picker naming one thing keeps a search for the theme finding all of it; the repo keeps no aliases, so the old names go everywhere at once.
+  rejected:
+    - Renaming the display names only, which leaves `soft` ids and `SOFT_*` tokens behind a theme no longer called Soft.
+```
+
+```mdl
+decision D-56: A stored id from before the rename resolves through one table, `RENAMED_LOOK_IDS` (`soft` to `neu-dark`, `soft-light` to `neu-light`, style set and background `soft` to `neu`), consulted by `resolveTheme`, `resolveStyleSet` and `resolveBackground` only when the registry has no entry by that id, and by plugin-canvas's picker through `currentLookId`. Fills in [D-54].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.7]
+  why: Drawings and settings store theme ids as plain strings, and users may already have picked Soft; the old Soft followed the app, so `soft` maps to Neu Dark as its closest fixed-mode successor, and a host's own entry under an old id still wins.
+  rejected:
+    - Keeping `soft` and `soft-light` as registered alias themes, which would list them in the picker and is a shim the repo forbids.
+    - Migrating stored ids, which would write to every drawing that names one and still miss offline peers.
 ```
 
 ---

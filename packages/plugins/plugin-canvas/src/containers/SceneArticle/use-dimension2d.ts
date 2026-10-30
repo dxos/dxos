@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type Camera, type CanvasServices, type EditorDisplay } from '@dxos/react-ui-canvas/scene';
+import { type Camera, type CanvasServices, type EditorDisplay, currentLookId } from '@dxos/react-ui-canvas/scene';
 import { createConfig2D } from '@dxos/react-ui-scene';
 import { type Node, isViewNode } from '@dxos/scene';
 
@@ -93,16 +93,18 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
     (next: Camera) => updateViewState((state) => ({ ...state, camera: next })),
     [updateViewState],
   );
+  // A drawing may name a theme by an id since renamed; the picker marks it by its current one.
+  const theme = currentLookId('themes', settings?.theme);
   const display = useMemo<EditorDisplay>(
     () => ({
-      theme: settings?.theme ?? appSettings.theme ?? FALLBACK_THEME,
-      themeOverride: settings?.theme,
+      theme: theme ?? appSettings.theme ?? FALLBACK_THEME,
+      themeOverride: theme,
       grid: (settings?.backgroundGrid ?? 'none') !== 'none',
       snap: snap ?? true,
       guides: guides ?? true,
       axes: axes ?? false,
     }),
-    [settings?.theme, settings?.backgroundGrid, appSettings.theme, snap, guides, axes],
+    [theme, settings?.backgroundGrid, appSettings.theme, snap, guides, axes],
   );
   const onDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => {

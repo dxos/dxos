@@ -138,10 +138,10 @@ const withoutFill = (
 };
 
 /**
- * A soft shape's accent: its hue marks only the border and the label, since the shape itself is the ground. A shape with
+ * A Neu shape's accent: its hue marks only the border and the label, since the shape itself is the ground. A shape with
  * no hue is pure relief, with no edge of its own.
  */
-const SOFT_ACCENTS: Record<StyleHue | 'default', ByTone<{ text: string; border: string }>> = {
+const NEU_ACCENTS: Record<StyleHue | 'default', ByTone<{ text: string; border: string }>> = {
   default: {
     theme: { text: '', border: 'border-transparent' },
     light: { text: 'text-neutral-700', border: 'border-transparent' },
@@ -197,24 +197,24 @@ const SOFT_ACCENTS: Record<StyleHue | 'default', ByTone<{ text: string; border: 
   },
 };
 
-/** The soft accents over one relief: the same ground in every tone, as its `light-dark()` variables follow the scheme. */
-const soft = (surface: string): Record<StyleHue | 'default', ByTone<SurfaceClasses>> => {
+/** The Neu accents over one relief: the same ground in every tone, as its `light-dark()` variables follow the scheme. */
+const neu = (surface: string): Record<StyleHue | 'default', ByTone<SurfaceClasses>> => {
   const relief = (accent: ByTone<{ text: string; border: string }>): ByTone<SurfaceClasses> => ({
     theme: { ...accent.theme, surface },
     light: { ...accent.light, surface },
     dark: { ...accent.dark, surface },
   });
   return {
-    default: relief(SOFT_ACCENTS.default),
-    neutral: relief(SOFT_ACCENTS.neutral),
-    red: relief(SOFT_ACCENTS.red),
-    orange: relief(SOFT_ACCENTS.orange),
-    amber: relief(SOFT_ACCENTS.amber),
-    green: relief(SOFT_ACCENTS.green),
-    teal: relief(SOFT_ACCENTS.teal),
-    sky: relief(SOFT_ACCENTS.sky),
-    blue: relief(SOFT_ACCENTS.blue),
-    violet: relief(SOFT_ACCENTS.violet),
+    default: relief(NEU_ACCENTS.default),
+    neutral: relief(NEU_ACCENTS.neutral),
+    red: relief(NEU_ACCENTS.red),
+    orange: relief(NEU_ACCENTS.orange),
+    amber: relief(NEU_ACCENTS.amber),
+    green: relief(NEU_ACCENTS.green),
+    teal: relief(NEU_ACCENTS.teal),
+    sky: relief(NEU_ACCENTS.sky),
+    blue: relief(NEU_ACCENTS.blue),
+    violet: relief(NEU_ACCENTS.violet),
   };
 };
 
@@ -849,9 +849,9 @@ export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<Su
       dark: { surface: 'bg-violet-900', text: 'text-violet-100', border: 'border-white/20' },
     },
   },
-  'soft-flat': soft('bg-(--dx-soft-ground)'),
-  'soft-inset': soft('bg-(--dx-soft-ground) shadow-(--dx-soft-inset)'),
-  'soft-raised': soft('bg-(--dx-soft-ground) shadow-(--dx-soft-raised)'),
+  'neu-flat': neu('bg-(--dx-neu-ground)'),
+  'neu-inset': neu('bg-(--dx-neu-ground) shadow-(--dx-neu-inset)'),
+  'neu-raised': neu('bg-(--dx-neu-ground) shadow-(--dx-neu-raised)'),
 };
 
 /** A theme hue outside the pickers' set, drawn by a set as the nearest picker hue. */
@@ -934,19 +934,19 @@ export const WASH_TEXT: Record<StyleHue, string> = {
 };
 
 /** The canvas fill a background's surface draws, screen-wide under the scene; the base surface draws none. */
-export const BACKGROUND_FILLS: Record<'base' | 'paper' | 'film' | 'soft', string> = {
+export const BACKGROUND_FILLS: Record<'base' | 'paper' | 'film' | 'neu', string> = {
   base: '',
   paper: 'bg-[#f4f0e6]',
   film: 'bg-[#050505]',
-  soft: 'bg-(--dx-soft-ground)',
+  neu: 'bg-(--dx-neu-ground)',
 };
 
-/** The soft ground in SVG, for a caption's backdrop and a hollow marker's inside on the soft background. */
-export const SOFT_CANVAS_FILL = 'fill-(--dx-soft-ground)';
+/** The Neu ground in SVG, for a caption's backdrop and a hollow marker's inside on the Neu background. */
+export const NEU_CANVAS_FILL = 'fill-(--dx-neu-ground)';
 
 /** A groove's floor and its two lips: shade on the upper wall, light on the lower. */
 export const GROOVE_CLASSES = {
-  floor: 'stroke-(--dx-soft-well)',
-  shade: 'stroke-(--dx-soft-shade)',
-  highlight: 'stroke-(--dx-soft-highlight)',
+  floor: 'stroke-(--dx-neu-well)',
+  shade: 'stroke-(--dx-neu-shade)',
+  highlight: 'stroke-(--dx-neu-highlight)',
 } as const;

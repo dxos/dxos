@@ -26,11 +26,11 @@ import {
 import {
   DEFAULT_LOOK,
   type LookTone,
+  type NeuRelief,
   type NodeSurface,
   type Opacity,
   type Radius,
   type SceneLook,
-  type SoftRelief,
   type StyleVariant,
   styleVariant,
 } from '../model/index.ts';
@@ -38,9 +38,9 @@ import {
   CANVAS_FILLS,
   DEFAULT_TEXT,
   NEAREST_HUE,
+  NEU_CANVAS_FILL,
   RADIUS_CLASSES,
   type SetSurface,
-  SOFT_CANVAS_FILL,
   SURFACES,
   VIEW_FILLS,
 } from './surfaces.ts';
@@ -278,22 +278,22 @@ export const cornerRadius = (
 ): Radius => (style?.rounded === false ? 'none' : style?.rounded ? tokens.roundedRadius : tokens.radius);
 
 /**
- * The canvas colour in SVG, under a link's caption and inside a hollow end marker: the soft ground on the soft
+ * The canvas colour in SVG, under a link's caption and inside a hollow end marker: the Neu ground on the Neu
  * background, else the canvas's own surface.
  */
 export const canvasFillClass = (look: SceneLook, opacity: Opacity): string =>
-  look.background.surface === 'soft' ? SOFT_CANVAS_FILL : CANVAS_FILLS[opacity][look.tone];
+  look.background.surface === 'neu' ? NEU_CANVAS_FILL : CANVAS_FILLS[opacity][look.tone];
 
-const SURFACE_RELIEF: Partial<Record<NodeSurface, SoftRelief>> = {
-  'soft-raised': 'raised',
-  'soft-inset': 'inset',
+const SURFACE_RELIEF: Partial<Record<NodeSurface, NeuRelief>> = {
+  'neu-raised': 'raised',
+  'neu-inset': 'inset',
 };
 
 /**
- * The soft relief a filled node stands in by its tone, for a shape drawn as a silhouette (its box-shadow would be
+ * The Neu relief a filled node stands in by its tone, for a shape drawn as a silhouette (its box-shadow would be
  * masked away with the box); none for a flat or unfilled shape or another style set. Selection never changes it.
  */
-export const nodeRelief = (node: Node, look: SceneLook = DEFAULT_LOOK): SoftRelief | undefined => {
+export const nodeRelief = (node: Node, look: SceneLook = DEFAULT_LOOK): NeuRelief | undefined => {
   const style = resolveStyle(node.style);
   if (!style.fill || style.guide) {
     return undefined;

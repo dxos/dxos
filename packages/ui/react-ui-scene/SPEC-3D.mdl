@@ -131,15 +131,17 @@ feat F-5: Meshes
 
 ```mdl
 feat F-6: Looks and materials
-  req F-6.1: The looks are CAD (flat parts with edges), Presentation (lit materials), Clay (matte solids) and Clay
-    Light (Clay held light), each a default style catalog: CAD offers Part, Highlight and Clearance, Presentation
-    Metal, Glass and Glow, the two Clays Body, Accent and Ghost. Every look can be picked in a read-only scene and in a
+  req F-6.1: The looks are CAD (flat parts with edges), Presentation (lit materials), Neu Light and Neu Dark (matte
+    solids), each a default style catalog: CAD offers Part, Highlight and Clearance, Presentation Metal, Glass and
+    Glow, the two Neu looks Body, Accent and Ghost. Every look can be picked in a read-only scene and in a
     host that stores no look.
   req F-6.2: An element's `Style3D` draws as a material over its hue and tone: a solid, tinted or glass surface,
     edges, opacity, metalness, roughness and glow.
-  req F-6.3: Clay follows the app's light or dark mode, and Clay Light is always light: its bodies and the ground
-    plane under them are the 2D soft ground of that mode (`SOFT_PALETTE`), lit softly, each solid body casting a soft
+  req F-6.3: Neu Light is always light and Neu Dark always dark, whatever the app's mode: its bodies and the ground
+    plane under them are the 2D Neu ground of that mode (`NEU_PALETTE`), lit softly, each solid body casting a soft
     contact shadow at its foot; an element's hue draws only as its edges, or as a rim on a solid sphere.
+  req F-6.4: A view or scene that stored a look under its earlier id (`clay`, `clay-light`) still draws, as the Neu
+    look that id was renamed to.
 ```
 
 ```mdl
@@ -307,6 +309,37 @@ decision D-16: The 3D look picker is the scene editor's shared display panel, so
   why: Recording where 2D's choices stop keeps the two dimensions' parity explicit rather than implied.
   rejected:
     - A recessed Clay body for an inset tone, which needs boolean geometry the renderer only has for solids.
+```
+
+```mdl
+decision D-17: The neumorphism themes are named Neu Light and Neu Dark, each always in its mode, in 2D and 3D.
+  date: 2026-10-30
+  by: user:richburdon
+  supersedes: D-14
+  affects: [F-6.1, F-6.3]
+```
+
+```mdl
+decision D-18: The 3D looks take the 2D ids, `neu-light` and `neu-dark` (Light listed first), and the material kind and its helpers are named Neu (`isNeuTheme`, `castsNeuShadow`, `NEU_*`); `themeMode3D` holds each in its mode, and no follows-the-app Neu look remains. Fills in [D-17].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-15
+  affects: [F-6.1, F-6.3]
+  why: The two dimensions share one picker vocabulary and one palette, so one id per look across both keeps a stored choice meaning the same thing in each.
+  rejected:
+    - Keeping `clay` as the 3D material kind, which leaves code naming a look no picker shows.
+```
+
+```mdl
+decision D-19: A stored `clay` resolves to `neu-dark` and `clay-light` to `neu-light` through `toTheme3D`, which replaces `isTheme3D` at every read of a stored or authored look (the plugin's view state, the scene's own theme, the viewport); the view state keeps the id as a string so an old one still decodes. Fills in [D-17].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.4]
+  why: A view state whose schema listed only the new ids would fail to decode an old one and drop the viewer's camera and grid with it; Clay followed the app, so its closest fixed-mode successor is Neu Dark, as 2D's Soft is.
+  rejected:
+    - Listing the old ids in the view-state schema, which would let them be written again.
 ```
 
 ---

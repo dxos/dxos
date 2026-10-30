@@ -76,7 +76,7 @@ export const onScene = (event: Event): boolean => event.target instanceof HTMLCa
 
 /**
  * A renderer over the canvas, made again when the look or the app's light or dark mode changes (both pick the
- * background and clay's ground), the container's size as it resizes, and the mode.
+ * background), the container's size as it resizes, and the mode.
  */
 export const useSceneRenderer = (
   containerRef: RefObject<HTMLDivElement | null>,

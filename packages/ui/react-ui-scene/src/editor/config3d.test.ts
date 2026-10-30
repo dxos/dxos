@@ -33,9 +33,9 @@ const document: Scene.SceneDocument = {
 };
 
 describe('config3d', () => {
-  test('CAD, Presentation and Clay are default style catalogs, and the looks the display panel offers', () => {
-    expect(CATALOGS_3D.map((catalog) => catalog.id)).toEqual(['cad', 'presentation', 'clay', 'clay-light']);
-    expect(config3d.display.themes.map((theme) => theme.id)).toEqual(['cad', 'presentation', 'clay', 'clay-light']);
+  test('CAD, Presentation, Neu Light and Neu Dark are default style catalogs, and the looks the display panel offers', () => {
+    expect(CATALOGS_3D.map((catalog) => catalog.id)).toEqual(['cad', 'presentation', 'neu-light', 'neu-dark']);
+    expect(config3d.display.themes.map((theme) => theme.id)).toEqual(['cad', 'presentation', 'neu-light', 'neu-dark']);
     expect(Object.keys(CATALOGS_3D[1].styles).length).toBeGreaterThan(0);
   });
 

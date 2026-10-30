@@ -9,14 +9,14 @@ import type * as Util from '@dxos/react-ui/Util';
 import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type GeometrySource, SceneLabels, type Theme3D, isTheme3D, renderList } from '../../three/index.ts';
+import { type GeometrySource, SceneLabels, type Theme3D, renderList, toTheme3D } from '../../three/index.ts';
 import { DEFAULT_CAMERA, useManifoldGeometry, useOrbit, useSceneRenderer } from './hooks.ts';
 
 export type Scene3DViewProps = Util.ThemedClassName<{
   document: Scene.SceneDocument;
   /** The scene to draw, by id; the document's root scene when unset. */
   scene?: string;
-  /** `cad`, `presentation` or `clay`; the scene's own when unset. */
+  /** `cad`, `presentation`, `neu-light` or `neu-dark`; the scene's own when unset. */
   theme?: Theme3D;
   /** Draws the ground grid. */
   grid?: boolean;
@@ -52,7 +52,7 @@ export const Scene3DView = ({
 }: Scene3DViewProps) => {
   const geometry = useManifoldGeometry(doc, givenGeometry);
   const root = sceneId === undefined ? rootScene(doc) : findScene(doc, sceneId);
-  const look: Theme3D = theme ?? (isTheme3D(root?.theme) ? root.theme : 'cad');
+  const look: Theme3D = theme ?? toTheme3D(root?.theme) ?? 'cad';
   const given = camera ?? (root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

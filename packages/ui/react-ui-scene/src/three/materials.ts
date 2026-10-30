@@ -86,10 +86,10 @@ export const setRim = (material: ShaderMaterial, color: Color3, opacity: number)
 };
 
 /**
- * A shaded surface: PBR for the presentation look (dithered by the scene's image processing), matte for clay, flat for
+ * A shaded surface: PBR for the presentation look (dithered by the scene's image processing), matte for Neu, flat for
  * CAD.
  */
-export const createSurfaceMaterial = (scene: Scene, name: string, kind: 'standard' | 'pbr' | 'clay'): Material => {
+export const createSurfaceMaterial = (scene: Scene, name: string, kind: 'standard' | 'pbr' | 'neu'): Material => {
   if (kind === 'pbr') {
     const material = new PBRMaterial(name, scene);
     material.metallic = 0;
@@ -98,36 +98,36 @@ export const createSurfaceMaterial = (scene: Scene, name: string, kind: 'standar
     return material;
   }
   const material = new StandardMaterial(name, scene);
-  // Clay is matte: a sheen would read as plastic.
-  material.specularColor = kind === 'clay' ? new Color3(0.02, 0.02, 0.02) : new Color3(0.1, 0.1, 0.1);
-  if (kind === 'clay') {
+  // Neu is matte: a sheen would read as plastic.
+  material.specularColor = kind === 'neu' ? new Color3(0.02, 0.02, 0.02) : new Color3(0.1, 0.1, 0.1);
+  if (kind === 'neu') {
     // The accent at a sphere's silhouette, where it has no edge to draw its hue on; the Fresnel colours scale the
     // emissive colour, so it is white.
     material.emissiveColor = Color3.White();
     material.emissiveFresnelParameters = new FresnelParameters({
       leftColor: Color3.Black(),
       rightColor: Color3.Black(),
-      bias: CLAY_RIM_BIAS,
-      power: CLAY_RIM_POWER,
+      bias: NEU_RIM_BIAS,
+      power: NEU_RIM_POWER,
     });
   }
   return material;
 };
 
 /**
- * How far clay's hue rim reaches in from the silhouette: Babylon weighs it by one less (bias + facing) to the power, so a
+ * How far Neu's hue rim reaches in from the silhouette: Babylon weighs it by one less (bias + facing) to the power, so a
  * bias and a power below one keep it to a band at the edge.
  */
-export const CLAY_RIM_BIAS = 0;
-export const CLAY_RIM_POWER = 0.2;
+export const NEU_RIM_BIAS = 0;
+export const NEU_RIM_POWER = 0.2;
 
-/** How strongly clay's rim takes the hue, so it tints the body's edge rather than glowing. */
-export const CLAY_RIM_STRENGTH = 0.6;
+/** How strongly Neu's rim takes the hue, so it tints the body's edge rather than glowing. */
+export const NEU_RIM_STRENGTH = 0.6;
 
-/** Sets a clay body's hue rim. */
-export const setClayAccent = (material: Material, accent: Color3): void => {
+/** Sets a Neu body's hue rim. */
+export const setNeuAccent = (material: Material, accent: Color3): void => {
   if (material instanceof StandardMaterial && material.emissiveFresnelParameters) {
-    material.emissiveFresnelParameters.leftColor = accent.scale(CLAY_RIM_STRENGTH);
+    material.emissiveFresnelParameters.leftColor = accent.scale(NEU_RIM_STRENGTH);
   }
 };
 

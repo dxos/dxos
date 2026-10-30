@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { materialSpec, themeMode3D } from './style.ts';
+import { materialSpec, themeMode3D, toTheme3D } from './style.ts';
 
 describe('materialSpec', () => {
   test('glass is a rim shell in the presentation look', () => {
@@ -20,17 +20,27 @@ describe('materialSpec', () => {
     expect(spec.alpha).toBeLessThan(1);
   });
 
-  test('Clay Light draws as Clay, held light; the other looks follow the app', () => {
-    expect(materialSpec({ hue: 'blue' }, 'clay-light')).toEqual(materialSpec({ hue: 'blue' }, 'clay'));
-    expect(themeMode3D('clay-light', 'dark')).toBe('light');
-    expect(themeMode3D('clay', 'dark')).toBe('dark');
+  test('Neu Light and Neu Dark draw alike, each held in its mode; the other looks follow the app', () => {
+    expect(materialSpec({ hue: 'blue' }, 'neu-light')).toEqual(materialSpec({ hue: 'blue' }, 'neu-dark'));
+    expect(themeMode3D('neu-light', 'dark')).toBe('light');
+    expect(themeMode3D('neu-dark', 'light')).toBe('dark');
     expect(themeMode3D('cad', 'light')).toBe('light');
+    expect(themeMode3D('presentation', 'dark')).toBe('dark');
   });
 
-  test('clay is a matte body whose hue is its edge accent, edged whatever the border', () => {
-    expect(materialSpec({ hue: 'blue' }, 'clay')).toEqual({ color: '#3366cc', kind: 'clay', alpha: 1, edges: true });
-    expect(materialSpec({ surface: 'glass', border: false }, 'clay')).toMatchObject({ kind: 'clay', edges: true });
-    expect(materialSpec({ surface: 'glass' }, 'clay').alpha).toBeLessThan(1);
+  test('Neu is a matte body whose hue is its edge accent, edged whatever the border', () => {
+    expect(materialSpec({ hue: 'blue' }, 'neu-dark')).toEqual({ color: '#3366cc', kind: 'neu', alpha: 1, edges: true });
+    expect(materialSpec({ surface: 'glass', border: false }, 'neu-dark')).toMatchObject({ kind: 'neu', edges: true });
+    expect(materialSpec({ surface: 'glass' }, 'neu-dark').alpha).toBeLessThan(1);
+  });
+
+  test('a stored look id resolves, a renamed look by its new id', () => {
+    expect(toTheme3D('presentation')).toBe('presentation');
+    expect(toTheme3D('neu-light')).toBe('neu-light');
+    expect(toTheme3D('clay')).toBe('neu-dark');
+    expect(toTheme3D('clay-light')).toBe('neu-light');
+    expect(toTheme3D('unknown')).toBeUndefined();
+    expect(toTheme3D(undefined)).toBeUndefined();
   });
 
   test('a border draws edges and opacity scales alpha', () => {

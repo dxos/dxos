@@ -5,11 +5,11 @@
 import { NullEngine } from '@babylonjs/core';
 import { describe, expect, test } from 'vitest';
 
-import { SOFT_PALETTE } from '@dxos/react-ui-canvas';
+import { NEU_PALETTE } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { renderList } from './render-list.ts';
-import { SceneRenderer3D, castsClayShadow, itemSignature } from './renderer.ts';
+import { SceneRenderer3D, castsNeuShadow, itemSignature } from './renderer.ts';
 
 describe('itemSignature', () => {
   test('new geometry of the same size rebuilds the mesh', () => {
@@ -21,7 +21,7 @@ describe('itemSignature', () => {
   });
 });
 
-describe('SceneRenderer3D clay', () => {
+describe('SceneRenderer3D neu', () => {
   const engine = () =>
     new NullEngine({
       renderWidth: 800,
@@ -31,7 +31,7 @@ describe('SceneRenderer3D clay', () => {
       lockstepMaxSteps: 1,
     });
 
-  test('the ground is the 2D soft ground of the mode, under the lowest item', () => {
+  test('the ground is the 2D Neu ground of the mode, under the lowest item', () => {
     const camera: Scene.Camera3D = {
       target: { x: 0, y: 0, z: 0 },
       yaw: 0,
@@ -51,10 +51,13 @@ describe('SceneRenderer3D clay', () => {
       ],
       models: [],
     };
-    for (const mode of ['light', 'dark'] as const) {
-      const view = new SceneRenderer3D({ engine: engine(), theme: 'clay', mode, background: '#ffffff' });
+    for (const [theme, mode] of [
+      ['neu-light', 'light'],
+      ['neu-dark', 'dark'],
+    ] as const) {
+      const view = new SceneRenderer3D({ engine: engine(), theme, background: '#ffffff' });
       view.render(renderList(document), camera);
-      expect(view.background).toBe(SOFT_PALETTE[mode].ground);
+      expect(view.background).toBe(NEU_PALETTE[mode].ground);
       expect(view.groundLevel).toBeCloseTo(0);
       view.dispose();
     }
@@ -255,7 +258,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 });
 
-describe('SceneRenderer3D clay ground', () => {
+describe('SceneRenderer3D neu ground', () => {
   const engine = () =>
     new NullEngine({
       renderWidth: 800,
@@ -290,24 +293,27 @@ describe('SceneRenderer3D clay ground', () => {
       },
       body: { id: 'body', type: 'cube', center: { x: 0, y: -1, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
     });
-    const view = new SceneRenderer3D({ engine: engine(), theme: 'clay', background: '#ffffff' });
+    const view = new SceneRenderer3D({ engine: engine(), theme: 'neu-dark', background: '#ffffff' });
     view.render(renderList(document), camera);
     // Under the cube's foot at -1.5, not the shell's at -4.
     expect(view.groundLevel).toBeCloseTo(-1.5, 1);
     view.dispose();
   });
 
-  test('Clay Light keeps the light ground under a dark app', () => {
-    const view = new SceneRenderer3D({ engine: engine(), theme: 'clay-light', mode: 'dark', background: '#ffffff' });
-    expect(view.background).toBe(SOFT_PALETTE.light.ground);
-    view.dispose();
+  test('Neu Light keeps the light ground under a dark app, and Neu Dark the dark under a light one', () => {
+    const light = new SceneRenderer3D({ engine: engine(), theme: 'neu-light', mode: 'dark', background: '#ffffff' });
+    expect(light.background).toBe(NEU_PALETTE.light.ground);
+    light.dispose();
+    const dark = new SceneRenderer3D({ engine: engine(), theme: 'neu-dark', mode: 'light', background: '#ffffff' });
+    expect(dark.background).toBe(NEU_PALETTE.dark.ground);
+    dark.dispose();
   });
 
   test('only solid bodies cast a contact shadow', () => {
-    const clay = { color: '#000000', kind: 'clay' as const, alpha: 1, edges: true };
-    expect(castsClayShadow(clay, {})).toBe(true);
-    expect(castsClayShadow({ ...clay, alpha: 0.4 }, {})).toBe(false);
-    expect(castsClayShadow(clay, { frame: true })).toBe(false);
-    expect(castsClayShadow({ ...clay, kind: 'standard' }, {})).toBe(false);
+    const body = { color: '#000000', kind: 'neu' as const, alpha: 1, edges: true };
+    expect(castsNeuShadow(body, {})).toBe(true);
+    expect(castsNeuShadow({ ...body, alpha: 0.4 }, {})).toBe(false);
+    expect(castsNeuShadow(body, { frame: true })).toBe(false);
+    expect(castsNeuShadow({ ...body, kind: 'standard' }, {})).toBe(false);
   });
 });

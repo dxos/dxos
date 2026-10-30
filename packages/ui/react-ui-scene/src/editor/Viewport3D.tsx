@@ -8,7 +8,7 @@ import { type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { Scene3DEditor, Scene3DView } from '../components/index.ts';
-import { isTheme3D } from '../three/index.ts';
+import { toTheme3D } from '../three/index.ts';
 import { toTool3D } from './tools3d.ts';
 
 /**
@@ -38,7 +38,7 @@ export const Viewport3D = ({
   onResize,
   children,
 }: ViewportProps<Scene.Camera3D>) => {
-  const look = isTheme3D(theme) ? theme : 'cad';
+  const look = toTheme3D(theme) ?? 'cad';
   if (picture) {
     return <Scene3DView document={document} scene={scene} theme={look} grid={false} orbit={false} />;
   }
