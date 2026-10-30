@@ -13,7 +13,7 @@ import * as MeshPresets from './MeshPresets.ts';
 describe('MeshPresets', () => {
   test.each(MeshPresets.PRESETS)('the %s preset is a mesh object of its OBJ triangles', (preset) => {
     const object = MeshPresets.make(preset);
-    expect(object).toMatchObject({ id: preset, kind: 'mesh' });
+    expect(object).toMatchObject({ id: preset, type: 'mesh' });
     expect(meshProps(object?.props)?.indices.length).toBeGreaterThan(300);
   });
 

@@ -39,9 +39,9 @@ describe('3D inspectors', () => {
         canvas: { layers: { a: { id: 'a', name: 'A', z: 'a0' }, b: { id: 'b', name: 'B', z: 'a1', hidden: true } } },
       },
       elements: {
-        x: { id: 'x', kind: 'cube', layer: 'a' },
-        y: { id: 'y', kind: 'cube', layer: 'b' },
-        z: { id: 'z', kind: 'cube' },
+        x: { id: 'x', type: 'cube', layer: 'a' },
+        y: { id: 'y', type: 'cube', layer: 'b' },
+        z: { id: 'z', type: 'cube' },
       },
     };
     expect(layersOf(layout).map((layer) => layer.id)).toEqual(['a', 'b']);

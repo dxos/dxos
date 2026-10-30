@@ -23,7 +23,7 @@ import {
 
 /** Elements that are drawn and so may be keyed: hidden operands and groups draw nothing of their own. */
 const isTarget = (element: Resolved): boolean =>
-  !element.hidden && element.kind !== 'group' && !Scene.RESERVED_IDS.includes(element.id);
+  !element.hidden && element.type !== 'group' && !Scene.RESERVED_IDS.includes(element.id);
 
 const PROPERTIES_2D: Readonly<Record<string, AnimatableKind>> = animatableProperties(Scene.Element2D);
 const PROPERTIES_3D: Readonly<Record<string, AnimatableKind>> = animatableProperties(Scene.Element3D);
@@ -121,8 +121,8 @@ export const sceneBinding = (
       id: element.id,
       position,
       radius,
-      opacity: element.style?.opacity ?? 1,
-      ...(element.style?.hue ? { color: element.style.hue } : {}),
+      opacity: element.overrides?.opacity ?? 1,
+      ...(element.overrides?.hue ? { color: element.overrides.hue } : {}),
     };
   };
   if (root.dim === '2d') {
@@ -141,9 +141,9 @@ export const sceneBinding = (
   }
   const elements: readonly Resolved[] = root.elements;
   const links = elements.flatMap((element) => {
-    const from = element.from && objects[element.from.element];
-    const to = element.to && objects[element.to.element];
-    return element.kind === 'link' && from && to
+    const from = element.source && objects[element.source.node ?? ''];
+    const to = element.target && objects[element.target.node ?? ''];
+    return element.type === 'link' && from && to
       ? [{ id: element.id, from: from.id, to: to.id, points: [{ ...from.position }, { ...to.position }] }]
       : [];
   });

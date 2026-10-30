@@ -34,7 +34,7 @@ const place = (element: Resolved3D, [x, y, z]: readonly [number, number, number]
 /** An element's triangles in its layout's coordinates: a mesh's own, or Manifold's for primitives and solids. */
 const trianglesOf = (elements: Readonly<Record<string, Resolved3D>>, id: string, wasm: ManifoldToplevel): Triangles => {
   const element = elements[id];
-  const mesh = element?.kind === 'mesh' ? meshProps(element.props) : undefined;
+  const mesh = element?.type === 'mesh' ? meshProps(element.props) : undefined;
   if (element && mesh) {
     const positions: number[] = [];
     for (let vertex = 0; vertex < mesh.positions.length; vertex += 3) {
@@ -102,7 +102,7 @@ export const exportSTL = (
   const elements = resolveLayout3D(doc, layout);
   const chosen =
     ids ??
-    Object.values(elements).flatMap((element) => (element.hidden || NOT_SOLID.has(element.kind) ? [] : [element.id]));
+    Object.values(elements).flatMap((element) => (element.hidden || NOT_SOLID.has(element.type) ? [] : [element.id]));
   return writeSTL(
     chosen.flatMap((id) => {
       try {

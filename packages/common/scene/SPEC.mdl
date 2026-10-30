@@ -856,3 +856,21 @@ decision D-91: The diagram's graphical primitives and their style vocabulary (`B
   for: user:richburdon
   why: `@dxos/diagram` depends on this package, so the engines can emit scene elements only once the shapes they draw are defined here.
 ```
+
+```mdl
+decision D-92: Styles are one mechanism with a property set per dimension: `Style2D` (the canvas `NodeStyle` plus `sketchy`, `pattern`, `weight` and the `black`/`white` hues) and `Style3D` (hue, tone, surface, border, rounded, opacity, metalness, roughness, emissive). An element names a style (`style`, the canvas's former `class`) and carries its own `overrides`; `resolveStyle` reads element overrides, then the layout's override of the named style, the model's definition, each catalog in order and the defaults, field by field. A `catalog:key` reference resolves in that catalog only. `StyleCatalog` is an ECHO object models reference. Lift and flatten map `fill` to `surface` (a fill at tone 3 to `tint`). Fills in COMMON-CORE decisions 6, 19 and 20.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-14
+  affects: [Style, F-3.1]
+  why: The resolution order is shared, but 3D materials and 2D strokes have no common property set; one struct over both would let each dimension store fields it cannot draw.
+```
+
+```mdl
+decision D-93: 3D elements and objects use the canvas element base's names: `type` (was `kind`), `z` (was `order`), `source`/`target` endpoints `{ node, port, point }` (were `from`/`to` bindings) and `overrides` for the element's own style. The stored endpoint is one struct, not the canvas's port/point union, because ECHO stores only discriminated unions. Groups keep `members`/`arrange` until they become composites placed by instances. The `.dx` grammar is unchanged; the reader and printer map its words onto the new names. Fills in COMMON-CORE decision 12.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: One element base for both dimensions lets the editor core, clipboard and inspectors read either; keeping the text grammar keeps every `.dx` file and exemplar valid.
+```

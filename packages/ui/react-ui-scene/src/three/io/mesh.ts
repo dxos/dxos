@@ -71,7 +71,7 @@ const idOf = (file: File): string =>
 /** A `mesh` object of the triangles, unit-sized and centred, keyed by its content. */
 export const meshObject = (id: string, triangles: Triangles): Scene.Object3D => {
   const unit = normalize(triangles);
-  return { id, kind: 'mesh', props: { mesh: { key: contentKey(unit), ...unit } } };
+  return { id, type: 'mesh', props: { mesh: { key: contentKey(unit), ...unit } } };
 };
 
 /**
@@ -94,8 +94,8 @@ export const importMesh = (file: File): Effect.Effect<Scene.Object3D, MeshImport
 const drawn = new Map<string, MeshData>();
 
 /** A mesh item's triangles for the renderer, in Babylon's left-handed winding; one per mesh content. */
-export const meshData = (item: Pick<RenderItem, 'id' | 'kind' | 'elements'>): MeshData | undefined => {
-  if (item.kind !== 'mesh') {
+export const meshData = (item: Pick<RenderItem, 'id' | 'type' | 'elements'>): MeshData | undefined => {
+  if (item.type !== 'mesh') {
     return undefined;
   }
   const mesh = meshProps(item.elements[item.id]?.props);

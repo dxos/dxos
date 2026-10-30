@@ -14,15 +14,15 @@ const document: Scene.SceneDocument = {
   layouts: [
     layout2D('main', [{ id: 'b', object: 'detail' }], 'parts'),
     layout2D('b-detail', [{ id: 'x', object: 'inner' }], 'inner-parts'),
-    layout2D('deepest', [{ id: 'y', kind: 'rect' }]),
+    layout2D('deepest', [{ id: 'y', type: 'rect' }]),
     layout2D('loose', []),
   ],
   models: [
     model2D('parts', [
-      { id: 'detail', kind: 'rect', parts: 'b-detail' },
-      { id: 'again', kind: 'rect', parts: 'b-detail' },
+      { id: 'detail', type: 'rect', parts: 'b-detail' },
+      { id: 'again', type: 'rect', parts: 'b-detail' },
     ]),
-    model2D('inner-parts', [{ id: 'inner', kind: 'rect', parts: 'deepest' }]),
+    model2D('inner-parts', [{ id: 'inner', type: 'rect', parts: 'deepest' }]),
   ],
 };
 
@@ -44,7 +44,7 @@ describe('reachedObjects', () => {
     const { root } = toEcho({
       scenes: [scene2D('s', 'a')],
       layouts: [layout2D('a', [{ id: 'self', object: 'again' }], 'm')],
-      models: [model2D('m', [{ id: 'again', kind: 'rect', parts: 'a' }])],
+      models: [model2D('m', [{ id: 'again', type: 'rect', parts: 'a' }])],
     });
     expect(reachedObjects(root)).toHaveLength(3);
   });

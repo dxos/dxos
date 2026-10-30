@@ -7,7 +7,7 @@
 // plane, so the 3D renderer can show a drawing from any camera. The 3D camera is the caller's, never stored (call 17).
 //
 
-import { type Scene } from '@dxos/scene';
+import { type Scene, flattenStyle, liftStyle } from '@dxos/scene';
 
 import { type Viewport } from './camera.ts';
 
@@ -57,17 +57,27 @@ const liftSize = ({ width, height }: Scene.Size2): Scene.Vec3 => ({
   z: height / PIXELS_PER_UNIT,
 });
 
-const liftElement = ({ center, size, rotation, arrange: _arrange, ...element }: Scene.Element2D): Scene.Element3D => ({
+const liftElement = ({
+  center,
+  size,
+  rotation,
+  scale: _scale,
+  overrides,
+  arrange: _arrange,
+  ...element
+}: Scene.Element2D): Scene.Element3D => ({
   ...element,
-  ...(element.kind !== undefined ? { kind: liftKind(element.kind) } : {}),
+  ...(element.type !== undefined ? { type: liftKind(element.type) } : {}),
+  ...(overrides ? { overrides: liftStyle(overrides) } : {}),
   ...(center ? { center: toGround(center) } : {}),
   ...(size ? { scale: liftSize(size) } : {}),
   ...(rotation !== undefined ? { rotation: { x: 0, y: rotation, z: 0 } } : {}),
 });
 
-const liftObject = ({ size, ...object }: Scene.Object2D): Scene.Object3D => ({
+const liftObject = ({ size, overrides, ...object }: Scene.Object2D): Scene.Object3D => ({
   ...object,
-  kind: liftKind(object.kind),
+  ...(overrides ? { overrides: liftStyle(overrides) } : {}),
+  type: liftKind(object.type),
   ...(size ? { scale: liftSize(size) } : {}),
 });
 
@@ -129,13 +139,15 @@ const flattenElement = ({
   center,
   scale,
   rotation,
+  overrides,
   arrange: _arrange,
   ...element
 }: Scene.Element3D): Scene.Element2D => {
-  const shape = element.kind !== undefined && element.kind !== 'link' && element.kind !== 'group';
+  const shape = element.type !== undefined && element.type !== 'link' && element.type !== 'group';
   return {
     ...element,
-    ...(element.kind !== undefined ? { kind: FLAT_KINDS[element.kind] ?? element.kind } : {}),
+    ...(element.type !== undefined ? { type: FLAT_KINDS[element.type] ?? element.type } : {}),
+    ...(overrides ? { overrides: flattenStyle(overrides) } : {}),
     ...(center ? { center: toCanvas(center) } : {}),
     ...(shape ? { size: { width: (scale?.x ?? 1) * PIXELS_PER_UNIT, height: (scale?.z ?? 1) * PIXELS_PER_UNIT } } : {}),
     ...(rotation?.y ? { rotation: rotation.y } : {}),

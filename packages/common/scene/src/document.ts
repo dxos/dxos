@@ -13,12 +13,16 @@ import {
   type Object3D,
   type SceneDocument,
   type SceneRecord,
-  type Style,
 } from './Scene.ts';
+import { type Style2D, type Style3D, resolveStyle } from './style.ts';
 
-/** An element with its model object applied, which is what renderers draw and the animator keys. */
-export type Resolved2D = Element2D & { kind: string; parts?: string };
-export type Resolved3D = Element3D & { kind: string; parts?: string };
+/**
+ * An element with its model object applied, which is what renderers draw and the animator keys: its `type` is known,
+ * and `overrides` hold its whole resolved look (the named style through the layout and model, then the object's and
+ * its own overrides).
+ */
+export type Resolved2D = Element2D & { type: string; parts?: string };
+export type Resolved3D = Element3D & { type: string; parts?: string };
 export type Resolved = Resolved2D | Resolved3D;
 
 /** A document with no scenes, layouts or models. */
@@ -42,8 +46,28 @@ export const sceneLayout = (doc: SceneDocument, scene = rootScene(doc)): LayoutR
   return layout?.dim === scene?.dim ? layout : undefined;
 };
 
-const mergeStyle = (base: Style | undefined, own: Style | undefined): { style?: Style } =>
-  base || own ? { style: { ...base, ...own } } : {};
+type Styles<S> = {
+  readonly layout?: { readonly [id: string]: Partial<S> | undefined };
+  readonly model?: { readonly [id: string]: S | undefined };
+};
+
+/** The element's look: its named style (or the object's) through the layout and model, then the overrides. */
+const look = <S extends object>(
+  element: { readonly style?: string; readonly overrides?: Partial<S> },
+  object: { readonly style?: string; readonly overrides?: Partial<S> } | undefined,
+  styles: Styles<S>,
+): { overrides?: Partial<S> } => {
+  const style = element.style ?? object?.style;
+  const overrides = { ...object?.overrides, ...element.overrides };
+  const resolved = resolveStyle<S>(
+    { style, overrides },
+    { styles: styles.layout },
+    { styles: styles.model ?? {} },
+    [],
+    {},
+  );
+  return Object.keys(resolved).length > 0 ? { overrides: resolved } : {};
+};
 
 const mergeProps = (
   base: Record<string, unknown> | undefined,
@@ -65,26 +89,34 @@ const objects3D = (doc: SceneDocument, layout: LayoutRecord3D): Readonly<Record<
 };
 
 /** A 2D element with the object it places applied: the element's own fields win, style and props merge. */
-export const resolve2D = (element: Element2D, object: Object2D | undefined): Resolved2D => {
+export const resolve2D = (
+  element: Element2D,
+  object: Object2D | undefined,
+  styles: Styles<Style2D> = {},
+): Resolved2D => {
   const size = element.size ?? object?.size;
   return {
     ...element,
-    kind: element.kind ?? object?.kind ?? '',
+    type: element.type ?? object?.type ?? '',
     ...(size ? { size } : {}),
-    ...mergeStyle(object?.style, element.style),
+    ...look(element, object, styles),
     ...mergeProps(object?.props, element.props),
     ...(object?.parts !== undefined ? { parts: object.parts } : {}),
   };
 };
 
 /** A 3D element with the object it places applied, as {@link resolve2D}. */
-export const resolve3D = (element: Element3D, object: Object3D | undefined): Resolved3D => {
+export const resolve3D = (
+  element: Element3D,
+  object: Object3D | undefined,
+  styles: Styles<Style3D> = {},
+): Resolved3D => {
   const scale = element.scale ?? object?.scale;
   return {
     ...element,
-    kind: element.kind ?? object?.kind ?? '',
+    type: element.type ?? object?.type ?? '',
     ...(scale ? { scale } : {}),
-    ...mergeStyle(object?.style, element.style),
+    ...look(element, object, styles),
     ...mergeProps(object?.props, element.props),
     ...(object?.parts !== undefined ? { parts: object.parts } : {}),
   };
@@ -93,10 +125,12 @@ export const resolve3D = (element: Element3D, object: Object3D | undefined): Res
 /** Every element of a 2D layout, resolved against the layout's model. */
 export const resolveLayout2D = (doc: SceneDocument, layout: LayoutRecord2D): Record<string, Resolved2D> => {
   const objects = objects2D(doc, layout);
+  const model = modelOf(doc, layout);
+  const styles = { layout: layout.styles, model: model?.dim === '2d' ? model.styles : undefined };
   return Object.fromEntries(
     Object.entries(layout.elements).map(([key, element]) => [
       key,
-      resolve2D(element, element.object === undefined ? undefined : objects[element.object]),
+      resolve2D(element, element.object === undefined ? undefined : objects[element.object], styles),
     ]),
   );
 };
@@ -104,10 +138,12 @@ export const resolveLayout2D = (doc: SceneDocument, layout: LayoutRecord2D): Rec
 /** Every element of a 3D layout, resolved against the layout's model. */
 export const resolveLayout3D = (doc: SceneDocument, layout: LayoutRecord3D): Record<string, Resolved3D> => {
   const objects = objects3D(doc, layout);
+  const model = modelOf(doc, layout);
+  const styles = { layout: layout.styles, model: model?.dim === '3d' ? model.styles : undefined };
   return Object.fromEntries(
     Object.entries(layout.elements).map(([key, element]) => [
       key,
-      resolve3D(element, element.object === undefined ? undefined : objects[element.object]),
+      resolve3D(element, element.object === undefined ? undefined : objects[element.object], styles),
     ]),
   );
 };

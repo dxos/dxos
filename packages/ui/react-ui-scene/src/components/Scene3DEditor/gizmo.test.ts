@@ -11,7 +11,7 @@ import { extrudeIntent, gizmoIntent } from './gizmo.ts';
 
 const BEFORE: Resolved3D = {
   id: 'a',
-  kind: 'cube',
+  type: 'cube',
   center: { x: 1, y: 0, z: 0 },
   rotation: { x: 0, y: 10, z: 0 },
   scale: { x: 1, y: 2, z: 1 },
@@ -47,7 +47,7 @@ describe('gizmoIntent', () => {
 
   test('scaling an element whose object supplies its scale grows it from that scale', () => {
     // The object scales by 2 and the element sets none; the resolved element is what the gizmo started from.
-    const before: Resolved3D = { id: 'a', kind: 'cube', object: 'box', scale: { x: 2, y: 2, z: 2 } };
+    const before: Resolved3D = { id: 'a', type: 'cube', object: 'box', scale: { x: 2, y: 2, z: 2 } };
     const layout: Scene.LayoutRecord3D = { id: 'l', dim: '3d', elements: { a: { id: 'a', object: 'box' } } };
     const intent = gizmoIntent('scale', 'a', before, { ...SAME, scale: { x: 3, y: 3, z: 3 } });
     expect(intent && applyIntent(layout, intent).elements.a.scale).toEqual({ x: 3, y: 3, z: 3 });

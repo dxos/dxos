@@ -32,7 +32,7 @@ describe('layoutSource', () => {
       Obj.make(Scene.Layout3D, {
         key,
         elements: Object.fromEntries(
-          ids.map((id, index) => [id, { id, kind: 'cube', center: { x: index, y: 0, z: 0 } }]),
+          ids.map((id, index) => [id, { id, type: 'cube', center: { x: index, y: 0, z: 0 } }]),
         ),
       }),
     );

@@ -73,14 +73,14 @@ export const validateDocument = (doc: SceneDocument): Problem[] => {
         if (!model?.objects[element.object]) {
           report(element.id, `Object "${element.object}" is not in the layout's model.`);
         }
-      } else if (element.kind === undefined) {
+      } else if (element.type === undefined) {
         report(element.id, 'An element needs a kind or an object.');
-      } else if (!kinds.includes(element.kind)) {
-        report(element.id, `A ${layout.dim} layout cannot hold a "${element.kind}".`);
+      } else if (!kinds.includes(element.type)) {
+        report(element.id, `A ${layout.dim} layout cannot hold a "${element.type}".`);
       }
-      for (const binding of [element.from, element.to]) {
-        if (binding && !ids.has(binding.element)) {
-          report(element.id, `Bound to "${binding.element}", which is not in the layout.`);
+      for (const end of [element.source, element.target]) {
+        if (end?.node !== undefined && !ids.has(end.node)) {
+          report(element.id, `Bound to "${end.node}", which is not in the layout.`);
         }
       }
       const missing = element.members?.filter((member: string) => !ids.has(member)) ?? [];
@@ -102,8 +102,8 @@ export const validateDocument = (doc: SceneDocument): Problem[] => {
       if (kinds.includes(object.id)) {
         report(`The object id "${object.id}" is also a kind.`);
       }
-      if (!kinds.includes(object.kind)) {
-        report(`A ${model.dim} model cannot hold a "${object.kind}".`);
+      if (!kinds.includes(object.type)) {
+        report(`A ${model.dim} model cannot hold a "${object.type}".`);
       }
       if (object.parts !== undefined) {
         checkLayout(object.parts, model.dim, report);

@@ -383,7 +383,23 @@ export type Endpoint = Schema.Schema.Type<typeof Endpoint>;
 
 export const isPointEndpoint = (end: Endpoint): end is PointEndpoint => 'point' in end;
 /** The node an end is attached to; a free end has none. */
-export const endpointNode = (end: Endpoint): NodeId | undefined => ('node' in end ? end.node : undefined);
+export const endpointNode = (end: Endpoint | ElementEndpoint): NodeId | undefined =>
+  'node' in end ? end.node : undefined;
+
+/**
+ * An endpoint as a scene element stores it: one struct rather than a union (ECHO stores only discriminated unions), a
+ * node and port or a free point.
+ */
+export const ElementEndpoint = Schema.Struct({
+  node: Schema.optional(Schema.String),
+  port: Schema.optional(Schema.String),
+  point: Schema.optional(Point),
+});
+export type ElementEndpoint = Schema.Schema.Type<typeof ElementEndpoint>;
+
+/** The endpoint bound to `map`'s id for its node instead; a point endpoint is unchanged. */
+export const rebindEndpoint = <E extends Endpoint | ElementEndpoint>(end: E, map: (node: NodeId) => NodeId): E =>
+  'node' in end && end.node !== undefined ? { ...end, node: map(end.node) } : end;
 
 /** What is drawn at a link end. */
 /** An end marker: a filled `arrow`, a `circle`, or a hollow `triangle` (inheritance). */

@@ -36,12 +36,12 @@ const DOC: Scene.SceneDocument = {
       dim: '3d',
       // Two parts, as a frame fits its parts' bounds and would re-centre a lone one wherever it moved.
       elements: {
-        b: { id: 'b', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
-        d: { id: 'd', kind: 'cube', center: { x: 2, y: 0, z: 0 } },
+        b: { id: 'b', type: 'cube', center: { x: 0, y: 0, z: 0 } },
+        d: { id: 'd', type: 'cube', center: { x: 2, y: 0, z: 0 } },
       },
     },
   ],
-  models: [{ id: 'm', dim: '3d', objects: { team: { id: 'team', kind: 'sphere', parts: 'inside' } } }],
+  models: [{ id: 'm', dim: '3d', objects: { team: { id: 'team', type: 'sphere', parts: 'inside' } } }],
 };
 
 describe('targetOf', () => {

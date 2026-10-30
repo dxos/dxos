@@ -19,7 +19,7 @@ const layout = (id: string, children: string[]): Scene.LayoutRecord2D =>
 const model = (layouts: string[]): Scene.ModelRecord2D =>
   model2D(
     'm',
-    layouts.map((id) => ({ id: `of-${id}`, kind: 'rect', parts: id })),
+    layouts.map((id) => ({ id: `of-${id}`, type: 'rect', parts: id })),
   );
 
 describe('layoutTree', () => {

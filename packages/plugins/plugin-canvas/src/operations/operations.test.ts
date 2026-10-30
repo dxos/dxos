@@ -232,7 +232,7 @@ describe('scene revisions', () => {
         const ref = Ref.make(canvas);
 
         yield* Operation.invoke(CanvasOperation.Apply, { canvas: ref, intents: [{ kind: 'create', node }] });
-        expect(layout.elements.n).toMatchObject({ kind: 'rect', center: { x: 0, y: 0 } });
+        expect(layout.elements.n).toMatchObject({ type: 'rect', center: { x: 0, y: 0 } });
         const moved = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
           intents: [{ kind: 'move', ids: ['n'], delta: { x: 10, y: 0 } }],

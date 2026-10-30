@@ -62,7 +62,7 @@ describe('toCanvasViews', () => {
         {
           id: 'l',
           dim: '2d',
-          elements: { ab: { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } } },
+          elements: { ab: { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } } },
         },
       ],
       models: [],
@@ -193,15 +193,16 @@ describe('fromCanvasView', () => {
   test('keeps a node field Element2D has no slot for under props.canvas', () => {
     const { layout } = fromCanvasView(EVERY_TYPE);
     expect(layout.elements.note.props?.canvas).toMatchObject({ text: 'Note' });
-    expect(layout.elements.styled.props?.canvas).toMatchObject({ class: 'warning', style: { guide: true } });
+    expect(layout.elements.styled.props?.canvas).toMatchObject({ class: 'warning' });
+    expect(layout.elements.styled.overrides).toMatchObject({ guide: true });
   });
 
-  test('maps z to order and a link endpoint to a binding', () => {
+  test('keeps z and the link endpoints', () => {
     const { layout } = fromCanvasView(EVERY_TYPE);
-    expect(layout.elements.rect.order).toBe('a0');
-    expect(layout.elements.line).toMatchObject({ kind: 'link', from: { element: 'rect', anchor: 'e' } });
-    expect(layout.elements.line.to).toEqual({ element: 'ellipse' });
-    expect(layout.elements.styled.style).toMatchObject({ hue: 'red', surface: 'none', border: true });
+    expect(layout.elements.rect.z).toBe('a0');
+    expect(layout.elements.line).toMatchObject({ type: 'link', source: { node: 'rect', port: 'e' } });
+    expect(layout.elements.line.target).toEqual({ node: 'ellipse' });
+    expect(layout.elements.styled.overrides).toMatchObject({ hue: 'red', fill: false, border: true });
   });
 
   test('a view node places a composite object whose parts is the inner View', () => {
@@ -210,7 +211,7 @@ describe('fromCanvasView', () => {
     expect(portal).toBeDefined();
     const { layout, objects } = fromCanvasView(view);
     const scene = portal && 'scene' in portal ? String(portal.scene) : '';
-    expect(objects).toContainEqual({ id: `view:${scene}`, kind: 'rect', parts: scene });
+    expect(objects).toContainEqual({ id: `view:${scene}`, type: 'rect', parts: scene });
     expect(portal && layout.elements[portal.id].object).toBe(`view:${scene}`);
   });
 
@@ -260,7 +261,7 @@ describe('fromCanvasView', () => {
     });
     const bogus = {
       ...layout,
-      elements: { ...layout.elements, ab: { ...layout.elements.ab, style: { hue: 'bogus' } } },
+      elements: { ...layout.elements, ab: { ...layout.elements.ab, overrides: { hue: 'bogus' } } },
     };
     const doc: Scene.SceneDocument = { scenes: [], layouts: [bogus], models: [] };
     expect(toCanvasView(doc, bogus).links.ab.style?.hue).toBeUndefined();

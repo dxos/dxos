@@ -3,7 +3,15 @@
 //
 
 import { type ObjectEntry, type ViewTreeItem } from '@dxos/react-ui-canvas';
-import { type Layer, type Scene, findLayout, resolveLayout, rootScene, sceneLayout } from '@dxos/scene';
+import {
+  type ElementEndpoint,
+  type Layer,
+  type Scene,
+  findLayout,
+  resolveLayout,
+  rootScene,
+  sceneLayout,
+} from '@dxos/scene';
 
 // The 2D inspectors (Views, Objects, Layers) read their rows from these over a 3D document, so both dimensions share
 // one component each; the 2D side builds the same rows from its View store.
@@ -68,12 +76,12 @@ export const layoutTree3D = (doc: Scene.SceneDocument, scene = rootScene(doc)): 
       const id = `${prefix}${element.id}`;
       return {
         id,
-        kind: element.kind === 'link' ? 'link' : parts ? 'instance' : 'node',
+        kind: element.type === 'link' ? 'link' : parts ? 'instance' : 'node',
         element: element.id,
         path,
         container: layout.id,
         label: element.label ?? element.id,
-        type: item?.kind,
+        type: item?.type,
         ...(readonly ? { readonly: true, object: { path } } : {}),
         children: parts ? rowsOf(parts, [...path, parts.id], `${id}/`, true, new Set([...seen, parts.id])) : [],
       };
@@ -99,11 +107,11 @@ export const withoutHidden = (doc: Scene.SceneDocument): Scene.SceneDocument => 
       return layout;
     }
     changed = true;
-    const bound = (binding?: Scene.Binding) => binding !== undefined && hidden.has(binding.element);
-    const keep = <E extends Pick<Scene.Element2D, 'from' | 'to'>>(elements: Readonly<Record<string, E>>) =>
+    const bound = (end?: ElementEndpoint) => end?.node !== undefined && hidden.has(end.node);
+    const keep = <E extends Pick<Scene.Element2D, 'source' | 'target'>>(elements: Readonly<Record<string, E>>) =>
       Object.fromEntries(
         Object.entries(elements).filter(
-          ([id, element]) => !hidden.has(id) && !bound(element.from) && !bound(element.to),
+          ([id, element]) => !hidden.has(id) && !bound(element.source) && !bound(element.target),
         ),
       );
     return layout.dim === '2d'

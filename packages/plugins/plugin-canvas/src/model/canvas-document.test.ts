@@ -111,7 +111,7 @@ describe('canvas document', () => {
       throw new Error('A 2D canvas has 2D objects.');
     }
     Obj.update(model, (model) => {
-      model.objects.frame = { id: 'frame', kind: 'rect', parts: Ref.make(layout) };
+      model.objects.frame = { id: 'frame', type: 'rect', parts: Ref.make(layout) };
     });
     deleteScene(canvas, scene);
     expect(canvas.layouts.map((ref) => ref.target)).toEqual([layout]);
@@ -125,7 +125,7 @@ describe('canvas document', () => {
     // A model a write attached to a parts layout, which the canvas does not list as its own.
     const other = Obj.make(Scene.Model2D, {
       key: 'other',
-      objects: { frame: { id: 'frame', kind: 'rect', parts: Ref.make(layout) } },
+      objects: { frame: { id: 'frame', type: 'rect', parts: Ref.make(layout) } },
     });
     const holder = Obj.make(Scene.Layout2D, { key: 'holder', model: Ref.make(other), elements: {} });
     Obj.update(canvas, (canvas) => {

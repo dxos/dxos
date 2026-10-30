@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { endpointNode } from './element.ts';
 import {
   Arrangement,
   type Dimension,
@@ -145,7 +146,7 @@ const solidIntentInputs = (intent: SolidIntent): string[] => {
 
 /** The elements a stored solid builds from, as the `solid` element's props name them. */
 const solidInputs = (element: Element | undefined): string[] => {
-  if (element?.kind !== 'solid') {
+  if (element?.type !== 'solid') {
     return [];
   }
   const operands = element.props?.operands;
@@ -168,7 +169,9 @@ const reduce = <E extends Element>(
     case 'create':
     case 'bind': {
       const element = intent.kind === 'create' ? intent.element : intent.link;
-      const bound = [element.from, element.to].every((end) => end === undefined || elements[end.element] !== undefined);
+      const bound = [element.source, element.target].every(
+        (end) => end === undefined || end.node === undefined || elements[end.node] !== undefined,
+      );
       return isElement(element) && bound && elements[element.id] === undefined
         ? { ...elements, [element.id]: element }
         : undefined;
@@ -178,7 +181,8 @@ const reduce = <E extends Element>(
       if (gone.size === 0) {
         return undefined;
       }
-      const boundTo = (element: E) => [element.from, element.to].some((end) => end && gone.has(end.element));
+      const boundTo = (element: E) =>
+        [element.source, element.target].some((end) => end && gone.has(endpointNode(end) ?? ''));
       // A deleted solid's operands are drawn again, unless a solid that stays still builds from them.
       const kept = Object.values(elements).filter((element) => !gone.has(element.id));
       const stillUsed = new Set(kept.flatMap(solidInputs));
@@ -210,8 +214,12 @@ const reduce = <E extends Element>(
         return undefined;
       }
       // A solid stands for its base operand (the first), so it keeps that operand's look.
-      const style = elements[inputs[0]]?.style;
-      const element = style ? { ...made, style } : made;
+      const base = elements[inputs[0]];
+      const element = {
+        ...made,
+        ...(base?.style !== undefined ? { style: base.style } : {}),
+        ...(base?.overrides !== undefined ? { overrides: base.overrides } : {}),
+      };
       // A solid draws in place of its operands, so they are hidden (and shown again when it is deleted).
       return {
         ...elements,
@@ -230,13 +238,13 @@ const reduce = <E extends Element>(
     }
     case 'group': {
       const members = intent.members.filter((id) => elements[id] !== undefined);
-      const group = { id: intent.id, kind: 'group', members, ...(intent.arrange ? { arrange: intent.arrange } : {}) };
+      const group = { id: intent.id, type: 'group', members, ...(intent.arrange ? { arrange: intent.arrange } : {}) };
       return members.length > 0 && elements[intent.id] === undefined && isElement(group)
         ? { ...elements, [intent.id]: group }
         : undefined;
     }
     case 'ungroup': {
-      if (elements[intent.id]?.kind !== 'group') {
+      if (elements[intent.id]?.type !== 'group') {
         return undefined;
       }
       const { [intent.id]: _group, ...rest } = elements;
@@ -299,13 +307,13 @@ const geometry2D = (element: Element2D, intent: LayoutIntent): Element2D | undef
 const solid3D = (intent: SolidIntent): Element3D => {
   switch (intent.kind) {
     case 'join':
-      return { id: intent.id, kind: 'solid', props: { op: 'union', operands: intent.operands.join(' ') } };
+      return { id: intent.id, type: 'solid', props: { op: 'union', operands: intent.operands.join(' ') } };
     case 'subtract':
-      return { id: intent.id, kind: 'solid', props: { op: 'difference', operands: `${intent.base} ${intent.tool}` } };
+      return { id: intent.id, type: 'solid', props: { op: 'difference', operands: `${intent.base} ${intent.tool}` } };
     case 'extrude':
       return {
         id: intent.id,
-        kind: 'solid',
+        type: 'solid',
         props: { op: 'extrude', target: intent.target, face: intent.face, distance: round(intent.distance) },
       };
   }

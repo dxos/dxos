@@ -132,10 +132,10 @@ const build = (elements: Elements3D, id: string, wasm: ManifoldToplevel, path: r
     throw new SolidError(`Solid "${id}" uses itself.`);
   }
   const position = element.center ?? ZERO;
-  if (element.kind !== 'solid') {
+  if (element.type !== 'solid') {
     const rotation = element.rotation ?? ZERO;
     return then(
-      then(primitiveSolid(wasm, element.kind, element.scale ?? UNIT, element.style?.rounded ?? false), (solid) =>
+      then(primitiveSolid(wasm, element.type, element.scale ?? UNIT, element.overrides?.rounded ?? false), (solid) =>
         solid.rotate([rotation.x, rotation.y, rotation.z]),
       ),
       (solid) => solid.translate([position.x, position.y, position.z]),

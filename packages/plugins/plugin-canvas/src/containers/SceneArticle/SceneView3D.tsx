@@ -428,7 +428,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       model: modelId,
       layout: editingLayout,
       ids: selection,
-      object: { id, kind: 'sphere' },
+      object: { id, type: 'sphere' },
     });
     if (problems.length > 0) {
       setNotice(problems.map(({ message }) => message).join(' '));
@@ -457,7 +457,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       'duplicate': { run: duplicate, enabled: some },
       'delete': { run: deleteSelection, enabled: some },
       'group': { run: group, enabled: () => editable() && selection.length > 1 },
-      'ungroup': { run: ungroup, enabled: () => editable() && resolved?.kind === 'group' },
+      'ungroup': { run: ungroup, enabled: () => editable() && resolved?.type === 'group' },
       'make-object': { run: makeObject, enabled: () => some() && modelId !== undefined },
     };
   }, [

@@ -36,8 +36,8 @@ describe('writeModelIntent', () => {
     applyLayoutIntent(layout, {
       kind: 'batch',
       intents: [
-        { kind: 'create', element: { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } } },
-        { kind: 'create', element: { id: 'b', kind: 'cube', center: { x: 2, y: 0, z: 0 } } },
+        { kind: 'create', element: { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } } },
+        { kind: 'create', element: { id: 'b', type: 'cube', center: { x: 2, y: 0, z: 0 } } },
       ],
     });
     return { ...made, layout, db };
@@ -46,22 +46,22 @@ describe('writeModelIntent', () => {
   test('define writes an object into the stored model', async () => {
     const { canvas, model } = await canvas3D();
     expect(
-      writeModelIntent(canvas, { kind: 'define', model: 'model', object: { id: 'lamp', kind: 'cylinder' } }),
+      writeModelIntent(canvas, { kind: 'define', model: 'model', object: { id: 'lamp', type: 'cylinder' } }),
     ).toEqual([]);
-    expect(Obj.instanceOf(Scene.Model3D, model) && model.objects.lamp).toMatchObject({ kind: 'cylinder' });
+    expect(Obj.instanceOf(Scene.Model3D, model) && model.objects.lamp).toMatchObject({ type: 'cylinder' });
   });
 
   test('define stores only the fields an object has, so a record carrying others (a label) still writes', async () => {
     const { canvas, model } = await canvas3D();
     const object = {
       id: 'crate',
-      kind: 'mesh',
+      type: 'mesh',
       label: 'Crate',
       props: { mesh: { key: 'k', positions: [0, 0, 0], indices: [0, 0, 0] } },
     };
     expect(writeModelIntent(canvas, { kind: 'define', model: 'model', object })).toEqual([]);
     const stored = Obj.instanceOf(Scene.Model3D, model) ? model.objects.crate : undefined;
-    expect(stored).toMatchObject({ id: 'crate', kind: 'mesh' });
+    expect(stored).toMatchObject({ id: 'crate', type: 'mesh' });
     expect(stored && 'label' in stored).toBe(false);
   });
 
@@ -72,7 +72,7 @@ describe('writeModelIntent', () => {
       model: 'model',
       layout: 'layout',
       ids: ['a', 'b'],
-      object: { id: 'pair', kind: 'sphere' },
+      object: { id: 'pair', type: 'sphere' },
     });
     expect(problems).toEqual([]);
     const parts = canvas.layouts
@@ -96,7 +96,7 @@ describe('writeModelIntent', () => {
       model: 'model',
       layout: 'layout',
       ids: ['a', 'b'],
-      object: { id: 'pair', kind: 'sphere' },
+      object: { id: 'pair', type: 'sphere' },
     });
     const after = canvasDocument(canvas);
     writeDocument(canvas, before);
@@ -123,7 +123,7 @@ describe('writeModelIntent', () => {
         model: 'model',
         layout: 'layout',
         ids: ['a'],
-        object: { id: 'one', kind: 'sphere' },
+        object: { id: 'one', type: 'sphere' },
       }),
     ).toEqual([]);
     expect(layout.model?.target).toBe(model);

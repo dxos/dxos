@@ -5,6 +5,7 @@
 import {
   type Resolved3D,
   Scene,
+  type Style3D,
   bounds3D,
   findLayout,
   fitChild,
@@ -22,17 +23,17 @@ export type RenderItem = {
   id: string;
   /** The resolved elements of the layout the element belongs to, which a solid evaluates its operation tree against. */
   elements: Readonly<Record<string, Resolved3D>>;
-  kind: string;
+  type: string;
   label?: string;
   center: Vec3;
   scale: Vec3;
   rotation: Vec3;
-  style?: Scene.Style;
+  style?: Style3D;
   /** Set on a composite element, which draws as a frame round its parts. */
   frame?: boolean;
 };
 
-export type RenderLink = { key: string; from: Vec3; to: Vec3; style?: Scene.Style };
+export type RenderLink = { key: string; from: Vec3; to: Vec3; style?: Style3D };
 
 export type RenderList = { items: RenderItem[]; links: RenderLink[] };
 
@@ -90,8 +91,8 @@ export const renderList = (
     const placed = new Map<string, Vec3>();
     for (const element of Object.values(elements)) {
       // A solid's geometry is its operands', placed where they are, so it needs no position of its own.
-      const local = element.center ?? (element.kind === 'solid' ? ZERO : undefined);
-      if (element.hidden || !local || element.kind === 'link' || element.kind === 'group') {
+      const local = element.center ?? (element.type === 'solid' ? ZERO : undefined);
+      if (element.hidden || !local || element.type === 'link' || element.type === 'group') {
         continue;
       }
       const center = apply(transform, local);
@@ -101,12 +102,12 @@ export const renderList = (
         key: keyOf(element.id),
         id: element.id,
         elements,
-        kind: element.kind,
+        type: element.type,
         center,
         scale: scaled(element.scale ?? UNIT, transform.scale),
         rotation: element.rotation ?? ZERO,
         ...(element.label !== undefined ? { label: element.label } : {}),
-        ...(element.style ? { style: element.style } : {}),
+        ...(element.overrides ? { style: element.overrides } : {}),
         ...(composite ? { frame: true } : {}),
       };
       items.push(item);
@@ -117,13 +118,13 @@ export const renderList = (
       }
     }
     for (const element of Object.values(elements)) {
-      if (element.kind !== 'link' || element.hidden || !element.from || !element.to) {
+      if (element.type !== 'link' || element.hidden || !element.source || !element.target) {
         continue;
       }
-      const from = placed.get(element.from.element);
-      const to = placed.get(element.to.element);
+      const from = element.source.node === undefined ? undefined : placed.get(element.source.node);
+      const to = element.target.node === undefined ? undefined : placed.get(element.target.node);
       if (from && to) {
-        links.push({ key: keyOf(element.id), from, to, ...(element.style ? { style: element.style } : {}) });
+        links.push({ key: keyOf(element.id), from, to, ...(element.overrides ? { style: element.overrides } : {}) });
       }
     }
   };

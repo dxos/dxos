@@ -32,7 +32,7 @@ export const manifoldGeometry = (wasm: ManifoldToplevel): GeometrySource => {
   const reported = new Set<string>();
   let roundedCube: MeshData | undefined;
   return (item) => {
-    if (item.kind === 'cube' && item.style?.rounded === true) {
+    if (item.type === 'cube' && item.style?.rounded === true) {
       if (!roundedCube) {
         const solid = primitiveSolid(wasm, 'cube', { x: 1, y: 1, z: 1 }, true);
         roundedCube = toMeshData(solid);
@@ -40,7 +40,7 @@ export const manifoldGeometry = (wasm: ManifoldToplevel): GeometrySource => {
       }
       return roundedCube;
     }
-    if (item.kind !== 'solid') {
+    if (item.type !== 'solid') {
       return undefined;
     }
     const key = solidKey(item.elements, item.id);

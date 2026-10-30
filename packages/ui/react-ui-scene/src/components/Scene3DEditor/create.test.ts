@@ -36,13 +36,13 @@ describe('drag to create', () => {
     const base = { center: { x: 1, y: 0, z: 1 }, width: 2, depth: 4 };
     expect(createdElement('box-1', 'cube', base, 3)).toEqual({
       id: 'box-1',
-      kind: 'cube',
+      type: 'cube',
       center: { x: 1, y: 1.5, z: 1 },
       scale: { x: 2, y: 3, z: 4 },
     });
     expect(createdElement('ball-1', 'sphere', base, undefined)).toEqual({
       id: 'ball-1',
-      kind: 'sphere',
+      type: 'sphere',
       center: { x: 1, y: 2, z: 1 },
       scale: { x: 4, y: 4, z: 4 },
     });

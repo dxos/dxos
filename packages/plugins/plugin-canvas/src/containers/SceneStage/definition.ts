@@ -28,7 +28,7 @@ export const scene2dStage: AnimatorCapabilities.StageDef = {
     },
   },
   renderers: ['2d', 'overlay'],
-  scriptProperties: { position: 'center', scale: 'size', opacity: 'style.opacity' },
+  scriptProperties: { position: 'center', scale: 'size', opacity: 'overrides.opacity' },
   bind: (object, sample) => {
     const document = sceneDocumentOf(object);
     return document ? sceneBinding(document, sample) : EMPTY_BINDING;
@@ -53,7 +53,7 @@ export const scene3dStage: AnimatorCapabilities.StageDef = {
   },
   renderers: ['3d', 'overlay'],
   layouts: { ...ARRANGERS_3D },
-  scriptProperties: { position: 'center', opacity: 'style.opacity' },
+  scriptProperties: { position: 'center', opacity: 'overrides.opacity' },
   bind: (object, sample) => {
     const document = sceneDocumentOf(object);
     return document ? sceneBinding(document, sample) : EMPTY_BINDING;

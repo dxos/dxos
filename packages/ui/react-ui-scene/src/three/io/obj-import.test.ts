@@ -81,9 +81,9 @@ const imported = async (file: File): Promise<Scene.Object3D> => {
 describe('importMesh', () => {
   test('an imported OBJ cube is one mesh object, unit-sized and centred, drawn as one item of 12 triangles', async () => {
     const object = await imported(new File([CUBE_OBJ], 'Box.obj'));
-    expect(object).toMatchObject({ id: 'box', kind: 'mesh' });
+    expect(object).toMatchObject({ id: 'box', type: 'mesh' });
     // ECHO stores an object with exactly its schema's fields, so an import adds no others.
-    expect(Object.keys(object).sort()).toEqual(['id', 'kind', 'props']);
+    expect(Object.keys(object).sort()).toEqual(['id', 'props', 'type']);
     const doc = document(object, 1);
     const { items } = renderList(doc);
     expect(items).toHaveLength(1);
@@ -99,7 +99,7 @@ describe('importMesh', () => {
     expect(Object.keys(doc.models[0].objects)).toEqual(['box']);
     const layout = doc.layouts[0];
     const resolved = layout.dim === '3d' ? resolveLayout3D(doc, layout) : {};
-    expect(Object.values(resolved).map((element) => element.kind)).toEqual(['mesh', 'mesh']);
+    expect(Object.values(resolved).map((element) => element.type)).toEqual(['mesh', 'mesh']);
     const { items } = renderList(doc);
     expect(meshData(items[0])).toBe(meshData(items[1]));
   });
@@ -107,7 +107,7 @@ describe('importMesh', () => {
   test('reads a GLB file too', async () => {
     const glb = new Uint8Array(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), 'testing/box.glb')));
     const object = await imported(new File([glb], 'box.glb'));
-    expect(object.kind).toBe('mesh');
+    expect(object.type).toBe('mesh');
     const { items } = renderList(document(object, 1));
     expect(meshData(items[0])?.indices.length).toBe(12 * 3);
   });

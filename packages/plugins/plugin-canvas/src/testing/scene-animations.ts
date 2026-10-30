@@ -18,11 +18,11 @@ const SCRIPTS: Record<ExemplarName, Animation.Beat[]> = {
   ],
   links: [
     { duration: 1.5, ease: 'ease-in-out', set: { a: { center: { x: 0, y: -80 } } }, camera: { zoom: 1.4 } },
-    { duration: 1.5, ease: 'ease-in-out', set: { c: { 'style.opacity': 0.2 } } },
+    { duration: 1.5, ease: 'ease-in-out', set: { c: { 'overrides.opacity': 0.2 } } },
     {
       duration: 1.5,
       ease: 'ease-in-out',
-      set: { a: { center: { x: 0, y: 0 } }, c: { 'style.opacity': 1 } },
+      set: { a: { center: { x: 0, y: 0 } }, c: { 'overrides.opacity': 1 } },
       camera: { zoom: 1 },
     },
   ],

@@ -22,7 +22,7 @@ describe('liftScene', () => {
     expect(doc.scenes[0].dim).toBe('3d');
     const layout = doc.layouts[0];
     const b = layout.dim === '3d' ? resolveLayout3D(doc, layout).b : undefined;
-    expect(b).toMatchObject({ kind: 'cube', center: { x: 256 / PIXELS_PER_UNIT, y: 0 } });
+    expect(b).toMatchObject({ type: 'cube', center: { x: 256 / PIXELS_PER_UNIT, y: 0 } });
     expect(b?.scale?.x).toBeCloseTo(128 / PIXELS_PER_UNIT);
   });
 
@@ -52,24 +52,24 @@ describe('flattenLayout', () => {
       id: 'l',
       dim: '3d',
       elements: {
-        a: { id: 'a', kind: 'cube', center: { x: 1, y: 0.5, z: -2 }, scale: { x: 2, y: 1, z: 1 } },
-        s: { id: 's', kind: 'sphere', center: { x: 0, y: 0, z: 0 } },
-        ab: { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 's' } },
+        a: { id: 'a', type: 'cube', center: { x: 1, y: 0.5, z: -2 }, scale: { x: 2, y: 1, z: 1 } },
+        s: { id: 's', type: 'sphere', center: { x: 0, y: 0, z: 0 } },
+        ab: { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 's' } },
       },
     };
     const flat = flattenLayout(layout);
     expect(flat.dim).toBe('2d');
     expect(flat.elements.a).toMatchObject({
-      kind: 'rect',
+      type: 'rect',
       center: { x: 100, y: 200 },
       size: { width: 200, height: 100 },
     });
     expect(flat.elements.s).toMatchObject({
-      kind: 'ellipse',
+      type: 'ellipse',
       center: { x: 0, y: 0 },
       size: { width: 100, height: 100 },
     });
-    expect(flat.elements.ab).toMatchObject({ kind: 'link', from: { element: 'a' }, to: { element: 's' } });
+    expect(flat.elements.ab).toMatchObject({ type: 'link', source: { node: 'a' }, target: { node: 's' } });
     const again = flattenLayout(liftLayout(flat));
     expect(again.elements.a).toMatchObject({ center: { x: 100, y: 200 }, size: { width: 200, height: 100 } });
   });

@@ -11,18 +11,18 @@ import { layout2D, model2D, scene2D } from './testing.ts';
 const main = layout2D(
   'main',
   [
-    { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size: { width: 128, height: 128 } },
+    { id: 'a', type: 'rect', center: { x: 0, y: 0 }, size: { width: 128, height: 128 } },
     { id: 'b', object: 'detail', label: 'B', center: { x: 256, y: 0 }, size: { width: 256, height: 256 } },
-    { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } },
+    { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
   ],
   'parts',
 );
 
 const detail = layout2D('b-detail', [
-  { id: 'x', kind: 'ellipse', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
+  { id: 'x', type: 'ellipse', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
 ]);
 
-const parts = model2D('parts', [{ id: 'detail', kind: 'rect', parts: 'b-detail' }]);
+const parts = model2D('parts', [{ id: 'detail', type: 'rect', parts: 'b-detail' }]);
 
 // In the order `fromEcho` reaches them: the scene's layout, its model, then the model's parts layouts.
 const document: Scene.SceneDocument = {
@@ -43,7 +43,7 @@ describe('echo', () => {
     const cyclic: Scene.SceneDocument = {
       scenes: [scene2D('s', 'a')],
       layouts: [layout2D('a', [{ id: 'self', object: 'again' }], 'm')],
-      models: [model2D('m', [{ id: 'again', kind: 'rect', parts: 'a' }])],
+      models: [model2D('m', [{ id: 'again', type: 'rect', parts: 'a' }])],
     };
     expect(fromEcho(toEcho(cyclic).root)).toEqual(cyclic);
   });

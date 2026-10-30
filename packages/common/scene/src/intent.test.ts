@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { applyIntent, isLayoutIntent } from './intent.ts';
 import { layout2D, layout3D } from './testing.ts';
 
-const cube = (id: string, x = 0) => ({ id, kind: 'cube', center: { x, y: 0, z: 0 } });
+const cube = (id: string, x = 0) => ({ id, type: 'cube', center: { x, y: 0, z: 0 } });
 
 describe('applyIntent', () => {
   test('move adds a Vec3 delta to each 3D center and rounds to 0.001', () => {
@@ -23,7 +23,7 @@ describe('applyIntent', () => {
     expect(rotated.elements.a.rotation).toEqual({ x: 0, y: 45, z: 5 });
     const scaled = applyIntent(layout, { kind: 'scale', ids: ['a'], factor: { x: 2, y: 0.5, z: 3 } });
     expect(scaled.elements.a.scale).toEqual({ x: 2, y: 1, z: 3 });
-    const flat = layout2D('f', [{ id: 'r', kind: 'rect', size: { width: 128, height: 64 }, rotation: 0 }]);
+    const flat = layout2D('f', [{ id: 'r', type: 'rect', size: { width: 128, height: 64 }, rotation: 0 }]);
     expect(applyIntent(flat, { kind: 'rotate', ids: ['r'], delta: 90 }).elements.r.rotation).toBe(90);
     expect(applyIntent(flat, { kind: 'scale', ids: ['r'], factor: { width: 2, height: 2 } }).elements.r.size).toEqual({
       width: 256,
@@ -36,9 +36,9 @@ describe('applyIntent', () => {
       cube('a'),
       cube('b'),
       cube('c'),
-      { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } },
-      { id: 'bc', kind: 'link', from: { element: 'b' }, to: { element: 'c' } },
-      { id: 'g', kind: 'group', members: ['a', 'c'] },
+      { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
+      { id: 'bc', type: 'link', source: { node: 'b' }, target: { node: 'c' } },
+      { id: 'g', type: 'group', members: ['a', 'c'] },
     ]);
     const after = applyIntent(layout, { kind: 'delete', ids: ['a'] });
     expect(Object.keys(after.elements).sort()).toEqual(['b', 'bc', 'c', 'g']);
@@ -53,7 +53,7 @@ describe('applyIntent', () => {
       members: ['a', 'b'],
       arrange: { kind: 'ring' },
     });
-    expect(grouped.elements.g).toEqual({ id: 'g', kind: 'group', members: ['a', 'b'], arrange: { kind: 'ring' } });
+    expect(grouped.elements.g).toEqual({ id: 'g', type: 'group', members: ['a', 'b'], arrange: { kind: 'ring' } });
     const ungrouped = applyIntent(grouped, { kind: 'ungroup', id: 'g' });
     expect(Object.keys(ungrouped.elements).sort()).toEqual(['a', 'b']);
   });
@@ -62,7 +62,7 @@ describe('applyIntent', () => {
     const layout = layout3D('l', [
       cube('a'),
       cube('b'),
-      { id: 'g', kind: 'group', members: ['a'], arrange: { kind: 'ring' } },
+      { id: 'g', type: 'group', members: ['a'], arrange: { kind: 'ring' } },
     ]);
     const moved = applyIntent(layout, { kind: 'move', ids: ['a', 'b'], delta: { x: 1, y: 0, z: 0 } });
     expect(moved.elements.a.pinned).toBe(true);
@@ -77,10 +77,12 @@ describe('applyIntent', () => {
   });
 
   test('update writes a nested path, and unsets it with no value', () => {
-    const layout = layout3D('l', [{ ...cube('a'), style: { hue: 'blue' } }]);
-    const updated = applyIntent(layout, { kind: 'update', id: 'a', path: ['style', 'hue'], value: 'red' });
-    expect(updated.elements.a.style).toEqual({ hue: 'red' });
-    expect(applyIntent(updated, { kind: 'update', id: 'a', path: ['style', 'hue'] }).elements.a.style).toEqual({});
+    const layout = layout3D('l', [{ ...cube('a'), overrides: { hue: 'blue' } }]);
+    const updated = applyIntent(layout, { kind: 'update', id: 'a', path: ['overrides', 'hue'], value: 'red' });
+    expect(updated.elements.a.overrides).toEqual({ hue: 'red' });
+    expect(applyIntent(updated, { kind: 'update', id: 'a', path: ['overrides', 'hue'] }).elements.a.overrides).toEqual(
+      {},
+    );
   });
 
   test('isLayoutIntent refuses a 2D delta on a 3D move', () => {
@@ -114,13 +116,13 @@ describe('applyIntent', () => {
 
   test('bind adds a link between two elements, and refuses one bound to a missing element', () => {
     const layout = layout3D('l', [cube('a'), cube('b')]);
-    const link = { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } };
+    const link = { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } };
     expect(applyIntent(layout, { kind: 'bind', link }).elements.ab).toEqual(link);
-    expect(applyIntent(layout, { kind: 'bind', link: { ...link, to: { element: 'missing' } } })).toBe(layout);
+    expect(applyIntent(layout, { kind: 'bind', link: { ...link, target: { node: 'missing' } } })).toBe(layout);
   });
 
   test('a move of a 3D element with no centre places it at the delta, where it was drawn from', () => {
-    const layout = layout3D('l', [{ id: 's', kind: 'solid' }]);
+    const layout = layout3D('l', [{ id: 's', type: 'solid' }]);
     expect(applyIntent(layout, { kind: 'move', ids: ['s'], delta: { x: 1, y: 2, z: 3 } }).elements.s.center).toEqual({
       x: 1,
       y: 2,
@@ -133,17 +135,17 @@ describe('solid intents', () => {
   const parts = () =>
     layout3D('l', [
       cube('box'),
-      { id: 'hole', kind: 'cylinder', center: { x: 0, y: 0, z: 0 } },
-      { id: 'other', kind: 'sphere', center: { x: 2, y: 0, z: 0 } },
+      { id: 'hole', type: 'cylinder', center: { x: 0, y: 0, z: 0 } },
+      { id: 'other', type: 'sphere', center: { x: 2, y: 0, z: 0 } },
     ]);
 
   test('join and subtract add a solid over their operands and hide them', () => {
     const joined = applyIntent(parts(), { kind: 'join', id: 'u', operands: ['box', 'other'] });
-    expect(joined.elements.u).toEqual({ id: 'u', kind: 'solid', props: { op: 'union', operands: 'box other' } });
+    expect(joined.elements.u).toEqual({ id: 'u', type: 'solid', props: { op: 'union', operands: 'box other' } });
     expect(joined.elements.box.hidden).toBe(true);
     expect(joined.elements.other.hidden).toBe(true);
     const cut = applyIntent(parts(), { kind: 'subtract', id: 'd', base: 'box', tool: 'hole' });
-    expect(cut.elements.d).toEqual({ id: 'd', kind: 'solid', props: { op: 'difference', operands: 'box hole' } });
+    expect(cut.elements.d).toEqual({ id: 'd', type: 'solid', props: { op: 'difference', operands: 'box hole' } });
     expect([cut.elements.box.hidden, cut.elements.hole.hidden, cut.elements.other.hidden]).toEqual([
       true,
       true,
@@ -152,12 +154,17 @@ describe('solid intents', () => {
   });
 
   test("a solid takes its base operand's style, so a subtraction keeps the colour it was cut from", () => {
-    const styled = applyIntent(parts(), { kind: 'update', id: 'box', path: ['style'], value: { hue: 'red', tone: 2 } });
-    expect(applyIntent(styled, { kind: 'subtract', id: 'd', base: 'box', tool: 'hole' }).elements.d.style).toEqual({
+    const styled = applyIntent(parts(), {
+      kind: 'update',
+      id: 'box',
+      path: ['overrides'],
+      value: { hue: 'red', tone: 2 },
+    });
+    expect(applyIntent(styled, { kind: 'subtract', id: 'd', base: 'box', tool: 'hole' }).elements.d.overrides).toEqual({
       hue: 'red',
       tone: 2,
     });
-    expect(applyIntent(styled, { kind: 'join', id: 'u', operands: ['box', 'other'] }).elements.u.style).toEqual({
+    expect(applyIntent(styled, { kind: 'join', id: 'u', operands: ['box', 'other'] }).elements.u.overrides).toEqual({
       hue: 'red',
       tone: 2,
     });
@@ -176,7 +183,7 @@ describe('solid intents', () => {
     });
     expect(after.elements.e).toEqual({
       id: 'e',
-      kind: 'solid',
+      type: 'solid',
       props: { op: 'extrude', target: 'box', face: { x: 0, y: 1, z: 0 }, distance: 0.5 },
     });
     expect(after.elements.box.hidden).toBe(true);
@@ -205,7 +212,7 @@ describe('solid intents', () => {
   });
 
   test('solid intents are 3D only', () => {
-    const flat = layout2D('f', [{ id: 'r', kind: 'rect' }]);
+    const flat = layout2D('f', [{ id: 'r', type: 'rect' }]);
     expect(isLayoutIntent({ kind: 'join', id: 'u', operands: ['r'] }, '2d')).toBe(false);
     expect(applyIntent(flat, { kind: 'join', id: 'u', operands: ['r'] })).toBe(flat);
   });

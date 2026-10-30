@@ -45,7 +45,7 @@ const needsManifold = (doc: Scene.SceneDocument): boolean =>
     (layout) =>
       layout.dim === '3d' &&
       Object.values(resolveLayout3D(doc, layout)).some(
-        (element) => element.kind === 'solid' || (element.kind === 'cube' && element.style?.rounded === true),
+        (element) => element.type === 'solid' || (element.type === 'cube' && element.overrides?.rounded === true),
       ),
   );
 

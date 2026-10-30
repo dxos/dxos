@@ -39,13 +39,14 @@ describe('readScenes', () => {
       object: 'box',
       label: 'A',
       center: { x: 0, y: 0 },
-      style: { surface: 'solid' },
+      // A 2D surface is the canvas's fill.
+      overrides: { fill: true },
     });
-    expect(layout.elements.b).toMatchObject({ kind: 'rect', size: { width: 100, height: 60 } });
+    expect(layout.elements.b).toMatchObject({ type: 'rect', size: { width: 100, height: 60 } });
     expect(layout.elements.ab).toMatchObject({
-      kind: 'link',
-      from: { element: 'a' },
-      to: { element: 'b' },
+      type: 'link',
+      source: { node: 'a' },
+      target: { node: 'b' },
       props: { end: 'arrow' },
     });
     expect(document.models).toEqual([
@@ -53,7 +54,12 @@ describe('readScenes', () => {
         id: 'shapes',
         dim: '2d',
         objects: {
-          box: { id: 'box', kind: 'rect', size: { width: 100, height: 60 }, style: { border: true, rounded: true } },
+          box: {
+            id: 'box',
+            type: 'rect',
+            size: { width: 100, height: 60 },
+            overrides: { border: true, rounded: true },
+          },
         },
       },
     ]);
@@ -85,7 +91,7 @@ model m dim=3d {
     expect(document.layouts[0].elements.t).toMatchObject({ object: 'team' });
     expect(document.models[0].objects.team).toEqual({
       id: 'team',
-      kind: 'sphere',
+      type: 'sphere',
       scale: { x: 3, y: 3, z: 3 },
       parts: 'inner',
     });

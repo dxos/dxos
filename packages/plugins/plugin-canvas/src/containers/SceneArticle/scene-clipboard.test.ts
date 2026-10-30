@@ -11,7 +11,7 @@ import { type SceneClipboard, nextPaste, pasteOffset } from './scene-clipboard.t
 const fragment: Scene.LayoutRecord3D = {
   id: 'clipboard',
   dim: '3d',
-  elements: { box: { id: 'box', kind: 'cube', center: { x: 0, y: 1, z: 0 } } },
+  elements: { box: { id: 'box', type: 'cube', center: { x: 0, y: 1, z: 0 } } },
 };
 const copied: SceneClipboard = { fragment, text: 'layout clipboard dim=3d {}', pasted: 0 };
 
@@ -48,6 +48,6 @@ describe('scene clipboard', () => {
     };
     const next = nextPaste(real, undefined, '2d');
     expect(next?.fragment.dim).toBe('2d');
-    expect(next?.fragment.elements.box).toMatchObject({ kind: 'rect' });
+    expect(next?.fragment.elements.box).toMatchObject({ type: 'rect' });
   });
 });

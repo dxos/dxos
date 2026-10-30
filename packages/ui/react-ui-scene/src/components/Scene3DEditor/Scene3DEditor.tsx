@@ -298,7 +298,7 @@ export const Scene3DEditor = ({
           'create' in tool
             ? {
                 kind: 'create',
-                element: { id: freeId(layout, tool.create), kind: tool.create, center: restingCenter(center) },
+                element: { id: freeId(layout, tool.create), type: tool.create, center: restingCenter(center) },
               }
             : { kind: 'create', element: { id: freeId(layout, tool.place), object: tool.place, center } };
         onIntent(editing, intent);
@@ -315,7 +315,7 @@ export const Scene3DEditor = ({
           const id = freeId(layout, 'link');
           onIntent(editing, {
             kind: 'bind',
-            link: { id, kind: 'link', from: { element: linkFrom }, to: { element } },
+            link: { id, type: 'link', source: { node: linkFrom }, target: { node: element } },
           });
           setLinkFrom(undefined);
           onSelect([id]);

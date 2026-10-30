@@ -356,10 +356,10 @@ describe('migrateSceneDrawing', () => {
         winner.model = undefined;
       });
       Obj.update(rootLayout(loser), (layout) => {
-        layout.elements['added'] = { id: 'added', kind: 'rect', center: { x: 0, y: 0 } };
+        layout.elements['added'] = { id: 'added', type: 'rect', center: { x: 0, y: 0 } };
       });
       const loserModel = db.add(
-        Obj.make(Scene.Model2D, { key: 'peer', objects: { thing: { id: 'thing', kind: 'rect' } } }),
+        Obj.make(Scene.Model2D, { key: 'peer', objects: { thing: { id: 'thing', type: 'rect' } } }),
       );
       Obj.update(loser, (loser) => {
         loser.model = Ref.make(loserModel);

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Scene } from '@dxos/scene';
+import { type Style3D } from '@dxos/scene';
 
 import { resolveHex } from './colors.ts';
 
@@ -13,7 +13,7 @@ export type Theme3D = (typeof THEMES_3D)[number];
 export type MaterialSpec = { color: string; kind: 'standard' | 'pbr' | 'rim'; alpha: number; edges: boolean };
 
 /** How see-through each surface is, before the element's own opacity. */
-const SURFACE_ALPHA: Readonly<Record<NonNullable<Scene.Style['surface']>, number>> = {
+const SURFACE_ALPHA: Readonly<Record<NonNullable<Style3D['surface']>, number>> = {
   solid: 1,
   tint: 0.6,
   glass: 0.4,
@@ -21,7 +21,7 @@ const SURFACE_ALPHA: Readonly<Record<NonNullable<Scene.Style['surface']>, number
 };
 
 /** Resolves an element's style tokens for a 3D theme (design call 19): the theme decides the material. */
-export const materialSpec = (style: Scene.Style | undefined, theme: Theme3D): MaterialSpec => {
+export const materialSpec = (style: Style3D | undefined, theme: Theme3D): MaterialSpec => {
   const surface = style?.surface ?? 'solid';
   const alpha = SURFACE_ALPHA[surface] * (style?.opacity ?? 1);
   const kind = theme === 'presentation' ? (surface === 'glass' ? 'rim' : 'pbr') : 'standard';

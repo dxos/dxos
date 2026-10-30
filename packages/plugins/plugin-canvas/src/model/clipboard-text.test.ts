@@ -15,7 +15,7 @@ const linksDoc = () => Dsl.readScenes(EXEMPLARS.links).document;
 const cubeLayout: Scene.LayoutRecord3D = {
   id: 'cube',
   dim: '3d',
-  elements: { box: { id: 'box', kind: 'cube', center: { x: 1, y: 1, z: 0 }, style: { hue: 'red' } } },
+  elements: { box: { id: 'box', type: 'cube', center: { x: 1, y: 1, z: 0 }, overrides: { hue: 'red' } } },
 };
 
 describe('clipboard text', () => {
@@ -23,7 +23,7 @@ describe('clipboard text', () => {
     const doc: Scene.SceneDocument = { scenes: [], layouts: [cubeLayout], models: [] };
     const text = fragmentText(doc, cubeLayout, copyElements(cubeLayout, ['box']));
     expect(text).toContain('layout');
-    expect(readFragment(text, '3d')?.elements.box).toMatchObject({ kind: 'cube', center: { x: 1, y: 1, z: 0 } });
+    expect(readFragment(text, '3d')?.elements.box).toMatchObject({ type: 'cube', center: { x: 1, y: 1, z: 0 } });
   });
 
   test('a 2D fragment of elements placing model objects reads back whole, with no object left to resolve', () => {
@@ -38,10 +38,10 @@ describe('clipboard text', () => {
   test('2D text pasted into 3D is lifted onto the ground; 3D text pasted into 2D is flattened', () => {
     const doc: Scene.SceneDocument = { scenes: [], layouts: [cubeLayout], models: [] };
     const text3D = fragmentText(doc, cubeLayout, copyElements(cubeLayout, ['box']));
-    expect(readFragment(text3D, '2d')?.elements.box).toMatchObject({ kind: 'rect', center: { x: 100, y: 0 } });
+    expect(readFragment(text3D, '2d')?.elements.box).toMatchObject({ type: 'rect', center: { x: 100, y: 0 } });
     const flat = readFragment(text3D, '2d');
     const text2D = flat && fragmentText({ scenes: [], layouts: [flat], models: [] }, flat, flat);
-    expect(text2D && readFragment(text2D, '3d')?.elements.box).toMatchObject({ kind: 'cube', center: { x: 1, z: 0 } });
+    expect(text2D && readFragment(text2D, '3d')?.elements.box).toMatchObject({ type: 'cube', center: { x: 1, z: 0 } });
   });
 
   test('text that is not a scene reads as nothing', () => {

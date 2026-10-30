@@ -4,7 +4,18 @@
 
 import type { SyntaxNode } from '@lezer/common';
 
-import { Scene as Model, type Part, applyArrangement, layoutTree, validateDocument } from '@dxos/scene';
+import {
+  type ElementEndpoint,
+  Scene as Model,
+  type Part,
+  type Style2D,
+  type Style3D,
+  applyArrangement,
+  flattenStyle,
+  layoutTree,
+  liftStyle,
+  validateDocument,
+} from '@dxos/scene';
 
 import { parser } from './gen/diagram.ts';
 import { type Problem, type Range, childrenOf, optional, unquote } from './parse.ts';
@@ -39,14 +50,35 @@ const asString = (value: AttrValue | undefined): string | undefined =>
 const asBoolean = (value: AttrValue | undefined): boolean | undefined =>
   typeof value === 'boolean' ? value : undefined;
 
-const parseBinding = (value: AttrValue | undefined): Model.Binding | undefined => {
+const parseBinding = (value: AttrValue | undefined): ElementEndpoint | undefined => {
   const text = asString(value);
   if (text === undefined) {
     return undefined;
   }
-  const [element, anchor] = text.split('#');
-  return anchor === undefined ? { element } : { element, anchor };
+  const [node, port] = text.split('#');
+  return port === undefined ? { node } : { node, port };
 };
+
+/** The style tokens the text form writes, shared by both dimensions; each dimension reads them into its own style. */
+type StyleTokens = {
+  hue?: string;
+  tone?: (typeof TONES)[number];
+  surface?: (typeof SURFACES)[number];
+  border?: boolean;
+  rounded?: boolean;
+  opacity?: number;
+};
+
+/** A 3D style's tokens: the text form writes only the shared ones. */
+const tokensOf3D = (style: Style3D | undefined): StyleTokens => {
+  const { hue, tone, surface, border, rounded, opacity } = style ?? {};
+  return Object.fromEntries(
+    Object.entries({ hue, tone, surface, border, rounded, opacity }).filter(([, value]) => value !== undefined),
+  );
+};
+
+/** A 2D style's tokens: its fill as a surface (the shared mapping in `liftStyle`). */
+const tokensOf2D = (style: Style2D | undefined): StyleTokens => tokensOf3D(style && liftStyle(style));
 
 /**
  * Reads every `scene`, `layout` and `model` block into the record form of `@dxos/scene`, arranges 3D group members that
@@ -120,8 +152,8 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     return attrs;
   };
 
-  const readStyle = (attrs: Map<string, AttrValue>, range: Range): Model.Style | undefined => {
-    const style: { -readonly [K in keyof Model.Style]: Model.Style[K] } = {};
+  const readStyle = (attrs: Map<string, AttrValue>, range: Range): StyleTokens | undefined => {
+    const style: StyleTokens = {};
     const hue = asString(attrs.get('hue'));
     hue !== undefined && (style.hue = hue);
     const tone = TONES.find((candidate) => candidate === attrs.get('tone'));
@@ -156,16 +188,16 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     const props = readProps(attrs, ELEMENT_KEYS);
     return {
       id,
-      ...(objects.has(word) ? { object: word } : { kind: word }),
+      ...(objects.has(word) ? { object: word } : { type: word }),
       ...(labelNode ? { label: unquote(slice(labelNode)) } : {}),
-      ...optionalString('order', attrs.get('order')),
+      ...optionalString('z', attrs.get('order')),
       ...optionalString('layer', attrs.get('layer')),
       ...optionalBoolean('hidden', attrs.get('hidden')),
       ...optionalBoolean('locked', attrs.get('locked')),
       ...optionalBoolean('pinned', attrs.get('pinned')),
-      ...(style ? { style } : {}),
-      ...optionalBinding('from', attrs.get('from')),
-      ...optionalBinding('to', attrs.get('to')),
+      ...(style ? { tokens: style } : {}),
+      ...optionalBinding('source', attrs.get('from')),
+      ...optionalBinding('target', attrs.get('to')),
       ...(members ? { members } : {}),
       ...(arrangeKind
         ? {
@@ -198,8 +230,10 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     if (at && isVec3(at)) {
       report(position, 'A 2D element takes an x,y position.');
     }
+    const { tokens, ...base } = readBase(statement, attrs, objects);
     return {
-      ...readBase(statement, attrs, objects),
+      ...base,
+      ...(tokens ? { overrides: flattenStyle(tokens) } : {}),
       ...(at && isVec2(at) ? { center: at } : {}),
       ...(isSize2(size) ? { size } : {}),
       ...(rotation !== undefined ? { rotation } : {}),
@@ -215,8 +249,10 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     if (at && !isVec3(at)) {
       report(position, 'A 3D element takes an x,y,z position.');
     }
+    const { tokens, ...base } = readBase(statement, attrs, objects);
     return {
-      ...readBase(statement, attrs, objects),
+      ...base,
+      ...(tokens ? { overrides: tokens satisfies Style3D } : {}),
       ...(at && isVec3(at) ? { center: at } : {}),
       ...(scale ? { scale } : {}),
       ...(isVec3(rotation) ? { rotation } : {}),
@@ -299,9 +335,9 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       ranges.set(`model:${head.id}/${id}`, object);
       return {
         id,
-        kind: slice(object.getChild('Word') ?? object),
+        type: slice(object.getChild('Word') ?? object),
         ...optionalString('parts', attrs.get('parts')),
-        ...(style ? { style } : {}),
+        ...(style ? { tokens: style } : {}),
         ...(props ? { props } : {}),
       };
     };
@@ -311,7 +347,12 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       for (const object of statements) {
         const attrs = readAttrs(object);
         const size = attrs.get('size');
-        const record = { ...readObject(object, attrs), ...(isSize2(size) ? { size } : {}) };
+        const { tokens, ...fields } = readObject(object, attrs);
+        const record = {
+          ...fields,
+          ...(tokens ? { overrides: flattenStyle(tokens) } : {}),
+          ...(isSize2(size) ? { size } : {}),
+        };
         objects[keyFor(objects, record.id, object)] = record;
       }
       models.push({ id: head.id, dim: '2d', ...head.name, objects });
@@ -320,7 +361,12 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       for (const object of statements) {
         const attrs = readAttrs(object);
         const scale = readScale(attrs.get('scale'));
-        const record = { ...readObject(object, attrs), ...(scale ? { scale } : {}) };
+        const { tokens, ...fields } = readObject(object, attrs);
+        const record = {
+          ...fields,
+          ...(tokens ? { overrides: tokens satisfies Style3D } : {}),
+          ...(scale ? { scale } : {}),
+        };
         objects[keyFor(objects, record.id, object)] = record;
       }
       models.push({ id: head.id, dim: '3d', ...head.name, objects });
@@ -461,34 +507,34 @@ const formatScale = (scale: Model.Vec3): string =>
     : `${formatNumber(scale.x)}x${formatNumber(scale.y)}x${formatNumber(scale.z)}`;
 
 /** Style tokens, then props, the order every element and object ends with. */
-const formatStyleAndProps = (item: { style?: Model.Style; props?: Record<string, unknown> }): string[] => [
-  ...STYLE_KEYS.flatMap((key) => attr(key, item.style?.[key])),
+const formatStyleAndProps = (tokens: StyleTokens, item: { props?: Record<string, unknown> }): string[] => [
+  ...STYLE_KEYS.flatMap((key) => attr(key, tokens[key])),
   ...Object.entries(item.props ?? {}).flatMap(([key, value]) => attr(key, value)),
 ];
 
 /** The attributes every element shares, in the canonical order after its geometry. */
-const formatBase = (element: Model.Element): string[] => [
-  ...attr('order', element.order),
+const formatBase = (element: Model.Element, tokens: StyleTokens): string[] => [
+  ...attr('order', element.z),
   ...attr('layer', element.layer),
   ...attr('hidden', element.hidden),
   ...attr('locked', element.locked),
   ...attr('pinned', element.pinned),
-  ...(element.from ? [`from=${formatBinding(element.from)}`] : []),
-  ...(element.to ? [`to=${formatBinding(element.to)}`] : []),
+  ...(element.source ? [`from=${formatBinding(element.source)}`] : []),
+  ...(element.target ? [`to=${formatBinding(element.target)}`] : []),
   ...(element.members ? [`members=${formatString(element.members.join(' '))}`] : []),
   ...attr('arrange', element.arrange?.kind),
   ...Object.entries(element.arrange?.params ?? {}).flatMap(([key, value]) => attr(`${ARRANGE_PARAM}${key}`, value)),
-  ...formatStyleAndProps(element),
+  ...formatStyleAndProps(tokens, element),
 ];
 
-const formatBinding = ({ element, anchor }: Model.Binding): string =>
-  formatWord(anchor === undefined ? element : `${element}#${anchor}`);
+const formatBinding = ({ node, port }: ElementEndpoint): string =>
+  formatWord(port === undefined ? (node ?? '') : `${node ?? ''}#${port}`);
 
 /** `element <id> <object or kind> ["label"]`; an element placing an object names it where a kind would go. */
 const formatHead = (element: Model.Element): string[] => [
   'element',
   formatId(element.id),
-  formatWord(element.object ?? element.kind ?? ''),
+  formatWord(element.object ?? element.type ?? ''),
   ...(element.label === undefined ? [] : [formatString(element.label)]),
 ];
 
@@ -498,7 +544,7 @@ const formatElement2D = (element: Model.Element2D): string =>
     ...(element.center ? ['@', formatVec2(element.center)] : []),
     ...attr('size', element.size),
     ...attr('rotation', element.rotation),
-    ...formatBase(element),
+    ...formatBase(element, tokensOf2D(element.overrides)),
   ].join(' ');
 
 const formatElement3D = (element: Model.Element3D): string =>
@@ -507,18 +553,18 @@ const formatElement3D = (element: Model.Element3D): string =>
     ...(element.center ? ['@', formatVec3(element.center)] : []),
     ...(element.scale ? [`scale=${formatScale(element.scale)}`] : []),
     ...attr('rotation', element.rotation),
-    ...formatBase(element),
+    ...formatBase(element, tokensOf3D(element.overrides)),
   ].join(' ');
 
-const formatObject = (object: Model.Object2D | Model.Object3D): string =>
+const formatObject = (object: Model.Object2D | Model.Object3D, tokens: StyleTokens): string =>
   [
     'object',
     formatId(object.id),
-    formatWord(object.kind),
+    formatWord(object.type),
     ...('size' in object ? attr('size', object.size) : []),
     ...('scale' in object && object.scale ? [`scale=${formatScale(object.scale)}`] : []),
     ...attr('parts', object.parts),
-    ...formatStyleAndProps(object),
+    ...formatStyleAndProps(tokens, object),
   ].join(' ');
 
 const formatCamera = (scene: Model.SceneRecord): string =>
@@ -570,7 +616,9 @@ const formatLayoutRecord = (layout: Model.LayoutRecord): string =>
 const formatModelRecord = (model: Model.ModelRecord): string =>
   formatBlock(
     ['model', formatId(model.id), `dim=${model.dim}`, ...name(model.name)],
-    Object.values(model.objects).map(formatObject),
+    model.dim === '2d'
+      ? Object.values(model.objects).map((object) => formatObject(object, tokensOf2D(object.overrides)))
+      : Object.values(model.objects).map((object) => formatObject(object, tokensOf3D(object.overrides))),
   );
 
 /**

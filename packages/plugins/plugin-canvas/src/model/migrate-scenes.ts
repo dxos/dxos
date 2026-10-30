@@ -100,7 +100,7 @@ export const legacyDocument = (content: Drawing.Canvas['content']): Scene.SceneD
   for (const layout of layouts.slice(1)) {
     if (!placedParts.has(layout.id)) {
       const id = `${COMPOSITE_PREFIX}${layout.id}`;
-      objects[id] = { id, kind: 'rect', parts: layout.id };
+      objects[id] = { id, type: 'rect', parts: layout.id };
     }
   }
   const hasModel = Object.keys(objects).length > 0;

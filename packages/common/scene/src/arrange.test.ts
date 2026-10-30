@@ -20,7 +20,7 @@ const cluster = (members: Scene.Element3D[]): Scene.LayoutRecord3D => ({
       ...members,
       {
         id: 'g',
-        kind: 'group',
+        type: 'group',
         members: members.map((member) => member.id),
         arrange: { kind: 'ring', params: { radius: 3 } },
       },
@@ -47,8 +47,8 @@ describe('arrange', () => {
     const pinned: Vec3 = { x: 9, y: 9, z: 9 };
     const layout = applyArrangement(
       cluster([
-        { id: 'a', kind: 'sphere' },
-        { id: 'b', kind: 'sphere', center: pinned, pinned: true },
+        { id: 'a', type: 'sphere' },
+        { id: 'b', type: 'sphere', center: pinned, pinned: true },
       ]),
     );
     expect(layout.elements.b.center).toEqual(pinned);

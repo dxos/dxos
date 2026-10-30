@@ -63,7 +63,7 @@ export const readCanvasContent = (canvas: Canvas.Canvas): ContentMap => {
   for (const layout of doc.layouts) {
     for (const [id, element] of Object.entries(layout.elements)) {
       const dsl: unknown = element.props?.dsl;
-      const key = element.kind === 'link' ? linkKey(id) : nodeKey(id);
+      const key = element.type === 'link' ? linkKey(id) : nodeKey(id);
       const record = content[key];
       if (isDslIdentity(dsl) && (isNodeRecord(record) || isLinkRecord(record))) {
         content[key] = { ...record, dsl };

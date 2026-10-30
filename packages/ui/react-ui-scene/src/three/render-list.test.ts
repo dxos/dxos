@@ -34,8 +34,8 @@ describe('renderList', () => {
       scenes: [scene],
       layouts: [
         layout('a', [
-          { id: 'a', kind: 'sphere', center: { x: 0, y: 0, z: 0 } },
-          { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } },
+          { id: 'a', type: 'sphere', center: { x: 0, y: 0, z: 0 } },
+          { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
         ]),
       ],
       models: [],
@@ -59,21 +59,21 @@ describe('renderList', () => {
           id: 'm',
           dim: '3d',
           objects: {
-            'of-a': { id: 'of-a', kind: 'sphere', parts: 'a' },
-            'of-b': { id: 'of-b', kind: 'sphere', parts: 'b' },
+            'of-a': { id: 'of-a', type: 'sphere', parts: 'a' },
+            'of-b': { id: 'of-b', type: 'sphere', parts: 'b' },
           },
         },
       ],
     });
     expect(list.items.map((item) => item.key)).toEqual(['to-b', 'to-b/to-a']);
-    expect(list.items[0]).toMatchObject({ kind: 'sphere', frame: true });
+    expect(list.items[0]).toMatchObject({ type: 'sphere', frame: true });
   });
 
   test("overrides replace the scene's own elements' values", () => {
     const list = renderList(
       {
         scenes: [scene],
-        layouts: [layout('a', [{ id: 'a', kind: 'sphere', center: { x: 0, y: 0, z: 0 } }])],
+        layouts: [layout('a', [{ id: 'a', type: 'sphere', center: { x: 0, y: 0, z: 0 } }])],
         models: [],
       },
       scene,

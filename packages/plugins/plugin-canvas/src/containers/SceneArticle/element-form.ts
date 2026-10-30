@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation } from '@dxos/echo';
 import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS } from '@dxos/react-ui-canvas';
 import { type FormFieldMap, type FormFieldOverride, NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
-import { type LayoutIntent, Scene, styleFields } from '@dxos/scene';
+import { type LayoutIntent, Scene, Style3D, styleFields } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 
 /** An axis as the form edits it: clearable while typing, and stepped by `step` with the stepper. */
@@ -31,7 +31,7 @@ type FormVec3 = Schema.Schema.Type<typeof FormVec3>;
 export const ElementForm = Schema.Struct({
   label: Scene.Element3D.fields.label,
   layer: Scene.Element3D.fields.layer,
-  style: Schema.optional(Schema.Struct({ ...Scene.Style.fields, opacity: styleFields.opacity })),
+  style: Schema.optional(Schema.Struct({ ...Style3D.fields, opacity: styleFields.opacity })),
   center: Schema.optional(formVec3(1)),
   rotation: Schema.optional(formVec3(15)),
   scale: Schema.optional(formVec3(0.1)),
@@ -63,7 +63,7 @@ const complete = (value: FormVec3 | undefined, fallback: Vec3): Vec3 => ({
 export const elementFormValues = (element: Scene.Element3D): ElementForm => ({
   label: element.label,
   layer: element.layer,
-  style: element.style,
+  style: element.overrides,
   center: element.center ?? IDENTITY.center,
   rotation: element.rotation ?? IDENTITY.rotation,
   scale: element.scale ?? IDENTITY.scale,
@@ -71,11 +71,15 @@ export const elementFormValues = (element: Scene.Element3D): ElementForm => ({
 
 /** The updates a save makes: only fields that changed, and a vector always whole, so the stored element stays valid. */
 export const elementFormIntents = (element: Scene.Element3D, values: ElementForm): LayoutIntent[] => [
-  ...(['label', 'layer', 'style'] as const).flatMap((field): LayoutIntent[] =>
+  ...(['label', 'layer'] as const).flatMap((field): LayoutIntent[] =>
     JSON.stringify(values[field]) === JSON.stringify(element[field])
       ? []
       : [{ kind: 'update', id: element.id, path: [field], value: values[field] }],
   ),
+  // The form's style is the element's own overrides; its named style is the Library's.
+  ...(JSON.stringify(values.style) === JSON.stringify(element.overrides)
+    ? []
+    : [{ kind: 'update' as const, id: element.id, path: ['overrides'], value: values.style }]),
   ...(['center', 'rotation', 'scale'] as const).flatMap((field): LayoutIntent[] => {
     const before = element[field] ?? IDENTITY[field];
     const after = complete(values[field], before);

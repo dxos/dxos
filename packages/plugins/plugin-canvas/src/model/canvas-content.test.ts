@@ -99,7 +99,7 @@ describe('CanvasLayoutBuilder', () => {
     const source = db.add(Drawing.makeCanvas({ schema: Canvas.TLDRAW_SCHEMA, content: frameWithChildren() }));
     const { canvas, upserted } = await run(tldrawConverter.convert(source, { from: tldraw, to: canvasVariant }));
     expect(Canvas.isCanvas(canvas)).toBe(true);
-    const nodes = Object.values(layoutOf(canvas).elements).filter((element) => element.kind !== 'link');
+    const nodes = Object.values(layoutOf(canvas).elements).filter((element) => element.type !== 'link');
     expect(nodes.map((element) => element.id).sort()).toEqual([...upserted].sort());
   });
 

@@ -19,7 +19,7 @@ import {
   elementFormValues,
 } from './element-form.ts';
 
-const cube: Scene.Element3D = { id: 'box', kind: 'cube', label: 'Cube' };
+const cube: Scene.Element3D = { id: 'box', type: 'cube', label: 'Cube' };
 
 /** Whether the struct `ast` marks `name` optional. */
 const optional = (ast: SchemaAST.AST, name: string) =>
@@ -86,11 +86,11 @@ describe('element form', () => {
   });
 
   test("a pick in the colour grid writes the element's hue and tone, keeping its surface", () => {
-    const element: Scene.Element3D = { ...cube, style: { hue: 'blue', surface: 'glass' } };
+    const element: Scene.Element3D = { ...cube, overrides: { hue: 'blue', surface: 'glass' } };
     const values = elementFormValues(element);
     const style = applyStyleChoice(values.style ?? {}, { hue: 'red', tone: 1 }, true);
     expect(elementFormIntents(element, { ...values, style })).toEqual([
-      { kind: 'update', id: 'box', path: ['style'], value: { hue: 'red', tone: 1, surface: 'glass' } },
+      { kind: 'update', id: 'box', path: ['overrides'], value: { hue: 'red', tone: 1, surface: 'glass' } },
     ]);
   });
 

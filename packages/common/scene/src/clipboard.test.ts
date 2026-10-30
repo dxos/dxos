@@ -8,12 +8,12 @@ import { copyElements, pasteIntent } from './clipboard.ts';
 import { applyIntent } from './intent.ts';
 import { layout2D, layout3D } from './testing.ts';
 
-const cube = (id: string, x = 0) => ({ id, kind: 'cube', center: { x, y: 0, z: 0 } });
+const cube = (id: string, x = 0) => ({ id, type: 'cube', center: { x, y: 0, z: 0 } });
 const link = (id: string, from: string, to: string) => ({
   id,
-  kind: 'link',
-  from: { element: from },
-  to: { element: to },
+  type: 'link',
+  source: { node: from },
+  target: { node: to },
 });
 
 const scene = () => layout3D('l', [cube('a'), cube('b', 2), cube('c', 4), link('ab', 'a', 'b'), link('bc', 'b', 'c')]);
@@ -30,7 +30,7 @@ describe('clipboard', () => {
   });
 
   test('a copied group brings its members, and keeps only members that came along', () => {
-    const layout = layout3D('l', [cube('a'), cube('b', 2), { id: 'g', kind: 'group', members: ['a', 'b'] }]);
+    const layout = layout3D('l', [cube('a'), cube('b', 2), { id: 'g', type: 'group', members: ['a', 'b'] }]);
     const fragment = copyElements(layout, ['g']);
     expect(Object.keys(fragment.elements).sort()).toEqual(['a', 'b', 'g']);
   });
@@ -43,13 +43,13 @@ describe('clipboard', () => {
     const [a, b, ab] = ['a', 'b', 'ab'].map((id) => after.elements[paste!.ids[['a', 'b', 'ab'].indexOf(id)]]);
     expect(a.center).toEqual({ x: 1, y: 0, z: 1 });
     expect(b.center).toEqual({ x: 3, y: 0, z: 1 });
-    expect(ab.from?.element).toBe(a.id);
-    expect(ab.to?.element).toBe(b.id);
+    expect(ab.source && 'node' in ab.source && ab.source.node).toBe(a.id);
+    expect(ab.target && 'node' in ab.target && ab.target.node).toBe(b.id);
     expect(Object.keys(after.elements)).toHaveLength(8);
   });
 
   test('a paste refuses a fragment placing an object that would contain itself', () => {
-    const fragment = layout3D('clipboard', [{ id: 'x', kind: 'sphere', object: 'team' }]);
+    const fragment = layout3D('clipboard', [{ id: 'x', type: 'sphere', object: 'team' }]);
     expect(
       pasteIntent(scene(), fragment, {
         offset: { x: 1, y: 0, z: 1 },
@@ -60,7 +60,7 @@ describe('clipboard', () => {
   });
 
   test('a paste refuses a fragment of the other dimension', () => {
-    const fragment = layout2D('clipboard', [{ id: 'r', kind: 'rect', center: { x: 0, y: 0 } }]);
+    const fragment = layout2D('clipboard', [{ id: 'r', type: 'rect', center: { x: 0, y: 0 } }]);
     expect(pasteIntent(scene(), fragment, { offset: { x: 1, y: 0, z: 1 }, newId: counter() })).toBeUndefined();
   });
 });

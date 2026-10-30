@@ -638,7 +638,7 @@ export class SceneRenderer3D {
       vertices.applyToMesh(mesh);
       return mesh;
     }
-    switch (item.kind) {
+    switch (item.type) {
       case 'sphere':
         return CreateSphere(name, { diameter: 1, segments: 48 }, this.#scene);
       case 'cylinder':
@@ -699,7 +699,7 @@ export class SceneRenderer3D {
       const spec = materialSpec(item.style, this.#theme);
       // An imported mesh carries its own triangles; Manifold supplies solids' and rounded cubes'.
       const data = geometry?.(item) ?? meshData(item);
-      const signature = itemSignature(item.kind, spec, data);
+      const signature = itemSignature(item.type, spec, data);
       let meshes = this.#items.get(item.key);
       if (meshes?.signature !== signature) {
         meshes?.surface.dispose(false, true);

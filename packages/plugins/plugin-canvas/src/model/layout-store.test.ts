@@ -157,11 +157,11 @@ describe('bindLayoutStore writes', () => {
     expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b).toMatchObject({
       object: 'box',
       center: { x: 320, y: 64 },
-      style: { hue: 'green' },
+      overrides: { hue: 'green' },
     });
     // The size and the rest of the style are still the object's.
     expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b.size).toBeUndefined();
-    expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b.style).toEqual({ hue: 'green' });
+    expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b.overrides).toEqual({ hue: 'green' });
     bound.dispose();
   });
 });
@@ -291,7 +291,7 @@ describe('bindLayoutStore versions', () => {
       Obj.make(Scene.Layout2D, {
         key: 'shared',
         model: Ref.make(model),
-        elements: { a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size } },
+        elements: { a: { id: 'a', type: 'rect', center: { x: 0, y: 0 }, size } },
       }),
     );
     const root = db.add(

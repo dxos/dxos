@@ -18,7 +18,7 @@ describe('scene stage', () => {
       expect.arrayContaining([
         { path: 'center', kind: 'point' },
         { path: 'size', kind: 'size' },
-        { path: 'style.opacity', kind: 'number' },
+        { path: 'overrides.opacity', kind: 'number' },
       ]),
     );
     expect(target?.values.center).toEqual({ x: 0, y: 0 });
@@ -55,12 +55,12 @@ describe('scene stage', () => {
     const original = read('links');
     const doc = applySample(original, {
       t: 0,
-      values: { a: { 'style.opacity': 0.5, 'center': { x: 10, y: 20 } } },
+      values: { a: { 'overrides.opacity': 0.5, 'center': { x: 10, y: 20 } } },
     });
     const [layout] = doc.layouts;
     expect(layout.dim === '2d' && layout.elements.a).toMatchObject({
       center: { x: 10, y: 20 },
-      style: { opacity: 0.5, hue: 'blue' },
+      overrides: { opacity: 0.5, hue: 'blue' },
     });
     expect(original.layouts[0].elements.a.center).toEqual({ x: 0, y: 0 });
   });

@@ -58,14 +58,14 @@ export const createdElement = (
     const diameter = Math.max(base.width, base.depth);
     return {
       id,
-      kind,
+      type: kind,
       center: { ...base.center, y: diameter / 2 },
       scale: { x: diameter, y: diameter, z: diameter },
     };
   }
   return {
     id,
-    kind,
+    type: kind,
     center: { ...base.center, y: height / 2 },
     scale: { x: base.width, y: height, z: base.depth },
   };

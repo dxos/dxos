@@ -12,6 +12,7 @@ import {
 } from '@dxos/react-ui-canvas/headless';
 import {
   type BuiltinNodeType,
+  type ElementEndpoint,
   type Endpoint,
   type Link,
   type LinkType,
@@ -19,6 +20,7 @@ import {
   type NodeStyle,
   type Resolved2D,
   type Scene,
+  type Style2D,
   STYLE_HUES,
   type StyleHue,
   type ViewId,
@@ -37,29 +39,23 @@ const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {
 
 const MARKERS = ['arrow', 'circle', 'triangle'] as const;
 
-/** Scene style tokens as react-ui-canvas's: a surface of `none` is unfilled, any other surface is filled. */
-const nodeStyle = (style: Scene.Style | undefined): NodeStyle | undefined => {
+/** A 2D style as react-ui-canvas's node style: the diagram-only values (sketchy, pattern, weight) have no node field. */
+const nodeStyle = (style: Style2D | undefined): NodeStyle | undefined => {
   if (!style) {
     return undefined;
   }
-  const { hue, tone, opacity, rounded, border, surface } = style;
-  return {
-    ...(hue !== undefined ? { hue } : {}),
-    ...(tone !== undefined ? { tone } : {}),
-    ...(opacity !== undefined ? { opacity } : {}),
-    ...(rounded !== undefined ? { rounded } : {}),
-    ...(border !== undefined ? { border } : {}),
-    ...(surface !== undefined ? { fill: surface !== 'none' } : {}),
-  };
+  const { pattern: _pattern, weight: _weight, lineStyle, ...rest } = style;
+  const result: NodeStyle = { ...rest, ...(lineStyle !== undefined && lineStyle !== 'sketchy' ? { lineStyle } : {}) };
+  return Object.keys(result).length > 0 ? result : undefined;
 };
 
 /** A composite element (its object has parts) is a `view` node over its parts layout's View. */
 const toNode = (element: Resolved2D, z: string): Node | undefined => {
-  const type = element.parts !== undefined ? 'view' : NODE_TYPES[element.kind];
+  const type = element.parts !== undefined ? 'view' : NODE_TYPES[element.type];
   if (!type || !element.center) {
     return undefined;
   }
-  const style = nodeStyle(element.style);
+  const style = nodeStyle(element.overrides);
   return {
     ...createNode({ type, id: element.id, z, center: element.center, size: element.size, scene: element.parts }),
     layer: DEFAULT_LAYER.id,
@@ -69,13 +65,24 @@ const toNode = (element: Resolved2D, z: string): Node | undefined => {
   };
 };
 
-const endpoint = ({ element, anchor }: Scene.Binding) =>
-  anchor === undefined ? { node: element } : { node: element, port: anchor };
+/** A scene endpoint as react-ui-canvas's: a node and port, or a free point. */
+const endpoint = ({ node, port, point }: ElementEndpoint): Endpoint | undefined =>
+  node !== undefined ? (port === undefined ? { node } : { node, port }) : point ? { point } : undefined;
+
+/** A canvas endpoint as a scene one. */
+const elementEndpoint = (end: Endpoint): ElementEndpoint =>
+  'node' in end
+    ? end.port === undefined
+      ? { node: end.node }
+      : { node: end.node, port: end.port }
+    : { point: end.point };
 
 /** A link both of whose ends are in the scene; a link to a missing element is not drawn (Review Focus 1). */
 const toLink = (element: Resolved2D, z: string, nodes: Readonly<Record<string, Node>>): Link | undefined => {
-  const { from, to } = element;
-  if (element.kind !== 'link' || !from || !to || !nodes[from.element] || !nodes[to.element]) {
+  const source = element.source && endpoint(element.source);
+  const target = element.target && endpoint(element.target);
+  const present = (end: Endpoint) => !('node' in end) || nodes[end.node] !== undefined;
+  if (element.type !== 'link' || !source || !target || !present(source) || !present(target)) {
     return undefined;
   }
   const end = MARKERS.find((marker) => marker === element.props?.end);
@@ -84,11 +91,11 @@ const toLink = (element: Resolved2D, z: string, nodes: Readonly<Record<string, N
     id: element.id,
     z,
     layer: DEFAULT_LAYER.id,
-    source: endpoint(from),
-    target: endpoint(to),
+    source,
+    target,
     ...(end ? { ends: { end } } : {}),
     ...(element.label !== undefined ? { text: element.label } : {}),
-    ...(element.style?.hue !== undefined ? { style: { hue: element.style.hue } } : {}),
+    ...(element.overrides?.hue !== undefined ? { style: { hue: element.overrides.hue } } : {}),
   };
 };
 
@@ -98,9 +105,6 @@ const toLink = (element: Resolved2D, z: string, nodes: Readonly<Record<string, N
 //
 
 type Fields = Record<string, unknown>;
-
-/** The node and link style fields a scene `Style` carries; the rest stay in `props.canvas.style`. */
-const SCENE_STYLE_KEYS = ['hue', 'tone', 'opacity', 'rounded', 'border', 'fill'] as const;
 
 const isRecord = (value: unknown): value is Fields => typeof value === 'object' && value !== null;
 
@@ -112,16 +116,6 @@ const omit = (fields: Fields, keys: readonly string[]): Fields =>
 
 const nonEmpty = (fields: Fields): Fields | undefined => (Object.keys(fields).length > 0 ? fields : undefined);
 
-/** A canvas style's scene fields as scene tokens: `fill: false` is the `none` surface, `fill: true` a solid one. */
-const sceneStyle = (style: Fields): Scene.Style | undefined => {
-  const { fill, ...rest } = pick(style, SCENE_STYLE_KEYS);
-  const tokens: Scene.Style = {
-    ...rest,
-    ...(fill === undefined ? {} : { surface: fill === false ? 'none' : 'solid' }),
-  };
-  return Object.keys(tokens).length > 0 ? tokens : undefined;
-};
-
 const VIEW_PREFIX = 'view:';
 const INSTANCE_PREFIX = 'instance:';
 
@@ -129,75 +123,54 @@ const INSTANCE_PREFIX = 'instance:';
 const NODE_SLOTS = ['type', 'id', 'z', 'center', 'size', 'rotation', 'label', 'layer', 'locked', 'style'];
 const LINK_SLOTS = ['id', 'z', 'source', 'target', 'text', 'layer', 'locked', 'style'];
 
-const toBinding = (end: Endpoint): Scene.Binding | undefined =>
-  'node' in end
-    ? end.port === undefined
-      ? { element: end.node }
-      : { element: end.node, anchor: end.port }
-    : undefined;
-
-const canvasExtra = (fields: Fields, slots: readonly string[], style: unknown): Fields => {
-  const rest = isRecord(style) ? nonEmpty(omit(style, SCENE_STYLE_KEYS)) : undefined;
-  return { ...omit(fields, slots), ...(rest ? { style: rest } : {}) };
-};
+const canvasExtra = (fields: Fields, slots: readonly string[]): Fields => omit(fields, slots);
 
 const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.Element2D => {
   const fields: Fields = { ...node };
-  const style = isRecord(node.style) ? sceneStyle(node.style) : undefined;
-  const extra = canvasExtra(fields, NODE_SLOTS, node.style);
-  let placed: { object: string } | { kind: string };
+  const extra = canvasExtra(fields, NODE_SLOTS);
+  let placed: { object: string } | { type: string };
   // The node type and its scene or composite are kept too: a portal to a View outside the drawing places an object
   // whose parts resolve to no layout, and must still read back as that portal.
   if (node.type === 'view' && typeof fields.scene === 'string') {
-    const object = { id: `${VIEW_PREFIX}${fields.scene}`, kind: 'rect', parts: fields.scene };
+    const object = { id: `${VIEW_PREFIX}${fields.scene}`, type: 'rect', parts: fields.scene };
     objects.set(object.id, object);
     placed = { object: object.id };
     extra.type = 'view';
   } else if (node.type === 'instance' && typeof fields.composite === 'string') {
-    const object = { id: `${INSTANCE_PREFIX}${fields.composite}`, kind: 'rect', parts: fields.composite };
+    const object = { id: `${INSTANCE_PREFIX}${fields.composite}`, type: 'rect', parts: fields.composite };
     objects.set(object.id, object);
     placed = { object: object.id };
     extra.type = 'instance';
   } else {
-    placed = { kind: node.type };
+    placed = { type: node.type };
   }
   return {
     id: node.id,
     ...placed,
-    order: node.z,
+    z: node.z,
     center: node.center,
     size: node.size,
     ...(node.rotation !== undefined ? { rotation: node.rotation } : {}),
     ...(typeof fields.label === 'string' ? { label: fields.label } : {}),
     ...(node.layer !== undefined ? { layer: node.layer } : {}),
     ...(node.locked !== undefined ? { locked: node.locked } : {}),
-    ...(style ? { style } : {}),
+    ...(node.style ? { overrides: node.style } : {}),
     props: { canvas: extra },
   };
 };
 
 const linkElement = (link: Link): Scene.Element2D => {
-  const from = toBinding(link.source);
-  const to = toBinding(link.target);
-  const extra = canvasExtra({ ...link }, LINK_SLOTS, link.style);
-  // A point end has no element to bind, so the endpoint itself is kept.
-  if (!from) {
-    extra.source = link.source;
-  }
-  if (!to) {
-    extra.target = link.target;
-  }
-  const hue = link.style?.hue;
+  const extra = canvasExtra({ ...link }, LINK_SLOTS);
   return {
     id: link.id,
-    kind: 'link',
-    order: link.z,
-    ...(from ? { from } : {}),
-    ...(to ? { to } : {}),
+    type: 'link',
+    z: link.z,
+    source: elementEndpoint(link.source),
+    target: elementEndpoint(link.target),
     ...(link.text !== undefined ? { label: link.text } : {}),
     ...(link.layer !== undefined ? { layer: link.layer } : {}),
     ...(link.locked !== undefined ? { locked: link.locked } : {}),
-    ...(hue !== undefined ? { style: { hue } } : {}),
+    ...(link.style ? { overrides: link.style } : {}),
     props: { canvas: extra },
   };
 };
@@ -229,15 +202,15 @@ export const fromCanvasView = (view: View): { layout: Scene.LayoutRecord2D; obje
   };
 };
 
-/** Scene style tokens back onto the canvas style fields they came from. */
-const canvasStyle = (style: Scene.Style | undefined, extra: unknown): Fields | undefined => {
+/** The element's style back onto the canvas node style (with any style an older layout kept under `props.canvas`). */
+const canvasStyle = (style: Style2D | undefined, extra: unknown): Fields | undefined => {
   const merged: Fields = { ...(isRecord(extra) ? extra : {}), ...nodeStyle(style) };
   return nonEmpty(merged);
 };
 
 /** An element written by {@link fromCanvasView} as the node it was. */
 const canvasNode = (element: Resolved2D, canvas: Fields): Node | undefined => {
-  if (!element.center || !element.size || element.order === undefined) {
+  if (!element.center || !element.size || element.z === undefined) {
     return undefined;
   }
   const { style: extraStyle, type: storedType, ...extra } = canvas;
@@ -245,14 +218,14 @@ const canvasNode = (element: Resolved2D, canvas: Fields): Node | undefined => {
     storedType === 'view' || storedType === 'instance'
       ? storedType
       : element.parts === undefined
-        ? element.kind
+        ? element.type
         : 'view';
-  const style = canvasStyle(element.style, extraStyle);
+  const style = canvasStyle(element.overrides, extraStyle);
   return {
     ...extra,
     type,
     id: element.id,
-    z: element.order,
+    z: element.z,
     center: element.center,
     size: element.size,
     ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
@@ -268,17 +241,14 @@ const canvasNode = (element: Resolved2D, canvas: Fields): Node | undefined => {
   };
 };
 
-const toEndpoint = (binding: Scene.Binding | undefined, stored: unknown): Endpoint | undefined =>
-  binding
-    ? binding.anchor === undefined
-      ? { node: binding.element }
-      : { node: binding.element, port: binding.anchor }
-    : isRecord(stored) &&
-        isRecord(stored.point) &&
-        typeof stored.point.x === 'number' &&
-        typeof stored.point.y === 'number'
-      ? { point: { x: stored.point.x, y: stored.point.y } }
-      : undefined;
+const toEndpoint = (end: ElementEndpoint | undefined, stored: unknown): Endpoint | undefined =>
+  (end && endpoint(end)) ??
+  (isRecord(stored) &&
+  isRecord(stored.point) &&
+  typeof stored.point.x === 'number' &&
+  typeof stored.point.y === 'number'
+    ? { point: { x: stored.point.x, y: stored.point.y } }
+    : undefined);
 
 const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = {
   line: 'line',
@@ -292,17 +262,24 @@ const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some
 /** A link element written by {@link fromCanvasView} as the link it was. */
 const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
   const { style: extraStyle, type: storedType, source, target, points, ...extra } = canvas;
-  const sourceEnd = toEndpoint(element.from, source);
-  const targetEnd = toEndpoint(element.to, target);
-  if (!sourceEnd || !targetEnd || element.order === undefined) {
+  const sourceEnd = toEndpoint(element.source, source);
+  const targetEnd = toEndpoint(element.target, target);
+  if (!sourceEnd || !targetEnd || element.z === undefined) {
     return undefined;
   }
-  const hue = element.style?.hue;
-  const style = { ...(isRecord(extraStyle) ? extraStyle : {}), ...(isStyleHue(hue) ? { hue } : {}) };
+  const hue = element.overrides?.hue;
+  const lineStyle = element.overrides?.lineStyle;
+  const fontSize = element.overrides?.fontSize;
+  const style = {
+    ...(isRecord(extraStyle) ? extraStyle : {}),
+    ...(isStyleHue(hue) ? { hue } : {}),
+    ...(lineStyle !== undefined && lineStyle !== 'sketchy' ? { lineStyle } : {}),
+    ...(fontSize !== undefined ? { fontSize } : {}),
+  };
   const base = {
     ...extra,
     id: element.id,
-    z: element.order,
+    z: element.z,
     source: sourceEnd,
     target: targetEnd,
     ...(element.label !== undefined ? { text: element.label } : {}),
@@ -330,12 +307,12 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D, canv
   // Elements a `.dx` document wrote have no canvas fields: they draw as `toView` draws them, among the rest.
   const native = elements.filter((element) => !isRecord(element.props?.canvas));
   const keys = initialKeys(native.length);
-  const keyOf = (element: Resolved2D) => element.order ?? keys[native.indexOf(element)];
+  const keyOf = (element: Resolved2D) => element.z ?? keys[native.indexOf(element)];
   const nodes: Record<string, Node> = {};
   const links: Record<string, Link> = {};
   for (const element of elements) {
     const stored = element.props?.canvas;
-    if (!isRecord(stored) || element.kind === 'link') {
+    if (!isRecord(stored) || element.type === 'link') {
       continue;
     }
     const node = canvasNode(element, stored);
@@ -347,7 +324,7 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D, canv
   }
   for (const element of elements) {
     const stored = element.props?.canvas;
-    if (element.kind !== 'link') {
+    if (element.type !== 'link') {
       continue;
     }
     const link = isRecord(stored) ? canvasLink(element, stored) : toLink(element, keyOf(element), nodes);
@@ -368,12 +345,12 @@ const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View =>
   const keys = initialKeys(elements.length);
   const nodes: Record<string, Node> = {};
   elements.forEach((element, index) => {
-    const node = toNode(element, element.order ?? keys[index]);
+    const node = toNode(element, element.z ?? keys[index]);
     node && (nodes[node.id] = node);
   });
   const links: Record<string, Link> = {};
   elements.forEach((element, index) => {
-    const link = toLink(element, element.order ?? keys[index], nodes);
+    const link = toLink(element, element.z ?? keys[index], nodes);
     link && (links[link.id] = link);
   });
   return { id: layout.id, name: layout.name, nodes, links, layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } };

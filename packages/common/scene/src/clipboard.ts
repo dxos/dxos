@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { endpointNode, rebindEndpoint } from './element.ts';
 import { type LayoutIntent } from './intent.ts';
 import { type Element2D, type Element3D, type LayoutRecord } from './Scene.ts';
 
@@ -27,13 +28,21 @@ export const copyElements = (layout: LayoutRecord, ids: Iterable<string>): Fragm
   }
   // A link comes along when both its ends do, whether or not it was selected itself.
   for (const [id, element] of Object.entries(elements)) {
-    if (element.from && element.to && chosen.has(element.from.element) && chosen.has(element.to.element)) {
+    if (
+      element.source &&
+      element.target &&
+      chosen.has(endpointNode(element.source) ?? '') &&
+      chosen.has(endpointNode(element.target) ?? '')
+    ) {
       chosen.add(id);
     }
   }
   const kept = [...chosen].filter((id) => {
-    const { from, to } = elements[id];
-    return (from === undefined || chosen.has(from.element)) && (to === undefined || chosen.has(to.element));
+    const { source, target } = elements[id];
+    return (
+      (source === undefined || chosen.has(endpointNode(source) ?? '')) &&
+      (target === undefined || chosen.has(endpointNode(target) ?? ''))
+    );
   });
   const keptIds = new Set(kept);
   const copied = Object.fromEntries(
@@ -75,14 +84,12 @@ export const pasteIntent = (
   if (source.length === 0 || source.some((element) => element.object !== undefined && refuses?.(element.object))) {
     return undefined;
   }
-  const idMap = new Map(source.map((element) => [element.id, newId(element.kind ?? element.object ?? 'element')]));
+  const idMap = new Map(source.map((element) => [element.id, newId(element.type ?? element.object ?? 'element')]));
   const rebound = <E extends Element2D | Element3D>(element: E): E => ({
     ...element,
     id: idMap.get(element.id) ?? element.id,
-    ...(element.from
-      ? { from: { ...element.from, element: idMap.get(element.from.element) ?? element.from.element } }
-      : {}),
-    ...(element.to ? { to: { ...element.to, element: idMap.get(element.to.element) ?? element.to.element } } : {}),
+    ...(element.source ? { source: rebindEndpoint(element.source, (node) => idMap.get(node) ?? node) } : {}),
+    ...(element.target ? { target: rebindEndpoint(element.target, (node) => idMap.get(node) ?? node) } : {}),
     ...(element.members ? { members: element.members.map((member) => idMap.get(member) ?? member) } : {}),
   });
   const intents: LayoutIntent[] =

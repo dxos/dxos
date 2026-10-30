@@ -56,13 +56,13 @@ export const makeLineup = (placements: readonly Placement[]) => {
     for (const preset of new Set(placements.map(({ preset }) => preset))) {
       const object = make(preset);
       // Stored as a fresh record, since the made one is read-only.
-      object && (model.objects[preset] = { id: object.id, kind: object.kind, props: { ...object.props } });
+      object && (model.objects[preset] = { id: object.id, type: object.type, props: { ...object.props } });
     }
   });
   Obj.update(layout, (layout) => {
     placements.forEach(({ preset, label, hue, x }, index) => {
       const id = `${preset}-${index + 1}`;
-      layout.elements[id] = { id, object: preset, label, center: { x, y: 0, z: 0 }, style: { hue } };
+      layout.elements[id] = { id, object: preset, label, center: { x, y: 0, z: 0 }, overrides: { hue } };
     });
   });
   return created;

@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { type ElementEndpoint, endpointNode, rebindEndpoint } from './element.ts';
 import {
   type Element2D,
   type Element3D,
@@ -33,7 +34,7 @@ export type ModelIntent =
       readonly model: string;
       readonly layout: string;
       readonly ids: readonly string[];
-      readonly object: { readonly id: string; readonly kind: string };
+      readonly object: { readonly id: string; readonly type: string };
     };
 
 export type ModelIntentResult = { doc: SceneDocument; problems: Problem[] };
@@ -107,10 +108,10 @@ const split = <E extends Element2D | Element3D>(
     element.members?.forEach(take);
   };
   ids.forEach(take);
-  const isBound = (element: E) => element.from !== undefined || element.to !== undefined;
+  const isBound = (element: E) => element.source !== undefined || element.target !== undefined;
   const endsInside = (element: E) =>
-    (element.from === undefined || taken.has(element.from.element)) &&
-    (element.to === undefined || taken.has(element.to.element));
+    (element.source === undefined || taken.has(endpointNode(element.source) ?? '')) &&
+    (element.target === undefined || taken.has(endpointNode(element.target) ?? ''));
   const within = (element: E) => isBound(element) && endsInside(element);
   const moved = (key: string, element: E) =>
     (taken.has(key) && (!isBound(element) || endsInside(element))) || within(element);
@@ -121,15 +122,16 @@ const split = <E extends Element2D | Element3D>(
       inside[key] = element;
       continue;
     }
-    const rebind = (end: E['from']) => (end && taken.has(end.element) ? { ...end, element: id } : end);
+    const rebind = (end: ElementEndpoint | undefined) =>
+      end && rebindEndpoint(end, (node) => (taken.has(node) ? id : node));
     const members = element.members && [...new Set(element.members.map((member) => (taken.has(member) ? id : member)))];
     outside[key] = {
       ...element,
-      ...(isBound(element) ? { from: rebind(element.from), to: rebind(element.to) } : {}),
+      ...(isBound(element) ? { source: rebind(element.source), target: rebind(element.target) } : {}),
       ...(members ? { members } : {}),
     };
   }
-  const element = placing(Object.values(inside).filter((element) => element.kind !== 'link'));
+  const element = placing(Object.values(inside).filter((element) => element.type !== 'link'));
   return { inside, outside: { ...outside, [id]: element }, element };
 };
 
@@ -156,7 +158,7 @@ const extract = (
   const object = { ...intent.object, parts: partsId };
   const nextModel = withObject(model, object);
   if (!nextModel) {
-    return problem(`An object of kind "${intent.object.kind}" does not fit a ${model.dim} model.`);
+    return problem(`An object of type "${intent.object.type}" does not fit a ${model.dim} model.`);
   }
   let parts: LayoutRecord;
   let host: LayoutRecord;

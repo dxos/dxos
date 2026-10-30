@@ -30,14 +30,14 @@ const overObject = (
   element: Types.DeepMutable<Scene.Element2D>,
   object: Scene.StoredObject2D,
 ): Types.DeepMutable<Scene.Element2D> => {
-  const { size, style, ...rest } = element;
+  const { size, overrides, ...rest } = element;
   const ownStyle = Object.fromEntries(
-    Object.entries(style ?? {}).filter(([key, value]) => !same(value, Reflect.get(object.style ?? {}, key))),
+    Object.entries(overrides ?? {}).filter(([key, value]) => !same(value, Reflect.get(object.overrides ?? {}, key))),
   );
   return {
     ...rest,
     ...(size && !same(size, object.size) ? { size } : {}),
-    ...(Object.keys(ownStyle).length > 0 ? { style: ownStyle } : {}),
+    ...(Object.keys(ownStyle).length > 0 ? { overrides: ownStyle } : {}),
   };
 };
 
@@ -74,13 +74,13 @@ const writeLayout = (
       // Props other than the canvas's own belong to other writers (the DSL identity, say), so they are kept.
       const { canvas: _canvas, ...kept } = plain(layout.elements[id]?.props ?? {});
       const written = plain(record.elements[id]);
-      const { kind, ...element } = { ...written, props: { ...kept, ...written.props } };
+      const { type, ...element } = { ...written, props: { ...kept, ...written.props } };
       const placed = layout.elements[id]?.object;
       const object = placed === undefined ? undefined : objectOf(placed);
       layout.elements[id] =
-        placed !== undefined && object && element.object === undefined && kind === object.kind
+        placed !== undefined && object && element.object === undefined && type === object.type
           ? overObject({ ...element, object: placed }, object)
-          : { ...element, ...(kind === undefined ? {} : { kind }) };
+          : { ...element, ...(type === undefined ? {} : { type }) };
     }
     for (const id of remove) {
       delete layout.elements[id];
@@ -218,7 +218,7 @@ export const makeLayoutWriter = (scene: Scene.Scene2D, { canvas }: LayoutWriterO
       );
     for (const { view } of written) {
       if (view.id !== root && !reachedBy(view.id)) {
-        placed.push({ id: `${COMPOSITE_PREFIX}${view.id}`, kind: 'rect', parts: view.id });
+        placed.push({ id: `${COMPOSITE_PREFIX}${view.id}`, type: 'rect', parts: view.id });
       }
     }
     const model = placed.length > 0 ? rootModel() : undefined;
