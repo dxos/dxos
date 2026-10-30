@@ -164,7 +164,15 @@ const resolveFromPackageRoot = (
   }
 
   const map = field === 'exports' ? packageJson.exports : packageJson.imports;
-  const entry = lookupConditionalMap(map, subpath);
+  // An `exports` value that is a path or is keyed by conditions rather than subpaths describes `.`.
+  const rootEntry =
+    field === 'exports' &&
+    subpath === '.' &&
+    map !== undefined &&
+    (typeof map === 'string' || !Object.keys(map).some((key) => key.startsWith('.')))
+      ? map
+      : undefined;
+  const entry = rootEntry ?? lookupConditionalMap(map, subpath);
   if (entry !== undefined) {
     const relativePath = tryResolveConditionalEntry(entry, conditions);
     if (!relativePath) {

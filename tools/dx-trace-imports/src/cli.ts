@@ -61,11 +61,14 @@ const foldTargets = (targets: string[]): string => (targets.length === 1 ? targe
  * Every export subpath of the package in `cwd` that resolves to a module: everything except
  * `./package.json`, wildcard patterns and stylesheet or data exports (`./theme.css`).
  */
+/** An `exports` object keyed by conditions (`{ "workerd": …, "default": … }`) describes `.` itself. */
+const isSubpathMap = (exports: object): boolean => Object.keys(exports).some((key) => key.startsWith('.'));
+
 const allExportSubpaths = (cwd: string): string[] => {
   // Boundary: package.json contents are untyped JSON.
   const manifest = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')) as { exports?: unknown };
   const exports = manifest.exports;
-  if (typeof exports !== 'object' || exports === null || Array.isArray(exports)) {
+  if (typeof exports !== 'object' || exports === null || Array.isArray(exports) || !isSubpathMap(exports)) {
     return ['.'];
   }
   return Object.keys(exports).filter(
@@ -89,6 +92,9 @@ const conditionalExportSubpaths = (cwd: string, conditions: readonly string[]): 
     typeof entry === 'object' &&
     entry !== null &&
     Object.entries(entry).some(([key, value]) => conditions.includes(key) || declares(value));
+  if (!isSubpathMap(exports)) {
+    return declares(exports) ? ['.'] : [];
+  }
   return allExportSubpaths(cwd).filter((subpath) => declares(Reflect.get(exports, subpath)));
 };
 
@@ -113,7 +119,8 @@ const readBansFile = (file: string): TargetEntry[] => {
     return value;
   };
   return Object.entries(document).flatMap(([scope, lists]: [string, unknown]) => {
-    if (typeof lists !== 'object' || lists === null) {
+    // An array here would read as a map with no `ban` and silently drop the runtime's checks.
+    if (typeof lists !== 'object' || lists === null || Array.isArray(lists)) {
       throw new Error(`${file}: ${scope} must be a map with \`ban\` and \`allow\`.`);
     }
     return [
