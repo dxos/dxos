@@ -146,6 +146,7 @@
     "@dxos/react-ui-scene": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "effect": "catalog:",

@@ -7,8 +7,9 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
 import { LayerField, StyleGridField, applyStyleChoice } from '@dxos/react-ui-canvas';
-import { StepAnnotation } from '@dxos/react-ui-form';
+import { NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { type Scene } from '@dxos/scene';
+import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 
 import {
   ELEMENT_FORM_FIELDS,
@@ -62,6 +63,21 @@ describe('element form', () => {
     expect(stepOf('center')).toBe(1);
     expect(stepOf('rotation')).toBe(15);
     expect(stepOf('scale')).toBe(0.1);
+  });
+
+  test('every vector axis aligns its figures to the end and shows its steppers on hover, as 2D does', () => {
+    const layoutOf = (name: string) => {
+      const field = SchemaAST.isObjects(ElementForm.ast)
+        ? ElementForm.ast.propertySignatures.find((p) => p.name === name)?.type
+        : undefined;
+      const struct = field && SchemaAST.isUnion(field) ? field.types[0] : field;
+      const axis = struct && SchemaAST.isObjects(struct) ? struct.propertySignatures[0].type : undefined;
+      const inner = axis && SchemaAST.isUnion(axis) ? axis.types[0] : axis;
+      return inner && Option.getOrUndefined(NumberLayoutAnnotation.getFromAst(inner));
+    };
+    for (const name of ['center', 'rotation', 'scale']) {
+      expect(layoutOf(name)).toEqual(VECTOR_AXIS_LAYOUT);
+    }
   });
 
   test("the style fields are the 2D canvas's: its colour grid at style.hue, the tone without a field of its own", () => {

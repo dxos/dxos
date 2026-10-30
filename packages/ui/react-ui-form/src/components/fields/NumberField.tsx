@@ -14,6 +14,7 @@ import { useFormContext } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
 import { type NumberEditEvent, type NumberEditState, numberEdit } from './number-edit.ts';
+import { numberLayoutOf } from './number-layout.ts';
 import { getNumericConstraints } from './numeric-constraints.ts';
 
 /** A fractional field without a declared step moves by 0.01 below magnitude 1, else by 0.1. */
@@ -42,6 +43,7 @@ export const NumberField = ({
     form: { commitOn },
   } = useFormContext('NumberField');
   const constraints = getNumericConstraints(type);
+  const layout = numberLayoutOf(type);
   // A caller's override narrows the schema's bounds for this form; a whole-number step reads as an integer.
   const min = minProp ?? constraints.min;
   const max = maxProp ?? constraints.max;
@@ -84,6 +86,8 @@ export const NumberField = ({
     <Input.Number
       disabled={!!readonly}
       placeholder={placeholder}
+      align={layout.align}
+      stepperOnHover={layout.stepperOnHover}
       min={min}
       max={max}
       step={step ?? defaultStep(committed, integer)}

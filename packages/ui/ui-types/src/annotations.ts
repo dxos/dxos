@@ -7,3 +7,12 @@
  * model schema can declare it without depending on React.
  */
 export const StepAnnotationId = '@dxos/schema/annotation/Step';
+
+/** How a number field lays out: figures aligned to the row's end, and steppers shown only on hover or focus. */
+export type NumberLayout = { align?: 'start' | 'end'; stepperOnHover?: boolean };
+
+/** A number field's {@link NumberLayout}; a vector's axes declare it so their figures line up in columns. */
+export const NumberLayoutAnnotationId = '@dxos/schema/annotation/NumberLayout';
+
+/** A vector's axes, in 2D and 3D alike: figures aligned in columns, steppers out of the way until hovered. */
+export const VECTOR_AXIS_LAYOUT: NumberLayout = { align: 'end', stepperOnHover: true };

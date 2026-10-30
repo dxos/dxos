@@ -6,11 +6,13 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation } from '@dxos/echo';
 import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS, styleFields } from '@dxos/react-ui-canvas';
-import { type FormFieldMap, type FormFieldOverride, StepAnnotation } from '@dxos/react-ui-form';
+import { type FormFieldMap, type FormFieldOverride, NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { type LayoutIntent, Scene } from '@dxos/scene';
+import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 
 /** An axis as the form edits it: clearable while typing, and stepped by `step` with the stepper. */
-const axis = (step: number) => Schema.optional(Schema.Number.pipe(StepAnnotation.set(step)));
+const axis = (step: number) =>
+  Schema.optional(Schema.Number.pipe(StepAnnotation.set(step), NumberLayoutAnnotation.set(VECTOR_AXIS_LAYOUT)));
 
 /** A vector as the form edits it, its axes on one row; a cleared axis takes the default's. */
 const formVec3 = (step: number) =>

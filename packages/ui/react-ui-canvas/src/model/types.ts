@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { AnimatableAnnotation } from '@dxos/animation';
 import { Scene as Dsl } from '@dxos/diagram';
 import { Annotation } from '@dxos/echo';
-import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
+import { HueAnnotationId, NumberLayoutAnnotationId, StepAnnotationId, VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 
 export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Point = Schema.Schema.Type<typeof Point>;
@@ -36,7 +36,8 @@ const pairLayout = (first: string, second: string) =>
   `<grid cols="2" fixed="true"><field name="${first}"/><field name="${second}"/></grid>`;
 
 /** A node coordinate as a form edits it: the stepper moves by one minor grid cell, as an arrow nudge does. */
-const gridNumber = (title: string) => Schema.Number.annotate({ title, [StepAnnotationId]: DEFAULT_GRID });
+const gridNumber = (title: string) =>
+  Schema.Number.annotate({ title, [StepAnnotationId]: DEFAULT_GRID, [NumberLayoutAnnotationId]: VECTOR_AXIS_LAYOUT });
 
 /** `Point` and `Size` for a node's own frame, laid out as one row each in the properties form. */
 const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') })
