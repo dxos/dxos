@@ -15,7 +15,7 @@ renders, picks and turns gestures into intents; it never writes ECHO and never o
 **Tech Stack:** Effect Schema, ECHO (`@dxos/echo`), React, effect atoms (`@effect/atom-react`), Babylon.js (3D),
 Manifold (solids), vitest, storybook (localhost:9009).
 
-**Spec:** `packages/ui/react-ui-canvas/docs/COMMON-CORE.md` (decisions 1–17; step 0 = one DSL target; the element base is
+**Spec:** `packages/ui/react-ui-canvas/docs/COMMON-CORE.md` (decisions 1–20; step 0 = one DSL target; the element base is
 react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
 `packages/common/scene/SPEC.mdl` (latest D-89+).
 
@@ -56,19 +56,17 @@ constraints}` (`engine/projections/constrained.ts:36-44`) and `GraphModel {nodes
    (`engine/projections/dynamic.ts:69-77`) are normalised onto elements; the projections change (Phase D).
 3. **Resolved — one animation system (decision 16).** The canvas timeline (`model/timeline.ts`) is retired; 2D
    timelines migrate into animator shots (Task A.5); a shared Timeline panel (Task B.7) edits shots in both dimensions.
-4. **Simplified (decision 15, pending confirmation) — diagram object frames.** With the canvas base this needs no new
-   design: plugin-canvas `SceneHandler` (`plugins/plugin-canvas/src/model/handler.ts:206-541`) already flattens each
-   `WorldObject` into absolute canvas elements — `origin`/`scale` baked in (`:227-228`, `:288`, `:317`), ids
-   `object/element` (`:67`), shapes → `diagram`/`rect`/`ellipse`/`text`/`portal` nodes, arrows → links with a
-   `connector` (`:396-441`) — and reads them back into world objects (`:482-538`). Phase 0 moves that translation into
-   the engines' output stage. Remaining divergence: an object exists only as the shared `object/` id prefix, not as an
-   element; `MoveObject` becomes a `move` of its elements.
-5. **Simplified (decision 15, pending confirmation) — diagram styles.** Canvas already handles both vocabularies:
-   plain nodes map diagram `color`/`fill`/`stroke` onto `NodeStyle` (`handler.ts:84`, `styleOf`), and `diagram` nodes
-   and link `connector`s keep the diagram vocabulary inside their own fields (`types.ts:375-395`, `:549-558`). So
-   `Style2D` is `NodeStyle`, with no second vocabulary. Remaining divergence: diagram-styled elements can't take a
-   named style from a catalog (their style lives in `element`/`connector`), and `sketchy` strokes, `pattern` fills and
-   `weight` exist only there.
+4. **Resolved — diagram object frames (decision 18).** Each `WorldObject` (`scene.ts:289-307`) becomes a composite
+   (its elements in local units = the object's own coordinates) placed by one `instance` element carrying `center` =
+   `origin`, `scale`, and `z` = `index`; `MoveObject` moves the instance. plugin-canvas `SceneHandler`'s flattening
+   (`handler.ts:206-541`) is dropped. Sharing rule (agent call): one composite per diagram object; objects share a
+   composite only when the source declares reuse (a `.dx` scene `model`/`object` placed by several elements);
+   structural de-duplication is deferred. The SVG renderer and both viewports draw parts through the instance
+   transform (strokes and text scaled); the corpus metric gate confirms identical diagrams.
+5. **Resolved — one 2D style vocabulary (decisions 19, 20).** `Style2D` = `NodeStyle` + `lineStyle: 'sketchy'`,
+   `pattern`, `weight`; diagram `color`/`fill`/`stroke`/`weight` map onto it (DSL mapping below) and disappear from
+   elements, so diagram-styled elements take catalog styles. Pending user override: the added `black`/`white` hues
+   (decision 20).
 6. **Accepted, not mechanical — diagram arcs and free curves (decision 14).** `SceneHandler` has no case for `line`,
    `curve` or `arc` (`handler.ts:314-441` handles rect/diamond/triangle/ellipse/circle/text/portal/arrow), so today
    they never reach the canvas; react-ui-canvas's `DiagramShape` is `Box|Circle|Text|Portal` (`types.ts:375`). New
@@ -87,51 +85,58 @@ these change: **R** = rename; **S** = structural (the decided split); **N** = no
 copies as is (same name, same shape). Round-trip tests: Task A.3, one test per row group. The data-mapping tasks (0.1,
 A.1–A.4) change no engine behaviour; engine changes are confined to Phases C and D.
 
-| Record (`types.ts`)                                                                                               | Field(s)                                                                                                                                                                   | New home                                                                               |     |
-| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --- |
-| **View** (`:678`)                                                                                                 | `id`                                                                                                                                                                       | `Layout2D.key`                                                                         | R   |
-|                                                                                                                   | `nodes` + `links`                                                                                                                                                          | `Layout2D.elements` (one map; a link is an element with `source`/`target`)             | S   |
-|                                                                                                                   | `name`, `layers`, `anonymous`                                                                                                                                              | copied onto `Layout2D`                                                                 | —   |
-|                                                                                                                   | `kind: composite`                                                                                                                                                          | `Model2D.objects[id]` with `parts` = that layout                                       | S   |
-| **Node / link base** (`:171`, `:560`)                                                                             | `id`, `type`, `z`, `locked`, `layer`, `label`, `text`, `ports`, `portsPerSide`, `exposed`, `center`, `size`, `rotation`, `source`, `target`, `ends`, `connector`, `points` | copied (shared base; geometry on `Element2D`)                                          | —   |
-|                                                                                                                   | `class`                                                                                                                                                                    | `style` (named style reference)                                                        | R   |
-|                                                                                                                   | `style` (`NodeStyle`/`LineStyle`)                                                                                                                                          | `overrides: Partial<Style2D>`                                                          | R   |
-| **NodeStyle** (`:140`)                                                                                            | all fields                                                                                                                                                                 | `Style2D` (= `NodeStyle`)                                                              | —   |
-| **Built-in node types** (rect, ellipse, cloud, polygon, polyline, note, view, instance, path, diagram, generator) | own fields (`params`, `points`, `scene`, `link`, `composite`, `overrides`, `fit`, `d`, `viewBox`, `element`, `heading`, `generator`, `seed`)                               | copied; each type keeps its schema (`Schema.Struct({ ...elementBase, type, … })`)      | —   |
-| **view / instance**                                                                                               | `scene`, `composite`                                                                                                                                                       | also set `object` → the composite model object                                         | S   |
-| **Plugin kinds** (image, UML class, compute shapes)                                                               | own fields                                                                                                                                                                 | copied; schemas registered in the kind registry (decision 13)                          | —   |
-| **Layer** (`:625`)                                                                                                | `id`, `name`, `z`, `hidden`                                                                                                                                                | copied into `Layout2D.layers`                                                          | —   |
-| **StyleClass** (`:525`)                                                                                           | `id`, `name`, `style`                                                                                                                                                      | `Model2D.styles[id] = { name, ...style }`                                              | S   |
-| **Lattice** (`utils/lattice.ts:15`)                                                                               | `LatticeSpec`                                                                                                                                                              | `Layout2D.lattice`                                                                     | —   |
-| **Constrained** (`constrained.ts:41`)                                                                             | `nodes`, `constraints`                                                                                                                                                     | `Layout2D.constraints`; nodes derived from elements                                    | N   |
-| **Dynamic** (`dynamic.ts:69`)                                                                                     | `edges`, `Overlay.positions`                                                                                                                                               | link elements; element centers                                                         | N   |
-| **Timeline** (`model/timeline.ts`)                                                                                | all                                                                                                                                                                        | an animator `Shot` over the migrated scene; keys rewritten to element paths (Task A.5) | S   |
-| **Canvas settings**                                                                                               | all                                                                                                                                                                        | `Canvas.settings` (unchanged); `theme`/`styleSet` choose the default `StyleCatalog`    | —   |
+| Record (`types.ts`)                                                                                                                 | Field(s)                                                                                                                                                                   | New home                                                                                                                                |     |
+| ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| **View** (`:678`)                                                                                                                   | `id`                                                                                                                                                                       | `Layout2D.key`                                                                                                                          | R   |
+|                                                                                                                                     | `nodes` + `links`                                                                                                                                                          | `Layout2D.elements` (one map; a link is an element with `source`/`target`)                                                              | S   |
+|                                                                                                                                     | `name`, `layers`, `anonymous`                                                                                                                                              | copied onto `Layout2D`                                                                                                                  | —   |
+|                                                                                                                                     | `kind: composite`                                                                                                                                                          | `Model2D.objects[id]` with `parts` = that layout                                                                                        | S   |
+| **Node / link base** (`:171`, `:560`)                                                                                               | `id`, `type`, `z`, `locked`, `layer`, `label`, `text`, `ports`, `portsPerSide`, `exposed`, `center`, `size`, `rotation`, `source`, `target`, `ends`, `connector`, `points` | copied (shared base; geometry on `Element2D`)                                                                                           | —   |
+|                                                                                                                                     | `class`                                                                                                                                                                    | `style` (named style reference)                                                                                                         | R   |
+|                                                                                                                                     | `style` (`NodeStyle`/`LineStyle`)                                                                                                                                          | `overrides: Partial<Style2D>`                                                                                                           | R   |
+| **NodeStyle** (`:140`) — extended (decision 19): `lineStyle` + `sketchy`, `pattern`, `weight`; hues + `black`/`white` (decision 20) | all fields                                                                                                                                                                 | `Style2D` (= `NodeStyle`)                                                                                                               | —   |
+| **Built-in node types** (rect, ellipse, cloud, polygon, polyline, note, view, instance, path, diagram, generator)                   | own fields (`params`, `points`, `scene`, `link`, `composite`, `overrides`, `fit`, `d`, `viewBox`, `element`, `heading`, `generator`, `seed`)                               | copied; each type keeps its schema (`Schema.Struct({ ...elementBase, type, … })`)                                                       | —   |
+| **view / instance**                                                                                                                 | `scene`, `composite`                                                                                                                                                       | `object` → the composite model object; instance gains `center`/`scale`/`rotation`/`fit` (decision 18; portal views keep `fit: 'frame'`) | S   |
+| **Plugin kinds** (image, UML class, compute shapes)                                                                                 | own fields                                                                                                                                                                 | copied; schemas registered in the kind registry (decision 13)                                                                           | —   |
+| **Layer** (`:625`)                                                                                                                  | `id`, `name`, `z`, `hidden`                                                                                                                                                | copied into `Layout2D.layers`                                                                                                           | —   |
+| **StyleClass** (`:525`)                                                                                                             | `id`, `name`, `style`                                                                                                                                                      | `Model2D.styles[id] = { name, ...style }`                                                                                               | S   |
+| **Lattice** (`utils/lattice.ts:15`)                                                                                                 | `LatticeSpec`                                                                                                                                                              | `Layout2D.lattice`                                                                                                                      | —   |
+| **Constrained** (`constrained.ts:41`)                                                                                               | `nodes`, `constraints`                                                                                                                                                     | `Layout2D.constraints`; nodes derived from elements                                                                                     | N   |
+| **Dynamic** (`dynamic.ts:69`)                                                                                                       | `edges`, `Overlay.positions`                                                                                                                                               | link elements; element centers                                                                                                          | N   |
+| **Timeline** (`model/timeline.ts`)                                                                                                  | all                                                                                                                                                                        | an animator `Shot` over the migrated scene; keys rewritten to element paths (Task A.5)                                                  | S   |
+| **Canvas settings**                                                                                                                 | all                                                                                                                                                                        | `Canvas.settings` (unchanged); `theme`/`styleSet` choose the default `StyleCatalog`                                                     | —   |
 
 **3D (decision 12):** `@dxos/scene`'s `kind`→`type`, `order`→`z`, `from`/`to` `Binding`→`source`/`target` `Endpoint`,
 shared `Style` tokens → `overrides: Partial<Style3D>`, groups (`members`/`arrange`) → composites + `instance` (decision 17). Task A.4.
 
 ## Diagram DSL mapping
 
-Only the output target changes, and it is the translation plugin-canvas `SceneHandler` already does
-(`handler.ts:206-541`), moved into the engines' output stage. Grammar changes: **none** (the `.dx` text is unchanged;
-the scene-statement reader/printer map `kind`/`from`/`to` onto `type`/`source`/`target`). `Dsl.compile`'s result type
+Only the output target changes. Grammar changes: **none** (the `.dx` text is unchanged; the scene-statement
+reader/printer map `kind`/`from`/`to`/groups onto `type`/`source`/`target`/composites). `Dsl.compile`'s result type
 changes (`ParseResult.commands` → `{ document, layout, intents }`).
 
-| `@dxos/diagram` (`scene.ts`)                                     | → canvas element (as `SceneHandler` does today)                                                                                |          |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| `WorldObject {id, origin, scale, index, ref, elements}` (`:289`) | no element of its own; members' geometry is absolute (`origin`/`scale` baked), ids `object/element`, `dsl.object` = id         | as today |
-| `Box rect\|diamond\|triangle` (`:68`)                            | `diagram` node with `element` = the box (or `rect` for plain boxes), `center`/`size` from x, y, w, h                           | as today |
-| `Box ellipse`, `Circle` (`:85`)                                  | `ellipse` / `diagram` node                                                                                                     | as today |
-| `Text` (`:137`)                                                  | `diagram` text node, or a caption/heading on its owner                                                                         | as today |
-| `Portal` (`:267`)                                                | `diagram` portal node (`element.ref` = DXN)                                                                                    | as today |
-| `Arrow` (`:208`)                                                 | link: `source`/`target` `{node, port}` (or `point`), `ends`, `connector {relation, head, tail, stroke, color, route, caption}` | as today |
-| `Polyline`, `Curve`, `Arc` (`:97-136`)                           | **new** `diagram` element types + 2D draw code                                                                                 | N (6)    |
-| `color`, `fill`, `stroke`, `weight`                              | inside `element`/`connector` (diagram nodes, connectors); `NodeStyle` for plain nodes                                          | as today |
-| element `id`                                                     | `dsl: { object, element }`; element id = `object/element`                                                                      | as today |
-| `UpsertObject`, `UpsertElements`                                 | `create`/`update` per element, one `batch`                                                                                     | M        |
-| `RemoveElements`, `RemoveObject`                                 | `delete` of the ids (all `object/` ids for an object)                                                                          | M        |
-| `MoveObject {origin}`                                            | `move` of the object's elements by the delta                                                                                   | M        |
+| `@dxos/diagram` (`scene.ts`)                                                         | → `@dxos/scene`                                                                                                                                                               |                 |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `WorldObject {id, origin, scale, index, ref, elements}` (`:289`)                     | composite `Model2D.objects[id]` (its `parts` = the elements, local units) + one `instance` element `{ object: id, center: origin, scale, z: index }`; `ref` → the portal link | M (decision 18) |
+| `Box rect\|diamond\|triangle\|ellipse {x, y, w, h, rotation, text, corners}` (`:68`) | part: `rect`/`ellipse` or `diagram` node (`element` = shape) with `center`/`size` from x, y, w, h; `label` = text                                                             | M               |
+| `Circle {cx, cy, r, text}` (`:85`)                                                   | part: `ellipse` with `size` = 2r                                                                                                                                              | M               |
+| `Text {x, y, w, text}` (`:137`)                                                      | part: `diagram` text node (or caption/heading on its owner, as today)                                                                                                         | M               |
+| `Portal {x, y, w, h, ref, text}` (`:267`)                                            | part: `view` node, `link` = DXN, `fit: 'frame'`                                                                                                                               | M               |
+| `Arrow {from, to, start, end, text, head, tail, relation}` (`:208`)                  | link: `source`/`target` `{node: object/element, port}` or `{point}`; `ends`; `connector {relation, head, tail, route, caption}`; `label`                                      | M               |
+| `Polyline`, `Curve`, `Arc` (`:97-136`)                                               | **new** part types + 2D draw code                                                                                                                                             | N (6)           |
+| `fill` none / solid / tint / pattern                                                 | `fill: false` / `fill: true, tone: 1` / `fill: true, tone: 3` / `fill: true, pattern: true`                                                                                   | M               |
+| `stroke` sketchy/solid/dashed/dotted                                                 | `lineStyle` (incl. `sketchy`)                                                                                                                                                 | M               |
+| `weight` s/m/l/xl                                                                    | `weight`                                                                                                                                                                      | M               |
+| `color` red/orange/green/blue/violet                                                 | same hue                                                                                                                                                                      | M               |
+| `color` light-red/light-green/light-violet                                           | red/green/violet + lighter tone                                                                                                                                               | M               |
+| `color` light-blue / yellow / grey                                                   | `sky` / `amber` / `neutral`                                                                                                                                                   | M               |
+| `color` black / white                                                                | new hues `black` / `white` (decision 20, pending override)                                                                                                                    | M               |
+| element `id`                                                                         | `dsl: { object, element }`; part id = element id within the composite                                                                                                         | M               |
+| `UpsertObject` (`:317`)                                                              | `ModelIntent` define/update the composite + `create`/`update` the instance, one `batch`                                                                                       | M               |
+| `UpsertElements` (`:322`)                                                            | `ModelIntent` update of the composite's parts                                                                                                                                 | M               |
+| `RemoveElements` (`:328`)                                                            | `ModelIntent` removing parts                                                                                                                                                  | M               |
+| `RemoveObject` (`:334`)                                                              | `delete` the instance (+ remove the composite when unused)                                                                                                                    | M               |
+| `MoveObject {origin}` (`:339`)                                                       | `update` the instance's `center`                                                                                                                                              | M               |
 
 ## Shared editor contract
 
@@ -177,14 +182,14 @@ changes (`ParseResult.commands` → `{ document, layout, intents }`).
 
 1. **Round-trip parity:** every built-in 2D node and link type (rect, ellipse, cloud, polygon, polyline, note, view,
    instance, path, generator, diagram; line, curve, spline, smart) survives react-ui-canvas record → `Element2D` → render
-   → edit → store with no field lost. Pinned by Task 1.3's corpus test.
-2. **Drag smoothness:** a 2D drag of 200 elements and a 3D gizmo drag write ECHO once, on release. Pinned by Task 3.2.
+   → edit → store with no field lost. Pinned by Task A.3's corpus test.
+2. **Drag smoothness:** a 2D drag of 200 elements and a 3D gizmo drag write ECHO once, on release. Pinned by Task C.2.
 3. **Undo with a peer:** an undo after a peer edits another field of the same element keeps the peer's field. Pinned
-   by Task 2.3.
+   by Task B.3.
 4. **Projections own positions:** in lattice/constrained/dynamic modes a move intent may be rewritten or refused; the
-   viewport previews via `constrain` before release. Pinned by Tasks 4.1–4.3.
-5. **Consumer breakage:** nothing imports the retired `View`/`Intent`/`ViewStore` (Task 5.6 grep gate), and compute,
-   UML and code graphs render and edit. Pinned by Tasks 5.3–5.5.
+   viewport previews via `constrain` before release. Pinned by Tasks D.1–D.3.
+5. **Consumer breakage:** nothing imports the retired `View`/`Intent`/`ViewStore` (Task E.6 grep gate), and compute,
+   UML and code graphs render and edit. Pinned by Tasks E.3–E.5.
 
 ---
 
@@ -211,7 +216,9 @@ The `.dx` semantic statements (`diagram`/`node`/`edge`/`group`) and the layout e
 
 - Produces: `elementBase` (react-ui-canvas `nodeBase` + `linkBase` fields; `class`→`style`, `style`→`overrides`),
   `Element2D` (union of the built-in types over `elementBase`), `dsl?: { object; element? }` on the base, new
-  `diagram` element types `polyline`/`curve`/`arc` (divergence 6).
+  `diagram` element types `polyline`/`curve`/`arc` (divergence 6), the instance transform `{ object; center; scale?;
+rotation?; fit?: 'none' | 'frame' }` (decision 18), `Style2D` = `NodeStyle` + `sketchy`/`pattern`/`weight` and the
+  `black`/`white` hues (decisions 19, 20).
 - **Parity:** the base is shared; 2D types are 2D; 3D adopts the base in A.4.
 
 - [ ] **Step 1: Failing test** `test('the scene element base has every react-ui-canvas node and link field', …)`
@@ -258,7 +265,9 @@ The `.dx` semantic statements (`diagram`/`node`/`edge`/`group`) and the layout e
 
 **Interfaces:**
 
-- Produces: `SceneSvg` props `{ document: SceneDocument; layout: string }`; `renderSvg(doc, layout): Markup`.
+- Produces: `SceneSvg` props `{ document: SceneDocument; layout: string }`; `renderSvg(doc, layout): Markup`, drawing
+  composite parts through each instance's transform (`center + rotation·scale·local`, strokes and text scaled) and
+  reading `Style2D` (diagram colours via decision 19's map).
 - Consumes: 0.2's `ParseResult`.
 - **Parity:** 2D renderer (the editor's 2D viewport, Phase C, is the interactive counterpart; both resolve styles
   through `resolveStyle` after A.2).
@@ -387,8 +396,9 @@ Partial<S>> }, model: { styles: Record<string, S> }, catalogs: readonly { key: s
 
 **Interfaces:** `Element3D = elementBase & { center?: Vec3; scale?: Vec3; rotation?: Vec3; points?: Vec3[];
 overrides?: Partial<Style3D> }`; `kind`→`type`, `order`→`z`, `from`/`to`→`source`/`target` `{node, port}`;
-groups → composites + `instance` (decision 17): remove `members`/`arrange`, move the ring/grid arrangers onto
-composites, and map the `.dx` group text onto composites. No aliases.
+groups → composites + `instance` (decision 17) with the shared instance transform (decision 18; 3D `scale: Vec3`):
+remove `members`/`arrange`, move the ring/grid arrangers onto composites, and map the `.dx` group text onto
+composites. No aliases.
 
 - [ ] **Step 1: Failing tests** — every `.dx` exemplar round-trips with the new names (text unchanged);
       `test('a 3D link binds by source/target endpoints', …)`; `test('a 3D group is a composite placed by an instance',
@@ -718,10 +728,13 @@ A fresh reviewer on the most capable model against this plan's Review Focus; one
 5. **Diagram corpus stability (Phase 0):** the illustrator corpus metrics and snapshots (`corpus.test.ts`) and the
    render-diagrams output must stay stable; only the output stage of the engines changes. Mitigation: 0.2's geometry
    equivalence test, 0.3's before/after renders, 0.5's gate.
-6. **Existing `.dx.svg` files:** files exported before Phase 0 are not imported as editable drawings (user, 2026-10-30); they still display as images.
-7. **Timeline migration (A.5):** canvas tracks target node paths; a missed path rewrite silently drops an animated
+6. **Composite transform in rendering (Phase 0, decision 18):** drawing diagram objects through instance transforms
+   instead of baked coordinates must keep the corpus metrics identical (strokes/text scale with the instance).
+   Mitigation: 0.3's metric gate; one composite per object keeps ids stable.
+7. **Existing `.dx.svg` files:** files exported before Phase 0 are not imported as editable drawings (user, 2026-10-30); they still display as images.
+8. **Timeline migration (A.5):** canvas tracks target node paths; a missed path rewrite silently drops an animated
    property. Mitigation: A.5's test compares every track and keyframe after the rewrite.
-8. **Scope:** Phase E (especially compute) is large; the plan keeps every phase green so the PR is shippable at the
+9. **Scope:** Phase E (especially compute) is large; the plan keeps every phase green so the PR is shippable at the
    end of each phase.
 
 ## Relative size

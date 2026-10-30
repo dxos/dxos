@@ -68,6 +68,22 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     onto composites; the 3D-only `members`/`arrange` fields are removed; the `.dx` reader/printer map the existing group
     text onto composites (no grammar change).
 
+18. (2026-10-30) **Composites with relative positioning, both dimensions.** A composite is a model object whose
+    `parts` layout is in local units; the placing `instance` element carries the transform — `object`, `center` (local
+    origin), `scale?` (2D: number or `Vec2`, local units → canvas px; 3D: `Vec3`), `rotation?`, `fit?: 'none' |
+'frame'` (`frame` = today's fit-to-frame for portal views, D-13; `none` = scale as given). Parts draw at
+    `center + rotation·scale·local`, with strokes and text scaled too. Diagram objects become composites placed by
+    instances (one element per object; `MoveObject` moves the instance); plugin-canvas `SceneHandler`'s flattening is
+    dropped. Canvas composite/instance nodes gain the explicit transform; 3D groups (decision 17) use the same
+    mechanism. The SVG renderer and both viewports draw parts through the instance transform. Supersedes decision 15's
+    object-frame approach.
+19. (2026-10-30) **One 2D style vocabulary now.** `Style2D` = canvas `NodeStyle` extended with `lineStyle: 'sketchy'`,
+    `pattern?: boolean` and `weight?: 's' | 'm' | 'l' | 'xl'` (scales stroke and text). Diagram styles map onto it (see
+    the plan's DSL mapping); diagram `color`/`fill`/`stroke`/`weight` fields disappear from elements, so
+    diagram-styled elements can take catalog styles. Supersedes decision 15's style approach.
+20. (2026-10-30, agent call for the user, pending override) Two theme-independent hues, `black` and `white`, are added
+    to the hue list so diagram `black`/`white` map exactly and the corpus metric gate stays stable.
+
 ## Expectations (user, 2026-10-30)
 
 These are the acceptance criteria; any place the work would break one is raised with the user before it is built.
@@ -113,6 +129,7 @@ Element2D   = elementBase & { center?: Vec2; size?: Size2; rotation?: number; po
                               overrides?: Partial<Style2D> /* was style */ } & <type's own fields>
 Element3D   = elementBase & { center?: Vec3; scale?: Vec3; rotation?: Vec3; points?: Vec3[];
                               overrides?: Partial<Style3D> } & <type's own fields>
+// Instance transform (decision 18): { object; center; scale?; rotation?; fit?: 'none' | 'frame' }
 // Plugin kinds: Schema.Struct({ ...elementBase, type: Schema.Literal('class'), ...own }) registered in the kind
 // registry (decision 13).
 LayoutIntent | ModelIntent                                        // the one edit vocabulary
@@ -121,7 +138,7 @@ LayoutIntent | ModelIntent                                        // the one edi
 ### Styles
 
 ```ts
-Style2D = NodeStyle /* hue, tone, opacity, lineStyle, rounded, fill, border, guide, fontFamily, fontSize, align… */ // CSS-like
+Style2D = NodeStyle & { lineStyle?: … | 'sketchy'; pattern?: boolean; weight?: 's' | 'm' | 'l' | 'xl' }  // decision 19
 Style3D = { name?; color?; metalness?; roughness?; opacity?; glass?; emissive?; … }         // material-like
 class StyleCatalog /* ECHO */ { name; dim: '2d' | '3d'; styles: Record<string, Style2D | Style3D> }
 
