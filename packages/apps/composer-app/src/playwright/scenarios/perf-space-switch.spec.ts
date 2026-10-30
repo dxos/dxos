@@ -7,7 +7,7 @@ import { statSync } from 'node:fs';
 
 import { BASE_URL, defineScenario, invokeInPage, waitForReady } from '../perf/scenario.ts';
 import { importProfileArchive } from './memory-soak.ts';
-import { waitForCountersQuiet } from './work-counters.ts';
+import { readCounters, waitForCountersQuiet } from './work-counters.ts';
 
 /** A `.dxprofile` export or raw `.sqlite` to load. It holds private keys: named by path and never copied. */
 const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
@@ -110,7 +110,12 @@ defineScenario({
     // Cold and warm, then a revisit once the worker has evicted the idle documents, as a day of switching does.
     for (const pass of ['cold', 'warm', 'revisit'].filter((pass) => PASSES.includes(pass))) {
       if (pass === 'revisit') {
+        const [before] = await readCounters(page, ['automerge.evictions']);
         await page.waitForTimeout(EVICTION_IDLE_MS);
+        const [after] = await readCounters(page, ['automerge.evictions']);
+        if (after === before) {
+          throw new Error(`no document was evicted in ${EVICTION_IDLE_MS} ms, so a revisit would time a warm switch`);
+        }
       }
       for (const [index, spaceId] of SPACES.entries()) {
         await stage(`${pass}-${index + 1}`, async () => {
