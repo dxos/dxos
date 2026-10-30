@@ -1381,7 +1381,9 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         // a transform, as `@dxos/ui-theme/plugin` does for `import.meta.dirname`), which one
         // shared output object cannot express.
         formats: ['es'],
-        fileName: (_, name) => `${name}.mjs`,
+        // A dependency bundled per module keeps its `node_modules/...` path, which `npm pack` and vitest both treat as
+        // an installed package rather than this package's own file.
+        fileName: (_, name) => `${name.replaceAll('node_modules', '_npm')}.mjs`,
       },
       outDir,
       sourcemap: true,
