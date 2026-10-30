@@ -5,12 +5,14 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Channel, type Message } from '@dxos/types';
+import { Channel } from '@dxos/types';
 
 /** The user-editable part: which channels the agent converses in. */
 export const Properties = Schema.Struct({
@@ -81,16 +83,22 @@ export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel
 export const OUTBOUND_PROPERTY = 'outbound';
 
 /**
- * Whether the agent's message reaches its channel: queued for the host to post ({@link OUTBOUND_PROPERTY}), or already
- * posted by a backend that records `<source>.messageId`. EDGE's host reads messages the same way.
+ * Marks an operation that speaks in a channel conversation (posts, mails or relays a message): a call that succeeds
+ * is the agent's reply there, where its written text is sent nowhere.
  */
-export const isSent = (message: Message.Message): boolean =>
-  message.sender.role === 'assistant' &&
-  (message.properties?.[OUTBOUND_PROPERTY] === true ||
-    Object.values(message.properties ?? {}).some(
-      (delivery) =>
-        typeof delivery === 'object' && delivery !== null && 'messageId' in delivery && !!delivery.messageId,
-    ));
+export const ChannelSendAnnotation = Annotation.make({
+  id: 'org.dxos.annotation.agent.channelSend',
+  schema: Schema.Boolean,
+});
+
+/** Marks the operation as a {@link ChannelSendAnnotation channel send}. */
+export const channelSend = Operation.annotate(ChannelSendAnnotation, true);
+
+/** Whether the operation is a {@link ChannelSendAnnotation channel send}. */
+export const isChannelSend = (op: Operation.Definition.Any): boolean =>
+  op.meta.annotations
+    ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, ChannelSendAnnotation), () => false)
+    : false;
 
 /** `Obj.Meta` key source of a chat that mirrors one conversation (a channel, or a thread inside one). */
 export const CHAT_SOURCE = 'org.dxos.agent/channel';

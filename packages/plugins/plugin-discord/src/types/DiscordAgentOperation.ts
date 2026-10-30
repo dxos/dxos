@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
+import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import { File } from '@dxos/types';
 
 import * as DiscordBot from './DiscordBot.ts';
@@ -52,7 +53,7 @@ export const Reply = Operation.make({
     ),
   }),
   output: Posted,
-});
+}).pipe(AgentChannels.channelSend);
 
 /** Sends a Discord direct message. */
 export const DirectMessage = Operation.make({
@@ -77,7 +78,7 @@ export const DirectMessage = Operation.make({
     ),
   }),
   output: Posted,
-});
+}).pipe(AgentChannels.channelSend);
 
 /** Reacts to a Discord message. */
 export const React = Operation.make({

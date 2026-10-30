@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Message } from '@dxos/types';
 
 import { ConversationSkill } from '#skills';
@@ -17,8 +18,8 @@ export const REMINDER =
   'or, to stay silent on purpose, finish without writing anything.';
 
 /**
- * Deterministic, with no model call: the agent wrote text since the request's prompt and sent nothing, judged by the
- * same marks the channel's host posts by ({@link AgentChannels.isSent}).
+ * Deterministic, with no model call: since the request's prompt the agent wrote text, and no call to a
+ * {@link AgentChannels.isChannelSend channel send} succeeded.
  */
 const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> = ConversationSkill.EnsureReplySent.pipe(
   Operation.withHandler(
@@ -30,11 +31,20 @@ const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> =
 
       const history = yield* Harness.history.pipe(Effect.orElseSucceed((): Message.Message[] => []));
       const request = history.slice(history.findLastIndex(isPrompt) + 1);
+      const wrote = request.some((message) => message.sender.role === 'assistant' && textOf(message).length > 0);
       const reminded = request.some((message) => textOf(message, true).includes(REMINDER));
-      const unsent =
-        request.some((message) => message.sender.role === 'assistant' && textOf(message).length > 0) &&
-        !request.some(AgentChannels.isSent);
-      return unsent && !reminded ? { followUp: REMINDER } : {};
+      if (!wrote || reminded) {
+        return {};
+      }
+
+      const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+      const sends = yield* Effect.forEach(succeededOperations(request), (key) =>
+        OperationHandlerSet.getHandlerByKey(handlers, key).pipe(
+          Effect.map(AgentChannels.isChannelSend),
+          Effect.orElseSucceed(() => false),
+        ),
+      );
+      return sends.some(Boolean) ? {} : { followUp: REMINDER };
     }),
   ),
 );
@@ -43,6 +53,18 @@ export default handler;
 
 /** A prompt someone wrote, which starts a request; synthetic prompts (a hook's follow-up) continue one. */
 const isPrompt = (message: Message.Message): boolean => message.sender.role === 'user' && textOf(message).length > 0;
+
+/** Keys of the operations behind the request's tool calls that returned a result rather than an error. */
+const succeededOperations = (request: readonly Message.Message[]): string[] => {
+  const blocks = request.flatMap((message) => message.blocks);
+  const succeeded = new Set(
+    blocks.flatMap((block) => (block._tag === 'toolResult' && block.error === undefined ? [block.toolCallId] : [])),
+  );
+  const keys = blocks.flatMap((block) =>
+    block._tag === 'toolCall' && block.operationKey && succeeded.has(block.toolCallId) ? [block.operationKey] : [],
+  );
+  return [...new Set(keys)];
+};
 
 /** The message's finished text: what its author wrote, or with `synthetic` what the system wrote. */
 const textOf = (message: Message.Message, synthetic = false): string[] =>

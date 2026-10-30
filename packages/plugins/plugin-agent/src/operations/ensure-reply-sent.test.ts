@@ -15,7 +15,7 @@ import { ContentBlock, Message } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { ConversationSkill } from '#skills';
-import { AgentChannels } from '#types';
+import { AgentChannels, EmailOperation, MemoryOperation } from '#types';
 
 import { REMINDER } from './ensure-reply-sent.ts';
 
@@ -32,7 +32,14 @@ describe('EnsureReplySent', () => {
     'asks a channel conversation to send the text it wrote',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const conversation = yield* setupChat({ channel: true, messages: [prompt('Hi'), reply('Nice to meet you.')] });
+        const conversation = yield* setupChat({
+          channel: true,
+          messages: [
+            prompt('I work on the inbox.'),
+            ...call(MemoryOperation.Remember, 'remember'),
+            reply('Nice, good to know.'),
+          ],
+        });
         const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
           Effect.provide(conversation),
         );
@@ -45,23 +52,18 @@ describe('EnsureReplySent', () => {
   );
 
   it.effect(
-    'is silent once the reply was queued for the host or posted',
+    'is silent once a channel send succeeded',
     Effect.fnUntraced(
       function* ({ expect }) {
-        for (const properties of [
-          { [AgentChannels.OUTBOUND_PROPERTY]: true },
-          { discord: { channelId: 'thread', messageId: 'posted' } },
-        ]) {
-          const conversation = yield* setupChat({
-            channel: true,
-            messages: [prompt('Hi'), reply('Let me check.'), reply('Nice to meet you.', properties)],
-          });
-          const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
-            Effect.provide(conversation),
-          );
+        const conversation = yield* setupChat({
+          channel: true,
+          messages: [prompt('Hi'), ...call(EmailOperation.Send, 'send'), reply('Replied by email.')],
+        });
+        const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
+          Effect.provide(conversation),
+        );
 
-          expect(output).toEqual({});
-        }
+        expect(output).toEqual({});
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -129,5 +131,28 @@ const prompt = (text: string) => Message.make({ sender: { role: 'user' }, blocks
 const followUp = (text: string) =>
   Message.make({ sender: { role: 'user' }, blocks: [ContentBlock.Text.make({ text, disposition: 'synthetic' })] });
 
-const reply = (text: string, properties?: Record<string, unknown>) =>
-  Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text }], properties });
+const reply = (text: string) => Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text }] });
+
+/** A tool call the agent made to `operation`, and its successful result. */
+const call = (operation: Operation.Definition.Any, toolCallId: string) => {
+  const name = Operation.toolName(operation);
+  return [
+    Message.make({
+      sender: { role: 'assistant' },
+      blocks: [
+        {
+          _tag: 'toolCall',
+          toolCallId,
+          name,
+          input: '{}',
+          providerExecuted: false,
+          operationKey: operation.meta.key,
+        },
+      ],
+    }),
+    Message.make({
+      sender: { role: 'tool' },
+      blocks: [{ _tag: 'toolResult', toolCallId, name, result: '{}', providerExecuted: false }],
+    }),
+  ];
+};
