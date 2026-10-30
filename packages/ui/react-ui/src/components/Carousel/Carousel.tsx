@@ -31,8 +31,12 @@ import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/MediaPlayer.t
 /** How many slides a page shows and how many a move advances, as the machine counts them, to map a page to its slides. */
 const PagingContext = createContext({ perPage: 1, perMove: 1 });
 
+// No `autoSize`: slides fill the 16:9 frame, and one whose media is not mounted would size to nothing.
 type CarouselRootProps = ThemedClassName<
-  Omit<CarouselPrimitive.RootProps, 'slideCount' | 'defaultPage' | 'loop' | 'autoplay' | 'translations' | 'orientation'>
+  Omit<
+    CarouselPrimitive.RootProps,
+    'slideCount' | 'defaultPage' | 'loop' | 'autoplay' | 'translations' | 'orientation' | 'autoSize'
+  >
 > & {
   /** Number of slides; nothing renders without any. */
   count: number;
