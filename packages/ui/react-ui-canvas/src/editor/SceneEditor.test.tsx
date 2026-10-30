@@ -5,7 +5,7 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { type Scene } from '@dxos/scene';
@@ -106,6 +106,36 @@ describe('SceneEditor', () => {
     expect(screen.getByTestId('viewport').dataset.grid).toBe('false');
     for (const id of ['palette', 'scene-actions', 'canvas-debug', 'canvas-display']) {
       expect(screen.queryByTestId(id)).toBeNull();
+    }
+  });
+
+  test('a viewport that reports its unchanged size after every render settles, editing or drawing a card', () => {
+    for (const role of ['article', 'card']) {
+      let renders = 0;
+      const ResizingViewport = ({ children, onResize }: ViewportProps<{ zoom: number }>) => {
+        renders++;
+        // Reports from an effect that reruns each render, as the canvas does when handed a fresh callback; capped so a
+        // loop fails the count rather than hanging the test.
+        useEffect(() => {
+          renders < 20 && onResize?.({ width: 400, height: 300 });
+        });
+        return <div data-testid='viewport'>{children}</div>;
+      };
+      render(
+        <SceneEditor.Root
+          config={{ ...config('2d'), viewport: ResizingViewport }}
+          document={DOCUMENT}
+          scene='s'
+          role={role}
+          onIntent={() => {}}
+          display={DISPLAY}
+          authoredCamera={{ zoom: 1 }}
+        >
+          <SceneEditor.Viewport />
+        </SceneEditor.Root>,
+      );
+      expect(renders).toBeLessThan(10);
+      cleanup();
     }
   });
 

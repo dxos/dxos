@@ -343,6 +343,13 @@ const SceneEditorRoot = <C,>({
 
   // The camera bar moves only this viewer's view, never the scene's authored camera.
   const [size, setSize] = useState({ width: 0, height: 0 });
+  // A viewport may report its size after every render; keeping the same object for the same size stops that re-rendering
+  // the editor, which re-renders the viewport, without end.
+  const handleResize = useCallback(
+    (next: { width: number; height: number }) =>
+      setSize((current) => (current.width === next.width && current.height === next.height ? current : next)),
+    [],
+  );
   const current = viewerCamera ?? authoredCamera;
   const camera = useMemo(
     () =>
@@ -400,7 +407,7 @@ const SceneEditorRoot = <C,>({
         onContextMenu={(at, kind) => store.setMenu({ at, kind })}
         onFaceChange={store.setFace}
         onCameraChange={onCameraChange}
-        onResize={setSize}
+        onResize={handleResize}
       >
         {overlay}
       </Viewport>
