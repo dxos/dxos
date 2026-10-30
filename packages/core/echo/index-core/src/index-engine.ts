@@ -683,6 +683,24 @@ export class IndexEngine {
   }
 
   /**
+   * Deletes the index rows of one feed's items that are on a branch other than main, as when the
+   * feed's index mode changes from all branches to the main branch only.
+   *
+   * @returns Number of `objectMeta` rows deleted.
+   */
+  deleteFeedBranchObjects(opts: { spaceId: SpaceId; queueId: string }): Effect.Effect<number, SqlError.SqlError> {
+    return this.#sql
+      .withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const recordIds = yield* this.#objectMetaIndex.selectFeedBranchRecordIds(opts);
+          yield* this.#deleteRecords(recordIds);
+          return recordIds.length;
+        }),
+      )
+      .pipe(Effect.withSpan('IndexEngine.deleteFeedBranchObjects'), SpanAttributes.annotateSpace(opts.spaceId));
+  }
+
+  /**
    * Deletes the index rows of a feed's items whose current block is among the trimmed `blocks`. A row
    * a newer block of the same object backs is kept, since a live feed object re-appends whole under
    * one id and retention may trim only its older blocks.

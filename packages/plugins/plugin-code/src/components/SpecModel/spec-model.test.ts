@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { parseFields } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
 
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
@@ -13,7 +14,6 @@ import {
   buildDataModel,
   buildDefinitionGraph,
   parseField,
-  parseFields,
   selectDefinitions,
   splitTopLevel,
 } from './spec-model.ts';

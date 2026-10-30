@@ -643,6 +643,7 @@ test QA-9: The guided tours
   automated:
     - composer-e2e:tour.spec.ts#Tour tests › the global tour runs from the Home help companion and advances
     - composer-e2e:tour.spec.ts#Tour tests › a document tour picks up contributed steps, however the toolbar collapses
+    - composer-e2e:tour.spec.ts#Tour tests › leaving a document ends its tour
   given:
     - an identity exists and the app is on Home
   steps:
@@ -677,6 +678,12 @@ test QA-9: The guided tours
       note: |
         Which control folds first is decided by a pixel budget the tour cannot see, so a tour that
         only works at one window size is passing by luck.
+    - name: Leave a document mid-tour
+      do: Start a document's tour, load the space's Home URL before finishing it, then reopen the document.
+      expect: |
+        the tour stays gone on Home and on the reopened document, and the global tour starts from Home;
+        a tour left running floats its card in the window's corner and its backdrop swallows every click
+      note: The backdrop blocks the sidebar, so a reader leaves mid-tour only by a load such as a boot onto Home.
 ```
 
 ```mdl
@@ -1145,14 +1152,22 @@ decision D-6: A plugin's definition is its dx.config.ts, so QA-16 edits the modu
 ```
 
 ```mdl
-decision D-7: Composer has a three-minute showcase film, recorded with autocue, covering collaboration, the plugin gallery, SaaS-style objects on the ECHO graph, agents in documents, coding projects, Inbox and Studio.
+decision D-7: A document's tour ends when the reader leaves the document, and QA-9 checks it.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-9]
+  why: The toolbar its steps point at unmounts with the document, so the card fell back to the window's top-left corner.
+```
+
+```mdl
+decision D-8: Composer has a three-minute showcase film, recorded with autocue, covering collaboration, the plugin gallery, SaaS-style objects on the ECHO graph, agents in documents, coding projects, Inbox and Studio.
   date: 2026-10-09
   by: user:richburdon
   affects: [QA-17]
 ```
 
 ```mdl
-decision D-8: [QA-17] specifies the film as one test whose steps are its scenes, with collaboration recorded separately by [QA-8]. Fills in [D-7].
+decision D-9: [QA-17] specifies the film as one test whose steps are its scenes, with collaboration recorded separately by [QA-8]. Fills in [D-8].
   date: 2026-10-09
   by: agent:claude-code
   for: user:richburdon
@@ -1163,14 +1178,14 @@ decision D-8: [QA-17] specifies the film as one test whose steps are its scenes,
 ```
 
 ```mdl
-decision D-9: The objects scene adds an Explorer graph after the kanban board.
+decision D-10: The objects scene adds an Explorer graph after the kanban board.
   date: 2026-10-10
   by: user:richburdon
   affects: [QA-17]
 ```
 
 ```mdl
-decision D-10: [QA-17] switches on Explorer and Cloudflare in the plugin gallery, so the graph in [D-9] uses a plugin the film has just enabled. Fills in [D-9].
+decision D-11: [QA-17] switches on Explorer and Cloudflare in the plugin gallery, so the graph in [D-10] uses a plugin the film has just enabled. Fills in [D-10].
   date: 2026-10-10
   by: agent:claude-code
   for: user:richburdon

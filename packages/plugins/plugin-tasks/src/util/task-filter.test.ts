@@ -8,7 +8,7 @@ import { Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { Task } from '@dxos/types';
 
-import { filterTasks } from './task-filter.ts';
+import { filterTasks, withinScope } from './task-filter.ts';
 
 const tagUrgent = Tag.make({ label: 'urgent' });
 const tagLater = Tag.make({ label: 'later' });
@@ -155,5 +155,20 @@ describe('filterTasks', () => {
     const child = makeTask({ title: 'Child', status: 'started', parent: absent });
     const kept = filterTasks([child], { statuses: new Set<Task.Status>(['started']) });
     expect(kept.map(({ title }) => title)).to.deep.eq(['Child']);
+  });
+});
+
+describe('withinScope', () => {
+  test('keeps the scoped tasks and everything filed under them, in order', ({ expect }) => {
+    const parent = makeTask({ title: 'Parent' });
+    const child = makeTask({ title: 'Child', parent });
+    const grandchild = makeTask({ title: 'Grandchild', parent: child });
+    const other = makeTask({ title: 'Other' });
+    const kept = withinScope([parent, child, grandchild, other], new Set([child.id]));
+    expect(kept.map(({ title }) => title)).to.deep.eq(['Child', 'Grandchild']);
+  });
+
+  test('an empty scope keeps nothing', ({ expect }) => {
+    expect(withinScope([makeTask({ title: 'Task' })], new Set())).to.deep.eq([]);
   });
 });

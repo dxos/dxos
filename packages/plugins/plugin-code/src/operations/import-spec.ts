@@ -8,11 +8,12 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import { formatSourceKey, isSpecKey, parseSourceKey } from '@dxos/deus/review';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import { SpecDocument } from '@dxos/types';
 
-import { formatSourceKey, getSpecKey, isSpecKey, parseSourceKey, resolvePath, resolveRoots, toMetaKey } from '#sync';
+import { getSpecKey, resolvePath, resolveRoots, toMetaKey } from '#sync';
 import { CodeCapabilities, CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';

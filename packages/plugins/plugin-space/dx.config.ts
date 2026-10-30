@@ -65,7 +65,9 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
   modules: [
     AppGraphBuilder,
     // TODO(wittjosiah): Could some of these commands make use of operations?
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
     SpaceCapability.createObject(
       () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
       {

@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import { formatSourceKey } from '@dxos/deus/review';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
-import { formatSourceKey, resolveRoots } from '#sync';
+import { resolveRoots } from '#sync';
 import { CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';

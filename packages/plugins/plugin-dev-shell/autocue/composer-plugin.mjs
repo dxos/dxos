@@ -248,7 +248,7 @@ const CLOCK_TYPE = 'org.example.type.worldClock';
 const TIMEZONES = ['Asia/Tokyo', 'Europe/London'];
 
 /** Contributed by plugin-dev-shell's `src/templates/composer-plugin.ts`. */
-const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
+const TEMPLATE_ID = 'org.dxos.project.composerPluginDevServer';
 
 /**
  * Off-camera prep shared with plugin-projects' desktop and registry flows: dismiss the notice, enable Dev Shell
@@ -436,7 +436,10 @@ export const steps = [
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
       await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.project"]', label: 'Project' });
       // Picked from the list, not filtered for: the reader sees the templates on offer.
-      await demo.click({ selector: `[role="option"][data-value="${TEMPLATE_ID}"]`, label: 'Composer Plugin' });
+      await demo.click({
+        selector: `[role="option"][data-value="${TEMPLATE_ID}"]`,
+        label: 'Composer Plugin (Dev Server)',
+      });
       await demo.type({
         selector: '[data-testid="create-project-panel.name-input"]',
         value: PROJECT_TITLE,
