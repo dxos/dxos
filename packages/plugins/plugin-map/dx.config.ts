@@ -6,12 +6,14 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
 import { MapNamespace } from './src/namespace.ts';
 import * as MapCapabilities from './src/types/MapCapabilities.ts';
 import * as MapEvents from './src/types/MapEvents.ts';
+import * as MapRole from './src/types/MapRole.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -82,12 +84,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
-        'org.dxos.plugin.map.role.map',
-        'org.dxos.plugin.map.role.world',
-        'org.dxos.role.article',
-        'org.dxos.role.formInput',
-        'org.dxos.role.objectProperties',
-        'org.dxos.role.section',
+        MapRole.MapInline,
+        MapRole.World,
+        AppRole.Article,
+        AppRole.FormInput,
+        AppRole.ObjectProperties,
+        AppRole.Section,
       ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),

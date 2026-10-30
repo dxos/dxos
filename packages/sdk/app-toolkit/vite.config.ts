@@ -23,6 +23,7 @@ export default defineConfig({
     'app-framework/Progress': 'src/app-framework/Progress.ts',
     'app-framework/ObservabilityMapping': 'src/app-framework/ObservabilityMapping.ts',
     'app-framework/AppCapability': 'src/app-framework/AppCapability.ts',
+    'app-framework/AppRole': 'src/app-framework/AppRole.ts',
     'app-framework/SchemaAdapter': 'src/app-framework/SchemaAdapter.ts',
     'app-framework/CommandsAdapter': 'src/app-framework/CommandsAdapter.ts',
     'app-framework/PluginAssetAdapter': 'src/app-framework/PluginAssetAdapter.ts',

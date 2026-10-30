@@ -6,6 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
@@ -89,7 +90,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
+      roles: [AppRole.Article, AppRole.CardContent, AppRole.Section, AppRole.Tabpanel],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(

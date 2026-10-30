@@ -5,6 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
@@ -75,11 +76,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Registers React surface contributions.
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
-        'org.dxos.role.article',
-        'org.dxos.role.deckCompanion.samplePanel',
-        'org.dxos.role.objectProperties',
-        'org.dxos.role.section',
-        'org.dxos.role.statusIndicator',
+        AppRole.Article,
+        AppRole.deckCompanion('samplePanel'),
+        AppRole.ObjectProperties,
+        AppRole.Section,
+        AppRole.StatusIndicator,
       ],
     }),
     // Registers the settings module.

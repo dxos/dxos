@@ -7,9 +7,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as DeckRole from '@dxos/plugin-deck/DeckRole';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { trim } from '@dxos/util';
 
 import { SupportNamespace } from './src/namespace.ts';
@@ -93,15 +96,15 @@ const config: Plugin.PluginConfig<SupportPluginOptions> = Plugin.config<SupportP
     AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'module-url' } })),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
-        'org.dxos.plugin.space.role.homeContent',
-        'org.dxos.plugin.support.role.hints',
-        'org.dxos.plugin.support.role.keyshortcuts',
-        'org.dxos.role.article',
-        'org.dxos.role.deckCompanion.discord',
-        'org.dxos.role.deckCompanion.help',
-        'org.dxos.role.dialog',
-        'org.dxos.role.section',
-        'org.dxos.role.statusIndicator',
+        SpaceSurface.SpaceHomeContent,
+        DeckRole.Hints,
+        DeckRole.Keyshortcuts,
+        AppRole.Article,
+        AppRole.deckCompanion('discord'),
+        AppRole.deckCompanion('help'),
+        AppRole.Dialog,
+        AppRole.Section,
+        AppRole.StatusIndicator,
       ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),

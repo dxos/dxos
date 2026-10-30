@@ -5,6 +5,7 @@
 export * as AppActivationEvents from './AppActivationEvents.ts';
 export * as AppCapabilities from './AppCapabilities.ts';
 export * as AppCapability from './AppCapability.ts';
+export * as AppRole from './AppRole.ts';
 export * as ObjectAction from './ObjectAction.ts';
 export * as SchemaAdapter from './SchemaAdapter.ts';
 export * as CommandsAdapter from './CommandsAdapter.ts';

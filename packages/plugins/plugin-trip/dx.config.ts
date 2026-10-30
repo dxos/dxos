@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
@@ -88,7 +89,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+      roles: [AppRole.Article, AppRole.Section],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {

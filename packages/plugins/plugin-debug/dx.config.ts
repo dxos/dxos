@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -16,6 +17,7 @@ import { trim } from '@dxos/util';
 import { DebugNamespace } from './src/namespace.ts';
 import * as Debug from './src/types/Debug.ts';
 import * as DebugEvents from './src/types/DebugEvents.ts';
+import * as DebugSurface from './src/types/DebugSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debug.DebugPluginOptions>({
@@ -88,14 +90,14 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
-        'org.dxos.plugin.debug.surface.page',
-        'org.dxos.plugin.debug.surface.stats',
-        'org.dxos.role.article',
-        'org.dxos.role.deckCompanion.spaceObjects',
-        'org.dxos.role.devtoolsOverview',
-        'org.dxos.role.drawer',
-        'org.dxos.role.section',
-        'org.dxos.role.statusIndicator',
+        DebugSurface.Page,
+        DebugSurface.Stats,
+        AppRole.Article,
+        AppRole.deckCompanion('spaceObjects'),
+        AppRole.DevtoolsOverview,
+        AppRole.Drawer,
+        AppRole.Section,
+        AppRole.StatusIndicator,
       ],
       requires: [Capabilities.AtomRegistry, Debug.DebugCapabilities.Settings, AppCapabilities.FileUploader],
     }),

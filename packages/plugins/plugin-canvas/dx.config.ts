@@ -7,6 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
@@ -85,7 +86,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       provides: [CanvasCapabilities.Settings],
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.objectProperties'],
+      roles: [AppRole.ObjectProperties],
     }),
     AppCapability.spaceTemplates(
       () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),

@@ -7,6 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
@@ -80,7 +81,7 @@ const config: Plugin.PluginConfig<OnboardingOptions> = Plugin.config<OnboardingO
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+      roles: [AppRole.Dialog],
     }),
     AppCapability.spaceTemplates(
       () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),

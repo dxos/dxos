@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
@@ -17,12 +18,14 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { trim } from '@dxos/util';
 
 import { AssistantNamespace } from './src/namespace.ts';
 import * as AssistantCapabilities from './src/types/AssistantCapabilities.ts';
 import * as AssistantEvents from './src/types/AssistantEvents.ts';
 import type * as AssistantOptions from './src/types/AssistantOptions.ts';
+import * as ChatSurface from './src/types/ChatSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void> =
@@ -99,15 +102,15 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       }),
       AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
         roles: [
-          'org.dxos.plugin.assistant.role.chatDetails',
-          'org.dxos.plugin.assistant.role.chatSurface',
-          'org.dxos.plugin.space.role.homeContent',
-          'org.dxos.plugin.space.role.homePinBottom',
-          'org.dxos.role.article',
-          'org.dxos.role.deckCompanion.trace',
-          'org.dxos.role.dialog',
-          'org.dxos.role.objectProperties',
-          'org.dxos.role.statusIndicator',
+          ChatSurface.ChatDetails,
+          ChatSurface.ChatSurface,
+          SpaceSurface.SpaceHomeContent,
+          SpaceSurface.SpaceHomePinBottom,
+          AppRole.Article,
+          AppRole.deckCompanion('trace'),
+          AppRole.Dialog,
+          AppRole.ObjectProperties,
+          AppRole.StatusIndicator,
         ],
       }),
       AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),

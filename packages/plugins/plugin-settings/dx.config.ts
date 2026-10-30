@@ -4,6 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 
 import { SettingsNamespace } from './src/namespace.ts';
 
@@ -20,7 +21,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article'],
+      roles: [AppRole.Article],
     }),
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),

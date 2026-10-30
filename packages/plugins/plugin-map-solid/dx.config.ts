@@ -4,6 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import { trim } from '@dxos/util';
 
 import { MapNamespace } from './src/namespace.ts';
@@ -42,7 +43,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/surface.tsx', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+      roles: [AppRole.Article, AppRole.Section],
     }),
   ],
 });

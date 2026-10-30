@@ -6,6 +6,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
@@ -39,7 +40,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/bridge-driver.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.deckCompanion.streamDeck', 'org.dxos.role.statusIndicator'],
+      roles: [AppRole.deckCompanion('streamDeck'), AppRole.StatusIndicator],
     }),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     AppCapability.pluginAsset({
