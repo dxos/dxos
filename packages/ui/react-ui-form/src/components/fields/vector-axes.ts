@@ -19,8 +19,8 @@ export type VectorAxis = {
   type: SchemaAST.AST;
 };
 
-/** Size axes read as their initial, as single-letter coordinates already do. */
-const SHORT_LABELS: Record<string, string> = { width: 'w', height: 'h', depth: 'd' };
+/** Axes are lettered by position, whatever their property names (a size's width and height read x and y). */
+const AXIS_LETTERS = ['x', 'y', 'z', 'w'] as const;
 
 /** Whether the property is a struct its schema marks as a vector (see {@link VectorAnnotation}). */
 export const isVectorType = (ast: SchemaAST.AST): boolean =>
@@ -28,8 +28,7 @@ export const isVectorType = (ast: SchemaAST.AST): boolean =>
   SchemaEx.findNode(ast, SchemaAST.isObjects) !== undefined;
 
 /**
- * The numeric axes of a vector struct, in schema order: a single-letter name labels itself, a size axis takes its
- * initial, and any other axis its title (else its name).
+ * The numeric axes of a vector struct, in schema order, lettered x, y, z by position.
  */
 export const getVectorAxes = (ast: SchemaAST.AST): VectorAxis[] => {
   const struct = SchemaEx.findNode(ast, SchemaAST.isObjects);
@@ -37,13 +36,11 @@ export const getVectorAxes = (ast: SchemaAST.AST): VectorAxis[] => {
     return [];
   }
 
-  return getFormProperties(struct).flatMap((property) => {
-    if (typeof property.name !== 'string' || property.type._tag !== 'Number') {
-      return [];
-    }
-    const name = property.name;
-    const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type);
-    const label = name.length === 1 ? name : (SHORT_LABELS[name] ?? title ?? name);
-    return [{ name, label, type: property.type }];
-  });
+  return getFormProperties(struct)
+    .filter((property) => typeof property.name === 'string' && property.type._tag === 'Number')
+    .map((property, index) => ({
+      name: String(property.name),
+      label: AXIS_LETTERS[index] ?? String(property.name),
+      type: property.type,
+    }));
 };

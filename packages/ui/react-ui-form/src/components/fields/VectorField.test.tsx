@@ -37,7 +37,7 @@ const renderForm = (values: Item, props: Partial<FormRootProps<Item>> = {}) =>
 describe('VectorField', () => {
   afterEach(() => cleanup());
 
-  test('stacks one input per axis, each labelled by its axis', ({ expect }) => {
+  test('stacks one input per axis, its letter a start adornment inside the input', ({ expect }) => {
     renderForm({ position: { x: 0, y: 1, z: 0 }, size: { width: 10, height: 20 } });
     const position = screen.getByRole('group', { name: 'Position' });
     expect(
@@ -51,10 +51,11 @@ describe('VectorField', () => {
       within(size)
         .getAllByRole('spinbutton')
         .map((input) => input.getAttribute('aria-label')),
-    ).toEqual(['w', 'h']);
-    // The visible axis labels are the same short names.
-    expect(within(position).getByText('z')).toBeInTheDocument();
-    expect(within(size).getByText('w')).toBeInTheDocument();
+    ).toEqual(['x', 'y']);
+    // The letter sits in the input's start adornment, not in a label column beside it.
+    const zInput = within(position).getByRole('spinbutton', { name: 'z' });
+    expect(zInput.closest('[data-part="control"]')?.querySelector('[data-part="start"]')?.textContent).toContain('z');
+    expect(within(size).queryByText('w')).toBeNull();
   });
 
   test('editing y writes only position.y, and commits on blur', async ({ expect }) => {

@@ -212,6 +212,12 @@
     color: inherit;
   }
   /* A trailing icon-only Button ends flush with the row, its inset cell standing in for the row's padding. */
+  /* A short label inside the row's start (a vector axis's letter); muted with the adornment, so the figure reads first. */
+  .dx-input-prefix {
+    padding-inline-start: var(--dx-control-pad, var(--dx-gap-size));
+    font-size: var(--dx-label-font-size);
+    user-select: none;
+  }
   .dx-input-adornment {
     display: flex;
     align-items: center;

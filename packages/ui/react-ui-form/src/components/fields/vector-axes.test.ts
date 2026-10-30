@@ -41,21 +41,21 @@ describe('getVectorAxes', () => {
     ]);
   });
 
-  test('size axes take their initial, even when titled', ({ expect }) => {
+  test('every axis is labelled x, y, z by position, a size included', ({ expect }) => {
     const Size2 = Schema.Struct({
       width: Schema.Number.annotate({ title: 'Width' }),
       height: Schema.Number.annotate({ title: 'Height' }),
     });
-    expect(getVectorAxes(Size2.ast).map(({ label }) => label)).toEqual(['w', 'h']);
+    expect(getVectorAxes(Size2.ast).map(({ label }) => label)).toEqual(['x', 'y']);
   });
 
-  test('another axis takes its title, and non-numeric properties are skipped', ({ expect }) => {
+  test('non-numeric properties are skipped and do not take a letter', ({ expect }) => {
     const Polar = Schema.Struct({
       radius: Schema.Number.annotate({ title: 'r' }),
       angle: Schema.Number,
       unit: Schema.String,
     });
-    expect(getVectorAxes(Polar.ast).map(({ label }) => label)).toEqual(['r', 'angle']);
+    expect(getVectorAxes(Polar.ast).map(({ label }) => label)).toEqual(['x', 'y']);
   });
 
   test('an optional axis is still an axis', ({ expect }) => {

@@ -67,6 +67,8 @@ export type NumberInputProps = ThemedClassName<
   'stepperOnHover'?: boolean;
   /** Sizes just this input (`data-size` scopes `theme/size.css`'s metrics to it), whatever its enclosing scope. */
   'size'?: Size;
+  /** Text at the input's start, inside the row (e.g. a vector axis's letter). */
+  'prefix'?: string;
   /** Aligns the number to the row's end, as figures in a column do. */
   'align'?: 'start' | 'end';
   /** Adds an end button that opens a slider over `min`..`max` (0..100 when unset). */
@@ -104,6 +106,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       stepperOnHover,
       align = 'start',
       size,
+      prefix,
       slider,
       incrementLabel,
       decrementLabel,
@@ -185,9 +188,14 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           data-stepper={placement || undefined}
           className={mx(recipes.numberInput(), classNames)}
         >
-          {(placement === 'start' || placement === 'split') && (
+          {(prefix || placement === 'start' || placement === 'split') && (
             <span data-scope='number-input' data-part='start' className={recipes.inputAdornment()}>
-              {decrement}
+              {prefix && (
+                <span aria-hidden className={recipes.inputPrefix()}>
+                  {prefix}
+                </span>
+              )}
+              {(placement === 'start' || placement === 'split') && decrement}
               {placement === 'start' && increment}
             </span>
           )}

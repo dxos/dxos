@@ -141,6 +141,7 @@ export const recipes = {
   input: () => `dx-control dx-input ${FOCUS_RING}`,
   inputAdornment: () => 'dx-input-adornment',
   inputField: () => 'dx-input-field',
+  inputPrefix: () => 'dx-input-prefix',
   label: () => 'dx-label',
   link: () => `dx-link ${FOCUS_RING}`,
   listbox: () => 'dx-listbox',
