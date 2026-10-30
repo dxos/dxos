@@ -298,8 +298,9 @@ exporting on the next deploy with no further action.
       was indistinguishable from preview on any dashboard — the same defect fixed for local via
       `dx-local.yml`, but fleet-wide. Now `dev` / `preview` / `staging` / `production` in
       `.github/workflows/env/*`, with `default` left explicit as `unknown`.
-- [ ] **Grant `SIGNOZ_INGESTION_KEY` to a Worker that starts exporting** — no Worker reads it
-      today, and `pnpm secrets` is gone; push it with `op read <ref> | wrangler secret put` once one does.
+- [ ] **Grant `SIGNOZ_INGESTION_KEY` to any new Worker** — per-Worker secret matched by a
+      1Password section named after the raw Worker name, so a newly added environment needs
+      `pnpm secrets remote <env> composer` before its clients can export.
 - [x] **Stamp the build commit as `vcs.ref.head.revision`.** `service.version` is
       `DXOS_VERSION`, a constant bumped at release, so two deploys of one release were
       indistinguishable in SigNoz and a regression could not be bisected to a commit. The hash
