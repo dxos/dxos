@@ -14,6 +14,7 @@ import {
   Camera,
   Color3,
   Color4,
+  Constants,
   CreateBox,
   CreateCylinder,
   CreateIcoSphere,
@@ -147,6 +148,9 @@ const SETTLE_FRAMES = 120;
 /** Frames drawn after a selection changes, so the outline's effect compiles and shows. */
 const OUTLINE_FRAMES = 3;
 
+/** The rendering group selection boxes draw in, after the scene with its depth cleared. */
+const OVERLAY_GROUP = 1;
+
 /** What the gizmos snap to with snapping on: the ground grid's minor unit, 15 degrees and a tenth of the size. */
 export const SNAP = { move: 1, rotate: 15, scale: 0.1 } as const;
 
@@ -175,6 +179,9 @@ export class SceneRenderer3D {
   readonly #instances: Record<Instance3D['primitive'], Mesh>;
   #grid?: LinesMesh;
   readonly #highlight: HighlightLayer;
+  /** The meshes kept out of the outline's mask and stencil: every mesh but the selected items'. */
+  readonly #excluded = new Set<Mesh>();
+  readonly #watched = new WeakSet<Mesh>();
   #selection: string;
   readonly #boxes = new Map<string, { mesh: LinesMesh; min: Vector3; max: Vector3 }>();
   /** The selected face: the item's key and the face's axis-aligned outward normal, drawn as a pane over that side. */
@@ -220,6 +227,19 @@ export class SceneRenderer3D {
       blurVerticalSize: 0.5,
     });
     this.#highlight.innerGlow = false;
+    // Another mesh in the outline's mask cuts the selected silhouette where it intersects or shares a face (which
+    // z-fights there), striping the stroke; with every other mesh excluded the mask is the whole silhouette.
+    // Swept before each frame, since meshes come and go with the items, links, boxes and grid.
+    // (An instanced mesh draws with its source, so excluding the source covers it.)
+    this.#scene.onBeforeRenderObservable.add(() =>
+      this.#scene.meshes.forEach((mesh) => mesh instanceof Mesh && this.#exclude(mesh)),
+    );
+    // The stroke is drawn where the stencil is not the selection's, so a selected item marks its whole silhouette, even
+    // where another item is in front of it; excluded meshes write no stencil at all.
+    this.#scene.onBeforeCameraRenderObservable.add(() => this.#engine.setStencilOperationDepthFail(Constants.REPLACE));
+    this.#scene.onAfterCameraRenderObservable.add(() => this.#engine.setStencilOperationDepthFail(Constants.KEEP));
+    // Selection boxes draw over the scene, as 2D's frame does, so a face that an edge lies on cannot z-fight with it.
+    this.#scene.setRenderingAutoClearDepthStencil(OVERLAY_GROUP, true, true, false);
   }
 
   /** The selection colour, as a hex string. */
@@ -227,11 +247,21 @@ export class SceneRenderer3D {
     return this.#selection;
   }
 
-  /** Each selected item's world-aligned bounding box: its corners and colour, by key. */
-  get boxes(): Record<string, { min: Vector3; max: Vector3; color: string }> {
+  /** Each selected item's world-aligned bounding box: its corners, colour and whether it draws over the scene, by key. */
+  get boxes(): Record<string, { min: Vector3; max: Vector3; color: string; onTop: boolean }> {
     return Object.fromEntries(
-      [...this.#boxes].map(([key, { min, max }]) => [key, { min, max, color: this.#selection }]),
+      [...this.#boxes].map(([key, { mesh, min, max }]) => [
+        key,
+        { min, max, color: this.#selection, onTop: mesh.renderingGroupId === OVERLAY_GROUP },
+      ]),
     );
+  }
+
+  /** The meshes that would cut into the selection outline's mask: none, whatever overlaps the selection. */
+  get outlineOccluders(): string[] {
+    return this.#scene.meshes
+      .filter((mesh) => mesh instanceof Mesh && !this.#excluded.has(mesh) && !this.#highlight.hasMesh(mesh))
+      .map((mesh) => mesh.name);
   }
 
   /** Turns gizmo snapping on (to the grid unit, 15 degrees and a tenth) or off. */
@@ -472,9 +502,12 @@ export class SceneRenderer3D {
     for (const [key, { surface }] of this.#items) {
       const selected = this.#selected.has(key);
       if (selected && !this.#highlight.hasMesh(surface)) {
+        this.#excluded.delete(surface);
+        this.#highlight.removeExcludedMesh(surface);
         this.#highlight.addMesh(surface, color);
       } else if (!selected && this.#highlight.hasMesh(surface)) {
         this.#highlight.removeMesh(surface);
+        this.#exclude(surface);
       }
     }
     // The boxes follow the items' current bounds, so a moved or resized item's box is drawn afresh.
@@ -514,6 +547,7 @@ export class SceneRenderer3D {
     mesh.color = color;
     mesh.alpha = 0.8;
     mesh.isPickable = false;
+    mesh.renderingGroupId = OVERLAY_GROUP;
     return { mesh, min: min.clone(), max: max.clone() };
   }
 
@@ -550,6 +584,21 @@ export class SceneRenderer3D {
     mesh.material = material;
     mesh.isPickable = false;
     this.#faceMesh = { mesh, center: center.clone() };
+  }
+
+  #exclude(mesh: Mesh): void {
+    if (this.#excluded.has(mesh) || this.#highlight.hasMesh(mesh)) {
+      return;
+    }
+    this.#excluded.add(mesh);
+    this.#highlight.addExcludedMesh(mesh);
+    if (!this.#watched.has(mesh)) {
+      this.#watched.add(mesh);
+      mesh.onDisposeObservable.addOnce(() => {
+        this.#excluded.delete(mesh);
+        this.#highlight.removeExcludedMesh(mesh);
+      });
+    }
   }
 
   #clearBoxes(): void {

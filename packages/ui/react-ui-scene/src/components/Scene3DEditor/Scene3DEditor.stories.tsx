@@ -18,7 +18,39 @@ import { type Tool3D } from './tools.ts';
 
 const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] as const;
 
-type StoryProps = { exemplar: (typeof EXEMPLARS_3D)[number] };
+/** Two cubes that intersect and two whose tops are coplanar: where a selection's outline and box must stay clean. */
+const OVERLAP: Scene.SceneDocument = {
+  scenes: [
+    {
+      id: 'overlap',
+      dim: '3d',
+      layout: 'overlap',
+      camera: {
+        target: { x: 1, y: 0, z: 0 },
+        yaw: 30,
+        pitch: 30,
+        distance: 9,
+        fov: 0.8,
+        projection: 'perspective',
+      },
+    },
+  ],
+  layouts: [
+    {
+      id: 'overlap',
+      dim: '3d',
+      elements: {
+        a: { id: 'a', type: 'cube', center: { x: -1, y: 0.5, z: 0 } },
+        b: { id: 'b', type: 'cube', center: { x: -0.4, y: 0.8, z: 0.4 } },
+        c: { id: 'c', type: 'cube', center: { x: 2, y: 0.5, z: 0 } },
+        d: { id: 'd', type: 'cube', center: { x: 3, y: 0.5, z: 0 } },
+      },
+    },
+  ],
+  models: [],
+};
+
+type StoryProps = { exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap' };
 
 const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
   { tool: 'select', icon: SELECT_ICON, label: 'Select' },
@@ -39,7 +71,10 @@ const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
  * 4. Delete removes the selection; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
  */
 const DefaultStory = ({ exemplar }: StoryProps) => {
-  const initial = useMemo(() => Dsl.readScenes(EXEMPLARS[exemplar]).document, [exemplar]);
+  const initial = useMemo(
+    () => (exemplar === 'overlap' ? OVERLAP : Dsl.readScenes(EXEMPLARS[exemplar]).document),
+    [exemplar],
+  );
   const [document, setDocument] = useState<Scene.SceneDocument>(initial);
   const [selection, setSelection] = useState<string[]>([]);
   const [tool, setTool] = useState<Tool3D>('select');
@@ -99,3 +134,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Overlapping: Story = { args: { exemplar: 'overlap' } };

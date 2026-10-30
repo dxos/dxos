@@ -87,6 +87,33 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.boxes).toEqual({});
   });
 
+  test('intersecting or coplanar items never cut into the outline: only selected items reach its mask', () => {
+    const view = renderer(
+      doc([
+        { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', type: 'cube', center: { x: 0.5, y: 0, z: 0.5 } },
+      ]),
+    );
+    view.setGrid(true);
+    view.select(['a']);
+    expect(view.outlineOccluders).toEqual([]);
+    view.select(['b']);
+    expect(view.outlineOccluders).toEqual([]);
+    view.dispose();
+  });
+
+  test('a selected box is drawn over the scene, so a face it lies on cannot stripe it', () => {
+    const view = renderer(
+      doc([
+        { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', type: 'cube', center: { x: 1, y: 0, z: 0 } },
+      ]),
+    );
+    view.select(['a']);
+    expect(view.boxes.a?.onTop).toBe(true);
+    view.dispose();
+  });
+
   test("a selected face is drawn over that side of the item's bounds in the selection colour, and cleared", () => {
     const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
     view.selectFace('a', { x: 1, y: 0, z: 0 });
