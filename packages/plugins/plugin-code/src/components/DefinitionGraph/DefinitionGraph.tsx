@@ -4,6 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
+import { type ReviewModel, type VerdictStatus, reviewAnnotations, statusOf } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
 import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas/scene';
 import * as Card from '@dxos/react-ui/Card';
@@ -21,18 +22,14 @@ import {
   type DefinitionModel,
   KIND_GROUPS,
   type KindGroup,
-  type ReviewModel,
   type SpecTexts,
   STATUS_STYLE,
-  type VerdictStatus,
   buildDefinitionGraph,
   diffDefinitionGraphs,
   groupOf,
   hiddenKinds,
   kindStyle,
-  reviewAnnotations,
   selectDefinitions,
-  statusOf,
 } from '../SpecModel/index.ts';
 
 /** QA blocks name most of the design, so they start hidden to keep the design legible. */

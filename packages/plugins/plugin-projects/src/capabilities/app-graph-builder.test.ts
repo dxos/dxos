@@ -17,7 +17,6 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { SpecDocument } from '@dxos/types';
 
 import { Feature, Spec } from '#types';
 
@@ -29,7 +28,6 @@ import {
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
   createSpecBreakdownsExtension,
-  createSpecDocumentCompanionExtension,
 } from './app-graph-builder.ts';
 
 describe('project app graph builder', () => {
@@ -120,25 +118,6 @@ describe('project app graph builder', () => {
       }).pipe(Effect.provide(TestDatabaseLayer({ types: [Spec.Spec, Feature.Feature] }))),
     );
   });
-
-  test("contributes the spec's document as a companion, and nothing while it holds none", async ({ expect }) => {
-    await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const extensions = yield* createSpecDocumentCompanionExtension();
-        const bare = yield* Database.add(Spec.make({ name: 'Bare' }));
-        expect(yield* Effect.promise(() => getSubjectCompanions(bare, extensions))).toEqual([]);
-
-        const document = yield* Database.add(SpecDocument.make({ name: 'PLUGIN.mdl', content: '# Spec' }));
-        const spec = yield* Database.add(Spec.make({ name: 'DXOS' }));
-        Obj.update(spec, (spec) => {
-          spec.document = Ref.make(document);
-        });
-        yield* Database.flush();
-        const companions = yield* Effect.promise(() => getSubjectCompanions(spec, extensions));
-        expect(companions.map((node) => node.data)).toEqual([document]);
-      }).pipe(Effect.provide(TestDatabaseLayer({ types: [Spec.Spec, Feature.Feature, SpecDocument.SpecDocument] }))),
-    );
-  });
 });
 
 const SUBJECT_ID = 'subject';
@@ -181,12 +160,4 @@ const getSubjectChildren = async (subject: unknown, extensions: AppGraphBuilder.
   const context = await setupSubject(subject, extensions);
   await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID));
   return context.registry.get(context.graph.connections(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'child'));
-};
-
-const getSubjectCompanions = async (subject: unknown, extensions: AppGraphBuilder.BuilderExtension[]) => {
-  const context = await setupSubject(subject, extensions);
-  await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'companion');
-  return context.registry.get(
-    context.graph.connections(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'companion'),
-  );
 };

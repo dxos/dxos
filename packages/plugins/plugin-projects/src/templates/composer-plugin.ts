@@ -69,6 +69,9 @@ export type TaskSeed = Pick<Task.Task, 'title' | 'description' | 'estimate'>;
 
 /** What differs between a run on the Computer shell and one in a local sandbox. */
 export type Variant = {
+  /** Distinct per variant offered alongside another, since the template list keys its rows by id. */
+  id?: string;
+  label?: string;
   skill: string;
   instructions: string;
   steps: ReadonlyArray<TaskSeed>;
@@ -87,10 +90,96 @@ export const readGuide = (how: string): TaskSeed => ({
   estimate: 'xs',
 });
 
+/** Stands for the plugin's key in the task text until {@link makeComposerPlugin} mints one per project. */
+export const PLUGIN_KEY_SLOT = '{{pluginKey}}';
+
+/**
+ * A key no other publisher holds: registry keys are global, so a fixed one is claimed by its first publisher and
+ * refused to everyone after.
+ */
+export const mintPluginKey = (): string => {
+  const suffix = Array.from(crypto.getRandomValues(new Uint8Array(4)), (byte) => byte.toString(16).padStart(2, '0'));
+  return `org.example.plugin.worldClock${suffix.join('')}`;
+};
+
+const FENCE = '```';
+
+/**
+ * The plugin's spec, seeded by the template and shipped in the bundle, so Plugins → Registry → Open Specification
+ * shows the same text the project started from.
+ */
+export const worldClockSpec = (key: string): string => `---
+id: ${key}
+name: WorldClockPlugin
+version: 0.1.0
+---
+
+A world clock for each space: a map with a pin per timezone above a row of ticking clocks. Written by an agent
+from the Composer Plugin project template, built in a sandbox and published to its author's private registry.
+
+## Extensions
+
+| Term        | URI                          |
+|-------------|------------------------------|
+| \`type\`      | \`org.dxos.mdl.type@1.0\`      |
+| \`component\` | \`org.dxos.mdl.component@1.0\` |
+| \`feat\`      | \`org.dxos.mdl.feat@1.0\`      |
+
+## Types
+
+${FENCE}mdl
+type Zone
+  fields:
+    timezone: string
+    lat: number
+    lng: number
+${FENCE}
+
+${FENCE}mdl
+type Clock
+  fields:
+    zones: Zone[]
+${FENCE}
+
+## Components
+
+${FENCE}mdl
+component ClocksArticle
+  desc: The Clocks page under the space's WORLD CLOCK group.
+  props:
+    clock?: Clock
+  slots:
+    map: World
+  actions:
+    addZone(timezone: string)
+    removeZone(timezone: string)
+    selectZone(timezone: string)
+${FENCE}
+
+## Features
+
+${FENCE}mdl
+feat F-1: World Clock
+
+  req F-1.1: Each space's navtree holds a WORLD CLOCK group with a Clocks page under it.
+  req F-1.2: The page shows the map with a pin per clock above a row of clocks sorted west to east.
+  req F-1.3: Each clock shows the date and the 24-hour time, ticking every second, and its timezone.
+  req F-1.4:
+    when: the reader picks a timezone from the plus card's form
+    then: a clock is added and stored on the space's Clock, created on the first change
+  req F-1.5:
+    when: the reader clicks a clock
+    then: its card and its pin on the map are selected
+${FENCE}
+`;
+
+/** Ships {@link worldClockSpec} with the bundle, as the guide's "Ship a spec" section does. */
+const SHIP_SPEC = ` Use the key \`${PLUGIN_KEY_SLOT}\`. Write this \`PLUGIN.mdl\` beside \`dx.config.ts\` exactly as given, set \`spec: 'PLUGIN.mdl'\` in \`dx.config.ts\`, and ship it as the guide's "Ship a spec" section shows: a \`pluginAsset\` entry in \`modules\`, \`Capability.lazyModule('pluginAsset', { provides: [AppCapabilities.PluginAsset], activatesOn: ActivationEvents.PluginAssetsRequested, environments: ['browser', 'tauri'] }, () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }))\`, whose body contributes \`AppCapabilities.PluginAsset\` with \`{ pluginId: '${PLUGIN_KEY_SLOT}', path: 'PLUGIN.mdl', content, mimeType: 'application/x-mdl' }\`, \`content\` imported from \`'../../PLUGIN.mdl?raw'\`, and a \`src/raw.d.ts\` declaring \`*?raw\`. Plugins → Registry shows it as the plugin's specification.\n\n\`${FENCE}markdown\n${worldClockSpec(PLUGIN_KEY_SLOT)}\`${FENCE}`;
+
 /** The plugin itself; `folder` is where its files go and `build` the sentence that says where it is served from. */
 export const writePlugin = (folder: string, build: string, extra = ''): TaskSeed => ({
   title: 'Write the plugin in TypeScript',
-  description: `Create \`dx.config.ts\` (the plugin, defined with \`Plugin.config\`), \`vite.config.ts\`, \`tsconfig.json\` and the module bodies under \`src/\` in \`${folder}/\`: a "World Clock" group in each space's navtree with a "Clocks" page under it. Define a \`Clock\` ECHO type holding its clocks, each a timezone and its position (from \`timezones\` in \`@dxos/react-ui-geo/data\`), one per space, stored on the first change; until then the page shows the reader's own timezone. The article shows plugin-map's \`World\` surface with a marker per clock and the Clock as its \`subject\`, and beneath it a single row of clock cards sorted west to east, each with a ghost delete button in its top-right corner (rendered after the card's text, or the text covers it) and showing the date, the time (24-hour, zero-padded, no AM/PM, ticking every second) and the timezone, then an empty card the same size as the clock cards with a large ghost plus button centered in it that opens a react-ui-form with a timezone select. Clicking a clock selects it with \`LayoutOperation.Select\`, which highlights its card and its pin on the map. Build the article from the guide's put-together example. Give each clock card \`data-testid="worldClock.clock"\`, the empty card \`data-testid="worldClock.new"\`, its plus button \`data-testid="worldClock.add"\` and each delete button \`data-testid="worldClock.delete"\`. Depend on \`org.dxos.plugin.map\` and tag it \`labs\` in \`dx.config.ts\`, as the guide does. Add to the navtree, never replace it: no workspace, no rail tab. ${build}${extra}`,
+  description: `Create \`dx.config.ts\` (the plugin, defined with \`Plugin.config\`), \`vite.config.ts\`, \`tsconfig.json\`, \`PLUGIN.mdl\` and the module bodies under \`src/\` in \`${folder}/\`: a "World Clock" group in each space's navtree with a "Clocks" page under it. Define a \`Clock\` ECHO type holding its clocks, each a timezone and its position (from \`timezones\` in \`@dxos/react-ui-geo/data\`), one per space, stored on the first change; until then the page shows the reader's own timezone. The article shows plugin-map's \`World\` surface with a marker per clock and the Clock as its \`subject\`, and beneath it a single row of clock cards sorted west to east, each with a ghost delete button in its top-right corner (rendered after the card's text, or the text covers it) and showing the date, the time (24-hour, zero-padded, no AM/PM, ticking every second) and the timezone, then an empty card the same size as the clock cards with a large ghost plus button centered in it that opens a react-ui-form with a timezone select. Clicking a clock selects it with \`LayoutOperation.Select\`, which highlights its card and its pin on the map. Build the article from the guide's put-together example. Give each clock card \`data-testid="worldClock.clock"\`, the empty card \`data-testid="worldClock.new"\`, its plus button \`data-testid="worldClock.add"\` and each delete button \`data-testid="worldClock.delete"\`. Depend on \`org.dxos.plugin.map\` and tag it \`labs\` in \`dx.config.ts\`, as the guide does. Add to the navtree, never replace it: no workspace, no rail tab. ${build}${extra}${SHIP_SPEC}`,
   estimate: 's',
 });
 
@@ -190,8 +279,10 @@ ${IDS}`,
 };
 
 /** The parent task and its four subtasks, each subtask depending on the one before it. */
-const makeTasks = (steps: ReadonlyArray<TaskSeed>): Task.Task => {
-  const subtasks = steps.map((step) => Task.make({ ...step, status: 'todo' }));
+const makeTasks = (steps: ReadonlyArray<TaskSeed>, pluginKey: string): Task.Task => {
+  const subtasks = steps.map((step) =>
+    Task.make({ ...step, description: step.description?.replaceAll(PLUGIN_KEY_SLOT, pluginKey), status: 'todo' }),
+  );
   for (const [index, task] of subtasks.entries()) {
     if (index > 0) {
       Obj.update(task, (task) => {
@@ -203,10 +294,13 @@ const makeTasks = (steps: ReadonlyArray<TaskSeed>): Task.Task => {
   return Task.make({ ...PARENT, status: 'todo', subtasks: subtasks.map((task) => Ref.make(task)) });
 };
 
-/** The "Composer Plugin" template for one variant: a chat builds a TypeScript plugin and offers it back to load. */
-export const makeComposerPlugin = (variant: Variant): ProjectCapabilities.Template => ({
-  id: 'org.dxos.project.composerPlugin',
-  label: 'Composer Plugin',
+/**
+ * The "Composer Plugin" template for one variant: a chat builds a TypeScript plugin and offers it back to load.
+ * Each project gets its own plugin key from `mintKey`.
+ */
+export const makeComposerPlugin = (variant: Variant, mintKey = mintPluginKey): ProjectCapabilities.Template => ({
+  id: variant.id ?? 'org.dxos.project.composerPlugin',
+  label: variant.label ?? 'Composer Plugin',
   icon: 'ph--puzzle-piece--regular',
   scaffold: ({ name }) =>
     Effect.sync(() => {
@@ -219,7 +313,7 @@ export const makeComposerPlugin = (variant: Variant): ProjectCapabilities.Templa
       });
       const taskSet = project.taskSet?.target;
       if (taskSet) {
-        TaskSet.addTaskToSet(taskSet, makeTasks(variant.steps));
+        TaskSet.addTaskToSet(taskSet, makeTasks(variant.steps, mintKey()));
       }
 
       return project;

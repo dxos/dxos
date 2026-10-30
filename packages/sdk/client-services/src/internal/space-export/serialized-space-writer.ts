@@ -112,8 +112,8 @@ export const writeSerializedSpaceArchive = async (
   const databaseRoot = space.databaseRoot;
   assertState(databaseRoot, 'Space database root is not ready');
 
-  const rootDoc = databaseRoot.doc();
-  invariant(rootDoc, 'Space database root document is not loaded');
+  const rootDoc = databaseRoot.directory();
+  invariant(rootDoc, 'Space database root document is not available');
 
   // Collect all object structures across the root doc and any linked docs.
   const objects: Obj.JSON[] = [];
