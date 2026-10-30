@@ -390,11 +390,17 @@ export class ObjectCore {
    * Derived from the document instead of stored, so it cannot disagree with what a read would find.
    */
   get isBodyAvailable(): boolean {
-    return this.hasDoc && getDeep(this.#root(), this.mountPath) != null;
+    return this.hasDoc && this.getObjectStructure() != null;
   }
 
-  /** Undefined until the body arrives — see {@link isBodyAvailable}. */
+  /**
+   * Undefined until the body arrives — see {@link isBodyAvailable} — and once the bound document is deleted,
+   * since live queries scan every loaded core and one unreadable core must not fail them all.
+   */
   getObjectStructure(): EntityStructure | undefined {
+    if (this.docHandle?.isDeleted) {
+      return undefined;
+    }
     return getDeep<EntityStructure>(this.#root(), this.mountPath);
   }
 
