@@ -4,19 +4,20 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import { type PortPath, assign, keyOf } from './ports.ts';
-import type * as Scene from './scene.ts';
 import { GRID, type Rect, zRouter } from './uml-grid.ts';
 
 const STEP = GRID / 2;
 
-type Segment = readonly [Scene.Point, Scene.Point];
+type Segment = readonly [Shape.Point, Shape.Point];
 
-const segmentsOf = (points: readonly Scene.Point[]): Segment[] =>
+const segmentsOf = (points: readonly Shape.Point[]): Segment[] =>
   points.slice(1).map((end, index) => [points[index], end] as const);
 
 /** Whether two orthogonal polylines cross at a point interior to a segment of each. */
-const crosses = (first: readonly Scene.Point[], second: readonly Scene.Point[]) =>
+const crosses = (first: readonly Shape.Point[], second: readonly Shape.Point[]) =>
   segmentsOf(first).some(([a0, a1]) =>
     segmentsOf(second).some(([b0, b1]) => {
       const [vertical, horizontal] =

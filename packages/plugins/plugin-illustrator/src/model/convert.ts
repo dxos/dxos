@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Scene } from '@dxos/diagram';
 import { Database, type Obj } from '@dxos/echo';
+import { Shape } from '@dxos/scene';
 
 import { Drawing, type IllustratorCapabilities, IllustratorError } from '#types';
 
@@ -17,7 +18,7 @@ type Placed = { ref: string; x: number; y: number; w: number; h: number };
 const BOX_KINDS: ReadonlySet<string> = new Set(['rect', 'ellipse', 'diamond', 'triangle']);
 
 /** Distance from a point to a rectangle's outline, whether the point is inside it or not. */
-const outlineDistance = ({ x, y, w, h }: Placed, point: Scene.Point): number => {
+const outlineDistance = ({ x, y, w, h }: Placed, point: Shape.Point): number => {
   const dx = Math.max(x - point.x, 0, point.x - (x + w));
   const dy = Math.max(y - point.y, 0, point.y - (y + h));
   const outside = Math.hypot(dx, dy);
@@ -29,7 +30,7 @@ const outlineDistance = ({ x, y, w, h }: Placed, point: Scene.Point): number => 
  * naming the box each end touches lets the target variant bind the arrow so it follows.
  */
 export const bindArrowEnds = (objects: readonly Scene.WorldObject[]): Scene.WorldObject[] => {
-  const place = (object: Scene.WorldObject, point: Scene.Point): Scene.Point => {
+  const place = (object: Scene.WorldObject, point: Shape.Point): Shape.Point => {
     const scale = object.scale ?? 1;
     return { x: (object.origin?.x ?? 0) + point.x * scale, y: (object.origin?.y ?? 0) + point.y * scale };
   };
@@ -44,7 +45,7 @@ export const bindArrowEnds = (objects: readonly Scene.WorldObject[]): Scene.Worl
     }),
   );
   // The smallest touching box wins, so an end on a node inside a group frame binds to the node.
-  const touching = (point: Scene.Point): string | undefined =>
+  const touching = (point: Shape.Point): string | undefined =>
     boxes
       .filter((box) => outlineDistance(box, point) <= TOUCH)
       .sort((left, right) => left.w * left.h - right.w * right.h)[0]?.ref;

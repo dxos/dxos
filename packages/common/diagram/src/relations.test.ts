@@ -4,32 +4,33 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import { parse as parseDsl, printCommands, read } from './dsl/index.ts';
 import { markers, parse as parseMermaid } from './mermaid.ts';
-import * as Scene from './scene.ts';
 import { relationStyle } from './uml.ts';
 
 describe('relations', () => {
   test('each relation derives its markers, and head/tail still override', ({ expect }) => {
-    expect(Scene.markersOf({ relation: 'inheritance' })).toEqual({ end: 'triangle', dashed: false });
-    expect(Scene.markersOf({ relation: 'implementation' })).toEqual({ end: 'triangle', dashed: true });
-    expect(Scene.markersOf({ relation: 'composition' })).toEqual({ start: 'diamond-filled', dashed: false });
-    expect(Scene.markersOf({ relation: 'aggregation' })).toEqual({ start: 'diamond', dashed: false });
-    expect(Scene.markersOf({ relation: 'one-to-many' })).toEqual({ start: 'one', end: 'crowsfoot', dashed: false });
-    expect(Scene.markersOf({ relation: 'many-to-many' })).toEqual({
+    expect(Shape.markersOf({ relation: 'inheritance' })).toEqual({ end: 'triangle', dashed: false });
+    expect(Shape.markersOf({ relation: 'implementation' })).toEqual({ end: 'triangle', dashed: true });
+    expect(Shape.markersOf({ relation: 'composition' })).toEqual({ start: 'diamond-filled', dashed: false });
+    expect(Shape.markersOf({ relation: 'aggregation' })).toEqual({ start: 'diamond', dashed: false });
+    expect(Shape.markersOf({ relation: 'one-to-many' })).toEqual({ start: 'one', end: 'crowsfoot', dashed: false });
+    expect(Shape.markersOf({ relation: 'many-to-many' })).toEqual({
       start: 'crowsfoot',
       end: 'crowsfoot',
       dashed: false,
     });
-    expect(Scene.markersOf({ relation: 'dependency' })).toEqual({ end: 'open', dashed: true });
+    expect(Shape.markersOf({ relation: 'dependency' })).toEqual({ end: 'open', dashed: true });
     // Documents from before relations keep drawing as they did.
-    expect(Scene.markersOf({})).toEqual({ end: 'arrow', dashed: false });
-    expect(Scene.markersOf({ head: 'triangle', tail: 'circle' })).toEqual({
+    expect(Shape.markersOf({})).toEqual({ end: 'arrow', dashed: false });
+    expect(Shape.markersOf({ head: 'triangle', tail: 'circle' })).toEqual({
       start: 'circle',
       end: 'triangle',
       dashed: false,
     });
-    expect(Scene.markersOf({ relation: 'inheritance', head: 'none' })).toEqual({ dashed: false });
+    expect(Shape.markersOf({ relation: 'inheritance', head: 'none' })).toEqual({ dashed: false });
   });
 
   test('the DSL relationship words', ({ expect }) => {

@@ -10,6 +10,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { Shape } from '@dxos/scene';
 
 import type * as Scene from './scene.ts';
 
@@ -26,12 +27,12 @@ export type Identity = {
 
 /** Where an object sits on the canvas: `canvas = origin + local * scale`. */
 export type Placement = {
-  origin: Scene.Point;
+  origin: Shape.Point;
   scale: number;
 };
 
 /** An object as accepted by the renderer's compiler; `upsert-elements` supplies only a subset. */
-export type ObjectInput = Scene.WorldObject | { id: string; elements: readonly Scene.Element[] };
+export type ObjectInput = Scene.WorldObject | { id: string; elements: readonly Shape.Element[] };
 
 /** A world object as derived from the canvas: placement is always resolved. */
 export type ReadWorldObject = Scene.WorldObject & Placement;
@@ -61,7 +62,7 @@ export type ContentHandler = {
   /** Derive the scene from the content map. */
   read: (content: ContentMap) => ReadResult;
   /** Translate an object move into a per-record mutation. */
-  translate: (record: any, delta: Scene.Point) => void;
+  translate: (record: any, delta: Shape.Point) => void;
   /** Create any scaffolding the renderer needs before its first record (e.g. a page). */
   scaffold?: (content: ContentMap) => void;
   /** Merge compiled records into the content map; defaults to a plain assign. */

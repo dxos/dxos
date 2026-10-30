@@ -10,6 +10,7 @@
 //
 
 import { Scene } from '@dxos/diagram';
+import { Shape } from '@dxos/scene';
 
 import { toFontSize, toStyle } from './style.ts';
 
@@ -20,7 +21,7 @@ export type CanvasContent = Record<string, any>;
 export type ExternalBox = { x: number; y: number; w: number; h: number };
 
 export type RenderOptions = {
-  origin: Scene.Point;
+  origin: Shape.Point;
   scale: number;
   /** Fractional-index seed past the existing canvas content. */
   indexStart: number;
@@ -126,14 +127,14 @@ const textSize = (value: string, fontSize: number): { w: number; h: number } => 
   };
 };
 
-const center = (box: ExternalBox): Scene.Point => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 });
+const center = (box: ExternalBox): Shape.Point => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 });
 
 /**
  * Point where the segment from a box's centre towards `toward` crosses the box outline, pushed out
  * by `gap`. Arrows drawn centre-to-centre disappear under their shapes, so each end is clipped to
  * the boundary; excalidraw then maintains the same contact point once the binding takes over.
  */
-const edgePoint = (box: ExternalBox, toward: Scene.Point, gap: number): Scene.Point => {
+const edgePoint = (box: ExternalBox, toward: Shape.Point, gap: number): Shape.Point => {
   const origin = center(box);
   const dx = toward.x - origin.x;
   const dy = toward.y - origin.y;
@@ -154,11 +155,11 @@ const edgePoint = (box: ExternalBox, toward: Scene.Point, gap: number): Scene.Po
  * Local coordinates are mapped via `canvas = origin + local * scale`.
  */
 export const renderObject = (
-  object: Scene.WorldObject | { id: string; elements: readonly Scene.Element[] },
+  object: Scene.WorldObject | { id: string; elements: readonly Shape.Element[] },
   options: RenderOptions,
 ): CanvasContent => {
   const { origin, scale, indexStart, external = {}, dialect = 'scene' } = options;
-  const point = (local: { x: number; y: number }): Scene.Point => ({
+  const point = (local: { x: number; y: number }): Shape.Point => ({
     x: origin.x + local.x * scale,
     y: origin.y + local.y * scale,
   });
@@ -166,7 +167,7 @@ export const renderObject = (
 
   const content: CanvasContent = {};
   let index = indexStart;
-  const meta = (element: Scene.Element, kind: string, extra: Record<string, any> = {}) => ({
+  const meta = (element: Shape.Element, kind: string, extra: Record<string, any> = {}) => ({
     object: object.id,
     element: element.id,
     kind,
@@ -176,7 +177,7 @@ export const renderObject = (
   });
 
   // Excalidraw binds to the element outline, so an endpoint's `#port` is dropped.
-  const ref = (value: string) => Scene.resolveRef(value, object.id);
+  const ref = (value: string) => Shape.resolveRef(value, object.id);
   // Bounding boxes of elements rendered so far plus pre-existing canvas elements.
   const box = (handle: string): ExternalBox | undefined => {
     const record = content[handle];
@@ -191,7 +192,7 @@ export const renderObject = (
    * Binding makes excalidraw own the centring and keeps the two together — an unbound label is a
    * separate shape the user can drag off the box it names.
    */
-  const label = (element: Scene.Element, value: string, bounds: ExternalBox) => {
+  const label = (element: Shape.Element, value: string, bounds: ExternalBox) => {
     const containerId = elementId(object.id, element.id);
     const id = `${containerId}__label`;
     // Type scales with the object so a label stays proportionate to the shape enclosing it.
@@ -419,7 +420,7 @@ export const rebind = (content: CanvasContent): void => {
 };
 
 /** Sample an arc (degrees, clockwise from +x, y-down screen coords) into spline points. */
-const sampleArc = ({ cx, cy, r, startAngle, endAngle }: Scene.Arc): Scene.Point[] => {
+const sampleArc = ({ cx, cy, r, startAngle, endAngle }: Shape.Arc): Shape.Point[] => {
   const sweep = endAngle - startAngle;
   const steps = Math.max(4, Math.ceil(Math.abs(sweep) / 22.5));
   return Array.from({ length: steps + 1 }, (_, i) => {

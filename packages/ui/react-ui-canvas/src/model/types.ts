@@ -11,7 +11,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Scene as Dsl } from '@dxos/diagram';
 import {
   Bounds,
   CloudNode,
@@ -31,6 +30,7 @@ import {
   PolygonNode,
   PolylineNode,
   RectNode,
+  Shape,
   type ViewId,
   ViewNode,
   boxFields,
@@ -49,13 +49,13 @@ export const DiagramHeading = Schema.Struct({
   x: Schema.Number,
   y: Schema.Number,
   w: Schema.optional(Schema.Number),
-  color: Schema.optional(Dsl.Color),
-  weight: Schema.optional(Dsl.Weight),
+  color: Schema.optional(Shape.Color),
+  weight: Schema.optional(Shape.Weight),
 });
 export type DiagramHeading = Schema.Schema.Type<typeof DiagramHeading>;
 
 /** The DSL elements a diagram node can be. */
-export const DiagramShape = Schema.Union([Dsl.Box, Dsl.Circle, Dsl.Text, Dsl.Portal]);
+export const DiagramShape = Schema.Union([Shape.Box, Shape.Circle, Shape.Text, Shape.Portal]);
 export type DiagramShape = Schema.Schema.Type<typeof DiagramShape>;
 
 /**
@@ -160,8 +160,8 @@ export const DiagramCaption = Schema.Struct({
   x: Schema.Number,
   y: Schema.Number,
   w: Schema.optional(Schema.Number),
-  color: Schema.optional(Dsl.Color),
-  weight: Schema.optional(Dsl.Weight),
+  color: Schema.optional(Shape.Color),
+  weight: Schema.optional(Shape.Weight),
 });
 export type DiagramCaption = Schema.Schema.Type<typeof DiagramCaption>;
 
@@ -170,11 +170,11 @@ export type DiagramCaption = Schema.Schema.Type<typeof DiagramCaption>;
  * route the layout gave it (scene coordinates, source end first) for as long as its ends are where the route meets them.
  */
 export const DiagramConnector = Schema.Struct({
-  relation: Schema.optional(Dsl.Relation),
-  head: Schema.optional(Dsl.ArrowHead),
-  tail: Schema.optional(Dsl.ArrowTail),
-  stroke: Schema.optional(Dsl.Stroke),
-  color: Schema.optional(Dsl.Color),
+  relation: Schema.optional(Shape.Relation),
+  head: Schema.optional(Shape.ArrowHead),
+  tail: Schema.optional(Shape.ArrowTail),
+  stroke: Schema.optional(Shape.Stroke),
+  color: Schema.optional(Shape.Color),
   route: Schema.optional(Schema.Array(Point)),
   caption: Schema.optional(DiagramCaption),
 });

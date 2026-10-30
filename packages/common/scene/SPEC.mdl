@@ -848,3 +848,11 @@ decision D-90: The 2D element base lives in this package: react-ui-canvas's node
   for: user:richburdon
   why: A pure move keeps phase 0 mechanical and every consumer green; the renames and the diagram types each belong with the task that changes their data.
 ```
+
+```mdl
+decision D-91: The diagram's graphical primitives and their style vocabulary (`Box`, `Circle`, `Polyline`, `Curve`, `Arc`, `Text`, `Arrow`, `Portal`, `Color`, `Fill`, `Stroke`, `Weight`, element refs) live in this package as `Shape`; `@dxos/diagram` keeps only its world objects and commands until plan 0.5 retires them. Fills in COMMON-CORE decision 11.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: `@dxos/diagram` depends on this package, so the engines can emit scene elements only once the shapes they draw are defined here.
+```

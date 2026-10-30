@@ -11,14 +11,7 @@
 // diagram's own SVG renderer draws, so a laid-out diagram keeps its look, routes and captions.
 //
 
-import {
-  type ContentHandler,
-  type ContentMap,
-  Diagnostics,
-  Scene as Dsl,
-  type ReadWorldObject,
-  type SvgFile,
-} from '@dxos/diagram';
+import { type ContentHandler, type ContentMap, Diagnostics, type ReadWorldObject, type SvgFile } from '@dxos/diagram';
 import {
   DEFAULT_LAYER,
   DEFAULT_SIZES,
@@ -40,7 +33,15 @@ import {
   sortByZ,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
-import { type EllipseNode, type Layer, type NodeStyle, type NoteNode, type RectNode, endpointNode } from '@dxos/scene';
+import {
+  type EllipseNode,
+  type Layer,
+  type NodeStyle,
+  type NoteNode,
+  type RectNode,
+  Shape,
+  endpointNode,
+} from '@dxos/scene';
 
 import {
   type DslIdentity,
@@ -62,7 +63,7 @@ import {
 export const elementId = (object: string, element: string) => `${object}/${element}`;
 
 /** DSL colours onto theme hues; black and white keep the default look. */
-const HUES: Partial<Record<Dsl.Color, string>> = {
+const HUES: Partial<Record<Shape.Color, string>> = {
   'grey': 'neutral',
   'light-violet': 'violet',
   'violet': 'violet',
@@ -76,7 +77,7 @@ const HUES: Partial<Record<Dsl.Color, string>> = {
   'red': 'red',
 };
 
-const styleOf = (element: { color?: Dsl.Color; fill?: Dsl.Fill; stroke?: Dsl.Stroke }): NodeStyle | undefined => {
+const styleOf = (element: { color?: Shape.Color; fill?: Shape.Fill; stroke?: Shape.Stroke }): NodeStyle | undefined => {
   const hue = element.color ? HUES[element.color] : undefined;
   const fill = element.fill === 'none' ? false : undefined;
   // A tinted shape is a group's backdrop: a guide, an annotation the lattice and the link router pass over.
@@ -110,9 +111,9 @@ const nodeAt = (nodes: readonly Node[], point: { x: number; y: number }, slack =
     .sort((left, right) => left.size.width * left.size.height - right.size.width * right.size.height)[0];
 
 /** The canvas markers of a connector's ends; a canvas end marker is one of arrow, circle or triangle. */
-const endsOf = (arrow: Dsl.Arrow): Link['ends'] => {
-  const markers = Dsl.markersOf(arrow);
-  const marker = (value: Dsl.Marker | undefined) =>
+const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
+  const markers = Shape.markersOf(arrow);
+  const marker = (value: Shape.Marker | undefined) =>
     value === 'triangle' ? 'triangle' : value === 'circle' ? 'circle' : value ? 'arrow' : undefined;
   const start = marker(markers.start);
   const end = marker(markers.end);
@@ -137,7 +138,7 @@ const nodesIn = (content: ContentMap, scene: string): Node[] =>
 const isBackdrop = (node: Node): boolean => node.style?.guide === true || isDiagramBackdrop(node);
 
 /** Small text's width and height (scene px) as the diagram renderer sets it, for the frame of a diagram text node. */
-const textFrame = (element: Dsl.Text, scale: number): { w: number; h: number } => {
+const textFrame = (element: Shape.Text, scale: number): { w: number; h: number } => {
   const { size, lineH } = Diagnostics.LABEL_TYPE[element.weight ?? 's'];
   const lines = element.text.split('\n');
   const longest = Math.max(1, ...lines.map((line) => line.length));
@@ -237,8 +238,8 @@ export const SceneHandler: ContentHandler = {
 
     // A small text belongs to what it captions rather than standing alone: a connector's caption
     // (`<arrow>-label`) is the link's text, and a title inside an untitled box of its object is that box's label.
-    const captions = new Map<string, Dsl.Text>();
-    const titles = new Map<string, Dsl.Text>();
+    const captions = new Map<string, Shape.Text>();
+    const titles = new Map<string, Shape.Text>();
     const absorbed = new Set<string>();
     for (const element of object.elements) {
       if (element.kind !== 'text' || element.weight !== 's') {
@@ -398,10 +399,10 @@ export const SceneHandler: ContentHandler = {
           const path = object.elements.find((other) => other.kind === 'line' && other.id === `${element.id}-path`);
           const start = path?.kind === 'line' ? path.points[0] : element.start;
           const from = element.from
-            ? Dsl.resolveRef(element.from, object.id)
+            ? Shape.resolveRef(element.from, object.id)
             : start && nodeAt(shapes, place(start.x, start.y))?.id;
           const to = element.to
-            ? Dsl.resolveRef(element.to, object.id)
+            ? Shape.resolveRef(element.to, object.id)
             : element.end && nodeAt(shapes, place(element.end.x, element.end.y))?.id;
           if (!from || !to || from === to) {
             break;
@@ -439,7 +440,7 @@ export const SceneHandler: ContentHandler = {
             break;
           }
           const ends = endsOf(element);
-          const dashed = Dsl.markersOf(element).dashed;
+          const dashed = Shape.markersOf(element).dashed;
           // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas
           // attaches at its own ports, so a route through the layout's points would kink at each end.
           const link: Link = {
@@ -482,7 +483,7 @@ export const SceneHandler: ContentHandler = {
         y: frames.length ? Math.min(...frames.map((frame) => frame.y)) : 0,
       };
       const first = members[0].dsl;
-      const elements: Dsl.Element[] = [];
+      const elements: Shape.Element[] = [];
       for (const record of members.sort((left, right) => (zOf(left) < zOf(right) ? -1 : 1))) {
         const element = record.dsl?.element ?? '';
         if (isNodeRecord(record)) {
@@ -549,7 +550,7 @@ export const SceneHandler: ContentHandler = {
 
 /** A DSL element as a diagram node holds it, and its frame in the element's own units. */
 const diagramShape = (
-  element: Dsl.Element,
+  element: Shape.Element,
   scale: number,
 ): { element: DiagramShape; frame: { x: number; y: number; w: number; h: number }; text?: string } | undefined => {
   switch (element.kind) {
@@ -573,7 +574,7 @@ const diagramShape = (
 };
 
 /** An element moved by `dx`, `dy`. */
-const translate = (element: Dsl.Element, dx: number, dy: number): Dsl.Element => {
+const translate = (element: Shape.Element, dx: number, dy: number): Shape.Element => {
   switch (element.kind) {
     case 'circle':
       return { ...element, cx: element.cx + dx, cy: element.cy + dy };
@@ -599,7 +600,7 @@ const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '
 const refTo = (content: ContentMap, nodeId: string, object: string): string => {
   const record = content[nodeKey(nodeId)];
   if (isNodeRecord(record) && record.dsl) {
-    return Dsl.formatRef({
+    return Shape.formatRef({
       ...(record.dsl.object === object ? {} : { object: record.dsl.object }),
       element: record.dsl.element,
     });

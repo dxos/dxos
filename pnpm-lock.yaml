@@ -11901,6 +11901,9 @@ importers:
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13144,6 +13147,9 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -19281,6 +19287,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

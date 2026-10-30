@@ -122,6 +122,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@excalidraw/excalidraw": "catalog:",

@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import type * as Scene from './scene.ts';
 import { CLASS_DIAGRAM } from './testing.ts';
 import { compile, isClassDiagram, parse } from './uml.ts';
@@ -75,7 +77,7 @@ describe('uml', () => {
 
     const dog = objects.find((object) => object.id === 'Dog')!;
     expect(dog.elements.map((element) => element.id)).toEqual(['title', 'attributes', 'methods']);
-    const [title, attributes, methods] = dog.elements as Scene.Box[];
+    const [title, attributes, methods] = dog.elements as Shape.Box[];
     expect(title.text).toBe('Dog');
     expect(attributes.text).toBe('+breed: string');
     expect(methods.text).toBe('+bark() void');
@@ -90,7 +92,7 @@ describe('uml', () => {
 
     // Stereotypes render as a guillemet line above the name.
     const serializable = objects.find((object) => object.id === 'Serializable')!;
-    expect((serializable.elements[0] as Scene.Box).text).toBe('«interface»\nSerializable');
+    expect((serializable.elements[0] as Shape.Box).text).toBe('«interface»\nSerializable');
   });
 
   test('layers supertypes and dependency targets above, parts below', ({ expect }) => {
@@ -106,7 +108,7 @@ describe('uml', () => {
 
   test('binds arrows to the compartments facing the peer, with UML styling', ({ expect }) => {
     const edges = objectsOf(compile(CLASS_DIAGRAM)).find((object) => object.id === 'edges')!;
-    const arrows = edges.elements as Scene.Arrow[];
+    const arrows = edges.elements as Shape.Arrow[];
 
     expect(arrows.every((arrow) => arrow.kind === 'arrow')).toBe(true);
     // Dog sits below Animal: the arrow leaves Dog's top compartment and meets Animal's bottom
@@ -135,8 +137,8 @@ describe('uml', () => {
       compile(diagram('reallyQuiteLongMethodName(withSomeArguments, andMoreArguments, andEvenMore) ReturnType')),
     )[0];
 
-    const shortMethods = short.elements.find((element) => element.id === 'methods') as Scene.Box;
-    const longMethods = long.elements.find((element) => element.id === 'methods') as Scene.Box;
+    const shortMethods = short.elements.find((element) => element.id === 'methods') as Shape.Box;
+    const longMethods = long.elements.find((element) => element.id === 'methods') as Shape.Box;
     expect(longMethods.w).toBeLessThanOrEqual(400);
     expect(longMethods.h).toBeGreaterThan(shortMethods.h);
 
@@ -146,7 +148,7 @@ describe('uml', () => {
         maxWidth: 240,
       }),
     )[0];
-    const narrowMethods = narrow.elements.find((element) => element.id === 'methods') as Scene.Box;
+    const narrowMethods = narrow.elements.find((element) => element.id === 'methods') as Shape.Box;
     expect(narrowMethods.w).toBeLessThanOrEqual(240);
     expect(narrowMethods.h).toBeGreaterThan(longMethods.h);
   });

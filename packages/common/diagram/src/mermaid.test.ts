@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import { compile, markers, parse } from './mermaid.ts';
 import type * as Scene from './scene.ts';
 
@@ -111,7 +113,7 @@ describe('mermaid', () => {
   test('frame encloses its members', ({ expect }) => {
     const objects = objectsOf(compile(FLOWCHART));
     const core = objects.find((object) => object.id === 'CORE')!;
-    const frame = core.elements[0] as Scene.Box;
+    const frame = core.elements[0] as Shape.Box;
 
     for (const id of ['A', 'B', 'C']) {
       const node = objects.find((object) => object.id === id)!;

@@ -8,6 +8,8 @@
 // carries no coordinates, so the dialect owns placement — see `dialect.ts` for the contract.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Layout from './layout.ts';
 import type * as Scene from './scene.ts';
 
@@ -80,7 +82,7 @@ export const toStandard = (source: string): string =>
     .join('\n');
 
 /** The scene relation a relationship kind draws as, with the dash its line needs; a plain reference stays a plain arrow. */
-export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'relation' | 'stroke'> => {
+export const markers = (kind: RelationKind): Pick<Shape.Arrow, 'relation' | 'stroke'> => {
   switch (kind) {
     case 'inheritance':
       return { relation: 'inheritance' };
@@ -225,7 +227,7 @@ const rank = (graph: MermaidGraph): Map<string, number> =>
 
 export type CompileOptions = {
   /** Canvas position of the diagram's top-left, in canvas px. */
-  origin?: Scene.Point;
+  origin?: Shape.Point;
   /** Canvas px per scene unit. */
   scale?: number;
   /** Gap between ranks along the flow direction, in scene units (default 60). */
@@ -256,7 +258,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   // Axis-specific node sizes: for LR/RL the main axis advances by width and lanes stack by height.
   const mainSize = horizontal ? NODE_W : NODE_H;
   const crossSize = horizontal ? NODE_H : NODE_W;
-  const positions = new Map<string, Scene.Point>();
+  const positions = new Map<string, Shape.Point>();
   for (const [lane, members] of lanes) {
     const span = members.length * crossSize + (members.length - 1) * gapCross;
     const offset = (widest * crossSize + (widest - 1) * gapCross - span) / 2;
@@ -271,7 +273,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
 
   // Frames first so nodes paint above them.
   for (const group of graph.groups) {
-    const members = group.children.map((id) => positions.get(id)).filter((point): point is Scene.Point => !!point);
+    const members = group.children.map((id) => positions.get(id)).filter((point): point is Shape.Point => !!point);
     if (members.length === 0) {
       continue;
     }

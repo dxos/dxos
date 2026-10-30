@@ -11,6 +11,8 @@
 
 import type { SyntaxNode } from '@lezer/common';
 
+import { Shape } from '@dxos/scene';
+
 import * as Scene from '../scene.ts';
 import * as SemanticEngine from '../semantic-engine.ts';
 import * as Semantic from '../semantic.ts';
@@ -136,7 +138,7 @@ export const read = (text: string): Reading => {
   // Error recovery can leave a `Point` or `Range` holding one number instead of two, so every
   // reader returns undefined rather than indexing past the end — `parse` reports problems, and a
   // reader that threw would take the whole document down with the line being typed.
-  const readPoint = (node: SyntaxNode): Scene.Point | undefined => {
+  const readPoint = (node: SyntaxNode): Shape.Point | undefined => {
     const [first, second] = childrenOf(node).filter((child) => child.name === 'Number');
     const [x, y] = [first && readNumber(first), second && readNumber(second)];
     return x !== undefined && y !== undefined ? { x, y } : undefined;
@@ -240,13 +242,13 @@ export const read = (text: string): Reading => {
 
   /** The four style fields every element shares. */
   const readStyle = (attrs: Map<string, Attr>) => ({
-    ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
-    ...optional('fill', enumAttr(attrs, 'fill', Scene.Fill.literals)),
-    ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
-    ...optional('weight', enumAttr(attrs, 'weight', Scene.Weight.literals)),
+    ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+    ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
+    ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
+    ...optional('weight', enumAttr(attrs, 'weight', Shape.Weight.literals)),
   });
 
-  const readEndpoint = (node: SyntaxNode): { ref?: string; point?: Scene.Point } => {
+  const readEndpoint = (node: SyntaxNode): { ref?: string; point?: Shape.Point } => {
     const child = node.firstChild;
     if (!child) {
       return {};
@@ -270,13 +272,13 @@ export const read = (text: string): Reading => {
   };
 
   /** Point list with the incomplete ones dropped; the syntax error is already reported. */
-  const readPoints = (nodes: SyntaxNode[]): Scene.Point[] =>
+  const readPoints = (nodes: SyntaxNode[]): Shape.Point[] =>
     nodes.flatMap((node) => {
       const point = readPoint(node);
       return point ? [point] : [];
     });
 
-  const readElement = (node: SyntaxNode): Scene.Element | undefined => {
+  const readElement = (node: SyntaxNode): Shape.Element | undefined => {
     const shape = node.firstChild;
     if (!shape) {
       return undefined;
@@ -323,7 +325,7 @@ export const read = (text: string): Reading => {
           ...size,
           ...optional('rotation', numberAttr(attrs, 'rotation')),
           ...optional('text', text),
-          ...optional('corners', enumAttr(attrs, 'corners', Scene.Corners.literals)),
+          ...optional('corners', enumAttr(attrs, 'corners', Shape.Corners.literals)),
           ...style,
         };
       }
@@ -391,9 +393,9 @@ export const read = (text: string): Reading => {
           ...optional('start', from?.point),
           ...optional('end', to?.point),
           ...optional('text', text),
-          ...optional('head', enumAttr(attrs, 'head', Scene.ArrowHead.literals)),
-          ...optional('tail', enumAttr(attrs, 'tail', Scene.ArrowTail.literals)),
-          ...optional('relation', enumAttr(attrs, 'relation', Scene.Relation.literals)),
+          ...optional('head', enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
+          ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
+          ...optional('relation', enumAttr(attrs, 'relation', Shape.Relation.literals)),
           ...style,
         };
       }
@@ -415,7 +417,7 @@ export const read = (text: string): Reading => {
     }
   };
 
-  const readElements = (body: SyntaxNode | null, objectId: string): Scene.Element[] =>
+  const readElements = (body: SyntaxNode | null, objectId: string): Shape.Element[] =>
     body
       ? childrenOf(body)
           .filter((child) => child.name === 'Element')
@@ -549,10 +551,10 @@ export const read = (text: string): Reading => {
       ...optional('pin', pin),
       ...optional('ref', stringAttr(attrs, 'ref')),
       ...optional('role', enumAttr(attrs, 'role', Semantic.ROLES)),
-      ...optional('shape', enumAttr(attrs, 'shape', Scene.BoxKind.literals)),
-      ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
-      ...optional('fill', enumAttr(attrs, 'fill', Scene.Fill.literals)),
-      ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
+      ...optional('shape', enumAttr(attrs, 'shape', Shape.BoxKind.literals)),
+      ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+      ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
+      ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
     });
     ranges.set(id, rangeOf(statement));
   };
@@ -641,10 +643,10 @@ export const read = (text: string): Reading => {
     const busName = busNode?.getChild('Id');
     const style: Semantic.EdgeStyle = {
       ...optional('relation', relation),
-      ...optional('head', op === '--' ? 'none' : enumAttr(attrs, 'head', Scene.ArrowHead.literals)),
-      ...optional('tail', enumAttr(attrs, 'tail', Scene.ArrowTail.literals)),
-      ...optional('stroke', enumAttr(attrs, 'stroke', Scene.Stroke.literals)),
-      ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+      ...optional('head', op === '--' ? 'none' : enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
+      ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
+      ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
+      ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
     };
     const fan = sources.length > 1 || targets.length > 1;
     if (busNode && sources.length > 1 && targets.length > 1) {
@@ -726,7 +728,7 @@ export const read = (text: string): Reading => {
         side: ends.length > 1 ? 'over' : side === 'left' ? 'left' : 'right',
         text: unquote(slice(label)),
         range: rangeOf(statement),
-        ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+        ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
       },
     });
   };
@@ -817,7 +819,7 @@ export const read = (text: string): Reading => {
         ...optional('gap', gap),
         ...optional('maxWidth', maxWidth),
         ...optional('compact', compact),
-        ...optional('color', enumAttr(attrs, 'color', Scene.Color.literals)),
+        ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
       });
       ranges.set(id, rangeOf(statement));
     }

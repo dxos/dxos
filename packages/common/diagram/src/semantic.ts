@@ -9,7 +9,8 @@
 // report a contradiction against the statement that caused it.
 //
 
-import type * as Scene from './scene.ts';
+import { Shape } from '@dxos/scene';
+
 
 export type Range = { from: number; to: number };
 
@@ -68,10 +69,10 @@ export type Node = {
   ref?: string;
   pin?: Pin;
   relations: Relation[];
-  shape?: Scene.BoxKind;
-  color?: Scene.Color;
-  fill?: Scene.Fill;
-  stroke?: Scene.Stroke;
+  shape?: Shape.BoxKind;
+  color?: Shape.Color;
+  fill?: Shape.Fill;
+  stroke?: Shape.Stroke;
   range: Range;
 };
 
@@ -85,7 +86,7 @@ export type Group = {
   maxWidth?: number;
   /** Keep the group near-square rather than a strip. */
   compact?: boolean;
-  color?: Scene.Color;
+  color?: Shape.Color;
   range: Range;
 };
 
@@ -99,7 +100,7 @@ export type End = { node: string; sides?: readonly Side[]; soft?: boolean; range
  * Relationship words an edge may use in place of `->`, each naming the scene relation it draws.
  * The left end is the subtype, the whole, the owner, or the one side.
  */
-export const RELATIONSHIPS: Readonly<Record<string, Scene.Relation>> = {
+export const RELATIONSHIPS: Readonly<Record<string, Shape.Relation>> = {
   'extends': 'inheritance',
   'implements': 'implementation',
   'composes': 'composition',
@@ -113,14 +114,14 @@ export const RELATIONSHIPS: Readonly<Record<string, Scene.Relation>> = {
 export const CONNECTORS = 'edges';
 
 /** Relations whose target is the abstraction, which reads best above its subtypes. */
-export const pointsUp = (relation: Scene.Relation | undefined): boolean =>
+export const pointsUp = (relation: Shape.Relation | undefined): boolean =>
   relation === 'inheritance' || relation === 'implementation';
 
 /**
  * How strongly a connector's relation shapes the reading of a diagram, highest first; on a box face
  * shared by several connectors the most significant takes the centre.
  */
-export const SIGNIFICANCE: Readonly<Record<Scene.Relation, number>> = {
+export const SIGNIFICANCE: Readonly<Record<Shape.Relation, number>> = {
   'inheritance': 4,
   'implementation': 4,
   'composition': 3,
@@ -132,15 +133,15 @@ export const SIGNIFICANCE: Readonly<Record<Scene.Relation, number>> = {
 };
 
 /** The significance of an edge's relation; an untyped dashed edge reads as a dependency. */
-export const significance = (relation: Scene.Relation | undefined, stroke?: Scene.Stroke): number =>
+export const significance = (relation: Shape.Relation | undefined, stroke?: Shape.Stroke): number =>
   SIGNIFICANCE[relation ?? (stroke === 'dashed' ? 'dependency' : 'association')];
 
 export type EdgeStyle = {
-  relation?: Scene.Relation;
-  head?: Scene.ArrowHead;
-  tail?: Scene.ArrowTail;
-  stroke?: Scene.Stroke;
-  color?: Scene.Color;
+  relation?: Shape.Relation;
+  head?: Shape.ArrowHead;
+  tail?: Shape.ArrowTail;
+  stroke?: Shape.Stroke;
+  color?: Shape.Color;
 };
 
 /**
@@ -192,7 +193,7 @@ export type Note = {
   over: readonly string[];
   side: 'left' | 'right' | 'over';
   text: string;
-  color?: Scene.Color;
+  color?: Shape.Color;
   range: Range;
 };
 
@@ -215,7 +216,7 @@ export type Step =
 export type Diagram = {
   kind: DiagramKind;
   flow: Flow;
-  origin: Scene.Point;
+  origin: Shape.Point;
   /** Cell pitch (box plus gutter), in scene units; measured from the boxes when absent. */
   grid?: Size;
   /** Box size; measured from the longest label when absent. */
@@ -366,7 +367,7 @@ export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
 };
 
 /** The mermaid dialect's token per relation, so its layering ranks abstractions as ours does. */
-const MERMAID_TOKEN: Record<Scene.Relation, string> = {
+const MERMAID_TOKEN: Record<Shape.Relation, string> = {
   'association': '-->',
   'dependency': '-.->',
   'inheritance': '--|>',

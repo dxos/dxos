@@ -11,7 +11,8 @@
 // connector length and extent fall.
 //
 
-import type * as Scene from './scene.ts';
+import { Shape } from '@dxos/scene';
+
 import { type Rect } from './uml-grid.ts';
 
 export type Geometry = {
@@ -41,15 +42,15 @@ const BEND_COST = 1;
 /** Cost of a lattice unit of drawing width or height, against one unit of connector length. */
 const EXTENT_COST = 1;
 
-type Points = Map<string, Scene.Point>;
+type Points = Map<string, Shape.Point>;
 
 const sign = (value: number) => (value > 0 ? 1 : value < 0 ? -1 : 0);
 
-const orientation = (a: Scene.Point, b: Scene.Point, c: Scene.Point) =>
+const orientation = (a: Shape.Point, b: Shape.Point, c: Shape.Point) =>
   sign((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x));
 
 /** Whether two segments properly cross; touching or collinear runs do not count. */
-const intersect = (a: Scene.Point, b: Scene.Point, c: Scene.Point, d: Scene.Point) => {
+const intersect = (a: Shape.Point, b: Shape.Point, c: Shape.Point, d: Shape.Point) => {
   const [o1, o2, o3, o4] = [orientation(a, b, c), orientation(a, b, d), orientation(c, d, a), orientation(c, d, b)];
   return o1 * o2 < 0 && o3 * o4 < 0;
 };
@@ -63,7 +64,7 @@ const apart = (a: Rect, b: Rect, gap: number) =>
  * plus bends plus the drawing's width and height, all in lattice units — and introduces no
  * violation of the placement's invariants.
  */
-export const compact = (graph: Graph, positions: ReadonlyMap<string, Scene.Point>, geometry: Geometry): Points => {
+export const compact = (graph: Graph, positions: ReadonlyMap<string, Shape.Point>, geometry: Geometry): Points => {
   const { cell, pitch, framePad, frameLabel, frameGap } = geometry;
   const edges = graph.edges.filter(
     (edge) => positions.has(edge.from) && positions.has(edge.to) && edge.from !== edge.to,
@@ -208,7 +209,7 @@ export const compact = (graph: Graph, positions: ReadonlyMap<string, Scene.Point
   }
 
   // Keep the placement's top-left where it was, so a move of the first package does not shift the drawing.
-  const corner = (points: Iterable<Scene.Point>) => {
+  const corner = (points: Iterable<Shape.Point>) => {
     const list = [...points];
     return { x: Math.min(...list.map((point) => point.x)), y: Math.min(...list.map((point) => point.y)) };
   };

@@ -9,11 +9,11 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import React, { Fragment, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Diagnostics, type Scene as Diagram, Mermaid, MermaidEngine, Objective, Score } from '@dxos/diagram';
+import { Diagnostics, Mermaid, MermaidEngine, Objective, Score } from '@dxos/diagram';
 import { BASIC } from '@dxos/diagram/testing';
 import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
-import { type ViewId } from '@dxos/scene';
+import { Shape, type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { ViewBuilder } from '../../builder/index.ts';
@@ -73,7 +73,7 @@ const fromMermaid = async (source: string): Promise<Seed> => {
         return [];
       }
       const { id, origin = { x: 0, y: 0 }, elements } = command.object;
-      const box = elements.find((element): element is Diagram.Box => element.kind === 'rect');
+      const box = elements.find((element): element is Shape.Box => element.kind === 'rect');
       return box ? [[id, { x: origin.x + box.x, y: origin.y + box.y, width: box.w, height: box.h }] as const] : [];
     }),
   );

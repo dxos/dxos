@@ -9,8 +9,9 @@
 // there is no renderer-native encoding to compile to. The plugin binds it to ECHO as `SvgBuilder`.
 //
 
+import { Shape } from '@dxos/scene';
+
 import { type ContentHandler, type ContentMap, type ReadWorldObject } from './content.ts';
-import type * as Scene from './scene.ts';
 
 /** Discriminates the base `Drawing.Canvas` as SVG-rendered scene content. */
 export const SVG_SCHEMA = 'dxos.org/svg/1';
@@ -20,12 +21,12 @@ type SvgRecord = {
   element: string;
   /** Insertion order, so `read` reproduces element paint order. */
   order: number;
-  placement: { origin: Scene.Point; scale: number };
+  placement: { origin: Shape.Point; scale: number };
   /** The object's `ref`, repeated on each of its records so `read` restores it. */
   ref?: string;
   /** The object's fractional z-order `index`, repeated like `ref`. */
   index?: string;
-  data: Scene.Element;
+  data: Shape.Element;
 };
 
 const isSvgRecord = (record: any): record is SvgRecord =>
@@ -103,7 +104,7 @@ export const SvgHandler: ContentHandler = {
         };
         objects.set(record.object, object);
       }
-      (object.elements as Scene.Element[]).push(record.data);
+      (object.elements as Shape.Element[]).push(record.data);
     }
     return { scene: { objects: [...objects.values()].sort(byIndex) }, unmanaged };
   },

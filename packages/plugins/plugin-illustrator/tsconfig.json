@@ -37,6 +37,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/util"
     },
     {
