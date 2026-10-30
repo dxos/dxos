@@ -14,8 +14,18 @@ export type ThemeChoice = { readonly theme: string | undefined };
 export const chooseTheme = (host: string | undefined, choice: ThemeChoice | undefined): string | undefined =>
   choice ? choice.theme : host;
 
-/** An editor display with a theme picked here over the host's: the pick shows as the override, as a host's would. */
+/**
+ * An editor display with a theme picked here over the host's: the pick shows as the override, as a host's would, and
+ * an override is the theme drawn, since a host may store only the pick the picker reported.
+ */
 export const withThemeChoice = <D extends { theme: string; themeOverride?: string }>(
   display: D,
   choice: ThemeChoice | undefined,
-): D => (choice ? { ...display, theme: choice.theme ?? display.theme, themeOverride: choice.theme } : display);
+): D => {
+  if (choice) {
+    return { ...display, theme: choice.theme ?? display.theme, themeOverride: choice.theme };
+  }
+  return display.themeOverride === undefined || display.themeOverride === display.theme
+    ? display
+    : { ...display, theme: display.themeOverride };
+};

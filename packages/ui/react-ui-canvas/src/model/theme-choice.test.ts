@@ -23,4 +23,10 @@ describe('theme choice', () => {
     });
     expect(withThemeChoice(display, { theme: undefined })).toEqual({ ...display, themeOverride: undefined });
   });
+
+  test("a host's override is drawn over its theme, so a host that only stores the pick still sees it", ({ expect }) => {
+    const display = { theme: 'flat', themeOverride: 'neu-light', grid: true, snap: false };
+    expect(withThemeChoice(display, undefined).theme).toBe('neu-light');
+    expect(withThemeChoice({ ...display, themeOverride: undefined }, undefined).theme).toBe('flat');
+  });
 });
