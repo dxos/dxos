@@ -14,7 +14,7 @@ import { SpecDocument } from '@dxos/types';
 import { readThrough, writeThrough } from '#sync';
 import { CodeOperation } from '#types';
 
-import { loadSpecText, specFileBases, specName } from './spec-file.ts';
+import { loadSpecText, specName } from './spec-file.ts';
 
 const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecFile> = CodeOperation.ImportSpecFile.pipe(
   Operation.withHandler(
@@ -22,9 +22,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecFile> = Code
       const codecs = yield* Capability.getAll(ProjectCapabilities.SpecDocumentCodec);
       if (!object || !heads || base === undefined) {
         const spec = yield* Database.add(SpecDocument.make({ name: specName(path), content }));
-        if (yield* readThrough(codecs, spec, content, path)) {
-          yield* specFileBases.set(spec.id, content);
-        }
+        yield* readThrough(codecs, spec, content, path);
         const { text } = yield* loadSpecText(Ref.make(spec));
         return { object: Ref.make(spec), heads: TextMerge.currentHeads(text) };
       }
@@ -35,16 +33,13 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecFile> = Code
       if (local !== undefined) {
         const merged = TextMerge.merge({ base, local, next: content });
         yield* readThrough(codecs, spec, merged, path);
-        yield* specFileBases.set(spec.id, merged);
         return { object, heads: TextMerge.currentHeads(text) };
       }
 
       // Spec.content is Text, so the remote change merges with local edits character by character (F-6.2).
       const next = yield* TextMerge.applyAt(text, { base, next: content, heads });
       // A change that brings the file its first `feat` block can make the document a codec's.
-      const file = text.content;
-      if (yield* readThrough(codecs, spec, file, path)) {
-        yield* specFileBases.set(spec.id, file);
+      if (yield* readThrough(codecs, spec, text.content, path)) {
         return { object, heads: TextMerge.currentHeads(text) };
       }
       return { object, heads: next };

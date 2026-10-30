@@ -128,11 +128,11 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
     );
 
     expect([sync.name, compose.name]).toEqual(['Sync, local', 'Compose, remote']);
-    const exported = await run(exportSpecFile.handler({ object: merged.object, path }));
+    const exported = await run(exportSpecFile.handler({ object: merged.object, path, base: remote }));
     expect(exported.content).toBe(remote.replace('feat F-1: Sync', 'feat F-1: Sync, local'));
   });
 
-  test('a spec of features is not pushed before its file text is known, so its blocks keep their form', async ({
+  test('a spec of features is not exported without the file as GitHub holds it, so its blocks keep their form', async ({
     expect,
   }) => {
     const { db, run } = await setup();

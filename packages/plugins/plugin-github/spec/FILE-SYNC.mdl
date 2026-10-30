@@ -121,6 +121,8 @@ export interface FileImportOutput extends Schema.Schema.Type<typeof FileImportOu
 export const FileExportInput = Schema.Struct({
   object: Ref.Ref(Obj.Unknown),
   path: Schema.String,
+  /** The file as GitHub holds it for this space: the blob last pushed while unmerged, else the blob last synced. */
+  base: Schema.optional(Schema.String),
 });
 export interface FileExportInput extends Schema.Schema.Type<typeof FileExportInput> {}
 
@@ -361,7 +363,7 @@ op ImportSpecFile
 ```mdl
 op ExportSpecFile
   key: org.dxos.operation.code.exportSpecFile
-  desc: FileMapping.export for `**/*.mdl`. Returns Spec.content as it stands, with the heads it read.
+  desc: FileMapping.export for `**/*.mdl`. Returns Spec.content as it stands, with the heads it read; a document a codec writes is rendered against base.
   input: FileExportInput
   output: FileExportOutput
   effects: [echo:read]
@@ -437,6 +439,8 @@ feat F-4: Push
   req F-4.6:
     when: the write branch's tip is not a commit this space wrote (the newest push VersionLink)
     then: the paths changed since that commit are pulled before anything is exported: a modified path as in F-3.2 with base = the blob this space last pushed, an added path as in F-3.1, a renamed path as in F-3.3 (with any content change applied as in F-3.2), and a removed path as in F-3.4. A removed path, and a renamed path's old name, are also removed from the push tree, so F-4.2 does not restore them from the read head; a person's commit on the pull request is merged, never overwritten. The space's own commits are never pulled, since they carry edits it already holds
+
+  req F-4.7: Export is given base, the file as GitHub holds it for this space: the blob in marker.pushed while that is set, else marker.blob. The engine reads it from a cache of blob contents by SHA that every blob a pass fetches or pushes fills, so it costs a fetchBlob only when the process has not read or written that blob.
 ```
 
 ```mdl
@@ -663,4 +667,23 @@ decision D-17: A spec file synced from a GitHub repository is read into features
   date: 2026-10-29
   by: user:wittjosiah
   affects: [F-6.2]
+```
+
+```mdl
+decision D-18: The engine passes export the file text it renders against, fetched once per file and cached by blob SHA, so a push does not wait for a pull on the same device. Refines [D-17].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-4.7, FileExportInput]
+```
+
+```mdl
+decision D-19: The base is the blob in marker.pushed while that is set, else marker.blob. The cache lives for the process, is bounded at 16 MiB and evicts the least recently used blob; the pull's own fetchBlob calls are unchanged, so T-2's requests stand. Fills in [D-18].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.7, T-1]
+  why: The pushed blob is what the write branch holds, so an export against it keeps the form of what was pushed. A blob SHA names its content, so a cached entry never goes stale; the first pass of a process pays one fetchBlob per bound file it has not read, and every later quiet pass costs T-1's one request.
+  rejected:
+    - Fetching the base on every pass, which costs one request per bound file and breaks T-1.
+    - Keeping the base per device, where a push on a device that has not pulled the file waits for the next pull.
 ```

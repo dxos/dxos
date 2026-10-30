@@ -1463,6 +1463,16 @@ decision D-40: A pull offers the file to every codec, not only to one that wrote
     - Pushing without a base, which rewrote 94 lines of plugin-chess's spec on a trial.
 ```
 
+```mdl
+decision D-41: A pull offers the file to every codec, not only to one that wrote the document, so a document read before it was a spec's becomes one. op:importSpecFile and op:exportSpecFile go through the codecs too: the import merges a remote change in the file's form against the base plugin-github passes, and the export renders against the base plugin-github passes, failing when it has none. Fills in [D-39].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-40
+  affects: [F-14.7, exportSpecFile]
+  why: plugin-github now passes the export the file as GitHub holds it, so plugin-code keeps no base of its own and any device can push.
+```
+
 ---
 
 ## Appendix: Extension Definitions
