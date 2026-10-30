@@ -57,13 +57,19 @@ const expectCount = async (page, selector, count, what) => {
   }
 };
 
-/** Points at the empty cell left of the leftmost card, where the canvas then shows its `+`. */
+/**
+ * Points at the empty cell right of the top row's last card, where the canvas then shows its `+`. The top row keeps the
+ * new card clear of the caption at the bottom of the frame.
+ */
 const showAdd = async (page) => {
   const boxes = await page
     .locator('[data-testid="feature-canvas-node"]')
     .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON()));
-  const { x, y, width, height } = boxes.reduce((left, box) => (box.x < left.x ? box : left));
-  await page.mouse.move(x + width / 2 - width * 1.25, y + height / 2, { steps: 12 });
+  const top = Math.min(...boxes.map((box) => box.y));
+  const { x, y, width, height } = boxes
+    .filter((box) => box.y - top < box.height / 2)
+    .reduce((right, box) => (box.x > right.x ? box : right));
+  await page.mouse.move(x + width / 2 + width * 1.25, y + height / 2, { steps: 12 });
   await page.getByTestId('feature-canvas.add').waitFor({ state: 'visible', timeout: 5_000 });
 };
 
