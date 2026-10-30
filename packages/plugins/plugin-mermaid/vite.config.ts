@@ -9,5 +9,5 @@ export default defineConfig({
     index: 'src/index.ts',
   },
   jsx: 'react',
-  test: { browser: 'chromium', storybook: true },
+  test: { node: true, browser: 'chromium', storybook: true },
 });

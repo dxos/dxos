@@ -91,6 +91,31 @@ export const buildPluginFenceDecorations = (state: EditorState, options: PluginF
   return Decoration.set(decorations, true);
 };
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const pluginFenceTheme = EditorView.theme({
+  '& .cm-plugin-fence': {
+    position: 'relative',
+  },
+  '& .cm-plugin-fence-button': {
+    position: 'absolute',
+    top: '4px',
+    right: '4px',
+    zIndex: '1',
+  },
+  // Drawn only while the pointer is over the button, above its end edge.
+  '& .cm-plugin-fence-tooltip': {
+    position: 'absolute',
+    bottom: 'calc(100% + 4px)',
+    right: '0',
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
+    visibility: 'hidden',
+  },
+  '& .cm-plugin-fence-button:hover .cm-plugin-fence-tooltip': {
+    visibility: 'visible',
+  },
+});
+
 /**
  * Shows an "Enable plugin" button, which opens the plugin registry, on fences whose language is rendered by a disabled plugin.
  * The host reconfigures the extension when the enabled set changes, so the button goes away once
@@ -102,29 +127,7 @@ export const pluginFences = (options: PluginFencesOptions): Extension => [
     update: (decorations, tr) => (tr.docChanged ? buildPluginFenceDecorations(tr.state, options) : decorations),
     provide: (field) => EditorView.decorations.from(field),
   }),
-  EditorView.theme({
-    '& .cm-plugin-fence': {
-      position: 'relative',
-    },
-    '& .cm-plugin-fence-button': {
-      position: 'absolute',
-      top: '4px',
-      right: '4px',
-      zIndex: '1',
-    },
-    // Drawn only while the pointer is over the button, above its end edge.
-    '& .cm-plugin-fence-tooltip': {
-      position: 'absolute',
-      bottom: 'calc(100% + 4px)',
-      right: '0',
-      whiteSpace: 'nowrap',
-      pointerEvents: 'none',
-      visibility: 'hidden',
-    },
-    '& .cm-plugin-fence-button:hover .cm-plugin-fence-tooltip': {
-      visibility: 'visible',
-    },
-  }),
+  pluginFenceTheme,
 ];
 
 class EnablePluginWidget extends WidgetType {

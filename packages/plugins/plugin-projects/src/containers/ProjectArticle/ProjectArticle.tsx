@@ -647,17 +647,15 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
               () => onSelect(spec),
             ),
           );
-          group
-            .separator('line')
-            .action(
-              'add-spec',
-              {
-                label: ['add-spec.label', { ns: ProjectsNamespace.key }],
-                icon: 'ph--plus--regular',
-                testId: 'projectsPlugin.addSpec',
-              },
-              onAdd,
-            );
+          group.separator('line').action(
+            'add-spec',
+            {
+              label: ['add-spec.label', { ns: ProjectsNamespace.key }],
+              icon: 'ph--plus--regular',
+              testId: 'projectsPlugin.addSpec',
+            },
+            onAdd,
+          );
         },
       );
       group.separator();
@@ -754,6 +752,24 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
   );
 
   return { tasks, checkedTasks, delegatableTasks, uncheck };
+};
+
+export type FeatureLevelArticleProps = AppSurface.ObjectArticleProps<Feature.Feature>;
+
+/** A feature's level of the project tracking it: the project article narrowed to the feature. */
+export const FeatureLevelArticle = ({ subject, ...props }: FeatureLevelArticleProps) => {
+  const project = FeatureMap.findProject(subject);
+  return project ? (
+    <ProjectArticle {...props} subject={project} spec={FeatureMap.findRoot(subject)} feature={subject} />
+  ) : null;
+};
+
+export type SpecLevelArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
+
+/** A spec's level of the project owning it: the project article on that spec. */
+export const SpecLevelArticle = ({ subject, ...props }: SpecLevelArticleProps) => {
+  const project = Spec.getProject(subject);
+  return project ? <ProjectArticle {...props} subject={project} spec={subject} /> : null;
 };
 
 export type ToolbarActionsProps = {

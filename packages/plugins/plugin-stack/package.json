@@ -59,6 +59,11 @@
       "types": "./dist/types/src/types/Stack.d.ts",
       "import": "./dist/lib/Stack.mjs"
     },
+    "./StackCapabilities": {
+      "source": "./src/types/StackCapabilities.ts",
+      "types": "./dist/types/src/types/StackCapabilities.d.ts",
+      "import": "./dist/lib/StackCapabilities.mjs"
+    },
     "./StackEvents": {
       "source": "./src/types/StackEvents.ts",
       "types": "./dist/types/src/types/StackEvents.d.ts",
@@ -77,6 +82,9 @@
     "*": {
       "Stack": [
         "dist/types/src/types/Stack.d.ts"
+      ],
+      "StackCapabilities": [
+        "dist/types/src/types/StackCapabilities.d.ts"
       ],
       "StackEvents": [
         "dist/types/src/types/StackEvents.d.ts"

@@ -15,7 +15,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Feature, FeatureMapView } from '#types';
+import { Feature, FeatureMap, FeatureMapView } from '#types';
 
 import { useOpenObject, useOpenSpecLevel, useSelectedSpec } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
@@ -141,4 +141,26 @@ export const ProjectFeatureCompanion = ({
   const spec = feature ? (Spec.instanceOf(breakdown) ? breakdown : undefined) : selected;
   const openLevel = useOpenSpecLevel(project, props.attendableId);
   return spec ? <FeatureCompanion spec={spec} onZoom={(zoomed) => openLevel(zoomed)} {...props} /> : null;
+};
+
+export type FeatureLevelCompanionProps = Omit<ProjectFeatureCompanionProps, 'project' | 'feature'> & {
+  feature: Feature.Feature;
+};
+
+/** The feature companion beside a feature's level of the project tracking it. */
+export const FeatureLevelCompanion = ({ feature, ...props }: FeatureLevelCompanionProps) => {
+  const project = FeatureMap.findProject(feature);
+  return project ? (
+    <ProjectFeatureCompanion {...props} project={project} spec={FeatureMap.findRoot(feature)} feature={feature} />
+  ) : null;
+};
+
+export type SpecLevelCompanionProps = Omit<ProjectFeatureCompanionProps, 'project' | 'spec' | 'feature'> & {
+  spec: Spec.Spec;
+};
+
+/** The feature companion beside a spec's level of the project owning it. */
+export const SpecLevelCompanion = ({ spec, ...props }: SpecLevelCompanionProps) => {
+  const project = Spec.getProject(spec);
+  return project ? <ProjectFeatureCompanion {...props} project={project} spec={spec} /> : null;
 };

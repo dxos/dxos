@@ -10,7 +10,6 @@ import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { ContentBlock } from '@dxos/types';
 import { concat, trim } from '@dxos/util';
 
 import { PlanReminder } from './definitions.ts';
@@ -19,10 +18,9 @@ import { PlanReminder } from './definitions.ts';
  * End-request hook for the planning skill. When the conversation's checklist still has
  * open tasks, an ephemeral check asks the model — given the full conversation — whether the
  * agent should keep working: a deterministic reminder alone would trap an agent that legitimately
- * finishes with open items in an unbreakable re-prompt loop. On "continue" it enqueues a
- * continuation reminder onto the owning host's queue (HarnessService Tier B), which keeps the
- * process alive; on "stop" it does nothing so the agent may complete with items deliberately left
- * open.
+ * finishes with open items in an unbreakable re-prompt loop. On "continue" it returns a
+ * continuation reminder as its follow-up; on "stop" it returns none so the agent may complete with
+ * items deliberately left open.
  */
 export default PlanReminder.pipe(
   Operation.withHandler(
@@ -30,12 +28,12 @@ export default PlanReminder.pipe(
       function* () {
         const chat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
         if (!chat) {
-          return;
+          return {};
         }
 
         const tasks = yield* Chat.loadTasks(chat);
         if (!tasks.some(Chat.isOpenTask)) {
-          return;
+          return {};
         }
         const checklist = yield* Chat.formatChecklist(chat);
 
@@ -46,14 +44,10 @@ export default PlanReminder.pipe(
         );
         const { text: reply } = yield* Effect.scoped(LanguageModel.generateText({ prompt }));
         if (!parseContinueDecision(reply)) {
-          return;
+          return {};
         }
 
-        yield* Harness.enqueueMessage({
-          content: [
-            ContentBlock.Text.make({ text: checklistContinueReminderPrompt(checklist), disposition: 'synthetic' }),
-          ],
-        });
+        return { followUp: checklistContinueReminderPrompt(checklist) };
       },
       Effect.provide(AiService.languageModel('com.anthropic.model.claude-sonnet-5.default')),
     ),

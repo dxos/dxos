@@ -27,6 +27,7 @@ import { attach } from '../operations/feature/util.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
   ARTIFACTS_SEGMENT,
+  SPEC_BRANCH_TYPE,
   SPEC_LEVEL_TYPE,
   SPECS_SEGMENT,
   createProjectActionExtension,
@@ -159,28 +160,22 @@ describe('project app graph builder', () => {
           return context.registry.get(context.graph.connections(id, 'child'));
         };
 
-        // The branch carries the project, wrapped so the Project-matching extensions leave it alone.
+        // The branch only groups the levels: it stands for no object, and the project's own spec is its Spec tab.
         const [branch] = yield* Effect.promise(() => children());
         expect(branch.id).toEqual(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPECS_SEGMENT));
-        expect(branch.type).toEqual(SPEC_LEVEL_TYPE);
-        expect(branch.data).toEqual({ branch: 'spec', project });
+        expect(branch.type).toEqual(SPEC_BRANCH_TYPE);
+        expect(branch.data).toBeNull();
         // The branch only groups the specs.
         expect(branch.properties.selectable).toBe(false);
 
-        // A node per spec, in the project's order, whatever their number.
+        // A level per spec, holding the spec, in the project's order, whatever their number.
         const specs = yield* Effect.promise(() => children(SPECS_SEGMENT));
-        expect(specs.map((node) => node.data)).toEqual([
-          { branch: 'spec', project, spec: root },
-          { branch: 'spec', project, spec: talk },
-        ]);
-        expect(specs.map((node) => node.properties.selectable)).toEqual([true, true]);
+        expect(specs.map((node) => node.data)).toEqual([root, talk]);
+        expect(specs.map((node) => node.type)).toEqual([SPEC_LEVEL_TYPE, SPEC_LEVEL_TYPE]);
 
-        // A level per feature, by name, addressed by its spec and the lineage of features above it.
+        // A level per feature, by name, holding the feature, addressed by its spec and the lineage of features above it.
         const levels = yield* Effect.promise(() => children(SPECS_SEGMENT, root.id));
-        expect(levels.map((node) => node.data)).toEqual([
-          { branch: 'spec', project, spec: root, feature: compose },
-          { branch: 'spec', project, spec: root, feature: sync },
-        ]);
+        expect(levels.map((node) => node.data)).toEqual([compose, sync]);
         const nested = yield* Effect.promise(() => children(SPECS_SEGMENT, root.id, sync.id));
         expect(nested.map((node) => node.id)).toEqual([
           GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPECS_SEGMENT, root.id, sync.id, gmail.id),

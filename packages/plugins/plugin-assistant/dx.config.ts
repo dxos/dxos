@@ -67,7 +67,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       AppCapability.skillDefinition(
         () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
         {
-          provides: [RoutineCapabilities.AgentDelegationStrategy],
+          provides: [AppCapabilities.HookDefinition, RoutineCapabilities.AgentDelegationStrategy],
         },
       ),
       AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } })),
