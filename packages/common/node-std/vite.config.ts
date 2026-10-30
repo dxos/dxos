@@ -23,6 +23,9 @@ export default defineConfig({
   // This package IS the browser polyfill for the node stdlib, so `DxNodeStdPlugin`'s
   // `node:*` -> `@dxos/node-std/*` remap would point every module at itself.
   nodeTarget: true,
+  // Each entry imports `./globals.js` before the `util` polyfill, which reads `process` at load; only one bundled file
+  // keeps that order.
+  preserveModules: false,
   // The polyfill implementations themselves. A consumer's bundler cannot resolve them —
   // that is the whole point of shipping this package pre-bundled.
   bundle: [
