@@ -18,3 +18,4 @@ export * from './useSceneNavigation.ts';
 export * from './useSceneSnap.ts';
 export * from './useSceneView.ts';
 export * from './useSceneWheel.ts';
+export * from './useDocumentStore.ts';

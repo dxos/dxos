@@ -14,8 +14,9 @@ import { type Layer } from '@dxos/scene';
 import { ViewBuilder } from '../../../builder/index.ts';
 import { type InspectorMode, createCanvasAtoms } from '../../../engine/index.ts';
 import { useRegistry } from '../../../hooks/index.ts';
-import { createMemoryStore } from '../../../model/index.ts';
+import { useDocumentHost } from '../../../testing/index.ts';
 import { between } from '../../../utils/index.ts';
+import { fromRenderLists2D } from '../../../viewport2d/index.ts';
 import { Canvas } from '../../Canvas/index.ts';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
@@ -40,10 +41,11 @@ type StoryArgs = {
 /** The inspector panel alone, floating to start: its toolbar, then the sections that show, without the canvas beside it. */
 const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
-  const { store, root } = useMemo(() => {
+  const { initial, root } = useMemo(() => {
     const tree = createTree();
-    return { store: createMemoryStore(tree.scenes), root: tree.root };
+    return { initial: fromRenderLists2D(tree.scenes, { root: tree.root }), root: tree.root };
   }, []);
+  const { document, onIntent, onModelIntent } = useDocumentHost(initial);
   const atoms = useMemo(() => createCanvasAtoms(root), [root]);
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select ? [select] : []));
@@ -51,7 +53,14 @@ const DefaultStory = ({ select }: StoryArgs) => {
   // The panel's toolbar docks and floats the inspectors.
   const [inspectors, setInspectors] = useState<InspectorMode>('floating');
   return (
-    <Canvas.Root store={store} root={root} atoms={atoms} inspectors={inspectors} onInspectorsChange={setInspectors}>
+    <Canvas.Root
+      document={document}
+      onIntent={onIntent}
+      onModelIntent={onModelIntent}
+      atoms={atoms}
+      inspectors={inspectors}
+      onInspectorsChange={setInspectors}
+    >
       <Canvas.Properties />
       <Canvas.Layers />
       <Canvas.Objects />

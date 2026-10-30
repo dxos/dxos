@@ -3,3 +3,4 @@
 //
 
 export * from './render-list.ts';
+export * from './writes.ts';

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type View, initialKeys } from '@dxos/react-ui-canvas/scene';
+import { type RenderList2D, initialKeys } from '@dxos/react-ui-canvas/headless';
 import { type Node, type RectNode } from '@dxos/scene';
 
 import { type Point } from './molecule.ts';
@@ -557,7 +557,7 @@ export const baseOf = (block: Block): Rect => ({
  * fits, selects and pans by. The overlay draws every container itself (base, frame, label and well), since the canvas's
  * shapes offer only one corner radius and the base, frame and well need concentric ones.
  */
-export const createDataFlowView = (layout: DataFlowLayout, revealed = true): View => {
+export const createDataFlowView = (layout: DataFlowLayout, revealed = true): RenderList2D => {
   // Before the monolithic agent is revealed, its blocks are left out, so the camera frames only the silos.
   const monolith = layout.monolith && revealed ? [layout.monolith.group] : [];
   const feed = layout.monolith && revealed ? [layout.monolith.feed] : [];

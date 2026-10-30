@@ -44,6 +44,9 @@ export type RenderList2D = {
   readonly anonymous?: boolean;
 };
 
+/** Every layout's render list, by layout id. */
+export type RenderLists2D = Readonly<Record<ViewId, RenderList2D>>;
+
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {
   rect: 'rect',
@@ -493,4 +496,42 @@ export const toRenderLists2D = (
     .flatMap((layout) => (layout.dim === '2d' ? [toRenderList2D(doc, layout)] : []))
     .sort((left, right) => Number(right.id === rootLayout) - Number(left.id === rootLayout));
   return { lists, root: lists[0]?.id ?? '' };
+};
+
+export type FromRenderLists2DOptions = {
+  /** The layout the scene shows; the first list's when unset. */
+  root?: string;
+  /** The model's named styles, as the canvas's style classes. */
+  styles?: StyleMap;
+  /** The scene's theme. */
+  theme?: string;
+};
+
+/**
+ * A 2D document drawing `lists`, the inverse of {@link toRenderLists2D}: a layout per list, one model (`model`) holding
+ * the objects its portals and instances place and the named styles, and one scene (`scene`) over `root`.
+ */
+export const fromRenderLists2D = (
+  lists: readonly RenderList2D[],
+  { root = lists[0]?.id ?? '', styles, theme }: FromRenderLists2DOptions = {},
+): Scene.SceneDocument => {
+  const objects: Record<string, Scene.Object2D> = {};
+  const layouts = lists.map((list) => {
+    const { layout, objects: placed } = fromRenderList2D(list);
+    placed.forEach((object) => (objects[object.id] = object));
+    return { ...layout, model: 'model' };
+  });
+  return {
+    scenes: [
+      {
+        id: 'scene',
+        dim: '2d',
+        layout: root,
+        camera: { center: { x: 0, y: 0 }, zoom: 1 },
+        ...(theme !== undefined ? { theme } : {}),
+      },
+    ],
+    layouts,
+    models: [{ id: 'model', dim: '2d', objects, ...(styles ? { styles: namedStyles(styles) } : {}) }],
+  };
 };

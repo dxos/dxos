@@ -11,7 +11,9 @@ import { type Database, Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Canvas, createCanvasAtoms, createMemoryStore, useRegistry } from '@dxos/react-ui-canvas/scene';
+import { fromRenderLists2D } from '@dxos/react-ui-canvas/headless';
+import { Canvas, createCanvasAtoms, useRegistry } from '@dxos/react-ui-canvas/scene';
+import { useDocumentHost } from '@dxos/react-ui-canvas/testing';
 import { Loading } from '@dxos/react-ui/testing';
 import { createStoryDecorators } from '@dxos/storybook-testing';
 
@@ -73,36 +75,29 @@ const Film = ({ chrome }: FilmProps) => {
   if (!db || !Drawing.isCanvas(canvas)) {
     return <Loading />;
   }
-  return <FilmView db={db} canvas={canvas} chrome={chrome} />;
+  return <FilmView db={db} chrome={chrome} />;
 };
 
-type FilmViewProps = FilmProps & { db: Database.Database; canvas: Drawing.Canvas };
+type FilmViewProps = FilmProps & { db: Database.Database };
 
-const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
+const FilmView = ({ db, chrome }: FilmViewProps) => {
   const registry = useRegistry();
-  // A film is only played, so it draws the end card's Views from memory rather than binding the drawing.
-  const bound = useMemo(
-    () => ({ store: createMemoryStore([rootScene(), logoComposite()], {}, { root: ROOT }), root: ROOT }),
-    [canvas],
+  // A film is only played, so it draws the end card from memory rather than binding the drawing.
+  const { document, onIntent, onModelIntent } = useDocumentHost(() =>
+    fromRenderLists2D([rootScene(), logoComposite()], { root: ROOT }),
   );
   const nodes = useCanvasNodes();
   const generators = useCanvasGenerators(db);
-  const atoms = useMemo(() => (bound ? createCanvasAtoms(bound.root) : undefined), [bound]);
+  const atoms = useMemo(() => createCanvasAtoms(ROOT), []);
   // The host holds the timeline; with the chrome, keys edited at a time land here.
   const [timeline, setTimeline] = useState(endCardTimeline);
   // Plays once from the start; a frame renderer seeks instead, which pauses it.
-  useEffect(() => {
-    if (atoms) {
-      registry.set(atoms.clock.playing, true);
-    }
-  }, [registry, atoms]);
-  if (!bound || !atoms) {
-    return <Loading />;
-  }
+  useEffect(() => registry.set(atoms.clock.playing, true), [registry, atoms]);
   return (
     <Canvas.Root
-      store={bound.store}
-      root={bound.root}
+      document={document}
+      onIntent={chrome ? onIntent : undefined}
+      onModelIntent={chrome ? onModelIntent : undefined}
       atoms={atoms}
       nodes={nodes}
       theme='film'

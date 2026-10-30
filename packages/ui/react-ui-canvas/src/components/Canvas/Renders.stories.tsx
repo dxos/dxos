@@ -12,8 +12,8 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { createCanvasAtoms } from '../../engine/index.ts';
 import { useRegistry } from '../../hooks/index.ts';
-import { createMemoryStore } from '../../model/index.ts';
-import { createViewTree } from '../../testing/index.ts';
+import { createViewTree, useDocumentHost } from '../../testing/index.ts';
+import { fromRenderLists2D } from '../../viewport2d/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** Commits per part, keyed by the Profiler id; read by the play function. */
@@ -41,10 +41,11 @@ const grownSince = (before: Map<string, number>, ids: readonly string[]) =>
 
 const DefaultStory = () => {
   const registry = useRegistry();
-  const { store, root } = useMemo(() => {
+  const { initial, root } = useMemo(() => {
     const tree = createViewTree(1);
-    return { store: createMemoryStore(tree.views), root: tree.root };
+    return { initial: fromRenderLists2D(tree.views, { root: tree.root }), root: tree.root };
   }, []);
+  const { document, onIntent, onModelIntent } = useDocumentHost(initial);
   const atoms = useMemo(() => createCanvasAtoms(root), [root]);
   // Exposed so the play function pans through the camera atom, as the wheel and the camera animation do.
   Reflect.set(window, '__canvasPan', (dx: number) => {
@@ -54,7 +55,7 @@ const DefaultStory = () => {
   // Selects as a click does, through the selection atom.
   Reflect.set(window, '__canvasSelect', (ids: string[]) => registry.set(atoms.selection, new Set(ids)));
   return (
-    <Canvas.Root store={store} root={root} atoms={atoms}>
+    <Canvas.Root document={document} onIntent={onIntent} onModelIntent={onModelIntent} atoms={atoms}>
       <Canvas.Viewport />
       <Counted id='navigation'>
         <Canvas.Navigation />

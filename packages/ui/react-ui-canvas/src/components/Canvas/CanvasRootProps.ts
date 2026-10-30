@@ -6,12 +6,11 @@ import { type ReactNode } from 'react';
 
 import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
-import { type Bounds, type Point, type ViewId } from '@dxos/scene';
+import { type Bounds, type Point, type Scene } from '@dxos/scene';
 
+import { type ConstrainIntent, type ViewportProps } from '../../editor/index.ts';
 import {
   type CanvasAtoms,
-  type CanvasHistory,
-  type CreateHistory,
   type FreehandProjectionOptions,
   type InspectorMode,
   type Projection,
@@ -25,24 +24,25 @@ import {
   type LinkRegistry,
   type NodeRegistry,
   type ThemeRegistry,
-  type ViewStore,
 } from '../../model/index.ts';
 
 export type CanvasRootProps = Util.ThemedClassName<{
-  store: ViewStore;
-  root: ViewId;
+  /** The drawing: the engine draws the scene's layouts and writes nothing to it but through the handlers below. */
+  document: Scene.SceneDocument;
+  /** The scene drawn, by id; the document's root scene when unset. */
+  scene?: string;
+  /** Takes an edit as an intent on the layout it changed; without it the view only draws, whatever it allows. */
+  onIntent?: ViewportProps['onIntent'];
+  /** Takes a model edit (an object a new composite places). */
+  onModelIntent?: ViewportProps['onModelIntent'];
+  /** Runs `change` as one undo step, for an edit that writes more than once (a new portal). */
+  onTransaction?: ViewportProps['onTransaction'];
+  /** The layout's mode, applied to every write; a refused or rewritten drag is redrawn as stored. */
+  constrain?: ConstrainIntent;
   nodes?: NodeRegistry;
   links?: LinkRegistry;
   /** Projection per scene; freehand (identity) by default. */
   createProjection?: (options: FreehandProjectionOptions) => Projection;
-  /** A host-owned projection instead, shared with the host's panels (see `useViewProjection`); its edits are not undone. */
-  projection?: Projection;
-  /**
-   * The undo history (VIEWS.md §8): how to make one over the canvas's own atoms (a host with its own history, such as
-   * Composer's tracker), or one from `useCanvasHistory` that a host sharing `projection` with its panels shares too; by
-   * default the canvas keeps a local one, so undo and redo work standalone.
-   */
-  history?: CanvasHistory | CreateHistory;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: CanvasAtoms;
   /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */

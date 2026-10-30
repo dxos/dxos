@@ -9,10 +9,11 @@ import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
+import { type Scene } from '@dxos/scene';
 
 import { type ViewTree } from '../../builder/index.ts';
 import { type InspectorMode, createLatticeProjection } from '../../engine/index.ts';
-import { type BackgroundGrid, createMemoryStore } from '../../model/index.ts';
+import { type BackgroundGrid } from '../../model/index.ts';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -22,7 +23,9 @@ import {
   createNestedViewTree,
   createSquareTree,
   createViewTree,
+  useDocumentHost,
 } from '../../testing/index.ts';
+import { fromRenderLists2D } from '../../viewport2d/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /**
@@ -65,8 +68,7 @@ type StoryArgs = {
 };
 
 type EditorProps = {
-  store: ReturnType<typeof createMemoryStore>;
-  root: string;
+  initial: Scene.SceneDocument;
   liveDepth: number;
   readonly?: boolean;
   lattice?: boolean;
@@ -74,8 +76,7 @@ type EditorProps = {
 };
 
 const Editor = ({
-  store,
-  root,
+  initial,
   liveDepth,
   readonly: initialReadonly = false,
   lattice,
@@ -86,10 +87,12 @@ const Editor = ({
   const [inspectors, setInspectors] = useState(initialInspectors);
   const [theme, setTheme] = useState<string>();
   const [backgroundGrid, setBackgroundGrid] = useState<BackgroundGrid>();
+  const { document, onIntent, onModelIntent } = useDocumentHost(initial);
   return (
     <Canvas.Root
-      store={store}
-      root={root}
+      document={document}
+      onIntent={onIntent}
+      onModelIntent={onModelIntent}
       readonly={readonly}
       onReadonlyChange={setReadonly}
       inspectors={inspectors}
@@ -115,17 +118,16 @@ const Editor = ({
 };
 
 const DefaultStory = ({ depth, liveDepth, readonly, fixture = 'elements', inspectors }: StoryArgs) => {
-  const { store, root } = useMemo(() => {
+  const { initial, root } = useMemo(() => {
     const tree = FIXTURES[fixture](depth);
-    return { store: createMemoryStore(tree.views, {}, { root: tree.root }), root: tree.root };
+    return { initial: fromRenderLists2D(tree.views, { root: tree.root }), root: tree.root };
   }, [depth, fixture]);
 
-  // Keyed on the root so a new tree remounts the editor, whose atoms are created on mount.
+  // Keyed on the tree so a new one remounts the editor, whose document and atoms are made on mount.
   return (
     <Editor
-      key={root}
-      store={store}
-      root={root}
+      key={`${fixture}:${depth}:${root}`}
+      initial={initial}
       liveDepth={liveDepth}
       readonly={readonly}
       lattice={fixture === 'lattice'}

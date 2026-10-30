@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
@@ -13,14 +12,15 @@ import { Diagnostics, Mermaid, MermaidEngine, Objective, Score } from '@dxos/dia
 import { BASIC } from '@dxos/diagram/testing';
 import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
-import { Shape, type ViewId } from '@dxos/scene';
+import { type Scene, Shape, type ViewId, findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { ViewBuilder } from '../../builder/index.ts';
 import { type CanvasAtoms, createCanvasAtoms } from '../../engine/index.ts';
-import { type View, type ViewStore, createMemoryStore } from '../../model/index.ts';
-import { createModelViewTree } from '../../testing/index.ts';
+import { type View } from '../../model/index.ts';
+import { createModelViewTree, useDocumentHost } from '../../testing/index.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/index.ts';
+import { fromRenderLists2D, toRenderList2D } from '../../viewport2d/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
 
@@ -163,18 +163,17 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 );
 
 type ScorecardProps = {
-  store: ViewStore;
-  root: ViewId;
+  /** The scene as the editor draws it. */
+  scene: View | undefined;
   atoms: CanvasAtoms;
   engine?: Objective.Evaluation;
   /** Every judge of the layout, of any kind; defaults to the objective's constraints and cost terms. */
   scorers?: readonly Score.Scorer[];
 };
 
-/** Live grading of the scene the editor shows: re-derived from the store on every change. */
-const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: ScorecardProps) => {
+/** Live grading of the scene the editor shows: re-derived from the document on every change. */
+const Scorecard = ({ scene, atoms, engine, scorers = DEFAULT_SCORERS }: ScorecardProps) => {
   const registry = useContext(RegistryContext);
-  const scene = useAtomValue(store.view(root));
   const graded = useMemo(() => (scene ? grade(scene) : undefined), [scene]);
   const [scores, setScores] = useState<readonly Score.Scored[]>();
   // The first scores, so Δ reads against the scene as it was first loaded.
@@ -302,18 +301,23 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
   );
 };
 
-type EditorProps = { store: ViewStore; root: ViewId; engine?: Objective.Evaluation };
+type EditorProps = { initial: Scene.SceneDocument; root: ViewId; engine?: Objective.Evaluation };
 
-const Editor = ({ store, root, engine }: EditorProps) => {
+const Editor = ({ initial, root, engine }: EditorProps) => {
   const atoms = useMemo(() => createCanvasAtoms(root), [root]);
+  const { document, onIntent, onModelIntent } = useDocumentHost(initial);
+  const scene = useMemo(() => {
+    const layout = findLayout(document, root);
+    return layout?.dim === '2d' ? toRenderList2D(document, layout) : undefined;
+  }, [document, root]);
   return (
     <Layout.Grid cols={['fill', '24rem']} classNames='dx-fill'>
-      <Canvas.Root store={store} root={root} atoms={atoms}>
+      <Canvas.Root document={document} onIntent={onIntent} onModelIntent={onModelIntent} atoms={atoms}>
         <Canvas.Viewport liveDepth={0} />
         <Canvas.Actions />
         <Canvas.Tools />
       </Canvas.Root>
-      <Scorecard store={store} root={root} atoms={atoms} engine={engine} />
+      <Scorecard scene={scene} atoms={atoms} engine={engine} />
     </Layout.Grid>
   );
 };
@@ -352,15 +356,15 @@ const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
       cancelled = true;
     };
   }, [source, fixture]);
-  const store = useMemo(() => seed && createMemoryStore(seed.views), [seed]);
+  const initial = useMemo(() => seed && fromRenderLists2D(seed.views, { root: seed.root }), [seed]);
 
   if (failure) {
     return <pre className='p-2 text-xs text-rose-500 whitespace-pre-wrap'>{failure}</pre>;
   }
-  if (!seed || !store) {
+  if (!seed || !initial) {
     return <div className='dx-fill' />;
   }
-  return <Editor key={seed.key} store={store} root={seed.root} engine={seed.engine} />;
+  return <Editor key={seed.key} initial={initial} root={seed.root} engine={seed.engine} />;
 };
 
 const meta: Meta<StoryArgs> = {

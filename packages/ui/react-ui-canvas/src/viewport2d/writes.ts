@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ViewMap, type ViewportProps } from '@dxos/react-ui-canvas';
-import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, type Scene, findLayout, layoutChanges } from '@dxos/scene';
 
+import { type ViewportProps } from '../editor/index.ts';
+import { type RenderLists2D, fromRenderList2D } from './render-list.ts';
+
 /**
- * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a View the document has
- * no layout for yet, such as a new portal's scene), or an object a new composite places, defined in the root's model.
+ * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a layout the document has
+ * none for yet, such as a new portal's scene), or an object a new composite places, defined in the root's model.
  */
-export type ViewWrite =
+export type LayoutWrite =
   | { kind: 'layout'; layout: string; intent: LayoutIntent; created: boolean }
   | { kind: 'define'; object: Scene.Object2D };
 
@@ -34,7 +35,7 @@ const overObject = (element: Element, object: Scene.Object2D): Element => {
 };
 
 /**
- * The element a changed node or link writes over the stored one: the canvas's fields from the View, the props other
+ * The element a changed node or link writes over the stored one: the canvas's fields from the RenderList2D, the props other
  * writers own and the DSL identity from the stored element, and an object placement kept while the node is still that
  * object's kind.
  */
@@ -58,17 +59,21 @@ const mergeElement = (
 const isEmpty = (intent: LayoutIntent): boolean => intent.kind === 'batch' && intent.intents.every(isEmpty);
 
 /**
- * What a change to the 2D engine's Views writes to the document: per View that changed, one intent on its layout with
- * only the elements that changed (so a drag of any number of elements is one write), and the model objects a new portal
- * or instance places. New layouts come first, then their objects, then the layouts placing them, so every reference
+ * What a change to the 2D engine's render lists writes to the document: per list that changed, one intent on its layout
+ * with only the elements that changed (so a drag of any number of elements is one write), and the model objects a new
+ * portal or instance places. New layouts come first, then their objects, then the layouts placing them, so every reference
  * resolves when it is written.
  */
-export const viewWrites = (document: Scene.SceneDocument, previous: ViewMap, next: ViewMap): ViewWrite[] => {
+export const layoutWrites = (
+  document: Scene.SceneDocument,
+  previous: RenderLists2D,
+  next: RenderLists2D,
+): LayoutWrite[] => {
   const models = new Map(document.models.flatMap((model) => (model.dim === '2d' ? [[model.id, model] as const] : [])));
   const known = new Set(document.models.flatMap((model) => (model.dim === '2d' ? Object.keys(model.objects) : [])));
-  const created: ViewWrite[] = [];
-  const defines = new Map<string, ViewWrite>();
-  const updated: ViewWrite[] = [];
+  const created: LayoutWrite[] = [];
+  const defines = new Map<string, LayoutWrite>();
+  const updated: LayoutWrite[] = [];
   for (const view of Object.values(next)) {
     const before = previous[view.id];
     if (before === view) {
@@ -103,7 +108,7 @@ export const viewWrites = (document: Scene.SceneDocument, previous: ViewMap, nex
   return [...created, ...defines.values(), ...updated];
 };
 
-export type ApplyViewWritesOptions = Pick<ViewportProps, 'onIntent' | 'onModelIntent' | 'onTransaction'> & {
+export type ApplyLayoutWritesOptions = Pick<ViewportProps, 'onIntent' | 'onModelIntent' | 'onTransaction'> & {
   /** The root's model, which a new composite's object is defined in. */
   model: string | undefined;
 };
@@ -112,9 +117,9 @@ export type ApplyViewWritesOptions = Pick<ViewportProps, 'onIntent' | 'onModelIn
  * Sends one engine change's writes to the editor; a change that writes more than once (a new portal: its element, its
  * scene and its object) goes as one transaction, so it undoes in one step, while a single write stays field-level.
  */
-export const applyViewWrites = (
-  writes: readonly ViewWrite[],
-  { model, onIntent, onModelIntent, onTransaction }: ApplyViewWritesOptions,
+export const applyLayoutWrites = (
+  writes: readonly LayoutWrite[],
+  { model, onIntent, onModelIntent, onTransaction }: ApplyLayoutWritesOptions,
 ): void => {
   const apply = () => {
     for (const next of writes) {

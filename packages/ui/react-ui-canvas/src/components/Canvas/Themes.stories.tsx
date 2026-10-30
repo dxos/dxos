@@ -10,7 +10,9 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { ViewBuilder } from '../../builder/index.ts';
-import { type BackgroundGrid, THEME_IDS, createMemoryStore } from '../../model/index.ts';
+import { type BackgroundGrid, THEME_IDS } from '../../model/index.ts';
+import { useDocumentHost } from '../../testing/index.ts';
+import { fromRenderLists2D } from '../../viewport2d/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 const cell = (x: number, y: number, width = 4, height = 2) => ({
@@ -94,18 +96,21 @@ const createTones = () =>
 type StoryArgs = { theme?: string; defaultTheme?: string; sample?: 'elements' | 'tones' };
 
 const ThemeView = ({ theme: initialTheme, defaultTheme, sample = 'elements' }: StoryArgs) => {
-  const { store, root } = useMemo(() => {
+  const initial = useMemo(() => {
     const tree = sample === 'tones' ? createTones() : createSample();
-    return { store: createMemoryStore(tree.views), root: tree.root };
+    return fromRenderLists2D(tree.views, { root: tree.root });
   }, [sample]);
   // The args are where the view starts; the theme bar changes it from there.
   const [theme, setTheme] = useState(initialTheme);
   useEffect(() => setTheme(initialTheme), [initialTheme]);
   const [grid, setGrid] = useState<BackgroundGrid>();
+  const { document, onIntent, onModelIntent } = useDocumentHost(initial);
   return (
     <Canvas.Root
-      store={store}
-      root={root}
+      key={sample}
+      document={document}
+      onIntent={onIntent}
+      onModelIntent={onModelIntent}
       theme={theme}
       defaultTheme={defaultTheme}
       backgroundGrid={grid}

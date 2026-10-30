@@ -15,10 +15,10 @@ import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMem
 
 import { type Timeline } from '@dxos/animation';
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
-import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '@dxos/scene';
+import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { animate, createCanvasAtoms, noHistory, readonlyCapabilities } from '../../engine/index.ts';
+import { animate, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
   SceneLookContext,
@@ -26,6 +26,7 @@ import {
   useCanvasHistory,
   useCommandHeld,
   useDocumentCommands,
+  useDocumentStore,
   useEditMode,
   useElementHandlers,
   useGeneratorFrames,
@@ -45,6 +46,7 @@ import {
   useViewProjection,
 } from '../../hooks/index.ts';
 import {
+  type MemoryViewStore,
   type ThemeChoice,
   chooseTheme,
   defaultThemeRegistry,
@@ -72,15 +74,53 @@ const NEU_STYLE = neuVars();
 /** No generators: what a view given none reads. */
 const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
 
+/**
+ * The engine over a document: its scene's layouts drawn from the draw state, each edit sent to the host as intents
+ * (COMMON-CORE C.2).
+ */
 export const CanvasRoot = ({
+  document,
+  scene,
+  constrain,
+  onIntent,
+  onModelIntent,
+  onTransaction,
+  ...props
+}: CanvasRootProps) => {
+  const registry = useRegistry();
+  // Read when a write is checked, so the view's snap toggle reaches the mode without rebuilding the store.
+  const snapRef = useRef<() => boolean>(() => true);
+  const { store, root } = useDocumentStore(registry, {
+    document,
+    scene,
+    constrain,
+    snap: () => snapRef.current(),
+    onIntent,
+    onModelIntent,
+    onTransaction,
+  });
+  return <CanvasEngine key={root} {...props} store={store} root={root} snapRef={snapRef} />;
+};
+
+CanvasRoot.displayName = 'Canvas.Root';
+
+type CanvasEngineProps = Omit<
+  CanvasRootProps,
+  'document' | 'scene' | 'constrain' | 'onIntent' | 'onModelIntent' | 'onTransaction'
+> & {
+  store: MemoryViewStore;
+  root: ViewId;
+  snapRef: { current: () => boolean };
+};
+
+const CanvasEngine = ({
   classNames,
   store,
   root,
+  snapRef,
   nodes: nodeRegistry = defaultNodeRegistry,
   links: linkRegistry = defaultLinkRegistry,
   createProjection,
-  projection: projectionProp,
-  history: historyProp,
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
@@ -116,7 +156,7 @@ export const CanvasRoot = ({
   hostKeys,
   onContextMenu: onHostContextMenu,
   children,
-}: CanvasRootProps) => {
+}: CanvasEngineProps) => {
   // A host that stores no theme choice still lets the viewer pick one, for this view alone.
   const [themeChoice, setThemeChoice] = useState<ThemeChoice>();
   const shownTheme = chooseTheme(theme, themeChoice);
@@ -137,15 +177,9 @@ export const CanvasRoot = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  // A host-owned projection given no history owns its side effects, so its edits are not undone here.
-  const ownHistory = useCanvasHistory({
-    registry,
-    atoms,
-    store,
-    history: typeof historyProp === 'function' ? historyProp : projectionProp ? noHistory : undefined,
-  });
-  const history = historyProp === undefined || typeof historyProp === 'function' ? ownHistory : historyProp;
-  const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp, history });
+  snapRef.current = () => registry.get(atoms.snap);
+  const history = useCanvasHistory({ registry, atoms, store });
+  const baseProjection = useViewProjection({ store, atoms, createProjection, history });
   history.view.projection = baseProjection;
   // The host's timeline as an atom, so the animated projection follows it without being rebuilt.
   const timelineAtom = useMemo(() => Atom.keepAlive(Atom.make<Timeline | undefined>(undefined)), []);
@@ -650,4 +684,4 @@ export const CanvasRoot = ({
   );
 };
 
-CanvasRoot.displayName = 'Canvas.Root';
+CanvasEngine.displayName = 'CanvasEngine';

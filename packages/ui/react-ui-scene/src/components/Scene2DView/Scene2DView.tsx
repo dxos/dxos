@@ -5,8 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { type Camera, Canvas, type NodeRegistry, createCanvasAtoms, createMemoryStore } from '@dxos/react-ui-canvas';
-import { toRenderLists2D } from '@dxos/react-ui-canvas/headless';
+import { type Camera, Canvas, type NodeRegistry, createCanvasAtoms, rootLayoutOf } from '@dxos/react-ui-canvas';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -75,18 +74,11 @@ const CanvasView = ({
 }: Scene2DViewProps) => {
   const registry = useContext(RegistryContext);
   const scene = sceneId === undefined ? rootScene(document) : findScene(document, sceneId);
-  // One store and one set of canvas atoms per root; later documents (an animation's samples) are written into them,
-  // so the canvas updates in place rather than remounting each frame.
-  const [{ store, atoms, rootId }] = useState(() => {
-    const { lists, root } = toRenderLists2D(document, scene);
-    return { store: createMemoryStore(lists, {}, { root }), atoms: createCanvasAtoms(root), rootId: root };
+  // One set of canvas atoms per root; later documents (an animation's samples) redraw in place rather than remounting.
+  const [{ atoms, rootId }] = useState(() => {
+    const root = rootLayoutOf(document, scene?.id);
+    return { atoms: createCanvasAtoms(root), rootId: root };
   });
-  useLayoutEffect(() => {
-    registry.set(
-      store.views,
-      Object.fromEntries(toRenderLists2D(document, scene).lists.map((list) => [list.id, list])),
-    );
-  }, [registry, store, document, scene]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number }>();
@@ -119,8 +111,8 @@ const CanvasView = ({
     <div ref={containerRef} className={mx('relative dx-fill overflow-hidden', classNames)} data-testid='scene.2d'>
       <Canvas.Root
         key={rootId}
-        store={store}
-        root={rootId}
+        document={document}
+        scene={scene?.id}
         atoms={atoms}
         nodes={nodes}
         createProjection={createProjection}

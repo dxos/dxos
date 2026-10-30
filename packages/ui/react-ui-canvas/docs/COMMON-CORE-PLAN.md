@@ -284,6 +284,19 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
   `RenderList2D`. Kind fields stay lowered by react-ui-scene's viewport (R-42), so no registry parameter. Rejected: a
   `RenderItem2D` of `Element2D` plus resolved `Style2D`, which would retype every node view (react-ui-canvas, compute,
   UML, plugin-canvas) for no change in what is drawn. Cost if wrong: node views retyped to elements later.
+- **R-67 (2026-10-30, agent, C.2): `Canvas.Root` takes a document, and its draw state is a private cache of it.**
+  `Canvas.Root` takes `document`, `scene`, `onIntent`/`onModelIntent`/`onTransaction` and `constrain` in place of
+  `store`/`root`/`projection`/`history`. `useDocumentStore` (react-ui-canvas `hooks/canvas`) reads the scene's layouts
+  into the engine's draw state before paint and never writes the document: a gesture previews in memory and its release
+  leaves as one intent per changed layout (`layoutWrites`/`applyLayoutWrites`, moved from react-ui-scene to
+  `viewport2d/writes.ts`); a write the mode refuses or moves, or one with no host, is drawn as stored. `Viewport2D`,
+  `Scene2DView`, `DataFlowView` and the end card pass documents; `fromRenderLists2D` (the inverse of
+  `toRenderLists2D`) builds one from render lists for stories and samples, and `useDocumentHost` (testing) applies the
+  intents. `Viewport2D` and `config2d` stay in react-ui-scene, where R-42 put the kind lowering. The `Constrained`,
+  `Dynamic` and `Animation` canvas stories are deleted: SceneEditor's `Constrained2D`/`Dynamic2D`/`Lattice2D` and the
+  SceneAnimation stories cover them. A resize writes a `size` update (a whole-element `update`, as `layoutChanges`
+  emits), not the plan's `scale` intent, which scales uniformly. **Parity:** 3D's `Viewport3D` already takes the
+  document and emits on release. Cost if wrong: a host that wanted the store back wraps the document in its own.
 
 ## Global Constraints
 
@@ -860,8 +873,9 @@ point edit) and `engine/controller.ts` to call `onPreview`/`onIntent` with `Layo
 - **Parity:** shared gesture rules (click/shift/marquee/create-tool select, Cmd-drag hand, drag-to-size) via shared
   helpers already in `utils` (`pressSelects`, `isHandDrag`, `boundsFromPoints`); 2D-specific geometry.
 
-- [ ] **Step 1: Failing test** `test('a drag of 200 elements writes once on release', …)` (Review Focus 2: count
-      ECHO writes via a recording layout proxy); `test('resize emits a scale intent at release', …)`.
+- [x] **Step 1: Failing test** `test('a drag of 200 elements writes once on release', …)` (Review Focus 2: count
+      ECHO writes via a recording layout proxy); `test('resize emits a scale intent at release', …)`. (R-67:
+      `hooks/canvas/useDocumentStore.test.tsx`; a resize writes `size`.)
 - [ ] **Steps 2–5:** FAIL → implement → PASS → commit `react-ui-canvas: 2D gestures commit intents on release`.
 
 ### Task C.3: 2D on `SceneEditor` in plugin-canvas

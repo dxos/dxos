@@ -17,18 +17,15 @@ import {
   type NodeRegistry,
   type Projection,
   type Tool,
-  type ViewMap,
   type ViewportProps,
   createCanvasAtoms,
-  createMemoryStore,
+  rootLayoutOf,
 } from '@dxos/react-ui-canvas';
-import { styleClasses, toRenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { type LayoutIntent, type Scene, applyIntent, findLayout, rootScene } from '@dxos/scene';
+import { type LayoutIntent, findLayout } from '@dxos/scene';
 
 import { type Kinds, fromViewportIntent, latticesKey, layoutProjection, toViewportDocument } from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
-import { type ViewWrite, applyViewWrites, viewWrites } from './view-writes.ts';
 
 /** The shortcuts the shared editor's command table handles, which the 2D engine leaves to it. */
 const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
@@ -89,36 +86,13 @@ const withCapabilities = (projection: Projection, allowed: Capabilities): Projec
   capabilities: Object.fromEntries(CAPABILITIES.map((key) => [key, !!projection.capabilities[key] && !!allowed[key]])),
 });
 
-/** Whether two versions of a layout draw any element in a different place or size (a pin alone draws the same). */
-const drawnDifferently = (left: Scene.LayoutRecord, right: Scene.LayoutRecord): boolean => {
-  const frame = (layout: Scene.LayoutRecord, id: string) => {
-    const element = layout.elements[id];
-    return JSON.stringify(element && [element.center, 'size' in element ? element.size : undefined]);
-  };
-  const ids = new Set([...Object.keys(left.elements), ...Object.keys(right.elements)]);
-  return [...ids].some((id) => frame(left, id) !== frame(right, id));
-};
-
 /**
- * The 2D viewport the shared editor draws: react-ui-canvas's engine over the open scene's layouts as Views, with its
- * gestures, handles, links and portals. The engine keeps a drag's in-flight state in memory and writes its store once on
- * release; that write reaches the editor as one intent per changed layout ({@link viewWrites}), so the editor records,
- * undoes and shares 2D edits as it does 3D ones. Selection, tool, drill path, camera and display are the editor's,
- * mirrored into the engine's atoms both ways.
+ * The 2D viewport the shared editor draws: react-ui-canvas's engine over the open scene's layouts, with its gestures,
+ * handles, links and portals. The engine sends each edit on release as one intent per changed layout, so the editor
+ * records, undoes and shares 2D edits as it does 3D ones. Selection, tool, drill path, camera and display are the
+ * editor's, mirrored into the engine's atoms both ways.
  */
 export const createViewport2D = (options: Viewport2DOptions = {}) => {
-  /** Whether the layout's mode refuses or rewrites one of the engine's writes to a stored layout. */
-  const changedByMode = (doc: Scene.SceneDocument, next: ViewWrite, snap: boolean): boolean => {
-    const record = next.kind === 'layout' && !next.created ? findLayout(doc, next.layout) : undefined;
-    if (!options.constrain || !record || next.kind !== 'layout') {
-      return false;
-    }
-    const constrained = options.constrain(record, next.intent, { snap });
-    return (
-      constrained === undefined || drawnDifferently(applyIntent(record, constrained), applyIntent(record, next.intent))
-    );
-  };
-
   const Viewport2D = ({
     document,
     scene: sceneId,
@@ -145,65 +119,11 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     children,
   }: ViewportProps<Camera>) => {
     const registry = useContext(RegistryContext);
-    const sceneRecord = document.scenes.find((record) => record.id === sceneId) ?? rootScene(document);
-    const read = (doc: Scene.SceneDocument) => toRenderLists2D(doc, sceneRecord);
-    const initial = useMemo(() => read(document), [sceneId]);
-    const root = initial.root;
-    const rootModel = (doc: Scene.SceneDocument) => {
-      const layout = findLayout(doc, root);
-      return (layout?.dim === '2d' ? layout.model : undefined) ?? doc.models.find((model) => model.dim === '2d')?.id;
-    };
-    const stylesOf = (doc: Scene.SceneDocument) => {
-      const model = doc.models.find((model) => model.id === rootModel(doc));
-      return styleClasses(model?.dim === '2d' ? model.styles : undefined);
-    };
-    const store = useMemo(() => createMemoryStore(initial.lists, stylesOf(document), { root }), [initial]);
+    const root = useMemo(() => rootLayoutOf(document, sceneId), [sceneId]);
     const atoms = useMemo(() => createCanvasAtoms(root), [root]);
-
-    // The latest props, read by the store's subscription, which outlives a render.
-    const latest = useRef({ document, snap, onIntent, onModelIntent, onTransaction });
-    latest.current = { document, snap, onIntent, onModelIntent, onTransaction };
-    const reading = useRef(false);
-    const last = useRef<ViewMap>(registry.get(store.views));
-
-    // The document as stored: read into the engine's store, which is not written back.
-    useEffect(() => {
-      reading.current = true;
-      try {
-        const views: ViewMap = Object.fromEntries(read(document).lists.map((list) => [list.id, list]));
-        registry.set(store.views, views);
-        registry.set(store.styles, stylesOf(document));
-        last.current = views;
-      } finally {
-        reading.current = false;
-      }
-    }, [registry, store, document]);
-
-    // The engine's writes, as intents on the layouts they changed.
-    useEffect(
-      () =>
-        registry.subscribe(store.views, (views) => {
-          if (reading.current) {
-            return;
-          }
-          const { document: doc, snap: snapping, ...handlers } = latest.current;
-          const writes = viewWrites(doc, last.current, views);
-          // The engine drew the drag as made; one the mode refuses or moves is drawn as stored until the write lands.
-          const constrained = options.constrain && writes.some((next) => changedByMode(doc, next, snapping));
-          if (constrained) {
-            reading.current = true;
-            try {
-              registry.set(store.views, last.current);
-            } finally {
-              reading.current = false;
-            }
-          } else {
-            last.current = views;
-          }
-          applyViewWrites(writes, { model: rootModel(doc), ...handlers });
-        }),
-      [registry, store],
-    );
+    // The document the projection reads, which outlives a render.
+    const latest = useRef(document);
+    latest.current = document;
 
     // The editor's state into the engine.
     useEffect(() => {
@@ -227,7 +147,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     // A layout with a lattice snaps the drag itself, so the engine previews the cells it lands on and draws the guides.
     const lattices = latticesKey(document);
     const createProjection = useMemo(() => {
-      const create = options.createProjection ?? layoutProjection(() => latest.current.document);
+      const create = options.createProjection ?? layoutProjection(() => latest.current);
       const allowed = options.capabilities;
       return allowed
         ? (projection: FreehandProjectionOptions) => withCapabilities(create(projection), allowed)
@@ -256,8 +176,12 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     return (
       <Canvas.Root
         key={root}
-        store={store}
-        root={root}
+        document={document}
+        scene={sceneId}
+        constrain={options.constrain}
+        onIntent={onIntent}
+        onModelIntent={onModelIntent}
+        onTransaction={onTransaction}
         atoms={atoms}
         nodes={options.nodes}
         createProjection={createProjection}
