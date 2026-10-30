@@ -343,8 +343,7 @@ prompt writes it to the transcript permanently; a file can be deleted.
 - `.secrets/` is gitignored at every depth. That is default exclusion, not enforcement — `git add -f`
   would still stage a file, so treat "nothing under `.secrets/` is tracked" as an invariant to uphold
   rather than a guarantee git gives you. Verify with `git ls-files | grep -i secret`; the only
-  expected hits are `scripts/secrets.mjs` and its edge-compute twin, which are tooling, not
-  credentials.
+  expected hit is `.secrets/.gitkeep`.
 - **The agent creates the empty file** (`umask 077`, `chmod 600`, `KEY=` lines with no value)
   and names its path; **the user pastes the value** (agents cannot sign in or complete an OAuth
   consent). One file per credential.
