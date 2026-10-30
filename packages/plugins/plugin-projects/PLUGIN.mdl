@@ -59,10 +59,10 @@ feat F-2: Feature embeds in the editor
   req F-2.4: An embed cut from one spec's document and pasted into another moves the feature to that spec. An embed of
              a feature whose own spec's document still embeds it is a reference and moves nothing.
   req F-2.5: Pasting an embed into a document that already embeds it embeds a copy of the feature.
-  req F-2.6: `/feature` puts a new feature's embed in place of its line, and the cursor in its section. A phrase before it
-             names the feature, and the cursor goes to its description. A sentence before it (ending in `.`, `!` or
-             `?`) becomes its description, and the cursor goes to its name, "New feature" until changed, as on an empty
-             line.
+  req F-2.6: `/feature`, at the start of a line or after a space, puts a new feature's embed in place of its line, and
+             the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
+             sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
+             "New feature" until changed, as on an empty line.
   req F-2.7: A section is inert until it has attention, so the cursor and scrolling pass through it. A click gives it
              attention, its form then edits the feature's name, description, requirements and status in place, and
              Escape returns the cursor to the text.
@@ -80,9 +80,10 @@ feat F-2: Feature embeds in the editor
 feat F-3: A spec as a file
   req F-3.1: Importing a file (`op:ImportSpec`) maps each `feat` block to the feature read in from it before, found by
              its source `path#F-n` wherever it has moved since, to the feature the spec numbered `F-n` before any file
-             held its block, or to a new one, and puts the feature's embed in place of the block. The file states the feature's name, description, requirements and, when it has a
-             `status:` line, its status. The description is the block's `desc:` field, or its bare prose before the
-             first `req`.
+             held its block, or to a new one, and puts the feature's embed in place of the block. The file states the
+             feature's name, description, requirements and status, planned when the block has no `status:` line. The
+             description is the block's `desc:` field, the prose alone when it is a block scalar (`desc: |` or
+             `desc: >`), or its bare prose before the first `req`.
   req F-3.7: A fence that holds several `feat` blocks, or other blocks before one, is split so each `feat` block is a
              fence of its own, which its embed replaces on import and an export writes back.
   req F-3.2: A feature the document embedded that no block of the file names is kept at the end when it was added in
@@ -772,28 +773,57 @@ decision D-38: An id the app gives a feature names no file until import reads it
 ```
 
 ```mdl
-decision D-39: A spec is one document. The canvas, the board and any other view are lenses over it, such as canvas positions or a kanban pivot, and the view toggle shows only when a spec has more than one view.
+decision D-39: Import reads a block without a `status:` line as planned, as export does, so a file that drops the line sets the feature to planned. Supersedes the import half of [D-21].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Import kept the feature's status when the line was gone, and export, reading the missing line as planned, then wrote the old status back, so the file and the feature never agreed.
+  rejected:
+    - Export omitting `status:` only for planned features while import keeps the old status, which leaves the same loop.
+```
+
+```mdl
+decision D-40: A `desc:` block scalar (`desc: |` or `desc: >`) is read as its prose, without the indicator. Fills in [D-21].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Repository specs such as org.dxos.plugin.code's F-14 write long descriptions as block scalars, and the indicator was read in as the first character of the description.
+```
+
+```mdl
+decision D-41: `/feature` is offered only for a slash at the start of a line or after a space. Fills in [D-25].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.6]
+  why: A slash inside a path such as `packages/` offered the completion, and Enter at the end of the line then accepted it, turning the paragraph into a feature.
+```
+
+```mdl
+decision D-42: A spec is one document. The canvas, the board and any other view are lenses over it, such as canvas positions or a kanban pivot, and the view toggle shows only when a spec has more than one view.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.2]
 ```
 
 ```mdl
-decision D-40: Each dialect is one bundle, and the blocks it defines map to plugin capabilities when the text is synced. Composer's editor stays fully compatible with MDL as plain text.
+decision D-43: Each dialect is one bundle, and the blocks it defines map to plugin capabilities when the text is synced. Composer's editor stays fully compatible with MDL as plain text.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.3]
 ```
 
 ```mdl
-decision D-41: What a dialect adds to a spec is kept as ECHO annotations on the spec, so it is strongly typed.
+decision D-44: What a dialect adds to a spec is kept as ECHO annotations on the spec, so it is strongly typed.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.4]
 ```
 
 ```mdl
-decision D-42: A spec declares its dialects as structured data, not in its text, and the sync to the text form uses them. A presentation dialect's blocks are inserted as templates by slash commands such as `/slide`, with no views of their own.
+decision D-45: A spec declares its dialects as structured data, not in its text, and the sync to the text form uses them. A presentation dialect's blocks are inserted as templates by slash commands such as `/slide`, with no views of their own.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.3]
@@ -801,7 +831,7 @@ decision D-42: A spec declares its dialects as structured data, not in its text,
 ```
 
 ```mdl
-decision D-43: A project has several top-level specs. The project article's Specs tab picks the current spec from a dropdown in its toolbar. Only feature specs nest, so a presentation spec is a top-level spec. Replaces the part of [D-9] where a project has at most one spec.
+decision D-46: A project has several top-level specs. The project article's Specs tab picks the current spec from a dropdown in its toolbar. Only feature specs nest, so a presentation spec is a top-level spec. Replaces the part of [D-9] where a project has at most one spec.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.1, F-4.5]
@@ -809,28 +839,28 @@ decision D-43: A project has several top-level specs. The project article's Spec
 ```
 
 ```mdl
-decision D-44: `Spec` is generic, so it moves to `@dxos/compute`.
+decision D-47: `Spec` is generic, so it moves to `@dxos/compute`.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.2]
 ```
 
 ```mdl
-decision D-45: A spec level's nav path is `project/<id>/specs/<spec>/<feature>/…`, the same however many specs the project has.
+decision D-48: A spec level's nav path is `project/<id>/specs/<spec>/<feature>/…`, the same however many specs the project has.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.6]
 ```
 
 ```mdl
-decision D-46: A spec that lists no dialects uses the core and changelog blocks only.
+decision D-49: A spec that lists no dialects uses the core and changelog blocks only.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.3]
 ```
 
 ```mdl
-decision D-47: The spec document folds into the spec: a spec's text is its own `content`, and `SpecDocument` goes away. Replaces the part of [D-12] where a spec refers to a separate document.
+decision D-50: The spec document folds into the spec: a spec's text is its own `content`, and `SpecDocument` goes away. Replaces the part of [D-12] where a spec refers to a separate document.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-1, F-4.2]
@@ -838,19 +868,19 @@ decision D-47: The spec document folds into the spec: a spec's text is its own `
 ```
 
 ```mdl
-decision D-48: `Spec` 0.3.0 (`org.dxos.type.projects.spec`) holds `name`, `description`, `dialects` and `content`, a `Text` it owns. `Project` 0.7.0 holds `specs`, a list of refs, in place of `spec`. The migrations move a 0.6.0 project's spec into the list, move a 0.2.0 spec's document's `Text` and file links onto the spec and delete the document, and make a spec of each `SpecDocument` no spec held. A migrated spec lists no dialects. Fills in [D-43], [D-44] and [D-47].
+decision D-51: `Spec` 0.3.0 (`org.dxos.type.projects.spec`) holds `name`, `description`, `dialects` and `content`, a `Text` it owns. `Project` 0.7.0 holds `specs`, a list of refs, in place of `spec`. The migrations move a 0.6.0 project's spec into the list, move a 0.2.0 spec's document's `Text` and file links onto the spec and delete the document, and make a spec of each `SpecDocument` no spec held. A migrated spec lists no dialects. Fills in [D-46], [D-47] and [D-50].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-4.1, F-4.2]
-  why: Moving the `Text` rather than copying it keeps its id, its history and the cursors anchored in it. No dialect registry exists yet to say which dialects an old spec used, and none listed reads as core and changelog only ([D-46]).
+  why: Moving the `Text` rather than copying it keeps its id, its history and the cursors anchored in it. No dialect registry exists yet to say which dialects an old spec used, and none listed reads as core and changelog only ([D-49]).
   rejected:
     - Copying the document's text into a new `Text` on the spec.
     - Listing the `feat` dialect on every migrated spec.
 ```
 
 ```mdl
-decision D-49: The spec's features are the `org.dxos.projects.features` annotation, a list of feature refs in the document's order, and its canvas layout is the `org.dxos.projects.layout` annotation. The refs keep the spec each feature's ECHO parent, so deleting the spec still deletes its features. Fills in [D-41]. Replaces the part of [D-17] where the features are a field of `Spec`.
+decision D-52: The spec's features are the `org.dxos.projects.features` annotation, a list of feature refs in the document's order, and its canvas layout is the `org.dxos.projects.layout` annotation. The refs keep the spec each feature's ECHO parent, so deleting the spec still deletes its features. Fills in [D-44]. Replaces the part of [D-17] where the features are a field of `Spec`.
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -862,7 +892,7 @@ decision D-49: The spec's features are the `org.dxos.projects.features` annotati
 ```
 
 ```mdl
-decision D-50: A breakdown spec takes the dialects of the spec its feature is on, when made by `op:CreateSpec` or when a feature is first broken down. Fills in [D-42].
+decision D-53: A breakdown spec takes the dialects of the spec its feature is on, when made by `op:CreateSpec` or when a feature is first broken down. Fills in [D-45].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -871,7 +901,7 @@ decision D-50: A breakdown spec takes the dialects of the spec its feature is on
 ```
 
 ```mdl
-decision D-51: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project that already has a spec; a spec given to a project joins the end of its specs. The Specs tab opens on the spec last picked, kept in the project's view state, or the project's first spec, and Add spec opens the spec form and selects the new spec. Fills in [D-43].
+decision D-54: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project that already has a spec; a spec given to a project joins the end of its specs. The Specs tab opens on the spec last picked, kept in the project's view state, or the project's first spec, and Add spec opens the spec form and selects the new spec. Fills in [D-46].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -880,7 +910,7 @@ decision D-51: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project th
 ```
 
 ```mdl
-decision D-52: The codec takes a spec only when its document embeds a feature or the file holds a `feat` block, and otherwise leaves the spec to the plain text sync. `ProjectCapabilities.SpecDocumentCodec` and `SpecDocumentExtensions` are renamed `SpecCodec` and `SpecExtensions` and take a `Spec`. Fills in [D-47]. Replaces [D-29], since no document exists apart from a spec.
+decision D-55: The codec takes a spec only when its document embeds a feature or the file holds a `feat` block, and otherwise leaves the spec to the plain text sync. `ProjectCapabilities.SpecDocumentCodec` and `SpecDocumentExtensions` are renamed `SpecCodec` and `SpecExtensions` and take a `Spec`. Fills in [D-50]. Replaces [D-29], since no document exists apart from a spec.
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -890,7 +920,7 @@ decision D-52: The codec takes a spec only when its document embeds a feature or
 ```
 
 ```mdl
-decision D-53: A spec's nav-tree node holds the spec itself, as a feature level holds its feature, so it gets every companion an object gets. A spec a project owns opens as that project's article on the spec, with the feature companion beside it; a spec no project owns keeps its own article. The Specs branch holds no object and opens nothing. Fills in [D-43] and [D-45], following [D-13].
+decision D-56: A spec's nav-tree node holds the spec itself, as a feature level holds its feature, so it gets every companion an object gets. A spec a project owns opens as that project's article on the spec, with the feature companion beside it; a spec no project owns keeps its own article. The Specs branch holds no object and opens nothing. Fills in [D-46] and [D-48], following [D-13].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -901,14 +931,14 @@ decision D-53: A spec's nav-tree node holds the spec itself, as a feature level 
 ```
 
 ```mdl
-decision D-54: A QA walk shows a project's several specs working, so the change can be seen in the app.
+decision D-57: A QA walk shows a project's several specs working, so the change can be seen in the app.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [QA-8]
 ```
 
 ```mdl
-decision D-55: QA-8 opens a project holding a feature map and a spec of prose, lists both on the Overview, switches between them from the Specs tab's dropdown, adds a third spec from it, and ends on the feature map's canvas. Fills in [D-54].
+decision D-58: QA-8 opens a project holding a feature map and a spec of prose, lists both on the Overview, switches between them from the Specs tab's dropdown, adds a third spec from it, and ends on the feature map's canvas. Fills in [D-57].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -917,7 +947,7 @@ decision D-55: QA-8 opens a project holding a feature map and a spec of prose, l
 ```
 
 ```mdl
-decision D-56: Creating a spec asks for its name, which is required and heads the new spec's document. Fills in [D-51].
+decision D-59: Creating a spec asks for its name, which is required and heads the new spec's document. Fills in [D-54].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah

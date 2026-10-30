@@ -30,7 +30,8 @@ const REQ_LINE = /^req[ \t]+([^\s:]+)[ \t]*:[ \t]*(.*)$/;
 const STATUS_LINE = /^status[ \t]*:[ \t]*(\S+)[ \t]*$/;
 /** A line that starts a field of its own (`when:`, `then:`, `desc:`) rather than continuing the one above. */
 const FIELD_LINE = /^[a-z][\w-]*:(?:[ \t]|$)/;
-const DESC_FIELD = /^desc:[ \t]*/;
+/** The `desc:` field marker, with a YAML block indicator (`|`, `>`) when the prose is on the lines below. */
+const DESC_FIELD = /^desc:[ \t]*(?:[|>][-+]?[ \t]*)?/;
 const isStatus = Schema.is(Feature.Status);
 
 /** The status of a feature whose block states none. */

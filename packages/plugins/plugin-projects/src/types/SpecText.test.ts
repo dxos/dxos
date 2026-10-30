@@ -205,6 +205,33 @@ describe('SpecText', () => {
     );
   });
 
+  test('a block without a status line is taken in as planned, as it is written out', async ({ expect }) => {
+    const file = ['```mdl', 'feat F-1: Sync', '  status: operational', '```', ''].join('\n');
+    const inbox = addSpec('Inbox');
+    await SpecText.take(inbox, { path: 'PLUGIN.mdl', text: file });
+    const [sync] = await Ref.loadAll(FeatureMap.getFeatures(inbox));
+    expect(sync.status).toBe('operational');
+
+    const edited = file.replace('  status: operational\n', '');
+    await SpecText.take(inbox, { path: 'PLUGIN.mdl', text: edited });
+    expect(sync.status).toBe('planned');
+    expect(await SpecText.expand(inbox, { base: edited })).toBe(edited);
+  });
+
+  test('replaceBlock finds a block that shares its fence with others', async ({ expect }) => {
+    const verdict = addFeature('Verdict');
+    const map = addSpec('Ride Check', [verdict]);
+    await write(
+      map,
+      ['```mdl', 'type Hour', '  time: string', '', 'feat F-1: Verdict', '', 'feat F-2: Chart', '```', ''].join('\n'),
+    );
+    await SpecText.replaceBlock(map, verdict, 'F-1');
+    const text = await SpecText.read(map);
+    expect(FeatureSpec.parse(text).map(({ id }) => id)).toEqual(['F-2']);
+    expect(text).toContain('type Hour');
+    expect(await embedded(map)).toEqual([verdict.id]);
+  });
+
   test('a fence holding several feat blocks is taken in as an embed per block', async ({ expect }) => {
     const file = [
       '```mdl',

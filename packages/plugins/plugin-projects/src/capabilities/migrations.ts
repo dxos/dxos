@@ -199,7 +199,7 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
       if (placement.position) {
         FeatureMap.setPosition(container, object.id, placement.position);
       }
-      await SpecText.embed(container, object);
+      await SpecText.replaceBlock(container, object, Feature.getBlockId(object));
     },
   });
 };

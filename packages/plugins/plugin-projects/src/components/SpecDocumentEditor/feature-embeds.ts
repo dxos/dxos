@@ -91,6 +91,10 @@ export const featureEmbeds = ({
       return null;
     }
     const line = context.state.doc.lineAt(context.pos);
+    // Only a slash that starts a word, so a path such as `packages/` offers nothing.
+    if (word.from > line.from && !/\s/.test(context.state.sliceDoc(word.from - 1, word.from))) {
+      return null;
+    }
     const before = context.state.sliceDoc(line.from, word.from).trim();
     return {
       from: word.from,
