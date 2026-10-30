@@ -12,6 +12,10 @@
     flex-direction: column;
     gap: var(--dx-gap-size);
   }
+  /* A compact set (a vector's axes) sits under its legend as a field's control sits under its label. */
+  .dx-fieldset[data-compact]:not(.dx-container) {
+    gap: 0;
+  }
   /* A grid set (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
   .dx-fieldset.dx-container {
     row-gap: inherit;

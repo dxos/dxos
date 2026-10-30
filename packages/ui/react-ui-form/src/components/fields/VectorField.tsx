@@ -32,7 +32,7 @@ export const VectorField: FormFieldRenderer = ({ type, jsonPath, label, readonly
   const path = useMemo(() => toPathSegments(jsonPath), [jsonPath]);
   const { showLabel } = presentationFor(presentation);
   return (
-    <Fieldset.Root data-testid={jsonPath === undefined ? undefined : `vector.${jsonPath}`}>
+    <Fieldset.Root compact data-testid={jsonPath === undefined ? undefined : `vector.${jsonPath}`}>
       {showLabel && label && <Fieldset.Legend>{label}</Fieldset.Legend>}
       <Layout.Container layout='stack' gutter='inherit' gap='none'>
         {axes.map((axis) => (

@@ -85,6 +85,13 @@ describe('element form', () => {
     expect(ELEMENT_FORM_OVERRIDES.scale).toMatchObject({ hidden: true });
   });
 
+  test('geometry comes before label, layer and style, as in the 2D form', () => {
+    const names = SchemaAST.isObjects(ElementForm.ast)
+      ? ElementForm.ast.propertySignatures.map(({ name }) => String(name))
+      : [];
+    expect(names).toEqual(['center', 'rotation', 'scale', 'label', 'layer', 'style']);
+  });
+
   test('rotation takes the first of two columns, so it lines up under the centre', () => {
     expect(ELEMENT_FORM_FIELDS.rotation).toBeDefined();
   });

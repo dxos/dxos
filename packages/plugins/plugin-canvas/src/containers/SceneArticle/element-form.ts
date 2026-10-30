@@ -22,14 +22,17 @@ const FormVec3 = formVec3(1);
 const FormScale = formVec3(0.1);
 type FormVec3 = Schema.Schema.Type<typeof FormVec3>;
 
-/** The fields a person edits in the 3D Properties form; bindings and parts are the tools' and the Library's. */
+/**
+ * The fields a person edits in the 3D Properties form (bindings and parts are the tools' and the Library's): geometry
+ * first, then label, layer and style, in the order the 2D form shows them.
+ */
 export const ElementForm = Schema.Struct({
-  label: Scene.Element3D.fields.label,
-  layer: Scene.Element3D.fields.layer,
-  style: Schema.optional(Schema.Struct({ ...Style3D.fields, opacity: styleFields.opacity })),
   center: Schema.optional(formVec3(1)),
   rotation: Schema.optional(formVec3(15)),
   scale: Schema.optional(FormScale),
+  label: Scene.Element3D.fields.label,
+  layer: Scene.Element3D.fields.layer,
+  style: Schema.optional(Schema.Struct({ ...Style3D.fields, opacity: styleFields.opacity })),
 });
 export type ElementForm = Schema.Schema.Type<typeof ElementForm>;
 
