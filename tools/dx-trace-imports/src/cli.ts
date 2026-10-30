@@ -57,13 +57,13 @@ const stringList = (value: unknown): string[] =>
  */
 const foldTargets = (targets: string[]): string => (targets.length === 1 ? targets[0] : `{${targets.join(',')}}`);
 
+/** An `exports` object keyed by conditions (`{ "workerd": …, "default": … }`) describes `.` itself. */
+const isSubpathMap = (exports: object): boolean => Object.keys(exports).some((key) => key.startsWith('.'));
+
 /**
  * Every export subpath of the package in `cwd` that resolves to a module: everything except
  * `./package.json`, wildcard patterns and stylesheet or data exports (`./theme.css`).
  */
-/** An `exports` object keyed by conditions (`{ "workerd": …, "default": … }`) describes `.` itself. */
-const isSubpathMap = (exports: object): boolean => Object.keys(exports).some((key) => key.startsWith('.'));
-
 const allExportSubpaths = (cwd: string): string[] => {
   // Boundary: package.json contents are untyped JSON.
   const manifest = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')) as { exports?: unknown };
@@ -85,7 +85,8 @@ const conditionalExportSubpaths = (cwd: string, conditions: readonly string[]): 
   const manifest: unknown = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
   const exports: unknown =
     typeof manifest === 'object' && manifest !== null ? Reflect.get(manifest, 'exports') : undefined;
-  if (typeof exports !== 'object' || exports === null || Array.isArray(exports)) {
+  // An array is a fallback list for `.`, so it falls to the root case below.
+  if (typeof exports !== 'object' || exports === null) {
     return [];
   }
   const declares = (entry: unknown): boolean =>
