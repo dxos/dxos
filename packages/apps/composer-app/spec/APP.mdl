@@ -1048,6 +1048,30 @@ test QA-16: Hot-reload a plugin capability
       expect: the Settings row returns, and the page does not reload
 ```
 
+```mdl
+test QA-17: Load a plugin from its manifest
+  desc: |
+    A plugin served from another origin loads from its `manifest.json`: Composer builds it from the modules
+    the manifest lists and imports a module body only when the module activates, never the bundle's
+    `index.mjs`. The fixture plugin (`composer-e2e/__fixtures__/remote-plugin`) contributes one operation.
+  actors: agent
+  status: passing
+  automated:
+    - composer-e2e:remote-plugin.spec.ts#Remote plugin › loads a plugin from its manifest and runs its operation
+  given:
+    - the fixture plugin is built to its `dist/` and served from another origin
+  steps:
+    - name: Load the plugin
+      do: Invoke org.dxos.operation.registry.loadPlugin with the URL of the fixture's manifest.json.
+      expect: it answers with the plugin's id, org.dxos.plugin.e2eRemote
+    - name: Run its operation
+      do: Invoke org.dxos.operation.e2eRemotePlugin.getEcho with { text: "hello" }.
+      expect: it answers { text: "hello", from: "e2e-remote-plugin" }
+    - name: Check what was fetched
+      do: List the requests made to the plugin's origin.
+      expect: manifest.json and the operation module's body were fetched, and index.mjs never was
+```
+
 ## Changelog
 
 ```mdl
@@ -1099,4 +1123,11 @@ decision D-6: A plugin's definition is its dx.config.ts, so QA-16 edits the modu
   for: user:dmaretskyi
   affects: [QA-16]
   why: Plugins are defined by Plugin.config in dx.config.ts; src/plugin.ts no longer exists.
+```
+
+```mdl
+decision D-4: QA-17 covers loading a plugin from its `manifest.json`, the format every host now loads a plugin from, with an end-to-end spec that fails if Composer imports the bundle's `index.mjs`.
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [QA-17]
 ```

@@ -32,8 +32,21 @@ tasks:
     options:
       timeout: 60
 
+  # The plugin `remote-plugin.spec.ts` loads by URL, built as a published plugin is: `composerPlugin` run in its own
+  # directory, which is where it finds `dx.config.ts`.
+  build-remote-plugin:
+    script: cd __fixtures__/remote-plugin && pnpm exec vite build --logLevel warn
+    deps:
+      - app-framework:build
+    inputs:
+      - __fixtures__/remote-plugin/**/*
+      - '!__fixtures__/remote-plugin/dist/**/*'
+    outputs:
+      - __fixtures__/remote-plugin/dist/
+
   e2e:
     deps:
+      - build-remote-plugin
       # The tag's own `bundle-e2e` dep is `~:bundle-e2e` and optional, so it resolves to nothing
       # here: the bundle this suite serves belongs to the app, not to this package.
       - composer-app:bundle-e2e
