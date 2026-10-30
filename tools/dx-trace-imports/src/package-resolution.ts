@@ -31,35 +31,42 @@ const readJsonFile = <T>(filePath: string): T | null => {
 };
 
 /**
+ * The target an entry selects: a path, `null` when a matched condition excludes it (terminal, as in
+ * Node), or `undefined` when nothing matched, so the caller moves on to later keys.
+ */
+const matchConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null | undefined => {
+  if (entry === null || typeof entry === 'string') {
+    return entry;
+  }
+  if (!isConditionalMap(entry)) {
+    // A fallback list: the first valid package-relative target wins; invalid ones are skipped.
+    for (const target of entry) {
+      const matched = matchConditionalEntry(target, conditions);
+      if (typeof matched === 'string' && matched.startsWith('./')) {
+        return matched;
+      }
+    }
+    return undefined;
+  }
+  for (const key of Object.keys(entry)) {
+    if (key === 'default' || key === 'import' || conditions.includes(key)) {
+      const matched = matchConditionalEntry(entry[key], conditions);
+      if (matched !== undefined) {
+        return matched;
+      }
+    }
+  }
+  return undefined;
+};
+
+/**
  * Resolve a conditional export/import entry against the given conditions, following
  * nested condition maps. Mirrors Node's resolution order: object keys are checked in
  * source order (not `conditions` order), since package authors rely on key order to
  * rank overlapping conditions (e.g. `node` before `default`).
  */
-const tryResolveConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null => {
-  if (entry === null || typeof entry === 'string') {
-    return entry;
-  }
-  if (!isConditionalMap(entry)) {
-    for (const target of entry) {
-      const resolved = tryResolveConditionalEntry(target, conditions);
-      if (resolved) {
-        return resolved;
-      }
-    }
-    return null;
-  }
-  // A matching key whose nested map matches nothing falls through to later keys, as in Node.
-  for (const key of Object.keys(entry)) {
-    if (key === 'default' || key === 'import' || conditions.includes(key)) {
-      const resolved = tryResolveConditionalEntry(entry[key], conditions);
-      if (resolved) {
-        return resolved;
-      }
-    }
-  }
-  return null;
-};
+const tryResolveConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null =>
+  matchConditionalEntry(entry, conditions) ?? null;
 
 /**
  * Collapse pnpm symlinks so the same physical module reached through different
