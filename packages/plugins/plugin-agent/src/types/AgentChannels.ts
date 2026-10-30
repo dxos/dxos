@@ -83,7 +83,7 @@ export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel
 export const OUTBOUND_PROPERTY = 'outbound';
 
 /**
- * Marks an operation that speaks in a channel conversation (posts, mails or relays a message). Its value names the
+ * Marks an operation that answers in a channel conversation (posts, mails, relays or reacts). Its value names the
  * output field that says where the message went: a conversation's thread id, or a reference to the chat it was
  * recorded in.
  */

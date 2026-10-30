@@ -95,5 +95,7 @@ export const React = Operation.make({
     message: Schema.String.annotate({ description: 'The message id (`message` in the header).' }),
     emoji: Schema.String.annotate({ description: 'A unicode emoji, e.g. 👍.' }),
   }),
-  output: Schema.Struct({}),
-});
+  output: Schema.Struct({
+    channel: Schema.String.annotate({ description: 'The Discord channel (or thread) the reaction was added in.' }),
+  }),
+}).pipe(AgentChannels.channelSend('channel'));
