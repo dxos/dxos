@@ -138,6 +138,40 @@ describe('SpecText', () => {
     expect(text.startsWith('# Inbox\n\n```mdl\nfeat F-1: Sync')).toBe(true);
   });
 
+  test('sync numbers a feature made in the app after the highest block id, and keeps the ids when features move', async ({
+    expect,
+  }) => {
+    const sync = addFeature('Sync');
+    Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-4']);
+    const archive = addFeature('Archive');
+    Obj.update(archive, (archive) => {
+      archive.requirements = [{ text: 'Archived mail is searchable.' }, { id: 'F-5.3', text: 'Undo restores it.' }];
+    });
+    const inbox = addSpec('Inbox', [sync, archive]);
+    await SpecText.sync(inbox);
+    expect(Feature.getBlockId(archive)).toBe('F-5');
+    expect(archive.requirements?.map(({ id }) => id)).toEqual(['F-5.4', 'F-5.3']);
+
+    await write(inbox, `${SpecText.makeEmbed(archive)}\n\n${SpecText.makeEmbed(sync)}\n`);
+    await SpecText.sync(inbox);
+    expect([Feature.getBlockId(archive), Feature.getBlockId(sync)]).toEqual(['F-5', 'F-4']);
+  });
+
+  test('a feature numbered before its spec had a file is the feature its block names once taken in', async ({
+    expect,
+  }) => {
+    const archive = addFeature('Archive');
+    const inbox = addSpec('Inbox', [archive]);
+    await SpecText.sync(inbox);
+    const file = await SpecText.expand(inbox);
+    expect(FeatureSpec.parse(file).map(({ id }) => id)).toEqual(['F-1']);
+
+    const { created } = await SpecText.take(inbox, { path: 'packages/a/PLUGIN.mdl', text: file });
+    expect(created).toEqual([]);
+    expect(members(inbox)).toEqual([archive.id]);
+    expect(Feature.getSources(archive)).toEqual(['packages/a/PLUGIN.mdl#F-1']);
+  });
+
   test('a file taken in and written out against itself is unchanged, apart from what was edited since', async ({
     expect,
   }) => {

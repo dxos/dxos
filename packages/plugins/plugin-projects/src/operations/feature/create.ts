@@ -36,7 +36,10 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Create> = FeatureOp
       }
       attach(spec, feature);
       // The document is canonical for what the spec holds, so the feature is embedded there too.
-      yield* Effect.promise(() => SpecText.embed(spec, feature));
+      yield* Effect.promise(async () => {
+        await SpecText.embed(spec, feature);
+        await SpecText.number(spec);
+      });
       yield* Database.flush();
       return { feature };
     }),

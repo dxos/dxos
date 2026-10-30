@@ -143,7 +143,7 @@ export const getSources = (feature: Feature | Obj.Snapshot<Feature>): string[] =
     .keys.filter(({ source }) => source === SPEC_KEY_SOURCE)
     .map(({ id }) => id);
 
-/** The block id the feature was read in from (`F-3`), if any. */
+/** The feature's block id (`F-3`): the one it was read in from, or the one its spec numbered it with. */
 export const getBlockId = (feature: Feature | Obj.Snapshot<Feature>): string | undefined =>
   getSources(feature)
     .map((source) => source.match(/#(.+)$/)?.[1])
@@ -164,6 +164,20 @@ export const setSources = (feature: Feature, sources: readonly string[]): void =
       ...sources.map((id) => ({ source: SPEC_KEY_SOURCE, id })),
     );
   });
+};
+
+/**
+ * The requirements with an id for each that has none, numbered under the feature's block id after the highest given
+ * (`F-3.4`); ids once given are kept, since text and code cite them.
+ */
+export const numberRequirements = (blockId: string, requirements: readonly Requirement[]): Requirement[] => {
+  const prefix = `${blockId}.`;
+  let next =
+    Math.max(0, ...requirements.map(({ id }) => (id?.startsWith(prefix) ? Number(id.slice(prefix.length)) || 0 : 0))) +
+    1;
+  return requirements.map((requirement) =>
+    requirement.id ? requirement : { ...requirement, id: `${prefix}${next++}` },
+  );
 };
 
 /**

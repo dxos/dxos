@@ -42,6 +42,11 @@ feat F-1: A spec's document is the spec
              `## Features` section, or at the end of the document when it has none.
   req F-1.5: A feature the spec holds that its document has never embedded, such as one a seed or a migration added, is
              embedded when the spec is synced, never dropped.
+  req F-1.6: Every feature the spec holds has a block id, as its `feat` block does, and every requirement an id under
+             it (`F-3.2`). A feature read in from a file keeps the file's id; one made in the app takes the next `F-n`
+             after the highest in the spec when the spec is synced, and a requirement added to it takes the next id
+             under the feature. Ids are kept once given: moving or removing a feature or a requirement leaves the
+             others' ids as they were.
 ```
 
 ```mdl
@@ -74,8 +79,8 @@ feat F-2: Feature embeds in the editor
 ```mdl
 feat F-3: A spec as a file
   req F-3.1: Importing a file (`op:ImportSpec`) maps each `feat` block to the feature read in from it before, found by
-             its source `path#F-n` wherever it has moved since, or to a new one, and puts the feature's embed in place
-             of the block. The file states the feature's name, description, requirements and, when it has a
+             its source `path#F-n` wherever it has moved since, to the feature the spec numbered `F-n` before any file
+             held its block, or to a new one, and puts the feature's embed in place of the block. The file states the feature's name, description, requirements and, when it has a
              `status:` line, its status. The description is the block's `desc:` field, or its bare prose before the
              first `req`.
   req F-3.7: A fence that holds several `feat` blocks, or other blocks before one, is split so each `feat` block is a
@@ -350,7 +355,7 @@ test QA-7: Grow a spec from prose
     autocue flow `spec-document` against the SpecDocumentArticle story "Prose", whose spec "Mail" is three paragraphs
     of prose with no features.
   actors: human
-  covers: [F-1.3, F-2.1, F-2.2, F-2.3, F-2.6, F-2.7, F-2.10]
+  covers: [F-1.3, F-1.6, F-2.1, F-2.2, F-2.3, F-2.6, F-2.7, F-2.10]
   status: unverified
   given:
     - storybook serves plugin-projects
@@ -364,19 +369,22 @@ test QA-7: Grow a spec from prose
       expect: the paragraph becomes a feature's section, whose description is the paragraph, with the cursor in its name
     - name: Name it
       do: Type "Search" and press Escape.
-      expect: the section is named "Search", and the cursor is back in the text, after the section
+      expect: the section is named "Search" with block id F-1, and the cursor is back in the text, after the section
     - name: Turn another paragraph into a feature
       do: Put the cursor at the end of the paragraph "Mail should feel instant…", type " /feature", accept it, type "Instant inbox" and press Escape.
-      expect: a second section, "Instant inbox", above "Search", with the cursor after it; the last paragraph is still prose
+      expect: a second section, "Instant inbox" with block id F-2, above "Search", with the cursor after it; the last paragraph is still prose
     - name: Reorder by moving the embed
       do: Press Alt+Down twice.
-      expect: the "Instant inbox" section sits below "Search", and the spec lists Search first
+      expect: the "Instant inbox" section sits below "Search", the spec lists Search first, and each keeps its block id
     - name: Delete a feature by deleting its embed
       do: With the cursor still after the "Instant inbox" section, press Backspace.
       expect: the section is gone and the spec holds only Search
     - name: Undo restores it
       do: Press Cmd+Z.
       expect: the "Instant inbox" section returns, the same feature with its description
+    - name: Add a requirement
+      do: Click the "Search" section, click "Add requirement" in it, type "Results appear as you type." and press Enter.
+      expect: the requirement shows its id, F-1.1
     - name: Depend on another feature
       do: Click the "Instant inbox" section, click "Add dependency" in it and pick "Search".
       expect: the section lists "Search" under "Depends on"
@@ -682,4 +690,31 @@ decision D-35: Approve [D-33]: a feature's dependencies stay in ECHO only. An em
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-2.10, F-3.3]
+```
+
+```mdl
+decision D-36: Every feature and requirement in a spec is numbered in the app, as it is in the `.mdl` text, not only those synced from a file or added by a seed. A spec in Composer is the MDL text made structured and must stay fully compatible with it. Numbers might follow the features' positions and need not be stored, though they may need to be.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-1.6, F-2.10]
+```
+
+```mdl
+decision D-37: Ids are stored and never renumbered. A feature made in the app takes the next `F-n` after the highest in its spec when the spec is synced, and a requirement added to it takes the next id under the feature. A feature or requirement that moves or goes leaves the others' ids as they were. Fills in [D-36].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.6, QA-7]
+  why: Specs, decisions and `@feature` tags in code cite features and requirements by id, so an id must name the same thing after a reorder. The `feat` dialect stores ids in the text for the same reason.
+  rejected:
+    - Numbering by position, which renumbers every feature after one that moves and breaks what cites them.
+```
+
+```mdl
+decision D-38: An id the app gives a feature names no file until import reads its block in from one; import then maps that block to the feature numbered with its id. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1, F-3.2]
+  why: An id recorded with the file's path would mark the feature as read in from the file, so importing the file before its block was written out would delete a feature added in the app. An id never written back left a file pulled after an export with a block no feature matched, which import then made a second feature of.
 ```

@@ -167,8 +167,40 @@ export const sync = async (spec: Spec.Spec, { removed = [] }: SyncOptions = {}):
       spec.features.splice(0, spec.features.length, ...owned.map((feature) => Ref.make(feature)));
     });
   }
+  await number(spec);
   return result;
 };
+
+/**
+ * Gives each feature the spec holds a block id, the next `F-n` free in the spec, and each of its requirements an id
+ * under that, so a feature made in the app is numbered as its `feat` block will be. Ids once given are kept, since
+ * text and code cite them. The id names no file until {@link take} reads its block in from one.
+ */
+export const number = async (spec: Spec.Spec): Promise<void> => {
+  const features = await Ref.loadAll(spec.features);
+  let next = nextBlockNumber([
+    ...FeatureSpec.parse(await read(spec)).map(({ id }) => id),
+    ...features.flatMap((feature) => Feature.getBlockId(feature) ?? []),
+  ]);
+  for (const feature of features) {
+    let blockId = Feature.getBlockId(feature);
+    if (!blockId) {
+      blockId = `F-${next++}`;
+      Feature.setSources(feature, [...Feature.getSources(feature), FeatureSpec.getSource('', blockId)]);
+    }
+    const requirements = feature.requirements ?? [];
+    const numbered = Feature.numberRequirements(blockId, requirements);
+    if (numbered.some((requirement, index) => requirement.id !== requirements[index].id)) {
+      Obj.update(feature, (feature) => {
+        feature.requirements = numbered;
+      });
+    }
+  }
+};
+
+/** The number after the highest `F-n` among the block ids. */
+const nextBlockNumber = (ids: readonly string[]): number =>
+  Math.max(0, ...ids.map((id) => Number(id.match(/^F-(\d+)$/)?.[1] ?? 0))) + 1;
 
 export type ExpandOptions = {
   /** The file text last written out or read in; a block it holds for a feature is updated in place, keeping its form. */
@@ -191,7 +223,7 @@ export const expand = async (spec: Spec.Spec, { base }: ExpandOptions = {}): Pro
     ...blocks.keys(),
     ...[...owned.values()].flatMap((feature) => Feature.getBlockId(feature) ?? []),
   ]);
-  let next = Math.max(0, ...[...used].map((id) => Number(id.match(/^F-(\d+)$/)?.[1] ?? 0))) + 1;
+  let next = nextBlockNumber([...used]);
   const changes = FeatureEmbed.parse(text).flatMap(({ id, from, to }): FeatureEmbed.Change[] => {
     const feature = owned.get(id);
     if (!feature) {
@@ -246,10 +278,25 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
     }
   }
 
+  // A feature the spec numbered before it had a file is the one its block names, once written out.
+  const numbered = new Map<string, Feature.Feature>();
+  for (const feature of await Ref.loadAll(spec.features)) {
+    const sources = Feature.getSources(feature);
+    const blockId = Feature.getBlockId(feature);
+    if (blockId && sources.every((source) => Feature.getSpecPath(source) === '')) {
+      numbered.set(blockId, feature);
+    }
+  }
+
   const changes: FeatureEmbed.Change[] = [];
   for (const { id, name, description, status, requirements, from, to } of blocks) {
     const source = FeatureSpec.getSource(path, id);
     let feature = existing.get(source);
+    const unfiled = feature ? undefined : numbered.get(id);
+    if (unfiled) {
+      Feature.setSources(unfiled, [source]);
+      feature = unfiled;
+    }
     if (feature) {
       const container = Spec.getContainer(feature);
       // The block's embed lands in this document, so the feature moves here, unless the spec lies beneath it.
